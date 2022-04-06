@@ -224,6 +224,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     uint64_t lastObservedMidiNoteEventCount{0};
 
+    modsources getSelectedModsource() { return modsource; }
+
   private:
     void openOrRecreateEditor();
     std::unique_ptr<Surge::Overlays::OverlayComponent> makeStorePatchDialog();

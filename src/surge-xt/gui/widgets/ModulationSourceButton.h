@@ -131,6 +131,7 @@ struct ModulationSourceButton : public juce::Component,
     }
     int getState() const { return state; }
     bool transientArmed{false}; // armed in drop state
+    int newlySelected{0};
 
     bool secondaryHoverActive{false};
 
