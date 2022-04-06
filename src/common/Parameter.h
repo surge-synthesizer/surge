@@ -208,8 +208,8 @@ enum ControlGroup
     endCG
 };
 
-const char ControlGroupDisplay[endCG][32] = {"Global", "",          "Oscillators", "Mixer",
-                                             "Filter", "Envelopes", "Modulators",  "FX"};
+const char ControlGroupDisplay[endCG][32] = {"Global",  "",          "Oscillators", "Mixer",
+                                             "Filters", "Envelopes", "Modulators",  "FX"};
 
 struct ParamUserData
 {
