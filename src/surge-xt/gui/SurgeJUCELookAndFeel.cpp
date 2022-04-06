@@ -121,7 +121,7 @@ void SurgeJUCELookAndFeel::onSkinChanged()
               skin->getColor(Colors::VirtualKeyboard::Key::MouseOver));
     setColour(MidiKeyboardComponent::keyDownOverlayColourId,
               skin->getColor(Colors::VirtualKeyboard::Key::Pressed));
-    setColour(MidiKeyboardComponent::upDownButtonArrowColourId,
+    setColour(MidiKeyboardComponent::upDownButtonBackgroundColourId,
               skin->getColor(Colors::VirtualKeyboard::OctaveJog::Background));
     setColour(MidiKeyboardComponent::upDownButtonArrowColourId,
               skin->getColor(Colors::VirtualKeyboard::OctaveJog::Arrow));

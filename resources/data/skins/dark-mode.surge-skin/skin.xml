@@ -149,6 +149,8 @@
 
         <color id="vkb.key.mouse_over" value="surgebluetrans"/>
         <color id="vkb.key.pressed" value="surgeblue"/>
+        <color id="vkb.octave.background" value="bordergray"/>
+        <color id="vkb.octave.arrow" value="lightgray"/>
         <color id="vkb.wheel.background" value="bggray"/>
         <color id="vkb.wheel.border" value="bordergray"/>
         <color id="vkb.wheel.value" value="surgeblue"/>
