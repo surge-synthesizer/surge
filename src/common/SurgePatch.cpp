@@ -2245,6 +2245,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     mes->sortOrder = 0;
                     mes->filterOn = 0;
                     mes->filterString = "";
+                    mes->filterInt = 0;
                     if (node)
                     {
                         int val;
@@ -2256,6 +2257,11 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         if (node->QueryIntAttribute("filterOn", &val) == TIXML_SUCCESS)
                         {
                             mes->filterOn = val;
+                        }
+
+                        if (node->QueryIntAttribute("filterInt", &val) == TIXML_SUCCESS)
+                        {
+                            mes->filterInt = val;
                         }
 
                         if (node->Attribute("filterString"))
@@ -2833,6 +2839,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             TiXmlElement modEd("modulation_editor");
             modEd.SetAttribute("sortOrder", dawExtraState.editor.modulationEditorState.sortOrder);
             modEd.SetAttribute("filterOn", dawExtraState.editor.modulationEditorState.filterOn);
+            modEd.SetAttribute("filterInt", dawExtraState.editor.modulationEditorState.filterInt);
             modEd.SetAttribute("filterString",
                                dawExtraState.editor.modulationEditorState.filterString.c_str());
             eds.InsertEndChild(modEd);
