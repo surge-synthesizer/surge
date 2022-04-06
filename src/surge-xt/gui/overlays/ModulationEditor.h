@@ -70,6 +70,12 @@ class ModulationEditor : public OverlayComponent,
 
     void updateParameterById(const SurgeSynthesizer::ID &pid);
 
+    bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override
+    {
+        // You would think this would be true, but the subscriptions will get us there
+        return false;
+    }
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationEditor);
 };
 

@@ -54,6 +54,7 @@ struct WaveShaperAnalysis : public OverlayComponent,
     std::unique_ptr<Surge::Widgets::ModulatableSlider> tryitSlider;
     std::unique_ptr<Surge::Widgets::SelfDrawToggleButton> linkButton;
 
+    bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override;
     bool linked{true};
     void linkToggled();
 

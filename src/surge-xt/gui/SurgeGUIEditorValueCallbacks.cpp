@@ -3268,9 +3268,17 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 {
                     lfoDisplay->repaint();
                 }
-                for (auto &el : juceOverlays)
+                for (const auto &[olTag, ol] : juceOverlays)
                 {
-                    el.second->repaint();
+                    auto olpc = ol->getPrimaryChildAsOverlayComponent();
+                    if (olpc && olpc->shouldRepaintOnParamChange(getPatch(), p))
+                    {
+                        olpc->repaint();
+                    }
+                    else
+                    {
+                        // std::cout << "Skipping param repaint" << std::endl;
+                    }
                 }
             }
             if (p->ctrltype == ct_filtertype)

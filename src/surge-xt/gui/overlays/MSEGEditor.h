@@ -54,6 +54,11 @@ struct MSEGEditor : public OverlayComponent,
     void resized() override;
     void paint(juce::Graphics &g) override;
 
+    bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override
+    {
+        return false;
+    }
+
     std::unique_ptr<MSEGControlRegion> controls;
     std::unique_ptr<MSEGCanvas> canvas;
 

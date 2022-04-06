@@ -88,6 +88,11 @@ struct TuningOverlay : public OverlayComponent,
     bool isInterestedInFileDrag(const juce::StringArray &files) override;
     void filesDropped(const juce::StringArray &files, int x, int y) override;
 
+    bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override
+    {
+        return false;
+    }
+
     std::unique_ptr<TuningTableListBoxModel> tuningKeyboardTableModel;
     std::unique_ptr<juce::TableListBox> tuningKeyboardTable;
 

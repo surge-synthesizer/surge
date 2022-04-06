@@ -103,6 +103,11 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
     std::unique_ptr<juce::CodeDocument> preludeDocument;
     std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
 
+    bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override
+    {
+        return false;
+    }
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaModulatorEditor);
 };
 
