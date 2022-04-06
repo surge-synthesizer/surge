@@ -23,6 +23,7 @@
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
 #include "SurgeJUCEHelpers.h"
+#include <fmt/core.h>
 
 namespace Surge
 {
@@ -244,23 +245,26 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
     ModulationEditor *editor{nullptr};
     ModulationListContents(ModulationEditor *e) : editor(e)
     {
-        sortOrder = (SortOrder)e->synth->storage.getPatch()
-                        .dawExtraState.editor.modulationEditorState.sortOrder;
+        auto &mes = e->synth->storage.getPatch().dawExtraState.editor.modulationEditorState;
+        sortOrder = (SortOrder)mes.sortOrder;
 
-        filterOn = (FilterOn)editor->synth->storage.getPatch()
-                       .dawExtraState.editor.modulationEditorState.filterOn;
+        filterOn = (FilterOn)mes.filterOn;
         switch (filterOn)
         {
         case NONE:
             clearFilters();
             break;
         case SOURCE:
-            filterBySource(editor->synth->storage.getPatch()
-                               .dawExtraState.editor.modulationEditorState.filterString);
+            filterBySource(mes.filterString);
             break;
         case TARGET:
-            filterByTarget(editor->synth->storage.getPatch()
-                               .dawExtraState.editor.modulationEditorState.filterString);
+            filterByTarget(mes.filterString);
+            break;
+        case TARGET_CG:
+            filterByTargetControlGroup((ControlGroup)mes.filterInt, mes.filterString);
+            break;
+        case TARGET_SCENE:
+            filterByTargetScene(mes.filterInt, mes.filterString);
             break;
         }
 
@@ -284,6 +288,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         bool isBipolar;
         bool isPerScene;
         int idBase;
+        int pscene;
+        ControlGroup pControlGroup;
         float moddepth01;
         bool isMuted;
         ModulationDisplayInfoWindowStrings mss;
@@ -645,12 +651,15 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
     } sortOrder{BY_SOURCE};
 
     std::string filterString;
+    int filterInt;
 
     enum FilterOn
     {
         NONE,
         SOURCE,
-        TARGET
+        TARGET,
+        TARGET_SCENE,
+        TARGET_CG
     } filterOn{NONE};
 
     void clearFilters()
@@ -689,6 +698,30 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             s;
     }
 
+    void filterByTargetScene(int s, const std::string &lb)
+    {
+        filterOn = TARGET_SCENE;
+        filterInt = s;
+        rebuildFrom(editor->synth);
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterOn =
+            (int)TARGET_SCENE;
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterInt = s;
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterString =
+            lb;
+    }
+
+    void filterByTargetControlGroup(ControlGroup c, const std::string &lb)
+    {
+        filterOn = TARGET_CG;
+        filterInt = c;
+        rebuildFrom(editor->synth);
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterOn =
+            (int)TARGET_CG;
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterInt = c;
+        editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.filterString =
+            lb;
+    }
+
     /*
      * Rows is the visible UI, dataRows is the entire set of data. In the case of filtered
      * displays, it is not the case that rows[i].datum == dataRows[i]
@@ -720,6 +753,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             if (synth->fromSynthSideId(d.destination_id + d.idBase, ptagid))
                 synth->getParameterName(ptagid, nm);
         }
+        d.pscene = p->scene;
+        d.pControlGroup = p->ctrlgroup;
 
         std::string sname = editor->ed->modulatorNameWithIndex(
             d.source_scene, d.source_id, d.source_index, false, d.inScene < 0);
@@ -824,8 +859,12 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         for (const auto &d : dataRows)
         {
-            if (!(filterOn == NONE || (filterOn == SOURCE && d.sname == filterString) ||
-                  (filterOn == TARGET && d.pname == filterString)))
+            auto included = filterOn == NONE || (filterOn == SOURCE && d.sname == filterString) ||
+                            (filterOn == TARGET && d.pname == filterString) ||
+                            (filterOn == TARGET_CG && d.pControlGroup == filterInt) ||
+                            (filterOn == TARGET_SCENE && d.pscene == filterInt);
+
+            if (!included)
             {
                 continue;
             }
@@ -840,8 +879,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 l->firstInSort = true;
             }
 
-            if (filterOn == NONE || (filterOn == SOURCE && d.sname == filterString) ||
-                (filterOn == TARGET && d.pname == filterString))
+            if (included)
             {
                 l->setBounds(0, ypos, getWidth(), DataRowEditor::height);
                 ypos += DataRowEditor::height;
@@ -922,7 +960,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             }
             else
             {
-                std::cout << "Skipping an element " << std::endl;
+                // std::cout << "Skipping an element " << std::endl;
             }
         }
     }
@@ -950,9 +988,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
     break;
     case tag_filter_by:
     {
-        /*
-         * Make a popup menu to filter
-         */
+        // Make a popup menu to filter
         auto men = juce::PopupMenu();
         std::set<std::string> sources, targets;
 
@@ -962,27 +998,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
             targets.insert(r.pname);
         }
 
-        // FIXME add help component
-
-        auto tcomp =
-            std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Filter Modulation List", "");
-
-        tcomp->setSkin(skin, associatedBitmapStore);
-
-        men.addCustomItem(-1, std::move(tcomp));
-
         if (!sources.empty() && !targets.empty())
         {
-            men.addSeparator();
-
-            men.addItem(Surge::GUI::toOSCase("Clear Filter"), [this]() {
-                editor->modContents->clearFilters();
-                filterL->setText("Filter By", juce::NotificationType::dontSendNotification);
-                filterW->setLabels({"-"});
-            });
-
-            men.addSeparator();
-
             men.addSectionHeader("BY SOURCE");
 
             for (auto s : sources)
@@ -993,6 +1010,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                     filterW->setLabels({s});
                 });
 
+            men.addColumnBreak();
             men.addSectionHeader("BY TARGET");
 
             for (auto t : targets)
@@ -1002,7 +1020,67 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                                      juce::NotificationType::dontSendNotification);
                     filterW->setLabels({t});
                 });
+
+            men.addColumnBreak();
+            men.addSectionHeader("BY TARGET SECTION");
+
+            for (int t = cg_GLOBAL; t < endCG; ++t)
+            {
+                if (t == 1)
+                    continue;
+
+                auto lab = fmt::format("{}", ControlGroupDisplay[t]);
+
+                men.addItem(lab, [this, t, lab]() {
+                    editor->modContents->filterByTargetControlGroup((ControlGroup)t, lab);
+                    filterL->setText("Filter By Target Section",
+                                     juce::NotificationType::dontSendNotification);
+                    filterW->setLabels({lab});
+                });
+            }
+
+            men.addColumnBreak();
+            men.addSectionHeader("BY TARGET SCENE");
+
+            for (int t = 0; t < n_scenes + 1; ++t)
+            {
+                auto lab = fmt::format("Scene {}", (char)('A' + (t - 1)));
+
+                if (t == 0)
+                {
+                    lab = "Global";
+                }
+
+                men.addItem(lab, [this, t, lab]() {
+                    editor->modContents->filterByTargetScene(t, lab);
+                    filterL->setText("Filter By Target Scene",
+                                     juce::NotificationType::dontSendNotification);
+                    filterW->setLabels({lab});
+                });
+            }
+
+            men.addSeparator();
+
+            men.addItem(Surge::GUI::toOSCase("Clear Filter"), [this]() {
+                editor->modContents->clearFilters();
+                filterL->setText("Filter By", juce::NotificationType::dontSendNotification);
+                filterW->setLabels({"-"});
+            });
+
+            men.addSeparator();
         }
+
+        auto st = &(editor->synth->storage);
+        auto msurl = st ? sge->helpURLForSpecial(st, "mod-list") : std::string();
+        auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+            "Filter Modulation List", hurl);
+
+        tcomp->setSkin(skin, associatedBitmapStore);
+        tcomp->setCenterBold(false);
+
+        men.addCustomItem(-1, std::move(tcomp));
 
         men.showMenuAsync(sge->popupMenuOptions());
     }
@@ -1052,12 +1130,6 @@ void ModulationSideControls::showAddSourceMenu()
 {
     auto men = juce::PopupMenu();
 
-    auto tcomp =
-        std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation From", "");
-    tcomp->setSkin(skin, associatedBitmapStore);
-    men.addCustomItem(-1, std::move(tcomp));
-    men.addSeparator();
-
     auto addMacroSub = juce::PopupMenu();
     auto addVLFOASub = juce::PopupMenu();
     auto addSLFOASub = juce::PopupMenu();
@@ -1073,6 +1145,17 @@ void ModulationSideControls::showAddSourceMenu()
     juce::PopupMenu *popMenu{nullptr};
     auto synth = editor->synth;
     auto sge = editor->ed;
+
+    auto st = &(synth->storage);
+    auto msurl = st ? sge->helpURLForSpecial(st, "mod-list") : std::string();
+    auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+    auto tcomp =
+        std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation From", hurl);
+    tcomp->setSkin(skin, associatedBitmapStore);
+    men.addCustomItem(-1, std::move(tcomp));
+    men.addSeparator();
+
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         for (int k = 1; k < n_modsources; k++)
@@ -1180,16 +1263,24 @@ void ModulationSideControls::showAddSourceMenu()
 void ModulationSideControls::showAddTargetMenu()
 {
     if (!addTargetW->isEnabled())
+    {
         return;
+    }
+
+    auto synth = editor->synth;
 
     auto men = juce::PopupMenu();
 
-    auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation To", "");
+    auto st = &(synth->storage);
+    auto msurl = st ? sge->helpURLForSpecial(st, "mod-list") : std::string();
+    auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+    auto tcomp =
+        std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation To", hurl);
     tcomp->setSkin(skin, associatedBitmapStore);
     men.addCustomItem(-1, std::move(tcomp));
     men.addSeparator();
 
-    auto synth = editor->synth;
     std::array<std::map<int, std::map<int, std::vector<std::pair<int, std::string>>>>, n_scenes + 1>
         parsBySceneThenCGThenCGE;
     int SENTINEL_ENTRY = 10000001;

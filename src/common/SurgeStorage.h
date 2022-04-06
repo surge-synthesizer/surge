@@ -799,6 +799,7 @@ struct DAWExtraStateStorage
             int sortOrder = 0;
             int filterOn = 0;
             std::string filterString{""};
+            int filterInt{0};
         } modulationEditorState;
 
         struct TuningOverlayState
