@@ -205,6 +205,7 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
 void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                        juce::MidiBuffer &midiMessages)
 {
+    priorCalLWasProcessBlockNotBypassed = true;
     auto fpuguard = sst::plugininfra::cpufeatures::FPUStateGuard();
 
     auto playhead = getPlayHead();
@@ -499,10 +500,20 @@ void SurgeSynthProcessor::handleNoteOff(juce::MidiKeyboardState *source, int mid
 void SurgeSynthProcessor::processBlockBypassed(juce::AudioBuffer<float> &buffer,
                                                juce::MidiBuffer &midiMessages)
 {
-    /*
-     * Temporary fix while we resolve #5828
-     */
-    processBlock(buffer, midiMessages);
+    if (priorCalLWasProcessBlockNotBypassed)
+    {
+        surge->allNotesOff();
+        surge->halt_engine = true;
+        bypassCountdown = 8; // let us fade out by doing a halted process
+    }
+    if (bypassCountdown >= 0)
+    {
+        midiMessages.clear(); // but don't send notes. We are all notes off
+        processBlock(buffer, midiMessages);
+        bypassCountdown--;
+    }
+    surge->audio_processing_active = false;
+    priorCalLWasProcessBlockNotBypassed = false;
 }
 
 //==============================================================================
