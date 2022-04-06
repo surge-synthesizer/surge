@@ -295,7 +295,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
     case WAVESHAPER_ANALYZER:
     {
-        auto pt = std::make_unique<Surge::Overlays::WaveShaperAnalysis>(&(this->synth->storage));
+        auto pt =
+            std::make_unique<Surge::Overlays::WaveShaperAnalysis>(this, &(this->synth->storage));
         pt->setSkin(currentSkin, bitmapStore);
 
         auto npc = Surge::Skin::Connector::NonParameterConnection::ANALYZE_WAVESHAPE;

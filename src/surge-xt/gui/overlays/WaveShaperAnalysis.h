@@ -21,8 +21,10 @@
 #include "FilterConfiguration.h"
 #include "SurgeGUICallbackInterfaces.h"
 #include "widgets/ModulatableSlider.h"
+#include "widgets/MultiSwitch.h"
 
 class SurgeStorage;
+class SurgeGUIEditor;
 
 namespace Surge
 {
@@ -32,7 +34,9 @@ struct WaveShaperAnalysis : public OverlayComponent,
                             Surge::GUI::SkinConsumingComponent,
                             Surge::GUI::IComponentTagValue::Listener
 {
-    WaveShaperAnalysis(SurgeStorage *s);
+    SurgeGUIEditor *editor{nullptr};
+    SurgeStorage *storage{nullptr};
+    WaveShaperAnalysis(SurgeGUIEditor *e, SurgeStorage *s);
     void paint(juce::Graphics &g) override;
     void onSkinChanged() override;
     void resized() override;
@@ -48,12 +52,18 @@ struct WaveShaperAnalysis : public OverlayComponent,
     int wstype{0};
 
     std::unique_ptr<Surge::Widgets::ModulatableSlider> tryitSlider;
+    std::unique_ptr<Surge::Widgets::SelfDrawToggleButton> linkButton;
+
+    bool linked{true};
+    void linkToggled();
+
+    float getDbValue();
+    float lastDbValue{-100};
 
     static constexpr int npts = 256;
 
     typedef std::vector<std::pair<float, float>> curve_t;
     curve_t sliderDrivenCurve;
-    float sliderDb;
 };
 } // namespace Overlays
 } // namespace Surge

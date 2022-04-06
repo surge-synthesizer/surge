@@ -594,6 +594,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                   bool mute) override;
     void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
 
+    const SurgePatch &getPatch() { return synth->storage.getPatch(); }
+
   private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
 
