@@ -40,12 +40,7 @@ struct MainFrame : public juce::Component
         repaint();
     }
 
-    void paint(juce::Graphics &g) override
-    {
-        if (bg)
-            bg->draw(g, 1.0);
-    }
-
+    void paint(juce::Graphics &g) override;
     bool debugFocus{false};
     juce::Rectangle<int> focusRectangle;
     void paintOverChildren(juce::Graphics &g) override

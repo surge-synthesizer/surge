@@ -19,6 +19,7 @@
 #include <stack>
 #include <chrono>
 #include <variant>
+#include <fmt/core.h>
 
 namespace Surge
 {
@@ -71,7 +72,7 @@ struct UndoManagerImpl
             time = std::chrono::high_resolution_clock::now();
         }
     };
-    std::deque<UndoRecord> undoStack;
+    std::deque<UndoRecord> undoStack, redoStack;
 
     /* Not same value, but same pair. Used for wheel event compressing for instance */
     bool aboutTheSameThing(const UndoAction &a, const UndoAction &b)
@@ -95,17 +96,27 @@ struct UndoManagerImpl
     {
         if (auto pa = std::get_if<UndoParam>(&a))
         {
-            return "PARAM";
+            return fmt::format("Param[id={},val.f={},val.i={}]", pa->paramId, pa->val.f, pa->val.i);
         }
         if (auto pa = std::get_if<UndoModulation>(&a))
         {
-            return "MOD";
+            return fmt::format("Modulation[id={},source={},scene={},idx={},val={}]", pa->paramId,
+                               editor->modulatorName(pa->ms, false, pa->scene), pa->scene,
+                               pa->index, pa->val);
         }
-
+        if (auto pa = std::get_if<UndoOscillator>(&a))
+        {
+            return fmt::format("Oscillator[scene={},num={},type={}]", pa->scene, pa->oscNum,
+                               pa->type);
+        }
+        if (auto pa = std::get_if<UndoFX>(&a))
+        {
+            return fmt::format("FX[slot={},type={}]", pa->fxslot, pa->type);
+        }
         return "UNK";
     }
 
-    void push(const UndoAction &r)
+    void pushUndo(const UndoAction &r)
     {
         if (undoStack.empty())
         {
@@ -138,14 +149,20 @@ struct UndoManagerImpl
         }
     }
 
-    void pushParameterChange(int paramId, pdata val)
+    void pushRedo(const UndoAction &r) { redoStack.emplace_back(r); }
+
+    void pushParameterChange(int paramId, pdata val, UndoManager::Target to)
     {
         auto r = UndoParam();
         r.paramId = paramId;
         r.val = val;
-        push(r);
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
     }
-    void pushModulationChange(int paramId, modsources modsource, int sc, int idx, float val)
+    void pushModulationChange(int paramId, modsources modsource, int sc, int idx, float val,
+                              UndoManager::Target to)
     {
         auto r = UndoModulation();
         r.paramId = paramId;
@@ -154,10 +171,13 @@ struct UndoManagerImpl
         r.scene = sc;
         r.index = idx;
 
-        push(r);
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
     }
 
-    void pushOscillator(int scene, int oscnum)
+    void pushOscillator(int scene, int oscnum, UndoManager::Target to = UndoManager::UNDO)
     {
         auto os = &(synth->storage.getPatch().scene[scene].osc[oscnum]);
         auto r = UndoOscillator();
@@ -173,10 +193,13 @@ struct UndoManagerImpl
             p++;
         }
 
-        push(r);
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
     }
 
-    void pushFX(int fxslot)
+    void pushFX(int fxslot, UndoManager::Target to = UndoManager::UNDO)
     {
         auto fx = &(synth->storage.getPatch().fx[fxslot]);
         auto r = UndoFX();
@@ -188,31 +211,43 @@ struct UndoManagerImpl
             r.paramIdValues.emplace_back(fx->p[i].id, fx->p[i].val);
         }
 
-        push(r);
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
     }
 
-    bool undo()
+    bool undoRedoImpl(UndoManager::Target which)
     {
-        if (undoStack.empty())
+        auto *currStack = &undoStack;
+        if (which == UndoManager::REDO)
+            currStack = &redoStack;
+
+        if (currStack->empty())
             return false;
 
-        auto qt = undoStack.back();
+        auto qt = currStack->back();
         auto q = qt.action;
-        undoStack.pop_back();
+        currStack->pop_back();
+
+        auto opposite = (which == UndoManager::UNDO ? UndoManager::REDO : UndoManager::UNDO);
 
         // this would be cleaner with std:visit but visit isn't in macos libc until 10.13
         if (auto p = std::get_if<UndoParam>(&q))
         {
+            editor->pushParamToUndoRedo(p->paramId, opposite);
             editor->setParamFromUndo(p->paramId, p->val);
             return true;
         }
         if (auto p = std::get_if<UndoModulation>(&q))
         {
+            editor->pushModulationToUndoRedo(p->paramId, p->ms, p->scene, p->index, opposite);
             editor->setModulationFromUndo(p->paramId, p->ms, p->scene, p->index, p->val);
             return true;
         }
         if (auto p = std::get_if<UndoOscillator>(&q))
         {
+            pushOscillator(p->scene, p->oscNum, opposite);
             auto os = &(synth->storage.getPatch().scene[p->scene].osc[p->oscNum]);
             os->type.val.i = p->type;
             synth->storage.getPatch().update_controls(false, os, false);
@@ -225,6 +260,7 @@ struct UndoManagerImpl
         }
         if (auto p = std::get_if<UndoFX>(&q))
         {
+            pushFX(p->fxslot, opposite);
             std::lock_guard<std::mutex> g(synth->fxSpawnMutex);
 
             int cge = p->fxslot;
@@ -252,16 +288,24 @@ struct UndoManagerImpl
         return false;
     }
 
-    // TODO: implement redo
-    bool redo() { return false; }
+    bool undo() { return undoRedoImpl(UndoManager::UNDO); }
+    bool redo() { return undoRedoImpl(UndoManager::REDO); }
 
     void dumpStack()
     {
+        std::cout << "-------- UNDO/REDO -----------\n";
         for (const auto &q : undoStack)
         {
-            std::cout << toString(q.action) << " " << q.time.time_since_epoch().count() << " "
-                      << q.action.index() << std::endl;
+            std::cout << "  UNDO : " << toString(q.action) << " "
+                      << q.time.time_since_epoch().count() << " " << q.action.index() << std::endl;
         }
+        std::cout << "\n";
+        for (const auto &q : redoStack)
+        {
+            std::cout << "  REDO : " << toString(q.action) << " "
+                      << q.time.time_since_epoch().count() << " " << q.action.index() << std::endl;
+        }
+        std::cout << "-------------------------------" << std::endl;
     }
 };
 
@@ -272,15 +316,15 @@ UndoManager::UndoManager(SurgeGUIEditor *ed, SurgeSynthesizer *synth)
 
 UndoManager::~UndoManager() = default;
 
-void UndoManager::pushParameterChange(int paramId, pdata val)
+void UndoManager::pushParameterChange(int paramId, pdata val, Target to)
 {
-    impl->pushParameterChange(paramId, val);
+    impl->pushParameterChange(paramId, val, to);
 }
 
 void UndoManager::pushModulationChange(int paramId, modsources modsource, int scene, int idx,
-                                       float val)
+                                       float val, Target to)
 {
-    impl->pushModulationChange(paramId, modsource, scene, idx, val);
+    impl->pushModulationChange(paramId, modsource, scene, idx, val, to);
 }
 
 void UndoManager::pushOscillator(int scene, int oscnum) { impl->pushOscillator(scene, oscnum); }

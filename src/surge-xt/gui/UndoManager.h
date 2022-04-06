@@ -34,10 +34,17 @@ struct UndoManager
 
     void resetEditor(SurgeGUIEditor *ed);
 
+    enum Target
+    {
+        UNDO,
+        REDO
+    };
+
     std::unique_ptr<UndoManagerImpl> impl;
-    void pushParameterChange(int paramId, pdata val);
+    void pushParameterChange(int paramId, pdata val, Target to = UNDO);
     void pushMacroChange(int macroid, float val);
-    void pushModulationChange(int paramId, modsources modsource, int scene, int index, float val);
+    void pushModulationChange(int paramId, modsources modsource, int scene, int index, float val,
+                              Target to = UNDO);
     void pushOscillator(int scene, int oscnum);
     void pushFX(int fxslot);
     bool undo();
