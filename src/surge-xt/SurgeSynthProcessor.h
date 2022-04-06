@@ -182,6 +182,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
     void processBlockBypassed(juce::AudioBuffer<float> &buffer,
                               juce::MidiBuffer &midiMessages) override;
+    bool priorCalLWasProcessBlockNotBypassed{true};
+    int bypassCountdown{-1};
+
     void applyMidi(const juce::MidiMessageMetadata &);
     bool supportsMPE() const override { return true; }
 
