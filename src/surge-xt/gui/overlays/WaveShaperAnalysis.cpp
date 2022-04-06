@@ -254,6 +254,19 @@ float WaveShaperAnalysis::getDbValue()
     }
     return sliderDb;
 }
+bool WaveShaperAnalysis::shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p)
+{
+    if (p->ctrlgroup == cg_GLOBAL)
+    {
+        for (int i = 0; i < n_scenes; ++i)
+        {
+            auto &ws = patch.scene[i].wsunit;
+            if (p->id == ws.type.id || p->id == ws.drive.id)
+                return true;
+        }
+    }
+    return false;
+}
 
 } // namespace Overlays
 }; // namespace Surge

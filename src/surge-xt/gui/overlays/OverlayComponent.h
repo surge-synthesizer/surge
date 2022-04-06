@@ -19,6 +19,9 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "UserDefaults.h"
 
+class Parameter;
+class SurgePatch;
+
 namespace Surge
 {
 namespace Overlays
@@ -38,6 +41,7 @@ struct OverlayComponent : juce::Component
     bool hasIndependentClose{true};
     void setHasIndependentClose(bool b) { hasIndependentClose = b; }
     bool getHasIndependentClose() { return hasIndependentClose; }
+    virtual bool shouldRepaintOnParamChange(const SurgePatch &, Parameter *p) { return true; }
 
     /*
      * This is called when a parent wrapper finally decides to show me, which will
