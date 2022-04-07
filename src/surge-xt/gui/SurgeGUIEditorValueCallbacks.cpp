@@ -2660,6 +2660,20 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         return;
     }
 
+    if (tag == tag_action_undo)
+    {
+        control->setValue(0);
+        undoManager()->undo();
+        return;
+    }
+
+    if (tag == tag_action_redo)
+    {
+        control->setValue(0);
+        undoManager()->redo();
+        return;
+    }
+
     if (tag == tag_lfo_menu)
     {
         control->setValue(0);
@@ -2714,10 +2728,11 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::DRAG_VALUE)
         {
             int t = (tag - tag_mod_source0);
-            ((ControllerModulationSource *)synth->storage.getPatch()
-                 .scene[current_scene]
-                 .modsources[t])
-                ->set_target01(control->getValue(), false);
+            auto cmsrc = ((ControllerModulationSource *)synth->storage.getPatch()
+                              .scene[current_scene]
+                              .modsources[t]);
+            undoManager()->pushMacroChange(t - ms_ctrl1, cmsrc->get_target01(0));
+            cmsrc->set_target01(control->getValue(), false);
             synth->getParent()->surgeMacroUpdated(t - ms_ctrl1, control->getValue());
 
             lfoDisplay->repaint();
@@ -3436,6 +3451,10 @@ bool SurgeGUIEditor::setControlFromString(modsources ms, const std::string &s)
     auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                     .scene[current_scene]
                     .modsources[ms]);
+    if (ms >= ms_ctrl1 && ms <= ms_ctrl8)
+    {
+        undoManager()->pushMacroChange(ms - ms_ctrl1, cms->get_target01(0));
+    }
     bool bp = cms->is_bipolar();
     float val = std::atof(s.c_str()) / 100.0;
     if ((bp && val >= -1 && val <= 1) || (val >= 0 && val <= 1))

@@ -542,6 +542,14 @@ Connector patch_category_jog =
     Connector("controls.category.prevnext", 157, 42, Connector::JOG_PATCHCATEGORY).asJogPlusMinus();
 Connector patch_jog =
     Connector("controls.patch.prevnext", 246, 42, Connector::JOG_PATCH).asJogPlusMinus();
+
+Connector action_undo = Connector("controls.action.undo", 510 - 35 - 40, 42, 31, 12,
+                                  Components::Switch, Connector::ACTION_UNDO)
+                            .withBackground(IDB_UNDO_BUTTON);
+Connector action_redo = Connector("controls.action.redo", 510 - 40, 42, 31, 12, Components::Switch,
+                                  Connector::ACTION_REDO)
+                            .withBackground(IDB_REDO_BUTTON);
+
 Connector patch_save = Connector("controls.patch.save", 510, 42, 37, 12, Components::MultiSwitch,
                                  Connector::SAVE_PATCH)
                            .withHSwitch2Properties(IDB_SAVE_PATCH, 1, 1, 1)

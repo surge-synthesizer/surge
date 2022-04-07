@@ -65,10 +65,25 @@ struct UndoManagerImpl
         int lfoid;
         StepSequencerStorage storageCopy;
     };
+    struct UndoRename
+    {
+        bool isMacro;
+        std::string name;
+        int scene;
+        int itemid;
+        int index;
+    };
+    struct UndoMacro
+    {
+        int macro;
+        float val;
+    };
 
     // If you add a new type here add it both to aboutTheSameThing, toString, and
     // to undo.
-    typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep> UndoAction;
+    typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep, UndoRename,
+                         UndoMacro>
+        UndoAction;
     struct UndoRecord
     {
         UndoAction action;
@@ -99,6 +114,11 @@ struct UndoManagerImpl
             auto pb = std::get_if<UndoStep>(&b);
             return (pa->lfoid == pb->lfoid) && (pa->scene == pb->scene);
         }
+        if (auto pa = std::get_if<UndoMacro>(&a))
+        {
+            auto pb = std::get_if<UndoMacro>(&b);
+            return (pa->macro == pb->macro);
+        }
         return false;
     }
 
@@ -126,6 +146,16 @@ struct UndoManagerImpl
         if (auto pa = std::get_if<UndoStep>(&a))
         {
             return fmt::format("Step[scene={},lfoid={}]", pa->scene, pa->lfoid);
+        }
+        if (auto pa = std::get_if<UndoMacro>(&a))
+        {
+            return fmt::format("Macro[id={},val={}]", pa->macro, pa->val);
+        }
+        if (auto pa = std::get_if<UndoRename>(&a))
+        {
+            return fmt::format("Rename{}[label='{}',itemid={},scene={},index={}]",
+                               (pa->isMacro ? "Macro" : "Modulator"), pa->name, pa->itemid,
+                               pa->scene, pa->index);
         }
         return "UNK";
     }
@@ -244,6 +274,34 @@ struct UndoManagerImpl
             pushRedo(r);
     }
 
+    void pushMacroOrLFORename(bool isMacro, const std::string &oldName, int scene, int itemid,
+                              int index, UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto r = UndoRename();
+        r.isMacro = isMacro;
+        r.name = oldName;
+        r.scene = scene;
+        r.itemid = itemid;
+        r.index = index;
+
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
+    void pushMacroChange(int m, float f, UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto r = UndoMacro();
+        r.macro = m;
+        r.val = f;
+
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
     bool undoRedoImpl(UndoManager::Target which)
     {
         auto *currStack = &undoStack;
@@ -318,6 +376,31 @@ struct UndoManagerImpl
             editor->setStepSequencerFromUndo(p->scene, p->lfoid, p->storageCopy);
             return true;
         }
+        if (auto p = std::get_if<UndoRename>(&q))
+        {
+            if (p->isMacro)
+            {
+                auto nm = editor->getPatch().CustomControllerLabel[p->itemid];
+                pushMacroOrLFORename(true, nm, -1, p->itemid, -1, opposite);
+                editor->setMacroNameFromUndo(p->itemid, p->name);
+            }
+            else
+            {
+                auto nm = editor->getPatch().LFOBankLabel[p->scene][p->itemid][p->index];
+                pushMacroOrLFORename(false, nm, p->scene, p->itemid, p->index, opposite);
+                editor->setLFONameFromUndo(p->scene, p->itemid, p->index, p->name);
+            }
+            return true;
+        }
+        if (auto p = std::get_if<UndoMacro>(&q))
+        {
+            auto cms = ((ControllerModulationSource *)editor->getPatch()
+                            .scene[editor->current_scene]
+                            .modsources[p->macro + ms_ctrl1]);
+            pushMacroChange(p->macro, cms->get_target01(0), opposite);
+            editor->setMacroValueFromUndo(p->macro, p->val);
+            return true;
+        }
 
         return false;
     }
@@ -378,6 +461,21 @@ void UndoManager::pushStepSequencer(int scene, int lfoid, const StepSequencerSto
     impl->pushStepSequencer(scene, lfoid, pushValue);
 }
 
+void UndoManager::pushMacroRename(int macro, const std::string &oldName)
+{
+    impl->pushMacroOrLFORename(true, oldName, -1, macro, -1);
+}
+
+void UndoManager::pushLFORename(int scene, int lfoid, int index, const std::string &oldName)
+{
+    impl->pushMacroOrLFORename(false, oldName, scene, lfoid, index);
+}
+
+void UndoManager::pushMacroChange(int macroid, float val) { impl->pushMacroChange(macroid, val); }
+
+bool UndoManager::canUndo() { return !impl->undoStack.empty(); }
+
+bool UndoManager::canRedo() { return !impl->redoStack.empty(); }
 } // namespace GUI
 
 } // namespace Surge

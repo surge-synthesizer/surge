@@ -480,6 +480,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,
                                   Surge::GUI::UndoManager::Target which);
     void setStepSequencerFromUndo(int scene, int lfoid, const StepSequencerStorage &val);
+    void setLFONameFromUndo(int scene, int lfoid, int index, const std::string &n);
+    void setMacroNameFromUndo(int ccid, const std::string &n);
+    void setMacroValueFromUndo(int ccid, float val);
 
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
@@ -601,7 +604,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
 
     Surge::GUI::IComponentTagValue *statusMPE = nullptr, *statusTune = nullptr,
-                                   *statusZoom = nullptr;
+                                   *statusZoom = nullptr, *actionUndo = nullptr,
+                                   *actionRedo = nullptr;
     std::unique_ptr<Surge::Overlays::AboutScreen> aboutScreen;
 
     std::unique_ptr<juce::Drawable> midiLearnOverlay;
@@ -632,7 +636,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
      * Weak pointers to some logical items for focus return
      */
     juce::Component *mpeStatus{nullptr}, *zoomStatus{nullptr}, *tuneStatus{nullptr},
-        *mainMenu{nullptr}, *lfoMenuButton{nullptr};
+        *mainMenu{nullptr}, *lfoMenuButton{nullptr}, *undoButton{nullptr}, *redoButton{nullptr};
 
     /*
      * This is the JUCE component management
