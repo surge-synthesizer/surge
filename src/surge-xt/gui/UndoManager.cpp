@@ -59,10 +59,16 @@ struct UndoManagerImpl
         int type;
         std::vector<std::pair<int, pdata>> paramIdValues;
     };
+    struct UndoStep
+    {
+        int scene;
+        int lfoid;
+        StepSequencerStorage storageCopy;
+    };
 
     // If you add a new type here add it both to aboutTheSameThing, toString, and
     // to undo.
-    typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX> UndoAction;
+    typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep> UndoAction;
     struct UndoRecord
     {
         UndoAction action;
@@ -88,7 +94,11 @@ struct UndoManagerImpl
             return (pa->paramId == pb->paramId) && (pa->scene == pb->scene) && (pa->ms == pb->ms) &&
                    (pa->index == pb->index);
         }
-
+        if (auto pa = std::get_if<UndoStep>(&a))
+        {
+            auto pb = std::get_if<UndoStep>(&b);
+            return (pa->lfoid == pb->lfoid) && (pa->scene == pb->scene);
+        }
         return false;
     }
 
@@ -112,6 +122,10 @@ struct UndoManagerImpl
         if (auto pa = std::get_if<UndoFX>(&a))
         {
             return fmt::format("FX[slot={},type={}]", pa->fxslot, pa->type);
+        }
+        if (auto pa = std::get_if<UndoStep>(&a))
+        {
+            return fmt::format("Step[scene={},lfoid={}]", pa->scene, pa->lfoid);
         }
         return "UNK";
     }
@@ -217,6 +231,19 @@ struct UndoManagerImpl
             pushRedo(r);
     }
 
+    void pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue,
+                           UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto r = UndoStep();
+        r.scene = scene;
+        r.lfoid = lfoid;
+        r.storageCopy = pushValue;
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
     bool undoRedoImpl(UndoManager::Target which)
     {
         auto *currStack = &undoStack;
@@ -284,6 +311,13 @@ struct UndoManagerImpl
             }
             return true;
         }
+        if (auto p = std::get_if<UndoStep>(&q))
+        {
+            pushStepSequencer(p->scene, p->lfoid,
+                              editor->getPatch().stepsequences[p->scene][p->lfoid], opposite);
+            editor->setStepSequencerFromUndo(p->scene, p->lfoid, p->storageCopy);
+            return true;
+        }
 
         return false;
     }
@@ -338,6 +372,11 @@ bool UndoManager::redo() { return impl->redo(); }
 void UndoManager::dumpStack() { impl->dumpStack(); }
 
 void UndoManager::resetEditor(SurgeGUIEditor *ed) { impl->editor = ed; }
+
+void UndoManager::pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue)
+{
+    impl->pushStepSequencer(scene, lfoid, pushValue);
+}
 
 } // namespace GUI
 

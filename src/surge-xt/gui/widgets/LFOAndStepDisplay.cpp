@@ -93,12 +93,14 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e) : guiEditor(e)
         auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
         q->onGetValue = [this, i](auto *T) { return ss->steps[i]; };
         q->onSetValue = [this, i](auto *T, float f) {
+            auto bscg = BeginStepGuard(this);
             ss->steps[i] = f;
-            storage->getPatch().isDirty = true;
+            stepSeqDirty();
             repaint();
             return;
         };
         q->onJogValue = [this, i](auto *t, int dir, bool isShift, bool isControl) {
+            auto bscg = BeginStepGuard(this);
             int step = i;
             if (step >= 0)
             {
@@ -116,11 +118,12 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e) : guiEditor(e)
                 else
                     f = limitpm1(f + delt);
                 ss->steps[step] = f;
-                storage->getPatch().isDirty = true;
+                stepSeqDirty();
                 repaint();
             }
         };
         q->onMinMaxDef = [this, i](auto *t, int mmd) {
+            auto bscg = BeginStepGuard(this);
             if (mmd == 1)
                 ss->steps[i] = 1.f;
             if (mmd == -1)
@@ -128,7 +131,7 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e) : guiEditor(e)
             if (mmd == 0)
                 ss->steps[i] = 0.f;
 
-            storage->getPatch().isDirty = true;
+            stepSeqDirty();
             repaint();
         };
         stepLayer->addChildComponent(*q);
@@ -227,22 +230,25 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e) : guiEditor(e)
     l0->step = 1;
     l0->onGetValue = [this](auto *) { return ss->loop_start; };
     l0->onSetValue = [this](auto *, float f) {
+        auto bscg = BeginStepGuard(this);
         ss->loop_start = (int)round(f);
-        storage->getPatch().isDirty = true;
+        stepSeqDirty();
         repaint();
     };
     l0->onJogValue = [this](auto *, int dir, bool, bool) {
+        auto bscg = BeginStepGuard(this);
         auto n = limit_range(ss->loop_start + dir, 0, 15);
         ss->loop_start = n;
-        storage->getPatch().isDirty = true;
+        stepSeqDirty();
         repaint();
     };
     l0->onMinMaxDef = [this](auto *, int mmd) {
+        auto bscg = BeginStepGuard(this);
         if (mmd == 1)
             ss->loop_start = ss->loop_end;
         else
             ss->loop_start = 0;
-        storage->getPatch().isDirty = true;
+        stepSeqDirty();
         repaint();
     };
     loopEndOverlays[0] = std::move(l0);
@@ -254,22 +260,25 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e) : guiEditor(e)
     l0->step = 1;
     l0->onGetValue = [this](auto *) { return ss->loop_end; };
     l0->onSetValue = [this](auto *, float f) {
+        auto bscg = BeginStepGuard(this);
         ss->loop_end = (int)round(f);
-        storage->getPatch().isDirty = true;
+        stepSeqDirty();
         repaint();
     };
     l0->onJogValue = [this](auto *, int dir, bool, bool) {
+        auto bscg = BeginStepGuard(this);
         auto n = limit_range(ss->loop_end + dir, 0, 15);
         ss->loop_end = n;
-        storage->getPatch().isDirty = true;
+        stepSeqDirty();
         repaint();
     };
     l0->onMinMaxDef = [this](auto *, int mmd) {
+        auto bscg = BeginStepGuard(this);
         if (mmd == -1)
             ss->loop_end = ss->loop_end;
         else
             ss->loop_end = 15;
-        storage->getPatch().isDirty = true;
+        stepSeqDirty();
         repaint();
     };
     loopEndOverlays[1] = std::move(l0);
@@ -1469,8 +1478,9 @@ void LFOAndStepDisplay::setStepToDefault(const juce::MouseEvent &event)
     {
         if (steprect[i].contains(event.position))
         {
+            auto bscg = BeginStepGuard(this);
             ss->steps[i] = 0.f;
-            storage->getPatch().isDirty = true;
+            stepSeqDirty();
             repaint();
         }
     }
@@ -1495,6 +1505,7 @@ void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
         float rx1 = r.getX() + r.getWidth();
         if (event.position.x >= rx0 && event.position.x < rx1)
         {
+            auto bscg = BeginStepGuard(this);
             draggedStep = i;
 
             float f;
@@ -1529,7 +1540,7 @@ void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
             }
 
             ss->steps[i] = f;
-            storage->getPatch().isDirty = true;
+            stepSeqDirty();
 
             repaint();
         }
@@ -1653,6 +1664,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
 
             if (r.contains(event.position))
             {
+                auto bscg = BeginStepGuard(this);
                 dragMode = TRIGGERS;
 
                 uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
@@ -1697,7 +1709,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                 ss->trigmask &= maskOff;
                 ss->trigmask |= maskOn;
 
-                storage->getPatch().isDirty = true;
+                stepSeqDirty();
                 repaint();
 
                 return;
@@ -1708,6 +1720,7 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
 
 void LFOAndStepDisplay::shiftLeft()
 {
+    auto bscg = BeginStepGuard(this);
     float t = ss->steps[0];
 
     for (int i = 0; i < (n_stepseqsteps - 1); i++)
@@ -1724,12 +1737,13 @@ void LFOAndStepDisplay::shiftLeft()
         (((ss->trigmask & 0x0000fffe00000000) >> 1) |
          (((ss->trigmask & 0x100000000) << 15) & 0xffff00000000));
 
-    storage->getPatch().isDirty = true;
+    stepSeqDirty();
     repaint();
 }
 
 void LFOAndStepDisplay::shiftRight()
 {
+    auto bscg = BeginStepGuard(this);
     float t = ss->steps[n_stepseqsteps - 1];
 
     for (int i = (n_stepseqsteps - 2); i >= 0; i--)
@@ -1746,7 +1760,7 @@ void LFOAndStepDisplay::shiftRight()
                    (((ss->trigmask & 0x00007fff00000000) << 1) |
                     (((ss->trigmask & 0x0000800000000000) >> 15) & 0xffff00000000));
 
-    storage->getPatch().isDirty = true;
+    stepSeqDirty();
     repaint();
 }
 
@@ -1927,8 +1941,9 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
         {
             if (ss->loop_start != loopStart && loopStart >= 0)
             {
+                auto bscg = BeginStepGuard(this);
                 ss->loop_start = loopStart;
-                storage->getPatch().isDirty = true;
+                stepSeqDirty();
                 repaint();
             }
         }
@@ -1936,8 +1951,9 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
         {
             if (ss->loop_end != loopStart && loopStart >= 0)
             {
+                auto bscg = BeginStepGuard(this);
                 ss->loop_end = loopStart;
-                storage->getPatch().isDirty = true;
+                stepSeqDirty();
                 repaint();
             }
         }
@@ -2046,6 +2062,7 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
 
         if (s >= 0 && e >= 0 && s != e) // s == e is the abort gesture
         {
+            auto bscg = BeginStepGuard(this);
             float fs = (float)(steprect[s].getBottom() - rmStepStart.y) / steprect[s].getHeight();
             float fe = (float)(steprect[e].getBottom() - rmStepCurr.y) / steprect[e].getHeight();
 
@@ -2067,7 +2084,6 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
             }
 
             ss->steps[s] = fs;
-            storage->getPatch().isDirty = true;
 
             if (s != e)
             {
@@ -2098,10 +2114,10 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
                     }
 
                     ss->steps[q] = f;
-                    storage->getPatch().isDirty = true;
                 }
             }
 
+            stepSeqDirty();
             repaint();
         }
     }
@@ -2127,6 +2143,8 @@ void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
     {
         return;
     }
+
+    auto bscg = BeginStepGuard(this);
 
     float delta = wheel.deltaX - (wheel.isReversed ? 1 : -1) * wheel.deltaY;
 #if MAC
@@ -2159,7 +2177,7 @@ void LFOAndStepDisplay::mouseWheelMove(const juce::MouseEvent &event,
             }
 
             ss->steps[i] = v;
-            storage->getPatch().isDirty = true;
+            stepSeqDirty();
             repaint();
         }
     }
@@ -2379,6 +2397,20 @@ bool LFOAndStepDisplay::keyPressed(const juce::KeyPress &key)
     }
 
     return false;
+}
+
+void LFOAndStepDisplay::prepareForEdit()
+{
+    jassert(stepDirtyCount == 0);
+    stepDirtyCount++;
+    undoStorageCopy = *ss;
+}
+
+void LFOAndStepDisplay::stepSeqDirty()
+{
+    jassert(stepDirtyCount == 1);
+    storage->getPatch().isDirty = true;
+    guiEditor->undoManager()->pushStepSequencer(scene, lfoid, undoStorageCopy);
 }
 
 } // namespace Widgets

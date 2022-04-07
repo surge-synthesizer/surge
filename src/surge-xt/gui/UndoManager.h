@@ -21,6 +21,7 @@
 
 struct SurgeSynthesizer;
 struct SurgeGUIEditor;
+struct StepSequencerStorage;
 
 namespace Surge
 {
@@ -46,6 +47,7 @@ struct UndoManager
     void pushModulationChange(int paramId, modsources modsource, int scene, int index, float val,
                               Target to = UNDO);
     void pushOscillator(int scene, int oscnum);
+    void pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue);
     void pushFX(int fxslot);
     bool undo();
     bool redo();

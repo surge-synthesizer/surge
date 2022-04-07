@@ -479,6 +479,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setModulationFromUndo(int paramId, modsources ms, int scene, int idx, float val);
     void pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,
                                   Surge::GUI::UndoManager::Target which);
+    void setStepSequencerFromUndo(int scene, int lfoid, const StepSequencerStorage &val);
 
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
