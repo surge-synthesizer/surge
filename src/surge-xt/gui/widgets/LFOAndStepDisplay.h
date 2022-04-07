@@ -70,6 +70,11 @@ struct LFOAndStepDisplay : public juce::Component,
     {
         lfoid = l;
     }
+    int scene{-1};
+    void setScene(int l) // from 0
+    {
+        scene = l;
+    }
 
     void populateLFOMS(LFOModulationSource *s);
 
@@ -126,6 +131,23 @@ struct LFOAndStepDisplay : public juce::Component,
         endHover();
         repaint();
     }
+
+    struct BeginStepGuard
+    {
+        LFOAndStepDisplay *that{nullptr};
+        BeginStepGuard(LFOAndStepDisplay *t) : that(t) { that->prepareForEdit(); }
+        ~BeginStepGuard() { that->postDirtyEdit(); }
+    };
+    void prepareForEdit();
+    void postDirtyEdit()
+    {
+        jassert(stepDirtyCount == 1);
+        stepDirtyCount--;
+    }
+    void stepSeqDirty();
+
+    int stepDirtyCount{0};
+    StepSequencerStorage undoStorageCopy;
 
     enum DragMode
     {

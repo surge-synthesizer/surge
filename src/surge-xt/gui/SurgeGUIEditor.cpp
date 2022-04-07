@@ -2174,6 +2174,12 @@ void SurgeGUIEditor::setParamFromUndo(int paramId, pdata val)
     synth->refresh_editor = true;
 }
 
+void SurgeGUIEditor::setStepSequencerFromUndo(int scene, int lfoid, const StepSequencerStorage &val)
+{
+    synth->storage.getPatch().stepsequences[scene][lfoid] = val;
+    synth->refresh_editor = true;
+}
+
 void SurgeGUIEditor::pushParamToUndoRedo(int paramId, Surge::GUI::UndoManager::Target which)
 {
     auto p = synth->storage.getPatch().param_ptr[paramId];
@@ -5315,6 +5321,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             lfoDisplay->setLFOStorage(&synth->storage.getPatch().scene[current_scene].lfo[lfo_id]);
             lfoDisplay->setModSource((modsources)p->ctrlgroup_entry);
             lfoDisplay->setLFOID(lfo_id);
+            lfoDisplay->setScene(current_scene);
 
             auto msi = 0;
             if (gui_modsrc[p->ctrlgroup_entry])
