@@ -252,6 +252,9 @@ struct Connector
         STATUS_TUNE,
         STATUS_ZOOM,
 
+        ACTION_UNDO,
+        ACTION_REDO,
+
         LFO_LABEL,
         FXPRESET_LABEL,
 
@@ -426,6 +429,7 @@ extern Surge::Skin::Connector surge_menu;
 extern Surge::Skin::Connector patch_category_jog, patch_jog, patch_save;
 
 extern Surge::Skin::Connector status_mpe, status_zoom, status_tune;
+extern Surge::Skin::Connector action_undo, action_redo;
 
 extern Surge::Skin::Connector vu_meter;
 

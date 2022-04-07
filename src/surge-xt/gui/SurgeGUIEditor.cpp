@@ -575,6 +575,27 @@ void SurgeGUIEditor::idle()
             }
         }
 
+        if (undoButton && redoButton)
+        {
+            auto us = dynamic_cast<Surge::Widgets::Switch *>(undoButton);
+            auto rs = dynamic_cast<Surge::Widgets::Switch *>(redoButton);
+
+            auto hasU = undoManager()->canUndo();
+            auto hasR = undoManager()->canRedo();
+
+            if (hasU != (!us->isDeactivated))
+            {
+                us->setDeactivated(!hasU);
+                us->repaint();
+            }
+
+            if (hasR != (!rs->isDeactivated))
+            {
+                rs->setDeactivated(!hasR);
+                rs->repaint();
+            }
+        }
+
         {
             bool expected = true;
             if (synth->rawLoadNeedsUIDawExtraState.compare_exchange_weak(expected, true) &&
@@ -1525,6 +1546,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                         "Configure");
             break;
         }
+        case Surge::Skin::Connector::NonParameterConnection::ACTION_UNDO:
+        {
+            actionUndo = layoutComponentForSkin(skinCtrl, tag_action_undo);
+            setAccessibilityInformationByTitleAndAction(actionUndo->asJuceComponent(), "Undo",
+                                                        "Undo");
+            break;
+        }
+        case Surge::Skin::Connector::NonParameterConnection::ACTION_REDO:
+        {
+            actionRedo = layoutComponentForSkin(skinCtrl, tag_action_redo);
+            setAccessibilityInformationByTitleAndAction(actionRedo->asJuceComponent(), "Redo",
+                                                        "Redo");
+            break;
+        }
         case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_store);
@@ -2176,7 +2211,38 @@ void SurgeGUIEditor::setParamFromUndo(int paramId, pdata val)
 
 void SurgeGUIEditor::setStepSequencerFromUndo(int scene, int lfoid, const StepSequencerStorage &val)
 {
+    if (scene != current_scene || lfoid != modsource - ms_lfo1)
+    {
+        changeSelectedScene(scene);
+        modsource = (modsources)(lfoid + ms_lfo1);
+        modsource_index = 0;
+        modsource_editor[scene] = modsource;
+        refresh_mod();
+    }
     synth->storage.getPatch().stepsequences[scene][lfoid] = val;
+    synth->refresh_editor = true;
+}
+
+void SurgeGUIEditor::setLFONameFromUndo(int scene, int lfoid, int index, const std::string &n)
+{
+    strxcpy(synth->storage.getPatch().LFOBankLabel[scene][lfoid][index], n.c_str(),
+            CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+    synth->refresh_editor = true;
+}
+void SurgeGUIEditor::setMacroNameFromUndo(int ccid, const std::string &n)
+{
+    strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid], n.c_str(),
+            CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+    synth->refresh_editor = true;
+}
+
+void SurgeGUIEditor::setMacroValueFromUndo(int ccid, float val)
+{
+    ((ControllerModulationSource *)synth->storage.getPatch()
+         .scene[current_scene]
+         .modsources[ccid + ms_ctrl1])
+        ->set_target01(val, false);
+    synth->getParent()->surgeMacroUpdated(ccid, val);
     synth->refresh_editor = true;
 }
 
@@ -4812,6 +4878,8 @@ void SurgeGUIEditor::openMacroRenameDialog(const int ccid, const juce::Point<int
                 useS = "-";
             }
 
+            undoManager()->pushMacroRename(ccid,
+                                           synth->storage.getPatch().CustomControllerLabel[ccid]);
             strxcpy(synth->storage.getPatch().CustomControllerLabel[ccid], useS.c_str(),
                     CUSTOM_CONTROLLER_LABEL_SIZE - 1);
             synth->storage.getPatch()
@@ -4841,6 +4909,7 @@ void SurgeGUIEditor::openLFORenameDialog(const int lfo_id, const juce::Point<int
 
     auto callback = [this, lfo_id, msi](const std::string &nv) {
         auto cp = synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi];
+        undoManager()->pushLFORename(current_scene, lfo_id, msi, cp);
         strxcpy(cp, nv.c_str(), CUSTOM_CONTROLLER_LABEL_SIZE);
         synth->storage.getPatch().isDirty = true;
         synth->refresh_editor = true;
@@ -5227,6 +5296,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 case tag_status_tune:
                     addAndMakeVisibleWithTracking(frame->getSynthControlsLayer(), *hsw);
                     tuneStatus = hsw.get();
+                    break;
+                case tag_action_undo:
+                    addAndMakeVisibleWithTracking(frame->getSynthControlsLayer(), *hsw);
+                    undoButton = hsw.get();
+                    break;
+                case tag_action_redo:
+                    addAndMakeVisibleWithTracking(frame->getSynthControlsLayer(), *hsw);
+                    redoButton = hsw.get();
                     break;
                 case tag_mseg_edit:
                     addAndMakeVisibleWithTrackingInCG(cg_LFO, *hsw);
@@ -5853,6 +5930,11 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 {
     if (prior != curr)
     {
+        auto lfoid = modsource - ms_lfo1;
+        auto id = synth->storage.getPatch().scene[current_scene].lfo[lfoid].shape.id;
+        auto pd = pdata();
+        pd.i = prior;
+        undoManager()->pushParameterChange(id, pd);
         synth->storage.getPatch().isDirty = true;
     }
 

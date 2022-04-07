@@ -322,6 +322,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             clearButton = std::make_unique<ModListIconButton>(1, [this]() {
                 auto me = contents->editor;
                 ModulationEditor::SelfModulationGuard g(me);
+                contents->editor->ed->pushModulationToUndoRedo(
+                    datum.destination_id + datum.idBase, (modsources)datum.source_id,
+                    datum.source_scene, datum.source_index, Surge::GUI::UndoManager::UNDO);
                 me->synth->clearModulation(datum.destination_id + datum.idBase,
                                            (modsources)datum.source_id, datum.source_scene,
                                            datum.source_index);
@@ -342,6 +345,10 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             muteButton = std::make_unique<ModListIconButton>(2, [this]() {
                 auto me = contents->editor;
                 ModulationEditor::SelfModulationGuard g(me);
+                contents->editor->ed->pushModulationToUndoRedo(
+                    datum.destination_id + datum.idBase, (modsources)datum.source_id,
+                    datum.source_scene, datum.source_index, Surge::GUI::UndoManager::UNDO);
+
                 me->synth->muteModulation(datum.destination_id + datum.idBase,
                                           (modsources)datum.source_id, datum.source_scene,
                                           datum.source_index, !muted);
@@ -577,6 +584,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
                 auto p = synth->storage.getPatch().param_ptr[datum.destination_id + datum.idBase];
 
+                contents->editor->ed->pushModulationToUndoRedo(
+                    p->id, (modsources)datum.source_id, datum.source_scene, datum.source_index,
+                    Surge::GUI::UndoManager::UNDO);
                 synth->setModulation(datum.destination_id + datum.idBase,
                                      (modsources)datum.source_id, datum.source_scene,
                                      datum.source_index, nm01);
@@ -1477,6 +1487,8 @@ void ModulationSideControls::showAddTargetMenu()
 void ModulationSideControls::doAdd()
 {
     auto synth = editor->synth;
+    editor->ed->pushModulationToUndoRedo(dest_id, add_ms, add_ms_sc, add_ms_idx,
+                                         Surge::GUI::UndoManager::UNDO);
     synth->setModulation(dest_id, add_ms, add_ms_sc, add_ms_idx, 0.01);
     addSourceW->setLabels({"Select Source"});
     addTargetW->setLabels({"Select Target"});

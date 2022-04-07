@@ -93,6 +93,8 @@ void SurgeImageStore::setupBuiltinBitmaps()
     addEntry(IDB_FAVORITE_BUTTON);
     addEntry(IDB_SEARCH_BUTTON);
     addEntry(IDB_FAVORITE_MENU_ICON);
+    addEntry(IDB_UNDO_BUTTON);
+    addEntry(IDB_REDO_BUTTON);
 
     // == SVG == Do not remove this comment - it indicates the start of the automated SVG adding
     // block

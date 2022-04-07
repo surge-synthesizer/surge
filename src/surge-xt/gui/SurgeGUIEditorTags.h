@@ -37,6 +37,8 @@ enum SurgeGUIEditorTags
     tag_status_mpe,
     tag_status_zoom,
     tag_status_tune,
+    tag_action_undo,
+    tag_action_redo,
 
     tag_mseg_edit,
     tag_lfo_menu,

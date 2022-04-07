@@ -49,8 +49,16 @@ struct UndoManager
     void pushOscillator(int scene, int oscnum);
     void pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue);
     void pushFX(int fxslot);
+
+    void pushMacroRename(int macro, const std::string &oldName);
+    void pushLFORename(int scene, int lfoid, int index, const std::string &oldName);
+
     bool undo();
     bool redo();
+
+    bool canUndo();
+    bool canRedo();
+
     void dumpStack();
 };
 } // namespace GUI
