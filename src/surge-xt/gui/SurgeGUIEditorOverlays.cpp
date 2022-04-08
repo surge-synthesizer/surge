@@ -21,6 +21,7 @@
 #include "overlays/LuaEditors.h"
 #include "overlays/TuningOverlays.h"
 #include "overlays/WaveShaperAnalysis.h"
+#include "overlays/FilterAnalysis.h"
 #include "overlays/OverlayWrapper.h"
 #include "overlays/KeyBindingsOverlay.h"
 #include "widgets/MainFrame.h"
@@ -326,6 +327,43 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         pt->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
         pt->defaultLocation = dl;
         pt->setCanMoveAround(std::make_pair(true, Surge::Storage::WSAnalysisOverlayLocation));
+
+        return pt;
+    }
+    break;
+
+    case FILTER_ANALYZER:
+    {
+        auto pt = std::make_unique<Surge::Overlays::FilterAnalysis>(this, &(this->synth->storage));
+        pt->setSkin(currentSkin, bitmapStore);
+
+        auto npc = Surge::Skin::Connector::NonParameterConnection::ANALYZE_FILTERS;
+        auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
+        auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+        auto b = skinCtrl->getRect();
+
+        auto w = 300;
+        auto h = 200;
+
+        auto c = b.getCentreX() - w / 2;
+        auto p = juce::Rectangle<int>(0, 0, w, h).withX(c).withY(b.getBottom() + 54);
+
+        auto dl = p.getTopLeft();
+
+        int sentinel = -1000004;
+        auto ploc = Surge::Storage::getUserDefaultValue(
+            &(synth->storage), Surge::Storage::FilterAnalysisOverlayLocation,
+            std::make_pair(sentinel, sentinel));
+        if (ploc.first != sentinel && ploc.second != sentinel)
+        {
+            p = juce::Rectangle<int>(ploc.first, ploc.second, w, h);
+        }
+
+        pt->setEnclosingParentPosition(p);
+        pt->setEnclosingParentTitle("Filter Analysis");
+        pt->defaultLocation = dl;
+        pt->setCanMoveAround(std::make_pair(true, Surge::Storage::FilterAnalysisOverlayLocation));
+        pt->setCanTearOut({true, Surge::Storage::FilterAnalysisOverlayTearOut});
 
         return pt;
     }
@@ -700,6 +738,13 @@ bool SurgeGUIEditor::updateOverlayContentIfPresent(OverlayTags tag)
     case WAVESHAPER_ANALYZER:
     {
         updateWaveshaperOverlay();
+        break;
+    }
+    case FILTER_ANALYZER:
+    {
+        auto f = getOverlayIfOpen(tag);
+        if (f)
+            f->repaint();
         break;
     }
     default:

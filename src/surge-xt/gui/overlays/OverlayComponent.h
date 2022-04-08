@@ -42,6 +42,7 @@ struct OverlayComponent : juce::Component
     void setHasIndependentClose(bool b) { hasIndependentClose = b; }
     bool getHasIndependentClose() { return hasIndependentClose; }
     virtual bool shouldRepaintOnParamChange(const SurgePatch &, Parameter *p) { return true; }
+    virtual void forceDataRefresh() {}
 
     /*
      * This is called when a parent wrapper finally decides to show me, which will

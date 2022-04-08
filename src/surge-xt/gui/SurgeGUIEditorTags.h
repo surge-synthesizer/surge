@@ -28,6 +28,7 @@ enum SurgeGUIEditorTags
     tag_mp_patch,
     tag_mp_jogwaveshape,
     tag_analyzewaveshape,
+    tag_analyzefilters,
     tag_store,
     tag_mod_source0,
     tag_mod_source_end = tag_mod_source0 + n_modsources,

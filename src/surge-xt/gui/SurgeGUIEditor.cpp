@@ -1514,6 +1514,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                         "Open");
             break;
         }
+        case Surge::Skin::Connector::NonParameterConnection::ANALYZE_FILTERS:
+        {
+            auto q = layoutComponentForSkin(skinCtrl, tag_analyzefilters);
+            q->setValue(isAnyOverlayPresent(FILTER_ANALYZER) ? 1 : 0);
+            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze Filters",
+                                                        "Open");
+            break;
+        }
         case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
@@ -5314,6 +5322,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                     lfoMenuButton = hsw.get();
                     break;
                 case tag_analyzewaveshape:
+                case tag_analyzefilters:
                     addAndMakeVisibleWithTrackingInCG(cg_FILTER, *hsw);
                     break;
 

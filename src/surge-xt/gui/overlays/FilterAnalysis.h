@@ -13,8 +13,8 @@
 ** open source in September 2018.
 */
 
-#ifndef SURGE_XT_WAVESHAPERANALYSIS_H
-#define SURGE_XT_WAVESHAPERANALYSIS_H
+#ifndef SURGE_XT_FilterAnalysis_H
+#define SURGE_XT_FilterAnalysis_H
 
 #include "OverlayComponent.h"
 #include "SkinSupport.h"
@@ -30,31 +30,30 @@ namespace Surge
 {
 namespace Overlays
 {
-struct WaveShaperAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingComponent
+struct FilterAnalysisEvaluator;
+
+struct FilterAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingComponent
 {
     SurgeGUIEditor *editor{nullptr};
     SurgeStorage *storage{nullptr};
-    WaveShaperAnalysis(SurgeGUIEditor *e, SurgeStorage *s);
+    FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s);
+    ~FilterAnalysis();
     void paint(juce::Graphics &g) override;
     void onSkinChanged() override;
     void resized() override;
+    void repushData();
+    void forceDataRefresh() override { repushData(); }
 
-    void recalcFromSlider();
+    int whichFilter{0};
+    void selectFilter(int which);
 
-    void setWSType(int wst);
-    int wstype{0};
-
+    std::unique_ptr<Surge::Widgets::SelfDrawToggleButton> f1Button, f2Button;
+    std::unique_ptr<FilterAnalysisEvaluator> evaluator;
     bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override;
-
-    float getDbValue();
-    float lastDbValue{-100};
-
-    static constexpr int npts = 256;
-
-    typedef std::vector<std::pair<float, float>> curve_t;
-    curve_t sliderDrivenCurve;
+    uint64_t catchUpStore{0};
+    juce::Path plotPath;
 };
 } // namespace Overlays
 } // namespace Surge
 
-#endif // SURGE_XT_WAVESHAPERANALYSIS_H
+#endif // SURGE_XT_FilterAnalysis_H
