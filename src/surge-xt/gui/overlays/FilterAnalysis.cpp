@@ -150,12 +150,12 @@ void FilterAnalysis::paint(juce::Graphics &g)
     static constexpr auto dbMin = -33.0f;
     static constexpr auto dbMax = 9.0f;
     constexpr auto dbRange = dbMax - dbMin;
-    auto freqToX = [](float freq, int width) {
+    auto freqToX = [&](float freq, int width) {
         auto xNorm = std::log(freq / lowFreq) / std::log(highFreq / lowFreq);
         return xNorm * (float)width;
     };
 
-    auto dbToY = [](float db, int height) { return (float)height * (dbMax - db) / dbRange; };
+    auto dbToY = [&](float db, int height) { return (float)height * (dbMax - db) / dbRange; };
 
     char nm[256], snm[256];
     fs.type.get_display(nm);
