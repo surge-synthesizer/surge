@@ -80,6 +80,8 @@ enum DefaultKey
     MSEGOverlayLocation,
     FormulaOverlayLocation,
     WSAnalysisOverlayLocation,
+    FilterAnalysisOverlayLocation,
+    FilterAnalysisOverlayTearOut,
 
     TuningOverlayLocationTearOut,
     ModlistOverlayLocationTearOut,

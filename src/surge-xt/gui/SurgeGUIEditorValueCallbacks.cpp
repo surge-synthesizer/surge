@@ -1507,6 +1507,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     {
                                         updateWaveshaperOverlay();
                                     }
+                                    if (p->ctrlgroup == cg_FILTER)
+                                    {
+                                        if (auto fo = getOverlayIfOpenAs<
+                                                Surge::Overlays::OverlayComponent>(FILTER_ANALYZER))
+                                        {
+                                            fo->forceDataRefresh();
+                                            fo->repaint();
+                                        }
+                                    }
                                     broadcastPluginAutomationChangeFor(p);
                                     synth->refresh_editor = true;
                                 });
@@ -2935,6 +2944,12 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         if (bvf)
             bvf->repaint();
         synth->switch_toggled_queued = true;
+
+        if (auto fo = getOverlayIfOpenAs<Surge::Overlays::OverlayComponent>(FILTER_ANALYZER))
+        {
+            fo->forceDataRefresh();
+            fo->repaint();
+        }
         return;
     }
 
@@ -3000,6 +3015,14 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             else
                 closeOverlay(WAVESHAPER_ANALYZER);
         }
+    }
+    break;
+    case tag_analyzefilters:
+    {
+        if (control->getValue() > 0.5f)
+            showOverlay(FILTER_ANALYZER);
+        else
+            closeOverlay(FILTER_ANALYZER);
     }
     break;
     case tag_mp_jogfx:

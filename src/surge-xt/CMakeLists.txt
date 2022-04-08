@@ -100,6 +100,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/AboutScreen.h
   gui/overlays/CoveringMessageOverlay.cpp
   gui/overlays/CoveringMessageOverlay.h
+  gui/overlays/FilterAnalysis.cpp
+  gui/overlays/FilterAnalysis.h
   gui/overlays/KeyBindingsOverlay.h
   gui/overlays/KeyBindingsOverlay.cpp
   gui/overlays/LuaEditors.cpp
@@ -201,6 +203,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   juce::juce_audio_processors
   juce::juce_audio_plugin_client
   surge-xt-binary
+  sst-filters-extras
   )
 
 target_include_directories(${PROJECT_NAME}

@@ -166,6 +166,12 @@ std::string defaultKeyToString(DefaultKey k)
     case WSAnalysisOverlayLocation:
         r = "wsAnalysisOverlayLocation";
         break;
+    case FilterAnalysisOverlayLocation:
+        r = "filterAnalysisOverlayLocation";
+        break;
+    case FilterAnalysisOverlayTearOut:
+        r = "filterAnalysisOverlayTearOut";
+        break;
     case TuningOverlayLocationTearOut:
         r = "tuningOverlayLocationTearOut";
         break;
