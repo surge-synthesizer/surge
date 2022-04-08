@@ -658,8 +658,25 @@ void SurgeGUIEditor::refreshAndMorphOverlayWithOpenClose(OverlayTags tag, Overla
     /*
      * Some editors can do better than a forced open-clsoe
      */
+    auto couldRefresh = updateOverlayContentIfPresent(newTag);
+    if (!couldRefresh)
+    {
+        closeOverlay(tag);
+        showOverlay(newTag);
+        if (to)
+        {
+            olw = getOverlayWrapperIfOpen(newTag);
+            if (olw)
+                olw->doTearOut(tol);
+        }
+    }
+}
+
+bool SurgeGUIEditor::updateOverlayContentIfPresent(OverlayTags tag)
+{
+    auto olw = getOverlayWrapperIfOpen(tag);
     bool couldRefresh = true;
-    switch (newTag)
+    switch (tag)
     {
     case TUNING_EDITOR:
     {
@@ -689,16 +706,5 @@ void SurgeGUIEditor::refreshAndMorphOverlayWithOpenClose(OverlayTags tag, Overla
         couldRefresh = false;
         break;
     }
-
-    if (!couldRefresh)
-    {
-        closeOverlay(tag);
-        showOverlay(newTag);
-        if (to)
-        {
-            olw = getOverlayWrapperIfOpen(newTag);
-            if (olw)
-                olw->doTearOut(tol);
-        }
-    }
+    return couldRefresh;
 }

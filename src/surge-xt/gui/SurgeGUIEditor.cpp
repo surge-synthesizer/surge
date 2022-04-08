@@ -1910,6 +1910,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             addAndMakeVisibleWithTracking(frame.get(), *(el.second));
         }
+        updateOverlayContentIfPresent(el.first);
     }
 
     if (showMSEGEditorOnNextIdleOrOpen)
