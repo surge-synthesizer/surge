@@ -189,6 +189,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
 #if HAS_CLAP_JUCE_EXTENSIONS
                             public clap_juce_extensions::clap_properties,
+                            public clap_juce_extensions::clap_extensions,
 #endif
 
                             public SurgeSynthesizer::PluginLayer,
@@ -275,6 +276,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
 #if SURGE_JUCE_VST3_EXTENSIONS
     bool getPluginHasMainInput() const override { return false; }
+#endif
+
+#if HAS_CLAP_JUCE_EXTENSIONS
+    bool isInputMain(int index) override { return false; }
 #endif
 
   private:
