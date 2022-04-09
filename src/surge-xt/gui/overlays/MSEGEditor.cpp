@@ -1530,6 +1530,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     void mouseDown(const juce::MouseEvent &e) override
     {
+        prepareForUndo();
         mouseDownInitiation =
             (getDrawArea().contains(e.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
                                                         : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
@@ -1794,6 +1795,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     void mouseUp(const juce::MouseEvent &e) override
     {
+        pushToUndoIfDirty();
         auto where = e.position.toInt();
 
         mouseDownInitiation = NOT_MOUSE_DOWN;
@@ -2348,6 +2350,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 contextMenu.addItem(Surge::GUI::toOSCase("Set Loop Start"), [this, tts]() {
                     Surge::MSEG::setLoopStart(ms, tts);
+                    pushToUndo();
                     modelChanged();
                 });
             }
@@ -2374,6 +2377,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     }
 
                     Surge::MSEG::setLoopEnd(ms, target);
+                    pushToUndo();
                     modelChanged();
                 });
             }
@@ -2390,11 +2394,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addItem("Split", [this, t, v]() {
                 Surge::MSEG::splitSegment(this->ms, t, v);
+                pushToUndo();
                 modelChanged();
             });
 
             actionsMenu.addItem("Delete", (ms->n_activeSegments > 1), false, [this, t]() {
                 Surge::MSEG::deleteSegment(this->ms, t);
+                pushToUndo();
                 modelChanged();
             });
 
@@ -2402,12 +2408,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Double Duration"), [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 2.0, longestMSEG);
+                pushToUndo();
                 modelChanged();
                 zoomToFull();
             });
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Half Duration"), [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 0.5, longestMSEG);
+                pushToUndo();
                 modelChanged();
                 zoomToFull();
             });
@@ -2416,11 +2424,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Flip Vertically"), [this]() {
                 Surge::MSEG::scaleValues(this->ms, -1);
+                pushToUndo();
                 modelChanged();
             });
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Flip Horizontally"), [this]() {
                 Surge::MSEG::mirrorMSEG(this->ms);
+                pushToUndo();
                 modelChanged();
             });
 
@@ -2429,18 +2439,21 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Snap Divisions"),
                                 (ms->editMode != MSEGStorage::LFO), false, [this]() {
                                     Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
+                                    pushToUndo();
                                     modelChanged();
                                 });
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Whole Units"),
                                 (ms->editMode != MSEGStorage::LFO), false, [this]() {
                                     Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
+                                    pushToUndo();
                                     modelChanged();
                                 });
 
             actionsMenu.addItem(Surge::GUI::toOSCase("Distribute Nodes Evenly"), [this]() {
                 Surge::MSEG::setAllDurationsTo(this->ms,
                                                ms->totalDuration / this->ms->n_activeSegments);
+                pushToUndo();
                 modelChanged();
             });
 
@@ -2453,6 +2466,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 this->zoomToFull();
                 if (controlregion)
                     controlregion->rebuild();
+                pushToUndo();
                 modelChanged();
             });
 
@@ -2463,6 +2477,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 this->zoomToFull();
                 if (controlregion)
                     controlregion->rebuild();
+                pushToUndo();
                 modelChanged();
             });
 
@@ -2471,6 +2486,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 this->zoomToFull();
                 if (controlregion)
                     controlregion->rebuild();
+                pushToUndo();
                 modelChanged();
             });
 
@@ -2486,6 +2502,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                        this->zoomToFull();
                                        if (controlregion)
                                            controlregion->rebuild();
+                                       pushToUndo();
                                        modelChanged();
                                    });
             }
@@ -2500,6 +2517,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                        this->zoomToFull();
                                        if (controlregion)
                                            controlregion->rebuild();
+                                       pushToUndo();
                                        modelChanged();
                                    });
             }
@@ -2517,6 +2535,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                            this->zoomToFull();
                                            if (controlregion)
                                                controlregion->rebuild();
+                                           pushToUndo();
                                            modelChanged();
                                        });
                 }
@@ -2532,6 +2551,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                     (ms->segments[tts].retriggerFEG), [this, tts]() {
                                         this->ms->segments[tts].retriggerFEG =
                                             !this->ms->segments[tts].retriggerFEG;
+                                        pushToUndo();
                                         modelChanged();
                                     });
 
@@ -2539,6 +2559,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                     (ms->segments[tts].retriggerAEG), [this, tts]() {
                                         this->ms->segments[tts].retriggerAEG =
                                             !this->ms->segments[tts].retriggerAEG;
+                                        pushToUndo();
                                         modelChanged();
                                     });
 
@@ -2547,12 +2568,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 triggerMenu.addItem(Surge::GUI::toOSCase("Nothing"), [this, tts]() {
                     this->ms->segments[tts].retriggerFEG = false;
                     this->ms->segments[tts].retriggerAEG = false;
+                    pushToUndo();
                     modelChanged();
                 });
 
                 triggerMenu.addItem(Surge::GUI::toOSCase("All"), [this, tts]() {
                     this->ms->segments[tts].retriggerFEG = true;
                     this->ms->segments[tts].retriggerAEG = true;
+                    pushToUndo();
                     modelChanged();
                 });
 
@@ -2564,6 +2587,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             settingsMenu.addItem(
                 Surge::GUI::toOSCase("Link Start and End Nodes"), true,
                 (ms->endpointMode == MSEGStorage::EndpointMode::LOCKED), [this]() {
+                    pushToUndo();
                     if (this->ms->endpointMode == MSEGStorage::EndpointMode::LOCKED)
                     {
                         this->ms->endpointMode = MSEGStorage::EndpointMode::FREE;
@@ -2582,6 +2606,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                  ms->segments[tts].useDeform, [this, tts]() {
                                      this->ms->segments[tts].useDeform =
                                          !this->ms->segments[tts].useDeform;
+                                     pushToUndo();
                                      modelChanged();
                                  });
 
@@ -2589,6 +2614,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                  ms->segments[tts].invertDeform, [this, tts]() {
                                      this->ms->segments[tts].invertDeform =
                                          !this->ms->segments[tts].invertDeform;
+                                     pushToUndo();
                                      modelChanged();
                                  });
 
@@ -2612,6 +2638,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                 this->ms->segments[h.associatedSegment].type = type;
                             }
                         }
+                        pushToUndo();
                         modelChanged();
                     });
             };
@@ -2653,8 +2680,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             recalcHotZones(mouseDownOrigin); // FIXME
 
         if (shouldDirty)
+        {
             storage->getPatch().isDirty = true;
+            tagForUndo();
+        }
         onModelChanged();
+        repaint();
     }
 
     static constexpr int longestMSEG = 128;
@@ -2765,6 +2796,28 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     SurgeGUIEditor *sge;
 
     SurgeImage *handleDrawable{nullptr};
+
+    bool shouldPostUndo{false};
+    MSEGStorage pushThisToUndoStorage;
+    void prepareForUndo()
+    {
+        pushThisToUndoStorage = *(this->ms);
+        shouldPostUndo = false;
+    }
+    void tagForUndo() { shouldPostUndo = true; }
+    void pushToUndo()
+    {
+        shouldPostUndo = false;
+        sge->undoManager()->pushMSEG(sge->getCurrentScene(), sge->getCurrentLFOIDInEditor(),
+                                     pushThisToUndoStorage);
+    }
+    void pushToUndoIfDirty()
+    {
+        if (shouldPostUndo)
+        {
+            pushToUndo();
+        }
+    }
 };
 
 void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
@@ -2776,6 +2829,8 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
     {
     case tag_edit_mode:
     {
+        canvas->prepareForUndo();
+        canvas->pushToUndo();
         int m = val > 0.5 ? 1 : 0;
         auto editMode = (MSEGStorage::EditMode)m;
         Surge::MSEG::modifyEditMode(this->ms, editMode);
@@ -2795,6 +2850,8 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
     }
     case tag_loop_mode:
     {
+        canvas->prepareForUndo();
+        canvas->pushToUndo();
         int m = floor((val * 2) + 0.1) + 1;
         ms->loopMode = (MSEGStorage::LoopMode)m;
         if (canvas)

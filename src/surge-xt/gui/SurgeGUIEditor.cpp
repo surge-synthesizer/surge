@@ -2159,13 +2159,14 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
             auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
             if (mci)
             {
-                undoManager()->pushModulationChange(ptag, modsource, current_scene, modsource_index,
-                                                    mci->modValue);
+                undoManager()->pushModulationChange(
+                    ptag, modsource, current_scene, modsource_index, mci->modValue,
+                    synth->isModulationMuted(ptag, modsource, current_scene, modsource_index));
             }
         }
         else
         {
-            undoManager()->pushParameterChange(ptag,
+            undoManager()->pushParameterChange(ptag, synth->storage.getPatch().param_ptr[ptag],
                                                synth->storage.getPatch().param_ptr[ptag]->val);
         }
         juceEditor->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
@@ -2212,7 +2213,21 @@ void SurgeGUIEditor::setParamFromUndo(int paramId, pdata val)
     auto p = synth->storage.getPatch().param_ptr[paramId];
     auto id = synth->idForParameter(p);
     juceEditor->beginParameterEdit(p);
-    p->val = val;
+    switch (p->valtype)
+    {
+    case vt_float:
+    {
+        auto fval = p->value_to_normalized(val.f);
+        synth->setParameter01(id, fval);
+        break;
+    }
+    case vt_int:
+        synth->setParameter01(id, (val.i - p->val_min.i) * 1.f / (p->val_max.i - p->val_min.i));
+        break;
+    case vt_bool:
+        synth->setParameter01(id, val.b ? 1.f : 0.f);
+        break;
+    }
     synth->sendParameterAutomation(id, synth->getParameter01(id));
     juceEditor->endParameterEdit(p);
     synth->refresh_editor = true;
@@ -2230,6 +2245,24 @@ void SurgeGUIEditor::setStepSequencerFromUndo(int scene, int lfoid, const StepSe
     }
     synth->storage.getPatch().stepsequences[scene][lfoid] = val;
     synth->refresh_editor = true;
+}
+
+void SurgeGUIEditor::setMSEGFromUndo(int scene, int lfoid, const MSEGStorage &val)
+{
+    if (scene != current_scene || lfoid != modsource - ms_lfo1)
+    {
+        changeSelectedScene(scene);
+        modsource = (modsources)(lfoid + ms_lfo1);
+        modsource_index = 0;
+        modsource_editor[scene] = modsource;
+        refresh_mod();
+    }
+    synth->storage.getPatch().msegs[scene][lfoid] = val;
+    synth->refresh_editor = true;
+    if (auto ol = getOverlayIfOpenAs<Surge::Overlays::MSEGEditor>(MSEG_EDITOR))
+    {
+        ol->forceRefresh();
+    }
 }
 
 void SurgeGUIEditor::setLFONameFromUndo(int scene, int lfoid, int index, const std::string &n)
@@ -2259,23 +2292,25 @@ void SurgeGUIEditor::pushParamToUndoRedo(int paramId, Surge::GUI::UndoManager::T
 {
     auto p = synth->storage.getPatch().param_ptr[paramId];
     auto id = synth->idForParameter(p);
-    undoManager()->pushParameterChange(paramId, p->val, which);
+    undoManager()->pushParameterChange(paramId, p, p->val, which);
 }
 
 void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene, int idx,
-                                           float val)
+                                           float val, bool muted)
 {
     auto p = synth->storage.getPatch().param_ptr[paramId];
     // FIXME scene and index
     synth->setModulation(p->id, ms, scene, idx, val);
+    synth->muteModulation(p->id, ms, scene, idx, muted);
     synth->refresh_editor = true;
 }
 
 void SurgeGUIEditor::pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,
                                               Surge::GUI::UndoManager::Target which)
 {
-    undoManager()->pushModulationChange(paramId, ms, scene, idx,
-                                        synth->getModulation(paramId, ms, scene, idx), which);
+    undoManager()->pushModulationChange(
+        paramId, ms, scene, idx, synth->getModulation(paramId, ms, scene, idx),
+        synth->isModulationMuted(paramId, modsource, current_scene, modsource_index), which);
 }
 //------------------------------------------------------------------------------------------------
 
@@ -5944,7 +5979,8 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         auto id = synth->storage.getPatch().scene[current_scene].lfo[lfoid].shape.id;
         auto pd = pdata();
         pd.i = prior;
-        undoManager()->pushParameterChange(id, pd);
+        undoManager()->pushParameterChange(
+            id, &(synth->storage.getPatch().scene[current_scene].lfo[lfoid].shape), pd);
         synth->storage.getPatch().isDirty = true;
     }
 

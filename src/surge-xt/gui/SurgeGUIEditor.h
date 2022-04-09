@@ -212,6 +212,13 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     // adjust
     int current_scene = 0, current_osc[n_scenes] = {0, 0}, current_fx = 0;
 
+    int getCurrentScene() { return current_scene; }
+    int getCurrentLFOIDInEditor()
+    {
+        auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
+        return lfo_id;
+    }
+
     /*
      * This is the hack to deal with the send return stacking
      */
@@ -479,10 +486,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     const std::unique_ptr<Surge::GUI::UndoManager> &undoManager();
     void setParamFromUndo(int paramId, pdata val);
     void pushParamToUndoRedo(int paramId, Surge::GUI::UndoManager::Target which);
-    void setModulationFromUndo(int paramId, modsources ms, int scene, int idx, float val);
+    void setModulationFromUndo(int paramId, modsources ms, int scene, int idx, float val,
+                               bool muted);
     void pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,
                                   Surge::GUI::UndoManager::Target which);
     void setStepSequencerFromUndo(int scene, int lfoid, const StepSequencerStorage &val);
+    void setMSEGFromUndo(int scene, int lfoid, const MSEGStorage &val);
     void setLFONameFromUndo(int scene, int lfoid, int index, const std::string &n);
     void setMacroNameFromUndo(int ccid, const std::string &n);
     void setMacroValueFromUndo(int ccid, float val);

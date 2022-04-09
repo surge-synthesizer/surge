@@ -44,6 +44,7 @@ struct UndoManagerImpl
         float val;
         int scene;
         int index;
+        bool muted;
         modsources ms;
     };
     struct UndoOscillator
@@ -65,6 +66,12 @@ struct UndoManagerImpl
         int lfoid;
         StepSequencerStorage storageCopy;
     };
+    struct UndoMSEG
+    {
+        int scene;
+        int lfoid;
+        MSEGStorage storageCopy;
+    };
     struct UndoRename
     {
         bool isMacro;
@@ -81,8 +88,8 @@ struct UndoManagerImpl
 
     // If you add a new type here add it both to aboutTheSameThing, toString, and
     // to undo.
-    typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep, UndoRename,
-                         UndoMacro>
+    typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep, UndoMSEG,
+                         UndoRename, UndoMacro>
         UndoAction;
     struct UndoRecord
     {
@@ -114,6 +121,11 @@ struct UndoManagerImpl
             auto pb = std::get_if<UndoStep>(&b);
             return (pa->lfoid == pb->lfoid) && (pa->scene == pb->scene);
         }
+        if (auto pa = std::get_if<UndoMSEG>(&a))
+        {
+            auto pb = std::get_if<UndoMSEG>(&b);
+            return (pa->lfoid == pb->lfoid) && (pa->scene == pb->scene);
+        }
         if (auto pa = std::get_if<UndoMacro>(&a))
         {
             auto pb = std::get_if<UndoMacro>(&b);
@@ -130,9 +142,9 @@ struct UndoManagerImpl
         }
         if (auto pa = std::get_if<UndoModulation>(&a))
         {
-            return fmt::format("Modulation[id={},source={},scene={},idx={},val={}]", pa->paramId,
-                               editor->modulatorName(pa->ms, false, pa->scene), pa->scene,
-                               pa->index, pa->val);
+            return fmt::format("Modulation[id={},source={},scene={},idx={},val={},muted={}]",
+                               pa->paramId, editor->modulatorName(pa->ms, false, pa->scene),
+                               pa->scene, pa->index, pa->val, pa->muted);
         }
         if (auto pa = std::get_if<UndoOscillator>(&a))
         {
@@ -146,6 +158,10 @@ struct UndoManagerImpl
         if (auto pa = std::get_if<UndoStep>(&a))
         {
             return fmt::format("Step[scene={},lfoid={}]", pa->scene, pa->lfoid);
+        }
+        if (auto pa = std::get_if<UndoMSEG>(&a))
+        {
+            return fmt::format("MSEG[scene={},lfoid={}]", pa->scene, pa->lfoid);
         }
         if (auto pa = std::get_if<UndoMacro>(&a))
         {
@@ -195,7 +211,7 @@ struct UndoManagerImpl
 
     void pushRedo(const UndoAction &r) { redoStack.emplace_back(r); }
 
-    void pushParameterChange(int paramId, pdata val, UndoManager::Target to)
+    void pushParameterChange(int paramId, const Parameter *p, pdata val, UndoManager::Target to)
     {
         auto r = UndoParam();
         r.paramId = paramId;
@@ -206,7 +222,7 @@ struct UndoManagerImpl
             pushRedo(r);
     }
     void pushModulationChange(int paramId, modsources modsource, int sc, int idx, float val,
-                              UndoManager::Target to)
+                              bool muted, UndoManager::Target to)
     {
         auto r = UndoModulation();
         r.paramId = paramId;
@@ -214,6 +230,7 @@ struct UndoManagerImpl
         r.ms = modsource;
         r.scene = sc;
         r.index = idx;
+        r.muted = muted;
 
         if (to == UndoManager::UNDO)
             pushUndo(r);
@@ -274,6 +291,18 @@ struct UndoManagerImpl
             pushRedo(r);
     }
 
+    void pushMSEG(int scene, int lfoid, const MSEGStorage &pushValue,
+                  UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto r = UndoMSEG();
+        r.scene = scene;
+        r.lfoid = lfoid;
+        r.storageCopy = pushValue;
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
     void pushMacroOrLFORename(bool isMacro, const std::string &oldName, int scene, int itemid,
                               int index, UndoManager::Target to = UndoManager::UNDO)
     {
@@ -327,7 +356,7 @@ struct UndoManagerImpl
         if (auto p = std::get_if<UndoModulation>(&q))
         {
             editor->pushModulationToUndoRedo(p->paramId, p->ms, p->scene, p->index, opposite);
-            editor->setModulationFromUndo(p->paramId, p->ms, p->scene, p->index, p->val);
+            editor->setModulationFromUndo(p->paramId, p->ms, p->scene, p->index, p->val, p->muted);
             return true;
         }
         if (auto p = std::get_if<UndoOscillator>(&q))
@@ -374,6 +403,12 @@ struct UndoManagerImpl
             pushStepSequencer(p->scene, p->lfoid,
                               editor->getPatch().stepsequences[p->scene][p->lfoid], opposite);
             editor->setStepSequencerFromUndo(p->scene, p->lfoid, p->storageCopy);
+            return true;
+        }
+        if (auto p = std::get_if<UndoMSEG>(&q))
+        {
+            pushMSEG(p->scene, p->lfoid, editor->getPatch().msegs[p->scene][p->lfoid], opposite);
+            editor->setMSEGFromUndo(p->scene, p->lfoid, p->storageCopy);
             return true;
         }
         if (auto p = std::get_if<UndoRename>(&q))
@@ -433,15 +468,15 @@ UndoManager::UndoManager(SurgeGUIEditor *ed, SurgeSynthesizer *synth)
 
 UndoManager::~UndoManager() = default;
 
-void UndoManager::pushParameterChange(int paramId, pdata val, Target to)
+void UndoManager::pushParameterChange(int paramId, const Parameter *p, pdata val, Target to)
 {
-    impl->pushParameterChange(paramId, val, to);
+    impl->pushParameterChange(paramId, p, val, to);
 }
 
 void UndoManager::pushModulationChange(int paramId, modsources modsource, int scene, int idx,
-                                       float val, Target to)
+                                       float val, bool muted, Target to)
 {
-    impl->pushModulationChange(paramId, modsource, scene, idx, val, to);
+    impl->pushModulationChange(paramId, modsource, scene, idx, val, muted, to);
 }
 
 void UndoManager::pushOscillator(int scene, int oscnum) { impl->pushOscillator(scene, oscnum); }
@@ -459,6 +494,11 @@ void UndoManager::resetEditor(SurgeGUIEditor *ed) { impl->editor = ed; }
 void UndoManager::pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue)
 {
     impl->pushStepSequencer(scene, lfoid, pushValue);
+}
+
+void UndoManager::pushMSEG(int scene, int lfoid, const MSEGStorage &pushValue)
+{
+    impl->pushMSEG(scene, lfoid, pushValue);
 }
 
 void UndoManager::pushMacroRename(int macro, const std::string &oldName)

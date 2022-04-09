@@ -1512,7 +1512,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 addTo->addItem(displaytxt, true, isChecked, [this, p, i, tag]() {
                                     float ef =
                                         Parameter::intScaledToFloat(i, p->val_max.i, p->val_min.i);
-                                    undoManager()->pushParameterChange(p->id, p->val);
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
                                     synth->setParameter01(synth->idForParameter(p), ef, false,
                                                           false);
 
@@ -1552,7 +1552,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             contextMenu.addItem(
                                 displaytxt, true, (i == p->val.i), [this, ef, p, i]() {
-                                    undoManager()->pushParameterChange(p->id, p->val);
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
                                     synth->setParameter01(synth->idForParameter(p), ef, false,
                                                           false);
                                     broadcastPluginAutomationChangeFor(p);
@@ -1634,6 +1634,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     contextMenu.addItem(
                         Surge::GUI::toOSCase("Tempo Sync"), true, (p->temposync),
                         [this, p, control]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
                             p->temposync = !p->temposync;
                             synth->storage.getPatch().isDirty = true;
 
@@ -1809,6 +1810,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             bool isChecked = p->deform_type == i;
 
                             contextMenu.addItem(title, true, isChecked, [this, p, i]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
                                 p->deform_type = i;
                                 synth->storage.getPatch().isDirty = true;
                             });
@@ -1834,20 +1836,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                                 bool isChecked = p->deform_type == i;
 
-                                contextMenu.addItem(Surge::GUI::toOSCase(title), true, isChecked,
-                                                    [this, isChecked, p, i]() {
-                                                        p->deform_type = i;
-                                                        if (!isChecked)
-                                                        {
-                                                            synth->storage.getPatch().isDirty =
-                                                                true;
-                                                        }
+                                contextMenu.addItem(
+                                    Surge::GUI::toOSCase(title), true, isChecked,
+                                    [this, isChecked, p, i]() {
+                                        if (p->deform_type != i)
+                                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                        if (frame)
-                                                        {
-                                                            frame->repaint();
-                                                        }
-                                                    });
+                                        p->deform_type = i;
+                                        if (!isChecked)
+                                        {
+                                            synth->storage.getPatch().isDirty = true;
+                                        }
+
+                                        if (frame)
+                                        {
+                                            frame->repaint();
+                                        }
+                                    });
                             }
                         }
 
@@ -1869,15 +1874,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         {
                             isChecked = ((p->deform_type & 0x0F) == m);
 
-                            contextMenu.addItem(mo_multitype_names[m], true, isChecked,
-                                                [this, isChecked, p, m]() {
-                                                    p->deform_type = (p->deform_type & 0xFFF0) | m;
-                                                    if (!isChecked)
-                                                    {
-                                                        synth->storage.getPatch().isDirty = true;
-                                                    }
-                                                    synth->refresh_editor = true;
-                                                });
+                            contextMenu.addItem(
+                                mo_multitype_names[m], true, isChecked, [this, isChecked, p, m]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                    p->deform_type = (p->deform_type & 0xFFF0) | m;
+                                    if (!isChecked)
+                                    {
+                                        synth->storage.getPatch().isDirty = true;
+                                    }
+                                    synth->refresh_editor = true;
+                                });
                         }
 
                         int subosc = ModernOscillator::mo_submask::mo_subone;
@@ -1896,6 +1903,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 {
                                     usubosc = 0;
                                 }
+
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = (p->deform_type & 0xF) | usubosc | usubskipsync;
 
@@ -1919,6 +1928,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     usubskipsync = 0;
                                 }
 
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
                                 p->deform_type = (p->deform_type & 0xF) | usubosc | usubskipsync;
 
                                 synth->storage.getPatch().isDirty = true;
@@ -1935,6 +1946,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         contextMenu.addItem(Surge::GUI::toOSCase("Ramp Not Masked Above Threshold"),
                                             true, isChecked, [p, this]() {
+                                                undoManager()->pushParameterChange(p->id, p,
+                                                                                   p->val);
+
                                                 p->deform_type = !p->deform_type;
 
                                                 synth->storage.getPatch().isDirty = true;
@@ -1958,6 +1972,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             contextMenu.addItem(Surge::GUI::toOSCase(tapeHysteresisModes[i]), true,
                                                 isChecked, [this, isChecked, p, i]() {
+                                                    if (p->deform_type != i)
+                                                        undoManager()->pushParameterChange(p->id, p,
+                                                                                           p->val);
+
                                                     p->deform_type = i;
                                                     if (!isChecked)
                                                     {
@@ -1984,6 +2002,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             contextMenu.addItem(Surge::GUI::toOSCase(fbClipModes[i]), true,
                                                 isChecked, [this, isChecked, p, i]() {
+                                                    if (p->deform_type != i)
+                                                        undoManager()->pushParameterChange(p->id, p,
+                                                                                           p->val);
+
                                                     p->deform_type = i;
                                                     if (!isChecked)
                                                     {
@@ -2047,12 +2069,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         {
                             bool isChecked = p->extend_range;
 
-                            contextMenu.addItem(Surge::GUI::toOSCase(txt), enable, isChecked,
-                                                [this, p]() {
-                                                    p->set_extend_range(!p->extend_range);
-                                                    synth->storage.getPatch().isDirty = true;
-                                                    synth->refresh_editor = true;
-                                                });
+                            contextMenu.addItem(
+                                Surge::GUI::toOSCase(txt), enable, isChecked, [this, p]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+                                    p->set_extend_range(!p->extend_range);
+                                    synth->storage.getPatch().isDirty = true;
+                                    synth->refresh_editor = true;
+                                });
                         }
                     }
                 }
@@ -2062,6 +2085,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     bool isChecked = p->absolute;
 
                     contextMenu.addItem("Absolute", true, isChecked, [this, p]() {
+                        undoManager()->pushParameterChange(p->id, p, p->val);
+
                         p->absolute = !p->absolute;
                         synth->storage.getPatch().isDirty = true;
 
@@ -2114,6 +2139,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     contextMenu.addSeparator();
 
                     contextMenu.addItem(txt, true, isChecked, [this, q]() {
+                        undoManager()->pushParameterChange(q->id, q, q->val);
+
                         q->deactivated = !q->deactivated;
                         synth->storage.getPatch().isDirty = true;
                         synth->refresh_editor = true;
@@ -2193,6 +2220,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                 break;
                                                 case Surge::Widgets::ModMenuCustomComponent::CLEAR:
                                                 {
+                                                    pushModulationToUndoRedo(
+                                                        ptag, (modsources)ms, sc, modidx,
+                                                        Surge::GUI::UndoManager::UNDO);
                                                     synth->clearModulation(ptag, (modsources)ms, sc,
                                                                            modidx);
                                                     refresh_mod();
@@ -2202,6 +2232,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                 break;
                                                 case Surge::Widgets::ModMenuCustomComponent::MUTE:
                                                 {
+                                                    pushModulationToUndoRedo(
+                                                        ptag, (modsources)ms, sc, modidx,
+                                                        Surge::GUI::UndoManager::UNDO);
                                                     auto is = synth->isModulationMuted(
                                                         ptag, (modsources)ms, sc, modidx);
 
@@ -2498,6 +2531,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     use_scene = current_scene;
                 }
+
+                pushModulationToUndoRedo(ptag, (modsources)thisms, use_scene, modsource_index,
+                                         Surge::GUI::UndoManager::UNDO);
 
                 synth->clearModulation(ptag, thisms, use_scene, modsource_index);
                 auto ctrms = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
