@@ -40,14 +40,10 @@ void MultiSwitch::paint(juce::Graphics &g)
     auto y = -valueToOff(value) * heightOfOneImage;
     auto t = juce::AffineTransform().translated(0, y);
 
-    float activationOpacity = 1.0;
-
-    if (isDeactivated)
-    {
-        activationOpacity = 0.5;
-    }
+    float activationOpacity = isDeactivated ? 0.5 : 1.0;
 
     g.reduceClipRegion(getLocalBounds());
+
     switchD->draw(g, activationOpacity, t);
 
     if (isHovered)

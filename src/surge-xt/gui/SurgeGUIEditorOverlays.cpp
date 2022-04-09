@@ -154,6 +154,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         return pt;
     }
     break;
+
     case MSEG_EDITOR:
     {
         auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
@@ -209,7 +210,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         return mse;
     }
-    break;
+
     case FORMULA_EDITOR:
     {
         auto lfo_id = modsource_editor[current_scene] - ms_lfo1;
@@ -257,9 +258,12 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         return fme;
     }
+
     case SAVE_PATCH:
+    {
         return makeStorePatchDialog();
-        break;
+    }
+
     case TUNING_EDITOR:
     {
         auto te = std::make_unique<Surge::Overlays::TuningOverlay>();
@@ -275,8 +279,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         return te;
     }
-    break;
-    case WAVETABLESCRIPTING_EDITOR:
+
+    case WT_SCRIPTING_EDITOR:
     {
         int w = 800, h = 520;
         auto px = (getWindowSizeX() - w) / 2;
@@ -287,36 +291,34 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         auto pt = std::make_unique<Surge::Overlays::WavetableEquationEditor>(
             this, &(this->synth->storage), os, currentSkin);
+
         pt->setSkin(currentSkin, bitmapStore);
         pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
         pt->setEnclosingParentTitle("Wavetable Script Editor");
+
         return pt;
     }
-    break;
 
     case WAVESHAPER_ANALYZER:
     {
         auto pt =
             std::make_unique<Surge::Overlays::WaveShaperAnalysis>(this, &(this->synth->storage));
+
         pt->setSkin(currentSkin, bitmapStore);
 
         auto npc = Surge::Skin::Connector::NonParameterConnection::ANALYZE_WAVESHAPE;
         auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
         auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
         auto b = skinCtrl->getRect();
-
-        auto w = 300;
-        auto h = 160;
-
+        int w = 300, h = 160;
         auto c = b.getCentreX() - w / 2;
         auto p = juce::Rectangle<int>(0, 0, w, h).withX(c).withY(b.getBottom() + 2);
-
         auto dl = p.getTopLeft();
-
         int sentinel = -1000004;
         auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
                                                         Surge::Storage::WSAnalysisOverlayLocation,
                                                         std::make_pair(sentinel, sentinel));
+
         if (ploc.first != sentinel && ploc.second != sentinel)
         {
             p = juce::Rectangle<int>(ploc.first, ploc.second, w, h);
@@ -330,30 +332,26 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         return pt;
     }
-    break;
 
     case FILTER_ANALYZER:
     {
         auto pt = std::make_unique<Surge::Overlays::FilterAnalysis>(this, &(this->synth->storage));
+
         pt->setSkin(currentSkin, bitmapStore);
 
         auto npc = Surge::Skin::Connector::NonParameterConnection::ANALYZE_FILTERS;
         auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
         auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
         auto b = skinCtrl->getRect();
-
-        auto w = 300;
-        auto h = 200;
-
+        int w = 300, h = 200;
         auto c = b.getCentreX() - w / 2;
         auto p = juce::Rectangle<int>(0, 0, w, h).withX(c).withY(b.getBottom() + 54);
-
         auto dl = p.getTopLeft();
-
         int sentinel = -1000004;
         auto ploc = Surge::Storage::getUserDefaultValue(
             &(synth->storage), Surge::Storage::FilterAnalysisOverlayLocation,
             std::make_pair(sentinel, sentinel));
+
         if (ploc.first != sentinel && ploc.second != sentinel)
         {
             p = juce::Rectangle<int>(ploc.first, ploc.second, w, h);
@@ -367,7 +365,6 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         return pt;
     }
-    break;
 
     case MODULATION_EDITOR:
     {
@@ -380,7 +377,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         return me;
     }
-    break;
+
     case KEYBINDINGS_EDITOR:
     {
         auto kb = std::make_unique<Surge::Overlays::KeyBindingsOverlay>(&(synth->storage), this);
@@ -390,11 +387,20 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         kb->setSkin(currentSkin, bitmapStore);
         kb->setEnclosingParentPosition(posRect);
         kb->setEnclosingParentTitle("Keyboard Shortcut Editor");
+
         return kb;
     }
+
+    // TODO: Implement the action history overlay!
+    case ACTION_HISTORY:
+    {
+        return nullptr;
+    }
+
     default:
         break;
     }
+
     return nullptr;
 }
 void SurgeGUIEditor::showOverlay(OverlayTags olt,

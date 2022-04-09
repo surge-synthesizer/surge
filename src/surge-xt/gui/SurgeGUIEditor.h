@@ -361,11 +361,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         PATCH_BROWSER,
         MODULATION_EDITOR,
         FORMULA_EDITOR,
-        WAVETABLESCRIPTING_EDITOR, // This code is here but incomplete, and off in XT 1.0
+        WT_SCRIPTING_EDITOR, // This code is here but incomplete, and off in XT 1.0
         TUNING_EDITOR,
         WAVESHAPER_ANALYZER,
         FILTER_ANALYZER,
         KEYBINDINGS_EDITOR,
+        ACTION_HISTORY,
 
         n_overlay_tags,
     };
