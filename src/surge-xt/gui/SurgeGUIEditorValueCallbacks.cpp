@@ -453,7 +453,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
     // In these cases just move along with success. RMB does nothing on these switches
     if (tag == tag_mp_jogwaveshape || tag == tag_mp_jogfx || tag == tag_mp_category ||
-        tag == tag_mp_patch || tag == tag_store)
+        tag == tag_mp_patch || tag == tag_store || tag == tag_action_undo || tag == tag_action_redo)
     {
         juce::PopupMenu contextMenu;
         std::string hu;
@@ -477,6 +477,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             hu = helpURLForSpecial("waveshaper");
             txt = "Waveshaper Navigation";
             break;
+        case tag_action_undo:
+        case tag_action_redo:
+            hu = helpURLForSpecial("action-history");
+            txt = "Action History";
+            break;
         case tag_store:
             hu = helpURLForSpecial("save-dialog");
             txt = "Patch Save";
@@ -489,6 +494,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(txt, fullyResolvedHelpURL(hu));
         tcomp->setSkin(currentSkin, bitmapStore);
         contextMenu.addCustomItem(-1, std::move(tcomp));
+
+        if (tag == tag_action_undo || tag == tag_action_redo)
+        {
+            contextMenu.addSeparator();
+
+            // TODO: Open action history overlay!
+            contextMenu.addItem(Surge::GUI::toOSCase("Open Action History..."),
+                                [this]() { toggleOverlay(ACTION_HISTORY); });
+        }
 
         contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                   Surge::GUI::makeEndHoverCallback(control));
@@ -2671,15 +2685,15 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
 
     if (tag == tag_action_undo)
     {
-        control->setValue(0);
         undoManager()->undo();
+        juce::Timer::callAfterDelay(25, [this, control]() { control->setValue(0); });
         return;
     }
 
     if (tag == tag_action_redo)
     {
-        control->setValue(0);
         undoManager()->redo();
+        juce::Timer::callAfterDelay(25, [this, control]() { control->setValue(0); });
         return;
     }
 

@@ -151,11 +151,11 @@ float Cabs::getParameter(VstInt32 index) {
 
 void Cabs::getParameterName(VstInt32 index, char *text) {
     switch (index) {
-        case kParamA: vst_strncpy (text, "CabType", kVstMaxParamStrLen); break;
-		case kParamB: vst_strncpy (text, "Intense", kVstMaxParamStrLen); break;
-		case kParamC: vst_strncpy (text, "Rm Loud", kVstMaxParamStrLen); break;
-		case kParamD: vst_strncpy (text, "CabSize", kVstMaxParamStrLen); break;
-		case kParamE: vst_strncpy (text, "OffAxis", kVstMaxParamStrLen); break;
+        case kParamA: vst_strncpy (text, "Type", kVstMaxParamStrLen); break;
+		case kParamB: vst_strncpy (text, "Tone", kVstMaxParamStrLen); break;
+		case kParamC: vst_strncpy (text, "Room", kVstMaxParamStrLen); break;
+		case kParamD: vst_strncpy (text, "Size", kVstMaxParamStrLen); break;
+		case kParamE: vst_strncpy (text, "Off-Axis", kVstMaxParamStrLen); break;
 		case kParamF: vst_strncpy (text, "Output", kVstMaxParamStrLen); break;
         default: break; // unknown parameter, shouldn't happen!
     } //this is our labels for displaying in the VST host
@@ -164,12 +164,12 @@ void Cabs::getParameterName(VstInt32 index, char *text) {
 void Cabs::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal) {
     switch (index) {
         case kParamA: switch((VstInt32)(EXTV(A) * 5.999 )) //0 to almost edge of # of params
-		{	case 0: vst_strncpy (text, "HPStack", kVstMaxParamStrLen); break;
+		{	case 0: vst_strncpy (text, "Stack", kVstMaxParamStrLen); break;
 			case 1: vst_strncpy (text, "Vintage", kVstMaxParamStrLen); break;
-			case 2: vst_strncpy (text, "Boutiqe", kVstMaxParamStrLen); break;
-			case 3: vst_strncpy (text, "Large C", kVstMaxParamStrLen); break;
-			case 4: vst_strncpy (text, "Small C", kVstMaxParamStrLen); break;
-			case 5: vst_strncpy (text, "BassAmp", kVstMaxParamStrLen); break;
+			case 2: vst_strncpy (text, "Boutique", kVstMaxParamStrLen); break;
+			case 3: vst_strncpy (text, "Large", kVstMaxParamStrLen); break;
+			case 4: vst_strncpy (text, "Small", kVstMaxParamStrLen); break;
+			case 5: vst_strncpy (text, "Bass Amp", kVstMaxParamStrLen); break;
 			default: break; // unknown parameter, shouldn't happen!
 		} break; //E as example 'popup' parameter with four values  */
         case kParamB: float2string (EXTV(B), text, kVstMaxParamStrLen); break;

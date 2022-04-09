@@ -61,6 +61,9 @@ inline std::unordered_map<std::string, int> createIdNameMap()
     res["MODMENU_ICONS"] = 185;
     res["FAVORITE_BUTTON"] = 186;
     res["SEARCH_BUTTON"] = 187;
+    res["FAVICON_MENU"] = 188;
+    res["UNDO_BUTTON"] = 189;
+    res["REDO_BUTTON"] = 190;
     res["MSEG_NODES"] = 301;
     res["MSEG_MOVEMENT_MODE"] = 302;
     res["MSEG_VERTICAL_SNAP"] = 303;
