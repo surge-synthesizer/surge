@@ -499,7 +499,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         {
             contextMenu.addSeparator();
 
-            // TODO: Open action history overlay!
             contextMenu.addItem(Surge::GUI::toOSCase("Open Action History..."),
                                 [this]() { toggleOverlay(ACTION_HISTORY); });
         }
