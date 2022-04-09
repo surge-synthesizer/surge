@@ -137,8 +137,8 @@ void FilterAnalysis::onSkinChanged()
 }
 void FilterAnalysis::resized()
 {
-    f1Button->setBounds(2, 2, 30, 15);
-    f2Button->setBounds(getWidth() - 32, 2, 30, 15);
+    f1Button->setBounds(2, 2, 40, 15);
+    f2Button->setBounds(getWidth() - 42, 2, 40, 15);
 }
 
 void FilterAnalysis::paint(juce::Graphics &g)
@@ -165,7 +165,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
     if (sst::filters::fut_subcount[fs.type.val.i] > 0)
         label = fmt::format("{} ({})", nm, snm);
 
-    g.fillAll(skin->getColor(Colors::Waveshaper::Preview::Background));
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
 
     auto dRect = getLocalBounds().withTrimmedTop(15).reduced(4);
 
@@ -177,13 +177,15 @@ void FilterAnalysis::paint(juce::Graphics &g)
     {
         auto gs = juce::Graphics::ScopedSaveState(g);
 
-        g.setColour(juce::Colour(120, 120, 120));
         g.addTransform(juce::AffineTransform().translated(dRect.getX(), dRect.getY()));
         g.setFont(font);
+
         for (float freq : {100.0f, 1000.0f, 10000.0f})
         {
             const auto xPos = freqToX(freq, width);
             juce::Line line{juce::Point{xPos, 0.0f}, juce::Point{xPos, (float)height}};
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
             g.drawLine(line);
 
             const auto over1000 = freq >= 1000.0f;
@@ -192,6 +194,8 @@ void FilterAnalysis::paint(juce::Graphics &g)
             const auto labelRect = juce::Rectangle{font.getStringWidth(freqString), labelHeight}
                                        .withBottomY(height - 2)
                                        .withRightX((int)xPos);
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Text));
             g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
         }
 
@@ -199,12 +203,16 @@ void FilterAnalysis::paint(juce::Graphics &g)
         {
             const auto yPos = dbToY(db, height);
             juce::Line line{juce::Point{0.0f, yPos}, juce::Point{(float)width, yPos}};
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
             g.drawLine(line);
 
             const auto dbString = juce::String(db) + " dB";
             const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
                                        .withBottomY((int)yPos)
                                        .withRightX(width - 2);
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Text));
             g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
         }
     }
@@ -245,7 +253,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
         }
     }
 
-    g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover));
+    g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
     g.drawRect(dRect);
 
     {
@@ -265,12 +273,12 @@ void FilterAnalysis::paint(juce::Graphics &g)
     {
         auto gs = juce::Graphics::ScopedSaveState(g);
         g.reduceClipRegion(dRect);
-        g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
+        g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
 
         g.strokePath(plotPath, juce::PathStrokeType(2.f, juce::PathStrokeType::JointStyle::curved));
     }
     auto txtr = getLocalBounds().withHeight(15);
-    g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
+    g.setColour(skin->getColor(Colors::MSEGEditor::Text));
     g.setFont(skin->getFont(Fonts::Waveshaper::Preview::Title));
     g.drawText(label, txtr, juce::Justification::centred);
 }
