@@ -1914,6 +1914,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     for (const auto &el : juceOverlays)
     {
+        if (el.second->getPrimaryChildAsOverlayComponent())
+        {
+            el.second->getPrimaryChildAsOverlayComponent()->forceDataRefresh();
+        }
         if (!el.second->isTornOut())
         {
             addAndMakeVisibleWithTracking(frame.get(), *(el.second));

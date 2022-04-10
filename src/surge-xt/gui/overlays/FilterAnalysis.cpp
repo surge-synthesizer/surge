@@ -330,6 +330,8 @@ void FilterAnalysis::resized()
 
     f1Button->setBounds(2, 2, 40, 15);
     f2Button->setBounds(w - 42, 2, 40, 15);
+
+    catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
 }
 
 } // namespace Overlays
