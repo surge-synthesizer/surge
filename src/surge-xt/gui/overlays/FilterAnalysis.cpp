@@ -67,6 +67,7 @@ struct FilterAnalysisEvaluator
                 }
 
                 auto fp = sst::filters::FilterPlotter(15);
+                // auto fp = sst::filters::DirectFilterPlotter();
                 auto data = fp.plotFilterMagnitudeResponse(
                     (sst::filters::FilterType)cty, (sst::filters::FilterSubType)csu, ccu, cre);
 

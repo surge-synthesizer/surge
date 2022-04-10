@@ -22,6 +22,7 @@
 struct SurgeSynthesizer;
 struct SurgeGUIEditor;
 struct StepSequencerStorage;
+struct MSEGStorage;
 
 namespace Surge
 {
@@ -42,12 +43,13 @@ struct UndoManager
     };
 
     std::unique_ptr<UndoManagerImpl> impl;
-    void pushParameterChange(int paramId, pdata val, Target to = UNDO);
+    void pushParameterChange(int paramId, const Parameter *p, pdata val, Target to = UNDO);
     void pushMacroChange(int macroid, float val);
     void pushModulationChange(int paramId, modsources modsource, int scene, int index, float val,
-                              Target to = UNDO);
+                              bool muted, Target to = UNDO);
     void pushOscillator(int scene, int oscnum);
     void pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue);
+    void pushMSEG(int scene, int lfoid, const MSEGStorage &pushValue);
     void pushFX(int fxslot);
 
     void pushMacroRename(int macro, const std::string &oldName);
