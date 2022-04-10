@@ -136,11 +136,6 @@ void FilterAnalysis::onSkinChanged()
     f1Button->setSkin(skin, associatedBitmapStore);
     f2Button->setSkin(skin, associatedBitmapStore);
 }
-void FilterAnalysis::resized()
-{
-    f1Button->setBounds(2, 2, 40, 15);
-    f2Button->setBounds(getWidth() - 42, 2, 40, 15);
-}
 
 void FilterAnalysis::paint(juce::Graphics &g)
 {
@@ -168,7 +163,9 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
 
-    auto dRect = getLocalBounds().withTrimmedTop(15).reduced(4);
+    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
+
+    auto dRect = lb.withTrimmedTop(15).reduced(4);
 
     auto width = dRect.getWidth();
     auto height = dRect.getHeight();
@@ -196,7 +193,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
                                        .withBottomY(height - 2)
                                        .withRightX((int)xPos);
 
-            g.setColour(skin->getColor(Colors::MSEGEditor::Text));
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
             g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
         }
 
@@ -213,7 +210,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
                                        .withBottomY((int)yPos)
                                        .withRightX(width - 2);
 
-            g.setColour(skin->getColor(Colors::MSEGEditor::Text));
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
             g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
         }
     }
@@ -278,8 +275,9 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
         g.strokePath(plotPath, juce::PathStrokeType(2.f, juce::PathStrokeType::JointStyle::curved));
     }
-    auto txtr = getLocalBounds().withHeight(15);
-    g.setColour(skin->getColor(Colors::MSEGEditor::Text));
+    auto txtr = lb.withHeight(15);
+    // MSEG::Text is black - use the same color as the waveshaper preview for the title
+    g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
     g.setFont(skin->getFont(Fonts::Waveshaper::Preview::Title));
     g.drawText(label, txtr, juce::Justification::centred);
 }
@@ -321,6 +319,17 @@ void FilterAnalysis::selectFilter(int which)
     }
     repushData();
     repaint();
+}
+
+void FilterAnalysis::resized()
+{
+    auto t = getTransform().inverted();
+    auto h = getHeight();
+    auto w = getWidth();
+    t.transformPoint(w, h);
+
+    f1Button->setBounds(2, 2, 40, 15);
+    f2Button->setBounds(w - 42, 2, 40, 15);
 }
 
 } // namespace Overlays

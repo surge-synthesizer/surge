@@ -1555,6 +1555,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     undoManager()->pushParameterChange(p->id, p, p->val);
                                     synth->setParameter01(synth->idForParameter(p), ef, false,
                                                           false);
+                                    if (p->ctrlgroup == cg_FILTER)
+                                    {
+                                        if (auto fo = getOverlayIfOpenAs<
+                                                Surge::Overlays::OverlayComponent>(FILTER_ANALYZER))
+                                        {
+                                            fo->forceDataRefresh();
+                                            fo->repaint();
+                                        }
+                                    }
                                     broadcastPluginAutomationChangeFor(p);
                                     synth->refresh_editor = true;
                                 });
