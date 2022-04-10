@@ -2230,6 +2230,15 @@ void SurgeGUIEditor::setParamFromUndo(int paramId, pdata val)
     }
     synth->sendParameterAutomation(id, synth->getParameter01(id));
     juceEditor->endParameterEdit(p);
+
+    for (const auto &[olTag, ol] : juceOverlays)
+    {
+        auto olpc = ol->getPrimaryChildAsOverlayComponent();
+        if (olpc && olpc->shouldRepaintOnParamChange(getPatch(), p))
+        {
+            olpc->repaint();
+        }
+    }
     synth->refresh_editor = true;
 }
 
