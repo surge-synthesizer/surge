@@ -213,6 +213,13 @@ void OverlayWrapper::supressInteriorDecoration()
     primaryChild->setBounds(getLocalBounds());
 }
 
+void OverlayWrapper::resized()
+{
+    if (isTornOut())
+    {
+        primaryChild->setBounds(getLocalBounds());
+    }
+}
 void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
 {
     parentBeforeTearOut = getParentComponent();
@@ -245,6 +252,7 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     dw->setContentNonOwned(this, false);
     dw->setContentComponentSize(w, h);
     dw->setVisible(true);
+    dw->setResizable(true, true);
     if (showAt.x >= 0 && showAt.y >= 0)
         dw->setTopLeftPosition(showAt.x, showAt.y);
     else

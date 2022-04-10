@@ -72,6 +72,8 @@ struct OverlayWrapper : public juce::Component,
 
     void visibilityChanged() override;
 
+    void resized() override;
+
     SurgeImage *icon{nullptr};
     void setIcon(SurgeImage *d) { icon = d; }
 
