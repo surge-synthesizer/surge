@@ -2243,9 +2243,33 @@ void SurgeGUIEditor::setParamFromUndo(int paramId, pdata val)
             olpc->repaint();
         }
     }
+
+    ensureParameterItemIsFocused(p);
     synth->refresh_editor = true;
 }
 
+void SurgeGUIEditor::ensureParameterItemIsFocused(Parameter *p)
+{
+    if (p->scene > 0 && p->scene - 1 != current_scene)
+    {
+        changeSelectedScene(p->scene - 1);
+    }
+    if (p->ctrlgroup == cg_FX && p->ctrlgroup_entry != current_fx)
+    {
+        current_fx = p->ctrlgroup_entry;
+        activateFromCurrentFx();
+    }
+    if (p->ctrlgroup == cg_LFO && p->ctrlgroup_entry != modsource_editor[p->scene - 1])
+    {
+        modsource = (modsources)(p->ctrlgroup_entry);
+        modsource_editor[p->scene - 1] = modsource;
+        refresh_mod();
+    }
+    if (p->ctrlgroup == cg_OSC && p->ctrlgroup_entry != current_osc[p->scene - 1])
+    {
+        current_osc[p->scene - 1] = p->ctrlgroup_entry;
+    }
+}
 void SurgeGUIEditor::setStepSequencerFromUndo(int scene, int lfoid, const StepSequencerStorage &val)
 {
     if (scene != current_scene || lfoid != modsource - ms_lfo1)
@@ -2280,6 +2304,10 @@ void SurgeGUIEditor::setMSEGFromUndo(int scene, int lfoid, const MSEGStorage &va
 
 void SurgeGUIEditor::setLFONameFromUndo(int scene, int lfoid, int index, const std::string &n)
 {
+    if (scene != current_scene)
+    {
+        changeSelectedScene(scene);
+    }
     strxcpy(synth->storage.getPatch().LFOBankLabel[scene][lfoid][index], n.c_str(),
             CUSTOM_CONTROLLER_LABEL_SIZE - 1);
     synth->refresh_editor = true;
@@ -2315,6 +2343,11 @@ void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene
     // FIXME scene and index
     synth->setModulation(p->id, ms, scene, idx, val);
     synth->muteModulation(p->id, ms, scene, idx, muted);
+    ensureParameterItemIsFocused(p);
+    modsource = ms;
+    modsource_index = idx;
+    mod_editor = true;
+    // TODO arm the modulator also
     synth->refresh_editor = true;
 }
 
