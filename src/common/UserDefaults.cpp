@@ -169,9 +169,7 @@ std::string defaultKeyToString(DefaultKey k)
     case FilterAnalysisOverlayLocation:
         r = "filterAnalysisOverlayLocation";
         break;
-    case FilterAnalysisOverlayTearOut:
-        r = "filterAnalysisOverlayTearOut";
-        break;
+
     case TuningOverlayLocationTearOut:
         r = "tuningOverlayLocationTearOut";
         break;
@@ -184,6 +182,26 @@ std::string defaultKeyToString(DefaultKey k)
     case FormulaOverlayLocationTearOut:
         r = "FormulaOverlayLocationTearOut";
         break;
+    case FilterAnalysisOverlayLocationTearOut:
+        r = "filterAnalysisOverlayLocationTearOut";
+        break;
+
+    case TuningOverlaySizeTearOut:
+        r = "tuningOverlaySizeTearOut";
+        break;
+    case ModlistOverlaySizeTearOut:
+        r = "modlistOverlaySizeTearOut";
+        break;
+    case MSEGOverlaySizeTearOut:
+        r = "msegOverlaySizeTearOut";
+        break;
+    case FormulaOverlaySizeTearOut:
+        r = "FormulaOverlaySizeTearOut";
+        break;
+    case FilterAnalysisOverlaySizeTearOut:
+        r = "filterAnalysisOverlaySizeTearOut";
+        break;
+
     case ModListValueDisplay:
         r = "modListValueDisplay";
         break;

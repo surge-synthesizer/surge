@@ -81,12 +81,18 @@ enum DefaultKey
     FormulaOverlayLocation,
     WSAnalysisOverlayLocation,
     FilterAnalysisOverlayLocation,
-    FilterAnalysisOverlayTearOut,
 
     TuningOverlayLocationTearOut,
     ModlistOverlayLocationTearOut,
     MSEGOverlayLocationTearOut,
     FormulaOverlayLocationTearOut,
+    FilterAnalysisOverlayLocationTearOut,
+
+    TuningOverlaySizeTearOut,
+    ModlistOverlaySizeTearOut,
+    MSEGOverlaySizeTearOut,
+    FormulaOverlaySizeTearOut,
+    FilterAnalysisOverlaySizeTearOut,
 
     ModListValueDisplay,
     MenuLightness,

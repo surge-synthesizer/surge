@@ -217,7 +217,25 @@ void OverlayWrapper::resized()
 {
     if (isTornOut())
     {
+        if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
+        {
+            if (oc->minh > 0 && oc->minw > 0)
+            {
+                auto mw = oc->minw;
+                auto mh = oc->minh;
+                primaryChild->getTransform().transformPoint(mw, mh);
+                if (getWidth() < mw || getHeight() < mh)
+                {
+                    auto nw = oc->minw;
+                    auto nh = oc->minh;
+                    tearOutParent->setContentComponentSize(mw, mh);
+                    return;
+                }
+            }
+        }
         primaryChild->setBounds(getLocalBounds());
+        Surge::Storage::updateUserDefaultValue(storage, canTearOutResizePair.second,
+                                               std::make_pair(getWidth(), getHeight()));
     }
 }
 void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
@@ -252,7 +270,7 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     dw->setContentNonOwned(this, false);
     dw->setContentComponentSize(w, h);
     dw->setVisible(true);
-    dw->setResizable(true, true);
+    dw->setResizable(canTearOutResize, canTearOutResize);
     if (showAt.x >= 0 && showAt.y >= 0)
         dw->setTopLeftPosition(showAt.x, showAt.y);
     else
@@ -272,6 +290,17 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
             dtp.y = pt.second;
         }
         dw->setTopLeftPosition(dtp);
+    }
+    {
+        auto pt = std::make_pair(-1, -1);
+        if (storage)
+            pt = Surge::Storage::getUserDefaultValue(storage, canTearOutResizePair.second, pt);
+        if (pt.first > 0 && pt.second > 0)
+        {
+            dw->setSize(pt.first, pt.second);
+            primaryChild->setSize(pt.first, pt.second);
+            resized();
+        }
     }
     dw->toFront(true);
     dw->wrapping = this;

@@ -55,6 +55,19 @@ struct OverlayComponent : juce::Component
     std::pair<bool, Surge::Storage::DefaultKey> getCanTearOut() { return canTearOut; }
     virtual void onTearOutChanged(bool isTornOut) {}
 
+    std::pair<bool, Surge::Storage::DefaultKey> canTearOutResize{false, Surge::Storage::nKeys};
+    void setCanTearOutResize(std::pair<bool, Surge::Storage::DefaultKey> b)
+    {
+        canTearOutResize = b;
+    }
+    std::pair<bool, Surge::Storage::DefaultKey> getCanTearOutResize() { return canTearOutResize; }
+    int minw{-1}, minh{-1};
+    void setMinimumSize(int w, int h)
+    {
+        minw = w;
+        minh = h;
+    }
+
     std::pair<bool, Surge::Storage::DefaultKey> canMoveAround{false, Surge::Storage::nKeys};
     void setCanMoveAround(std::pair<bool, Surge::Storage::DefaultKey> b) { canMoveAround = b; }
     bool getCanMoveAround() { return canMoveAround.first; }

@@ -84,6 +84,14 @@ struct OverlayWrapper : public juce::Component,
         canTearOutPair = b;
         canTearOut = b.first;
     }
+    std::pair<bool, Surge::Storage::DefaultKey> canTearOutResizePair{false, Surge::Storage::nKeys};
+    bool canTearOutResize;
+    void setCanTearOutResize(std::pair<bool, Surge::Storage::DefaultKey> b)
+    {
+        canTearOutResizePair = b;
+        canTearOutResize = b.first;
+    }
+
     void doTearOut(const juce::Point<int> &showAt = juce::Point<int>(-1, -1));
     void doTearIn();
     bool isTornOut();
