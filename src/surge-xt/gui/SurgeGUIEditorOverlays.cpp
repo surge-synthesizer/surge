@@ -205,6 +205,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         mse->setEnclosingParentTitle(title);
         mse->setCanTearOut({true, Surge::Storage::MSEGOverlayLocationTearOut});
+        mse->setCanTearOutResize({true, Surge::Storage::MSEGOverlaySizeTearOut});
+        mse->setMinimumSize(300, 300);
         locationGet(mse.get(), Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW,
                     Surge::Storage::MSEGOverlayLocation);
 
@@ -252,6 +254,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         fme->setSkin(currentSkin, bitmapStore);
         fme->setEnclosingParentTitle(title);
         fme->setCanTearOut({true, Surge::Storage::FormulaOverlayLocationTearOut});
+        fme->setCanTearOutResize({true, Surge::Storage::FormulaOverlaySizeTearOut});
+        fme->setMinimumSize(300, 300);
         locationGet(fme.get(),
                     Surge::Skin::Connector::NonParameterConnection::FORMULA_EDITOR_WINDOW,
                     Surge::Storage::FormulaOverlayLocation);
@@ -274,6 +278,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         te->setTuning(synth->storage.currentTuning);
         te->setEnclosingParentTitle("Tuning Editor");
         te->setCanTearOut({true, Surge::Storage::TuningOverlayLocationTearOut});
+        te->setCanTearOutResize({true, Surge::Storage::TuningOverlaySizeTearOut});
+        te->setMinimumSize(300, 300);
         locationGet(te.get(), Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW,
                     Surge::Storage::TuningOverlayLocation);
 
@@ -361,7 +367,9 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         pt->setEnclosingParentTitle("Filter Analysis");
         pt->defaultLocation = dl;
         pt->setCanMoveAround(std::make_pair(true, Surge::Storage::FilterAnalysisOverlayLocation));
-        pt->setCanTearOut({true, Surge::Storage::FilterAnalysisOverlayTearOut});
+        pt->setCanTearOut({true, Surge::Storage::FilterAnalysisOverlayLocationTearOut});
+        pt->setCanTearOutResize({true, Surge::Storage::FilterAnalysisOverlaySizeTearOut});
+        pt->setMinimumSize(250, 150);
 
         return pt;
     }
@@ -371,6 +379,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto me = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
         me->setEnclosingParentTitle("Modulation List");
         me->setCanTearOut({true, Surge::Storage::ModlistOverlayLocationTearOut});
+        me->setCanTearOutResize({true, Surge::Storage::ModlistOverlaySizeTearOut});
+        me->setMinimumSize(300, 300);
         me->setSkin(currentSkin, bitmapStore);
         locationGet(me.get(), Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW,
                     Surge::Storage::ModlistOverlayLocation);
@@ -478,9 +488,22 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
     default:
         break;
     }
+
+    if (isTornOut.find(olt) != isTornOut.end())
+    {
+        if (isTornOut[olt])
+        {
+            getOverlayWrapperIfOpen(olt)->doTearOut();
+        }
+    }
 }
 void SurgeGUIEditor::closeOverlay(OverlayTags olt)
 {
+    auto olw = getOverlayWrapperIfOpen(olt);
+    if (olw)
+    {
+        isTornOut[olt] = olw->isTornOut();
+    }
     switch (olt)
     {
     case MSEG_EDITOR:
@@ -546,6 +569,7 @@ Surge::Overlays::OverlayWrapper *SurgeGUIEditor::addJuceEditorOverlay(
     if (olc)
     {
         ol->setCanTearOut(olc->getCanTearOut());
+        ol->setCanTearOutResize(olc->getCanTearOutResize());
     }
 
     ol->addAndTakeOwnership(std::move(c));
@@ -564,6 +588,10 @@ void SurgeGUIEditor::dismissEditorOfType(OverlayTags ofType)
 
     if (overlayConsumesKeyboard(ofType))
         vkbForward--;
+
+    auto ow = getOverlayWrapperIfOpen(ofType);
+    if (ow)
+        isTornOut[ofType] = ow->isTornOut();
 
     if (juceOverlays.find(ofType) != juceOverlays.end())
     {

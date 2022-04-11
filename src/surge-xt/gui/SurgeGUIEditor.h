@@ -410,6 +410,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         std::function<void()> onClose = []() {}, bool forceModal = false);
     std::unordered_map<OverlayTags, std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceOverlays;
     std::vector<std::unique_ptr<Surge::Overlays::OverlayWrapper>> juceDeleteOnIdle;
+    std::unordered_map<OverlayTags, bool> isTornOut;
     void rezoomOverlays();
     void frontNonModalOverlays();
 
