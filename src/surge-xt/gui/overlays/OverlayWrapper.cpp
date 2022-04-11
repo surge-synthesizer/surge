@@ -221,23 +221,29 @@ void OverlayWrapper::resized()
         {
             if (oc->minh > 0 && oc->minw > 0)
             {
+                auto w = getWidth(), h = getHeight();
                 auto mw = oc->minw;
                 auto mh = oc->minh;
+
                 primaryChild->getTransform().transformPoint(mw, mh);
-                if (getWidth() < mw || getHeight() < mh)
+
+                mw = w < mw ? mw : w;
+                mh = h < mh ? mh : h;
+
+                if (w < mw || h < mh)
                 {
-                    auto nw = oc->minw;
-                    auto nh = oc->minh;
                     tearOutParent->setContentComponentSize(mw, mh);
                     return;
                 }
             }
         }
+
         primaryChild->setBounds(getLocalBounds());
         Surge::Storage::updateUserDefaultValue(storage, canTearOutResizePair.second,
                                                std::make_pair(getWidth(), getHeight()));
     }
 }
+
 void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
 {
     parentBeforeTearOut = getParentComponent();
@@ -247,6 +253,7 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
 
     auto w = getWidth();
     auto h = getHeight();
+
     if (editor)
     {
         auto sc = 1.0 * editor->getZoomFactor() / 100.0;
