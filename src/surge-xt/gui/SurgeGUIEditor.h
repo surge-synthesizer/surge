@@ -495,6 +495,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setLFONameFromUndo(int scene, int lfoid, int index, const std::string &n);
     void setMacroNameFromUndo(int ccid, const std::string &n);
     void setMacroValueFromUndo(int ccid, float val);
+    void ensureParameterItemIsFocused(Parameter *p);
 
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
