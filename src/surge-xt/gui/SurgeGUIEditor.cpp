@@ -3994,9 +3994,8 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
 
         auto m = std::string("Show Layout Grid (") + std::to_string(pxres) + " px)";
 
-        skinSubMenu.addItem(Surge::GUI::toOSCase(m), [this, pxres]() {
-                this->showAboutScreen(pxres);
-        });
+        skinSubMenu.addItem(Surge::GUI::toOSCase(m),
+                            [this, pxres]() { this->showAboutScreen(pxres); });
 
         skinSubMenu.addItem(
             Surge::GUI::toOSCase("Change Layout Grid Resolution..."), [this, pxres]() {
