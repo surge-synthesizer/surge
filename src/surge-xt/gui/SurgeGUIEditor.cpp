@@ -2664,7 +2664,9 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCase("Download Additional Content..."), []() {
-        juce::URL(fmt::format("{}Additional-Content", stringWebsite)).launchInDefaultBrowser();
+        juce::URL(
+            fmt::format("{}surge-synthesizer.github.io/wiki/Additional-Content", stringRepository))
+            .launchInDefaultBrowser();
     });
 
     settingsMenu.addItem(Surge::GUI::toOSCase("Skin Library..."), []() {
