@@ -240,7 +240,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         pid++;
     }
     if (patchid_queue >= 0)
-        processThreadunsafeOperations(true); // DANGER MODE IS ON
+        processAudioThreadOpsWhenAudioEngineUnavailable(true); // DANGER MODE IS ON
     patchid_queue = -1;
 }
 
@@ -2350,8 +2350,10 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                 int cge = p->ctrlgroup_entry;
 
                 fxsync[cge].type.val.i = p->val.i;
-                p->val.i = oldval.i; // so funnily we want to set the value *back* so the loadFX
-                                     // picks up the change in fxsync
+
+                // so funnily we want to set the value *back* so that loadFx picks up the change in
+                // fxsync
+                p->val.i = oldval.i;
                 Effect *t_fx = spawn_effect(fxsync[cge].type.val.i, &storage, &fxsync[cge], 0);
                 if (t_fx)
                 {
@@ -2577,7 +2579,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                     {
                         for (auto &t : fxmodsync[s])
                         {
-                            setModulation(storage.getPatch().fx[s].p[t.whichForReal].id,
+                            setModDepth01(storage.getPatch().fx[s].p[t.whichForReal].id,
                                           (modsources)t.source_id, t.source_scene, t.source_index,
                                           t.depth);
                         }
@@ -3051,7 +3053,7 @@ bool SurgeSynthesizer::isModsourceUsed(modsources modsource)
     return modsourceused[modsource];
 }
 
-float SurgeSynthesizer::getModulation(long ptag, modsources modsource, int modsourceScene,
+float SurgeSynthesizer::getModDepth01(long ptag, modsources modsource, int modsourceScene,
                                       int index) const
 {
     if (!isValidModulation(ptag, modsource))
@@ -3216,7 +3218,7 @@ void SurgeSynthesizer::clearModulation(long ptag, modsources modsource, int mods
     }
 }
 
-bool SurgeSynthesizer::setModulation(long ptag, modsources modsource, int modsourceScene, int index,
+bool SurgeSynthesizer::setModDepth01(long ptag, modsources modsource, int modsourceScene, int index,
                                      float val)
 {
     if (!isValidModulation(ptag, modsource))
@@ -3483,7 +3485,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     return;
 }
 
-void SurgeSynthesizer::processThreadunsafeOperations(bool dangerMode)
+void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dangerMode)
 {
     if (!audio_processing_active || dangerMode)
     {
@@ -4488,7 +4490,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
             }
 
             auto depth =
-                getModulation(fxsync[source].p[whichForReal].id, (modsources)mv->at(i).source_id,
+                getModDepth01(fxsync[source].p[whichForReal].id, (modsources)mv->at(i).source_id,
                               mv->at(i).source_scene, mv->at(i).source_index);
             fxmodsync[target].push_back({mv->at(i).source_id, mv->at(i).source_scene,
                                          mv->at(i).source_index, whichForReal, depth});
@@ -4510,7 +4512,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                     }
                 }
 
-                auto depth = getModulation(fxsync[target].p[whichForReal].id,
+                auto depth = getModDepth01(fxsync[target].p[whichForReal].id,
                                            (modsources)mv->at(i).source_id, mv->at(i).source_scene,
                                            mv->at(i).source_index);
                 fxmodsync[source].push_back({mv->at(i).source_id, mv->at(i).source_scene,

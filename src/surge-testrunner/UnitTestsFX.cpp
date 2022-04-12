@@ -116,7 +116,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         step(surge);
         setFX(surge, 0, fxt_combulator);
 
-        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
         step(surge);
 
@@ -136,9 +136,9 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         setFX(surge, 0, fxt_combulator);
         setFX(surge, 4, fxt_chorus4);
 
-        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
-        surge->setModulation(surge->storage.getPatch().fx[0].p[3].id, ms_slfo2, 0, 0, 0.2);
-        surge->setModulation(surge->storage.getPatch().fx[4].p[3].id, ms_slfo1, 0, 0, 0.3);
+        surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[0].p[3].id, ms_slfo2, 0, 0, 0.2);
+        surge->setModDepth01(surge->storage.getPatch().fx[4].p[3].id, ms_slfo1, 0, 0, 0.3);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 3);
         step(surge);
 
@@ -157,7 +157,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         step(surge);
         setFX(surge, 0, fxt_combulator);
 
-        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
         step(surge);
 
@@ -177,8 +177,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         setFX(surge, 0, fxt_combulator);
         setFX(surge, 1, fxt_chorus4);
 
-        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
-        surge->setModulation(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
         step(surge);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
         confirmDestinations(surge, {{0, 2}, {1, 3}});
@@ -198,8 +198,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         setFX(surge, 0, fxt_combulator);
         setFX(surge, 1, fxt_chorus4);
 
-        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
-        surge->setModulation(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
         step(surge);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
         confirmDestinations(surge, {{0, 2}, {1, 3}});
@@ -219,8 +219,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         setFX(surge, 0, fxt_combulator);
         setFX(surge, 1, fxt_chorus4);
 
-        surge->setModulation(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
-        surge->setModulation(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
+        surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
         step(surge);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 2);
         confirmDestinations(surge, {{0, 2}, {1, 3}});

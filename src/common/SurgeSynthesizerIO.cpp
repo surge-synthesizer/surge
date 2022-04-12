@@ -129,7 +129,7 @@ void SurgeSynthesizer::jogPatch(bool increment, bool insideCategory)
 
         patchid_queue = storage.patchOrdering[order];
     }
-    processThreadunsafeOperations();
+    processAudioThreadOpsWhenAudioEngineUnavailable();
     return;
 }
 
@@ -169,7 +169,7 @@ void SurgeSynthesizer::jogCategory(bool increment)
         if (storage.patch_list[p].category == current_category_id)
         {
             patchid_queue = p;
-            processThreadunsafeOperations();
+            processAudioThreadOpsWhenAudioEngineUnavailable();
             return;
         }
     }

@@ -603,13 +603,13 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
     void setModulationPy(const SurgePyNamedParam &to, SurgePyModSource const &from, float amt,
                          int scene, int index)
     {
-        setModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), scene, index,
+        setModDepth01(to.getID().getSynthSideId(), (modsources)from.getModSource(), scene, index,
                       amt);
     }
     float getModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from, int scene,
                           int index)
     {
-        return getModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(), scene,
+        return getModDepth01(to.getID().getSynthSideId(), (modsources)from.getModSource(), scene,
                              index);
     }
     bool isValidModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from)
@@ -745,7 +745,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             r.depth = gm.depth;
             r.source_scene = gm.source_scene;
             r.source_index = gm.source_index;
-            r.normalizedDepth = getModulation(gm.destination_id, (modsources)gm.source_id,
+            r.normalizedDepth = getModDepth01(gm.destination_id, (modsources)gm.source_id,
                                               gm.source_scene, gm.source_index);
             gmr.append(r);
         }
@@ -768,7 +768,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                 r.source_scene = gm.source_scene;
                 r.source_index = gm.source_index;
                 r.normalizedDepth =
-                    getModulation(gm.destination_id + storage.getPatch().scene_start[sc],
+                    getModDepth01(gm.destination_id + storage.getPatch().scene_start[sc],
                                   (modsources)gm.source_id, r.source_scene, r.source_index);
                 sms.append(r);
             }
@@ -786,7 +786,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                 r.source_scene = gm.source_scene;
                 r.source_index = gm.source_index;
                 r.normalizedDepth =
-                    getModulation(gm.destination_id + storage.getPatch().scene_start[sc],
+                    getModDepth01(gm.destination_id + storage.getPatch().scene_start[sc],
                                   (modsources)gm.source_id, gm.source_scene, gm.source_index);
                 smv.append(r);
             }
@@ -916,11 +916,11 @@ PYBIND11_MODULE(surgepy, m)
         .def("getModSource", &SurgeSynthesizerWithPythonExtensions::getModSource,
              "Given a constant from surge.constants.ms_* provide a modulator object",
              py::arg("modId"))
-        .def("setModulation", &SurgeSynthesizerWithPythonExtensions::setModulationPy,
+        .def("setModDepth01", &SurgeSynthesizerWithPythonExtensions::setModulationPy,
              "Set a modulation to a given depth", py::arg("targetParameter"),
              py::arg("modulationSource"), py::arg("depth"), py::arg("scene") = 0,
              py::arg("index") = 0)
-        .def("getModulation", &SurgeSynthesizerWithPythonExtensions::getModulationPy,
+        .def("getModDepth01", &SurgeSynthesizerWithPythonExtensions::getModulationPy,
              "Get the modulation depth from a source to a parameter.", py::arg("targetParameter"),
              py::arg("modulationSource"), py::arg("scene") = 0, py::arg("index") = 0)
         .def("isValidModulation", &SurgeSynthesizerWithPythonExtensions::isValidModulationPy,

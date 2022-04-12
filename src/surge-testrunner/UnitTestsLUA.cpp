@@ -673,7 +673,7 @@ TEST_CASE("Simple Used Formula Modulator", "[formula]")
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
         auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
-        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+        surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
 function init(modstate)
@@ -715,8 +715,8 @@ TEST_CASE("Voice Features and Flags", "[formula]")
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
         surge->storage.getPatch().scene[0].lfo[6].shape.val.i = lt_formula;
         auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
-        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
-        surge->setModulation(pitchId, ms_slfo1, 0, 0, 0.1);
+        surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
+        surge->setModDepth01(pitchId, ms_slfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
 function init(modstate)
@@ -762,8 +762,8 @@ end)FN");
         surge->storage.getPatch().scene[0].lfo[6].shape.val.i = lt_formula;
         surge->storage.getPatch().scene[0].adsr[0].r.val.f = 2;
         auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
-        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
-        surge->setModulation(pitchId, ms_slfo1, 0, 0, 0.1);
+        surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
+        surge->setModDepth01(pitchId, ms_slfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
 function init(modstate)
@@ -832,7 +832,7 @@ TEST_CASE("Macros Are Available", "[formula]")
     surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
     surge->storage.getPatch().scene[0].adsr[0].r.val.f = 2;
     auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
-    surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+    surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
     REQUIRE(1);
 }
 
@@ -843,7 +843,7 @@ TEST_CASE("Nan Clampsr", "[formula]")
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
         auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
-        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+        surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
 function init(modstate)
@@ -877,7 +877,7 @@ end)FN");
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
         auto pitchId = surge->storage.getPatch().scene[0].osc[0].pitch.id;
-        surge->setModulation(pitchId, ms_lfo1, 0, 0, 0.1);
+        surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
 function init(modstate)

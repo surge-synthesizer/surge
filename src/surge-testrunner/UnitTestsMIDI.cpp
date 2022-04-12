@@ -1526,7 +1526,7 @@ TEST_CASE("Poly AT on Multiple Channels", "[midi]")
             REQUIRE(surge);
 
             auto pid = surge->storage.getPatch().scene[0].osc[0].pitch.id;
-            surge->setModulation(pid, ms_polyaftertouch, 0, 0, 0.1);
+            surge->setModDepth01(pid, ms_polyaftertouch, 0, 0, 0.1);
             surge->process();
             surge->playNote(ch, 60, 120, 0);
             surge->process();

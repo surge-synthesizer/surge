@@ -587,7 +587,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 contents->editor->ed->pushModulationToUndoRedo(
                     p->id, (modsources)datum.source_id, datum.source_scene, datum.source_index,
                     Surge::GUI::UndoManager::UNDO);
-                synth->setModulation(datum.destination_id + datum.idBase,
+                synth->setModDepth01(datum.destination_id + datum.idBase,
                                      (modsources)datum.source_id, datum.source_scene,
                                      datum.source_index, nm01);
 
@@ -776,7 +776,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         int ptag = p->id;
         auto thisms = (modsources)d.source_id;
 
-        d.moddepth01 = synth->getModulation(ptag, thisms, d.source_scene, d.source_index);
+        d.moddepth01 = synth->getModDepth01(ptag, thisms, d.source_scene, d.source_index);
         d.isBipolar = synth->isBipolarModulation(thisms);
         d.isMuted = synth->isModulationMuted(ptag, thisms, d.source_scene, d.source_index);
         p->get_display_of_modulation_depth(
@@ -1489,7 +1489,7 @@ void ModulationSideControls::doAdd()
     auto synth = editor->synth;
     editor->ed->pushModulationToUndoRedo(dest_id, add_ms, add_ms_sc, add_ms_idx,
                                          Surge::GUI::UndoManager::UNDO);
-    synth->setModulation(dest_id, add_ms, add_ms_sc, add_ms_idx, 0.01);
+    synth->setModDepth01(dest_id, add_ms, add_ms_sc, add_ms_idx, 0.01);
     addSourceW->setLabels({"Select Source"});
     addTargetW->setLabels({"Select Target"});
     addTargetW->setEnabled(false);
