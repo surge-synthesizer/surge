@@ -45,6 +45,7 @@ struct AboutScreen : public juce::Component,
     std::string host, wrapper;
     void setHostProgram(const std::string &h) { host = h; }
     void setWrapperType(const std::string &w) { wrapper = w; }
+    void setDevModeGrid(const int &dmg) { devModeGrid = dmg; }
 
     void populateData();
 
@@ -57,7 +58,7 @@ struct AboutScreen : public juce::Component,
 
     void onSkinChanged() override;
     SurgeImage *logo{nullptr};
-    int logoW{666}, logoH{179};
+    int logoW{666}, logoH{179}, devModeGrid{-1};
 
     // label, value, url
     std::vector<std::tuple<std::string, std::string, std::string>> lowerLeft, lowerRight;

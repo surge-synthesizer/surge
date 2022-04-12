@@ -227,7 +227,7 @@ void AboutScreen::buttonClicked(juce::Button *button)
 
 void AboutScreen::resized()
 {
-    if (labels.empty())
+    if (labels.empty() && devModeGrid == -1)
     {
         int lHeight = 16;
         int margin = 16;
@@ -406,8 +406,9 @@ void AboutScreen::resized()
             "https://discord.gg/aFQDdMV",
             "https://juce.com"};
 
-        std::vector<std::string> urllabels = {
-            "Surge GitHub", "VST3", "Apple Audio Units", "Gnu GPL3", "Join our Discord", "JUCE"};
+        std::vector<std::string> urllabels = {"Surge XT GitHub Repository", "Steinberg VST3",
+                                              "Apple Audio Units",          "GNU GPL3",
+                                              "Join our Discord!",          "JUCE Framework"};
         int x = 0;
 
         for (auto idx : idxes)
@@ -425,12 +426,67 @@ void AboutScreen::resized()
 
 void AboutScreen::paint(juce::Graphics &g)
 {
-    g.fillAll(fillColour);
-
-    if (logo)
+    if (devModeGrid == -1)
     {
-        auto r = juce::Rectangle<int>(0, 0, logoW, logoH).withCentre(getLocalBounds().getCentre());
-        logo->drawWithin(g, r.toFloat(), juce::RectanglePlacement(), 1.0);
+        g.fillAll(fillColour);
+
+        if (logo)
+        {
+            auto r =
+                juce::Rectangle<int>(0, 0, logoW, logoH).withCentre(getLocalBounds().getCentre());
+            logo->drawWithin(g, r.toFloat(), juce::RectanglePlacement(), 1.0);
+        }
+    }
+    else
+    {
+        auto primaryLineColor = juce::Colour((uint32_t)0xC0FF2020);
+        auto secondaryLineColor = juce::Colour((uint32_t)0xC0C06060);
+
+        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+        g.setColour(juce::Colours::red);
+        g.drawText("0", juce::Rectangle(2, 2, 20, 40), juce::Justification::topLeft);
+
+        // x axis
+        for (int i = 1; i <= getHeight() / devModeGrid; i++)
+        {
+            int y = i * devModeGrid;
+
+            if (i % 4 == 0)
+            {
+                g.setColour(juce::Colours::red);
+                g.drawText(std::to_string(y), juce::Rectangle(2, y + 2, 20, 40),
+                           juce::Justification::topLeft);
+
+                g.setColour(primaryLineColor);
+            }
+            else
+            {
+                g.setColour(secondaryLineColor);
+            }
+
+            g.drawLine(0, y, getWidth(), y);
+        }
+
+        // y axis
+        for (int i = 1; i <= getWidth() / devModeGrid; i++)
+        {
+            int x = i * devModeGrid;
+
+            if (i % 4 == 0)
+            {
+                g.setColour(juce::Colours::red);
+                g.drawText(std::to_string(x), juce::Rectangle(x + 2, 2, 40, 20),
+                           juce::Justification::topLeft);
+
+                g.setColour(primaryLineColor);
+            }
+            else
+            {
+                g.setColour(secondaryLineColor);
+            }
+
+            g.drawLine(x, 0, x, getHeight());
+        }
     }
 }
 
