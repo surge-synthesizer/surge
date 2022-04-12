@@ -459,7 +459,7 @@ void SurgeSynthProcessor::getStateInformation(juce::MemoryBlock &destData)
 void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
     surge->enqueuePatchForLoad(data, sizeInBytes);
-    surge->processThreadunsafeOperations();
+    surge->processAudioThreadOpsWhenAudioEngineUnavailable();
 }
 
 void SurgeSynthProcessor::surgeParameterUpdated(const SurgeSynthesizer::ID &id, float f)

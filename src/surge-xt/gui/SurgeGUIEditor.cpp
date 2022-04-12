@@ -1142,7 +1142,7 @@ void SurgeGUIEditor::refresh_mod()
                     synth->isModDestUsed(i),
                     synth->isActiveModulation(i, thisms, use_scene, modsource_index));
                 s->setIsModulationBipolar(synth->isBipolarModulation(thisms));
-                s->setModValue(synth->getModulation(i, thisms, use_scene, modsource_index));
+                s->setModValue(synth->getModDepth01(i, thisms, use_scene, modsource_index));
             }
             else
             {
@@ -2427,7 +2427,7 @@ void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene
 {
     auto p = synth->storage.getPatch().param_ptr[paramId];
     // FIXME scene and index
-    synth->setModulation(p->id, ms, scene, idx, val);
+    synth->setModDepth01(p->id, ms, scene, idx, val);
     synth->muteModulation(p->id, ms, scene, idx, muted);
     ensureParameterItemIsFocused(p);
     modsource = ms;
@@ -2441,7 +2441,7 @@ void SurgeGUIEditor::pushModulationToUndoRedo(int paramId, modsources ms, int sc
                                               Surge::GUI::UndoManager::Target which)
 {
     undoManager()->pushModulationChange(
-        paramId, ms, scene, idx, synth->getModulation(paramId, ms, scene, idx),
+        paramId, ms, scene, idx, synth->getModDepth01(paramId, ms, scene, idx),
         synth->isModulationMuted(paramId, modsource, current_scene, modsource_index), which);
 }
 //------------------------------------------------------------------------------------------------
@@ -4486,7 +4486,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     }
 
     typeinParamEditor->setEditedParam(p);
-    typeinParamEditor->setModulation(p && ms > 0, (modsources)ms, modScene, modidx);
+    typeinParamEditor->setModDepth01(p && ms > 0, (modsources)ms, modScene, modidx);
 
     addAndMakeVisibleWithTracking(frame.get(), *typeinParamEditor);
 
@@ -5290,7 +5290,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             synth->isActiveModulation(p->id, modsource, current_scene, modsource_index));
         if (synth->isValidModulation(p->id, modsource))
         {
-            hs->setModValue(synth->getModulation(p->id, modsource, current_scene, modsource_index));
+            hs->setModValue(synth->getModDepth01(p->id, modsource, current_scene, modsource_index));
             hs->setIsModulationBipolar(synth->isBipolarModulation(modsource));
         }
 

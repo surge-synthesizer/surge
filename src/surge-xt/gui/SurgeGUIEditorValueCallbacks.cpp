@@ -2551,7 +2551,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 if (ctrms)
                 {
                     ctrms->setModValue(
-                        synth->getModulation(p->id, thisms, use_scene, modsource_index));
+                        synth->getModDepth01(p->id, thisms, use_scene, modsource_index));
                     ctrms->setModulationState(
                         synth->isModDestUsed(p->id),
                         synth->isActiveModulation(p->id, thisms, use_scene, modsource_index));
@@ -3152,7 +3152,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     {
         synth->switch_toggled_queued = true;
         queue_refresh = true;
-        synth->processThreadunsafeOperations();
+        synth->processAudioThreadOpsWhenAudioEngineUnavailable();
         return;
     }
     break;
@@ -3161,7 +3161,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         synth->load_fx_needed = true;
         // queue_refresh = true;
         synth->fx_reload[limit_range(current_fx, 0, n_fx_slots - 1)] = true;
-        synth->processThreadunsafeOperations();
+        synth->processAudioThreadOpsWhenAudioEngineUnavailable();
 
         if (fxMenu && fxMenu->selectedIdx >= 0)
         {
@@ -3223,7 +3223,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 auto use_scene = 0;
                 if (this->synth->isModulatorDistinctPerScene(thisms))
                     use_scene = current_scene;
-                synth->setModulation(ptag, thisms, use_scene, modsource_index, mv);
+                synth->setModDepth01(ptag, thisms, use_scene, modsource_index, mv);
 
                 mci->setModulationState(
                     synth->isModDestUsed(p->id),
@@ -3511,7 +3511,7 @@ bool SurgeGUIEditor::setParameterModulationFromString(Parameter *p, modsources m
     }
     else
     {
-        synth->setModulation(p->id, ms, modsourceScene, modidx, mv);
+        synth->setModDepth01(p->id, ms, modsourceScene, modidx, mv);
         synth->refresh_editor = true;
         synth->storage.getPatch().isDirty = true;
     }

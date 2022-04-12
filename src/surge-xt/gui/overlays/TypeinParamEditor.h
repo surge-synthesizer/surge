@@ -54,7 +54,7 @@ struct TypeinParamEditor : public juce::Component,
     bool isMod{false};
     modsources ms{ms_original};
     int modScene{-1}, modidx{0};
-    void setModulation(bool isMod, modsources ms, int modScene, int modidx)
+    void setModDepth01(bool isMod, modsources ms, int modScene, int modidx)
     {
         this->isMod = isMod;
         this->ms = ms;

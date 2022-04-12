@@ -95,13 +95,14 @@ class alignas(16) SurgeSynthesizer
     void resetStateFromTimeData();
     void processControl();
     /*
-     * processThreadunsafeOperations reloads a patch if the audio thread isn't running
-     * but if it is running lets the deferred queue handle it. But it has an option
+     * processAudioThreadOpsWhenAudioEngineUnavailable reloads a patch if the audio thread
+     * isn't running but if it is running lets the deferred queue handle it. But it has an option
      * which is *extremely dangerous* to force you to load in the current thread immediately.
      * If you use this option and dont' know what you are doing it will explode - basically
      * we only use it in the startup constructor path.
      */
-    void processThreadunsafeOperations(bool doItEvenIfAudioIsRunningDANGER = false);
+    void
+    processAudioThreadOpsWhenAudioEngineUnavailable(bool doItEvenIfAudioIsRunningDANGER = false);
     bool loadFx(bool initp, bool force_reload_all);
     void enqueueFXOff(int whichFX);
     bool loadOscalgos();
@@ -279,22 +280,22 @@ class alignas(16) SurgeSynthesizer
                                      int index) const;
 
     /*
-     * setModulation etc take a modsource scene. This is only needed for global modulations
+     * setModDepth01 etc take a modsource scene. This is only needed for global modulations
      * since for in-scene modulations the parameter implicit in ptag has a scene. But for
      * LFOs modulating FX, we need to know which scene they originate from. See #2285
      */
-    bool setModulation(long ptag, modsources modsource, int modsourceScene, int index, float value);
-    float getModulation(long ptag, modsources modsource, int modsourceScene, int index) const;
+    bool setModDepth01(long ptag, modsources modsource, int modsourceScene, int index, float value);
+    float getModDepth01(long ptag, modsources modsource, int modsourceScene, int index) const;
+    float getModDepth(long ptag, modsources modsource, int modsourceScene, int index) const;
     void muteModulation(long ptag, modsources modsource, int modsourceScene, int index, bool mute);
     bool isModulationMuted(long ptag, modsources modsource, int modsourceScene, int index) const;
-    float getModDepth(long ptag, modsources modsource, int modsourceScene, int index) const;
     void clearModulation(long ptag, modsources modsource, int modsourceScene, int index,
                          bool clearEvenIfInvalid = false);
     void clear_osc_modulation(
         int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
 
     /*
-     * The modulation API (setModulation etc...) is called from all sorts of places
+     * The modulation API (setModDepth01 etc...) is called from all sorts of places
      * but mostly from the UI. This adds a listener which gets notified but this listener
      * should just post a message over to the UI thread and be quick in case there
      * are cases where the audio thread calls set/clear/mute modulation.

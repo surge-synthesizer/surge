@@ -144,7 +144,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         {
             synth->patchid_queue = t;
             // Looks scary but remember this only runs if audio thread is off
-            synth->processThreadunsafeOperations();
+            synth->processAudioThreadOpsWhenAudioEngineUnavailable();
             patchCountdown = 200;
         }
     }
@@ -448,7 +448,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     {
         strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
         synth->has_patchid_file = true;
-        synth->processThreadunsafeOperations();
+        synth->processAudioThreadOpsWhenAudioEngineUnavailable();
     }
 
     void loadPatchWithDirtyCheck(bool increment, bool isCategory, bool insideCategory = false);
