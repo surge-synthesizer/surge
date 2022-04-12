@@ -746,11 +746,15 @@ void SurgeGUIEditor::idle()
             if (frame)
             {
                 if (synth->patch_loaded)
+                {
                     mod_editor = false;
+                }
+
                 synth->patch_loaded = false;
 
                 openOrRecreateEditor();
             }
+
             if (patchSelector)
             {
                 patchSelector->sel_id = synth->patchid;
@@ -774,23 +778,30 @@ void SurgeGUIEditor::idle()
         }
 
         bool vuInvalid = false;
+
         if (synth->vu_peak[0] != vu[0]->getValue())
         {
             vuInvalid = true;
             vu[0]->setValue(synth->vu_peak[0]);
         }
+
         if (synth->vu_peak[1] != vu[0]->getValueR())
         {
             vu[0]->setValueR(synth->vu_peak[1]);
             vuInvalid = true;
         }
+
         vu[0]->setIsAudioActive(synth->audio_processing_active);
+
         if (vuInvalid)
+        {
             vu[0]->repaint();
+        }
 
         for (int i = 0; i < n_fx_slots; i++)
         {
             assert(i + 1 < Effect::KNumVuSlots);
+
             if (vu[i + 1] && synth->fx[current_fx])
             {
                 vu[i + 1]->setValue(synth->fx[current_fx]->vu[(i << 1)]);
@@ -810,6 +821,7 @@ void SurgeGUIEditor::idle()
                 {
                     char pname[256], pdisp[256];
                     SurgeSynthesizer::ID jid;
+
                     if (synth->fromSynthSideId(j, jid))
                     {
                         synth->getParameterName(jid, pname);
@@ -841,6 +853,7 @@ void SurgeGUIEditor::idle()
             lastTempo = synth->time_data.tempo;
             lastTSNum = synth->time_data.timeSigNumerator;
             lastTSDen = synth->time_data.timeSigDenominator;
+
             if (lfoDisplay)
             {
                 lfoDisplay->setTimeSignature(synth->time_data.timeSigNumerator,
@@ -850,6 +863,7 @@ void SurgeGUIEditor::idle()
         }
 
         std::vector<int> refreshIndices;
+
         if (synth->refresh_overflow)
         {
             refreshIndices.resize(n_total_params);
@@ -859,19 +873,27 @@ void SurgeGUIEditor::idle()
         else
         {
             for (int i = 0; i < 8; ++i)
+            {
                 if (synth->refresh_parameter_queue[i] >= 0)
+                {
                     refreshIndices.push_back(synth->refresh_parameter_queue[i]);
+                }
+            }
         }
 
         synth->refresh_overflow = false;
+
         for (int i = 0; i < 8; ++i)
+        {
             synth->refresh_parameter_queue[i] = -1;
+        }
 
         for (auto j : refreshIndices)
         {
             if ((j < n_total_params) && param[j])
             {
                 SurgeSynthesizer::ID jid;
+
                 if (synth->fromSynthSideId(j, jid))
                 {
                     param[j]->asControlValueInterface()->setValue(synth->getParameter01(jid));
@@ -908,11 +930,9 @@ void SurgeGUIEditor::idle()
                 */
                 auto *cc = nonmod_param[j];
 
-                /*
-                ** Some state changes enable and disable sliders. If this is one of those state
-                *changes and a value has changed, then
-                ** we need to invalidate them. See #2056.
-                */
+                // Some state changes enable and disable sliders. If this is one of those state
+                // changes and a value has changed, then we need to invalidate them.
+                // See https://github.com/surge-synthesizer/surge/issues/2056
                 auto tag = cc->getTag();
                 SurgeSynthesizer::ID jid;
 
@@ -966,15 +986,19 @@ void SurgeGUIEditor::idle()
 
                 if (synth->storage.getPatch().param_ptr[j]->ctrltype == ct_scenemode)
                 {
-                    /*
-                     * This is gross hack for our reordering of scenemode. Basically take the
-                     * automation value and turn it into the UI value
-                     */
+                    // This is gross hack for our reordering of scenemode. Basically take the
+                    // automation value and turn it into the UI value
                     auto pval = Parameter::intUnscaledFromFloat(sv, n_scene_modes - 1);
+
                     if (pval == sm_dual)
+                    {
                         pval = sm_chsplit;
+                    }
                     else if (pval == sm_chsplit)
+                    {
                         pval = sm_dual;
+                    }
+
                     sv = Parameter::intScaledToFloat(pval, n_scene_modes - 1);
                 }
 
@@ -985,6 +1009,7 @@ void SurgeGUIEditor::idle()
 
                 // Integer switches also work differently
                 auto assw = dynamic_cast<Surge::Widgets::Switch *>(cc);
+
                 if (assw)
                 {
                     if (assw->isMultiIntegerValued())
@@ -994,6 +1019,7 @@ void SurgeGUIEditor::idle()
                 }
 
                 auto bvf = cc->asJuceComponent();
+
                 if (bvf)
                 {
                     bvf->repaint();
@@ -1018,12 +1044,8 @@ void SurgeGUIEditor::idle()
 
          }
 #endif
-            else
-            {
-                // printf( "Bailing out of all possible refreshes on %d\n", j );
-                // This is not really a problem
-            }
         }
+
         for (int i = 0; i < n_customcontrollers; i++)
         {
             if (((ControllerModulationSource *)synth->storage.getPatch()
@@ -1043,6 +1065,7 @@ void SurgeGUIEditor::idle()
     if (scanJuceSkinComponents)
     {
         std::vector<Surge::GUI::Skin::Control::sessionid_t> toRemove;
+
         for (const auto &c : juceSkinComponents)
         {
             if (!currentSkin->containsControlWithSessionId(c.first))
@@ -1050,10 +1073,12 @@ void SurgeGUIEditor::idle()
                 toRemove.push_back(c.first);
             }
         }
+
         for (const auto &sid : toRemove)
         {
             juceSkinComponents.erase(sid);
         }
+
         scanJuceSkinComponents = false;
     }
 }
@@ -1090,22 +1115,27 @@ void SurgeGUIEditor::refresh_mod()
     modsources thisms = modsource;
 
     synth->storage.modRoutingMutex.lock();
+
     for (int i = 0; i < n_paramslots; i++)
     {
         if (param[i])
         {
             auto s = param[i];
-
             auto p = synth->storage.getPatch().param_ptr[i];
+
             if (p)
             {
                 s->setIsValidToModulate(synth->isValidModulation(p->id, thisms));
             }
+
             if (s->getIsValidToModulate())
             {
                 auto use_scene = 0;
+
                 if (this->synth->isModulatorDistinctPerScene(thisms))
+                {
                     use_scene = current_scene;
+                }
 
                 s->setIsEditingModulation(mod_editor);
                 s->setModulationState(
@@ -1118,17 +1148,10 @@ void SurgeGUIEditor::refresh_mod()
             {
                 s->setIsEditingModulation(false);
             }
+
             s->asJuceComponent()->repaint();
         }
     }
-#if OSC_MOD_ANIMATION
-    if (oscdisplay)
-    {
-        ((COscillatorDisplay *)oscdisplay)->setIsMod(mod_editor);
-        ((COscillatorDisplay *)oscdisplay)->setModSource(thisms);
-        oscdisplay->invalid();
-    }
-#endif
 
     synth->storage.modRoutingMutex.unlock();
 
@@ -1161,6 +1184,7 @@ void SurgeGUIEditor::refresh_mod()
     if (modsource > 0)
     {
         int state = mod_editor ? 2 : 1;
+
         if (modsource == modsource_editor[current_scene])
         {
             state |= 4;
@@ -1195,16 +1219,9 @@ bool SurgeGUIEditor::isControlVisible(ControlGroup controlGroup, int controlGrou
 juce::Rectangle<int> SurgeGUIEditor::positionForModulationGrid(modsources entry)
 {
     bool isMacro = isCustomController(entry);
-
     int gridX = Surge::GUI::ModulationGrid::getModulationGrid()->get(entry).x;
     int gridY = Surge::GUI::ModulationGrid::getModulationGrid()->get(entry).y;
     int width = isMacro ? 90 : 72;
-
-    // to ensure the same gap between the modbuttons,
-    // make the first and last non-macro button wider 2px
-    // if ((!isMacro) && ((gridX == 0) || (gridX == 9)))
-    //    width += 2;
-
     auto skinCtrl = currentSkin->controlForUIID("controls.modulation.panel");
 
     if (!skinCtrl)
@@ -1221,20 +1238,14 @@ juce::Rectangle<int> SurgeGUIEditor::positionForModulationGrid(modsources entry)
     auto r = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y, width - 1, 14);
 
     if (isMacro)
+    {
         r = r.withTrimmedBottom(-8);
+    }
 
     int offsetX = 23;
 
     for (int i = 0; i < gridX; i++)
     {
-        // if ((!isMacro) && (i == 0))
-        //    offsetX += 2;
-
-        // gross hack for accumulated 2 px horizontal offsets from the previous if clause
-        // needed to align the last column nicely
-        // if ((!isMacro) && (i == 8))
-        //    offsetX -= 18;
-
         offsetX += width;
     }
 
@@ -1259,6 +1270,7 @@ juce::Rectangle<int> SurgeGUIEditor::positionForModOverview()
     }
 
     auto r = juce::Rectangle<int>(skinCtrl->x, skinCtrl->y - 1, 22, 16 * 4 + 8).reduced(1);
+
     return r;
 }
 
@@ -1276,11 +1288,16 @@ void SurgeGUIEditor::openOrRecreateEditor()
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeGUIEditor::openOrRecreateEditor");
 #endif
+
     if (!synth)
+    {
         return;
+    }
+
     assert(frame);
 
     bool somethingHasFocus{false};
+
     if (editor_open)
     {
         somethingHasFocus = (juce::Component::getCurrentlyFocusedComponent() != nullptr);
@@ -1291,10 +1308,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
     std::unordered_map<std::string, std::string> uiidToSliderLabel;
     current_scene = synth->storage.getPatch().scene_active.val.i;
 
-    /*
-     * In Surge 1.8, the skin engine can change the position of this panel as a whole
-     * but not anything else about it. The skin query happens inside positionForModulationGrid
-     */
+    // In Surge 1.8, the skin engine can change the position of this panel as a whole,
+    // but not anything else about it. The skin query happens inside positionForModulationGrid
     for (int k = 1; k < n_modsources; k++)
     {
         modsources ms = (modsources)k;
@@ -1320,10 +1335,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 gui_modsrc[ms] = std::make_unique<Surge::Widgets::ModulationSourceButton>();
             }
 
-            // would be nice if this had worked, alas...
             auto ff = currentSkin->getFont(Fonts::Widgets::ModButtonFont);
-            gui_modsrc[ms]->setFont(ff);
 
+            gui_modsrc[ms]->setFont(ff);
             gui_modsrc[ms]->setBounds(r);
             gui_modsrc[ms]->setTag(tag_mod_source0 + ms);
             gui_modsrc[ms]->addListener(this);
@@ -1335,7 +1349,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             if ((ms >= ms_ctrl1) && (ms <= ms_ctrl8))
             {
-                // std::cout << synth->learn_macro_from_cc << std::endl;
                 gui_modsrc[ms]->setCurrentModLabel(
                     synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
                 gui_modsrc[ms]->setIsMeta(true);
@@ -1368,7 +1381,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     modOverviewLauncher->setSkin(currentSkin);
     addAndMakeVisibleWithTracking(frame->getModButtonLayer(), *modOverviewLauncher);
 
-    // fx vu-meters & labels. This is all a bit hacky still
+    // FX VU meters and labels. This is all a bit hacky still
     {
         std::lock_guard<std::mutex> g(synth->fxSpawnMutex);
 
@@ -1376,20 +1389,25 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             auto fxpp = currentSkin->getOrCreateControlForConnector("fx.param.panel");
             auto fxRect = juce::Rectangle<int>(fxpp->x, fxpp->y, 123, 13);
+
             for (int i = 0; i < 15; i++)
             {
                 auto t = synth->fx[current_fx]->vu_type(i);
+
                 if (t)
                 {
                     auto vr = fxRect.translated(6, yofs * synth->fx[current_fx]->vu_ypos(i))
                                   .translated(0, -14);
+
                     if (!vu[i + 1])
                     {
                         vu[i + 1] = std::make_unique<Surge::Widgets::VuMeter>();
                     }
+
                     vu[i + 1]->setBounds(vr);
                     vu[i + 1]->setSkin(currentSkin, bitmapStore);
                     vu[i + 1]->setType(t);
+
                     addAndMakeVisibleWithTracking(frame.get(), *vu[i + 1]);
                 }
                 else
@@ -1405,13 +1423,16 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                   .withTrimmedRight(-5)
                                   .translated(5, -12)
                                   .translated(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
+
                     if (!effectLabels[i])
                     {
                         effectLabels[i] = std::make_unique<Surge::Widgets::EffectLabel>();
                     }
+
                     effectLabels[i]->setBounds(vr);
                     effectLabels[i]->setLabel(label);
                     effectLabels[i]->setSkin(currentSkin, bitmapStore);
+
                     addAndMakeVisibleWithTracking(frame.get(), *effectLabels[i]);
                 }
                 else
@@ -1422,9 +1443,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
     }
 
-    /*
-     * Loop over the non-associated controls
-     */
+    // Loop over the non-associated controls
     for (auto i = Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED + 1;
          i < Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED; ++i)
     {
@@ -1432,6 +1451,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             (Surge::Skin::Connector::NonParameterConnection)i;
         auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
         auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+
         currentSkin->resolveBaseParentOffsets(skinCtrl);
 
         if (!skinCtrl)
@@ -1439,15 +1459,15 @@ void SurgeGUIEditor::openOrRecreateEditor()
             std::cout << "Unable to find SkinCtrl" << std::endl;
             continue;
         }
-        if (skinCtrl->classname == Surge::GUI::NoneClassName)
-            continue;
 
-        /*
-         * Many of the controls are special and so require non-generalizable constructors
-         * handled here. Some are standard and so once we know the tag we can use
-         * layoutComponentForSkin but it's not worth generalizing the OSCILLATOR_DISPLAY beyond
-         * this, say.
-         */
+        if (skinCtrl->classname == Surge::GUI::NoneClassName)
+        {
+            continue;
+        }
+
+        // Many of the controls are special and require non-generalizable constructors handled here.
+        // Some are standard, so once we know the tag, we can use layoutComponentForSkin,
+        // But it's not worth generalizing the OSCILLATOR_DISPLAY beyond this, say.
         switch (npc)
         {
         case Surge::Skin::Connector::NonParameterConnection::OSCILLATOR_DISPLAY:
@@ -1456,6 +1476,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                 oscWaveform = std::make_unique<Surge::Widgets::OscillatorWaveformDisplay>();
             }
+
             oscWaveform->setBounds(skinCtrl->getRect());
             oscWaveform->setSkin(currentSkin, bitmapStore);
             oscWaveform->setStorage(&(synth->storage));
@@ -1469,6 +1490,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                         "Oscillator Waveform Display", "Display");
 
             addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_OSC), *oscWaveform);
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::SURGE_MENU:
@@ -1476,6 +1498,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto q = layoutComponentForSkin(skinCtrl, tag_settingsmenu);
             mainMenu = q->asJuceComponent();
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Main Menu", "Open");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::OSCILLATOR_SELECT:
@@ -1484,6 +1507,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             oscswitch->setValue((float)current_osc[current_scene] / 2.0f);
             setAccessibilityInformationByTitleAndAction(oscswitch->asJuceComponent(),
                                                         "Oscillator Number", "Select");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_PATCHCATEGORY:
@@ -1491,12 +1515,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_category);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Jog Patch Category",
                                                         "Jog");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_patch);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Jog Patch", "Jog");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_WAVESHAPE:
@@ -1504,6 +1530,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogwaveshape);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Jog Waveshape",
                                                         "Jog");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::ANALYZE_WAVESHAPE:
@@ -1512,6 +1539,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             q->setValue(isAnyOverlayPresent(WAVESHAPER_ANALYZER) ? 1 : 0);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze Waveshape",
                                                         "Open");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::ANALYZE_FILTERS:
@@ -1520,12 +1548,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
             q->setValue(isAnyOverlayPresent(FILTER_ANALYZER) ? 1 : 0);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze Filters",
                                                         "Open");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "FX Preset", "Jog");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_MPE:
@@ -1545,6 +1575,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                                                  : synth->storage.isToggledToCache);
             setAccessibilityInformationByTitleAndAction(statusTune->asJuceComponent(), "Tune",
                                                         "Configure");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_ZOOM:
@@ -1552,6 +1583,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             statusZoom = layoutComponentForSkin(skinCtrl, tag_status_zoom);
             setAccessibilityInformationByTitleAndAction(statusZoom->asJuceComponent(), "Zoom",
                                                         "Configure");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::ACTION_UNDO:
@@ -1559,6 +1591,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             actionUndo = layoutComponentForSkin(skinCtrl, tag_action_undo);
             setAccessibilityInformationByTitleAndAction(actionUndo->asJuceComponent(), "Undo",
                                                         "Undo");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::ACTION_REDO:
@@ -1566,12 +1599,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
             actionRedo = layoutComponentForSkin(skinCtrl, tag_action_redo);
             setAccessibilityInformationByTitleAndAction(actionRedo->asJuceComponent(), "Redo",
                                                         "Redo");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_store);
             setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Save Patch", "Save");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_OPEN:
@@ -1579,37 +1614,50 @@ void SurgeGUIEditor::openOrRecreateEditor()
             lfoEditSwitch = layoutComponentForSkin(skinCtrl, tag_mseg_edit);
             setAccessibilityInformationByTitleAndAction(lfoEditSwitch->asJuceComponent(),
                                                         "Show MSEG Editor", "Show");
+
+            auto q = modsource_editor[current_scene];
             auto msejc = dynamic_cast<juce::Component *>(lfoEditSwitch);
+
             jassert(msejc);
+
             msejc->setVisible(false);
             lfoEditSwitch->setValue(isAnyOverlayPresent(MSEG_EDITOR) ||
                                     isAnyOverlayPresent(FORMULA_EDITOR));
-            auto q = modsource_editor[current_scene];
+
             if ((q >= ms_lfo1 && q <= ms_lfo6) || (q >= ms_slfo1 && q <= ms_slfo6))
             {
                 auto *lfodata = &(synth->storage.getPatch().scene[current_scene].lfo[q - ms_lfo1]);
+
                 if (lfodata->shape.val.i == lt_mseg || lfodata->shape.val.i == lt_formula)
+                {
                     msejc->setVisible(true);
+                }
 
                 if (lfodata->shape.val.i == lt_formula)
+                {
                     setAccessibilityInformationByTitleAndAction(lfoEditSwitch->asJuceComponent(),
                                                                 "Show Formula Editor", "Show");
+                }
             }
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::LFO_MENU:
         {
             auto r = layoutComponentForSkin(skinCtrl, tag_lfo_menu);
             setAccessibilityInformationByTitleAndAction(r->asJuceComponent(), "LFO Menu", "Open");
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::LFO_LABEL:
         {
             componentForSkinSessionOwnedByMember(skinCtrl->sessionid, lfoNameLabel);
             addAndMakeVisibleWithTracking(frame.get(), *lfoNameLabel);
+
             lfoNameLabel->setBounds(skinCtrl->getRect());
             lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
             lfoNameLabel->setFontColour(currentSkin->getColor(Colors::LFO::Title::Text));
+
             break;
         }
 
@@ -1618,7 +1666,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             // Room for improvement, obviously
             if (!fxPresetLabel)
             {
-                fxPresetLabel = std::make_unique<juce::Label>("FxPreset label");
+                fxPresetLabel = std::make_unique<juce::Label>("FX Preset Name");
             }
 
             fxPresetLabel->setColour(juce::Label::textColourId,
@@ -1631,11 +1679,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
             setAccessibilityInformationByTitleAndAction(fxPresetLabel.get(), "FX Preset", "Show");
 
             addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_FX), *fxPresetLabel);
+
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
         {
             componentForSkinSessionOwnedByMember(skinCtrl->sessionid, patchSelector);
+
             patchSelector->addListener(this);
             patchSelector->setStorage(&(this->synth->storage));
             patchSelector->setTag(tag_patchname);
@@ -1661,6 +1711,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             // FIXOWN
             componentForSkinSessionOwnedByMember(skinCtrl->sessionid, effectChooser);
+
             effectChooser->addListener(this);
             effectChooser->setStorage(&(synth->storage));
             effectChooser->setBounds(skinCtrl->getRect());
@@ -1673,6 +1724,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                 effectChooser->setEffectType(fxi, synth->storage.getPatch().fx[fxi].type.val.i);
             }
+
             effectChooser->setBypass(synth->storage.getPatch().fx_bypass.val.i);
             effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
 
@@ -1685,11 +1737,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER:
         {
-            // main vu-meter
             componentForSkinSessionOwnedByMember(skinCtrl->sessionid, vu[0]);
+
             vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
             vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
+
             addAndMakeVisibleWithTracking(frame.get(), *vu[0]);
 
             break;
@@ -1707,19 +1760,22 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     memset(param, 0, n_paramslots * sizeof(void *));
     memset(nonmod_param, 0, n_paramslots * sizeof(void *));
+
     int i = 0;
     vector<Parameter *>::iterator iter;
+
     for (iter = synth->storage.getPatch().param_ptr.begin();
          iter != synth->storage.getPatch().param_ptr.end(); iter++)
     {
         if (i == n_paramslots)
         {
-            // This would only happen if a dev added params.
+            // This would only happen if we added new parameters
             synth->storage.reportError(
                 "INTERNAL ERROR: List of parameters is larger than maximum number of parameter "
                 "slots. Increase n_paramslots in SurgeGUIEditor.h!",
                 "Error");
         }
+
         Parameter *p = *iter;
         bool paramIsVisible = ((p->scene == (current_scene + 1)) || (p->scene == 0)) &&
                               isControlVisible(p->ctrlgroup, p->ctrlgroup_entry) &&
@@ -1732,21 +1788,16 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
         if (p->ctrltype == ct_fmratio)
         {
-            if (p->extend_range || p->absolute)
-                p->val_default.f = 16.f;
-            else
-                p->val_default.f = 1.f;
+            p->val_default.f = (p->extend_range || p->absolute) ? 16.f : 1.f;
         }
 
         if (p->hasSkinConnector &&
             conn.payload->defaultComponent != Surge::Skin::Components::None && paramIsVisible)
         {
-            /*
-             * Some special cases where we don't add a control
-             */
+            // Some special cases where we don't add a control
             bool addControl = true;
 
-            // Case: Analog envelopes have no shapers
+            // Analog filter/amp envelope mode has no segment shape controls
             if (p->ctrltype == ct_envshape || p->ctrltype == ct_envshape_attack)
             {
                 addControl = (synth->storage.getPatch()
@@ -1758,6 +1809,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             if (addControl)
             {
                 auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
+
                 currentSkin->resolveBaseParentOffsets(skinCtrl);
                 layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
                                        style | conn.payload->controlStyleFlags);
@@ -1771,6 +1823,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 }
             }
         }
+
         i++;
     }
 
@@ -1778,14 +1831,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
     if (synth->storage.getPatch().scene[current_scene].f2_link_resonance.val.b)
     {
         i = synth->storage.getPatch().scene[current_scene].filterunit[1].resonance.id;
+
         if (param[i])
+        {
             param[i]->setDeactivated(true);
+        }
     }
     else
     {
         i = synth->storage.getPatch().scene[current_scene].filterunit[1].resonance.id;
+
         if (param[i])
+        {
             param[i]->setDeactivated(false);
+        }
     }
 
     // feedback control
@@ -1795,22 +1854,26 @@ void SurgeGUIEditor::openOrRecreateEditor()
         i = synth->storage.getPatch().scene[current_scene].feedback.id;
         bool curr = param[i]->getDeactivated();
         param[i]->setDeactivated(true);
+
         if (!curr)
         {
             param[i]->asJuceComponent()->repaint();
         }
     }
 
-    // pan2 control
+    // width control
     if ((synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i !=
          fc_stereo) &&
         (synth->storage.getPatch().scene[current_scene].filterblock_configuration.val.i != fc_wide))
     {
         i = synth->storage.getPatch().scene[current_scene].width.id;
+
         if (param[i])
         {
             bool curr = param[i]->getDeactivated();
+
             param[i]->setDeactivated(true);
+
             if (!curr)
             {
                 param[i]->asJuceComponent()->repaint();
@@ -1820,9 +1883,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     // Make sure the infowindow typein
     paramInfowindow->setVisible(false);
-    addComponentWithTracking(frame.get(), *paramInfowindow);
-
     patchSelectorComment->setVisible(false);
+
+    addComponentWithTracking(frame.get(), *paramInfowindow);
     addComponentWithTracking(frame.get(), *patchSelectorComment);
 
     // Mouse behavior
@@ -1845,15 +1908,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                  : Surge::Widgets::ModulatableSlider::TouchscreenMode::kEnabled;
     }
 
-    /*
-    ** Skin Labels
-    */
+    // skin labels
     auto labels = currentSkin->getLabels();
 
     for (auto &l : labels)
     {
         auto mtext = currentSkin->propertyValue(l, Surge::Skin::Component::TEXT);
         auto ctext = currentSkin->propertyValue(l, Surge::Skin::Component::CONTROL_TEXT);
+
         if (ctext.has_value() && uiidToSliderLabel.find(*ctext) != uiidToSliderLabel.end())
         {
             mtext = ctext;
@@ -1884,24 +1946,29 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto frcol = currentSkin->getColor(frcoln, dcol);
 
             auto lb = componentForSkinSession<juce::Label>(l->sessionid);
+
             lb->setColour(juce::Label::textColourId, col);
             lb->setColour(juce::Label::backgroundColourId, bgcol);
             lb->setBounds(l->getRect());
             lb->setText(*mtext, juce::dontSendNotification);
 
             addAndMakeVisibleWithTracking(frame.get(), *lb);
+
             juceSkinComponents[l->sessionid] = std::move(lb);
         }
         else
         {
             auto image = currentSkin->propertyValue(l, Surge::Skin::Component::IMAGE);
+
             if (image.has_value())
             {
                 auto bmp = bitmapStore->getImageByStringID(*image);
+
                 if (bmp)
                 {
                     auto r = l->getRect();
                     auto db = bmp->getDrawableButUseWithCaution();
+
                     if (db)
                     {
                         db->setBounds(r);
@@ -1918,10 +1985,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             el.second->getPrimaryChildAsOverlayComponent()->forceDataRefresh();
         }
+
         if (!el.second->isTornOut())
         {
             addAndMakeVisibleWithTracking(frame.get(), *(el.second));
         }
+
         updateOverlayContentIfPresent(el.first);
     }
 
@@ -1932,22 +2001,27 @@ void SurgeGUIEditor::openOrRecreateEditor()
     }
 
     // We need this here in case we rebuild when opening a new patch.
-    // closeMSEGEditor does nothing if the mseg editor isn't open
+    // closeMSEGEditor() does nothing if the MSEG editor isn't open
     auto lfoidx = modsource_editor[current_scene] - ms_lfo1;
+
     if (lfoidx >= 0 && lfoidx <= n_lfos)
     {
         auto ld = &(synth->storage.getPatch().scene[current_scene].lfo[lfoidx]);
+
         if (ld->shape.val.i != lt_mseg)
         {
             auto olc = getOverlayWrapperIfOpen(MSEG_EDITOR);
+
             if (olc && !olc->isTornOut())
             {
                 closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
             }
         }
+
         if (ld->shape.val.i != lt_formula)
         {
             auto olc = getOverlayWrapperIfOpen(FORMULA_EDITOR);
+
             if (olc && !olc->isTornOut())
             {
                 closeOverlay(SurgeGUIEditor::FORMULA_EDITOR);
@@ -1955,17 +2029,16 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
     }
 
-    // if the tuning is open and oddsound has activated (which causes a refrresh) then close it
+    // if the Tuning Editor was open and ODDSound was activated (which causes a refresh), close it
     if (synth->storage.oddsound_mts_active)
     {
         closeOverlay(TUNING_EDITOR);
     }
 
-    /*
-     * Finally make sure the Z-Order fronting for our overlays is still OK
-     */
+    // Finally make sure the Z-order fronting for our overlays is still OK
     std::vector<juce::Component *> frontthese;
     std::vector<juce::Component *> thenFrontThese;
+
     for (auto c : frame->getChildren())
     {
         if (auto ol = dynamic_cast<Surge::Overlays::OverlayWrapper *>(c))
@@ -1980,10 +2053,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
         }
     }
+
     for (auto c : frontthese)
     {
         c->toFront(true);
     }
+
     for (auto c : thenFrontThese)
     {
         c->toFront(true);
@@ -1993,6 +2068,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     refresh_mod();
 
     removeUnusedTrackedComponents();
+
     editor_open = true;
     queue_refresh = false;
 
@@ -2005,14 +2081,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
     {
         handler->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
     }
+
     frame->repaint();
 }
 
 void SurgeGUIEditor::close_editor()
 {
     editor_open = false;
-    // frame->removeAllChildren();
-    // frame->clearGroupLayers();
+
     resetComponentTracking();
     setzero(param);
 }
@@ -2025,16 +2101,14 @@ bool SurgeGUIEditor::open(void *parent)
     frame = std::make_unique<Surge::Widgets::MainFrame>();
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     frame->setSurgeGUIEditor(this);
-    // frame->setWantsKeyboardFocus(true);
+
     juceEditor->addAndMakeVisible(*frame);
     juceEditor->addKeyListener(this);
 
-    /*
-     * SET UP JUCE EDITOR BETTER
-     */
-
+    // TODO: SET UP JUCE EDITOR BETTER!
     bitmapStore.reset(new SurgeImageStore());
     bitmapStore->setupBuiltinBitmaps();
+
     if (!currentSkin->reloadSkin(bitmapStore))
     {
         auto db = Surge::GUI::SkinDB::get();
@@ -2046,6 +2120,7 @@ bool SurgeGUIEditor::open(void *parent)
         auto msg = std::string(oss.str());
         this->currentSkin = db->defaultSkin(&(this->synth->storage));
         this->currentSkin->reloadSkin(this->bitmapStore);
+
         synth->storage.reportError(msg, "Skin Loading Error");
     }
 
@@ -2061,7 +2136,9 @@ bool SurgeGUIEditor::open(void *parent)
     auto *des = &(synth->storage.getPatch().dawExtraState);
 
     if (des->isPopulated && des->editor.isMSEGOpen)
+    {
         showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+    }
 
     return true;
 }
@@ -2075,16 +2152,23 @@ void SurgeGUIEditor::close()
 void SurgeGUIEditor::setParameter(long index, float value)
 {
     if (!frame)
-        return;
-    if (!editor_open)
-        return;
-    if (index > synth->storage.getPatch().param_ptr.size())
-        return;
-
-    // if(param[index])
     {
-        // param[index]->setValue(value);
+        return;
+    }
+
+    if (!editor_open)
+    {
+        return;
+    }
+
+    if (index > synth->storage.getPatch().param_ptr.size())
+    {
+        return;
+    }
+
+    {
         int j = 0;
+
         while (j < 7)
         {
             if ((synth->refresh_ctrl_queue[j] > -1) && (synth->refresh_ctrl_queue[j] != index))
@@ -2092,6 +2176,7 @@ void SurgeGUIEditor::setParameter(long index, float value)
             else
                 break;
         }
+
         synth->refresh_ctrl_queue[j] = index;
         synth->refresh_ctrl_queue_value[j] = value;
     }
@@ -2101,6 +2186,7 @@ void SurgeGUIEditor::addHelpHeaderTo(const std::string &lab, const std::string &
                                      juce::PopupMenu &m) const
 {
     auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(lab, hu);
+
     tc->setSkin(currentSkin, bitmapStore);
     m.addCustomItem(-1, std::move(tc));
 }
@@ -6179,15 +6265,19 @@ void SurgeGUIEditor::showAboutScreen(int devModeGrid)
     aboutScreen->setWrapperType(synth->juceWrapperType);
     aboutScreen->setStorage(&(this->synth->storage));
     aboutScreen->setSkin(currentSkin, bitmapStore);
-
+    aboutScreen->setDevModeGrid(devModeGrid);
     aboutScreen->populateData();
-
     aboutScreen->setBounds(frame->getLocalBounds());
+
     // this is special - it can't make a rebuild so just add it normally
     frame->addAndMakeVisible(*aboutScreen);
 }
 
-void SurgeGUIEditor::hideAboutScreen() { frame->removeChildComponent(aboutScreen.get()); }
+void SurgeGUIEditor::hideAboutScreen()
+{
+    frame->removeChildComponent(aboutScreen.get());
+    aboutScreen = nullptr;
+}
 
 void SurgeGUIEditor::showMidiLearnOverlay(const juce::Rectangle<int> &r)
 {
