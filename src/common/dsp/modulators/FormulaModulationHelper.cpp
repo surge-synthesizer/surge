@@ -236,10 +236,11 @@ end
             }
         }
 
-        lua_setglobal(s.L,
-                      s.stateName); // FIXME - we have to clean this up when evaluat is done
+        // FIXME - we have to clean this up when evaluation is done
+        lua_setglobal(s.L, s.stateName);
 
-        lua_pop(s.L, -1); // the modstate which is nouw bound to the statename
+        // the modstate which is now bound to the state name
+        lua_pop(s.L, -1);
 
         s.useEnvelope = true;
 
@@ -265,7 +266,8 @@ end
                     }
                     lua_pop(s.L, 1);
                 }
-                // now lets read off those subscriptions
+
+                // now let's read off those subscriptions
                 lua_pushstring(s.L, "subscriptions");
                 lua_gettable(s.L, -2);
 

@@ -104,7 +104,7 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
     {
         float nSpread = ud * 16 * storage->note_to_pitch_inv(pitch) / Tunings::MIDI_0_FREQ * 12;
         ud = nSpread;
-        // TODO : Tuning Awareness alas
+        // TODO: Tuning Awareness alas
     }
 
     if (do_FM)

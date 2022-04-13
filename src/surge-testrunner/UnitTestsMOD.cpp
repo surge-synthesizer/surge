@@ -939,13 +939,14 @@ TEST_CASE("Keytrack Morph", "[mod]")
             /*
              * FIXME: Make this an assertive test. What we are really checking is, is l_shape 3.33
              * inside the oscillator? But there's no easy way to assert that so just leave the test
-             * here as a debugging harness around issue 3046
+             * here as a debugging harness around issue
+             * https://github.com/surge-synthesizer/surge/issues/3046
              */
         }
     }
 }
 
-TEST_CASE("KeyTrack in Play Modes", "[mod]")
+TEST_CASE("Keytrack in Play Modes", "[mod]")
 {
     /*
      * See issue 2892. In mono mode keytrack needs to follow held keys not just soloe playing voice
@@ -1008,7 +1009,7 @@ TEST_CASE("KeyTrack in Play Modes", "[mod]")
                             0) == latest);
                 return true;
             };
-            DYNAMIC_SECTION("KeyTrack Test mode=" << m << " mpe=" << mp)
+            DYNAMIC_SECTION("Keytrack Test mode=" << m << " mpe=" << mp)
             {
                 {
                     auto surge = cs();

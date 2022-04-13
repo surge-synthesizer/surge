@@ -274,8 +274,7 @@ void AirWindowsEffect::setupSubFX(int sfx, bool useStreamedValues)
     lastSelected = sfx;
     resetCtrlTypes(useStreamedValues);
 
-    // Snap the init values as defaults onto the params. Start at 1 since slot 0 is the FX type
-    // selector
+    // Snap the init values as defaults onto the params. Start at 1 since slot 0 is FX type selector
     for (auto i = 1; i < n_fx_params; ++i)
     {
         if (fxdata->p[i].ctrltype != ct_none)

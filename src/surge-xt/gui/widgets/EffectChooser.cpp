@@ -68,11 +68,10 @@ void EffectChooser::paint(juce::Graphics &g)
 {
     if (skin->getVersion() < 2)
     {
-        // FIXME implement this
         jassert(false);
         g.fillAll(juce::Colours::red);
         g.setColour(juce::Colours::white);
-        g.drawText("Can't do v1 skins in Surge XT!", getLocalBounds(),
+        g.drawText("Can't load skin version 1 in Surge XT!", getLocalBounds(),
                    juce::Justification::centred);
         return;
     }

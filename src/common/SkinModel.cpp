@@ -509,8 +509,8 @@ Connector trigger_mode = Connector("lfo.trigger_mode", 172, 484, 51, 39, Compone
 Connector unipolar = Connector("lfo.unipolar", 172, 546, 51, 14, Components::Switch)
                          .withBackground(IDB_LFO_UNIPOLAR);
 
-// combined LFO shape AND LFO display - TODO: split them to individual skin connectors at some
-// point!
+// combined LFO shape AND LFO display
+// TODO: split them to individual skin connectors at some point!
 Connector shape = Connector("lfo.shape", 235, 480, 359, 84, Components::LFODisplay);
 
 Connector mseg_editor =

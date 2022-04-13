@@ -121,8 +121,7 @@ void Reverb2Effect::calc_size(float scale)
 
 void Reverb2Effect::setvars(bool init)
 {
-    // TODO, balance the gains from the calculated decay coefficient?
-
+    // TODO: balance the gains from the calculated decay coefficient?
     _tap_gainL[0] = 1.5f / 4.f;
     _tap_gainL[1] = 1.2f / 4.f;
     _tap_gainL[2] = 1.0f / 4.f;
@@ -137,12 +136,12 @@ void Reverb2Effect::setvars(bool init)
 
 void Reverb2Effect::update_rtime()
 {
-    float t = BLOCK_SIZE_INV * (samplerate * (std::max(1.0f, powf(2.f, *f[rev2_decay_time])) * 2.f +
-                                              std::max(0.1f, powf(2.f, *f[rev2_predelay]) *
-                                                                 (fxdata->p[rev2_predelay].temposync
-                                                                      ? storage->temposyncratio_inv
-                                                                      : 1.f)) *
-                                                  2.f)); // * 2.f is to get the db120 time
+    auto ts = fxdata->p[rev2_predelay].temposync ? storage->temposyncratio_inv : 1.f;
+    // * 2.f is to get the dB120 time
+    auto pdlyt = std::max(0.1f, powf(2.f, *f[rev2_predelay]) * ts) * 2.f;
+    auto dcyt = std::max(1.0f, powf(2.f, *f[rev2_decay_time])) * 2.f;
+    float t = BLOCK_SIZE_INV * (samplerate * (dcyt + pdlyt));
+
     ringout_time = (int)t;
 }
 

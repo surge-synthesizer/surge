@@ -2318,6 +2318,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     // see if it can be done in a cleaner way
     // TODO: once we have more than 6 voice/scene LFOs, this condition will need tweaking,
     // because new LFOs will need to be appended at the end of the list of modsources
+    // OR, we break compatibility in a major version update and have all LFOs in a block
     bool isSceneMSEG() const { return lfodata->shape.ctrlgroup_entry >= ms_slfo1; }
 
     void openPopup(const juce::Point<float> &iw)

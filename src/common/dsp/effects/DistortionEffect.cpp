@@ -67,9 +67,9 @@ void DistortionEffect::setvars(bool init)
 
 void DistortionEffect::process(float *dataL, float *dataR)
 {
-    // TODO fix denormals!
     if (bi == 0)
         setvars(false);
+
     bi = (bi + 1) & slowrate_m1;
 
     band1.process_block(dataL, dataR);
@@ -109,9 +109,12 @@ void DistortionEffect::process(float *dataL, float *dataR)
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
-        float a = (k & 16) ? 0.00000001 : -0.00000001; // denormal thingy
+        // denormal thingy
+        float a = (k & 16) ? 0.00000001 : -0.00000001;
+
         float Lin = dataL[k];
         float Rin = dataR[k];
+
         for (int s = 0; s < distortion_OS; s++)
         {
             L = Lin + fb * L;
@@ -143,8 +146,9 @@ void DistortionEffect::process(float *dataL, float *dataR)
                 R = lookup_waveshape(ws, R);
             }
 
+            // denormal handling
             L += a;
-            R += a; // denormal
+            R += a;
 
             if (!fxdata->p[dist_posteq_highcut].deactivated)
             {

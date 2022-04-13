@@ -136,8 +136,9 @@ class alignas(16) SurgeSynthesizer
     SurgeVoice *getUnusedVoice(int scene); // not const since it updates voice state
     void freeVoice(SurgeVoice *);
     std::array<std::array<SurgeVoice, MAX_VOICES>, 2> voices_array;
-    unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A & 2 is scene B
-                                               // // TODO: FIX SCENE ASSUMPTION!
+    // TODO: FIX SCENE ASSUMPTION!
+    unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A, 2 is scene B
+
     int64_t voiceCounter = 1L;
 
     std::atomic<unsigned int> processRunning{0};
@@ -270,7 +271,7 @@ class alignas(16) SurgeSynthesizer
     bool isBipolarModulation(modsources modsources) const;
     bool isModsourceUsed(modsources modsource); // FIXME - this should be const
     bool isModDestUsed(long moddest) const;
-    bool isModulatorDistinctPerScene(modsources modsource) const; // ModWheel no; SLFO2 yes. etc...
+    bool isModulatorDistinctPerScene(modsources modsource) const; // Modwheel no; SLFO2 yes. etc...
 
     bool supportsIndexedModulator(int scene, modsources modsource) const;
     int getMaxModulationIndex(int scene, modsources modsource) const;
@@ -291,8 +292,8 @@ class alignas(16) SurgeSynthesizer
     bool isModulationMuted(long ptag, modsources modsource, int modsourceScene, int index) const;
     void clearModulation(long ptag, modsources modsource, int modsourceScene, int index,
                          bool clearEvenIfInvalid = false);
-    void clear_osc_modulation(
-        int scene, int entry); // clear the modulation routings on the algorithm-specific sliders
+    // clear the modulation routings on the algorithm-specific sliders
+    void clear_osc_modulation(int scene, int entry);
 
     /*
      * The modulation API (setModDepth01 etc...) is called from all sorts of places
@@ -342,9 +343,8 @@ class alignas(16) SurgeSynthesizer
     void updateUsedState();
     void prepareModsourceDoProcess(int scenemask);
     unsigned int saveRaw(void **data);
+
     // synth -> editor variables
-    std::atomic<int>
-        polydisplay; // updated in audio thread, read from ui, so have assignments be atomic
     bool refresh_editor, patch_loaded;
     int learn_param_from_cc, learn_macro_from_cc, learn_param_from_note;
     int refresh_ctrl_queue[8];
@@ -352,9 +352,12 @@ class alignas(16) SurgeSynthesizer
     bool refresh_overflow = false;
     float refresh_ctrl_queue_value[8];
     bool process_input;
-    std::atomic<int> patchid_queue;
     bool has_patchid_file;
     char patchid_file[FILENAME_MAX];
+    std::atomic<int> patchid_queue;
+
+    // updated in audio thread, read from UI, so have assignments be atomic
+    std::atomic<int> polydisplay;
 
     float vu_peak[8];
 
@@ -366,8 +369,8 @@ class alignas(16) SurgeSynthesizer
     int CC0, CC32, PCH, patchid;
     float masterfade = 0;
     bool approachingAllSoundsOff{false};
-    HalfRateFilter halfbandA, halfbandB,
-        halfbandIN; // TODO: FIX SCENE ASSUMPTION (for halfbandA/B - use std::array)
+    // TODO: FIX SCENE ASSUMPTION (for halfbandA/B - use std::array)
+    HalfRateFilter halfbandA, halfbandB, halfbandIN;
     std::list<SurgeVoice *> voices[n_scenes];
     std::unique_ptr<Effect> fx[n_fx_slots];
     std::atomic<bool> halt_engine;
@@ -389,7 +392,8 @@ class alignas(16) SurgeSynthesizer
 
     static constexpr int n_hpBQ = 4;
 
-    std::array<BiquadFilter, n_hpBQ> hpA, hpB; // TODO: FIX SCENE ASSUMPTION (use std::array)
+    // TODO: FIX SCENE ASSUMPTION (use std::array)
+    std::array<BiquadFilter, n_hpBQ> hpA, hpB;
 
     bool fx_reload[n_fx_slots];   // if true, reload new effect parameters from fxsync
     FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init
@@ -407,7 +411,6 @@ class alignas(16) SurgeSynthesizer
     int32_t fx_suspend_bitmask;
 
     // hold pedal stuff
-
     struct HoldBufferItem
     {
         int channel;
@@ -429,13 +432,13 @@ class alignas(16) SurgeSynthesizer
 
     void changeModulatorSmoothing(Modulator::SmoothingMode m);
 
-    // these have to be thread-safe, so keep private
+    // these have to be thread-safe, so keep them private
   private:
     PluginLayer *_parent = nullptr;
 
     void switch_toggled();
 
-    // midicontrol-interpolators
+    // MIDI control interpolators
     static const int num_controlinterpolators = 128;
     ControllerModulationSource mControlInterpolator[num_controlinterpolators];
     bool mControlInterpolatorUsed[num_controlinterpolators];

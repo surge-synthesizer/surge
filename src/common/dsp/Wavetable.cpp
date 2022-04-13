@@ -200,15 +200,14 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
     for (int j = 0; j < this->n_tables; j++)
     {
         TableF32WeakPointers[0][j] = TableF32Data + GetWTIndex(j, size, n_tables, 0);
-        TableI16WeakPointers[0][j] =
-            TableI16Data + GetWTIndex(j, size, n_tables, 0,
-                                      FIRipolI16_N); // + padding for a "non-wrapping" interpolator
+        // + padding for a non-wrapping interpolator
+        TableI16WeakPointers[0][j] = TableI16Data + GetWTIndex(j, size, n_tables, 0, FIRipolI16_N);
     }
-    for (int j = this->n_tables; j < min_F32_tables;
-         j++) // W-TABLE need at least 3 tables to work properly
+    for (int j = this->n_tables; j < min_F32_tables; j++)
     {
         unsigned int s = this->size;
         int l = 0;
+
         while (s && (l < max_mipmap_levels))
         {
             TableF32WeakPointers[l][j] = TableF32Data + GetWTIndex(j, size, n_tables, l);
@@ -340,5 +339,5 @@ void Wavetable::MipMapWT()
     // TODO I16 mipmaps end up out of phase
     // The click/knot/bug probably results from the fact that there is no padding in the beginning,
     // so it becomes out of phase at mipmap switch - makes sense because as they were off by a whole
-    // sample at the mipmap switch, which can not be explained by the halfrate filter
+    // sample at the mipmap switch, which cannot be explained by the half rate filter
 }

@@ -3608,10 +3608,9 @@ void SurgeSynthesizer::processControl()
         }
     }
 
-    /*
-     * Update keys if we are bound
-     */
+    // Update keys if we are bound
     prepareModsourceDoProcess((playA ? 1 : 0) | (playB ? 2 : 0));
+
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         if (storage.getPatch().scene[sc].modsource_doprocess[ms_highest_key] ||

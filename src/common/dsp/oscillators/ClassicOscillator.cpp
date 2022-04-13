@@ -616,9 +616,7 @@ void ClassicOscillator::process_block(float pitch0, float drift, bool stereo, bo
 
     if (FM)
     {
-        /*
-        ** FIXME - document the FM branch
-        */
+        // FIXME - document the FM branch
         for (l = 0; l < n_unison; l++)
         {
             driftLFO[l].next();
@@ -636,6 +634,7 @@ void ClassicOscillator::process_block(float pitch0, float drift, bool stereo, bo
                 while (((l_sync.v > 0) && (syncstate[l] < a)) || (oscstate[l] < a))
                 {
                     FMmul_inv = rcp(fmmul);
+
                     // The division races with the growth of the oscstate so that it never comes out
                     // of/gets out of the loop this becomes unsafe, don't fuck with the oscstate but
                     // make a division within the convolute instead.

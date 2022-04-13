@@ -59,7 +59,8 @@ void VocoderEffect::setvars(bool init)
     const float Spread = 0.4f / Q;
 
     active_bands = *pdata_ival[voc_num_bands];
-    active_bands = active_bands - (active_bands % 4); // FIXME - adjust the UI to be chunks of 4
+    // FIXME - adjust the UI to be chunks of 4
+    active_bands = active_bands - (active_bands % 4);
 
     // We need to clamp these in reasonable ranges
     float flo = limit_range(*f[voc_minfreq], -36.f, 36.f);
@@ -90,10 +91,11 @@ void VocoderEffect::setvars(bool init)
         sepMod = true;
         auto fDist = fhi - flo;
         auto fDistHalf = fDist / 2.f;
-        auto mMid =
-            fDistHalf + flo +
-            0.3 * mC * fDistHalf; // that 0.3 is a tuning choice about how far we can move center
-        auto mLo = mMid - fDistHalf * (1 + 0.7 * mX); // as is that 0.7
+
+        // that 0.3 is a tuning choice about how far we can move center
+        auto mMid = fDistHalf + flo + 0.3 * mC * fDistHalf;
+        // as is that 0.7
+        auto mLo = mMid - fDistHalf * (1 + 0.7 * mX);
         auto dM = fDistHalf * 2 * (1.0 + 0.7 * mX) / (active_bands - 1);
 
         auto mHi = mLo + dM * (active_bands - 1);

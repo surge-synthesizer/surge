@@ -1201,17 +1201,21 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, SurgeImage *
     {
         return nullptr;
     }
+
     if (c.get())
     {
         // YES it might. Show and document this
         // std::cout << "TODO: The component may have a name for a hover asset type=" << t << "
         // component=" << c->toString() << std::endl;
     }
+
     if (!b)
     {
         return nullptr;
     }
+
     std::ostringstream sid;
+
     if (b->resourceID < 0)
     {
         // we got a skin

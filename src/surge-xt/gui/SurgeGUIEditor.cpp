@@ -2433,7 +2433,7 @@ void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene
     modsource = ms;
     modsource_index = idx;
     mod_editor = true;
-    // TODO arm the modulator also
+    // TODO: arm the modulator also
     synth->refresh_editor = true;
 }
 
@@ -3990,7 +3990,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
     if (useDevMenu)
     {
         int pxres = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                        Surge::Storage::LayoutGridResolution, 16);
+                                                        Surge::Storage::LayoutGridResolution, 20);
 
         auto m = std::string("Show Layout Grid (") + std::to_string(pxres) + " px)";
 
@@ -4003,9 +4003,15 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
                     std::to_string(pxres), "Enter a new value:", "Layout Grid Resolution",
                     juce::Point<int>{400, 400},
                     [this](const std::string &s) {
-                        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                               Surge::Storage::LayoutGridResolution,
-                                                               std::atoi(s.c_str()));
+                        auto val = std::atoi(s.c_str());
+
+                        if (val < 4)
+                        {
+                            val = 4;
+                        }
+
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage), Surge::Storage::LayoutGridResolution, val);
                     },
                     mainMenu);
             });
@@ -5651,7 +5657,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         fxMenu->setFxBuffer(&synth->fxsync[current_fx]);
         fxMenu->setCurrentFx(current_fx);
         fxMenu->selectedIdx = selectedFX[current_fx];
-        // TODO set the fxs fxb, cfx
+        // TODO: set the fxs fxb, cfx
 
         fxMenu->populate();
         addAndMakeVisibleWithTrackingInCG(cg_FX, *fxMenu);
@@ -5686,7 +5692,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         pbd->setBackgroundDrawable(images[0]);
         pbd->setHoverBackgroundDrawable(images[1]);
 
-        // TODO extra from properties
+        // TODO: extra from properties
         auto nfcm =
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::NUMBERFIELD_CONTROLMODE,
                                        std::to_string(Surge::Skin::Parameters::NONE));
@@ -6545,6 +6551,7 @@ void SurgeGUIEditor::setupKeymapManager()
                               {keymap_t::Modifiers::SHIFT, juce::KeyPress::leftKey});
     keyMapManager->addBinding(Surge::GUI::NEXT_CATEGORY,
                               {keymap_t::Modifiers::SHIFT, juce::KeyPress::rightKey});
+
     keyMapManager->addBinding(Surge::GUI::FAVORITE_PATCH, {keymap_t::Modifiers::ALT, (int)'F'});
     keyMapManager->addBinding(Surge::GUI::FIND_PATCH, {keymap_t::Modifiers::COMMAND, (int)'F'});
     keyMapManager->addBinding(Surge::GUI::SAVE_PATCH, {keymap_t::Modifiers::COMMAND, (int)'S'});
@@ -6569,13 +6576,14 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
                               {keymap_t::Modifiers::ALT, (int)'K'});
 
-    keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t ::Modifiers::SHIFT, '/'});
-    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t ::Modifiers::NONE, '+'});
-    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_25, {keymap_t ::Modifiers::SHIFT, '+'});
-    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_10, {keymap_t ::Modifiers::NONE, '-'});
-    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_25, {keymap_t ::Modifiers::SHIFT, '-'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t::Modifiers::SHIFT, '/'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t::Modifiers::NONE, '+'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_25, {keymap_t::Modifiers::SHIFT, '+'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_10, {keymap_t::Modifiers::NONE, '-'});
+    keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_25, {keymap_t::Modifiers::SHIFT, '-'});
 
     keyMapManager->addBinding(Surge::GUI::REFRESH_SKIN, {juce::KeyPress::F5Key});
+    keyMapManager->addBinding(Surge::GUI::SKIN_LAYOUT_GRID, {keymap_t::Modifiers::ALT, (int)'L'});
 
     keyMapManager->addBinding(Surge::GUI::OPEN_MANUAL, {juce::KeyPress::F1Key});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_ABOUT, {juce::KeyPress::F12Key});
@@ -6650,6 +6658,58 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::REDO:
                 undoManager()->redo();
                 return true;
+
+            case Surge::GUI::SAVE_PATCH:
+                showOverlay(SurgeGUIEditor::SAVE_PATCH);
+                return true;
+            case Surge::GUI::FIND_PATCH:
+                patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
+                patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
+                return true;
+            case Surge::GUI::FAVORITE_PATCH:
+                setPatchAsFavorite(!isPatchFavorite());
+                patchSelector->setIsFavorite(isPatchFavorite());
+                return true;
+
+            case Surge::GUI::PREV_PATCH:
+            case Surge::GUI::NEXT_PATCH:
+            {
+                std::string ctrlcmd = showShortcutDescription("Ctrl", u8"\U00002318");
+
+                return promptForOKCancelWithDontAskAgain(
+                    "Confirm Patch Change",
+                    fmt::format("You have used {0}+left or {0}+right to load another patch,\n"
+                                "which will discard any changes made so far.\n\n"
+                                "Do you want to proceed?",
+                                ctrlcmd),
+                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
+                        closeOverlay(SAVE_PATCH);
+
+                        auto insideCategory = Surge::Storage::getUserDefaultValue(
+                            &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
+
+                        loadPatchWithDirtyCheck(action == Surge::GUI::NEXT_PATCH, false,
+                                                insideCategory);
+                    });
+            }
+            case Surge::GUI::PREV_CATEGORY:
+            case Surge::GUI::NEXT_CATEGORY:
+            {
+                std::string shiftmac = showShortcutDescription("Shift", u8"\U000021E7");
+
+                return promptForOKCancelWithDontAskAgain(
+                    "Confirm Category Change",
+                    fmt::format("You have used {0}+left or {0}+right to select another category,\n"
+                                "which will discard any changes made so far.\n\n"
+                                "Do you want to proceed?",
+                                shiftmac),
+                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
+                        closeOverlay(SAVE_PATCH);
+
+                        loadPatchWithDirtyCheck(action == Surge::GUI::NEXT_CATEGORY, true);
+                    });
+            }
+
             // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
             case Surge::GUI::OSC_1:
                 changeSelectedOsc(0);
@@ -6660,28 +6720,28 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::OSC_3:
                 changeSelectedOsc(2);
                 return true;
+
             // TODO: FIX SCENE ASSUMPTION
             case Surge::GUI::TOGGLE_SCENE:
             {
                 auto s = current_scene + 1;
+
                 if (s >= n_scenes)
+                {
                     s = 0;
+                }
+
                 changeSelectedScene(s);
                 return true;
             }
-            case Surge::GUI::SAVE_PATCH:
-                showOverlay(SurgeGUIEditor::SAVE_PATCH);
+
+#if WINDOWS
+            case Surge::GUI::TOGGLE_DEBUG_CONSOLE:
+                Surge::Debug::toggleConsole();
                 return true;
-            case Surge::GUI::FIND_PATCH:
-                patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
-                patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
-                return true;
+#endif
             case Surge::GUI::SHOW_KEYBINDINGS_EDITOR:
                 toggleOverlay(SurgeGUIEditor::KEYBINDINGS_EDITOR);
-                frame->repaint();
-                return true;
-            case Surge::GUI::SHOW_TUNING_EDITOR:
-                toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
                 frame->repaint();
                 return true;
             case Surge::GUI::SHOW_LFO_EDITOR:
@@ -6696,37 +6756,16 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 }
 
                 return true;
-            case Surge::GUI::FAVORITE_PATCH:
-                setPatchAsFavorite(!isPatchFavorite());
-                patchSelector->setIsFavorite(isPatchFavorite());
-                return true;
             case Surge::GUI::SHOW_MODLIST:
                 toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
                 frame->repaint();
                 return true;
-#if WINDOWS
-            case Surge::GUI::TOGGLE_DEBUG_CONSOLE:
-                Surge::Debug::toggleConsole();
+            case Surge::GUI::SHOW_TUNING_EDITOR:
+                toggleOverlay(SurgeGUIEditor::TUNING_EDITOR);
+                frame->repaint();
                 return true;
-#endif
             case Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD:
                 toggleVirtualKeyboard();
-                return true;
-            case Surge::GUI::OPEN_MANUAL:
-                juce::URL(stringManual).launchInDefaultBrowser();
-                return true;
-            case Surge::GUI::REFRESH_SKIN:
-                refreshSkin();
-                return true;
-            case Surge::GUI::TOGGLE_ABOUT:
-                if (frame->getIndexOfChildComponent(aboutScreen.get()) >= 0)
-                {
-                    hideAboutScreen();
-                }
-                else
-                {
-                    showAboutScreen();
-                }
                 return true;
 
             case Surge::GUI::ZOOM_TO_DEFAULT:
@@ -6754,47 +6793,51 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
             }
 
-            case Surge::GUI::PREV_PATCH:
-            case Surge::GUI::NEXT_PATCH:
+            case Surge::GUI::REFRESH_SKIN:
+                refreshSkin();
+                return true;
+
+            case Surge::GUI::OPEN_MANUAL:
+                juce::URL(stringManual).launchInDefaultBrowser();
+                return true;
+            case Surge::GUI::SKIN_LAYOUT_GRID:
+            case Surge::GUI::TOGGLE_ABOUT:
             {
-                std::string ctrlcmd = showShortcutDescription("Ctrl", u8"\U00002318");
+                int pxres = -1;
 
-                return promptForOKCancelWithDontAskAgain(
-                    "Confirm Patch Change",
-                    fmt::format("You have used {0}+left or {0}+right to load another patch,\n"
-                                "which will discard any changes made so far.\n\n"
-                                "Do you want to proceed?",
-                                ctrlcmd),
-                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
-                        closeOverlay(SAVE_PATCH);
+                if (action == Surge::GUI::SKIN_LAYOUT_GRID)
+                {
+                    pxres = Surge::Storage::getUserDefaultValue(
+                        &(synth->storage), Surge::Storage::LayoutGridResolution, 20);
+                };
 
-                        auto insideCategory = Surge::Storage::getUserDefaultValue(
-                            &(this->synth->storage), Surge::Storage::PatchJogWraparound, 1);
+                if (frame->getIndexOfChildComponent(aboutScreen.get()) >= 0)
+                {
+                    bool doShowAgain = false;
 
-                        loadPatchWithDirtyCheck(action == Surge::GUI::NEXT_PATCH, false,
-                                                insideCategory);
-                    });
+                    if ((action == Surge::GUI::SKIN_LAYOUT_GRID &&
+                         aboutScreen->devModeGrid == -1) ||
+                        (action == Surge::GUI::TOGGLE_ABOUT && aboutScreen->devModeGrid > -1))
+                    {
+                        doShowAgain = true;
+                    }
+
+                    hideAboutScreen();
+
+                    if (doShowAgain)
+                    {
+                        showAboutScreen(pxres);
+                    }
+                }
+                else
+                {
+                    showAboutScreen(pxres);
+                }
+
+                return true;
             }
 
-            case Surge::GUI::PREV_CATEGORY:
-            case Surge::GUI::NEXT_CATEGORY:
-            {
-                std::string shiftmac = showShortcutDescription("Shift", u8"\U000021E7");
-
-                return promptForOKCancelWithDontAskAgain(
-                    "Confirm Category Change",
-                    fmt::format("You have used {0}+left or {0}+right to select another category,\n"
-                                "which will discard any changes made so far.\n\n"
-                                "Do you want to proceed?",
-                                shiftmac),
-                    Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
-                        closeOverlay(SAVE_PATCH);
-
-                        loadPatchWithDirtyCheck(action == Surge::GUI::NEXT_CATEGORY, true);
-                    });
-            }
             case Surge::GUI::n_kbdActions:
-                // ERROR CONDITION;
                 break;
             }
         }

@@ -280,19 +280,15 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     loadRaw(data.get(), cs, true);
     data.reset();
 
-    /*
-    ** OK so at this point we may have loaded a patch with a tuning override
-    */
+    // OK so at this point we may have loaded a patch with a tuning override
     if (storage.getPatch().patchTuning.tuningStoredInPatch)
     {
-        /*
-         * This code changed radically at the end of the XT 1.0 cycle. Previously we would
-         * check and prompt. Now the semantic is:
-         *
-         * 1. If the patch has a tuning, always parse it onto the patchStreamedTuning member
-         *    (which we reset below if the patch doesn't have it)
-         * 2. based on the tuning setting, override the tuning if there's a patch tuning
-         */
+        // This code changed radically at the end of the XT 1.0 cycle. Previously we would
+        // check and prompt. Now the semantic is:
+        //
+        // 1. If the patch has a tuning, always parse it onto the patchStreamedTuning member
+        //    (which we reset below if the patch doesn't have it)
+        // 2. based on the tuning setting, override the tuning if there's a patch tuning
         bool ot = Surge::Storage::getUserDefaultValue(
             &storage, Surge::Storage::OverrideTuningOnPatchLoad, false);
         bool om = Surge::Storage::getUserDefaultValue(
@@ -370,9 +366,8 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     }
 
     masterfade = 1.f;
-    /*
-    ** Notify the host display that the patch name has changed
-    */
+
+    // Notify the host display that the patch name has changed
     storage.getPatch().isDirty = false;
     updateDisplay();
 
@@ -448,15 +443,14 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
     patch_loaded = true;
     refresh_editor = true;
 
-    /*
-    ** new patch just loaded so I look up and set the current category and patch.
-    ** This is used to draw checkmarks in the menu. If for some reason we don't
-    ** find one, nothing will break
-    */
+    // New patch was just loaded so I look up and set the current category and patch.
+    // This is used to draw checkmarks in the menu. If for some reason we don't find one,
+    // nothing will break
     std::vector<int> inferredPatchIds;
     int cnt = storage.patch_list.size();
     string name = storage.getPatch().name;
     string cat = storage.getPatch().category;
+
     for (int p = 0; p < cnt; ++p)
     {
         if (storage.patch_list[p].name == name &&
@@ -497,9 +491,7 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
         }
         else
         {
-            /*
-             * I don't see how this could ever happen. Punt.
-             */
+            // I don't see how this could ever happen. Punt.
             patchid = inferredPatchIds.back();
         }
     }

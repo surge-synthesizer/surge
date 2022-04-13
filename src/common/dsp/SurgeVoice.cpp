@@ -685,15 +685,16 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
         state.keep_playing = false;
     }
 
-    // TODO memcpy is bottleneck
-    memcpy(localcopy, paramptr, sizeof(localcopy));
+    // TODO: memcpy is bottleneck
     // don't actually need to copy everything
-    // LFOs could be ignore when unused
+    // LFOs could be ignored when unused
     // same for FX & OSCs
-    // also ignore int-parameters
+    // also ignore integer parameters
+    memcpy(localcopy, paramptr, sizeof(localcopy));
 
     applyModulationToLocalcopy();
     update_portamento();
+
     if (state.porta_doretrigger)
     {
         state.porta_doretrigger = false;
@@ -702,6 +703,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     }
 
     float pb = modsources[ms_pitchbend]->get_output(0);
+
     if (pb > 0)
         pb *= (float)scene->pbrange_up.val.i * (scene->pbrange_up.extend_range ? 0.01f : 1.f);
     else
