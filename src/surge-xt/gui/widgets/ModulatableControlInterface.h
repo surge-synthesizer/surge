@@ -162,9 +162,7 @@ struct ModulatableControlInterface
     int intRange{0};
     virtual void setIntStepRange(int i) { intRange = i; }
 
-    /*
-     * Font handling. FIXME - implement this
-     */
+    // Font handling. FIXME - implement this
     juce::Font font;
     virtual void setFont(juce::Font f) { font = f; }
     virtual void setFontStyle(int x) {}

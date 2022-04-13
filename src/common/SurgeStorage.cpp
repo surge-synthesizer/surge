@@ -127,12 +127,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
             sinctableI16[j * FIRipolI16_N + i] = (short)((float)val * 16384.f);
         }
     }
-    /*for(j=0; j<FIRipolI16_N; j++){
-            for(int i=0; i<FIRipol_N; i++){
-                    sinctable[j*FIRipolI16_N*2 + FIRipolI16_N + i] = sinctable[(j+1)*FIRipolI16_N*2
-    + i] - sinctable[j*FIRipolI16_N*2 + i]));
-            }
-    }*/
 
     for (int s = 0; s < n_scenes; s++)
         for (int o = 0; o < n_oscs; o++)
@@ -170,12 +164,16 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     }
 
     init_tables();
+
     pitch_bend = 0;
     last_key[0] = 60;
     last_key[1] = 60;
     temposyncratio = 1.f;
-    temposyncratio_inv = 0.0f; // Use this as a sentinel (since it was not initialized prior
-                               // to 1.6.5 this was the value at least win and mac had). #1444
+
+    // Use this as a sentinel, since it was not initialized prior to 1.6.5
+    // this was the value at least Windows and Mac had
+    // https://github.com/surge-synthesizer/surge/issues/1444
+    temposyncratio_inv = 0.0f;
 
     songpos = 0;
 
@@ -183,6 +181,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     {
         controllers[i] = 41 + i;
     }
+
     for (int i = 0; i < n_modsources; i++)
         modsource_vu[i] = 0.f; // remove?
 
@@ -350,8 +349,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
     load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);
 
-    // WindowWT is a Wavetable which now has a constructor so don't do this
-    // memset(&WindowWT, 0, sizeof(WindowWT));
     if (loadWtAndPatch && !load_wt_wt_mem(SurgeSharedBinary::windows_wt,
                                           SurgeSharedBinary::windows_wtSize, &WindowWT))
     {
@@ -362,7 +359,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         reportError(oss.str(), "Resource Loading Error");
     }
 
-    // Tunings Library Support
+    // Tuning library support
     currentScale = Tunings::evenTemperament12NoteScale();
     currentMapping = Tunings::KeyboardMapping();
     cachedToggleOffScale = currentScale;
@@ -545,10 +542,8 @@ void SurgeStorage::initializePatchDb(bool force)
 
     patchDBInitialized = true;
 
-    /*
-     * We do this here because if there is a schema upgrade we need to do it before
-     * we do a patch read, even though our next activity is a read
-     */
+    // We do this here, because if there is a schema upgrade we need to do it before we do a patch
+    // read, even though our next activity is a read
     patchDB->prepareForWrites();
 
     auto awid = patchDB->readAllPatchPathsWithIdAndModTime();
@@ -1073,8 +1068,7 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
     memset(&wh, 0, sizeof(wt_header));
 
     size_t read = f.sgetn(reinterpret_cast<char *>(&wh), sizeof(wh));
-    // I'm not sure why this ever worked but it is checking the 4 bytes against vawt so...
-    // if (wh.tag != vt_read_int32BE('vawt'))
+
     if (!(wh.tag[0] == 'v' && wh.tag[1] == 'a' && wh.tag[2] == 'w' && wh.tag[3] == 't'))
     {
         // SOME sort of error reporting is appropriate
@@ -1123,8 +1117,6 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
 
     memcpy(&wh, data, sizeof(wt_header));
 
-    // I'm not sure why this ever worked but it is checking the 4 bytes against vawt so...
-    // if (wh.tag != vt_read_int32BE('vawt'))
     if (!(wh.tag[0] == 'v' && wh.tag[1] == 'a' && wh.tag[2] == 'w' && wh.tag[3] == 't'))
     {
         // SOME sort of error reporting is appropriate
@@ -1900,16 +1892,12 @@ void SurgeStorage::init_tables()
         waveshapers[wst_digital][i] = (float)tanh(x);
     }
 
-    // from 1.2.2
-    // nyquist_pitch = (float)12.f*log((0.49999*M_PI) / (dsamplerate_os_inv */
-    // 2*M_PI*440.0))/log(2.0);	// include some margin for error (and to avoid denormals in IIR
-    // filter clamping)
-    // 1.3
+    // include some margin for error (and to avoid denormals in IIR filter clamping)
     nyquist_pitch =
-        (float)12.f * log((0.75 * M_PI) / (dsamplerate_os_inv * 2 * M_PI * 440.0)) /
-        log(2.0); // include some margin for error (and to avoid denormals in IIR filter clamping)
-    vu_falloff =
-        0.997f; // TODO should be sample rate-dependent (this is per 32-sample block at 44.1k)
+        (float)12.f * log((0.75 * M_PI) / (dsamplerate_os_inv * 2 * M_PI * 440.0)) / log(2.0);
+
+    // TODO: should be sample rate-dependent (this is per 32-sample block at 44.1k)
+    vu_falloff = 0.997f;
 }
 
 float SurgeStorage::note_to_pitch(float x)
@@ -2179,7 +2167,8 @@ void SurgeStorage::loadMidiMappingByName(std::string name)
 
     auto doc = userMidiMappingsXMLByName[name];
     auto sm = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-midi"));
-    // We can do revisio nstuff here later if we need to
+
+    // We can do revision stuff here later if we need to
     if (!sm)
     {
         // Invalid XML Document. Show an error?
@@ -2199,8 +2188,8 @@ void SurgeStorage::loadMidiMappingByName(std::string name)
         }
 
         // Apply the new control mapping
-
         auto map = mc->FirstChildElement("map");
+
         while (map)
         {
             int i, c;
@@ -2242,8 +2231,10 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
     sm.SetAttribute("name", name);
 
     // Build the XML here
-    int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
-                                              // B will be duplicated on load)
+
+    // only store midictrl's for scene A (scene A -> scene B will be duplicated on load)
+    int n = n_global_params + n_scene_params;
+
     TiXmlElement mc("midictrl");
     for (int i = 0; i < n; i++)
     {
@@ -2309,8 +2300,7 @@ void SurgeStorage::setOddsoundMTSActiveTo(bool b)
     oddsound_mts_active = b;
     if (b && b != poa)
     {
-        // Oddsound right now is MIDI_ONLY so force that to avoid
-        // lingering problems
+        // Oddsound right now is MIDI_ONLY so force that to avoid lingering problems
         tuningApplicationMode = RETUNE_MIDI_ONLY;
     }
     if (!b && b != poa)
@@ -2377,7 +2367,7 @@ float SurgeStorage::remapKeyInMidiOnlyMode(float res)
     if (!isStandardTuning && tuningApplicationMode == RETUNE_MIDI_ONLY)
     {
         auto idx = (int)floor(res);
-        float frac = res - idx; // frac is 0 means use idx; frac is 1 means use idx+1
+        float frac = res - idx; // frac is 0 means use idx; frac is 1 means use idx + 1
         float b0 = currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
         float b1 = currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
         res = (1.f - frac) * b0 + frac * b1;
@@ -2411,14 +2401,13 @@ bool isValidUTF8(const std::string &testThis)
     const char *data = testThis.c_str();
 
     // https://helloacm.com/how-to-validate-utf-8-encoding-the-simple-utf-8-validation-algorithm/
+    //
     // Valid UTF8 has a specific binary format. If it's a single byte UTF8 character, then it is
     // always of form '0xxxxxxx', where 'x' is any binary digit. If it's a two byte UTF8 character,
     // then it's always of form '110xxxxx10xxxxxx'. Similarly for three and four byte UTF8
     // characters it starts with '1110xxxx' and '11110xxx' followed by '10xxxxxx' one less times as
     // there are bytes. This tool will locate mistakes in the encoding and tell you where they
     // occurred.
-
-    //    https://helloacm.com/how-to-validate-utf-8-encoding-the-simple-utf-8-validation-algorithm/
 
     auto is10x = [](int a) {
         int bit1 = (a >> 7) & 1;
@@ -2495,7 +2484,8 @@ bool isValidUTF8(const std::string &testThis)
 string findReplaceSubstring(string &source, const string &from, const string &to)
 {
     string newString;
-    newString.reserve(source.length()); // avoids a few memory allocations
+    // avoids a few memory allocations
+    newString.reserve(source.length());
 
     string::size_type lastPos = 0;
     string::size_type findPos;

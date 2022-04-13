@@ -170,8 +170,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
 
                 if (mwave == flw_sng)
                 {
-                    // FIXME - exponential creep up. We want to get there in a time related to our
-                    // rate
+                    // FIXME exponential creep up. We want to get there in time related to our rate
                     auto cv = lfoval[c][i].v;
                     auto diff = (lfosandhtarget[c][i] - cv) * rate * 2;
                     lfoval[c][i].newValue(cv + diff);
@@ -226,12 +225,13 @@ void FlangerEffect::process(float *dataL, float *dataR)
     }
     case flm_arp_solo:
     {
-        feedbackScale += 0.2; // this is one voice doppler basically
+        // this is one voice doppler basically
+        feedbackScale += 0.2;
     }
     case flm_arp_mix:
     {
-        feedbackScale += 0.3; // this is one voice classic basically and the steady signal clamps
-                              // away feedback more
+        // this is one voice classic basically and the steady signal clamps away feedback more
+        feedbackScale += 0.3;
     }
     default:
         break;

@@ -13,4 +13,4 @@ for dirpath, dirnames, files in os.walk("resources/data"):
                 header["wavct"] = f.read(2)
                 header["flags"] = f.read(2)
 
-                print( wt, " ", header["flags" ][0], header["flags"][1] );
+                print( wt, " ", header["flags" ][0], header["flags"][1] )

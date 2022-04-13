@@ -119,7 +119,7 @@ const char *SpringReverbEffect::group_label(int id)
     case 0:
         return "Reverb";
     case 1:
-        return "Modulation"; // @TODO: better name for these parameters...
+        return "Modulation";
     case 2:
         return "Output";
     }

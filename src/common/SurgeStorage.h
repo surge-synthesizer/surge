@@ -1072,13 +1072,13 @@ class alignas(16) SurgeStorage
     double songpos;
     void init_tables();
     float nyquist_pitch;
-    int last_key[2]; // TODO: FIX SCENE ASSUMPTION?
+    int last_key[2]; // TODO: FIX SCENE ASSUMPTION
     TiXmlElement *getSnapshotSection(const char *name);
     void load_midi_controllers();
     void write_midi_controllers_to_user_default();
     void save_snapshots();
     int controllers[n_customcontrollers];
-    float poly_aftertouch[2][16][128]; // TODO: FIX SCENE ASSUMPTION?
+    float poly_aftertouch[2][16][128]; // TODO: FIX SCENE ASSUMPTION
     float modsource_vu[n_modsources];
     void setSamplerate(float sr);
 

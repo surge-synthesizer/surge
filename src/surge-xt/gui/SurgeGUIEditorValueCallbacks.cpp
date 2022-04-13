@@ -2112,8 +2112,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             }
                             else
                             {
-                                snprintf(ntxt, 256, "M%c Ratio",
-                                         txt[1]); // Ladies and gentlemen, MC Ratio!
+                                // Ladies and gentlemen, MC Ratio!
+                                snprintf(ntxt, 256, "M%c Ratio", txt[1]);
                             }
 
                             p->set_name(ntxt);
@@ -3196,7 +3196,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             char pname[256], pdisp[128], txt[128];
             bool modulate = false;
 
-            // This allows us to turn on and off the editor. FIXME mseg check it
+            // This allows us to turn on and off the editor. FIXME MSEG check it
             if (p->ctrltype == ct_lfotype)
                 synth->refresh_editor = true;
 

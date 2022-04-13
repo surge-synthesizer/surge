@@ -61,6 +61,7 @@ enum KeyboardActions
     ZOOM_MINUS_25,
 
     REFRESH_SKIN,
+    SKIN_LAYOUT_GRID,
 
     OPEN_MANUAL,
     TOGGLE_ABOUT,
@@ -77,6 +78,22 @@ inline std::string keyboardActionName(KeyboardActions a)
     case REDO:
         return "REDO";
 
+    case SAVE_PATCH:
+        return "SAVE_PATCH";
+    case FIND_PATCH:
+        return "FIND_PATCH";
+    case FAVORITE_PATCH:
+        return "FAVORITE_PATCH";
+
+    case PREV_PATCH:
+        return "PREV_PATCH";
+    case NEXT_PATCH:
+        return "NEXT_PATCH";
+    case PREV_CATEGORY:
+        return "PREV_CATEGORY";
+    case NEXT_CATEGORY:
+        return "NEXT_CATEGORY";
+
     // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
     case OSC_1:
         return "OSC_1";
@@ -89,35 +106,20 @@ inline std::string keyboardActionName(KeyboardActions a)
     case TOGGLE_SCENE:
         return "TOGGLE_SCENE";
 
-    case SAVE_PATCH:
-        return "SAVE_PATCH";
-    case FIND_PATCH:
-        return "FIND_PATCH";
-    case FAVORITE_PATCH:
-        return "FAVORITE_PATCH";
-
-    case SHOW_KEYBINDINGS_EDITOR:
-        return "SHOW_KEYBINDINGS_EDITOR";
-    case SHOW_TUNING_EDITOR:
-        return "SHOW_TUNING_EDITOR";
-    case SHOW_LFO_EDITOR:
-        return "SHOW_LFO_EDITOR";
-    case SHOW_MODLIST:
-        return "SHOW_MODLIST";
 #if WINDOWS
     case TOGGLE_DEBUG_CONSOLE:
         return "TOGGLE_DEBUG_CONSOLE";
 #endif
+    case SHOW_KEYBINDINGS_EDITOR:
+        return "SHOW_KEYBINDINGS_EDITOR";
+    case SHOW_LFO_EDITOR:
+        return "SHOW_LFO_EDITOR";
+    case SHOW_MODLIST:
+        return "SHOW_MODLIST";
+    case SHOW_TUNING_EDITOR:
+        return "SHOW_TUNING_EDITOR";
     case TOGGLE_VIRTUAL_KEYBOARD:
         return "TOGGLE_VIRTUAL_KEYBOARD";
-
-    case OPEN_MANUAL:
-        return "OPEN_MANUAL";
-    case REFRESH_SKIN:
-        return "REFRESH_SKIN";
-
-    case TOGGLE_ABOUT:
-        return "TOGGLE_ABOUT";
 
     case ZOOM_TO_DEFAULT:
         return "ZOOM_TO_DEFAULT";
@@ -129,14 +131,17 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "ZOOM_MINUS_10";
     case ZOOM_MINUS_25:
         return "ZOOM_MINUS_25";
-    case PREV_CATEGORY:
-        return "PREV_CATEGORY";
-    case NEXT_CATEGORY:
-        return "NEXT_CATEGORY";
-    case PREV_PATCH:
-        return "PREV_PATCH";
-    case NEXT_PATCH:
-        return "NEXT_PATCH";
+
+    case REFRESH_SKIN:
+        return "REFRESH_SKIN";
+    case SKIN_LAYOUT_GRID:
+        return "SKIN_LAYOUT_GRID";
+
+    case OPEN_MANUAL:
+        return "OPEN_MANUAL";
+    case TOGGLE_ABOUT:
+        return "TOGGLE_ABOUT";
+
     case n_kbdActions:
         return "ERROR";
     }
@@ -156,8 +161,9 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         desc = "Undo";
         break;
     case REDO:
-        desc = "Redo (WIP!)";
+        desc = "Redo";
         break;
+
     case SAVE_PATCH:
         desc = "Save Patch";
         break;
@@ -167,6 +173,7 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     case FAVORITE_PATCH:
         desc = "Mark Patch as Favorite";
         break;
+
     case PREV_PATCH:
         desc = "Previous Patch";
         break;
@@ -179,6 +186,44 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     case NEXT_CATEGORY:
         desc = "Next Category";
         break;
+
+    // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
+    case OSC_1:
+        desc = "Select Oscillator 1";
+        break;
+    case OSC_2:
+        desc = "Select Oscillator 2";
+        break;
+    case OSC_3:
+        desc = "Select Oscillator 3";
+        break;
+
+    // TODO: FIX SCENE ASSUMPTION
+    case TOGGLE_SCENE:
+        desc = "Toggle Scene A/B";
+        break;
+
+#if WINDOWS
+    case TOGGLE_DEBUG_CONSOLE:
+        desc = "Debug Console";
+        break;
+#endif
+    case SHOW_KEYBINDINGS_EDITOR:
+        desc = "Keyboard Shortcut Editor";
+        break;
+    case SHOW_LFO_EDITOR:
+        desc = "LFO Editor (MSEG or Formula)";
+        break;
+    case SHOW_MODLIST:
+        desc = "Modulation List";
+        break;
+    case SHOW_TUNING_EDITOR:
+        desc = "Tuning Editor";
+        break;
+    case TOGGLE_VIRTUAL_KEYBOARD:
+        desc = "Virtual Keyboard";
+        break;
+
     case ZOOM_TO_DEFAULT:
         desc = "Zoom to Default";
         break;
@@ -194,50 +239,22 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     case ZOOM_MINUS_25:
         desc = "Zoom -25%";
         break;
-    case SHOW_KEYBINDINGS_EDITOR:
-        desc = "Keyboard Shortcut Editor";
-        break;
-    case SHOW_TUNING_EDITOR:
-        desc = "Tuning Editor";
-        break;
-    case SHOW_LFO_EDITOR:
-        desc = "LFO Editor (MSEG or Formula)";
-        break;
-    case SHOW_MODLIST:
-        desc = "Modulation List";
-        break;
-#if WINDOWS
-    case TOGGLE_DEBUG_CONSOLE:
-        desc = "Debug Console";
-        break;
-#endif
-    case TOGGLE_VIRTUAL_KEYBOARD:
-        desc = "Virtual Keyboard";
-        break;
-    case OPEN_MANUAL:
-        desc = "Open Manual";
-        break;
+
     case REFRESH_SKIN:
         desc = "Refresh Skin";
+        break;
+    case SKIN_LAYOUT_GRID:
+        desc = "Toggle Layout Grid";
+        break;
+
+    case OPEN_MANUAL:
+        desc = "Open Manual";
         break;
     case TOGGLE_ABOUT:
         desc = "About Surge XT";
         skipOSCase = true;
         break;
-    // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
-    case OSC_1:
-        desc = "Select Oscillator 1";
-        break;
-    case OSC_2:
-        desc = "Select Oscillator 2";
-        break;
-    case OSC_3:
-        desc = "Select Oscillator 3";
-        break;
-    case TOGGLE_SCENE:
-        // TODO: FIX SCENE ASSUMPTION
-        desc = "Toggle Scene A/B";
-        break;
+
     default:
         desc = "<Unknown Action>";
         break;

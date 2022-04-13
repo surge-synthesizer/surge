@@ -364,7 +364,8 @@ template <bool is_init> void WavetableOscillator::update_lagvals()
 
     float invt =
         min(1.0, (8.175798915 * storage->note_to_pitch_tuningctr(pitch_t)) * dsamplerate_os_inv);
-    float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, 4 * invt)); // TODO Make a lookup table
+    // TODO: Make a lookup table
+    float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, 4 * invt));
 
     hpf_coeff.newValue(hpf2);
     integrator_mult.newValue(invt);

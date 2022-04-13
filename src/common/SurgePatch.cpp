@@ -898,12 +898,13 @@ void SurgePatch::do_morph()
 struct patch_header
 {
     char tag[4];
-    unsigned int xmlsize, wtsize[2][3]; // TODO: FIX SCENE AND OSC COUNT ASSUMPTION (but also since
-                                        // it's used in streaming, do it with care!)
+    // TODO: FIX SCENE AND OSC COUNT ASSUMPTION for wtsize
+    // (but also since it's used in streaming, do it with care!)
+    unsigned int xmlsize, wtsize[2][3];
 };
 #pragma pack(pop)
 
-// BASE 64 SUPPORT. THANKS
+// BASE 64 SUPPORT, THANKS TO:
 // https://renenyffenegger.ch/notes/development/Base64/Encoding-and-decoding-base-64-with-cpp
 static const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                         "abcdefghijklmnopqrstuvwxyz"

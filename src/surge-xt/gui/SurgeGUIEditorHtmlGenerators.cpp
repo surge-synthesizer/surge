@@ -355,7 +355,7 @@ th {
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
 
      )HTML";
-    // TODO - if there are none print differently
+    // TODO: if there are none print differently
     bool foundOne = false;
     int n = n_global_params + n_scene_params;
     for (int i = 0; i < n; i++)

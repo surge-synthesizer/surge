@@ -170,7 +170,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
     {
         float nSpread = ud * 16 * storage->note_to_pitch_inv(pitch) / Tunings::MIDI_0_FREQ * 12;
         ud = nSpread;
-        // TODO : Tuning Awareness alas
+        // TODO: Tuning Awareness alas
     }
 
     for (int u = 0; u < n_unison; ++u)

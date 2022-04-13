@@ -171,8 +171,9 @@ class ModControl
 
             if (mwave == mod_noise)
             {
-                // FIXME - exponential creep up. We want to get there in a time related to our rate
+                // FIXME - exponential creep up. We want to get there in time related to our rate
                 auto cv = lfoval.v;
+
                 // thisphase * 0.98 prevents a glitch when LFO rate is disabled and phase offset is
                 // 1 which constantly retriggers S&G
                 thisrate = (rate == 0) ? thisphase * 0.98 : thisrate;

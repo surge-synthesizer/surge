@@ -261,10 +261,10 @@ struct PatchDBSQLTreeViewItem : public SharedTreeViewItem
     bool mightContainSubItems() override { return true; }
     void paintItem(juce::Graphics &g, int width, int height) override
     {
-        // TODO surge logo
+        // TODO: Surge XT logo
         g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
         g.setColour(juce::Colours::black);
-        g.drawText("Surge", 2, 0, width - 2, height, juce::Justification::centredLeft);
+        g.drawText("Surge XT", 2, 0, width - 2, height, juce::Justification::centredLeft);
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchDBSQLTreeViewItem);
