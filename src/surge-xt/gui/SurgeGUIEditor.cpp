@@ -2937,7 +2937,6 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
         << " Semitones)";
 
     mpeSubMenu.addItem(Surge::GUI::toOSCase(oss.str().c_str()), [this, where]() {
-        // FIXME! This won't work on Linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
         promptForMiniEdit(
             c, "Enter a new value:", "MPE Pitch Bend Range", where,
@@ -2954,7 +2953,6 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
     oss2 << "Change Default MPE Pitch Bend Range (Current: " << def << " Semitones)";
 
     mpeSubMenu.addItem(Surge::GUI::toOSCase(oss2.str().c_str()), [this, where]() {
-        // FIXME! This won't work on linux
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
         promptForMiniEdit(
             c, "Enter a default value:", "Default MPE Pitch Bend Range", where,
