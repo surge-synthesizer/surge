@@ -1896,8 +1896,14 @@ void SurgeStorage::init_tables()
     nyquist_pitch =
         (float)12.f * log((0.75 * M_PI) / (dsamplerate_os_inv * 2 * M_PI * 440.0)) / log(2.0);
 
-    // TODO: should be sample rate-dependent (this is per 32-sample block at 44.1k)
-    vu_falloff = 0.997f;
+    // This factor used to be hardcoded to 0.997, which thanks to some reverse engineering
+    // by @selenologist was deduced to be the factor of a one pole lowpass with a ~21 Hz cutoff.
+    // (Please refer to the VU falloff calc at the end of process() method in SurgeSynthesizer.cpp!)
+    // But this made the meters fall off at different rates depending on sample rate we're
+    // running at, so we unrolled this into an equation to make the VU meters have identical
+    // ballistics at any sample rate!
+    // We have also decided to make the meters less sluggish, so we increased the cutoff to 60 Hz
+    vu_falloff = exp(-2 * M_PI * (60.f * samplerate_inv));
 }
 
 float SurgeStorage::note_to_pitch(float x)

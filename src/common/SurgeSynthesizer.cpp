@@ -4158,8 +4158,7 @@ void SurgeSynthesizer::process()
     amp.multiply_2_blocks(output[0], output[1], BLOCK_SIZE_QUAD);
     amp_mute.multiply_2_blocks(output[0], output[1], BLOCK_SIZE_QUAD);
 
-    // VU
-    // falloff
+    // VU falloff
     float a = storage.vu_falloff;
     vu_peak[0] = min(2.f, a * vu_peak[0]);
     vu_peak[1] = min(2.f, a * vu_peak[1]);
