@@ -62,6 +62,23 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     struct AccSlider : public juce::Slider
     {
         AccSlider() { setWantsKeyboardFocus(true); }
+        juce::String getTextFromValue(double v) override
+        {
+            // std::cout << "GTFV " << v << std::endl;
+            // return juce::Slider::getTextFromValue(v);
+            //  This is a bit of a hack to externalize this but
+            return tv;
+        }
+
+        juce::String tv;
+        void setTextValue(juce::String s)
+        {
+            tv = s;
+            if (auto *handler = getAccessibilityHandler())
+            {
+                handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+            }
+        }
         bool keyPressed(const juce::KeyPress &key) override
         {
             float amt = 0.05;
