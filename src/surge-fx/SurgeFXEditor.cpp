@@ -143,6 +143,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setFXParamValue01(i, this->fxParamSliders[i].getValue());
             fxParamDisplay[i].setDisplay(
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
         };
         fxParamSliders[i].onDragStart = [i, this]() {
             this->processor.setUserEditingFXParam(i, true);
@@ -272,8 +273,17 @@ SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
 
 void SurgefxAudioProcessorEditor::resetLabels()
 {
+    auto st = [](auto &thing, const std::string &title) {
+        thing.setTitle(title);
+        if (auto *handler = thing.getAccessibilityHandler())
+        {
+            handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+            handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+        }
+    };
     for (int i = 0; i < n_fx_params; ++i)
     {
+        auto nm = processor.getParamName(i) + " " + processor.getParamGroup(i);
         fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
                                    juce::NotificationType::dontSendNotification);
         fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
@@ -283,26 +293,31 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxParamDisplay[i].setAppearsDeactivated(processor.getFXStorageAppearsDeactivated(i));
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
                                      !processor.getFXStorageAppearsDeactivated(i));
+        st(fxParamSliders[i], nm + " Knob");
+        fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
+
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setAccessible(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       juce::NotificationType::dontSendNotification);
-
+        st(fxTempoSync[i], nm + " Temposynced");
         fxDeactivated[i].setEnabled(false);
+
         fxExtended[i].setEnabled(processor.canExtend(i));
         fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
                                      juce::NotificationType::dontSendNotification);
         fxExtended[i].setAccessible(processor.canExtend(i));
-
+        st(fxExtended[i], nm + " Extended");
         fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
         fxAbsoluted[i].setToggleState(processor.getFXStorageAbsolute(i),
                                       juce::NotificationType::dontSendNotification);
         fxAbsoluted[i].setAccessible(processor.canAbsolute(i));
-
+        st(fxAbsoluted[i], nm + " Absoluted");
         fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
                                         juce::NotificationType::dontSendNotification);
         fxDeactivated[i].setAccessible(processor.canDeactitvate(i));
+        st(fxDeactivated[i], nm + " Deactivated");
     }
 
     int row = 0, col = 0;
