@@ -212,6 +212,7 @@ KeyBindingsOverlay::KeyBindingsOverlay(SurgeStorage *st, SurgeGUIEditor *ed)
 
     bindingListBoxModel = std::make_unique<KeyBindingsListBoxModel>(editor);
     bindingList = std::make_unique<juce::ListBox>("Keyboard Shortcuts", bindingListBoxModel.get());
+    bindingList->updateContent();
     addAndMakeVisible(*bindingList);
 }
 
