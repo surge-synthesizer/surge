@@ -401,7 +401,7 @@ Connector waveshaper_analyze = Connector("filter.waveshaper_preview", 408, 375, 
                                    .withBackground(IDB_WAVESHAPER_ANALYSIS);
 Connector filter_analyze = Connector("filter.filter_preview", 519, 197, 11, 11, Components::Switch,
                                      Connector::ANALYZE_FILTERS)
-                               .withBackground(IDB_WAVESHAPER_ANALYSIS);
+                               .withBackground(IDB_FILTER_ANALYSIS);
 
 Connector highpass = Connector("filter.highpass", 353, 301).asVertical().asWhite();
 } // namespace Filter

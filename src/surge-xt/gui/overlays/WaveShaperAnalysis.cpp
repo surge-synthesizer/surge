@@ -30,7 +30,7 @@ void WaveShaperAnalysis::resized() {}
 
 void WaveShaperAnalysis::paint(juce::Graphics &g)
 {
-    if (sliderDrivenCurve.empty() || lastDbValue != getDbValue())
+    if (sliderDrivenCurve.empty() || lastDbValue != getDbValue() || lastPFG != getPFG())
     {
         recalcFromSlider();
     }
@@ -55,15 +55,14 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
     {
         if (i == 0)
         {
-            p.startNewSubPath(sliderDrivenCurve[i].first, sliderDrivenCurve[i].second);
-            pInput.startNewSubPath(sliderDrivenCurve[i].first,
-                                   std::sin(sliderDrivenCurve[i].first * 4.0 * M_PI));
+            p.startNewSubPath(std::get<0>(sliderDrivenCurve[i]), std::get<2>(sliderDrivenCurve[i]));
+            pInput.startNewSubPath(std::get<0>(sliderDrivenCurve[i]),
+                                   std::get<1>(sliderDrivenCurve[i]));
         }
         else
         {
-            p.lineTo(sliderDrivenCurve[i].first, sliderDrivenCurve[i].second);
-            pInput.lineTo(sliderDrivenCurve[i].first,
-                          std::sin(sliderDrivenCurve[i].first * 4.0 * M_PI));
+            p.lineTo(std::get<0>(sliderDrivenCurve[i]), std::get<2>(sliderDrivenCurve[i]));
+            pInput.lineTo(std::get<0>(sliderDrivenCurve[i]), std::get<1>(sliderDrivenCurve[i]));
         }
     }
 
@@ -88,12 +87,16 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
 
         g.drawLine(re.getX(), re.getCentreY(), re.getX() + re.getWidth(), re.getCentreY());
         g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover));
-        g.strokePath(pInput, juce::PathStrokeType(1.0), xf);
-
-        if (wstype != wst_none)
         {
-            g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
-            g.strokePath(p, juce::PathStrokeType(1.25), xf);
+            auto gs2 = juce::Graphics::ScopedSaveState(g);
+            g.reduceClipRegion(re.toNearestIntEdges());
+            g.strokePath(pInput, juce::PathStrokeType(1.0), xf);
+
+            if (wstype != wst_none)
+            {
+                g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
+                g.strokePath(p, juce::PathStrokeType(1.25), xf);
+            }
         }
     }
 
@@ -112,6 +115,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
 void WaveShaperAnalysis::recalcFromSlider()
 {
     lastDbValue = getDbValue();
+    lastPFG = getPFG();
     sliderDrivenCurve.clear();
 
     QuadFilterWaveshaperState wss;
@@ -130,14 +134,15 @@ void WaveShaperAnalysis::recalcFromSlider()
     auto wsop = GetQFPtrWaveshaper(wstype);
 
     auto sliderDb = getDbValue();
-
     auto amp = powf(2.f, sliderDb / 18.f);
+
+    auto pfg = powf(2.f, getPFG() / 18.f);
     auto d1 = _mm_set1_ps(amp);
 
     for (int i = 0; i < npts; i++)
     {
         float x = i * dx;
-        float inval = std::sin(x * 4.0 * M_PI);
+        float inval = pfg * std::sin(x * 4.0 * M_PI);
         auto ivs = _mm_set1_ps(inval);
         auto ov1 = ivs;
 
@@ -149,7 +154,7 @@ void WaveShaperAnalysis::recalcFromSlider()
         float r alignas(16)[8];
         _mm_store_ps(r, ov1);
 
-        sliderDrivenCurve.emplace_back(x, r[0]);
+        sliderDrivenCurve.emplace_back(x, inval, r[0]);
     }
 }
 
@@ -168,14 +173,26 @@ float WaveShaperAnalysis::getDbValue()
     sliderDb = f;
     return sliderDb;
 }
+
+float WaveShaperAnalysis::getPFG()
+{
+    float sliderDb = 0.f;
+    auto cs = editor->current_scene;
+    auto &p = editor->getPatch().scene[cs].level_pfg;
+    auto f = p.get_extended(p.val.f);
+    sliderDb = f;
+    return sliderDb;
+}
 bool WaveShaperAnalysis::shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p)
 {
-    if (p->ctrlgroup == cg_GLOBAL)
+    if (p->ctrlgroup == cg_GLOBAL || p->ctrlgroup == cg_MIX)
     {
         for (int i = 0; i < n_scenes; ++i)
         {
             auto &ws = patch.scene[i].wsunit;
             if (p->id == ws.type.id || p->id == ws.drive.id)
+                return true;
+            if (p->id == patch.scene[i].level_pfg.id)
                 return true;
         }
     }

@@ -49,9 +49,12 @@ struct WaveShaperAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCo
     float getDbValue();
     float lastDbValue{-100};
 
+    float getPFG();
+    float lastPFG{-100};
+
     static constexpr int npts = 256;
 
-    typedef std::vector<std::pair<float, float>> curve_t;
+    typedef std::vector<std::tuple<float, float, float>> curve_t; // x, in, out
     curve_t sliderDrivenCurve;
 };
 } // namespace Overlays
