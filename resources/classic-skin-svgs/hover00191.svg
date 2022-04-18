@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg width="11" height="22" viewBox="0 0 11 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M1 3.5C1 2.11929 2.11929 1 3.5 1H7.5C8.88071 1 10 2.11929 10 3.5V7.5C10 8.88071 8.88071 10 7.5 10H3.5C2.11929 10 1 8.88071 1 7.5V3.5Z" fill="#F1BB72"/>
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M5 10L5 1L6 1L6 10L5 10Z" fill="#B4B4B4"/>
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M1 5H10V6H1V5Z" fill="#B4B4B4"/>
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M1 14.5C1 13.1193 2.11929 12 3.5 12H7.5C8.88071 12 10 13.1193 10 14.5V18.5C10 19.8807 8.88071 21 7.5 21H3.5C2.11929 21 1 19.8807 1 18.5V14.5Z" fill="#804900"/>
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M5 21L5 12L6 12L6 21L5 21Z" fill="#B4B4B4"/>
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M1 16H10V17H1V16Z" fill="#B4B4B4"/>
-  <path style="stroke: rgb(255, 255, 255);" d="M 1.159 4.403 L 4.057 4.447 L 6.153 2.536 L 7.16 3.843 L 8.825 9.242"/>
-  <path style="stroke: #ff9000;" d="M 1.265 15.425 L 4.163 15.469 L 6.259 13.558 L 7.266 14.865 L 8.931 20.264"/>
+<svg width="11px" height="22px" viewBox="0 0 11 22" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <rect width="11" height="22" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+  <g id="hover00191" clip-path="url(#clip_1)">
+    <path d="M1 3.7C1 2.20884 2.20884 1 3.7 1L7.3 1C8.79116 1 10 2.20884 10 3.7L10 7.3C10 8.79116 8.79116 10 7.3 10L3.7 10C2.20884 10 1 8.79116 1 7.3L1 3.7L1 3.7Z" id="Shape" fill="#F1BB72" fill-rule="evenodd" stroke="none" />
+    <path d="M1 14.7C1 13.2088 2.20884 12 3.7 12L7.3 12C8.79116 12 10 13.2088 10 14.7L10 18.3C10 19.7912 8.79116 21 7.3 21L3.7 21C2.20884 21 1 19.7912 1 18.3L1 14.7L1 14.7Z" id="Shape" fill="#804900" fill-rule="evenodd" stroke="none" />
+    <path d="M2 14.9808L5 14.9808C5 14.9808 5.32544 13.6313 6 13.5C6.67456 13.3687 7.06819 14.4939 7.06819 14.4939L8 19.5" id="Shape" fill="none" fill-rule="evenodd" stroke="#FF9000" stroke-width="1" />
+    <path d="M2 3.98151L5 3.98151C5 3.98151 5.32544 2.63196 6 2.50066C6.67456 2.36936 7.06819 3.49455 7.06819 3.49455L8 8.50066" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+  </g>
 </svg>

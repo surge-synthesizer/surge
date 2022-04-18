@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="11px" height="22px" viewBox="0 0 11 22" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <rect width="11" height="22" id="artboard_1" />
+    <clipPath id="clip_1">
+      <use xlink:href="#artboard_1" clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+  <g id="bmp00191" clip-path="url(#clip_1)">
+    <path d="M0.5 3.5C0.5 1.84315 1.84315 0.5 3.5 0.5L7.5 0.5C9.15685 0.5 10.5 1.84315 10.5 3.5L10.5 7.5C10.5 9.15685 9.15685 10.5 7.5 10.5L3.5 10.5C1.84315 10.5 0.5 9.15685 0.5 7.5L0.5 3.5L0.5 3.5Z" id="Shape" fill="#242424" fill-rule="evenodd" stroke="#050505" stroke-width="1" />
+    <path d="M0.5 14.5C0.5 12.8431 1.84315 11.5 3.5 11.5L7.5 11.5C9.15685 11.5 10.5 12.8431 10.5 14.5L10.5 18.5C10.5 20.1569 9.15685 21.5 7.5 21.5L3.5 21.5C1.84315 21.5 0.5 20.1569 0.5 18.5L0.5 14.5L0.5 14.5Z" id="Shape" fill="#242424" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
+    <path d="M2 15C2 13.8954 2.89543 13 4 13L7 13C8.10457 13 9 13.8954 9 15L9 18C9 19.1046 8.10457 20 7 20L4 20C2.89543 20 2 19.1046 2 18L2 15L2 15Z" id="Shape" fill="#FF9000" fill-rule="evenodd" stroke="none" />
+    <path d="M2.49911 15.2327L5 15.2327C5 15.2327 5.2713 14.1077 5.83363 13.9982C6.39596 13.8888 6.7241 14.8268 6.7241 14.8268L7.50089 19" id="Shape" fill="none" stroke="#000000" stroke-width="1" />
+    <path d="M2.49911 4.23336L5 4.23336C5 4.23336 5.2713 3.10834 5.83363 2.99889C6.39596 2.88943 6.7241 3.82743 6.7241 3.82743L7.50089 8.00066" id="Shape" fill="none" fill-rule="evenodd" stroke="#B4B4B4" stroke-width="1" />
+  </g>
+</svg>
