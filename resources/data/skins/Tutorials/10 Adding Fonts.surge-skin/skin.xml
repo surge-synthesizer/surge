@@ -5,6 +5,8 @@ Put them in the skin/fonts directory and theywill be available!
 <surge-skin name="10 Adding Fonts" category="Tutorials" author="Surge Synth Team"
             authorURL="https://surge-synth-team.org/" version="2">
     <globals>
+        <!-- You can choose a font to override out 'lato' default -->
+        <default-font family="Lobster-Regular"/>
         <!-- There are global elements for fonts. This is still a work in progress as of surge xt 1.1 but we are slowly adding them as
              we approach surge 2.0. For now the modbutton font works this way -->
         <font id="fonts.widgets.modbutton" family="PlayfairDisplay" size="8"/>

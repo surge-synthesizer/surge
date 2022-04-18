@@ -54,17 +54,25 @@ DefaultFonts::DefaultFonts()
 
     firaMonoRegularTypeface = juce::Typeface::createSystemTypefaceFor(
         SurgeXTBinary::FiraMonoRegular_ttf, SurgeXTBinary::FiraMonoRegular_ttfSize);
+    setupFontMembers();
+}
+
+void DefaultFonts::setupFontMembers()
+{
     displayFont = getLatoAtSize(9);
     patchNameFont = getLatoAtSize(13);
     lfoTypeFont = getLatoAtSize(8);
     aboutFont = getLatoAtSize(10);
 }
-
 DefaultFonts::~DefaultFonts() { fmi = nullptr; };
 
 juce::Font DefaultFonts::getLatoAtSize(float size, juce::Font::FontStyleFlags style) const
 {
-    if (useOSLato)
+    if (hasLatoOverride)
+    {
+        return juce::Font(latoOverride).withPointHeight(size).withStyle(style);
+    }
+    else if (useOSLato)
     {
         return juce::Font("Lato", 10, 0).withPointHeight(size).withStyle(style);
     }
@@ -92,6 +100,18 @@ juce::Font DefaultFonts::getFiraMonoAtSize(float size, juce::Font::FontStyleFlag
     return juce::Font(firaMonoRegularTypeface).withPointHeight(size).withStyle(style);
 }
 
+void DefaultFonts::overrideLatoWith(juce::ReferenceCountedObjectPtr<juce::Typeface> itf)
+{
+    hasLatoOverride = true;
+    latoOverride = itf;
+    setupFontMembers();
+}
+void DefaultFonts::restoreLatoAsDefault()
+{
+    hasLatoOverride = false;
+    latoOverride = nullptr;
+    setupFontMembers();
+}
 DefaultFonts *DefaultFonts::fmi{nullptr};
 
 DefaultFonts *getFontManager()

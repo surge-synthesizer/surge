@@ -473,6 +473,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
     };
 
     // process the images and colors
+    Surge::GUI::getFontManager()->restoreLatoAsDefault();
     for (auto g : globals)
     {
         if (g.first == "defaultimage")
@@ -510,6 +511,16 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
                 // This will give us a broken skin but no need to tell the users
                 FIXMEERROR << "Unable to load image directory: " << e.what();
             }
+        }
+
+        if (g.first == "default-font")
+        {
+            auto family = g.second.props["family"];
+            auto f = typeFaces[family];
+            if (f)
+                Surge::GUI::getFontManager()->overrideLatoWith(f);
+            else
+                FIXMEERROR << "COULD NOT LOAD FONT " << family << std::endl;
         }
     }
 
