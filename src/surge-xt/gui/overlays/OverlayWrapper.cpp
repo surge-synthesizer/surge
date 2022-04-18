@@ -237,8 +237,8 @@ void OverlayWrapper::resized()
                 }
             }
         }
-
-        primaryChild->setBounds(getLocalBounds());
+        auto topcc = tearOutParent->getContentComponent()->getBounds();
+        primaryChild->setBounds(0, 0, topcc.getWidth(), topcc.getHeight());
         Surge::Storage::updateUserDefaultValue(storage, canTearOutResizePair.second,
                                                std::make_pair(getWidth(), getHeight()));
     }
@@ -298,17 +298,7 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
         }
         dw->setTopLeftPosition(dtp);
     }
-    {
-        auto pt = std::make_pair(-1, -1);
-        if (storage)
-            pt = Surge::Storage::getUserDefaultValue(storage, canTearOutResizePair.second, pt);
-        if (pt.first > 0 && pt.second > 0)
-        {
-            dw->setSize(pt.first, pt.second);
-            primaryChild->setSize(pt.first, pt.second);
-            resized();
-        }
-    }
+
     dw->toFront(true);
     dw->wrapping = this;
     dw->supressMoveUpdates = false;
@@ -316,6 +306,15 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     tearOutParent = std::move(dw);
     tearOutParent->setColour(juce::DocumentWindow::backgroundColourId,
                              findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
+
+    auto pt = std::make_pair(-1, -1);
+    if (storage)
+        pt = Surge::Storage::getUserDefaultValue(storage, canTearOutResizePair.second, pt);
+    if (pt.first > 0 && pt.second > 0)
+    {
+        tearOutParent->setSize(pt.first, pt.second);
+        resized();
+    }
 }
 
 juce::Point<int> OverlayWrapper::currentTearOutLocation()
