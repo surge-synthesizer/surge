@@ -69,6 +69,50 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
     re.expand(2, 2);
 
     {
+        auto gs = juce::Graphics::ScopedSaveState(g);
+
+        auto font = Surge::GUI::getFontManager()->getLatoAtSize(7);
+        g.setFont(font);
+
+        for (float dphase : {0.25f, 0.5f, 0.75f})
+        {
+            auto x0 = dphase, y0 = -1.f, x1 = dphase, y1 = 1.f;
+            xf.transformPoint(x0, y0);
+            xf.transformPoint(x1, y1);
+            juce::Line line{juce::Point{x0, y0}, juce::Point{x1, y1}};
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
+            g.drawLine(line);
+        }
+
+        for (float amp : {-0.5f, 0.f, 0.5f})
+        {
+            auto x0 = 0.f, y0 = amp, x1 = 1.f, y1 = amp;
+            xf.transformPoint(x0, y0);
+            xf.transformPoint(x1, y1);
+            juce::Line line{juce::Point{x0, y0}, juce::Point{x1, y1}};
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
+            g.drawLine(line);
+        }
+
+        for (float lab : {-1.f, -0.5f, 0.f, 0.5f, 1.f})
+        {
+            auto x0 = 1.f, y0 = lab;
+            xf.transformPoint(x0, y0);
+            auto dbString = juce::String(lab);
+            auto labelRect =
+                juce::Rectangle{font.getStringWidth(dbString), 9}.withBottomY((int)y0).withRightX(
+                    x0 - 2);
+            if (lab > 0.75)
+                labelRect = labelRect.withY(y0);
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+            g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
+        }
+    }
+
+    {
         juce::Graphics::ScopedSaveState gs(g);
         g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
         g.setColour(skin->getColor(Colors::Waveshaper::Display::Dots));
@@ -94,13 +138,32 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
 
             if (wstype != wst_none)
             {
-                g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
-                g.strokePath(p, juce::PathStrokeType(1.25), xf);
+                {
+                    auto gs = juce::Graphics::ScopedSaveState(g);
+                    auto fp = p;
+                    fp.lineTo(std::get<0>(sliderDrivenCurve.back()), 0);
+                    fp.lineTo(0, 0);
+
+                    auto cg = juce::ColourGradient::vertical(
+                        skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
+                        skin->getColor(Colors::MSEGEditor::GradientFill::EndColor), re);
+
+                    g.setGradientFill(cg);
+                    g.fillPath(fp, xf);
+                }
+                {
+                    auto gs = juce::Graphics::ScopedSaveState(g);
+                    g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
+
+                    g.strokePath(
+                        p, juce::PathStrokeType(2.f, juce::PathStrokeType::JointStyle::curved), xf);
+                }
             }
         }
     }
 
-    g.setColour(skin->getColor(Colors::Waveshaper::Preview::Border));
+    g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+    // g.setColour(skin->getColor(Colors::Waveshaper::Preview::Border));
     g.drawRect(re);
 
     auto txtr = getLocalBounds().withHeight(top - 6);
