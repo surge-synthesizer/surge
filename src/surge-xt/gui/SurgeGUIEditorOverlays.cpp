@@ -458,6 +458,7 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
     case MODULATION_EDITOR:
         onClose = [this]() { frame->repaint(); };
         break;
+    case FILTER_ANALYZER:
     case WAVESHAPER_ANALYZER:
         onClose = [this]() { this->synth->refresh_editor = true; };
         break;

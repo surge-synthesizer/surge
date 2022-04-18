@@ -56,20 +56,23 @@ struct FilterAnalysisEvaluator
             if (lastIB != inboundUpdates)
             {
                 int cty, csu;
-                float ccu, cre;
+                float ccu, cre, cgn;
                 {
                     auto lock = std::unique_lock<std::mutex>(dataLock);
                     cty = type;
                     csu = subtype;
                     ccu = cutoff;
                     cre = resonance;
+                    cgn = gain;
                     lastIB = inboundUpdates;
                 }
 
                 auto fp = sst::filters::FilterPlotter(15);
                 // auto fp = sst::filters::DirectFilterPlotter();
+                auto par = sst::filters::FilterPlotParameters();
+                par.inputAmplitude = cgn;
                 auto data = fp.plotFilterMagnitudeResponse(
-                    (sst::filters::FilterType)cty, (sst::filters::FilterSubType)csu, ccu, cre);
+                    (sst::filters::FilterType)cty, (sst::filters::FilterSubType)csu, ccu, cre, par);
 
                 {
                     auto lock = std::unique_lock<std::mutex>(dataLock);
@@ -86,7 +89,7 @@ struct FilterAnalysisEvaluator
         }
     }
 
-    void request(int t, int s, float c, float r)
+    void request(int t, int s, float c, float r, float g)
     {
         {
             auto lock = std::unique_lock<std::mutex>(dataLock);
@@ -95,6 +98,7 @@ struct FilterAnalysisEvaluator
             subtype = s;
             cutoff = c;
             resonance = r;
+            gain = powf(2.f, g / 18.f);
             inboundUpdates++;
         }
         cv.notify_one();
@@ -103,7 +107,7 @@ struct FilterAnalysisEvaluator
     std::pair<std::vector<float>, std::vector<float>> dataCopy;
     std::atomic<uint64_t> inboundUpdates{1}, outboundUpdates{1};
     int type{0}, subtype{0};
-    float cutoff{60}, resonance{0};
+    float cutoff{60}, resonance{0}, gain{1.f};
     std::mutex dataLock;
     std::condition_variable cv;
     std::unique_ptr<std::thread> analysisThread;
@@ -289,19 +293,26 @@ bool FilterAnalysis::shouldRepaintOnParamChange(const SurgePatch &patch, Paramet
         repushData();
         return true;
     }
+    if (editor && p->id == patch.scene[editor->current_scene].level_pfg.id)
+    {
+        repushData();
+        return true;
+    }
     return false;
 }
 
 void FilterAnalysis::repushData()
 {
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
+    auto &pfg = editor->getPatch().scene[editor->current_scene].level_pfg;
 
     auto t = fs.type.val.i;
     auto s = fs.subtype.val.i;
     auto c = fs.cutoff.val.f;
     auto r = fs.resonance.val.f;
+    auto g = pfg.val.f;
 
-    evaluator->request(t, s, c, r);
+    evaluator->request(t, s, c, r, g);
 }
 
 void FilterAnalysis::selectFilter(int which)
