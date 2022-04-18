@@ -30,10 +30,16 @@ struct DefaultFonts : public juce::DeletedAtShutdown
     juce::Font patchNameFont;
     juce::Font lfoTypeFont;
     juce::Font aboutFont;
+    void setupFontMembers();
 
     juce::ReferenceCountedObjectPtr<juce::Typeface> latoRegularTypeface, latoBoldTypeface,
         latoItalicTypeface, latoBoldItalicTypeface;
     juce::ReferenceCountedObjectPtr<juce::Typeface> firaMonoRegularTypeface;
+
+    void overrideLatoWith(juce::ReferenceCountedObjectPtr<juce::Typeface>);
+    void restoreLatoAsDefault();
+    juce::ReferenceCountedObjectPtr<juce::Typeface> latoOverride;
+    bool hasLatoOverride{false};
 
     static DefaultFonts *fmi;
     friend class Skin;
