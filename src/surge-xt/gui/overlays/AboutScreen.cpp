@@ -132,7 +132,7 @@ struct ClipboardCopyButton : public juce::TextButton, Surge::GUI::SkinConsumingC
             g.setColour(skin->getColor(Colors::AboutPage::Link));
         }
 
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+        g.setFont(skin->fontManager->getLatoAtSize(10));
         g.drawText("Copy Version Info", getLocalBounds(), juce::Justification::centred, false);
     }
 };
@@ -237,7 +237,7 @@ void AboutScreen::resized()
         auto h0 = getHeight() - lls * lHeight - margin;
         auto h1 = getHeight() - lrs * lHeight - margin;
         auto colW = 66;
-        auto font = Surge::GUI::getFontManager()->getLatoAtSize(10);
+        auto font = skin->fontManager->getLatoAtSize(10);
 
         copyButton = std::make_unique<ClipboardCopyButton>();
         copyButton->setSkin(skin, associatedBitmapStore);
@@ -338,7 +338,7 @@ void AboutScreen::resized()
             lb->setInterceptsMouseClicks(false, true);
             lb->setText(s, juce::NotificationType::dontSendNotification);
             lb->setBounds(xp, yp, w, lHeight);
-            lb->setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+            lb->setFont(skin->fontManager->getLatoAtSize(8));
             lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Text));
             addAndMakeVisible(*lb);
             labels.push_back(std::move(lb));
@@ -442,7 +442,7 @@ void AboutScreen::paint(juce::Graphics &g)
         auto primaryLineColor = juce::Colour((uint32_t)0xC0FF2020);
         auto secondaryLineColor = juce::Colour((uint32_t)0xC0C06060);
 
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+        g.setFont(skin->fontManager->getLatoAtSize(9));
         g.setColour(juce::Colours::red);
         g.drawText("0", juce::Rectangle(2, 2, 20, 40), juce::Justification::topLeft);
 

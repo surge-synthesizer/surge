@@ -47,7 +47,7 @@ void VuMeter::paint(juce::Graphics &g)
     if (!isAudioActive)
     {
         g.setColour(skin->getColor(Colors::VuMeter::UnavailableText));
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+        g.setFont(skin->fontManager->getLatoAtSize(8));
         g.drawText("Audio Output Unavailable", getLocalBounds().withTrimmedBottom(1),
                    juce::Justification::centred);
         return;

@@ -32,7 +32,8 @@ namespace Surge
 namespace Widgets
 {
 
-struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
+struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
+                                  public Surge::GUI::SkinConsumingComponent
 {
     SurgeStorage *storage;
     std::vector<PatchStorage::PatchDB::patchRecord> lastSearchResult;
@@ -69,7 +70,7 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
             g.fillRect(r);
         }
 
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(12));
+        g.setFont(skin->fontManager->getLatoAtSize(12));
         if (searchIndex >= 0 && searchIndex < lastSearchResult.size())
         {
             auto pr = lastSearchResult[searchIndex];
@@ -84,7 +85,7 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
                 g.setColour(hlRowSubText);
             else
                 g.setColour(rowSubText);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+            g.setFont(skin->fontManager->getLatoAtSize(8));
             g.drawText(pr.cat, r, juce::Justification::bottomLeft);
             g.drawText(pr.author, r, juce::Justification::bottomRight);
         }
@@ -108,7 +109,7 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider
         }
 
         g.setColour(rowText.withAlpha(0.666f));
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7, juce::Font::bold));
+        g.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::bold));
         g.drawText(txt, q, juce::Justification::topLeft);
     }
 };
@@ -186,14 +187,13 @@ void PatchSelector::paint(juce::Graphics &g)
     // patch name
     if (!isTypeaheadSearchOn)
     {
-        auto catsz = Surge::GUI::getFontManager()->displayFont.getStringWidthFloat(category);
-        auto authsz = Surge::GUI::getFontManager()->displayFont.getStringWidthFloat(author);
+        auto catsz = skin->fontManager->displayFont.getStringWidthFloat(category);
+        auto authsz = skin->fontManager->displayFont.getStringWidthFloat(author);
 
         auto catszwith =
-            Surge::GUI::getFontManager()->displayFont.getStringWidthFloat("Category: " + category);
-        auto authszwith =
-            Surge::GUI::getFontManager()->displayFont.getStringWidthFloat("By: " + author);
-        auto mainsz = Surge::GUI::getFontManager()->patchNameFont.getStringWidthFloat(pname);
+            skin->fontManager->displayFont.getStringWidthFloat("Category: " + category);
+        auto authszwith = skin->fontManager->displayFont.getStringWidthFloat("By: " + author);
+        auto mainsz = skin->fontManager->patchNameFont.getStringWidthFloat(pname);
 
         bool useCatAndBy{false}, alignTop{false};
 
@@ -221,7 +221,7 @@ void PatchSelector::paint(juce::Graphics &g)
         auto pnRect =
             pbrowser.withLeft(searchRect.getRight()).withRight(favoritesRect.getX()).reduced(4, 0);
 
-        g.setFont(Surge::GUI::getFontManager()->patchNameFont);
+        g.setFont(skin->fontManager->patchNameFont);
 
         auto uname = pname;
 
@@ -244,7 +244,7 @@ void PatchSelector::paint(juce::Graphics &g)
                          1, 0.1);
 
         // category/author name
-        g.setFont(Surge::GUI::getFontManager()->displayFont);
+        g.setFont(skin->fontManager->displayFont);
 
         g.drawText((useCatAndBy ? "Category: " : "") + category, cat,
                    juce::Justification::centredLeft);
@@ -1100,7 +1100,7 @@ void PatchSelector::onSkinChanged()
     typeAhead->setColour(juce::TextEditor::outlineColourId, transBlack);
     typeAhead->setColour(juce::TextEditor::backgroundColourId, transBlack);
     typeAhead->setColour(juce::TextEditor::focusedOutlineColourId, transBlack);
-    typeAhead->setFont(Surge::GUI::getFontManager()->patchNameFont);
+    typeAhead->setFont(skin->fontManager->patchNameFont);
     typeAhead->setIndents(4, (typeAhead->getHeight() - typeAhead->getTextHeight()) / 2);
 
     typeAhead->setColour(juce::TextEditor::textColourId,
@@ -1124,6 +1124,8 @@ void PatchSelector::onSkinChanged()
     patchDbProvider->hlRowSubText =
         skin->getColor(Colors::PatchBrowser::TypeAheadList::HighlightSubText);
     patchDbProvider->divider = skin->getColor(Colors::PatchBrowser::TypeAheadList::Separator);
+
+    patchDbProvider->setSkin(skin, associatedBitmapStore);
 }
 
 void PatchSelector::toggleTypeAheadSearch(bool b)
@@ -1264,7 +1266,7 @@ void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
     g.setColour(skin->getColor(clr::Background));
     g.fillRect(getLocalBounds().reduced(1));
     g.setColour(skin->getColor(clr::Text));
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+    g.setFont(skin->fontManager->getLatoAtSize(9));
     g.drawMultiLineText(comment, 5, g.getCurrentFont().getHeight() + 2, getWidth(),
                         juce::Justification::left);
 }
@@ -1279,7 +1281,7 @@ void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &cen
 
     int idx = 0;
 
-    auto ft = Surge::GUI::getFontManager()->getLatoAtSize(9);
+    auto ft = skin->fontManager->getLatoAtSize(9);
     auto width = 0;
 
     while (std::getline(ss, to, '\n'))

@@ -35,7 +35,6 @@
 #include "fmt/core.h"
 
 #include "overlays/AboutScreen.h"
-#include "overlays/CoveringMessageOverlay.h"
 #include "overlays/MiniEdit.h"
 #include "overlays/MSEGEditor.h"
 #include "overlays/ModulationEditor.h"
@@ -458,14 +457,7 @@ void SurgeGUIEditor::idle()
             {
                 synth->audio_processing_active = false;
             }
-            if (synth->processRunning > 10 && showNoProcessingOverlay)
-            {
-                noProcessingOverlay =
-                    std::make_unique<Surge::Overlays::AudioEngineNotRunningOverlay>(this);
-                noProcessingOverlay->setBounds(frame->getBounds());
-                addAndMakeVisibleWithTracking(frame.get(), *noProcessingOverlay);
-                synth->processRunning = 1;
-            }
+
             processRunningCheckEvery = 0;
         }
     }
@@ -1655,7 +1647,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             addAndMakeVisibleWithTracking(frame.get(), *lfoNameLabel);
 
             lfoNameLabel->setBounds(skinCtrl->getRect());
-            lfoNameLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
+            lfoNameLabel->setFont(currentSkin->fontManager->getLatoAtSize(9, juce::Font::bold));
             lfoNameLabel->setFontColour(currentSkin->getColor(Colors::LFO::Title::Text));
 
             break;
@@ -1671,7 +1663,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             fxPresetLabel->setColour(juce::Label::textColourId,
                                      currentSkin->getColor(Colors::Effect::Preset::Name));
-            fxPresetLabel->setFont(Surge::GUI::getFontManager()->displayFont);
+            fxPresetLabel->setFont(currentSkin->fontManager->displayFont);
             fxPresetLabel->setJustificationType(juce::Justification::centredRight);
 
             fxPresetLabel->setText(fxPresetName[current_fx], juce::dontSendNotification);
@@ -5238,10 +5230,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hs->setTextAlign(Surge::GUI::Skin::setJuceTextAlignProperty(
             currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::TEXT_ALIGN, "right")));
 
-        // Control is using labfont = Surge::GUI::getFontManager()->displayFont, which is
+        // Control is using labfont = currentSkin->fontManager->displayFont, which is
         // currently 9 pt in size
         // TODO: Pull the default font size from some central location at a later date
-        hs->setFont(Surge::GUI::getFontManager()->displayFont);
+        hs->setFont(currentSkin->fontManager->displayFont);
 
         auto ff = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FONT_FAMILY, "");
         auto fs = std::atoi(
@@ -5262,7 +5254,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         }
         else
         {
-            hs->setFont(Surge::GUI::getFontManager()->getLatoAtSize(fs));
+            hs->setFont(currentSkin->fontManager->getLatoAtSize(fs));
         }
 
         hs->setTextHOffset(std::atoi(

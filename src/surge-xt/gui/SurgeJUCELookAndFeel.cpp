@@ -210,8 +210,8 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Gr
 
     String surgeLabel = "Surge XT";
     String surgeVersion = Surge::Build::FullVersionStr;
-    auto fontSurge = Surge::GUI::getFontManager()->getLatoAtSize(14, juce::Font::bold);
-    auto fontVersion = Surge::GUI::getFontManager()->getFiraMonoAtSize(14, juce::Font::bold);
+    auto fontSurge = skin->fontManager->getLatoAtSize(14, juce::Font::bold);
+    auto fontVersion = skin->fontManager->getFiraMonoAtSize(14, juce::Font::bold);
 
 #if BUILD_IS_DEBUG
     surgeVersion += " DEBUG";
@@ -338,7 +338,7 @@ Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
 
 juce::Font SurgeJUCELookAndFeel::getPopupMenuFont()
 {
-    return Surge::GUI::getFontManager()->getLatoAtSize(15);
+    return skin->fontManager->getLatoAtSize(15);
     // return juce::LookAndFeel_V4::getPopupMenuFont();
 }
 // overridden here just to make the shortcut text same size as normal menu entry text

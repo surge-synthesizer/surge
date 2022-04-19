@@ -332,7 +332,7 @@ void OscillatorMenu::paint(juce::Graphics &g)
 
     int i = osc->type.val.i;
 
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(font_size, font_style));
+    g.setFont(skin->fontManager->getLatoAtSize(font_size, font_style));
 
     if (isHovered)
     {
@@ -496,7 +496,7 @@ void FxMenu::paint(juce::Graphics &g)
     if (isHovered)
         fgc = skin->getColor(Colors::Effect::Menu::TextHover);
 
-    g.setFont(Surge::GUI::getFontManager()->displayFont);
+    g.setFont(skin->fontManager->displayFont);
     g.setColour(fgc);
     auto r = getLocalBounds().reduced(2).withTrimmedLeft(4).withTrimmedRight(12);
     g.drawText(fxslot_names[current_fx], r, juce::Justification::centredLeft);

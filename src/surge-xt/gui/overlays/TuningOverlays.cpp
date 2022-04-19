@@ -180,9 +180,9 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
             notenum = std::to_string(mn);
             notename = noteInScale % 12 == 0 ? fmt::format("C{:d}", rowNumber / 12 - mcoff) : "";
 
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7, juce::Font::bold));
+            g.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::bold));
             g.drawText(notename, 2 + txtOff, 0, width - margin, height, just_l, false);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
+            g.setFont(skin->fontManager->getLatoAtSize(7));
             g.drawText(notenum, 2 + txtOff, 0, width - txtOff - margin, height,
                        juce::Justification::centredRight, false);
 
@@ -191,7 +191,7 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         case 2:
         {
             display = fmt::format("{:.2f}", fr);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+            g.setFont(skin->fontManager->getLatoAtSize(8));
             g.drawText(display, 2 + txtOff, 0, width - margin, height, just_r, false);
             break;
         }
@@ -400,7 +400,6 @@ class RadialScaleGraph : public juce::Component,
                 auto tl = std::make_unique<juce::Label>("tone index");
                 tl->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
                 tl->setBounds(totalR.withWidth(labw));
-                tl->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
                 tl->setJustificationType(juce::Justification::centredRight);
                 toneInterior->addAndMakeVisible(*tl);
                 toneLabels.push_back(std::move(tl));
@@ -443,7 +442,6 @@ class RadialScaleGraph : public juce::Component,
                 {
                     auto te = std::make_unique<juce::TextEditor>("tone");
                     te->setBounds(totalR.withTrimmedLeft(labw + m).withTrimmedRight(h + m));
-                    te->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
                     te->setJustification((juce::Justification::verticallyCentred));
                     te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
                     te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
@@ -530,6 +528,17 @@ class RadialScaleGraph : public juce::Component,
             showHideKnob->setSkin(skin, associatedBitmapStore);
         for (const auto &k : toneKnobs)
             k->setSkin(skin, associatedBitmapStore);
+        for (const auto &tl : toneLabels)
+            tl->setFont(skin->fontManager->getLatoAtSize(9));
+        for (const auto &te : toneEditors)
+        {
+            te->setFont(skin->fontManager->getFiraMonoAtSize(9));
+            auto gt = te->getText();
+            te->setText("val", juce::dontSendNotification);
+
+            te->setText(gt, juce::dontSendNotification);
+        }
+
         setNotesOn(bitset);
     }
 
@@ -921,11 +930,9 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         viewport->setViewedComponent(intervalPainter.get(), false);
 
         whatLabel = std::make_unique<juce::Label>("Interval");
-        whatLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(12, juce::Font::bold));
         addAndMakeVisible(*whatLabel);
 
         explLabel = std::make_unique<juce::Label>("Interval");
-        explLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
         explLabel->setJustificationType(juce::Justification::centredRight);
         addAndMakeVisible(*explLabel);
 
@@ -1020,7 +1027,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             g.fillAll(skin->getColor(clr::Background));
             auto ic = matrix->tuning.scale.count;
             int mt = ic + (mode == ROTATION ? 1 : 2);
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            g.setFont(skin->fontManager->getLatoAtSize(9));
             for (int i = 0; i < mt; ++i)
             {
                 bool noi = i > 0 ? matrix->notesOn[i - 1] : false;
@@ -1304,7 +1311,12 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         intervalPainter->setSizeFromTuning();
     }
 
-    void onSkinChanged() override { intervalPainter->setSkin(skin, associatedBitmapStore); }
+    void onSkinChanged() override
+    {
+        intervalPainter->setSkin(skin, associatedBitmapStore);
+        whatLabel->setFont(skin->fontManager->getLatoAtSize(12, juce::Font::bold));
+        explLabel->setFont(skin->fontManager->getLatoAtSize(8));
+    }
     std::vector<bool> notesOn;
     std::bitset<128> bitset{0};
     void setNotesOn(const std::bitset<128> &bs)
@@ -1497,7 +1509,6 @@ struct SCLKBMDisplay : public juce::Component,
         sclDocument->addListener(this);
         sclTokeniser = std::make_unique<SCLKBMTokeniser>();
         scl = std::make_unique<juce::CodeEditorComponent>(*sclDocument, sclTokeniser.get());
-        scl->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
         scl->setLineNumbersShown(false);
         scl->setScrollbarThickness(8);
         addAndMakeVisible(*scl);
@@ -1507,13 +1518,11 @@ struct SCLKBMDisplay : public juce::Component,
         kbmTokeniser = std::make_unique<SCLKBMTokeniser>(false);
 
         kbm = std::make_unique<juce::CodeEditorComponent>(*kbmDocument, kbmTokeniser.get());
-        kbm->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
         kbm->setLineNumbersShown(false);
         kbm->setScrollbarThickness(8);
         addAndMakeVisible(*kbm);
 
-        auto teProps = [](const auto &te) {
-            te->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+        auto teProps = [this](const auto &te) {
             te->setJustification((juce::Justification::verticallyCentred));
             te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
         };
@@ -1521,7 +1530,6 @@ struct SCLKBMDisplay : public juce::Component,
         auto newL = [this](const std::string &s) {
             auto res = std::make_unique<juce::Label>(s, s);
             res->setText(s, juce::dontSendNotification);
-            res->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
             addAndMakeVisible(*res);
             return res;
         };
@@ -1801,8 +1809,8 @@ struct SCLKBMDisplay : public juce::Component,
         s = s.translated(3, 0);
         kbmGo->setBounds(nxt(50));
 
-        auto teProps = [](const auto &te) {
-            te->setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+        auto teProps = [this](const auto &te) {
+            te->setFont(skin->fontManager->getFiraMonoAtSize(9));
             te->setJustification((juce::Justification::verticallyCentred));
             te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
         };
@@ -1860,11 +1868,13 @@ struct SCLKBMDisplay : public juce::Component,
                               kbmStartL.get(), kbmConstantL.get(), kbmFreqL.get()})
         {
             r->setColour(juce::Label::textColourId, skin->getColor(qclr::ToneLabelText));
+            r->setFont(skin->fontManager->getLatoAtSize(9));
         }
 
         for (const auto &r :
              {evenDivInto.get(), evenDivOf.get(), kbmStart.get(), kbmConstant.get(), kbmFreq.get()})
         {
+            r->setFont(skin->fontManager->getLatoAtSize(9));
 
             r->setColour(juce::TextEditor::ColourIds::backgroundColourId,
                          skin->getColor(qclr::ToneLabelBackground));
@@ -1876,6 +1886,9 @@ struct SCLKBMDisplay : public juce::Component,
                          skin->getColor(qclr::ToneLabelText));
             r->applyColourToAllText(skin->getColor(qclr::ToneLabelText), true);
         }
+
+        scl->setFont(skin->fontManager->getFiraMonoAtSize(9));
+        kbm->setFont(skin->fontManager->getFiraMonoAtSize(9));
     }
 
     std::function<void(const std::string &scl, const std::string &kbl)> onTextChanged =
@@ -2014,7 +2027,7 @@ struct TuningControlArea : public juce::Component,
     {
         auto res = std::make_unique<juce::Label>(s, s);
         res->setText(s, juce::dontSendNotification);
-        res->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
+        res->setFont(skin->fontManager->getLatoAtSize(9, juce::Font::bold));
         res->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
         return res;
     }

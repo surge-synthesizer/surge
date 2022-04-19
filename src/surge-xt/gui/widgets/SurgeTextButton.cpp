@@ -74,7 +74,7 @@ void SurgeTextButton::paint(juce::Graphics &g)
     }
 
     g.setColour(fg);
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8, juce::Font::bold));
+    g.setFont(skin->fontManager->getLatoAtSize(8, juce::Font::bold));
     g.drawText(getButtonText(), getLocalBounds(), juce::Justification::centred);
 }
 

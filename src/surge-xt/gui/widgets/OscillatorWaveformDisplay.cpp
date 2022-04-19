@@ -336,7 +336,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         auto wtn = getCurrentWavetableName();
 
         g.setColour(isWtNameHovered ? fgtextHov : fgtext);
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+        g.setFont(skin->fontManager->getLatoAtSize(9));
         g.drawText(wtn.c_str(), waveTableName, juce::Justification::centred);
     }
 
@@ -1697,7 +1697,7 @@ void OscillatorWaveformDisplay::drawEditorBox(juce::Graphics &g, const std::stri
     g.setColour(outline);
     g.drawRect(customEditorBox);
     g.setColour(txt);
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(fontsize));
+    g.setFont(skin->fontManager->getLatoAtSize(fontsize));
     g.drawText(s, customEditorBox, juce::Justification::centred);
 }
 

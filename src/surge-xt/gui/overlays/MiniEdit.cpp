@@ -32,7 +32,6 @@ MiniEdit::MiniEdit()
     setAccessible(true);
     typein = std::make_unique<juce::TextEditor>("minieditTypein");
     typein->setJustification(juce::Justification::centred);
-    typein->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     typein->setSelectAllWhenFocused(true);
     typein->setWantsKeyboardFocus(true);
     typein->addListener(this);
@@ -78,7 +77,7 @@ void MiniEdit::paint(juce::Graphics &g)
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Background));
     g.fillRect(tbRect);
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Text));
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10, juce::Font::bold));
+    g.setFont(skin->fontManager->getLatoAtSize(10, juce::Font::bold));
     g.drawText(title, tbRect, juce::Justification::centred);
 
     auto d = associatedBitmapStore->getImage(IDB_SURGE_ICON);
@@ -94,7 +93,7 @@ void MiniEdit::paint(juce::Graphics &g)
     g.fillRect(bodyRect);
 
     g.setColour(skin->getColor(Colors::Dialog::Label::Text));
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+    g.setFont(skin->fontManager->getLatoAtSize(9));
 
     auto labelRect = bodyRect.withHeight(20).reduced(6, 0);
 
@@ -106,6 +105,8 @@ void MiniEdit::paint(juce::Graphics &g)
 
 void MiniEdit::onSkinChanged()
 {
+    typein->setFont(skin->fontManager->getLatoAtSize(11));
+
     typein->setColour(juce::TextEditor::backgroundColourId,
                       skin->getColor(Colors::Dialog::Entry::Background));
     typein->setColour(juce::TextEditor::textColourId, skin->getColor(Colors::Dialog::Entry::Text));

@@ -44,7 +44,7 @@ struct KeyBindingsListRow : public juce::Component
 
         name = std::make_unique<juce::Label>("name", Surge::GUI::keyboardActionDescription(action));
         name->setColour(juce::Label::textColourId, juce::Colours::white);
-        name->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+        name->setFont(editor->currentSkin->fontManager->getLatoAtSize(9));
         name->setAccessible(true);
         addAndMakeVisible(*name);
 

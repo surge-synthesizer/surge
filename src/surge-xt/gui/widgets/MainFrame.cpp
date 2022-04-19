@@ -44,7 +44,7 @@ void MainFrame::paint(juce::Graphics &g)
     g.setColour(juce::Colours::red.withAlpha(0.7f));
     g.fillRect(r);
     r = r.withTrimmedTop(1);
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+    g.setFont(9);
     g.setColour(juce::Colours::white);
     g.drawText(Surge::Build::FullVersionStr, r, juce::Justification::centredTop);
     r = r.withTrimmedTop(14);

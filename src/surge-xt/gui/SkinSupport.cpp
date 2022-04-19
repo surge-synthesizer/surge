@@ -248,6 +248,7 @@ Skin::Skin(const std::string &root, const std::string &name) : root(root), name(
     // std::cout << "Constructing a skin " << _D(root) << _D(name) << _D(instances) << std::endl;
     imageStringToId = createIdNameMap();
     imageAllowedIds = allowedImageIds();
+    fontManager = std::make_unique<FontManager>();
 }
 
 Skin::Skin(bool inMemory)
@@ -259,6 +260,7 @@ Skin::Skin(bool inMemory)
     imageStringToId = createIdNameMap();
     imageAllowedIds = allowedImageIds();
     useInMemorySkin = true;
+    fontManager = std::make_unique<FontManager>();
 }
 
 Skin::~Skin()
@@ -473,7 +475,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
     };
 
     // process the images and colors
-    Surge::GUI::getFontManager()->restoreLatoAsDefault();
+    fontManager->restoreLatoAsDefault();
     for (auto g : globals)
     {
         if (g.first == "defaultimage")
@@ -518,7 +520,7 @@ bool Skin::reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore)
             auto family = g.second.props["family"];
             auto f = typeFaces[family];
             if (f)
-                Surge::GUI::getFontManager()->overrideLatoWith(f);
+                fontManager->overrideLatoWith(f);
             else
                 FIXMEERROR << "COULD NOT LOAD FONT " << family << std::endl;
         }
@@ -1124,17 +1126,16 @@ juce::Font Skin::getFont(const Surge::Skin::FontDesc &d)
     }
     if (d.defaultFamily == Surge::Skin::FontDesc::SANS)
     {
-        return Surge::GUI::getFontManager()->getLatoAtSize(d.size,
-                                                           (juce::Font::FontStyleFlags)d.style);
+        return fontManager->getLatoAtSize(d.size, (juce::Font::FontStyleFlags)d.style);
     }
     if (d.defaultFamily == Surge::Skin::FontDesc::MONO)
     {
-        return Surge::GUI::getFontManager()->getFiraMonoAtSize(d.size);
+        return fontManager->getFiraMonoAtSize(d.size);
     }
 
     static bool IHaveImplementedThis = false;
     jassert(IHaveImplementedThis);
-    return Surge::GUI::getFontManager()->getLatoAtSize(d.size, (juce::Font::FontStyleFlags)d.style);
+    return fontManager->getLatoAtSize(d.size, (juce::Font::FontStyleFlags)d.style);
 }
 
 juce::Colour Skin::getColor(const std::string &iid, const juce::Colour &def,

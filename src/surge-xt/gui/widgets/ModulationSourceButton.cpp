@@ -801,7 +801,7 @@ void ModulationOverviewLaunchButton::paintButton(juce::Graphics &g,
         msg = "Close";
     }
 
-    auto f = Surge::GUI::getFontManager()->getLatoAtSize(9);
+    auto f = skin->fontManager->getLatoAtSize(9);
     auto h = f.getHeight() * 0.9f;
     auto sh = h * msg.length();
     auto y0 = (getHeight() - sh) / 2.f;

@@ -97,7 +97,7 @@ void WaveShaperSelector::paint(juce::Graphics &g)
         g.setColour(skin->getColor(Colors::Waveshaper::Text).withAlpha(dOpacity));
     }
 
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
+    g.setFont(skin->fontManager->getLatoAtSize(7));
     g.drawText(wst_ui_names[iValue], getLocalBounds().withHeight(labelHeight),
                juce::Justification::centred);
 

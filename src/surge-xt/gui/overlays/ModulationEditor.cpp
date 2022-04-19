@@ -58,7 +58,6 @@ struct ModulationSideControls : public juce::Component,
         auto makeL = [this](const std::string &s) {
             auto l = std::make_unique<juce::Label>(s);
             l->setText(s, juce::dontSendNotification);
-            l->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
             if (skin)
                 l->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
             l->setAccessible(true);
@@ -211,9 +210,13 @@ struct ModulationSideControls : public juce::Component,
         if (sortL && skin)
         {
             sortL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            sortL->setFont(skin->fontManager->getLatoAtSize(9, juce::Font::bold));
             filterL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            filterL->setFont(skin->fontManager->getLatoAtSize(9, juce::Font::bold));
             addL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            addL->setFont(skin->fontManager->getLatoAtSize(9, juce::Font::bold));
             dispL->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+            dispL->setFont(skin->fontManager->getLatoAtSize(9, juce::Font::bold));
         }
     }
 
@@ -275,7 +278,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
     {
         if (rows.empty())
         {
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(20));
+            g.setFont(skin->fontManager->getLatoAtSize(20));
             g.setColour(skin->getColor(Colors::ModulationListOverlay::DimText));
             g.drawText("No Modulations Assigned", getLocalBounds(), juce::Justification::centred);
         }
@@ -432,7 +435,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             g.drawLine(indent, 0, indent, getHeight(), 1);
             g.drawLine(getWidth() - indent, 0, getWidth() - indent, getHeight(), 1);
 
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            g.setFont(skin->fontManager->getLatoAtSize(9));
             g.setColour(skin->getColor(Colors::ModulationListOverlay::Text));
 
             int fh = g.getCurrentFont().getHeight();
@@ -499,7 +502,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             {
                 g.setColour(skin->getColor(Colors::ModulationListOverlay::DimText));
                 auto tf = g.getCurrentFont();
-                g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
+                g.setFont(skin->fontManager->getLatoAtSize(7));
                 tb = tb.withTop(0);
                 g.drawText(firstLab, tb.withTrimmedLeft(2), juce::Justification::topLeft);
                 g.setFont(tf);
@@ -510,7 +513,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 return;
             }
 
-            g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(9));
+            g.setFont(skin->fontManager->getLatoAtSize(9));
             auto sb = surgeLikeSlider->getBounds();
             auto bb = sb.withY(0).withHeight(getHeight()).reduced(0, 1);
 

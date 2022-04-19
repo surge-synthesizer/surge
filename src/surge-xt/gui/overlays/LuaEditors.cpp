@@ -261,7 +261,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
 
             auto r = rows[rowNumber];
             auto b = juce::Rectangle<int>(0, 0, w, h);
-            g.setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+            g.setFont(skin->fontManager->getFiraMonoAtSize(9));
             if (r.isInternal)
                 g.setColour(skin->getColor(Colors::FormulaEditor::Debugger::InternalText));
             else
@@ -469,7 +469,7 @@ struct FormulaControlArea : public juce::Component,
     {
         auto res = std::make_unique<juce::Label>(s, s);
         res->setText(s, juce::dontSendNotification);
-        res->setFont(Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold));
+        res->setFont(skin->fontManager->getLatoAtSize(9, juce::Font::bold));
         res->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
         return res;
     }
@@ -752,7 +752,7 @@ struct WavetablePreviewComponent : juce::Component
     void paint(juce::Graphics &g) override
     {
         g.fillAll(juce::Colour(0, 0, 0));
-        g.setFont(Surge::GUI::getFontManager()->getFiraMonoAtSize(9));
+        g.setFont(skin->fontManager->getFiraMonoAtSize(9));
 
         g.setColour(juce::Colour(230, 230, 255)); // could be a skin->getColor of course
         auto s1 = std::string("Frame : ") + std::to_string(frameNumber);
@@ -808,7 +808,7 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
     }
 
     resolutionLabel = std::make_unique<juce::Label>("resLabl");
-    resolutionLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+    resolutionLabel->setFont(skin->fontManager->getLatoAtSize(10));
     resolutionLabel->setText("Resolution:", juce::NotificationType::dontSendNotification);
     addAndMakeVisible(resolutionLabel.get());
 
@@ -825,12 +825,12 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
     addAndMakeVisible(resolution.get());
 
     framesLabel = std::make_unique<juce::Label>("frmLabl");
-    framesLabel->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+    framesLabel->setFont(skin->fontManager->getLatoAtSize(10));
     framesLabel->setText("Frames:", juce::NotificationType::dontSendNotification);
     addAndMakeVisible(framesLabel.get());
 
     frames = std::make_unique<juce::TextEditor>("frm");
-    frames->setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+    frames->setFont(skin->fontManager->getLatoAtSize(10));
     frames->setText(std::to_string(osc->wavetable_formula_nframes),
                     juce::NotificationType::dontSendNotification);
     addAndMakeVisible(frames.get());

@@ -784,8 +784,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     inline void drawAxis(juce::Graphics &g)
     {
-        auto primaryFont = Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold);
-        auto secondaryFont = Surge::GUI::getFontManager()->getLatoAtSize(7);
+        auto primaryFont = skin->fontManager->getLatoAtSize(9, juce::Font::bold);
+        auto secondaryFont = skin->fontManager->getLatoAtSize(7);
 
         auto haxisArea = getHAxisArea();
         auto tpx = timeToPx();
@@ -3107,8 +3107,8 @@ void MSEGControlRegion::rebuild()
     removeAllChildren();
     labels.clear();
 
-    auto labelFont = Surge::GUI::getFontManager()->getLatoAtSize(9, juce::Font::bold);
-    auto editFont = Surge::GUI::getFontManager()->getLatoAtSize(9);
+    auto labelFont = skin->fontManager->getLatoAtSize(9, juce::Font::bold);
+    auto editFont = skin->fontManager->getLatoAtSize(9);
 
     int height = getHeight();
     int margin = 2;
