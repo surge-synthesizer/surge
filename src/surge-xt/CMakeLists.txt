@@ -98,8 +98,6 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/UndoManager.cpp
   gui/overlays/AboutScreen.cpp
   gui/overlays/AboutScreen.h
-  gui/overlays/CoveringMessageOverlay.cpp
-  gui/overlays/CoveringMessageOverlay.h
   gui/overlays/FilterAnalysis.cpp
   gui/overlays/FilterAnalysis.h
   gui/overlays/KeyBindingsOverlay.h

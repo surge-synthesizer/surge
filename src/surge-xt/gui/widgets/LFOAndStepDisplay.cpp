@@ -789,7 +789,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
                 juce::Point<int> tp(xp + 1, valScale * 0.0);
                 tp = tp.transformedBy(at);
                 g.setColour(skin->getColor(Colors::LFO::Waveform::Ruler::Text));
-                g.setFont(Surge::GUI::getFontManager()->lfoTypeFont);
+                g.setFont(skin->fontManager->lfoTypeFont);
                 g.drawText(s, tp.x, tp.y, 20, 10, juce::Justification::bottomLeft);
             }
             else if (everyMeasure == 1)
@@ -857,7 +857,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         float typ = yp;
         auto tp = juce::Point<float>(xp + 0.5, typ + 0.5).transformedBy(at);
         g.setColour(skin->getColor(Colors::LFO::Waveform::Ruler::Text));
-        g.setFont(Surge::GUI::getFontManager()->lfoTypeFont);
+        g.setFont(skin->fontManager->lfoTypeFont);
         char txt[TXT_SIZE];
         float tv = delta * l;
         if (fabs(roundf(tv) - tv) < 0.05)
@@ -895,7 +895,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     if (warnForInvalid)
     {
         g.setColour(skin->getColor(Colors::LFO::Waveform::Wave));
-        g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(14, juce::Font::bold));
+        g.setFont(skin->fontManager->getLatoAtSize(14, juce::Font::bold));
         g.drawText(invalidMessage, waveform_display.withTrimmedBottom(30),
                    juce::Justification::centred);
     }
@@ -1406,7 +1406,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
         snprintf(txt, TXT_SIZE, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
 
         g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
-        g.setFont(Surge::GUI::getFontManager()->lfoTypeFont);
+        g.setFont(skin->fontManager->lfoTypeFont);
         g.drawText(txt, labelR, juce::Justification::centredLeft);
 
         if (keyModMult > 0)

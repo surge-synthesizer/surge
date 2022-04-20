@@ -71,7 +71,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
     {
         auto gs = juce::Graphics::ScopedSaveState(g);
 
-        auto font = Surge::GUI::getFontManager()->getLatoAtSize(7);
+        auto font = skin->fontManager->getLatoAtSize(7);
         g.setFont(font);
 
         for (float dphase : {0.25f, 0.5f, 0.75f})

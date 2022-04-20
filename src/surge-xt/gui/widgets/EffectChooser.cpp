@@ -81,7 +81,7 @@ void EffectChooser::paint(juce::Graphics &g)
         bg->draw(g, 1.0);
     }
 
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(7));
+    g.setFont(skin->fontManager->getLatoAtSize(7));
 
     juce::Colour bgd, frm, txt;
 

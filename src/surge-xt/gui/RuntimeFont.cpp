@@ -23,7 +23,7 @@ namespace Surge
 namespace GUI
 {
 
-DefaultFonts::DefaultFonts()
+FontManager::FontManager()
 {
 #if WINDOWS
     /* On windows in memory fonts use GDI and OS fonts use D2D so if we have
@@ -57,16 +57,16 @@ DefaultFonts::DefaultFonts()
     setupFontMembers();
 }
 
-void DefaultFonts::setupFontMembers()
+void FontManager::setupFontMembers()
 {
     displayFont = getLatoAtSize(9);
     patchNameFont = getLatoAtSize(13);
     lfoTypeFont = getLatoAtSize(8);
     aboutFont = getLatoAtSize(10);
 }
-DefaultFonts::~DefaultFonts() { fmi = nullptr; };
+FontManager::~FontManager(){};
 
-juce::Font DefaultFonts::getLatoAtSize(float size, juce::Font::FontStyleFlags style) const
+juce::Font FontManager::getLatoAtSize(float size, juce::Font::FontStyleFlags style) const
 {
     if (hasLatoOverride)
     {
@@ -95,30 +95,22 @@ juce::Font DefaultFonts::getLatoAtSize(float size, juce::Font::FontStyleFlags st
     }
 }
 
-juce::Font DefaultFonts::getFiraMonoAtSize(float size, juce::Font::FontStyleFlags style) const
+juce::Font FontManager::getFiraMonoAtSize(float size, juce::Font::FontStyleFlags style) const
 {
     return juce::Font(firaMonoRegularTypeface).withPointHeight(size).withStyle(style);
 }
 
-void DefaultFonts::overrideLatoWith(juce::ReferenceCountedObjectPtr<juce::Typeface> itf)
+void FontManager::overrideLatoWith(juce::ReferenceCountedObjectPtr<juce::Typeface> itf)
 {
     hasLatoOverride = true;
     latoOverride = itf;
     setupFontMembers();
 }
-void DefaultFonts::restoreLatoAsDefault()
+void FontManager::restoreLatoAsDefault()
 {
     hasLatoOverride = false;
     latoOverride = nullptr;
     setupFontMembers();
-}
-DefaultFonts *DefaultFonts::fmi{nullptr};
-
-DefaultFonts *getFontManager()
-{
-    if (!DefaultFonts::fmi)
-        DefaultFonts::fmi = new DefaultFonts();
-    return DefaultFonts::fmi;
 }
 
 } // namespace GUI

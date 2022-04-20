@@ -134,7 +134,7 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
         auto r = glyphMenuBounds.withTrimmedLeft(6);
         auto valcol = skin->getColor(Colors::Menu::FilterValue);
 
-        g.setFont(Surge::GUI::getFontManager()->displayFont);
+        g.setFont(skin->fontManager->displayFont);
 
         if (isHovered)
         {
@@ -156,7 +156,7 @@ void MenuForDiscreteParams::paint(juce::Graphics &g)
                      .withTrimmedBottom(4)
                      .withTrimmedLeft(6)
                      .withTrimmedRight(15);
-        g.setFont(Surge::GUI::getFontManager()->displayFont);
+        g.setFont(skin->fontManager->displayFont);
 
         auto labcol = skin->getColor(Colors::Menu::Name);
         auto valcol = skin->getColor(Colors::Menu::Value);

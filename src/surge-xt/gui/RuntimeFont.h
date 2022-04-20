@@ -6,13 +6,10 @@ namespace Surge
 {
 namespace GUI
 {
-
-class Skin;
-
-struct DefaultFonts : public juce::DeletedAtShutdown
+struct FontManager
 {
-    DefaultFonts();
-    ~DefaultFonts();
+    FontManager();
+    ~FontManager();
 
     // When we can make this say 'private' we are done
     // private:
@@ -41,11 +38,8 @@ struct DefaultFonts : public juce::DeletedAtShutdown
     juce::ReferenceCountedObjectPtr<juce::Typeface> latoOverride;
     bool hasLatoOverride{false};
 
-    static DefaultFonts *fmi;
     friend class Skin;
 };
-
-DefaultFonts *getFontManager();
 
 } // namespace GUI
 } // namespace Surge

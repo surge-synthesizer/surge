@@ -20,11 +20,7 @@ namespace Surge
 {
 namespace Widgets
 {
-ParameterInfowindow::ParameterInfowindow()
-{
-    setInterceptsMouseClicks(false, false);
-    setFont(Surge::GUI::getFontManager()->displayFont);
-}
+ParameterInfowindow::ParameterInfowindow() { setInterceptsMouseClicks(false, false); }
 ParameterInfowindow::~ParameterInfowindow() = default;
 
 void ParameterInfowindow::paint(juce::Graphics &g)
@@ -60,6 +56,7 @@ void ParameterInfowindow::paint(juce::Graphics &g)
 
     g.setColour(txtCol);
     g.setOpacity(opacity);
+    font = skin->fontManager->displayFont;
     g.setFont(font);
 
     if (name.empty())

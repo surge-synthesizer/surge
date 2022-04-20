@@ -840,7 +840,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     /*
     ** Skin support
     */
+  public:
     Surge::GUI::Skin::ptr_t currentSkin;
+
+  private:
     void setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry);
     void reloadFromSkin();
     Surge::GUI::IComponentTagValue *

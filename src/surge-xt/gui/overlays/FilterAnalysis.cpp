@@ -174,7 +174,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
     auto width = dRect.getWidth();
     auto height = dRect.getHeight();
     auto labelHeight = 9;
-    auto font = Surge::GUI::getFontManager()->getLatoAtSize(7);
+    auto font = skin->fontManager->getLatoAtSize(7);
 
     {
         auto gs = juce::Graphics::ScopedSaveState(g);

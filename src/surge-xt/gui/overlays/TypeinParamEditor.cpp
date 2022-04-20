@@ -30,7 +30,6 @@ TypeinParamEditor::TypeinParamEditor()
     textEd = std::make_unique<juce::TextEditor>("typeinParamEditor");
     textEd->addListener(this);
     textEd->setSelectAllWhenFocused(true);
-    textEd->setFont(Surge::GUI::getFontManager()->getLatoAtSize(11));
     textEd->setIndents(4, (textEd->getHeight() - textEd->getTextHeight()) / 2);
     textEd->setJustification(juce::Justification::centred);
     textEd->setTitle("New Value");
@@ -47,13 +46,13 @@ void TypeinParamEditor::paint(juce::Graphics &g)
     g.setColour(skin->getColor(Colors::Dialog::Border));
     g.drawRect(getLocalBounds());
 
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(10));
+    g.setFont(skin->fontManager->getLatoAtSize(10));
     g.setColour(skin->getColor(Colors::Dialog::Label::Text));
 
     auto r = getLocalBounds().translated(0, 2).withHeight(14);
     g.drawText(mainLabel, r, juce::Justification::centred);
 
-    g.setFont(Surge::GUI::getFontManager()->getLatoAtSize(8));
+    g.setFont(skin->fontManager->getLatoAtSize(8));
 
     if (isMod)
     {
@@ -136,6 +135,8 @@ void TypeinParamEditor::visibilityChanged()
 
 void TypeinParamEditor::onSkinChanged()
 {
+    textEd->setFont(skin->fontManager->getLatoAtSize(11));
+
     textEd->setColour(juce::TextEditor::backgroundColourId,
                       skin->getColor(Colors::Dialog::Entry::Background));
     textEd->setColour(juce::TextEditor::textColourId, skin->getColor(Colors::Dialog::Entry::Text));

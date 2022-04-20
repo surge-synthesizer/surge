@@ -45,6 +45,8 @@ namespace Surge
 namespace GUI
 {
 
+struct FontManager;
+
 void loadTypefacesFromPath(const fs::path &p,
                            std::unordered_map<std::string, juce::Typeface::Ptr> &result);
 
@@ -85,6 +87,7 @@ class Skin
 
     bool useInMemorySkin{false};
 
+    std::unique_ptr<FontManager> fontManager;
     bool reloadSkin(std::shared_ptr<SurgeImageStore> bitmapStore);
 
     std::string resourceName(const std::string &relativeName)
