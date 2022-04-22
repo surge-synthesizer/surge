@@ -447,6 +447,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
     if (button.isCommandDown() && (tag == tag_mp_patch || tag == tag_mp_category))
     {
+        undoManager()->pushPatch();
         synth->selectRandomPatch();
         return 1;
     }
@@ -3034,6 +3035,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_mp_category:
     {
+        undoManager()->pushPatch();
         closeOverlay(SAVE_PATCH);
 
         loadPatchWithDirtyCheck((control->getValue() > 0.5f), true);
@@ -3043,6 +3045,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_mp_patch:
     {
+        undoManager()->pushPatch();
         closeOverlay(SAVE_PATCH);
 
         auto insideCategory = Surge::Storage::getUserDefaultValue(

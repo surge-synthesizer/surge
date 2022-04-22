@@ -621,6 +621,7 @@ void PatchSelector::showClassicMenu(bool single_category)
             sge->fileChooser->launchAsync(
                 juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
                 [this, patchPath, sge](const juce::FileChooser &c) {
+                    sge->undoManager()->pushPatch();
                     auto ress = c.getResults();
                     if (ress.size() != 1)
                         return;
@@ -1073,6 +1074,10 @@ void PatchSelector::loadPatch(int id)
 {
     if (id >= 0)
     {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+            sge->undoManager()->pushPatch();
+
         enqueue_sel_id = id;
         notifyValueChanged();
     }

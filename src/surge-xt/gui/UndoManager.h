@@ -60,6 +60,8 @@ struct UndoManager
 
     void pushTuning(const Tunings::Tuning &t);
 
+    void pushPatch(); // args TK
+
     bool undo();
     bool redo();
 

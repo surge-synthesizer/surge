@@ -2342,6 +2342,21 @@ void SurgeGUIEditor::setTuningFromUndo(const Tunings::Tuning &t)
     tuningChanged();
 }
 const Tunings::Tuning &SurgeGUIEditor::getTuningForRedo() { return synth->storage.currentTuning; }
+const fs::path SurgeGUIEditor::pathForCurrentPatch()
+{
+    if (patchSelector->sel_id >= 0 && patchSelector->sel_id < synth->storage.patch_list.size())
+    {
+        return synth->storage.patch_list[patchSelector->sel_id].path;
+    }
+    return {};
+}
+
+void SurgeGUIEditor::setPatchFromUndo(void *data, size_t datasz)
+{
+    synth->enqueuePatchForLoad(data, datasz);
+    synth->processAudioThreadOpsWhenAudioEngineUnavailable();
+    synth->refresh_editor = true;
+}
 
 void SurgeGUIEditor::ensureParameterItemIsFocused(Parameter *p)
 {
