@@ -25,6 +25,7 @@
 
 #include "juce_gui_extra/juce_gui_extra.h"
 #include "OverlayComponent.h"
+#include "RefreshableOverlay.h"
 
 class SurgeGUIEditor;
 
@@ -73,7 +74,7 @@ class CodeEditorContainerWithApply : public OverlayComponent,
 struct ExpandingFormulaDebugger;
 struct FormulaControlArea;
 
-struct FormulaModulatorEditor : public CodeEditorContainerWithApply
+struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public RefreshableOverlay
 {
     FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage *s, LFOStorage *lfos,
                            FormulaModulatorStorage *fs, int lfoid, int scene,
@@ -97,6 +98,8 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply
 
     void onSkinChanged() override;
     void setApplyEnabled(bool b) override;
+
+    void forceRefresh() override {}
 
     DAWExtraStateStorage::EditorState::FormulaEditState &getEditState();
 

@@ -32,6 +32,13 @@ struct UndoManagerImpl
     SurgeSynthesizer *synth;
     UndoManagerImpl(SurgeGUIEditor *ed, SurgeSynthesizer *s) : editor(ed), synth(s) {}
 
+    bool doPush{true};
+    struct SelfPushGuard
+    {
+        UndoManagerImpl *that;
+        SelfPushGuard(UndoManagerImpl *imp) : that(imp) { that->doPush = false; }
+        ~SelfPushGuard() { that->doPush = true; }
+    };
     // for now this is super simple
     struct UndoParam
     {
@@ -72,6 +79,12 @@ struct UndoManagerImpl
         int lfoid;
         MSEGStorage storageCopy;
     };
+    struct UndoFormula
+    {
+        int scene;
+        int lfoid;
+        FormulaModulatorStorage storageCopy;
+    };
     struct UndoRename
     {
         bool isMacro;
@@ -85,11 +98,15 @@ struct UndoManagerImpl
         int macro;
         float val;
     };
+    struct UndoTuning
+    {
+        Tunings::Tuning tuning;
+    };
 
     // If you add a new type here add it both to aboutTheSameThing, toString, and
     // to undo.
     typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep, UndoMSEG,
-                         UndoRename, UndoMacro>
+                         UndoFormula, UndoRename, UndoMacro, UndoTuning>
         UndoAction;
     struct UndoRecord
     {
@@ -126,10 +143,21 @@ struct UndoManagerImpl
             auto pb = std::get_if<UndoMSEG>(&b);
             return (pa->lfoid == pb->lfoid) && (pa->scene == pb->scene);
         }
+        if (auto pa = std::get_if<UndoFormula>(&a))
+        {
+            auto pb = std::get_if<UndoFormula>(&b);
+            return (pa->lfoid == pb->lfoid) && (pa->scene == pb->scene);
+        }
         if (auto pa = std::get_if<UndoMacro>(&a))
         {
             auto pb = std::get_if<UndoMacro>(&b);
             return (pa->macro == pb->macro);
+        }
+        if (auto pa = std::get_if<UndoTuning>(&a))
+        {
+            // We've already checked B is a tuning. If we have simultaneous tuning actions
+            // we know they are compressible.
+            return true;
         }
         return false;
     }
@@ -163,6 +191,10 @@ struct UndoManagerImpl
         {
             return fmt::format("MSEG[scene={},lfoid={}]", pa->scene, pa->lfoid);
         }
+        if (auto pa = std::get_if<UndoFormula>(&a))
+        {
+            return fmt::format("FORMULA[scene={},lfoid={}]", pa->scene, pa->lfoid);
+        }
         if (auto pa = std::get_if<UndoMacro>(&a))
         {
             return fmt::format("Macro[id={},val={}]", pa->macro, pa->val);
@@ -173,11 +205,18 @@ struct UndoManagerImpl
                                (pa->isMacro ? "Macro" : "Modulator"), pa->name, pa->itemid,
                                pa->scene, pa->index);
         }
+        if (auto pa = std::get_if<UndoTuning>(&a))
+        {
+            return fmt::format("Tuning[]");
+        }
         return "UNK";
     }
 
     void pushUndo(const UndoAction &r)
     {
+        if (!doPush)
+            return;
+
         if (undoStack.empty())
         {
             undoStack.emplace_back(r);
@@ -209,7 +248,12 @@ struct UndoManagerImpl
         }
     }
 
-    void pushRedo(const UndoAction &r) { redoStack.emplace_back(r); }
+    void pushRedo(const UndoAction &r)
+    {
+        if (!doPush)
+            return;
+        redoStack.emplace_back(r);
+    }
 
     void pushParameterChange(int paramId, const Parameter *p, pdata val, UndoManager::Target to)
     {
@@ -303,6 +347,20 @@ struct UndoManagerImpl
         else
             pushRedo(r);
     }
+
+    void pushFormula(int scene, int lfoid, const FormulaModulatorStorage &pushValue,
+                     UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto r = UndoFormula();
+        r.scene = scene;
+        r.lfoid = lfoid;
+        r.storageCopy = pushValue;
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
     void pushMacroOrLFORename(bool isMacro, const std::string &oldName, int scene, int itemid,
                               int index, UndoManager::Target to = UndoManager::UNDO)
     {
@@ -325,6 +383,16 @@ struct UndoManagerImpl
         r.macro = m;
         r.val = f;
 
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
+    void pushTuning(const Tunings::Tuning &t, UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto r = UndoTuning();
+        r.tuning = t;
         if (to == UndoManager::UNDO)
             pushUndo(r);
         else
@@ -411,6 +479,13 @@ struct UndoManagerImpl
             editor->setMSEGFromUndo(p->scene, p->lfoid, p->storageCopy);
             return true;
         }
+        if (auto p = std::get_if<UndoFormula>(&q))
+        {
+            pushFormula(p->scene, p->lfoid, editor->getPatch().formulamods[p->scene][p->lfoid],
+                        opposite);
+            editor->setFormulaFromUndo(p->scene, p->lfoid, p->storageCopy);
+            return true;
+        }
         if (auto p = std::get_if<UndoRename>(&q))
         {
             if (p->isMacro)
@@ -434,6 +509,13 @@ struct UndoManagerImpl
                             .modsources[p->macro + ms_ctrl1]);
             pushMacroChange(p->macro, cms->get_target01(0), opposite);
             editor->setMacroValueFromUndo(p->macro, p->val);
+            return true;
+        }
+        if (auto p = std::get_if<UndoTuning>(&q))
+        {
+            pushTuning(editor->getTuningForRedo(), opposite);
+            auto g = SelfPushGuard(this);
+            editor->setTuningFromUndo(p->tuning);
             return true;
         }
 
@@ -501,6 +583,11 @@ void UndoManager::pushMSEG(int scene, int lfoid, const MSEGStorage &pushValue)
     impl->pushMSEG(scene, lfoid, pushValue);
 }
 
+void UndoManager::pushFormula(int scene, int lfoid, const FormulaModulatorStorage &pushValue)
+{
+    impl->pushFormula(scene, lfoid, pushValue);
+}
+
 void UndoManager::pushMacroRename(int macro, const std::string &oldName)
 {
     impl->pushMacroOrLFORename(true, oldName, -1, macro, -1);
@@ -510,6 +597,8 @@ void UndoManager::pushLFORename(int scene, int lfoid, int index, const std::stri
 {
     impl->pushMacroOrLFORename(false, oldName, scene, lfoid, index);
 }
+
+void UndoManager::pushTuning(const Tunings::Tuning &t) { impl->pushTuning(t); }
 
 void UndoManager::pushMacroChange(int macroid, float val) { impl->pushMacroChange(macroid, val); }
 

@@ -18,11 +18,13 @@
 
 #include "Parameter.h"
 #include "ModulationSource.h"
+#include "Tunings.h"
 
 struct SurgeSynthesizer;
 struct SurgeGUIEditor;
 struct StepSequencerStorage;
 struct MSEGStorage;
+struct FormulaModulatorStorage;
 
 namespace Surge
 {
@@ -50,10 +52,13 @@ struct UndoManager
     void pushOscillator(int scene, int oscnum);
     void pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue);
     void pushMSEG(int scene, int lfoid, const MSEGStorage &pushValue);
+    void pushFormula(int scene, int lfoid, const FormulaModulatorStorage &pushValue);
     void pushFX(int fxslot);
 
     void pushMacroRename(int macro, const std::string &oldName);
     void pushLFORename(int scene, int lfoid, int index, const std::string &oldName);
+
+    void pushTuning(const Tunings::Tuning &t);
 
     bool undo();
     bool redo();

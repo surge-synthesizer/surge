@@ -493,9 +493,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                                   Surge::GUI::UndoManager::Target which);
     void setStepSequencerFromUndo(int scene, int lfoid, const StepSequencerStorage &val);
     void setMSEGFromUndo(int scene, int lfoid, const MSEGStorage &val);
+    void setFormulaFromUndo(int scene, int lfoid, const FormulaModulatorStorage &val);
     void setLFONameFromUndo(int scene, int lfoid, int index, const std::string &n);
     void setMacroNameFromUndo(int ccid, const std::string &n);
     void setMacroValueFromUndo(int ccid, float val);
+    void setTuningFromUndo(const Tunings::Tuning &);
+    const Tunings::Tuning &getTuningForRedo();
     void ensureParameterItemIsFocused(Parameter *p);
 
   private:
