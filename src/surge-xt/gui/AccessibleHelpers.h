@@ -465,7 +465,7 @@ inline std::tuple<AccessibleKeyEditAction, AccessibleKeyModifier>
 accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
 {
     jassert(storage);
-    if (!Surge::GUI::allowKeyboardEdits(storage))
+    if (!storage || !Surge::GUI::allowKeyboardEdits(storage))
         return {None, NoModifier};
 
     return accessibleEditActionInternal(key);

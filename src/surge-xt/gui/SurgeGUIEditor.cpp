@@ -37,6 +37,7 @@
 #include "overlays/AboutScreen.h"
 #include "overlays/MiniEdit.h"
 #include "overlays/MSEGEditor.h"
+#include "overlays/LuaEditors.h"
 #include "overlays/ModulationEditor.h"
 #include "overlays/TypeinParamEditor.h"
 #include "overlays/OverlayWrapper.h"
@@ -2326,6 +2327,22 @@ void SurgeGUIEditor::setParamFromUndo(int paramId, pdata val)
     synth->refresh_editor = true;
 }
 
+void SurgeGUIEditor::setTuningFromUndo(const Tunings::Tuning &t)
+{
+    try
+    {
+        synth->storage.retuneAndRemapToScaleAndMapping(t.scale, t.keyboardMapping);
+        synth->refresh_editor = true;
+    }
+    catch (Tunings::TuningError &e)
+    {
+        synth->storage.retuneTo12TETScaleC261Mapping();
+        synth->storage.reportError(e.what(), "SCL Error");
+    }
+    tuningChanged();
+}
+const Tunings::Tuning &SurgeGUIEditor::getTuningForRedo() { return synth->storage.currentTuning; }
+
 void SurgeGUIEditor::ensureParameterItemIsFocused(Parameter *p)
 {
     if (p->scene > 0 && p->scene - 1 != current_scene)
@@ -2375,6 +2392,24 @@ void SurgeGUIEditor::setMSEGFromUndo(int scene, int lfoid, const MSEGStorage &va
     synth->storage.getPatch().msegs[scene][lfoid] = val;
     synth->refresh_editor = true;
     if (auto ol = getOverlayIfOpenAs<Surge::Overlays::MSEGEditor>(MSEG_EDITOR))
+    {
+        ol->forceRefresh();
+    }
+}
+
+void SurgeGUIEditor::setFormulaFromUndo(int scene, int lfoid, const FormulaModulatorStorage &val)
+{
+    if (scene != current_scene || lfoid != modsource - ms_lfo1)
+    {
+        changeSelectedScene(scene);
+        modsource = (modsources)(lfoid + ms_lfo1);
+        modsource_index = 0;
+        modsource_editor[scene] = modsource;
+        refresh_mod();
+    }
+    synth->storage.getPatch().formulamods[scene][lfoid] = val;
+    synth->refresh_editor = true;
+    if (auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(FORMULA_EDITOR))
     {
         ol->forceRefresh();
     }
@@ -2532,6 +2567,7 @@ void SurgeGUIEditor::scaleFileDropped(const string &fn)
 {
     try
     {
+        undoManager()->pushTuning(synth->storage.currentTuning);
         this->synth->storage.retuneToScale(Tunings::readSCLFile(fn));
         this->synth->refresh_editor = true;
     }
@@ -2547,6 +2583,7 @@ void SurgeGUIEditor::mappingFileDropped(const string &fn)
 {
     try
     {
+        undoManager()->pushTuning(synth->storage.currentTuning);
         this->synth->storage.remapToKeyboard(Tunings::readKBMFile(fn));
         this->synth->refresh_editor = true;
     }

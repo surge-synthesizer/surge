@@ -427,6 +427,7 @@ class RadialScaleGraph : public juce::Component,
 
                     showHideKnob = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
                     showHideKnob->setSkin(skin, associatedBitmapStore);
+                    showHideKnob->setStorage(storage);
                     showHideKnob->setRows(1);
                     showHideKnob->setColumns(1);
                     showHideKnob->setTag(12345);
@@ -525,7 +526,9 @@ class RadialScaleGraph : public juce::Component,
     void onSkinChanged() override
     {
         if (showHideKnob)
+        {
             showHideKnob->setSkin(skin, associatedBitmapStore);
+        }
         for (const auto &k : toneKnobs)
             k->setSkin(skin, associatedBitmapStore);
         for (const auto &tl : toneLabels)
@@ -2099,6 +2102,8 @@ struct TuningControlArea : public juce::Component,
         {
             if (applyS->isEnabled())
             {
+                if (overlay->storage && overlay->editor)
+                    overlay->editor->undoManager()->pushTuning(overlay->storage->currentTuning);
                 auto *sck = overlay->sclKbmDisplay.get();
                 sck->onTextChanged(sck->sclDocument->getAllContent().toStdString(),
                                    sck->kbmDocument->getAllContent().toStdString());
@@ -2242,6 +2247,7 @@ void TuningOverlay::onToneChanged(int tone, double newCentsValue)
 {
     if (storage)
     {
+        editor->undoManager()->pushTuning(storage->currentTuning);
         storage->currentScale.tones[tone].type = Tunings::Tone::kToneCents;
         storage->currentScale.tones[tone].cents = newCentsValue;
         recalculateScaleText();
@@ -2252,6 +2258,8 @@ void TuningOverlay::onScaleRescaled(double scaleBy)
 {
     if (!storage)
         return;
+
+    editor->undoManager()->pushTuning(storage->currentTuning);
 
     /*
      * OK so we want a 1 cent move on top so that is top -> top+1 for scaleBy = 1
@@ -2275,6 +2283,8 @@ void TuningOverlay::onScaleRescaledAbsolute(double riTo)
     if (!storage)
         return;
 
+    editor->undoManager()->pushTuning(storage->currentTuning);
+
     /*
      * OK so we want a 1 cent move on top so that is top -> top+1 for scaleBy = 1
      * top ( 1 + x * scaleBy ) = top+1
@@ -2295,6 +2305,7 @@ void TuningOverlay::onToneStringChanged(int tone, const std::string &newStringVa
 {
     if (storage)
     {
+        editor->undoManager()->pushTuning(storage->currentTuning);
         try
         {
             auto parsed = Tunings::toneFromString(newStringValue);
@@ -2312,6 +2323,8 @@ void TuningOverlay::onNewSCLKBM(const std::string &scl, const std::string &kbm)
 {
     if (!storage)
         return;
+
+    editor->undoManager()->pushTuning(storage->currentTuning);
 
     try
     {
