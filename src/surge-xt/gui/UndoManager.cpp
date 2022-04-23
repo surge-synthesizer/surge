@@ -27,17 +27,34 @@ namespace GUI
 {
 struct UndoManagerImpl
 {
-    static constexpr int max_stack = 250;
+    static constexpr int maxUndoStackMem = 1024 * 1024 * 25;
+    static constexpr int maxRedoStackMem = 1024 * 1024 * 10;
     SurgeGUIEditor *editor;
     SurgeSynthesizer *synth;
     UndoManagerImpl(SurgeGUIEditor *ed, SurgeSynthesizer *s) : editor(ed), synth(s) {}
-
+    ~UndoManagerImpl()
+    {
+        for (auto &r : undoStack)
+        {
+            freeAction(r.action);
+        }
+        for (auto &r : redoStack)
+        {
+            freeAction(r.action);
+        }
+    }
     bool doPush{true};
     struct SelfPushGuard
     {
         UndoManagerImpl *that;
         SelfPushGuard(UndoManagerImpl *imp) : that(imp) { that->doPush = false; }
         ~SelfPushGuard() { that->doPush = true; }
+    };
+    struct CleanupGuard
+    {
+        UndoManagerImpl *that;
+        CleanupGuard(UndoManagerImpl *imp) : that(imp) {}
+        ~CleanupGuard() { that->doCleanup(); }
     };
     // for now this is super simple
     struct UndoParam
@@ -102,11 +119,17 @@ struct UndoManagerImpl
     {
         Tunings::Tuning tuning;
     };
+    struct UndoPatch
+    {
+        void *data{nullptr};
+        size_t dataSz{0};
+        fs::path path{};
+    };
 
     // If you add a new type here add it both to aboutTheSameThing, toString, and
     // to undo.
     typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep, UndoMSEG,
-                         UndoFormula, UndoRename, UndoMacro, UndoTuning>
+                         UndoFormula, UndoRename, UndoMacro, UndoTuning, UndoPatch>
         UndoAction;
     struct UndoRecord
     {
@@ -118,6 +141,31 @@ struct UndoManagerImpl
         }
     };
     std::deque<UndoRecord> undoStack, redoStack;
+    size_t undoStackMem{0}, redoStackMem{0};
+
+    size_t actionSize(const UndoAction &a)
+    {
+        auto res = sizeof(a);
+
+        if (auto pt = std::get_if<UndoFormula>(&a))
+        {
+            res += pt->storageCopy.formulaString.size();
+        }
+        if (auto pt = std::get_if<UndoPatch>(&a))
+        {
+            res += pt->dataSz;
+        }
+        return res;
+    }
+
+    void freeAction(UndoAction &a)
+    {
+        if (auto pt = std::get_if<UndoPatch>(&a))
+        {
+            free(pt->data);
+            pt->dataSz = 0;
+        }
+    }
 
     /* Not same value, but same pair. Used for wheel event compressing for instance */
     bool aboutTheSameThing(const UndoAction &a, const UndoAction &b)
@@ -158,6 +206,11 @@ struct UndoManagerImpl
             // We've already checked B is a tuning. If we have simultaneous tuning actions
             // we know they are compressible.
             return true;
+        }
+        if (auto pa = std::get_if<UndoTuning>(&a))
+        {
+            // UndoPatch is always different
+            return false;
         }
         return false;
     }
@@ -209,6 +262,10 @@ struct UndoManagerImpl
         {
             return fmt::format("Tuning[]");
         }
+        if (auto pa = std::get_if<UndoPatch>(&a))
+        {
+            return fmt::format("Patch[]");
+        }
         return "UNK";
     }
 
@@ -217,9 +274,11 @@ struct UndoManagerImpl
         if (!doPush)
             return;
 
+        auto g = CleanupGuard(this);
         if (undoStack.empty())
         {
             undoStack.emplace_back(r);
+            undoStackMem += actionSize(r);
             return;
         }
 
@@ -227,6 +286,7 @@ struct UndoManagerImpl
         if (r.index() != t.action.index())
         {
             undoStack.emplace_back(r);
+            undoStackMem += actionSize(r);
         }
         else
         {
@@ -240,11 +300,8 @@ struct UndoManagerImpl
             else
             {
                 undoStack.emplace_back(r);
+                undoStackMem += actionSize(r);
             }
-        }
-        while (undoStack.size() > max_stack)
-        {
-            undoStack.pop_front();
         }
     }
 
@@ -252,7 +309,27 @@ struct UndoManagerImpl
     {
         if (!doPush)
             return;
+        auto g = CleanupGuard(this);
         redoStack.emplace_back(r);
+        redoStackMem += actionSize(r);
+    }
+
+    void doCleanup()
+    {
+        while (undoStackMem > maxUndoStackMem)
+        {
+            auto r = undoStack.front();
+            freeAction(r.action);
+            undoStackMem -= actionSize(r.action);
+            undoStack.pop_front();
+        }
+        while (redoStackMem > maxRedoStackMem)
+        {
+            auto r = redoStack.front();
+            freeAction(r.action);
+            redoStackMem -= actionSize(r.action);
+            redoStack.pop_front();
+        }
     }
 
     void pushParameterChange(int paramId, const Parameter *p, pdata val, UndoManager::Target to)
@@ -399,17 +476,59 @@ struct UndoManagerImpl
             pushRedo(r);
     }
 
+    void pushPatch(UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto r = UndoPatch();
+        r.data = nullptr;
+        r.dataSz = 0;
+        r.path = fs::path{};
+        static int qq = 0;
+        bool doStream = editor->getPatch().isDirty;
+        if (!doStream)
+        {
+            auto pt = editor->pathForCurrentPatch();
+            if (pt.empty())
+            {
+                doStream = true;
+            }
+            else
+            {
+                r.path = pt;
+            }
+        }
+        if (doStream)
+        {
+            void *data{nullptr};
+            auto dsz = editor->getPatch().save_patch(&data);
+            // Now the pointer which is returned will be the patches 'patchptr'
+            // which on the lext load will get clobbered so we need to make a copy.
+            r.dataSz = dsz;
+            r.data = malloc(r.dataSz);
+            memcpy(r.data, data, r.dataSz);
+        }
+
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
     bool undoRedoImpl(UndoManager::Target which)
     {
         auto *currStack = &undoStack;
+        auto *currStackMem = &undoStackMem;
         if (which == UndoManager::REDO)
+        {
             currStack = &redoStack;
+            currStackMem = &redoStackMem;
+        }
 
         if (currStack->empty())
             return false;
 
         auto qt = currStack->back();
         auto q = qt.action;
+        *currStackMem -= actionSize(q);
         currStack->pop_back();
 
         auto opposite = (which == UndoManager::UNDO ? UndoManager::REDO : UndoManager::UNDO);
@@ -518,6 +637,20 @@ struct UndoManagerImpl
             editor->setTuningFromUndo(p->tuning);
             return true;
         }
+        if (auto p = std::get_if<UndoPatch>(&q))
+        {
+            pushPatch(opposite);
+            auto g = SelfPushGuard(this);
+            if (p->dataSz == 0)
+            {
+                editor->queuePatchFileLoad(p->path.u8string());
+            }
+            else
+            {
+                editor->setPatchFromUndo(p->data, p->dataSz);
+            }
+            return true;
+        }
 
         return false;
     }
@@ -530,13 +663,13 @@ struct UndoManagerImpl
         std::cout << "-------- UNDO/REDO -----------\n";
         for (const auto &q : undoStack)
         {
-            std::cout << "  UNDO : " << toString(q.action) << " "
+            std::cout << "  UNDO : " << toString(q.action) << " " << actionSize(q.action) << " "
                       << q.time.time_since_epoch().count() << " " << q.action.index() << std::endl;
         }
         std::cout << "\n";
         for (const auto &q : redoStack)
         {
-            std::cout << "  REDO : " << toString(q.action) << " "
+            std::cout << "  REDO : " << toString(q.action) << " " << actionSize(q.action) << " "
                       << q.time.time_since_epoch().count() << " " << q.action.index() << std::endl;
         }
         std::cout << "-------------------------------" << std::endl;
@@ -601,6 +734,8 @@ void UndoManager::pushLFORename(int scene, int lfoid, int index, const std::stri
 void UndoManager::pushTuning(const Tunings::Tuning &t) { impl->pushTuning(t); }
 
 void UndoManager::pushMacroChange(int macroid, float val) { impl->pushMacroChange(macroid, val); }
+
+void UndoManager::pushPatch() { impl->pushPatch(); }
 
 bool UndoManager::canUndo() { return !impl->undoStack.empty(); }
 

@@ -446,6 +446,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void queuePatchFileLoad(const std::string &file)
     {
+        undoManager()->pushPatch();
+        strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
         strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
         synth->has_patchid_file = true;
         synth->processAudioThreadOpsWhenAudioEngineUnavailable();
@@ -499,7 +501,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setMacroValueFromUndo(int ccid, float val);
     void setTuningFromUndo(const Tunings::Tuning &);
     const Tunings::Tuning &getTuningForRedo();
+    const fs::path pathForCurrentPatch();
     void ensureParameterItemIsFocused(Parameter *p);
+    void setPatchFromUndo(void *data, size_t datasz);
 
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
@@ -615,7 +619,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                   bool mute) override;
     void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
 
-    const SurgePatch &getPatch() { return synth->storage.getPatch(); }
+    SurgePatch &getPatch() { return synth->storage.getPatch(); }
 
   private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
