@@ -2243,7 +2243,8 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
             if (mci)
             {
                 undoManager()->pushModulationChange(
-                    ptag, modsource, current_scene, modsource_index, mci->modValue,
+                    ptag, synth->storage.getPatch().param_ptr[ptag], modsource, current_scene,
+                    modsource_index, mci->modValue,
                     synth->isModulationMuted(ptag, modsource, current_scene, modsource_index));
             }
         }
@@ -2489,7 +2490,8 @@ void SurgeGUIEditor::pushModulationToUndoRedo(int paramId, modsources ms, int sc
                                               Surge::GUI::UndoManager::Target which)
 {
     undoManager()->pushModulationChange(
-        paramId, ms, scene, idx, synth->getModDepth01(paramId, ms, scene, idx),
+        paramId, synth->storage.getPatch().param_ptr[paramId], ms, scene, idx,
+        synth->getModDepth01(paramId, ms, scene, idx),
         synth->isModulationMuted(paramId, modsource, current_scene, modsource_index), which);
 }
 //------------------------------------------------------------------------------------------------

@@ -85,6 +85,7 @@ struct UndoManagerImpl
         int index;
         bool muted;
         modsources ms;
+        std::string source_name, target_name;
     };
     struct UndoOscillator
     {
@@ -429,11 +430,13 @@ struct UndoManagerImpl
         else
             pushRedo(r);
     }
-    void pushModulationChange(int paramId, modsources modsource, int sc, int idx, float val,
-                              bool muted, UndoManager::Target to)
+    void pushModulationChange(int paramId, const Parameter *p, modsources modsource, int sc,
+                              int idx, float val, bool muted, UndoManager::Target to)
     {
         auto r = UndoModulation();
         r.paramId = paramId;
+        r.target_name = p->fullname;
+        r.source_name = modsource_names[modsource];
         r.val = val;
         r.ms = modsource;
         r.scene = sc;
@@ -652,6 +655,7 @@ struct UndoManagerImpl
         auto dcroug = DontClearRedoOnUndoGuard(this);
         auto *currStack = &undoStack;
         auto *currStackMem = &undoStackMem;
+
         if (which == UndoManager::REDO)
         {
             currStack = &redoStack;
@@ -667,13 +671,15 @@ struct UndoManagerImpl
         currStack->pop_back();
 
         auto opposite = (which == UndoManager::UNDO ? UndoManager::REDO : UndoManager::UNDO);
-
+        std::string verb = (which == UndoManager::UNDO ? "Undo" : "Redo");
         // this would be cleaner with std:visit but visit isn't in macos libc until 10.13
         if (auto pa = std::get_if<UndoParam>(&q))
         {
             editor->pushParamToUndoRedo(pa->paramId, opposite);
             auto g = SelfPushGuard(this);
             restoreParamToEditor(pa);
+            auto ann = fmt::format("{} Parameter Value, {}", verb, pa->name);
+            editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
         if (auto p = std::get_if<UndoModulation>(&q))
@@ -681,6 +687,10 @@ struct UndoManagerImpl
             editor->pushModulationToUndoRedo(p->paramId, p->ms, p->scene, p->index, opposite);
             auto g = SelfPushGuard(this);
             editor->setModulationFromUndo(p->paramId, p->ms, p->scene, p->index, p->val, p->muted);
+
+            auto ann =
+                fmt::format("{} Modulation to {} from {}", verb, p->target_name, p->source_name);
+            editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
         if (auto p = std::get_if<UndoOscillator>(&q))
@@ -695,6 +705,9 @@ struct UndoManagerImpl
             {
                 restoreParamToEditor(&qp);
             }
+            auto ann = fmt::format("{} Oscillator Type to {}, Scene {} Oscillator {}", verb,
+                                   osc_type_names[p->type], (char)('A' + p->scene), p->oscNum + 1);
+            editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
         if (auto p = std::get_if<UndoFullLFO>(&q))
@@ -731,6 +744,11 @@ struct UndoManagerImpl
                     editor->setStepSequencerFromUndo(p->scene, p->lfoid, *ms);
                 }
             }
+
+            auto ann = fmt::format("{} Full Modulator, Scene {} Modulator {}", verb,
+                                   (char)('A' + p->scene), p->lfoid + 1);
+            editor->enqueueAccessibleAnnouncement(ann);
+
             return true;
         }
         if (auto p = std::get_if<UndoFX>(&q))
@@ -764,6 +782,10 @@ struct UndoManagerImpl
                 pa->set_extend_range(p->undoParamValues[i].extend_range);
                 pa->deform_type = p->undoParamValues[i].deform_type;
             }
+
+            auto ann = fmt::format("{} FX Type to {}, FX Slot {}", verb, fx_type_names[p->type],
+                                   fxslot_names[p->fxslot]);
+            editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
         if (auto p = std::get_if<UndoStep>(&q))
@@ -772,6 +794,10 @@ struct UndoManagerImpl
                               editor->getPatch().stepsequences[p->scene][p->lfoid], opposite);
             auto g = SelfPushGuard(this);
             editor->setStepSequencerFromUndo(p->scene, p->lfoid, p->storageCopy);
+            auto ann = fmt::format("{} StepSequencer Setting, Scene {} Modulator {}", verb,
+                                   (char)('A' + p->scene), p->lfoid + 1);
+            editor->enqueueAccessibleAnnouncement(ann);
+
             return true;
         }
         if (auto p = std::get_if<UndoMSEG>(&q))
@@ -779,6 +805,10 @@ struct UndoManagerImpl
             pushMSEG(p->scene, p->lfoid, editor->getPatch().msegs[p->scene][p->lfoid], opposite);
             auto g = SelfPushGuard(this);
             editor->setMSEGFromUndo(p->scene, p->lfoid, p->storageCopy);
+            auto ann = fmt::format("{} MSEG Model, Scene {} Modulator {}", verb,
+                                   (char)('A' + p->scene), p->lfoid + 1);
+            editor->enqueueAccessibleAnnouncement(ann);
+
             return true;
         }
         if (auto p = std::get_if<UndoFormula>(&q))
@@ -787,6 +817,10 @@ struct UndoManagerImpl
                         opposite);
             auto g = SelfPushGuard(this);
             editor->setFormulaFromUndo(p->scene, p->lfoid, p->storageCopy);
+            auto ann = fmt::format("{} Formula, Scene {} Modulator {}", verb,
+                                   (char)('A' + p->scene), p->lfoid + 1);
+            editor->enqueueAccessibleAnnouncement(ann);
+
             return true;
         }
         if (auto p = std::get_if<UndoRename>(&q))
@@ -796,7 +830,10 @@ struct UndoManagerImpl
                 auto nm = editor->getPatch().CustomControllerLabel[p->itemid];
                 pushMacroOrLFORename(true, nm, -1, p->itemid, -1, opposite);
                 auto g = SelfPushGuard(this);
+
                 editor->setMacroNameFromUndo(p->itemid, p->name);
+                auto ann = fmt::format("{} Macro {} Rename", p->itemid);
+                editor->enqueueAccessibleAnnouncement(ann);
             }
             else
             {
@@ -804,6 +841,9 @@ struct UndoManagerImpl
                 pushMacroOrLFORename(false, nm, p->scene, p->itemid, p->index, opposite);
                 auto g = SelfPushGuard(this);
                 editor->setLFONameFromUndo(p->scene, p->itemid, p->index, p->name);
+
+                auto ann = fmt::format("{} Modulator Rename", p->itemid);
+                editor->enqueueAccessibleAnnouncement(ann);
             }
             return true;
         }
@@ -815,6 +855,9 @@ struct UndoManagerImpl
             pushMacroChange(p->macro, cms->get_target01(0), opposite);
             auto g = SelfPushGuard(this);
             editor->setMacroValueFromUndo(p->macro, p->val);
+
+            auto ann = fmt::format("{} Macro {} Value", p->macro);
+            editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
         if (auto p = std::get_if<UndoTuning>(&q))
@@ -822,6 +865,9 @@ struct UndoManagerImpl
             pushTuning(editor->getTuningForRedo(), opposite);
             auto g = SelfPushGuard(this);
             editor->setTuningFromUndo(p->tuning);
+
+            auto ann = fmt::format("{} Tuning Change");
+            editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
         if (auto p = std::get_if<UndoPatch>(&q))
@@ -836,6 +882,9 @@ struct UndoManagerImpl
             {
                 editor->setPatchFromUndo(p->data, p->dataSz);
             }
+
+            auto ann = fmt::format("{} Patch Change");
+            editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
 
@@ -875,10 +924,10 @@ void UndoManager::pushParameterChange(int paramId, const Parameter *p, pdata val
     impl->pushParameterChange(paramId, p, val, to);
 }
 
-void UndoManager::pushModulationChange(int paramId, modsources modsource, int scene, int idx,
-                                       float val, bool muted, Target to)
+void UndoManager::pushModulationChange(int paramId, const Parameter *p, modsources modsource,
+                                       int scene, int idx, float val, bool muted, Target to)
 {
-    impl->pushModulationChange(paramId, modsource, scene, idx, val, muted, to);
+    impl->pushModulationChange(paramId, p, modsource, scene, idx, val, muted, to);
 }
 
 void UndoManager::pushOscillator(int scene, int oscnum) { impl->pushOscillator(scene, oscnum); }

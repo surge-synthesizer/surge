@@ -47,8 +47,8 @@ struct UndoManager
     std::unique_ptr<UndoManagerImpl> impl;
     void pushParameterChange(int paramId, const Parameter *p, pdata val, Target to = UNDO);
     void pushMacroChange(int macroid, float val);
-    void pushModulationChange(int paramId, modsources modsource, int scene, int index, float val,
-                              bool muted, Target to = UNDO);
+    void pushModulationChange(int paramId, const Parameter *p, modsources modsource, int scene,
+                              int index, float val, bool muted, Target to = UNDO);
     void pushOscillator(int scene, int oscnum);
     void pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue);
     void pushMSEG(int scene, int lfoid, const MSEGStorage &pushValue);
