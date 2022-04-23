@@ -50,6 +50,17 @@ struct UndoManagerImpl
         SelfPushGuard(UndoManagerImpl *imp) : that(imp) { that->doPush = false; }
         ~SelfPushGuard() { that->doPush = true; }
     };
+
+    bool clearRedoOnUndo{true};
+    struct DontClearRedoOnUndoGuard
+    {
+        UndoManagerImpl *that;
+        DontClearRedoOnUndoGuard(UndoManagerImpl *imp) : that(imp)
+        {
+            that->clearRedoOnUndo = false;
+        }
+        ~DontClearRedoOnUndoGuard() { that->clearRedoOnUndo = true; }
+    };
     struct CleanupGuard
     {
         UndoManagerImpl *that;
@@ -299,6 +310,10 @@ struct UndoManagerImpl
         {
             undoStack.emplace_back(r);
             undoStackMem += actionSize(r);
+            if (clearRedoOnUndo)
+            {
+                clearRedo();
+            }
             return;
         }
 
@@ -307,6 +322,10 @@ struct UndoManagerImpl
         {
             undoStack.emplace_back(r);
             undoStackMem += actionSize(r);
+            if (clearRedoOnUndo)
+            {
+                clearRedo();
+            }
         }
         else
         {
@@ -321,8 +340,22 @@ struct UndoManagerImpl
             {
                 undoStack.emplace_back(r);
                 undoStackMem += actionSize(r);
+                if (clearRedoOnUndo)
+                {
+                    clearRedo();
+                }
             }
         }
+    }
+
+    void clearRedo()
+    {
+        for (auto &r : redoStack)
+        {
+            freeAction(r.action);
+        }
+        redoStack.clear();
+        redoStackMem = 0;
     }
 
     void pushRedo(const UndoAction &r)
@@ -616,6 +649,7 @@ struct UndoManagerImpl
 
     bool undoRedoImpl(UndoManager::Target which)
     {
+        auto dcroug = DontClearRedoOnUndoGuard(this);
         auto *currStack = &undoStack;
         auto *currStackMem = &undoStackMem;
         if (which == UndoManager::REDO)
