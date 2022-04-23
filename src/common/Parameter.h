@@ -471,6 +471,7 @@ class Parameter
     bool affect_other_parameters{};
     float moverate{};
     bool per_voice_processing{};
+    // remember these need to be stashed specially in undo
     bool temposync{}, absolute{}, deactivated{};
 
 #define DEBUG_WRITABLE_EXTEND_RANGE 0

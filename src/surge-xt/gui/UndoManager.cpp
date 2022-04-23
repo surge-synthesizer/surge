@@ -28,7 +28,7 @@ namespace GUI
 struct UndoManagerImpl
 {
     static constexpr int maxUndoStackMem = 1024 * 1024 * 25;
-    static constexpr int maxRedoStackMem = 1024 * 1024 * 10;
+    static constexpr int maxRedoStackMem = 1024 * 1024 * 25;
     SurgeGUIEditor *editor;
     SurgeSynthesizer *synth;
     UndoManagerImpl(SurgeGUIEditor *ed, SurgeSynthesizer *s) : editor(ed), synth(s) {}
@@ -60,6 +60,10 @@ struct UndoManagerImpl
     struct UndoParam
     {
         int paramId;
+        std::string name;
+        bool temposync, absolute, deactivated, extend_range, deform_type;
+        bool porta_constrate, porta_gliss, porta_retrigger;
+        int porta_curve;
         pdata val;
     };
     struct UndoModulation
@@ -76,13 +80,13 @@ struct UndoManagerImpl
         int oscNum;
         int scene;
         int type;
-        std::vector<std::pair<int, pdata>> paramIdValues;
+        std::vector<UndoParam> undoParamValues;
     };
     struct UndoFX
     {
         int fxslot;
         int type;
-        std::vector<std::pair<int, pdata>> paramIdValues;
+        std::vector<UndoParam> undoParamValues;
     };
     struct UndoStep
     {
@@ -101,6 +105,13 @@ struct UndoManagerImpl
         int scene;
         int lfoid;
         FormulaModulatorStorage storageCopy;
+    };
+    struct UndoFullLFO
+    {
+        int scene;
+        int lfoid;
+        std::vector<UndoParam> undoParamValues;
+        std::variant<bool, MSEGStorage, StepSequencerStorage, FormulaModulatorStorage> extraStorage;
     };
     struct UndoRename
     {
@@ -129,7 +140,7 @@ struct UndoManagerImpl
     // If you add a new type here add it both to aboutTheSameThing, toString, and
     // to undo.
     typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep, UndoMSEG,
-                         UndoFormula, UndoRename, UndoMacro, UndoTuning, UndoPatch>
+                         UndoFormula, UndoRename, UndoMacro, UndoTuning, UndoPatch, UndoFullLFO>
         UndoAction;
     struct UndoRecord
     {
@@ -212,6 +223,11 @@ struct UndoManagerImpl
             // UndoPatch is always different
             return false;
         }
+        if (auto pa = std::get_if<UndoFullLFO>(&a))
+        {
+            // No way to generate these other than discretely
+            return false;
+        }
         return false;
     }
 
@@ -265,6 +281,10 @@ struct UndoManagerImpl
         if (auto pa = std::get_if<UndoPatch>(&a))
         {
             return fmt::format("Patch[]");
+        }
+        if (auto pa = std::get_if<UndoFullLFO>(&a))
+        {
+            return fmt::format("FullLFO[]");
         }
         return "UNK";
     }
@@ -332,11 +352,45 @@ struct UndoManagerImpl
         }
     }
 
+    void populateUndoParamFromP(const Parameter *p, pdata val, UndoParam &r)
+    {
+        r.name = p->fullname;
+        r.temposync = p->temposync;
+        r.absolute = p->absolute;
+        r.deactivated = p->deactivated;
+        r.extend_range = p->extend_range;
+        r.deform_type = p->deform_type;
+
+        r.porta_constrate = p->porta_constrate;
+        r.porta_gliss = p->porta_gliss;
+        r.porta_retrigger = p->porta_retrigger;
+        r.porta_curve = p->porta_curve;
+
+        r.val = val;
+    }
+
+    void restoreParamToEditor(const UndoParam *pa)
+    {
+        editor->setParamFromUndo(pa->paramId, pa->val);
+        editor->applyToParamForUndo(pa->paramId, [pa](Parameter *p) {
+            p->temposync = pa->temposync;
+            p->absolute = pa->absolute;
+            p->deactivated = pa->deactivated;
+            p->set_extend_range(pa->extend_range);
+            p->deform_type = pa->deform_type;
+
+            p->porta_constrate = pa->porta_constrate;
+            p->porta_gliss = pa->porta_gliss;
+            p->porta_retrigger = pa->porta_retrigger;
+            p->porta_curve = pa->porta_curve;
+        });
+    }
+
     void pushParameterChange(int paramId, const Parameter *p, pdata val, UndoManager::Target to)
     {
         auto r = UndoParam();
         r.paramId = paramId;
-        r.val = val;
+        populateUndoParamFromP(p, val, r);
         if (to == UndoManager::UNDO)
             pushUndo(r);
         else
@@ -371,7 +425,10 @@ struct UndoManagerImpl
         p++;
         while (p <= &(os->retrigger))
         {
-            r.paramIdValues.emplace_back(p->id, p->val);
+            auto pu = UndoParam();
+            pu.paramId = p->id;
+            populateUndoParamFromP(p, p->val, pu);
+            r.undoParamValues.emplace_back(pu);
             p++;
         }
 
@@ -390,7 +447,11 @@ struct UndoManagerImpl
 
         for (int i = 0; i < n_fx_params; ++i)
         {
-            r.paramIdValues.emplace_back(fx->p[i].id, fx->p[i].val);
+            auto *p = &(fx->p[i]);
+            auto pu = UndoParam();
+            pu.paramId = p->id;
+            populateUndoParamFromP(p, p->val, pu);
+            r.undoParamValues.emplace_back(pu);
         }
 
         if (to == UndoManager::UNDO)
@@ -419,6 +480,46 @@ struct UndoManagerImpl
         r.scene = scene;
         r.lfoid = lfoid;
         r.storageCopy = pushValue;
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
+    void pushFullLFO(int scene, int lfoid, UndoManager::Target to = UndoManager::UNDO)
+    {
+        UndoFullLFO r;
+        r.scene = scene;
+        r.lfoid = lfoid;
+        auto lf = &(editor->getPatch().scene[scene].lfo[lfoid]);
+        if (lf->shape.val.i == lt_mseg)
+        {
+            r.extraStorage = editor->getPatch().msegs[scene][lfoid];
+        }
+        else if (lf->shape.val.i == lt_formula)
+        {
+            r.extraStorage = editor->getPatch().formulamods[scene][lfoid];
+        }
+        else if (lf->shape.val.i == lt_stepseq)
+        {
+            r.extraStorage = editor->getPatch().stepsequences[scene][lfoid];
+        }
+        else
+        {
+            r.extraStorage = false;
+        }
+
+        Parameter *p = &(lf->rate);
+
+        while (p <= &(lf->release))
+        {
+            auto pu = UndoParam();
+            pu.paramId = p->id;
+            populateUndoParamFromP(p, p->val, pu);
+            r.undoParamValues.emplace_back(pu);
+            p++;
+        }
+
         if (to == UndoManager::UNDO)
             pushUndo(r);
         else
@@ -534,34 +635,74 @@ struct UndoManagerImpl
         auto opposite = (which == UndoManager::UNDO ? UndoManager::REDO : UndoManager::UNDO);
 
         // this would be cleaner with std:visit but visit isn't in macos libc until 10.13
-        if (auto p = std::get_if<UndoParam>(&q))
+        if (auto pa = std::get_if<UndoParam>(&q))
         {
-            editor->pushParamToUndoRedo(p->paramId, opposite);
-            editor->setParamFromUndo(p->paramId, p->val);
+            editor->pushParamToUndoRedo(pa->paramId, opposite);
+            auto g = SelfPushGuard(this);
+            restoreParamToEditor(pa);
             return true;
         }
         if (auto p = std::get_if<UndoModulation>(&q))
         {
             editor->pushModulationToUndoRedo(p->paramId, p->ms, p->scene, p->index, opposite);
+            auto g = SelfPushGuard(this);
             editor->setModulationFromUndo(p->paramId, p->ms, p->scene, p->index, p->val, p->muted);
             return true;
         }
         if (auto p = std::get_if<UndoOscillator>(&q))
         {
             pushOscillator(p->scene, p->oscNum, opposite);
+            auto g = SelfPushGuard(this);
             auto os = &(synth->storage.getPatch().scene[p->scene].osc[p->oscNum]);
             os->type.val.i = p->type;
             synth->storage.getPatch().update_controls(false, os, false);
 
-            for (auto q : p->paramIdValues)
+            for (const auto &qp : p->undoParamValues)
             {
-                editor->setParamFromUndo(q.first, q.second);
+                restoreParamToEditor(&qp);
+            }
+            return true;
+        }
+        if (auto p = std::get_if<UndoFullLFO>(&q))
+        {
+            pushFullLFO(p->scene, p->lfoid, opposite);
+            auto g = SelfPushGuard(this);
+            auto lf = &(synth->storage.getPatch().scene[p->scene].lfo[p->lfoid]);
+
+            for (const auto &qp : p->undoParamValues)
+            {
+                restoreParamToEditor(&qp);
+            }
+            if (lf->shape.val.i == lt_mseg)
+            {
+                auto ms = std::get_if<MSEGStorage>(&p->extraStorage);
+                if (ms)
+                {
+                    editor->setMSEGFromUndo(p->scene, p->lfoid, *ms);
+                }
+            }
+            else if (lf->shape.val.i == lt_formula)
+            {
+                auto ms = std::get_if<FormulaModulatorStorage>(&p->extraStorage);
+                if (ms)
+                {
+                    editor->setFormulaFromUndo(p->scene, p->lfoid, *ms);
+                }
+            }
+            else if (lf->shape.val.i == lt_stepseq)
+            {
+                auto ms = std::get_if<StepSequencerStorage>(&p->extraStorage);
+                if (ms)
+                {
+                    editor->setStepSequencerFromUndo(p->scene, p->lfoid, *ms);
+                }
             }
             return true;
         }
         if (auto p = std::get_if<UndoFX>(&q))
         {
             pushFX(p->fxslot, opposite);
+            auto spg = SelfPushGuard(this);
             std::lock_guard<std::mutex> g(synth->fxSpawnMutex);
 
             int cge = p->fxslot;
@@ -581,7 +722,13 @@ struct UndoManagerImpl
             synth->fx_reload[cge] = true;
             for (int i = 0; i < n_fx_params; ++i)
             {
-                synth->fxsync[cge].p[i].val = p->paramIdValues[i].second;
+                auto *pa = &(synth->fxsync[cge].p[i]);
+                pa->val = p->undoParamValues[i].val;
+                pa->temposync = p->undoParamValues[i].temposync;
+                pa->absolute = p->undoParamValues[i].absolute;
+                pa->deactivated = p->undoParamValues[i].deactivated;
+                pa->set_extend_range(p->undoParamValues[i].extend_range);
+                pa->deform_type = p->undoParamValues[i].deform_type;
             }
             return true;
         }
@@ -589,12 +736,14 @@ struct UndoManagerImpl
         {
             pushStepSequencer(p->scene, p->lfoid,
                               editor->getPatch().stepsequences[p->scene][p->lfoid], opposite);
+            auto g = SelfPushGuard(this);
             editor->setStepSequencerFromUndo(p->scene, p->lfoid, p->storageCopy);
             return true;
         }
         if (auto p = std::get_if<UndoMSEG>(&q))
         {
             pushMSEG(p->scene, p->lfoid, editor->getPatch().msegs[p->scene][p->lfoid], opposite);
+            auto g = SelfPushGuard(this);
             editor->setMSEGFromUndo(p->scene, p->lfoid, p->storageCopy);
             return true;
         }
@@ -602,6 +751,7 @@ struct UndoManagerImpl
         {
             pushFormula(p->scene, p->lfoid, editor->getPatch().formulamods[p->scene][p->lfoid],
                         opposite);
+            auto g = SelfPushGuard(this);
             editor->setFormulaFromUndo(p->scene, p->lfoid, p->storageCopy);
             return true;
         }
@@ -611,12 +761,14 @@ struct UndoManagerImpl
             {
                 auto nm = editor->getPatch().CustomControllerLabel[p->itemid];
                 pushMacroOrLFORename(true, nm, -1, p->itemid, -1, opposite);
+                auto g = SelfPushGuard(this);
                 editor->setMacroNameFromUndo(p->itemid, p->name);
             }
             else
             {
                 auto nm = editor->getPatch().LFOBankLabel[p->scene][p->itemid][p->index];
                 pushMacroOrLFORename(false, nm, p->scene, p->itemid, p->index, opposite);
+                auto g = SelfPushGuard(this);
                 editor->setLFONameFromUndo(p->scene, p->itemid, p->index, p->name);
             }
             return true;
@@ -627,6 +779,7 @@ struct UndoManagerImpl
                             .scene[editor->current_scene]
                             .modsources[p->macro + ms_ctrl1]);
             pushMacroChange(p->macro, cms->get_target01(0), opposite);
+            auto g = SelfPushGuard(this);
             editor->setMacroValueFromUndo(p->macro, p->val);
             return true;
         }
@@ -736,6 +889,8 @@ void UndoManager::pushTuning(const Tunings::Tuning &t) { impl->pushTuning(t); }
 void UndoManager::pushMacroChange(int macroid, float val) { impl->pushMacroChange(macroid, val); }
 
 void UndoManager::pushPatch() { impl->pushPatch(); }
+
+void UndoManager::pushFullLFO(int scene, int lfoid) { impl->pushFullLFO(scene, lfoid); }
 
 bool UndoManager::canUndo() { return !impl->undoStack.empty(); }
 

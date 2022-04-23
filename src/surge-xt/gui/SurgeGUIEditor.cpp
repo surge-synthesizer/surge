@@ -2460,8 +2460,14 @@ void SurgeGUIEditor::setMacroValueFromUndo(int ccid, float val)
 void SurgeGUIEditor::pushParamToUndoRedo(int paramId, Surge::GUI::UndoManager::Target which)
 {
     auto p = synth->storage.getPatch().param_ptr[paramId];
-    auto id = synth->idForParameter(p);
     undoManager()->pushParameterChange(paramId, p, p->val, which);
+}
+
+void SurgeGUIEditor::applyToParamForUndo(int paramId, std::function<void(Parameter *)> f)
+{
+    auto p = synth->storage.getPatch().param_ptr[paramId];
+    f(p);
+    synth->refresh_editor = true;
 }
 
 void SurgeGUIEditor::setModulationFromUndo(int paramId, modsources ms, int scene, int idx,
@@ -2876,6 +2882,7 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
         for (const auto &p : cat.presets)
         {
             auto action = [this, p, currentLfoId]() {
+                undoManager()->pushFullLFO(current_scene, currentLfoId);
                 this->synth->storage.modulatorPreset->loadPresetFrom(
                     p.path, &(this->synth->storage), current_scene, currentLfoId);
 
