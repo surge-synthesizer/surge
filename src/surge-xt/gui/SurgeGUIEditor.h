@@ -489,6 +489,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     const std::unique_ptr<Surge::GUI::UndoManager> &undoManager();
     void setParamFromUndo(int paramId, pdata val);
     void pushParamToUndoRedo(int paramId, Surge::GUI::UndoManager::Target which);
+    void applyToParamForUndo(int paramId, std::function<void(Parameter *)> f);
     void setModulationFromUndo(int paramId, modsources ms, int scene, int idx, float val,
                                bool muted);
     void pushModulationToUndoRedo(int paramId, modsources ms, int scene, int idx,

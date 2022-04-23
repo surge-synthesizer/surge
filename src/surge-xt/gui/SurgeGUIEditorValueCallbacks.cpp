@@ -1744,6 +1744,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     contextMenu.addItem(
                         Surge::GUI::toOSCase("Reset Filter Cutoff To Keytrack Root"),
                         [this, p, control] {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
                             auto kr = this->synth->storage.getPatch()
                                           .scene[current_scene]
                                           .keytrack_root.val.i;
@@ -1772,35 +1773,52 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     bool isChecked = p->porta_constrate;
 
                     contextMenu.addItem(Surge::GUI::toOSCase("Constant Rate"), true, isChecked,
-                                        [this, p]() { p->porta_constrate = !p->porta_constrate; });
+                                        [this, p]() {
+                                            undoManager()->pushParameterChange(p->id, p, p->val);
+                                            p->porta_constrate = !p->porta_constrate;
+                                        });
 
                     isChecked = p->porta_gliss;
 
                     contextMenu.addItem(Surge::GUI::toOSCase("Glissando"), true, isChecked,
-                                        [this, p]() { p->porta_gliss = !p->porta_gliss; });
+                                        [this, p]() {
+                                            undoManager()->pushParameterChange(p->id, p, p->val);
+                                            p->porta_gliss = !p->porta_gliss;
+                                        });
 
                     isChecked = p->porta_retrigger;
 
                     contextMenu.addItem(Surge::GUI::toOSCase("Retrigger at Scale Degrees"), true,
-                                        isChecked,
-                                        [this, p]() { p->porta_retrigger = !p->porta_retrigger; });
+                                        isChecked, [this, p]() {
+                                            undoManager()->pushParameterChange(p->id, p, p->val);
+                                            p->porta_retrigger = !p->porta_retrigger;
+                                        });
 
                     contextMenu.addSectionHeader("CURVE");
 
                     isChecked = (p->porta_curve == -1);
 
                     contextMenu.addItem(Surge::GUI::toOSCase("Logarithmic"), true, isChecked,
-                                        [this, p]() { p->porta_curve = -1; });
+                                        [this, p]() {
+                                            undoManager()->pushParameterChange(p->id, p, p->val);
+                                            p->porta_curve = -1;
+                                        });
 
                     isChecked = (p->porta_curve == 0);
 
                     contextMenu.addItem(Surge::GUI::toOSCase("Linear"), true, isChecked,
-                                        [this, p]() { p->porta_curve = 0; });
+                                        [this, p]() {
+                                            undoManager()->pushParameterChange(p->id, p, p->val);
+                                            p->porta_curve = 0;
+                                        });
 
                     isChecked = (p->porta_curve == 1);
 
                     contextMenu.addItem(Surge::GUI::toOSCase("Exponential"), true, isChecked,
-                                        [this, p]() { p->porta_curve = 1; });
+                                        [this, p]() {
+                                            undoManager()->pushParameterChange(p->id, p, p->val);
+                                            p->porta_curve = 1;
+                                        });
                 }
 
                 if (p->has_deformoptions())
