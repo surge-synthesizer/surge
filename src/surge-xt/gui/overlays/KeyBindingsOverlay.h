@@ -31,7 +31,8 @@ namespace Overlays
 struct KeyBindingsListBoxModel;
 struct KeyBindingsOverlay : public OverlayComponent, public Surge::GUI::SkinConsumingComponent
 {
-    static constexpr int okCancelAreaHeight = 25;
+    static constexpr int okCancelAreaHeight = 30, margin = 2, btnHeight = 17, btnWidth = 50;
+
     SurgeStorage *storage{nullptr};
     SurgeGUIEditor *editor{nullptr};
     KeyBindingsOverlay(SurgeStorage *storage, SurgeGUIEditor *editor);

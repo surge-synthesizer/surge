@@ -55,7 +55,7 @@ MiniEdit::~MiniEdit() {}
 
 juce::Rectangle<int> MiniEdit::getDisplayRegion()
 {
-    auto fullRect = juce::Rectangle<int>(0, 0, 180, 80).withCentre(getBounds().getCentre());
+    auto fullRect = juce::Rectangle<int>(0, 0, 180, 90).withCentre(getBounds().getCentre());
     return fullRect;
 }
 
@@ -127,7 +127,7 @@ void MiniEdit::onSkinChanged()
 
 void MiniEdit::resized()
 {
-    auto typeinHeight = 18, margin = 2, btnWidth = 40;
+    auto typeinHeight = 18, margin = 2, btnHeight = 17, btnWidth = 50;
 
     auto fullRect = getDisplayRegion();
     auto dialogCenter = fullRect.getWidth() / 2;
@@ -139,10 +139,11 @@ void MiniEdit::resized()
     typein->setBounds(typeinBox);
     typein->setIndents(4, (typein->getHeight() - typein->getTextHeight()) / 2);
 
-    auto buttonRow = fullRect.translated(0, (3 * typeinHeight) + (margin * 3) + 2)
-                         .withHeight(typeinHeight - 4)
-                         .withTrimmedLeft(margin)
-                         .withTrimmedRight(margin);
+    auto buttonRow =
+        fullRect.translated(0, fullRect.getBottom() - typeinBox.getBottom() + typeinHeight + 15)
+            .withHeight(btnHeight)
+            .withTrimmedLeft(margin)
+            .withTrimmedRight(margin);
     auto okRect = buttonRow.withTrimmedLeft(dialogCenter - btnWidth - margin).withWidth(btnWidth);
     auto canRect = buttonRow.withTrimmedLeft(dialogCenter + margin).withWidth(btnWidth);
 

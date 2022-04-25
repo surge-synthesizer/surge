@@ -235,13 +235,21 @@ void KeyBindingsOverlay::paint(juce::Graphics &g)
 
 void KeyBindingsOverlay::resized()
 {
+    auto l = getLocalBounds().withTrimmedBottom(okCancelAreaHeight).reduced(margin);
     auto r = getLocalBounds().withTrimmedTop(getHeight() - okCancelAreaHeight);
-    auto b1 = r.withTrimmedLeft(getWidth() - 90);
-    cancelS->setBounds(b1.reduced(2));
-    b1 = b1.translated(-90, 0);
-    okS->setBounds(b1.reduced(2));
+    auto dialogCenter = getLocalBounds().getWidth() / 2;
+    auto okRect = r.withTrimmedLeft(dialogCenter - btnWidth - margin)
+                      .withWidth(btnWidth)
+                      .withHeight(btnHeight);
+    auto canRect =
+        r.withTrimmedLeft(dialogCenter + margin).withWidth(btnWidth).withHeight(btnHeight);
 
-    auto l = getLocalBounds().withTrimmedBottom(okCancelAreaHeight).reduced(1);
+    okRect.setCentre(okRect.getCentreX(), r.getY() + okCancelAreaHeight / 2);
+    canRect.setCentre(canRect.getCentreX(), r.getY() + okCancelAreaHeight / 2);
+
+    okS->setBounds(okRect);
+    cancelS->setBounds(canRect);
+
     bindingList->setBounds(l);
 }
 
