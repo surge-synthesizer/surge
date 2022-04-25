@@ -500,6 +500,12 @@ std::unique_ptr<juce::AccessibilityHandler> MultiSwitch::createAccessibilityHand
     }
 }
 
+void MultiSwitchSelfDraw::onSkinChanged()
+{
+    MultiSwitch::onSkinChanged();
+    font = skin->fontManager->getLatoAtSize(8, juce::Font::bold);
+}
+
 void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 {
     namespace clr = Colors::JuceWidgets::TextMultiSwitch;
@@ -571,7 +577,7 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 
             auto isOn = isCellOn(r, c);
             auto isHo = isHovered && hoverSelection == idx;
-            auto isEn = isEnabled();
+            auto isEn = isEnabled() && !isDeactivated;
 
             auto fg = skin->getColor(clr::Text);
 
@@ -614,7 +620,7 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
             }
 
             g.setColour(fg);
-            g.setFont(skin->fontManager->getLatoAtSize(8, juce::Font::bold));
+            g.setFont(font);
             g.drawText(labels[idx], rc, juce::Justification::centred);
 
             idx++;

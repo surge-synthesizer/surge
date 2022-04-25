@@ -122,6 +122,7 @@ struct MultiSwitch : public juce::Component,
 struct MultiSwitchSelfDraw : public MultiSwitch
 {
     MultiSwitchSelfDraw() : MultiSwitch() {}
+    juce::Font font{36};
     void paint(juce::Graphics &g) override;
 
     std::vector<std::string> labels;
@@ -138,6 +139,8 @@ struct MultiSwitchSelfDraw : public MultiSwitch
         auto isOn = idx == getIntegerValue() && !solo;
         return isOn;
     }
+
+    void onSkinChanged() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchSelfDraw);
 };
