@@ -44,7 +44,10 @@ juce_add_plugin(${PROJECT_NAME}
   AU_MAIN_TYPE kAudioUnitType_MusicDevice
   AU_SANDBOX_SAFE TRUE
 
+  # JUCE7 made a different choice than community branch
   LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt
+  LV2URI https://surge-synthesizer.github.io/lv2/surge-xt
+
   LV2_SHARED_LIBRARY_NAME SurgeXT
 
   FORMATS ${SURGE_JUCE_FORMATS}

@@ -96,6 +96,11 @@ if(JUCE_SUPPORTS_LV2)
   add_compile_options(-Wno-error=deprecated-declarations)
 endif()
 
+if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_audio_plugin_client/LV2/juce_LV2_Client.cpp)
+  message(STATUS "JUCE7 LV2 support present; activating LV2")
+  list(APPEND SURGE_JUCE_FORMATS LV2)
+endif()
+
 
 if(DEFINED ENV{ASIOSDK_DIR} OR BUILD_USING_MY_ASIO_LICENSE)
   if(BUILD_USING_MY_ASIO_LICENSE)
