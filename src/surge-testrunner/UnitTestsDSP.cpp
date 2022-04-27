@@ -1021,7 +1021,7 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
 
         auto wst = sst::waveshapers::GetQuadWaveshaper(sst::waveshapers::WaveshaperType::wst_asym);
         auto shafted_tanh = [](double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); };
-        sst::waveshapers::QuadWaveshaperState qss {};
+        sst::waveshapers::QuadWaveshaperState qss{};
         for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
             qss.R[i] = _mm_setzero_ps();
 

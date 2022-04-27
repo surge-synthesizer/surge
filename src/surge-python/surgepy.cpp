@@ -1130,12 +1130,15 @@ PYBIND11_MODULE(surgepy, m)
     C(lt_mseg);
     C(lt_formula);
 
-    C(wst_none);
-    C(wst_soft);
-    C(wst_hard);
-    C(wst_asym);
-    C(wst_sine);
-    C(wst_digital);
+    {
+        using sst::waveshapers::WaveshaperType;
+        C(WaveshaperType::wst_none);
+        C(WaveshaperType::wst_soft);
+        C(WaveshaperType::wst_hard);
+        C(WaveshaperType::wst_asym);
+        C(WaveshaperType::wst_sine);
+        C(WaveshaperType::wst_digital);
+    }
 
     {
         using sst::filters::FilterType;
