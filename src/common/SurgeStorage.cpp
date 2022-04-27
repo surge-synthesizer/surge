@@ -1999,7 +1999,7 @@ float lookup_waveshape(sst::waveshapers::WaveshaperType entry, float x)
     if (e < 1)
         return -1;
 
-    const auto& waveshapers = sst::waveshapers::globalWaveshaperTables.waveshapers[(int)entry];
+    const auto &waveshapers = sst::waveshapers::globalWaveshaperTables.waveshapers[(int)entry];
     return (1 - a) * waveshapers[e & 0x3ff] + a * waveshapers[(e + 1) & 0x3ff];
 }
 
@@ -2011,7 +2011,7 @@ float lookup_waveshape_warp(sst::waveshapers::WaveshaperType entry, float x)
     int e = (int)x;
     float a = x - (float)e;
 
-    const auto& waveshapers = sst::waveshapers::globalWaveshaperTables.waveshapers[(int)entry];
+    const auto &waveshapers = sst::waveshapers::globalWaveshaperTables.waveshapers[(int)entry];
     return (1 - a) * waveshapers[e & 0x3ff] + a * waveshapers[(e + 1) & 0x3ff];
 }
 

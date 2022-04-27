@@ -3,7 +3,6 @@
 
 #include "HeadlessUtils.h"
 #include "BiquadFilter.h"
-#include "QuadFilterWaveshaper.h"
 #include "MemoryPool.h"
 
 #include "sst/plugininfra/strnatcmp.h"

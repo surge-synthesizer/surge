@@ -15,7 +15,8 @@ namespace Surge
 namespace Widgets
 {
 using WaveshaperType = sst::waveshapers::WaveshaperType;
-std::array<std::vector<std::pair<float, float>>, (int)WaveshaperType::n_ws_types> WaveShaperSelector::wsCurves;
+std::array<std::vector<std::pair<float, float>>, (int)WaveshaperType::n_ws_types>
+    WaveShaperSelector::wsCurves;
 
 WaveShaperSelector::WaveShaperSelector() {}
 
@@ -152,7 +153,8 @@ void WaveShaperSelector::paint(juce::Graphics &g)
             g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover).withAlpha(dOpacity));
         else
             g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave).withAlpha(dOpacity));
-        g.strokePath(curvePath, juce::PathStrokeType{iValue == WaveshaperType::wst_none ? 0.6f : dThick}, xf);
+        g.strokePath(curvePath,
+                     juce::PathStrokeType{iValue == WaveshaperType::wst_none ? 0.6f : dThick}, xf);
     }
 }
 
@@ -165,7 +167,8 @@ void WaveShaperSelector::resized()
 void WaveShaperSelector::setValue(float f)
 {
     value = f;
-    iValue = static_cast<WaveshaperType>(Parameter::intUnscaledFromFloat(value, (int)WaveshaperType::n_ws_types - 1, 0));
+    iValue = static_cast<WaveshaperType>(
+        Parameter::intUnscaledFromFloat(value, (int)WaveshaperType::n_ws_types - 1, 0));
     repaint();
 }
 

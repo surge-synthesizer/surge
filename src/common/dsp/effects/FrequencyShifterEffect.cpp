@@ -138,8 +138,12 @@ void FrequencyShifterEffect::process(float *dataL, float *dataR)
 
         feedback.process();
 
-        buffer[0][wp] = dataL[k] + (float)lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, (L[k] * feedback.v));
-        buffer[1][wp] = dataR[k] + (float)lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, (R[k] * feedback.v));
+        buffer[0][wp] =
+            dataL[k] + (float)lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
+                                               (L[k] * feedback.v));
+        buffer[1][wp] =
+            dataR[k] + (float)lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
+                                               (R[k] * feedback.v));
     }
 
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);

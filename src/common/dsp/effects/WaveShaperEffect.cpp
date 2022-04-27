@@ -94,7 +94,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
         hpPre.process_block(wetL, wetR);
     }
 
-    const auto newShape = static_cast<sst::waveshapers::WaveshaperType> (*pdata_ival[ws_shaper]);
+    const auto newShape = static_cast<sst::waveshapers::WaveshaperType>(*pdata_ival[ws_shaper]);
     if (newShape != lastShape)
     {
         lastShape = newShape;
