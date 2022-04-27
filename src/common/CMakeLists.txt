@@ -16,6 +16,7 @@ surge_add_lib_subdirectory(LuaJitLib)
 surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
+surge_add_lib_subdirectory(sst/sst-waveshapers)
 
 set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
 set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
@@ -73,8 +74,6 @@ add_library(${PROJECT_NAME}
   dsp/Oscillator.h
   dsp/QuadFilterChain.cpp
   dsp/QuadFilterChain.h
-  dsp/QuadFilterWaveshaper.h
-  dsp/QuadFilterWaveshaper.cpp
   dsp/SurgeVoice.cpp
   dsp/SurgeVoice.h
   dsp/SurgeVoiceState.h
@@ -308,6 +307,7 @@ target_link_libraries(${PROJECT_NAME}
   sst-plugininfra::tinyxml
   sst-plugininfra::strnatcmp
   sst-filters
+  sst-waveshapers
 
   surge::oddsound-mts
   surge::sqlite

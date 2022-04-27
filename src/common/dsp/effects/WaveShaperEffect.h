@@ -21,7 +21,8 @@
 
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
-#include "QuadFilterWaveshaper.h"
+
+#include "sst/waveshapers.h"
 
 class WaveShaperEffect : public Effect
 {
@@ -57,8 +58,8 @@ class WaveShaperEffect : public Effect
     };
 
   private:
-    int lastShape{wst_none};
-    QuadFilterWaveshaperState wss;
+    sst::waveshapers::WaveshaperType lastShape{sst::waveshapers::WaveshaperType::wst_none};
+    sst::waveshapers::QuadWaveshaperState wss;
     HalfRateFilter halfbandOUT, halfbandIN;
     BiquadFilter lpPre, hpPre, lpPost, hpPost;
     lipol_ps mix alignas(16), boost alignas(16);

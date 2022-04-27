@@ -1,6 +1,5 @@
 #include "DistortionEffect.h"
 #include <vembertech/halfratefilter.h>
-#include "QuadFilterWaveshaper.h"
 #include "DebugHelpers.h"
 
 // feedback can get tricky with packed SSE
@@ -31,7 +30,7 @@ void DistortionEffect::init()
     L = 0.f;
     R = 0.f;
 
-    for (int i = 0; i < n_waveshaper_registers; ++i)
+    for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
         wsState.R[i] = _mm_setzero_ps();
 }
 
@@ -97,8 +96,8 @@ void DistortionEffect::process(float *dataL, float *dataR)
     drive.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
     // FX waveshapers have value at wst_soft for 0; so don't add wst_soft here (like we did in 1.9)
-    bool useSSEShaper = (ws >= wst_sine);
-    auto wsop = GetQFPtrWaveshaper(ws);
+    bool useSSEShaper = (ws >= sst::waveshapers::WaveshaperType::wst_sine);
+    auto wsop = sst::waveshapers::GetQuadWaveshaper(ws);
     float dD = 0.f;
     float dNow = dS;
 

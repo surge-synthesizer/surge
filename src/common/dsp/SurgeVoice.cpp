@@ -1172,7 +1172,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
     {
         // We need to initialize the waveshaper registers
         for (int c = 0; c < 2; ++c)
-            initializeWaveshaperRegister(scene->wsunit.type.val.i, FBP.WS[c].R);
+            sst::waveshapers::initializeWaveshaperRegister(static_cast<sst::waveshapers::WaveshaperType>(scene->wsunit.type.val.i), FBP.WS[c].R);
     }
 
     if (Q)
@@ -1190,7 +1190,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
 
         for (int c = 0; c < 2; ++c)
         {
-            for (int i = 0; i < n_waveshaper_registers; ++i)
+            for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
             {
                 set1f(Q->WSS[c].R[i], e, FBP.WS[c].R[i]);
             }
@@ -1294,7 +1294,7 @@ void SurgeVoice::GetQFB()
     }
     for (int c = 0; c < 2; ++c)
     {
-        for (int i = 0; i < n_waveshaper_registers; ++i)
+        for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
         {
             FBP.WS[c].R[i] = get1f(fbq->WSS[c].R[i], fbqi);
         }

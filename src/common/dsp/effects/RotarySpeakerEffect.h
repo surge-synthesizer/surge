@@ -18,16 +18,17 @@
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
 #include "AllpassFilter.h"
-#include "QuadFilterWaveshaper.h"
 
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
+
+#include "sst/waveshapers.h"
 
 class RotarySpeakerEffect : public Effect
 {
   public:
     lipol_ps width alignas(16), mix alignas(16);
-    QuadFilterWaveshaperState wsState alignas(16);
+    sst::waveshapers::QuadWaveshaperState wsState alignas(16);
 
     RotarySpeakerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~RotarySpeakerEffect();
