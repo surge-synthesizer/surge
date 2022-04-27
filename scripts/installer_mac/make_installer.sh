@@ -17,10 +17,12 @@ VST3="Surge XT.vst3"
 AU="Surge XT.component"
 CLAP="Surge XT.clap"
 APP="Surge XT.app"
+LV2="Surge XT.lv2"
 FXAU="Surge XT Effects.component"
 FXVST3="Surge XT Effects.vst3"
 FXCLAP="Surge XT Effects.clap"
 FXAPP="Surge XT Effects.app"
+FXLV2="Surge XT Effects.lv2"
 
 
 if [ "$VERSION" == "" ]; then
@@ -57,10 +59,23 @@ build_flavor()
 
     if [[ ! -z $MAC_SIGNING_CERT ]]; then
       [[ -z $MAC_INSTALLING_CERT ]] && echo "You need an installing cert too " && exit 2
-      codesign --force -s "$MAC_SIGNING_CERT" -o runtime --deep "$workdir/$flavorprod"
-      codesign -vvv "$workdir/$flavorprod"
+
+      if [[ -d "$workdir/$flavorprod/Contents" ]]; then
+        echo "Signing as a bundle"
+        codesign --force -s "$MAC_SIGNING_CERT" -o runtime --deep "$workdir/$flavorprod"
+        codesign -vvv "$workdir/$flavorprod"
+      fi
+      if [[ -f "$workdir/$flavorprod/manifest.ttl" ]]; then
+        echo "Signing as an LV2 ($workdir/$flavorprod)"
+        ls "$workdir/$flavorprod/"
+        pushd "$workdir/$flavorprod"
+        codesign --force -s "$MAC_SIGNING_CERT" -o runtime *
+        codesign -vvv *
+        popd
+      fi
 
       pkgbuild --sign "$MAC_INSTALLING_CERT" --root $workdir --identifier $ident --version $VERSION --install-location "$loc" "$TMPDIR/Surge_XT_${flavor}.pkg" || exit 1
+      pkgutil --check-signature "$TMPDIR/Surge_XT_${flavor}.pkg"
     else
       pkgbuild --root $workdir --identifier $ident --version $VERSION --install-location "$loc" "$TMPDIR/Surge_XT_${flavor}.pkg" || exit 1
     fi
@@ -93,6 +108,14 @@ fi
 
 if [[ -d $INDIR/$FXCLAP ]]; then
     build_flavor "FXCLAP" "$FXCLAP" "org.surge-synth-team.surge-xt-fx.clap.pkg" "/Library/Audio/Plug-Ins/Clap"
+fi
+
+if [[ -d $INDIR/$LV2 ]]; then
+    build_flavor "LV2" "$LV2" "org.surge-synth-team.surge-xt.lv2.pkg" "/Library/Audio/Plug-Ins/LV2"
+fi
+
+if [[ -d $INDIR/$FXLV2 ]]; then
+    build_flavor "FXLV2" "$FXLV2" "org.surge-synth-team.surge-xt-fx.lv2.pkg" "/Library/Audio/Plug-Ins/LV2"
 fi
 
 if [[ -d $INDIR/$APP ]]; then
@@ -130,7 +153,12 @@ fi
 if [[ -d $INDIR/$CLAP ]]; then
 	CLAP_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt.clap.pkg"/>'
   CLAP_CHOICE='<line choice="org.surge-synth-team.surge-xt.clap.pkg"/>'
-	CLAP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt.clap.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT Clap (0.21)\"><pkg-ref id=\"org.surge-synth-team.surge-xt.clap.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt.clap.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_CLAP.pkg</pkg-ref>"
+	CLAP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt.clap.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT Clap\"><pkg-ref id=\"org.surge-synth-team.surge-xt.clap.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt.clap.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_CLAP.pkg</pkg-ref>"
+fi
+if [[ -d $INDIR/$LV2 ]]; then
+	LV2_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt.lv2.pkg"/>'
+  LV2_CHOICE='<line choice="org.surge-synth-team.surge-xt.lv2.pkg"/>'
+	LV2_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt.lv2.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT LV2\"><pkg-ref id=\"org.surge-synth-team.surge-xt.lv2.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt.lv2.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_LV2.pkg</pkg-ref>"
 fi
 if [[ -d $INDIR/$APP ]]; then
 	APP_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt.app.pkg"/>'
@@ -151,7 +179,12 @@ fi
 if [[ -d $INDIR/$FXCLAP ]]; then
 	FXCLAP_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt-fx.clap.pkg"/>'
 	FXCLAP_CHOICE='<line choice="org.surge-synth-team.surge-xt-fx.clap.pkg"/>'
-	FXCLAP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT Effects Clap (0.21)\"><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXCLAP.pkg</pkg-ref>"
+	FXCLAP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT Effects Clap\"><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXCLAP.pkg</pkg-ref>"
+fi
+if [[ -d $INDIR/$FXLV2 ]]; then
+	FXLV2_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt-fx.lv2.pkg"/>'
+	FXLV2_CHOICE='<line choice="org.surge-synth-team.surge-xt-fx.lv2.pkg"/>'
+	FXLV2_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt-fx.lv2.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT Effects LV2\"><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.lv2.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.lv2.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXLV2.pkg</pkg-ref>"
 fi
 if [[ -d $INDIR/$FXAPP ]]; then
 	FXAPP_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt-fx.app.pkg"/>'
@@ -168,10 +201,12 @@ cat > $TMPDIR/distribution.xml << XMLEND
     ${VST3_PKG_REF}
     ${AU_PKG_REF}
     ${CLAP_PKG_REF}
+    ${LV2_PKG_REF}
     ${APP_PKG_REF}
     ${FXVST3_PKG_REF}
     ${FXAU_PKG_REF}
     ${FXCLAP_PKG_REF}
+    ${FXLV2_PKG_REF}
     ${FXAPP_PKG_REF}
     <pkg-ref id="org.surge-synth-team.surge-xt.resources.pkg"/>
     <options require-scripts="false" customize="always" />
@@ -179,20 +214,24 @@ cat > $TMPDIR/distribution.xml << XMLEND
         ${VST3_CHOICE}
         ${AU_CHOICE}
         ${CLAP_CHOICE}
+        ${LV2_CHOICE}
         ${APP_CHOICE}
         ${FXVST3_CHOICE}
         ${FXAU_CHOICE}
         ${FXCLAP_CHOICE}
+        ${FXLV2_CHOICE}
         ${FXAPP_CHOICE}
         <line choice="org.surge-synth-team.surge-xt.resources.pkg"/>
     </choices-outline>
     ${VST3_CHOICE_DEF}
     ${AU_CHOICE_DEF}
     ${CLAP_CHOICE_DEF}
+    ${LV2_CHOICE_DEF}
     ${APP_CHOICE_DEF}
     ${FXVST3_CHOICE_DEF}
     ${FXAU_CHOICE_DEF}
     ${FXCLAP_CHOICE_DEF}
+    ${FXLV2_CHOICE_DEF}
     ${FXAPP_CHOICE_DEF}
     <choice id="org.surge-synth-team.surge-xt.resources.pkg" visible="true" enabled="false" selected="true" title="Install resources">
         <pkg-ref id="org.surge-synth-team.surge-xt.resources.pkg"/>
@@ -249,6 +288,13 @@ if [[ ! -z $MAC_SIGNING_CERT ]]; then
   while [[ "$request_status" == "in progress" ]]; do
       echo -n "waiting... "
       sleep 10
+      request_full=$(xcrun altool --notarization-info "$ruuid" \
+                                           --username "${MAC_SIGNING_ID}" \
+                                           --password "${MAC_SIGNING_1UPW}" \
+                                           --asc-provider "${MAC_SIGNING_TEAM}" 2>&1 \
+                               )
+      echo $request_full
+
       request_status=$(xcrun altool --notarization-info "$ruuid" \
                                       --username "${MAC_SIGNING_ID}" \
                                       --password "${MAC_SIGNING_1UPW}" \
