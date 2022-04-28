@@ -139,11 +139,14 @@ struct KeyBindingsListRow : public juce::Component
         Surge::Storage::findReplaceSubstring(desc, "shift", u8"\U000021E7");
         Surge::Storage::findReplaceSubstring(desc, "ctrl", u8"\U00002303");
 #else
-        desc[0] = std::toupper(desc[0]);
+        Surge::Storage::findReplaceSubstring(desc, "ctrl", "Ctrl");
+        Surge::Storage::findReplaceSubstring(desc, "alt", "Alt");
+        Surge::Storage::findReplaceSubstring(desc, "shift", "Shift");
 #endif
-        keyDesc->setText(desc, juce::dontSendNotification);
 
+        keyDesc->setText(desc, juce::dontSendNotification);
         learn->setValue(0);
+
         repaint();
     }
 
@@ -165,15 +168,15 @@ struct KeyBindingsListRow : public juce::Component
     {
         auto r = getLocalBounds().reduced(2);
         auto a1 = r.withWidth(r.getHeight() * 1.5);
-        active->setBounds(a1);
         auto at = r.withTrimmedLeft(r.getHeight() * 1.5);
         auto a2 = at.withTrimmedRight(120);
         auto a3 = at.withTrimmedLeft(at.getWidth() - 120);
+
+        active->setBounds(a1);
         name->setBounds(a2.withWidth(220));
         keyDesc->setBounds(a2.withTrimmedLeft(220));
-
-        reset->setBounds(a3.withWidth(60).reduced(1));
-        learn->setBounds(a3.withTrimmedLeft(60).reduced(1));
+        learn->setBounds(a3.withWidth(60).reduced(1));
+        reset->setBounds(a3.withTrimmedLeft(60).reduced(1));
     }
 
     std::unique_ptr<juce::ToggleButton> active;
@@ -270,10 +273,27 @@ KeyBindingsOverlay::KeyBindingsOverlay(SurgeStorage *st, SurgeGUIEditor *ed)
     cancelS->setStorage(storage);
     addAndMakeVisible(*cancelS);
 
+    resetAll = std::make_unique<Surge::Widgets::SelfDrawButton>("Reset All");
+    resetAll->setSkin(editor->currentSkin);
+    resetAll->setStorage(editor->getStorage());
+    resetAll->setAccessible(true);
+    resetAll->onClick = [this]() { this->resetAllToDefault(); };
+    addAndMakeVisible(*resetAll);
+
     bindingListBoxModel = std::make_unique<KeyBindingsListBoxModel>(this, editor);
     bindingList = std::make_unique<juce::ListBox>("Keyboard Shortcuts", bindingListBoxModel.get());
     bindingList->updateContent();
     addAndMakeVisible(*bindingList);
+}
+
+void KeyBindingsOverlay::resetAllToDefault()
+{
+    for (auto const &[k, b] : editor->keyMapManager->bindings)
+    {
+        editor->keyMapManager->bindings[k] = editor->keyMapManager->defaultBindings[k];
+    }
+
+    bindingList->updateContent();
 }
 
 KeyBindingsOverlay::~KeyBindingsOverlay()
@@ -313,6 +333,7 @@ void KeyBindingsOverlay::resized()
 
     okS->setBounds(okRect);
     cancelS->setBounds(canRect);
+    resetAll->setBounds(canRect.translated(175, 0).withWidth(58));
 
     bindingList->setBounds(l);
 }
@@ -321,6 +342,8 @@ void KeyBindingsOverlay::onSkinChanged()
 {
     okS->setSkin(skin, associatedBitmapStore);
     cancelS->setSkin(skin, associatedBitmapStore);
+    resetAll->setSkin(skin, associatedBitmapStore);
+
     repaint();
 }
 
