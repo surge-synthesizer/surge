@@ -263,6 +263,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     setTitle("Surge XT Effects");
     setDescription("Surge XT Effects");
+    resetLabels();
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
