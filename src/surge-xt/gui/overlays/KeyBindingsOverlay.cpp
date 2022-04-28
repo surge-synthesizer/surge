@@ -113,25 +113,16 @@ struct KeyBindingsListRow : public juce::Component
 
         reset->setDeactivated(binding == dbinding);
 
-        auto flags = juce::ModifierKeys::noModifiers;
+        int flags = juce::ModifierKeys::noModifiers;
 
-        switch (binding.modifier)
-        {
-        case SurgeGUIEditor::keymap_t::SHIFT:
-            flags = juce::ModifierKeys::shiftModifier;
-            break;
-        case SurgeGUIEditor::keymap_t::COMMAND:
-            flags = juce::ModifierKeys::commandModifier;
-            break;
-        case SurgeGUIEditor::keymap_t::CONTROL:
-            flags = juce::ModifierKeys::ctrlModifier;
-            break;
-        case SurgeGUIEditor::keymap_t::ALT:
-            flags = juce::ModifierKeys::altModifier;
-            break;
-        default:
-            break;
-        }
+        if (binding.modifier & SurgeGUIEditor::keymap_t::SHIFT)
+            flags |= juce::ModifierKeys::shiftModifier;
+        if (binding.modifier & SurgeGUIEditor::keymap_t::COMMAND)
+            flags |= juce::ModifierKeys::commandModifier;
+        if (binding.modifier & SurgeGUIEditor::keymap_t::CONTROL)
+            flags |= juce::ModifierKeys::ctrlModifier;
+        if (binding.modifier & SurgeGUIEditor::keymap_t::ALT)
+            flags |= juce::ModifierKeys::altModifier;
 
         auto kp = juce::KeyPress(binding.keyCode, flags, binding.keyCode);
 
@@ -151,6 +142,8 @@ struct KeyBindingsListRow : public juce::Component
         desc[0] = std::toupper(desc[0]);
 #endif
         keyDesc->setText(desc, juce::dontSendNotification);
+
+        learn->setValue(0);
         repaint();
     }
 
@@ -340,10 +333,15 @@ bool KeyBindingsOverlay::keyPressed(const juce::KeyPress &key)
         binding.type = SurgeGUIEditor::keymap_t::Binding::KEYCODE;
         binding.keyCode = key.getKeyCode();
         binding.modifier = 0;
+#if SST_COMMAND_CTRL_SAME_KEY
+        if (key.getModifiers().isCommandDown() || key.getModifiers().isCtrlDown())
+            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::COMMAND;
+#else
         if (key.getModifiers().isCommandDown())
             binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::COMMAND;
         if (key.getModifiers().isCtrlDown())
             binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::CONTROL;
+#endif
         if (key.getModifiers().isShiftDown())
             binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::SHIFT;
         if (key.getModifiers().isAltDown())
