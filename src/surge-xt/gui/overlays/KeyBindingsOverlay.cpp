@@ -17,6 +17,9 @@
 #include <SurgeJUCELookAndFeel.h>
 #include "RuntimeFont.h"
 
+#define UNDO_MODEL_IN_DTOR 0
+#define USE_JUCE_TEXTBUTTON 0
+
 namespace Surge
 {
 namespace Overlays
@@ -26,13 +29,16 @@ struct KeyBindingsListRow : public juce::Component
 {
     SurgeGUIEditor *editor{nullptr};
     Surge::GUI::KeyboardActions action;
+    KeyBindingsOverlay *overlay;
 
-    KeyBindingsListRow(Surge::GUI::KeyboardActions a, SurgeGUIEditor *ed) : action(a), editor(ed)
+    KeyBindingsListRow(Surge::GUI::KeyboardActions a, KeyBindingsOverlay *o, SurgeGUIEditor *ed)
+        : action(a), overlay(o), editor(ed)
     {
         active = std::make_unique<juce::ToggleButton>();
         active->setButtonText("");
         active->onStateChange = [this]() {
             editor->keyMapManager->bindings[action].active = active->getToggleState();
+            resetValues();
         };
         active->setAccessible(true);
         active->setToggleState(editor->keyMapManager->bindings[action].active,
@@ -40,6 +46,7 @@ struct KeyBindingsListRow : public juce::Component
         active->setTitle(std::string("Toggle ") + Surge::GUI::keyboardActionDescription(action));
         active->setDescription(std::string("Toggle ") +
                                Surge::GUI::keyboardActionDescription(action));
+
         addAndMakeVisible(*active);
 
         name = std::make_unique<juce::Label>("name", Surge::GUI::keyboardActionDescription(action));
@@ -49,13 +56,35 @@ struct KeyBindingsListRow : public juce::Component
         addAndMakeVisible(*name);
 
         std::string desc = "";
-        keyDesc = std::make_unique<juce::Label>("keyDesc", desc);
-        keyDesc->setColour(juce::Label::textColourId, juce::Colours::white);
-        // TODO FIXME: Font should be juce::LNF_v4::getPopupMenuFont(), just for Mac symbols!
-        keyDesc->setFont(10.0);
-        keyDesc->setJustificationType(juce::Justification::right);
+        keyDesc = std::make_unique<juce::Label>("Key Binding", desc);
         keyDesc->setAccessible(true);
+        keyDesc->setFont(juce::Font(10));
         addAndMakeVisible(*keyDesc);
+
+        reset = std::make_unique<Surge::Widgets::SelfDrawButton>("Reset");
+        reset->setSkin(editor->currentSkin);
+        reset->setStorage(editor->getStorage());
+        reset->setAccessible(true);
+        reset->onClick = [this]() { resetToDefault(); };
+        addAndMakeVisible(*reset);
+
+        learn = std::make_unique<Surge::Widgets::SelfDrawToggleButton>("Learn");
+        learn->setSkin(editor->currentSkin);
+        learn->setStorage(editor->getStorage());
+        learn->setAccessible(true);
+        learn->onToggle = [this]() {
+            if (learn->getValue() > 0.5)
+            {
+                overlay->isLearning = true;
+                overlay->learnAction = action;
+            }
+            else
+            {
+                overlay->isLearning = false;
+                overlay->learnAction = -1;
+            }
+        };
+        addAndMakeVisible(*learn);
 
         setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
 
@@ -64,15 +93,26 @@ struct KeyBindingsListRow : public juce::Component
 
     void resetValues()
     {
-        active->setToggleState(editor->keyMapManager->bindings[action].active,
-                               juce::dontSendNotification);
-        active->setTitle(std::string("Toggle ") + Surge::GUI::keyboardActionDescription(action));
-        active->setDescription(std::string("Toggle ") +
-                               Surge::GUI::keyboardActionDescription(action));
-
         name->setText(Surge::GUI::keyboardActionDescription(action), juce::dontSendNotification);
 
+        auto act = editor->keyMapManager->bindings[action].active;
+        active->setToggleState(act, juce::dontSendNotification);
+        if (act)
+        {
+            name->setColour(juce::Label::textColourId, juce::Colours::white);
+            keyDesc->setColour(juce::Label::textColourId, juce::Colours::white);
+        }
+        else
+        {
+            keyDesc->setColour(juce::Label::textColourId, juce::Colours::grey);
+            name->setColour(juce::Label::textColourId, juce::Colours::grey);
+        }
+
         const auto &binding = editor->keyMapManager->bindings[action];
+        const auto &dbinding = editor->keyMapManager->defaultBindings[action];
+
+        reset->setDeactivated(binding == dbinding);
+
         auto flags = juce::ModifierKeys::noModifiers;
 
         switch (binding.modifier)
@@ -111,6 +151,14 @@ struct KeyBindingsListRow : public juce::Component
         desc[0] = std::toupper(desc[0]);
 #endif
         keyDesc->setText(desc, juce::dontSendNotification);
+        repaint();
+    }
+
+    void resetToDefault()
+    {
+        const auto &dbinding = editor->keyMapManager->defaultBindings[action];
+        editor->keyMapManager->bindings[action] = dbinding;
+        resetValues();
     }
 
     void setAction(Surge::GUI::KeyboardActions a)
@@ -120,25 +168,34 @@ struct KeyBindingsListRow : public juce::Component
         repaint();
     }
 
-    void resized()
+    void resized() override
     {
         auto r = getLocalBounds().reduced(2);
         auto a1 = r.withWidth(r.getHeight() * 1.5);
         active->setBounds(a1);
-        auto a2 = r.withTrimmedLeft(r.getHeight() * 1.5);
-        name->setBounds(a2.withWidth(300));
-        keyDesc->setBounds(a2.withTrimmedLeft(300));
+        auto at = r.withTrimmedLeft(r.getHeight() * 1.5);
+        auto a2 = at.withTrimmedRight(120);
+        auto a3 = at.withTrimmedLeft(at.getWidth() - 120);
+        name->setBounds(a2.withWidth(220));
+        keyDesc->setBounds(a2.withTrimmedLeft(220));
+
+        reset->setBounds(a3.withWidth(60).reduced(1));
+        learn->setBounds(a3.withTrimmedLeft(60).reduced(1));
     }
 
     std::unique_ptr<juce::ToggleButton> active;
     std::unique_ptr<juce::Label> name, keyDesc;
+
+    std::unique_ptr<Surge::Widgets::SelfDrawButton> reset;
+    std::unique_ptr<Surge::Widgets::SelfDrawToggleButton> learn;
 };
 
 struct KeyBindingsListBoxModel : public juce::ListBoxModel
 {
     SurgeGUIEditor *editor;
+    KeyBindingsOverlay *overlay;
 
-    KeyBindingsListBoxModel(SurgeGUIEditor *ed) : editor(ed) {}
+    KeyBindingsListBoxModel(KeyBindingsOverlay *o, SurgeGUIEditor *ed) : overlay(o), editor(ed) {}
 
     int getNumRows() override { return SurgeGUIEditor::keymap_t::numFuncs; }
 
@@ -154,22 +211,32 @@ struct KeyBindingsListBoxModel : public juce::ListBoxModel
     juce::Component *refreshComponentForRow(int rowNumber, bool isRowSelected,
                                             juce::Component *existingComponentToUpdate) override
     {
-        auto rc = dynamic_cast<KeyBindingsListRow *>(existingComponentToUpdate);
-
-        if (!rc)
+        if (rowNumber < SurgeGUIEditor::keymap_t::numFuncs)
         {
-            // Should never happen but
-            if (existingComponentToUpdate)
+            auto rc = dynamic_cast<KeyBindingsListRow *>(existingComponentToUpdate);
+
+            if (!rc)
             {
-                delete existingComponentToUpdate;
+                // Should never happen but
+                if (existingComponentToUpdate)
+                {
+                    delete existingComponentToUpdate;
+                }
+
+                rc =
+                    new KeyBindingsListRow((Surge::GUI::KeyboardActions)rowNumber, overlay, editor);
             }
 
-            rc = new KeyBindingsListRow((Surge::GUI::KeyboardActions)rowNumber, editor);
+            rc->setAction((Surge::GUI::KeyboardActions)rowNumber);
+            return rc;
         }
 
-        rc->setAction((Surge::GUI::KeyboardActions)rowNumber);
+        if (existingComponentToUpdate)
+        {
+            delete existingComponentToUpdate;
+        }
 
-        return rc;
+        return nullptr;
     }
 
     juce::String getNameForRow(int rowNumber) override
@@ -210,13 +277,17 @@ KeyBindingsOverlay::KeyBindingsOverlay(SurgeStorage *st, SurgeGUIEditor *ed)
     cancelS->setStorage(storage);
     addAndMakeVisible(*cancelS);
 
-    bindingListBoxModel = std::make_unique<KeyBindingsListBoxModel>(editor);
+    bindingListBoxModel = std::make_unique<KeyBindingsListBoxModel>(this, editor);
     bindingList = std::make_unique<juce::ListBox>("Keyboard Shortcuts", bindingListBoxModel.get());
     bindingList->updateContent();
     addAndMakeVisible(*bindingList);
 }
 
-KeyBindingsOverlay::~KeyBindingsOverlay() = default;
+KeyBindingsOverlay::~KeyBindingsOverlay()
+{
+    bindingList.reset(nullptr);
+    bindingListBoxModel.reset(nullptr); // order matters here
+}
 
 void KeyBindingsOverlay::paint(juce::Graphics &g)
 {
@@ -258,6 +329,30 @@ void KeyBindingsOverlay::onSkinChanged()
     okS->setSkin(skin, associatedBitmapStore);
     cancelS->setSkin(skin, associatedBitmapStore);
     repaint();
+}
+
+bool KeyBindingsOverlay::keyPressed(const juce::KeyPress &key)
+{
+    if (isLearning)
+    {
+        auto &binding = editor->keyMapManager->bindings[(Surge::GUI::KeyboardActions)learnAction];
+
+        binding.type = SurgeGUIEditor::keymap_t::Binding::KEYCODE;
+        binding.keyCode = key.getKeyCode();
+        binding.modifier = 0;
+        if (key.getModifiers().isCommandDown())
+            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::COMMAND;
+        if (key.getModifiers().isCtrlDown())
+            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::CONTROL;
+        if (key.getModifiers().isShiftDown())
+            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::SHIFT;
+        if (key.getModifiers().isAltDown())
+            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::ALT;
+
+        bindingList->updateContent();
+        return true;
+    }
+    return Component::keyPressed(key);
 }
 
 } // namespace Overlays

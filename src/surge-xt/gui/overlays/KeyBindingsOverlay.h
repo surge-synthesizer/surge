@@ -43,9 +43,13 @@ struct KeyBindingsOverlay : public OverlayComponent, public Surge::GUI::SkinCons
 
     void onSkinChanged() override;
 
+    bool isLearning{false};
+    int learnAction{0};
+    bool keyPressed(const juce::KeyPress &key) override;
+
     std::unique_ptr<Surge::Widgets::SelfDrawButton> okS, cancelS;
-    std::unique_ptr<juce::ListBox> bindingList;
     std::unique_ptr<KeyBindingsListBoxModel> bindingListBoxModel;
+    std::unique_ptr<juce::ListBox> bindingList;
 };
 } // namespace Overlays
 } // namespace Surge

@@ -143,10 +143,12 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "TOGGLE_ABOUT";
 
     case n_kbdActions:
-        return "ERROR";
+        jassert(false);
+        return "ERROR_NKBD";
     }
 
-    return "ERROR";
+    jassert(false);
+    return "ERROR_OVER";
 }
 
 // This is the user-facing stringification of an action.
@@ -256,6 +258,7 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         break;
 
     default:
+        jassert(false);
         desc = "<Unknown Action>";
         break;
     };
