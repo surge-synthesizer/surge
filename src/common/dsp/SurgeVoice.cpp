@@ -66,16 +66,16 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         res = storage->remapKeyInMidiOnlyMode(res);
     }
 
-    res = SurgeVoice::channelKeyEquvialent(res, channel, storage, false);
+    res = SurgeVoice::channelKeyEquvialent(res, channel, mpeEnabled, storage, false);
 
     return res;
 }
 
-float SurgeVoice::channelKeyEquvialent(float key, int channel, SurgeStorage *storage,
-                                       bool remapKeyForTuning)
+float SurgeVoice::channelKeyEquvialent(float key, int channel, bool isMpeEnabled,
+                                       SurgeStorage *storage, bool remapKeyForTuning)
 {
     float res = key;
-    if (storage->mapChannelToOctave && !storage->oddsound_mts_active)
+    if (storage->mapChannelToOctave && !storage->oddsound_mts_active && !isMpeEnabled)
     {
         if (remapKeyForTuning)
         {
@@ -153,6 +153,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.voiceChannelState = voiceChannelState;
 
     state.mpePitchBendRange = storage->mpePitchBendRange;
+    state.mpeEnabled = mpeEnabled;
     state.mpePitchBend = ControllerModulationSource(storage->pitchSmoothingMode);
     state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
 
@@ -169,8 +170,9 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
         }
         else
         {
-            if (storage->mapChannelToOctave)
-                state.portasrc_key = channelKeyEquvialent(lk, state.channel, storage, true);
+            if (storage->mapChannelToOctave && !mpeEnabled)
+                state.portasrc_key =
+                    channelKeyEquvialent(lk, state.channel, mpeEnabled, storage, true);
             else
                 state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
         }

@@ -133,8 +133,8 @@ class alignas(16) SurgeVoice
         }
     }
 
-    static float channelKeyEquvialent(float key, int channel, SurgeStorage *storage,
-                                      bool remapKeyForTuning = true);
+    static float channelKeyEquvialent(float key, int channel, bool isMpeEnabled,
+                                      SurgeStorage *storage, bool remapKeyForTuning = true);
 
   private:
     template <bool first> void calc_ctrldata(QuadFilterChainState *, int);

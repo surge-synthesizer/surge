@@ -629,6 +629,23 @@ TEST_CASE("Channel to Octave Mapping", "[tun]")
             REQUIRE(f2 == Approx(f1 * 2).margin(0.1));
         }
     }
+    SECTION("When enabled with MPE on, MPE wins")
+    {
+        auto surge = surgeOnSine();
+        surge->storage.mapChannelToOctave = true;
+        surge->mpeEnabled = true;
+        surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+        float f1, f2;
+        for (int chanOff = -2; chanOff < 3; chanOff++)
+        { // Only checking reasonable octaves because frequencyForNote actually examines the
+          // waveform
+            INFO("chanOff is " << chanOff);
+            f1 = frequencyForNote(surge, 60, 2, 0, (chanOff + 16) % 16);
+            f2 = frequencyForNote(surge, 60, 2, 0, (chanOff + 1 + 16) % 16);
+            REQUIRE(f2 == Approx(f1).margin(0.1));
+        }
+    }
+
     SECTION("When enabled and tuning applied, note 60 is mapped to the correct octaves in "
             "different channels")
     {
