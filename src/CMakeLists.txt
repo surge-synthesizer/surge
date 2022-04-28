@@ -99,6 +99,7 @@ endif()
 if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_audio_plugin_client/LV2/juce_LV2_Client.cpp)
   message(STATUS "JUCE7 LV2 support present; activating LV2")
   list(APPEND SURGE_JUCE_FORMATS LV2)
+  target_compile_definitions(surge-juce INTERFACE SURGE_HAS_JUCE7=1)
 endif()
 
 
