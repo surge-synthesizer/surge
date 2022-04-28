@@ -42,7 +42,7 @@ struct WaveShaperAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCo
     void recalcFromSlider();
 
     void setWSType(int wst);
-    int wstype{0};
+    sst::waveshapers::WaveshaperType wstype{sst::waveshapers::WaveshaperType::wst_none};
 
     bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override;
 

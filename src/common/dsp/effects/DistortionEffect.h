@@ -18,16 +18,17 @@
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
 #include "AllpassFilter.h"
-#include "QuadFilterWaveshaper.h"
 
 #include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
+
+#include "sst/waveshapers.h"
 
 class DistortionEffect : public Effect
 {
     HalfRateFilter hr_a alignas(16), hr_b alignas(16);
     lipol_ps drive alignas(16), outgain alignas(16);
-    QuadFilterWaveshaperState wsState alignas(16);
+    sst::waveshapers::QuadWaveshaperState wsState alignas(16);
 
   public:
     DistortionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);

@@ -1019,10 +1019,10 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
         // need to do this to init tables only
         auto surge = Surge::Headless::createSurge(44100);
 
-        auto wst = GetQFPtrWaveshaper(wst_asym);
+        auto wst = sst::waveshapers::GetQuadWaveshaper(sst::waveshapers::WaveshaperType::wst_asym);
         auto shafted_tanh = [](double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); };
-        QuadFilterWaveshaperState qss;
-        for (int i = 0; i < n_waveshaper_registers; ++i)
+        sst::waveshapers::QuadWaveshaperState qss{};
+        for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
             qss.R[i] = _mm_setzero_ps();
 
         /*

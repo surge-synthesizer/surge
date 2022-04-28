@@ -27,7 +27,7 @@ struct WaveShaperSelector : public juce::Component,
     void paint(juce::Graphics &g) override;
 
     float value;
-    int iValue;
+    sst::waveshapers::WaveshaperType iValue;
     float getValue() const override { return value; }
     void setValue(float f) override;
 
@@ -120,7 +120,9 @@ struct WaveShaperSelector : public juce::Component,
     juce::Rectangle<int> waveArea, labelArea;
     static constexpr int labelHeight = 13;
 
-    static std::array<std::vector<std::pair<float, float>>, n_ws_types> wsCurves;
+    static std::array<std::vector<std::pair<float, float>>,
+                      (int)sst::waveshapers::WaveshaperType::n_ws_types>
+        wsCurves;
 
     SurgeImage *bg{nullptr}, *bgHover{nullptr};
     void onSkinChanged() override;

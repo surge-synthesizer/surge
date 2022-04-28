@@ -136,7 +136,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
             g.reduceClipRegion(re.toNearestIntEdges());
             g.strokePath(pInput, juce::PathStrokeType(1.0), xf);
 
-            if (wstype != wst_none)
+            if (wstype != sst::waveshapers::WaveshaperType::wst_none)
             {
                 {
                     auto gs = juce::Graphics::ScopedSaveState(g);
@@ -168,7 +168,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
 
     auto txtr = getLocalBounds().withHeight(top - 6);
     std::ostringstream title;
-    title << wst_names[wstype];
+    title << sst::waveshapers::wst_names[(int)wstype];
 
     g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
     g.setFont(skin->getFont(Fonts::Waveshaper::Preview::Title));
@@ -181,20 +181,20 @@ void WaveShaperAnalysis::recalcFromSlider()
     lastPFG = getPFG();
     sliderDrivenCurve.clear();
 
-    QuadFilterWaveshaperState wss;
+    sst::waveshapers::QuadWaveshaperState wss;
     float dx = 1.f / (npts - 1);
     float R[4];
 
     initializeWaveshaperRegister(wstype, R);
 
-    for (int i = 0; i < n_waveshaper_registers; ++i)
+    for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
     {
         wss.R[i] = _mm_set1_ps(R[i]);
     }
 
     wss.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps()); // better way?
 
-    auto wsop = GetQFPtrWaveshaper(wstype);
+    auto wsop = sst::waveshapers::GetQuadWaveshaper(wstype);
 
     auto sliderDb = getDbValue();
     auto amp = powf(2.f, sliderDb / 18.f);
@@ -223,7 +223,7 @@ void WaveShaperAnalysis::recalcFromSlider()
 
 void WaveShaperAnalysis::setWSType(int w)
 {
-    wstype = w;
+    wstype = static_cast<sst::waveshapers::WaveshaperType>(w);
     recalcFromSlider();
 }
 

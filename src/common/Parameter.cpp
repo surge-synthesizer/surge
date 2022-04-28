@@ -873,7 +873,7 @@ void Parameter::set_type(int ctrltype)
     case ct_wstype:
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = n_ws_types - 1;
+        val_max.i = (int)sst::waveshapers::WaveshaperType::n_ws_types - 1;
         val_default.i = 0;
         break;
     case ct_midikey_or_channel:
@@ -3337,7 +3337,9 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             break;
         }
         case ct_wstype:
-            snprintf(txt, TXT_SIZE, "%s", wst_names[limit_range(i, 0, (int)n_ws_types - 1)]);
+            snprintf(txt, TXT_SIZE, "%s",
+                     sst::waveshapers::wst_names[limit_range(
+                         i, 0, (int)sst::waveshapers::WaveshaperType::n_ws_types - 1)]);
             break;
         case ct_envmode:
             snprintf(txt, TXT_SIZE, "%s", em_names[limit_range(i, 0, (int)n_env_modes - 1)]);
@@ -3442,7 +3444,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             snprintf(txt, TXT_SIZE, "%d bands", i);
             break;
         case ct_distortion_waveshape:
-            snprintf(txt, TXT_SIZE, "%s", wst_names[FXWaveShapers[i]]);
+            snprintf(txt, TXT_SIZE, "%s", sst::waveshapers::wst_names[(int)FXWaveShapers[i]]);
             break;
         case ct_mscodec:
             switch (i)

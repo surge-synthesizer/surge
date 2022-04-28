@@ -3937,7 +3937,9 @@ void SurgeSynthesizer::process()
         }
         else
         {
-            g.WSptr = GetQFPtrWaveshaper(storage.getPatch().scene[s].wsunit.type.val.i);
+            g.WSptr =
+                sst::waveshapers::GetQuadWaveshaper(static_cast<sst::waveshapers::WaveshaperType>(
+                    storage.getPatch().scene[s].wsunit.type.val.i));
         }
 
         FBQFPtr ProcessQuadFB =

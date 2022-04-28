@@ -51,7 +51,6 @@ short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
 float table_dB alignas(16)[512], table_envrate_lpf alignas(16)[512],
     table_envrate_linear alignas(16)[512], table_glide_exp alignas(16)[512],
     table_glide_log alignas(16)[512];
-float waveshapers alignas(16)[n_ws_types][1024];
 float samplerate = 0, samplerate_inv;
 double dsamplerate, dsamplerate_inv;
 double dsamplerate_os, dsamplerate_os_inv;
@@ -1878,20 +1877,6 @@ void SurgeStorage::init_tables()
         table_two_to_the_minus[i] = pow(2.0, -twelths);
     }
 
-    double mult = 1.0 / 32.0;
-    for (int i = 0; i < 1024; i++)
-    {
-        double x = ((double)i - 512.0) * mult;
-
-        waveshapers[wst_soft][i] = (float)tanh(x);
-        waveshapers[wst_hard][i] = (float)pow(tanh(pow(::abs(x), 5.0)), 0.2);
-        if (x < 0)
-            waveshapers[wst_hard][i] = -waveshapers[wst_hard][i];
-        waveshapers[wst_asym][i] = (float)shafted_tanh(x + 0.5) - shafted_tanh(0.5);
-        waveshapers[wst_sine][i] = (float)sin((double)((double)i - 512.0) * M_PI / 512.0);
-        waveshapers[wst_digital][i] = (float)tanh(x);
-    }
-
     // include some margin for error (and to avoid denormals in IIR filter clamping)
     nyquist_pitch =
         (float)12.f * log((0.75 * M_PI) / (dsamplerate_os_inv * 2 * M_PI * 440.0)) / log(2.0);
@@ -2002,7 +1987,7 @@ float db_to_linear(float x)
     return (1 - a) * table_dB[e & 0x1ff] + a * table_dB[(e + 1) & 0x1ff];
 }
 
-float lookup_waveshape(int entry, float x)
+float lookup_waveshape(sst::waveshapers::WaveshaperType entry, float x)
 {
     x *= 32.f;
     x += 512.f;
@@ -2014,10 +1999,11 @@ float lookup_waveshape(int entry, float x)
     if (e < 1)
         return -1;
 
-    return (1 - a) * waveshapers[entry][e & 0x3ff] + a * waveshapers[entry][(e + 1) & 0x3ff];
+    const auto &waveshapers = sst::waveshapers::globalWaveshaperTables.waveshapers[(int)entry];
+    return (1 - a) * waveshapers[e & 0x3ff] + a * waveshapers[(e + 1) & 0x3ff];
 }
 
-float lookup_waveshape_warp(int entry, float x)
+float lookup_waveshape_warp(sst::waveshapers::WaveshaperType entry, float x)
 {
     x *= 256.f;
     x += 512.f;
@@ -2025,7 +2011,8 @@ float lookup_waveshape_warp(int entry, float x)
     int e = (int)x;
     float a = x - (float)e;
 
-    return (1 - a) * waveshapers[entry][e & 0x3ff] + a * waveshapers[entry][(e + 1) & 0x3ff];
+    const auto &waveshapers = sst::waveshapers::globalWaveshaperTables.waveshapers[(int)entry];
+    return (1 - a) * waveshapers[e & 0x3ff] + a * waveshapers[(e + 1) & 0x3ff];
 }
 
 float envelope_rate_lpf(float x)

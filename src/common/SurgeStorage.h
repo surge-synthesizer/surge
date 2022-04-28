@@ -450,8 +450,6 @@ const int lt_num_deforms[n_lfo_types] = {
  */
 #include "FilterConfiguration.h"
 
-extern float waveshapers alignas(16)[n_ws_types][1024];
-
 enum env_mode
 {
     emt_digital = 0,
@@ -1464,8 +1462,8 @@ class alignas(16) SurgeStorage
 };
 
 float db_to_linear(float);
-float lookup_waveshape(int, float);
-float lookup_waveshape_warp(int, float);
+float lookup_waveshape(sst::waveshapers::WaveshaperType, float);
+float lookup_waveshape_warp(sst::waveshapers::WaveshaperType, float);
 float envelope_rate_lpf(float);
 float envelope_rate_linear(float);
 float envelope_rate_linear_nowrap(float);

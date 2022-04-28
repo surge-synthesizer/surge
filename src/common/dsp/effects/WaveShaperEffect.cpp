@@ -94,14 +94,15 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
         hpPre.process_block(wetL, wetR);
     }
 
-    if (*pdata_ival[ws_shaper] != lastShape)
+    const auto newShape = static_cast<sst::waveshapers::WaveshaperType>(*pdata_ival[ws_shaper]);
+    if (newShape != lastShape)
     {
-        lastShape = *pdata_ival[ws_shaper];
+        lastShape = newShape;
 
-        float R[n_waveshaper_registers];
+        float R[sst::waveshapers::n_waveshaper_registers];
         initializeWaveshaperRegister(lastShape, R);
 
-        for (int i = 0; i < n_waveshaper_registers; ++i)
+        for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
         {
             wss.R[i] = _mm_set1_ps(R[i]);
         }
@@ -109,7 +110,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
         wss.init = _mm_cmpneq_ps(_mm_setzero_ps(), _mm_setzero_ps());
     }
 
-    auto wsptr = GetQFPtrWaveshaper(lastShape);
+    auto wsptr = sst::waveshapers::GetQuadWaveshaper(lastShape);
 
     // Now upsample
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];

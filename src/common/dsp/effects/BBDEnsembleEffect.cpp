@@ -178,8 +178,8 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
         R[s] *= 0.75f;
 
         // soft-clip input
-        L[s] = lookup_waveshape(wst_soft, L[s] + fbStateL);
-        R[s] = lookup_waveshape(wst_soft, R[s] + fbStateR);
+        L[s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, L[s] + fbStateL);
+        R[s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, R[s] + fbStateR);
 
         delL.write(L[s]);
         delR.write(R[s]);
@@ -276,8 +276,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             R[s] *= 0.75f;
 
             // soft-clip input
-            L[s] = lookup_waveshape(wst_soft, L[s] + fbStateL);
-            R[s] = lookup_waveshape(wst_soft, R[s] + fbStateR);
+            L[s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, L[s] + fbStateL);
+            R[s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, R[s] + fbStateR);
 
             // OK so look at the diagram in #3743
             float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;

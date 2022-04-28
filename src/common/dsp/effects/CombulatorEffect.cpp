@@ -284,8 +284,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         }
 
         // soft-clip output for good measure
-        mixl = lookup_waveshape(wst_soft, mixl);
-        mixr = lookup_waveshape(wst_soft, mixr);
+        mixl = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixl);
+        mixr = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixr);
 
         dataOS[0][s] = mixl;
         dataOS[1][s] = mixr;

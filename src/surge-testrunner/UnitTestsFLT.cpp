@@ -50,9 +50,9 @@ TEST_CASE("Run Every Filter", "[flt]")
 
 TEST_CASE("Run Every Waveshaper", "[flt]")
 {
-    for (int wt = 0; wt < n_ws_types; wt++)
+    for (int wt = 0; wt < (int)sst::waveshapers::WaveshaperType::n_ws_types; wt++)
     {
-        DYNAMIC_SECTION("Test WaveShaper " << wst_names[wt])
+        DYNAMIC_SECTION("Test WaveShaper " << sst::waveshapers::wst_names[wt])
         {
             auto surge = Surge::Headless::createSurge(44100);
             REQUIRE(surge);

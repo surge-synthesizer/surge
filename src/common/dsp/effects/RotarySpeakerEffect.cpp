@@ -1,5 +1,4 @@
 #include "RotarySpeakerEffect.h"
-#include "QuadFilterWaveshaper.h"
 
 using namespace std;
 
@@ -39,7 +38,7 @@ void RotarySpeakerEffect::setvars(bool init)
         width.instantize();
         mix.instantize();
 
-        for (int i = 0; i < n_waveshaper_registers; ++i)
+        for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
             wsState.R[i] = _mm_setzero_ps();
     }
 }
@@ -211,19 +210,19 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
 
     switch (ws)
     {
-    case wst_hard:
+    case sst::waveshapers::WaveshaperType::wst_hard:
     {
         gain_tweak = 1.4;
         compensate = 3.f;
     }
-    case wst_asym:
+    case sst::waveshapers::WaveshaperType::wst_asym:
     {
         gain_tweak = 1.15;
         compensate = 9.f;
         compensateStartsAt = 0.05;
         break;
     }
-    case wst_sine:
+    case sst::waveshapers::WaveshaperType::wst_sine:
     {
         gain_tweak = 4.4;
         compensate = 10.f;
@@ -231,15 +230,15 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
         square_drive_comp = true;
         break;
     }
-    case wst_digital:
+    case sst::waveshapers::WaveshaperType::wst_digital:
     {
         gain_tweak = 1.f;
         compensate = 4.f;
         compensateStartsAt = 0.f;
         break;
     }
-    case wst_fwrectify:
-    case wst_fuzzsoft:
+    case sst::waveshapers::WaveshaperType::wst_fwrectify:
+    case sst::waveshapers::WaveshaperType::wst_fuzzsoft:
     {
         gain_tweak = 1.f;
         compensate = 2.f;
@@ -267,8 +266,8 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     }
 
     // FX waveshapers have value at wst_soft for 0; so don't add wst_soft here (like we did in 1.9)
-    bool useSSEShaper = (ws >= wst_sine);
-    auto wsop = GetQFPtrWaveshaper(ws);
+    bool useSSEShaper = (ws >= sst::waveshapers::WaveshaperType::wst_sine);
+    auto wsop = sst::waveshapers::GetQuadWaveshaper(ws);
 
     for (k = 0; k < BLOCK_SIZE; k++)
     {

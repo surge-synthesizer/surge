@@ -786,6 +786,7 @@ void LFOModulationSource::process_block()
 
     case lt_sine:
     {
+        constexpr auto wst_sine = sst::waveshapers::WaveshaperType::wst_sine;
         switch (lfo->deform.deform_type)
         {
         case type_1:

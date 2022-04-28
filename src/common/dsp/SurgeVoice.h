@@ -179,7 +179,7 @@ class alignas(16) SurgeVoice
         } FU[4];
         struct
         {
-            float R[n_waveshaper_registers];
+            float R[sst::waveshapers::n_waveshaper_registers];
         } WS[2];
     } FBP;
     sst::filters::FilterCoefficientMaker<SurgeStorage> CM[2];
