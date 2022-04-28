@@ -57,9 +57,16 @@ struct SurgeParamToJuceInfo
 struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
 {
     explicit SurgeParamToJuceParamAdapter(SurgeSynthesizer *s, Parameter *p)
-        : s(s), p(p), range(0.f, 1.f, 0.001f), juce::RangedAudioParameter(
-                                                   p->get_storage_name(),
-                                                   SurgeParamToJuceInfo::getParameterName(s, p), "")
+        : s(s), p(p),
+          range(0.f, 1.f, 0.001f), juce::RangedAudioParameter(
+#if SURGE_HAS_JUCE7
+                                       juce::ParameterID(
+                                           p->get_storage_name(),
+                                           1), // This "1" needs thought if we add params
+#else
+                                       p->get_storage_name(),
+#endif
+                                       SurgeParamToJuceInfo::getParameterName(s, p), "")
     {
         setValueNotifyingHost(getValue());
     }
@@ -116,7 +123,13 @@ struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
     explicit SurgeMacroToJuceParamAdapter(SurgeSynthesizer *s, long macroNum)
         : s(s), macroNum(macroNum),
           range(0.f, 1.f, 0.001f), juce::RangedAudioParameter(
+#if SURGE_HAS_JUCE7
+                                       juce::ParameterID(
+                                           std::string("macro_") + std::to_string(macroNum), 1),
+#else
                                        std::string("macro_") + std::to_string(macroNum),
+#endif
+
                                        std::string("C: ") + std::to_string(macroNum), "")
     {
         setValueNotifyingHost(getValue());
@@ -156,8 +169,14 @@ struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
 struct SurgeBypassParameter : public juce::RangedAudioParameter
 {
     explicit SurgeBypassParameter()
-        : value(0.f), range(0.f, 1.f, 0.01f), juce::RangedAudioParameter("surgext_bypass",
-                                                                         "Bypass Surge XT", "")
+        : value(0.f), range(0.f, 1.f, 0.01f), juce::RangedAudioParameter(
+#if SURGE_HAS_JUCE7
+                                                  juce::ParameterID("surgext-bypass", 1),
+#else
+                                                  "surgext_bypass",
+#endif
+
+                                                  "Bypass Surge XT", "")
     {
         setValueNotifyingHost(getValue());
     }
@@ -183,9 +202,7 @@ struct SurgeBypassParameter : public juce::RangedAudioParameter
 };
 
 class SurgeSynthProcessor : public juce::AudioProcessor,
-#if SURGE_JUCE_VST3_EXTENSIONS
                             public juce::VST3ClientExtensions,
-#endif
 
 #if HAS_CLAP_JUCE_EXTENSIONS
                             public clap_juce_extensions::clap_properties,
@@ -274,9 +291,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     std::string paramClumpName(int clumpid);
     juce::MidiKeyboardState midiKeyboardState;
 
-#if SURGE_JUCE_VST3_EXTENSIONS
     bool getPluginHasMainInput() const override { return false; }
-#endif
 
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool isInputMain(int index) override { return false; }
