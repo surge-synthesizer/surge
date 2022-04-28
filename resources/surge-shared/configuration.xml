@@ -113,7 +113,7 @@
     <snapshot name="Init (Send)" p0="0" p1="0.5" p2="0" p3="-2" p4="1" p5="0.5" p6="1" p7="0" p8="8" p9="1"/>
 </type>
 <type i="4" name="Rotary Speaker">
-    <snapshot name="Init" p0="-7.00000" p1="0.000000" p2="0.000000"/>
+    <snapshot name="Init" p0="0" p1="0" p2="0" p3="0.7" p4="0" p5="0" p6="0" p7="1"/>
 </type>
 <sectionheader label="TIME &amp; SPACE"/>
 <type i="1" name="Delay">
