@@ -21,10 +21,12 @@
 
 void SurgeSynthProcessorSpecificExtensions(SurgeSynthProcessor *p, SurgeSynthesizer *s)
 {
+#if !SURGE_HAS_JUCE7
     p->surge->activateExtraOutputs = false;
     p->canRemoveBusValue = true;
     p->removeBus(false);
     p->removeBus(false);
     p->canRemoveBusValue = false;
+#endif
 }
 void SurgeSynthEditorSpecificExtensions(SurgeSynthEditor *e, SurgeGUIEditor *sed) {}
