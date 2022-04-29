@@ -238,7 +238,17 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
 class SurgeFXParamDisplay : public juce::Component
 {
   public:
-    SurgeFXParamDisplay() : juce::Component() { setAccessible(true); }
+    SurgeFXParamDisplay() : juce::Component()
+    {
+        setAccessible(true);
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+        setWantsKeyboardFocus(true);
+        overlayEditor = std::make_unique<juce::TextEditor>("edit value");
+        overlayEditor->onEscapeKey = [this]() { dismissOverlay(); };
+        overlayEditor->onFocusLost = [this]() { dismissOverlay(); };
+        overlayEditor->onReturnKey = [this]() { processOverlay(); };
+        addChildComponent(*overlayEditor);
+    }
     virtual void setGroup(std::string grp)
     {
         group = grp;
@@ -306,11 +316,67 @@ class SurgeFXParamDisplay : public juce::Component
             g.setFont(12);
             g.drawSingleLineText(name, bounds.getX() + 5, bounds.getY() + 2 + 10 + 3 + 11);
 
-            g.setFont(20);
-            g.drawSingleLineText(display, bounds.getX() + 5,
-                                 bounds.getY() + bounds.getHeight() - 5);
+            if (!overlayEditor->isVisible())
+            {
+                g.setFont(20);
+                g.drawSingleLineText(display, bounds.getX() + 5,
+                                     bounds.getY() + bounds.getHeight() - 5);
+            }
         }
     }
+
+    void resized() override
+    {
+        overlayEditor->setBounds(getLocalBounds().reduced(2, 3).withTrimmedTop(getHeight() - 28));
+    }
+
+    void mouseDoubleClick(const juce::MouseEvent &e) override
+    {
+        if (!overlayEditor->isVisible())
+            initializeOverlay();
+    }
+
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        if (key.getKeyCode() == juce::KeyPress::returnKey && !overlayEditor->isVisible())
+        {
+            initializeOverlay();
+            return true;
+        }
+        return false;
+    }
+
+    void initializeOverlay()
+    {
+        if (!allowsTypein)
+            return;
+
+        overlayEditor->setColour(juce::TextEditor::textColourId,
+                                 findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
+        overlayEditor->setColour(juce::TextEditor::outlineColourId,
+                                 juce::Colours::transparentBlack);
+        overlayEditor->setColour(juce::TextEditor::focusedOutlineColourId,
+                                 juce::Colours::transparentBlack);
+        overlayEditor->setColour(juce::TextEditor::ColourIds::highlightColourId,
+                                 juce::Colour(0xFF775522));
+        overlayEditor->setJustification(juce::Justification::bottomLeft);
+        overlayEditor->setFont(juce::Font(20));
+        overlayEditor->setText(display, juce::dontSendNotification);
+        overlayEditor->setVisible(true);
+        overlayEditor->grabKeyboardFocus();
+        overlayEditor->selectAll();
+    }
+
+    void dismissOverlay() { overlayEditor->setVisible(false); }
+
+    void processOverlay()
+    {
+        onOverlayEntered(overlayEditor->getText().toStdString());
+        dismissOverlay();
+    }
+
+    std::function<void(const std::string &)> onOverlayEntered = [](const std::string &) {};
+    bool allowsTypein{true};
 
     struct AH : public juce::AccessibilityHandler
     {
@@ -333,7 +399,10 @@ class SurgeFXParamDisplay : public juce::Component
 
         explicit AH(SurgeFXParamDisplay *s)
             : comp(s), juce::AccessibilityHandler(
-                           *s, juce::AccessibilityRole::staticText, juce::AccessibilityActions(),
+                           *s, juce::AccessibilityRole::button,
+                           juce::AccessibilityActions().addAction(
+                               juce::AccessibilityActionType::press,
+                               [this]() { this->comp->initializeOverlay(); }),
                            AccessibilityHandler::Interfaces{std::make_unique<AHV>(s)})
         {
         }
@@ -352,6 +421,7 @@ class SurgeFXParamDisplay : public juce::Component
     std::string name = "Uninit";
     std::string display = "SoftwareError";
     bool appearsDeactivated = false;
+    std::unique_ptr<juce::TextEditor> overlayEditor;
 };
 
 class SurgeTempoSyncSwitch : public juce::ToggleButton
