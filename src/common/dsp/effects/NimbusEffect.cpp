@@ -72,6 +72,7 @@ void NimbusEffect::init()
 
     consumed = 0;
     created = 0;
+    builtBuffer = false;
     resampReadPtr = 0;
     resampWritePtr = 1; // why 1? well while we are stalling we want to output 0 so write 1 ahead
 }
@@ -110,69 +111,76 @@ void NimbusEffect::process(float *dataL, float *dataR)
         clouds::ShortFrame input[BLOCK_SIZE << 3];
         clouds::ShortFrame output[BLOCK_SIZE << 3];
 
-        int sp = 0;
-        if (hasStubInput)
-        {
-            sp = 1;
-            input[0].l = stub_input[0];
-            input[0].r = stub_input[1];
-        }
-        hasStubInput = false;
-
-        for (int i = 0; i < sdata.output_frames_gen; ++i)
-        {
-            input[i + sp].l = (short)(clamp1bp(resample_into[i][0]) * 32767.0f);
-            input[i + sp].r = (short)(clamp1bp(resample_into[i][1]) * 32767.0f);
-        }
-
-        int inputSz = sdata.output_frames_gen + sp;
+        int frames_to_go = sdata.output_frames_gen;
+        int outpos = 0;
 
         processor->set_playback_mode(
             (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pdata_ival[nmb_mode]));
         processor->set_quality(*pdata_ival[nmb_quality]);
 
-        auto parm = processor->mutable_parameters();
-        float den_val, tex_val;
-
-        den_val = (*f[nmb_density] + 1.f) * 0.5;
-        tex_val = (*f[nmb_texture] + 1.f) * 0.5;
-
-        parm->position = clamp01(*f[nmb_position]);
-        parm->size = clamp01(*f[nmb_size]);
-        parm->density = clamp01(den_val);
-        parm->texture = clamp01(tex_val);
-        parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
-        parm->stereo_spread = clamp01(*f[nmb_spread]);
-        parm->feedback = clamp01(*f[nmb_feedback]);
-        parm->freeze = *f[nmb_freeze] > 0.5;
-        parm->reverb = clamp01(*f[nmb_reverb]);
-        parm->dry_wet = 1.f;
-
-        parm->trigger = false;     // this is an external granulating source. Skip it
-        parm->gate = parm->freeze; // This is the CV for the freeze button
-
-        processor->Prepare();
-
-        if (*pdata_ival[nmb_quality] >= 2)
+        int consume_ptr = 0;
+        while (frames_to_go >= nimbusprocess_blocksize)
         {
-            /*
-             * In the 16 bit modes, Clouds crashes if you hand it an odd number
-             * of samples to process.
-             */
-            if (inputSz % 2)
+            int sp = 0;
+            while (numStubs > 0)
             {
-                stub_input[0] = input[inputSz - 1].l;
-                stub_input[1] = input[inputSz - 1].r;
-                inputSz--;
-                hasStubInput = true;
+                input[sp].l = (short)(clamp1bp(stub_input[0][sp]) * 32767.0f);
+                input[sp].r = (short)(clamp1bp(stub_input[1][sp]) * 32767.0f);
+                sp++;
+                numStubs--;
             }
-        }
-        processor->Process(input, output, inputSz);
 
-        for (int i = 0; i < inputSz; ++i)
+            for (int i = sp; i < nimbusprocess_blocksize; ++i)
+            {
+                input[i].l = (short)(clamp1bp(resample_into[consume_ptr][0]) * 32767.0f);
+                input[i].r = (short)(clamp1bp(resample_into[consume_ptr][1]) * 32767.0f);
+                consume_ptr++;
+            }
+
+            int inputSz = nimbusprocess_blocksize; // sdata.output_frames_gen + sp;
+
+            auto parm = processor->mutable_parameters();
+
+            float den_val, tex_val;
+
+            den_val = (*f[nmb_density] + 1.f) * 0.5;
+            tex_val = (*f[nmb_texture] + 1.f) * 0.5;
+
+            parm->position = clamp01(*f[nmb_position]);
+            parm->size = clamp01(*f[nmb_size]);
+            parm->density = clamp01(den_val);
+            parm->texture = clamp01(tex_val);
+            parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
+            parm->stereo_spread = clamp01(*f[nmb_spread]);
+            parm->feedback = clamp01(*f[nmb_feedback]);
+            parm->freeze = *f[nmb_freeze] > 0.5;
+            parm->reverb = clamp01(*f[nmb_reverb]);
+            parm->dry_wet = 1.f;
+
+            parm->trigger = false;     // this is an external granulating source. Skip it
+            parm->gate = parm->freeze; // This is the CV for the freeze button
+
+            processor->Prepare();
+            processor->Process(input, output, inputSz);
+
+            for (int i = 0; i < inputSz; ++i)
+            {
+                resample_this[outpos + i][0] = output[i].l / 32767.0f;
+                resample_this[outpos + i][1] = output[i].r / 32767.0f;
+            }
+            outpos += inputSz;
+            frames_to_go -= (nimbusprocess_blocksize - sp);
+        }
+
+        if (frames_to_go > 0)
         {
-            resample_this[i][0] = output[i].l / 32767.0f;
-            resample_this[i][1] = output[i].r / 32767.0f;
+            numStubs = frames_to_go;
+            for (int i = 0; i < numStubs; ++i)
+            {
+                stub_input[0][i] = resample_into[consume_ptr][0];
+                stub_input[1][i] = resample_into[consume_ptr][1];
+                consume_ptr++;
+            }
         }
 
         SRC_DATA odata;
@@ -180,22 +188,26 @@ void NimbusEffect::process(float *dataL, float *dataR)
         odata.src_ratio = processor_sr_inv * samplerate;
         odata.data_in = &(resample_this[0][0]);
         odata.data_out = &(resample_into[0][0]);
-        odata.input_frames = inputSz;
+        odata.input_frames = outpos;
         odata.output_frames = BLOCK_SIZE << 3;
         auto reso = src_process(euroSR_to_surgeSR, &odata);
-        created += odata.output_frames_gen;
+        if (!builtBuffer)
+            created += odata.output_frames_gen;
 
         size_t w = resampWritePtr;
         for (int i = 0; i < odata.output_frames_gen; ++i)
         {
             resampled_output[w][0] = resample_into[i][0];
             resampled_output[w][1] = resample_into[i][1];
+
             w = (w + 1U) & (raw_out_sz - 1U);
         }
         resampWritePtr = w;
     }
 
     bool rpi = (created) > (BLOCK_SIZE + 8); // leave some buffer
+    if (rpi)
+        builtBuffer = true;
 
     size_t rp = resampReadPtr;
     for (int i = 0; i < BLOCK_SIZE; ++i)
