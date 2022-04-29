@@ -121,6 +121,7 @@ PatchSelector::PatchSelector()
     typeAhead->setVisible(false);
     typeAhead->addTypeAheadListener(this);
     typeAhead->setToElementZeroOnReturn = true;
+    typeAhead->dismissMode = TypeAhead::DISMISS_ON_RETURN_RETAIN_ON_CMD_RETURN;
     addChildComponent(*typeAhead);
 
     setWantsKeyboardFocus(true);

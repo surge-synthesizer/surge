@@ -58,13 +58,14 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
 
     void returnKeyPressed(int lastRowSelected) override
     {
+        auto m = juce::ModifierKeys::getCurrentModifiers();
         if (lastRowSelected < 0 || lastRowSelected >= search.size())
         {
             ta->dismissWithoutValue();
             return;
         }
         ta->dismissWithValue(search[lastRowSelected],
-                             provider->textBoxValueForIndex(search[lastRowSelected]));
+                             provider->textBoxValueForIndex(search[lastRowSelected]), m);
     }
     void escapeKeyPressed() { ta->dismissWithoutValue(); }
 
@@ -129,12 +130,21 @@ TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
 
 TypeAhead::~TypeAhead() = default;
 
-void TypeAhead::dismissWithValue(int providerIdx, const std::string &s)
+void TypeAhead::dismissWithValue(int providerIdx, const std::string &s,
+                                 const juce::ModifierKeys &mod)
 {
+    bool cmd = mod.isCommandDown() || mod.isCtrlDown();
+    bool doDismiss = (dismissMode == DISMISS_ON_RETURN) ||
+                     (dismissMode == DISMISS_ON_RETURN_RETAIN_ON_CMD_RETURN && !cmd) ||
+                     (dismissMode == DISMISS_ON_CMD_RETURN_RETAIN_ON_RETURN && cmd) ||
+                     lboxmodel->getNumRows() <= 1;
     setText(s, juce::NotificationType::dontSendNotification);
-    lbox->setVisible(false);
-    if (isVisible())
-        grabKeyboardFocus();
+    if (doDismiss)
+    {
+        lbox->setVisible(false);
+        if (isVisible())
+            grabKeyboardFocus();
+    }
     for (auto l : taList)
         l->itemSelected(providerIdx);
 }

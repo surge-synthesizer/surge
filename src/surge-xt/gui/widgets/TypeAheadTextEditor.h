@@ -48,6 +48,13 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
         borderid
     };
 
+    enum DismissMode
+    {
+        DISMISS_ON_RETURN,
+        DISMISS_ON_RETURN_RETAIN_ON_CMD_RETURN,
+        DISMISS_ON_CMD_RETURN_RETAIN_ON_RETURN
+    } dismissMode{DISMISS_ON_RETURN};
+
     TypeAhead(const std::string &l, TypeAheadDataProvider *p); // does not take ownership
     ~TypeAhead();
 
@@ -64,7 +71,7 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
     void addTypeAheadListener(TypeAheadListener *l) { taList.insert(l); }
     void removeTypeAheadListener(TypeAheadListener *l) { taList.erase(l); }
 
-    void dismissWithValue(int providerIdx, const std::string &s);
+    void dismissWithValue(int providerIdx, const std::string &s, const juce::ModifierKeys &mod);
     void dismissWithoutValue();
 
     std::unique_ptr<juce::ListBox> lbox;
