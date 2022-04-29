@@ -309,5 +309,10 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     void copyGlobaldataSubset(int start, int end);
     void setupStorageRanges(Parameter *start, Parameter *endIncluding);
 
+  public:
+    void setParameterByString(int i, const std::string &s);
+    bool canSetParameterByString(int i);
+
+  private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgefxAudioProcessor)
 };

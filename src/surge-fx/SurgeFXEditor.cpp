@@ -248,6 +248,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
         fxParamDisplay[i].setDisplay(processor.getParamValue(i));
         fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
+        fxParamDisplay[i].onOverlayEntered = [i, this](const std::string &s) {
+            processor.setParameterByString(i, s);
+        };
 
         addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
     }
@@ -290,6 +293,8 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
+        fxParamDisplay[i].allowsTypein = processor.canSetParameterByString(i);
+
         fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
         fxParamDisplay[i].setAppearsDeactivated(processor.getFXStorageAppearsDeactivated(i));
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
