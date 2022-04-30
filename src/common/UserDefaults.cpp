@@ -82,6 +82,9 @@ std::string defaultKeyToString(DefaultKey k)
     case PatchJogWraparound:
         r = "patchJogWraparound";
         break;
+    case RetainPatchSearchboxAfterLoad:
+        r = "retainPatchSearchboxAfterLoad";
+        break;
     case OverrideTuningOnPatchLoad:
         r = "overrideTuningOnPatchLoad";
         break;
