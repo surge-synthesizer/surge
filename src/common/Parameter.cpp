@@ -2181,13 +2181,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     case LinearWithScale:
     {
         std::string u = displayInfo.unit;
-        if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
-        {
-            u = "semitones";
-            if (storage && !storage->isStandardTuning &&
-                storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-                u = "keys";
-        }
+
+        getSemitonesOrKeys(u);
 
         if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
         {
@@ -2323,13 +2318,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             }
 
             std::string u = displayInfo.unit;
-            if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
-            {
-                u = "semitones";
-                if (storage && !storage->isStandardTuning &&
-                    storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-                    u = "keys";
-            }
+
+            getSemitonesOrKeys(u);
 
             switch (displaymode)
             {
@@ -2857,6 +2847,20 @@ float Parameter::quantize_modulation(float inputval) const
     return res;
 }
 
+void Parameter::getSemitonesOrKeys(std::string &str) const
+{
+    if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
+    {
+        str = "semitones";
+
+        if (storage && !storage->isStandardTuning &&
+            storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
+        {
+            str = "keys";
+        }
+    }
+}
+
 void Parameter::get_display_alt(char *txt, bool external, float ef) const
 {
 
@@ -3002,13 +3006,9 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         case LinearWithScale:
         {
             std::string u = displayInfo.unit;
-            if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
-            {
-                u = "semitones";
-                if (storage && !storage->isStandardTuning &&
-                    storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-                    u = "keys";
-            }
+
+            getSemitonesOrKeys(u);
+
             if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
             {
                 if (!is_bipolar())
@@ -3056,21 +3056,18 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                 snprintf(txt, TXT_SIZE, "%s", res.c_str());
                 return;
             }
+
             if (can_extend_range() && extend_range)
             {
                 f = get_extended(f);
             }
+
             std::string u = displayInfo.unit;
 
-            if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
-            {
-                u = "semitones";
-                if (storage && !storage->isStandardTuning &&
-                    storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-                    u = "keys";
-            }
+            getSemitonesOrKeys(u);
 
             float dval = displayInfo.a * powf(2.0f, f * displayInfo.b);
+
             if (f >= val_max.f)
             {
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString)
@@ -4165,17 +4162,16 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             }
         }
 
-        if (res > val_max.f)
+        if (res < val_min.f || res > val_max.f)
         {
-            set_error_message(errMsg, to_str(val_max.f * factor * displayInfo.scale),
-                              absolute ? displayInfo.absoluteUnit : displayInfo.unit, true);
-            return false;
-        }
+            bool isLarger = res > val_max.f;
+            auto value = isLarger ? val_max.f : val_min.f;
+            std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
 
-        if (res < val_min.f)
-        {
-            set_error_message(errMsg, to_str(val_min.f * factor * displayInfo.scale),
-                              absolute ? displayInfo.absoluteUnit : displayInfo.unit, false);
+            getSemitonesOrKeys(unit);
+
+            set_error_message(errMsg, to_str(value * factor * displayInfo.scale), unit, isLarger);
+
             return false;
         }
 

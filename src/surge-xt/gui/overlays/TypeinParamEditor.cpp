@@ -189,7 +189,7 @@ void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
     {
         wasInputInvalid = true;
         repaint();
-        juce::Timer::callAfterDelay(2000, [this]() {
+        juce::Timer::callAfterDelay(5000, [this]() {
             wasInputInvalid = false;
             repaint();
         });

@@ -511,6 +511,7 @@ class Parameter
     };
 
 #define DISPLAYINFO_TXT_SIZE 128
+
     struct DisplayInfo
     {
         char unit[DISPLAYINFO_TXT_SIZE]{}, absoluteUnit[DISPLAYINFO_TXT_SIZE]{};
@@ -533,16 +534,16 @@ class Parameter
               absoluteFactor = 1.0; // set these to 1 in case we sneak by and divide by accident
     } displayInfo;
 
+    void getSemitonesOrKeys(std::string &str) const;
+
     ParamUserData *user_data = nullptr;    // I know this is a bit gross but we have a runtime type
     void set_user_data(ParamUserData *ud); // I take a shallow copy and don't assume ownership and
-                                           // assume i am referencable
+                                           // assume I am referencable
 
     bool supportsDynamicName() const;
     ParameterDynamicNameFunction *dynamicName = nullptr;
 
-    /*
-     * Handlers for dynamic deactivation and dynamic bipolarity
-     */
+    // Handlers for dynamic deactivation and dynamic bipolarity
     ParameterDynamicDeactivationFunction *dynamicDeactivation = nullptr;
     ParameterDynamicBoolFunction *dynamicBipolar = nullptr;
 
