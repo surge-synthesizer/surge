@@ -3857,6 +3857,16 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                                                               !patchJogWrap);
                    });
 
+    bool patchStickySearchbox = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::RetainPatchSearchboxAfterLoad, true);
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Retain Patch Search Results After Loading"), true,
+                   patchStickySearchbox, [this, patchStickySearchbox]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::RetainPatchSearchboxAfterLoad,
+                           !patchStickySearchbox);
+                   });
+
     int patchDirtyCheck = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::PromptToLoadOverDirtyPatch, DUNNO);
 

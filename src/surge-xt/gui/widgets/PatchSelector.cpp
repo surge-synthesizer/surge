@@ -121,7 +121,7 @@ PatchSelector::PatchSelector()
     typeAhead->setVisible(false);
     typeAhead->addTypeAheadListener(this);
     typeAhead->setToElementZeroOnReturn = true;
-    typeAhead->dismissMode = TypeAhead::DISMISS_ON_RETURN_RETAIN_ON_CMD_RETURN;
+
     addChildComponent(*typeAhead);
 
     setWantsKeyboardFocus(true);
@@ -1141,21 +1141,33 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
 
     if (isTypeaheadSearchOn)
     {
-        storage->initializePatchDb();
         bool enable = true;
         auto txt = pname;
+
+        storage->initializePatchDb();
+
         if (storage->patchDB->numberOfJobsOutstanding() > 0)
         {
             enable = false;
             txt = "Updating Patch Database: " +
                   std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " items left";
         }
+
+        bool patchStickySearchbox = Surge::Storage::getUserDefaultValue(
+            storage, Surge::Storage::RetainPatchSearchboxAfterLoad, true);
+
+        typeAhead->dismissMode = patchStickySearchbox
+                                     ? TypeAhead::DISMISS_ON_CMD_RETURN_RETAIN_ON_RETURN
+                                     : TypeAhead::DISMISS_ON_RETURN_RETAIN_ON_CMD_RETURN;
+
         typeAhead->setJustification(juce::Justification::centred);
         typeAhead->setIndents(4, (typeAhead->getHeight() - typeAhead->getTextHeight()) / 2);
         typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
 
         if (!typeAhead->isVisible() && sge)
+        {
             sge->vkbForward++;
+        }
 
         typeAhead->setVisible(true);
         typeAhead->setEnabled(enable);
@@ -1192,6 +1204,13 @@ void PatchSelector::enableTypeAheadIfReady()
         txt = "Updating patch database: " +
               std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " items left";
     }
+
+    bool patchStickySearchbox = Surge::Storage::getUserDefaultValue(
+        storage, Surge::Storage::RetainPatchSearchboxAfterLoad, true);
+
+    typeAhead->dismissMode = patchStickySearchbox
+                                 ? TypeAhead::DISMISS_ON_CMD_RETURN_RETAIN_ON_RETURN
+                                 : TypeAhead::DISMISS_ON_RETURN_RETAIN_ON_CMD_RETURN;
 
     typeAhead->setText(txt, juce::NotificationType::dontSendNotification);
     typeAhead->setEnabled(enable);

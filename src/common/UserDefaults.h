@@ -40,7 +40,9 @@ enum DefaultKey
     DefaultZoom,
     SliderMoveRateState,
     RememberTabPositionsPerScene,
+
     PatchJogWraparound,
+    RetainPatchSearchboxAfterLoad,
 
     OverrideTuningOnPatchLoad,
     OverrideMappingOnPatchLoad,
