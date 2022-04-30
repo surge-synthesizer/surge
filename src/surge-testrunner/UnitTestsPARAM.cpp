@@ -42,7 +42,7 @@ TEST_CASE("Param String Inversion", "[parm]")
             auto preval = p.val.f;
             char txt[256];
             p.get_display(txt);
-            REQUIRE( p.set_value_from_string( std::string( txt ) ) );
+            REQUIRE( p.set_value_from_string( std::string( txt, "" ) ) );
             auto v01 = p.get_value_f01();
 
             INFO( "Type " << type << " val01=" << val << " val.f=" << preval << " txt=" << txt << " roundtrip=" << p.val.f << " roundtrip01=" << v01 );

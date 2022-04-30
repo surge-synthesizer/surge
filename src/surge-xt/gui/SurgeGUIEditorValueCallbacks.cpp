@@ -3502,10 +3502,11 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     }
 }
 
-bool SurgeGUIEditor::setParameterFromString(Parameter *p, const std::string &s)
+bool SurgeGUIEditor::setParameterFromString(Parameter *p, const std::string &s, std::string &errMsg)
 {
     auto v = p->get_value_f01();
-    if (p && p->set_value_from_string(s))
+
+    if (p && p->set_value_from_string(s, errMsg))
     {
         if (v != p->get_value_f01())
             synth->storage.getPatch().isDirty = true;

@@ -35,3 +35,14 @@ static inline void strxcpy(char *const dst, const char *const src, const size_t 
  * bytes now also use this constant.
  */
 #define TXT_SIZE 256
+
+/*
+ * And here's a template that converts many different types to a std::string
+ * (primarily used by Parameter.cpp)
+ */
+template <typename Type> std::string to_str(const Type &t)
+{
+    std::ostringstream os;
+    os << t;
+    return os.str();
+}

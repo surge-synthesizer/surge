@@ -65,7 +65,7 @@ void TypeinParamEditor::paint(juce::Graphics &g)
     if (wasInputInvalid)
     {
         g.setColour(skin->getColor(Colors::Dialog::Label::Error));
-        g.drawText("Input out of range!", r, juce::Justification::centred);
+        g.drawText(errorToDisplay, r, juce::Justification::centred);
     }
     else
     {
@@ -152,7 +152,7 @@ void TypeinParamEditor::onSkinChanged()
     repaint();
 }
 
-bool TypeinParamEditor::handleTypein(const std::string &value)
+bool TypeinParamEditor::handleTypein(const std::string &value, std::string &errMsg)
 {
     if (!editor)
         return false;
@@ -166,7 +166,7 @@ bool TypeinParamEditor::handleTypein(const std::string &value)
         }
         else
         {
-            res = editor->setParameterFromString(p, value);
+            res = editor->setParameterFromString(p, value, errMsg);
         }
     }
     else
@@ -178,7 +178,7 @@ bool TypeinParamEditor::handleTypein(const std::string &value)
 
 void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
 {
-    auto res = handleTypein(te.getText().toStdString());
+    auto res = handleTypein(te.getText().toStdString(), errorToDisplay);
 
     if (res)
     {

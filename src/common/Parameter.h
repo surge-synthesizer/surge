@@ -429,8 +429,10 @@ class Parameter
     float value_to_normalized(float value) const;
     float get_default_value_f01() const;
     void set_value_f01(float v, bool force_integer = false);
-    bool set_value_from_string(const std::string &s);
-    bool set_value_from_string_onto(const std::string &s, pdata &ontoThis);
+    bool set_value_from_string(const std::string &s, std::string &errMsg);
+    bool set_value_from_string_onto(const std::string &s, pdata &ontoThis, std::string &errMsg);
+    void set_error_message(std::string &errMsg, const std::string value, const std::string unit,
+                           const bool isLarger);
     void set_extend_range(bool er);
 
     /*

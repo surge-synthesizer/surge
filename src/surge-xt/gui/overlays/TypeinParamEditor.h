@@ -76,10 +76,10 @@ struct TypeinParamEditor : public juce::Component,
         secondaryVal = sec;
     }
 
-    std::string modbyLabel;
+    std::string modbyLabel, errorToDisplay;
     void setModByLabel(const std::string &by) { modbyLabel = by; }
 
-    virtual bool handleTypein(const std::string &value);
+    virtual bool handleTypein(const std::string &value, std::string &errMsg);
 
     void setEditableText(const std::string &et) { textEd->setText(et, juce::dontSendNotification); }
 
@@ -107,7 +107,10 @@ struct TypeinParamEditor : public juce::Component,
 struct TypeinLambdaEditor : public TypeinParamEditor
 {
     TypeinLambdaEditor(std::function<bool(const std::string &)> c) : callback(c){};
-    bool handleTypein(const std::string &value) override { return callback(value); }
+    bool handleTypein(const std::string &value, std::string &errMsg) override
+    {
+        return callback(value);
+    }
     std::function<bool(const std::string &)> callback;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TypeinLambdaEditor);
 };

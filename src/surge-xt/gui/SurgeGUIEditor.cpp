@@ -4864,7 +4864,8 @@ float SurgeGUIEditor::getF01FromString(long tag, const std::string &s)
         if (p)
         {
             pdata pd;
-            p->set_value_from_string_onto(s, pd);
+            std::string errMsg;
+            p->set_value_from_string_onto(s, pd, errMsg);
             return p->value_to_normalized(pd.f);
         }
     }

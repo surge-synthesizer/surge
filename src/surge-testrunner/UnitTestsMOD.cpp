@@ -615,12 +615,13 @@ TEST_CASE("Extended pitch bend", "[mod]")
     SECTION("Pitch By Ratios")
     {
         auto surge = surgeOnSine();
+        std::string errMsg;
         surge->mpeEnabled = false;
         surge->storage.getPatch().scene[0].pbrange_up.set_extend_range(true);
-        surge->storage.getPatch().scene[0].pbrange_up.set_value_from_string("9/8");
+        surge->storage.getPatch().scene[0].pbrange_up.set_value_from_string("9/8", errMsg);
 
         surge->storage.getPatch().scene[0].pbrange_dn.set_extend_range(true);
-        surge->storage.getPatch().scene[0].pbrange_dn.set_value_from_string("3/2");
+        surge->storage.getPatch().scene[0].pbrange_dn.set_value_from_string("3/2", errMsg);
 
         auto f60 = frequencyForNote(surge, 60);
 

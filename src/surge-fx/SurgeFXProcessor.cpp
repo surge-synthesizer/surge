@@ -520,8 +520,9 @@ void SurgefxAudioProcessor::updateJuceParamsFromStorage()
 void SurgefxAudioProcessor::setParameterByString(int i, const std::string &s)
 {
     auto *p = &(fxstorage->p[fx_param_remap[i]]);
+    std::string errMsg;
 
-    p->set_value_from_string(s);
+    p->set_value_from_string(s, errMsg);
     *(fxParams[i]) = fxstorage->p[fx_param_remap[i]].get_value_f01();
     changedParamsValue[i] = fxstorage->p[fx_param_remap[i]].get_value_f01();
     triggerAsyncUpdate();

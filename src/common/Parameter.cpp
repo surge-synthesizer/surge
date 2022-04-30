@@ -28,6 +28,7 @@
 #include "DebugHelpers.h"
 #include "StringOps.h"
 #include "Tunings.h"
+#include "fmt/core.h"
 
 Parameter::Parameter()
 {
@@ -3941,12 +3942,20 @@ bool Parameter::can_setvalue_from_string() const
     return false;
 }
 
-bool Parameter::set_value_from_string(const std::string &s)
+void Parameter::set_error_message(std::string &errMsg, const std::string value,
+                                  const std::string unit, const bool isLarger)
 {
-    return set_value_from_string_onto(s, val);
+    errMsg =
+        fmt::format("Input can't be {} than {} {}!", isLarger ? "larger" : "smaller", value, unit);
 }
 
-bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis)
+bool Parameter::set_value_from_string(const std::string &s, std::string &errMsg)
+{
+    return set_value_from_string_onto(s, val, errMsg);
+}
+
+bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis,
+                                           std::string &errMsg)
 {
     const char *c = s.c_str();
 
@@ -4156,8 +4165,17 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             }
         }
 
-        if (res < val_min.f || res > val_max.f)
+        if (res > val_max.f)
         {
+            set_error_message(errMsg, to_str(val_max.f * factor * displayInfo.scale),
+                              absolute ? displayInfo.absoluteUnit : displayInfo.unit, true);
+            return false;
+        }
+
+        if (res < val_min.f)
+        {
+            set_error_message(errMsg, to_str(val_min.f * factor * displayInfo.scale),
+                              absolute ? displayInfo.absoluteUnit : displayInfo.unit, false);
             return false;
         }
 
