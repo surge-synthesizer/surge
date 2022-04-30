@@ -832,7 +832,7 @@ struct UndoManagerImpl
                 auto g = SelfPushGuard(this);
 
                 editor->setMacroNameFromUndo(p->itemid, p->name);
-                auto ann = fmt::format("{} Macro {} Rename", p->itemid);
+                auto ann = fmt::format("{} Macro {} Rename", verb, p->itemid);
                 editor->enqueueAccessibleAnnouncement(ann);
             }
             else
@@ -842,7 +842,7 @@ struct UndoManagerImpl
                 auto g = SelfPushGuard(this);
                 editor->setLFONameFromUndo(p->scene, p->itemid, p->index, p->name);
 
-                auto ann = fmt::format("{} Modulator Rename", p->itemid);
+                auto ann = fmt::format("{} Modulator Rename", verb);
                 editor->enqueueAccessibleAnnouncement(ann);
             }
             return true;
@@ -856,7 +856,7 @@ struct UndoManagerImpl
             auto g = SelfPushGuard(this);
             editor->setMacroValueFromUndo(p->macro, p->val);
 
-            auto ann = fmt::format("{} Macro {} Value", p->macro);
+            auto ann = fmt::format("{} Macro {} Value", verb, p->macro);
             editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
@@ -866,7 +866,7 @@ struct UndoManagerImpl
             auto g = SelfPushGuard(this);
             editor->setTuningFromUndo(p->tuning);
 
-            auto ann = fmt::format("{} Tuning Change");
+            auto ann = fmt::format("{} Tuning Change", verb);
             editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
@@ -883,7 +883,7 @@ struct UndoManagerImpl
                 editor->setPatchFromUndo(p->data, p->dataSz);
             }
 
-            auto ann = fmt::format("{} Patch Change");
+            auto ann = fmt::format("{} Patch Change", verb);
             editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
