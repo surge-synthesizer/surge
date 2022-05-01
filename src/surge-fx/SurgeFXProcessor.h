@@ -73,6 +73,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     float getFXStorageValue01(int i) { return fxstorage->p[fx_param_remap[i]].get_value_f01(); }
     float getFXParamValue01(int i) { return *(fxParams[i]); }
     void setFXParamValue01(int i, float f) { *(fxParams[i]) = f; }
+
     void setFXParamTempoSync(int i, bool b)
     {
         int v = *(fxParamFeatures[i]);
@@ -82,6 +83,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
             v = v & ~kTempoSync;
         fxParamFeatures[i]->setValueNotifyingHost((float)v / 0xFF);
     }
+
     bool getFXParamTempoSync(int i) { return *(fxParamFeatures[i]) & kTempoSync; }
     void setFXStorageTempoSync(int i, bool b) { fxstorage->p[fx_param_remap[i]].temposync = b; }
     bool getFXStorageTempoSync(int i) { return fxstorage->p[fx_param_remap[i]].temposync; }
@@ -237,6 +239,18 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         return txt;
     }
 
+    std::string getParamValueFor(int idx, float f)
+    {
+        if (fxstorage->p[fx_param_remap[idx]].ctrltype == ct_none)
+        {
+            return "-";
+        }
+
+        char txt[1024];
+        fxstorage->p[fx_param_remap[idx]].get_display(txt, true, f);
+        return txt;
+    }
+
     std::string getParamValueFromFloat(int i, float f)
     {
         if (fxstorage->p[fx_param_remap[i]].ctrltype == ct_none)
@@ -259,13 +273,42 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     std::unique_ptr<SurgeStorage> storage;
 
   private:
+    template <typename T, typename F> struct FXAudioParameter : public T
+    {
+        juce::String mutableName;
+        template <typename... Args>
+        FXAudioParameter(Args &&...args) : T(std::forward<Args>(args)...)
+        {
+            mutableName = T::getName(64);
+        }
+
+        FXAudioParameter<T, F> &operator=(F newValue)
+        {
+            T::operator=(newValue);
+            return *this;
+        }
+
+        juce::String getName(int end) const override { return mutableName.substring(0, end); }
+
+        std::function<juce::String(float, int)> getTextHandler;
+        std::function<float(const juce::String &)> getTextToValue;
+        juce::String getText(float f, int i) const override { return getTextHandler(f, i); }
+
+        float getValueForText(const juce::String &text) const override
+        {
+            return getTextToValue(text);
+        }
+    };
+
     //==============================================================================
     juce::AudioProcessorParameter *fxBaseParams[2 * n_fx_params + 1];
 
     // These are just copyes of the pointer from above with the cast done to make the code look
     // nicer
-    juce::AudioParameterFloat *fxParams[n_fx_params];
-    juce::AudioParameterInt *fxType;
+    typedef FXAudioParameter<juce::AudioParameterFloat, float> float_param_t;
+    typedef FXAudioParameter<juce::AudioParameterInt, int> int_param_t;
+    float_param_t *fxParams[n_fx_params];
+    int_param_t *fxType;
 
     enum ParamFeatureFlags
     {
@@ -311,6 +354,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
   public:
     void setParameterByString(int i, const std::string &s);
+    float getParameterValueForString(int i, const std::string &s);
     bool canSetParameterByString(int i);
 
   private:

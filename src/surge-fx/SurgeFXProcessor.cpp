@@ -38,24 +38,39 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         snprintf(lb, 256, "fx_parm_%d", i);
         snprintf(nm, 256, "FX Parameter %d", i);
 
-        addParameter(fxParams[i] = new juce::AudioParameterFloat(
-                         lb, nm, juce::NormalisableRange<float>(0.0, 1.0),
-                         fxstorage->p[fx_param_remap[i]].get_value_f01()));
+        addParameter(fxParams[i] =
+                         new float_param_t(lb, nm, juce::NormalisableRange<float>(0.0, 1.0),
+                                           fxstorage->p[fx_param_remap[i]].get_value_f01()));
+        fxParams[i]->getTextHandler = [this, i](float f, int len) -> juce::String {
+            return juce::String(getParamValueFor(i, f)).substring(0, len);
+        };
+        fxParams[i]->getTextToValue = [this, i](const juce::String &s) -> float {
+            return getParameterValueForString(i, s.toStdString());
+        };
         fxBaseParams[i] = fxParams[i];
     }
-    addParameter(fxType = new juce::AudioParameterInt("fxtype", "FX Type", fxt_delay,
-                                                      n_fx_types - 1, effectNum));
+
+    addParameter(fxType =
+                     new int_param_t("fxtype", "FX Type", fxt_delay, n_fx_types - 1, effectNum));
+    fxType->getTextHandler = [this](float f, int len) -> juce::String {
+        auto i = (int)round(f * n_fx_types);
+        if (i >= 0 && i < n_fx_types)
+            return fx_type_names[i];
+        return "";
+    };
+    fxType->getTextToValue = [](const juce::String &s) -> float { return 0; };
     fxBaseParams[n_fx_params] = fxType;
 
     for (int i = 0; i < n_fx_params; ++i)
     {
         char lb[256], nm[256];
         snprintf(lb, 256, "fx_temposync_%d", i);
-        snprintf(nm, 256, "FX Temposync %d", i);
+        snprintf(nm, 256, "Feature Param %d", i);
 
         // if you change this 0xFF also change the divide in the setValueNotifyingHost in
         // setFXParamExtended etc
-        addParameter(fxParamFeatures[i] = new juce::AudioParameterInt(lb, nm, 0, 0xFF, 0));
+        fxParamFeatures[i] = new juce::AudioParameterInt(lb, nm, 0, 0xFF, 0);
+        // addParameter();
         *(fxParamFeatures[i]) = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
         fxBaseParams[i + n_fx_params + 1] = fxParamFeatures[i];
     }
@@ -76,7 +91,11 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     resettingFx = false;
 }
 
-SurgefxAudioProcessor::~SurgefxAudioProcessor() {}
+SurgefxAudioProcessor::~SurgefxAudioProcessor()
+{
+    for (int i = 0; i < n_fx_params; ++i)
+        delete fxParamFeatures[i];
+}
 
 //==============================================================================
 const juce::String SurgefxAudioProcessor::getName() const { return JucePlugin_Name; }
@@ -386,6 +405,7 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
                     paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), pf);
                 }
             }
+            resetFxParams(true);
             updateJuceParamsFromStorage();
         }
     }
@@ -492,6 +512,7 @@ void SurgefxAudioProcessor::resetFxParams(bool updateJuceParams)
         updateJuceParamsFromStorage();
     }
 
+    updateHostDisplay();
     resettingFx = false;
 }
 
@@ -501,6 +522,7 @@ void SurgefxAudioProcessor::updateJuceParamsFromStorage()
     for (int i = 0; i < n_fx_params; ++i)
     {
         *(fxParams[i]) = fxstorage->p[fx_param_remap[i]].get_value_f01();
+        fxParams[i]->mutableName = getParamGroup(i) + " " + getParamName(i);
         int32_t switchVal = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
         *(fxParamFeatures[i]) = switchVal;
     }
@@ -517,6 +539,17 @@ void SurgefxAudioProcessor::updateJuceParamsFromStorage()
     triggerAsyncUpdate();
 }
 
+float SurgefxAudioProcessor::getParameterValueForString(int i, const std::string &s)
+{
+    if (!canSetParameterByString(i))
+        return 0;
+
+    auto *p = &(fxstorage->p[fx_param_remap[i]]);
+
+    pdata v;
+    p->set_value_from_string_onto(s, v);
+    return v.f;
+}
 void SurgefxAudioProcessor::setParameterByString(int i, const std::string &s)
 {
     auto *p = &(fxstorage->p[fx_param_remap[i]]);
