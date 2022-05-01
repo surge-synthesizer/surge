@@ -20,6 +20,7 @@
 #include <chrono>
 #include <variant>
 #include <fmt/core.h>
+#include "widgets/MainFrame.h" // so i can repaint without rebuild
 
 namespace Surge
 {
@@ -94,6 +95,23 @@ struct UndoManagerImpl
         int type;
         std::vector<UndoParam> undoParamValues;
     };
+    struct UndoWavetable
+    {
+        int oscNum;
+        int scene;
+
+        int current_id;
+        // Why shared? Well this is only used in one edge case and it makes it easier
+        std::shared_ptr<Wavetable> wt;
+
+        std::string displayName;
+    };
+    struct UndoOscillatorExtraConfig
+    {
+        int oscNum;
+        int scene;
+        OscillatorStorage::ExtraConfigurationData extraConfig;
+    };
     struct UndoFX
     {
         int fxslot;
@@ -151,8 +169,9 @@ struct UndoManagerImpl
 
     // If you add a new type here add it both to aboutTheSameThing, toString, and
     // to undo.
-    typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoFX, UndoStep, UndoMSEG,
-                         UndoFormula, UndoRename, UndoMacro, UndoTuning, UndoPatch, UndoFullLFO>
+    typedef std::variant<UndoParam, UndoModulation, UndoOscillator, UndoOscillatorExtraConfig,
+                         UndoWavetable, UndoFX, UndoStep, UndoMSEG, UndoFormula, UndoRename,
+                         UndoMacro, UndoTuning, UndoPatch, UndoFullLFO>
         UndoAction;
     struct UndoRecord
     {
@@ -209,6 +228,11 @@ struct UndoManagerImpl
             auto pb = std::get_if<UndoStep>(&b);
             return (pa->lfoid == pb->lfoid) && (pa->scene == pb->scene);
         }
+        if (auto pa = std::get_if<UndoOscillatorExtraConfig>(&a))
+        {
+            auto pb = std::get_if<UndoOscillatorExtraConfig>(&b);
+            return (pa->oscNum == pb->oscNum) && (pa->scene == pb->scene);
+        }
         if (auto pa = std::get_if<UndoMSEG>(&a))
         {
             auto pb = std::get_if<UndoMSEG>(&b);
@@ -259,6 +283,14 @@ struct UndoManagerImpl
         {
             return fmt::format("Oscillator[scene={},num={},type={}]", pa->scene, pa->oscNum,
                                pa->type);
+        }
+        if (auto pa = std::get_if<UndoOscillatorExtraConfig>(&a))
+        {
+            return fmt::format("OscillatorConfig[scene={},num={}]", pa->scene, pa->oscNum);
+        }
+        if (auto pa = std::get_if<UndoWavetable>(&a))
+        {
+            return fmt::format("OscillatorWavetable[scene={},num={}]", pa->scene, pa->oscNum);
         }
         if (auto pa = std::get_if<UndoFX>(&a))
         {
@@ -467,6 +499,45 @@ struct UndoManagerImpl
             r.undoParamValues.emplace_back(pu);
             p++;
         }
+
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
+    void pushWavetable(int scene, int oscnum, UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto os = &(synth->storage.getPatch().scene[scene].osc[oscnum]);
+        auto r = UndoWavetable();
+
+        r.current_id = os->wt.current_id;
+
+        r.wt = nullptr;
+        if (r.current_id < 0)
+        {
+            r.wt = std::make_shared<Wavetable>();
+            r.wt->Copy(&(os->wt));
+        }
+
+        r.scene = scene;
+        r.oscNum = oscnum;
+        r.displayName = os->wavetable_display_name;
+
+        if (to == UndoManager::UNDO)
+            pushUndo(r);
+        else
+            pushRedo(r);
+    }
+
+    void pushOscillatorExtraConfig(int scene, int oscnum,
+                                   UndoManager::Target to = UndoManager::UNDO)
+    {
+        auto os = &(synth->storage.getPatch().scene[scene].osc[oscnum]);
+        auto r = UndoOscillatorExtraConfig();
+        r.scene = scene;
+        r.oscNum = oscnum;
+        r.extraConfig = os->extraConfig;
 
         if (to == UndoManager::UNDO)
             pushUndo(r);
@@ -707,6 +778,49 @@ struct UndoManagerImpl
             }
             auto ann = fmt::format("{} Oscillator Type to {}, Scene {} Oscillator {}", verb,
                                    osc_type_names[p->type], (char)('A' + p->scene), p->oscNum + 1);
+            editor->enqueueAccessibleAnnouncement(ann);
+            return true;
+        }
+        if (auto p = std::get_if<UndoOscillatorExtraConfig>(&q))
+        {
+            pushOscillatorExtraConfig(p->scene, p->oscNum, opposite);
+            auto g = SelfPushGuard(this);
+            auto os = &(synth->storage.getPatch().scene[p->scene].osc[p->oscNum]);
+
+            os->extraConfig = p->extraConfig;
+            editor->frame->repaint();
+
+            auto ann = fmt::format("{} Oscillator Configuration in Scene {} Oscillator {}", verb,
+                                   (char)('A' + p->scene), p->oscNum + 1);
+            editor->enqueueAccessibleAnnouncement(ann);
+            return true;
+        }
+        if (auto p = std::get_if<UndoWavetable>(&q))
+        {
+            pushWavetable(p->scene, p->oscNum, opposite);
+            auto g = SelfPushGuard(this);
+            auto os = &(synth->storage.getPatch().scene[p->scene].osc[p->oscNum]);
+
+            if (!p->displayName.empty())
+            {
+                strncpy(os->wavetable_display_name, p->displayName.c_str(), 256);
+            }
+            if (p->current_id >= 0)
+            {
+                os->wt.queue_id = p->current_id;
+            }
+            else if (p->wt)
+            {
+                os->wt.Copy(p->wt.get());
+                synth->refresh_editor = true;
+            }
+            else
+            {
+                jassertfalse;
+            }
+
+            auto ann = fmt::format("{} Oscillator Wavetable in Scene {} Oscillator {}", verb,
+                                   (char)('A' + p->scene), p->oscNum + 1);
             editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
@@ -974,6 +1088,12 @@ void UndoManager::pushMacroChange(int macroid, float val) { impl->pushMacroChang
 void UndoManager::pushPatch() { impl->pushPatch(); }
 
 void UndoManager::pushFullLFO(int scene, int lfoid) { impl->pushFullLFO(scene, lfoid); }
+
+void UndoManager::pushWavetable(int scene, int oscnum) { impl->pushWavetable(scene, oscnum); };
+void UndoManager::pushOscillatorExtraConfig(int scene, int oscnum)
+{
+    impl->pushOscillatorExtraConfig(scene, oscnum);
+}
 
 bool UndoManager::canUndo() { return !impl->undoStack.empty(); }
 

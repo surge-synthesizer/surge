@@ -50,6 +50,9 @@ struct UndoManager
     void pushModulationChange(int paramId, const Parameter *p, modsources modsource, int scene,
                               int index, float val, bool muted, Target to = UNDO);
     void pushOscillator(int scene, int oscnum);
+    void pushWavetable(int scene, int oscnum);
+    void pushOscillatorExtraConfig(int scene, int oscnum);
+
     void pushStepSequencer(int scene, int lfoid, const StepSequencerStorage &pushValue);
     void pushMSEG(int scene, int lfoid, const MSEGStorage &pushValue);
     void pushFullLFO(int scene, int lfoid);
