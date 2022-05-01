@@ -4102,6 +4102,20 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             ontoThis.i = ni;
             return true;
         }
+        else
+        {
+            bool isLarger = ni > val_max.f;
+            auto value = isLarger ? val_max.i : val_min.i;
+            float ext_mul = (can_extend_range() && extend_range) ? displayInfo.extendFactor : 1.0;
+            float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
+            float factor = ext_mul * abs_mul;
+            std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
+
+            getSemitonesOrKeys(unit);
+
+            set_error_message(errMsg, std::to_string(value * factor * displayInfo.scale), unit,
+                              isLarger);
+        }
 
         return false;
     }
@@ -4116,6 +4130,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     case DelegatedToFormatter:
     {
         auto ef = dynamic_cast<ParameterExternalFormatter *>(user_data);
+
         if (ef)
         {
             float f;
@@ -4170,15 +4185,15 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
             getSemitonesOrKeys(unit);
 
-            set_error_message(errMsg, to_str(value * factor * displayInfo.scale), unit, isLarger);
+            set_error_message(errMsg, std::to_string(value * factor * displayInfo.scale), unit,
+                              isLarger);
 
             return false;
         }
 
         ontoThis.f = res;
-        return true;
 
-        break;
+        return true;
     }
     case ATwoToTheBx:
     {
@@ -4187,12 +4202,15 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             if ((s[0] >= 'a' && s[0] <= 'g') || (s[0] >= 'A' && s[0] <= 'G'))
             {
                 int oct_offset = 0;
+
                 if (storage)
                 {
                     oct_offset =
                         Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
                 }
+
                 int note = 0, sf = 0;
+
                 if (s[0] >= 'a' && s[0] <= 'g')
                 {
                     note = s[0] - 'a';
@@ -4204,11 +4222,13 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 }
 
                 int octPos = 1;
+
                 while (s[octPos] == '#')
                 {
                     sf++;
                     octPos++;
                 }
+
                 while (s[octPos] == 'b')
                 {
                     sf--;
@@ -4223,24 +4243,28 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 nv = 440.0 * pow(2.0, (mn - 69) / 12.0);
             }
         }
+
         /*
         ** v = a 2^bx
         ** log2(v/a) = bx
         ** log2(v/a)/b = x;
         */
+
         if (nv <= 0 || !std::isfinite(nv))
         {
             return false;
         }
+
         float res = log2f(nv / displayInfo.a) / displayInfo.b;
 
         if (res < val_min.f || res > val_max.f)
         {
             return false;
         }
+
         ontoThis.f = res;
+
         return true;
-        break;
     }
     case Decibel:
     {
@@ -4263,9 +4287,9 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
 
         ontoThis.f = nv;
+
         return true;
     }
-    break;
     }
 
     switch (ctrltype)
@@ -4276,10 +4300,11 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             return false;
         }
+
         ontoThis.f = nv;
+
         return true;
     }
-    break;
     case ct_fmratio:
     {
         if (absolute)
@@ -4287,30 +4312,41 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             float uv = std::atof(c) / 440.f;
             float n = log2(uv) * 12 + 69;
             float bpv = (n - 69) / 69.f;
+
             ontoThis.f = bpv * 16 + 16;
         }
         else
         {
             // In this case we have to set nv differently
             const char *strip = &(c[0]);
+
             while (*strip != '\0' && !std::isdigit(*strip) && *strip != '.')
+            {
                 ++strip;
+            }
 
             // OK so do we contain a /?
             const char *slp;
+
             if ((slp = strstr(strip, "/")) != nullptr)
             {
                 float num = std::atof(strip);
                 float den = std::atof(slp + 1);
+
                 if (den == 0)
+                {
                     nv = 1;
+                }
                 else
+                {
                     nv = num / den;
+                }
             }
             else
             {
                 nv = std::atof(strip);
             }
+
             if (extend_range)
             {
                 if (nv < 1)
@@ -4329,6 +4365,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                     nv = (nv - 1) * 16.f / 31.f + 16;
                 }
             }
+
             ontoThis.f = nv;
         }
     }
@@ -4337,6 +4374,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     default:
         return false;
     }
+
     return true;
 }
 
