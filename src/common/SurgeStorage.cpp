@@ -1028,6 +1028,7 @@ void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)
 
 void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *osc)
 {
+    strncpy(wt->current_filename, wt->queue_filename, 256);
     wt->queue_filename[0] = 0;
     string extension = filename.substr(filename.find_last_of('.'), filename.npos);
     for (unsigned int i = 0; i < extension.length(); i++)

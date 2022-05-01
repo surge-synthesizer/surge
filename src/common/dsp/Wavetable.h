@@ -47,6 +47,7 @@ class Wavetable
     int current_id, queue_id;
     bool refresh_display;
     char queue_filename[256];
+    char current_filename[256];
 };
 
 enum wtflags

@@ -672,6 +672,8 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
 {
     if (id >= 0 && (id < storage->wt_list.size()))
     {
+        if (sge)
+            sge->undoManager()->pushWavetable(scene, oscInScene);
         oscdata->wt.queue_id = id;
     }
 }
@@ -753,6 +755,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
         {
             if (!event.mods.isPopupMenu())
             {
+                if (sge)
+                    sge->undoManager()->pushWavetable(scene, oscInScene);
                 id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
 
                 if (id >= 0)
@@ -769,6 +773,9 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
         {
             if (!event.mods.isPopupMenu())
             {
+                if (sge)
+                    sge->undoManager()->pushWavetable(scene, oscInScene);
+
                 id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
 
                 if (id >= 0)
@@ -1197,8 +1204,8 @@ struct AliasAdditiveEditor : public juce::Component,
                              public Surge::GUI::SkinConsumingComponent,
                              public LongHoldMixin<AliasAdditiveEditor>
 {
-    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc, SurgeGUIEditor *ed)
-        : storage(s), oscdata(osc), sge(ed)
+    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc, SurgeGUIEditor *ed, int sc, int os)
+        : storage(s), oscdata(osc), sge(ed), scene(sc), oscInScene(os)
     {
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
@@ -1211,6 +1218,8 @@ struct AliasAdditiveEditor : public juce::Component,
             };
 
             q->onSetValue = [this, i](auto *T, float f) {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
                 oscdata->extraConfig.data[i] = limitpm1(f);
                 storage->getPatch().isDirty = true;
                 repaint();
@@ -1225,6 +1234,7 @@ struct AliasAdditiveEditor : public juce::Component,
                     fac = 0.01;
                 }
 
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
                 oscdata->extraConfig.data[i] = limitpm1(v + fac * dir);
                 storage->getPatch().isDirty = true;
                 repaint();
@@ -1243,6 +1253,7 @@ struct AliasAdditiveEditor : public juce::Component,
                     val = -1;
                 }
 
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
                 oscdata->extraConfig.data[i] = limitpm1(val);
                 storage->getPatch().isDirty = true;
                 repaint();
@@ -1262,6 +1273,8 @@ struct AliasAdditiveEditor : public juce::Component,
     OscillatorStorage *oscdata;
     SurgeStorage *storage;
     SurgeGUIEditor *sge;
+    int scene;
+    int oscInScene;
 
     std::array<juce::Rectangle<float>, AliasOscillator::n_additive_partials> sliders;
     std::array<std::unique_ptr<OverlayAsAccessibleSlider<AliasAdditiveEditor>>,
@@ -1330,10 +1343,13 @@ struct AliasAdditiveEditor : public juce::Component,
 
         {
             auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
                 for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
                 }
+                storage->getPatch().isDirty = true;
 
                 repaint();
             };
@@ -1343,6 +1359,8 @@ struct AliasAdditiveEditor : public juce::Component,
 
         {
             auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
                 for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
@@ -1352,6 +1370,7 @@ struct AliasAdditiveEditor : public juce::Component,
                         oscdata->extraConfig.data[qq] *= -1.f;
                     }
                 }
+                storage->getPatch().isDirty = true;
 
                 repaint();
             };
@@ -1361,10 +1380,13 @@ struct AliasAdditiveEditor : public juce::Component,
 
         {
             auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
                 for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
                 }
+                storage->getPatch().isDirty = true;
 
                 repaint();
             };
@@ -1374,10 +1396,13 @@ struct AliasAdditiveEditor : public juce::Component,
 
         {
             auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
                 for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
                 }
+                storage->getPatch().isDirty = true;
 
                 repaint();
             };
@@ -1387,10 +1412,13 @@ struct AliasAdditiveEditor : public juce::Component,
 
         {
             auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
                 for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = storage->rand_pm1();
                 }
+                storage->getPatch().isDirty = true;
 
                 repaint();
             };
@@ -1402,6 +1430,8 @@ struct AliasAdditiveEditor : public juce::Component,
 
         {
             auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
                 for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                 {
                     if (oscdata->extraConfig.data[qq] < 0)
@@ -1409,6 +1439,7 @@ struct AliasAdditiveEditor : public juce::Component,
                         oscdata->extraConfig.data[qq] *= -1;
                     }
                 }
+                storage->getPatch().isDirty = true;
 
                 repaint();
             };
@@ -1418,10 +1449,13 @@ struct AliasAdditiveEditor : public juce::Component,
 
         {
             auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
                 for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
                 }
+                storage->getPatch().isDirty = true;
 
                 repaint();
             };
@@ -1431,6 +1465,9 @@ struct AliasAdditiveEditor : public juce::Component,
 
         {
             auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+                storage->getPatch().isDirty = true;
+
                 float pdata[AliasOscillator::n_additive_partials];
 
                 for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
@@ -1476,6 +1513,9 @@ struct AliasAdditiveEditor : public juce::Component,
 
             if (clickedSlider >= 0)
             {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+                storage->getPatch().isDirty = true;
+
                 auto d = (-1.f * event.position.y / getHeight() + 0.5) * 2 *
                          (!event.mods.isCommandDown());
                 oscdata->extraConfig.data[clickedSlider] = limitpm1(d);
@@ -1506,6 +1546,9 @@ struct AliasAdditiveEditor : public juce::Component,
 
         if (clickedSlider >= 0)
         {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+            storage->getPatch().isDirty = true;
+
             oscdata->extraConfig.data[clickedSlider] = 0.f;
 
             repaint();
@@ -1533,6 +1576,9 @@ struct AliasAdditiveEditor : public juce::Component,
 
         if (draggedSlider >= 0)
         {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+            storage->getPatch().isDirty = true;
+
             auto d =
                 (-1.f * event.position.y / getHeight() + 0.5) * 2 * (!event.mods.isCommandDown());
             oscdata->extraConfig.data[draggedSlider] = limitpm1(d);
@@ -1577,6 +1623,9 @@ struct AliasAdditiveEditor : public juce::Component,
 
         if (draggedSlider >= 0)
         {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+            storage->getPatch().isDirty = true;
+
             auto d = oscdata->extraConfig.data[draggedSlider] + delta;
 
             oscdata->extraConfig.data[draggedSlider] = limitpm1(d);
@@ -1597,7 +1646,7 @@ void OscillatorWaveformDisplay::showCustomEditor()
     if (oscdata->type.val.i == ot_alias &&
         oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
     {
-        auto ed = std::make_unique<AliasAdditiveEditor>(storage, oscdata, sge);
+        auto ed = std::make_unique<AliasAdditiveEditor>(storage, oscdata, sge, scene, oscInScene);
         ed->setSkin(skin, associatedBitmapStore);
         customEditor = std::move(ed);
     }

@@ -718,6 +718,7 @@ void SurgePatch::init_default_values()
             else
                 osc.wt.queue_id = -1;
             osc.wt.queue_filename[0] = 0;
+            osc.wt.current_filename[0] = 0;
         }
         scene[sc].fm_depth.val.f = -24.f;
         scene[sc].portamento.val.f = scene[sc].portamento.val_min.f;
@@ -1028,6 +1029,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                     scene[sc].osc[osc].wt.queue_id = -1;
                     scene[sc].osc[osc].wt.queue_filename[0] = 0;
                     scene[sc].osc[osc].wt.current_id = -1;
+                    scene[sc].osc[osc].wt.current_filename[0] = 0;
 
                     void *d = (void *)((char *)dr + sizeof(wt_header));
 
