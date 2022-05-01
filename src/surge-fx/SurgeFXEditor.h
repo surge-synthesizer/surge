@@ -39,6 +39,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     std::unique_ptr<juce::Component> picker;
     void makeMenu();
     void showMenu();
+    void toggleLatencyMode();
 
     //==============================================================================
     void paint(juce::Graphics &) override;
