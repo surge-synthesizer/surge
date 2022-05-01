@@ -166,11 +166,11 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
     pitchlag.startValue(pitch);
     sync.newValue(std::max(0.f, localcopy[oscdata->p[mo_sync].param_id_in_scene].f));
 
+    float absOff = 0;
     if (oscdata->p[mo_unison_detune].absolute)
     {
-        float nSpread = ud * 16 * storage->note_to_pitch_inv(pitch) / Tunings::MIDI_0_FREQ * 12;
-        ud = nSpread;
-        // TODO: Tuning Awareness alas
+        absOff = ud * 16;
+        ud = 0;
     }
 
     for (int u = 0; u < n_unison; ++u)
@@ -178,10 +178,13 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
         auto dval = driftLFO[u].next();
         auto lfodetune = drift * dval;
 
-        dpbase[u].newValue(
-            std::min(0.5, pitch_to_dphase(pitchlag.v + lfodetune + ud * unisonOffsets[u])));
-        dspbase[u].newValue(std::min(
-            0.5, pitch_to_dphase(pitchlag.v + lfodetune + sync.v + ud * unisonOffsets[u])));
+        dpbase[u].newValue(std::min(
+            0.5, pitch_to_dphase_with_absolute_offset(
+                     pitchlag.v + lfodetune + ud * unisonOffsets[u], absOff * unisonOffsets[u])));
+        dspbase[u].newValue(
+            std::min(0.5, pitch_to_dphase_with_absolute_offset(pitchlag.v + lfodetune + sync.v +
+                                                                   ud * unisonOffsets[u],
+                                                               absOff * unisonOffsets[u])));
     }
 
     auto subdt = drift * driftLFO[0].val();
