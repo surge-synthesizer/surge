@@ -409,11 +409,19 @@ class Parameter
     const char *get_storage_name() const;
     const wchar_t *getUnit() const;
     void get_display(char *txt, bool external = false, float ef = 0.f) const;
+
     enum ModulationDisplayMode
     {
         TypeIn,
         Menu,
         InfoWindow
+    };
+
+    enum ErrorMessageMode
+    {
+        IsSmaller,
+        IsLarger,
+        Special,
     };
 
     void get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
@@ -432,7 +440,7 @@ class Parameter
     bool set_value_from_string(const std::string &s, std::string &errMsg);
     bool set_value_from_string_onto(const std::string &s, pdata &ontoThis, std::string &errMsg);
     void set_error_message(std::string &errMsg, const std::string value, const std::string unit,
-                           const bool isLarger);
+                           const ErrorMessageMode mode);
     void set_extend_range(bool er);
 
     /*

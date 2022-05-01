@@ -262,8 +262,8 @@ bool Parameter::can_extend_range() const
     case ct_twist_aux_mix:
     case ct_countedset_percent_extendable:
 
-    // Extendable integers are really rare and special. If you add one you may
-    // want to chat on discord...
+    // Extendable integers are really rare and special.
+    // If you add one, you may want to chat with us on Discord!
     case ct_pbdepth:
         return true;
     }
@@ -1153,7 +1153,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_sendlevel:
         val_min.f = 0;
-        val_max.f = 1.5874;
+        val_max.f = 1.5874011517f; // +12 dB
         valtype = vt_float;
         val_default.f = 0;
         break;
@@ -1164,7 +1164,7 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     case ct_airwindows_param:
-    case ct_airwindows_param_bipolar: // it's still 0,1; this is just a display thing
+    case ct_airwindows_param_bipolar: // it's still 0 ... 1 - this is just a display thing
         val_min.f = 0;
         val_max.f = 1;
         valtype = vt_float;
@@ -1537,6 +1537,8 @@ void Parameter::set_type(int ctrltype)
         displayInfo.b = std::log2(4.5f / 0.5f);
         displayInfo.decimals = 2;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "s");
+    case ct_pbdepth:
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "keys");
     }
 
     switch (ctrltype)
@@ -1674,13 +1676,14 @@ void Parameter::bound_value(bool force_integer)
         {
             if (val.f != 0)
             {
-                val.f = db_to_amp(round(
-                    amp_to_db(val.f))); // we use round instead of floor because with some params
-                                        // it wouldn't snap to max value (i.e. send levels)
+                // we use round instead of floor because with some params
+                // it wouldn't snap to max value (i.e. send levels)
+                val.f = db_to_amp(round(amp_to_db(val.f)));
             }
             else
             {
-                val.f = -INFINITY; // this is so that the popup shows -inf proper instead of -192.0
+                val.f =
+                    -INFINITY; // this is so that the popup shows -inf proper instead of -192.0 dB
             }
             break;
         }
@@ -3016,6 +3019,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                     f = (f + 1) * 0.5;
                 }
             }
+
             if (can_extend_range())
             {
                 f = get_extended(f);
@@ -3026,6 +3030,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                 f = displayInfo.absoluteFactor * f;
                 u = displayInfo.absoluteUnit;
             }
+
             snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals),
                      displayInfo.scale * f, u.c_str());
 
@@ -3034,18 +3039,20 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             {
                 strxcpy(txt, displayInfo.maxLabel, TXT_SIZE);
             }
+
             if (f <= val_min.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinString))
             {
                 strxcpy(txt, displayInfo.minLabel, TXT_SIZE);
             }
+
             if (f == val_default.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomDefaultString))
             {
                 strxcpy(txt, displayInfo.defLabel, TXT_SIZE);
             }
+
             return;
-            break;
         }
         case ATwoToTheBx:
         {
@@ -3054,6 +3061,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                 std::string res =
                     tempoSyncNotationValue(displayInfo.tempoSyncNotationMultiplier * f);
                 snprintf(txt, TXT_SIZE, "%s", res.c_str());
+
                 return;
             }
 
@@ -3075,11 +3083,13 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                     snprintf(txt, TXT_SIZE, "%s", displayInfo.maxLabel);
                     return;
                 }
+
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxValue)
                 {
                     dval = displayInfo.maxLabelValue;
                 }
             }
+
             if (f <= val_min.f)
             {
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinString)
@@ -3087,24 +3097,30 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                     snprintf(txt, TXT_SIZE, "%s", displayInfo.minLabel);
                     return;
                 }
+
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinValue)
                 {
                     dval = displayInfo.minLabelValue;
                 }
             }
+
             snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals), dval,
                      u.c_str());
+
             return;
-            break;
         }
         case Decibel:
         {
             if (f == 0)
+            {
                 snprintf(txt, TXT_SIZE, "-inf dB");
+            }
             else
+            {
                 snprintf(txt, TXT_SIZE, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(f));
+            }
+
             return;
-            break;
         }
         }
 
@@ -3181,9 +3197,9 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         case ct_pbdepth:
         {
             if (extend_range)
-                snprintf(txt, TXT_SIZE, "%0.2f Keys", i * 1.f / 100);
+                snprintf(txt, TXT_SIZE, "%0.2f keys", i * 1.f / 100);
             else
-                snprintf(txt, TXT_SIZE, "%i Keys", i);
+                snprintf(txt, TXT_SIZE, "%i keys", i);
         }
         break;
         case ct_midikey_or_channel:
@@ -3933,17 +3949,24 @@ bool Parameter::can_setvalue_from_string() const
     case ct_spring_decay:
     {
         return true;
-        break;
     }
     }
     return false;
 }
 
 void Parameter::set_error_message(std::string &errMsg, const std::string value,
-                                  const std::string unit, const bool isLarger)
+                                  const std::string unit, const ErrorMessageMode mode)
 {
-    errMsg =
-        fmt::format("Input can't be {} than {} {}!", isLarger ? "larger" : "smaller", value, unit);
+    if (mode == ErrorMessageMode::Special)
+    {
+        errMsg = value;
+    }
+    else
+    {
+        errMsg =
+            fmt::format("Input can't be {} than {} {}!",
+                        (mode == ErrorMessageMode::IsLarger) ? "larger" : "smaller", value, unit);
+    }
 }
 
 bool Parameter::set_value_from_string(const std::string &s, std::string &errMsg)
@@ -3982,8 +4005,12 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             if (sm == sm_chsplit)
             {
                 const char *strip = &(c[0]);
+
                 while (*strip != '\0' && !std::isdigit(*strip))
+                {
                     ++strip;
+                }
+
                 ni = (std::atof(strip) * 8) - 1;
 
                 // breaks case after channel number input, but if we're in split mode we fall
@@ -4039,8 +4066,8 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 }
 
                 // finally, octave number
-                auto q = lowerS.substr(n, lowerS.length() -
-                                              n); // trim the fat to the left of current char
+                // trim the fat to the left of current char
+                auto q = lowerS.substr(n, lowerS.length() - n);
 
                 int oct;
                 try
@@ -4049,7 +4076,8 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 }
                 catch (std::invalid_argument const &)
                 {
-                    oct = -10; // throw things out of range on invalid input
+                    // throw things out of range on invalid input
+                    oct = -10;
                 }
 
                 // construct the integer note value
@@ -4071,6 +4099,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 {
                     auto a = Tunings::toneFromString(s);
                     auto c = a.cents;
+
                     ni = (int)std::round(c);
                 }
                 catch (const Tunings::TuningError &e)
@@ -4100,11 +4129,13 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         if (ni >= val_min.i && ni <= val_max.i)
         {
             ontoThis.i = ni;
+
             return true;
         }
         else
         {
-            bool isLarger = ni > val_max.f;
+            ErrorMessageMode isLarger =
+                (ni > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
             auto value = isLarger ? val_max.i : val_min.i;
             float ext_mul = (can_extend_range() && extend_range) ? displayInfo.extendFactor : 1.0;
             float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
@@ -4113,7 +4144,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
             getSemitonesOrKeys(unit);
 
-            set_error_message(errMsg, std::to_string(value * factor * displayInfo.scale), unit,
+            set_error_message(errMsg, fmt::format("{:g}", value * factor * displayInfo.scale), unit,
                               isLarger);
         }
 
@@ -4134,13 +4165,14 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         if (ef)
         {
             float f;
+
             if (ef->stringToValue(this, c, f))
             {
                 ontoThis.f = limit_range(f, val_min.f, val_max.f);
                 return true;
             }
         }
-        // break; DO NOT break. Fall back
+        // DO NOT break. Fall through!
     }
     case LinearWithScale:
     {
@@ -4168,24 +4200,27 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
         float factor = ext_mul * abs_mul;
         float res = nv / displayInfo.scale / factor;
+        float minval = val_min.f;
 
         if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
         {
             if (!is_bipolar())
             {
                 res = res * 2 - 1;
+                minval = 0.f;
             }
         }
 
         if (res < val_min.f || res > val_max.f)
         {
-            bool isLarger = res > val_max.f;
-            auto value = isLarger ? val_max.f : val_min.f;
+            ErrorMessageMode isLarger =
+                (res > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
+            auto value = isLarger ? val_max.f : minval;
             std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
 
             getSemitonesOrKeys(unit);
 
-            set_error_message(errMsg, std::to_string(value * factor * displayInfo.scale), unit,
+            set_error_message(errMsg, fmt::format("{:g}", value * factor * displayInfo.scale), unit,
                               isLarger);
 
             return false;
@@ -4252,6 +4287,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
         if (nv <= 0 || !std::isfinite(nv))
         {
+            set_error_message(errMsg, "Invalid value input!", "", ErrorMessageMode::Special);
             return false;
         }
 
@@ -4259,6 +4295,15 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
         if (res < val_min.f || res > val_max.f)
         {
+            ErrorMessageMode isLarger =
+                (res > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
+            auto value = isLarger ? val_max.f : val_min.f;
+            std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
+
+            set_error_message(errMsg,
+                              fmt::format("{:g}", displayInfo.a * pow(2.0, value * displayInfo.b)),
+                              unit, isLarger);
+
             return false;
         }
 
@@ -4268,13 +4313,16 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     }
     case Decibel:
     {
-        // typing in the maximum value for send levels (12 dB) didn't work
-        // probably because of float precision (or lack thereof)
-        // so special case them here
-        // better solution welcome!
-        if (nv >= 12)
+        if (std::isnan(nv) || (std::isinf(nv) && nv > 0))
         {
-            nv = limit_range((float)db_to_amp(nv), val_min.f, val_max.f);
+            set_error_message(errMsg, "Invalid value input!", "", ErrorMessageMode::Special);
+
+            return false;
+        }
+
+        if (std::isinf(nv) && nv < 0)
+        {
+            nv = 0.f;
         }
         else
         {
@@ -4283,6 +4331,12 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
         if (nv < val_min.f || nv > val_max.f)
         {
+            ErrorMessageMode isLarger =
+                (nv > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
+            auto value = isLarger ? val_max.f : val_min.f;
+
+            set_error_message(errMsg, fmt::format("{:g}", amp_to_db(value)), "dB", isLarger);
+
             return false;
         }
 
