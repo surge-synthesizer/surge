@@ -100,11 +100,11 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
 {
     float ud = oscdata->p[ao_unison_detune].get_extended(
         localcopy[oscdata->p[ao_unison_detune].param_id_in_scene].f);
+    float absOff = 0;
     if (oscdata->p[ao_unison_detune].absolute)
     {
-        float nSpread = ud * 16 * storage->note_to_pitch_inv(pitch) / Tunings::MIDI_0_FREQ * 12;
-        ud = nSpread;
-        // TODO: Tuning Awareness alas
+        absOff = ud * 16;
+        ud = 0;
     }
 
     if (do_FM)
@@ -283,7 +283,10 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
     for (int u = 0; u < n_unison; ++u)
     {
         const float lfodrift = drift * driftLFO[u].next();
-        phase_increments[u] = pitch_to_dphase(pitch + lfodrift + ud * unisonOffsets[u]) * two32;
+        phase_increments[u] =
+            pitch_to_dphase_with_absolute_offset(pitch + lfodrift + ud * unisonOffsets[u],
+                                                 absOff * unisonOffsets[u]) *
+            two32;
     }
 
     for (int i = 0; i < BLOCK_SIZE_OS; ++i)

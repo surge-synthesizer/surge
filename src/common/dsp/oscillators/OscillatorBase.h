@@ -49,6 +49,12 @@ class alignas(16) Oscillator
         return (double)(Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) * dsamplerate_os_inv);
     }
 
+    inline double pitch_to_dphase_with_absolute_offset(float x, float off)
+    {
+        return (double)(std::max(1.0, Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) + off) *
+                        dsamplerate_os_inv);
+    }
+
     virtual void setGate(bool g) { gate = g; }
 
     virtual void handleStreamingMismatches(int streamingRevision, int currentSynthStreamingRevision)
