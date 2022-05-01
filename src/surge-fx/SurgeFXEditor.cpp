@@ -432,12 +432,40 @@ void SurgefxAudioProcessorEditor::showMenu()
                     setEffectType(m.fxtype);
             });
     }
+    p.addSeparator();
+    auto sm = juce::PopupMenu();
+    sm.addItem("Zero Latency Mode", true, processor.nonLatentBlockMode,
+               [this]() { toggleLatencyMode(); });
+    p.addSubMenu("Settings", sm);
+
     auto o = juce::PopupMenu::Options();
     auto r = juce::Rectangle<int>().withPosition(
         localPointToGlobal(picker->getBounds().getBottomLeft()));
     o = o.withTargetScreenArea(r).withPreferredPopupDirection(
         juce::PopupMenu::Options::PopupDirection::downwards);
     p.showMenuAsync(o);
+}
+
+void SurgefxAudioProcessorEditor::toggleLatencyMode()
+{
+    auto clm = processor.nonLatentBlockMode;
+    Surge::Storage::updateUserDefaultValue(processor.storage.get(),
+                                           Surge::Storage::FXUnitAssumeFixedBlock, !clm);
+    processor.nonLatentBlockMode = !clm;
+
+    std::ostringstream oss;
+    oss << "You have changed the latency settings on the Surge XT Effects plugin. "
+        << "You need to re-load your DAW project for this to take effect. "
+        << (clm ? "You have set the plugin to have 32 samples latency and work with variable "
+                  "blocks. "
+                : "You have set the plugin to have no latency but require fixed blocks of at least "
+                  "size 32. "
+                  "Note that some DAWs - especially FL - use variable sized blocks by default so "
+                  "in this mode "
+                  "you must update your DAW settings to send fixed blocks of a multiple of 32.");
+
+    juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,
+                                           "Latency Settings Changed", oss.str());
 }
 
 struct FxFocusTrav : public juce::ComponentTraverser

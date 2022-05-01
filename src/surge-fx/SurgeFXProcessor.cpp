@@ -11,6 +11,7 @@
 #include "SurgeFXProcessor.h"
 #include "SurgeFXEditor.h"
 #include "DebugHelpers.h"
+#include "UserDefaults.h"
 
 //==============================================================================
 SurgefxAudioProcessor::SurgefxAudioProcessor()
@@ -19,12 +20,16 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
                          .withInput("Sidechain", juce::AudioChannelSet::stereo(), true))
 {
+    storage.reset(new SurgeStorage());
+    storage->userDefaultsProvider->addOverride(Surge::Storage::HighPrecisionReadouts, false);
+
     nonLatentBlockMode = !juce::PluginHostType().isFruityLoops();
+    nonLatentBlockMode = Surge::Storage::getUserDefaultValue(
+        storage.get(), Surge::Storage::FXUnitAssumeFixedBlock, nonLatentBlockMode);
+
     setLatencySamples(nonLatentBlockMode ? 0 : BLOCK_SIZE);
 
     effectNum = fxt_off;
-    storage.reset(new SurgeStorage());
-    storage->userDefaultsProvider->addOverride(Surge::Storage::HighPrecisionReadouts, false);
 
     fxstorage = &(storage->getPatch().fx[0]);
     audio_thread_surge_effect.reset();
