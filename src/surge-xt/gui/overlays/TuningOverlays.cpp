@@ -398,6 +398,10 @@ class RadialScaleGraph : public juce::Component,
                 auto totalR = juce::Rectangle<int>(m, i * (h + m) + m, w - 2 * m, h);
 
                 auto tl = std::make_unique<juce::Label>("tone index");
+                if (skin)
+                {
+                    tl->setFont(skin->fontManager->getLatoAtSize(9));
+                }
                 tl->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
                 tl->setBounds(totalR.withWidth(labw));
                 tl->setJustificationType(juce::Justification::centredRight);
@@ -444,10 +448,15 @@ class RadialScaleGraph : public juce::Component,
                     auto te = std::make_unique<juce::TextEditor>("tone");
                     te->setBounds(totalR.withTrimmedLeft(labw + m).withTrimmedRight(h + m));
                     te->setJustification((juce::Justification::verticallyCentred));
+                    if (skin)
+                    {
+                        te->setFont(skin->fontManager->getFiraMonoAtSize(9));
+                    }
                     te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
                     te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
                     te->setEnabled(i != 0);
                     te->addListener(this);
+
                     te->onEscapeKey = [this]() { giveAwayKeyboardFocus(); };
                     toneInterior->addAndMakeVisible(*te);
                     toneEditors.push_back(std::move(te));
@@ -536,13 +545,14 @@ class RadialScaleGraph : public juce::Component,
         for (const auto &te : toneEditors)
         {
             te->setFont(skin->fontManager->getFiraMonoAtSize(9));
+            // Work around a juce feature that replacing a font only works on new text
             auto gt = te->getText();
             te->setText("val", juce::dontSendNotification);
-
             te->setText(gt, juce::dontSendNotification);
         }
 
         setNotesOn(bitset);
+        repaint();
     }
 
   private:
@@ -776,7 +786,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
                 g.addTransform(t);
                 g.setColour(juce::Colours::white);
-                g.setFont(0.1);
+                g.setFont(skin->fontManager->getLatoAtSize(0.1));
                 auto msg = fmt::format("{:.2f}", intervals[i]);
                 auto tr = juce::Rectangle<float>(0.f, -0.1f, 0.6f, 0.2f);
                 g.setColour(juce::Colours::white);
@@ -794,7 +804,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
                 g.addTransform(t);
                 g.setColour(juce::Colours::white);
-                g.setFont(0.1);
+                g.setFont(skin->fontManager->getLatoAtSize(0.1));
                 auto msg = fmt::format("{:.2f}", intervals[i]);
                 auto tr = juce::Rectangle<float>(-0.3f, -0.2f, 0.6f, 0.2f);
                 g.setColour(juce::Colours::white);
@@ -814,7 +824,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         else
             g.setColour(juce::Colour(200, 200, 240));
         juce::Rectangle<float> textPos(0, -0.1, 0.1, 0.1);
-        g.setFont(0.1);
+        g.setFont(skin->fontManager->getLatoAtSize(0.1));
         g.drawText(juce::String(i), textPos, juce::Justification::centred, 1);
         g.restoreState();
     }
@@ -1888,6 +1898,12 @@ struct SCLKBMDisplay : public juce::Component,
             r->setColour(juce::TextEditor::ColourIds::textColourId,
                          skin->getColor(qclr::ToneLabelText));
             r->applyColourToAllText(skin->getColor(qclr::ToneLabelText), true);
+
+            // Work around a buglet that the text editor applies fonts ontly to newly inserted
+            // text after setFont
+            auto t = r->getText();
+            r->setText("--", juce::dontSendNotification);
+            r->setText(t, juce::dontSendNotification);
         }
 
         scl->setFont(skin->fontManager->getFiraMonoAtSize(9));
