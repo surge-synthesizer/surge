@@ -33,8 +33,6 @@ void Surge::GUI::loadTypefacesFromPath(const fs::path &p,
 
                 auto tf = juce::Typeface::createSystemTypefaceFor((void *)(&contents[0]),
                                                                   contents.size());
-                std::cout << path_to_string(d.stem()) << " " << path_to_string(d.filename()) << " "
-                          << path_to_string(d) << std::endl;
                 result[key] = tf;
             }
         }
