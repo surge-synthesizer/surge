@@ -1157,6 +1157,8 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
     {
         bool enable = true;
         auto txt = pname;
+        if (!typeAhead->lastSearch.empty())
+            txt = typeAhead->lastSearch;
 
         storage->initializePatchDb();
 
@@ -1193,6 +1195,10 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
         {
             juce::Timer::callAfterDelay(250, [this]() { this->enableTypeAheadIfReady(); });
         }
+        else
+        {
+            typeAhead->searchAndShowLBox();
+        }
     }
     else
     {
@@ -1211,6 +1217,8 @@ void PatchSelector::enableTypeAheadIfReady()
 
     bool enable = true;
     auto txt = pname;
+    if (!typeAhead->lastSearch.empty())
+        txt = typeAhead->lastSearch;
 
     if (storage->patchDB->numberOfJobsOutstanding() > 0)
     {
@@ -1233,6 +1241,7 @@ void PatchSelector::enableTypeAheadIfReady()
     {
         typeAhead->grabKeyboardFocus();
         typeAhead->selectAll();
+        typeAhead->searchAndShowLBox();
     }
     else
     {
