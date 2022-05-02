@@ -306,7 +306,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxTempoSync[i].setAccessible(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       juce::NotificationType::dontSendNotification);
-        st(fxTempoSync[i], nm + " Temposynced");
+        st(fxTempoSync[i], nm + " Tempo Synced");
         fxDeactivated[i].setEnabled(false);
 
         fxExtended[i].setEnabled(processor.canExtend(i));
@@ -318,7 +318,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxAbsoluted[i].setToggleState(processor.getFXStorageAbsolute(i),
                                       juce::NotificationType::dontSendNotification);
         fxAbsoluted[i].setAccessible(processor.canAbsolute(i));
-        st(fxAbsoluted[i], nm + " Absoluted");
+        st(fxAbsoluted[i], nm + " Absolute");
         fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
                                         juce::NotificationType::dontSendNotification);
@@ -434,7 +434,7 @@ void SurgefxAudioProcessorEditor::showMenu()
     }
     p.addSeparator();
     auto sm = juce::PopupMenu();
-    sm.addItem("Zero Latency Mode", true, processor.nonLatentBlockMode,
+    sm.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
                [this]() { toggleLatencyMode(); });
     p.addSubMenu("Settings", sm);
 
@@ -454,18 +454,17 @@ void SurgefxAudioProcessorEditor::toggleLatencyMode()
     processor.nonLatentBlockMode = !clm;
 
     std::ostringstream oss;
-    oss << "You have changed the latency settings on the Surge XT Effects plugin. "
-        << "You need to re-load your DAW project for this to take effect. "
-        << (clm ? "You have set the plugin to have 32 samples latency and work with variable "
-                  "blocks. "
-                : "You have set the plugin to have no latency but require fixed blocks of at least "
-                  "size 32. "
-                  "Note that some DAWs - especially FL - use variable sized blocks by default so "
-                  "in this mode "
-                  "you must update your DAW settings to send fixed blocks of a multiple of 32.");
+    oss << "Please restart the DAW transport or reload your DAW project for this setting to take "
+           "effect!\n\n"
+        << (clm ? "The processing latency is now 32 samples, and variable size audio buffers are "
+                  "supported."
+                : "The processing latency is now disabled, so fixed size buffers of at least "
+                  "32 samples are required. Note that some DAWs (particularly FL Studio) use "
+                  "variable size buffers by default, so in this mode you have to adjust the plugin "
+                  "processing options in your DAW to send fixed size audio buffers.");
 
     juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,
-                                           "Latency Settings Changed", oss.str());
+                                           "Latency Setting Changed", oss.str());
 }
 
 struct FxFocusTrav : public juce::ComponentTraverser

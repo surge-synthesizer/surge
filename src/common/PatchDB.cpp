@@ -643,14 +643,14 @@ CREATE TABLE IF NOT EXISTS Favorites (
                     {
                         std::ostringstream oss;
                         oss << le.what() << "\n"
-                            << "Locking errors occur when two Surge instances try"
-                               " to write to the Patch Database at the same time. In most cases we "
-                               "will retry successfully. Please dismiss this error while we retry "
-                               "up to 10 more times. (This is attempt "
-                            << lock_retries << ")";
-                        storage->reportError(oss.str(), "Patch DB Locked");
-                        // OK so in this case, we reload the doThis onto the front of the queue
-                        // and sleep
+                            << "Patch database is locked for writing. Most likely, another Surge "
+                               "XT instance has exclusive write access. We will attempt to retry "
+                               "writing up to 10 more times. "
+                               "Please dismiss this error in the meantime!\n\n Attempt: "
+                            << lock_retries;
+                        storage->reportError(oss.str(), "Patch Database Locked");
+                        // OK so in this case, we reload doThis onto the front of the queue and
+                        // sleep
                         lock_retries++;
                         if (lock_retries < 10)
                         {
@@ -667,8 +667,8 @@ CREATE TABLE IF NOT EXISTS Favorites (
                         else
                         {
                             storage->reportError(
-                                "Database is locked and unwritable after multiple backoffs",
-                                "Patch DB");
+                                "Database is locked and unwritable after multiple attempts!",
+                                "Patch Database Locked");
                         }
                     }
                     catch (SQL::Exception &e)

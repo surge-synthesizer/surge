@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include "SurgeStorage.h"
 #include "UserDefaults.h"
 
@@ -8,8 +7,6 @@ namespace Surge
 {
 namespace GUI
 {
-std::string toOSCase(const std::string &menuName);
-
 extern bool showCursor(SurgeStorage *storage);
 extern bool allowKeyboardEdits(SurgeStorage *storage);
 extern bool isTouchMode(SurgeStorage *storage);

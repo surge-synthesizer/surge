@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 /*
  * There are a number of places in Surge where raw C strings are copied around.
  * Ideally these would be replaced with something safer, but for the time being, a replacement
@@ -35,3 +37,33 @@ static inline void strxcpy(char *const dst, const char *const src, const size_t 
  * bytes now also use this constant.
  */
 #define TXT_SIZE 256
+
+namespace Surge
+{
+namespace GUI
+{
+/*
+ * Used to convert letter case for menu entries
+ * Input string should be macOS style (Menu Entry is Like This)
+ * Output is string in Windows style (Menu entry is like this), or unmodified if we're on Mac
+ */
+inline std::string toOSCase(const std::string &iMenuName)
+{
+#if WINDOWS
+    auto menuName = iMenuName;
+
+    for (auto i = 1; i < menuName.length() - 1; ++i)
+    {
+        if (!(isupper(menuName[i]) && (isupper(menuName[i + 1]) || !isalpha(menuName[i + 1]))))
+        {
+            menuName[i] = std::tolower(menuName[i]);
+        }
+    }
+
+    return menuName;
+#else
+    return iMenuName;
+#endif
+}
+} // namespace GUI
+} // namespace Surge
