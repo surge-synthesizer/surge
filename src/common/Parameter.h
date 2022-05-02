@@ -338,11 +338,12 @@ struct ModulationDisplayInfoWindowStrings
 class SurgeStorage;
 
 /*
-** WARNING WARNING
+** WARNING!
 **
 ** Parameter is copied with memcpy
-** Don't have complex types as members therefore
+** Therefore, don't have complex types as members!
 */
+
 class Parameter
 {
   public:
@@ -442,6 +443,7 @@ class Parameter
     void set_error_message(std::string &errMsg, const std::string value, const std::string unit,
                            const ErrorMessageMode mode);
     void set_extend_range(bool er);
+    double get_note_number_from_string(const std::string s);
 
     /*
      * These two functions convert the modulation depth to a -1,1 range appropriate

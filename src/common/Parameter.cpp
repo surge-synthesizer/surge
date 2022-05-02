@@ -2883,8 +2883,15 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
     case ct_freq_vocoder_low:
     case ct_freq_vocoder_high:
     case ct_freq_ringmod:
+    case ct_fmratio:
     {
         float f = val.f;
+
+        if (ctrltype == ct_fmratio && absolute)
+        {
+            f = 69 * ((f - 16.0) / 16.0);
+        }
+
         int i_value = round(f) + ((ctrltype != ct_freq_ringmod) ? 69 : 0);
         int oct_offset = 1;
         char notename[16];
@@ -2895,6 +2902,11 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
         }
 
         snprintf(txt, TXT_SIZE, "~%s", get_notename(notename, i_value, oct_offset));
+
+        if (ctrltype == ct_fmratio && !absolute)
+        {
+            snprintf(txt, TXT_SIZE, "");
+        }
 
         break;
     }
@@ -3130,9 +3142,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         {
             if (absolute)
             {
-                /*
-                 * OK so I am 0 to 32. So let's define a note
-                 */
+                // OK so I am 0 to 32. So let's define a note
                 float bpv = (f - 16.0) / 16.0;
                 auto note = 69 + 69 * bpv;
                 auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
@@ -3954,6 +3964,51 @@ bool Parameter::can_setvalue_from_string() const
     return false;
 }
 
+double Parameter::get_note_number_from_string(const std::string s)
+{
+    if ((s[0] >= 'a' && s[0] <= 'g') || (s[0] >= 'A' && s[0] <= 'G'))
+    {
+        int note = 0, sf = 0, octPos = 1, octOffset = 0;
+
+        if (storage)
+        {
+            octOffset = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
+        }
+
+        if (s[0] >= 'a' && s[0] <= 'g')
+        {
+            note = s[0] - 'a';
+        }
+
+        if (s[0] >= 'A' && s[0] <= 'G')
+        {
+            note = s[0] - 'A';
+        }
+
+        while (s[octPos] == '#')
+        {
+            sf++;
+            octPos++;
+        }
+
+        while (s[octPos] == 'b')
+        {
+            sf--;
+            octPos++;
+        }
+
+        std::vector<int> df6 = {9, 11, 0, 2, 4, 5, 7};
+        auto oct = std::atoi(s.c_str() + octPos) + octOffset;
+        auto mn = df6[note] + (oct * 12) + sf;
+
+        return 440.0 * pow(2.0, (mn - 69) / 12.0);
+    }
+    else
+    {
+        return 0.0;
+    }
+}
+
 void Parameter::set_error_message(std::string &errMsg, const std::string value,
                                   const std::string unit, const ErrorMessageMode mode)
 {
@@ -4136,15 +4191,15 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             ErrorMessageMode isLarger =
                 (ni > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
-            auto value = isLarger ? val_max.i : val_min.i;
             float ext_mul = (can_extend_range() && extend_range) ? displayInfo.extendFactor : 1.0;
             float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
             float factor = ext_mul * abs_mul;
+            auto bound = isLarger ? val_max.i : val_min.i;
             std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
 
             getSemitonesOrKeys(unit);
 
-            set_error_message(errMsg, fmt::format("{:g}", value * factor * displayInfo.scale), unit,
+            set_error_message(errMsg, fmt::format("{:g}", bound * factor * displayInfo.scale), unit,
                               isLarger);
         }
 
@@ -4215,12 +4270,12 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             ErrorMessageMode isLarger =
                 (res > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
-            auto value = isLarger ? val_max.f : minval;
+            auto bound = isLarger ? val_max.f : minval;
             std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
 
             getSemitonesOrKeys(unit);
 
-            set_error_message(errMsg, fmt::format("{:g}", value * factor * displayInfo.scale), unit,
+            set_error_message(errMsg, fmt::format("{:g}", bound * factor * displayInfo.scale), unit,
                               isLarger);
 
             return false;
@@ -4234,49 +4289,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     {
         if (displayInfo.supportsNoteName)
         {
-            if ((s[0] >= 'a' && s[0] <= 'g') || (s[0] >= 'A' && s[0] <= 'G'))
-            {
-                int oct_offset = 0;
-
-                if (storage)
-                {
-                    oct_offset =
-                        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
-                }
-
-                int note = 0, sf = 0;
-
-                if (s[0] >= 'a' && s[0] <= 'g')
-                {
-                    note = s[0] - 'a';
-                }
-
-                if (s[0] >= 'A' && s[0] <= 'G')
-                {
-                    note = s[0] - 'A';
-                }
-
-                int octPos = 1;
-
-                while (s[octPos] == '#')
-                {
-                    sf++;
-                    octPos++;
-                }
-
-                while (s[octPos] == 'b')
-                {
-                    sf--;
-                    octPos++;
-                }
-
-                auto oct = std::atoi(s.c_str() + octPos) + oct_offset;
-
-                std::vector<int> df6 = {9, 11, 0, 2, 4, 5, 7};
-
-                auto mn = df6[note] + (oct)*12 + sf;
-                nv = 440.0 * pow(2.0, (mn - 69) / 12.0);
-            }
+            nv = get_note_number_from_string(s);
         }
 
         /*
@@ -4297,11 +4310,11 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             ErrorMessageMode isLarger =
                 (res > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
-            auto value = isLarger ? val_max.f : val_min.f;
+            auto bound = isLarger ? val_max.f : val_min.f;
             std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
 
             set_error_message(errMsg,
-                              fmt::format("{:g}", displayInfo.a * pow(2.0, value * displayInfo.b)),
+                              fmt::format("{:g}", displayInfo.a * pow(2.0, bound * displayInfo.b)),
                               unit, isLarger);
 
             return false;
@@ -4333,9 +4346,9 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             ErrorMessageMode isLarger =
                 (nv > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
-            auto value = isLarger ? val_max.f : val_min.f;
+            auto bound = isLarger ? val_max.f : val_min.f;
 
-            set_error_message(errMsg, fmt::format("{:g}", amp_to_db(value)), "dB", isLarger);
+            set_error_message(errMsg, fmt::format("{:g}", amp_to_db(bound)), "dB", isLarger);
 
             return false;
         }
@@ -4352,6 +4365,12 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     {
         if (nv < val_min.f || nv > val_max.f)
         {
+            ErrorMessageMode isLarger =
+                (nv > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
+            auto bound = isLarger ? val_max.f : val_min.f;
+
+            set_error_message(errMsg, fmt::format("1 : {:g}", bound), "", isLarger);
+
             return false;
         }
 
@@ -4363,9 +4382,24 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     {
         if (absolute)
         {
-            float uv = std::atof(c) / 440.f;
+            nv = get_note_number_from_string(s);
+
+            float uv = nv / 440.f;
             float n = log2(uv) * 12 + 69;
             float bpv = (n - 69) / 69.f;
+            float value = bpv * 16 + 16;
+
+            if (value < val_min.f || value > val_max.f)
+            {
+                ErrorMessageMode isLarger =
+                    (value > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
+                auto bound = isLarger ? val_max.f : val_min.f;
+                bound = 440.0 * pow(2.0, (69 * (bound - 16.0) / 16.0) / 12);
+
+                set_error_message(errMsg, fmt::format("{:.2f}", bound), "Hz", isLarger);
+
+                return false;
+            }
 
             ontoThis.f = bpv * 16 + 16;
         }
@@ -4418,6 +4452,26 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                     // (nv - 1)/2 + 16 = f
                     nv = (nv - 1) * 16.f / 31.f + 16;
                 }
+            }
+
+            if (nv < val_min.f || nv > val_max.f)
+            {
+                ErrorMessageMode isLarger =
+                    (nv > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
+                auto bound = isLarger ? val_max.f : val_min.f;
+
+                if (extend_range && !isLarger)
+                {
+                    // we can get away with this because we know we're symmetric in this mode
+                    bound = val_max.f;
+                    set_error_message(errMsg, fmt::format("C : 1 / {:.0f}", bound), "", isLarger);
+                }
+                else
+                {
+                    set_error_message(errMsg, fmt::format("C : {:.0f}", bound), "", isLarger);
+                }
+
+                return false;
             }
 
             ontoThis.f = nv;
