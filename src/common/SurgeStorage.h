@@ -869,10 +869,9 @@ class SurgePatch
     // data
     SurgeSceneStorage scene[n_scenes], morphscene;
     FxStorage fx[n_fx_slots];
-    // char name[NAMECHARS];
     int scene_start[n_scenes], scene_size;
-    Parameter scene_active, scenemode, scenemorph,
-        splitpoint; // streaming name for splitpoint is splitkey (due to legacy)
+    // streaming name for splitpoint is splitkey (due to legacy)
+    Parameter scene_active, scenemode, splitpoint;
     Parameter volume;
     Parameter polylimit;
     Parameter fx_bypass, fx_disable;
@@ -990,24 +989,24 @@ class alignas(16) SurgeStorage
   public:
     float audio_in alignas(16)[2][BLOCK_SIZE_OS];
     float audio_in_nonOS alignas(16)[2][BLOCK_SIZE];
-    float audio_otherscene alignas(
-        16)[2][BLOCK_SIZE_OS]; // this will be a pointer to an aligned 2 x BLOCK_SIZE_OS array
-    //	float sincoffset alignas(16)[(FIRipol_M)*FIRipol_N];	// deprecated
+    // this will be a pointer to an aligned 2 x BLOCK_SIZE_OS array
+    float audio_otherscene alignas(16)[2][BLOCK_SIZE_OS];
 
     SurgeStorage(std::string suppliedDataPath = "");
     static std::string skipPatchLoadDataPathSentinel;
 
-    // With XT surgestorage can now keep a cache of errors it reports to the user
+    // In Surge XT, SurgeStorage can now keep a cache of errors it reports to the user
     void reportError(const std::string &msg, const std::string &title);
     struct ErrorListener
     {
-        // This can be called from any thread. Beware. But it is called only
-        // when an error occurs so if you want to be sloppy and just lock that's OK
+        // This can be called from any thread, beware! But it is called only
+        // when an error occursm so if you want to be sloppy and just lock, that's OK
         virtual void onSurgeError(const std::string &msg, const std::string &title) = 0;
     };
     std::unordered_set<ErrorListener *> errorListeners;
-    std::mutex preListenerErrorMutex; // this mutex is ONLY locked in the error path and
-    // when registering a listener (from the UI thread)
+    // this mutex is ONLY locked in the error path and when registering a listener
+    // (from the UI thread)
+    std::mutex preListenerErrorMutex;
     std::vector<std::pair<std::string, std::string>> preListenerErrors;
     void addErrorListener(ErrorListener *l)
     {
@@ -1099,13 +1098,11 @@ class alignas(16) SurgeStorage
     void load_wt(std::string filename, Wavetable *wt, OscillatorStorage *);
     bool load_wt_wt(std::string filename, Wavetable *wt);
     bool load_wt_wt_mem(const char *data, const size_t dataSize, Wavetable *wt);
-    // void load_wt_wav(std::string filename, Wavetable* wt);
     bool load_wt_wav_portable(std::string filename, Wavetable *wt);
     std::string export_wt_wav_portable(std::string fbase, Wavetable *wt);
     void clipboard_copy(int type, int scene, int entry, modsources ms = ms_original);
-    // this function is a bit of a hack to stop me having a reference to a surge synth
-    // here and also stop me having to move all of isValidModulation and its buddies onto
-    // storage
+    // this function is a bit of a hack to stop me having a reference to SurgeSynth here
+    // and also to stop me having to move all of isValidModulation and its buddies onto SurgeStorage
     void clipboard_paste(
         int type, int scene, int entry, modsources ms = ms_original,
         std::function<bool(int, modsources)> isValidModulation = [](auto a, auto b) {
@@ -1114,7 +1111,7 @@ class alignas(16) SurgeStorage
     int get_clipboard_type() const;
     int getAdjacentWaveTable(int id, bool nextPrev) const;
 
-    // The in-memory patch database.
+    // The in-memory patch database
     std::vector<Patch> patch_list;
     std::vector<PatchCategory> patch_category;
     int firstThirdPartyCategory;
@@ -1122,7 +1119,7 @@ class alignas(16) SurgeStorage
     std::vector<int> patchOrdering;
     std::vector<int> patchCategoryOrdering;
 
-    // The in-memory wavetable database.
+    // The in-memory wavetable database
     std::vector<Patch> wt_list;
     std::vector<PatchCategory> wt_category;
     int firstThirdPartyWTCategory;
@@ -1150,7 +1147,6 @@ class alignas(16) SurgeStorage
     void loadMidiMappingByName(std::string name);
     void storeMidiMappingToName(std::string name);
 
-    // float table_sin[512],table_sin_offset[512];
     std::mutex waveTableDataMutex;
     std::recursive_mutex modRoutingMutex;
     Wavetable WindowWT;
@@ -1299,10 +1295,7 @@ class alignas(16) SurgeStorage
         }
         else
         {
-            /*
-             * In this case the mapping happens at the keyboard layer so
-             * don't double-retune it
-             */
+            // In this case the mapping happens at the keyboard layer so don't double-retune it
             return 60;
         }
     }
@@ -1330,13 +1323,13 @@ class alignas(16) SurgeStorage
 
     /*
      * If we tune at keyboard or with MTS, we don't reset the internal tuning table.
-     * Same if we are in standard tuning. So lets have that condition be done once
+     * Same if we are in standard tuning. So let's have that condition be done once
      */
     inline bool tuningTableIs12TET()
     {
         if ((isStandardTuning) ||                           // nothing changed
             (oddsound_mts_client && oddsound_mts_active) || // MTS in command
-            tuningApplicationMode == RETUNE_MIDI_ONLY       // tune the keyboard not the tables
+            tuningApplicationMode == RETUNE_MIDI_ONLY       // tune the keyboard, not the tables
         )
             return true;
         return false;
@@ -1360,7 +1353,7 @@ class alignas(16) SurgeStorage
     std::unordered_map<int, std::string> helpURL_controlgroup;
     std::unordered_map<std::string, std::string> helpURL_paramidentifier;
     std::unordered_map<std::string, std::string> helpURL_specials;
-    // Alternately make this unordered and provide a hash
+    // Alternatively, make this unordered and provide a hash
     std::map<std::pair<std::string, int>, std::string> helpURL_paramidentifier_typespecialized;
 
     int subtypeMemory[n_scenes][n_filterunits_per_scene][sst::filters::num_filter_types];

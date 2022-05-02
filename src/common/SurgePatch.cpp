@@ -60,7 +60,6 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     param_ptr.push_back(scenemode.assign(p_id.next(), 0, "scenemode", "Scene Mode", ct_scenemode,
                                          Surge::Skin::Global::scene_mode, 0, cg_GLOBAL, 0, false,
                                          kHorizontal | kNoPopup));
-    // param_ptr.push_back(scenemorph.assign(p_id.next(),0,"scenemorph","scenemorph",ct_percent,hmargin+gui_sec_width,gui_mid_topbar_y,0,0,0,false,kHorizontal));
 
     param_ptr.push_back(splitpoint.assign(p_id.next(), 0, "splitkey", "Split Point",
                                           ct_midikey_or_channel, Surge::Skin::Scene::splitpoint, 0,
@@ -880,17 +879,6 @@ void SurgePatch::update_controls(
                 }
             }
         }
-    }
-}
-
-void SurgePatch::do_morph()
-{
-    int s = scene_start[0];
-    int n = scene_start[1] - scene_start[0];
-    for (int i = 0; i < n; i++)
-    {
-        //		copy_ptr[i]->morph(copy_ptr[i+n],scenemorph.val.f);
-        scenedata[0][i] = param_ptr[s + i]->morph(param_ptr[s + i + n], scenemorph.val.f);
     }
 }
 

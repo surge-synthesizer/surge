@@ -400,9 +400,6 @@ class Parameter
     Parameter *get_primary_deactivation_driver() const;
 
     void set_type(int ctrltype);
-    void morph(Parameter *a, Parameter *b, float x);
-    //	void morph(parameter *b, float x);
-    pdata morph(Parameter *b, float x);
     const char *get_name() const;
     const char *get_full_name() const;
     void set_name(const char *n); // never change name_storage as it is used for storage/recall
@@ -443,7 +440,7 @@ class Parameter
     void set_error_message(std::string &errMsg, const std::string value, const std::string unit,
                            const ErrorMessageMode mode);
     void set_extend_range(bool er);
-    double get_note_number_from_string(const std::string s);
+    double get_freq_from_note_name(const std::string s);
 
     /*
      * These two functions convert the modulation depth to a -1,1 range appropriate

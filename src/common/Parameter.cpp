@@ -1538,7 +1538,8 @@ void Parameter::set_type(int ctrltype)
         displayInfo.decimals = 2;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "s");
     case ct_pbdepth:
-        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "keys");
+        displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys;
+        break;
     }
 
     switch (ctrltype)
@@ -3146,6 +3147,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                 float bpv = (f - 16.0) / 16.0;
                 auto note = 69 + 69 * bpv;
                 auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
+
                 snprintf(txt, TXT_SIZE, "%.*f Hz", (detailedMode ? 6 : 2), freq);
             }
             else
@@ -3182,22 +3184,26 @@ void Parameter::get_display(char *txt, bool external, float ef) const
     case vt_int:
     {
         if (external)
+        {
             i = Parameter::intUnscaledFromFloat(ef, val_max.i, val_min.i);
+        }
         else
+        {
             i = val.i;
+        }
 
         if (displayType == DelegatedToFormatter)
         {
             float fv = Parameter::intScaledToFloat(i, val_max.i, val_min.i);
-
             char vt[TXT_SIZE];
-
             auto ef = dynamic_cast<ParameterExternalFormatter *>(user_data);
+
             if (ef)
             {
                 if (ef->formatValue(this, fv, vt, TXT_SIZE - 1))
                 {
                     snprintf(txt, TXT_SIZE, "%s", vt);
+
                     return;
                 }
             }
@@ -3206,10 +3212,18 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         {
         case ct_pbdepth:
         {
+            std::string unit;
+
+            getSemitonesOrKeys(unit);
+
             if (extend_range)
-                snprintf(txt, TXT_SIZE, "%0.2f keys", i * 1.f / 100);
+            {
+                snprintf(txt, TXT_SIZE, "%0.2f %s", i * 1.f / 100, unit.c_str());
+            }
             else
-                snprintf(txt, TXT_SIZE, "%i keys", i);
+            {
+                snprintf(txt, TXT_SIZE, "%i %s", i, unit.c_str());
+            }
         }
         break;
         case ct_midikey_or_channel:
@@ -3327,10 +3341,9 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                             case FilterType::fut_resonancewarp_n:
                             case FilterType::fut_resonancewarp_bp:
                             case FilterType::fut_resonancewarp_ap:
-                                // "i & 3" selects the lower two bits that represent the stage
-                                // count.
+                                // "i & 3" selects the lower two bits that represent the stage count
                                 // "(i >> 2) & 3" selects the next two bits that represent the
-                                // saturator.
+                                // saturator
                                 snprintf(txt, TXT_SIZE, "%s %s",
                                          sst::filters::fut_nlf_subtypes[i & 3],
                                          sst::filters::fut_nlf_saturators[(i >> 2) & 3]);
@@ -3345,10 +3358,9 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                                 snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_def_subtypes[i]);
                                 break;
                             case FilterType::fut_tripole:
-                                // "i & 3" selects the lower two bits that represent the filter
-                                // mode.
+                                // "i & 3" selects the lower two bits that represent the filter mode
                                 // "(i >> 2) & 3" selects the next two bits that represent the
-                                // output stage.
+                                // output stage
                                 snprintf(txt, TXT_SIZE, "%s, %s",
                                          sst::filters::fut_tripole_subtypes[i & 3],
                                          sst::filters::fut_tripole_output_stage[(i >> 2) & 3]);
@@ -3474,13 +3486,13 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "LR -> MS -> LR");
+                snprintf(txt, TXT_SIZE, "L-R > M-S > L-R");
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "LR -> MS");
+                snprintf(txt, TXT_SIZE, "L-R > M-S");
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "MS -> LR");
+                snprintf(txt, TXT_SIZE, "M-S > L-R");
                 break;
             }
             break;
@@ -3707,6 +3719,7 @@ float Parameter::get_value_f01() const
         return val.b ? 1.f : 0.f;
         break;
     };
+
     return 0;
 }
 
@@ -3724,6 +3737,7 @@ float Parameter::normalized_to_value(float value) const
         return (value > 0.5f) ? 1.f : 0.f;
         break;
     };
+
     return 0;
 }
 
@@ -3741,6 +3755,7 @@ float Parameter::value_to_normalized(float value) const
         return (value > 0.5) ? 1.f : 0.f;
         break;
     };
+
     return 0;
 }
 
@@ -3762,6 +3777,7 @@ float Parameter::get_default_value_f01() const
         return val_default.b ? 1.f : 0.f;
         break;
     };
+
     return 0;
 }
 
@@ -3779,81 +3795,42 @@ void Parameter::set_value_f01(float v, bool force_integer)
         val.b = (v > 0.5f);
         break;
     }
+
     bound_value(force_integer);
 }
 
 float Parameter::get_modulation_f01(float mod) const
 {
     if (ctrltype == ct_none)
+    {
         return 0;
+    }
+
     if (valtype != vt_float)
+    {
         return 0;
-    //	float v = ((val.f+mod)-val_min.f)/(val_max.f - val_min.f);
+    }
+
     float v = (mod) / (val_max.f - val_min.f);
-    // return limit_range(v,val_min.f,val_max.f);
-    // return limit_range(v,0.0f,1.0f);
+
     return limit_range(v, -1.0f, 1.0f);
 }
 
 float Parameter::set_modulation_f01(float v) const
 {
     if (ctrltype == ct_none)
+    {
         return 0;
+    }
+
     if (valtype != vt_float)
+    {
         return 0;
+    }
 
-    // float mod = v*(val_max.f - val_min.f) + val_min.f - val.f;
     float mod = v * (val_max.f - val_min.f);
+
     return mod;
-}
-
-//
-pdata Parameter::morph(Parameter *b, float x)
-{
-    pdata rval;
-    if ((valtype == vt_float) && (b->valtype == vt_float) && (ctrltype == b->ctrltype))
-    {
-        rval.f = (1 - x) * val.f + x * b->val.f;
-    }
-    else
-    {
-        if (x > 0.5)
-            rval.i = b->val.i;
-        else
-            rval.i = this->val.i;
-    }
-    return rval;
-}
-
-// uses "this" as parameter a
-/*void parameter::morph(parameter *b, float x)
-{
-        if((valtype == vt_float)&&(b->valtype == vt_float)&&(ctrltype == b->ctrltype))
-        {
-                val.f = (1-x)*val.f + x*b->val.f;
-        }
-        else
-        {
-                                        if (x>0.5)
-                                                memcpy(this,b,sizeof(parameter));
-        }
-}*/
-
-// uses two other parameters
-void Parameter::morph(Parameter *a, Parameter *b, float x)
-{
-    if ((a->valtype == vt_float) && (b->valtype == vt_float) && (a->ctrltype == b->ctrltype))
-    {
-        memcpy((void *)this, (void *)a, sizeof(Parameter));
-        val.f = (1 - x) * a->val.f + x * b->val.f;
-    }
-    else
-    {
-        if (x > 0.5)
-            memcpy((void *)this, (void *)b, sizeof(Parameter));
-        else
-            memcpy((void *)this, (void *)a, sizeof(Parameter));
-    }
 }
 
 bool Parameter::can_setvalue_from_string() const
@@ -3964,7 +3941,7 @@ bool Parameter::can_setvalue_from_string() const
     return false;
 }
 
-double Parameter::get_note_number_from_string(const std::string s)
+double Parameter::get_freq_from_note_name(const std::string s)
 {
     if ((s[0] >= 'a' && s[0] <= 'g') || (s[0] >= 'A' && s[0] <= 'G'))
     {
@@ -4036,7 +4013,10 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
     if (valtype == vt_int)
     {
-        int ni = val_min.i - 1; // default out of range value to test against later
+        // default out of range value to test against later
+        int ni = val_min.i - 1;
+        // extend_range helpers
+        int factor = 1, offset = 0;
 
         try
         {
@@ -4044,11 +4024,13 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
         catch (const std::invalid_argument &)
         {
-            ni = val_min.i - 1; // set value of ni out of range on invalid input
+            // set value of ni out of range on invalid input
+            ni = val_min.i - 1;
         }
         catch (const std::out_of_range &)
         {
-            ni = val_min.i - 1; // same for out of range input
+            // likewise for out of range input
+            ni = val_min.i - 1;
         }
 
         switch (ctrltype)
@@ -4067,6 +4049,8 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 }
 
                 ni = (std::atof(strip) * 8) - 1;
+                factor = 8;
+                offset = 1;
 
                 // breaks case after channel number input, but if we're in split mode we fall
                 // through to ct_midikey
@@ -4075,73 +4059,13 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
         case ct_midikey:
         {
-            if (ni == val_min.i - 1) // if integer input failed, try note recognition
+            // if input is invalid or out of int range, try note recognition
+            if (ni < val_min.i)
             {
-                std::string::size_type n;
-                std::string::size_type m;
-                std::string notes[7] = {"c", "d", "e", "f", "g", "a", "b"};
-                int pitches[7] = {0, 2, 4, 5, 7, 9, 11};
-                int val = 0;
-                int neg = 1;
+                float uv = get_freq_from_note_name(s) / 440.f;
+                float n = log2(uv) * 12 + 69;
 
-                // convert string to lowercase
-                auto lowerS = s;
-                std::for_each(lowerS.begin(), lowerS.end(),
-                              [](char &c) { c = ::tolower(static_cast<unsigned char>(c)); });
-
-                // find the unmodified note
-                for (int i = 0; i < 7; i++)
-                {
-                    n = lowerS.find(notes[i]);
-                    if (n != std::string::npos)
-                    {
-                        val = pitches[i];
-                        break;
-                    }
-                }
-
-                // check if the following character is sharp or flat, adjust val if so
-                n++;
-                if ((m = lowerS.find("#", n, 1)) != std::string::npos)
-                {
-                    val += 1;
-                    n++;
-                }
-                else if ((m = lowerS.find("b", n, 1)) != std::string::npos)
-                {
-                    val -= 1;
-                    n++;
-                }
-
-                // if neither note modifiers are found, check for minus
-                if ((m = lowerS.find("-", n, 1)) != std::string::npos)
-                {
-                    neg = -1;
-                    n++;
-                }
-
-                // finally, octave number
-                // trim the fat to the left of current char
-                auto q = lowerS.substr(n, lowerS.length() - n);
-
-                int oct;
-                try
-                {
-                    oct = std::stoi(q);
-                }
-                catch (std::invalid_argument const &)
-                {
-                    // throw things out of range on invalid input
-                    oct = -10;
-                }
-
-                // construct the integer note value
-                int oct_offset = 1;
-                if (storage)
-                    oct_offset =
-                        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
-
-                ni = ((oct + oct_offset) * 12 * neg) + val;
+                ni = (int)n;
             }
 
             break;
@@ -4156,6 +4080,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                     auto c = a.cents;
 
                     ni = (int)std::round(c);
+                    factor = 100;
                 }
                 catch (const Tunings::TuningError &e)
                 {
@@ -4167,14 +4092,17 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 try
                 {
                     ni = std::round(std::stof(s) * 100);
+                    factor = 100;
                 }
                 catch (const std::invalid_argument &)
                 {
-                    ni = val_min.i - 1; // set value of ni out of range on invalid input
+                    // set value of ni out of range on invalid input
+                    ni = val_min.i - 1;
                 }
                 catch (const std::out_of_range &)
                 {
-                    ni = val_min.i - 1; // same for out of range input
+                    // likewise for out of range input
+                    ni = val_min.i - 2;
                 }
             }
         }
@@ -4191,15 +4119,12 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             ErrorMessageMode isLarger =
                 (ni > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
-            float ext_mul = (can_extend_range() && extend_range) ? displayInfo.extendFactor : 1.0;
-            float abs_mul = (can_be_absolute() && absolute) ? displayInfo.absoluteFactor : 1.0;
-            float factor = ext_mul * abs_mul;
             auto bound = isLarger ? val_max.i : val_min.i;
-            std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
+            std::string unit = displayInfo.unit;
 
             getSemitonesOrKeys(unit);
 
-            set_error_message(errMsg, fmt::format("{:g}", bound * factor * displayInfo.scale), unit,
+            set_error_message(errMsg, fmt::format("{:d}", (bound / factor) + offset), unit,
                               isLarger);
         }
 
@@ -4289,7 +4214,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     {
         if (displayInfo.supportsNoteName)
         {
-            nv = get_note_number_from_string(s);
+            nv = get_freq_from_note_name(s);
         }
 
         /*
@@ -4382,7 +4307,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     {
         if (absolute)
         {
-            nv = get_note_number_from_string(s);
+            nv = get_freq_from_note_name(s);
 
             float uv = nv / 440.f;
             float n = log2(uv) * 12 + 69;
@@ -4486,14 +4411,13 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     return true;
 }
 
-/*
-** This function returns a value in range [-1.1] scaled by the mins and maxes
-*/
+// This function returns a value in range [-1, 1], scaled by the minimum and maximums
 float Parameter::calculate_modulation_value_from_string(const std::string &s, bool &valid)
 {
     valid = true;
 
     float mv = std::atof(s.c_str());
+
     switch (displayType)
     {
     case Custom:
@@ -4501,8 +4425,6 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
     case DelegatedToFormatter:
     case LinearWithScale:
     {
-        valid = true;
-        auto mv = (float)std::atof(s.c_str());
         if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
         {
             // Check for a fraction
@@ -4514,8 +4436,11 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
                     auto ct = a.cents;
 
                     mv = ct;
+
                     if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
+                    {
                         mv /= 100.0;
+                    }
                 }
                 catch (const Tunings::TuningError &e)
                 {
@@ -4537,18 +4462,21 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
         {
             mv /= displayInfo.absoluteFactor;
         }
+
         auto rmv = mv / (val_max.f - val_min.f);
+
         if (can_extend_range() && extend_range)
         {
-            // ModValu is in extended units already
+            // ModValue is in extended units already
             rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
         }
 
         if (rmv > 1 || rmv < -1)
+        {
             valid = false;
-        return rmv;
+        }
 
-        break;
+        return rmv;
     }
     case ATwoToTheBx:
     {
@@ -4556,6 +4484,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
         {
             auto mv = (float)std::atof(s.c_str()) / 100.0;
             auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+
             return rmv;
         }
 
@@ -4564,12 +4493,17 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
             if (s[0] == 'N' || s[0] == 'C' || s[0] == 'n' || s[0] == 'c')
             {
                 auto mv = (float)std::atof(s.c_str() + 1);
+
                 if (s[0] == 'C' || s[0] == 'c')
+                {
                     mv = mv / 100.0;
+                }
 
                 auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+
                 return rmv;
             }
+
             if (s[0] == 'T' || s[0] == 't')
             {
                 try
@@ -4577,6 +4511,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
                     auto a = Tunings::toneFromString(s.c_str() + 1);
                     auto mv = a.cents / 100.0;
                     auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+
                     return rmv;
                 }
                 catch (const Tunings::TuningError &e)
@@ -4585,55 +4520,59 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
             }
         }
 
-        /* modulation is displayed as
-        **
-        ** d = mp - val
-        **   = a2^b(v+m) - a2^bv
-        ** d/a + 2^bv = 2^b(v+m)
-        ** log2( d/a + 2^bv ) = b(v + m)
-        ** log2( d/a + 2^bv )/b - v = m
-        */
+        /* modulation is displayed as:
+         *
+         * d = mp - val
+         *   = a2^b(v+m) - a2^bv
+         * d/a + 2^bv = 2^b(v+m)
+         * log2( d/a + 2^bv ) = b(v + m)
+         * log2( d/a + 2^bv )/b - v = m
+         */
 
         auto d = (float)std::atof(s.c_str());
         auto a = displayInfo.a;
         auto b = displayInfo.b;
         auto mv = val_min.f;
-
         auto l2arg = d / a + pow(2.0, b * val.f);
+
         if (l2arg > 0)
+        {
             mv = log2f(l2arg) / b - val.f;
+        }
         else
+        {
             valid = false;
+        }
 
         auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+
         return rmv;
-        break;
     }
     case Decibel:
     {
         /*
-        ** amp2db is 18 * log2(x)
-        **
-        ** we have
-        ** d = mp - val
-        **   = 18 * ( log2( m + v ) - log2( v ) )
-        ** d / 18 + log2(v) = log2( m + v )
-        ** 2^(d/18 + log2(v) ) - v = m;
-        **
-        ** But there's a gotcha. The minimum dB is -192 so we have to set the val.f accordingly.
-        ** That is we have some amp2db we have used, called av. So:
-        **
-        ** d = mv - av
-        **   = 18 ( log2(m+v) ) - av
-        ** d / 18 + av/18 = log2(m+v)
-        ** 2^(d/18 + mv/18) - v = m
-        */
+         * amp2db is 18 * log2(x)
+         *
+         * we have
+         * d = mp - val
+         *   = 18 * ( log2( m + v ) - log2( v ) )
+         * d / 18 + log2(v) = log2( m + v )
+         * 2^(d/18 + log2(v) ) - v = m;
+         *
+         * But there's a gotcha. The minimum dB is -192 so we have to set the val.f accordingly.
+         * That is, we have some amp2db we have used, called av. So:
+         *
+         * d = mv - av
+         *   = 18 ( log2(m+v) ) - av
+         * d / 18 + av/18 = log2(m+v)
+         * 2^(d/18 + mv/18) - v = m
+         */
         auto av = amp_to_db(val.f);
         auto d = (float)std::atof(s.c_str());
         auto mv = powf(2.0, (d / 18.0 + av / 18.0)) - val.f;
         auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+
         return rmv;
-        break;
     }
     }
 
@@ -4642,14 +4581,17 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
     case ct_fmratio:
     {
         int pos{0};
+
         while (pos < s.length() && !std::isdigit(s[pos]) && !(s[pos] == '.' || s[pos] == ','))
+        {
             pos++;
+        }
+
         auto q = s.substr(pos);
 
         if (absolute)
         {
             auto dfreq = std::atof(q.c_str());
-
             float bpv = (val.f - 16.0) / 16.0;
             float mul = 69;
             float note = 69 + mul * bpv;
@@ -4658,30 +4600,39 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
             auto tgnote = log2(tgfreq / 440.0) * 12 + 69;
             auto tgbpv = (tgnote - 69) / mul;
             auto dbpv = (tgbpv - bpv) / 2.0;
+
             return dbpv;
         }
+
         if (extend_range)
         {
             /*
-             * OK so what's happening here? Well we need to give a number that
+             * OK so what's happening here? Well, we need to give a number that
              * when handed in after going through get_extended gives us what
              * we typed in through the formatting.
              *
-             * That is p->get_extended(mf) = v / 31 / 2. So lets get to work
+             * That is p->get_extended(mf) = v / 31 / 2. So let's get to work!
              */
             float mv = 0.f;
             const char *strip = &(q.c_str()[0]);
+
             while (*strip != '\0' && !std::isdigit(*strip) && *strip != '.')
+            {
                 ++strip;
+            }
 
             // OK so do we contain a /?
             const char *slp;
+
             if ((slp = strstr(strip, "/")) != nullptr)
             {
                 float num = std::atof(strip);
                 float den = std::atof(slp + 1);
+
                 if (den == 0)
+                {
                     mv = 1;
+                }
                 else
                 {
                     mv = num / den;
@@ -4693,6 +4644,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
             {
                 mv = std::atof(strip);
             }
+
             // Normalized value
             auto exmf = (mv) / 31.0 / 2.0;
             // This reverses the scaling for extended mode. We now have
@@ -4702,15 +4654,18 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
             // so the transformation out of extended is
             // x = (f-16) * 31/16 +- 1
             // ( x -+ 1 ) * 16 / 31 + 16 = f
-
             auto res = (qq + ((qq >= -32) ? +1 : -1)) * 16.f / 31.f + 16.f;
+
             return res / 32;
         }
 
         auto mv = (float)std::atof(q.c_str()) / (get_extended(val_max.f) - get_extended(val_min.f));
 
         if (mv < -1 || mv > 1)
+        {
             valid = false;
+        }
+
         return mv;
     }
     default:
@@ -4719,11 +4674,16 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
         auto mv = (float)std::atof(s.c_str()) / (get_extended(val_max.f) - get_extended(val_min.f));
 
         if (mv < -1 || mv > 1)
+        {
             valid = false;
+        }
+
         return mv;
     }
     }
+
     valid = false;
+
     return 0.0;
 }
 
