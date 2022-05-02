@@ -197,6 +197,15 @@ void TypeAhead::parentHierarchyChanged()
     }
 }
 
+void TypeAhead::searchAndShowLBox()
+{
+    lboxmodel->setSearch(getText().toStdString());
+    showLbox();
+
+    lbox->updateContent();
+    lbox->repaint();
+}
+
 void TypeAhead::showLbox()
 {
     auto p = getParentComponent();
@@ -221,6 +230,7 @@ void TypeAhead::showLbox()
 
 void TypeAhead::textEditorTextChanged(TextEditor &editor)
 {
+    lastSearch = editor.getText().toStdString();
     lboxmodel->setSearch(editor.getText().toStdString());
 
     if (!lbox->isVisible())
@@ -237,6 +247,7 @@ bool TypeAhead::keyPressed(const juce::KeyPress &press)
     {
         if (!lbox->isVisible())
         {
+            lastSearch = "";
             lboxmodel->setSearch("");
             showLbox();
 

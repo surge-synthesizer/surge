@@ -54,6 +54,7 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
         DISMISS_ON_RETURN_RETAIN_ON_CMD_RETURN,
         DISMISS_ON_CMD_RETURN_RETAIN_ON_RETURN
     } dismissMode{DISMISS_ON_RETURN};
+    std::string lastSearch{""};
 
     TypeAhead(const std::string &l, TypeAheadDataProvider *p); // does not take ownership
     ~TypeAhead();
@@ -77,6 +78,7 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
     std::unique_ptr<juce::ListBox> lbox;
     std::unique_ptr<TypeAheadListBoxModel> lboxmodel;
 
+    void searchAndShowLBox();
     void showLbox();
     void parentHierarchyChanged() override;
     void textEditorTextChanged(juce::TextEditor &editor) override;
