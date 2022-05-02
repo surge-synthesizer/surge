@@ -22,6 +22,7 @@
 #include "fmt/core.h"
 
 #include "ModernOscillator.h"
+#include "StringOscillator.h"
 
 #include "widgets/EffectChooser.h"
 #include "widgets/LFOAndStepDisplay.h"
@@ -2043,6 +2044,52 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         }
 
                         contextMenu.addSeparator();
+
+                        break;
+                    }
+                    case ct_percent_with_string_deform_hook:
+                    {
+                        auto addDef = [this, p,
+                                       &contextMenu](StringOscillator::deform_modes dm,
+                                                     StringOscillator::deform_modes allMode,
+                                                     const std::string &lb) {
+                            auto ticked = p->deform_type & dm;
+
+                            contextMenu.addItem(
+                                Surge::GUI::toOSCase(lb), true, ticked,
+                                [this, p, allMode, dm, ticked] {
+                                    if (!ticked)
+                                    {
+                                        undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                        p->deform_type = (p->deform_type & ~allMode) | dm;
+                                        synth->storage.getPatch().isDirty = true;
+                                        frame->repaint();
+                                    }
+                                });
+                        };
+
+                        contextMenu.addSeparator();
+                        addDef(StringOscillator::os_onex, StringOscillator::os_all,
+                               "1x Oversample");
+                        addDef(StringOscillator::os_twox, StringOscillator::os_all,
+                               "2x Oversample");
+
+                        contextMenu.addSeparator();
+                        addDef(StringOscillator::interp_zoh, StringOscillator::interp_all,
+                               "ZoH Interpolation");
+                        addDef(StringOscillator::interp_lin, StringOscillator::interp_all,
+                               "Linear Interpolation");
+                        addDef(StringOscillator::interp_sinc, StringOscillator::interp_all,
+                               "Sinc Interpolation");
+
+                        contextMenu.addSeparator();
+                        addDef(StringOscillator::filter_fixed, StringOscillator::filter_all,
+                               "Fixed Filter Frequency");
+                        addDef(StringOscillator::filter_keytrack, StringOscillator::filter_all,
+                               "Keytracked Filter Frequency");
+                        addDef(StringOscillator::filter_compensate, StringOscillator::filter_all,
+                               "Keytracked Pitch Compensated Model");
 
                         break;
                     }

@@ -80,6 +80,14 @@ struct SSESincDelayLine
         return buffer[RP] * (1 - frac) + buffer[RPP] * frac;
     }
 
+    inline float readZOH(float delay)
+    {
+        auto iDelay = (int)delay;
+        int RP = (wp - iDelay) & (COMB_SIZE - 1);
+        int RPP = RP == 0 ? COMB_SIZE - 1 : RP - 1;
+        return buffer[RPP];
+    }
+
     inline void clear()
     {
         memset((void *)buffer, 0, (COMB_SIZE + FIRipol_N) * sizeof(float));
