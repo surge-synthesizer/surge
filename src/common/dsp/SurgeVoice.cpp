@@ -54,7 +54,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
             key != keyRetuningForKey)
         {
             keyRetuningForKey = key;
-            keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key, channel);
+            keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key + mpeBend, 0);
         }
         auto rkey = keyRetuning;
 
