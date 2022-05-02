@@ -170,7 +170,7 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
     t2level.startValue(0.5 * limit_range(localcopy[id_strbalance].f, -1.f, 1.f) + 0.5);
 
     // we need a big prefill to support the delay line for FM
-    auto prefill = (int)floor(10 * std::max(pitchmult_inv, pitchmult2_inv));
+    auto prefill = (int)floor(10 * std::max(pitchmult_inv, pitchmult2_inv) * getOversampleLevel());
 
     for (int i = 0; i < 2; ++i)
     {
@@ -187,13 +187,13 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
         phase2 = urd(gen);
     }
 
-    auto r1 = 1.0 / pitchmult_inv;
-    auto r2 = 1.0 / pitchmult2_inv;
+    auto r1 = 1.0 / (pitchmult_inv * getOversampleLevel());
+    auto r2 = 1.0 / (pitchmult2_inv * getOversampleLevel());
     auto d0 = limit_range(localcopy[id_exciterlvl].f, 0.f, 1.f);
     d0 *= d0 * d0 * d0;
 
     int dustrp = BLOCK_SIZE_OS;
-    configureLpAndHpFromTone();
+    configureLpAndHpFromTone(pitch);
 
     for (int i = 0; i < prefill; ++i)
     {
@@ -364,29 +364,95 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
     charFilt.init(storage->getPatch().character.val.i);
 }
 
-void StringOscillator::configureLpAndHpFromTone()
+float StringOscillator::pitchAdjustmentForStiffness()
 {
+    auto filter_mode = oscdata->p[str_exciter_level].deform_type & StringOscillator::filter_all;
+    if (!(filter_mode & StringOscillator::filter_compensate))
+        return 0;
+
+    auto tv = limit_range(localcopy[id_stiffness].f, -1.f, 1.f);
+    if (tv < 0)
+    {
+        // I just whacked at it in a tuner at levels and came up with this
+        static constexpr float retunes[] = {-0.0591202, -0.122405, -0.225738, -0.406056,
+                                            -0.7590243};
+        float fidx = limit_range(-4 * tv, 0.f, 4.f);
+        int idx = limit_range((int)fidx, 0, 3);
+        float frac = fidx - idx;
+
+        auto res = retunes[idx] * (1 - frac) + retunes[idx + 1] * frac;
+
+        return -res;
+    }
+    else
+    {
+        // I just whacked at it in a tuner at levels and came up with this
+        static constexpr float retunes[] = {0.02752047, 0.09026062, 0.31, 0.615, 0.87};
+        float fidx = limit_range(4 * tv, 0.f, 4.f);
+        int idx = limit_range((int)fidx, 0, 3);
+        float frac = fidx - idx;
+
+        auto res = retunes[idx] * (1 - frac) + retunes[idx + 1] * frac;
+
+        return -res;
+    }
+    return 0;
+}
+
+void StringOscillator::configureLpAndHpFromTone(float pitch)
+{
+    auto filter_mode = oscdata->p[str_exciter_level].deform_type & StringOscillator::filter_all;
+
     tone.newValue(limit_range(localcopy[id_stiffness].f, -1.f, 1.f));
 
     float clo = 10, cmidhi = 60, cmid = 100, chi = -70;
     float hpCutoff = chi;
     float lpCutoff = cmid;
 
-    if (tone.v > 0)
+    if (filter_mode & StringOscillator::filter_fixed)
     {
-        // OK so cool scale the HP cutoff
-        auto tv = tone.v;
-        hpCutoff = tv * (cmidhi - chi) + chi;
+        if (tone.v > 0)
+        {
+            // OK so cool scale the HP cutoff
+            auto tv = tone.v;
+            hpCutoff = tv * (cmidhi - chi) + chi;
+        }
+        else
+        {
+            auto tv = -tone.v;
+            lpCutoff = tv * (clo - cmid) + cmid;
+        }
     }
     else
     {
-        auto tv = -tone.v;
-        lpCutoff = tv * (clo - cmid) + cmid;
+        // If you change this you also need to recallibrate the tuning corrections!
+        if (tone.v > 0)
+        {
+            // We want a smaller range but chi stays the same so cmidhi - chi = 60 + 70 = 130
+            // and we want about 60% to knock us out so
+            cmidhi = 10, chi = -70;
+            // OK so cool scale the HP cutoff
+            auto tv = tone.v;
+            hpCutoff = tv * (cmidhi - chi) + chi + pitch - 60;
+        }
+        else
+        {
+            auto tv = -tone.v;
+            lpCutoff = pitch - 40 * tv;
+        }
     }
-
     // Inefficient - copy coefficients later
-    lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
-    hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING, 0.707);
+    lp.coeff_LP(lp.calc_omega((lpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING * getOversampleLevel(),
+                0.707);
+    hp.coeff_HP(hp.calc_omega((hpCutoff / 12.0) - 2.f) * OSC_OVERSAMPLING * getOversampleLevel(),
+                0.707);
+}
+
+int StringOscillator::getOversampleLevel()
+{
+    if (oscdata->p[str_exciter_level].deform_type & StringOscillator::os_twox)
+        return 2;
+    return 1;
 }
 
 void StringOscillator::process_block(float pitch, float drift, bool stereo, bool FM, float fmdepthV)
@@ -394,12 +460,31 @@ void StringOscillator::process_block(float pitch, float drift, bool stereo, bool
 #define P(m)                                                                                       \
     case m:                                                                                        \
         if (FM)                                                                                    \
-            process_block_internal<true, m>(pitch, drift, stereo, fmdepthV);                       \
+        {                                                                                          \
+            if (oss & StringOscillator::os_onex)                                                   \
+            {                                                                                      \
+                process_block_internal<true, m, 1>(pitch, drift, stereo, fmdepthV);                \
+            }                                                                                      \
+            else                                                                                   \
+            {                                                                                      \
+                process_block_internal<true, m, 2>(pitch, drift, stereo, fmdepthV);                \
+            }                                                                                      \
+        }                                                                                          \
         else                                                                                       \
-            process_block_internal<false, m>(pitch, drift, stereo, fmdepthV);                      \
+        {                                                                                          \
+            if (oss & StringOscillator::os_onex)                                                   \
+            {                                                                                      \
+                process_block_internal<false, m, 1>(pitch, drift, stereo, fmdepthV);               \
+            }                                                                                      \
+            else                                                                                   \
+            {                                                                                      \
+                process_block_internal<false, m, 2>(pitch, drift, stereo, fmdepthV);               \
+            }                                                                                      \
+        }                                                                                          \
         break;
 
     auto mode = (exciter_modes)oscdata->p[str_exciter_mode].val.i;
+    auto oss = oscdata->p[str_exciter_level].deform_type & StringOscillator::os_all;
 
     switch (mode)
     {
@@ -425,11 +510,12 @@ void StringOscillator::process_block(float pitch, float drift, bool stereo, bool
 #undef P
 }
 
-template <bool FM, StringOscillator::exciter_modes mode>
+template <bool FM, StringOscillator::exciter_modes mode, int OS>
 void StringOscillator::process_block_internal(float pitch, float drift, bool stereo, float fmdepthV)
 {
     auto lfodetune = drift * driftLFO[0].next();
-    auto pitch_t = std::min(148.f, pitch + lfodetune);
+    auto pitchadj = pitchAdjustmentForStiffness();
+    auto pitch_t = std::min(148.f, pitch + lfodetune + pitchadj);
     auto pitchmult_inv = std::max((FIRipol_N >> 1) + 1.0, dsamplerate_os * (1 / 8.175798915) *
                                                               storage->note_to_pitch_inv(pitch_t));
     auto d0 = limit_range(localcopy[id_exciterlvl].f, 0.f, 1.f);
@@ -461,7 +547,7 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
 
     if (oscdata->p[str_str2_detune].absolute)
     {
-        pitch2_t = std::min(148.f, pitch);
+        pitch2_t = std::min(148.f, pitch + pitchadj);
         auto frequency = Tunings::MIDI_0_FREQ * storage->note_to_pitch(pitch2_t);
 
         auto fac = oscdata->p[str_str2_detune].extend_range ? 12 * 16 : 16;
@@ -473,11 +559,14 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
     }
     else
     {
-        pitch2_t = std::min(148.f, pitch + p2off);
+        pitch2_t = std::min(148.f, pitch + p2off + pitchadj);
         pitchmult2_inv = std::max(1.0, dsamplerate_os * (1 / 8.175798915) *
                                            storage->note_to_pitch_inv(pitch2_t));
         dp2 = pitch_to_dphase(pitch2_t);
     }
+
+    dp1 /= OS;
+    dp2 /= OS;
 
     pitchmult_inv = std::min(pitchmult_inv, (delayLine[0]->comb_size - 100) * 1.0);
     pitchmult2_inv = std::min(pitchmult2_inv, (delayLine[0]->comb_size - 100) * 1.0);
@@ -516,7 +605,7 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
 
     fmdepth.newValue(fv);
 
-    configureLpAndHpFromTone();
+    configureLpAndHpFromTone(pitch);
 
     float val[2] = {0.f, 0.f}, fbNoOutVal[2] = {0.f, 0.f}, fbv[2] = {0, 0};
 
@@ -525,7 +614,24 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
         fillDustBuffer(pitchmult_inv, pitchmult2_inv);
     }
 
-    for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+    auto interp_mode = oscdata->p[str_exciter_level].deform_type & StringOscillator::interp_all;
+
+    float *useOutL, *useOutR;
+
+    float osOutL[BLOCK_SIZE_OS * max_oversample], osOutR[BLOCK_SIZE_OS * max_oversample];
+
+    if (OS == 1)
+    {
+        useOutL = output;
+        useOutR = outputR;
+    }
+    else
+    {
+        useOutL = osOutL;
+        useOutR = osOutR;
+    }
+
+    for (int i = 0; i < BLOCK_SIZE_OS * OS; ++i)
     {
         for (int t = 0; t < 2; ++t)
         {
@@ -538,7 +644,21 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
                 v *= Surge::DSP::fastexp(limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
             }
 
-            val[t] = delayLine[t]->read(v);
+            v *= OS;
+
+            switch (interp_mode)
+            {
+            case StringOscillator::interp_sinc:
+                val[t] = delayLine[t]->read(v);
+                break;
+            case StringOscillator::interp_lin:
+                val[t] = delayLine[t]->readLinear(v);
+                break;
+            case StringOscillator::interp_zoh:
+                val[t] = delayLine[t]->readZOH(v);
+                break;
+            }
+
             fbNoOutVal[t] = 0.f;
 
             // Add continuous excitation
@@ -607,7 +727,11 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
             break;
             case constant_audioin:
             {
-                fbNoOutVal[t] = examp.v * storage->audio_in[t][i];
+                // in OS case on audio in do a simple ZOH for now
+                if (OS == 1)
+                    fbNoOutVal[t] = examp.v * storage->audio_in[t][i];
+                if (OS == 2)
+                    fbNoOutVal[t] = examp.v * storage->audio_in[t][i / 2];
             }
             break;
             default:
@@ -647,8 +771,13 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
         examp.process();
         fmdepth.process();
 
-        output[i] = out;
-        outputR[i] = out;
+        useOutL[i] = out;
+        useOutR[i] = out;
+    }
+
+    if (OS == 2)
+    {
+        halfband.process_block_D2(useOutL, useOutR, BLOCK_SIZE_OS * OS, output, outputR);
     }
 
     if (charFilt.doFilter)
@@ -670,7 +799,7 @@ void StringOscillator::init_ctrltypes()
     oscdata->p[str_exciter_mode].set_type(ct_stringosc_excitation_model);
 
     oscdata->p[str_exciter_level].set_name("Exciter Level");
-    oscdata->p[str_exciter_level].set_type(ct_percent);
+    oscdata->p[str_exciter_level].set_type(ct_percent_with_string_deform_hook);
     oscdata->p[str_exciter_level].val_default.f = 1.f;
 
     oscdata->p[str_str1_decay].set_name("String 1 Decay");
@@ -695,6 +824,7 @@ void StringOscillator::init_default_values()
 {
     oscdata->p[str_exciter_mode].val.i = 0;
     oscdata->p[str_exciter_level].val.f = 1.f;
+    oscdata->p[str_exciter_level].deform_type = os_onex | interp_sinc | filter_fixed;
 
     oscdata->p[str_str1_decay].val.f = 0.95f;
     oscdata->p[str_str2_decay].val.f = 0.95f;
@@ -708,12 +838,20 @@ void StringOscillator::init_default_values()
 
 void StringOscillator::fillDustBuffer(float tap0, float tap1)
 {
-    for (int i = 0; i < BLOCK_SIZE_OS; ++i)
+    for (int i = 0; i < BLOCK_SIZE_OS * getOversampleLevel(); ++i)
     {
         auto v0 = urd(gen) * 2 - 1;
         auto v1 = urd(gen) * 2 - 1;
         noiseLp.process_sample_nolag(v0, v1);
         dustBuffer[0][i] = v0 * 1.7;
         dustBuffer[1][i] = v1 * 1.7;
+    }
+}
+void StringOscillator::handleStreamingMismatches(int streamingRevision,
+                                                 int currentSynthStreamingRevision)
+{
+    if (streamingRevision < 19)
+    {
+        oscdata->p[str_exciter_level].deform_type = os_onex | interp_sinc | filter_fixed;
     }
 }

@@ -97,10 +97,12 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                           added (a lot of) new waveshapers
 //                           added two additional FX slots to all FX chains
 //                           added new Conditioner parameter (Side Low Cut)
-// 17 -> 18 (XT 1.1 release) added clipping options to Delay Feedback parameter (via deform)
-//                           added Tone parameter to Phaser effect
+// 17 -> 19 (XT 1.1 release) added clipping options to Delay Feedback parameter (via deform) (18)
+//                           added Tone parameter to Phaser effect (18)
+//                           added String deform options (late in 1.1 so make 19 to not break all
+//                           the nightlies)
 
-const int ff_revision = 18;
+const int ff_revision = 19;
 
 extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
 extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];

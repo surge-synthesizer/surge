@@ -322,6 +322,7 @@ bool Parameter::has_deformoptions() const
     switch (ctrltype)
     {
     case ct_freq_hpf:
+    case ct_percent_with_string_deform_hook:
     case ct_lfodeform:
     case ct_modern_trimix:
     case ct_alias_mask:
@@ -921,6 +922,7 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     case ct_percent:
+    case ct_percent_with_string_deform_hook:
     case ct_percent_deactivatable:
     case ct_dly_fb_clippingmodes:
     case ct_percent_oscdrift:
@@ -1263,6 +1265,7 @@ void Parameter::set_type(int ctrltype)
     switch (ctrltype)
     {
     case ct_percent:
+    case ct_percent_with_string_deform_hook:
     case ct_dly_fb_clippingmodes:
     case ct_percent_bipolar_deactivatable:
     case ct_percent_deactivatable:
@@ -1586,6 +1589,7 @@ void Parameter::bound_value(bool force_integer)
         switch (ctrltype)
         {
         case ct_percent:
+        case ct_percent_with_string_deform_hook:
         case ct_percent_bipolar_deactivatable:
         case ct_percent_deactivatable:
         case ct_dly_fb_clippingmodes:
@@ -1846,6 +1850,7 @@ bool Parameter::supportsDynamicName() const
     case ct_modern_trimix:
     case ct_lfophaseshuffle:
     case ct_percent:
+    case ct_percent_with_string_deform_hook:
     case ct_percent_bipolar:
     case ct_percent_bipolar_deactivatable:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
@@ -3837,6 +3842,7 @@ bool Parameter::can_setvalue_from_string() const
     switch (ctrltype)
     {
     case ct_percent:
+    case ct_percent_with_string_deform_hook:
     case ct_percent_deactivatable:
     case ct_dly_fb_clippingmodes:
     case ct_percent_oscdrift:
