@@ -641,7 +641,14 @@ CREATE TABLE IF NOT EXISTS Favorites (
                     }
                     catch (SQL::LockedException &le)
                     {
-                        storage->reportError(le.what(), "Patch DB");
+                        std::ostringstream oss;
+                        oss << le.what() << "\n"
+                            << "Locking errors occur when two Surge instances try"
+                               " to write to the Patch Database at the same time. In most cases we "
+                               "will retry successfully. Please dismiss this error while we retry "
+                               "up to 10 more times. (This is attempt "
+                            << lock_retries << ")";
+                        storage->reportError(oss.str(), "Patch DB Locked");
                         // OK so in this case, we reload the doThis onto the front of the queue
                         // and sleep
                         lock_retries++;
