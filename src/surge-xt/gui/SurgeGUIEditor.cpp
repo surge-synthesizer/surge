@@ -711,6 +711,9 @@ void SurgeGUIEditor::idle()
             }
         }
 
+        if (patchSelector)
+            patchSelector->idle();
+
         if (patchChanged)
         {
             for (int i = 0; i < n_fx_slots; ++i)
@@ -6724,6 +6727,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 showOverlay(SurgeGUIEditor::SAVE_PATCH);
                 return true;
             case Surge::GUI::FIND_PATCH:
+                std::cout << "FFFF" << std::endl;
                 patchSelector->isTypeaheadSearchOn = !patchSelector->isTypeaheadSearchOn;
                 patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
                 return true;
