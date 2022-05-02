@@ -144,6 +144,9 @@ struct PatchSelector : public juce::Component,
     int getCurrentPatchId() const;
     int getCurrentCategoryId() const;
 
+    void idle(); // called by SGE::idle
+
+    bool wasTypeaheadCanceledSinceLastIdle{false};
     bool isTypeaheadSearchOn{false};
     void toggleTypeAheadSearch(bool);
     void enableTypeAheadIfReady();
