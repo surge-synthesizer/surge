@@ -16,7 +16,7 @@
 #include "MenuCustomComponents.h"
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
-#include "SurgeGUIUtils.h"
+#include <StringOps.h>
 
 namespace Surge
 {

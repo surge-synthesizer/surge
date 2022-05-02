@@ -181,7 +181,7 @@ void PatchSelector::paint(juce::Graphics &g)
         juce::Graphics::ScopedSaveState gs(g);
         g.reduceClipRegion(searchRect);
         auto img = associatedBitmapStore->getImage(IDB_SEARCH_BUTTON);
-        int yShift = 13 * ((searchHover ? 1 : 0));
+        int yShift = 13 * ((searchHover || isTypeaheadSearchOn ? 1 : 0));
         img->drawAt(g, searchRect.getX(), searchRect.getY() - yShift, 1.0);
     }
 
@@ -392,7 +392,14 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         tooltipCountdown = -1;
         toggleCommentTooltip(false);
 
-        toggleTypeAheadSearch(!isTypeaheadSearchOn);
+        if (wasTypeaheadCanceledSinceLastIdle)
+        {
+            toggleTypeAheadSearch(false);
+        }
+        else
+        {
+            toggleTypeAheadSearch(!isTypeaheadSearchOn);
+        }
         return;
     }
 
@@ -1098,7 +1105,14 @@ void PatchSelector::itemSelected(int providerIndex)
         sge->queuePatchFileLoad(sr.file);
     }
 }
-void PatchSelector::typeaheadCanceled() { toggleTypeAheadSearch(false); }
+
+void PatchSelector::idle() { wasTypeaheadCanceledSinceLastIdle = false; }
+
+void PatchSelector::typeaheadCanceled()
+{
+    wasTypeaheadCanceledSinceLastIdle = true;
+    toggleTypeAheadSearch(false);
+}
 
 void PatchSelector::onSkinChanged()
 {
@@ -1143,6 +1157,8 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
     {
         bool enable = true;
         auto txt = pname;
+        if (!typeAhead->lastSearch.empty())
+            txt = typeAhead->lastSearch;
 
         storage->initializePatchDb();
 
@@ -1179,6 +1195,10 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
         {
             juce::Timer::callAfterDelay(250, [this]() { this->enableTypeAheadIfReady(); });
         }
+        else
+        {
+            typeAhead->searchAndShowLBox();
+        }
     }
     else
     {
@@ -1197,6 +1217,8 @@ void PatchSelector::enableTypeAheadIfReady()
 
     bool enable = true;
     auto txt = pname;
+    if (!typeAhead->lastSearch.empty())
+        txt = typeAhead->lastSearch;
 
     if (storage->patchDB->numberOfJobsOutstanding() > 0)
     {
@@ -1219,6 +1241,7 @@ void PatchSelector::enableTypeAheadIfReady()
     {
         typeAhead->grabKeyboardFocus();
         typeAhead->selectAll();
+        typeAhead->searchAndShowLBox();
     }
     else
     {

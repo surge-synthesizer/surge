@@ -41,6 +41,7 @@ enum ctrltypes
     ct_none,
     ct_percent,
     ct_percent_deactivatable,
+    ct_percent_with_string_deform_hook,
     ct_dly_fb_clippingmodes,
     ct_percent_bipolar,
     ct_percent_bipolar_deactivatable,

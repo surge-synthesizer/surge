@@ -306,7 +306,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxTempoSync[i].setAccessible(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       juce::NotificationType::dontSendNotification);
-        st(fxTempoSync[i], nm + " Temposynced");
+        st(fxTempoSync[i], nm + " Tempo Synced");
         fxDeactivated[i].setEnabled(false);
 
         fxExtended[i].setEnabled(processor.canExtend(i));
@@ -318,7 +318,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxAbsoluted[i].setToggleState(processor.getFXStorageAbsolute(i),
                                       juce::NotificationType::dontSendNotification);
         fxAbsoluted[i].setAccessible(processor.canAbsolute(i));
-        st(fxAbsoluted[i], nm + " Absoluted");
+        st(fxAbsoluted[i], nm + " Absolute");
         fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
                                         juce::NotificationType::dontSendNotification);
@@ -432,12 +432,39 @@ void SurgefxAudioProcessorEditor::showMenu()
                     setEffectType(m.fxtype);
             });
     }
+    p.addSeparator();
+    auto sm = juce::PopupMenu();
+    sm.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
+               [this]() { toggleLatencyMode(); });
+    p.addSubMenu("Settings", sm);
+
     auto o = juce::PopupMenu::Options();
     auto r = juce::Rectangle<int>().withPosition(
         localPointToGlobal(picker->getBounds().getBottomLeft()));
     o = o.withTargetScreenArea(r).withPreferredPopupDirection(
         juce::PopupMenu::Options::PopupDirection::downwards);
     p.showMenuAsync(o);
+}
+
+void SurgefxAudioProcessorEditor::toggleLatencyMode()
+{
+    auto clm = processor.nonLatentBlockMode;
+    Surge::Storage::updateUserDefaultValue(processor.storage.get(),
+                                           Surge::Storage::FXUnitAssumeFixedBlock, !clm);
+    processor.nonLatentBlockMode = !clm;
+
+    std::ostringstream oss;
+    oss << "Please restart the DAW transport or reload your DAW project for this setting to take "
+           "effect!\n\n"
+        << (clm ? "The processing latency is now 32 samples, and variable size audio buffers are "
+                  "supported."
+                : "The processing latency is now disabled, so fixed size buffers of at least "
+                  "32 samples are required. Note that some DAWs (particularly FL Studio) use "
+                  "variable size buffers by default, so in this mode you have to adjust the plugin "
+                  "processing options in your DAW to send fixed size audio buffers.");
+
+    juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,
+                                           "Latency Setting Changed", oss.str());
 }
 
 struct FxFocusTrav : public juce::ComponentTraverser

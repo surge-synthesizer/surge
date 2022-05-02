@@ -99,6 +99,9 @@ enum DefaultKey
     ModListValueDisplay,
     MenuLightness,
 
+    // Some FX Bank specific ones
+    FXUnitAssumeFixedBlock,
+
     nKeys
 };
 

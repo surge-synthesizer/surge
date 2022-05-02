@@ -711,6 +711,9 @@ void SurgeGUIEditor::idle()
             }
         }
 
+        if (patchSelector)
+            patchSelector->idle();
+
         if (patchChanged)
         {
             for (int i = 0; i < n_fx_slots; ++i)

@@ -57,21 +57,42 @@ class StringOscillator : public Oscillator
         constant_audioin,
     };
 
+    // This coordinates with the UI code in SGE::controlModClicked around
+    // ct_percent_with_string_deform_hook
+    enum deform_modes : int32_t
+    {
+        os_onex = 1 << 1U,
+        os_twox = 1 << 2U,
+        os_all = os_onex | os_twox,
+
+        interp_zoh = 1 << 3U,
+        interp_lin = 1 << 4U,
+        interp_sinc = 1 << 5U,
+        interp_all = interp_zoh | interp_lin | interp_sinc,
+
+        filter_fixed = 1 << 6U,
+        filter_keytrack = 1 << 7U,
+        filter_compensate = 1 << 8U,
+        filter_all = filter_fixed | filter_keytrack | filter_compensate
+    };
+
+    static constexpr int max_oversample = 2;
+
     StringOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
-        : Oscillator(s, o, p), lp(s), hp(s), noiseLp(s)
+        : Oscillator(s, o, p), lp(s), hp(s), noiseLp(s), halfband(6, true)
     {
     }
 
     ~StringOscillator();
 
-    virtual void init(float pitch, bool is_display = false, bool nonzero_drift = true);
-    virtual void init_ctrltypes(int scene, int oscnum) { init_ctrltypes(); };
-    virtual void init_ctrltypes();
-    virtual void init_default_values();
+    virtual void init(float pitch, bool is_display = false, bool nonzero_drift = true) override;
+    virtual void init_ctrltypes(int scene, int oscnum) override { init_ctrltypes(); };
+    virtual void init_ctrltypes() override;
+    virtual void init_default_values() override;
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
-                               float FMdepth = 0.f);
+                               float FMdepth = 0.f) override;
 
-    template <bool FM, exciter_modes mode>
+    template <bool FM, exciter_modes mode, int OS>
     void process_block_internal(float pitch, float drift, bool stereo, float FMdepth);
 
     float phase1 = 0, phase2 = 0;
@@ -89,11 +110,17 @@ class StringOscillator : public Oscillator
     std::minstd_rand gen;
     std::uniform_real_distribution<float> urd;
 
-    float dustBuffer[2][BLOCK_SIZE_OS];
+    float dustBuffer[2][BLOCK_SIZE_OS * max_oversample];
     void fillDustBuffer(float tap0, float tap1);
 
     BiquadFilter lp, hp, noiseLp;
-    void configureLpAndHpFromTone();
+    HalfRateFilter halfband;
+    void configureLpAndHpFromTone(float playingPitch);
+    float pitchAdjustmentForStiffness();
+    int getOversampleLevel();
+
+    void handleStreamingMismatches(int streamingRevision,
+                                   int currentSynthStreamingRevision) override;
 
   private:
     int id_exciterlvl, id_str1decay, id_str2decay, id_str2detune, id_strbalance, id_stiffness;

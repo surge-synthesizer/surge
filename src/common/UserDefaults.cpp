@@ -211,6 +211,11 @@ std::string defaultKeyToString(DefaultKey k)
     case MenuLightness:
         r = "menuLightness";
         break;
+
+    case FXUnitAssumeFixedBlock:
+        r = "fxAssumeFixedBlock";
+        break;
+
     case nKeys:
         break;
     }

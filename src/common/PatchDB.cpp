@@ -641,9 +641,16 @@ CREATE TABLE IF NOT EXISTS Favorites (
                     }
                     catch (SQL::LockedException &le)
                     {
-                        storage->reportError(le.what(), "Patch DB");
-                        // OK so in this case, we reload the doThis onto the front of the queue
-                        // and sleep
+                        std::ostringstream oss;
+                        oss << le.what() << "\n"
+                            << "Patch database is locked for writing. Most likely, another Surge "
+                               "XT instance has exclusive write access. We will attempt to retry "
+                               "writing up to 10 more times. "
+                               "Please dismiss this error in the meantime!\n\n Attempt: "
+                            << lock_retries;
+                        storage->reportError(oss.str(), "Patch Database Locked");
+                        // OK so in this case, we reload doThis onto the front of the queue and
+                        // sleep
                         lock_retries++;
                         if (lock_retries < 10)
                         {
@@ -660,8 +667,8 @@ CREATE TABLE IF NOT EXISTS Favorites (
                         else
                         {
                             storage->reportError(
-                                "Database is locked and unwritable after multiple backoffs",
-                                "Patch DB");
+                                "Database is locked and unwritable after multiple attempts!",
+                                "Patch Database Locked");
                         }
                     }
                     catch (SQL::Exception &e)
