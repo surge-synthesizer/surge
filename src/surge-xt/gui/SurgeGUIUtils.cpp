@@ -13,31 +13,6 @@ namespace Surge
 {
 namespace GUI
 {
-
-/*
- * Used to convert letter case for menu entries
- * Input string should be macOS style (Menu Entry is Like This)
- * Output is string in Windows style (Menu entry is like this), or unmodified if we're on Mac
- */
-std::string toOSCase(const std::string &imenuName)
-{
-#if WINDOWS
-    auto menuName = imenuName;
-
-    for (auto i = 1; i < menuName.length() - 1; ++i)
-    {
-        if (!(isupper(menuName[i]) && (isupper(menuName[i + 1]) || !isalpha(menuName[i + 1]))))
-        {
-            menuName[i] = std::tolower(menuName[i]);
-        }
-    }
-
-    return menuName;
-#else
-    return imenuName;
-#endif
-}
-
 bool showCursor(SurgeStorage *storage)
 {
     bool sc =
