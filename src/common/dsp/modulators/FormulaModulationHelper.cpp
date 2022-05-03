@@ -214,6 +214,26 @@ end
 
         if (lua_isfunction(s.L, -2))
         {
+            // CALL HERE
+            auto addn = [&s](const char *q, float f) {
+                lua_pushstring(s.L, q);
+                lua_pushnumber(s.L, f);
+                lua_settable(s.L, -3);
+            };
+
+            addn("delay", s.del);
+            addn("decay", s.dec);
+            addn("attack", s.a);
+            addn("hold", s.h);
+            addn("sustain", s.s);
+            addn("release", s.r);
+            addn("rate", s.rate);
+            addn("amplitude", s.amp);
+            addn("startphase", s.phase);
+            addn("deform", s.deform);
+            addn("tempo", s.tempo);
+            addn("songpos", s.songpos);
+
             auto cres = lua_pcall(s.L, 1, 1, 0);
             if (cres == LUA_OK)
             {

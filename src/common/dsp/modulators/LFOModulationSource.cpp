@@ -418,6 +418,24 @@ void LFOModulationSource::attack()
 
     case lt_formula:
     {
+        formulastate.released = false;
+
+        formulastate.del = lfo->delay.value_to_normalized(localcopy[idelay].f);
+        formulastate.a = lfo->attack.value_to_normalized(localcopy[iattack].f);
+        formulastate.h = lfo->hold.value_to_normalized(localcopy[ihold].f);
+        formulastate.dec = lfo->decay.value_to_normalized(localcopy[idecay].f);
+        formulastate.s = lfo->sustain.value_to_normalized(localcopy[isustain].f);
+        formulastate.r = lfo->release.value_to_normalized(localcopy[irelease].f);
+
+        formulastate.rate = localcopy[rate].f;
+        formulastate.amp = localcopy[magn].f;
+        formulastate.phase = localcopy[startphase].f;
+        formulastate.deform = localcopy[ideform].f;
+        formulastate.tempo = storage->temposyncratio * 120.0;
+        formulastate.songpos = storage->songpos;
+
+        formulastate.isVoice = isVoice;
+
         Surge::Formula::prepareForEvaluation(storage, fs, formulastate, is_display);
     }
     break;
