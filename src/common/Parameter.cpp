@@ -238,6 +238,7 @@ bool Parameter::can_extend_range() const
 {
     switch (ctrltype)
     {
+    case ct_percent_with_extend_to_bipolar:
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
     case ct_freq_reson_band1:
@@ -323,6 +324,7 @@ bool Parameter::has_deformoptions() const
     {
     case ct_freq_hpf:
     case ct_percent_with_string_deform_hook:
+    case ct_percent_bipolar_with_string_filter_hook:
     case ct_lfodeform:
     case ct_modern_trimix:
     case ct_alias_mask:
@@ -358,8 +360,10 @@ bool Parameter::is_bipolar() const
     case ct_decibel_extendable:
     case ct_freq_mod:
     case ct_percent_bipolar:
+    case ct_percent_bipolar_with_string_filter_hook:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_pan:
+    case ct_percent_bipolar_stringbal:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:
     case ct_freq_shift:
@@ -380,6 +384,12 @@ bool Parameter::is_bipolar() const
     case ct_fmratio:
     {
         if (extend_range && !absolute)
+            res = true;
+    }
+    break;
+    case ct_percent_with_extend_to_bipolar:
+    {
+        if (extend_range)
             res = true;
     }
     break;
@@ -923,6 +933,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_percent:
     case ct_percent_with_string_deform_hook:
+    case ct_percent_with_extend_to_bipolar:
     case ct_percent_deactivatable:
     case ct_dly_fb_clippingmodes:
     case ct_percent_oscdrift:
@@ -971,6 +982,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_modern_trimix:
     case ct_percent_bipolar:
+    case ct_percent_bipolar_with_string_filter_hook:
     case ct_percent_bipolar_deactivatable:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_pan:
@@ -1265,6 +1277,7 @@ void Parameter::set_type(int ctrltype)
     switch (ctrltype)
     {
     case ct_percent:
+    case ct_percent_with_extend_to_bipolar:
     case ct_percent_with_string_deform_hook:
     case ct_dly_fb_clippingmodes:
     case ct_percent_bipolar_deactivatable:
@@ -1272,6 +1285,7 @@ void Parameter::set_type(int ctrltype)
     case ct_percent_oscdrift:
     case ct_percent200:
     case ct_percent_bipolar:
+    case ct_percent_bipolar_with_string_filter_hook:
     case ct_lfodeform:
     case ct_rotarydrive:
     case ct_countedset_percent:
@@ -1589,6 +1603,7 @@ void Parameter::bound_value(bool force_integer)
         switch (ctrltype)
         {
         case ct_percent:
+        case ct_percent_with_extend_to_bipolar:
         case ct_percent_with_string_deform_hook:
         case ct_percent_bipolar_deactivatable:
         case ct_percent_deactivatable:
@@ -1596,6 +1611,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_percent_oscdrift:
         case ct_percent200:
         case ct_percent_bipolar:
+        case ct_percent_bipolar_with_string_filter_hook:
         case ct_percent_bipolar_stereo:
         case ct_percent_bipolar_pan:
         case ct_percent_bipolar_stringbal:
@@ -1850,7 +1866,6 @@ bool Parameter::supportsDynamicName() const
     case ct_modern_trimix:
     case ct_lfophaseshuffle:
     case ct_percent:
-    case ct_percent_with_string_deform_hook:
     case ct_percent_bipolar:
     case ct_percent_bipolar_deactivatable:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
@@ -2056,6 +2071,12 @@ float Parameter::get_extended(float f) const
             return -((16 - f) * 31.f / 16.f + 1);
         }
     }
+    break;
+    case ct_percent_with_extend_to_bipolar:
+    {
+        return 2 * f - 1;
+    }
+    break;
     default:
     {
         return f;
@@ -3842,12 +3863,14 @@ bool Parameter::can_setvalue_from_string() const
     switch (ctrltype)
     {
     case ct_percent:
+    case ct_percent_with_extend_to_bipolar:
     case ct_percent_with_string_deform_hook:
     case ct_percent_deactivatable:
     case ct_dly_fb_clippingmodes:
     case ct_percent_oscdrift:
     case ct_percent200:
     case ct_percent_bipolar:
+    case ct_percent_bipolar_with_string_filter_hook:
     case ct_percent_bipolar_deactivatable:
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_pan:

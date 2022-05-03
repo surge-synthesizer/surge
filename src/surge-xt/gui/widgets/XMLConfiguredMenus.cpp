@@ -575,6 +575,9 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
                 snprintf(sublbl, TXT_SIZE, "p%i_deactivated", i);
                 fxbuffer->p[i].deactivated =
                     ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
+                snprintf(sublbl, TXT_SIZE, "p%i_deform_type", i);
+                if (e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS)
+                    fxbuffer->p[i].deform_type = j;
             }
         }
         else
