@@ -366,14 +366,16 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
 
 float StringOscillator::pitchAdjustmentForStiffness()
 {
-    auto filter_mode = oscdata->p[str_exciter_level].deform_type & StringOscillator::filter_all;
+    auto filter_mode = oscdata->p[str_stiffness].deform_type & StringOscillator::filter_all;
     if (!(filter_mode & StringOscillator::filter_compensate))
         return 0;
 
     auto tv = limit_range(localcopy[id_stiffness].f, -1.f, 1.f);
     if (tv < 0)
     {
-        // I just whacked at it in a tuner at levels and came up with this
+        // I just whacked at it in a tuner at levels and came up with this. These are pitch shifts
+        // so basically i ran A/69/440 into a tuner with the burst chirp and saw how far we were
+        // off in frequency at 0, 25, 50 etcc then converted to notes using 12TET
         static constexpr float retunes[] = {-0.0591202, -0.122405, -0.225738, -0.406056,
                                             -0.7590243};
         float fidx = limit_range(-4 * tv, 0.f, 4.f);
@@ -401,7 +403,7 @@ float StringOscillator::pitchAdjustmentForStiffness()
 
 void StringOscillator::configureLpAndHpFromTone(float pitch)
 {
-    auto filter_mode = oscdata->p[str_exciter_level].deform_type & StringOscillator::filter_all;
+    auto filter_mode = oscdata->p[str_stiffness].deform_type & StringOscillator::filter_all;
 
     tone.newValue(limit_range(localcopy[id_stiffness].f, -1.f, 1.f));
 
@@ -578,28 +580,69 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
 
     auto fbp = limit_range(localcopy[id_str1decay].f, 0.f, 1.f);
 
-    if (fbp < 0.2)
+    if (oscdata->p[str_str1_decay].extend_range)
     {
-        // go from 0.85 to 0.95
-        feedback[0].newValue(0.85f + (0.5f * fbp));
+        fbp = 2 * fbp - 1;
+        auto absfbp = fabs(fbp);
+        auto sgn = 1.f;
+        if (fbp < 0)
+            sgn = -1.f;
+        if (absfbp < 0.2)
+        {
+            // go from 0.85 to 0.95
+            feedback[0].newValue(sgn * (0.85f + (0.5f * absfbp)));
+        }
+        else
+        {
+            // go from 0.95 to 1.0
+            feedback[0].newValue(sgn * (0.9375f + (0.0625f * absfbp)));
+        }
     }
     else
     {
-        // go from 0.95 to 1.0
-        feedback[0].newValue(0.9375f + (0.0625f * fbp));
+        if (fbp < 0.2)
+        {
+            // go from 0.85 to 0.95
+            feedback[0].newValue(0.85f + (0.5f * fbp));
+        }
+        else
+        {
+            // go from 0.95 to 1.0
+            feedback[0].newValue(0.9375f + (0.0625f * fbp));
+        }
     }
 
     auto fbp2 = limit_range(localcopy[id_str2decay].f, 0.f, 1.f);
 
-    if (fbp2 < 0.2)
+    if (oscdata->p[str_str2_decay].extend_range)
     {
-        feedback[1].newValue(0.85f + (0.5f * fbp2));
+        fbp2 = 2 * fbp2 - 1;
+        auto absfbp = fabs(fbp2);
+        auto sgn = 1.f;
+        if (fbp2 < 0)
+            sgn = -1.f;
+        if (absfbp < 0.2)
+        {
+            // go from 0.85 to 0.95
+            feedback[1].newValue(sgn * (0.85f + (0.5f * absfbp)));
+        }
+        else
+        {
+            // go from 0.95 to 1.0
+            feedback[1].newValue(sgn * (0.9375f + (0.0625f * absfbp)));
+        }
     }
     else
     {
-        feedback[1].newValue(0.9375f + (0.0625f * fbp2));
+        if (fbp2 < 0.2)
+        {
+            feedback[1].newValue(0.85f + (0.5f * fbp2));
+        }
+        else
+        {
+            feedback[1].newValue(0.9375f + (0.0625f * fbp2));
+        }
     }
-
     // fmdepthV basically goes 0 -> 16 so lets push it 0,1 for now
     double fv = fmdepthV / 16.0;
 
@@ -803,11 +846,11 @@ void StringOscillator::init_ctrltypes()
     oscdata->p[str_exciter_level].val_default.f = 1.f;
 
     oscdata->p[str_str1_decay].set_name("String 1 Decay");
-    oscdata->p[str_str1_decay].set_type(ct_percent);
+    oscdata->p[str_str1_decay].set_type(ct_percent_with_extend_to_bipolar);
     oscdata->p[str_str1_decay].val_default.f = 0.95;
 
     oscdata->p[str_str2_decay].set_name("String 2 Decay");
-    oscdata->p[str_str2_decay].set_type(ct_percent);
+    oscdata->p[str_str2_decay].set_type(ct_percent_with_extend_to_bipolar);
     oscdata->p[str_str2_decay].val_default.f = 0.95;
 
     oscdata->p[str_str2_detune].set_name("String 2 Detune");
@@ -817,23 +860,26 @@ void StringOscillator::init_ctrltypes()
     oscdata->p[str_str_balance].set_type(ct_percent_bipolar_stringbal);
 
     oscdata->p[str_stiffness].set_name("Stiffness");
-    oscdata->p[str_stiffness].set_type(ct_percent_bipolar);
+    oscdata->p[str_stiffness].set_type(ct_percent_bipolar_with_string_filter_hook);
 }
 
 void StringOscillator::init_default_values()
 {
     oscdata->p[str_exciter_mode].val.i = 0;
     oscdata->p[str_exciter_level].val.f = 1.f;
-    oscdata->p[str_exciter_level].deform_type = os_onex | interp_sinc | filter_fixed;
+    oscdata->p[str_exciter_level].deform_type = os_onex | interp_sinc;
 
     oscdata->p[str_str1_decay].val.f = 0.95f;
+    oscdata->p[str_str1_decay].set_extend_range(false);
     oscdata->p[str_str2_decay].val.f = 0.95f;
+    oscdata->p[str_str2_decay].set_extend_range(false);
 
     oscdata->p[str_str2_detune].val.f = 0.1f;
     oscdata->p[str_str2_detune].set_extend_range(false);
     oscdata->p[str_str_balance].val.f = 0.f;
 
     oscdata->p[str_stiffness].val.f = 0.f;
+    oscdata->p[str_stiffness].deform_type = filter_fixed;
 }
 
 void StringOscillator::fillDustBuffer(float tap0, float tap1)
@@ -852,6 +898,9 @@ void StringOscillator::handleStreamingMismatches(int streamingRevision,
 {
     if (streamingRevision < 19)
     {
-        oscdata->p[str_exciter_level].deform_type = os_onex | interp_sinc | filter_fixed;
+        oscdata->p[str_exciter_level].deform_type = os_onex | interp_sinc;
+        oscdata->p[str_stiffness].deform_type = filter_fixed;
+        oscdata->p[str_str1_decay].set_extend_range(false);
+        oscdata->p[str_str2_decay].set_extend_range(false);
     }
 }
