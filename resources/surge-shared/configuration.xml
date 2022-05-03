@@ -25,7 +25,7 @@
 <type i="6" name="FM2" retrigger="1" p6_extend_range="1"/>
 <type i="5" name="FM3" retrigger="1" p1_extend_range="0" p3_extend_range="0" p5_extend_range="0" p6_extend_range="1"/>
 <separator/>
-<type i="9" name="String" p0="0" p4_extend_range="0"/>
+<type i="9" name="String" p0="0" p4_extend_range="0" p6_deform_type="256"/>
 <type i="10" name="Twist" p4_extend_range="0"/>
 <separator/>
 <type i="11" name="Alias" p4_extend_range="0"/>
