@@ -2932,7 +2932,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
 
         if (ctrltype == ct_fmratio && !absolute)
         {
-            snprintf(txt, TXT_SIZE, "");
+            snprintf(txt, TXT_SIZE, " ");
         }
 
         break;
