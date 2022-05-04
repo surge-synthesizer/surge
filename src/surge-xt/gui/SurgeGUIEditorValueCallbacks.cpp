@@ -3573,13 +3573,13 @@ bool SurgeGUIEditor::setParameterFromString(Parameter *p, const std::string &s, 
 }
 bool SurgeGUIEditor::setParameterModulationFromString(Parameter *p, modsources ms,
                                                       int modsourceScene, int modidx,
-                                                      const std::string &s)
+                                                      const std::string &s, std::string &errMsg)
 {
     if (!p || ms == 0)
         return false;
 
     bool valid = false;
-    auto mv = p->calculate_modulation_value_from_string(s, valid);
+    auto mv = p->calculate_modulation_value_from_string(s, errMsg, valid);
 
     if (!valid)
     {

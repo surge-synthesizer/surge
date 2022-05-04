@@ -4441,7 +4441,8 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 }
 
 // This function returns a value in range [-1, 1], scaled by the minimum and maximums
-float Parameter::calculate_modulation_value_from_string(const std::string &s, bool &valid)
+float Parameter::calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
+                                                        bool &valid)
 {
     valid = true;
 
@@ -4479,11 +4480,14 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
 
         mv /= displayInfo.scale;
 
+        float minval = val_min.f;
+
         if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
         {
             if (!is_bipolar())
             {
                 mv = mv * 2;
+                minval = 0;
             }
         }
 
@@ -4496,7 +4500,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
 
         if (can_extend_range() && extend_range)
         {
-            // ModValue is in extended units already
+            // mod value is in extended units already
             rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
         }
 
@@ -4596,6 +4600,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, bo
          * d / 18 + av/18 = log2(m+v)
          * 2^(d/18 + mv/18) - v = m
          */
+
         auto av = amp_to_db(val.f);
         auto d = (float)std::atof(s.c_str());
         auto mv = powf(2.0, (d / 18.0 + av / 18.0)) - val.f;

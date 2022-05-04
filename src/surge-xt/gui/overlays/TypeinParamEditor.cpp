@@ -183,7 +183,7 @@ bool TypeinParamEditor::handleTypein(const std::string &value, std::string &errM
     {
         if (p && ms > 0)
         {
-            res = editor->setParameterModulationFromString(p, ms, modScene, modidx, value);
+            res = editor->setParameterModulationFromString(p, ms, modScene, modidx, value, errMsg);
         }
         else
         {
