@@ -1,0 +1,8 @@
+<single-fx streaming_version="19">
+  <snapshot name="PowerSag" 
+     type="14"
+     p0="66"
+     p1="0.5"
+     p2="0.75"
+  />
+</single-fx>
