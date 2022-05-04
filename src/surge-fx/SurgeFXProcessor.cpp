@@ -552,14 +552,16 @@ float SurgefxAudioProcessor::getParameterValueForString(int i, const std::string
     auto *p = &(fxstorage->p[fx_param_remap[i]]);
 
     pdata v;
-    p->set_value_from_string_onto(s, v);
+    // TODO: range error reporting
+    std::string errMsg;
+    p->set_value_from_string_onto(s, v, errMsg);
     return v.f;
 }
 void SurgefxAudioProcessor::setParameterByString(int i, const std::string &s)
 {
     auto *p = &(fxstorage->p[fx_param_remap[i]]);
+    // TODO: range error reporting
     std::string errMsg;
-
     p->set_value_from_string(s, errMsg);
     *(fxParams[i]) = fxstorage->p[fx_param_remap[i]].get_value_f01();
     changedParamsValue[i] = fxstorage->p[fx_param_remap[i]].get_value_f01();
