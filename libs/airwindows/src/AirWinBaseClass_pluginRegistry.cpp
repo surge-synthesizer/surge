@@ -10,6 +10,7 @@
 #include "Cabs.h"
 #include "Capacitor.h"
 #include "Chamber.h"
+#include "ChromeOxide.h"
 #include "Cojones.h"
 #include "Compresaturator.h"
 #include "CrunchyGrooveWear.h"
@@ -20,10 +21,14 @@
 #include "DeRez2.h"
 #include "Drive.h"
 #include "DrumSlam.h"
+#include "DubSub.h"
+#include "DubCenter.h"
 #include "DustBunny.h"
+#include "FireAmp.h"
 #include "Focus.h"
 #include "Fracture.h"
 #include "Galactic.h"
+#include "GlitchShifter.h"
 #include "GrooveWear.h"
 #include "HardVacuum.h"
 #include "Hombre.h"
@@ -38,10 +43,13 @@
 #include "Mojo.h"
 #include "NCSeventeen.h"
 #include "Noise.h"
+#include "NonlinearSpace.h"
 #include "OneCornerClip.h"
+#include "Pafnuty.h"
 #include "PocketVerbs.h"
 #include "Point.h"
 #include "Pop.h"
+#include "PowerSag.h"
 #include "Pressure4.h"
 #include "PyeWacket.h"
 #include "SingleEndedTriode.h"
@@ -50,8 +58,10 @@
 #include "Spiral2.h"
 #include "StarChild.h"
 #include "Surge.h"
+#include "TapeDust.h"
 #include "TripleSpread.h"
 #include "ToTape6.h"
+#include "ToVinyl4.h"
 #include "UnBox.h"
 #include "Verbity.h"
 #include "VariMu.h"
@@ -106,6 +116,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     std::string gnSaturation = "Saturation And More";
     std::string gnStereo = "Stereo";
     std::string gnTape = "Tape";
+    std::string gnPitch = "Pitch";
 
     int id = 0; // add new effects only at the end of this list!
 
@@ -190,6 +201,18 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnSaturation, "NoOp (Was: Tube)");
 
     reg.emplace_back(create<Cabs::Cabs>, id++, 410, gnFilter, "Cabs");
+
+    reg.emplace_back(create<ChromeOxide::ChromeOxide>, id++, 445, gnTape, "Chrome Oxide");
+    reg.emplace_back(create<DubSub::DubSub>, id++, 421, gnFilter, "DubSub");
+    reg.emplace_back(create<DubCenter::DubCenter>, id++, 423, gnFilter, "DubCenter");
+    reg.emplace_back(create<FireAmp::FireAmp>, id++, 312, gnSaturation, "FireAmp");
+    reg.emplace_back(create<GlitchShifter::GlitchShifter>, id++, 500, gnPitch, "GlitchShifter");
+    reg.emplace_back(create<NonlinearSpace::NonlinearSpace>, id++, 250, gnAmbience,
+                     "NonlinearSpace");
+    reg.emplace_back(create<Pafnuty::Pafnuty>, id++, 440, gnFilter, "Pafnuty");
+    reg.emplace_back(create<PowerSag::PowerSag>, id++, 362, gnSaturation, "PowerSag");
+    reg.emplace_back(create<TapeDust::TapeDust>, id++, 205, gnNoise, "TapeDust");
+    reg.emplace_back(create<ToVinyl4::ToVinyl4>, id++, 200, gnLoFi, "ToVinyl4");
 
     return reg;
 }

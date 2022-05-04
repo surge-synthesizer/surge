@@ -36,6 +36,8 @@ add_library(${PROJECT_NAME}
   src/CapacitorProc.cpp
   src/Chamber.cpp
   src/ChamberProc.cpp
+  src/ChromeOxide.cpp
+  src/ChromeOxideProc.cpp
   src/Cojones.cpp
   src/Cojones.h
   src/CojonesProc.cpp
@@ -66,9 +68,15 @@ add_library(${PROJECT_NAME}
   src/DrumSlam.cpp
   src/DrumSlam.h
   src/DrumSlamProc.cpp
+  src/DubSub.cpp
+  src/DubSubProc.cpp
+  src/DubCenter.cpp
+  src/DubCenterProc.cpp
   src/DustBunny.cpp
   src/DustBunny.h
   src/DustBunnyProc.cpp
+  src/FireAmp.cpp
+  src/FireAmpProc.cpp
   src/Focus.cpp
   src/Focus.h
   src/FocusProc.cpp
@@ -78,6 +86,8 @@ add_library(${PROJECT_NAME}
   src/Galactic.cpp
   src/Galactic.h
   src/GalacticProc.cpp
+  src/GlitchShifter.cpp
+  src/GlitchShifterProc.cpp
   src/GrooveWear.cpp
   src/GrooveWear.h
   src/GrooveWearProc.cpp
@@ -120,9 +130,13 @@ add_library(${PROJECT_NAME}
   src/Noise.cpp
   src/Noise.h
   src/NoiseProc.cpp
+  src/NonlinearSpace.cpp
+  src/NonlinearSpaceProc.cpp
   src/OneCornerClip.cpp
   src/OneCornerClip.h
   src/OneCornerClipProc.cpp
+  src/Pafnuty.cpp
+  src/PafnutyProc.cpp
   src/PocketVerbs.cpp
   src/PocketVerbs.h
   src/PocketVerbsProc.cpp
@@ -132,6 +146,8 @@ add_library(${PROJECT_NAME}
   src/Pop.cpp
   src/Pop.h
   src/PopProc.cpp
+  src/PowerSag.cpp
+  src/PowerSagProc.cpp
   src/Pressure4.cpp
   src/Pressure4.h
   src/Pressure4Proc.cpp
@@ -156,9 +172,13 @@ add_library(${PROJECT_NAME}
   src/Surge.cpp
   src/Surge.h
   src/SurgeProc.cpp
+  src/TapeDust.cpp
+  src/TapeDustProc.cpp
   src/ToTape6.cpp
   src/ToTape6.h
   src/ToTape6Proc.cpp
+  src/ToVinyl4.cpp
+  src/ToVinyl4Proc.cpp
   src/TripleSpread.cpp
   src/TripleSpread.h
   src/TripleSpreadProc.cpp

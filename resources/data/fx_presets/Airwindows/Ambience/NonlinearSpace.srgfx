@@ -1,0 +1,12 @@
+<single-fx streaming_version="19">
+  <snapshot name="NonlinearSpace" 
+     type="14"
+     p0="64"
+     p1="0.3"
+     p2="0.5"
+     p3="0.5"
+     p4="0.5"
+     p5="0.5"
+     p6="1"
+  />
+</single-fx>
