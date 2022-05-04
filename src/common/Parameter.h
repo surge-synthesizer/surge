@@ -341,11 +341,12 @@ struct ModulationDisplayInfoWindowStrings
 class SurgeStorage;
 
 /*
-** WARNING WARNING
+** WARNING!
 **
 ** Parameter is copied with memcpy
-** Don't have complex types as members therefore
+** Therefore, don't have complex types as members!
 */
+
 class Parameter
 {
   public:
@@ -402,9 +403,6 @@ class Parameter
     Parameter *get_primary_deactivation_driver() const;
 
     void set_type(int ctrltype);
-    void morph(Parameter *a, Parameter *b, float x);
-    //	void morph(parameter *b, float x);
-    pdata morph(Parameter *b, float x);
     const char *get_name() const;
     const char *get_full_name() const;
     void set_name(const char *n); // never change name_storage as it is used for storage/recall
@@ -412,11 +410,19 @@ class Parameter
     const char *get_storage_name() const;
     const wchar_t *getUnit() const;
     void get_display(char *txt, bool external = false, float ef = 0.f) const;
+
     enum ModulationDisplayMode
     {
         TypeIn,
         Menu,
         InfoWindow
+    };
+
+    enum ErrorMessageMode
+    {
+        IsSmaller,
+        IsLarger,
+        Special,
     };
 
     void get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
@@ -432,9 +438,12 @@ class Parameter
     float value_to_normalized(float value) const;
     float get_default_value_f01() const;
     void set_value_f01(float v, bool force_integer = false);
-    bool set_value_from_string(const std::string &s);
-    bool set_value_from_string_onto(const std::string &s, pdata &ontoThis);
+    bool set_value_from_string(const std::string &s, std::string &errMsg);
+    bool set_value_from_string_onto(const std::string &s, pdata &ontoThis, std::string &errMsg);
+    void set_error_message(std::string &errMsg, const std::string value, const std::string unit,
+                           const ErrorMessageMode mode);
     void set_extend_range(bool er);
+    double get_freq_from_note_name(const std::string s);
 
     /*
      * These two functions convert the modulation depth to a -1,1 range appropriate
@@ -443,7 +452,8 @@ class Parameter
     float get_modulation_f01(float mod) const;
     float set_modulation_f01(float v) const;
 
-    float calculate_modulation_value_from_string(const std::string &s, bool &valid);
+    float calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
+                                                 bool &valid);
 
     void bound_value(bool force_integer = false);
     std::string tempoSyncNotationValue(float f) const;
@@ -512,6 +522,7 @@ class Parameter
     };
 
 #define DISPLAYINFO_TXT_SIZE 128
+
     struct DisplayInfo
     {
         char unit[DISPLAYINFO_TXT_SIZE]{}, absoluteUnit[DISPLAYINFO_TXT_SIZE]{};
@@ -534,16 +545,16 @@ class Parameter
               absoluteFactor = 1.0; // set these to 1 in case we sneak by and divide by accident
     } displayInfo;
 
+    void getSemitonesOrKeys(std::string &str) const;
+
     ParamUserData *user_data = nullptr;    // I know this is a bit gross but we have a runtime type
     void set_user_data(ParamUserData *ud); // I take a shallow copy and don't assume ownership and
-                                           // assume i am referencable
+                                           // assume I am referencable
 
     bool supportsDynamicName() const;
     ParameterDynamicNameFunction *dynamicName = nullptr;
 
-    /*
-     * Handlers for dynamic deactivation and dynamic bipolarity
-     */
+    // Handlers for dynamic deactivation and dynamic bipolarity
     ParameterDynamicDeactivationFunction *dynamicDeactivation = nullptr;
     ParameterDynamicBoolFunction *dynamicBipolar = nullptr;
 

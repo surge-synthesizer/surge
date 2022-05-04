@@ -3436,7 +3436,8 @@ bool SurgeSynthesizer::stringToNormalizedValue(const ID &index, std::string s, f
         return false;
 
     pdata vt = p->val;
-    auto res = p->set_value_from_string_onto(s, vt);
+    std::string errMsg;
+    auto res = p->set_value_from_string_onto(s, vt, errMsg);
 
     if (res)
     {

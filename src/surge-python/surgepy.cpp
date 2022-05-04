@@ -318,7 +318,6 @@ class SurgePyPatchConverter
 #define ADD(x) addParam(res, #x, patch.x);
         ADD(scene_active);
         ADD(scenemode);
-        // ADD( scenemorph );
         ADD(splitpoint);
         ADD(volume);
         ADD(polylimit);

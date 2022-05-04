@@ -88,7 +88,8 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
     float getValueForText(const juce::String &text) const override
     {
         pdata onto;
-        if (p->set_value_from_string_onto(text.toStdString(), onto))
+        std::string errMsg;
+        if (p->set_value_from_string_onto(text.toStdString(), onto, errMsg))
         {
             if (p->valtype == vt_float)
                 return p->value_to_normalized(onto.f);

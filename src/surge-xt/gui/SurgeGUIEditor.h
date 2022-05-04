@@ -634,9 +634,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<juce::Drawable> midiLearnOverlay;
 
     std::unique_ptr<Surge::Overlays::TypeinParamEditor> typeinParamEditor;
-    bool setParameterFromString(Parameter *p, const std::string &s);
+    bool setParameterFromString(Parameter *p, const std::string &s, std::string &errMsg);
     bool setParameterModulationFromString(Parameter *p, modsources ms, int modsourceScene,
-                                          int modidx, const std::string &s);
+                                          int modidx, const std::string &s, std::string &errMsg);
     bool setControlFromString(modsources ms, const std::string &s);
     void hideTypeinParamEditor();
     friend struct Surge::Overlays::TypeinParamEditor;
