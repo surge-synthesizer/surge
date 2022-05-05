@@ -3970,7 +3970,7 @@ bool Parameter::can_setvalue_from_string() const
     return false;
 }
 
-double Parameter::get_freq_from_note_name(const std::string s)
+double Parameter::get_freq_from_note_name(const std::string s, double defv)
 {
     if ((s[0] >= 'a' && s[0] <= 'g') || (s[0] >= 'A' && s[0] <= 'G'))
     {
@@ -4011,7 +4011,7 @@ double Parameter::get_freq_from_note_name(const std::string s)
     }
     else
     {
-        return 0.0;
+        return defv;
     }
 }
 
@@ -4091,7 +4091,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             // if input is invalid or out of int range, try note recognition
             if (ni < val_min.i)
             {
-                float uv = get_freq_from_note_name(s) / 440.f;
+                float uv = get_freq_from_note_name(s, 60) / 440.f;
                 float n = log2(uv) * 12 + 69;
 
                 ni = (int)n;
@@ -4243,7 +4243,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     {
         if (displayInfo.supportsNoteName)
         {
-            nv = get_freq_from_note_name(s);
+            nv = get_freq_from_note_name(s, nv);
         }
 
         /*
@@ -4336,7 +4336,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     {
         if (absolute)
         {
-            nv = get_freq_from_note_name(s);
+            nv = get_freq_from_note_name(s, nv);
 
             float uv = nv / 440.f;
             float n = log2(uv) * 12 + 69;
@@ -4444,6 +4444,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 float Parameter::calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
                                                         bool &valid)
 {
+    errMsg = "Modulation Out of Bounds";
     valid = true;
 
     float mv = std::atof(s.c_str());
@@ -4481,6 +4482,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         mv /= displayInfo.scale;
 
         float minval = val_min.f;
+        float maxval = val_max.f;
 
         if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
         {
@@ -4502,10 +4504,22 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         {
             // mod value is in extended units already
             rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+            minval = get_extended(val_min.f);
+            maxval = get_extended(val_max.f);
         }
 
         if (rmv > 1 || rmv < -1)
         {
+            /* So we need modval / maxval - minval < 1
+             * or modval < maxval - minval
+             * Or modval / max - min > -1
+             * or modva > -(max - min)
+             * so modval has to be between -(max-min) and (max-min)
+             */
+            if (rmv < -1)
+                errMsg = fmt::format("Depth must be larger than {:.2f}", -(maxval - minval));
+            else
+                errMsg = fmt::format("Depth must be smaller than {:.2f}", (maxval - minval));
             valid = false;
         }
 
@@ -4574,6 +4588,13 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         }
         else
         {
+            /*
+             * d / a + 2^bv > 0
+             * d > -a 2^bv
+             */
+            auto mind = -a * pow(2.0, b * val.f);
+            errMsg = fmt::format("Depth must be larger than {:.2f}", mind);
+
             valid = false;
         }
 
@@ -4709,6 +4730,12 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
         if (mv < -1 || mv > 1)
         {
+            auto minval = get_extended(val_min.f);
+            auto maxval = get_extended(val_max.f);
+            if (mv < -1)
+                errMsg = fmt::format("Depth must be larger than {:.2f}", -(maxval - minval));
+            else
+                errMsg = fmt::format("Depth must be smaller than {:.2f}", (maxval - minval));
             valid = false;
         }
 
