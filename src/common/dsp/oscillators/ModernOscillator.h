@@ -45,7 +45,8 @@ class ModernOscillator : public Oscillator
     };
 
     static constexpr int sigbuf_len = 6;
-    ModernOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
+    ModernOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
+        : Oscillator(s, o, p), charFilt(s)
     {
         for (auto u = 0; u < MAX_UNISON; ++u)
         {

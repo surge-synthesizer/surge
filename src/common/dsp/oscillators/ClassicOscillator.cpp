@@ -141,7 +141,7 @@ AbstractBlitOscillator::AbstractBlitOscillator(SurgeStorage *storage, Oscillator
                                                pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy)
 {
-    integrator_hpf = (1.f - 2.f * 20.f * samplerate_inv);
+    integrator_hpf = (1.f - 2.f * 20.f * storage->samplerate_inv);
     integrator_hpf *= integrator_hpf;
 }
 
@@ -163,7 +163,7 @@ void AbstractBlitOscillator::prepare_unison(int voices)
 
 ClassicOscillator::ClassicOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                      pdata *localcopy)
-    : AbstractBlitOscillator(storage, oscdata, localcopy)
+    : AbstractBlitOscillator(storage, oscdata, localcopy), charFilt(storage)
 {
 }
 
@@ -494,8 +494,8 @@ template <bool FM> void ClassicOscillator::convolute(int voice, bool stereo)
             float *obfR = &oscbufferR[bufpos + k + delay];
             __m128 obL = _mm_loadu_ps(obfL);
             __m128 obR = _mm_loadu_ps(obfR);
-            __m128 st = _mm_load_ps(&sinctable[m + k]);
-            __m128 so = _mm_load_ps(&sinctable[m + k + FIRipol_N]);
+            __m128 st = _mm_load_ps(&storage->sinctable[m + k]);
+            __m128 so = _mm_load_ps(&storage->sinctable[m + k + FIRipol_N]);
             so = _mm_mul_ps(so, lipol128);
             st = _mm_add_ps(st, so);
             obL = _mm_add_ps(obL, _mm_mul_ps(st, g128L));
@@ -516,9 +516,10 @@ template <bool FM> void ClassicOscillator::convolute(int voice, bool stereo)
         {
             float *obf = &oscbuffer[bufpos + k + delay]; // Get buffer[pos + delay + k ]
             __m128 ob = _mm_loadu_ps(obf);
-            __m128 st =
-                _mm_load_ps(&sinctable[m + k]); // get the sinctable for our fractional position
-            __m128 so = _mm_load_ps(&sinctable[m + k + FIRipol_N]); // get the sinctable deriv
+            __m128 st = _mm_load_ps(
+                &storage->sinctable[m + k]); // get the sinctable for our fractional position
+            __m128 so =
+                _mm_load_ps(&storage->sinctable[m + k + FIRipol_N]); // get the sinctable deriv
             so = _mm_mul_ps(so, lipol128); // scale the deriv by the lipol fractional time
             st = _mm_add_ps(st, so);       // this is now st = sinctable + dt * dsinctable
             st = _mm_mul_ps(st, g128);     // so this is now the convolved difference, g * kernel
@@ -570,7 +571,7 @@ template <bool is_init> void ClassicOscillator::update_lagvals()
 
     // keytracked highpass filter that deforms the mathematically perfect BLIT waveforms
     auto pp = storage->note_to_pitch_tuningctr(pitch + l_sync.v);
-    float invt = 4.f * min(1.0, (8.175798915 * pp * dsamplerate_os_inv));
+    float invt = 4.f * min(1.0, (8.175798915 * pp * storage->dsamplerate_os_inv));
     // TODO: Make a lookup table
     float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, invt));
 
@@ -597,8 +598,8 @@ void ClassicOscillator::process_block(float pitch0, float drift, bool stereo, bo
     */
     this->pitch = min(148.f, pitch0);
     this->drift = drift;
-    pitchmult_inv =
-        std::max(1.0, dsamplerate_os * (1.f / 8.175798915f) * storage->note_to_pitch_inv(pitch));
+    pitchmult_inv = std::max(1.0, storage->dsamplerate_os * (1.f / 8.175798915f) *
+                                      storage->note_to_pitch_inv(pitch));
     // This must be a real division, reciprocal approximation is not precise enough
     pitchmult = 1.f / pitchmult_inv;
 

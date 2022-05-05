@@ -87,7 +87,7 @@ void ResonatorEffect::sampleRateReset()
 {
     for (int e = 0; e < 3; ++e)
         for (int c = 0; c < 2; ++c)
-            coeff[e][c].setSampleRateAndBlockSize((float)dsamplerate_os, BLOCK_SIZE_OS);
+            coeff[e][c].setSampleRateAndBlockSize((float)storage->dsamplerate_os, BLOCK_SIZE_OS);
 }
 
 void ResonatorEffect::process(float *dataL, float *dataR)
@@ -193,8 +193,10 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     {
         // preprocess audio in through asymmetric waveshaper
         // this mimics Polymoog's power supply which only operated on positive rails
-        dataOS[0][s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_asym, dataOS[0][s]);
-        dataOS[1][s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_asym, dataOS[1][s]);
+        dataOS[0][s] =
+            storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_asym, dataOS[0][s]);
+        dataOS[1][s] =
+            storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_asym, dataOS[1][s]);
 
         auto l128 = _mm_setzero_ps();
         auto r128 = _mm_setzero_ps();
@@ -230,8 +232,8 @@ void ResonatorEffect::process(float *dataL, float *dataR)
             }
 
             // soft-clip output for good measure
-            mixl = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixl);
-            mixr = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixr);
+            mixl = storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixl);
+            mixr = storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixr);
 
             // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every
             // other sample

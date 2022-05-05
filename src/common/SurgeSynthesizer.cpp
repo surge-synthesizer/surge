@@ -165,6 +165,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
             patch.scene[j].modsources[ms_ctrl1 + i] = patch.scene[0].modsources[ms_ctrl1 + i];
         }
     }
+    f for (int s = 0; s < n_scenes; ++s) for (auto ms : patch.scene[s].modsources) if (ms)
+        ms->set_samplerate(storage.samplerate, storage.samplerate_inv);
 
     amp.set_blocksize(BLOCK_SIZE);
 
@@ -2108,7 +2110,7 @@ void SurgeSynthesizer::allNotesOff()
 void SurgeSynthesizer::setSamplerate(float sr)
 {
     storage.setSamplerate(sr);
-    sinus.set_rate(1000.0 * dsamplerate_inv);
+    sinus.set_rate(1000.0 * storage.dsamplerate_inv);
 
     for (const auto &f : fx)
     {
@@ -3849,7 +3851,7 @@ void SurgeSynthesizer::process()
     storage.modRoutingMutex.lock();
     processControl();
 
-    amp.set_target_smoothed(db_to_linear(storage.getPatch().volume.val.f));
+    amp.set_target_smoothed(storage.db_to_linear(storage.getPatch().volume.val.f));
     amp_mute.set_target(mfade);
 
     int fx_bypass = storage.getPatch().fx_bypass.val.i;

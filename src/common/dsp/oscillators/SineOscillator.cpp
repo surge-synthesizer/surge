@@ -67,7 +67,7 @@
  */
 
 SineOscillator::SineOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
-    : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
+    : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage), charFilt(storage)
 {
 }
 
@@ -87,7 +87,7 @@ void SineOscillator::prepare_unison(int voices)
     }
 
     // normalize to be sample rate independent amount of time for 50 44.1k samples
-    dplaying = 1.0 / 50.0 * 44100 / samplerate;
+    dplaying = 1.0 / 50.0 * 44100 / storage->samplerate;
     playingramp[0] = 1;
     for (int i = 1; i < voices; ++i)
         playingramp[i] = 0;

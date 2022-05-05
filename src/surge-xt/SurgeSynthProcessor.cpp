@@ -341,7 +341,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         {
             surge->process();
             surge->time_data.ppqPos +=
-                (double)BLOCK_SIZE * surge->time_data.tempo / (60. * samplerate);
+                (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
         }
         *outL = surge->output[0][blockPos];
         *outR = surge->output[1][blockPos];

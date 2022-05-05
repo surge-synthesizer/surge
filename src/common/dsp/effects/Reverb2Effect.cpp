@@ -77,7 +77,7 @@ Reverb2Effect::~Reverb2Effect() {}
 
 void Reverb2Effect::init() { setvars(true); }
 
-int msToSamples(float ms, float scale)
+int msToSamples(float ms, float scale, float samplerate)
 {
     float a = samplerate * ms * 0.001f;
     float b = a * scale;
@@ -88,35 +88,35 @@ void Reverb2Effect::calc_size(float scale)
 {
     float m = scale;
 
-    _tap_timeL[0] = msToSamples(80.3, m);
-    _tap_timeL[1] = msToSamples(59.3, m);
-    _tap_timeL[2] = msToSamples(97.7, m);
-    _tap_timeL[3] = msToSamples(122.6, m);
-    _tap_timeR[0] = msToSamples(35.5, m);
-    _tap_timeR[1] = msToSamples(101.6, m);
-    _tap_timeR[2] = msToSamples(73.9, m);
-    _tap_timeR[3] = msToSamples(80.3, m);
+    _tap_timeL[0] = msToSamples(80.3, m, storage->samplerate);
+    _tap_timeL[1] = msToSamples(59.3, m, storage->samplerate);
+    _tap_timeL[2] = msToSamples(97.7, m, storage->samplerate);
+    _tap_timeL[3] = msToSamples(122.6, m, storage->samplerate);
+    _tap_timeR[0] = msToSamples(35.5, m, storage->samplerate);
+    _tap_timeR[1] = msToSamples(101.6, m, storage->samplerate);
+    _tap_timeR[2] = msToSamples(73.9, m, storage->samplerate);
+    _tap_timeR[3] = msToSamples(80.3, m, storage->samplerate);
 
-    _input_allpass[0].setLen(msToSamples(4.76, m));
-    _input_allpass[1].setLen(msToSamples(6.81, m));
-    _input_allpass[2].setLen(msToSamples(10.13, m));
-    _input_allpass[3].setLen(msToSamples(16.72, m));
+    _input_allpass[0].setLen(msToSamples(4.76, m, storage->samplerate));
+    _input_allpass[1].setLen(msToSamples(6.81, m, storage->samplerate));
+    _input_allpass[2].setLen(msToSamples(10.13, m, storage->samplerate));
+    _input_allpass[3].setLen(msToSamples(16.72, m, storage->samplerate));
 
-    _allpass[0][0].setLen(msToSamples(38.2, m));
-    _allpass[0][1].setLen(msToSamples(53.4, m));
-    _delay[0].setLen(msToSamples(178.8, m));
+    _allpass[0][0].setLen(msToSamples(38.2, m, storage->samplerate));
+    _allpass[0][1].setLen(msToSamples(53.4, m, storage->samplerate));
+    _delay[0].setLen(msToSamples(178.8, m, storage->samplerate));
 
-    _allpass[1][0].setLen(msToSamples(44.0, m));
-    _allpass[1][1].setLen(msToSamples(41, m));
-    _delay[1].setLen(msToSamples(126.5, m));
+    _allpass[1][0].setLen(msToSamples(44.0, m, storage->samplerate));
+    _allpass[1][1].setLen(msToSamples(41, m, storage->samplerate));
+    _delay[1].setLen(msToSamples(126.5, m, storage->samplerate));
 
-    _allpass[2][0].setLen(msToSamples(48.3, m));
-    _allpass[2][1].setLen(msToSamples(60.5, m));
-    _delay[2].setLen(msToSamples(106.1, m));
+    _allpass[2][0].setLen(msToSamples(48.3, m, storage->samplerate));
+    _allpass[2][1].setLen(msToSamples(60.5, m, storage->samplerate));
+    _delay[2].setLen(msToSamples(106.1, m, storage->samplerate));
 
-    _allpass[3][0].setLen(msToSamples(38.9, m));
-    _allpass[3][1].setLen(msToSamples(42.2, m));
-    _delay[3].setLen(msToSamples(139.4, m));
+    _allpass[3][0].setLen(msToSamples(38.9, m, storage->samplerate));
+    _allpass[3][1].setLen(msToSamples(42.2, m, storage->samplerate));
+    _delay[3].setLen(msToSamples(139.4, m, storage->samplerate));
 }
 
 void Reverb2Effect::setvars(bool init)
@@ -140,7 +140,7 @@ void Reverb2Effect::update_rtime()
     // * 2.f is to get the dB120 time
     auto pdlyt = std::max(0.1f, powf(2.f, *f[rev2_predelay]) * ts) * 2.f;
     auto dcyt = std::max(1.0f, powf(2.f, *f[rev2_decay_time])) * 2.f;
-    float t = BLOCK_SIZE_INV * (samplerate * (dcyt + pdlyt));
+    float t = BLOCK_SIZE_INV * (storage->samplerate * (dcyt + pdlyt));
 
     ringout_time = (int)t;
 }
@@ -165,15 +165,15 @@ void Reverb2Effect::process(float *dataL, float *dataR)
     _buildup.newValue(0.7f * *f[rev2_buildup]);
     _hf_damp_coefficent.newValue(0.8 * *f[rev2_hf_damping]);
     _lf_damp_coefficent.newValue(0.2 * *f[rev2_lf_damping]);
-    _modulation.newValue(*f[rev2_modulation] * samplerate * 0.001f * 5.f);
+    _modulation.newValue(*f[rev2_modulation] * storage->samplerate * 0.001f * 5.f);
 
-    width.set_target_smoothed(db_to_linear(*f[rev2_width]));
+    width.set_target_smoothed(storage->db_to_linear(*f[rev2_width]));
     mix.set_target_smoothed(*f[rev2_mix]);
 
-    _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * dsamplerate_inv);
+    _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * storage->dsamplerate_inv);
 
     int pdt =
-        limit_range((int)(samplerate * pow(2.f, *f[rev2_predelay]) *
+        limit_range((int)(storage->samplerate * pow(2.f, *f[rev2_predelay]) *
                           (fxdata->p[rev2_predelay].temposync ? storage->temposyncratio_inv : 1.f)),
                     1, PREDELAY_BUFFER_SIZE_LIMIT - 1);
 

@@ -98,7 +98,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
     SRC_DATA sdata;
     sdata.end_of_input = 0;
-    sdata.src_ratio = processor_sr * samplerate_inv;
+    sdata.src_ratio = processor_sr * storage->samplerate_inv;
     sdata.data_in = &(resample_this[0][0]);
     sdata.data_out = &(resample_into[0][0]);
     sdata.input_frames = BLOCK_SIZE;
@@ -185,7 +185,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
         SRC_DATA odata;
         odata.end_of_input = 0;
-        odata.src_ratio = processor_sr_inv * samplerate;
+        odata.src_ratio = processor_sr_inv * storage->samplerate;
         odata.data_in = &(resample_this[0][0]);
         odata.data_out = &(resample_into[0][0]);
         odata.input_frames = outpos;

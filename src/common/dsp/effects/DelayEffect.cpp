@@ -45,7 +45,7 @@ void DelayEffect::setvars(bool init)
     feedback.set_target_smoothed(fb);
     crossfeed.set_target_smoothed(cf);
 
-    float lforate = envelope_rate_linear(-*f[dly_mod_rate]) *
+    float lforate = storage->envelope_rate_linear(-*f[dly_mod_rate]) *
                     (fxdata->p[dly_mod_rate].temposync ? storage->temposyncratio : 1.f);
     lfophase += lforate;
 
@@ -70,22 +70,24 @@ void DelayEffect::setvars(bool init)
     if (init)
     {
         timeL.newValue(
-            samplerate *
+            storage->samplerate *
                 ((fxdata->p[dly_time_left].temposync ? storage->temposyncratio_inv : 1.f) *
                  storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[dly_time_left].val.f)) +
             LFOval - FIRoffset);
         timeR.newValue(
-            samplerate * ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
-                          storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[isLinked].val.f)) -
+            storage->samplerate *
+                ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
+                 storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[isLinked].val.f)) -
             LFOval - FIRoffset);
     }
     else
     {
         timeL.newValue(
-            samplerate * ((fxdata->p[dly_time_left].temposync ? storage->temposyncratio_inv : 1.f) *
-                          storage->note_to_pitch_ignoring_tuning(12 * *f[dly_time_left])) +
+            storage->samplerate *
+                ((fxdata->p[dly_time_left].temposync ? storage->temposyncratio_inv : 1.f) *
+                 storage->note_to_pitch_ignoring_tuning(12 * *f[dly_time_left])) +
             LFOval - FIRoffset);
-        timeR.newValue(samplerate *
+        timeR.newValue(storage->samplerate *
                            ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
                             storage->note_to_pitch_ignoring_tuning(12 * *f[isLinked])) -
                        LFOval - FIRoffset);
@@ -106,7 +108,7 @@ void DelayEffect::setvars(bool init)
     }
 
     mix.set_target_smoothed(*f[dly_mix]);
-    width.set_target_smoothed(db_to_linear(*f[dly_width]));
+    width.set_target_smoothed(storage->db_to_linear(*f[dly_width]));
     pan.set_target_smoothed(clamp1bp(*f[dly_input_channel]));
 
     lp.coeff_LP2B(lp.calc_omega(*f[dly_highcut] / 12.0), 0.707);
@@ -151,17 +153,17 @@ void DelayEffect::process(float *dataL, float *dataR)
                                             FIRipol_M - 1);
 
         __m128 L, R;
-        L = _mm_mul_ps(_mm_load_ps(&sinctable1X[sincL]), _mm_loadu_ps(&buffer[0][rpL]));
-        L = _mm_add_ps(
-            L, _mm_mul_ps(_mm_load_ps(&sinctable1X[sincL + 4]), _mm_loadu_ps(&buffer[0][rpL + 4])));
-        L = _mm_add_ps(
-            L, _mm_mul_ps(_mm_load_ps(&sinctable1X[sincL + 8]), _mm_loadu_ps(&buffer[0][rpL + 8])));
+        L = _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincL]), _mm_loadu_ps(&buffer[0][rpL]));
+        L = _mm_add_ps(L, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincL + 4]),
+                                     _mm_loadu_ps(&buffer[0][rpL + 4])));
+        L = _mm_add_ps(L, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincL + 8]),
+                                     _mm_loadu_ps(&buffer[0][rpL + 8])));
         L = sum_ps_to_ss(L);
-        R = _mm_mul_ps(_mm_load_ps(&sinctable1X[sincR]), _mm_loadu_ps(&buffer[1][rpR]));
-        R = _mm_add_ps(
-            R, _mm_mul_ps(_mm_load_ps(&sinctable1X[sincR + 4]), _mm_loadu_ps(&buffer[1][rpR + 4])));
-        R = _mm_add_ps(
-            R, _mm_mul_ps(_mm_load_ps(&sinctable1X[sincR + 8]), _mm_loadu_ps(&buffer[1][rpR + 8])));
+        R = _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincR]), _mm_loadu_ps(&buffer[1][rpR]));
+        R = _mm_add_ps(R, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincR + 4]),
+                                     _mm_loadu_ps(&buffer[1][rpR + 4])));
+        R = _mm_add_ps(R, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincR + 8]),
+                                     _mm_loadu_ps(&buffer[1][rpR + 8])));
         R = sum_ps_to_ss(R);
         _mm_store_ss(&tbufferL[k], L);
         _mm_store_ss(&tbufferR[k], R);

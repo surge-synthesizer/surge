@@ -158,13 +158,14 @@ void Reverb1Effect::update_rtime()
     int max_dt = 0;
     for (int t = 0; t < rev_taps; t++)
     {
-        delay_fb[t] =
-            powf(db60, delay_time[t] / (256.f * samplerate * powf(2.f, *f[rev1_decaytime])));
+        delay_fb[t] = powf(db60, delay_time[t] /
+                                     (256.f * storage->samplerate * powf(2.f, *f[rev1_decaytime])));
         max_dt = max(max_dt, delay_time[t]);
     }
     lastf[rev1_decaytime] = *f[rev1_decaytime];
-    float t = BLOCK_SIZE_INV * ((float)(max_dt >> 8) + samplerate * powf(2.f, *f[rev1_decaytime]) *
-                                                           2.f); // * 2.f is to get the db120 time
+    float t = BLOCK_SIZE_INV *
+              ((float)(max_dt >> 8) + storage->samplerate * powf(2.f, *f[rev1_decaytime]) *
+                                          2.f); // * 2.f is to get the db120 time
     ringout_time = (int)t;
 }
 
@@ -200,9 +201,9 @@ void Reverb1Effect::process(float *dataL, float *dataR)
     b = (b + 1) & 31;
 
     mix.set_target_smoothed(*f[rev1_mix]);
-    width.set_target_smoothed(db_to_linear(*f[rev1_width]));
+    width.set_target_smoothed(storage->db_to_linear(*f[rev1_width]));
 
-    int pdtime = (int)(float)samplerate *
+    int pdtime = (int)(float)storage->samplerate *
                  storage->note_to_pitch_ignoring_tuning(12 * *f[rev1_predelay]) *
                  (fxdata->p[rev1_predelay].temposync ? storage->temposyncratio_inv : 1.f);
 

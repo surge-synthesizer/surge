@@ -32,7 +32,8 @@ struct SSESincDelayLine
     float buffer alignas(16)[COMB_SIZE + FIRipol_N];
     int wp = 0;
 
-    SSESincDelayLine() { clear(); }
+    const float *sinctable{nullptr}; // a pointer copy of the storage member
+    SSESincDelayLine(const float *st) : sinctable(st) { clear(); }
 
     inline void write(float f)
     {

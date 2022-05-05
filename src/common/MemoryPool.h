@@ -23,21 +23,21 @@ namespace Memory
 // pre-alloc must be at least one
 template <typename T, size_t preAlloc, size_t growBy, size_t capacity = 16384> struct MemoryPool
 {
-    MemoryPool()
+    template <typename... Args> MemoryPool(Args &&...args)
     {
         while (position < preAlloc)
-            refreshPool();
+            refreshPool(std::forward<Args>(args)...);
     }
     ~MemoryPool()
     {
         for (size_t i = 0; i < position; ++i)
             delete pool[i];
     }
-    T *getItem()
+    template <typename... Args> T *getItem(Args &&...args)
     {
         if (position == 0)
         {
-            refreshPool();
+            refreshPool(std::forward<Args>(args)...);
         }
         auto q = pool[position - 1];
         pool[position - 1] = nullptr; // just to flag bugs
@@ -49,23 +49,23 @@ template <typename T, size_t preAlloc, size_t growBy, size_t capacity = 16384> s
         pool[position] = t;
         position++;
     }
-    void refreshPool()
+    template <typename... Args> void refreshPool(Args &&...args)
     {
         // In an ideal world, this grow would be off thread.
         // For XT 1 leave it here and have a reasonable prealloc
         assert(position < (growBy + capacity));
         for (size_t i = 0; i < growBy; ++i)
         {
-            pool[position] = new T();
+            pool[position] = new T(std::forward<Args>(args)...);
             position++;
         }
     }
 
-    void setupPoolToSize(size_t upTo)
+    template <typename... Args> void setupPoolToSize(size_t upTo, Args &&...args)
     {
         while (position < upTo)
         {
-            pool[position] = new T();
+            pool[position] = new T(std::forward<Args>(args)...);
             position++;
         }
     }

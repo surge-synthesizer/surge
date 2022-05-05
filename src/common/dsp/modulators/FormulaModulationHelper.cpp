@@ -205,7 +205,7 @@ end
         lua_settable(s.L, -3);
 
         lua_pushstring(s.L, "samplerate");
-        lua_pushnumber(s.L, samplerate);
+        lua_pushnumber(s.L, storage->samplerate);
         lua_settable(s.L, -3);
 
         lua_pushstring(s.L, "block_size");

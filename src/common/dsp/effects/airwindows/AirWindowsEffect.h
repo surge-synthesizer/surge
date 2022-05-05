@@ -55,7 +55,7 @@ class alignas(16) AirWindowsEffect : public Effect
     {
         if (airwin)
         {
-            airwin->sr = samplerate;
+            airwin->sr = storage->samplerate;
         }
     }
 

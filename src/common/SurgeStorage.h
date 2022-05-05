@@ -104,16 +104,6 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
 const int ff_revision = 19;
 
-extern float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
-extern float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
-extern short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
-extern float table_envrate_lpf alignas(16)[512], table_envrate_linear alignas(16)[512],
-    table_glide_exp alignas(16)[512], table_glide_log alignas(16)[512];
-extern float table_note_omega alignas(16)[2][512];
-extern float samplerate, samplerate_inv;
-extern double dsamplerate, dsamplerate_inv;
-extern double dsamplerate_os, dsamplerate_os_inv;
-
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
 const int n_global_postparams = 1;
@@ -994,6 +984,16 @@ class alignas(16) SurgeStorage
     // this will be a pointer to an aligned 2 x BLOCK_SIZE_OS array
     float audio_otherscene alignas(16)[2][BLOCK_SIZE_OS];
 
+    float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
+    float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
+    short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
+    float table_dB alignas(16)[512], table_envrate_lpf alignas(16)[512],
+        table_envrate_linear alignas(16)[512], table_glide_exp alignas(16)[512],
+        table_glide_log alignas(16)[512];
+    float samplerate, samplerate_inv;
+    double dsamplerate, dsamplerate_inv;
+    double dsamplerate_os, dsamplerate_os_inv;
+
     SurgeStorage(std::string suppliedDataPath = "");
     static std::string skipPatchLoadDataPathSentinel;
 
@@ -1454,16 +1454,15 @@ class alignas(16) SurgeStorage
     inline float rand_pm1() { return rand_01() * 2 - 1; }
     inline float rand_01() { return (float)std::rand() / (float)(RAND_MAX); }
 #endif
+    float db_to_linear(float);
+    float lookup_waveshape(sst::waveshapers::WaveshaperType, float);
+    float lookup_waveshape_warp(sst::waveshapers::WaveshaperType, float);
+    float envelope_rate_lpf(float);
+    float envelope_rate_linear(float);
+    float envelope_rate_linear_nowrap(float);
+    float glide_log(float);
+    float glide_exp(float);
 };
-
-float db_to_linear(float);
-float lookup_waveshape(sst::waveshapers::WaveshaperType, float);
-float lookup_waveshape_warp(sst::waveshapers::WaveshaperType, float);
-float envelope_rate_lpf(float);
-float envelope_rate_linear(float);
-float envelope_rate_linear_nowrap(float);
-float glide_log(float);
-float glide_exp(float);
 
 namespace Surge
 {

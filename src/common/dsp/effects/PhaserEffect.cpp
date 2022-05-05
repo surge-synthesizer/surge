@@ -84,7 +84,7 @@ void PhaserEffect::setvars()
 {
     init_stages();
 
-    double rate = envelope_rate_linear(-*f[ph_mod_rate]) *
+    double rate = storage->envelope_rate_linear(-*f[ph_mod_rate]) *
                   (fxdata->p[ph_mod_rate].temposync ? storage->temposyncratio : 1.f);
 
     rate *= (float)slowrate;
@@ -137,7 +137,7 @@ void PhaserEffect::setvars()
 
     feedback.newValue(0.95f * *f[ph_feedback]);
     tone.newValue(clamp1bp(*f[ph_tone]));
-    width.set_target_smoothed(db_to_linear(*f[ph_width]));
+    width.set_target_smoothed(storage->db_to_linear(*f[ph_width]));
 
     // lowpass range is from MIDI note 136 down to 57 (~21.1 kHz down to 220 Hz)
     // highpass range is from MIDI note 34 to 136(~61 Hz to ~21.1 kHz)

@@ -79,7 +79,7 @@ constexpr float qVals2ndOrderButter[] = {1.0 / 0.7654, 1.0 / 1.8478};
 } // namespace
 
 BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd)
+    : Effect(storage, fxdata, pd), delL(storage->sinctable), delR(storage->sinctable)
 {
     width.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
@@ -98,7 +98,7 @@ void BBDEnsembleEffect::init()
     auto init_bbds = [=](auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
         for (auto *del : {&delL1, &delL2, &delR1, &delR2})
         {
-            del->prepare(samplerate);
+            del->prepare(storage->samplerate);
             del->setFilterFreq(10000.0f);
             del->setDelayTime(0.005f);
         }
@@ -111,14 +111,14 @@ void BBDEnsembleEffect::init()
     init_bbds(del_2048L1, del_2048L2, del_2048R1, del_2048R2);
     init_bbds(del_4096L1, del_4096L2, del_4096R1, del_4096R2);
 
-    bbd_saturation_sse.reset(samplerate);
+    bbd_saturation_sse.reset(storage->samplerate);
     bbd_saturation_sse.setDrive(0.5f);
 
     fbStateL = 0.0f;
     fbStateR = 0.0f;
 
     // Butterworth highpass
-    const auto dc_omega = 2 * M_PI * 50.0 / samplerate;
+    const auto dc_omega = 2 * M_PI * 50.0 / storage->samplerate;
     for (int i = 0; i < 2; ++i)
     {
         dc_blocker[i].suspend();
@@ -126,7 +126,7 @@ void BBDEnsembleEffect::init()
         dc_blocker[i].coeff_instantize();
     }
 
-    const auto hf_omega = 2 * M_PI * 20000.0 / samplerate;
+    const auto hf_omega = 2 * M_PI * 20000.0 / storage->samplerate;
     sincInputFilter.suspend();
     sincInputFilter.coeff_LP(hf_omega, 0.7071);
     sincInputFilter.coeff_instantize();
@@ -161,12 +161,12 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
     copy_block(dataR, R, BLOCK_SIZE_QUAD);
 
     const auto aa_cutoff = calculateFilterParamFrequency(*f, storage);
-    sincInputFilter.coeff_LP(2 * M_PI * aa_cutoff / samplerate, 0.7071);
+    sincInputFilter.coeff_LP(2 * M_PI * aa_cutoff / storage->samplerate, 0.7071);
     sincInputFilter.process_block(L, R);
 
-    float del1 = delayScale * delay1Ms * 0.001 * samplerate;
-    float del2 = delayScale * delay2Ms * 0.001 * samplerate;
-    float del0 = delayCenterMs * 0.001 * samplerate;
+    float del1 = delayScale * delay1Ms * 0.001 * storage->samplerate;
+    float del2 = delayScale * delay2Ms * 0.001 * storage->samplerate;
+    float del0 = delayCenterMs * 0.001 * storage->samplerate;
 
     bbd_saturation_sse.setDrive(*f[ens_delay_sat]);
     float fbGain = getFeedbackGain(false);
@@ -178,8 +178,10 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
         R[s] *= 0.75f;
 
         // soft-clip input
-        L[s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, L[s] + fbStateL);
-        R[s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, R[s] + fbStateR);
+        L[s] =
+            storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, L[s] + fbStateL);
+        R[s] =
+            storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, R[s] + fbStateR);
 
         delL.write(L[s]);
         delR.write(R[s]);
@@ -225,8 +227,10 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     setvars(false);
 
     // limit between 0.005 and 40 Hz with modulation
-    double rate1 = envelope_rate_linear(-limit_range(*f[ens_lfo_freq1], -7.64386f, 5.322f));
-    double rate2 = envelope_rate_linear(-limit_range(*f[ens_lfo_freq2], -7.64386f, 5.322f));
+    double rate1 =
+        storage->envelope_rate_linear(-limit_range(*f[ens_lfo_freq1], -7.64386f, 5.322f));
+    double rate2 =
+        storage->envelope_rate_linear(-limit_range(*f[ens_lfo_freq2], -7.64386f, 5.322f));
     float roff = 0;
     constexpr float onethird = 1.0 / 3.0;
 
@@ -276,8 +280,10 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             R[s] *= 0.75f;
 
             // soft-clip input
-            L[s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, L[s] + fbStateL);
-            R[s] = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, R[s] + fbStateR);
+            L[s] = storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
+                                             L[s] + fbStateL);
+            R[s] = storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
+                                             R[s] + fbStateR);
 
             // OK so look at the diagram in #3743
             float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
@@ -315,8 +321,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
                     modlfos[j][i].post_process();
         }
 
-        mul_block(L, db_to_linear(-8.0f), L, BLOCK_SIZE_QUAD);
-        mul_block(R, db_to_linear(-8.0f), R, BLOCK_SIZE_QUAD);
+        mul_block(L, storage->db_to_linear(-8.0f), L, BLOCK_SIZE_QUAD);
+        mul_block(R, storage->db_to_linear(-8.0f), R, BLOCK_SIZE_QUAD);
     };
 
     switch (bbd_stages)

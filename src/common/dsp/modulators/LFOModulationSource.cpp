@@ -471,7 +471,7 @@ void LFOModulationSource::process_block()
 
     if (!lfo->rate.temposync)
     {
-        frate = envelope_rate_linear_nowrap(-localcopy[rate].f);
+        frate = storage->envelope_rate_linear_nowrap(-localcopy[rate].f);
     }
     else
     {
@@ -483,7 +483,7 @@ void LFOModulationSource::process_block()
         ** envrate is blocksize / samplerate 2^-x
         ** so let's just do that
         */
-        frate = (double)BLOCK_SIZE_OS * dsamplerate_os_inv *
+        frate = (double)BLOCK_SIZE_OS * storage->dsamplerate_os_inv *
                 pow(2.0, localcopy[rate].f); // since x = -localcopy, -x == localcopy
     }
 
@@ -511,7 +511,7 @@ void LFOModulationSource::process_block()
         switch (env_state)
         {
         case lfoeg_delay:
-            envrate = envelope_rate_linear_nowrap(localcopy[idelay].f);
+            envrate = storage->envelope_rate_linear_nowrap(localcopy[idelay].f);
 
             if (lfo->delay.temposync)
             {
@@ -520,7 +520,7 @@ void LFOModulationSource::process_block()
 
             break;
         case lfoeg_attack:
-            envrate = envelope_rate_linear_nowrap(localcopy[iattack].f);
+            envrate = storage->envelope_rate_linear_nowrap(localcopy[iattack].f);
 
             if (lfo->attack.temposync)
             {
@@ -529,7 +529,7 @@ void LFOModulationSource::process_block()
 
             break;
         case lfoeg_hold:
-            envrate = envelope_rate_linear_nowrap(localcopy[ihold].f);
+            envrate = storage->envelope_rate_linear_nowrap(localcopy[ihold].f);
 
             if (lfo->hold.temposync)
             {
@@ -538,7 +538,7 @@ void LFOModulationSource::process_block()
 
             break;
         case lfoeg_decay:
-            envrate = envelope_rate_linear_nowrap(localcopy[idecay].f);
+            envrate = storage->envelope_rate_linear_nowrap(localcopy[idecay].f);
 
             if (lfo->decay.temposync)
             {
@@ -547,7 +547,7 @@ void LFOModulationSource::process_block()
 
             break;
         case lfoeg_release:
-            envrate = envelope_rate_linear_nowrap(localcopy[irelease].f);
+            envrate = storage->envelope_rate_linear_nowrap(localcopy[irelease].f);
 
             if (lfo->release.temposync)
             {
@@ -808,25 +808,25 @@ void LFOModulationSource::process_block()
         switch (lfo->deform.deform_type)
         {
         case type_1:
-            iout = bend1(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase));
+            iout = bend1(storage->lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase));
 
             break;
 
         case type_2:
             if (localcopy[ideform].f >= -1 / 4.5)
             {
-                iout = bend2(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase));
+                iout = bend2(storage->lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase));
             }
             else
             {
-                iout = bend2(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase)) /
+                iout = bend2(storage->lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase)) /
                        (1 - ((localcopy[ideform].f + (1 / 4.5)) / 1.6));
             }
 
             break;
 
         case type_3:
-            iout = (bend3(lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase)) /
+            iout = (bend3(storage->lookup_waveshape_warp(wst_sine, 2.f - 4.f * phase)) /
                         (1.f + 0.5 * abs(localcopy[ideform].f)) -
                     (0.06 * localcopy[ideform].f));
 

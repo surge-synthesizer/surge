@@ -42,17 +42,19 @@ class alignas(16) Oscillator
     virtual bool allow_display() { return true; }
     inline double pitch_to_omega(float x)
     {
-        return (2.0 * M_PI * Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) * dsamplerate_os_inv);
+        return (2.0 * M_PI * Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) *
+                storage->dsamplerate_os_inv);
     }
     inline double pitch_to_dphase(float x)
     {
-        return (double)(Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) * dsamplerate_os_inv);
+        return (double)(Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) *
+                        storage->dsamplerate_os_inv);
     }
 
     inline double pitch_to_dphase_with_absolute_offset(float x, float off)
     {
         return (double)(std::max(1.0, Tunings::MIDI_0_FREQ * storage->note_to_pitch(x) + off) *
-                        dsamplerate_os_inv);
+                        storage->dsamplerate_os_inv);
     }
 
     virtual void setGate(bool g) { gate = g; }

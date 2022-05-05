@@ -118,8 +118,6 @@ const int modsource_display_order[n_modsources] = {
 };
 
 const int n_customcontrollers = 8;
-extern float samplerate_inv;
-extern float samplerate;
 
 const char modsource_names_button[n_modsources][32] = {
     "Off",
@@ -309,7 +307,14 @@ class ModulationSource
     virtual bool is_bipolar() { return false; }
     virtual void set_bipolar(bool b) {}
 
+    void set_samplerate(float sr, float sri)
+    {
+        samplerate = sr;
+        samplerate_inv = sri;
+    }
+
   protected:
+    float samplerate{0}, samplerate_inv{0};
     int active_outputs{0};
     static constexpr int vecsize = 16;
     float output, voutput[vecsize];
@@ -439,6 +444,7 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
     }
     inline void processSmoothing(Modulator::SmoothingMode mode, float sigma)
     {
+        assert(samplerate > 1000);
         for (int idx = 0; idx < NDX; ++idx)
         {
             if (mode == Modulator::SmoothingMode::LEGACY ||
@@ -485,12 +491,14 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
     }
     virtual void process_block() override
     {
+        assert(samplerate > 1000);
         processSmoothing(smoothingMode,
                          smoothingMode == Modulator::SmoothingMode::FAST_EXP ? 0.005f : 0.0025f);
     }
 
     virtual bool process_block_until_close(float sigma)
     {
+        assert(samplerate > 1000);
         if (smoothingMode == Modulator::SmoothingMode::LEGACY)
             processSmoothing(Modulator::SmoothingMode::SLOW_EXP, sigma);
         else

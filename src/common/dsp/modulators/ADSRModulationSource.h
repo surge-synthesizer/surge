@@ -191,7 +191,7 @@ class ADSRModulationSource : public ModulationSource
             // calculate coefficients for envelope
             const float shortest = 6.f;
             const float longest = -2.f;
-            const float coeff_offset = 2.f - log(samplerate / BLOCK_SIZE) / log(2.f);
+            const float coeff_offset = 2.f - log(storage->samplerate / BLOCK_SIZE) / log(2.f);
 
             float coef_A =
                 powf(2.f, std::min(0.f, coeff_offset - lc[a].f * (adsr->a.temposync
@@ -234,7 +234,7 @@ class ADSRModulationSource : public ModulationSource
             {
             case (s_attack):
             {
-                phase += envelope_rate_linear_nowrap(lc[a].f) *
+                phase += storage->envelope_rate_linear_nowrap(lc[a].f) *
                          (adsr->a.temposync ? storage->temposyncratio : 1.f);
                 if (phase >= 1)
                 {
@@ -265,7 +265,7 @@ class ADSRModulationSource : public ModulationSource
                 {
                 phase = sustain;
                 }*/
-                float rate = envelope_rate_linear_nowrap(lc[d].f) *
+                float rate = storage->envelope_rate_linear_nowrap(lc[d].f) *
                              (adsr->d.temposync ? storage->temposyncratio : 1.f);
 
                 float l_lo, l_hi;
@@ -316,7 +316,7 @@ class ADSRModulationSource : public ModulationSource
             break;
             case (s_release):
             {
-                phase -= envelope_rate_linear_nowrap(lc[r].f) *
+                phase -= storage->envelope_rate_linear_nowrap(lc[r].f) *
                          (adsr->r.temposync ? storage->temposyncratio : 1.f);
                 output = phase;
                 for (int i = 0; i < lc[r_s].i; i++)
@@ -332,7 +332,7 @@ class ADSRModulationSource : public ModulationSource
             break;
             case (s_uberrelease):
             {
-                phase -= envelope_rate_linear_nowrap(-6.5);
+                phase -= storage->envelope_rate_linear_nowrap(-6.5);
                 output = phase;
                 for (int i = 0; i < lc[r_s].i; i++)
                     output *= phase;

@@ -50,8 +50,8 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     }
 
     // A very simple envelope follower
-    envA = pow(0.01, 1.0 / (5 * dsamplerate_os * 0.001));
-    envR = pow(0.01, 1.0 / (5 * dsamplerate_os * 0.001));
+    envA = pow(0.01, 1.0 / (5 * storage->dsamplerate_os * 0.001));
+    envR = pow(0.01, 1.0 / (5 * storage->dsamplerate_os * 0.001));
     envV[0] = 0.f;
     envV[1] = 0.f;
 
@@ -164,7 +164,7 @@ void CombulatorEffect::sampleRateReset()
 {
     for (int e = 0; e < 3; ++e)
         for (int c = 0; c < 2; ++c)
-            coeff[e][c].setSampleRateAndBlockSize((float)dsamplerate_os, BLOCK_SIZE_OS);
+            coeff[e][c].setSampleRateAndBlockSize((float)storage->dsamplerate_os, BLOCK_SIZE_OS);
 }
 
 void CombulatorEffect::process(float *dataL, float *dataR)
@@ -284,8 +284,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         }
 
         // soft-clip output for good measure
-        mixl = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixl);
-        mixr = lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixr);
+        mixl = storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixl);
+        mixr = storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, mixr);
 
         dataOS[0][s] = mixl;
         dataOS[1][s] = mixr;

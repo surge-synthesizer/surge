@@ -290,13 +290,16 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
                 unsigned int MPos = FPos >> (16 + MipMapB);
                 unsigned int MSPos = ((FPos >> (8 + MipMapB)) & 0xFF);
 
-                __m128i Wave = _mm_madd_epi16(_mm_load_si128(((__m128i *)sinctableI16 + MSPos)),
-                                              _mm_loadu_si128((__m128i *)&WaveAdr[MPos]));
-                __m128i WaveP1 = _mm_madd_epi16(_mm_load_si128(((__m128i *)sinctableI16 + MSPos)),
-                                                _mm_loadu_si128((__m128i *)&WaveAdrP1[MPos]));
+                __m128i Wave =
+                    _mm_madd_epi16(_mm_load_si128(((__m128i *)storage->sinctableI16 + MSPos)),
+                                   _mm_loadu_si128((__m128i *)&WaveAdr[MPos]));
+                __m128i WaveP1 =
+                    _mm_madd_epi16(_mm_load_si128(((__m128i *)storage->sinctableI16 + MSPos)),
+                                   _mm_loadu_si128((__m128i *)&WaveAdrP1[MPos]));
 
-                __m128i Win = _mm_madd_epi16(_mm_load_si128(((__m128i *)sinctableI16 + WinSPos)),
-                                             _mm_loadu_si128((__m128i *)&WinAdr[WinPos]));
+                __m128i Win =
+                    _mm_madd_epi16(_mm_load_si128(((__m128i *)storage->sinctableI16 + WinSPos)),
+                                   _mm_loadu_si128((__m128i *)&WinAdr[WinPos]));
 
                 // Sum
                 int iWin alignas(16)[4], iWaveP1 alignas(16)[4], iWave alignas(16)[4];
@@ -381,7 +384,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
         float f = storage->note_to_pitch(pitch + drift * Window.driftLFO[l].val() +
                                          Detune * (DetuneOffset + DetuneBias * (float)l));
         int Ratio = Float2Int(8.175798915f * 32768.f * f * (float)(storage->WindowWT.size) *
-                              samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
+                              storage->samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
 
         Window.Ratio[l] = Ratio;
 
@@ -396,7 +399,7 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
                                                  Detune * (DetuneOffset + DetuneBias * (float)l));
                 int Ratio =
                     Float2Int(8.175798915f * 32768.f * f * fmadj * (float)(storage->WindowWT.size) *
-                              samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
+                              storage->samplerate_inv); // (65536.f*0.5f), 0.5 for oversampling
 
                 Window.FMRatio[l][i] = Ratio;
                 FMdepth[l].process();

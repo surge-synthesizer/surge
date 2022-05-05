@@ -105,14 +105,14 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
     if (is_display)
     {
         ownDelayLines = true;
-        delayLine[0] = new SSESincDelayLine<16384>();
-        delayLine[1] = new SSESincDelayLine<16384>();
+        delayLine[0] = new SSESincDelayLine<16384>(storage->sinctable);
+        delayLine[1] = new SSESincDelayLine<16384>(storage->sinctable);
     }
     else
     {
         ownDelayLines = false;
-        delayLine[0] = storage->memoryPools->stringDelayLines.getItem();
-        delayLine[1] = storage->memoryPools->stringDelayLines.getItem();
+        delayLine[0] = storage->memoryPools->stringDelayLines.getItem(storage->sinctable);
+        delayLine[1] = storage->memoryPools->stringDelayLines.getItem(storage->sinctable);
     }
 
     memset((void *)dustBuffer, 0, 2 * (BLOCK_SIZE_OS) * sizeof(float));
@@ -136,8 +136,8 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
     urd = std::uniform_real_distribution<float>(0.0, 1.0);
 
     auto pitch_t = std::min(148.f, pitch);
-    auto pitchmult_inv =
-        std::max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
+    auto pitchmult_inv = std::max(1.0, storage->dsamplerate_os * (1 / 8.175798915) *
+                                           storage->note_to_pitch_inv(pitch_t));
     auto p2off = oscdata->p[str_str2_detune].get_extended(localcopy[id_str2detune].f);
     double pitch2_t = 1, pitchmult2_inv = 1;
 
@@ -150,12 +150,12 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
         auto detune = localcopy[id_str2detune].f * fac;
 
         frequency = std::max(10.0, frequency + detune);
-        pitchmult2_inv = std::max(1.0, dsamplerate_os / frequency);
+        pitchmult2_inv = std::max(1.0, storage->dsamplerate_os / frequency);
     }
     else
     {
         pitch2_t = std::min(148.f, pitch + p2off);
-        pitchmult2_inv = std::max(1.0, dsamplerate_os * (1 / 8.175798915) *
+        pitchmult2_inv = std::max(1.0, storage->dsamplerate_os * (1 / 8.175798915) *
                                            storage->note_to_pitch_inv(pitch2_t));
     }
 
@@ -518,8 +518,9 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
     auto lfodetune = drift * driftLFO[0].next();
     auto pitchadj = pitchAdjustmentForStiffness();
     auto pitch_t = std::min(148.f, pitch + lfodetune + pitchadj);
-    auto pitchmult_inv = std::max((FIRipol_N >> 1) + 1.0, dsamplerate_os * (1 / 8.175798915) *
-                                                              storage->note_to_pitch_inv(pitch_t));
+    auto pitchmult_inv =
+        std::max((FIRipol_N >> 1) + 1.0,
+                 storage->dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
     auto d0 = limit_range(localcopy[id_exciterlvl].f, 0.f, 1.f);
 
     if (mode >= constant_noise)
@@ -556,13 +557,13 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
         auto detune = localcopy[id_str2detune].f * fac;
 
         frequency = std::max(10.0, frequency + detune);
-        pitchmult2_inv = std::max(1.0, dsamplerate_os / frequency);
-        dp2 = frequency * dsamplerate_os_inv;
+        pitchmult2_inv = std::max(1.0, storage->dsamplerate_os / frequency);
+        dp2 = frequency * storage->dsamplerate_os_inv;
     }
     else
     {
         pitch2_t = std::min(148.f, pitch + p2off + pitchadj);
-        pitchmult2_inv = std::max(1.0, dsamplerate_os * (1 / 8.175798915) *
+        pitchmult2_inv = std::max(1.0, storage->dsamplerate_os * (1 / 8.175798915) *
                                            storage->note_to_pitch_inv(pitch2_t));
         dp2 = pitch_to_dphase(pitch2_t);
     }

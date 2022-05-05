@@ -87,7 +87,7 @@ void ParametricEQ3BandEffect::process(float *dataL, float *dataR)
     if (!fxdata->p[eq3_gain3].deactivated)
         band3.process_block(L, R);
 
-    gain.set_target_smoothed(db_to_linear(*f[eq3_gain]));
+    gain.set_target_smoothed(storage->db_to_linear(*f[eq3_gain]));
     gain.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
 
     mix.set_target_smoothed(clamp1bp(*f[eq3_mix]));

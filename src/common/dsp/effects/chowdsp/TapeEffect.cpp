@@ -30,15 +30,15 @@ TapeEffect::~TapeEffect() {}
 
 void TapeEffect::init()
 {
-    hysteresis.reset(samplerate);
-    toneControl.prepare(samplerate);
-    lossFilter.prepare(samplerate, BLOCK_SIZE);
+    hysteresis.reset(storage->samplerate);
+    toneControl.prepare(storage->samplerate);
+    lossFilter.prepare(storage->samplerate, BLOCK_SIZE);
 
     clear_block(L, BLOCK_SIZE_QUAD);
     clear_block(R, BLOCK_SIZE_QUAD);
 
-    degrade.prepareToPlay((float)samplerate, BLOCK_SIZE);
-    chew.prepare((float)samplerate, BLOCK_SIZE);
+    degrade.prepareToPlay((float)storage->samplerate, BLOCK_SIZE);
+    chew.prepare((float)storage->samplerate, BLOCK_SIZE);
 
     mix.set_target(1.f);
     mix.instantize();

@@ -177,7 +177,10 @@ class ModControl
                 // thisphase * 0.98 prevents a glitch when LFO rate is disabled and phase offset is
                 // 1 which constantly retriggers S&G
                 thisrate = (rate == 0) ? thisphase * 0.98 : thisrate;
-                auto diff = (lfosandhtarget - cv) * thisrate * 2 * samplerate_inv;
+                /*
+                 * ***SCREAMING HARD
+                 */
+                auto diff = (lfosandhtarget - cv) * thisrate * 2 * 48000 /* samplerate_inv */;
                 lfoval.newValue(cv + diff);
             }
             else

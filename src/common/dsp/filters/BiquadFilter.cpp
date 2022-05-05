@@ -169,7 +169,7 @@ void BiquadFilter::coeff_APF(double omega, double Q)
 
 void BiquadFilter::coeff_peakEQ(double omega, double BW, double gain)
 {
-    coeff_orfanidisEQ(omega, BW, db_to_linear(gain), db_to_linear(gain * 0.5), 1);
+    coeff_orfanidisEQ(omega, BW, storage->db_to_linear(gain), storage->db_to_linear(gain * 0.5), 1);
 }
 
 void BiquadFilter::coeff_orfanidisEQ(double omega, double BW, double G, double GB, double G0)

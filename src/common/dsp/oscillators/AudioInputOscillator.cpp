@@ -105,10 +105,11 @@ void AudioInputOscillator::process_block(float pitch, float drift, bool stereo, 
         useOtherScene = true;
     }
 
-    float inGain = db_to_linear(localcopy[oscdata->p[audioin_gain].param_id_in_scene].f);
+    float inGain = storage->db_to_linear(localcopy[oscdata->p[audioin_gain].param_id_in_scene].f);
     float inChMix =
         limit_range(localcopy[oscdata->p[audioin_channel].param_id_in_scene].f, -1.f, 1.f);
-    float sceneGain = db_to_linear(localcopy[oscdata->p[audioin_sceneAgain].param_id_in_scene].f);
+    float sceneGain =
+        storage->db_to_linear(localcopy[oscdata->p[audioin_sceneAgain].param_id_in_scene].f);
     float sceneChMix =
         limit_range(localcopy[oscdata->p[audioin_sceneAchan].param_id_in_scene].f, -1.f, 1.f);
     float sceneMix = localcopy[oscdata->p[audioin_sceneAmix].param_id_in_scene].f;

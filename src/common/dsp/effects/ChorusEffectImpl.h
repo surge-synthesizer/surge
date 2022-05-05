@@ -49,12 +49,12 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
         hp.coeff_HP(hp.calc_omega(fxdata->p[ch_lowcut].val.f / 12.0), 0.707);
         lp.coeff_LP2B(lp.calc_omega(fxdata->p[ch_highcut].val.f / 12.0), 0.707);
         mix.set_target(fxdata->p[ch_mix].val.f);
-        width.set_target(db_to_linear(fxdata->p[ch_width].val.f));
+        width.set_target(storage->db_to_linear(fxdata->p[ch_width].val.f));
     }
     else
     {
         feedback.set_target_smoothed(0.5f * amp_to_linear(*f[ch_feedback]));
-        float rate = envelope_rate_linear(-*f[1]) *
+        float rate = storage->envelope_rate_linear(-*f[1]) *
                      (fxdata->p[ch_rate].temposync ? storage->temposyncratio : 1.f);
         float tm = storage->note_to_pitch_ignoring_tuning(12 * *f[0]) *
                    (fxdata->p[ch_time].temposync ? storage->temposyncratio_inv : 1.f);
@@ -66,13 +66,13 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
                 lfophase[i] -= 1;
 
             float lfoout = (2.f * fabs(2.f * lfophase[i] - 1.f) - 1.f) * *f[ch_depth];
-            time[i].newValue(samplerate * tm * (1 + lfoout));
+            time[i].newValue(storage->samplerate * tm * (1 + lfoout));
         }
 
         hp.coeff_HP(hp.calc_omega(*f[ch_lowcut] * (1.f / 12.f)), 0.707);
         lp.coeff_LP2B(lp.calc_omega(*f[ch_highcut] * (1.f / 12.f)), 0.707);
         mix.set_target_smoothed(*f[ch_mix]);
-        width.set_target_smoothed(db_to_linear(*f[ch_width]));
+        width.set_target_smoothed(storage->db_to_linear(*f[ch_width]));
     }
 }
 
@@ -101,11 +101,11 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
                                                FIRipol_M - 1);
 
             __m128 vo;
-            vo = _mm_mul_ps(_mm_load_ps(&sinctable1X[sinc]), _mm_loadu_ps(&buffer[rp]));
-            vo = _mm_add_ps(
-                vo, _mm_mul_ps(_mm_load_ps(&sinctable1X[sinc + 4]), _mm_loadu_ps(&buffer[rp + 4])));
-            vo = _mm_add_ps(
-                vo, _mm_mul_ps(_mm_load_ps(&sinctable1X[sinc + 8]), _mm_loadu_ps(&buffer[rp + 8])));
+            vo = _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sinc]), _mm_loadu_ps(&buffer[rp]));
+            vo = _mm_add_ps(vo, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sinc + 4]),
+                                           _mm_loadu_ps(&buffer[rp + 4])));
+            vo = _mm_add_ps(vo, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sinc + 8]),
+                                           _mm_loadu_ps(&buffer[rp + 8])));
 
             L = _mm_add_ps(L, _mm_mul_ps(vo, voicepanL4[j]));
             R = _mm_add_ps(R, _mm_mul_ps(vo, voicepanR4[j]));

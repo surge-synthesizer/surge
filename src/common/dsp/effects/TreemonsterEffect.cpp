@@ -57,8 +57,8 @@ void TreemonsterEffect::setvars(bool init)
         mix.instantize();
 
         // envelope follower times: 5 ms attack, 500 ms release
-        envA = pow(0.01, 1.0 / (5 * dsamplerate * 0.001));
-        envR = pow(0.01, 1.0 / (500 * dsamplerate * 0.001));
+        envA = pow(0.01, 1.0 / (5 * storage->dsamplerate * 0.001));
+        envR = pow(0.01, 1.0 / (500 * storage->dsamplerate * 0.001));
         envV[0] = 0.f;
         envV[1] = 0.f;
 
@@ -80,8 +80,8 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     float tbuf alignas(16)[2][BLOCK_SIZE];
     float envscaledSineWave alignas(16)[2][BLOCK_SIZE];
 
-    auto thres = db_to_linear(limit_range(*f[tm_threshold], fxdata->p[tm_threshold].val_min.f,
-                                          fxdata->p[tm_threshold].val_max.f));
+    auto thres = storage->db_to_linear(limit_range(
+        *f[tm_threshold], fxdata->p[tm_threshold].val_min.f, fxdata->p[tm_threshold].val_max.f));
 
     // copy dry signal (dataL, dataR) to wet signal (L, R)
     copy_block(dataL, L, BLOCK_SIZE_QUAD);
@@ -114,7 +114,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     float qs = clamp01(*f[tm_speed]);
     qs *= qs * qs * qs;
     float speed = 0.9999 - qs * 0.0999 / 128;
-    float numberOfSteps = 32 * 48000 * samplerate_inv;
+    float numberOfSteps = 32 * 48000 * storage->samplerate_inv;
     for (int i = 0; i < numberOfSteps; ++i)
     {
         length_smooth[0] = speed * length_smooth[0] + (1 - speed) * length_target[0];

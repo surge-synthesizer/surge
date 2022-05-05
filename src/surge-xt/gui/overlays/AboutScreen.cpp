@@ -179,7 +179,7 @@ void AboutScreen::populateData()
     lowerLeft.emplace_back("Build:", buildinfo, "");
     lowerLeft.emplace_back("System:", system, "");
 
-    auto srString = fmt::format("{:.1f} kHz", samplerate / 1000.0);
+    auto srString = fmt::format("{:.1f} kHz", storage->samplerate / 1000.0);
 
     if (host != "Unknown")
     {
