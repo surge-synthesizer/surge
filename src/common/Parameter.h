@@ -443,7 +443,7 @@ class Parameter
     void set_error_message(std::string &errMsg, const std::string value, const std::string unit,
                            const ErrorMessageMode mode);
     void set_extend_range(bool er);
-    double get_freq_from_note_name(const std::string s);
+    double get_freq_from_note_name(const std::string s, double defv);
 
     /*
      * These two functions convert the modulation depth to a -1,1 range appropriate
