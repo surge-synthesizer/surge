@@ -115,7 +115,7 @@ SurgeSynthProcessor::~SurgeSynthProcessor() {}
 //==============================================================================
 const juce::String SurgeSynthProcessor::getName() const { return JucePlugin_Name; }
 
-bool SurgeSynthProcessor::acceptsMidi() const { return true; }
+bool SurgeSynthProcessor::acceptsMidi() const { return false; }
 
 bool SurgeSynthProcessor::producesMidi() const { return false; }
 
