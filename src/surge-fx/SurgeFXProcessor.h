@@ -205,7 +205,8 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     int32_t paramFeatureFromParam(Parameter *p)
     {
-        return (p->temposync ? kTempoSync : 0) + (p->extend_range ? kExtended : 0) + (p->absolute ? kAbsolute : 0) + (p->appears_deactivated() ? kDeactivated : 0);
+        return (p->temposync ? kTempoSync : 0) + (p->extend_range ? kExtended : 0) +
+               (p->absolute ? kAbsolute : 0) + (p->appears_deactivated() ? kDeactivated : 0);
     };
 
     void paramFeatureOntoParam(Parameter *p, int32_t features)

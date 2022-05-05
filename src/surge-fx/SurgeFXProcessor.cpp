@@ -91,9 +91,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     resettingFx = false;
 }
 
-SurgefxAudioProcessor::~SurgefxAudioProcessor()
-{
-}
+SurgefxAudioProcessor::~SurgefxAudioProcessor() {}
 
 //==============================================================================
 const juce::String SurgefxAudioProcessor::getName() const { return JucePlugin_Name; }
@@ -298,8 +296,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 for (int i = 0; i < n_fx_params; ++i)
                 {
                     fxstorage->p[fx_param_remap[i]].set_value_f01(*fxParams[i]);
-                    paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]),
-                                            paramFeatures[i]);
+                    paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), paramFeatures[i]);
                 }
                 copyGlobaldataSubset(storage_id_start, storage_id_end);
 
