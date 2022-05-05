@@ -76,29 +76,29 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     void setFXParamTempoSync(int i, bool b)
     {
-        int v = *(fxParamFeatures[i]);
+        int v = paramFeatures[i];
         if (b)
             v = v | kTempoSync;
         else
             v = v & ~kTempoSync;
-        fxParamFeatures[i]->setValueNotifyingHost((float)v / 0xFF);
+        paramFeatures[i] = v;
     }
 
-    bool getFXParamTempoSync(int i) { return *(fxParamFeatures[i]) & kTempoSync; }
+    bool getFXParamTempoSync(int i) { return (paramFeatures[i]) & kTempoSync; }
     void setFXStorageTempoSync(int i, bool b) { fxstorage->p[fx_param_remap[i]].temposync = b; }
     bool getFXStorageTempoSync(int i) { return fxstorage->p[fx_param_remap[i]].temposync; }
     bool canTempoSync(int i) { return fxstorage->p[fx_param_remap[i]].can_temposync(); }
 
     void setFXParamExtended(int i, bool b)
     {
-        int v = *(fxParamFeatures[i]);
+        int v = (paramFeatures[i]);
         if (b)
             v = v | kExtended;
         else
             v = v & ~kExtended;
-        fxParamFeatures[i]->setValueNotifyingHost((float)v / 0xFF);
+        paramFeatures[i] = v;
     }
-    bool getFXParamExtended(int i) { return *(fxParamFeatures[i]) & kExtended; }
+    bool getFXParamExtended(int i) { return paramFeatures[i] & kExtended; }
     void setFXStorageExtended(int i, bool b)
     {
         fxstorage->p[fx_param_remap[i]].set_extend_range(b);
@@ -108,28 +108,28 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     void setFXParamAbsolute(int i, bool b)
     {
-        int v = *(fxParamFeatures[i]);
+        int v = paramFeatures[i];
         if (b)
             v = v | kAbsolute;
         else
             v = v & ~kAbsolute;
-        fxParamFeatures[i]->setValueNotifyingHost((float)v / 0xFF);
+        paramFeatures[i] = v;
     }
-    bool getFXParamAbsolute(int i) { return *(fxParamFeatures[i]) & kAbsolute; }
+    bool getFXParamAbsolute(int i) { return paramFeatures[i] & kAbsolute; }
     void setFXStorageAbsolute(int i, bool b) { fxstorage->p[fx_param_remap[i]].absolute = b; }
     bool getFXStorageAbsolute(int i) { return fxstorage->p[fx_param_remap[i]].absolute; }
     bool canAbsolute(int i) { return fxstorage->p[fx_param_remap[i]].can_be_absolute(); }
 
     void setFXParamDeactivated(int i, bool b)
     {
-        int v = *(fxParamFeatures[i]);
+        int v = paramFeatures[i];
         if (b)
             v = v | kDeactivated;
         else
             v = v & ~kDeactivated;
-        fxParamFeatures[i]->setValueNotifyingHost((float)v / 0xFF);
+        paramFeatures[i] = v;
     }
-    bool getFXParamDeactivated(int i) { return *(fxParamFeatures[i]) & kDeactivated; }
+    bool getFXParamDeactivated(int i) { return paramFeatures[i] & kDeactivated; }
     void setFXStorageDeactivated(int i, bool b) { fxstorage->p[fx_param_remap[i]].deactivated = b; }
     bool getFXStorageDeactivated(int i) { return fxstorage->p[fx_param_remap[i]].deactivated; }
     bool getFXStorageAppearsDeactivated(int i)
@@ -161,7 +161,6 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
             if (wasParamFeatureChanged[i])
             {
                 wasParamFeatureChanged[i] = false;
-                fxParamFeatures[i]->endChangeGesture();
             }
     }
 
@@ -195,7 +194,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     {
         if (b)
         {
-            fxParamFeatures[i]->beginChangeGesture();
+            // Used to send a start change here but we don't have params any more
         }
         else
         {
@@ -206,13 +205,16 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     int32_t paramFeatureFromParam(Parameter *p)
     {
-        return (p->temposync ? kTempoSync : 0) + (p->extend_range ? kExtended : 0);
+        return (p->temposync ? kTempoSync : 0) + (p->extend_range ? kExtended : 0) +
+               (p->absolute ? kAbsolute : 0) + (p->appears_deactivated() ? kDeactivated : 0);
     };
 
     void paramFeatureOntoParam(Parameter *p, int32_t features)
     {
         p->temposync = features & kTempoSync;
         p->set_extend_range(features & kExtended);
+        p->absolute = features & kAbsolute;
+        p->deactivated = features & kDeactivated;
     }
 
     // Information about parameter strings
@@ -317,11 +319,10 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         kAbsolute = 1U << 2U,
         kDeactivated = 1U << 3U
     };
-    juce::AudioParameterInt *fxParamFeatures[n_fx_params];
-
-    std::atomic<bool> changedParams[2 * n_fx_params + 1];
-    std::atomic<float> changedParamsValue[2 * n_fx_params + 1];
-    std::atomic<bool> isUserEditing[2 * n_fx_params + 1];
+    std::atomic<int> paramFeatures[n_fx_params];
+    std::atomic<bool> changedParams[n_fx_params + 1];
+    std::atomic<float> changedParamsValue[n_fx_params + 1];
+    std::atomic<bool> isUserEditing[n_fx_params + 1];
     std::atomic<bool> wasParamFeatureChanged[n_fx_params];
     std::function<void()> paramChangeListener;
     float lastBPM = -1;
