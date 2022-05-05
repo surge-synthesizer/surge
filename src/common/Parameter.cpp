@@ -2879,7 +2879,7 @@ float Parameter::quantize_modulation(float inputval) const
 
 void Parameter::getSemitonesOrKeys(std::string &str) const
 {
-    if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys)
+    if (displayInfo.customFeatures & ParamDisplayFeatures::kUnitsAreSemitonesOrKeys && !absolute)
     {
         str = "semitones";
 
@@ -4444,7 +4444,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 float Parameter::calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
                                                         bool &valid)
 {
-    errMsg = "Modulation Out of Bounds";
+    errMsg = "Input is out of bounds!";
     valid = true;
 
     float mv = std::atof(s.c_str());
@@ -4483,6 +4483,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
         float minval = val_min.f;
         float maxval = val_max.f;
+        float factor = 1.f;
 
         if (displayInfo.customFeatures & ParamDisplayFeatures::kScaleBasedOnIsBiPolar)
         {
@@ -4496,6 +4497,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         if (can_be_absolute() && absolute)
         {
             mv /= displayInfo.absoluteFactor;
+            factor *= displayInfo.absoluteFactor;
         }
 
         auto rmv = mv / (val_max.f - val_min.f);
@@ -4510,16 +4512,29 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
         if (rmv > 1 || rmv < -1)
         {
-            /* So we need modval / maxval - minval < 1
+            std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
+
+            getSemitonesOrKeys(unit);
+
+            /*
+             * So we need modval / maxval - minval < 1
              * or modval < maxval - minval
-             * Or modval / max - min > -1
-             * or modva > -(max - min)
-             * so modval has to be between -(max-min) and (max-min)
+             * or modval / max - min > -1
+             * or modval > -(max - min)
+             * so modval has to be between +/- (max - min)
              */
+
+            auto bound = (maxval - minval) * displayInfo.scale * factor;
+
             if (rmv < -1)
-                errMsg = fmt::format("Depth must be larger than {:.2f}", -(maxval - minval));
+            {
+                errMsg = fmt::format("Input can't be smaller than {:g} {}!", -bound, unit);
+            }
             else
-                errMsg = fmt::format("Depth must be smaller than {:.2f}", (maxval - minval));
+            {
+                errMsg = fmt::format("Input can't be larger than {:g} {}!", bound, unit);
+            }
+
             valid = false;
         }
 
@@ -4593,7 +4608,8 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
              * d > -a 2^bv
              */
             auto mind = -a * pow(2.0, b * val.f);
-            errMsg = fmt::format("Depth must be larger than {:.2f}", mind);
+
+            errMsg = fmt::format("Input can't be smaller than {:g}!", mind);
 
             valid = false;
         }
@@ -4732,10 +4748,21 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         {
             auto minval = get_extended(val_min.f);
             auto maxval = get_extended(val_max.f);
+            std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
+
+            getSemitonesOrKeys(unit);
+
             if (mv < -1)
-                errMsg = fmt::format("Depth must be larger than {:.2f}", -(maxval - minval));
+            {
+                errMsg =
+                    fmt::format("Input can't be smaller than {:g} {}!", -(maxval - minval), unit);
+            }
             else
-                errMsg = fmt::format("Depth must be smaller than {:.2f}", (maxval - minval));
+            {
+                errMsg =
+                    fmt::format("Input can't be larger than {:g} {}!", (maxval - minval), unit);
+            }
+
             valid = false;
         }
 
