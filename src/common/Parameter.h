@@ -45,7 +45,7 @@ enum ctrltypes
     ct_dly_fb_clippingmodes,
     ct_percent_bipolar,
     ct_percent_bipolar_deactivatable,
-    ct_percent_bipolar_stereo,    // bipolar with special text strings at -100% +100% and 0%
+    ct_percent_bipolar_stereo,    // bipolar with special text strings at -100%, +100% and 0%
     ct_percent_bipolar_stringbal, // bipolar with special text strings
     ct_percent_bipolar_with_string_filter_hook,
     ct_percent_bipolar_w_dynamic_unipolar_formatting,
@@ -77,7 +77,7 @@ enum ctrltypes
     ct_freq_audible_deactivatable,
     ct_freq_audible_deactivatable_hp,
     ct_freq_audible_deactivatable_lp,
-    ct_freq_audible_with_tunability, // we abuse 'extended' to mean 'use SCL tunign'
+    ct_freq_audible_with_tunability, // we abuse 'extended' to mean 'use SCL tuning'
     ct_freq_audible_with_very_low_lowerbound,
     ct_freq_mod,
     ct_freq_hpf,
@@ -189,7 +189,7 @@ enum ctrltypes
     ct_tape_speed,
     ct_lfophaseshuffle,
     ct_mscodec,
-    ct_percent_bipolar_pan, // bipolar with special text strings at -100% +100% and 0%
+    ct_percent_bipolar_pan, // bipolar with special text strings at -100%, +100% and 0%
     ct_spring_decay,
     num_ctrltypes,
 };
@@ -301,8 +301,8 @@ struct ParameterIDCounter
     }
 
     typedef std::shared_ptr<ParameterIDPromise> promise_t;
-    typedef ParameterIDPromise
-        *promise_ptr_t; // use this for constant size carefully managed weak references
+    // use this for constant size carefully managed weak references
+    typedef ParameterIDPromise *promise_ptr_t;
 
     promise_t head, tail;
 
@@ -382,9 +382,12 @@ class Parameter
     bool has_portaoptions() const;
     bool has_deformoptions() const;
     bool is_bipolar() const;
-    bool is_discrete_selection() const; // basically a hint to use a dropdown not a slider
-    bool is_nonlocal_on_change() const; // basically a change to me means other vals change so
-                                        // redraw everyone else too
+
+    // basically a hint to use a dropdown not a slider
+    bool is_discrete_selection() const;
+
+    // basically a change to this param means other values change so redraw everyone else too
+    bool is_nonlocal_on_change() const;
 
     /*
      * Why "appears deactivated" vs "is_deactivated". Well we have primary items
@@ -405,7 +408,8 @@ class Parameter
     void set_type(int ctrltype);
     const char *get_name() const;
     const char *get_full_name() const;
-    void set_name(const char *n); // never change name_storage as it is used for storage/recall
+    // never change name_storage as it is used for storage/recall!
+    void set_name(const char *n);
     const char *get_internal_name() const;
     const char *get_storage_name() const;
     const wchar_t *getUnit() const;
@@ -457,17 +461,19 @@ class Parameter
 
     void bound_value(bool force_integer = false);
     std::string tempoSyncNotationValue(float f) const;
-    float quantize_modulation(float modvalue) const; // given a mod-value hand it back rounded to a
-                                                     // 'reasonable' step size (used in ctrl-drag)
+    // given a mod-value hand it back rounded to a 'reasonable' step size (used in ctrl-drag)
+    float quantize_modulation(float modvalue) const;
 
     void create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup, int ctrlgroup_entry,
                          const char *lfoPrefixOverride = nullptr) const;
 
     pdata val{}, val_default{}, val_min{}, val_max{};
+
     // You might be tempted to use a non-fixed-size member here, like a std::string, but
     // this class gets pre-c++ memcopied so that's not an option which is why I do this wonky
     // pointer thing and strncpy from a string onto ui_identifier
     ParameterIDCounter::promise_ptr_t id_promise{};
+
     int id{};
     char name[NAMECHARS]{}, dispname[NAMECHARS]{}, name_storage[NAMECHARS]{}, fullname[NAMECHARS]{};
     char ui_identifier[NAMECHARS]{};
@@ -541,15 +547,17 @@ class Parameter
 
         bool supportsNoteName = false;
 
-        float extendFactor = 1.0,
-              absoluteFactor = 1.0; // set these to 1 in case we sneak by and divide by accident
+        // set these to 1 in case we sneak by and divide by accident
+        float extendFactor = 1.0, absoluteFactor = 1.0;
     } displayInfo;
 
     void getSemitonesOrKeys(std::string &str) const;
 
-    ParamUserData *user_data = nullptr;    // I know this is a bit gross but we have a runtime type
-    void set_user_data(ParamUserData *ud); // I take a shallow copy and don't assume ownership and
-                                           // assume I am referencable
+    // I know this is a bit gross but we have a runtime type
+    ParamUserData *user_data = nullptr;
+
+    // I take a shallow copy and don't assume ownership and assume I am referencable
+    void set_user_data(ParamUserData *ud);
 
     bool supportsDynamicName() const;
     ParameterDynamicNameFunction *dynamicName = nullptr;
