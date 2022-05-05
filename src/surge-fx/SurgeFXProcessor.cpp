@@ -72,15 +72,10 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         snprintf(lb, 256, "fx_temposync_%d", i);
         snprintf(nm, 256, "Feature Param %d", i);
 
-        // if you change this 0xFF also change the divide in the setValueNotifyingHost in
-        // setFXParamExtended etc
-        fxParamFeatures[i] = new juce::AudioParameterInt(lb, nm, 0, 0xFF, 0);
-        // addParameter();
-        *(fxParamFeatures[i]) = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
-        fxBaseParams[i + n_fx_params + 1] = fxParamFeatures[i];
+        paramFeatures[i] = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
     }
 
-    for (int i = 0; i < 2 * n_fx_params + 1; ++i)
+    for (int i = 0; i < n_fx_params + 1; ++i)
     {
         fxBaseParams[i]->addListener(this);
         changedParams[i] = false;
@@ -98,8 +93,6 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
 SurgefxAudioProcessor::~SurgefxAudioProcessor()
 {
-    for (int i = 0; i < n_fx_params; ++i)
-        delete fxParamFeatures[i];
 }
 
 //==============================================================================
@@ -238,7 +231,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             for (int i = 0; i < n_fx_params; ++i)
             {
                 fxstorage->p[fx_param_remap[i]].set_value_f01(*fxParams[i]);
-                paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), *(fxParamFeatures[i]));
+                paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), paramFeatures[i]);
             }
             copyGlobaldataSubset(storage_id_start, storage_id_end);
 
@@ -306,7 +299,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 {
                     fxstorage->p[fx_param_remap[i]].set_value_f01(*fxParams[i]);
                     paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]),
-                                          *(fxParamFeatures[i]));
+                                            paramFeatures[i]);
                 }
                 copyGlobaldataSubset(storage_id_start, storage_id_end);
 
@@ -369,7 +362,7 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
         xml->setAttribute(nm, val);
 
         snprintf(nm, 256, "fxp_param_features_%d", i);
-        int pf = *(fxParamFeatures[i]);
+        int pf = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
         xml->setAttribute(nm, pf);
     }
     xml->setAttribute("fxt", effectNum);
@@ -380,8 +373,10 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
     if (xmlState.get() != nullptr)
     {
+        int paramFeaturesCache[n_fx_params];
         if (xmlState->hasTagName("surgefx"))
         {
             effectNum = xmlState->getIntAttribute("fxt", fxt_delay);
@@ -407,10 +402,15 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
                 if (xmlState->hasAttribute(nm))
                 {
                     int pf = xmlState->getIntAttribute(nm, 0);
-                    paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), pf);
+                    paramFeaturesCache[i] = pf;
                 }
             }
             resetFxParams(true);
+            for (int i = 0; i < n_fx_params; ++i)
+            {
+                paramFeatureOntoParam(&(fxstorage->p[fx_param_remap[i]]), paramFeaturesCache[i]);
+            }
+
             updateJuceParamsFromStorage();
         }
     }
@@ -528,8 +528,7 @@ void SurgefxAudioProcessor::updateJuceParamsFromStorage()
     {
         *(fxParams[i]) = fxstorage->p[fx_param_remap[i]].get_value_f01();
         fxParams[i]->mutableName = getParamGroup(i) + " " + getParamName(i);
-        int32_t switchVal = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
-        *(fxParamFeatures[i]) = switchVal;
+        paramFeatures[i] = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
     }
     *(fxType) = effectNum;
 
