@@ -131,7 +131,7 @@ cmake -Bbuild -DBUILD_USING_MY_ASIO_LICENSE=True
 On Linux, using a community fork of JUCE, you can build an LV2. Here's how! We assume you have checked out Surge and can
 build.
 
-First, clone https://github.com/lv2-porting-project/JUCE/tree/lv2 on branch lv2, to some directory of your choosing.
+First, clone https://github.com/lv2-porting-project/JUCE/tree/lv2 on branch lv2, to some directory of your choosing:
 
 ```
 sudo apt-get install -y lv2-dev
@@ -139,7 +139,7 @@ cd /some/location
 git clone --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
 ```
 
-then run a fresh CMake to (1) point to that JUCE fork and (2) activate LV2
+Then run a fresh CMake to (1) point to that JUCE fork and (2) activate LV2:
 
 ```
 cmake -Bbuild_lv2 -DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=/some/location/JUCE-lv2/
@@ -179,7 +179,7 @@ cmake --build ignore/sxt --config Release --parallel 8
 sudo cmake --install ignore/sxt
 ```
 
-and you should get a working install in `/usr/bin`, `/usr/share` and `/usr/lib`
+and you should get a working install in `/usr/bin`, `/usr/share` and `/usr/lib`.
 
 ## Platform Specific Choices
 
@@ -258,7 +258,7 @@ You need to install the following:
 * Install [Git](https://git-scm.com/downloads)
   , [Visual Studio 2017 or newer](https://visualstudio.microsoft.com/downloads/)
 * When you install Visual Studio, make sure to include CLI tools and CMake, which are included in
-  'Optional CLI support' and 'Toolset for desktop' install bundles
+  'Optional CLI support' and 'Toolset for desktop' install bundles.
 
 ## macOS
 
@@ -297,5 +297,5 @@ server. We are grateful to Microsoft for providing Azure pipelines for free to t
 # References
 
 * Most Surge-related conversation happens on the Surge Synthesizer Discord server. You can join
-  via [this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link)
-* Discussion at KvR forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922)
+  via [this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link).
+* Discussion at KvR forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922).
