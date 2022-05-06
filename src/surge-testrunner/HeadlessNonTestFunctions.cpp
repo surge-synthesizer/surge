@@ -635,7 +635,7 @@ void generateNLFeedbackNorms()
         for (int i = 0; i < 100; ++i)
             surge->process();
 
-        int blocks = (floor)(2.0 * samplerate * BLOCK_SIZE_INV);
+        int blocks = (floor)(2.0 * surge->storage.samplerate * BLOCK_SIZE_INV);
         double rms = 0; // double to avoid so much overflow risk
         for (int i = 0; i < blocks; ++i)
         {

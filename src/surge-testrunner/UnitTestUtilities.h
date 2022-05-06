@@ -22,7 +22,8 @@ std::pair<double, double> frequencyAndRMSForNote(std::shared_ptr<SurgeSynthesize
                                                  int seconds = 2, int audioChannel = 0,
                                                  int midiChannel = 0);
 
-double frequencyFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo);
+double frequencyFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo,
+                         float sampleRate);
 double RMSFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo);
 
 double frequencyForEvents(std::shared_ptr<SurgeSynthesizer> surge,

@@ -165,8 +165,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
             patch.scene[j].modsources[ms_ctrl1 + i] = patch.scene[0].modsources[ms_ctrl1 + i];
         }
     }
-    for (int s = 0; s < n_scenes; ++s) for (auto ms : patch.scene[s].modsources) if (ms)
-        ms->set_samplerate(storage.samplerate, storage.samplerate_inv);
+    for (int s = 0; s < n_scenes; ++s)
+        for (auto ms : patch.scene[s].modsources)
+            if (ms)
+                ms->set_samplerate(storage.samplerate, storage.samplerate_inv);
 
     amp.set_blocksize(BLOCK_SIZE);
 

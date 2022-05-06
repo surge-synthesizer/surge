@@ -598,7 +598,7 @@ TEST_CASE("Sinc Delay Line", "[dsp]")
     SECTION("Test Constants")
     {
         float val = 1.324;
-        SSESincDelayLine<4096> dl4096;
+        SSESincDelayLine<4096> dl4096(surge->storage.sinctable);
 
         for (int i = 0; i < 10000; ++i)
         {
@@ -625,7 +625,7 @@ TEST_CASE("Sinc Delay Line", "[dsp]")
     {
         float val = 0;
         float dRamp = 0.01;
-        SSESincDelayLine<4096> dl4096;
+        SSESincDelayLine<4096> dl4096(surge->storage.sinctable);
 
         for (int i = 0; i < 10000; ++i)
         {
