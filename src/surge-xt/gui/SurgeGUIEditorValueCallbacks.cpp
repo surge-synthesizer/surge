@@ -2073,29 +2073,37 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         if (p->ctrltype == ct_percent_with_string_deform_hook)
                         {
                             contextMenu.addSeparator();
-                            addDef(StringOscillator::os_onex, StringOscillator::os_all,
-                                   "1x Oversample");
-                            addDef(StringOscillator::os_twox, StringOscillator::os_all,
-                                   "2x Oversample");
+
+                            contextMenu.addSectionHeader("OVERSAMPLING");
+
+                            addDef(StringOscillator::os_onex, StringOscillator::os_all, "1x");
+                            addDef(StringOscillator::os_twox, StringOscillator::os_all, "2x");
 
                             contextMenu.addSeparator();
+
+                            contextMenu.addSectionHeader("INTERPOLATION");
+
                             addDef(StringOscillator::interp_zoh, StringOscillator::interp_all,
-                                   "ZoH Interpolation");
+                                   Surge::GUI::toOSCase("Zero Order Hold"));
                             addDef(StringOscillator::interp_lin, StringOscillator::interp_all,
-                                   "Linear Interpolation");
+                                   "Linear");
                             addDef(StringOscillator::interp_sinc, StringOscillator::interp_all,
-                                   "Sinc Interpolation");
+                                   "Sinc");
                         }
+
                         if (p->ctrltype == ct_percent_bipolar_with_string_filter_hook)
                         {
                             contextMenu.addSeparator();
+
+                            contextMenu.addSectionHeader("STIFFNESS FILTER");
+
                             addDef(StringOscillator::filter_fixed, StringOscillator::filter_all,
-                                   "Fixed Filter Frequency");
+                                   "Static");
                             addDef(StringOscillator::filter_keytrack, StringOscillator::filter_all,
-                                   "Keytracked Filter Frequency");
+                                   "Keytracked");
                             addDef(StringOscillator::filter_compensate,
                                    StringOscillator::filter_all,
-                                   "Keytracked Pitch Compensated Model");
+                                   Surge::GUI::toOSCase("Keytracked and Pitch Compensated"));
                         }
 
                         break;
