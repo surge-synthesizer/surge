@@ -990,9 +990,9 @@ class alignas(16) SurgeStorage
     float table_dB alignas(16)[512], table_envrate_lpf alignas(16)[512],
         table_envrate_linear alignas(16)[512], table_glide_exp alignas(16)[512],
         table_glide_log alignas(16)[512];
-    float samplerate, samplerate_inv;
-    double dsamplerate, dsamplerate_inv;
-    double dsamplerate_os, dsamplerate_os_inv;
+    float samplerate{0}, samplerate_inv{1};
+    double dsamplerate{0}, dsamplerate_inv{1};
+    double dsamplerate_os{0}, dsamplerate_os_inv{1};
 
     SurgeStorage(std::string suppliedDataPath = "");
     static std::string skipPatchLoadDataPathSentinel;
