@@ -117,9 +117,9 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         }
     }
 
-    for (int s=0; s<n_scenes; s++)
-	for (int m=0; m<n_modsources; ++m)
-	   getPatch().scene[s].modsource_doprocess[m] = false;
+    for (int s = 0; s < n_scenes; s++)
+        for (int m = 0; m < n_modsources; ++m)
+            getPatch().scene[s].modsource_doprocess[m] = false;
 
     for (int s = 0; s < n_scenes; s++)
         for (int o = 0; o < n_oscs; o++)
@@ -342,8 +342,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
     load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);
 
-    if (!load_wt_wt_mem(SurgeSharedBinary::windows_wt,
-                                          SurgeSharedBinary::windows_wtSize, &WindowWT))
+    if (!load_wt_wt_mem(SurgeSharedBinary::windows_wt, SurgeSharedBinary::windows_wtSize,
+                        &WindowWT))
     {
         WindowWT.size = 0;
         std::ostringstream oss;

@@ -1068,7 +1068,6 @@ void SineOscillator::handleStreamingMismatches(int streamingRevision,
         oscdata->retrigger.val.b = true;
         charFilt.doFilter = false;
     }
-
 }
 
 float SineOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
