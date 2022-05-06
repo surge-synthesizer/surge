@@ -41,6 +41,7 @@ struct Build
 #define SURGE_VST2_IDENTIFIER 'cjs3'
 
 #define stringProductName "Surge XT"
+#define stringOrganization "https://github.com/surge-synthesizer/"
 #define stringRepository "https://github.com/surge-synthesizer/surge/"
 #define stringWebsite "https://surge-synthesizer.github.io/"
 #define stringManual "https://surge-synthesizer.github.io/manual-xt/"
