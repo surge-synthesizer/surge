@@ -1314,7 +1314,7 @@ class alignas(16) SurgeStorage
     void initialize_oddsound();
     void deinitialize_oddsound();
     MTSClient *oddsound_mts_client = nullptr;
-    std::atomic<bool> oddsound_mts_active;
+    std::atomic<bool> oddsound_mts_active{false};
     void setOddsoundMTSActiveTo(bool b);
     uint32_t oddsound_mts_on_check = 0;
     enum OddsoundRetuneMode
