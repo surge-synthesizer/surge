@@ -129,10 +129,6 @@ void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     lp.coeff_LP2B(lp.calc_omega(oscdata->p[sine_highcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
 
     charFilt.init(storage->getPatch().character.val.i);
-    if (storage && storage->getPatch().streamingRevision <= 15)
-    {
-        charFilt.doFilter = false;
-    }
 }
 
 SineOscillator::~SineOscillator() {}
@@ -1070,7 +1066,9 @@ void SineOscillator::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 15)
     {
         oscdata->retrigger.val.b = true;
+        charFilt.doFilter = false;
     }
+
 }
 
 float SineOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)

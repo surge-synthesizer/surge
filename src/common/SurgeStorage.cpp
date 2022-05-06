@@ -117,6 +117,10 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         }
     }
 
+    for (int s=0; s<n_scenes; s++)
+	for (int m=0; m<n_modsources; ++m)
+	   getPatch().scene[s].modsource_doprocess[m] = false;
+
     for (int s = 0; s < n_scenes; s++)
         for (int o = 0; o < n_oscs; o++)
         {
