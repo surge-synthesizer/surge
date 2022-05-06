@@ -85,8 +85,10 @@ StringOscillator::~StringOscillator()
 {
     if (storage && !ownDelayLines)
     {
-        storage->memoryPools->stringDelayLines.returnItem(delayLine[0]);
-        storage->memoryPools->stringDelayLines.returnItem(delayLine[1]);
+        if (delayLine[0])
+            storage->memoryPools->stringDelayLines.returnItem(delayLine[0]);
+        if (delayLine[1])
+            storage->memoryPools->stringDelayLines.returnItem(delayLine[1]);
     }
     else
     {
