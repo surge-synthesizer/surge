@@ -38,7 +38,8 @@ void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *
                          int nC, int startSample = -1, int endSample = -1);
 
 std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &patchName);
-std::shared_ptr<SurgeSynthesizer> surgeOnSine();
-std::shared_ptr<SurgeSynthesizer> surgeOnSaw();
+std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &, float sr = 44100);
+std::shared_ptr<SurgeSynthesizer> surgeOnSine(float sr = 44100);
+std::shared_ptr<SurgeSynthesizer> surgeOnSaw(float sr = 44100);
 } // namespace Test
 } // namespace Surge

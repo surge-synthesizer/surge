@@ -1056,3 +1056,55 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
         }
     }
 }
+
+TEST_CASE("Dont Fear The Reaper", "[dsp]")
+{
+    // Reaper added cool per-plugin oversampling. Will we do OK with that?
+    for (auto t : {"Init Sine" /* "Init Saw" */})
+    {
+        DYNAMIC_SECTION("Template Test " << t)
+        {
+            std::vector surges = {Surge::Test::surgeOnTemplate(t, 48000),
+                                  Surge::Test::surgeOnTemplate(t, 48000 * 2),
+                                  Surge::Test::surgeOnTemplate(t, 48000 * 4)};
+
+            static constexpr int nsamples = 1024;
+            float samples[3][nsamples];
+
+            for (int s = 0; s < 3; ++s)
+            {
+                for (int i = 0; i < 5; ++i)
+                    surges[s]->process();
+                surges[s]->playNote(0, 60, 127, 0);
+                // surges[s]->process();
+            }
+
+            for (int i = 0; i < 3; ++i)
+            {
+                int mul = 1 << i;
+                int wp = 0;
+                while (wp < nsamples)
+                {
+                    surges[i]->process();
+
+                    int q = 0;
+                    while (q < BLOCK_SIZE)
+                    {
+                        samples[i][wp] = surges[i]->output[0][q];
+                        wp++;
+                        q += mul;
+                    }
+                }
+            }
+
+            for (int i = 0; i < nsamples; i++)
+            {
+                INFO("Checking at " << i);
+                // So we don't line up perfectly but if we stay in phase the
+                // per sample values won't matter that much since we have a long time
+                REQUIRE(fabs(samples[0][i] - samples[1][i]) < 0.05);
+                REQUIRE(fabs(samples[0][i] - samples[2][i]) < 0.05);
+            }
+        }
+    }
+}
