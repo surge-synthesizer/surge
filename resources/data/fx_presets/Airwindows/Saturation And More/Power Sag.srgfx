@@ -1,8 +1,8 @@
 <single-fx streaming_version="19">
-  <snapshot name="TapeDust" 
+  <snapshot name="Power Sag"
      type="14"
-     p0="67"
+     p0="66"
      p1="0.5"
-     p2="0.5"
+     p2="0.75"
   />
 </single-fx>

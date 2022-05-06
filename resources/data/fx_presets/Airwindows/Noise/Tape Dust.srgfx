@@ -1,10 +1,8 @@
 <single-fx streaming_version="19">
-  <snapshot name="FireAmp" 
+  <snapshot name="Tape Dust"
      type="14"
-     p0="62"
+     p0="67"
      p1="0.5"
      p2="0.5"
-     p3="0.8"
-     p4="1"
   />
 </single-fx>

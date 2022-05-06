@@ -88,7 +88,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
 {
     /*
      * Static function, only called from audio thread, safe to have a static member here to avoid
-     * rebuild too often.
+     * rebuilding too often.
      */
     static std::vector<AirWinBaseClass::Registration> reg;
 
@@ -96,15 +96,13 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
         return reg;
 
     /*
-    ** Register here with streaming ID (which must be increasing and can never change) and display
-    *order ID (which can be
-    ** really anything you want) and display name. So basically always add stuff to the end of this
-    *list but set the
-    ** display order to whatever you want. The nice thing is the display order doesn't need to be
-    *contiguous and the
-    ** order displayed is just a sort. So here I use values in steps of 10 so I can put stuff in
-    *between.
-    */
+     * Register with streaming ID (which must be increasing and can never change), display order ID
+     * (which can be really anything you want) and display name. So basically: always add stuff to
+     * the end of this list, but set the display order to whatever you want.
+     *
+     * The nice thing is the display order doesn't need to be contiguous and the order displayed is
+     * just a sort. So here I use values in steps of 10 so I can put stuff in between.
+     */
 
     // Set up some group names
     std::string gnClipping = "Clipping";
@@ -118,8 +116,9 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     std::string gnTape = "Tape";
     std::string gnPitch = "Pitch";
 
-    int id = 0; // add new effects only at the end of this list!
+    int id = 0;
 
+    // add new effects only at the end of this list!
     reg.emplace_back(create<ADClip7::ADClip7>, id++, 10, gnClipping, "AD Clip");
     reg.emplace_back(create<BlockParty::BlockParty>, id++, 20, gnDynamics, "Block Party");
     reg.emplace_back(create<ButterComp2::ButterComp2>, id++, 30, gnDynamics, "Butter Comp");
@@ -165,7 +164,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     reg.emplace_back(create<Loud::Loud>, id++, 350, gnSaturation, "Loud");
     reg.emplace_back(create<NCSeventeen::NCSeventeen>, id++, 360, gnSaturation, "NC-17");
     reg.emplace_back(create<Spiral2::Spiral2>, id++, 390, gnSaturation, "Spiral");
-    reg.emplace_back(create<UnBox::UnBox>, id++, 400, gnSaturation, "Unbox");
+    reg.emplace_back(create<UnBox::UnBox>, id++, 395, gnSaturation, "Unbox");
 
     reg.emplace_back(create<DeBess::DeBess>, id++, 420, gnFilter, "De-Bess");
     reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnFilter, "NoOp (Was: DeEss)");
@@ -193,26 +192,27 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
 
     reg.emplace_back(create<TripleSpread::TripleSpread>, id++, 440, gnStereo, "Triple Spread");
 
+    // XT 1.0 additions
     reg.emplace_back(create<Chamber::Chamber>, id++, 223, gnAmbience, "Chamber");
-
-    reg.emplace_back(create<Mackity::Mackity>, id++, 355, gnSaturation, "Mackity");
+    reg.emplace_back(create<Mackity::Mackity>, id++, 353, gnSaturation, "Mackity");
     reg.emplace_back(create<MackEQ::MackEQ>, id++, 430, gnFilter, "MackEQ");
 
     reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnSaturation, "NoOp (Was: Tube)");
 
+    // XT 1.1 additions
     reg.emplace_back(create<Cabs::Cabs>, id++, 410, gnFilter, "Cabs");
 
     reg.emplace_back(create<ChromeOxide::ChromeOxide>, id++, 445, gnTape, "Chrome Oxide");
-    reg.emplace_back(create<DubSub::DubSub>, id++, 421, gnFilter, "DubSub");
-    reg.emplace_back(create<DubCenter::DubCenter>, id++, 423, gnFilter, "DubCenter");
-    reg.emplace_back(create<FireAmp::FireAmp>, id++, 312, gnSaturation, "FireAmp");
-    reg.emplace_back(create<GlitchShifter::GlitchShifter>, id++, 500, gnPitch, "GlitchShifter");
-    reg.emplace_back(create<NonlinearSpace::NonlinearSpace>, id++, 250, gnAmbience,
-                     "NonlinearSpace");
-    reg.emplace_back(create<Pafnuty::Pafnuty>, id++, 440, gnFilter, "Pafnuty");
-    reg.emplace_back(create<PowerSag::PowerSag>, id++, 362, gnSaturation, "PowerSag");
-    reg.emplace_back(create<TapeDust::TapeDust>, id++, 205, gnNoise, "TapeDust");
-    reg.emplace_back(create<ToVinyl4::ToVinyl4>, id++, 200, gnLoFi, "ToVinyl4");
+    reg.emplace_back(create<DubSub::DubSub>, id++, 421, gnFilter, "Dub Sub");
+    reg.emplace_back(create<DubCenter::DubCenter>, id++, 423, gnFilter, "Dub Center");
+    reg.emplace_back(create<FireAmp::FireAmp>, id++, 312, gnSaturation, "Fire Amp");
+    reg.emplace_back(create<GlitchShifter::GlitchShifter>, id++, 500, gnPitch, "Glitch Shifter");
+    reg.emplace_back(create<NonlinearSpace::NonlinearSpace>, id++, 245, gnAmbience,
+                     "Nonlinear Space");
+    reg.emplace_back(create<Pafnuty::Pafnuty>, id++, 435, gnFilter, "Pafnuty");
+    reg.emplace_back(create<PowerSag::PowerSag>, id++, 362, gnSaturation, "Power Sag");
+    reg.emplace_back(create<TapeDust::TapeDust>, id++, 205, gnNoise, "Tape Dust");
+    reg.emplace_back(create<ToVinyl4::ToVinyl4>, id++, 195, gnLoFi, "To Vinyl");
 
     return reg;
 }
