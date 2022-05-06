@@ -21,7 +21,6 @@
 #include <cstring>
 #include "basic_dsp.h"
 #include "SurgeSharedBinary.h"
-
 #include "lua/LuaSources.h"
 
 bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::string &definition,
@@ -33,6 +32,7 @@ bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::str
         return false;
     return true;
 }
+
 int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
     lua_State *L, const std::string &definition, const std::vector<std::string> functions,
     std::string &errorMessage)
