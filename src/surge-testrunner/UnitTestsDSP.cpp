@@ -1060,10 +1060,10 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
 TEST_CASE("Dont Fear The Reaper", "[dsp]")
 {
     // Reaper added cool per-plugin oversampling. Will we do OK with that?
-    for (auto base : { 44100, 48000})
+    for (auto base : {44100, 48000})
     {
         // A few like string and noise won't pass this test so be explicit about our choices
-        for (auto t : { ot_sine, ot_FM2, ot_wavetable, ot_window, ot_alias })
+        for (auto t : {ot_sine, ot_FM2, ot_wavetable, ot_window, ot_alias})
         {
             DYNAMIC_SECTION("Oversample Test " << base << " on " << osc_type_names[t])
             {
@@ -1076,7 +1076,8 @@ TEST_CASE("Dont Fear The Reaper", "[dsp]")
 
                 for (int s = 0; s < 3; ++s)
                 {
-                    // std::cout << "SampleRate at " << s << " = " << surges[s]->storage.samplerate << std::endl;
+                    // std::cout << "SampleRate at " << s << " = " << surges[s]->storage.samplerate
+                    // << std::endl;
                     surges[s]->storage.getPatch().scene[0].osc[0].queue_type = t;
                     surges[s]->storage.getPatch().scene[0].osc[0].retrigger.val.b = true;
 
@@ -1107,7 +1108,8 @@ TEST_CASE("Dont Fear The Reaper", "[dsp]")
                 for (int i = 0; i < nsamples; i++)
                 {
                     // std::cout << base << " " << osc_type_names[t] << " " << i << " "
-                    //     << samples[0][i] << " " << samples[1][i] << " " << samples[2][i] << std::endl;
+                    //     << samples[0][i] << " " << samples[1][i] << " " << samples[2][i] <<
+                    //     std::endl;
                     INFO("Checking at " << i);
                     // So we don't line up perfectly but if we stay in phase the
                     // per sample values won't matter that much since we have a long time
