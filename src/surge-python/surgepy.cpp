@@ -851,7 +851,7 @@ PYBIND11_MODULE(surgepy, m)
         .def("__repr__",
              [](SurgeSynthesizerWithPythonExtensions &s) {
                  return std::string("<SurgeSynthesizer samplerate=") +
-                        std::to_string((int)samplerate) + "Hz>";
+                        std::to_string((int)s.storage.samplerate) + "Hz>";
              })
         .def("getControlGroup", &SurgeSynthesizerWithPythonExtensions::getControlGroup,
              "Gather the parameters groups for a surge.constants.cg_ control group",
@@ -862,7 +862,8 @@ PYBIND11_MODULE(surgepy, m)
         .def("getBlockSize", &SurgeSynthesizer::getBlockSize)
         .def("getFactoryDataPath", &SurgeSynthesizerWithPythonExtensions::factoryDataPath)
         .def("getUserDataPath", &SurgeSynthesizerWithPythonExtensions::userDataPath)
-        .def("getSampleRate", [](SurgeSynthesizerWithPythonExtensions &s) { return samplerate; })
+        .def("getSampleRate",
+             [](SurgeSynthesizerWithPythonExtensions &s) { return s.storage.samplerate; })
 
         .def("fromSynthSideId", &SurgeSynthesizer::fromSynthSideId)
         .def("createSynthSideId", &SurgeSynthesizerWithPythonExtensions::createSynthSideId)

@@ -870,7 +870,7 @@ void SurgePatch::update_controls(
         {
             if (fx[i].type.val.i != fxt_off)
             {
-                Effect *t_fx = spawn_effect(fx[i].type.val.i, nullptr, &(fx[i]), nullptr);
+                Effect *t_fx = spawn_effect(fx[i].type.val.i, storage, &(fx[i]), nullptr);
                 if (t_fx)
                 {
                     t_fx->init_ctrltypes();
