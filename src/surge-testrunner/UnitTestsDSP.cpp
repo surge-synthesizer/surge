@@ -1068,11 +1068,11 @@ TEST_CASE("Dont Fear The Reaper", "[dsp]")
             DYNAMIC_SECTION("Oversample Test " << base << " on " << osc_type_names[t])
             {
                 std::vector surges = {Surge::Headless::createSurge(base),
-                                      Surge::Headless::createSurge(base * 2) };
-                                      // Surge::Headless::createSurge(base * 4)};
+                                      Surge::Headless::createSurge(base * 2)};
+                // Surge::Headless::createSurge(base * 4)};
 
                 constexpr static int nsurge = 2;
-                REQUIRE( nsurge == surges.size() );
+                REQUIRE(nsurge == surges.size());
 
                 static constexpr int nsamples = 1024;
                 float samples[3][nsamples];
