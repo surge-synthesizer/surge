@@ -1068,13 +1068,16 @@ TEST_CASE("Dont Fear The Reaper", "[dsp]")
             DYNAMIC_SECTION("Oversample Test " << base << " on " << osc_type_names[t])
             {
                 std::vector surges = {Surge::Headless::createSurge(base),
-                                      Surge::Headless::createSurge(base * 2),
-                                      Surge::Headless::createSurge(base * 4)};
+                                      Surge::Headless::createSurge(base * 2) };
+                                      // Surge::Headless::createSurge(base * 4)};
+
+                constexpr static int nsurge = 2;
+                REQUIRE( nsurge == surges.size() );
 
                 static constexpr int nsamples = 1024;
                 float samples[3][nsamples];
 
-                for (int s = 0; s < 3; ++s)
+                for (int s = 0; s < nsurge; ++s)
                 {
                     // std::cout << "SampleRate at " << s << " = " << surges[s]->storage.samplerate
                     // << std::endl;
@@ -1087,7 +1090,7 @@ TEST_CASE("Dont Fear The Reaper", "[dsp]")
                     surges[s]->playNote(0, 60, 127, 0);
                 }
 
-                for (int i = 0; i < 3; ++i)
+                for (int i = 0; i < nsurge; ++i)
                 {
                     int mul = 1 << i;
                     int wp = 0;
@@ -1110,11 +1113,15 @@ TEST_CASE("Dont Fear The Reaper", "[dsp]")
                     // std::cout << base << " " << osc_type_names[t] << " " << i << " "
                     //     << samples[0][i] << " " << samples[1][i] << " " << samples[2][i] <<
                     //     std::endl;
-                    INFO("Checking at " << i);
+
                     // So we don't line up perfectly but if we stay in phase the
                     // per sample values won't matter that much since we have a long time
-                    REQUIRE(fabs(samples[0][i] - samples[1][i]) < 0.05);
-                    REQUIRE(fabs(samples[0][i] - samples[2][i]) < 0.05);
+                    for (int q = 1; q < nsurge; ++q)
+                    {
+                        INFO("Checking at " << i << " " << q);
+                        REQUIRE(fabs(samples[0][i] - samples[q][i]) < 0.05);
+                    }
+                    // REQUIRE(fabs(samples[0][i] - samples[2][i]) < 0.05);
                 }
             }
         }
