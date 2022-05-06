@@ -5,7 +5,9 @@ using namespace vt_dsp;
 float bend(float x, float b) { return (1.f + b) * x - b * x * x * x; }
 
 PhaserEffect::PhaserEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd), lp(storage), hp(storage)
+    : Effect(storage, fxdata, pd), lp(storage), hp(storage),
+      modLFOL(storage->samplerate, storage->samplerate_inv),
+      modLFOR(storage->samplerate, storage->samplerate_inv)
 {
     for (int i = 0; i < n_bq_units; i++)
     {

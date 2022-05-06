@@ -827,6 +827,7 @@ TEST_CASE("CModulationSources", "[mod]")
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
         ControllerModulationSource a(Modulator::SmoothingMode::LEGACY);
+        a.set_samplerate(surge->storage.samplerate, surge->storage.samplerate_inv);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -849,6 +850,7 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(surge);
 
         ControllerModulationSource a(Modulator::SmoothingMode::FAST_EXP);
+        a.set_samplerate(surge->storage.samplerate, surge->storage.samplerate_inv);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -872,6 +874,7 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(surge);
 
         ControllerModulationSource a(Modulator::SmoothingMode::SLOW_EXP);
+        a.set_samplerate(surge->storage.samplerate, surge->storage.samplerate_inv);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -1394,7 +1397,7 @@ TEST_CASE("ModLFO is well behaved", "[mod]")
                 float depth = 1.0;
 
                 INFO("200 Samples at " << rate << " with po " << phase_offset);
-                Surge::ModControl mc;
+                Surge::ModControl mc(48000, 1.0 / 48000);
                 for (int s = 0; s < 200; ++s)
                 {
                     mc.pre_process(m, rate, depth, phase_offset);

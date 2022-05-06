@@ -19,7 +19,7 @@ namespace chowdsp
 {
 
 NeuronEffect::NeuronEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd)
+    : Effect(storage, fxdata, pd), modLFO(storage->samplerate, storage->samplerate_inv)
 {
     dc_blocker.setBlockSize(BLOCK_SIZE);
     makeup.set_blocksize(BLOCK_SIZE);

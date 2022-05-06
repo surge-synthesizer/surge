@@ -24,7 +24,8 @@ namespace Surge
 class ModControl
 {
   public:
-    ModControl()
+    float samplerate{0}, samplerate_inv{0};
+    ModControl(float sr, float sri) : samplerate(sr), samplerate_inv(sri)
     {
         lfophase = 0.0f;
         lfosandhtarget = 0.0f;
@@ -32,6 +33,7 @@ class ModControl
         for (int i = 0; i < LFO_TABLE_SIZE; ++i)
             sin_lfo_table[i] = sin(2.0 * M_PI * i / LFO_TABLE_SIZE);
     }
+    ModControl() : ModControl(0, 0) {}
 
     enum mod_waves
     {
@@ -45,6 +47,7 @@ class ModControl
 
     inline void pre_process(int mwave, float rate, float depth_val, float phase_offset)
     {
+        assert(samplerate > 1000);
         bool lforeset = false;
         bool rndreset = false;
         float lfoout = lfoval.v;
@@ -177,10 +180,7 @@ class ModControl
                 // thisphase * 0.98 prevents a glitch when LFO rate is disabled and phase offset is
                 // 1 which constantly retriggers S&G
                 thisrate = (rate == 0) ? thisphase * 0.98 : thisrate;
-                /*
-                 * ***SCREAMING HARD
-                 */
-                auto diff = (lfosandhtarget - cv) * thisrate * 2 * 48000 /* samplerate_inv */;
+                auto diff = (lfosandhtarget - cv) * thisrate * 2 * samplerate_inv;
                 lfoval.newValue(cv + diff);
             }
             else

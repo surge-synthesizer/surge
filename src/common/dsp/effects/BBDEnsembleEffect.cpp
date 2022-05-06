@@ -85,6 +85,15 @@ BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, p
     mix.set_blocksize(BLOCK_SIZE);
 
     for (int i = 0; i < 2; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            modlfos[i][j].samplerate = storage->samplerate;
+            modlfos[i][j].samplerate_inv = storage->samplerate_inv;
+        }
+    }
+
+    for (int i = 0; i < 2; ++i)
         dc_blocker[i].setBlockSize(BLOCK_SIZE);
 }
 
