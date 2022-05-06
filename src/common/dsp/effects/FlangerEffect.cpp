@@ -49,7 +49,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
     }
     // So here is a flanger with everything fixed
 
-    float rate = envelope_rate_linear(-limit_range(*f[fl_rate], -8.f, 10.f)) *
+    float rate = storage->envelope_rate_linear(-limit_range(*f[fl_rate], -8.f, 10.f)) *
                  (fxdata->p[fl_rate].temposync ? storage->temposyncratio : 1.f);
 
     for (int c = 0; c < 2; ++c)
@@ -185,7 +185,8 @@ void FlangerEffect::process(float *dataL, float *dataR)
 
             auto combspace = *f[fl_voice_spacing];
             float pitch = v0 + combspace * i;
-            float nv = samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch));
+            float nv =
+                storage->samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch));
 
             // OK so biggest tap = delaybase[c][i].v * ( 1.0 + lfoval[c][i].v * depth.v ) + 1;
             // Assume lfoval is [-1,1] and depth is known
@@ -201,7 +202,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
     averageDelayBase /= (2 * COMBS_PER_CHANNEL);
     vzeropitch.process();
 
-    float dApprox = rate * samplerate / BLOCK_SIZE * averageDelayBase * depth_val;
+    float dApprox = rate * storage->samplerate / BLOCK_SIZE * averageDelayBase * depth_val;
 
     depth.newValue(depth_val);
     mix.newValue(*f[fl_mix]);
@@ -239,7 +240,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
 
     float fbv = *f[fl_feedback];
     if (fbv > 0)
-        ringout_value = samplerate * 32.0;
+        ringout_value = storage->samplerate * 32.0;
     else
         ringout_value = 1024;
 
@@ -395,7 +396,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
         voices.process();
     }
 
-    width.set_target_smoothed(db_to_linear(*f[fl_width]) / 3);
+    width.set_target_smoothed(storage->db_to_linear(*f[fl_width]) / 3);
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);

@@ -26,6 +26,8 @@ namespace Memory
 {
 struct SurgeMemoryPools
 {
+    SurgeMemoryPools(SurgeStorage *s) : stringDelayLines(s->sinctable) {}
+
     /*
      * The largest number of oscillator instances of a particlar
      * type are scenes * oscs * max voices, but add some pad
@@ -59,7 +61,7 @@ struct SurgeMemoryPools
         if (hasString)
         {
             int maxUsed = nString * 2 * storage->getPatch().polylimit.val.i;
-            stringDelayLines.setupPoolToSize((int)(maxUsed * 0.5));
+            stringDelayLines.setupPoolToSize((int)(maxUsed * 0.5), storage->sinctable);
         }
         else
         {

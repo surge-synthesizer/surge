@@ -111,7 +111,7 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, bool isMpeEnabled
     return res;
 }
 
-SurgeVoice::SurgeVoice() { sampleRateReset(); }
+SurgeVoice::SurgeVoice() {}
 
 SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *params, int key,
                        int velocity, int channel, int scene_id, float detune,
@@ -126,6 +126,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     this->mpeEnabled = mpeEnabled;
     assert(storage);
     assert(oscene);
+
+    sampleRateReset();
 
     memcpy(localcopy, paramptr, sizeof(localcopy));
 
@@ -352,13 +354,13 @@ void SurgeVoice::legato(int key, int velocity, char detune)
         switch (scene->portamento.porta_curve)
         {
         case porta_log:
-            phase = glide_log(state.portaphase);
+            phase = storage->glide_log(state.portaphase);
             break;
         case porta_lin:
             phase = state.portaphase;
             break;
         case porta_exp:
-            phase = glide_exp(state.portaphase);
+            phase = storage->glide_exp(state.portaphase);
             break;
         }
 
@@ -600,9 +602,9 @@ void SurgeVoice::update_portamento()
             (1.f /
              ((1.f / quantStep) * fabs(state.getPitch(storage) - state.portasrc_key) + 0.00001));
 
-    state.portaphase += envelope_rate_linear(localcopy[scene->portamento.param_id_in_scene].f) *
-                        (scene->portamento.temposync ? storage->temposyncratio : 1.f) *
-                        const_rate_factor;
+    state.portaphase +=
+        storage->envelope_rate_linear(localcopy[scene->portamento.param_id_in_scene].f) *
+        (scene->portamento.temposync ? storage->temposyncratio : 1.f) * const_rate_factor;
 
     if (state.portaphase < 1)
     {
@@ -611,13 +613,13 @@ void SurgeVoice::update_portamento()
         switch (scene->portamento.porta_curve)
         {
         case porta_log:
-            phase = glide_log(state.portaphase);
+            phase = storage->glide_log(state.portaphase);
             break;
         case porta_lin:
             phase = state.portaphase;
             break;
         case porta_exp:
-            phase = glide_exp(state.portaphase);
+            phase = storage->glide_exp(state.portaphase);
             break;
         }
 
@@ -737,7 +739,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     float on = amp_to_linear(localcopy[lag_id[le_noise]].f);
     float r12 = amp_to_linear(localcopy[lag_id[le_ring12]].f);
     float r23 = amp_to_linear(localcopy[lag_id[le_ring23]].f);
-    float pfg = db_to_linear(localcopy[lag_id[le_pfg]].f);
+    float pfg = storage->db_to_linear(localcopy[lag_id[le_pfg]].f);
 
     osclevels[le_osc1].set_target(o1);
     osclevels[le_osc2].set_target(o2);
@@ -803,7 +805,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
 void SurgeVoice::sampleRateReset()
 {
     for (auto &cm : CM)
-        cm.setSampleRateAndBlockSize((float)dsamplerate_os, BLOCK_SIZE_OS);
+        cm.setSampleRateAndBlockSize((float)storage->dsamplerate_os, BLOCK_SIZE_OS);
 }
 
 bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
@@ -872,7 +874,8 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
                     (scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
                         octaveSize * scene->osc[1].octave.val.i,
                     1),
-                drift, is_wide, true, db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
+                drift, is_wide, true,
+                storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
         }
         else
         {
@@ -917,7 +920,8 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
                     (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
                         octaveSize * scene->osc[0].octave.val.i,
                     0),
-                drift, is_wide, true, db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
+                drift, is_wide, true,
+                storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
         }
         else if (FMmode)
         {
@@ -926,7 +930,8 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
                     (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
                         octaveSize * scene->osc[0].octave.val.i,
                     0),
-                drift, is_wide, true, db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
+                drift, is_wide, true,
+                storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
         }
         else
         {

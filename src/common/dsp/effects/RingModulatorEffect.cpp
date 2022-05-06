@@ -76,14 +76,14 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
 
     // gain scale based on unison
     float gscale = 0.4 + 0.6 * (1.f / sqrtf(uni));
-    double sri = dsamplerate_inv;
+    double sri = storage->dsamplerate_inv;
     int ub = BLOCK_SIZE;
 
 #if OVERSAMPLE
     // Now upsample
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
     halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1]);
-    sri = dsamplerate_os_inv;
+    sri = storage->dsamplerate_os_inv;
     ub = BLOCK_SIZE_OS;
 #else
     float *dataOS[2];

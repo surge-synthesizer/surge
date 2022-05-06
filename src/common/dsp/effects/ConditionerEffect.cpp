@@ -116,13 +116,13 @@ void ConditionerEffect::process(float *dataL, float *dataR)
         band2.process_block(dataL, dataR);
     }
 
-    float pregain = db_to_linear(-*f[cond_threshold]);
+    float pregain = storage->db_to_linear(-*f[cond_threshold]);
 
     ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *f[cond_balance]));
     ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *f[cond_balance]));
 
     width.set_target_smoothed(clamp1bp(*f[cond_width]));
-    postamp.set_target_smoothed(db_to_linear(*f[cond_gain]));
+    postamp.set_target_smoothed(storage->db_to_linear(*f[cond_gain]));
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);

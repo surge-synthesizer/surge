@@ -111,8 +111,8 @@ void VocoderEffect::setvars(bool init)
 
     for (int i = 0; i < active_bands && i < n_vocoder_bands; i++)
     {
-        Freq[i & 3] = fb * samplerate_inv;
-        FreqM[i & 3] = mb * samplerate_inv;
+        Freq[i & 3] = fb * storage->samplerate_inv;
+        FreqM[i & 3] = mb * storage->samplerate_inv;
 
         if ((i & 3) == 3)
         {
@@ -181,16 +181,16 @@ void VocoderEffect::process(float *dataL, float *dataR)
     }
 
     float Gain = *f[voc_input_gain] + 24.f;
-    mGain.set_target_smoothed(db_to_linear(Gain));
+    mGain.set_target_smoothed(storage->db_to_linear(Gain));
     mGain.multiply_block(modulator_in, BLOCK_SIZE_QUAD);
 
-    mGainR.set_target_smoothed(db_to_linear(Gain));
+    mGainR.set_target_smoothed(storage->db_to_linear(Gain));
     mGainR.multiply_block(modulator_inR, BLOCK_SIZE_QUAD);
 
     vFloat Rate = vLoad1(EnvFRate);
     vFloat Ratem1 = vLoad1(1.f - EnvFRate);
 
-    float Gate = db_to_linear(*f[voc_input_gate] + Gain);
+    float Gate = storage->db_to_linear(*f[voc_input_gate] + Gain);
     vFloat GateLevel = vLoad1(Gate * Gate);
 
     const vFloat MaxLevel = vLoad1(6.f);

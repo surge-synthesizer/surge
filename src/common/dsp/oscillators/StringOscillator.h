@@ -79,7 +79,7 @@ class StringOscillator : public Oscillator
     static constexpr int max_oversample = 2;
 
     StringOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
-        : Oscillator(s, o, p), lp(s), hp(s), noiseLp(s), halfband(6, true)
+        : Oscillator(s, o, p), lp(s), hp(s), noiseLp(s), halfband(6, true), charFilt(s)
     {
     }
 

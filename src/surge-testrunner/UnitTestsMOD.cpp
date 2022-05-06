@@ -72,7 +72,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
 
         while (true)
         {
-            auto t = 1.0 * (i + 1) * BLOCK_SIZE * dsamplerate_inv;
+            auto t = 1.0 * (i + 1) * BLOCK_SIZE * surge->storage.dsamplerate_inv;
             i++;
             if (t > runUntil || runUntil < 0)
                 break;
@@ -340,8 +340,8 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
     /*
     ** This section recreates the somewhat painful SSE code in readable stuff
     */
-    auto analogClone = [](float a_sec, float d_sec, float s, float r_sec, float releaseAfter,
-                          float runUntil, float pushSusAt = -1, float pushSusTo = 0) {
+    auto analogClone = [surge](float a_sec, float d_sec, float s, float r_sec, float releaseAfter,
+                               float runUntil, float pushSusAt = -1, float pushSusTo = 0) {
         float a = limit_range((float)(log(a_sec) / log(2.0)), -8.f, 5.f);
         float d = limit_range((float)(log(d_sec) / log(2.0)), -8.f, 5.f);
         float r = limit_range((float)(log(r_sec) / log(2.0)), -8.f, 5.f);
@@ -358,7 +358,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
 
         while (true)
         {
-            float t = 1.0 * (i + 1) * BLOCK_SIZE * dsamplerate_inv;
+            float t = 1.0 * (i + 1) * BLOCK_SIZE * surge->storage.dsamplerate_inv;
             i++;
             if (t > runUntil || runUntil < 0)
                 break;
@@ -405,7 +405,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
 
             const float shortest = 6.f;
             const float longest = -2.f;
-            const float coeff_offset = 2.f - log(samplerate / BLOCK_SIZE) / log(2.f);
+            const float coeff_offset = 2.f - log(surge->storage.samplerate / BLOCK_SIZE) / log(2.f);
 
             float coef_A = pow(2.f, std::min(0.f, coeff_offset - a));
             float coef_D = pow(2.f, std::min(0.f, coeff_offset - d));
@@ -808,7 +808,7 @@ TEST_CASE("LfoTempoSync Latch Drift", "[mod]")
         {
             if (lfo->get_output(0) > p)
             {
-                double time = i * dsamplerate_inv * BLOCK_SIZE;
+                double time = i * surge->storage.dsamplerate_inv * BLOCK_SIZE;
                 double beats = time * bpm / 60;
                 int bt2 = round(beats * 2);
                 double drift = fabs(beats * 2 - bt2);
@@ -827,6 +827,7 @@ TEST_CASE("CModulationSources", "[mod]")
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
         ControllerModulationSource a(Modulator::SmoothingMode::LEGACY);
+        a.set_samplerate(surge->storage.samplerate, surge->storage.samplerate_inv);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -849,6 +850,7 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(surge);
 
         ControllerModulationSource a(Modulator::SmoothingMode::FAST_EXP);
+        a.set_samplerate(surge->storage.samplerate, surge->storage.samplerate_inv);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -872,6 +874,7 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(surge);
 
         ControllerModulationSource a(Modulator::SmoothingMode::SLOW_EXP);
+        a.set_samplerate(surge->storage.samplerate, surge->storage.samplerate_inv);
         a.init(0.5f);
         REQUIRE(a.get_output(0) == 0.5f);
         float t = 0.6;
@@ -1394,7 +1397,7 @@ TEST_CASE("ModLFO is well behaved", "[mod]")
                 float depth = 1.0;
 
                 INFO("200 Samples at " << rate << " with po " << phase_offset);
-                Surge::ModControl mc;
+                Surge::ModControl mc(48000, 1.0 / 48000);
                 for (int s = 0; s < 200; ++s)
                 {
                     mc.pre_process(m, rate, depth, phase_offset);

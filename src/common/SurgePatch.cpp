@@ -845,7 +845,7 @@ void SurgePatch::update_controls(
 
             unsigned char mbuf alignas(16)[oscillator_buffer_size];
             Oscillator *t_osc =
-                spawn_osc(sc.osc[osc].type.val.i, nullptr, &sc.osc[osc], nullptr, mbuf);
+                spawn_osc(sc.osc[osc].type.val.i, storage, &sc.osc[osc], nullptr, mbuf);
             if (t_osc)
             {
                 t_osc->init_ctrltypes(sn, osc);
@@ -870,7 +870,7 @@ void SurgePatch::update_controls(
         {
             if (fx[i].type.val.i != fxt_off)
             {
-                Effect *t_fx = spawn_effect(fx[i].type.val.i, nullptr, &(fx[i]), nullptr);
+                Effect *t_fx = spawn_effect(fx[i].type.val.i, storage, &(fx[i]), nullptr);
                 if (t_fx)
                 {
                     t_fx->init_ctrltypes();

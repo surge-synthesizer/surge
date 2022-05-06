@@ -1505,7 +1505,8 @@ TEST_CASE("Octave Per Channel and Porta", "[tun]")
 
                     int nSTrim = (int)(nS / 2 * 0.8);
                     int start = (int)(nS / 2 * 0.05);
-                    auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+                    auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim,
+                                                  surge->storage.samplerate);
 
                     delete[] buffer;
 
@@ -1603,7 +1604,8 @@ TEST_CASE("Portamento With Repeated Notes", "[tun]")
 
                 int nSTrim = (int)(nS / 2 * 0.8);
                 int start = (int)(nS / 2 * 0.05);
-                auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+                auto freq =
+                    frequencyFromData(buffer, nS, nC, 0, start, nSTrim, surge->storage.samplerate);
 
                 delete[] buffer;
 
@@ -1693,7 +1695,8 @@ TEST_CASE("Portamento With Repeated Notes", "[tun]")
 
             int nSTrim = (int)(nS / 2 * 0.8);
             int start = (int)(nS / 2 * 0.05);
-            auto freq = frequencyFromData(buffer, nS, nC, 0, start, nSTrim);
+            auto freq =
+                frequencyFromData(buffer, nS, nC, 0, start, nSTrim, surge->storage.samplerate);
 
             delete[] buffer;
 

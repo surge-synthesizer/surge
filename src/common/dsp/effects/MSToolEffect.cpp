@@ -88,8 +88,8 @@ void MSToolEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
 
-    ampM.set_target_smoothed(db_to_linear(*f[mstl_mgain]));
-    ampS.set_target_smoothed(db_to_linear(*f[mstl_sgain]));
+    ampM.set_target_smoothed(storage->db_to_linear(*f[mstl_mgain]));
+    ampS.set_target_smoothed(storage->db_to_linear(*f[mstl_sgain]));
     postampL.set_target_smoothed(clamp1bp(1 - *f[mstl_outgain]));
     postampR.set_target_smoothed(clamp1bp(1 + *f[mstl_outgain]));
 

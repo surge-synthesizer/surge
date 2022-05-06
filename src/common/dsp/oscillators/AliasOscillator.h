@@ -62,7 +62,8 @@ class AliasOscillator : public Oscillator
 
     static constexpr int n_additive_partials = 16;
 
-    AliasOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p) : Oscillator(s, o, p)
+    AliasOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
+        : Oscillator(s, o, p), charFilt(s)
     {
         for (auto u = 0; u < MAX_UNISON; ++u)
         {

@@ -67,7 +67,7 @@
  */
 
 SineOscillator::SineOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy)
-    : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
+    : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage), charFilt(storage)
 {
 }
 
@@ -87,7 +87,7 @@ void SineOscillator::prepare_unison(int voices)
     }
 
     // normalize to be sample rate independent amount of time for 50 44.1k samples
-    dplaying = 1.0 / 50.0 * 44100 / samplerate;
+    dplaying = 1.0 / 50.0 * 44100 / storage->samplerate;
     playingramp[0] = 1;
     for (int i = 1; i < voices; ++i)
         playingramp[i] = 0;
@@ -129,10 +129,6 @@ void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     lp.coeff_LP2B(lp.calc_omega(oscdata->p[sine_highcut].val.f / 12.0) / OSC_OVERSAMPLING, 0.707);
 
     charFilt.init(storage->getPatch().character.val.i);
-    if (storage->getPatch().streamingRevision <= 15)
-    {
-        charFilt.doFilter = false;
-    }
 }
 
 SineOscillator::~SineOscillator() {}
@@ -1070,6 +1066,7 @@ void SineOscillator::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 15)
     {
         oscdata->retrigger.val.b = true;
+        charFilt.doFilter = false;
     }
 }
 

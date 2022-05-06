@@ -274,10 +274,10 @@ static struct EngineDynamicDeact : public ParameterDynamicDeactivationFunction
 
 TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                  pdata *localcopy)
-    : Oscillator(storage, oscdata, localcopy)
+    : Oscillator(storage, oscdata, localcopy), charFilt(storage)
 {
 #if SAMPLERATE_LANCZOS
-    lancRes = std::make_unique<LanczosResampler>(48000, dsamplerate_os);
+    lancRes = std::make_unique<LanczosResampler>(48000, storage->dsamplerate_os);
     srcstate = nullptr;
 #else
     int error;
@@ -343,7 +343,7 @@ void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
 
     memset(fmlagbuffer, 0, (BLOCK_SIZE_OS << 1) * sizeof(float));
     fmrp = 0;
-    fmwp = (int)(BLOCK_SIZE_OS * 48000 * dsamplerate_os_inv);
+    fmwp = (int)(BLOCK_SIZE_OS * 48000 * storage->dsamplerate_os_inv);
 
     process_block_internal<false, true>(pitch, 0, false, 0, std::ceil(cycleInSamples));
 }
@@ -404,7 +404,7 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
         float dsmaster[BLOCK_SIZE_OS << 2];
         SRC_DATA fmdata;
         fmdata.end_of_input = 0;
-        fmdata.src_ratio = 48000.0 / dsamplerate_os; // going INTO the plaits rate
+        fmdata.src_ratio = 48000.0 / storage->dsamplerate_os; // going INTO the plaits rate
         fmdata.data_in = master_osc;
         fmdata.data_out = &(dsmaster[0]);
         fmdata.input_frames = BLOCK_SIZE_OS;

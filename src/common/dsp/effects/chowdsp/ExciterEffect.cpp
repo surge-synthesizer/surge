@@ -40,7 +40,7 @@ void ExciterEffect::init()
     toneFilter.coeff_HP(M_PI, q_val);
     toneFilter.coeff_instantize();
 
-    levelDetector.reset(samplerate);
+    levelDetector.reset(storage->samplerate);
 
     drive_gain.set_target(1.0f);
     wet_gain.set_target(0.0f);
@@ -72,8 +72,8 @@ void ExciterEffect::set_params()
 {
     // "Tone" param
     auto cutoff = low_freq * std::pow(high_freq / low_freq, clamp01(*f[exciter_tone]));
-    cutoff = limit_range(cutoff, 10.0, samplerate * 0.48);
-    auto omega_factor = samplerate_inv * 2.0 * M_PI / (double)os.getOSRatio();
+    cutoff = limit_range(cutoff, 10.0, storage->samplerate * 0.48);
+    auto omega_factor = storage->samplerate_inv * 2.0 * M_PI / (double)os.getOSRatio();
     toneFilter.coeff_HP(cutoff * omega_factor, q_val);
 
     // "Drive" param

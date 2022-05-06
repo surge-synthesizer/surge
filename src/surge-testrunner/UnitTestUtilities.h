@@ -22,7 +22,8 @@ std::pair<double, double> frequencyAndRMSForNote(std::shared_ptr<SurgeSynthesize
                                                  int seconds = 2, int audioChannel = 0,
                                                  int midiChannel = 0);
 
-double frequencyFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo);
+double frequencyFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo,
+                         float sampleRate);
 double RMSFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo);
 
 double frequencyForEvents(std::shared_ptr<SurgeSynthesizer> surge,
@@ -37,7 +38,8 @@ void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *
                          int nC, int startSample = -1, int endSample = -1);
 
 std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &patchName);
-std::shared_ptr<SurgeSynthesizer> surgeOnSine();
-std::shared_ptr<SurgeSynthesizer> surgeOnSaw();
+std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &, float sr = 44100);
+std::shared_ptr<SurgeSynthesizer> surgeOnSine(float sr = 44100);
+std::shared_ptr<SurgeSynthesizer> surgeOnSaw(float sr = 44100);
 } // namespace Test
 } // namespace Surge

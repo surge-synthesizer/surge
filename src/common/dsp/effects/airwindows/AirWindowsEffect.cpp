@@ -266,7 +266,7 @@ void AirWindowsEffect::setupSubFX(int sfx, bool useStreamedValues)
 
     int dp = (detailedMode ? 6 : 2);
 
-    airwin = r.create(r.id, dsamplerate, dp); // FIXME
+    airwin = r.create(r.id, storage->dsamplerate, dp); // FIXME
     airwin->storage = storage;
 
     char fxname[1024];

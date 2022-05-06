@@ -19,7 +19,7 @@ namespace chowdsp
 {
 
 NeuronEffect::NeuronEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd)
+    : Effect(storage, fxdata, pd), modLFO(storage->samplerate, storage->samplerate_inv)
 {
     dc_blocker.setBlockSize(BLOCK_SIZE);
     makeup.set_blocksize(BLOCK_SIZE);
@@ -41,8 +41,8 @@ void NeuronEffect::init()
 
     os.reset();
 
-    delay1.prepare({dsamplerate * os.getOSRatio(), BLOCK_SIZE, 2});
-    delay2.prepare({dsamplerate * os.getOSRatio(), BLOCK_SIZE, 2});
+    delay1.prepare({storage->dsamplerate * os.getOSRatio(), BLOCK_SIZE, 2});
+    delay2.prepare({storage->dsamplerate * os.getOSRatio(), BLOCK_SIZE, 2});
     delay1.setDelay(0.0f);
     delay2.setDelay(0.0f);
 
@@ -50,7 +50,7 @@ void NeuronEffect::init()
     y1[1] = 0.0f;
 
     dc_blocker.suspend();
-    dc_blocker.coeff_HP(35.0f / samplerate, 0.707);
+    dc_blocker.coeff_HP(35.0f / storage->samplerate, 0.707);
     dc_blocker.coeff_instantize();
 
     width.instantize();
@@ -105,7 +105,7 @@ void NeuronEffect::set_params()
     auto wh_clamped = clamp01(*f[neuron_drive_wh]);
 
     Wf.setTargetValue(clamp01(*f[neuron_squash_wf]) * 20.0f);
-    Wh.setTargetValue(db_to_linear(wh_clamped));
+    Wh.setTargetValue(storage->db_to_linear(wh_clamped));
     Uf.setTargetValue(clamp01(*f[neuron_stab_uf]) * 5.0f);
     Uh.setTargetValue(clamp01(*f[neuron_asym_uh]) * 0.9f);
     bf.setTargetValue(bf_clamped * 6.0f - 1.0f);
@@ -119,12 +119,12 @@ void NeuronEffect::set_params()
     auto delayTimeSec1 = 1.0f / (float)freqHz1;
     auto delayTimeSec2 = 1.0f / (float)freqHz2;
 
-    delay1Smooth.setTargetValue(delayTimeSec1 * 0.5f * samplerate * os.getOSRatio());
-    delay2Smooth.setTargetValue(delayTimeSec2 * 0.5f * samplerate * os.getOSRatio());
+    delay1Smooth.setTargetValue(delayTimeSec1 * 0.5f * storage->samplerate * os.getOSRatio());
+    delay2Smooth.setTargetValue(delayTimeSec2 * 0.5f * storage->samplerate * os.getOSRatio());
 
     // modulation settings
     int mwave = *pdata_ival[neuron_lfo_wave];
-    float rate = envelope_rate_linear(-limit_range(*f[neuron_lfo_rate], -8.f, 10.f)) *
+    float rate = storage->envelope_rate_linear(-limit_range(*f[neuron_lfo_rate], -8.f, 10.f)) *
                  (fxdata->p[neuron_lfo_rate].temposync ? storage->temposyncratio : 1.f);
     float depth_val = limit_range(*f[neuron_lfo_depth], 0.f, 2.f);
 
@@ -150,8 +150,8 @@ void NeuronEffect::set_params()
 
     makeup.set_target_smoothed(makeupGain);
 
-    width.set_target_smoothed(db_to_linear(*f[neuron_width]));
-    outgain.set_target_smoothed(db_to_linear(*f[neuron_gain]));
+    width.set_target_smoothed(storage->db_to_linear(*f[neuron_width]));
+    outgain.set_target_smoothed(storage->db_to_linear(*f[neuron_gain]));
 }
 
 void NeuronEffect::suspend() { init(); }

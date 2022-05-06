@@ -50,7 +50,7 @@ void FM2Oscillator::process_block(float pitch, float drift, bool stereo, bool FM
         localcopy[oscdata->p[fm2_feedback].param_id_in_scene].f);
 
     double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
-    double sh = localcopy[oscdata->p[fm2_m12offset].param_id_in_scene].f * dsamplerate_inv;
+    double sh = localcopy[oscdata->p[fm2_m12offset].param_id_in_scene].f * storage->dsamplerate_inv;
 
     RM1.set_rate(min(M_PI, (double)pitch_to_omega(pitch + driftlfo) *
                                    (double)localcopy[oscdata->p[fm2_m1ratio].param_id_in_scene].i +

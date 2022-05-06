@@ -45,9 +45,9 @@ void DistortionEffect::setvars(bool init)
                            fxdata->p[dist_preeq_bw].val.f, pregain);
         band2.coeff_peakEQ(band2.calc_omega(fxdata->p[dist_posteq_freq].val.f / 12.f),
                            fxdata->p[dist_posteq_bw].val.f, postgain);
-        auto dE = db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive]));
+        auto dE = storage->db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive]));
         drive.set_target_smoothed(dE);
-        outgain.set_target_smoothed(db_to_linear(*f[dist_gain]));
+        outgain.set_target_smoothed(storage->db_to_linear(*f[dist_gain]));
     }
     else
     {
@@ -73,7 +73,7 @@ void DistortionEffect::process(float *dataL, float *dataR)
 
     band1.process_block(dataL, dataR);
     auto dS = drive.get_target();
-    auto dE = db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive]));
+    auto dE = storage->db_to_linear(fxdata->p[dist_drive].get_extended(*f[dist_drive]));
     drive.set_target_smoothed(dE);
 
     float ringoutMul = 1.0;
@@ -81,7 +81,7 @@ void DistortionEffect::process(float *dataL, float *dataR)
     {
         ringoutMul = limit01(1.f * (ringout_time - ringout - 1) / ringout_end);
     }
-    outgain.set_target_smoothed(db_to_linear(*f[dist_gain]) * ringoutMul);
+    outgain.set_target_smoothed(storage->db_to_linear(*f[dist_gain]) * ringoutMul);
 
     float fb = *f[dist_feedback];
     int wsi = *pdata_ival[dist_model];
@@ -141,8 +141,8 @@ void DistortionEffect::process(float *dataL, float *dataR)
             }
             else
             {
-                L = lookup_waveshape(ws, L);
-                R = lookup_waveshape(ws, R);
+                L = storage->lookup_waveshape(ws, L);
+                R = storage->lookup_waveshape(ws, R);
             }
 
             // denormal handling

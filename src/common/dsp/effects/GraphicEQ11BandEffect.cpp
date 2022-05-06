@@ -132,7 +132,7 @@ void GraphicEQ11BandEffect::process(float *dataL, float *dataR)
     if (!fxdata->p[geq11_16k].deactivated)
         band11.process_block(dataL, dataR);
 
-    gain.set_target_smoothed(db_to_linear(*f[geq11_gain]));
+    gain.set_target_smoothed(storage->db_to_linear(*f[geq11_gain]));
     gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

@@ -45,16 +45,6 @@
 // FIXME
 #include "FormulaModulationHelper.h"
 
-float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
-float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
-short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
-float table_dB alignas(16)[512], table_envrate_lpf alignas(16)[512],
-    table_envrate_linear alignas(16)[512], table_glide_exp alignas(16)[512],
-    table_glide_log alignas(16)[512];
-float samplerate = 0, samplerate_inv;
-double dsamplerate, dsamplerate_inv;
-double dsamplerate_os, dsamplerate_os_inv;
-
 using namespace std;
 
 std::string SurgeStorage::skipPatchLoadDataPathSentinel = "<SKIP-PATCH-SENTINEL>";
@@ -126,6 +116,10 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
             sinctableI16[j * FIRipolI16_N + i] = (short)((float)val * 16384.f);
         }
     }
+
+    for (int s = 0; s < n_scenes; s++)
+        for (int m = 0; m < n_modsources; ++m)
+            getPatch().scene[s].modsource_doprocess[m] = false;
 
     for (int s = 0; s < n_scenes; s++)
         for (int o = 0; o < n_oscs; o++)
@@ -348,8 +342,8 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
     load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);
 
-    if (loadWtAndPatch && !load_wt_wt_mem(SurgeSharedBinary::windows_wt,
-                                          SurgeSharedBinary::windows_wtSize, &WindowWT))
+    if (!load_wt_wt_mem(SurgeSharedBinary::windows_wt, SurgeSharedBinary::windows_wtSize,
+                        &WindowWT))
     {
         WindowWT.size = 0;
         std::ostringstream oss;
@@ -498,7 +492,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     modulatorPreset = std::make_unique<Surge::Storage::ModulatorPreset>();
     modulatorPreset->forcePresetRescan();
 
-    memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>();
+    memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }
 
 void SurgeStorage::createUserDirectory()
@@ -1979,7 +1973,7 @@ void SurgeStorage::note_to_omega_ignoring_tuning(float x, float &sinu, float &co
            a * table_note_omega_ignoring_tuning[1][(e + 1) & 0x1ff];
 }
 
-float db_to_linear(float x)
+float SurgeStorage::db_to_linear(float x)
 {
     x += 384;
     int e = (int)x;
@@ -1988,7 +1982,7 @@ float db_to_linear(float x)
     return (1 - a) * table_dB[e & 0x1ff] + a * table_dB[(e + 1) & 0x1ff];
 }
 
-float lookup_waveshape(sst::waveshapers::WaveshaperType entry, float x)
+float SurgeStorage::lookup_waveshape(sst::waveshapers::WaveshaperType entry, float x)
 {
     x *= 32.f;
     x += 512.f;
@@ -2004,7 +1998,7 @@ float lookup_waveshape(sst::waveshapers::WaveshaperType entry, float x)
     return (1 - a) * waveshapers[e & 0x3ff] + a * waveshapers[(e + 1) & 0x3ff];
 }
 
-float lookup_waveshape_warp(sst::waveshapers::WaveshaperType entry, float x)
+float SurgeStorage::lookup_waveshape_warp(sst::waveshapers::WaveshaperType entry, float x)
 {
     x *= 256.f;
     x += 512.f;
@@ -2016,7 +2010,7 @@ float lookup_waveshape_warp(sst::waveshapers::WaveshaperType entry, float x)
     return (1 - a) * waveshapers[e & 0x3ff] + a * waveshapers[(e + 1) & 0x3ff];
 }
 
-float envelope_rate_lpf(float x)
+float SurgeStorage::envelope_rate_lpf(float x)
 {
     x *= 16.f;
     x += 256.f;
@@ -2026,7 +2020,7 @@ float envelope_rate_lpf(float x)
     return (1 - a) * table_envrate_lpf[e & 0x1ff] + a * table_envrate_lpf[(e + 1) & 0x1ff];
 }
 
-float envelope_rate_linear(float x)
+float SurgeStorage::envelope_rate_linear(float x)
 {
     x *= 16.f;
     x += 256.f;
@@ -2036,7 +2030,7 @@ float envelope_rate_linear(float x)
     return (1 - a) * table_envrate_linear[e & 0x1ff] + a * table_envrate_linear[(e + 1) & 0x1ff];
 }
 
-float envelope_rate_linear_nowrap(float x)
+float SurgeStorage::envelope_rate_linear_nowrap(float x)
 {
     x *= 16.f;
     x += 256.f;
@@ -2048,7 +2042,7 @@ float envelope_rate_linear_nowrap(float x)
 }
 
 // this function is only valid for x = {0, 1}
-float glide_exp(float x)
+float SurgeStorage::glide_exp(float x)
 {
     x *= 511.f;
     int e = (int)x;
@@ -2058,7 +2052,7 @@ float glide_exp(float x)
 }
 
 // this function is only valid for x = {0, 1}
-float glide_log(float x)
+float SurgeStorage::glide_log(float x)
 {
     x *= 511.f;
     int e = (int)x;

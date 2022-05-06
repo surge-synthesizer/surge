@@ -51,7 +51,8 @@ struct DriftLFO
  */
 template <typename valtype> struct CharacterFilter
 {
-    CharacterFilter() noexcept {}
+    SurgeStorage *storage;
+    CharacterFilter(SurgeStorage *s) noexcept : storage(s) {}
 
     void init(int itype)
     {
@@ -60,7 +61,7 @@ template <typename valtype> struct CharacterFilter
         {
         case 0:
         {
-            valtype filt = 1.0 - 2.0 * 5000.0 * dsamplerate_inv;
+            valtype filt = 1.0 - 2.0 * 5000.0 * storage->dsamplerate_inv;
             filt *= filt;
             CoefB0 = 1.0 - filt;
             CoefB1 = 0.0;
@@ -70,7 +71,7 @@ template <typename valtype> struct CharacterFilter
         break;
         case 2:
         {
-            valtype filt = 1.0 - 2.0 * 5000.0 * dsamplerate_inv;
+            valtype filt = 1.0 - 2.0 * 5000.0 * storage->dsamplerate_inv;
             filt *= filt;
             valtype A0 = 1.0 / (1.0 - filt);
             CoefB0 = 1.0 * A0;

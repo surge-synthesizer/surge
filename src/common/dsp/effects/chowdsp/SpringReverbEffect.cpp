@@ -24,7 +24,7 @@ SpringReverbEffect::SpringReverbEffect(SurgeStorage *storage, FxStorage *fxdata,
 
 void SpringReverbEffect::init()
 {
-    proc.prepare(samplerate, BLOCK_SIZE);
+    proc.prepare(storage->samplerate, BLOCK_SIZE);
 
     mix.set_target(1.f);
     mix.instantize();

@@ -132,7 +132,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
         int totalSamples = (1 << 4) * (int)getWidth();
         int averagingWindow = 4; // < and Mult of BlockSizeOS
-        float disp_pitch_rs = disp_pitch + 12.0 * log2(dsamplerate / 44100.0);
+        float disp_pitch_rs = disp_pitch + 12.0 * log2(storage->dsamplerate / 44100.0);
 
         if (!storage->isStandardTuning)
         {
@@ -1094,7 +1094,7 @@ struct WaveTable3DEditor : public juce::Component,
             int totalSamples = getWidth();
             // empirically set up... don't ask!
             float disp_pitch_rs =
-                12.f * std::log2f((700.f * (samplerate / 48000.f)) / 440.f) + 69.f;
+                12.f * std::log2f((700.f * (storage->samplerate / 48000.f)) / 440.f) + 69.f;
 
             if (!storage->isStandardTuning)
             {

@@ -505,8 +505,9 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     }
 
     int minSamples = (1 << 0) * (int)(waveform_display.getWidth());
-    int totalSamples = std::max((int)minSamples, (int)(totalEnvTime * samplerate / BLOCK_SIZE));
-    float drawnTime = totalSamples * samplerate_inv * BLOCK_SIZE;
+    int totalSamples =
+        std::max((int)minSamples, (int)(totalEnvTime * storage->samplerate / BLOCK_SIZE));
+    float drawnTime = totalSamples * storage->samplerate_inv * BLOCK_SIZE;
 
     // OK so let's assume we want about 1000 pixels worth tops in
     int averagingWindow = (int)(totalSamples / 1000.0) + 1;
@@ -550,7 +551,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
 
             if (susCountdown < 0 && tlfo->env_state == lfoeg_stuck)
             {
-                susCountdown = susTime * samplerate / BLOCK_SIZE;
+                susCountdown = susTime * storage->samplerate / BLOCK_SIZE;
             }
             else if (susCountdown == 0 && tlfo->env_state == lfoeg_stuck)
             {
@@ -1190,8 +1191,9 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
     auto boxo = rect_steps;
 
     int minSamples = (1 << 4) * boxo.getWidth();
-    int totalSamples = std::max((int)minSamples, (int)(totalSampleTime * samplerate / BLOCK_SIZE));
-    float cycleSamples = cyclesec * samplerate / BLOCK_SIZE;
+    int totalSamples =
+        std::max((int)minSamples, (int)(totalSampleTime * storage->samplerate / BLOCK_SIZE));
+    float cycleSamples = cyclesec * storage->samplerate / BLOCK_SIZE;
 
     // OK so lets assume we want about 1000 pixels worth tops in
     int averagingWindow = (int)(totalSamples / 2000.0) + 1;
@@ -1216,7 +1218,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
 
             if (susCountdown < 0 && tlfo->env_state == lfoeg_stuck)
             {
-                susCountdown = susTime * samplerate / BLOCK_SIZE;
+                susCountdown = susTime * storage->samplerate / BLOCK_SIZE;
             }
             else if (susCountdown == 0 && tlfo->env_state == lfoeg_stuck)
             {

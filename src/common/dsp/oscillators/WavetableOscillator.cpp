@@ -317,8 +317,8 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
             float *obfR = &oscbufferR[bufpos + k + delay];
             __m128 obL = _mm_loadu_ps(obfL);
             __m128 obR = _mm_loadu_ps(obfR);
-            __m128 st = _mm_load_ps(&sinctable[m + k]);
-            __m128 so = _mm_load_ps(&sinctable[m + k + FIRipol_N]);
+            __m128 st = _mm_load_ps(&storage->sinctable[m + k]);
+            __m128 so = _mm_load_ps(&storage->sinctable[m + k + FIRipol_N]);
             so = _mm_mul_ps(so, lipol128);
             st = _mm_add_ps(st, so);
             obL = _mm_add_ps(obL, _mm_mul_ps(st, g128L));
@@ -336,8 +336,8 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
         {
             float *obf = &oscbuffer[bufpos + k + delay];
             __m128 ob = _mm_loadu_ps(obf);
-            __m128 st = _mm_load_ps(&sinctable[m + k]);
-            __m128 so = _mm_load_ps(&sinctable[m + k + FIRipol_N]);
+            __m128 st = _mm_load_ps(&storage->sinctable[m + k]);
+            __m128 so = _mm_load_ps(&storage->sinctable[m + k + FIRipol_N]);
             so = _mm_mul_ps(so, lipol128);
             st = _mm_add_ps(st, so);
             st = _mm_mul_ps(st, g128);
@@ -362,8 +362,8 @@ template <bool is_init> void WavetableOscillator::update_lagvals()
     l_shape.newValue(limit_range(localcopy[id_shape].f, 0.f, 1.f));
     formant_t = max(0.f, localcopy[id_formant].f);
 
-    float invt =
-        min(1.0, (8.175798915 * storage->note_to_pitch_tuningctr(pitch_t)) * dsamplerate_os_inv);
+    float invt = min(1.0, (8.175798915 * storage->note_to_pitch_tuningctr(pitch_t)) *
+                              storage->dsamplerate_os_inv);
     // TODO: Make a lookup table
     float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, 4 * invt));
 
@@ -391,7 +391,7 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
     pitch_last = pitch_t;
     pitch_t = min(148.f, pitch0);
     pitchmult_inv =
-        max(1.0, dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
+        max(1.0, storage->dsamplerate_os * (1 / 8.175798915) * storage->note_to_pitch_inv(pitch_t));
     pitchmult = 1.f / pitchmult_inv; // This must be a real division, reciprocal-approximation is
                                      // not precise enough
     this->drift = drift;

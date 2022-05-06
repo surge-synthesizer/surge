@@ -598,7 +598,7 @@ TEST_CASE("Sinc Delay Line", "[dsp]")
     SECTION("Test Constants")
     {
         float val = 1.324;
-        SSESincDelayLine<4096> dl4096;
+        SSESincDelayLine<4096> dl4096(surge->storage.sinctable);
 
         for (int i = 0; i < 10000; ++i)
         {
@@ -625,7 +625,7 @@ TEST_CASE("Sinc Delay Line", "[dsp]")
     {
         float val = 0;
         float dRamp = 0.01;
-        SSESincDelayLine<4096> dl4096;
+        SSESincDelayLine<4096> dl4096(surge->storage.sinctable);
 
         for (int i = 0; i < 10000; ++i)
         {
@@ -1052,6 +1052,77 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
                 float v = shafted_tanh(x + 0.5) - shafted_tanh(0.5);
                 INFO(inv[q] << " " << i << " " << v);
                 REQUIRE(out[q] == Approx(v).margin(0.1));
+            }
+        }
+    }
+}
+
+TEST_CASE("Dont Fear The Reaper", "[dsp]")
+{
+    // Reaper added cool per-plugin oversampling. Will we do OK with that?
+    for (auto base : {44100, 48000})
+    {
+        // A few like string and noise won't pass this test so be explicit about our choices
+        for (auto t : {ot_sine, ot_FM2, ot_wavetable, ot_window, ot_alias})
+        {
+            DYNAMIC_SECTION("Oversample Test " << base << " on " << osc_type_names[t])
+            {
+                std::vector surges = {Surge::Headless::createSurge(base),
+                                      Surge::Headless::createSurge(base * 2)};
+                // Surge::Headless::createSurge(base * 4)};
+
+                constexpr static int nsurge = 2;
+                REQUIRE(nsurge == surges.size());
+
+                static constexpr int nsamples = 1024;
+                float samples[3][nsamples];
+
+                for (int s = 0; s < nsurge; ++s)
+                {
+                    // std::cout << "SampleRate at " << s << " = " << surges[s]->storage.samplerate
+                    // << std::endl;
+                    surges[s]->storage.getPatch().scene[0].osc[0].queue_type = t;
+                    surges[s]->storage.getPatch().scene[0].osc[0].retrigger.val.b = true;
+
+                    for (int q = 0; q < 10; ++q)
+                        surges[s]->process();
+
+                    surges[s]->playNote(0, 60, 127, 0);
+                }
+
+                for (int i = 0; i < nsurge; ++i)
+                {
+                    int mul = 1 << i;
+                    int wp = 0;
+                    while (wp < nsamples)
+                    {
+                        surges[i]->process();
+
+                        int q = 0;
+                        while (q < BLOCK_SIZE && wp < nsamples)
+                        {
+                            samples[i][wp] = surges[i]->output[0][q];
+                            wp++;
+                            q += mul;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < nsamples; i++)
+                {
+                    // std::cout << base << " " << osc_type_names[t] << " " << i << " "
+                    //     << samples[0][i] << " " << samples[1][i] << " " << samples[2][i] <<
+                    //     std::endl;
+
+                    // So we don't line up perfectly but if we stay in phase the
+                    // per sample values won't matter that much since we have a long time
+                    for (int q = 1; q < nsurge; ++q)
+                    {
+                        INFO("Checking at " << i << " " << q);
+                        REQUIRE(fabs(samples[0][i] - samples[q][i]) < 0.05);
+                    }
+                    // REQUIRE(fabs(samples[0][i] - samples[2][i]) < 0.05);
+                }
             }
         }
     }

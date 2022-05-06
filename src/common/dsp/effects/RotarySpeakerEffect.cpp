@@ -29,7 +29,7 @@ void RotarySpeakerEffect::init()
 void RotarySpeakerEffect::setvars(bool init)
 {
     drive.newValue(*f[rot_drive]);
-    width.set_target_smoothed(db_to_linear(*f[rot_width]));
+    width.set_target_smoothed(storage->db_to_linear(*f[rot_width]));
     mix.set_target_smoothed(*f[rot_mix]);
 
     if (init)
@@ -135,8 +135,9 @@ void RotarySpeakerEffect::process_only_control()
     float frate =
         *f[rot_horn_rate] * (fxdata->p[rot_horn_rate].temposync ? storage->temposyncratio : 1.f);
 
-    lfo.set_rate(2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
-    lf_lfo.set_rate(*f[rot_rotor_rate] * 2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
+    lfo.set_rate(2 * M_PI * powf(2, frate) * storage->dsamplerate_inv * BLOCK_SIZE);
+    lf_lfo.set_rate(*f[rot_rotor_rate] * 2 * M_PI * powf(2, frate) * storage->dsamplerate_inv *
+                    BLOCK_SIZE);
 
     lfo.process();
     lf_lfo.process();
@@ -155,8 +156,8 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
      ** therefore lf_lfo processes BLOCK_SIZE more times
      ** hence the lack of BLOCK_SIZE here
      */
-    lfo.set_rate(2 * M_PI * powf(2, frate) * dsamplerate_inv * BLOCK_SIZE);
-    lf_lfo.set_rate(*f[rot_rotor_rate] * 2 * M_PI * powf(2, frate) * dsamplerate_inv);
+    lfo.set_rate(2 * M_PI * powf(2, frate) * storage->dsamplerate_inv * BLOCK_SIZE);
+    lf_lfo.set_rate(*f[rot_rotor_rate] * 2 * M_PI * powf(2, frate) * storage->dsamplerate_inv);
 
     float precalc0 = (-2 - (float)lfo.i);
     float precalc1 = (-1 - (float)lfo.r);
@@ -164,7 +165,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     float lenL = sqrt(precalc0 * precalc0 + precalc1 * precalc1);
     float lenR = sqrt(precalc0 * precalc0 + precalc2 * precalc2);
 
-    float delay = samplerate * 0.0018f * *f[rot_doppler];
+    float delay = storage->samplerate * 0.0018f * *f[rot_doppler];
 
     dL.newValue(delay * lenL);
     dR.newValue(delay * lenR);
@@ -286,8 +287,8 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
             }
             else
             {
-                input =
-                    lookup_waveshape(ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) * gain_tweak;
+                input = storage->lookup_waveshape(ws, 0.5f * (dataL[k] + dataR[k]) * drive_factor) *
+                        gain_tweak;
             }
             input /= gain_comp_factor;
 
@@ -328,10 +329,10 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
         tbufferR[k] = 0;
         for (int i = 0; i < FIRipol_N; i++)
         {
-            tbufferL[k] +=
-                buffer[(rpL - i) & (max_delay_length - 1)] * sinctable1X[sincL + FIRipol_N - i];
-            tbufferR[k] +=
-                buffer[(rpR - i) & (max_delay_length - 1)] * sinctable1X[sincR + FIRipol_N - i];
+            tbufferL[k] += buffer[(rpL - i) & (max_delay_length - 1)] *
+                           storage->sinctable1X[sincL + FIRipol_N - i];
+            tbufferR[k] += buffer[(rpR - i) & (max_delay_length - 1)] *
+                           storage->sinctable1X[sincR + FIRipol_N - i];
         }
         dL.process();
         dR.process();

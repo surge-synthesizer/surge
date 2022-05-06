@@ -37,17 +37,18 @@ void FrequencyShifterEffect::setvars(bool init)
 
     if (init)
         time.newValue((fxdata->p[freq_delay].temposync ? storage->temposyncratio_inv : 1.f) *
-                          samplerate *
+                          storage->samplerate *
                           storage->note_to_pitch_ignoring_tuning(12 * fxdata->p[freq_delay].val.f) -
                       FIRoffset);
     else
         time.newValue((fxdata->p[freq_delay].temposync ? storage->temposyncratio_inv : 1.f) *
-                          samplerate * storage->note_to_pitch_ignoring_tuning(12 * *f[freq_delay]) -
+                          storage->samplerate *
+                          storage->note_to_pitch_ignoring_tuning(12 * *f[freq_delay]) -
                       FIRoffset);
     mix.set_target_smoothed(*f[freq_mix]);
 
     double shift = *f[freq_shift] * (fxdata->p[freq_shift].extend_range ? 1000.0 : 10.0);
-    double omega = shift * M_PI * 2.0 * dsamplerate_inv;
+    double omega = shift * M_PI * 2.0 * storage->dsamplerate_inv;
     o1L.set_rate(M_PI * 0.5 - min(0.0, omega));
     o2L.set_rate(M_PI * 0.5 + max(0.0, omega));
 
@@ -104,10 +105,10 @@ void FrequencyShifterEffect::process(float *dataL, float *dataR)
 
         for (int i = 0; i < FIRipol_N; i++)
         {
-            L[k] +=
-                buffer[0][(rp - i) & (max_delay_length - 1)] * sinctable1X[sinc + FIRipol_N - i];
-            R[k] +=
-                buffer[1][(rp - i) & (max_delay_length - 1)] * sinctable1X[sinc + FIRipol_N - i];
+            L[k] += buffer[0][(rp - i) & (max_delay_length - 1)] *
+                    storage->sinctable1X[sinc + FIRipol_N - i];
+            R[k] += buffer[1][(rp - i) & (max_delay_length - 1)] *
+                    storage->sinctable1X[sinc + FIRipol_N - i];
         }
 
         // do freqshift (part I)
@@ -139,11 +140,11 @@ void FrequencyShifterEffect::process(float *dataL, float *dataR)
         feedback.process();
 
         buffer[0][wp] =
-            dataL[k] + (float)lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
-                                               (L[k] * feedback.v));
+            dataL[k] + (float)storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
+                                                        (L[k] * feedback.v));
         buffer[1][wp] =
-            dataR[k] + (float)lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
-                                               (R[k] * feedback.v));
+            dataR[k] + (float)storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
+                                                        (R[k] * feedback.v));
     }
 
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);

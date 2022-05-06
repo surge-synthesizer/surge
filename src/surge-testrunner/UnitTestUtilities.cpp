@@ -11,7 +11,8 @@ namespace Surge
 namespace Test
 {
 
-double frequencyFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo)
+double frequencyFromData(float *buffer, int nS, int nC, int audioChannel, int start, int trimTo,
+                         float samplerate)
 {
     float *leftTrimmed = new float[trimTo];
 
@@ -73,7 +74,8 @@ double RMSFromData(float *buffer, int nS, int nC, int audioChannel, int start, i
 double frequencyForNote(std::shared_ptr<SurgeSynthesizer> surge, int note, int seconds,
                         int audioChannel, int midiChannel)
 {
-    auto events = Surge::Headless::makeHoldNoteFor(note, samplerate * seconds, 64, midiChannel);
+    auto events = Surge::Headless::makeHoldNoteFor(note, surge->storage.samplerate * seconds, 64,
+                                                   midiChannel);
     float *buffer;
     int nS, nC;
     Surge::Headless::playAsConfigured(surge, events, &buffer, &nS, &nC);
@@ -81,14 +83,15 @@ double frequencyForNote(std::shared_ptr<SurgeSynthesizer> surge, int note, int s
         surge->process(); // Ring out any transients on this synth
 
     REQUIRE(nC == 2);
-    REQUIRE(nS >= samplerate * seconds);
-    REQUIRE(nS <= samplerate * seconds + 4 * BLOCK_SIZE);
+    REQUIRE(nS >= surge->storage.samplerate * seconds);
+    REQUIRE(nS <= surge->storage.samplerate * seconds + 4 * BLOCK_SIZE);
 
     // Trim off the leading and trailing
     int nSTrim = (int)(nS / 2 * 0.8);
     int start = (int)(nS / 2 * 0.05);
 
-    auto freq = frequencyFromData(buffer, nS, nC, audioChannel, start, nSTrim);
+    auto freq =
+        frequencyFromData(buffer, nS, nC, audioChannel, start, nSTrim, surge->storage.samplerate);
     delete[] buffer;
 
     return freq;
@@ -97,7 +100,8 @@ double frequencyForNote(std::shared_ptr<SurgeSynthesizer> surge, int note, int s
 std::pair<double, double> frequencyAndRMSForNote(std::shared_ptr<SurgeSynthesizer> surge, int note,
                                                  int seconds, int audioChannel, int midiChannel)
 {
-    auto events = Surge::Headless::makeHoldNoteFor(note, samplerate * seconds, 64, midiChannel);
+    auto events = Surge::Headless::makeHoldNoteFor(note, surge->storage.samplerate * seconds, 64,
+                                                   midiChannel);
     float *buffer;
     int nS, nC;
     Surge::Headless::playAsConfigured(surge, events, &buffer, &nS, &nC);
@@ -105,14 +109,15 @@ std::pair<double, double> frequencyAndRMSForNote(std::shared_ptr<SurgeSynthesize
         surge->process(); // Ring out any transients on this synth
 
     REQUIRE(nC == 2);
-    REQUIRE(nS >= samplerate * seconds);
-    REQUIRE(nS <= samplerate * seconds + 4 * BLOCK_SIZE);
+    REQUIRE(nS >= surge->storage.samplerate * seconds);
+    REQUIRE(nS <= surge->storage.samplerate * seconds + 4 * BLOCK_SIZE);
 
     // Trim off the leading and trailing
     int nSTrim = (int)(nS / 2 * 0.8);
     int start = (int)(nS / 2 * 0.05);
 
-    auto freq = frequencyFromData(buffer, nS, nC, audioChannel, start, nSTrim);
+    auto freq =
+        frequencyFromData(buffer, nS, nC, audioChannel, start, nSTrim, surge->storage.samplerate);
     auto rms = RMSFromData(buffer, nS, nC, audioChannel, start, nSTrim);
     delete[] buffer;
 
@@ -133,8 +138,8 @@ double frequencyForEvents(std::shared_ptr<SurgeSynthesizer> surge,
     REQUIRE(startSample < nS);
     REQUIRE(endSample < nS);
 
-    auto freq =
-        frequencyFromData(buffer, nS, nC, audioChannel, startSample, endSample - startSample);
+    auto freq = frequencyFromData(buffer, nS, nC, audioChannel, startSample,
+                                  endSample - startSample, surge->storage.samplerate);
     delete[] buffer;
 
     return freq;
@@ -194,9 +199,9 @@ std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &otp)
         return surge;
 }
 
-std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp)
+std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp, float sr = 44100)
 {
-    auto surge = Surge::Headless::createSurge(44100);
+    auto surge = Surge::Headless::createSurge(sr);
 
     auto templatePath = surge->storage.datapath / fs::path{"patches_factory"} /
                         fs::path{"Templates"} / fs::path{otp + ".fxp"};
@@ -206,8 +211,14 @@ std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp)
     return surge;
 }
 
-std::shared_ptr<SurgeSynthesizer> surgeOnSine() { return surgeOnTemplate("Init Sine"); }
-std::shared_ptr<SurgeSynthesizer> surgeOnSaw() { return surgeOnTemplate("Init Saw"); }
+std::shared_ptr<SurgeSynthesizer> surgeOnSine(float sr = 44100)
+{
+    return surgeOnTemplate("Init Sine", sr);
+}
+std::shared_ptr<SurgeSynthesizer> surgeOnSaw(float sr = 44100)
+{
+    return surgeOnTemplate("Init Saw", sr);
+}
 
 void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *buffer, int nS,
                          int nC, int startSample, int endSample)

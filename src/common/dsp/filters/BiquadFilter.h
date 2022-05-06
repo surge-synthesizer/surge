@@ -180,11 +180,12 @@ class alignas(16) BiquadFilter
     double calc_omega(double scfreq)
     {
         return (2 * 3.14159265358979323846) * 440 *
-               storage->note_to_pitch_ignoring_tuning((float)(12.f * scfreq)) * dsamplerate_inv;
+               storage->note_to_pitch_ignoring_tuning((float)(12.f * scfreq)) *
+               storage->dsamplerate_inv;
     }
-    static double calc_omega_from_Hz(double Hz)
+    double calc_omega_from_Hz(double Hz)
     {
-        return (2 * 3.14159265358979323846) * Hz * dsamplerate_inv;
+        return (2 * 3.14159265358979323846) * Hz * storage->dsamplerate_inv;
     }
     double calc_v1_Q(double reso) { return 1 / (1.02 - limit_range(reso, 0.0, 1.0)); }
     // inline void process_block_stereo(float *dataL,float *dataR);
