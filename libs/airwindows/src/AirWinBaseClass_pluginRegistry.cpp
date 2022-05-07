@@ -203,8 +203,8 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     reg.emplace_back(create<Cabs::Cabs>, id++, 410, gnFilter, "Cabs");
 
     reg.emplace_back(create<ChromeOxide::ChromeOxide>, id++, 445, gnTape, "Chrome Oxide");
-    reg.emplace_back(create<DubSub::DubSub>, id++, 421, gnFilter, "Dub Sub");
-    reg.emplace_back(create<DubCenter::DubCenter>, id++, 423, gnFilter, "Dub Center");
+    reg.emplace_back(create<DubSub::DubSub>, id++, 422, gnFilter, "Dub Sub");
+    reg.emplace_back(create<DubCenter::DubCenter>, id++, 421, gnFilter, "Dub Center");
     reg.emplace_back(create<FireAmp::FireAmp>, id++, 312, gnSaturation, "Fire Amp");
     reg.emplace_back(create<GlitchShifter::GlitchShifter>, id++, 500, gnPitch, "Glitch Shifter");
     reg.emplace_back(create<NonlinearSpace::NonlinearSpace>, id++, 245, gnAmbience,

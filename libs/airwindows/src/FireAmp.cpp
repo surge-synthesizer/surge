@@ -18,7 +18,7 @@ FireAmp::FireAmp(audioMasterCallback audioMaster)
 {
     A = 0.5;
     B = 0.5;
-    C = 0.8;
+    C = 0.5;
     D = 1.0;
 
     lastSampleL = 0.0;
@@ -246,7 +246,7 @@ void FireAmp::getParameterName(VstInt32 index, char *text)
         vst_strncpy(text, "Output", kVstMaxParamStrLen);
         break;
     case kParamD:
-        vst_strncpy(text, "Dry/Wet", kVstMaxParamStrLen);
+        vst_strncpy(text, "Mix", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -279,14 +279,8 @@ void FireAmp::getParameterLabel(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "%", kVstMaxParamStrLen);
-        break;
     case kParamB:
-        vst_strncpy(text, "%", kVstMaxParamStrLen);
-        break;
     case kParamC:
-        vst_strncpy(text, "%", kVstMaxParamStrLen);
-        break;
     case kParamD:
         vst_strncpy(text, "%", kVstMaxParamStrLen);
         break;

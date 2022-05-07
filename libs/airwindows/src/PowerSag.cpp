@@ -24,8 +24,8 @@ PowerSag::PowerSag(audioMasterCallback audioMaster)
     controlL = 0;
     controlR = 0;
     gcount = 0;
-    A = 0.0;
-    B = 0.3;
+    A = 0.5;
+    B = 0.25;
     fpdL = 1.0;
     while (fpdL < 16386)
         fpdL = rand() * UINT32_MAX;
@@ -154,8 +154,6 @@ void PowerSag::getParameterLabel(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "%", kVstMaxParamStrLen);
-        break;
     case kParamB:
         vst_strncpy(text, "%", kVstMaxParamStrLen);
         break; // the percent

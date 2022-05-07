@@ -16,8 +16,8 @@ namespace TapeDust
 TapeDust::TapeDust(audioMasterCallback audioMaster)
     : AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
-    A = 0.0;
-    B = 1.0;
+    A = 0.5;
+    B = 0.5;
 
     for (int count = 0; count < 11; count++)
     {
@@ -126,10 +126,10 @@ void TapeDust::getParameterName(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "Dust", kVstMaxParamStrLen);
+        vst_strncpy(text, "Amount", kVstMaxParamStrLen);
         break;
     case kParamB:
-        vst_strncpy(text, "Dry/Wet", kVstMaxParamStrLen);
+        vst_strncpy(text, "Mix", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -156,8 +156,6 @@ void TapeDust::getParameterLabel(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "%", kVstMaxParamStrLen);
-        break;
     case kParamB:
         vst_strncpy(text, "%", kVstMaxParamStrLen);
         break;

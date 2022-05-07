@@ -16,12 +16,12 @@ namespace NonlinearSpace
 NonlinearSpace::NonlinearSpace(audioMasterCallback audioMaster)
     : AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
-    A = 0.3; // this is the sample rate so it will become a 'popup' with fixed values
+    A = 0.5; // this is the sample rate so it will become a 'popup' with fixed values
     B = 0.5;
     C = 0.5;
     D = 0.5;
     E = 0.5; // this is nonlin, so it produces -1 to 1: 0.5 will become 0
-    F = 1.0;
+    F = 0.5;
 
     int count;
     for (count = 0; count < 2347; count++)
@@ -545,10 +545,10 @@ void NonlinearSpace::getParameterName(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "SmpRate", kVstMaxParamStrLen);
+        vst_strncpy(text, "Sample Rate", kVstMaxParamStrLen);
         break;
     case kParamB:
-        vst_strncpy(text, "Livenes", kVstMaxParamStrLen);
+        vst_strncpy(text, "Liveness", kVstMaxParamStrLen);
         break;
     case kParamC:
         vst_strncpy(text, "Treble", kVstMaxParamStrLen);
@@ -557,10 +557,10 @@ void NonlinearSpace::getParameterName(VstInt32 index, char *text)
         vst_strncpy(text, "Bass", kVstMaxParamStrLen);
         break;
     case kParamE:
-        vst_strncpy(text, "Nonlin", kVstMaxParamStrLen);
+        vst_strncpy(text, "Nonlinear", kVstMaxParamStrLen);
         break;
     case kParamF:
-        vst_strncpy(text, "Dry/Wet", kVstMaxParamStrLen);
+        vst_strncpy(text, "Mix", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -575,44 +575,44 @@ void NonlinearSpace::getParameterDisplay(VstInt32 index, char *text, float extVa
         switch ((VstInt32)(EXTV(A) * 6.999)) // 0 to almost edge of # of params
         {
         case 0:
-            vst_strncpy(text, "16K", kVstMaxParamStrLen);
+            vst_strncpy(text, "16k", kVstMaxParamStrLen);
             break;
         case 1:
-            vst_strncpy(text, "32K", kVstMaxParamStrLen);
+            vst_strncpy(text, "32k", kVstMaxParamStrLen);
             break;
         case 2:
-            vst_strncpy(text, "44.1K", kVstMaxParamStrLen);
+            vst_strncpy(text, "44.1k", kVstMaxParamStrLen);
             break;
         case 3:
-            vst_strncpy(text, "48K", kVstMaxParamStrLen);
+            vst_strncpy(text, "48k", kVstMaxParamStrLen);
             break;
         case 4:
-            vst_strncpy(text, "64K", kVstMaxParamStrLen);
+            vst_strncpy(text, "64k", kVstMaxParamStrLen);
             break;
         case 5:
-            vst_strncpy(text, "88.2K", kVstMaxParamStrLen);
+            vst_strncpy(text, "88.2k", kVstMaxParamStrLen);
             break;
         case 6:
-            vst_strncpy(text, "96K", kVstMaxParamStrLen);
+            vst_strncpy(text, "96k", kVstMaxParamStrLen);
             break;
         default:
             break; // unknown parameter, shouldn't happen!
         }
         break; // E as example 'popup' parameter with four values  */
     case kParamB:
-        float2string(EXTV(B), text, kVstMaxParamStrLen);
+        float2string(EXTV(B) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamC:
-        float2string(EXTV(C), text, kVstMaxParamStrLen);
+        float2string(EXTV(C) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamD:
-        float2string(EXTV(D), text, kVstMaxParamStrLen);
+        float2string(EXTV(D) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamE:
-        float2string((EXTV(E) * 2.0) - 1.0, text, kVstMaxParamStrLen);
+        float2string(((EXTV(E) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamF:
-        float2string(EXTV(F), text, kVstMaxParamStrLen);
+        float2string(EXTV(F) * 100.0, text, kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -627,19 +627,11 @@ void NonlinearSpace::getParameterLabel(VstInt32 index, char *text)
         vst_strncpy(text, "", kVstMaxParamStrLen);
         break;
     case kParamB:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamC:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamD:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamE:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamF:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
+        vst_strncpy(text, "%", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
