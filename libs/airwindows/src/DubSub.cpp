@@ -16,16 +16,16 @@ namespace DubSub
 DubSub::DubSub(audioMasterCallback audioMaster)
     : AudioEffectX(audioMaster, kNumPrograms, kNumParameters)
 {
-    A = 0.9;
+    A = 0.75;
     B = 0.5;
-    C = 0.74;
-    D = 1.0;
-    E = 0.95;
+    C = 0.5;
+    D = 0.5;
+    E = 0.5;
     F = 0.5;
-    G = 0.2;
-    H = 0.2;
-    I = 0.5;
-    J = 1.0;
+    G = 0.25;
+    H = 0.25;
+    I = 0.75;
+    J = 0.5;
 
     WasNegativeL = false;
     SubOctaveL = false;
@@ -280,34 +280,34 @@ void DubSub::getParameterName(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "TGrind", kVstMaxParamStrLen);
+        vst_strncpy(text, "Treble Grind", kVstMaxParamStrLen);
         break;
     case kParamB:
-        vst_strncpy(text, "Grd/Out", kVstMaxParamStrLen);
+        vst_strncpy(text, "Grind Output", kVstMaxParamStrLen);
         break;
     case kParamC:
-        vst_strncpy(text, "XOver", kVstMaxParamStrLen);
+        vst_strncpy(text, "Crossover", kVstMaxParamStrLen);
         break;
     case kParamD:
-        vst_strncpy(text, "BsDrive", kVstMaxParamStrLen);
+        vst_strncpy(text, "Bass Drive", kVstMaxParamStrLen);
         break;
     case kParamE:
-        vst_strncpy(text, "BsVoice", kVstMaxParamStrLen);
+        vst_strncpy(text, "Bass Voicing", kVstMaxParamStrLen);
         break;
     case kParamF:
-        vst_strncpy(text, "BassOut", kVstMaxParamStrLen);
+        vst_strncpy(text, "Bass Output", kVstMaxParamStrLen);
         break;
     case kParamG:
-        vst_strncpy(text, "SbDrive", kVstMaxParamStrLen);
+        vst_strncpy(text, "Sub Drive", kVstMaxParamStrLen);
         break;
     case kParamH:
-        vst_strncpy(text, "SbVoice", kVstMaxParamStrLen);
+        vst_strncpy(text, "Sub Voicing", kVstMaxParamStrLen);
         break;
     case kParamI:
-        vst_strncpy(text, "SubOut", kVstMaxParamStrLen);
+        vst_strncpy(text, "Sub Output", kVstMaxParamStrLen);
         break;
     case kParamJ:
-        vst_strncpy(text, "Dry/Wet", kVstMaxParamStrLen);
+        vst_strncpy(text, "Mix", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -319,34 +319,34 @@ void DubSub::getParameterDisplay(VstInt32 index, char *text, float extVal, bool 
     switch (index)
     {
     case kParamA:
-        float2string(EXTV(A), text, kVstMaxParamStrLen);
+        float2string(EXTV(A) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamB:
-        float2string((EXTV(B) * 2.0) - 1.0, text, kVstMaxParamStrLen);
+        float2string(((EXTV(B) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamC:
-        float2string(EXTV(C), text, kVstMaxParamStrLen);
+        float2string(EXTV(C) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamD:
-        float2string(EXTV(D), text, kVstMaxParamStrLen);
+        float2string(EXTV(D) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamE:
-        float2string(EXTV(E), text, kVstMaxParamStrLen);
+        float2string(EXTV(E) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamF:
-        float2string((EXTV(F) * 2.0) - 1.0, text, kVstMaxParamStrLen);
+        float2string(((EXTV(F) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamG:
-        float2string(EXTV(G), text, kVstMaxParamStrLen);
+        float2string(EXTV(G) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamH:
-        float2string(EXTV(H), text, kVstMaxParamStrLen);
+        float2string(EXTV(H) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamI:
-        float2string((EXTV(I) * 2.0) - 1.0, text, kVstMaxParamStrLen);
+        float2string(((EXTV(I) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamJ:
-        float2string(EXTV(J), text, kVstMaxParamStrLen);
+        float2string(EXTV(J) * 100.0, text, kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -358,34 +358,16 @@ void DubSub::getParameterLabel(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamB:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamC:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamD:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamE:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamF:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamG:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamH:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamI:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamJ:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
+        vst_strncpy(text, "%", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!

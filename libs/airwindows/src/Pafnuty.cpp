@@ -242,16 +242,16 @@ void Pafnuty::getParameterName(VstInt32 index, char *text)
         vst_strncpy(text, "Tenth", kVstMaxParamStrLen);
         break;
     case kParamJ:
-        vst_strncpy(text, "Elevnth", kVstMaxParamStrLen);
+        vst_strncpy(text, "Eleventh", kVstMaxParamStrLen);
         break;
     // case kParamK:
-    //     vst_strncpy(text, "Twelvth", kVstMaxParamStrLen);
+    //     vst_strncpy(text, "Twelfth", kVstMaxParamStrLen);
     //     break;
     //  case kParamL:
-    //      vst_strncpy(text, "Thirtnh", kVstMaxParamStrLen);
+    //      vst_strncpy(text, "Thirteenth", kVstMaxParamStrLen);
     //      break;
     case kParamM:
-        vst_strncpy(text, "Inv/Wet", kVstMaxParamStrLen);
+        vst_strncpy(text, "Mix", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -261,6 +261,7 @@ void Pafnuty::getParameterName(VstInt32 index, char *text)
 void Pafnuty::getParameterDisplay(VstInt32 index, char *text, float extVal, bool isExternal)
 {
     auto f2s = [this](auto f, auto t, auto l) { float2string(f * 100, t, l); };
+
     switch (index)
     {
     case kParamA:

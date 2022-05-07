@@ -198,7 +198,7 @@ void GlitchShifter::getParameterName(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "Note", kVstMaxParamStrLen);
+        vst_strncpy(text, "Pitch", kVstMaxParamStrLen);
         break;
     case kParamB:
         vst_strncpy(text, "Trim", kVstMaxParamStrLen);
@@ -207,10 +207,10 @@ void GlitchShifter::getParameterName(VstInt32 index, char *text)
         vst_strncpy(text, "Tighten", kVstMaxParamStrLen);
         break;
     case kParamD:
-        vst_strncpy(text, "Feedbck", kVstMaxParamStrLen);
+        vst_strncpy(text, "Feedback", kVstMaxParamStrLen);
         break;
     case kParamE:
-        vst_strncpy(text, "Dry/Wet", kVstMaxParamStrLen);
+        vst_strncpy(text, "Mix", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -225,16 +225,16 @@ void GlitchShifter::getParameterDisplay(VstInt32 index, char *text, float extVal
         int2string(((int)(EXTV(A) * 24.999) - 12), text, kVstMaxParamStrLen);
         break;
     case kParamB:
-        float2string((EXTV(B) * 2.0) - 1.0, text, kVstMaxParamStrLen);
+        float2string(((EXTV(B) * 2.0) - 1.0) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamC:
-        float2string(EXTV(C), text, kVstMaxParamStrLen);
+        float2string(EXTV(C) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamD:
-        float2string(EXTV(D), text, kVstMaxParamStrLen);
+        float2string(EXTV(D) * 100.0, text, kVstMaxParamStrLen);
         break;
     case kParamE:
-        float2string(EXTV(E), text, kVstMaxParamStrLen);
+        float2string(EXTV(E) * 100.0, text, kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -246,19 +246,13 @@ void GlitchShifter::getParameterLabel(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "semi", kVstMaxParamStrLen);
+        vst_strncpy(text, "semitones", kVstMaxParamStrLen);
         break;
     case kParamB:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamC:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamD:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
-        break;
     case kParamE:
-        vst_strncpy(text, "", kVstMaxParamStrLen);
+        vst_strncpy(text, "%", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!

@@ -93,8 +93,9 @@ ToVinyl4::ToVinyl4(audioMasterCallback audioMaster)
     A = 0.203419; // 22.0 hz = ((A*A)*290)+10  (A*A)*290 = 12   (A*A) = 0.0413793  sqrt() = 0.203419
     B = 0.3424051; // 44.0 hz = ((B*B)*290)+10  (B*B)*290 = 34   (B*B) = 0.1172413  sqrt() =
                    // 0.3424051
-    C = 0.32;
-    D = 0.064;
+    C = 0.33;
+    D = 0.1;
+
     fpdL = 1.0;
     while (fpdL < 16386)
         fpdL = rand() * UINT32_MAX;
@@ -209,16 +210,16 @@ void ToVinyl4::getParameterName(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "Mid HiP", kVstMaxParamStrLen);
+        vst_strncpy(text, "Mid Highpass", kVstMaxParamStrLen);
         break;
     case kParamB:
-        vst_strncpy(text, "SideHiP", kVstMaxParamStrLen);
+        vst_strncpy(text, "Side Highpass", kVstMaxParamStrLen);
         break;
     case kParamC:
-        vst_strncpy(text, "H Limit", kVstMaxParamStrLen);
+        vst_strncpy(text, "HF Limiter", kVstMaxParamStrLen);
         break;
     case kParamD:
-        vst_strncpy(text, "Gv Wear", kVstMaxParamStrLen);
+        vst_strncpy(text, "Groove Wear", kVstMaxParamStrLen);
         break;
     default:
         break; // unknown parameter, shouldn't happen!
@@ -251,14 +252,12 @@ void ToVinyl4::getParameterLabel(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "hz", kVstMaxParamStrLen);
+        vst_strncpy(text, "Hz", kVstMaxParamStrLen);
         break;
     case kParamB:
-        vst_strncpy(text, "hz", kVstMaxParamStrLen);
+        vst_strncpy(text, "Hz", kVstMaxParamStrLen);
         break;
     case kParamC:
-        vst_strncpy(text, "%", kVstMaxParamStrLen);
-        break;
     case kParamD:
         vst_strncpy(text, "%", kVstMaxParamStrLen);
         break;

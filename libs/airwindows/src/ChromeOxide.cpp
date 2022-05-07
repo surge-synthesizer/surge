@@ -134,7 +134,7 @@ void ChromeOxide::getParameterName(VstInt32 index, char *text)
     switch (index)
     {
     case kParamA:
-        vst_strncpy(text, "Intense", kVstMaxParamStrLen);
+        vst_strncpy(text, "Intensity", kVstMaxParamStrLen);
         break;
     case kParamB:
         vst_strncpy(text, "Bias", kVstMaxParamStrLen);
