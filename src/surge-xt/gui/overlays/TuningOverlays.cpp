@@ -231,6 +231,7 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
         isDragging = true;
         repaint();
     }
+
     virtual void mouseDrag(const juce::MouseEvent &event) override
     {
         int d = -(event.getDistanceFromDragStartX() + event.getDistanceFromDragStartY());
@@ -297,6 +298,7 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
         angle = 0;
         repaint();
     }
+
     virtual void paint(juce::Graphics &g) override
     {
         if (!skin)
@@ -310,30 +312,45 @@ class InfiniteKnob : public juce::Component, public Surge::GUI::SkinConsumingCom
         float r = b / 2.0;
         float dx = (w - b) / 2.0;
         float dy = (h - b) / 2.0;
+
         g.saveState();
         g.addTransform(juce::AffineTransform::translation(dx, dy));
         g.addTransform(juce::AffineTransform::translation(r, r));
         g.addTransform(
             juce::AffineTransform::rotation(angle / 50.0 * 2.0 * juce::MathConstants<double>::pi));
+
         if (isHovered)
+        {
             g.setColour(skin->getColor(clr::KnobFillHover));
+        }
         else
+        {
             g.setColour(skin->getColor(clr::KnobFill));
+        }
+
         g.fillEllipse(-(r - 3), -(r - 3), (r - 3) * 2, (r - 3) * 2);
         g.setColour(skin->getColor(clr::KnobBorder));
         g.drawEllipse(-(r - 3), -(r - 3), (r - 3) * 2, (r - 3) * 2, r / 5.0);
+
         if (enabled)
         {
             if (isPlaying)
+            {
                 g.setColour(skin->getColor(clr::KnobThumbPlayed));
+            }
             else
+            {
                 g.setColour(skin->getColor(clr::KnobThumb));
+            }
+
             g.drawLine(0, -(r - 1), 0, r - 1, r / 3.0);
         }
+
         g.restoreState();
     }
 
     bool isHovered = false;
+
     void mouseEnter(const juce::MouseEvent &e) override
     {
         isHovered = true;
@@ -519,6 +536,7 @@ class RadialScaleGraph : public juce::Component,
     }
 
     bool centsShowing{true};
+
     void valueChanged(GUI::IComponentTagValue *p) override
     {
         if (p == showHideKnob.get())
@@ -532,16 +550,24 @@ class RadialScaleGraph : public juce::Component,
         }
         repaint();
     }
+
     void onSkinChanged() override
     {
         if (showHideKnob)
         {
             showHideKnob->setSkin(skin, associatedBitmapStore);
         }
+
         for (const auto &k : toneKnobs)
+        {
             k->setSkin(skin, associatedBitmapStore);
+        }
+
         for (const auto &tl : toneLabels)
+        {
             tl->setFont(skin->fontManager->getLatoAtSize(9));
+        }
+
         for (const auto &te : toneEditors)
         {
             te->setFont(skin->fontManager->getFiraMonoAtSize(9));
@@ -591,8 +617,11 @@ class RadialScaleGraph : public juce::Component,
     {
         namespace clr = Colors::TuningOverlay::RadialGraph;
         bitset = bs;
+
         for (int i = 0; i < scale.count; ++i)
+        {
             notesOn[i] = false;
+        }
 
         for (int i = 0; i < 128; ++i)
         {
@@ -603,11 +632,15 @@ class RadialScaleGraph : public juce::Component,
         }
 
         if (!skin)
+        {
             return;
+        }
+
         for (auto &a : toneKnobs)
         {
             a->isPlaying = false;
         }
+
         for (int i = 0; i < scale.count; ++i)
         {
             auto ni = (i + 1) % (scale.count);
@@ -683,10 +716,15 @@ void RadialScaleGraph::paint(juce::Graphics &g)
     {
         notesOn.clear();
         notesOn.resize(scale.count);
+
         for (int i = 0; i < scale.count; ++i)
+        {
             notesOn[i] = 0;
+        }
     }
+
     g.fillAll(skin->getColor(clr::Background));
+
     int w = getWidth() - usedForSidebar;
     int h = getHeight();
     float r = std::min(w, h) / 2.1;
@@ -706,29 +744,34 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
     g.addTransform(screenTransform);
 
-    // We are now in a normal x y 0 1 coordinate system with 0,0 at the center. Cool
+    // We are now in a normal x y 0 1 coordinate system with 0, 0 at the center. Cool
 
     // So first things first - scan for range.
     double ETInterval = scale.tones.back().cents / scale.count;
     double dIntMin = 0, dIntMax = 0;
     double pCents = 0;
     std::vector<float> intervals; // between tone i and i-1
+
     for (int i = 0; i < scale.count; ++i)
     {
         auto t = scale.tones[i];
         auto c = t.cents;
         auto in = c - pCents;
+
         pCents = c;
         intervals.push_back(in);
 
         auto intervalDistance = (c - ETInterval * (i + 1)) / ETInterval;
+
         dIntMax = std::max(intervalDistance, dIntMax);
         dIntMin = std::min(intervalDistance, dIntMin);
     }
+
     double range = std::max(0.01, std::max(dIntMax, -dIntMin / 2.0)); // twice as many inside rings
     int iRange = std::ceil(range);
 
     dInterval = outerRadiusExtension / iRange;
+
     double nup = iRange;
     double ndn = (int)(iRange * 1.6);
 
@@ -749,6 +792,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                                               cpos * 0.8));
 
             float rad = 1.0 + dInterval * i;
+
             g.drawEllipse(-rad, -rad, 2 * rad, 2 * rad, 0.01);
         }
     }
@@ -761,9 +805,14 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
 
         if (notesOn[i])
+        {
             g.setColour(juce::Colour(255, 255, 255));
+        }
         else
+        {
             g.setColour(juce::Colour(110, 110, 120));
+        }
+
         g.drawLine(0, 0, (1.0 + outerRadiusExtension) * sx, (1.0 + outerRadiusExtension) * cx,
                    0.01);
 
@@ -787,14 +836,17 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 g.addTransform(t);
                 g.setColour(juce::Colours::white);
                 g.setFont(skin->fontManager->getLatoAtSize(0.1));
+
                 auto msg = fmt::format("{:.2f}", intervals[i]);
                 auto tr = juce::Rectangle<float>(0.f, -0.1f, 0.6f, 0.2f);
+
                 g.setColour(juce::Colours::white);
                 g.drawText(msg, tr, juce::Justification::centredLeft);
             }
             else
             {
                 juce::Graphics::ScopedSaveState gs(g);
+
                 auto t =
                     juce::AffineTransform()
                         .scaled(-0.7, 0.7)
@@ -805,8 +857,10 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 g.addTransform(t);
                 g.setColour(juce::Colours::white);
                 g.setFont(skin->fontManager->getLatoAtSize(0.1));
+
                 auto msg = fmt::format("{:.2f}", intervals[i]);
                 auto tr = juce::Rectangle<float>(-0.3f, -0.2f, 0.6f, 0.2f);
+
                 g.setColour(juce::Colours::white);
                 g.drawText(msg, tr, juce::Justification::centred);
             }
@@ -820,11 +874,17 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
 
         if (notesOn[i])
+        {
             g.setColour(juce::Colour(255, 255, 255));
+        }
         else
+        {
             g.setColour(juce::Colour(200, 200, 240));
-        juce::Rectangle<float> textPos(0, -0.1, 0.1, 0.1);
-        g.setFont(skin->fontManager->getLatoAtSize(0.1));
+        }
+
+        // tone labels
+        juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
+        g.setFont(skin->fontManager->getLatoAtSize(0.075));
         g.drawText(juce::String(i), textPos, juce::Justification::centred, 1);
         g.restoreState();
     }
@@ -847,7 +907,6 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         auto expectedC = scale.tones.back().cents / scale.count;
 
         auto rx = 1.0 + dInterval * (c - expectedC * i) / expectedC;
-
         float dx = 0.1, dy = 0.1;
 
         if (i == scale.count)
@@ -879,8 +938,11 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         }
 
         auto originalDrawColor = drawColour;
+
         if (hotSpotIndex == i - 1)
+        {
             drawColour = drawColour.brighter(0.6);
+        }
 
         if (i == scale.count)
         {
@@ -1537,7 +1599,7 @@ struct SCLKBMDisplay : public juce::Component,
 
         auto teProps = [this](const auto &te) {
             te->setJustification((juce::Justification::verticallyCentred));
-            te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
+            // te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
         };
 
         auto newL = [this](const std::string &s) {
@@ -1797,14 +1859,15 @@ struct SCLKBMDisplay : public juce::Component,
         scl->setBounds(b);
         kbm->setBounds(b.translated(w / 2, 0));
 
-        auto r = juce::Rectangle<int>(0, h - 20, w, 20);
-
+        auto r = juce::Rectangle<int>(0, h - 21, w, 20);
         auto s = r.withWidth(w / 2).withTrimmedLeft(2);
+
         auto nxt = [&s](int p) {
             auto q = s.withWidth(p);
             s = s.withTrimmedLeft(p);
             return q.reduced(0, 2);
         };
+
         evenDivOfL->setBounds(nxt(37));
         evenDivOf->setBounds(nxt(80));
         evenDivIntoL->setBounds(nxt(30));
@@ -1827,6 +1890,7 @@ struct SCLKBMDisplay : public juce::Component,
             te->setJustification((juce::Justification::verticallyCentred));
             te->setIndents(4, (te->getHeight() - te->getTextHeight()) / 2);
         };
+
         teProps(evenDivOf);
         teProps(evenDivInto);
         teProps(kbmStart);
