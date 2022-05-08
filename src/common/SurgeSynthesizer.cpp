@@ -2197,6 +2197,7 @@ ControllerModulationSource *SurgeSynthesizer::AddControlInterpolator(int Id, boo
     {
         // Already exists, return it
         AlreadyExisted = true;
+        mControlInterpolator[Index].set_samplerate(storage.samplerate, storage.samplerate_inv);
         return &mControlInterpolator[Index];
     }
 
@@ -2208,6 +2209,7 @@ ControllerModulationSource *SurgeSynthesizer::AddControlInterpolator(int Id, boo
         mControlInterpolator[Index].id = Id;
         mControlInterpolatorUsed[Index] = true;
 
+        mControlInterpolator[Index].set_samplerate(storage.samplerate, storage.samplerate_inv);
         mControlInterpolator[Index].smoothingMode = storage.smoothingMode; // IMPLEMENT THIS HERE
         return &mControlInterpolator[Index];
     }
