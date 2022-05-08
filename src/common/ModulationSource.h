@@ -307,7 +307,7 @@ class ModulationSource
     virtual bool is_bipolar() { return false; }
     virtual void set_bipolar(bool b) {}
 
-    void set_samplerate(float sr, float sri)
+    inline void set_samplerate(float sr, float sri)
     {
         samplerate = sr;
         samplerate_inv = sri;
@@ -522,6 +522,44 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
 };
 
 using ControllerModulationSource = ControllerModulationSourceVector<1>;
+
+struct MacroModulationSource : ControllerModulationSource
+{
+    MacroModulationSource(Modulator::SmoothingMode mode)
+        : ControllerModulationSource(mode), modunderlyer(mode)
+    {
+        modunderlyer.init(0);
+    }
+
+    virtual float get_output(int which) override
+    {
+        return value[which] + modunderlyer.get_output(which);
+    }
+
+    virtual float get_output01(int i) override
+    {
+        if (bipolar)
+            return 0.5f + 0.5f * (value[i] + modunderlyer.value[i]);
+        return value[i] + modunderlyer.value[i];
+    }
+
+    void setModulationDepth(float d) { modunderlyer.set_target(d); }
+
+    ControllerModulationSource modunderlyer;
+    void process_block() override
+    {
+        modunderlyer.set_samplerate(samplerate, samplerate_inv);
+        modunderlyer.process_block();
+        return ControllerModulationSource::process_block();
+    }
+
+    bool process_block_until_close(float sigma) override
+    {
+        modunderlyer.set_samplerate(samplerate, samplerate_inv);
+        modunderlyer.process_block_until_close(sigma);
+        return ControllerModulationSource::process_block_until_close(sigma);
+    }
+};
 
 class RandomModulationSource : public ModulationSource
 {

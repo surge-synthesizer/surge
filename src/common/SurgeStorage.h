@@ -919,6 +919,15 @@ class SurgePatch
 
     FilterSelectorMapper patchFilterSelectorMapper;
     WaveShaperSelectorMapper patchWaveshaperSelectorMapper;
+
+    struct MonophonicParamModulation
+    {
+        int32_t param_id{0};
+        double value{0};
+    };
+    int32_t paramModulationCount{0};
+    static constexpr int maxMonophonicParamModulations = 256;
+    std::array<MonophonicParamModulation, maxMonophonicParamModulations> monophonicParamModulations;
 };
 
 struct Patch

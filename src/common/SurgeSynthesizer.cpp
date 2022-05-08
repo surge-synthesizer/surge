@@ -157,8 +157,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
     for (int i = 0; i < n_customcontrollers; i++)
     {
-        patch.scene[0].modsources[ms_ctrl1 + i] =
-            new ControllerModulationSource(storage.smoothingMode);
+        patch.scene[0].modsources[ms_ctrl1 + i] = new MacroModulationSource(storage.smoothingMode);
 
         for (int j = 1; j < n_scenes; j++)
         {
@@ -337,7 +336,8 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
     return channelmask;
 }
 
-void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detune)
+void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detune,
+                                int32_t host_noteid)
 {
     if (halt_engine)
         return;
@@ -393,12 +393,12 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     if (channelmask & 1)
     {
         midiKeyPressedForScene[0][key] = ++orderedMidiKey;
-        playVoice(0, channel, key, velocity, detune);
+        playVoice(0, channel, key, velocity, detune, host_noteid);
     }
     if (channelmask & 2)
     {
         midiKeyPressedForScene[1][key] = ++orderedMidiKey;
-        playVoice(1, channel, key, velocity, detune);
+        playVoice(1, channel, key, velocity, detune, host_noteid);
     }
 
     channelState[channel].keyState[key].keystate = velocity;
@@ -548,6 +548,26 @@ SurgeVoice *SurgeSynthesizer::getUnusedVoice(int scene)
 
 void SurgeSynthesizer::freeVoice(SurgeVoice *v)
 {
+    if (v->host_note_id > 0)
+    {
+        bool used_away = false;
+        // does any other voice have this voiceid
+        for (int s = 0; s < n_scenes; ++s)
+        {
+            for (auto vo : voices[s])
+            {
+                if (vo != v && vo->host_note_id == v->host_note_id)
+                {
+                    used_away = true;
+                }
+            }
+        }
+        if (!used_away)
+        {
+            notifyEndedNote(v->host_note_id, v->originating_host_key, v->originating_host_channel);
+        }
+    }
+
     for (int i = 0; i < MAX_VOICES; i++)
     {
         if (voices_usedby[0][i] && (v == &voices_array[0][i]))
@@ -562,6 +582,28 @@ void SurgeSynthesizer::freeVoice(SurgeVoice *v)
     v->freeAllocatedElements();
 }
 
+void SurgeSynthesizer::notifyEndedNote(int32_t nid, int16_t key, int16_t chan, bool thisBlock)
+{
+    if (!doNotifyEndedNote)
+        return;
+    if (thisBlock)
+    {
+        int h = hostNoteEndedDuringBlockCount;
+        endedHostNoteIds[h] = nid;
+        endedHostNoteOriginalKey[h] = key;
+        endedHostNoteOriginalChannel[h] = chan;
+        hostNoteEndedDuringBlockCount++;
+    }
+    else
+    {
+        int h = hostNoteEndedToPushToNextBlock;
+        nextBlockEndedHostNoteIds[h] = nid;
+        nextBlockEndedHostNoteOriginalKey[h] = key;
+        nextBlockEndedHostNoteOriginalChannel[h] = chan;
+        hostNoteEndedToPushToNextBlock++;
+    }
+}
+
 int SurgeSynthesizer::getMpeMainChannel(int voiceChannel, int key)
 {
     if (mpeEnabled)
@@ -572,8 +614,18 @@ int SurgeSynthesizer::getMpeMainChannel(int voiceChannel, int key)
     return voiceChannel;
 }
 
-void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocity, char detune)
+void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocity, char detune,
+                                 int32_t host_noteid, int16_t override_hostkey,
+                                 int16_t override_hostchan)
 {
+    int16_t host_originating_key = (int16_t)key;
+    int16_t host_originating_channel = (int16_t)channel;
+
+    if (override_hostkey >= 0)
+        host_originating_key = override_hostkey;
+    if (override_hostchan >= 0)
+        host_originating_channel = override_hostchan;
+
     if (getNonReleasedVoices(scene) == 0)
     {
         for (int l = 0; l < n_lfos_scene; l++)
@@ -641,7 +693,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             new (nvoice) SurgeVoice(
                 &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
                 key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
-                &channelState[mpeMainChannel], &channelState[channel], mpeEnabled, voiceCounter++);
+                &channelState[mpeMainChannel], &channelState[channel], mpeEnabled, voiceCounter++,
+                host_noteid, host_originating_key, host_originating_channel);
         }
         break;
     }
@@ -713,6 +766,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
 
         if (createVoice)
         {
+            int32_t noteIdToReuse = -1;
+            int16_t channelToReuse, keyToReuse;
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -721,10 +776,22 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     if (v->state.gate)
                     {
                         glide = true;
+                        noteIdToReuse = v->host_note_id;
+                        channelToReuse = v->originating_host_channel;
+                        keyToReuse = v->originating_host_key;
                     }
                     v->uber_release();
                 }
             }
+
+            if (noteIdToReuse >= 0)
+            {
+                notifyEndedNote(host_noteid, host_originating_key, host_originating_channel, false);
+                host_noteid = noteIdToReuse;
+                host_originating_channel = channelToReuse;
+                host_originating_key = keyToReuse;
+            }
+
             SurgeVoice *nvoice = getUnusedVoice(scene);
             if (nvoice)
             {
@@ -733,11 +800,11 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 voices[scene].push_back(nvoice);
                 if ((storage.getPatch().scene[scene].polymode.val.i == pm_mono_fp) && !glide)
                     storage.last_key[scene] = key;
-                new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
-                                        storage.getPatch().scenedata[scene], key, velocity, channel,
-                                        scene, detune, &channelState[channel].keyState[key],
-                                        &channelState[mpeMainChannel], &channelState[channel],
-                                        mpeEnabled, voiceCounter++);
+                new (nvoice) SurgeVoice(
+                    &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
+                    key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
+                    &channelState[mpeMainChannel], &channelState[channel], mpeEnabled,
+                    voiceCounter++, host_noteid, host_originating_key, host_originating_channel);
             }
         }
         else
@@ -855,7 +922,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         &storage, &storage.getPatch().scene[scene],
                         storage.getPatch().scenedata[scene], key, velocity, channel, scene, detune,
                         &channelState[channel].keyState[key], &channelState[mpeMainChannel],
-                        &channelState[channel], mpeEnabled, voiceCounter++);
+                        &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
+                        host_originating_key, host_originating_channel);
                 }
             }
             else
@@ -869,6 +937,15 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                  * constructor call).
                  */
                 channelState[channel].keyState[key].voiceOrder = voiceCounter++;
+
+                /*
+                 * but we also need to terminate this voiceid
+                 */
+                if (host_noteid >= 0)
+                {
+                    notifyEndedNote(host_noteid, host_originating_key, host_originating_channel,
+                                    false);
+                }
             }
         }
         else
@@ -908,7 +985,7 @@ void SurgeSynthesizer::releaseScene(int s)
     halfbandIN.reset();
 }
 
-void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
+void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_t host_noteid)
 {
     midiNoteEvents++;
     bool foundVoice[n_scenes];
@@ -918,7 +995,8 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
         for (auto *v : voices[sc])
         {
             foundVoice[sc] = true;
-            if ((v->state.key == key) && (v->state.channel == channel))
+            if ((v->state.key == key) && (v->state.channel == channel) &&
+                (host_noteid < 0 || v->host_note_id == host_noteid))
                 v->state.releasevelocity = velocity;
         }
     }
@@ -999,14 +1077,15 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity)
         }
 
         if (sceneNoHold)
-            releaseNotePostHoldCheck(sc, channel, key, velocity);
+            releaseNotePostHoldCheck(sc, channel, key, velocity, host_noteid);
         else
-            holdbuffer[sc].push_back(
-                HoldBufferItem{channel, key, channel, key}); // hold pedal is down, add to buffer
+            holdbuffer[sc].push_back(HoldBufferItem{
+                channel, key, channel, key, host_noteid}); // hold pedal is down, add to buffer
     }
 }
 
-void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char key, char velocity)
+void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char key, char velocity,
+                                                int32_t host_noteid)
 {
     channelState[channel].keyState[key].keystate = 0;
     list<SurgeVoice *>::const_iterator iter;
@@ -1045,9 +1124,14 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
             switch (polymode)
             {
             case pm_poly:
-                if ((v->state.key == key) && (v->state.channel == channel))
+            {
+                if ((v->state.key == key) && (v->state.channel == channel) && (v->state.gate) &&
+                    (host_noteid < 0 || v->host_note_id == host_noteid))
+                {
                     v->release();
-                break;
+                }
+            }
+            break;
             case pm_mono:
             case pm_mono_fp:
             case pm_latch:
@@ -1263,8 +1347,12 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                              * so fake a gate quickly. See #4971
                              */
                             v->state.gate = (polymode == pm_mono_fp);
+                            doNotifyEndedNote = false;
                             playVoice(scene, activateVoiceChannel, activateVoiceKey, velocity,
-                                      channelState[activateVoiceChannel].keyState[k].lastdetune);
+                                      channelState[activateVoiceChannel].keyState[k].lastdetune,
+                                      v->host_note_id, v->originating_host_key,
+                                      v->originating_host_channel);
+                            doNotifyEndedNote = true;
                             v->state.gate = false;
                         }
                     }
@@ -1476,6 +1564,24 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
         {
             for (int l = 0; l < n_lfos_scene; l++)
                 storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->release();
+        }
+    }
+}
+
+void SurgeSynthesizer::setNoteExpression(NoteExpressionType net, int16_t key, int16_t channel,
+                                         float value)
+{
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        for (auto v : voices[sc])
+        {
+            if ((v->state.key == key && v->state.channel == channel) ||
+                (v->originating_host_key >= 0 && v->originating_host_key == key &&
+                 v->originating_host_channel >= 0 && v->originating_host_channel == channel))
+            {
+                std::cout << "Got a voice match for " << net << " on " << key << " " << channel
+                          << std::endl;
+            }
         }
     }
 }
@@ -2024,7 +2130,7 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
         {
             if (!channelState[0].hold && !channelState[channel].hold)
             {
-                releaseNotePostHoldCheck(scene, channel, key, 127);
+                releaseNotePostHoldCheck(scene, channel, key, 127, hp.host_noteid);
             }
             else
             {
@@ -3108,6 +3214,42 @@ void SurgeSynthesizer::muteModulation(long ptag, modsources modsource, int modso
     }
 }
 
+void SurgeSynthesizer::applyParameterMonophonicModulation(Parameter *p, float depth)
+{
+    auto &pt = storage.getPatch();
+    // This linear search will become, i think, wuite tiresome
+    for (int i = 0; i < pt.paramModulationCount; ++i)
+    {
+        if (pt.monophonicParamModulations[i].param_id == p->id)
+        {
+            pt.monophonicParamModulations[i].value = depth * (p->val_max.f - p->val_min.f);
+            return;
+        }
+    }
+
+    assert(pt.paramModulationCount < pt.maxMonophonicParamModulations);
+    pt.monophonicParamModulations[pt.paramModulationCount].param_id = p->id;
+    pt.monophonicParamModulations[pt.paramModulationCount].value = depth;
+    pt.paramModulationCount++;
+    return;
+}
+
+void SurgeSynthesizer::applyParameterPolyphonicModulation(Parameter *p, int32_t note_id,
+                                                          int16_t key, int16_t channel, float depth)
+{
+    // in theory, a parameter without a scene will never get poly modulation applied
+    if (p->scene == 0)
+        return;
+
+    for (auto v : voices[p->scene - 1])
+    {
+        if (v->host_note_id == note_id)
+        {
+            v->applyPolyphonicParamModulation(p, depth);
+        }
+    }
+}
+
 void SurgeSynthesizer::clear_osc_modulation(int scene, int entry)
 {
     storage.modRoutingMutex.lock();
@@ -3312,6 +3454,12 @@ void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
     storage.getPatch().isDirty = true;
     ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum])
         ->set_target01(val, true);
+}
+
+void SurgeSynthesizer::applyMacroMonophonicModulation(long macroNum, float val)
+{
+    ((MacroModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum])
+        ->setModulationDepth(val);
 }
 
 float SurgeSynthesizer::getParameter01(long index) const
@@ -3776,6 +3924,27 @@ void SurgeSynthesizer::process()
     storage.audioThreadID = std::this_thread::get_id();
 #endif
     processRunning = 0;
+
+#if DEBUG
+    memset(endedHostNoteIds, 0, 512 * sizeof(int32_t));
+#endif
+
+    if (hostNoteEndedToPushToNextBlock)
+    {
+        for (int i = 0; i < hostNoteEndedToPushToNextBlock; ++i)
+        {
+            endedHostNoteIds[i] = nextBlockEndedHostNoteIds[i];
+            endedHostNoteOriginalKey[i] = nextBlockEndedHostNoteOriginalKey[i];
+            endedHostNoteOriginalChannel[i] = nextBlockEndedHostNoteOriginalChannel[i];
+        }
+        hostNoteEndedDuringBlockCount = hostNoteEndedToPushToNextBlock;
+        hostNoteEndedToPushToNextBlock = 0;
+    }
+    else
+    {
+        hostNoteEndedToPushToNextBlock = 0;
+        hostNoteEndedDuringBlockCount = 0;
+    }
 
     float mfade = 1.f;
 

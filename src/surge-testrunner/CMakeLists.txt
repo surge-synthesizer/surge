@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME}
   UnitTestsMIDI.cpp
   UnitTestsMOD.cpp
   UnitTestsMSEG.cpp
+  UnitTestsNOTEID.cpp
   UnitTestsPARAM.cpp
   UnitTestsQUERY.cpp
   UnitTestsTUN.cpp

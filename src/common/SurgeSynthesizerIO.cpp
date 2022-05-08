@@ -300,7 +300,6 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
             {
                 if (ot)
                 {
-                    std::cout << "Resetting Tuning" << std::endl;
                     if (storage.getPatch().patchTuning.scaleContents.size() > 1)
                     {
                         storage.retuneToScale(
@@ -316,7 +315,6 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
                 {
                     if (storage.getPatch().patchTuning.mappingContents.size() > 1)
                     {
-                        std::cout << "Resetting Mapping" << std::endl;
                         auto kb =
                             Tunings::parseKBMData(storage.getPatch().patchTuning.mappingContents);
                         if (storage.getPatch().patchTuning.mappingName.size() > 1)
