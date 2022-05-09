@@ -430,9 +430,8 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
         {
             juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
         }
-
-        notifyBeginEdit();
     }
+
     editTypeWas = DRAG;
     updateLocationState();
 
@@ -503,6 +502,7 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
     modValueOnMouseDown = modValue;
     lastDistance = 0.f;
     editTypeWas = NOEDIT;
+    notifyBeginEdit();
     showInfowindow(isEditingModulation);
 }
 
@@ -545,6 +545,7 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
 
     if (editTypeWas != DRAG)
     {
+        notifyEndEdit();
         editTypeWas = NOEDIT;
         return;
     }
