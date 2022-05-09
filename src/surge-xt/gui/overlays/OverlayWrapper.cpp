@@ -167,6 +167,24 @@ struct TearOutWindow : public juce::DocumentWindow
     }
 
     OverlayWrapper *wrapping{nullptr};
+
+    void mouseDoubleClick(const juce::MouseEvent &event) override
+    {
+        auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(wrapping->primaryChild.get());
+        auto sz = oc->getEnclosingParentPosition();
+
+        auto mw = sz.getWidth();
+        auto mh = sz.getHeight();
+
+        wrapping->primaryChild->getTransform().transformPoint(mw, mh);
+
+        wrapping->tearOutParent->setContentComponentSize(mw, mh);
+
+        Surge::Storage::updateUserDefaultValue(wrapping->storage,
+                                               wrapping->canTearOutResizePair.second,
+                                               std::make_pair(getWidth(), getHeight()));
+    }
+
     void closeButtonPressed() override
     {
         if (wrapping)
@@ -174,6 +192,7 @@ struct TearOutWindow : public juce::DocumentWindow
             wrapping->onClose();
         }
     }
+
     void minimiseButtonPressed() override
     {
         if (wrapping)
@@ -184,6 +203,7 @@ struct TearOutWindow : public juce::DocumentWindow
 
     int outstandingMoves = 0;
     bool supressMoveUpdates{false};
+
     void moved() override
     {
         if (supressMoveUpdates)
@@ -193,16 +213,20 @@ struct TearOutWindow : public juce::DocumentWindow
         // writing every move would be "bad". Add a 1 second delay.
         juce::Timer::callAfterDelay(1000, [this]() { this->moveUpdate(); });
     }
+
     void moveUpdate()
     {
         outstandingMoves--;
+
         if (outstandingMoves == 0 && wrapping && wrapping->storage)
         {
             auto tl = getBounds().getTopLeft();
+
             Surge::Storage::updateUserDefaultValue(
                 wrapping->storage, wrapping->canTearOutPair.second, std::make_pair(tl.x, tl.y));
         }
     }
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TearOutWindow);
 };
 
@@ -367,9 +391,12 @@ void OverlayWrapper::mouseDown(const juce::MouseEvent &e)
 void OverlayWrapper::mouseDoubleClick(const juce::MouseEvent &e)
 {
     if (isTornOut())
+    {
         return;
+    }
 
     auto c = getPrimaryChildAsOverlayComponent();
+
     if (c && c->getCanMoveAround() && editor)
     {
         auto p = c->defaultLocation;
