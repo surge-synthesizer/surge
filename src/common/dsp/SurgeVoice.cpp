@@ -157,6 +157,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.mpePitchBendRange = storage->mpePitchBendRange;
     state.mpeEnabled = mpeEnabled;
     state.mpePitchBend = ControllerModulationSource(storage->pitchSmoothingMode);
+    state.mpePitchBend.set_samplerate(storage->samplerate, storage->samplerate_inv);
     state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
 
     if ((scene->polymode.val.i == pm_mono_st_fp) ||
@@ -201,8 +202,13 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     sampleRateReset();
 
     polyAftertouchSource = ControllerModulationSource(storage->smoothingMode);
+    polyAftertouchSource.set_samplerate(storage->samplerate, storage->samplerate_inv);
+
     monoAftertouchSource = ControllerModulationSource(storage->smoothingMode);
+    monoAftertouchSource.set_samplerate(storage->samplerate, storage->samplerate_inv);
+
     timbreSource = ControllerModulationSource(storage->smoothingMode);
+    timbreSource.set_samplerate(storage->samplerate, storage->samplerate_inv);
 
     polyAftertouchSource.init(
         storage->poly_aftertouch[state.scene_id & 1][state.channel & 15][state.key & 127]);
