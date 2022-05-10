@@ -178,6 +178,8 @@ void LFOModulationSource::attack()
     env_val = 0.f;
     env_phase = 0;
     ratemult = 1.f;
+    bool isFirstAttack = !everAttacked;
+    everAttacked = true;
 
     if (localcopy[idelay].f == lfo->delay.val_min.f)
     {
@@ -307,23 +309,26 @@ void LFOModulationSource::attack()
     switch (lfo->shape.val.i)
     {
     case lt_snh:
-        noise = 0.f;
-        noised1 = 0.f;
-        target = 0.f;
-
-        if (lfo->deform.deform_type == type_2)
+        if (isFirstAttack || lfo->trigmode.val.i != lm_freerun)
         {
-            wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
-            wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
-            wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
-            wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+            noise = 0.f;
+            noised1 = 0.f;
+            target = 0.f;
 
-            iout = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
-        }
-        else
-        {
-            iout = correlated_noise_o2mk2_suppliedrng(
-                target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
+            if (lfo->deform.deform_type == type_2)
+            {
+                wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+                wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+                wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+                wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+
+                iout = correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+            }
+            else
+            {
+                iout = correlated_noise_o2mk2_suppliedrng(
+                    target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
+            }
         }
 
         break;
@@ -372,18 +377,21 @@ void LFOModulationSource::attack()
 
     case lt_noise:
     {
-        auto lid = limit_range(localcopy[ideform].f, -1.f, 1.f);
+        if (isFirstAttack || lfo->trigmode.val.i != lm_freerun)
+        {
+            auto lid = limit_range(localcopy[ideform].f, -1.f, 1.f);
 
-        noise = 0.f;
-        noised1 = 0.f;
-        target = 0.f;
+            noise = 0.f;
+            noised1 = 0.f;
+            target = 0.f;
 
-        wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
-        wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
-        wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
-        wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+            wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+            wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+            wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+            wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
 
-        phase = 0.f;
+            phase = 0.f;
+        }
     }
     break;
 
