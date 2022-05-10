@@ -56,6 +56,8 @@ struct MSEGEditor : public OverlayComponent,
 
     bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override
     {
+        if (p->ctrlgroup == cg_LFO)
+            return true;
         return false;
     }
 

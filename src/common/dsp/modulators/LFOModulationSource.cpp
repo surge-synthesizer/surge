@@ -24,6 +24,8 @@ void LFOModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *
     this->is_display = is_display;
 
     Surge::Formula::cleanEvaluatorState(formulastate);
+    if (is_display)
+        msegstate = Surge::MSEG::EvaluatorState();
 
     iout = 0;
     output = 0;
@@ -166,7 +168,8 @@ void LFOModulationSource::initPhaseFromStartPhase()
 void LFOModulationSource::attack()
 {
     // For VLFO you don't need this but SLFO get recycled, so you do
-    msegstate = Surge::MSEG::EvaluatorState();
+    if (!is_display)
+        msegstate = Surge::MSEG::EvaluatorState();
 
     if (!phaseInitialized)
     {
