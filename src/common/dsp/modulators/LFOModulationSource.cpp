@@ -178,6 +178,7 @@ void LFOModulationSource::attack()
     env_val = 0.f;
     env_phase = 0;
     ratemult = 1.f;
+    everAttacked = true;
 
     if (localcopy[idelay].f == lfo->delay.val_min.f)
     {
