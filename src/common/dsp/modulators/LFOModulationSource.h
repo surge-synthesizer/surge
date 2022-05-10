@@ -78,6 +78,8 @@ class LFOModulationSource : public ModulationSource
     bool retrigger_FEG;
     bool retrigger_AEG;
 
+    bool everAttacked{false};
+
   private:
     LFOStorage *lfo;
     SurgeVoiceState *state;
