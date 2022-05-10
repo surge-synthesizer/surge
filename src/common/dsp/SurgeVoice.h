@@ -39,7 +39,8 @@ class alignas(16) SurgeVoice
     SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *scene, pdata *params, int key,
                int velocity, int channel, int scene_id, float detune, MidiKeyState *keyState,
                MidiChannelState *mainChannelState, MidiChannelState *voiceChannelState,
-               bool mpeEnabled, int64_t voiceOrder);
+               bool mpeEnabled, int64_t voiceOrder, int32_t host_note_id,
+               int16_t originating_host_key, int16_t originating_host_channel);
     ~SurgeVoice();
 
     void release();
@@ -54,6 +55,23 @@ class alignas(16) SurgeVoice
     int osctype[n_oscs];
     SurgeVoiceState state;
     int age, age_release;
+
+    /*
+     * Begin implementing host-provided identifiers for voices for polyphonic
+     * modulators, note expressions, and so on
+     */
+    int32_t host_note_id{-1};
+    int16_t originating_host_key{-1}, originating_host_channel{-1};
+
+    struct PolyphonicParamModulation
+    {
+        int32_t param_id{0};
+        double value{0};
+    };
+    int32_t paramModulationCount{0};
+    static constexpr int maxPolyphonicParamModulations = 64;
+    std::array<PolyphonicParamModulation, maxPolyphonicParamModulations> polyphonicParamModulations;
+    void applyPolyphonicParamModulation(Parameter *, double value);
 
     /*
     ** Given a note0 and an oscillator this returns the appropriate note.

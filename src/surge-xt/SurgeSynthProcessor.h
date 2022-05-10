@@ -54,19 +54,42 @@ struct SurgeParamToJuceInfo
     }
 };
 
-struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
+struct SurgeBaseParam : juce::RangedAudioParameter
+#if HAS_CLAP_JUCE_EXTENSIONS
+    ,
+                        clap_juce_extensions::clap_param_extensions
+#endif
+
+{
+    template <typename... Args>
+    SurgeBaseParam(Args &&...args) : juce::RangedAudioParameter(std::forward<Args>(args)...)
+    {
+    }
+
+    virtual void applyMonophonicModulation(double value)
+    {
+        std::cout << "Base Class Mono Mod - Override " << value << std::endl;
+    }
+    virtual void applyPolyphonicModulation(int32_t note_id, int16_t key, int16_t channel,
+                                           double value)
+    {
+        std::cout << "BASE CLASS POLY MOD - Override for note_id=" << note_id << " key=" << key
+                  << " channel=" << channel << " value=" << value << std::endl;
+    }
+};
+
+struct SurgeParamToJuceParamAdapter : SurgeBaseParam
 {
     explicit SurgeParamToJuceParamAdapter(SurgeSynthesizer *s, Parameter *p)
-        : s(s), p(p),
-          range(0.f, 1.f, 0.001f), juce::RangedAudioParameter(
+        : s(s), p(p), range(0.f, 1.f, 0.001f),
+          SurgeBaseParam(
 #if SURGE_HAS_JUCE7
-                                       juce::ParameterID(
-                                           p->get_storage_name(),
-                                           1), // This "1" needs thought if we add params
+              juce::ParameterID(p->get_storage_name(),
+                                1), // This "1" needs thought if we add params
 #else
-                                       p->get_storage_name(),
+              p->get_storage_name(),
 #endif
-                                       SurgeParamToJuceInfo::getParameterName(s, p), "")
+              SurgeParamToJuceInfo::getParameterName(s, p), "")
     {
         setValueNotifyingHost(getValue());
     }
@@ -117,21 +140,34 @@ struct SurgeParamToJuceParamAdapter : juce::RangedAudioParameter
     juce::NormalisableRange<float> range;
     SurgeSynthesizer *s;
     Parameter *p;
+
+#if HAS_CLAP_JUCE_EXTENSIONS
+    bool supportsMonophonicModulation() override { return true; }
+    bool supportsPolyphonicModulation() override { return p->per_voice_processing; }
+    void applyPolyphonicModulation(int32_t note_id, int16_t key, int16_t channel,
+                                   double value) override
+    {
+        s->applyParameterPolyphonicModulation(p, note_id, key, channel, value);
+    }
+    void applyMonophonicModulation(double value) override
+    {
+        s->applyParameterMonophonicModulation(p, value);
+    }
+#endif
 };
 
-struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
+struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
 {
     explicit SurgeMacroToJuceParamAdapter(SurgeSynthesizer *s, long macroNum)
-        : s(s), macroNum(macroNum),
-          range(0.f, 1.f, 0.001f), juce::RangedAudioParameter(
+        : s(s), macroNum(macroNum), range(0.f, 1.f, 0.001f),
+          SurgeBaseParam(
 #if SURGE_HAS_JUCE7
-                                       juce::ParameterID(
-                                           std::string("macro_") + std::to_string(macroNum), 1),
+              juce::ParameterID(std::string("macro_") + std::to_string(macroNum), 1),
 #else
-                                       std::string("macro_") + std::to_string(macroNum),
+              std::string("macro_") + std::to_string(macroNum),
 #endif
 
-                                       std::string("C: ") + std::to_string(macroNum), "")
+              std::string("C: ") + std::to_string(macroNum), "")
     {
         setValueNotifyingHost(getValue());
     }
@@ -160,6 +196,14 @@ struct SurgeMacroToJuceParamAdapter : public juce::RangedAudioParameter
     {
         return std::to_string(s->getMacroParameter01(macroNum));
     }
+
+#if HAS_CLAP_JUCE_EXTENSIONS
+    bool supportsMonophonicModulation() override { return true; }
+    void applyMonophonicModulation(double value) override
+    {
+        s->applyMacroMonophonicModulation(macroNum, value);
+    }
+#endif
 
     const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
     juce::NormalisableRange<float> range;
@@ -230,6 +274,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool priorCallWasProcessBlockNotBypassed{true};
     int bypassCountdown{-1};
 
+    void processBlockPlayhead();
+    void processBlockMidiFromGUI();
+    void processBlockPostFunction();
+
     void applyMidi(const juce::MidiMessageMetadata &);
     bool supportsMPE() const override { return true; }
 
@@ -296,6 +344,18 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool isInputMain(int index) override { return false; }
+    bool supportsDirectProcess() override { return true; }
+    clap_process_status clap_direct_process(const clap_process *process) noexcept override;
+    void process_clap_event(const clap_event_header_t *e);
+
+    bool supportsVoiceInfo() override { return true; }
+    bool voiceInfoGet(clap_voice_info *info) override
+    {
+        info->voice_capacity = 128;
+        info->voice_count = 128;
+        info->flags = CLAP_VOICE_INFO_SUPPORTS_OVERLAPPING_NOTES;
+        return true;
+    }
 #endif
 
   private:
@@ -307,6 +367,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     int blockPos = 0;
 
     int checkNamesEvery = 0;
+
+    int32_t non_clap_noteid{1};
 
   public:
     std::unique_ptr<Surge::GUI::UndoManager> undoManager;

@@ -116,7 +116,8 @@ SurgeVoice::SurgeVoice() {}
 SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *params, int key,
                        int velocity, int channel, int scene_id, float detune,
                        MidiKeyState *keyState, MidiChannelState *mainChannelState,
-                       MidiChannelState *voiceChannelState, bool mpeEnabled, int64_t voiceOrder)
+                       MidiChannelState *voiceChannelState, bool mpeEnabled, int64_t voiceOrder,
+                       int32_t host_nid, int16_t host_key, int16_t host_chan)
 //: fb(storage,oscene)
 {
     // assign pointers
@@ -124,6 +125,10 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     this->scene = oscene;
     this->paramptr = params;
     this->mpeEnabled = mpeEnabled;
+    this->host_note_id = host_nid;
+    this->originating_host_key = host_key;
+    this->originating_host_channel = host_chan;
+    this->paramModulationCount = 0;
     assert(storage);
     assert(oscene);
 
@@ -1137,6 +1142,12 @@ template <bool noLFOSources> void SurgeVoice::applyModulationToLocalcopy()
         monoAftertouchSource.set_output(0, state.voiceChannelState->pressure);
         // Currently timbre only works in MPE mode, so no need to do anything when not in MPE mode.
     }
+
+    for (int i = 0; i < paramModulationCount; ++i)
+    {
+        auto &pc = polyphonicParamModulations[i];
+        localcopy[pc.param_id].f += pc.value;
+    }
 }
 
 void SurgeVoice::set_path(bool osc1, bool osc2, bool osc3, int FMmode, bool ring12, bool ring23,
@@ -1330,5 +1341,30 @@ void SurgeVoice::freeAllocatedElements()
     for (int i = 0; i < n_lfos_voice; ++i)
     {
         lfo[i].completedModulation();
+    }
+}
+
+void SurgeVoice::applyPolyphonicParamModulation(Parameter *p, double value)
+{
+    if (p->valtype != vt_float)
+        return;
+
+    // quickly do a search to see if i'm there
+    int param_id = p->param_id_in_scene;
+    for (int i = 0; i < paramModulationCount; ++i)
+    {
+        if (polyphonicParamModulations[i].param_id == param_id)
+        {
+            polyphonicParamModulations[i].value = value * (p->val_max.f - p->val_min.f);
+            return;
+        }
+    }
+    int idx = paramModulationCount;
+    assert(paramModulationCount < maxPolyphonicParamModulations);
+    if (paramModulationCount < maxPolyphonicParamModulations)
+    {
+        polyphonicParamModulations[idx].param_id = param_id;
+        polyphonicParamModulations[idx].value = value;
+        paramModulationCount++;
     }
 }

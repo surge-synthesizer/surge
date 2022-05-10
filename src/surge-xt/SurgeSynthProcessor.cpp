@@ -247,48 +247,8 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     }
     surge->audio_processing_active = true;
 
-    auto playhead = getPlayHead();
-    if (playhead)
-    {
-        juce::AudioPlayHead::CurrentPositionInfo cp;
-        playhead->getCurrentPosition(cp);
-        surge->time_data.tempo = cp.bpm;
-
-        // isRecording should always imply isPlaying but better safe than sorry
-        if (cp.isPlaying || cp.isRecording)
-            surge->time_data.ppqPos = cp.ppqPosition;
-
-        surge->time_data.timeSigNumerator = cp.timeSigNumerator;
-        surge->time_data.timeSigDenominator = cp.timeSigDenominator;
-        surge->resetStateFromTimeData();
-    }
-    else
-    {
-        surge->time_data.tempo = standaloneTempo;
-        surge->time_data.timeSigNumerator = 4;
-        surge->time_data.timeSigDenominator = 4;
-        surge->resetStateFromTimeData();
-    }
-
-    midiR rec;
-    while (midiFromGUI.pop(rec))
-    {
-        if (rec.type == midiR::NOTE)
-        {
-            if (rec.on)
-                surge->playNote(rec.ch, rec.note, rec.vel, 0);
-            else
-                surge->releaseNote(rec.ch, rec.note, rec.vel);
-        }
-        if (rec.type == midiR::PITCHWHEEL)
-        {
-            surge->pitchBend(rec.ch, rec.cval);
-        }
-        if (rec.type == midiR::MODWHEEL)
-        {
-            surge->channelController(rec.ch, 1, rec.cval);
-        }
-    }
+    processBlockPlayhead();
+    processBlockMidiFromGUI();
 
     auto mainOutput = getBusBuffer(buffer, false, 0);
 
@@ -376,6 +336,60 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         midiIt++;
     }
 
+    processBlockPostFunction();
+}
+
+void SurgeSynthProcessor::processBlockPlayhead()
+{
+    auto playhead = getPlayHead();
+    if (playhead)
+    {
+        juce::AudioPlayHead::CurrentPositionInfo cp;
+        playhead->getCurrentPosition(cp);
+        surge->time_data.tempo = cp.bpm;
+
+        // isRecording should always imply isPlaying but better safe than sorry
+        if (cp.isPlaying || cp.isRecording)
+            surge->time_data.ppqPos = cp.ppqPosition;
+
+        surge->time_data.timeSigNumerator = cp.timeSigNumerator;
+        surge->time_data.timeSigDenominator = cp.timeSigDenominator;
+        surge->resetStateFromTimeData();
+    }
+    else
+    {
+        surge->time_data.tempo = standaloneTempo;
+        surge->time_data.timeSigNumerator = 4;
+        surge->time_data.timeSigDenominator = 4;
+        surge->resetStateFromTimeData();
+    }
+}
+
+void SurgeSynthProcessor::processBlockMidiFromGUI()
+{
+    midiR rec;
+    while (midiFromGUI.pop(rec))
+    {
+        if (rec.type == midiR::NOTE)
+        {
+            if (rec.on)
+                surge->playNote(rec.ch, rec.note, rec.vel, 0, non_clap_noteid++);
+            else
+                surge->releaseNote(rec.ch, rec.note, rec.vel);
+        }
+        if (rec.type == midiR::PITCHWHEEL)
+        {
+            surge->pitchBend(rec.ch, rec.cval);
+        }
+        if (rec.type == midiR::MODWHEEL)
+        {
+            surge->channelController(rec.ch, 1, rec.cval);
+        }
+    }
+}
+
+void SurgeSynthProcessor::processBlockPostFunction()
+{
     if (checkNamesEvery++ > 10)
     {
         checkNamesEvery = 0;
@@ -386,6 +400,198 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     }
 }
 
+#if HAS_CLAP_JUCE_EXTENSIONS
+clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process *process) noexcept
+{
+    auto fpuguard = sst::plugininfra::cpufeatures::FPUStateGuard();
+
+    if (process->audio_outputs_count == 0 || process->audio_outputs_count > 3)
+        return CLAP_PROCESS_ERROR;
+    if (process->audio_outputs[0].channel_count > 2 || process->audio_outputs[0].channel_count == 0)
+        return CLAP_PROCESS_ERROR;
+
+    if (!surge->audio_processing_active)
+    {
+        // I am just becoming active. There may be lingering notes from when I was
+        // deactivated so
+        surge->allNotesOff();
+    }
+    surge->audio_processing_active = true;
+
+    processBlockPlayhead();
+    processBlockMidiFromGUI();
+
+    auto ev = process->in_events;
+    auto evtsz = ev->size(ev);
+    auto currev = 0;
+    auto nextevtime = -1;
+
+    if (evtsz > 0)
+    {
+        auto evt = ev->get(ev, 0);
+        nextevtime = evt->time;
+    }
+
+    // TO DO: Sidechain Input
+
+    float *outL{nullptr}, *outR{nullptr};
+    outL = process->audio_outputs[0].data32[0];
+    outR = outL;
+    if (process->audio_outputs[0].channel_count == 2)
+        outR = process->audio_outputs[0].data32[1];
+
+    for (int s = 0; s < process->frames_count; ++s)
+    {
+        if (blockPos == 0)
+        {
+            while (nextevtime >= 0 && nextevtime < s + BLOCK_SIZE && currev < evtsz)
+            {
+                auto evt = ev->get(ev, currev);
+
+                process_clap_event(evt);
+
+                currev++;
+                if (currev < evtsz)
+                {
+                    nextevtime = ev->get(ev, currev)->time;
+                }
+                else
+                {
+                    nextevtime = -1;
+                }
+            }
+        }
+        /*
+        if (blockPos == 0 && mainInput.getNumChannels() > 0)
+        {
+            auto inL = mainInput.getReadPointer(0, i);
+            auto inR = inL;                     // assume mono
+            if (mainInput.getNumChannels() > 1) // unless its not
+            {
+                inR = mainInput.getReadPointer(1, i);
+            }
+            surge->process_input = true;
+            memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
+            memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
+        }
+        else
+        {
+            surge->process_input = false;
+        }
+         */
+        surge->process_input = false;
+        if (blockPos == 0)
+        {
+            surge->process();
+            surge->time_data.ppqPos +=
+                (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
+
+            if (surge->hostNoteEndedDuringBlockCount > 0)
+            {
+                auto ov = process->out_events;
+                for (int v = 0; v < surge->hostNoteEndedDuringBlockCount; ++v)
+                {
+                    auto evt = clap_event_note();
+                    evt.header.size = sizeof(clap_event_note);
+                    evt.header.type = (uint16_t)CLAP_EVENT_NOTE_END;
+                    evt.header.time = s;
+                    evt.header.space_id = CLAP_CORE_EVENT_SPACE_ID;
+                    evt.header.flags = 0;
+
+                    evt.port_index = 0;
+                    evt.channel = surge->endedHostNoteOriginalChannel[v];
+                    evt.key = surge->endedHostNoteOriginalKey[v];
+                    evt.note_id = surge->endedHostNoteIds[v];
+                    evt.velocity = 0.0;
+
+                    ov->try_push(ov, reinterpret_cast<const clap_event_header *>(&evt));
+                }
+            }
+        }
+        *outL = surge->output[0][blockPos];
+        *outR = surge->output[1][blockPos];
+        outL++;
+        outR++;
+
+        // TO DO: Scene Output
+
+        blockPos = (blockPos + 1) & (BLOCK_SIZE - 1);
+    }
+
+    // just in case
+    while (currev < evtsz)
+    {
+        auto evt = ev->get(ev, currev);
+        process_clap_event(evt);
+        currev++;
+    }
+
+    processBlockPostFunction();
+    return CLAP_PROCESS_CONTINUE;
+}
+
+void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
+{
+    if (evt->space_id != CLAP_CORE_EVENT_SPACE_ID)
+        return;
+
+    switch (evt->type)
+    {
+    case CLAP_EVENT_NOTE_ON:
+    {
+        auto nevt = reinterpret_cast<const clap_event_note *>(evt);
+        surge->playNote(nevt->channel, nevt->key, 127 * nevt->velocity, 0, nevt->note_id);
+    }
+    break;
+    case CLAP_EVENT_NOTE_OFF:
+    {
+        auto nevt = reinterpret_cast<const clap_event_note *>(evt);
+        surge->releaseNote(nevt->channel, nevt->key, 127 * nevt->velocity, nevt->note_id);
+    }
+    break;
+    case CLAP_EVENT_MIDI:
+    {
+        auto mevt = reinterpret_cast<const clap_event_midi *>(evt);
+        applyMidi(juce::MidiMessageMetadata(mevt->data, 3, mevt->header.time));
+    }
+    break;
+    case CLAP_EVENT_PARAM_VALUE:
+    {
+        auto pevt = reinterpret_cast<const clap_event_param_value *>(evt);
+        auto jp = static_cast<juce::AudioProcessorParameter *>(pevt->cookie);
+        jp->setValue(pevt->value);
+    }
+    break;
+    case CLAP_EVENT_PARAM_MOD:
+    {
+        auto pevt = reinterpret_cast<const clap_event_param_mod *>(evt);
+        auto jp = static_cast<SurgeBaseParam *>(pevt->cookie);
+        if (pevt->note_id >= 0)
+        {
+            jassert(jp->supportsPolyphonicModulation());
+            jp->applyPolyphonicModulation(pevt->note_id, pevt->key, pevt->channel, pevt->amount);
+        }
+        else
+        {
+            jassert(jp->supportsMonophonicModulation());
+            jp->applyMonophonicModulation(pevt->amount);
+        }
+    }
+    break;
+
+    case CLAP_EVENT_TRANSPORT:
+    case CLAP_EVENT_NOTE_END:
+    default:
+    {
+        DBG("Unknown message type " << (int)(evt->type));
+        // In theory I should never get this.
+        // jassertfalse
+    }
+    break;
+    }
+}
+#endif
+
 void SurgeSynthProcessor::applyMidi(const juce::MidiMessageMetadata &it)
 {
     auto m = it.getMessage();
@@ -395,7 +601,8 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessageMetadata &it)
 
     if (m.isNoteOn())
     {
-        surge->playNote(ch, m.getNoteNumber(), m.getVelocity(), 0);
+        // no note ids coming from juce- or ui- land
+        surge->playNote(ch, m.getNoteNumber(), m.getVelocity(), 0, -1);
     }
     else if (m.isNoteOff())
     {

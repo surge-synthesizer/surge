@@ -68,9 +68,10 @@ class alignas(16) SurgeSynthesizer
     };
     SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath = "");
     virtual ~SurgeSynthesizer();
-    void playNote(char channel, char key, char velocity, char detune);
-    void releaseNote(char channel, char key, char velocity);
-    void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity);
+    void playNote(char channel, char key, char velocity, char detune, int32_t host_noteid = -1);
+    void releaseNote(char channel, char key, char velocity, int32_t host_noteid = -1);
+    void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity,
+                                  int32_t host_noteid = -1);
     void pitchBend(char channel, int value);
     void polyAftertouch(char channel, int key, int value);
     void channelAftertouch(char channel, int value);
@@ -125,7 +126,8 @@ class alignas(16) SurgeSynthesizer
         int source, int target,
         FXReorderMode m); // This is safe to call from the UI thread since it just edits the sync
 
-    void playVoice(int scene, char channel, char key, char velocity, char detune);
+    void playVoice(int scene, char channel, char key, char velocity, char detune,
+                   int32_t host_noteid, int16_t okey = -1, int16_t ochan = -1);
     void releaseScene(int s);
     int calculateChannelMask(int channel, int key);
     void softkillVoice(int scene);
@@ -135,6 +137,7 @@ class alignas(16) SurgeSynthesizer
 
     SurgeVoice *getUnusedVoice(int scene); // not const since it updates voice state
     void freeVoice(SurgeVoice *);
+    void notifyEndedNote(int32_t nid, int16_t key, int16_t chan, bool thisBlock = true);
     std::array<std::array<SurgeVoice, MAX_VOICES>, 2> voices_array;
     // TODO: FIX SCENE ASSUMPTION!
     unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A, 2 is scene B
@@ -142,6 +145,17 @@ class alignas(16) SurgeSynthesizer
     int64_t voiceCounter = 1L;
 
     std::atomic<unsigned int> processRunning{0};
+
+    bool doNotifyEndedNote{true};
+    int32_t hostNoteEndedDuringBlockCount{0};
+    int32_t endedHostNoteIds[MAX_VOICES << 3];
+    int16_t endedHostNoteOriginalKey[MAX_VOICES << 3];
+    int16_t endedHostNoteOriginalChannel[MAX_VOICES << 3];
+
+    int32_t hostNoteEndedToPushToNextBlock{0};
+    int32_t nextBlockEndedHostNoteIds[MAX_VOICES << 3];
+    int16_t nextBlockEndedHostNoteOriginalKey[MAX_VOICES << 3];
+    int16_t nextBlockEndedHostNoteOriginalChannel[MAX_VOICES << 3];
 
   public:
     /*
@@ -226,8 +240,23 @@ class alignas(16) SurgeSynthesizer
         return setParameter01(index.getSynthSideId(), value, external, force_integer);
     }
 
+    void applyParameterMonophonicModulation(Parameter *, float depth);
+    void applyParameterPolyphonicModulation(Parameter *, int32_t note_id, int16_t key,
+                                            int16_t channel, float depth);
+
     void setMacroParameter01(long macroNum, float val);
     float getMacroParameter01(long macroNum) const;
+    void applyMacroMonophonicModulation(long macroNum, float val);
+
+    enum NoteExpressionType
+    {
+        VOLUME,  // maps to per voice volume in all voices
+        PAN,     // maps to per voice pan in all voices
+        PITCH,   // maps to the tuning
+        TIMBRE,  // maps to the MPE Timbre parameter
+        PRESSURE // maps to "channel AT" in MPE mode and "ply AT" in non-MPE mode
+    };
+    void setNoteExpression(NoteExpressionType net, int16_t key, int16_t channel, float value);
 
     bool getParameterIsBoolean(const ID &index) const;
 
@@ -417,6 +446,7 @@ class alignas(16) SurgeSynthesizer
         int key;
         int originalChannel;
         int originalKey;
+        int32_t host_noteid;
     };
     std::list<HoldBufferItem> holdbuffer[n_scenes];
     void purgeHoldbuffer(int scene);

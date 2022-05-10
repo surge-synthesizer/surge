@@ -817,6 +817,13 @@ void SurgePatch::copy_scenedata(pdata *d, int scene)
         // d[i].f = param_ptr[i+s]->val.f;
         d[i].i = param_ptr[i + s]->val.i;
     }
+
+    for (int i = 0; i < paramModulationCount; ++i)
+    {
+        auto &pm = monophonicParamModulations[i];
+        if (pm.param_id >= s && pm.param_id < s + n_scene_params)
+            d[pm.param_id - s].f += pm.value;
+    }
 }
 
 void SurgePatch::copy_globaldata(pdata *d)
@@ -825,6 +832,13 @@ void SurgePatch::copy_globaldata(pdata *d)
     {
         // if (param_ptr[i]->valtype == vt_float)
         d[i].i = param_ptr[i]->val.i; // int is safer (no exceptions or anything)
+    }
+
+    for (int i = 0; i < paramModulationCount; ++i)
+    {
+        auto &pm = monophonicParamModulations[i];
+        if (pm.param_id < n_global_params)
+            d[pm.param_id].f += pm.value;
     }
 }
 // pdata scenedata[n_scenes][n_scene_params];
