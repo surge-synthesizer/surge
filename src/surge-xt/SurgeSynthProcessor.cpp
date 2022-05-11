@@ -604,6 +604,42 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     }
     break;
 
+    case CLAP_EVENT_NOTE_EXPRESSION:
+    {
+        auto pevt = reinterpret_cast<const clap_event_note_expression *>(evt);
+        jassert(pevt->note_id == -1); // note expressions come to channel/key
+        SurgeVoice::NoteExpressionType net = SurgeVoice::UNKNOWN;
+        switch (pevt->expression_id)
+        {
+        // with 0 < x <= 4, plain = 20 * log(x)
+        case CLAP_NOTE_EXPRESSION_VOLUME:
+            net = SurgeVoice::VOLUME;
+            break;
+        // pan, 0 left, 0.5 center, 1 right
+        case CLAP_NOTE_EXPRESSION_PAN:
+            net = SurgeVoice::PAN;
+            break;
+        // relative tuning in semitone, from -120 to +120
+        case CLAP_NOTE_EXPRESSION_TUNING:
+            net = SurgeVoice::PITCH;
+            break;
+
+            // 0..1
+        case CLAP_NOTE_EXPRESSION_BRIGHTNESS:
+            net = SurgeVoice::TIMBRE;
+            break;
+        case CLAP_NOTE_EXPRESSION_PRESSURE:
+            net = SurgeVoice::PRESSURE;
+            break;
+        case CLAP_NOTE_EXPRESSION_VIBRATO:
+        case CLAP_NOTE_EXPRESSION_EXPRESSION:
+            break;
+        }
+        if (net != SurgeVoice::UNKNOWN)
+            surge->setNoteExpression(net, pevt->note_id, pevt->key, pevt->channel, pevt->value);
+    }
+    break;
+
     case CLAP_EVENT_TRANSPORT:
     case CLAP_EVENT_NOTE_END:
     default:
