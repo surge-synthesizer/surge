@@ -395,7 +395,8 @@ void SurgeSynthProcessor::processBlockPostFunction()
         checkNamesEvery = 0;
         if (std::atomic_exchange(&parameterNameUpdated, false))
         {
-            updateHostDisplay();
+            updateHostDisplay(
+                juce::AudioProcessorListener::ChangeDetails().withParameterInfoChanged(true));
         }
     }
 }
@@ -440,6 +441,26 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
     if (process->audio_outputs[0].channel_count == 2)
         outR = process->audio_outputs[0].data32[1];
 
+    float *sceneAL{nullptr}, *sceneAR{nullptr}, *sceneBL{nullptr}, *sceneBR{nullptr};
+    bool haveSceneOut{false};
+
+    if (process->audio_inputs_count == 1)
+    {
+        surge->process_input = true;
+    }
+    if (process->audio_outputs_count == 3 && process->audio_outputs[1].channel_count == 2 &&
+        process->audio_outputs[2].channel_count == 2)
+    {
+        haveSceneOut = true;
+        sceneAL = process->audio_outputs[1].data32[0];
+        sceneAR = process->audio_outputs[1].data32[1];
+        sceneBL = process->audio_outputs[2].data32[0];
+        sceneBR = process->audio_outputs[2].data32[1];
+
+        if (!sceneAL || !sceneAR || !sceneBL || !sceneBR)
+            haveSceneOut = false;
+    }
+
     for (int s = 0; s < process->frames_count; ++s)
     {
         if (blockPos == 0)
@@ -461,27 +482,18 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
                 }
             }
         }
-        /*
-        if (blockPos == 0 && mainInput.getNumChannels() > 0)
-        {
-            auto inL = mainInput.getReadPointer(0, i);
-            auto inR = inL;                     // assume mono
-            if (mainInput.getNumChannels() > 1) // unless its not
-            {
-                inR = mainInput.getReadPointer(1, i);
-            }
-            surge->process_input = true;
-            memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
-            memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
-        }
-        else
-        {
-            surge->process_input = false;
-        }
-         */
-        surge->process_input = false;
+
         if (blockPos == 0)
         {
+            if (process->audio_inputs_count == 1)
+            {
+                auto inL = process->audio_inputs[0].data32[0];
+                auto inR = inL;
+                if (process->audio_inputs[0].channel_count == 2)
+                    inR = process->audio_inputs[0].data32[0];
+                memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
+                memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
+            }
             surge->process();
             surge->time_data.ppqPos +=
                 (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
@@ -512,6 +524,19 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
         *outR = surge->output[1][blockPos];
         outL++;
         outR++;
+
+        if (haveSceneOut)
+        {
+            *sceneAL = surge->sceneout[0][0][blockPos];
+            *sceneAR = surge->sceneout[0][1][blockPos];
+            *sceneBL = surge->sceneout[1][0][blockPos];
+            *sceneBR = surge->sceneout[1][1][blockPos];
+
+            sceneAL++;
+            sceneAR++;
+            sceneBL++;
+            sceneBR++;
+        }
 
         // TO DO: Scene Output
 
