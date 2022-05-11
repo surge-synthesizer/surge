@@ -3558,7 +3558,9 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         }
     }
 
-    if (tag == waveshaperSelector->getTag())
+    // TODO: If we hide waveshaper selector in skin but leave jog and analysis button in,
+    // they stop working. Is there any way around this?
+    if (waveshaperSelector && tag == waveshaperSelector->getTag())
     {
         updateWaveshaperOverlay();
     }
