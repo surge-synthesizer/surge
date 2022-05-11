@@ -775,23 +775,26 @@ void SurgeGUIEditor::idle()
 
         bool vuInvalid = false;
 
-        if (synth->vu_peak[0] != vu[0]->getValue())
+        if (vu[0])
         {
-            vuInvalid = true;
-            vu[0]->setValue(synth->vu_peak[0]);
-        }
+            if (synth->vu_peak[0] != vu[0]->getValue())
+            {
+                vuInvalid = true;
+                vu[0]->setValue(synth->vu_peak[0]);
+            }
 
-        if (synth->vu_peak[1] != vu[0]->getValueR())
-        {
-            vu[0]->setValueR(synth->vu_peak[1]);
-            vuInvalid = true;
-        }
+            if (synth->vu_peak[1] != vu[0]->getValueR())
+            {
+                vu[0]->setValueR(synth->vu_peak[1]);
+                vuInvalid = true;
+            }
 
-        vu[0]->setIsAudioActive(synth->audio_processing_active);
+            vu[0]->setIsAudioActive(synth->audio_processing_active);
 
-        if (vuInvalid)
-        {
-            vu[0]->repaint();
+            if (vuInvalid)
+            {
+                vu[0]->repaint();
+            }
         }
 
         for (int i = 0; i < n_fx_slots; i++)
@@ -2348,7 +2351,9 @@ void SurgeGUIEditor::setTuningFromUndo(const Tunings::Tuning &t)
 const Tunings::Tuning &SurgeGUIEditor::getTuningForRedo() { return synth->storage.currentTuning; }
 const fs::path SurgeGUIEditor::pathForCurrentPatch()
 {
-    if (patchSelector->sel_id >= 0 && patchSelector->sel_id < synth->storage.patch_list.size())
+    // TODO: rewrite how patch prev-next works so that it doesn't depend on patchSelector widget
+    if (patchSelector && patchSelector->sel_id >= 0 &&
+        patchSelector->sel_id < synth->storage.patch_list.size())
     {
         return synth->storage.patch_list[patchSelector->sel_id].path;
     }
@@ -3666,8 +3671,8 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
 
     patchDefMenu.addSeparator();
 
-    auto pscid = patchSelector->getCurrentCategoryId();
-    auto pspid = patchSelector->getCurrentPatchId();
+    auto pscid = patchSelector ? patchSelector->getCurrentCategoryId() : -1;
+    auto pspid = patchSelector ? patchSelector->getCurrentPatchId() : -1;
     auto s = &(this->synth->storage);
 
     if (pscid >= 0 && pscid < s->patch_category.size() && pspid >= 0 &&
