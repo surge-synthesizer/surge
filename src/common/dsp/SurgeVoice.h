@@ -73,6 +73,20 @@ class alignas(16) SurgeVoice
     std::array<PolyphonicParamModulation, maxPolyphonicParamModulations> polyphonicParamModulations;
     void applyPolyphonicParamModulation(Parameter *, double value);
 
+    enum NoteExpressionType
+    {
+        VOLUME,   // maps to per voice volume in all voices
+                  // 0 < x < = 4, amp = 20 * log(x)
+        PAN,      // maps to per voice pan in all voices, 0..1 with 0.5 center
+        PITCH,    // maps to the tuning -120 to 120 in keys
+        TIMBRE,   // maps to the MPE Timbre parameter 0 .. 1
+        PRESSURE, // maps to "channel AT" in MPE mode and "poly AT" in non-MPE mode 0 .. 1
+        UNKNOWN
+    };
+    void applyNoteExpression(NoteExpressionType net, float value);
+    static constexpr int numNoteExpressionTypes = (int)UNKNOWN;
+    std::array<float, numNoteExpressionTypes> noteExpressions;
+
     /*
     ** Given a note0 and an oscillator this returns the appropriate note.
     ** This is a pretty easy calculation in non-absolute mode. Just add.

@@ -248,15 +248,8 @@ class alignas(16) SurgeSynthesizer
     float getMacroParameter01(long macroNum) const;
     void applyMacroMonophonicModulation(long macroNum, float val);
 
-    enum NoteExpressionType
-    {
-        VOLUME,  // maps to per voice volume in all voices
-        PAN,     // maps to per voice pan in all voices
-        PITCH,   // maps to the tuning
-        TIMBRE,  // maps to the MPE Timbre parameter
-        PRESSURE // maps to "channel AT" in MPE mode and "ply AT" in non-MPE mode
-    };
-    void setNoteExpression(NoteExpressionType net, int16_t key, int16_t channel, float value);
+    void setNoteExpression(SurgeVoice::NoteExpressionType net, int32_t note_id, int16_t key,
+                           int16_t channel, float value);
 
     bool getParameterIsBoolean(const ID &index) const;
 

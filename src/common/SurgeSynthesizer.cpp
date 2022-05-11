@@ -1568,8 +1568,8 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
     }
 }
 
-void SurgeSynthesizer::setNoteExpression(NoteExpressionType net, int16_t key, int16_t channel,
-                                         float value)
+void SurgeSynthesizer::setNoteExpression(SurgeVoice::NoteExpressionType net, int32_t note_id,
+                                         int16_t key, int16_t channel, float value)
 {
     for (int sc = 0; sc < n_scenes; sc++)
     {
@@ -1577,10 +1577,10 @@ void SurgeSynthesizer::setNoteExpression(NoteExpressionType net, int16_t key, in
         {
             if ((v->state.key == key && v->state.channel == channel) ||
                 (v->originating_host_key >= 0 && v->originating_host_key == key &&
-                 v->originating_host_channel >= 0 && v->originating_host_channel == channel))
+                 v->originating_host_channel >= 0 && v->originating_host_channel == channel) ||
+                (note_id >= 0 && v->host_note_id == note_id))
             {
-                std::cout << "Got a voice match for " << net << " on " << key << " " << channel
-                          << std::endl;
+                v->applyNoteExpression(net, value);
             }
         }
     }

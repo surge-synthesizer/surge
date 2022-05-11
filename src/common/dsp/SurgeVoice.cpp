@@ -136,6 +136,12 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
     memcpy(localcopy, paramptr, sizeof(localcopy));
 
+    noteExpressions[VOLUME] = 1.0; // 1 is no ampplification
+    noteExpressions[PAN] = 0.5;    // since it is  0..1
+    noteExpressions[PITCH] = 0.0;
+    noteExpressions[TIMBRE] = 0.0;
+    noteExpressions[PRESSURE] = 0.0;
+
     // We want this on the keystate so it survives the voice for mono mode
     keyState->voiceOrder = voiceOrder;
 
@@ -645,6 +651,8 @@ void SurgeVoice::update_portamento()
     }
     else
         state.pkey = state.getPitch(storage);
+
+    state.pkey += noteExpressions[PITCH];
 }
 
 int SurgeVoice::routefilter(int r)
@@ -768,11 +776,13 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     route[5] = routefilter(scene->route_noise.val.i);
 
     float pan1 = limit_range(localcopy[pan_id].f + state.voiceChannelState->pan +
-                                 state.mainChannelState->pan,
+                                 state.mainChannelState->pan + (noteExpressions[PAN] * 2 - 1),
                              -1.f, 1.f);
     float amp =
         0.5f * amp_to_linear(localcopy[volume_id].f); // the *0.5 multiplication will be eliminated
                                                       // by the 2x gain of the halfband filter
+
+    amp = amp * noteExpressions[VOLUME]; // since amp is already linear as is the NE
 
     // Volume correcting/correction (fc_stereo updated since v1.2.2)
     if (scene->filterblock_configuration.val.i == fc_wide)
@@ -783,8 +793,12 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     if ((scene->filterblock_configuration.val.i == fc_stereo) ||
         (scene->filterblock_configuration.val.i == fc_wide))
     {
+        // I am surprised this is not pan1 - as oppsoed to pan_id - so will change it
+        // pan1 -= localcopy[width_id].f;
+        // float pan2 = localcopy[pan_id].f + localcopy[width_id].f;
+        float pan2 = pan1 + localcopy[width_id].f;
         pan1 -= localcopy[width_id].f;
-        float pan2 = localcopy[pan_id].f + localcopy[width_id].f;
+
         float amp2L = amp * megapanL(pan2);
         float amp2R = amp * megapanR(pan2);
         if (Q)
@@ -1122,8 +1136,9 @@ template <bool noLFOSources> void SurgeVoice::applyModulationToLocalcopy()
             iter++;
         }
 
-        monoAftertouchSource.set_target(state.voiceChannelState->pressure);
-        timbreSource.set_target(state.voiceChannelState->timbre);
+        monoAftertouchSource.set_target(state.voiceChannelState->pressure +
+                                        noteExpressions[PRESSURE]);
+        timbreSource.set_target(state.voiceChannelState->timbre + noteExpressions[TIMBRE]);
 
         if (scene->modsource_doprocess[ms_aftertouch])
         {
@@ -1139,8 +1154,14 @@ template <bool noLFOSources> void SurgeVoice::applyModulationToLocalcopy()
     {
         // When not in MPE mode, channel aftertouch is already smoothed at scene level.
         // Do not smooth it again, force the output to the current value.
-        monoAftertouchSource.set_output(0, state.voiceChannelState->pressure);
-        // Currently timbre only works in MPE mode, so no need to do anything when not in MPE mode.
+        // This means we don't actually smooth the NE so FIXME on that
+        monoAftertouchSource.set_output(0, state.voiceChannelState->pressure +
+                                               noteExpressions[PRESSURE]);
+
+        // TimbreSource used to be ignored in non-MPE mode; now it just echose the
+        // note expression
+        timbreSource.set_target(noteExpressions[TIMBRE]);
+        timbreSource.process_block();
     }
 
     for (int i = 0; i < paramModulationCount; ++i)
@@ -1367,4 +1388,13 @@ void SurgeVoice::applyPolyphonicParamModulation(Parameter *p, double value)
         polyphonicParamModulations[idx].value = value;
         paramModulationCount++;
     }
+}
+
+void SurgeVoice::applyNoteExpression(NoteExpressionType net, float value)
+{
+    // std::cout << __func__ << _D(net) << _D(value) << std::endl;
+    if (net != UNKNOWN)
+        noteExpressions[net] = value;
+    if (net == VOLUME)
+        noteExpressions[net] = value * 4;
 }
