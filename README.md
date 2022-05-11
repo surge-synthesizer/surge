@@ -229,7 +229,7 @@ To cross-compile for aarch64, use the CMake Linux toolchain for aarch64, as show
 
 ```
 cmake -Bignore/xc64 -DCMAKE_TOOLCHAIN_FILE=cmake/linux-aarch64-ubuntu-crosscompile-toolchain.cmake -DCMAKE_BUILD_TYPE=DEBUG -GNinja
-cmake --build ignore/xc64 --config Debug --target surge-headless
+cmake --build ignore/xc64 --config Debug --target surge-testrunner
 ```
 
 Of course, that toolchain makes specific choices. You can make other choices as long as (1) you set the CMake variable
