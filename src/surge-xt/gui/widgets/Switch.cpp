@@ -24,7 +24,7 @@ namespace Surge
 namespace Widgets
 {
 
-Switch::Switch()
+Switch::Switch() : juce::Component(), WidgetBaseMixin<Switch>(this)
 {
     setRepaintsOnMouseActivity(true);
     setDescription("Switch");

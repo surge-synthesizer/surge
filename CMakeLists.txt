@@ -43,6 +43,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND UNIX AND NOT APPLE AND NOT SURGE_SKIP
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+  if (${SURGE_SANITIZE})
+    message(STATUS "Sanitizer is On" )
+  endif()
   # Any Clang or any GCC
   add_compile_options(
     -Wno-multichar
@@ -55,11 +58,13 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     $<$<AND:$<NOT:$<BOOL:${WIN32}>>,$<COMPILE_LANGUAGE:CXX>>:-fvisibility-inlines-hidden>
 
     # BP note: If you want to turn on llvm/gcc sanitize undo this and the link options below
-    # -fsanitize=address -fsanitize=undefined
+    $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=address>
+    $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=undefined>
   )
 
   add_link_options(
-    # -fsanitize=address -fsanitize=undefinec
+    $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=address>
+    $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=undefined>
   )
 
   # Enable SSE2 on x86-32 only. It's implied on x86-64 and N/A elsewhere.

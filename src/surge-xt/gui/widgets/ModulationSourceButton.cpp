@@ -30,6 +30,7 @@ namespace Surge
 namespace Widgets
 {
 ModulationSourceButton::ModulationSourceButton()
+    : juce::Component(), WidgetBaseMixin<ModulationSourceButton>(this)
 {
     setDescription("Modulator");
     setAccessible(true);

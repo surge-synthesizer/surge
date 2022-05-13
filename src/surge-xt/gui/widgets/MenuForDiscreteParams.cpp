@@ -24,7 +24,8 @@ namespace Surge
 {
 namespace Widgets
 {
-MenuForDiscreteParams::MenuForDiscreteParams() = default;
+MenuForDiscreteParams::MenuForDiscreteParams()
+    : juce::Component(), WidgetBaseMixin<MenuForDiscreteParams>(this){};
 MenuForDiscreteParams::~MenuForDiscreteParams() = default;
 
 void MenuForDiscreteParams::paint(juce::Graphics &g)

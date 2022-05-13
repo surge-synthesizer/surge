@@ -35,7 +35,7 @@ template <typename T>
 struct WidgetBaseMixin : public Surge::GUI::SkinConsumingComponent,
                          public Surge::GUI::IComponentTagValue
 {
-    WidgetBaseMixin() { asT()->setWantsKeyboardFocus(true); }
+    WidgetBaseMixin(juce::Component *c) { c->setWantsKeyboardFocus(true); }
     inline T *asT() { return static_cast<T *>(this); }
 
     uint32_t tag{0};

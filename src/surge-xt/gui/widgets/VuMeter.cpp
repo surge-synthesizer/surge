@@ -23,7 +23,7 @@ namespace Surge
 {
 namespace Widgets
 {
-VuMeter::VuMeter()
+VuMeter::VuMeter() : juce::Component(), WidgetBaseMixin<VuMeter>(this)
 {
     setAccessible(false);
     setWantsKeyboardFocus(false);

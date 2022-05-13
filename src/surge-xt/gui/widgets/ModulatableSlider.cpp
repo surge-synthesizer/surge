@@ -30,7 +30,10 @@ ModulatableSlider::MoveRateState ModulatableSlider::sliderMoveRateState =
     ModulatableSlider::MoveRateState::kUnInitialized;
 ModulatableSlider::TouchscreenMode ModulatableSlider::touchscreenMode =
     ModulatableSlider::TouchscreenMode::kUnassigned;
-ModulatableSlider::ModulatableSlider() { setRepaintsOnMouseActivity(true); }
+ModulatableSlider::ModulatableSlider() : juce::Component(), WidgetBaseMixin<ModulatableSlider>(this)
+{
+    setRepaintsOnMouseActivity(true);
+}
 
 ModulatableSlider::~ModulatableSlider() {}
 
