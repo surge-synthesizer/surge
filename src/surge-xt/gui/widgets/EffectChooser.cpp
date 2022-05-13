@@ -36,7 +36,7 @@ std::array<int, n_fx_slots> displayOrder{
     fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4,
 };
 
-EffectChooser::EffectChooser()
+EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChooser>(this)
 {
     setRepaintsOnMouseActivity(true);
     setAccessible(true);

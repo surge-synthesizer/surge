@@ -114,7 +114,7 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
     }
 };
 
-PatchSelector::PatchSelector()
+PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelector>(this)
 {
     patchDbProvider = std::make_unique<PatchDBTypeAheadProvider>();
     typeAhead = std::make_unique<Surge::Widgets::TypeAhead>("patch select", patchDbProvider.get());

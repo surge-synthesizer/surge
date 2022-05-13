@@ -33,7 +33,7 @@ struct NumberField : public juce::Component,
                      public WidgetBaseMixin<NumberField>,
                      public LongHoldMixin<NumberField>
 {
-    NumberField() : juce::Component(), WidgetBaseMixin<NumberField>() {}
+    NumberField() : juce::Component(), WidgetBaseMixin<NumberField>(this) {}
 
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }

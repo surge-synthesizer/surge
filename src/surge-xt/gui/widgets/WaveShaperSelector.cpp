@@ -18,7 +18,10 @@ using WaveshaperType = sst::waveshapers::WaveshaperType;
 std::array<std::vector<std::pair<float, float>>, (int)WaveshaperType::n_ws_types>
     WaveShaperSelector::wsCurves;
 
-WaveShaperSelector::WaveShaperSelector() {}
+WaveShaperSelector::WaveShaperSelector()
+    : juce::Component(), WidgetBaseMixin<WaveShaperSelector>(this)
+{
+}
 
 WaveShaperSelector::~WaveShaperSelector() {}
 

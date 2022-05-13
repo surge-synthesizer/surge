@@ -26,7 +26,7 @@ namespace Surge
 namespace Widgets
 {
 
-MultiSwitch::MultiSwitch()
+MultiSwitch::MultiSwitch() : juce::Component(), WidgetBaseMixin<MultiSwitch>(this)
 {
     setRepaintsOnMouseActivity(true);
     setAccessible(true);

@@ -315,7 +315,7 @@ void XMLMenuPopulator::populate()
     maxIdx = allPresets.size();
 }
 
-OscillatorMenu::OscillatorMenu()
+OscillatorMenu::OscillatorMenu() : juce::Component(), WidgetBaseMixin<OscillatorMenu>(this)
 {
     strcpy(mtype, "osc");
     setDescription("Oscillator Type");
@@ -478,7 +478,7 @@ std::unique_ptr<juce::AccessibilityHandler> OscillatorMenu::createAccessibilityH
     return std::make_unique<XMLMenuAH<OscillatorMenu>>(this);
 }
 
-FxMenu::FxMenu()
+FxMenu::FxMenu() : juce::Component(), WidgetBaseMixin<FxMenu>(this)
 {
     strcpy(mtype, "fx");
     setDescription("FX Type");

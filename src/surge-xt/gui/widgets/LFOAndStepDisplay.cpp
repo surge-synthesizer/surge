@@ -47,7 +47,8 @@ struct TimeB
     std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
 
-LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e) : guiEditor(e)
+LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
+    : juce::Component(), WidgetBaseMixin<LFOAndStepDisplay>(this), guiEditor(e)
 {
     setTitle("LFO Type And Display");
     setAccessible(true);
