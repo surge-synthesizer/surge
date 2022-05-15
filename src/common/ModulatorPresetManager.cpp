@@ -204,8 +204,12 @@ void ModulatorPreset::loadPresetFrom(const fs::path &location, SurgeStorage *s, 
     if (lfotype == lt_mseg)
     {
         auto msn = lfox->FirstChildElement("mseg");
+        bool msegSnapMem =
+            Surge::Storage::getUserDefaultValue(s, Surge::Storage::RestoreMSEGSnapFromPatch, true);
+
         if (msn)
-            s->getPatch().msegFromXMLElement(&(s->getPatch().msegs[scene][lfoid]), msn, true);
+            s->getPatch().msegFromXMLElement(&(s->getPatch().msegs[scene][lfoid]), msn,
+                                             msegSnapMem);
     }
 
     if (lfotype == lt_stepseq)

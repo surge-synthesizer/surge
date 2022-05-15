@@ -4544,7 +4544,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
     {
         if (temposync)
         {
-            auto mv = (float)std::atof(s.c_str()) / 100.0;
+            mv /= 100.0;
             auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
 
             return rmv;
@@ -4584,37 +4584,40 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
         /* modulation is displayed as:
          *
-         * d = mp - val
-         *   = a2^b(v+m) - a2^bv
-         * d/a + 2^bv = 2^b(v+m)
-         * log2( d/a + 2^bv ) = b(v + m)
-         * log2( d/a + 2^bv )/b - v = m
+         * mv = mp - val
+         *   = a2^b(v + m) - a2^bv
+         * mv / a + 2^bv = 2^b(v + m)
+         * log2(mv / a + 2^bv) = b(v + m)
+         * log2(mv / a + 2^bv) / b - v = m
          */
 
-        auto d = (float)std::atof(s.c_str());
         auto a = displayInfo.a;
         auto b = displayInfo.b;
-        auto mv = val_min.f;
-        auto l2arg = d / a + pow(2.0, b * val.f);
+        auto max_val = val_max.f;
+        auto min_val = val_min.f;
+        auto l2arg = mv / a + pow(2.0, b * val.f);
+
+        std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
+        getSemitonesOrKeys(unit);
 
         if (l2arg > 0)
         {
-            mv = log2f(l2arg) / b - val.f;
+            min_val = log2f(l2arg) / b - val.f;
         }
         else
         {
             /*
-             * d / a + 2^bv > 0
-             * d > -a 2^bv
+             * mv / a + 2^bv > 0
+             * mv > -a 2^bv
              */
             auto mind = -a * pow(2.0, b * val.f);
 
-            errMsg = fmt::format("Input can't be smaller than {:g}!", mind);
+            errMsg = fmt::format("Input can't be smaller than {:g} {}!", mind, unit);
 
             valid = false;
         }
 
-        auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+        auto rmv = min_val / (get_extended(val_max.f) - get_extended(val_min.f));
 
         return rmv;
     }
