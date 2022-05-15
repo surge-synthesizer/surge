@@ -332,9 +332,9 @@ bool MultiSwitch::keyPressed(const juce::KeyPress &key)
     return true;
 }
 
-struct MultiSwitchRadioButton : public juce::Component
+template <juce::AccessibilityRole ROLE> struct MultiSwitchAccOverlayButton : public juce::Component
 {
-    MultiSwitchRadioButton(MultiSwitch *s, float value, int ival, const std::string &label)
+    MultiSwitchAccOverlayButton(MultiSwitch *s, float value, int ival, const std::string &label)
         : mswitch(s), val(value), ival(ival)
     {
         setDescription(label);
@@ -350,9 +350,9 @@ struct MultiSwitchRadioButton : public juce::Component
 
     struct RBAH : public juce::AccessibilityHandler
     {
-        explicit RBAH(MultiSwitchRadioButton *b, MultiSwitch *s)
+        explicit RBAH(MultiSwitchAccOverlayButton *b, MultiSwitch *s)
             : button(b), mswitch(s), juce::AccessibilityHandler(
-                                         *b, juce::AccessibilityRole::radioButton,
+                                         *b, ROLE,
                                          juce::AccessibilityActions()
                                              .addAction(juce::AccessibilityActionType::press,
                                                         [this]() { this->press(); })
@@ -386,14 +386,14 @@ struct MultiSwitchRadioButton : public juce::Component
         }
 
         MultiSwitch *mswitch;
-        MultiSwitchRadioButton *button;
+        MultiSwitchAccOverlayButton *button;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAH);
     };
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler()
     {
         return std::make_unique<RBAH>(this, mswitch);
     }
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchRadioButton);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchAccOverlayButton);
 };
 
 void MultiSwitch::setupAccessibility()
@@ -430,11 +430,23 @@ void MultiSwitch::setupAccessibility()
         {
             float val = ((float)sel) / (rows * columns - 1);
             auto title = sge->getDisplayForTag(getTag(), true, val);
-            auto ac = std::make_unique<MultiSwitchRadioButton>(this, val, sel, title);
-
+            std::unique_ptr<juce::Component> ac;
+            if (isAlwaysAccessibleMomentary())
+            {
+                title = getTitle().toStdString() + " " + title;
+                ac = std::make_unique<MultiSwitchAccOverlayButton<juce::AccessibilityRole::button>>(
+                    this, val, sel, title);
+            }
+            else
+            {
+                ac = std::make_unique<
+                    MultiSwitchAccOverlayButton<juce::AccessibilityRole::radioButton>>(this, val,
+                                                                                       sel, title);
+            }
             sel++;
             ac->getProperties().set("ControlGroup", (int)(c * columns + rows));
             ac->setBounds(juce::Rectangle<int>(c * dc, r * dr, dc, dr));
+            ac->setAccessible(true);
             addAndMakeVisible(*ac);
             selectionComponents.push_back(std::move(ac));
         }
@@ -455,6 +467,9 @@ juce::Component *MultiSwitch::getCurrentAccessibleSelectionComponent()
 
 void MultiSwitch::updateAccessibleStateOnUserValueChange()
 {
+    if (isAlwaysAccessibleMomentary())
+        return;
+
     if (getIntegerValue() < 0 || getIntegerValue() >= selectionComponents.size())
     {
         return;

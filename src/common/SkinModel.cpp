@@ -50,6 +50,8 @@ Component MultiSwitch =
         .withProperty(Component::DRAGGABLE_HSWITCH, {"draggable"},
                       {"Is the switch draggable as a slider via mouse/touch or not. Valid values: "
                        "true, false"})
+        .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, {"accessible_as_buttons"},
+                      {"Is the accesible display buttons (true) or radio buttons (false, def)"})
         .withProperty(Component::HOVER_IMAGE, {"hover_image"},
                       {"Hover image of the switch - required if you "
                        "set the base image and want feedback on mouse hover"})
@@ -83,10 +85,13 @@ Component Slider =
         .withProperty(Component::HIDE_SLIDER_LABEL, {"hide_slider_label"},
                       {"Hides the parameter name label"});
 
-Component Switch = Component("CSwitchControl")
-                       .withAlias("Switch")
-                       .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
-                                     {"Base image of the switch"});
+Component Switch =
+    Component("CSwitchControl")
+        .withAlias("Switch")
+        .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
+                      {"Base image of the switch"})
+        .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, {"accessible_as_buttons"},
+                      {"Is the accesible display buttons (true) or radio buttons (false, def)"});
 
 Component FilterSelector =
     Component("FilterSelector")
@@ -496,7 +501,8 @@ Connector lfo_title_label =
     Connector("lfo.title", 6, 498, 11, 71, Components::Custom, Connector::LFO_LABEL);
 Connector lfo_presets =
     Connector("lfo.presets", 6, 484, 13, 11, Components::Switch, Connector::LFO_MENU)
-        .withBackground(IDB_LFO_PRESET_MENU);
+        .withBackground(IDB_LFO_PRESET_MENU)
+        .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, true);
 
 Connector lfo_main_panel = Connector("lfo.main.panel", 28, 478, Components::Group);
 Connector rate = Connector("lfo.rate", 0, 0).asHorizontal().inParent("lfo.main.panel");
@@ -515,7 +521,8 @@ Connector shape = Connector("lfo.shape", 235, 480, 359, 84, Components::LFODispl
 
 Connector mseg_editor =
     Connector("lfo.mseg_editor", 597, 484, 11, 11, Components::Switch, Connector::MSEG_EDITOR_OPEN)
-        .withBackground(IDB_LFO_MSEG_EDIT);
+        .withBackground(IDB_LFO_MSEG_EDIT)
+        .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, true);
 
 Connector lfo_eg_panel = Connector("lfo.envelope.panel", 616, 493, Components::Group);
 Connector delay = Connector("lfo.delay", 0, 0).inParent("lfo.envelope.panel");
@@ -548,15 +555,18 @@ Connector patch_jog =
 
 Connector action_undo =
     Connector("controls.action.undo", 433, 42, 16, 12, Components::Switch, Connector::ACTION_UNDO)
-        .withBackground(IDB_UNDO_BUTTON);
+        .withBackground(IDB_UNDO_BUTTON)
+        .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, true);
 Connector action_redo =
     Connector("controls.action.redo", 448, 42, 16, 12, Components::Switch, Connector::ACTION_REDO)
-        .withBackground(IDB_REDO_BUTTON);
+        .withBackground(IDB_REDO_BUTTON)
+        .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, true);
 
 Connector patch_save = Connector("controls.patch.save", 510, 42, 37, 12, Components::MultiSwitch,
                                  Connector::SAVE_PATCH)
                            .withHSwitch2Properties(IDB_SAVE_PATCH, 1, 1, 1)
-                           .withProperty(Component::DRAGGABLE_HSWITCH, false);
+                           .withProperty(Component::DRAGGABLE_HSWITCH, false)
+                           .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, true);
 
 Connector status_panel = Connector("controls.status.panel", 562, 12, Components::Group);
 Connector status_mpe =

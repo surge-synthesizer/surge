@@ -63,6 +63,8 @@ struct ModulatableSlider : public juce::Component,
     virtual void setIsLightStyle(bool b) { isLightStyle = b; }
     bool isLightStyle{false};
 
+    bool initiatedChange{false};
+
     /**
      * Vertical sliders have smaller vertical footprints in the LFO region, as a remnant from
      * the classic skin. Support the option of intent here even though subclasses may do nothing

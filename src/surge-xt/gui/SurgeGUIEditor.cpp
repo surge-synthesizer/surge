@@ -1536,17 +1536,20 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_analyzewaveshape);
             q->setValue(isAnyOverlayPresent(WAVESHAPER_ANALYZER) ? 1 : 0);
-            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze Waveshape",
-                                                        "Open");
-
+            // setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze
+            // Waveshape",
+            //                                             "Open");
+            //  This is a purely visual representation so dont show the button
+            q->asJuceComponent()->setAccessible(false);
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::ANALYZE_FILTERS:
         {
             auto q = layoutComponentForSkin(skinCtrl, tag_analyzefilters);
             q->setValue(isAnyOverlayPresent(FILTER_ANALYZER) ? 1 : 0);
-            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze Filters",
-                                                        "Open");
+            // setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "Analyze Filters",
+            //                                             "Open");
+            q->asJuceComponent()->setAccessible(false);
 
             break;
         }
@@ -5373,7 +5376,21 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         param[p->id] = hs.get();
 
-        addAndMakeVisibleWithTracking(frame->getControlGroupLayer(p->ctrlgroup), *hs);
+        auto cgl = frame->getControlGroupLayer(p->ctrlgroup);
+
+        /*
+         * wsunit is its own thing and since there's only one the controlgroup
+         * is global (grossly) not filter since filter has one-per-filter in the entries
+         * or at least thats how it has been forever, so hack here and reorg it inxt2
+         */
+        if (p->id == synth->storage.getPatch().scene[0].wsunit.drive.id ||
+            p->id == synth->storage.getPatch().scene[0].wsunit.type.id ||
+            p->id == synth->storage.getPatch().scene[1].wsunit.drive.id ||
+            p->id == synth->storage.getPatch().scene[1].wsunit.type.id)
+        {
+            cgl = frame->getControlGroupLayer(cg_FILTER);
+        }
+        addAndMakeVisibleWithTracking(cgl, *hs);
         juceSkinComponents[skinCtrl->sessionid] = std::move(hs);
 
         return dynamic_cast<Surge::GUI::IComponentTagValue *>(
@@ -5400,8 +5417,12 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FRAME_OFFSET, "0");
             auto drgb = currentSkin->propertyValue(skinCtrl,
                                                    Surge::Skin::Component::DRAGGABLE_HSWITCH, "1");
+            auto accAsBut = currentSkin->propertyValue(
+                skinCtrl, Surge::Skin::Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, "0");
+            // std::cout << skinCtrl->ui_id << " accAsBut = " << accAsBut << std::endl;
             auto hsw = componentForSkinSession<Surge::Widgets::MultiSwitch>(skinCtrl->sessionid);
             hsw->setStorage(&(synth->storage));
+            hsw->setIsAlwaysAccessibleMomentary(std::atoi(accAsBut.c_str()));
             hsw->setRows(std::atoi(rows.c_str()));
             hsw->setColumns(std::atoi(cols.c_str()));
             hsw->setTag(tag);
@@ -5531,6 +5552,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             auto hsw = componentForSkinSession<Surge::Widgets::Switch>(skinCtrl->sessionid);
             hsw->setStorage(&(synth->storage));
+            auto accAsBut = currentSkin->propertyValue(
+                skinCtrl, Surge::Skin::Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, "0");
+            hsw->setIsAlwaysAccessibleMomentary(std::atoi(accAsBut.c_str()));
 
             if (p)
             {

@@ -187,8 +187,9 @@ struct SwitchAH : public juce::AccessibilityHandler
     explicit SwitchAH(Switch *s)
         : mswitch(s), juce::AccessibilityHandler(
                           *s,
-                          s->isMultiIntegerValued() ? juce::AccessibilityRole::button
-                                                    : juce::AccessibilityRole::toggleButton,
+                          (s->isMultiIntegerValued() || s->isAlwaysAccessibleMomentary())
+                              ? juce::AccessibilityRole::button
+                              : juce::AccessibilityRole::toggleButton,
                           juce::AccessibilityActions()
                               .addAction(juce::AccessibilityActionType::showMenu,
                                          [this]() { this->showMenu(); })

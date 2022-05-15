@@ -91,6 +91,8 @@ struct MenuCenteredBoldLabel : juce::PopupMenu::CustomComponent
 {
     MenuCenteredBoldLabel(const std::string &s) : label(s), juce::PopupMenu::CustomComponent(true)
     {
+        setAccessible(true);
+        setTitle(label);
     }
     void getIdealSize(int &idealWidth, int &idealHeight) override;
     void paint(juce::Graphics &g) override;
