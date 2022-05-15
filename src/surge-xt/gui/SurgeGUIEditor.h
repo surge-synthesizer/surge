@@ -446,10 +446,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void queuePatchFileLoad(const std::string &file)
     {
-        undoManager()->pushPatch();
-        strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
-        strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
-        synth->has_patchid_file = true;
+        {
+            std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
+            undoManager()->pushPatch();
+            strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
+            synth->has_patchid_file = true;
+        }
         synth->processAudioThreadOpsWhenAudioEngineUnavailable();
     }
 

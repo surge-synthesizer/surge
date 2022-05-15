@@ -374,7 +374,7 @@ class alignas(16) SurgeSynthesizer
     bool refresh_overflow = false;
     float refresh_ctrl_queue_value[8];
     bool process_input;
-    bool has_patchid_file;
+    std::atomic<bool> has_patchid_file;
     char patchid_file[FILENAME_MAX];
     std::atomic<int> patchid_queue;
 

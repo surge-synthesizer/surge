@@ -375,6 +375,13 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
 void SurgeSynthesizer::enqueuePatchForLoad(const void *data, int size)
 {
     {
+        // If we are forcing values on, we don't want to do any enqueued loads
+        // or want to wait for them to complete
+        std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
+        has_patchid_file = false;
+        patchid_queue = -1;
+    }
+    {
         std::lock_guard<std::mutex> g(rawLoadQueueMutex);
 
         enqueuedLoadData.reset(new char[size]);
@@ -390,6 +397,13 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
     bool expected = true;
     if (rawLoadEnqueued.compare_exchange_weak(expected, true) && expected)
     {
+        {
+            // If we are forcing values on, we don't want to do any enqueued loads
+            // or want to wait for them to complete
+            std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
+            has_patchid_file = false;
+            patchid_queue = -1;
+        }
         std::lock_guard<std::mutex> g(rawLoadQueueMutex);
         rawLoadEnqueued = false;
         loadRaw(enqueuedLoadData.get(), enqueuedLoadSize);
