@@ -22,6 +22,7 @@
 #include "LuaSupport.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/MenuCustomComponents.h"
+#include <fmt/core.h>
 
 namespace Surge
 {
@@ -253,6 +254,31 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
                 g.fillAll(skin->getColor(Colors::FormulaEditor::Debugger::Row));
         }
 
+        std::string getText(int rowNumber, int columnId)
+        {
+            auto r = rows[rowNumber];
+
+            if (columnId == 1)
+            {
+                return r.label;
+            }
+            else if (columnId == 2)
+            {
+                if (!r.hasValue)
+                {
+                    return "";
+                }
+                else if (auto fv = std::get_if<float>(&r.value))
+                {
+                    return fmt::format("{:.3f}", *fv);
+                }
+                else if (auto sv = std::get_if<std::string>(&r.value))
+                {
+                    return *sv;
+                }
+            }
+            return "";
+        }
         void paintCell(juce::Graphics &g, int rowNumber, int columnId, int w, int h,
                        bool rowIsSelected) override
         {
@@ -270,27 +296,58 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             if (columnId == 1)
             {
                 b = b.withTrimmedLeft(r.depth * 10);
-                g.drawText(r.label, b, juce::Justification::centredLeft);
+                g.drawText(getText(rowNumber, columnId), b, juce::Justification::centredLeft);
             }
             else if (columnId == 2)
             {
-                if (!r.hasValue)
-                {
-                }
-                else if (auto fv = std::get_if<float>(&r.value))
-                {
-                    g.drawText(std::to_string(*fv), b, juce::Justification::centredRight);
-                }
-                else if (auto sv = std::get_if<std::string>(&r.value))
-                {
-                    g.drawText(*sv, b, juce::Justification::centredRight);
-                }
+                g.drawText(getText(rowNumber, columnId), b, juce::Justification::centredRight);
             }
             else
             {
                 g.setColour(juce::Colours::red);
                 g.fillRect(b);
             }
+        }
+
+        struct DebugCell : juce::Label
+        {
+            int row{0}, col{0};
+            DebugDataModel *model{nullptr};
+            DebugCell(DebugDataModel *m) : model(m) {}
+            void paint(juce::Graphics &g) override
+            {
+                model->paintCell(g, row, col, getWidth(), getHeight(), false);
+            }
+
+            void updateAccessibility()
+            {
+                setAccessible(true);
+                setText(model->getText(row, col), juce::dontSendNotification);
+            }
+
+            JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DebugCell);
+        };
+        friend class DebugCell;
+
+        Component *refreshComponentForCell(int rowNumber, int columnId, bool isRowSelected,
+                                           Component *existingComponentToUpdate) override
+        {
+            DebugCell *cell{nullptr};
+            if (existingComponentToUpdate)
+            {
+                cell = dynamic_cast<DebugCell *>(existingComponentToUpdate);
+                if (!cell)
+                    delete existingComponentToUpdate;
+            }
+            if (!cell)
+            {
+                cell = new DebugCell(this);
+            }
+            cell->row = rowNumber;
+            cell->col = columnId;
+            cell->updateAccessibility();
+
+            return cell;
         }
     };
 

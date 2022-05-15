@@ -107,6 +107,10 @@ struct MultiSwitch : public juce::Component,
     void setHoverSwitchDrawable(SurgeImage *d) { hoverSwitchD = d; }
     void setHoverOnSwitchDrawable(SurgeImage *d) { hoverOnSwitchD = d; }
 
+    bool iam{false};
+    bool isAlwaysAccessibleMomentary() const { return iam; }
+    void setIsAlwaysAccessibleMomentary(bool b) { iam = b; }
+
     void setupAccessibility();
     std::vector<std::unique_ptr<juce::Component>> selectionComponents;
     juce::Component *getCurrentAccessibleSelectionComponent() override;

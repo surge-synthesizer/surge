@@ -130,6 +130,7 @@ std::string Component::propertyEnumToString(Properties p)
         PN(FRAME_OFFSET)
         PN(NUMBERFIELD_CONTROLMODE)
         PN(DRAGGABLE_HSWITCH)
+        PN(ACCESSIBLE_AS_MOMENTARY_BUTTON)
         PN(BACKGROUND_COLOR)
         PN(FRAME_COLOR)
 
@@ -245,7 +246,8 @@ Connector &Connector::asJogPlusMinus() noexcept
     payload->w = 32;
     payload->h = 12;
     return withHSwitch2Properties(IDB_PREVNEXT_JOG, 2, 1, 2)
-        .withProperty(Component::DRAGGABLE_HSWITCH, false);
+        .withProperty(Component::DRAGGABLE_HSWITCH, false)
+        .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, true);
 }
 
 Connector &Connector::asStackedGroupLeader() { return *this; }

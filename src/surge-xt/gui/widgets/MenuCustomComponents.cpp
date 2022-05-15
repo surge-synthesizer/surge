@@ -206,7 +206,7 @@ void MenuCenteredBoldLabel::paint(juce::Graphics &g)
 
 void MenuCenteredBoldLabel::addToMenu(juce::PopupMenu &m, const std::string label)
 {
-    m.addCustomItem(-1, std::make_unique<MenuCenteredBoldLabel>(label));
+    m.addCustomItem(-1, std::make_unique<MenuCenteredBoldLabel>(label), nullptr, label);
 }
 
 //==============================================================================

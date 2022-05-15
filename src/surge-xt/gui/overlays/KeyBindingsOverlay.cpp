@@ -66,12 +66,20 @@ struct KeyBindingsListRow : public juce::Component
         reset->setStorage(editor->getStorage());
         reset->setAccessible(true);
         reset->onClick = [this]() { resetToDefault(); };
+        reset->setTitle(std::string("Reset ") + Surge::GUI::keyboardActionDescription(action));
+        reset->setDescription(std::string("Reset ") +
+                              Surge::GUI::keyboardActionDescription(action));
+
         addAndMakeVisible(*reset);
 
         learn = std::make_unique<Surge::Widgets::SelfDrawToggleButton>("Learn");
         learn->setSkin(editor->currentSkin);
         learn->setStorage(editor->getStorage());
         learn->setAccessible(true);
+        learn->setTitle(std::string("Learn ") + Surge::GUI::keyboardActionDescription(action));
+        learn->setDescription(std::string("Learn ") +
+                              Surge::GUI::keyboardActionDescription(action));
+
         learn->onToggle = [this]() {
             if (learn->getValue() > 0.5)
             {

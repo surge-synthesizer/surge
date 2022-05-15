@@ -497,6 +497,8 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
             getOverlayWrapperIfOpen(olt)->doTearOut();
         }
     }
+
+    getOverlayIfOpen(olt)->grabKeyboardFocus();
 }
 void SurgeGUIEditor::closeOverlay(OverlayTags olt)
 {

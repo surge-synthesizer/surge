@@ -130,6 +130,7 @@ struct Component
         FRAMES,
         FRAME_OFFSET,
         DRAGGABLE_HSWITCH,
+        ACCESSIBLE_AS_MOMENTARY_BUTTON,
 
         NUMBERFIELD_CONTROLMODE,
 

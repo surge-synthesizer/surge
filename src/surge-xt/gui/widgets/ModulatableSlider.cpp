@@ -485,6 +485,7 @@ void ModulatableSlider::mouseDrag(const juce::MouseEvent &event)
 
 void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
 {
+    initiatedChange = false;
     enqueueFutureInfowindow(SurgeGUIEditor::InfoQAction::CANCEL);
     mouseDownFloatPosition = event.position;
 
@@ -505,6 +506,7 @@ void ModulatableSlider::mouseDown(const juce::MouseEvent &event)
     modValueOnMouseDown = modValue;
     lastDistance = 0.f;
     editTypeWas = NOEDIT;
+    initiatedChange = true;
     notifyBeginEdit();
     showInfowindow(isEditingModulation);
 }
@@ -548,7 +550,9 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
 
     if (editTypeWas != DRAG)
     {
-        notifyEndEdit();
+        if (initiatedChange)
+            notifyEndEdit();
+        initiatedChange = false;
         editTypeWas = NOEDIT;
         return;
     }

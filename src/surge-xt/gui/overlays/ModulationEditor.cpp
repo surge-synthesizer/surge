@@ -1496,6 +1496,7 @@ void ModulationSideControls::doAdd()
     addSourceW->setLabels({"Select Source"});
     addTargetW->setLabels({"Select Target"});
     addTargetW->setEnabled(false);
+    addSourceW->grabKeyboardFocus();
     repaint();
 }
 

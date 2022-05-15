@@ -47,6 +47,10 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>, public L
     bool isMultiIntegerValued() const { return iit; };
     void setIsMultiIntegerValued(bool b) { iit = b; };
 
+    bool iam{false};
+    bool isAlwaysAccessibleMomentary() const { return iam; }
+    void setIsAlwaysAccessibleMomentary(bool b) { iam = b; }
+
     int iv{0}, im{1};
     void setIntegerValue(int i) { iv = i; }
     void setIntegerMax(int i) { im = i; }
