@@ -80,7 +80,7 @@ struct XMLMenuPopulator
     };
     virtual void scanExtraPresets() {}
     std::vector<Item> allPresets;
-    virtual void loadByIndex(int idx)
+    virtual void loadByIndex(const std::string &name, int idx)
     {
         auto q = allPresets[idx];
         if (q.xmlElement)
@@ -107,7 +107,7 @@ struct XMLMenuPopulator
             if (idx >= (int)allPresets.size())
                 idx = 0;
         } while (allPresets[idx].isSeparator || allPresets[idx].isSectionHeader);
-        loadByIndex(idx);
+        loadByIndex(allPresets[idx].name, idx);
     }
     int maxIdx;
     char mtype[64];
@@ -228,7 +228,7 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void pasteFX();
     void saveFX();
 
-    void loadByIndex(int index) override;
+    void loadByIndex(const std::string &name, int index) override;
     void loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p);
 
     SurgeImage *bg{}, *bgHover{};

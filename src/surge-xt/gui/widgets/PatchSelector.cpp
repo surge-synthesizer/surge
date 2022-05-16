@@ -26,6 +26,7 @@
 #include "fmt/core.h"
 #include "SurgeJUCEHelpers.h"
 #include "AccessibleHelpers.h"
+#include "SurgeJUCEHelpers.h"
 
 namespace Surge
 {
@@ -283,7 +284,8 @@ void PatchSelector::mouseEnter(const juce::MouseEvent &)
     if (tooltipCountdown < 0)
     {
         tooltipCountdown = 5;
-        juce::Timer::callAfterDelay(100, [this]() { shouldTooltip(); });
+        juce::Timer::callAfterDelay(100, Surge::GUI::makeSafeCallback<PatchSelector>(
+                                             this, [](auto *that) { that->shouldTooltip(); }));
     }
 }
 
@@ -426,7 +428,8 @@ void PatchSelector::shouldTooltip()
     }
     else
     {
-        juce::Timer::callAfterDelay(200, [this]() { shouldTooltip(); });
+        juce::Timer::callAfterDelay(200, Surge::GUI::makeSafeCallback<PatchSelector>(
+                                             this, [](auto *that) { that->shouldTooltip(); }));
     }
 }
 

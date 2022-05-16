@@ -107,10 +107,10 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
             {
                 auto f = ss->steps[step];
                 auto delt = 0.05;
-                if (isShift)
-                    delt = 0.01;
                 if (isControl)
-                    delt = (isUnipolar() ? 1.0 : 0.5) / 12.0;
+                    delt = 0.01;
+                if (isShift)
+                    delt = 1.0 / 12.0;
                 if (dir < 0)
                     delt *= -1;
 
