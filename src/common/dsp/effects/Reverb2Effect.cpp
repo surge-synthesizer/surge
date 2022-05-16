@@ -9,7 +9,7 @@ Reverb2Effect::allpass::allpass()
     memset(_data, 0, MAX_ALLPASS_LEN * sizeof(float));
 }
 
-void Reverb2Effect::allpass::setLen(int len) { _len = len; }
+void Reverb2Effect::allpass::setLen(int len) { _len = std::clamp(len, 0, MAX_ALLPASS_LEN - 1); }
 
 float Reverb2Effect::allpass::process(float in, float coeff)
 {
@@ -29,7 +29,7 @@ Reverb2Effect::delay::delay()
     memset(_data, 0, MAX_DELAY_LEN * sizeof(float));
 }
 
-void Reverb2Effect::delay::setLen(int len) { _len = len; }
+void Reverb2Effect::delay::setLen(int len) { _len = std::clamp(len, 0, MAX_DELAY_LEN - 1); }
 
 float Reverb2Effect::delay::process(float in, int tap1, float &tap_out1, int tap2, float &tap_out2,
                                     int modulation)
@@ -81,6 +81,9 @@ int msToSamples(float ms, float scale, float samplerate)
 {
     float a = samplerate * ms * 0.001f;
     float b = a * scale;
+    // these are clamped out above
+    // assert( b < Reverb2Effect::MAX_ALLPASS_LEN);
+    // assert( b < Reverb2Effect::MAX_DELAY_LEN);
     return (int)(b);
 }
 

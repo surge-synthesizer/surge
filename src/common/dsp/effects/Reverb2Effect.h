@@ -24,12 +24,13 @@
 
 class Reverb2Effect : public Effect
 {
+    // These are set to make sure we have delay lengths up to 384k
     static const int NUM_BLOCKS = 4, NUM_INPUT_ALLPASSES = 4, NUM_ALLPASSES_PER_BLOCK = 2,
-                     MAX_ALLPASS_LEN = 16384, MAX_DELAY_LEN = 16384,
+                     MAX_ALLPASS_LEN = 16384 * 8, MAX_DELAY_LEN = 16384 * 8,
                      DELAY_LEN_MASK = MAX_DELAY_LEN - 1, DELAY_SUBSAMPLE_BITS = 8,
                      DELAY_SUBSAMPLE_RANGE = (1 << DELAY_SUBSAMPLE_BITS),
-                     PREDELAY_BUFFER_SIZE = 48000 * 4 * 4, // max sample rate is 48000 * 4 probably
-        PREDELAY_BUFFER_SIZE_LIMIT = 48000 * 4 * 3;        // allow for one second of diffusion
+                     PREDELAY_BUFFER_SIZE = 48000 * 8 * 4, // max sample rate is 48000 * 8 probably
+        PREDELAY_BUFFER_SIZE_LIMIT = 48000 * 8 * 3;        // allow for one second of diffusion
 
     class allpass
     {

@@ -231,3 +231,37 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         confirmDestinations(surge, {{0, 3}, {1, 2}});
     }
 }
+
+TEST_CASE("High Samplerate Reverb2", "[fx]")
+{
+    SECTION("Make Reverb2")
+    {
+        auto surge = Surge::Headless::createSurge(48000 * 32);
+        REQUIRE(surge);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        auto *pt = &(surge->storage.getPatch().fx[0].type);
+        auto awv = 1.f * fxt_reverb2 / (pt->val_max.i - pt->val_min.i);
+
+        auto did = surge->idForParameter(pt);
+        surge->setParameter01(did, awv, false);
+
+        for (int i = 0; i < 10; ++i)
+        {
+            surge->process();
+        }
+
+        surge->playNote(0, 60, 127, 0);
+        for (int i = 0; i < 100; ++i)
+        {
+            surge->process();
+        }
+        surge->releaseNote(0, 60, 0);
+        for (int i = 0; i < 1000; ++i)
+        {
+            surge->process();
+        }
+    }
+}
