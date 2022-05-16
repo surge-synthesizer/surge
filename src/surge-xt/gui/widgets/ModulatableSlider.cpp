@@ -758,7 +758,7 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
         return true;
     }
 
-    float dv{0.05};
+    float dv = 1.0 / range;
     switch (action)
     {
     case Increase:
@@ -789,6 +789,7 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
 
     if (isEditingModulation)
     {
+        // Value is PM1
         if (action == Increase || action == Decrease)
             modValue = limitpm1(modValue + dv);
         else if (action == ToMax)
@@ -798,12 +799,13 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
     }
     else
     {
+        // Value is 01
         if (action == Increase || action == Decrease)
             value = limit01(value + dv);
         else if (action == ToMax)
             value = 1;
         else if (action == ToMin)
-            value = -1;
+            value = 0;
     }
 
     notifyBeginEdit();

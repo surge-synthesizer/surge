@@ -259,7 +259,7 @@ void XMLMenuPopulator::populate()
                 case FACPS:
                 {
                     auto idx = c->idx;
-                    m.addItem(c->name, [host, idx]() { host->loadByIndex(idx); });
+                    m.addItem(c->name, [host, idx, n = c->name]() { host->loadByIndex(n, idx); });
                 }
                 break;
                 case USPS:
@@ -271,7 +271,7 @@ void XMLMenuPopulator::populate()
                         m.addSectionHeader("USER PRESETS");
                     }
                     auto idx = c->idx;
-                    m.addItem(c->name, [host, idx]() { host->loadByIndex(idx); });
+                    m.addItem(c->name, [host, n = c->name, idx]() { host->loadByIndex(n, idx); });
                 }
                 break;
                 case SEP:
@@ -766,7 +766,7 @@ void FxMenu::scanExtraPresets()
     }
 }
 
-void FxMenu::loadByIndex(int index)
+void FxMenu::loadByIndex(const std::string &name, int index)
 {
     auto q = allPresets[index];
     if (q.xmlElement)
@@ -780,6 +780,12 @@ void FxMenu::loadByIndex(int index)
     selectedIdx = index;
     if (getControlListener())
         getControlListener()->valueChanged(asControlValueInterface());
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    if (sge)
+    {
+        auto announce = std::string("Loaded FX Preset  ") + name;
+        sge->enqueueAccessibleAnnouncement(announce);
+    }
     repaint();
 }
 

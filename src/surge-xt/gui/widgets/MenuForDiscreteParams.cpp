@@ -346,7 +346,8 @@ float MenuForDiscreteParams::nextValueInOrder(float v, int inc)
 
 std::unique_ptr<juce::AccessibilityHandler> MenuForDiscreteParams::createAccessibilityHandler()
 {
-    return std::make_unique<DiscreteAH<MenuForDiscreteParams, juce::AccessibilityRole::comboBox>>(
+    // Why a slider? combo box announces wrong
+    return std::make_unique<DiscreteAH<MenuForDiscreteParams, juce::AccessibilityRole::slider>>(
         this);
 }
 

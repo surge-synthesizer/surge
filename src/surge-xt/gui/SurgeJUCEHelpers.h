@@ -33,6 +33,15 @@ inline std::function<void(int)> makeAsyncCallback(T *that, std::function<void(T 
     };
 }
 
+template <typename T>
+inline std::function<void()> makeSafeCallback(T *that, std::function<void(T *)> cb)
+{
+    return [safethat = juce::Component::SafePointer<T>(that), cb]() {
+        if (safethat)
+            cb(safethat);
+    };
+}
+
 template <typename T> inline std::function<void(int)> makeEndHoverCallback(T *that)
 {
     return [safethat = juce::Component::SafePointer<T>(that)](int x) {
