@@ -1235,7 +1235,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             char txt[TXT_SIZE], txt2[512];
             p->get_display(txt);
-            snprintf(txt2, 512, "%s: %s", Surge::GUI::toOSCase("Edit Value").c_str(), txt);
+
+            if (!p->temposync)
+            {
+                snprintf(txt2, 512, "%s: %s", Surge::GUI::toOSCase("Edit Value").c_str(), txt);
+            }
+            else
+            {
+                snprintf(txt2, 512, "%s", txt);
+            }
 
             if (p->valtype == vt_float)
             {
