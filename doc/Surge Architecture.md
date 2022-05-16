@@ -7,8 +7,8 @@ and works. This is not a developer how-to. That information is covered in [our D
 document for our future selves**. As such, it is rather casual and incomplete now. Sorry!
 
 * [Code Layout](#code-layout)
-* [SurgeStorage, Parameter and SurgeSynthesizer](#parameter-and-surge-synthesizer)
-* [SurgeGUIEditor](#surgegui)
+* [SurgeStorage, Parameter and SurgeSynthesizer](#surgestorage-parameter-and-surgesynthesizer)
+* [SurgeGUIEditor](#surgeguieditor)
 * [Voices and MPE](#voices-and-mpe)
 * [DSP](#dsp)
 * [Headless](#headless)

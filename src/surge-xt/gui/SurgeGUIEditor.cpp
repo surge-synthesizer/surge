@@ -2808,9 +2808,8 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
         juce::URL(fmt::format("{}feedback", stringWebsite)).launchInDefaultBrowser();
     });
 
-    settingsMenu.addItem(Surge::GUI::toOSCase("Read the Code..."), []() {
-        juce::URL(fmt::format("{}surge", stringRepository)).launchInDefaultBrowser();
-    });
+    settingsMenu.addItem(Surge::GUI::toOSCase("Read the Code..."),
+                         []() { juce::URL(stringRepository).launchInDefaultBrowser(); });
 
     settingsMenu.addItem(Surge::GUI::toOSCase("Download Additional Content..."), []() {
         juce::URL(fmt::format("{}surge-synthesizer.github.io/wiki/Additional-Content",
