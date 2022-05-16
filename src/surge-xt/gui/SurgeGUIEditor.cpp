@@ -6204,6 +6204,8 @@ void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderM
         fxPresetName[source] = "";
 
     synth->reorderFx(source, target, m);
+    // the effect chooser caches the bitmask so reset it after a swap
+    effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
 }
 
 void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)

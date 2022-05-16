@@ -4730,6 +4730,31 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         fx_reload[source] = true;
     }
 
+    // Finally deal with the bitmask
+    auto startingBitmask = storage.getPatch().fx_disable.val.i;
+    auto sourceBitmask = (startingBitmask & (1 << source)) ? 1 : 0;
+    auto targetBitmask = (startingBitmask & (1 << target)) ? 1 : 0;
+
+    if (m == FXReorderMode::SWAP)
+    {
+        // target to source and source to target
+        startingBitmask = startingBitmask & ~(1 << source) & ~(1 << target);
+        startingBitmask = startingBitmask | (sourceBitmask << target) | (targetBitmask << source);
+    }
+    else if (m == FXReorderMode::MOVE)
+    {
+        // source bitmask goes back to off
+        startingBitmask =
+            (startingBitmask & ~(1 << source) & ~(1 << target)) | (sourceBitmask << target);
+    }
+    else
+    {
+        // It's a copy
+        startingBitmask = (startingBitmask & ~(1 << target)) | (sourceBitmask << target);
+    }
+    storage.getPatch().fx_disable.val.i = startingBitmask;
+    fx_suspend_bitmask = startingBitmask;
+
     fx_reload[target] = true;
     load_fx_needed = true;
     refresh_editor = true;
