@@ -331,7 +331,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         }
 
         pt->setEnclosingParentPosition(p);
-        pt->setEnclosingParentTitle("Waveshaper Preview");
+        pt->setEnclosingParentTitle("Waveshaper Analysis");
         pt->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
         pt->defaultLocation = dl;
         pt->setCanMoveAround(std::make_pair(true, Surge::Storage::WSAnalysisOverlayLocation));

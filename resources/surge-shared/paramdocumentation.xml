@@ -28,7 +28,8 @@
   <special id="lfo-presets" help_url="#lfo-presets"/>
   <special id="fx-selector" help_url="#effect-unit-selector"/>
   <special id="fx-presets" help_url="#effect-and-preset-picker"/>
-  <special id="waveshaper-preview" help_url="#waveshaper"/>
+  <special id="filter-analysis" help_url="#filter-controls"/>
+  <special id="waveshaper-analysis" help_url="#waveshaper"/>
   <special id="alias-shape" help_url="#shape"/>
   <special id="action-history" help_url="#action-history"/>
 
