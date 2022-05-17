@@ -73,6 +73,7 @@ struct UndoManagerImpl
     {
         int paramId;
         std::string name;
+        std::string formattedValue;
         bool temposync, absolute, deactivated, extend_range, deform_type;
         bool porta_constrate, porta_gliss, porta_retrigger;
         int porta_curve;
@@ -271,7 +272,7 @@ struct UndoManagerImpl
     {
         if (auto pa = std::get_if<UndoParam>(&a))
         {
-            return fmt::format("Param[id={},val.f={},val.i={}]", pa->paramId, pa->val.f, pa->val.i);
+            return fmt::format("Parameter {} : {}", pa->name, pa->formattedValue);
         }
         if (auto pa = std::get_if<UndoModulation>(&a))
         {
@@ -281,8 +282,8 @@ struct UndoManagerImpl
         }
         if (auto pa = std::get_if<UndoOscillator>(&a))
         {
-            return fmt::format("Oscillator[scene={},num={},type={}]", pa->scene, pa->oscNum,
-                               pa->type);
+            return fmt::format("Scene {} Oscillator {} Type : {}", (char)('A' + pa->scene),
+                               pa->oscNum, osc_type_names[pa->type]);
         }
         if (auto pa = std::get_if<UndoOscillatorExtraConfig>(&a))
         {
@@ -420,7 +421,9 @@ struct UndoManagerImpl
 
     void populateUndoParamFromP(const Parameter *p, pdata val, UndoParam &r)
     {
-        r.name = p->fullname;
+        char txt[256];
+        synth->getParameterName(synth->idForParameter(p), txt);
+        r.name = txt;
         r.temposync = p->temposync;
         r.absolute = p->absolute;
         r.deactivated = p->deactivated;
@@ -433,6 +436,9 @@ struct UndoManagerImpl
         r.porta_curve = p->porta_curve;
 
         r.val = val;
+
+        p->get_display(txt, true, val.f);
+        r.formattedValue = txt;
     }
 
     void restoreParamToEditor(const UndoParam *pa)
@@ -467,7 +473,9 @@ struct UndoManagerImpl
     {
         auto r = UndoModulation();
         r.paramId = paramId;
-        r.target_name = p->fullname;
+        char txt[256];
+        synth->getParameterName(synth->idForParameter(p), txt);
+        r.target_name = txt;
         r.source_name = modsource_names[modsource];
         r.val = val;
         r.ms = modsource;
@@ -1024,6 +1032,31 @@ struct UndoManagerImpl
         }
         std::cout << "-------------------------------" << std::endl;
     }
+
+    std::vector<std::string> textStack(UndoManager::Target t, int maxDepth = 10)
+    {
+        auto *currStack = &undoStack;
+        auto *currStackMem = &undoStackMem;
+
+        if (t == UndoManager::REDO)
+        {
+            currStack = &redoStack;
+            currStackMem = &redoStackMem;
+        }
+
+        int ct = 0;
+        std::vector<std::string> res;
+
+        for (const auto &q : *currStack)
+        {
+            res.push_back(toString(q.action));
+            if (ct++ >= maxDepth)
+                break;
+        }
+
+        std::reverse(res.begin(), res.end());
+        return res;
+    }
 };
 
 UndoManager::UndoManager(SurgeGUIEditor *ed, SurgeSynthesizer *synth)
@@ -1053,6 +1086,11 @@ bool UndoManager::undo() { return impl->undo(); }
 bool UndoManager::redo() { return impl->redo(); }
 
 void UndoManager::dumpStack() { impl->dumpStack(); }
+
+std::vector<std::string> UndoManager::textStack(Target t, int maxDepth)
+{
+    return impl->textStack(t, maxDepth);
+}
 
 void UndoManager::resetEditor(SurgeGUIEditor *ed) { impl->editor = ed; }
 
