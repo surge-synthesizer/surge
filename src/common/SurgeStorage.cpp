@@ -658,10 +658,29 @@ void SurgeStorage::refresh_patchlist()
     }
 
     auto favorites = patchDB->readUserFavorites();
-    std::unordered_set<std::string> favSet;
+    auto pathToTrunc = [](const std::string &s) -> std::string {
+        auto pf = s.find("patches_factory");
+        auto p3 = s.find("patches_3rdparty");
+
+        if (pf != std::string::npos)
+        {
+            return s.substr(pf);
+        }
+        if (p3 != std::string::npos)
+        {
+            return s.substr(p3);
+        }
+        return "";
+    };
+    std::unordered_set<std::string> favSet, favTruncSet;
     for (auto f : favorites)
     {
         favSet.insert(f);
+        auto pf = pathToTrunc(f);
+        if (!pf.empty())
+        {
+            favTruncSet.insert(pf);
+        }
     }
     for (auto &p : patch_list)
     {
@@ -670,7 +689,11 @@ void SurgeStorage::refresh_patchlist()
             std::chrono::duration_cast<std::chrono::seconds>(qtime.time_since_epoch()).count();
 
         auto ps = p.path.u8string();
+        auto pf = pathToTrunc(ps);
+
         if (favSet.find(ps) != favSet.end())
+            p.isFavorite = true;
+        else if (!pf.empty() && (favTruncSet.find(pf) != favTruncSet.end()))
             p.isFavorite = true;
         else
             p.isFavorite = false;
