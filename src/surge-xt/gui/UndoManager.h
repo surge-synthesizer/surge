@@ -73,6 +73,8 @@ struct UndoManager
     bool canRedo();
 
     void dumpStack();
+
+    std::vector<std::string> textStack(Target t, int maxDepth = 10);
 };
 } // namespace GUI
 } // namespace Surge

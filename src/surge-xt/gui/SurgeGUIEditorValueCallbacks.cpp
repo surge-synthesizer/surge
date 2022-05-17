@@ -497,16 +497,34 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         tcomp->setSkin(currentSkin, bitmapStore);
         contextMenu.addCustomItem(-1, std::move(tcomp));
 
-        // TODO: Implement!
-        /*
         if (tag == tag_action_undo || tag == tag_action_redo)
         {
-            contextMenu.addSeparator();
-
-            contextMenu.addItem(Surge::GUI::toOSCase("Open Action History..."),
-                                [this]() { toggleOverlay(ACTION_HISTORY); });
+            auto stack =
+                undoManager()->textStack(tag == tag_action_undo ? Surge::GUI::UndoManager::UNDO
+                                                                : Surge::GUI::UndoManager::REDO);
+            if (!stack.empty())
+            {
+                contextMenu.addSeparator();
+                int nUndo = 1;
+                for (auto s : stack)
+                {
+                    contextMenu.addItem(s, [this, tag, nUndo]() {
+                        for (int q = 0; q < nUndo; ++q)
+                        {
+                            if (tag == tag_action_undo)
+                            {
+                                undoManager()->undo();
+                            }
+                            else
+                            {
+                                undoManager()->redo();
+                            }
+                        }
+                    });
+                    nUndo++;
+                }
+            }
         }
-         */
 
         contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                   Surge::GUI::makeEndHoverCallback(control));
