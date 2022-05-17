@@ -497,6 +497,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         tcomp->setSkin(currentSkin, bitmapStore);
         contextMenu.addCustomItem(-1, std::move(tcomp));
 
+        // TODO: Implement!
+        /*
         if (tag == tag_action_undo || tag == tag_action_redo)
         {
             contextMenu.addSeparator();
@@ -504,6 +506,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             contextMenu.addItem(Surge::GUI::toOSCase("Open Action History..."),
                                 [this]() { toggleOverlay(ACTION_HISTORY); });
         }
+         */
 
         contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                   Surge::GUI::makeEndHoverCallback(control));
@@ -664,7 +667,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     if (tag == tag_analyzewaveshape)
     {
         auto contextMenu = juce::PopupMenu();
-        auto hu = helpURLForSpecial("waveshaper");
+        auto hu = helpURLForSpecial("waveshaper-analysis");
         auto lurl = hu;
 
         if (lurl != "")
@@ -672,6 +675,27 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
         auto tcomp =
             std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Waveshaper Analysis", lurl);
+
+        tcomp->setSkin(currentSkin, bitmapStore);
+        contextMenu.addCustomItem(-1, std::move(tcomp));
+
+        contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
+                                  Surge::GUI::makeEndHoverCallback(control));
+
+        return 1;
+    }
+
+    if (tag == tag_analyzefilters)
+    {
+        auto contextMenu = juce::PopupMenu();
+        auto hu = helpURLForSpecial("filter-analysis");
+        auto lurl = hu;
+
+        if (lurl != "")
+            lurl = fullyResolvedHelpURL(hu);
+
+        auto tcomp =
+            std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Filter Analysis", lurl);
 
         tcomp->setSkin(currentSkin, bitmapStore);
         contextMenu.addCustomItem(-1, std::move(tcomp));
