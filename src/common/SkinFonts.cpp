@@ -30,6 +30,7 @@ const FontDesc NumberField("fonts.widgets.numberfield", System::Display),
     EffectLabel("fonts.widgets.effectlabel", System::Display);
 const FontDesc TabButtonFont("fonts.widgets.tabbutton", System::Display);
 const FontDesc ModButtonFont("fonts.widgets.modbutton", 8, FontDesc::FontStyleFlags::bold);
+const FontDesc SelfDrawSwitchFont("fonts.widgets.multiswitch", 8, FontDesc::FontStyleFlags::bold);
 
 } // namespace Widgets
 namespace PatchStore
