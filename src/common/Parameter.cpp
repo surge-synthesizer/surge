@@ -4617,7 +4617,25 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
             valid = false;
         }
 
-        auto rmv = min_val / (get_extended(val_max.f) - get_extended(val_min.f));
+        auto range = (get_extended(val_max.f) - get_extended(val_min.f));
+        ;
+        auto rmv = min_val / range;
+        if (rmv < -1)
+        {
+            auto mind = -a * pow(2.0, b * val.f);
+
+            errMsg = fmt::format("Input can't be smaller than {:g} {}!", mind, unit);
+
+            valid = false;
+        }
+        if (rmv > 1)
+        {
+            auto maxd = a * pow(2.0, b * (val.f + range));
+
+            errMsg = fmt::format("Input can't be larger than {:g} {}!", maxd, unit);
+
+            valid = false;
+        }
 
         return rmv;
     }
@@ -4642,9 +4660,32 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
          */
 
         auto av = amp_to_db(val.f);
+
         auto d = (float)std::atof(s.c_str());
         auto mv = powf(2.0, (d / 18.0 + av / 18.0)) - val.f;
-        auto rmv = mv / (get_extended(val_max.f) - get_extended(val_min.f));
+        auto range = (get_extended(val_max.f) - get_extended(val_min.f));
+        auto rmv = mv / range;
+
+        // The modulator will clamp anyway. This is all a bit tricky so just punt on -ve case
+        if (d < -192 - amp_to_db(val_max.f))
+        {
+            valid = false;
+
+            errMsg = fmt::format("Input cant be smaller than {}", -192 - amp_to_db(val_max.f));
+        }
+
+        if (rmv > 1)
+        {
+            /*
+             * 2 ^ ( d / 18 + av / 18) - val.f < 1
+             * 2 ^ ( d / 18 + av / 18) < 1 + val.f
+             * d + av < 18 ( log2( 1 + bal.f ) );
+             * d < 18 ( log2( 1 + val.f ) ) - av
+             */
+            valid = false;
+            auto maxv = 18 * (log2(1 + val.f)) - av;
+            errMsg = fmt::format("Input can't be larger than {}", maxv);
+        }
 
         return rmv;
     }
