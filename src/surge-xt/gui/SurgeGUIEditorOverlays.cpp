@@ -295,83 +295,47 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
 
-        auto pt = std::make_unique<Surge::Overlays::WavetableEquationEditor>(
+        auto wtse = std::make_unique<Surge::Overlays::WavetableEquationEditor>(
             this, &(this->synth->storage), os, currentSkin);
 
-        pt->setSkin(currentSkin, bitmapStore);
-        pt->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
-        pt->setEnclosingParentTitle("Wavetable Script Editor");
+        wtse->setSkin(currentSkin, bitmapStore);
+        wtse->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
+        wtse->setEnclosingParentTitle("Wavetable Script Editor");
 
-        return pt;
+        return wtse;
     }
 
     case WAVESHAPER_ANALYZER:
     {
-        auto pt =
+        auto wsa =
             std::make_unique<Surge::Overlays::WaveShaperAnalysis>(this, &(this->synth->storage));
 
-        pt->setSkin(currentSkin, bitmapStore);
+        locationGet(wsa.get(),
+                    Surge::Skin::Connector::NonParameterConnection::WAVESHAPER_ANALYSIS_WINDOW,
+                    Surge::Storage::WSAnalysisOverlayLocation);
 
-        auto npc = Surge::Skin::Connector::NonParameterConnection::ANALYZE_WAVESHAPE;
-        auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-        auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-        auto b = skinCtrl->getRect();
-        int w = 300, h = 160;
-        auto c = b.getCentreX() - w / 2;
-        auto p = juce::Rectangle<int>(0, 0, w, h).withX(c).withY(b.getBottom() + 2);
-        auto dl = p.getTopLeft();
-        int sentinel = -1000004;
-        auto ploc = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                        Surge::Storage::WSAnalysisOverlayLocation,
-                                                        std::make_pair(sentinel, sentinel));
+        wsa->setSkin(currentSkin, bitmapStore);
+        wsa->setEnclosingParentTitle("Waveshaper Analysis");
+        wsa->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
 
-        if (ploc.first != sentinel && ploc.second != sentinel)
-        {
-            p = juce::Rectangle<int>(ploc.first, ploc.second, w, h);
-        }
-
-        pt->setEnclosingParentPosition(p);
-        pt->setEnclosingParentTitle("Waveshaper Analysis");
-        pt->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
-        pt->defaultLocation = dl;
-        pt->setCanMoveAround(std::make_pair(true, Surge::Storage::WSAnalysisOverlayLocation));
-
-        return pt;
+        return wsa;
     }
 
     case FILTER_ANALYZER:
     {
-        auto pt = std::make_unique<Surge::Overlays::FilterAnalysis>(this, &(this->synth->storage));
+        auto fa = std::make_unique<Surge::Overlays::FilterAnalysis>(this, &(this->synth->storage));
 
-        pt->setSkin(currentSkin, bitmapStore);
+        locationGet(fa.get(),
+                    Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW,
+                    Surge::Storage::FilterAnalysisOverlayLocation);
 
-        auto npc = Surge::Skin::Connector::NonParameterConnection::ANALYZE_FILTERS;
-        auto conn = Surge::Skin::Connector::connectorByNonParameterConnection(npc);
-        auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
-        auto b = skinCtrl->getRect();
-        int w = 300, h = 200;
-        auto c = b.getCentreX() - w / 2;
-        auto p = juce::Rectangle<int>(0, 0, w, h).withX(c).withY(b.getBottom() + 54);
-        auto dl = p.getTopLeft();
-        int sentinel = -1000004;
-        auto ploc = Surge::Storage::getUserDefaultValue(
-            &(synth->storage), Surge::Storage::FilterAnalysisOverlayLocation,
-            std::make_pair(sentinel, sentinel));
+        fa->setSkin(currentSkin, bitmapStore);
+        fa->setEnclosingParentTitle("Filter Analysis");
+        fa->setCanTearOut({true, Surge::Storage::FilterAnalysisOverlayLocationTearOut});
+        fa->setCanTearOutResize({true, Surge::Storage::FilterAnalysisOverlaySizeTearOut});
+        fa->setMinimumSize(300, 200);
 
-        if (ploc.first != sentinel && ploc.second != sentinel)
-        {
-            p = juce::Rectangle<int>(ploc.first, ploc.second, w, h);
-        }
-
-        pt->setEnclosingParentPosition(p);
-        pt->setEnclosingParentTitle("Filter Analysis");
-        pt->defaultLocation = dl;
-        pt->setCanMoveAround(std::make_pair(true, Surge::Storage::FilterAnalysisOverlayLocation));
-        pt->setCanTearOut({true, Surge::Storage::FilterAnalysisOverlayLocationTearOut});
-        pt->setCanTearOutResize({true, Surge::Storage::FilterAnalysisOverlaySizeTearOut});
-        pt->setMinimumSize(300, 200);
-
-        return pt;
+        return fa;
     }
 
     case MODULATION_EDITOR:
