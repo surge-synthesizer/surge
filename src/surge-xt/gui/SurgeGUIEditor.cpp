@@ -1755,6 +1755,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::FORMULA_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::WAVESHAPER_ANALYSIS_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
             break;
         }

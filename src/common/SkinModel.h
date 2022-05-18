@@ -270,6 +270,8 @@ struct Connector
 
         LFO_MENU,
 
+        FILTER_ANALYSIS_WINDOW,
+        WAVESHAPER_ANALYSIS_WINDOW,
         FORMULA_EDITOR_WINDOW,
         TUNING_EDITOR_WINDOW,
         MOD_LIST_WINDOW,
@@ -442,6 +444,8 @@ extern Surge::Skin::Connector patch_browser;
 extern Surge::Skin::Connector mseg_editor, formula_editor, tuning_editor;
 
 extern Surge::Skin::Connector mod_list;
+
+extern Surge::Skin::Connector filter_analysis, ws_analysis;
 
 extern Surge::Skin::Connector save_patch_dialog;
 

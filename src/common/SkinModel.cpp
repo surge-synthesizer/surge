@@ -597,6 +597,12 @@ Connector tuning_editor = Connector("tuningeditor.window", 0, 58, 750, 511, Comp
 Connector mod_list =
     Connector("modlist.window", 148, 58, 602, 511, Components::Custom, Connector::MOD_LIST_WINDOW);
 
+Connector filter_analysis = Connector("filter.filter_analysis.window", 374, 263, 300, 212,
+                                      Components::Custom, Connector::FILTER_ANALYSIS_WINDOW);
+
+Connector ws_analysis = Connector("filter.waveshaper_analysis.window", 450, 237, 300, 160,
+                                  Components::Custom, Connector::WAVESHAPER_ANALYSIS_WINDOW);
+
 Connector save_patch_dialog = Connector("controls.patch.save.window", 157, 57, 390, 270,
                                         Components::Custom, Connector::SAVE_PATCH_DIALOG);
 

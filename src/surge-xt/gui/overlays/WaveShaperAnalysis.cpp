@@ -95,21 +95,6 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
             g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
             g.drawLine(line);
         }
-
-        for (float lab : {-1.f, -0.5f, 0.f, 0.5f, 1.f})
-        {
-            auto x0 = 1.f, y0 = lab;
-            xf.transformPoint(x0, y0);
-            auto dbString = juce::String(lab);
-            auto labelRect =
-                juce::Rectangle{font.getStringWidth(dbString), 9}.withBottomY((int)y0).withRightX(
-                    x0 - 2);
-            if (lab > 0.75)
-                labelRect = labelRect.withY(y0);
-
-            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
-            g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
-        }
     }
 
     {
