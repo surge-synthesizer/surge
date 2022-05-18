@@ -42,6 +42,11 @@ ModulationSourceButton::ModulationSourceButton()
         mouseMode = CLICK_SELECT_ONLY;
         notifyValueChanged();
     };
+    ol->onReturnKey = [this](auto *t) {
+        mouseMode = CLICK_SELECT_ONLY;
+        notifyValueChanged();
+        return true;
+    };
     addChildComponent(*ol);
     selectAccButton = std::move(ol);
 
@@ -50,6 +55,11 @@ ModulationSourceButton::ModulationSourceButton()
     ol->onPress = [this](auto *t) {
         mouseMode = CLICK_TOGGLE_ARM;
         notifyValueChanged();
+    };
+    ol->onReturnKey = [this](auto *t) {
+        mouseMode = CLICK_TOGGLE_ARM;
+        notifyValueChanged();
+        return true;
     };
     addChildComponent(*ol);
     toggleArmAccButton = std::move(ol);
@@ -60,8 +70,63 @@ ModulationSourceButton::ModulationSourceButton()
         mouseMode = CLICK_ARROW;
         notifyValueChanged();
     };
+    ol->onReturnKey = [this](auto *t) {
+        mouseMode = CLICK_ARROW;
+        notifyValueChanged();
+        return true;
+    };
     addChildComponent(*ol);
     targetAccButton = std::move(ol);
+
+    auto os =
+        std::make_unique<OverlayAsAccessibleSlider<ModulationSourceButton>>(this, "macro value");
+    os->onGetValue = [this](auto *t) { return value; };
+    os->onSetValue = [this](auto *t, float f) {
+        value = limit01(f);
+        mouseMode = DRAG_VALUE;
+
+        notifyBeginEdit();
+        notifyValueChanged();
+        notifyEndEdit();
+        repaint();
+        if (auto h = t->getAccessibilityHandler())
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+    };
+    os->onMinMaxDef = [this](auto *t, int mmd) {
+        if (mmd == 1)
+            value = 1;
+        if (mmd == -1)
+            value = 0;
+        if (mmd == 0)
+            value = (isBipolar ? 0.5 : 0);
+
+        mouseMode = DRAG_VALUE;
+
+        notifyBeginEdit();
+        notifyValueChanged();
+        notifyEndEdit();
+        repaint();
+        if (auto h = t->getAccessibilityHandler())
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+    };
+    os->onJogValue = [this](auto *t, int dir, bool isShift, bool isControl) {
+        auto delt = 0.05;
+        if (isShift)
+            delt = delt * 0.1;
+        if (dir < 0)
+            delt *= -1;
+        value = value + delt;
+        mouseMode = DRAG_VALUE;
+
+        notifyBeginEdit();
+        notifyValueChanged();
+        notifyEndEdit();
+        repaint();
+        if (auto h = t->getAccessibilityHandler())
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+    };
+    addChildComponent(*os);
+    macroSlider = std::move(os);
 }
 void ModulationSourceButton::paint(juce::Graphics &g)
 {
@@ -738,6 +803,11 @@ void ModulationSourceButton::resized()
     hamburgerHome = getLocalBounds().withWidth(11).reduced(2, 2);
 
     auto b = getLocalBounds().withWidth(getHeight());
+
+    if (isMeta)
+    {
+        b = b.withTrimmedBottom(10);
+    }
     selectAccButton->setBounds(b);
     b = b.translated(getHeight(), 0);
     targetAccButton->setBounds(b);
@@ -749,6 +819,13 @@ void ModulationSourceButton::resized()
     if (isLFO())
     {
         targetAccButton->setVisible(true);
+    }
+
+    if (isMeta)
+    {
+        b = getLocalBounds().withTrimmedTop(getHeight() - 10);
+        macroSlider->setVisible(true);
+        macroSlider->setBounds(b);
     }
 }
 
