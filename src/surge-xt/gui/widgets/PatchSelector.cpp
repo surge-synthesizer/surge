@@ -161,13 +161,6 @@ void PatchSelector::paint(juce::Graphics &g)
         auth = auth.translated(0, -1);
     }
 
-#if 0
-    g.setColour(juce::Colours::red);
-    g.drawRect(pbrowser);
-    g.drawRect(cat);
-    g.drawRect(auth);
-#endif
-
     // favorites rect
     {
         juce::Graphics::ScopedSaveState gs(g);
@@ -182,7 +175,7 @@ void PatchSelector::paint(juce::Graphics &g)
         juce::Graphics::ScopedSaveState gs(g);
         g.reduceClipRegion(searchRect);
         auto img = associatedBitmapStore->getImage(IDB_SEARCH_BUTTON);
-        int yShift = 13 * ((searchHover || isTypeaheadSearchOn ? 1 : 0));
+        int yShift = 13 * ((searchHover ? 1 : 0) + (isTypeaheadSearchOn ? 2 : 0));
         img->drawAt(g, searchRect.getX(), searchRect.getY() - yShift, 1.0);
     }
 
