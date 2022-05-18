@@ -87,6 +87,7 @@ namespace Widgets
 extern const Surge::Skin::FontDesc NumberField, EffectLabel;
 extern const Surge::Skin::FontDesc TabButtonFont;
 extern const Surge::Skin::FontDesc ModButtonFont;
+extern const Surge::Skin::FontDesc SelfDrawSwitchFont;
 } // namespace Widgets
 namespace PatchStore
 {
