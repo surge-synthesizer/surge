@@ -1539,3 +1539,34 @@ TEST_CASE("Poly AT on Multiple Channels", "[midi]")
         }
     }
 }
+
+TEST_CASE("MIDI Learn", "[midi]")
+{
+    auto surge = std::shared_ptr<SurgeSynthesizer>(Surge::Headless::createSurge(44100));
+    REQUIRE(surge);
+
+    for (int i = 0; i < 5; ++i)
+        surge->process();
+
+    auto &pp = surge->storage.getPatch().scene[0].osc[0].pitch;
+    auto pv = pp.val.f;
+    REQUIRE(pv == 0);
+
+    surge->learn_param_from_cc = pp.id;
+    surge->process();
+    surge->channelController(0, 41, 64);
+    surge->process();
+    REQUIRE(surge->learn_param_from_cc == -1);
+
+    surge->channelController(0, 41, 127);
+    for (int i = 0; i < 300; ++i)
+        surge->process();
+    auto pu = pp.val.f;
+    REQUIRE(pu == Approx(7).margin(.1));
+
+    surge->channelController(0, 41, 0);
+    for (int i = 0; i < 600; ++i)
+        surge->process();
+    auto pd = pp.val.f;
+    REQUIRE(pd == Approx(-7).margin(.1));
+}
