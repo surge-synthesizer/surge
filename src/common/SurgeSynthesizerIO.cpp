@@ -410,6 +410,7 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
         loadFromDawExtraState();
 
         rawLoadNeedsUIDawExtraState = true;
+        refresh_editor = true;
     }
 }
 

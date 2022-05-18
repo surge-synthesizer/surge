@@ -178,7 +178,9 @@ void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newNa
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
     surge->setSamplerate(sr);
-    surge->audio_processing_active = true;
+    // It used to be I would set audio processing active true here *but* REAPER calls this for
+    // inactive muted channels so we didn't load if that was the case. Set it true only
+    // if we actually have an audio process going! See #6173
 }
 
 void SurgeSynthProcessor::releaseResources()

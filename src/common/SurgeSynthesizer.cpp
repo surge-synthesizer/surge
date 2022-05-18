@@ -230,6 +230,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     mpeGlobalPitchBendRange = 0;
 
     int pid = 0;
+    patchid_queue = -1;
+    has_patchid_file = false;
     bool lookingForFactory = (storage.initPatchCategoryType == "Factory");
     for (auto p : storage.patch_list)
     {
@@ -245,6 +247,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     if (patchid_queue >= 0)
         processAudioThreadOpsWhenAudioEngineUnavailable(true); // DANGER MODE IS ON
     patchid_queue = -1;
+    has_patchid_file = false;
 }
 
 SurgeSynthesizer::~SurgeSynthesizer()
@@ -3651,6 +3654,8 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
     if (!audio_processing_active || dangerMode)
     {
         processEnqueuedPatchIfNeeded();
+
+        auto lg = std::lock_guard<std::mutex>(patchLoadSpawnMutex);
 
         // if the audio processing is inactive, patchloading should occur anyway
         if (patchid_queue >= 0)
