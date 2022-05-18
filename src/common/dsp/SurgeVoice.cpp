@@ -1395,6 +1395,4 @@ void SurgeVoice::applyNoteExpression(NoteExpressionType net, float value)
     // std::cout << __func__ << _D(net) << _D(value) << std::endl;
     if (net != UNKNOWN)
         noteExpressions[net] = value;
-    if (net == VOLUME)
-        noteExpressions[net] = value * 4;
 }
