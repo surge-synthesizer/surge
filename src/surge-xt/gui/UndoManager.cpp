@@ -272,7 +272,8 @@ struct UndoManagerImpl
     {
         if (auto pa = std::get_if<UndoParam>(&a))
         {
-            return fmt::format("Parameter {} : {}", pa->name, pa->formattedValue);
+            return fmt::format("Parameter {} : {} f={} i={}", pa->name, pa->formattedValue,
+                               pa->val.f, pa->val.i);
         }
         if (auto pa = std::get_if<UndoModulation>(&a))
         {
@@ -437,7 +438,20 @@ struct UndoManagerImpl
 
         r.val = val;
 
-        p->get_display(txt, false);
+        if (p->ctrltype == vt_float)
+        {
+            p->get_display(txt, true, val.f);
+        }
+        else if (p->ctrltype == vt_int)
+        {
+            p->get_display(txt, true,
+                           Parameter::intScaledToFloat(val.i, p->val_max.i, p->val_min.i));
+        }
+        else
+        {
+            sprintf(txt, "%s", (p->val.b ? "On" : "Off"));
+        }
+
         r.formattedValue = txt;
     }
 
