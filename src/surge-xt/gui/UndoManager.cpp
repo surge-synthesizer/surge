@@ -437,7 +437,7 @@ struct UndoManagerImpl
 
         r.val = val;
 
-        p->get_display(txt, true, val.f);
+        p->get_display(txt, false);
         r.formattedValue = txt;
     }
 
@@ -916,7 +916,7 @@ struct UndoManagerImpl
                               editor->getPatch().stepsequences[p->scene][p->lfoid], opposite);
             auto g = SelfPushGuard(this);
             editor->setStepSequencerFromUndo(p->scene, p->lfoid, p->storageCopy);
-            auto ann = fmt::format("{} StepSequencer Setting, Scene {} Modulator {}", verb,
+            auto ann = fmt::format("{} Step Sequencer Setting, Scene {} Modulator {}", verb,
                                    (char)('A' + p->scene), p->lfoid + 1);
             editor->enqueueAccessibleAnnouncement(ann);
 
@@ -927,8 +927,8 @@ struct UndoManagerImpl
             pushMSEG(p->scene, p->lfoid, editor->getPatch().msegs[p->scene][p->lfoid], opposite);
             auto g = SelfPushGuard(this);
             editor->setMSEGFromUndo(p->scene, p->lfoid, p->storageCopy);
-            auto ann = fmt::format("{} MSEG Model, Scene {} Modulator {}", verb,
-                                   (char)('A' + p->scene), p->lfoid + 1);
+            auto ann = fmt::format("{} MSEG, Scene {} Modulator {}", verb, (char)('A' + p->scene),
+                                   p->lfoid + 1);
             editor->enqueueAccessibleAnnouncement(ann);
 
             return true;

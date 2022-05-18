@@ -458,8 +458,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         tag == tag_mp_patch || tag == tag_store || tag == tag_action_undo || tag == tag_action_redo)
     {
         juce::PopupMenu contextMenu;
-        std::string hu;
-        std::string txt;
+        std::string hu, txt;
 
         switch (tag)
         {
@@ -495,36 +494,59 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         auto tcomp =
             std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(txt, fullyResolvedHelpURL(hu));
         tcomp->setSkin(currentSkin, bitmapStore);
+
         contextMenu.addCustomItem(-1, std::move(tcomp));
 
+#ifdef DEBUG
         if (tag == tag_action_undo || tag == tag_action_redo)
         {
-            auto stack =
-                undoManager()->textStack(tag == tag_action_undo ? Surge::GUI::UndoManager::UNDO
-                                                                : Surge::GUI::UndoManager::REDO);
-            if (!stack.empty())
+            auto undoStack = undoManager()->textStack(Surge::GUI::UndoManager::UNDO);
+            auto redoStack = undoManager()->textStack(Surge::GUI::UndoManager::REDO);
+
+            if (!redoStack.empty() || !undoStack.empty())
             {
                 contextMenu.addSeparator();
+            }
+
+            if (!redoStack.empty())
+            {
+                contextMenu.addSectionHeader("Redo Stack");
+
+                int nRedo = redoStack.size();
+
+                for (auto s = redoStack.rbegin(); s != redoStack.rend(); ++s)
+                {
+                    contextMenu.addItem(*s, [this, tag, nRedo]() {
+                        for (int q = nRedo; q > 0; --q)
+                        {
+                            undoManager()->redo();
+                        }
+                    });
+
+                    nRedo--;
+                }
+            }
+
+            if (!undoStack.empty())
+            {
+                contextMenu.addSectionHeader("Undo Stack");
+
                 int nUndo = 1;
-                for (auto s : stack)
+
+                for (auto s : undoStack)
                 {
                     contextMenu.addItem(s, [this, tag, nUndo]() {
                         for (int q = 0; q < nUndo; ++q)
                         {
-                            if (tag == tag_action_undo)
-                            {
-                                undoManager()->undo();
-                            }
-                            else
-                            {
-                                undoManager()->redo();
-                            }
+                            undoManager()->undo();
                         }
                     });
+
                     nUndo++;
                 }
             }
         }
+#endif
 
         contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                   Surge::GUI::makeEndHoverCallback(control));
