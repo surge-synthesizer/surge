@@ -272,7 +272,8 @@ struct UndoManagerImpl
     {
         if (auto pa = std::get_if<UndoParam>(&a))
         {
-            return fmt::format("Parameter {} : {}", pa->name, pa->formattedValue);
+            return fmt::format("Parameter {} : {} f={} i={}", pa->name, pa->formattedValue,
+                               pa->val.f, pa->val.i);
         }
         if (auto pa = std::get_if<UndoModulation>(&a))
         {
@@ -437,7 +438,20 @@ struct UndoManagerImpl
 
         r.val = val;
 
-        p->get_display(txt, true, val.f);
+        if (p->ctrltype == vt_float)
+        {
+            p->get_display(txt, true, val.f);
+        }
+        else if (p->ctrltype == vt_int)
+        {
+            p->get_display(txt, true,
+                           Parameter::intScaledToFloat(val.i, p->val_max.i, p->val_min.i));
+        }
+        else
+        {
+            sprintf(txt, "%s", (p->val.b ? "On" : "Off"));
+        }
+
         r.formattedValue = txt;
     }
 
@@ -916,7 +930,7 @@ struct UndoManagerImpl
                               editor->getPatch().stepsequences[p->scene][p->lfoid], opposite);
             auto g = SelfPushGuard(this);
             editor->setStepSequencerFromUndo(p->scene, p->lfoid, p->storageCopy);
-            auto ann = fmt::format("{} StepSequencer Setting, Scene {} Modulator {}", verb,
+            auto ann = fmt::format("{} Step Sequencer Setting, Scene {} Modulator {}", verb,
                                    (char)('A' + p->scene), p->lfoid + 1);
             editor->enqueueAccessibleAnnouncement(ann);
 
@@ -927,8 +941,8 @@ struct UndoManagerImpl
             pushMSEG(p->scene, p->lfoid, editor->getPatch().msegs[p->scene][p->lfoid], opposite);
             auto g = SelfPushGuard(this);
             editor->setMSEGFromUndo(p->scene, p->lfoid, p->storageCopy);
-            auto ann = fmt::format("{} MSEG Model, Scene {} Modulator {}", verb,
-                                   (char)('A' + p->scene), p->lfoid + 1);
+            auto ann = fmt::format("{} MSEG, Scene {} Modulator {}", verb, (char)('A' + p->scene),
+                                   p->lfoid + 1);
             editor->enqueueAccessibleAnnouncement(ann);
 
             return true;
