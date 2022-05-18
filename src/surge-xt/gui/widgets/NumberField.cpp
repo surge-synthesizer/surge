@@ -138,6 +138,7 @@ void NumberField::mouseDown(const juce::MouseEvent &event)
     mouseDownLongHold(event);
 
     mouseMode = DRAG;
+    notifyBeginEdit();
 
     if (!Surge::GUI::showCursor(storage))
     {
@@ -183,6 +184,7 @@ void NumberField::mouseUp(const juce::MouseEvent &event)
             auto p = localPointToGlobal(mouseDownOrigin);
             juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(p);
         }
+        notifyEndEdit();
     }
     mouseMode = NONE;
 }
