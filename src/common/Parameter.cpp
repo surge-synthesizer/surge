@@ -4525,15 +4525,11 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
              */
 
             auto bound = (maxval - minval) * displayInfo.scale * factor;
+            ErrorMessageMode isLarger =
+                (rmv < -1) ? ErrorMessageMode::IsSmaller : ErrorMessageMode::IsLarger;
 
-            if (rmv < -1)
-            {
-                errMsg = fmt::format("Input can't be smaller than {:g} {}!", -bound, unit);
-            }
-            else
-            {
-                errMsg = fmt::format("Input can't be larger than {:g} {}!", bound, unit);
-            }
+            set_error_message(errMsg, fmt::format("{:g}", (rmv < -1) ? -bound : bound), unit,
+                              isLarger);
 
             valid = false;
         }
@@ -4596,6 +4592,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         auto max_val = val_max.f;
         auto min_val = val_min.f;
         auto l2arg = mv / a + pow(2.0, b * val.f);
+        auto omv = mv;
 
         std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
         getSemitonesOrKeys(unit);
@@ -4610,29 +4607,34 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
              * mv / a + 2^bv > 0
              * mv > -a 2^bv
              */
-            auto mind = -a * pow(2.0, b * val.f);
+            auto bound = -a * pow(2.0, b * val.f);
 
-            errMsg = fmt::format("Input can't be smaller than {:g} {}!", mind, unit);
+            set_error_message(errMsg, fmt::format("{:g}", bound), unit,
+                              ErrorMessageMode::IsSmaller);
 
             valid = false;
         }
 
         auto range = (get_extended(val_max.f) - get_extended(val_min.f));
-        ;
         auto rmv = min_val / range;
-        if (rmv < -1)
-        {
-            auto mind = -a * pow(2.0, b * val.f);
+        ErrorMessageMode isLarger =
+            (rmv < -1) ? ErrorMessageMode::IsSmaller : ErrorMessageMode::IsLarger;
+        auto bound = (rmv < -1) ? (-a * pow(2.0, b * val.f)) : a * pow(2.0, b * (val.f + range));
 
-            errMsg = fmt::format("Input can't be smaller than {:g} {}!", mind, unit);
+        if (rmv > 1 || rmv < -1)
+        {
+            set_error_message(errMsg, fmt::format("{:g}", bound), unit, isLarger);
 
             valid = false;
         }
-        if (rmv > 1)
-        {
-            auto maxd = a * pow(2.0, b * (val.f + range));
 
-            errMsg = fmt::format("Input can't be larger than {:g} {}!", maxd, unit);
+        auto finalModReach = a * pow(2.0, b * (val.f)) + omv;
+
+        if (displayInfo.modulationCap > 0 && finalModReach > displayInfo.modulationCap)
+        {
+            auto bound = displayInfo.modulationCap - a * pow(2.0, b * val.f);
+
+            set_error_message(errMsg, fmt::format("{:g}", bound), unit, ErrorMessageMode::IsLarger);
 
             valid = false;
         }
@@ -4666,12 +4668,13 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         auto range = (get_extended(val_max.f) - get_extended(val_min.f));
         auto rmv = mv / range;
 
-        // The modulator will clamp anyway. This is all a bit tricky so just punt on -ve case
+        // The modulator will clamp anyway. This is all a bit tricky so just punt on negative case
         if (d < -192 - amp_to_db(val_max.f))
         {
-            valid = false;
+            set_error_message(errMsg, fmt::format("{:g}", -192 - amp_to_db(val_max.f)), "dB",
+                              ErrorMessageMode::IsSmaller);
 
-            errMsg = fmt::format("Input cant be smaller than {}", -192 - amp_to_db(val_max.f));
+            valid = false;
         }
 
         if (rmv > 1)
@@ -4682,9 +4685,11 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
              * d + av < 18 ( log2( 1 + bal.f ) );
              * d < 18 ( log2( 1 + val.f ) ) - av
              */
+            auto bound = 18 * (log2(1 + val.f)) - av;
+
+            set_error_message(errMsg, fmt::format("{:g}", bound), "dB", ErrorMessageMode::IsLarger);
+
             valid = false;
-            auto maxv = 18 * (log2(1 + val.f)) - av;
-            errMsg = fmt::format("Input can't be larger than {}", maxv);
         }
 
         return rmv;
@@ -4792,20 +4797,13 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         {
             auto minval = get_extended(val_min.f);
             auto maxval = get_extended(val_max.f);
+            auto bound = (mv < -1) ? -(maxval - minval) : (maxval - minval);
+            auto isLarger = (mv < -1) ? ErrorMessageMode::IsSmaller : ErrorMessageMode::IsLarger;
             std::string unit = absolute ? displayInfo.absoluteUnit : displayInfo.unit;
 
             getSemitonesOrKeys(unit);
 
-            if (mv < -1)
-            {
-                errMsg =
-                    fmt::format("Input can't be smaller than {:g} {}!", -(maxval - minval), unit);
-            }
-            else
-            {
-                errMsg =
-                    fmt::format("Input can't be larger than {:g} {}!", (maxval - minval), unit);
-            }
+            set_error_message(errMsg, fmt::format("{:g}", bound), unit, isLarger);
 
             valid = false;
         }
