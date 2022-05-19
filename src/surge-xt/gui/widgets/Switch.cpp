@@ -185,18 +185,16 @@ bool Switch::keyPressed(const juce::KeyPress &key)
 struct SwitchAH : public juce::AccessibilityHandler
 {
     explicit SwitchAH(Switch *s)
-        : mswitch(s), juce::AccessibilityHandler(
-                          *s,
-                          (s->isMultiIntegerValued() || s->isAlwaysAccessibleMomentary())
-                              ? juce::AccessibilityRole::button
-                              : juce::AccessibilityRole::toggleButton,
-                          juce::AccessibilityActions()
-                              .addAction(juce::AccessibilityActionType::showMenu,
-                                         [this]() { this->showMenu(); })
-                              .addAction(juce::AccessibilityActionType::toggle,
-                                         [this]() { this->showMenu(); })
-                              .addAction(juce::AccessibilityActionType::press,
-                                         [this]() { this->press(); }))
+        : mswitch(s),
+          juce::AccessibilityHandler(
+              *s,
+              (s->isAlwaysAccessibleMomentary()) ? juce::AccessibilityRole::button
+                                                 : juce::AccessibilityRole::toggleButton,
+              juce::AccessibilityActions()
+                  .addAction(juce::AccessibilityActionType::showMenu,
+                             [this]() { this->showMenu(); })
+                  .addAction(juce::AccessibilityActionType::toggle, [this]() { this->showMenu(); })
+                  .addAction(juce::AccessibilityActionType::press, [this]() { this->press(); }))
     {
     }
 
@@ -237,9 +235,81 @@ struct SwitchAH : public juce::AccessibilityHandler
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SwitchAH);
 };
 
+struct SwitchMultiValAH : public juce::AccessibilityHandler
+{
+    struct MSValue : public juce::AccessibilityValueInterface
+    {
+        explicit MSValue(Switch *s) : sw(s) {}
+
+        Switch *sw;
+
+        bool isReadOnly() const override { return false; }
+        double getCurrentValue() const override { return sw->getIntegerValue(); }
+        void setValue(double newValue) override
+        {
+            sw->setIntegerValue((int)newValue);
+            sw->repaint();
+            sw->notifyValueChanged();
+        }
+        virtual juce::String getCurrentValueAsString() const override
+        {
+            auto sge = sw->firstListenerOfType<SurgeGUIEditor>();
+            if (sge)
+            {
+                return sge->getDisplayForTag(sw->getTag());
+            }
+            return std::to_string(sw->getIntegerValue());
+        }
+        virtual void setValueAsString(const juce::String &newValue) override
+        {
+            setValue(newValue.getDoubleValue());
+        }
+        AccessibleValueRange getRange() const override
+        {
+            return {{0, (double)sw->getIntegerMaxValue()}, 1};
+        }
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MSValue);
+    };
+
+    explicit SwitchMultiValAH(Switch *s)
+        : mswitch(s), juce::AccessibilityHandler(
+                          *s, juce::AccessibilityRole::slider,
+
+                          juce::AccessibilityActions()
+                              .addAction(juce::AccessibilityActionType::showMenu,
+                                         [this]() { this->showMenu(); })
+                              .addAction(juce::AccessibilityActionType::press,
+                                         [this]() { this->press(); }),
+                          juce::AccessibilityHandler::Interfaces{std::make_unique<MSValue>(s)})
+    {
+    }
+
+    void press()
+    {
+        mswitch->setValueDirection(1);
+        mswitch->notifyValueChangedWithBeginEnd();
+    }
+    void showMenu()
+    {
+        auto m = juce::ModifierKeys().withFlags(juce::ModifierKeys::rightButtonModifier);
+        mswitch->notifyControlModifierClicked(m);
+    }
+
+    Switch *mswitch;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SwitchMultiValAH);
+};
+
 std::unique_ptr<juce::AccessibilityHandler> Switch::createAccessibilityHandler()
 {
-    return std::make_unique<SwitchAH>(this);
+    if (isMultiIntegerValued())
+    {
+        return std::make_unique<SwitchMultiValAH>(this);
+    }
+    else
+    {
+        return std::make_unique<SwitchAH>(this);
+    }
 }
 
 } // namespace Widgets

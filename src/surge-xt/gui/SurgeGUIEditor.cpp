@@ -1337,7 +1337,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto ff = currentSkin->getFont(Fonts::Widgets::ModButtonFont);
 
             gui_modsrc[ms]->setFont(ff);
-            gui_modsrc[ms]->setBounds(r);
             gui_modsrc[ms]->setTag(tag_mod_source0 + ms);
             gui_modsrc[ms]->addListener(this);
             gui_modsrc[ms]->setSkin(currentSkin, bitmapStore);
@@ -1359,6 +1358,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                              ->get_target01(0));
             }
 
+            // setBounds needs to happen after setIsMeta since resized activates bounds based on
+            // metaness
+            gui_modsrc[ms]->setBounds(r);
             addAndMakeVisibleWithTracking(frame->getModButtonLayer(), *gui_modsrc[ms]);
 
             if (ms >= ms_ctrl1 && ms <= ms_ctrl8 && synth->learn_macro_from_cc == ms - ms_ctrl1)
@@ -1367,6 +1369,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
             }
         }
     }
+
+    // reset the lfo rate slider pointer
+    lfoRateSlider = nullptr;
 
     auto moRect = positionForModOverview();
 
@@ -1815,9 +1820,13 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
 
                 currentSkin->resolveBaseParentOffsets(skinCtrl);
-                layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
-                                       style | conn.payload->controlStyleFlags);
+                auto comp = layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
+                                                   style | conn.payload->controlStyleFlags);
 
+                if (strcmp(p->ui_identifier, "lfo.rate") == 0 && comp)
+                {
+                    lfoRateSlider = comp->asJuceComponent();
+                }
                 uiidToSliderLabel[p->ui_identifier] = p->get_name();
 
                 if (p->id == synth->learn_param_from_cc || p->id == synth->learn_param_from_note)
@@ -4853,6 +4862,17 @@ std::string SurgeGUIEditor::getDisplayForTag(long tag, bool external, float f)
     if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
     {
         Parameter *p = synth->storage.getPatch().param_ptr[ptag];
+
+        if (p->ctrltype == ct_scenemode)
+        {
+            // Ahh that decision in 1.6 to not change streaming order continues to be painful
+            auto iv = Parameter::intUnscaledFromFloat(f, p->val_max.i, p->val_min.i);
+            if (iv == 3)
+                iv = 2;
+            else if (iv == 2)
+                iv = 3;
+            f = Parameter::intScaledToFloat(iv, p->val_max.i, p->val_min.i);
+        }
         if (p)
         {
             char txt[1024];

@@ -221,7 +221,8 @@ struct ModulationSourceButton : public juce::Component,
 
     void resized() override;
 
-    std::unique_ptr<juce::Component> targetAccButton, selectAccButton, toggleArmAccButton;
+    std::unique_ptr<juce::Component> targetAccButton, selectAccButton, toggleArmAccButton,
+        macroSlider;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSourceButton);
 };

@@ -661,7 +661,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
      * Weak pointers to some logical items for focus return
      */
     juce::Component *mpeStatus{nullptr}, *zoomStatus{nullptr}, *tuneStatus{nullptr},
-        *mainMenu{nullptr}, *lfoMenuButton{nullptr}, *undoButton{nullptr}, *redoButton{nullptr};
+        *mainMenu{nullptr}, *lfoMenuButton{nullptr}, *undoButton{nullptr}, *redoButton{nullptr},
+        *lfoRateSlider{nullptr};
 
     /*
      * This is the JUCE component management

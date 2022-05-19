@@ -3020,6 +3020,9 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 if ((state & 3) == 0)
                     queue_refresh = true;
                 refresh_mod();
+
+                if (lfoRateSlider)
+                    lfoRateSlider->grabKeyboardFocus();
             }
             else if (cms->getMouseMode() == Surge::Widgets::ModulationSourceButton::HAMBURGER)
             {
