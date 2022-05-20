@@ -3220,7 +3220,12 @@ void SurgeSynthesizer::muteModulation(long ptag, modsources modsource, int modso
 void SurgeSynthesizer::applyParameterMonophonicModulation(Parameter *p, float depth)
 {
     auto &pt = storage.getPatch();
-    // This linear search will become, i think, wuite tiresome
+    if (pt.paramModulationCount >= pt.maxMonophonicParamModulations)
+    {
+        // hmmm ... what to do here?
+        return;
+    }
+    // This linear search will become, i think, quite tiresome at size
     for (int i = 0; i < pt.paramModulationCount; ++i)
     {
         if (pt.monophonicParamModulations[i].param_id == p->id)

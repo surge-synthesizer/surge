@@ -10,6 +10,7 @@
 #include <string>
 #include <chrono>
 
+#define _DBGCOUT std::cout << __func__ << ":" << __LINE__ << "| "
 #define _D(x) " " << (#x) << "=" << x
 #define _R(x, y) Surge::Debug::LifeCycleToConsole y(x);
 #define _DUMPR(r)                                                                                  \

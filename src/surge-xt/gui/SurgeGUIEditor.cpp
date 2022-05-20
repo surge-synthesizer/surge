@@ -2531,6 +2531,7 @@ void SurgeGUIEditor::toggleMPE()
         statusMPE->setValue(this->synth->mpeEnabled ? 1 : 0);
         statusMPE->asJuceComponent()->repaint();
     }
+    synth->refresh_editor = true;
 }
 
 juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Point<int> &where)
@@ -3001,8 +3002,7 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
         endis = "Disable MPE";
     }
 
-    mpeSubMenu.addItem(endis.c_str(),
-                       [this]() { this->synth->mpeEnabled = !this->synth->mpeEnabled; });
+    mpeSubMenu.addItem(endis.c_str(), [this]() { toggleMPE(); });
 
     mpeSubMenu.addSeparator();
 
@@ -4688,6 +4688,15 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button, int forScene)
                 return ccl + " (" + modsource_names[i] + ")";
             }
         }
+    }
+
+    if (i == ms_aftertouch && synth->mpeEnabled)
+    {
+        return "MPE Pressure";
+    }
+    if (i == ms_timbre && synth->mpeEnabled)
+    {
+        return "MPE Timbre";
     }
     if (button)
         return std::string(modsource_names_button[i]);
