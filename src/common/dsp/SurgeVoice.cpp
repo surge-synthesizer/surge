@@ -16,7 +16,7 @@
 #include "SurgeVoice.h"
 #include "DSPUtils.h"
 #include "QuadFilterChain.h"
-#include <math.h>
+#include <cmath>
 #include "libMTSClient.h"
 
 using namespace std;
@@ -746,8 +746,12 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
 
     if (scene->modsource_doprocess[ms_polyaftertouch])
     {
+        auto addl = 0.0;
+        if (!mpeEnabled)
+            addl = noteExpressions[PRESSURE];
         ((ControllerModulationSource *)modsources[ms_polyaftertouch])
             ->set_target(
+                addl +
                 storage->poly_aftertouch[state.scene_id & 1][state.channel & 15][state.key & 127]);
         ((ControllerModulationSource *)modsources[ms_polyaftertouch])->process_block();
     }
@@ -1152,11 +1156,10 @@ template <bool noLFOSources> void SurgeVoice::applyModulationToLocalcopy()
     }
     else
     {
-        // When not in MPE mode, channel aftertouch is already smoothed at scene level.
-        // Do not smooth it again, force the output to the current value.
-        // This means we don't actually smooth the NE so FIXME on that
-        monoAftertouchSource.set_output(0, state.voiceChannelState->pressure +
-                                               noteExpressions[PRESSURE]);
+        /* When not in MPE mode, channel aftertouch is already smoothed at scene level.
+         * Do not smooth it again, force the output to the current value.
+         */
+        monoAftertouchSource.init(0, state.voiceChannelState->pressure);
 
         // TimbreSource used to be ignored in non-MPE mode; now it just echose the
         // note expression
