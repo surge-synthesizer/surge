@@ -37,7 +37,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
 
     g.fillAll(skin->getColor(Colors::Waveshaper::Preview::Background));
 
-    // OK so this path is in x=0,1 y=-1,1
+    // OK so this path is in x = 0, 1; y = -1, 1
     const auto sideOne = 4.f, sideTwo = 4.f, top = 25.f;
     auto xf = juce::AffineTransform()
                   .translated(0, -1.0)
@@ -99,33 +99,22 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
 
     {
         juce::Graphics::ScopedSaveState gs(g);
-        g.setColour(skin->getColor(Colors::Waveshaper::Display::Wave));
-        g.setColour(skin->getColor(Colors::Waveshaper::Display::Dots));
 
-        for (int yd = -4; yd <= 4; ++yd)
-        {
-            float yp = yd * 0.2;
-            for (float xp = 0.05; xp < 1; xp += 0.05)
-            {
-                auto cxp = xp, cyp = yp;
-
-                xf.transformPoint(cxp, cyp);
-                g.fillEllipse(cxp - 0.5, cyp - 0.5, 1, 1);
-            }
-        }
-
+        g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
         g.drawLine(re.getX(), re.getCentreY(), re.getX() + re.getWidth(), re.getCentreY());
-        g.setColour(skin->getColor(Colors::Waveshaper::Display::WaveHover));
+
         {
             auto gs2 = juce::Graphics::ScopedSaveState(g);
+
             g.reduceClipRegion(re.toNearestIntEdges());
-            g.strokePath(pInput, juce::PathStrokeType(1.0), xf);
+            g.strokePath(pInput, juce::PathStrokeType(0.75), xf);
 
             if (wstype != sst::waveshapers::WaveshaperType::wst_none)
             {
                 {
                     auto gs = juce::Graphics::ScopedSaveState(g);
                     auto fp = p;
+
                     fp.lineTo(std::get<0>(sliderDrivenCurve.back()), 0);
                     fp.lineTo(0, 0);
 
@@ -136,19 +125,19 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
                     g.setGradientFill(cg);
                     g.fillPath(fp, xf);
                 }
+
                 {
                     auto gs = juce::Graphics::ScopedSaveState(g);
-                    g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
 
+                    g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
                     g.strokePath(
-                        p, juce::PathStrokeType(2.f, juce::PathStrokeType::JointStyle::curved), xf);
+                        p, juce::PathStrokeType(1.f, juce::PathStrokeType::JointStyle::curved), xf);
                 }
             }
         }
     }
 
     g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-    // g.setColour(skin->getColor(Colors::Waveshaper::Preview::Border));
     g.drawRect(re);
 
     auto txtr = getLocalBounds().withHeight(top - 6);
