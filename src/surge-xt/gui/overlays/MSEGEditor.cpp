@@ -920,6 +920,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 }
 
                 snprintf(txt, 16, "%5.1f", value);
+                g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
 
                 if (value == 1.f)
                 {

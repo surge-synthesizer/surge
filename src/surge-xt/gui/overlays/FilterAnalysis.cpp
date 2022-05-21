@@ -236,7 +236,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
                                        .withBottomY((int)yPos)
                                        .withRightX(width - 2);
 
-            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
         }
     }
