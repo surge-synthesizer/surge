@@ -147,8 +147,8 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
     static constexpr auto lowFreq = 10.f;
     static constexpr auto highFreq = 24000.f;
-    static constexpr auto dbMin = -33.0f;
-    static constexpr auto dbMax = 9.0f;
+    static constexpr auto dbMin = -42.f;
+    static constexpr auto dbMax = 12.f;
     constexpr auto dbRange = dbMax - dbMin;
     auto freqToX = [&](float freq, int width) {
         auto xNorm = std::log(freq / lowFreq) / std::log(highFreq / lowFreq);
@@ -182,17 +182,26 @@ void FilterAnalysis::paint(juce::Graphics &g)
         g.addTransform(juce::AffineTransform().translated(dRect.getX(), dRect.getY()));
         g.setFont(font);
 
-        for (float freq : {100.0f, 1000.0f, 10000.0f})
+        for (float freq : {20.f, 40.f, 60.f, 80.f, 100.f, 200.f, 400.f, 600.f, 800.f, 1000.f,
+                           2000.f, 4000.f, 6000.f, 8000.f, 10000.f, 20000.f})
         {
             const auto xPos = freqToX(freq, width);
-            juce::Line line{juce::Point{xPos, 0.0f}, juce::Point{xPos, (float)height}};
+            juce::Line line{juce::Point{xPos, 0.f}, juce::Point{xPos, (float)height}};
 
-            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
+            if (freq == 100.f || freq == 1000.f || freq == 10000.f)
+            {
+                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+            }
+            else
+            {
+                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
+            }
+
             g.drawLine(line);
 
-            const auto over1000 = freq >= 1000.0f;
+            const auto over1000 = freq >= 1000.f;
             const auto freqString =
-                juce::String(over1000 ? freq / 1000.0f : freq) + (over1000 ? " kHz" : " Hz");
+                juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
             const auto labelRect = juce::Rectangle{font.getStringWidth(freqString), labelHeight}
                                        .withBottomY(height - 2)
                                        .withRightX((int)xPos);
@@ -201,15 +210,24 @@ void FilterAnalysis::paint(juce::Graphics &g)
             g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
         }
 
-        for (float db : {-30.0f, -24.0f, -18.0f, -12.0f, -6.0f, 0.0f, 6.0f})
+        for (float dB : {-36.f, -30.f, -24.f, -18.f, -12.f, -6.f, 0.f, 6.f})
         {
-            const auto yPos = dbToY(db, height);
-            juce::Line line{juce::Point{0.0f, yPos}, juce::Point{(float)width, yPos}};
+            const auto yPos = dbToY(dB, height);
 
-            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
+            juce::Line line{juce::Point{0.f, yPos}, juce::Point{(float)width, yPos}};
+
+            if (dB == 0.f)
+            {
+                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+            }
+            else
+            {
+                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
+            }
+
             g.drawLine(line);
 
-            const auto dbString = juce::String(db) + " dB";
+            const auto dbString = juce::String(dB) + " dB";
             const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
                                        .withBottomY((int)yPos)
                                        .withRightX(width - 2);
@@ -235,7 +253,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
         const auto nPoints = freqAxis.size();
         for (int i = 0; i < nPoints; ++i)
         {
-            if (freqAxis[i] < lowFreq / 2.0f || freqAxis[i] > highFreq * 1.01f)
+            if (freqAxis[i] < lowFreq / 2.f || freqAxis[i] > highFreq * 1.01f)
                 continue;
 
             auto xDraw = freqToX(freqAxis[i], dRect.getWidth());
@@ -277,7 +295,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
         g.reduceClipRegion(dRect);
         g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
 
-        g.strokePath(plotPath, juce::PathStrokeType(2.f, juce::PathStrokeType::JointStyle::curved));
+        g.strokePath(plotPath, juce::PathStrokeType(1.f, juce::PathStrokeType::JointStyle::curved));
     }
     auto txtr = lb.withHeight(15);
     // MSEG::Text is black - use the same color as the waveshaper preview for the title

@@ -1364,44 +1364,56 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 g.setColour(primaryGridColor);
 
                 if (val != 0.f)
+                {
                     ticklen = 20;
+                }
 
-                //  if (val != -1.f)
                 g.drawLine(drawArea.getX() - ticklen, v, drawArea.getRight(), v);
             }
             else
             {
-                g.setColour(secondaryHGridColor);
                 bool useDottedPath = false; // use juce::Path and dotted. Slow AF on windows
                 bool useSolidPath = false;  // use juce::Path and solid. Fastest, but no dots
                 bool useHand = !(useDottedPath || useSolidPath); // Hand roll the lines. Fast enough
+
+                g.setColour(secondaryHGridColor);
 
                 if (useHand)
                 {
                     float x = drawArea.getX() - ticklen;
                     float xe = drawArea.getRight();
 
-                    while (x < xe)
+                    if (val != -1.f)
                     {
-                        g.drawLine(x, v, std::min(xe, x + 2), v, 0.5);
-                        x += 5;
+                        while (x < xe)
+                        {
+                            g.drawLine(x, v, std::min(xe, x + 2), v, 0.5);
+                            x += 5;
+                        }
                     }
                 }
                 else
                 {
                     float dashLength[2] = {2.f, 5.f}; // 2 px dash 5 px gap
-                    // Can be any even size if you change the '2' below in createDashedStroke
                     auto dotted = juce::Path();
                     auto markerLine = juce::Path();
-                    markerLine.startNewSubPath(drawArea.getX() - ticklen, v);
-                    markerLine.lineTo(drawArea.getRight(), v);
                     auto st = juce::PathStrokeType(0.5, juce::PathStrokeType::beveled,
                                                    juce::PathStrokeType::butt);
+
+                    markerLine.startNewSubPath(drawArea.getX() - ticklen, v);
+                    markerLine.lineTo(drawArea.getRight(), v);
+
+                    // Can be any even size if you change the '2' below
                     st.createDashedStroke(dotted, markerLine, dashLength, 2);
+
                     if (useDottedPath)
+                    {
                         g.strokePath(dotted, st);
+                    }
                     else
+                    {
                         g.strokePath(markerLine, st);
+                    }
                 }
             }
         }
@@ -1424,25 +1436,29 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     // my left edge is off the right or my left edge is off the left
                     if (h.rect.getX() > drawArea.getRight() + 1 ||
                         h.rect.getX() < drawArea.getX() - 1)
+                    {
                         continue;
+                    }
                 }
                 else if (h.zoneSubType == hotzone::LOOP_END)
                 {
                     // my right edge is off the right or left
                     if (h.rect.getRight() > drawArea.getRight() + 1 ||
                         h.rect.getRight() <= drawArea.getX())
+                    {
                         continue;
+                    }
                 }
 
                 // draw a hovered loop marker
                 if (h.active)
                 {
                     auto c = skin->getColor(Colors::MSEGEditor::Loop::Marker);
-
                     auto hr = h.rect.translated(0, -1);
 
                     g.setColour(c);
                     g.fillRect(hr);
+
                     drawLoopDragMarker(g, c, h.zoneSubType, hr);
                 }
             }
