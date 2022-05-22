@@ -350,7 +350,7 @@ juce::AudioProcessorEditor *SurgefxAudioProcessor::createEditor()
 void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
     std::unique_ptr<juce::XmlElement> xml(new juce::XmlElement("surgefx"));
-    xml->setAttribute("streamingVersion", (int)1);
+    xml->setAttribute("streamingVersion", (int)2);
     for (int i = 0; i < n_fx_params; ++i)
     {
         char nm[256];
@@ -358,6 +358,32 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
         float val = *(fxParams[i]);
         xml->setAttribute(nm, val);
 
+        auto &spar = fxstorage->p[fx_param_remap[i]];
+        snprintf(nm, 256, "surgevaltype_%d", i);
+        xml->setAttribute(nm, spar.valtype);
+
+        snprintf(nm, 256, "surgeval_%d", i);
+
+        switch (spar.valtype)
+        {
+        case vt_bool:
+            xml->setAttribute(nm, spar.val.b);
+            break;
+        case vt_int:
+            if (spar.ctrltype == ct_none)
+            {
+                xml->setAttribute(nm, 0);
+            }
+            else
+            {
+                xml->setAttribute(nm, spar.val.i);
+            }
+            break;
+        default:
+        case vt_float:
+            xml->setAttribute(nm, spar.val.f);
+            break;
+        }
         snprintf(nm, 256, "fxp_param_features_%d", i);
         int pf = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
         xml->setAttribute(nm, pf);
@@ -376,17 +402,48 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
         int paramFeaturesCache[n_fx_params];
         if (xmlState->hasTagName("surgefx"))
         {
+            auto streamingVersion = xmlState->getIntAttribute("streamingVersion", (int)2);
+            if (streamingVersion > 2 || streamingVersion < 0)
+                streamingVersion = 1; // assume some corrupted ancient session
+
             effectNum = xmlState->getIntAttribute("fxt", fxt_delay);
             resetFxType(effectNum, false);
 
             for (int i = 0; i < n_fx_params; ++i)
             {
                 char nm[256];
-                snprintf(nm, 256, "fxp_%d", i);
-                float v = xmlState->getDoubleAttribute(nm, 0.0);
-                fxstorage->p[fx_param_remap[i]].set_value_f01(v);
+                if (streamingVersion == 1)
+                {
+                    snprintf(nm, 256, "fxp_%d", i);
+                    float v = xmlState->getDoubleAttribute(nm, 0.0);
+                    fxstorage->p[fx_param_remap[i]].set_value_f01(v);
+                }
+                else if (streamingVersion == 2)
+                {
+                    auto &spar = fxstorage->p[fx_param_remap[i]];
+                    snprintf(nm, 256, "fxp_%d", i);
+                    float v = xmlState->getDoubleAttribute(nm, 0.0);
 
-                // Legacy unstream
+                    snprintf(nm, 256, "surgevaltype_%d", i);
+                    int type = xmlState->getIntAttribute(nm, vt_float);
+
+                    snprintf(nm, 256, "surgeval_%d", i);
+
+                    if (type == vt_int && xmlState->hasAttribute(nm))
+                    {
+                        // Unstream the int as an int. Bools and FLoats are
+                        // fine since they will 01 consisntently and properly but
+                        // this means things like add an airwindow and we survive
+                        // going forward
+                        int ival = xmlState->getIntAttribute(nm, 0);
+                        spar.val.i = ival;
+                    }
+                    else
+                    {
+                        spar.set_value_f01(v);
+                    }
+                }
+                // Legacy unstream temposync
                 snprintf(nm, 256, "fxp_temposync_%d", i);
                 if (xmlState->hasAttribute(nm))
                 {
@@ -394,7 +451,7 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
                     fxstorage->p[fx_param_remap[i]].temposync = b;
                 }
 
-                // Modern unstream
+                // Modern unstream parameters
                 snprintf(nm, 256, "fxp_param_features_%d", i);
                 if (xmlState->hasAttribute(nm))
                 {
