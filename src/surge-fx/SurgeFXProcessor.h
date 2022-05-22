@@ -14,6 +14,7 @@
 #include "Effect.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
+#include "DebugHelpers.h"
 
 #if MAC
 #include <execinfo.h>
@@ -140,6 +141,8 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     virtual void parameterValueChanged(int parameterIndex, float newValue) override
     {
+        Surge::Debug::stackTraceToStdout();
+        std::cout << "parameterValueChanged " << parameterIndex << " " << newValue << std::endl;
         if (supressParameterUpdates)
             return;
 
