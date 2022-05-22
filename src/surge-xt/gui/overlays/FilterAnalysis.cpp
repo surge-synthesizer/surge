@@ -45,6 +45,7 @@ struct FilterAnalysisEvaluator
     void runThread()
     {
         uint64_t lastIB = 0;
+        auto fp = sst::filters::FilterPlotter(15);
         while (continueWaiting)
         {
             if (lastIB == inboundUpdates)
@@ -67,10 +68,8 @@ struct FilterAnalysisEvaluator
                     lastIB = inboundUpdates;
                 }
 
-                auto fp = sst::filters::FilterPlotter(15);
-                // auto fp = sst::filters::DirectFilterPlotter();
                 auto par = sst::filters::FilterPlotParameters();
-                par.inputAmplitude = cgn;
+                par.inputAmplitude *= cgn;
                 auto data = fp.plotFilterMagnitudeResponse(
                     (sst::filters::FilterType)cty, (sst::filters::FilterSubType)csu, ccu, cre, par);
 
