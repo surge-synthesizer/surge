@@ -326,6 +326,8 @@ void SurgefxAudioProcessorEditor::resetLabels()
         st(fxDeactivated[i], nm + " Deactivated");
     }
 
+    picker->repaint();
+
     int row = 0, col = 0;
 
     if (auto h = getAccessibilityHandler())
