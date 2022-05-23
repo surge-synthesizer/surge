@@ -899,7 +899,7 @@ void StringOscillator::fillDustBuffer(float tap0, float tap1)
 void StringOscillator::handleStreamingMismatches(int streamingRevision,
                                                  int currentSynthStreamingRevision)
 {
-    if (streamingRevision < 19)
+    if (streamingRevision <= 18)
     {
         oscdata->p[str_exciter_level].deform_type = os_onex | interp_sinc;
         oscdata->p[str_stiffness].deform_type = filter_fixed;

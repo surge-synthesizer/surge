@@ -262,6 +262,7 @@ bool Parameter::can_extend_range() const
     case ct_percent_oscdrift:
     case ct_twist_aux_mix:
     case ct_countedset_percent_extendable:
+    case ct_dly_fb_clippingmodes:
 
     // Extendable integers are really rare and special.
     // If you add one, you may want to chat with us on Discord!
@@ -388,6 +389,7 @@ bool Parameter::is_bipolar() const
             res = true;
     }
     break;
+    case ct_dly_fb_clippingmodes:
     case ct_percent_with_extend_to_bipolar:
     {
         if (extend_range)
@@ -1959,6 +1961,7 @@ void Parameter::set_storage_value(float f)
 void Parameter::set_extend_range(bool er)
 {
     bool prior_extend = extend_range;
+
 #if DEBUG_WRITABLE_EXTEND_RANGE
     extend_range_internal = er;
 #else
@@ -1986,6 +1989,7 @@ void Parameter::set_extend_range(bool er)
             val_min.f = 21.23265f; // 1500 Hz
         }
         break;
+        case ct_dly_fb_clippingmodes:
         case ct_lfophaseshuffle:
         {
             val_default.f = 0.f;
@@ -2013,7 +2017,7 @@ void Parameter::set_extend_range(bool er)
             val_min.f = -34.4936f; // 60 Hz
             val_max.f = 49.09578;  // 7500 Hz
         }
-        break;
+        case ct_dly_fb_clippingmodes:
         case ct_lfophaseshuffle:
         {
             val_default.f = 0.5f;
@@ -2077,6 +2081,7 @@ float Parameter::get_extended(float f) const
         }
     }
     break;
+    case ct_dly_fb_clippingmodes:
     case ct_percent_with_extend_to_bipolar:
     {
         return 2 * f - 1;

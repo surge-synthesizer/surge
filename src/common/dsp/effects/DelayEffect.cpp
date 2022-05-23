@@ -23,6 +23,7 @@ void DelayEffect::init()
     envf = 0.f;
     LFOval = 0.f;
     LFOdirection = true;
+    FBsign = false;
     lp.suspend();
     hp.suspend();
     // See issue #1444 and the fix for this stuff
@@ -39,7 +40,20 @@ void DelayEffect::setvars(bool init)
         inithadtempo = true;
     }
 
-    float fb = amp_to_linear(*f[dly_feedback]);
+    auto fbp = *f[dly_feedback];
+    FBsign = false;
+
+    if (fxdata->p[dly_feedback].extend_range)
+    {
+        fbp = 2.f * fbp - 1.f;
+
+        if (fbp < 0.f)
+        {
+            FBsign = true;
+        }
+    }
+
+    float fb = amp_to_linear(abs(fbp));
     float cf = amp_to_linear(*f[dly_crossfeed]);
 
     feedback.set_target_smoothed(fb);
@@ -60,6 +74,7 @@ void DelayEffect::setvars(bool init)
     // small bias to avoid denormals
 
     const float ca = 0.99f;
+
     if (LFOdirection)
         LFOval = ca * LFOval + lfo_increment;
     else
@@ -165,10 +180,19 @@ void DelayEffect::process(float *dataL, float *dataR)
         R = _mm_add_ps(R, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincR + 8]),
                                      _mm_loadu_ps(&buffer[1][rpR + 8])));
         R = sum_ps_to_ss(R);
+
         _mm_store_ss(&tbufferL[k], L);
         _mm_store_ss(&tbufferR[k], R);
     }
 
+    // negative feedback
+    if (FBsign)
+    {
+        mul_block(tbufferL, -1.f, tbufferL, BLOCK_SIZE_QUAD);
+        mul_block(tbufferR, -1.f, tbufferR, BLOCK_SIZE_QUAD);
+    }
+
+    // feedback path clipping modes
     switch (fxdata->p[dly_feedback].deform_type)
     {
     case dly_clipping_soft:
@@ -196,6 +220,7 @@ void DelayEffect::process(float *dataL, float *dataR)
     {
         lp.process_block(tbufferL, tbufferR);
     }
+
     if (!fxdata->p[dly_lowcut].deactivated)
     {
         hp.process_block(tbufferL, tbufferR);
@@ -222,10 +247,10 @@ void DelayEffect::process(float *dataL, float *dataR)
 
     if (wpos == 0)
     {
+        // copy buffer so FIR-core doesn't have to wrap
         for (k = 0; k < FIRipol_N; k++)
         {
-            buffer[0][k + max_delay_length] =
-                buffer[0][k]; // copy buffer so FIR-core doesn't have to wrap
+            buffer[0][k + max_delay_length] = buffer[0][k];
             buffer[1][k + max_delay_length] = buffer[1][k];
         }
     }
@@ -331,6 +356,7 @@ void DelayEffect::init_default_values()
     fxdata->p[dly_time_right].deactivated = false;
     fxdata->p[dly_feedback].val.f = 0.0f;
     fxdata->p[dly_feedback].deform_type = 1;
+    fxdata->p[dly_feedback].set_extend_range(false);
     fxdata->p[dly_crossfeed].val.f = 0.0f;
 
     fxdata->p[dly_lowcut].val.f = -24.f;
@@ -359,5 +385,10 @@ void DelayEffect::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 17)
     {
         fxdata->p[dly_feedback].deform_type = 1;
+    }
+
+    if (streamingRevision <= 18)
+    {
+        fxdata->p[dly_feedback].set_extend_range(false);
     }
 }
