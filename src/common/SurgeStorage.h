@@ -66,41 +66,43 @@ const int FIRoffset = FIRipol_N >> 1;
 const int FIRipolI16_N = 8;
 const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
+// clang-format off
 // XML file format revision
-// 0 -> 1 new filter/amp EG attack shapes (0 -> 1, 1 -> 2, 2 -> 2)
-// 1 -> 2 new LFO EG stages (if (decay == max) sustain = max else sustain = min)
-// 2 -> 3 filter subtypes added: Comb defaults to 1, Legacy Ladder defaults to 3
-// 3 -> 4 Comb+ and Comb- are now combined into one filter type
-//        (type, subtype: +, 0 -> 0 | +, 1 -> 1 | -, 0 -> 2 | -, 1 -> 3)
-// 4 -> 5 Stereo filter configuration has separate pan controls now
-// 5 -> 6 (1.2.0 release) filter resonance response changed (same parameters, different sound)
-// 6 -> 7 custom controller state now stored in DAW recall
-// 7 -> 8 larger resonance range (old filters are set to subtype 1)
-//        Pan 2 -> Width
-// 8 -> 9 macros extended to 8 (offset IDs larger than ctrl7 by 1)
-//        macros can now be named (guess the name for older patches)
-// 9 -> 10 added Character parameter
-// 10 -> 11 (1.6.2 release) added DAW extra state
-// 11 -> 12 (1.6.3 release) added new parameters to Distortion effect
-// 12 -> 13 (1.7.0 release) added slider deactivation facility
-//                          Sine LP/HP filters
-//                          Sine/FM2/FM3 feedback extension/bipolar
-// 13 -> 14 (1.8.0 nightlies) add Phaser Stages/Center/Spread parameters
-//                            add ability to configure Vocoder modulator input (monosum/L/R/stereo)
-//                            add comb filter tuning and compatibility block
-// 14 -> 15 (1.8.0 release) the great remapping of filter types (GitHub issue #3006, PR #3329)
-// 15 -> 16 (1.9.0 release) oscillator retrigger is consistent now (GitHub issue #3171, PR #3785)
-//                          added tuningApplicationMode to patch
-//                          added disable toggle to Low/High Cut filters in various effects
-//                          added disable toggle to Phaser Rate, and different waveform options
-// 16 -> 17 (XT 1.0 release) added continuous morph toggle to Window oscillator
-//                           added (a lot of) new waveshapers
-//                           added two additional FX slots to all FX chains
-//                           added new Conditioner parameter (Side Low Cut)
-// 17 -> 19 (XT 1.1 release) added clipping options to Delay Feedback parameter (via deform) (18)
-//                           added Tone parameter to Phaser effect (18)
-//                           added String deform options (late in 1.1 so make 19 to not break all
-//                           the nightlies)
+// 0 -> 1                      new filter/amp EG attack shapes (0 -> 1, 1 -> 2, 2 -> 2)
+// 1 -> 2                      new LFO EG stages (if (decay == max) sustain = max else sustain = min)
+// 2 -> 3                      filter subtypes added: Comb defaults to 1, Legacy Ladder defaults to 3
+// 3 -> 4                      Comb+ and Comb- are now combined into one filter type
+//                             (type, subtype: +, 0 -> 0 | +, 1 -> 1 | -, 0 -> 2 | -, 1 -> 3)
+// 4 -> 5                      Stereo filter configuration has separate pan controls now
+// 5 -> 6                      (1.2.0 release) filter resonance response changed (same parameters, different sound)
+// 6 -> 7                      custom controller state now stored in DAW recall
+// 7 -> 8                      larger resonance range (old filters are set to subtype 1)
+//                             Pan 2 -> Width
+// 8 -> 9                      macros extended to 8 (offset IDs larger than ctrl7 by 1)
+//                             macros can now be named (guess the name for older patches)
+// 9 -> 10                     added Character parameter
+// 10 -> 11 (1.6.2 release)    added DAW extra state
+// 11 -> 12 (1.6.3 release)    added new parameters to Distortion effect
+// 12 -> 13 (1.7.0 release)    added slider deactivation facility
+//                             Sine LP/HP filters
+//                             Sine/FM2/FM3 feedback extension/bipolar
+// 13 -> 14 (1.8.0 nightlies)  add Phaser Stages/Center/Spread parameters
+//                             add ability to configure Vocoder modulator input (monosum/L/R/stereo)
+//                             add comb filter tuning and compatibility block
+// 14 -> 15 (1.8.0 release)    the great remapping of filter types (GitHub issue #3006, PR #3329)
+// 15 -> 16 (1.9.0 release)    oscillator retrigger is consistent now (GitHub issue #3171, PR #3785)
+//                             added tuningApplicationMode to patch
+//                             added disable toggle to Low/High Cut filters in various effects
+//                             added disable toggle to Phaser Rate, and different waveform options
+// 16 -> 17 (XT 1.0 release)   added continuous morph toggle to Window oscillator
+//                             added (a lot of) new waveshapers
+//                             added two additional FX slots to all FX chains
+//                             added new Conditioner parameter (Side Low Cut)
+// 17 -> 18 (XT 1.1 nightlies) added clipping options to Delay Feedback parameter (via deform)
+//                             added Tone parameter to Phaser effect
+// 18 -> 19 (XT 1.1 release)   added String deform options (interpolation, bipolar Decay params, Stiffness options)
+//                             added Extend to Delay Feedback parameter (allows negative delay)
+// clang-format on
 
 const int ff_revision = 19;
 

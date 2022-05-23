@@ -2091,11 +2091,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         contextMenu.addSeparator();
 
+                        contextMenu.addSectionHeader("LIMITING");
+
                         std::vector<std::string> fbClipModes = {
                             "Disabled (DANGER!)", "Soft Clip (cubic)", "Soft Clip (tanh)",
                             "Hard Clip at 0 dBFS", "Hard Clip at +18 dBFS"};
-
-                        contextMenu.addSectionHeader("LIMITING");
 
                         for (int i = 0; i < fbClipModes.size(); ++i)
                         {

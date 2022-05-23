@@ -80,6 +80,6 @@ class DelayEffect : public Effect
     BiquadFilter lp, hp;
     double lfophase;
     float LFOval;
-    bool LFOdirection;
+    bool LFOdirection, FBsign;
     int ringout_time;
 };
