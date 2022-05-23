@@ -245,6 +245,7 @@ void OverlayWrapper::resized()
         {
             if (oc->minh > 0 && oc->minw > 0)
             {
+                auto sz = tearOutParent->getContentComponentBorder();
                 auto w = getWidth(), h = getHeight();
                 auto mw = oc->minw;
                 auto mh = oc->minh;
@@ -256,20 +257,34 @@ void OverlayWrapper::resized()
 
                 if (w < mw || h < mh)
                 {
+
                     tearOutParent->setContentComponentSize(mw, mh);
+                    auto p = static_cast<juce::Component *>(this);
+                    while (p->getParentComponent())
+                        p = p->getParentComponent();
+                    p->repaint();
+
                     return;
                 }
             }
         }
         auto topcc = tearOutParent->getContentComponent()->getBounds();
         primaryChild->setBounds(0, 0, topcc.getWidth(), topcc.getHeight());
-        Surge::Storage::updateUserDefaultValue(storage, canTearOutResizePair.second,
-                                               std::make_pair(getWidth(), getHeight()));
+        if (resizeRecordsSize)
+        {
+            Surge::Storage::updateUserDefaultValue(storage, canTearOutResizePair.second,
+                                                   std::make_pair(getWidth(), getHeight()));
+        }
     }
 }
 
 void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
 {
+    auto rvs = juce::ScopedValueSetter(resizeRecordsSize, false);
+    auto pt = std::make_pair(-1, -1);
+    if (storage)
+        pt = Surge::Storage::getUserDefaultValue(storage, canTearOutResizePair.second, pt);
+
     parentBeforeTearOut = getParentComponent();
     locationBeforeTearOut = getBoundsInParent();
     childLocationBeforeTearOut = primaryChild->getBounds();
@@ -277,7 +292,6 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
 
     auto w = getWidth();
     auto h = getHeight();
-
     if (editor)
     {
         auto sc = 1.0 * editor->getZoomFactor() / 100.0;
@@ -289,6 +303,11 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
         primaryChild->setBounds(getLocalBounds());
     }
 
+    if (pt.first > 0)
+        w = pt.first;
+    if (pt.second > 0)
+        h = pt.second;
+
     std::string t = "Tear Out";
     if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
     {
@@ -299,8 +318,37 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
                                                      juce::DocumentWindow::minimiseButton);
     dw->supressMoveUpdates = true;
     dw->setContentNonOwned(this, false);
+
+    auto brd = dw->getContentComponentBorder();
     dw->setContentComponentSize(w, h);
     dw->setVisible(true);
+    // CONSTRAINER SETUP
+    tearOutConstrainer.reset();
+    if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
+    {
+        if (oc->minh > 0 || oc->minw > 0)
+        {
+            tearOutConstrainer = std::make_unique<juce::ComponentBoundsConstrainer>();
+            auto mw = oc->minw;
+            auto mh = oc->minh;
+
+            primaryChild->getTransform().transformPoint(mw, mh);
+
+            auto sz = dw->getContentComponentBorder();
+            mw += sz.getLeftAndRight();
+            mh += sz.getTopAndBottom();
+
+            if (mw > 0)
+            {
+                tearOutConstrainer->setMinimumWidth(mw);
+            }
+            if (mh > 0)
+            {
+                tearOutConstrainer->setMinimumHeight(mh);
+            }
+            dw->setConstrainer(tearOutConstrainer.get());
+        }
+    }
     dw->setResizable(canTearOutResize, canTearOutResize);
     if (showAt.x >= 0 && showAt.y >= 0)
         dw->setTopLeftPosition(showAt.x, showAt.y);
@@ -331,14 +379,13 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     tearOutParent->setColour(juce::DocumentWindow::backgroundColourId,
                              findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
 
-    auto pt = std::make_pair(-1, -1);
-    if (storage)
-        pt = Surge::Storage::getUserDefaultValue(storage, canTearOutResizePair.second, pt);
     if (pt.first > 0 && pt.second > 0)
     {
         tearOutParent->setSize(pt.first, pt.second);
         resized();
     }
+
+    resizeRecordsSize = true;
 }
 
 juce::Point<int> OverlayWrapper::currentTearOutLocation()

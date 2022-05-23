@@ -92,6 +92,7 @@ struct OverlayWrapper : public juce::Component,
         canTearOutResize = b.first;
     }
 
+    bool resizeRecordsSize{true};
     void doTearOut(const juce::Point<int> &showAt = juce::Point<int>(-1, -1));
     void doTearIn();
     bool isTornOut();
@@ -119,6 +120,7 @@ struct OverlayWrapper : public juce::Component,
     bool getIsModal() const { return isModal; }
 
     std::unique_ptr<juce::DocumentWindow> tearOutParent;
+    std::unique_ptr<juce::ComponentBoundsConstrainer> tearOutConstrainer;
 
     void onSkinChanged() override;
 
