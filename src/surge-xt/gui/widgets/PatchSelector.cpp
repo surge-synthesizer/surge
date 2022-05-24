@@ -36,19 +36,30 @@ namespace Widgets
 struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
                                   public Surge::GUI::SkinConsumingComponent
 {
-    SurgeStorage *storage;
+    SurgeStorage *storage{nullptr};
+    PatchSelector *selector{nullptr};
+    PatchDBTypeAheadProvider(PatchSelector *s) : selector(s) {}
+
     std::vector<PatchStorage::PatchDB::patchRecord> lastSearchResult;
     std::vector<int> searchFor(const std::string &s) override
     {
         lastSearchResult = storage->patchDB->queryFromQueryString(s);
         std::vector<int> res(lastSearchResult.size());
         std::iota(res.begin(), res.end(), 0);
+        selector->searchUpdated();
         return res;
     }
     std::string textBoxValueForIndex(int idx) override
     {
         if (idx >= 0 && idx < lastSearchResult.size())
             return lastSearchResult[idx].name;
+        return "<<ERROR>>";
+    }
+
+    std::string accessibleTextForIndex(int idx) override
+    {
+        if (idx >= 0 && idx < lastSearchResult.size())
+            return lastSearchResult[idx].name + " in " + lastSearchResult[idx].cat;
         return "<<ERROR>>";
     }
 
@@ -117,7 +128,7 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
 
 PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelector>(this)
 {
-    patchDbProvider = std::make_unique<PatchDBTypeAheadProvider>();
+    patchDbProvider = std::make_unique<PatchDBTypeAheadProvider>(this);
     typeAhead = std::make_unique<Surge::Widgets::TypeAhead>("patch select", patchDbProvider.get());
     typeAhead->setVisible(false);
     typeAhead->addTypeAheadListener(this);
@@ -1350,6 +1361,28 @@ void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &cen
                  .translated(0, height / 2);
     setBounds(r);
     repaint();
+}
+
+void PatchSelector::searchUpdated()
+{
+    outstandingSearches++;
+    auto cb = [ptr = juce::Component::SafePointer(this)]() {
+        if (ptr)
+        {
+            ptr->outstandingSearches--;
+            if (ptr->isTypeaheadSearchOn && ptr->outstandingSearches == 0)
+            {
+                auto sge = ptr->firstListenerOfType<SurgeGUIEditor>();
+                if (sge)
+                {
+                    auto items = ptr->patchDbProvider->lastSearchResult.size();
+                    auto ann = fmt::format("Found {} patches; Down to navigate", items);
+                    sge->enqueueAccessibleAnnouncement(ann);
+                }
+            }
+        }
+    };
+    juce::Timer::callAfterDelay(3 * 1000, cb);
 }
 
 } // namespace Widgets

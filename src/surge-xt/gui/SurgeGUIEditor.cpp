@@ -6727,6 +6727,11 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_10, {keymap_t::Modifiers::NONE, '-'});
     keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_25, {keymap_t::Modifiers::SHIFT, '-'});
 
+    keyMapManager->addBinding(Surge::GUI::FOCUS_NEXT_CONTROL_GROUP,
+                              {keymap_t::Modifiers::ALT, (int)'.'});
+    keyMapManager->addBinding(Surge::GUI::FOCUS_PRIOR_CONTROL_GROUP,
+                              {keymap_t::Modifiers::ALT, (int)','});
+
     keyMapManager->addBinding(Surge::GUI::REFRESH_SKIN, {juce::KeyPress::F5Key});
     keyMapManager->addBinding(Surge::GUI::SKIN_LAYOUT_GRID, {keymap_t::Modifiers::ALT, (int)'L'});
 
@@ -6936,6 +6941,92 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 auto jog = zl * di;
                 resizeWindow(getZoomFactor() + jog);
                 return true;
+            }
+
+            case Surge::GUI::FOCUS_NEXT_CONTROL_GROUP:
+            case Surge::GUI::FOCUS_PRIOR_CONTROL_GROUP:
+            {
+                auto dir = (action == Surge::GUI::FOCUS_NEXT_CONTROL_GROUP ? 1 : -1);
+                auto fc = frame->getCurrentlyFocusedComponent();
+                if (fc == frame.get())
+                {
+                }
+                else
+                {
+                    while (fc->getParentComponent() && fc->getParentComponent() != frame.get())
+                    {
+                        fc = fc->getParentComponent();
+                    }
+                }
+                if (fc == nullptr || fc == frame.get())
+                    return false;
+
+                auto cg = (int)fc->getProperties().getWithDefault("ControlGroup", -1);
+                if (cg < 0)
+                    return false;
+                juce::Component *focusThis{nullptr};
+                for (auto c : frame->getChildren())
+                {
+                    auto ccg = (int)c->getProperties().getWithDefault("ControlGroup", -1);
+                    if (ccg < 0)
+                        continue;
+                    if (dir < 0)
+                    {
+                        if (ccg < cg)
+                        {
+                            if (focusThis)
+                            {
+                                auto ncg = (int)focusThis->getProperties().getWithDefault(
+                                    "ControlGroup", -1);
+                                if (ncg < ccg)
+                                    focusThis = c;
+                            }
+                            else
+                            {
+                                focusThis = c;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (ccg > cg)
+                        {
+                            if (focusThis)
+                            {
+                                auto ncg = (int)focusThis->getProperties().getWithDefault(
+                                    "ControlGroup", -1);
+                                if (ncg > ccg)
+                                    focusThis = c;
+                            }
+                            else
+                            {
+                                focusThis = c;
+                            }
+                        }
+                    }
+                }
+                if (focusThis)
+                {
+                    // So now focus the first element of focusThis
+                    if (focusThis->getWantsKeyboardFocus())
+                    {
+                        focusThis->grabKeyboardFocus();
+                        return true;
+                    }
+                    for (auto c : focusThis->getChildren())
+                    {
+                        if (c->getWantsKeyboardFocus() && c->isShowing())
+                        {
+                            c->grabKeyboardFocus();
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             case Surge::GUI::REFRESH_SKIN:

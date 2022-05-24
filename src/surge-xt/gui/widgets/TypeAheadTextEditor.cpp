@@ -81,6 +81,55 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
     {
         ta->dismissWithoutValue();
     }
+
+    struct TARow : juce::Label
+    {
+        int row{0};
+        bool isSelected{false};
+        TypeAheadListBoxModel *model{nullptr};
+        TARow(TypeAheadListBoxModel *m) : model(m) {}
+        void paint(juce::Graphics &g) override
+        {
+            model->paintListBoxItem(row, g, getWidth(), getHeight(), isSelected);
+        }
+
+        void updateAccessibility()
+        {
+            setAccessible(true);
+            if (row >= 0 && row < model->search.size())
+            {
+                setText(model->provider->accessibleTextForIndex(model->search[row]),
+                        juce::dontSendNotification);
+            }
+            else
+            {
+                setText("", juce::dontSendNotification);
+            }
+        }
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TARow);
+    };
+
+    juce::Component *refreshComponentForRow(int rowNumber, bool isRowSelected,
+                                            juce::Component *existingComponentToUpdate) override
+    {
+        TARow *row{nullptr};
+        if (existingComponentToUpdate)
+        {
+            row = dynamic_cast<TARow *>(existingComponentToUpdate);
+            if (!row)
+                delete existingComponentToUpdate;
+        }
+        if (!row)
+        {
+            row = new TARow(this);
+        }
+        row->row = rowNumber;
+        row->isSelected = isRowSelected;
+        row->updateAccessibility();
+
+        return row;
+    }
 };
 
 struct TypeAheadListBox : public juce::ListBox
@@ -88,6 +137,7 @@ struct TypeAheadListBox : public juce::ListBox
     TypeAheadListBox(const juce::String &s, juce::ListBoxModel *m) : juce::ListBox(s, m)
     {
         setOutlineThickness(1);
+        setAccessible(true);
     }
 
     void paintOverChildren(juce::Graphics &graphics) override
