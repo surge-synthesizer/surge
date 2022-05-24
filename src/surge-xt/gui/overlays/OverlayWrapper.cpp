@@ -162,11 +162,62 @@ bool OverlayWrapper::isTornOut() { return tearOutParent != nullptr; }
 
 struct TearOutWindow : public juce::DocumentWindow
 {
+    struct PinButton : juce::Component
+    {
+        TearOutWindow *window{nullptr};
+        PinButton(TearOutWindow *w) : window(w) {}
+        void paint(juce::Graphics &g) override
+        {
+            if (hovered)
+                g.fillAll(juce::Colours::orange);
+
+            g.setColour(juce::Colours::white);
+
+            if (window->isPinned)
+            {
+                g.drawFittedText("T", getLocalBounds(), juce::Justification::centred, 1);
+            }
+            else
+            {
+                g.drawFittedText("F", getLocalBounds(), juce::Justification::centred, 1);
+            }
+        }
+
+        bool hovered{false};
+        void mouseEnter(const juce::MouseEvent &e) override
+        {
+            hovered = true;
+            repaint();
+        }
+        void mouseExit(const juce::MouseEvent &e) override
+        {
+            hovered = false;
+            repaint();
+        }
+
+        void mouseUp(const juce::MouseEvent &e) override
+        {
+            if (getLocalBounds().contains(e.position.toInt()))
+            {
+                window->togglePin();
+            }
+        }
+    };
     TearOutWindow(const juce::String &s, int x) : juce::DocumentWindow(s, juce::Colours::black, x)
     {
+        pinButton = std::make_unique<PinButton>(this);
+        Component::addAndMakeVisible(pinButton.get());
     }
 
     OverlayWrapper *wrapping{nullptr};
+    bool isPinned{false};
+
+    void togglePin()
+    {
+        isPinned = !isPinned;
+        setAlwaysOnTop(isPinned);
+        repaint();
+    }
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
@@ -183,6 +234,17 @@ struct TearOutWindow : public juce::DocumentWindow
         Surge::Storage::updateUserDefaultValue(wrapping->storage,
                                                wrapping->canTearOutResizePair.second,
                                                std::make_pair(getWidth(), getHeight()));
+    }
+
+    void resized() override
+    {
+        juce::DocumentWindow::resized();
+
+        auto tba = getTitleBarArea();
+        auto tbh = tba.getHeight();
+
+        auto r = juce::Rectangle<int>((int)(2.5 * tbh), 0, tbh, tbh);
+        pinButton->setBounds(r.reduced(2));
     }
 
     void closeButtonPressed() override
@@ -226,6 +288,8 @@ struct TearOutWindow : public juce::DocumentWindow
                 wrapping->storage, wrapping->canTearOutPair.second, std::make_pair(tl.x, tl.y));
         }
     }
+
+    std::unique_ptr<juce::Component> pinButton;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TearOutWindow);
 };
