@@ -67,11 +67,18 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
         ta->dismissWithValue(search[lastRowSelected],
                              provider->textBoxValueForIndex(search[lastRowSelected]), m);
     }
+
     void escapeKeyPressed() { ta->dismissWithoutValue(); }
 
     void listBoxItemClicked(int row, const juce::MouseEvent &event) override
     {
         returnKeyPressed(row);
+    }
+
+    void listBoxItemDoubleClicked(int row, const juce::MouseEvent &event) override
+    {
+        returnKeyPressed(row);
+        ta->dismissWithoutValue();
     }
 };
 
