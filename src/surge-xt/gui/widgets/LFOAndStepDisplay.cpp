@@ -211,11 +211,11 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
             switch (q)
             {
             case 1:
-                return "Trigger FEG + AEG";
+                return "Trigger Filter env and Amp env";
             case 2:
-                return "Trigger FEG";
+                return "Trigger Filter env";
             case 3:
-                return "Trigger AEG";
+                return "Trigger Amp env";
             }
             return "No Triggers";
         };

@@ -108,6 +108,8 @@ enum DefaultKey
     ModListValueDisplay,
     MenuLightness,
 
+    UseNarratorAnnouncements,
+
     // Surge XT Effects specific defaults
     FXUnitAssumeFixedBlock,
 

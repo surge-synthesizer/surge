@@ -477,6 +477,18 @@ void SurgeGUIEditor::idle()
         needsModUpdate = false;
     }
 
+    if (sendStructureChangeIn > 0)
+    {
+        sendStructureChangeIn--;
+        if (sendStructureChangeIn == 0)
+        {
+            if (auto *handler = frame->getAccessibilityHandler())
+            {
+                handler->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
+            }
+        }
+    }
+
     if (!accAnnounceStrings.empty())
     {
         auto h = frame->getAccessibilityHandler();
@@ -2090,10 +2102,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         patchSelector->grabKeyboardFocus();
     }
 
-    if (auto *handler = frame->getAccessibilityHandler())
-    {
-        handler->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
-    }
+    sendStructureChangeIn = 120;
 
     frame->repaint();
 }
@@ -3918,6 +3927,15 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                                     showShortcutDescription("Alt + B", u8"\U00002325B"), true,
                                     false, [this]() { toggleOverlay(KEYBINDINGS_EDITOR); });
 
+    bool doAccAnn = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, true);
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Add Additional Accessibility Announcements"), true,
+                   doAccAnn, [this, doAccAnn]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements,
+                           !doAccAnn);
+                   });
     wfMenu.addSeparator();
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
@@ -7374,5 +7392,15 @@ void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bo
         closeOverlay(SAVE_PATCH);
 
         synth->jogPatchOrCategory(increment, isCategory, insideCategory);
+    }
+}
+
+void SurgeGUIEditor::enqueueAccessibleAnnouncement(const std::string &s)
+{
+    auto doAcc = Surge::Storage::getUserDefaultValue(
+        &(synth->storage), Surge::Storage::UseNarratorAnnouncements, true);
+    if (doAcc)
+    {
+        accAnnounceStrings.push_back({s, 3});
     }
 }

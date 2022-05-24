@@ -1254,6 +1254,13 @@ bool PatchSelector::keyPressed(const juce::KeyPress &key)
         showClassicMenu();
         return true;
     }
+
+    if (action == Return)
+    {
+        showClassicMenu();
+        return true;
+    }
+
     return false;
 }
 
@@ -1265,7 +1272,7 @@ class PatchSelectorAH : public juce::AccessibilityHandler
                              *sel, juce::AccessibilityRole::label,
                              juce::AccessibilityActions()
                                  .addAction(juce::AccessibilityActionType::press,
-                                            [sel] { sel->openPatchBrowser(); })
+                                            [sel] { sel->showClassicMenu(); })
                                  .addAction(juce::AccessibilityActionType::showMenu,
                                             [sel] { sel->showClassicMenu(); }),
                              {std::make_unique<PatchSelectorValueInterface>(sel)})

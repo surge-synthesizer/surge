@@ -22,6 +22,7 @@
 #include "SurgeGUIUtils.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include <fmt/core.h>
 
 namespace Surge
 {
@@ -352,7 +353,7 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     std::function<float(T *)> onGetValue = [](T *) { return 0.f; };
     std::function<void(T *, float f)> onSetValue = [](T *, float f) { return; };
     std::function<std::string(T *, float f)> onValueToString = [](T *, float f) {
-        return std::to_string(f);
+        return fmt::format("{:.3f}", f);
     };
     std::function<void(T *, int, bool, bool)> onJogValue = [](T *, int, bool, bool) {
         jassert(false);
@@ -483,33 +484,44 @@ template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::
         return false;
 
     auto [action, mod] = Surge::Widgets::accessibleEditAction(key, under->storage);
+    auto ah = getAccessibilityHandler();
 
     if (action == Increase)
     {
         onJogValue(under, +1, key.getModifiers().isShiftDown(), key.getModifiers().isCtrlDown());
+        if (ah)
+            ah->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         return true;
     }
     if (action == Decrease)
     {
         onJogValue(under, -1, key.getModifiers().isShiftDown(), key.getModifiers().isCtrlDown());
+        if (ah)
+            ah->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         return true;
     }
 
     if (action == ToMax)
     {
         onMinMaxDef(under, 1);
+        if (ah)
+            ah->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         return true;
     }
 
     if (action == ToMin)
     {
         onMinMaxDef(under, -1);
+        if (ah)
+            ah->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         return true;
     }
 
     if (action == ToDefault)
     {
         onMinMaxDef(under, 0);
+        if (ah)
+            ah->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         return true;
     }
     return false;

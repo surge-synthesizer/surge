@@ -709,6 +709,7 @@ void FormulaModulatorEditor::applyCode()
     editor->repaintFrame();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
     setApplyEnabled(false);
+    mainEditor->grabKeyboardFocus();
 }
 
 void FormulaModulatorEditor::setApplyEnabled(bool b)
