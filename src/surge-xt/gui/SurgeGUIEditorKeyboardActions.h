@@ -60,6 +60,9 @@ enum KeyboardActions
     ZOOM_MINUS_10,
     ZOOM_MINUS_25,
 
+    FOCUS_NEXT_CONTROL_GROUP,
+    FOCUS_PRIOR_CONTROL_GROUP,
+
     REFRESH_SKIN,
     SKIN_LAYOUT_GRID,
 
@@ -136,6 +139,11 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "REFRESH_SKIN";
     case SKIN_LAYOUT_GRID:
         return "SKIN_LAYOUT_GRID";
+
+    case FOCUS_NEXT_CONTROL_GROUP:
+        return "FOCUS_NEXT_CONTROL_GROUP";
+    case FOCUS_PRIOR_CONTROL_GROUP:
+        return "FOCUS_PRIOR_CONTROL_GROUP";
 
     case OPEN_MANUAL:
         return "OPEN_MANUAL";
@@ -247,6 +255,13 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         break;
     case SKIN_LAYOUT_GRID:
         desc = "Toggle Layout Grid";
+        break;
+
+    case FOCUS_NEXT_CONTROL_GROUP:
+        desc = "Move Focus to Next Control Group";
+        break;
+    case FOCUS_PRIOR_CONTROL_GROUP:
+        desc = "Move Focus to Prior Control Group";
         break;
 
     case OPEN_MANUAL:

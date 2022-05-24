@@ -118,7 +118,9 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
     std::string textBoxValueForIndex(int idx) override
     {
         if (storage)
+        {
             return storage->patch_category[idx].name;
+        }
         return "";
     }
 };
