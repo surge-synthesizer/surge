@@ -361,6 +361,9 @@ void OscillatorMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
         auto sc = sge->current_scene;
         sge->oscilatorMenuIndex[sc][sge->current_osc[sc]] = idx;
         sge->undoManager()->pushOscillator(sc, sge->current_osc[sc]);
+
+        auto announce = std::string("Oscillator Type is ") + osc_type_names[type];
+        sge->enqueueAccessibleAnnouncement(announce);
     }
     osc->queue_type = type;
     osc->queue_xmldata = e;

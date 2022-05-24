@@ -469,10 +469,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::vector<DAWExtraStateStorage::EditorState::OverlayState> overlaysForNextIdle;
 
     std::deque<std::pair<std::string, int>> accAnnounceStrings;
-    void enqueueAccessibleAnnouncement(const std::string &s)
-    {
-        accAnnounceStrings.push_back({s, 3});
-    }
+    void enqueueAccessibleAnnouncement(const std::string &s);
     void setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
                                                 const std::string &action);
 
@@ -764,6 +761,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     float blinktimer = 0;
     bool blinkstate = false;
     int firstIdleCountdown = 0;
+    int sendStructureChangeIn = -1;
 
     juce::PopupMenu makeSmoothMenu(const juce::Point<int> &where,
                                    const Surge::Storage::DefaultKey &key, int defaultValue,

@@ -237,6 +237,10 @@ std::string defaultKeyToString(DefaultKey k)
         r = "menuLightness";
         break;
 
+    case UseNarratorAnnouncements:
+        r = "useNarratorAnnouncements";
+        break;
+
     case FXUnitAssumeFixedBlock:
         r = "fxAssumeFixedBlock";
         break;
