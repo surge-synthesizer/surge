@@ -256,27 +256,36 @@ void FilterAnalysis::paint(juce::Graphics &g)
         bool started = false;
         const auto nPoints = freqAxis.size();
 
-        for (int i = 0; i < nPoints; ++i)
+        if (nPoints == 0)
         {
-            if (freqAxis[i] < lowFreq / 2.f || freqAxis[i] > highFreq * 1.01f)
+            auto yDraw = dbToY(-6, height);
+            plotPath.startNewSubPath(0, yDraw);
+            plotPath.lineTo(dRect.getX() + width, yDraw);
+        }
+        else
+        {
+            for (int i = 0; i < nPoints; ++i)
             {
-                continue;
-            }
+                if (freqAxis[i] < lowFreq / 2.f || freqAxis[i] > highFreq * 1.01f)
+                {
+                    continue;
+                }
 
-            auto xDraw = freqToX(freqAxis[i], width);
-            auto yDraw = dbToY(magResponseDBSmoothed[i], height);
+                auto xDraw = freqToX(freqAxis[i], width);
+                auto yDraw = dbToY(magResponseDBSmoothed[i], height);
 
-            xDraw += dRect.getX();
-            yDraw += dRect.getY();
+                xDraw += dRect.getX();
+                yDraw += dRect.getY();
 
-            if (!started)
-            {
-                plotPath.startNewSubPath(xDraw, yDraw);
-                started = true;
-            }
-            else
-            {
-                plotPath.lineTo(xDraw, yDraw);
+                if (!started)
+                {
+                    plotPath.startNewSubPath(xDraw, yDraw);
+                    started = true;
+                }
+                else
+                {
+                    plotPath.lineTo(xDraw, yDraw);
+                }
             }
         }
     }

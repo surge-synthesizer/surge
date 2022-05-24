@@ -313,7 +313,7 @@ Button *SurgeJUCELookAndFeel::createDocumentWindowButton(int buttonType)
                                                              shape, shape);
     }
 
-    if (buttonType == DocumentWindow::maximiseButton)
+    if (buttonType == DocumentWindow::maximiseButton) // HACK
     {
         shape.addLineSegment({0.0f, 0.0f, 1.0f, 0.0f}, crossThickness); // top
         shape.addRectangle(0.0f, 0.0f, 1.0f, 1.0f);
