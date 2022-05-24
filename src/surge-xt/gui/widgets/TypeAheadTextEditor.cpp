@@ -67,11 +67,19 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
         ta->dismissWithValue(search[lastRowSelected],
                              provider->textBoxValueForIndex(search[lastRowSelected]), m);
     }
+
     void escapeKeyPressed() { ta->dismissWithoutValue(); }
 
     void listBoxItemClicked(int row, const juce::MouseEvent &event) override
     {
         returnKeyPressed(row);
+    }
+
+    // if we have the listbox sticking around after patch load,
+    // make sure we dismiss it on double click!
+    void listBoxItemDoubleClicked(int row, const juce::MouseEvent &event) override
+    {
+        ta->dismissWithoutValue();
     }
 };
 
