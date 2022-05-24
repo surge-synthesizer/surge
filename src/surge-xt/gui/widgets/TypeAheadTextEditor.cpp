@@ -75,9 +75,10 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
         returnKeyPressed(row);
     }
 
+    // if we have the listbox sticking around after patch load,
+    // make sure we dismiss it on double click!
     void listBoxItemDoubleClicked(int row, const juce::MouseEvent &event) override
     {
-        returnKeyPressed(row);
         ta->dismissWithoutValue();
     }
 };
