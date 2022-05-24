@@ -88,18 +88,27 @@ enum DefaultKey
     ModlistOverlayLocationTearOut,
     MSEGOverlayLocationTearOut,
     FormulaOverlayLocationTearOut,
+    WSAnalysisOverlayLocationTearOut,
     FilterAnalysisOverlayLocationTearOut,
 
     TuningOverlaySizeTearOut,
     ModlistOverlaySizeTearOut,
     MSEGOverlaySizeTearOut,
     FormulaOverlaySizeTearOut,
+    WSAnalysisOverlaySizeTearOut,
     FilterAnalysisOverlaySizeTearOut,
+
+    TuningOverlayTearOutAlwaysOnTop,
+    ModlistOverlayTearOutAlwaysOnTop,
+    MSEGOverlayTearOutAlwaysOnTop,
+    FormulaOverlayTearOutAlwaysOnTop,
+    WSAnalysisOverlayTearOutAlwaysOnTop,
+    FilterAnalysisOverlayTearOutAlwaysOnTop,
 
     ModListValueDisplay,
     MenuLightness,
 
-    // Some FX Bank specific ones
+    // Surge XT Effects specific defaults
     FXUnitAssumeFixedBlock,
 
     nKeys

@@ -149,7 +149,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         jassert(false); // Make a key for me please!
 
-        pt->setCanTearOut({true, Surge::Storage::nKeys});
+        pt->setCanTearOut({true, Surge::Storage::nKeys, Surge::Storage::nKeys});
 
         return pt;
     }
@@ -204,7 +204,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         Surge::Storage::findReplaceSubstring(title, std::string("LFO"), std::string("MSEG"));
 
         mse->setEnclosingParentTitle(title);
-        mse->setCanTearOut({true, Surge::Storage::MSEGOverlayLocationTearOut});
+        mse->setCanTearOut({true, Surge::Storage::MSEGOverlayLocationTearOut,
+                            Surge::Storage::MSEGOverlayTearOutAlwaysOnTop});
         mse->setCanTearOutResize({true, Surge::Storage::MSEGOverlaySizeTearOut});
         mse->setMinimumSize(600, 250);
         locationGet(mse.get(), Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW,
@@ -253,7 +254,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         fme->setSkin(currentSkin, bitmapStore);
         fme->setEnclosingParentTitle(title);
-        fme->setCanTearOut({true, Surge::Storage::FormulaOverlayLocationTearOut});
+        fme->setCanTearOut({true, Surge::Storage::FormulaOverlayLocationTearOut,
+                            Surge::Storage::FormulaOverlayTearOutAlwaysOnTop});
         fme->setCanTearOutResize({true, Surge::Storage::FormulaOverlaySizeTearOut});
         fme->setMinimumSize(500, 250);
         locationGet(fme.get(),
@@ -277,7 +279,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         te->setSkin(currentSkin, bitmapStore);
         te->setTuning(synth->storage.currentTuning);
         te->setEnclosingParentTitle("Tuning Editor");
-        te->setCanTearOut({true, Surge::Storage::TuningOverlayLocationTearOut});
+        te->setCanTearOut({true, Surge::Storage::TuningOverlayLocationTearOut,
+                           Surge::Storage::TuningOverlayTearOutAlwaysOnTop});
         te->setCanTearOutResize({true, Surge::Storage::TuningOverlaySizeTearOut});
         te->setMinimumSize(730, 400);
         locationGet(te.get(), Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW,
@@ -317,6 +320,10 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         wsa->setSkin(currentSkin, bitmapStore);
         wsa->setEnclosingParentTitle("Waveshaper Analysis");
         wsa->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
+        wsa->setCanTearOut({true, Surge::Storage::WSAnalysisOverlayLocationTearOut,
+                            Surge::Storage::WSAnalysisOverlayTearOutAlwaysOnTop});
+        wsa->setCanTearOutResize({true, Surge::Storage::WSAnalysisOverlaySizeTearOut});
+        wsa->setMinimumSize(300, 160);
 
         return wsa;
     }
@@ -331,7 +338,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         fa->setSkin(currentSkin, bitmapStore);
         fa->setEnclosingParentTitle("Filter Analysis");
-        fa->setCanTearOut({true, Surge::Storage::FilterAnalysisOverlayLocationTearOut});
+        fa->setCanTearOut({true, Surge::Storage::FilterAnalysisOverlayLocationTearOut,
+                           Surge::Storage::FilterAnalysisOverlayTearOutAlwaysOnTop});
         fa->setCanTearOutResize({true, Surge::Storage::FilterAnalysisOverlaySizeTearOut});
         fa->setMinimumSize(300, 200);
 
@@ -342,7 +350,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
     {
         auto me = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
         me->setEnclosingParentTitle("Modulation List");
-        me->setCanTearOut({true, Surge::Storage::ModlistOverlayLocationTearOut});
+        me->setCanTearOut({true, Surge::Storage::ModlistOverlayLocationTearOut,
+                           Surge::Storage::ModlistOverlayTearOutAlwaysOnTop});
         me->setCanTearOutResize({true, Surge::Storage::ModlistOverlaySizeTearOut});
         me->setMinimumSize(600, 300);
         me->setSkin(currentSkin, bitmapStore);
@@ -533,6 +542,7 @@ Surge::Overlays::OverlayWrapper *SurgeGUIEditor::addJuceEditorOverlay(
     });
 
     auto olc = dynamic_cast<Surge::Overlays::OverlayComponent *>(c.get());
+
     if (olc)
     {
         ol->setCanTearOut(olc->getCanTearOut());

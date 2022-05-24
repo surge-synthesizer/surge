@@ -91,8 +91,11 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
 {
     hasInteriorDec = true;
     auto sp = getLocalBounds();
+
     if (isModal)
+    {
         sp = componentBounds;
+    }
 
     auto q = sp.reduced(2 * margin, 2 * margin)
                  .withTrimmedBottom(titlebarSize)
@@ -104,6 +107,7 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
     auto closeButtonBounds =
         getLocalBounds().withHeight(buttonSize).withLeft(getWidth() - buttonSize).translated(-2, 2);
     auto tearOutButtonBounds = closeButtonBounds.translated(-buttonSize - 2, 0);
+
     if (showCloseButton)
     {
         closeButton->setVisible(true);
@@ -127,10 +131,12 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
     addAndMakeVisible(*primaryChild);
 
     auto paintTitle = title;
+
     if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
     {
         paintTitle = oc->getEnclosingParentTitle();
     }
+
     setTitle(paintTitle);
     setDescription(paintTitle);
 }
@@ -160,35 +166,51 @@ void OverlayWrapper::visibilityChanged()
 
 bool OverlayWrapper::isTornOut() { return tearOutParent != nullptr; }
 
-struct TearOutWindow : public juce::DocumentWindow
+struct TearOutWindow : public juce::DocumentWindow, public Surge::GUI::SkinConsumingComponent
 {
     struct PinButton : juce::Component
     {
         TearOutWindow *window{nullptr};
         PinButton(TearOutWindow *w) : window(w) {}
+
         void paint(juce::Graphics &g) override
         {
             if (hovered)
-                g.fillAll(juce::Colours::orange);
+            {
+                g.fillAll(juce::Colour(96, 96, 96));
+            }
 
-            g.setColour(juce::Colours::white);
+            // g.setColour(juce::Colours::white);
+            g.setColour(window->skin->getColor(Colors::Dialog::Titlebar::Text));
+
+            juce::Rectangle<int> pinHead = getLocalBounds().reduced(12, 6).removeFromTop(10);
+            juce::Line<int> pinEdge{pinHead.getBottomLeft().translated(-3, 0),
+                                    pinHead.getBottomRight().translated(3, 0)};
+            juce::Line<float> pinNeedle{
+                pinEdge.toFloat().getPointAlongLineProportionally(0.5).translated(0.f, 2.f),
+                pinEdge.toFloat().getPointAlongLineProportionally(0.5).translated(0.f, 5.f)};
 
             if (window->isPinned)
             {
-                g.drawFittedText("T", getLocalBounds(), juce::Justification::centred, 1);
+                g.fillRect(pinHead.removeFromBottom(5));
             }
             else
             {
-                g.drawFittedText("F", getLocalBounds(), juce::Justification::centred, 1);
+                g.drawRect(pinHead.toFloat(), 1.75f);
             }
+
+            g.drawLine(pinEdge.toFloat(), 2.5f);
+            g.drawLine(pinNeedle, 2.5f);
         }
 
         bool hovered{false};
+
         void mouseEnter(const juce::MouseEvent &e) override
         {
             hovered = true;
             repaint();
         }
+
         void mouseExit(const juce::MouseEvent &e) override
         {
             hovered = false;
@@ -203,18 +225,29 @@ struct TearOutWindow : public juce::DocumentWindow
             }
         }
     };
-    TearOutWindow(const juce::String &s, int x) : juce::DocumentWindow(s, juce::Colours::black, x)
+
+    bool isPinned{false};
+    OverlayWrapper *wrapping{nullptr};
+
+    TearOutWindow(const juce::String &s, int x, const bool pinned)
+        : juce::DocumentWindow(s, juce::Colours::black, x)
     {
         pinButton = std::make_unique<PinButton>(this);
         Component::addAndMakeVisible(pinButton.get());
+
+        isPinned = pinned;
+        setAlwaysOnTop(isPinned);
     }
 
-    OverlayWrapper *wrapping{nullptr};
-    bool isPinned{false};
+    void onSkinChanged() override { pinButton->repaint(); }
 
     void togglePin()
     {
         isPinned = !isPinned;
+
+        Surge::Storage::updateUserDefaultValue(wrapping->storage,
+                                               std::get<2>(wrapping->canTearOutData), isPinned);
+
         setAlwaysOnTop(isPinned);
         repaint();
     }
@@ -241,10 +274,16 @@ struct TearOutWindow : public juce::DocumentWindow
         juce::DocumentWindow::resized();
 
         auto tba = getTitleBarArea();
-        auto tbh = tba.getHeight();
+        auto tbh = tba.getHeight() + 5;
+        auto xPos = tba.getRight() - (3 * tbh);
 
-        auto r = juce::Rectangle<int>((int)(2.5 * tbh), 0, tbh, tbh);
-        pinButton->setBounds(r.reduced(2));
+#if MAC
+        xPos = 3 * xPos;
+#endif
+
+        auto r = juce::Rectangle<int>(xPos, 1, tbh, tbh);
+
+        pinButton->setBounds(r);
     }
 
     void closeButtonPressed() override
@@ -284,8 +323,9 @@ struct TearOutWindow : public juce::DocumentWindow
         {
             auto tl = getBounds().getTopLeft();
 
-            Surge::Storage::updateUserDefaultValue(
-                wrapping->storage, wrapping->canTearOutPair.second, std::make_pair(tl.x, tl.y));
+            Surge::Storage::updateUserDefaultValue(wrapping->storage,
+                                                   std::get<1>(wrapping->canTearOutData),
+                                                   std::make_pair(tl.x, tl.y));
         }
     }
 
@@ -332,8 +372,11 @@ void OverlayWrapper::resized()
                 }
             }
         }
+
         auto topcc = tearOutParent->getContentComponent()->getBounds();
+
         primaryChild->setBounds(0, 0, topcc.getWidth(), topcc.getHeight());
+
         if (resizeRecordsSize)
         {
             Surge::Storage::updateUserDefaultValue(storage, canTearOutResizePair.second,
@@ -346,16 +389,21 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
 {
     auto rvs = juce::ScopedValueSetter(resizeRecordsSize, false);
     auto pt = std::make_pair(-1, -1);
+
     if (storage)
+    {
         pt = Surge::Storage::getUserDefaultValue(storage, canTearOutResizePair.second, pt);
+    }
 
     parentBeforeTearOut = getParentComponent();
     locationBeforeTearOut = getBoundsInParent();
     childLocationBeforeTearOut = primaryChild->getBounds();
+
     getParentComponent()->removeChildComponent(this);
 
     auto w = getWidth();
     auto h = getHeight();
+
     if (editor)
     {
         auto sc = 1.0 * editor->getZoomFactor() / 100.0;
@@ -368,37 +416,50 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     }
 
     if (pt.first > 0)
+    {
         w = pt.first;
+    }
+
     if (pt.second > 0)
+    {
         h = pt.second;
+    }
 
     std::string t = "Tear Out";
+
     if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
     {
         t = oc->getEnclosingParentTitle();
         oc->onTearOutChanged(true);
     }
-    auto dw = std::make_unique<TearOutWindow>(t, juce::DocumentWindow::closeButton |
-                                                     juce::DocumentWindow::minimiseButton);
+
+    auto dw = std::make_unique<TearOutWindow>(
+        t, juce::DocumentWindow::closeButton | juce::DocumentWindow::minimiseButton, isAlwaysOnTop);
     dw->supressMoveUpdates = true;
     dw->setContentNonOwned(this, false);
+    dw->setSkin(skin, associatedBitmapStore);
 
     auto brd = dw->getContentComponentBorder();
+
     dw->setContentComponentSize(w, h);
     dw->setVisible(true);
+
     // CONSTRAINER SETUP
     tearOutConstrainer.reset();
+
     if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
     {
         if (oc->minh > 0 || oc->minw > 0)
         {
             tearOutConstrainer = std::make_unique<juce::ComponentBoundsConstrainer>();
+
             auto mw = oc->minw;
             auto mh = oc->minh;
 
             primaryChild->getTransform().transformPoint(mw, mh);
 
             auto sz = dw->getContentComponentBorder();
+
             mw += sz.getLeftAndRight();
             mh += sz.getTopAndBottom();
 
@@ -406,32 +467,42 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
             {
                 tearOutConstrainer->setMinimumWidth(mw);
             }
+
             if (mh > 0)
             {
                 tearOutConstrainer->setMinimumHeight(mh);
             }
+
             dw->setConstrainer(tearOutConstrainer.get());
         }
     }
+
     dw->setResizable(canTearOutResize, canTearOutResize);
+
     if (showAt.x >= 0 && showAt.y >= 0)
         dw->setTopLeftPosition(showAt.x, showAt.y);
     else
     {
         auto pt = std::make_pair(-1, -1);
+
         if (storage)
-            pt = Surge::Storage::getUserDefaultValue(storage, canTearOutPair.second, pt);
+        {
+            pt = Surge::Storage::getUserDefaultValue(storage, std::get<1>(canTearOutData), pt);
+        }
+
         auto dt = juce::Desktop::getInstance()
                       .getDisplays()
                       .getDisplayForPoint(editor->frame->getBounds().getTopLeft())
                       ->userArea;
         auto dtp = juce::Point<int>((dt.getWidth() - w) / 2, (dt.getHeight() - h) / 2);
+
         if (pt.first > 0 && pt.second > 0 && pt.first < dt.getWidth() - w / 2 &&
             pt.second < dt.getHeight() - h / 2)
         {
             dtp.x = pt.first;
             dtp.y = pt.second;
         }
+
         dw->setTopLeftPosition(dtp);
     }
 
@@ -468,14 +539,19 @@ void OverlayWrapper::doTearIn()
         onClose();
         return;
     }
+
     tearOutParent.reset(nullptr);
     hasInteriorDec = true;
 
     primaryChild->setTransform(juce::AffineTransform());
     primaryChild->setBounds(childLocationBeforeTearOut);
     setBounds(locationBeforeTearOut);
-    parentBeforeTearOut->addAndMakeVisible(*this);
-    parentBeforeTearOut = nullptr;
+
+    if (parentBeforeTearOut)
+    {
+        parentBeforeTearOut->addAndMakeVisible(*this);
+        parentBeforeTearOut = nullptr;
+    }
 
     if (auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(primaryChild.get()))
     {
@@ -486,9 +562,12 @@ void OverlayWrapper::doTearIn()
 void OverlayWrapper::mouseDown(const juce::MouseEvent &e)
 {
     if (isTornOut())
+    {
         return;
+    }
 
     auto c = getPrimaryChildAsOverlayComponent();
+
     if (c && c->getCanMoveAround())
     {
         isDragging = true;
@@ -513,7 +592,9 @@ void OverlayWrapper::mouseDoubleClick(const juce::MouseEvent &e)
         auto p = c->defaultLocation;
         auto b = getBounds();
         auto q = juce::Rectangle<int>(p.x, p.y, b.getWidth(), b.getHeight());
+
         setBounds(q);
+
         Surge::Storage::updateUserDefaultValue(storage, c->getMoveAroundKey(),
                                                std::make_pair(p.x, p.y));
     }
@@ -522,10 +603,14 @@ void OverlayWrapper::mouseDoubleClick(const juce::MouseEvent &e)
 void OverlayWrapper::mouseUp(const juce::MouseEvent &e)
 {
     if (isTornOut())
+    {
         return;
+    }
 
     toFront(true);
+
     auto c = getPrimaryChildAsOverlayComponent();
+
     if (c && c->getCanMoveAround() && editor)
     {
         isDragging = false;
@@ -579,18 +664,29 @@ OverlayComponent *OverlayWrapper::getPrimaryChildAsOverlayComponent()
 void OverlayWrapper::onSkinChanged()
 {
     auto skc = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(primaryChild.get());
+
     if (skc)
     {
         skc->setSkin(skin, associatedBitmapStore);
     }
+
     icon = associatedBitmapStore->getImage(IDB_SURGE_ICON);
+
     if (tearOutParent)
     {
         tearOutParent->setColour(
             juce::DocumentWindow::backgroundColourId,
             findColour(SurgeJUCELookAndFeel::SurgeColourIds::topWindowBorderId));
         tearOutParent->repaint();
+
+        auto skc = dynamic_cast<Surge::GUI::SkinConsumingComponent *>(tearOutParent.get());
+
+        if (skc)
+        {
+            skc->setSkin(skin, associatedBitmapStore);
+        }
     }
+
     repaint();
 }
 

@@ -50,9 +50,16 @@ struct OverlayComponent : juce::Component
      */
     virtual void shownInParent() {}
 
-    std::pair<bool, Surge::Storage::DefaultKey> canTearOut{false, Surge::Storage::nKeys};
-    void setCanTearOut(std::pair<bool, Surge::Storage::DefaultKey> b) { canTearOut = b; }
-    std::pair<bool, Surge::Storage::DefaultKey> getCanTearOut() { return canTearOut; }
+    std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> canTearOut{
+        false, Surge::Storage::nKeys, Surge::Storage::nKeys};
+    void setCanTearOut(std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> t)
+    {
+        canTearOut = t;
+    }
+    std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> getCanTearOut()
+    {
+        return canTearOut;
+    }
     virtual void onTearOutChanged(bool isTornOut) {}
 
     std::pair<bool, Surge::Storage::DefaultKey> canTearOutResize{false, Surge::Storage::nKeys};

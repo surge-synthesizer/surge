@@ -77,13 +77,20 @@ struct OverlayWrapper : public juce::Component,
     SurgeImage *icon{nullptr};
     void setIcon(SurgeImage *d) { icon = d; }
 
-    std::pair<bool, Surge::Storage::DefaultKey> canTearOutPair{false, Surge::Storage::nKeys};
-    bool canTearOut;
-    void setCanTearOut(std::pair<bool, Surge::Storage::DefaultKey> b)
+    std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> canTearOutData{
+        false, Surge::Storage::nKeys, Surge::Storage::nKeys};
+    bool canTearOut, isAlwaysOnTop;
+    void setCanTearOut(std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> t)
     {
-        canTearOutPair = b;
-        canTearOut = b.first;
+        canTearOutData = t;
+        canTearOut = std::get<0>(t);
+        isAlwaysOnTop = Surge::Storage::getUserDefaultValue(storage, std::get<2>(t), false);
     }
+    std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> getCanTearOut()
+    {
+        return canTearOutData;
+    }
+
     std::pair<bool, Surge::Storage::DefaultKey> canTearOutResizePair{false, Surge::Storage::nKeys};
     bool canTearOutResize;
     void setCanTearOutResize(std::pair<bool, Surge::Storage::DefaultKey> b)
@@ -98,7 +105,7 @@ struct OverlayWrapper : public juce::Component,
     bool isTornOut();
     juce::Point<int> currentTearOutLocation();
     juce::Rectangle<int> locationBeforeTearOut, childLocationBeforeTearOut;
-    juce::Component *parentBeforeTearOut{nullptr};
+    juce::Component::SafePointer<juce::Component> parentBeforeTearOut{nullptr};
 
     bool hasInteriorDec{true};
     void supressInteriorDecoration();
