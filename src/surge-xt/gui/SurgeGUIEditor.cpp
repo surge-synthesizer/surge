@@ -7025,6 +7025,36 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 }
                 else
                 {
+                    // We are off the end. If dir = +1 grab the smallest, else the largest
+                    juce::Component *wrapper;
+                    int lccg = (dir > 0 ? std::numeric_limits<int>::max() : 0);
+                    for (auto c : frame->getChildren())
+                    {
+                        auto ccg = (int)c->getProperties().getWithDefault("ControlGroup", -1);
+                        if (ccg < 0)
+                            continue;
+                        if (dir > 0 && ccg < lccg)
+                        {
+                            lccg = ccg;
+                            wrapper = c;
+                        }
+                        if (dir < 0 && ccg > lccg)
+                        {
+                            lccg = ccg;
+                            wrapper = c;
+                        }
+                    }
+                    if (wrapper)
+                    {
+                        for (auto c : wrapper->getChildren())
+                        {
+                            if (c->getWantsKeyboardFocus() && c->isShowing())
+                            {
+                                c->grabKeyboardFocus();
+                                return true;
+                            }
+                        }
+                    }
                     return false;
                 }
             }
