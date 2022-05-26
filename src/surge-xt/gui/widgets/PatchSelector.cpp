@@ -1382,7 +1382,7 @@ void PatchSelector::searchUpdated()
             }
         }
     };
-    juce::Timer::callAfterDelay(3 * 1000, cb);
+    juce::Timer::callAfterDelay(1.0 * 1000, cb);
 }
 
 } // namespace Widgets
