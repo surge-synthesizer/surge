@@ -1554,8 +1554,10 @@ void Parameter::set_type(int ctrltype)
         displayType = ATwoToTheBx;
         displayInfo.a = 0.5f;
         displayInfo.b = std::log2(4.5f / 0.5f);
-        displayInfo.decimals = 2;
+        displayInfo.decimals = 3;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "s");
+        break;
+
     case ct_pbdepth:
         displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys;
         break;
