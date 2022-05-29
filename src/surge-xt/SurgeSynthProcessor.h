@@ -167,14 +167,14 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
               std::string("macro_") + std::to_string(macroNum),
 #endif
 
-              std::string("C: ") + std::to_string(macroNum), "")
+              std::string("M") + std::to_string(macroNum + 1), "")
     {
         setValueNotifyingHost(getValue());
     }
 
     juce::String getName(int i) const override
     {
-        juce::String res = "C" + std::to_string(macroNum) + ": ";
+        juce::String res = "M" + std::to_string(macroNum + 1) + ": ";
         res += SurgeParamToJuceInfo::getMacroName(s, macroNum);
 
         res = res.substring(0, i);

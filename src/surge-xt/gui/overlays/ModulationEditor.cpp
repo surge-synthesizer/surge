@@ -124,6 +124,7 @@ struct ModulationSideControls : public juce::Component,
         dispL = makeL("Value Display");
         dispW = makeW({"None", "Depths", "Values and Depths", "Values, Depths and Ranges"},
                       tag_value_disp, true, "Value Displays", true);
+        dispW->setAccessible(false);
 
         auto dwv = Surge::Storage::getUserDefaultValue(&(editor->synth->storage),
                                                        Storage::ModListValueDisplay, 3);

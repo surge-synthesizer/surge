@@ -88,7 +88,7 @@ struct ModulationSourceButton : public juce::Component,
     }
     bool isMeta{false}, isBipolar{false};
     void setIsMeta(bool b) { isMeta = b; }
-    void setBipolar(bool b) { isBipolar = b; }
+    void setIsBipolar(bool b);
 
     bool containsModSource(modsources ms)
     {
