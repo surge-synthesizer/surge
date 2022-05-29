@@ -1362,7 +1362,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 gui_modsrc[ms]->setCurrentModLabel(
                     synth->storage.getPatch().CustomControllerLabel[ms - ms_ctrl1]);
                 gui_modsrc[ms]->setIsMeta(true);
-                gui_modsrc[ms]->setBipolar(
+                gui_modsrc[ms]->setIsBipolar(
                     synth->storage.getPatch().scene[current_scene].modsources[ms]->is_bipolar());
                 gui_modsrc[ms]->setValue(((ControllerModulationSource *)synth->storage.getPatch()
                                               .scene[current_scene]

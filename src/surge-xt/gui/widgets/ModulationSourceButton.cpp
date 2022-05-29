@@ -81,6 +81,12 @@ ModulationSourceButton::ModulationSourceButton()
     auto os =
         std::make_unique<OverlayAsAccessibleSlider<ModulationSourceButton>>(this, "macro value");
     os->onGetValue = [this](auto *t) { return value; };
+    os->onValueToString = [this](auto *t, float f) {
+        auto v = f;
+        if (isBipolar)
+            v = v * 2 - 1;
+        return fmt::format("{:.3f}", v);
+    };
     os->onSetValue = [this](auto *t, float f) {
         value = limit01(f);
         mouseMode = DRAG_VALUE;
@@ -110,12 +116,12 @@ ModulationSourceButton::ModulationSourceButton()
             h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
     };
     os->onJogValue = [this](auto *t, int dir, bool isShift, bool isControl) {
-        auto delt = 0.05;
+        auto delt = 0.05f;
         if (isShift)
             delt = delt * 0.1;
         if (dir < 0)
             delt *= -1;
-        value = value + delt;
+        value = limit01(value + delt);
         mouseMode = DRAG_VALUE;
 
         notifyBeginEdit();
@@ -894,6 +900,19 @@ void ModulationOverviewLaunchButton::paintButton(juce::Graphics &g,
         g.drawText(s, juce::Rectangle<int>(0, y0, getWidth(), h), juce::Justification::centred);
 
         y0 += h;
+    }
+}
+
+void ModulationSourceButton::setIsBipolar(bool b)
+{
+    auto wasBipolar = isBipolar;
+    isBipolar = b;
+    if (macroSlider && wasBipolar != isBipolar)
+    {
+        if (auto h = macroSlider->getAccessibilityHandler())
+        {
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+        }
     }
 }
 

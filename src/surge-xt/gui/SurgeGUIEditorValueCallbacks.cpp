@@ -1110,7 +1110,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         if (msb)
                         {
-                            msb->setBipolar(bp);
+                            msb->setIsBipolar(bp);
                         }
 
                         refresh_mod();
