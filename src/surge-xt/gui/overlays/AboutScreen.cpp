@@ -352,9 +352,13 @@ void AboutScreen::resized()
 
         yp += lblvs;
 
-        addLabel("VST is a trademark of Steinberg Media Technologies GmbH;Audio Units is a "
+        addLabel("VST is a trademark of Steinberg Media Technologies GmbH; Audio Units is a "
                  "trademark of Apple Inc.",
                  600);
+
+        yp += lblvs;
+
+        addLabel("CLAP support is licensed under MIT license", 600);
 
         yp += lblvs;
 
@@ -396,7 +400,7 @@ void AboutScreen::resized()
             600);
 
         auto img = associatedBitmapStore->getImage(IDB_ABOUT_LOGOS);
-        auto idxes = {0, 4, 3, 1, 2, 5};
+        auto idxes = {0, 4, 3, 6, 1, 2, 5};
 
         std::vector<std::string> urls = {
             stringRepository,
@@ -404,22 +408,24 @@ void AboutScreen::resized()
             "https://developer.apple.com/documentation/audiounit",
             "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
             "https://discord.gg/aFQDdMV",
-            "https://juce.com"};
+            "https://juce.com",
+            "https://github.com/free-audio/clap"};
 
-        std::vector<std::string> urllabels = {"Surge XT GitHub Repository", "Steinberg VST3",
-                                              "Apple Audio Units",          "GNU GPL3",
-                                              "Join our Discord!",          "JUCE Framework"};
-        int x = 0;
+        std::vector<std::string> urllabels = {
+            "Surge XT GitHub Repository", "Steinberg VST3", "Apple Audio Units",  "GNU GPL3",
+            "Join our Discord!",          "JUCE Framework", "CLever Audio Plugin"};
+
+        int x = idxes.size();
 
         for (auto idx : idxes)
         {
             auto bt = std::make_unique<ClickURLImage>(img, idx, urls[idx], urllabels[idx]);
 
-            bt->setBounds(rightSide + (x * 42), margin, 36, 36);
+            bt->setBounds(getWidth() - (margin / 2) - (x * 42), margin, 36, 36);
             addAndMakeVisible(*bt);
             icons.push_back(std::move(bt));
 
-            x++;
+            x--;
         }
     }
 }
