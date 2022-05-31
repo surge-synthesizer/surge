@@ -442,7 +442,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
 void SurgeSynthesizer::softkillVoice(int s)
 {
     list<SurgeVoice *>::iterator iter, max_playing, max_released;
-    int max_age = 0, max_age_release = 0;
+    int max_age = -1, max_age_release = -1;
     iter = voices[s].begin();
 
     while (iter != voices[s].end())
@@ -467,9 +467,9 @@ void SurgeSynthesizer::softkillVoice(int s)
         }
         iter++;
     }
-    if (max_age_release)
+    if (max_age_release >= 0)
         (*max_released)->uber_release();
-    else if (max_age)
+    else if (max_age >= 0)
         (*max_playing)->uber_release();
 }
 
