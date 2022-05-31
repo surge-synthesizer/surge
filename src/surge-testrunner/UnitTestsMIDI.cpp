@@ -1542,7 +1542,7 @@ TEST_CASE("Poly AT on Multiple Channels", "[midi]")
 
 TEST_CASE("MIDI Learn", "[midi]")
 {
-    auto surge = std::shared_ptr<SurgeSynthesizer>(Surge::Headless::createSurge(44100));
+    auto surge = Surge::Headless::createSurge(44100);
     REQUIRE(surge);
 
     for (int i = 0; i < 5; ++i)
@@ -1569,4 +1569,43 @@ TEST_CASE("MIDI Learn", "[midi]")
         surge->process();
     auto pd = pp.val.f;
     REQUIRE(pd == Approx(-7).margin(.1));
+}
+
+TEST_CASE("Poly Chords Blow Through Limit", "[midi]")
+{
+    INFO("See Issue 6221");
+    SECTION("Stagger Note On")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+        surge->storage.getPatch().polylimit.val.i = 3;
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        for (int i = 0; i < 5; ++i)
+        {
+            surge->playNote(0, 60 + 2 * i, 100, 0, 123 + i);
+            surge->process();
+        }
+        for (int i = 0; i < 100; ++i)
+            surge->process();
+
+        REQUIRE(surge->voices[0].size() == 3);
+    }
+    SECTION("Simultaneous Note On")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+        surge->storage.getPatch().polylimit.val.i = 3;
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        for (int i = 0; i < 5; ++i)
+            surge->playNote(0, 60 + 2 * i, 100, 0, 123 + i);
+
+        for (int i = 0; i < 100; ++i)
+            surge->process();
+
+        REQUIRE(surge->voices[0].size() == 3);
+    }
 }
