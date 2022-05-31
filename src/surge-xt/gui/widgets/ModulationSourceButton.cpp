@@ -458,6 +458,7 @@ void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 
         if (bottomRect.contains(event.position.toInt()))
         {
+            notifyBeginEdit();
             mouseMode = PREDRAG_VALUE;
             return;
         }
@@ -656,6 +657,11 @@ void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
         notifyEndEdit();
     }
 
+    if (mouseMode == PREDRAG_VALUE)
+    {
+        notifyEndEdit();
+    }
+
     mouseMode = NONE;
 
     return;
@@ -683,7 +689,7 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
         {
             juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
         }
-        notifyBeginEdit();
+        // notifyBeginEdit();
         mouseMode = DRAG_VALUE;
         valAtMouseDown = value;
     }
