@@ -437,7 +437,7 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
 
     // TO DO: Sidechain Input
 
-    float *outL{nullptr}, *outR{nullptr};
+    float *outL{nullptr}, *outR{nullptr}, *inL{nullptr}, *inR{nullptr};
     outL = process->audio_outputs[0].data32[0];
     outR = outL;
     if (process->audio_outputs[0].channel_count == 2)
@@ -449,6 +449,10 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
     if (process->audio_inputs_count == 1)
     {
         surge->process_input = true;
+        inL = process->audio_inputs[0].data32[0];
+        inR = inL;
+        if (process->audio_inputs[0].channel_count == 2)
+            inR = process->audio_inputs[0].data32[1];
     }
     if (process->audio_outputs_count == 3 && process->audio_outputs[1].channel_count == 2 &&
         process->audio_outputs[2].channel_count == 2)
@@ -487,14 +491,12 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
 
         if (blockPos == 0)
         {
-            if (process->audio_inputs_count == 1)
+            if (inL && inR)
             {
-                auto inL = process->audio_inputs[0].data32[0];
-                auto inR = inL;
-                if (process->audio_inputs[0].channel_count == 2)
-                    inR = process->audio_inputs[0].data32[0];
                 memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
                 memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
+                inL += BLOCK_SIZE;
+                inR += BLOCK_SIZE;
             }
             surge->process();
             surge->time_data.ppqPos +=
