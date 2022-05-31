@@ -1,15 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg width="11px" height="22px" viewBox="0 0 11 22" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <rect width="11" height="22" id="artboard_1" />
-    <clipPath id="clip_1">
-      <use xlink:href="#artboard_1" clip-rule="evenodd" />
-    </clipPath>
-  </defs>
-  <g id="hover00191" clip-path="url(#clip_1)">
-    <path d="M1.5 3.9C1.5 2.57452 2.57452 1.5 3.9 1.5L7.1 1.5C8.42548 1.5 9.5 2.57452 9.5 3.9L9.5 7.1C9.5 8.42548 8.42548 9.5 7.1 9.5L3.9 9.5C2.57452 9.5 1.5 8.42548 1.5 7.1L1.5 3.9L1.5 3.9Z" id="Shape" fill="#399DFF" fill-rule="evenodd" stroke="none" />
-    <path d="M1.5 14.9C1.5 13.5745 2.57452 12.5 3.9 12.5L7.1 12.5C8.42548 12.5 9.5 13.5745 9.5 14.9L9.5 18.1C9.5 19.4255 8.42548 20.5 7.1 20.5L3.9 20.5C2.57452 20.5 1.5 19.4255 1.5 18.1L1.5 14.9L1.5 14.9Z" id="Shape" fill="#FF9000" fill-rule="evenodd" stroke="#FFFFFF" stroke-width="1" />
-    <path d="M2.49911 15.2327L5 15.2327C5 15.2327 5.2713 14.1077 5.83363 13.9982C6.39596 13.8888 6.7241 14.8268 6.7241 14.8268L7.50089 19" id="Shape" fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="1" />
-    <path d="M2.49911 4.23336L5 4.23336C5 4.23336 5.2713 3.10834 5.83363 2.99889C6.39596 2.88943 6.7241 3.82743 6.7241 3.82743L7.50089 8.00066" id="Shape" fill="none" fill-rule="evenodd" stroke="#EEEEEE" stroke-width="1" />
-  </g>
+<svg width="11" height="22" viewBox="0 0 11 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="2.5" y="2.5" width="6" height="6" rx="1" fill="#399DFF"/>
+<rect x="2.5" y="2.5" width="6" height="6" rx="1" stroke="#399DFF"/>
+<path d="M2.5 4.74072H5.25C5.25 4.74072 5.54832 3.61809 6.16667 3.50887C6.78501 3.39964 7.14584 4.33564 7.14584 4.33564L8 8.5" stroke="white"/>
+<rect x="1.5" y="12.5" width="8" height="8" rx="1" fill="#FF9000"/>
+<rect x="1.5" y="12.5" width="8" height="8" rx="1" stroke="white"/>
+<path d="M2.5 15.7407H5.25C5.25 15.7407 5.54832 14.6181 6.16667 14.5089C6.78501 14.3996 7.14584 15.3356 7.14584 15.3356L8 19.5" stroke="black"/>
 </svg>
