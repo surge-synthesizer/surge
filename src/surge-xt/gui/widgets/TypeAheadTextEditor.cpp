@@ -56,6 +56,16 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
             provider->paintDataItem(search[rowNumber], g, width, height, rowIsSelected);
     }
 
+    juce::String getNameForRow(int row) override
+    {
+        if (row >= 0 && row < search.size())
+        {
+            return provider->accessibleTextForIndex(search[row]);
+        }
+        else
+            return juce::String("Row ") + juce::String(row);
+    }
+
     void returnKeyPressed(int lastRowSelected) override
     {
         auto m = juce::ModifierKeys::getCurrentModifiers();
@@ -87,7 +97,7 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
         int row{0};
         bool isSelected{false};
         TypeAheadListBoxModel *model{nullptr};
-        TARow(TypeAheadListBoxModel *m) : model(m) {}
+        TARow(TypeAheadListBoxModel *m) : model(m) { setWantsKeyboardFocus(true); }
         void paint(juce::Graphics &g) override
         {
             model->paintListBoxItem(row, g, getWidth(), getHeight(), isSelected);
@@ -100,11 +110,28 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
             {
                 setText(model->provider->accessibleTextForIndex(model->search[row]),
                         juce::dontSendNotification);
+                setTitle(getText());
+                setDescription(getText());
             }
             else
             {
                 setText("", juce::dontSendNotification);
             }
+            if (auto h = getAccessibilityHandler())
+            {
+                h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+                h->notifyAccessibilityEvent(juce::AccessibilityEvent::textChanged);
+            }
+#if WINDOWS
+            if (auto p = getParentComponent())
+            {
+                if (auto ph = p->getAccessibilityHandler())
+                {
+                    ph->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+                    ph->notifyAccessibilityEvent(juce::AccessibilityEvent::textChanged);
+                }
+            }
+#endif
         }
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TARow);
