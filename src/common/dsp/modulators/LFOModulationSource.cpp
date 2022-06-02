@@ -5,8 +5,6 @@
 
 using namespace std;
 
-int LFOModulationSource::urngSeed = 1234;
-
 LFOModulationSource::LFOModulationSource() { Surge::Formula::initEvaluatorState(formulastate); }
 LFOModulationSource::~LFOModulationSource() { Surge::Formula::cleanEvaluatorState(formulastate); }
 
@@ -66,7 +64,7 @@ void LFOModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *
     else
     {
         gen = std::default_random_engine();
-        gen.seed(urngSeed++);
+        gen.seed(storage->rand_u32());
         distro = std::uniform_real_distribution<float>(-1.f, 1.f);
         urng = [this]() -> float { return distro(gen); };
     }
@@ -329,8 +327,14 @@ void LFOModulationSource::attack()
             }
             else
             {
-                iout = correlated_noise_o2mk2_suppliedrng(
-                    target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
+                /*
+                 * The SNH uses correlated noise with prior state. It used to be the
+                 * attack always used prior state zero and only randomized once so
+                 * the first value of SNH LFO was constant. This little loop fixes that.
+                 */
+                for (int i = 0; i < 3; ++i)
+                    iout = correlated_noise_o2mk2_suppliedrng(
+                        target, noised1, limit_range(localcopy[ideform].f, -1.f, 1.f), urng);
             }
         }
 
@@ -388,7 +392,18 @@ void LFOModulationSource::attack()
             noised1 = 0.f;
             target = 0.f;
 
-            wf_history[3] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+            /*
+             * See the above comment in S&H; with noised1 set to 0, there isn't enough
+             * randomness in wf_history[3] and so the outset cubic interpolation gets
+             * less degrees of randomness than expected, so move us along a bit.
+             *
+             * This matters less than with S&H because of the (peculiar) behaviour
+             * of the phase here. If phase is zero we always start at the same value
+             * not a random value.
+             */
+            for (int i = 0; i < 3; ++i)
+                wf_history[3] =
+                    correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
             wf_history[2] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
             wf_history[1] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
             wf_history[0] = correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
