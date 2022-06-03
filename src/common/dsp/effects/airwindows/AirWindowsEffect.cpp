@@ -185,7 +185,7 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
         hasInvalidated = true;
     }
 
-    if (!airwin || fxdata->p[0].val.i != lastSelected || fxdata->p[0].user_data == nullptr)
+    if (!airwin || *(pdata_ival[0]) != lastSelected || fxdata->p[0].user_data == nullptr)
     {
         /*
         ** So do we want to let Airwindows set params as defaults or do we want
@@ -203,7 +203,7 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
         {
             useStreamedValues = true;
         }
-        setupSubFX(fxdata->p[0].val.i, useStreamedValues);
+        setupSubFX(*(pdata_ival[0]), useStreamedValues);
     }
 
     if (!airwin)
