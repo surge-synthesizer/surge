@@ -3231,14 +3231,45 @@ void SurgeSynthesizer::applyParameterMonophonicModulation(Parameter *p, float de
     {
         if (pt.monophonicParamModulations[i].param_id == p->id)
         {
-            pt.monophonicParamModulations[i].value = depth * (p->val_max.f - p->val_min.f);
+            pt.monophonicParamModulations[i].vt_type = (valtypes)p->valtype;
+            switch (p->valtype)
+            {
+            case vt_float:
+                pt.monophonicParamModulations[i].value = depth * (p->val_max.f - p->val_min.f);
+                break;
+            case vt_int:
+                pt.monophonicParamModulations[i].value = depth * (p->val_max.i - p->val_min.i);
+                pt.monophonicParamModulations[i].imin = p->val_min.i;
+                pt.monophonicParamModulations[i].imax = p->val_max.i;
+
+                break;
+            case vt_bool:
+                pt.monophonicParamModulations[i].value = depth;
+                break;
+            }
             return;
         }
     }
 
     assert(pt.paramModulationCount < pt.maxMonophonicParamModulations);
     pt.monophonicParamModulations[pt.paramModulationCount].param_id = p->id;
-    pt.monophonicParamModulations[pt.paramModulationCount].value = depth;
+    pt.monophonicParamModulations[pt.paramModulationCount].vt_type = (valtypes)p->valtype;
+    switch (p->valtype)
+    {
+    case vt_float:
+        pt.monophonicParamModulations[pt.paramModulationCount].value =
+            depth * (p->val_max.f - p->val_min.f);
+        break;
+    case vt_int:
+        pt.monophonicParamModulations[pt.paramModulationCount].value =
+            depth * (p->val_max.i - p->val_min.i);
+        pt.monophonicParamModulations[pt.paramModulationCount].imin = p->val_min.i;
+        pt.monophonicParamModulations[pt.paramModulationCount].imax = p->val_max.i;
+        break;
+    case vt_bool:
+        pt.monophonicParamModulations[pt.paramModulationCount].value = depth;
+        break;
+    }
     pt.paramModulationCount++;
     return;
 }

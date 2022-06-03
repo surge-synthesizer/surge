@@ -926,6 +926,10 @@ class SurgePatch
     {
         int32_t param_id{0};
         double value{0};
+        valtypes vt_type{vt_float};
+
+        // Integer modulation is new and doesn't internally clamp so clamp at the modulation edge
+        int imin{0}, imax{1};
     };
     int32_t paramModulationCount{0};
     static constexpr int maxMonophonicParamModulations = 256;

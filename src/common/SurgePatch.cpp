@@ -822,7 +822,27 @@ void SurgePatch::copy_scenedata(pdata *d, int scene)
     {
         auto &pm = monophonicParamModulations[i];
         if (pm.param_id >= s && pm.param_id < s + n_scene_params)
-            d[pm.param_id - s].f += pm.value;
+        {
+            switch (pm.vt_type)
+            {
+            case vt_float:
+                d[pm.param_id - s].f += pm.value;
+                break;
+            case vt_int:
+            {
+                auto v =
+                    std::clamp((int)(round)(d[pm.param_id - s].i + pm.value), pm.imin, pm.imax);
+                d[pm.param_id - s].i = v;
+                break;
+            }
+            case vt_bool:
+                if (pm.value > 0.5) // true + 0.5 is true; false + 0.5 is true
+                    d[pm.param_id - s].b = true;
+                if (pm.value < 0.5)
+                    d[pm.param_id - s].b = false;
+                break;
+            }
+        }
     }
 }
 
@@ -838,7 +858,26 @@ void SurgePatch::copy_globaldata(pdata *d)
     {
         auto &pm = monophonicParamModulations[i];
         if (pm.param_id < n_global_params)
-            d[pm.param_id].f += pm.value;
+        {
+            switch (pm.vt_type)
+            {
+            case vt_float:
+                d[pm.param_id].f += pm.value;
+                break;
+            case vt_int:
+            {
+                auto v = std::clamp((int)(round)(d[pm.param_id].i + pm.value), pm.imin, pm.imax);
+                d[pm.param_id].i = v;
+                break;
+            }
+            case vt_bool:
+                if (pm.value > 0.5) // true + 0.5 is true; false + 0.5 is true
+                    d[pm.param_id].b = true;
+                if (pm.value < 0.5)
+                    d[pm.param_id].b = false;
+                break;
+            }
+        }
     }
 }
 // pdata scenedata[n_scenes][n_scene_params];
