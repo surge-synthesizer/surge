@@ -247,7 +247,7 @@ class alignas(16) SurgeSynthesizer
     void setMacroParameter01(long macroNum, float val);
     float getMacroParameter01(long macroNum) const;
     void applyMacroMonophonicModulation(long macroNum, float val);
-    ;
+
     void setNoteExpression(SurgeVoice::NoteExpressionType net, int32_t note_id, int16_t key,
                            int16_t channel, float value);
 

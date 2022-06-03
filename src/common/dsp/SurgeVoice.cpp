@@ -867,7 +867,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
         osc[2]->process_block(
             noteShiftFromPitchParam(
                 (scene->osc[2].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
-                    octaveSize * scene->osc[2].octave.val.i,
+                    octaveSize * localcopy[scene->osc[2].octave.param_id_in_scene].i,
                 2),
             drift, is_wide);
 
@@ -901,7 +901,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
             osc[1]->process_block(
                 noteShiftFromPitchParam(
                     (scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
-                        octaveSize * scene->osc[1].octave.val.i,
+                        octaveSize * localcopy[scene->osc[1].octave.param_id_in_scene].i,
                     1),
                 drift, is_wide, true,
                 storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
@@ -911,7 +911,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
             osc[1]->process_block(
                 noteShiftFromPitchParam(
                     (scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
-                        octaveSize * scene->osc[1].octave.val.i,
+                        octaveSize * localcopy[scene->osc[1].octave.param_id_in_scene].i,
                     1),
                 drift, is_wide);
         }
@@ -947,7 +947,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
             osc[0]->process_block(
                 noteShiftFromPitchParam(
                     (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
-                        octaveSize * scene->osc[0].octave.val.i,
+                        octaveSize * localcopy[scene->osc[0].octave.param_id_in_scene].i,
                     0),
                 drift, is_wide, true,
                 storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
@@ -957,7 +957,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
             osc[0]->process_block(
                 noteShiftFromPitchParam(
                     (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
-                        octaveSize * scene->osc[0].octave.val.i,
+                        octaveSize * localcopy[scene->osc[0].octave.param_id_in_scene].i,
                     0),
                 drift, is_wide, true,
                 storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
@@ -967,7 +967,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
             osc[0]->process_block(
                 noteShiftFromPitchParam(
                     (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
-                        octaveSize * scene->osc[0].octave.val.i,
+                        octaveSize * localcopy[scene->osc[0].octave.param_id_in_scene].i,
                     0),
                 drift, is_wide);
         }
@@ -1170,7 +1170,25 @@ template <bool noLFOSources> void SurgeVoice::applyModulationToLocalcopy()
     for (int i = 0; i < paramModulationCount; ++i)
     {
         auto &pc = polyphonicParamModulations[i];
-        localcopy[pc.param_id].f += pc.value;
+        switch (pc.vt_type)
+        {
+        case vt_float:
+            localcopy[pc.param_id].f += pc.value;
+            break;
+        case vt_int:
+        {
+            auto v =
+                std::clamp((int)(round)(localcopy[pc.param_id].i + pc.value), pc.imin, pc.imax);
+            localcopy[pc.param_id].i = v;
+            break;
+        }
+        case vt_bool:
+            if (pc.value > 0.5)
+                localcopy[pc.param_id].b = true;
+            if (pc.value < 0.5)
+                localcopy[pc.param_id].b = false;
+            break;
+        }
     }
 }
 
@@ -1370,16 +1388,28 @@ void SurgeVoice::freeAllocatedElements()
 
 void SurgeVoice::applyPolyphonicParamModulation(Parameter *p, double value)
 {
-    if (p->valtype != vt_float)
-        return;
-
     // quickly do a search to see if i'm there
     int param_id = p->param_id_in_scene;
     for (int i = 0; i < paramModulationCount; ++i)
     {
         if (polyphonicParamModulations[i].param_id == param_id)
         {
-            polyphonicParamModulations[i].value = value * (p->val_max.f - p->val_min.f);
+            auto &pp = polyphonicParamModulations[i];
+            pp.vt_type = (valtypes)p->valtype;
+            switch (pp.vt_type)
+            {
+            case vt_float:
+                pp.value = value * (p->val_max.f - p->val_min.f);
+                break;
+            case vt_int:
+                pp.value = value * (p->val_max.i - p->val_min.i);
+                pp.imin = p->val_min.i;
+                pp.imax = p->val_max.i;
+                break;
+            case vt_bool:
+                pp.value = value;
+            }
+
             return;
         }
     }
@@ -1387,8 +1417,23 @@ void SurgeVoice::applyPolyphonicParamModulation(Parameter *p, double value)
     assert(paramModulationCount < maxPolyphonicParamModulations);
     if (paramModulationCount < maxPolyphonicParamModulations)
     {
-        polyphonicParamModulations[idx].param_id = param_id;
-        polyphonicParamModulations[idx].value = value;
+        auto &pp = polyphonicParamModulations[idx];
+        pp.param_id = param_id;
+        pp.vt_type = (valtypes)p->valtype;
+        switch (pp.vt_type)
+        {
+        case vt_float:
+            pp.value = value * (p->val_max.f - p->val_min.f);
+            break;
+        case vt_int:
+            pp.value = value * (p->val_max.i - p->val_min.i);
+            pp.imin = p->val_min.i;
+            pp.imax = p->val_max.i;
+            break;
+        case vt_bool:
+            pp.value = value;
+        }
+
         paramModulationCount++;
     }
 }
