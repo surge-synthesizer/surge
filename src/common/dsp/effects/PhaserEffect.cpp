@@ -59,7 +59,7 @@ void PhaserEffect::init()
 
 inline void PhaserEffect::init_stages()
 {
-    n_stages = fxdata->p[ph_stages].val.i;
+    n_stages = *(pdata_ival[ph_stages]);
     n_bq_units = n_stages * 2;
 
     if (n_bq_units_initialised < n_bq_units)

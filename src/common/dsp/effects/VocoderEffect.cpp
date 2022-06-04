@@ -161,7 +161,7 @@ void VocoderEffect::process(float *dataL, float *dataR)
     {
         setvars(false);
     }
-    modulator_mode = fxdata->p[voc_mod_input].val.i;
+    modulator_mode = *(pdata_ival[voc_mod_input]); // fxdata->p[voc_mod_input].val.i;
     wet = *f[voc_mix];
     float EnvFRate = 0.001f * powf(2.f, 4.f * *f[voc_envfollow]);
 

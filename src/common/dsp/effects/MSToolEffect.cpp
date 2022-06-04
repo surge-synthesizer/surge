@@ -95,7 +95,7 @@ void MSToolEffect::process(float *dataL, float *dataR)
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
 
-    int io = (fxdata->p[mstl_matrix].val.i);
+    int io = *(pdata_ival[mstl_matrix]); // (fxdata->p[mstl_matrix].val.i);
     switch (io)
     {
     case 0:

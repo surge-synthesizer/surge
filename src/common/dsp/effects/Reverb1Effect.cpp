@@ -183,8 +183,8 @@ void Reverb1Effect::process(float *dataL, float *dataR)
 {
     float wetL alignas(16)[BLOCK_SIZE], wetR alignas(16)[BLOCK_SIZE];
 
-    if (fxdata->p[rev1_shape].val.i != shape)
-        loadpreset(fxdata->p[rev1_shape].val.i);
+    if (*(pdata_ival[rev1_shape]) != shape)
+        loadpreset(*(pdata_ival[rev1_shape]));
     if ((b == 0) && (fabs(*f[rev1_roomsize] - lastf[rev1_roomsize]) > 0.001f))
         loadpreset(shape);
     //	if(fabs(*f[rev1_variation] - lastf[rev1_variation]) > 0.001f) update_rsize();
