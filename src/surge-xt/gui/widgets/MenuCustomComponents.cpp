@@ -160,6 +160,15 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
 }
 
 void MenuTitleHelpComponent::mouseUp(const juce::MouseEvent &e) { launchHelp(); }
+bool MenuTitleHelpComponent::keyPressed(const juce::KeyPress &k)
+{
+    if (k.isKeyCode(juce::KeyPress::returnKey) || k.isKeyCode(juce::KeyPress::spaceKey))
+    {
+        launchHelp();
+        return true;
+    }
+    return false;
+}
 
 void MenuTitleHelpComponent::launchHelp()
 {
@@ -200,7 +209,17 @@ void MenuCenteredBoldLabel::paint(juce::Graphics &g)
     auto ft = getLookAndFeel().getPopupMenuFont();
     ft = ft.withHeight(ft.getHeight() - 1).boldened();
     g.setFont(ft);
-    g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
+    if (isItemHighlighted())
+    {
+        g.setColour(findColour(juce::PopupMenu::highlightedBackgroundColourId));
+        g.fillRect(r);
+
+        g.setColour(findColour(juce::PopupMenu::highlightedTextColourId));
+    }
+    else
+    {
+        g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
+    }
     g.drawText(label, r, juce::Justification::centredTop);
 }
 
@@ -256,6 +275,11 @@ ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::
     addAndMakeVisible(*tb);
     edit = std::move(tb);
     edit->accLabel = "Edit " + s;
+
+    setAccessible(true);
+    setTitle(std::string("From ") + source + " by " + amount);
+    setDescription(getTitle());
+    setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 }
 
 ModMenuCustomComponent::~ModMenuCustomComponent() noexcept = default;
@@ -319,6 +343,17 @@ void ModMenuCustomComponent::mouseUp(const juce::MouseEvent &e)
 {
     callback(EDIT);
     triggerMenuItem();
+}
+
+bool ModMenuCustomComponent::keyPressed(const juce::KeyPress &k)
+{
+    if (k.isKeyCode(juce::KeyPress::returnKey) || k.isKeyCode(juce::KeyPress::spaceKey))
+    {
+        callback(EDIT);
+        triggerMenuItem();
+        return true;
+    }
+    return false;
 }
 
 void ModMenuCustomComponent::onSkinChanged()

@@ -677,7 +677,7 @@ void FxMenu::populate()
         hmen->setSkin(skin, associatedBitmapStore);
         hmen->setCenterBold(false);
 
-        menu.addCustomItem(-1, std::move(hmen));
+        menu.addCustomItem(-1, std::move(hmen), nullptr, "FX Presets");
     }
 }
 
