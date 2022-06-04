@@ -67,7 +67,7 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
         }
     }
 
-    n_unison = is_display ? 1 : oscdata->p[ao_unison_voices].val.i;
+    n_unison = is_display ? 1 : localcopy[oscdata->p[ao_unison_voices].param_id_in_scene].i;
 
     auto us = Surge::Oscillator::UnisonSetup<float>(n_unison);
 
@@ -411,7 +411,7 @@ void AliasOscillator::process_block(float pitch, float drift, bool stereo, bool 
     const float crush_bits =
         limit_range(localcopy[oscdata->p[ao_bit_depth].param_id_in_scene].f, 1.f, 8.f);
 
-    const ao_waves wavetype = (ao_waves)oscdata->p[ao_wave].val.i;
+    const ao_waves wavetype = (ao_waves)localcopy[oscdata->p[ao_wave].param_id_in_scene].i;
 
 #define P(m)                                                                                       \
     case m:                                                                                        \

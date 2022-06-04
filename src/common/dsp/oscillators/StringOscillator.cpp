@@ -180,7 +180,7 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
         driftLFO[i].init(nzi);
     }
 
-    auto mode = (exciter_modes)oscdata->p[str_exciter_mode].val.i;
+    auto mode = (exciter_modes)localcopy[oscdata->p[str_exciter_mode].param_id_in_scene].i;
     phase1 = 0.0, phase2 = 0.0;
 
     if (!oscdata->retrigger.val.b && !is_display)
@@ -487,7 +487,7 @@ void StringOscillator::process_block(float pitch, float drift, bool stereo, bool
         }                                                                                          \
         break;
 
-    auto mode = (exciter_modes)oscdata->p[str_exciter_mode].val.i;
+    auto mode = (exciter_modes)localcopy[oscdata->p[str_exciter_mode].param_id_in_scene].i;
     auto oss = oscdata->p[str_exciter_level].deform_type & StringOscillator::os_all;
 
     switch (mode)
