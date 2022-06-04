@@ -378,6 +378,7 @@ class Parameter
     bool can_be_absolute() const;
     bool can_deactivate() const;
     bool can_setvalue_from_string() const;
+    bool can_be_nondestructively_modulated() const;
     void clear_flags();
     bool has_portaoptions() const;
     bool has_deformoptions() const;

@@ -375,7 +375,7 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
 
     auto driftv = driftLFO.next();
     patch->note = pitch + drift * driftv;
-    patch->engine = oscdata->p[twist_engine].val.i;
+    patch->engine = localcopy[oscdata->p[twist_engine].param_id_in_scene].i;
 
     harm.newValue(fvbp(twist_harmonics));
     timb.newValue(fvbp(twist_timbre));

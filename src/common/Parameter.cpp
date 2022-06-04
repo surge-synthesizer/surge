@@ -3866,6 +3866,20 @@ float Parameter::set_modulation_f01(float v) const
     return mod;
 }
 
+bool Parameter::can_be_nondestructively_modulated() const
+{
+    switch (ctrltype)
+    {
+        /*
+         * Because of the way these are read when we don't have a copy of
+         * the modulation state, they are best to destructively modulate.
+         */
+    case ct_character:
+        return false;
+    }
+    return true;
+}
+
 bool Parameter::can_setvalue_from_string() const
 {
     switch (ctrltype)

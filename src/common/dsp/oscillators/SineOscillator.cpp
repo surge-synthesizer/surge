@@ -95,7 +95,8 @@ void SineOscillator::prepare_unison(int voices)
 
 void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
 {
-    n_unison = limit_range(oscdata->p[sine_unison_voices].val.i, 1, MAX_UNISON);
+    n_unison =
+        limit_range(localcopy[oscdata->p[sine_unison_voices].param_id_in_scene].i, 1, MAX_UNISON);
 
     if (is_display)
     {

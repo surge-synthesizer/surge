@@ -126,8 +126,8 @@ float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
 void LFOModulationSource::msegEnvelopePhaseAdjustment()
 {
     // If we have an envelope MSEG length above 1 we want phase to span the duration
-    if (lfo->shape.val.i == lt_mseg && ms->editMode == MSEGStorage::ENVELOPE &&
-        ms->totalDuration > 1.0)
+    if (localcopy[lfo->shape.param_id_in_scene].i == lt_mseg &&
+        ms->editMode == MSEGStorage::ENVELOPE && ms->totalDuration > 1.0)
     {
         // extend the phase
         phase *= ms->totalDuration;
@@ -143,7 +143,8 @@ void LFOModulationSource::initPhaseFromStartPhase()
     phase = localcopy[startphase].f;
     phaseInitialized = true;
 
-    if (lfo->shape.val.i == lt_tri && lfo->rate.deactivated && !lfo->unipolar.val.b)
+    if (localcopy[lfo->shape.param_id_in_scene].i == lt_tri && lfo->rate.deactivated &&
+        !lfo->unipolar.val.b)
     {
         phase += 0.25;
     }
@@ -202,7 +203,7 @@ void LFOModulationSource::attack()
     {
         phase = lfo->start_phase.val.f;
 
-        if (lfo->shape.val.i == lt_stepseq)
+        if (localcopy[lfo->shape.param_id_in_scene].i == lt_stepseq)
         {
             phase = 0.f;
         }
@@ -216,7 +217,7 @@ void LFOModulationSource::attack()
         float phaseslider;
 
         // Use Phase as shuffle-parameter instead
-        if (lfo->shape.val.i == lt_stepseq)
+        if (localcopy[lfo->shape.param_id_in_scene].i == lt_stepseq)
         {
             phaseslider = 0.f;
         }
@@ -236,7 +237,7 @@ void LFOModulationSource::attack()
             phaseslider -= 1.f;
         }
 
-        switch (lfo->trigmode.val.i)
+        switch (localcopy[lfo->trigmode.param_id_in_scene].i)
         {
         case lm_keytrigger:
             phase = phaseslider;
@@ -280,8 +281,8 @@ void LFOModulationSource::attack()
             // And so the total phase is timePassed * rate + phase0
             auto startPhase = phaseslider;
 
-            if (lfo->shape.val.i == lt_mseg && ms->editMode == MSEGStorage::ENVELOPE &&
-                ms->totalDuration > 1.0)
+            if (localcopy[lfo->shape.param_id_in_scene].i == lt_mseg &&
+                ms->editMode == MSEGStorage::ENVELOPE && ms->totalDuration > 1.0)
             {
                 // extend the phase
                 startPhase *= ms->totalDuration;
@@ -307,10 +308,10 @@ void LFOModulationSource::attack()
         };
     }
 
-    switch (lfo->shape.val.i)
+    switch (localcopy[lfo->shape.param_id_in_scene].i)
     {
     case lt_snh:
-        if (isFirstAttack || lfo->trigmode.val.i != lm_freerun)
+        if (isFirstAttack || localcopy[lfo->trigmode.param_id_in_scene].i != lm_freerun)
         {
             noise = 0.f;
             noised1 = 0.f;
@@ -384,7 +385,7 @@ void LFOModulationSource::attack()
 
     case lt_noise:
     {
-        if (isFirstAttack || lfo->trigmode.val.i != lm_freerun)
+        if (isFirstAttack || localcopy[lfo->trigmode.param_id_in_scene].i != lm_freerun)
         {
             auto lid = limit_range(localcopy[ideform].f, -1.f, 1.f);
 
@@ -476,7 +477,8 @@ void LFOModulationSource::release()
         env_releasestart = env_val;
         env_phase = 0;
     }
-    else if (lfo->shape.val.i == lt_mseg || lfo->shape.val.i == lt_formula)
+    else if (localcopy[lfo->shape.param_id_in_scene].i == lt_mseg ||
+             localcopy[lfo->shape.param_id_in_scene].i == lt_formula)
     {
         env_state = lfoeg_msegrelease;
     }
@@ -484,7 +486,8 @@ void LFOModulationSource::release()
 
 void LFOModulationSource::process_block()
 {
-    if ((!phaseInitialized) || (lfo->trigmode.val.i == lm_keytrigger && lfo->rate.deactivated))
+    if ((!phaseInitialized) ||
+        (localcopy[lfo->trigmode.param_id_in_scene].i == lm_keytrigger && lfo->rate.deactivated))
     {
         initPhaseFromStartPhase();
     }
@@ -492,7 +495,7 @@ void LFOModulationSource::process_block()
     retrigger_FEG = false;
     retrigger_AEG = false;
 
-    int s = lfo->shape.val.i;
+    int s = localcopy[lfo->shape.param_id_in_scene].i;
     float frate = 0;
 
     if (!lfo->rate.temposync)
@@ -1171,7 +1174,7 @@ void LFOModulationSource::process_block()
 
 void LFOModulationSource::completedModulation()
 {
-    if (lfo->shape.val.i == lt_formula)
+    if (localcopy[lfo->shape.param_id_in_scene].i == lt_formula)
     {
         Surge::Formula::cleanEvaluatorState(formulastate);
     }

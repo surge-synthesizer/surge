@@ -123,7 +123,7 @@ void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
     pwidth.setRate(0.001); // 4x slower
     sync.setRate(0.001 * BLOCK_SIZE_OS);
 
-    n_unison = is_display ? 1 : oscdata->p[mo_unison_voices].val.i;
+    n_unison = is_display ? 1 : localcopy[oscdata->p[mo_unison_voices].param_id_in_scene].i;
 
     auto us = Surge::Oscillator::UnisonSetup<double>(n_unison);
 

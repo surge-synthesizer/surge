@@ -196,7 +196,8 @@ void ClassicOscillator::init(float pitch, bool is_display, bool nonzero_init_dri
     l_sub.setRate(rate);
     l_sync.setRate(rate);
 
-    n_unison = limit_range(oscdata->p[co_unison_voices].val.i, 1, MAX_UNISON);
+    n_unison =
+        limit_range(localcopy[oscdata->p[co_unison_voices].param_id_in_scene].i, 1, MAX_UNISON);
 
     if (is_display)
     {

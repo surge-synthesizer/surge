@@ -142,8 +142,11 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
     Parameter *p;
 
 #if HAS_CLAP_JUCE_EXTENSIONS
-    bool supportsMonophonicModulation() override { return true; }
-    bool supportsPolyphonicModulation() override { return p->per_voice_processing; }
+    bool supportsMonophonicModulation() override { return p->can_be_nondestructively_modulated(); }
+    bool supportsPolyphonicModulation() override
+    {
+        return p->can_be_nondestructively_modulated() && p->per_voice_processing;
+    }
     void applyPolyphonicModulation(int32_t note_id, int16_t key, int16_t channel,
                                    double value) override
     {
