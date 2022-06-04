@@ -73,6 +73,7 @@ struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     void getIdealSize(int &idealWidth, int &idealHeight) override;
 
     void mouseUp(const juce::MouseEvent &e) override;
+    bool keyPressed(const juce::KeyPress &k) override;
     void paint(juce::Graphics &g) override;
     void onSkinChanged() override;
 
@@ -126,6 +127,7 @@ struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     SurgeImage *icons{nullptr};
 
     void mouseUp(const juce::MouseEvent &e) override;
+    bool keyPressed(const juce::KeyPress &k) override;
 
     std::unique_ptr<TinyLittleIconButton> clear, mute, edit;
     std::string source, amount;

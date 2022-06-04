@@ -1293,7 +1293,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             auto hmen =
                 std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(p->get_full_name(), lurl);
             hmen->setSkin(currentSkin, bitmapStore);
-            contextMenu.addCustomItem(-1, std::move(hmen));
+            contextMenu.addCustomItem(-1, std::move(hmen), nullptr, p->get_full_name());
 
             contextMenu.addSeparator();
 
@@ -2409,10 +2409,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                 break;
                                                 }
                                             });
+                                    auto comptitle = comp->getTitle();
                                     comp->setSkin(currentSkin, bitmapStore);
                                     comp->setIsMuted(
                                         synth->isModulationMuted(ptag, (modsources)ms, sc, modidx));
-                                    contextMenu.addCustomItem(-1, std::move(comp));
+                                    contextMenu.addCustomItem(-1, std::move(comp), nullptr,
+                                                              comptitle);
                                 }
                             }
                         }
@@ -2462,7 +2464,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 synth->refresh_editor = true;
                             });
                         allThree->setSkin(currentSkin, bitmapStore);
-                        contextMenu.addCustomItem(-1, std::move(allThree));
+                        auto comptitle = allThree->getTitle();
+
+                        contextMenu.addCustomItem(-1, std::move(allThree), nullptr, comptitle);
                     }
                 }
 
