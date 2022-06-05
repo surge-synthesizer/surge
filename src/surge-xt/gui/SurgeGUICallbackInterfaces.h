@@ -34,6 +34,7 @@ struct IComponentTagValue
 
     virtual void startHover(const juce::Point<float> &) {}
     virtual void endHover() {}
+    virtual bool isCurrentlyHovered() { return false; }
 
     juce::Component *asJuceComponent()
     {

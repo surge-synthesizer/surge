@@ -245,6 +245,10 @@ std::string defaultKeyToString(DefaultKey k)
         r = "fxAssumeFixedBlock";
         break;
 
+    case MenuAndEditKeybindingsFollowKeyboardFocus:
+        r = "menuAndEditKeybindingsFollowKeyboardFocus";
+        break;
+
     case nKeys:
         break;
     }

@@ -469,6 +469,11 @@ accessibleEditAction(const juce::KeyPress &key, SurgeStorage *storage)
     if (!storage || !Surge::GUI::allowKeyboardEdits(storage))
         return {None, NoModifier};
 
+    if (storage &&
+        !Surge::Storage::getUserDefaultValue(
+            storage, Surge::Storage::DefaultKey::MenuAndEditKeybindingsFollowKeyboardFocus, true))
+        return {None, NoModifier};
+
     return accessibleEditActionInternal(key);
 }
 
