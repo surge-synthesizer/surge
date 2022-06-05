@@ -3875,6 +3875,19 @@ bool Parameter::can_be_nondestructively_modulated() const
          * the modulation state, they are best to destructively modulate.
          */
     case ct_character:
+    case ct_scenemode:
+    case ct_scenesel:
+    case ct_midikey_or_channel:
+    case ct_polylimit:
+    case ct_polymode:
+    case ct_fxtype:
+    case ct_osctype:
+    case ct_lfotype:
+    case ct_filtertype:
+    case ct_filtersubtype:
+    case ct_wstype:
+    case ct_fbconfig:
+    case ct_fxbypass:
         return false;
     }
     return true;
