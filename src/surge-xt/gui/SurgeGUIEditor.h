@@ -840,6 +840,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void resetComponentTracking();
     void removeUnusedTrackedComponents();
 
+  public:
     void promptForUserValueEntry(Parameter *p, juce::Component *c)
     {
         promptForUserValueEntry(p, c, -1, -1, -1);

@@ -323,6 +323,19 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         DataRowEditor(const Datum &d, ModulationListContents *c) : datum(d), contents(c)
         {
+            pencilButton = std::make_unique<ModListIconButton>(0, [this]() {
+                auto sge = contents->editor->ed;
+                auto p = contents->editor->synth->storage.getPatch()
+                             .param_ptr[datum.destination_id + datum.idBase];
+                sge->promptForUserValueEntry(p, pencilButton.get(), datum.source_id,
+                                             datum.source_scene, datum.source_index);
+            });
+            pencilButton->setAccessible(true);
+            pencilButton->setTitle("Edit");
+            pencilButton->setDescription("Edit");
+            pencilButton->setWantsKeyboardFocus(true);
+            addAndMakeVisible(*pencilButton);
+
             clearButton = std::make_unique<ModListIconButton>(1, [this]() {
                 auto me = contents->editor;
                 ModulationEditor::SelfModulationGuard g(me);
@@ -403,6 +416,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
             clearButton->setTitle("Clear " + accPostfix);
             clearButton->setDescription("Clear " + accPostfix);
+
+            pencilButton->setTitle("Edit " + accPostfix);
+            pencilButton->setDescription("Edit " + accPostfix);
 
             auto t = std::string("Source: ") + datum.sname + (" to  Target: ") + datum.pname;
             setTitle(t);
@@ -558,8 +574,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             }
         }
 
-        static constexpr int controlsStart = 150;
-        static constexpr int controlsEnd = controlsStart + (14 + 2) * 2 + 140 + 2;
+        static constexpr int controlsStart = 160;
+        static constexpr int controlsEnd = controlsStart + (14 + 2) * 3 + 140 + 2;
 
         void resized() override
         {
@@ -569,6 +585,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             int bY = ((height - bh) / 2) - 1;
             int sY = (height - sh) / 2 + 2;
 
+            pencilButton->setBounds(startX, bY, bh, bh);
+            startX += bh + 2;
             clearButton->setBounds(startX, bY, bh, bh);
             startX += bh + 2;
             muteButton->setBounds(startX, bY, bh, bh);
@@ -615,12 +633,14 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         void onSkinChanged() override
         {
+            pencilButton->icons = associatedBitmapStore->getImage(IDB_MODMENU_ICONS);
             clearButton->icons = associatedBitmapStore->getImage(IDB_MODMENU_ICONS);
             muteButton->icons = associatedBitmapStore->getImage(IDB_MODMENU_ICONS);
             surgeLikeSlider->setSkin(skin, associatedBitmapStore);
         }
 
         bool muted{false};
+        std::unique_ptr<ModListIconButton> pencilButton;
         std::unique_ptr<ModListIconButton> clearButton;
         std::unique_ptr<ModListIconButton> muteButton;
         std::unique_ptr<Surge::Widgets::ModulatableSlider> surgeLikeSlider;
