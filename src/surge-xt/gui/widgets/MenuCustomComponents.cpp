@@ -223,7 +223,7 @@ void MenuCenteredBoldLabel::paint(juce::Graphics &g)
     if (isSectionHeader)
         g.drawText(label, r.withTrimmedLeft(5), juce::Justification::centredLeft);
     else
-        g.drawText(label, r, juce::Justification::centredTop);
+        g.drawText(label, r, juce::Justification::centred);
 }
 
 void MenuCenteredBoldLabel::addToMenu(juce::PopupMenu &m, const std::string label)
