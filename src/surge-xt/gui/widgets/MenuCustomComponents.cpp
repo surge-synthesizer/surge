@@ -220,12 +220,22 @@ void MenuCenteredBoldLabel::paint(juce::Graphics &g)
     {
         g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
     }
-    g.drawText(label, r, juce::Justification::centredTop);
+    if (isSectionHeader)
+        g.drawText(label, r.withTrimmedLeft(5), juce::Justification::centredLeft);
+    else
+        g.drawText(label, r, juce::Justification::centredTop);
 }
 
 void MenuCenteredBoldLabel::addToMenu(juce::PopupMenu &m, const std::string label)
 {
     m.addCustomItem(-1, std::make_unique<MenuCenteredBoldLabel>(label), nullptr, label);
+}
+
+void MenuCenteredBoldLabel::addToMenuAsSectionHeader(juce::PopupMenu &m, const std::string label)
+{
+    auto q = std::make_unique<MenuCenteredBoldLabel>(label);
+    q->isSectionHeader = true;
+    m.addCustomItem(-1, std::move(q), nullptr, label);
 }
 
 //==============================================================================

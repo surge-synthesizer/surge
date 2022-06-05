@@ -495,7 +495,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(txt, fullyResolvedHelpURL(hu));
         tcomp->setSkin(currentSkin, bitmapStore);
 
-        contextMenu.addCustomItem(-1, std::move(tcomp));
+        auto hment = tcomp->getTitle();
+
+        contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
 
 #ifdef DEBUG
         if (tag == tag_action_undo || tag == tag_action_redo)
@@ -621,7 +623,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
                 fmt::format("Osc {:d}", a + 1), lurl);
             tcomp->setSkin(currentSkin, bitmapStore);
-            contextMenu.addCustomItem(-1, std::move(tcomp));
+            auto hment = tcomp->getTitle();
+
+            contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
 
             contextMenu.addSeparator();
 
@@ -662,8 +666,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
                 fmt::format("Scene {:c}", 'A' + current_scene), lurl);
             tcomp->setSkin(currentSkin, bitmapStore);
+            auto hment = tcomp->getTitle();
 
-            contextMenu.addCustomItem(-1, std::move(tcomp));
+            contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
 
             contextMenu.addSeparator();
 
@@ -697,8 +702,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(olname, hurl);
             hmen->setSkin(currentSkin, bitmapStore);
+            auto hment = hmen->getTitle();
+
             auto contextMenu = juce::PopupMenu();
-            contextMenu.addCustomItem(-1, std::move(hmen));
+            contextMenu.addCustomItem(-1, std::move(hmen), nullptr, hment);
             contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
         }
@@ -715,9 +722,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
         auto tcomp =
             std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Waveshaper Analysis", lurl);
+        auto hment = tcomp->getTitle();
 
         tcomp->setSkin(currentSkin, bitmapStore);
-        contextMenu.addCustomItem(-1, std::move(tcomp));
+        contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
 
         contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                   Surge::GUI::makeEndHoverCallback(control));
@@ -736,9 +744,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
         auto tcomp =
             std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Filter Analysis", lurl);
+        auto hment = tcomp->getTitle();
 
         tcomp->setSkin(currentSkin, bitmapStore);
-        contextMenu.addCustomItem(-1, std::move(tcomp));
+        contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
 
         contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                   Surge::GUI::makeEndHoverCallback(control));
@@ -781,7 +790,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 modulatorNameWithIndex(current_scene, modsource, modsource_index, false, false),
                 lurl);
             hmen->setSkin(currentSkin, bitmapStore);
-            contextMenu.addCustomItem(-1, std::move(hmen));
+            auto hment = hmen->getTitle();
+            contextMenu.addCustomItem(-1, std::move(hmen), nullptr, hment);
 
             contextMenu.addSeparator();
 
@@ -974,7 +984,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             modMenu->setSkin(currentSkin, bitmapStore);
                             modMenu->setIsMuted(synth->isModulationMuted(
                                 parameter->id, (modsources)thisms, use_scene, modidx));
-                            contextMenu.addCustomItem(-1, std::move(modMenu));
+                            auto mmt = modMenu->getTitle();
+                            contextMenu.addCustomItem(-1, std::move(modMenu), nullptr, mmt);
                             first_destination = false;
                             n_md++;
                         }
@@ -1051,7 +1062,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             synth->refresh_editor = true;
                         });
                     allThree->setSkin(currentSkin, bitmapStore);
-                    contextMenu.addCustomItem(-1, std::move(allThree));
+                    auto at = allThree->getTitle();
+                    contextMenu.addCustomItem(-1, std::move(allThree), nullptr, at);
                 }
             }
             int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, n_scenes - 1);

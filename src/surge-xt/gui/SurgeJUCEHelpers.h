@@ -23,7 +23,6 @@ namespace Surge
 {
 namespace GUI
 {
-
 template <typename T>
 inline std::function<void(int)> makeAsyncCallback(T *that, std::function<void(T *, int)> cb)
 {

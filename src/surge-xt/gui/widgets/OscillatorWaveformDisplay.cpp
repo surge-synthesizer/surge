@@ -567,7 +567,9 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
             tc->setSkin(skin, associatedBitmapStore);
             tc->setCenterBold(centerBold);
 
-            contextMenu.addCustomItem(-1, std::move(tc));
+            auto hment = tc->getTitle();
+
+            contextMenu.addCustomItem(-1, std::move(tc), nullptr, hment);
         }
 
         if (add2D3Dswitch)
@@ -1369,9 +1371,11 @@ struct AliasAdditiveEditor : public juce::Component,
             auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
                 "Alias Additive Options", hurl);
 
+            auto hment = tc->getTitle();
+
             tc->setSkin(skin, associatedBitmapStore);
 
-            contextMenu.addCustomItem(-1, std::move(tc));
+            contextMenu.addCustomItem(-1, std::move(tc), nullptr, hment);
 
             contextMenu.addSeparator();
         }

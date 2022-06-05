@@ -460,3 +460,10 @@ void SurgeJUCELookAndFeel::updateDarkIfNeeded()
         }
     }
 }
+void SurgeJUCELookAndFeel::drawPopupMenuSectionHeaderWithOptions(Graphics &graphics,
+                                                                 const Rectangle<int> &area,
+                                                                 const String &sectionName,
+                                                                 const PopupMenu::Options &options)
+{
+    LookAndFeel_V2::drawPopupMenuSectionHeaderWithOptions(graphics, area, sectionName, options);
+}
