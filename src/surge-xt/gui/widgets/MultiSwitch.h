@@ -101,6 +101,7 @@ struct MultiSwitch : public juce::Component,
 
     bool isHovered{false};
     int hoverSelection{0};
+    bool isCurrentlyHovered() override { return isHovered; }
 
     SurgeImage *switchD{nullptr}, *hoverSwitchD{nullptr}, *hoverOnSwitchD{nullptr};
     void setSwitchDrawable(SurgeImage *d) { switchD = d; }

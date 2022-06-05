@@ -93,6 +93,7 @@ struct ModulatableSlider : public juce::Component,
                         const juce::MouseWheelDetails &wheel) override;
     void startHover(const juce::Point<float> &) override;
     void endHover() override;
+    bool isCurrentlyHovered() override { return isHovered; }
     bool keyPressed(const juce::KeyPress &key) override;
     void focusGained(juce::Component::FocusChangeType cause) override
     {

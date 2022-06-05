@@ -12,13 +12,8 @@
 
 #define _DBGCOUT std::cout << __FILE__ << ":" << __LINE__ << "|" << __func__ << "| "
 #define _D(x) " " << (#x) << "=" << x
+#define _DTN(x) " typeof:" << (#x) << "=" << typeid(x).name()
 #define _R(x, y) Surge::Debug::LifeCycleToConsole y(x);
-#define _DUMPR(r)                                                                                  \
-    " " << (#r) << "=(L/X=" << r.left << ",T/Y=" << r.top << ")+(W=" << r.getWidth()               \
-        << ",H=" << r.getHeight() << ")+(R=" << r.right << ",B=" << r.bottom << ")"
-#define _DUMPCOL(c)                                                                                \
-    " " << (#c) << "r=" << (int)c.red << " g=" << (int)c.green << " b=" << (int)c.blue             \
-        << " a=" << (int)c.alpha
 
 namespace Surge
 {

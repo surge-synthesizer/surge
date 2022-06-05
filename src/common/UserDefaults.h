@@ -67,6 +67,7 @@ enum DefaultKey
     LastPatchPath,
 
     TabKeyArmsModulators,
+    MenuAndEditKeybindingsFollowKeyboardFocus,
 
     InfoWindowPopupOnIdle,
 

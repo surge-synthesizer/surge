@@ -37,6 +37,8 @@ enum KeyboardActions
     PREV_CATEGORY,
     NEXT_CATEGORY,
 
+    EDIT_PARAM_VALUE,
+
     // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
     OSC_1,
     OSC_2,
@@ -87,6 +89,9 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "FIND_PATCH";
     case FAVORITE_PATCH:
         return "FAVORITE_PATCH";
+
+    case EDIT_PARAM_VALUE:
+        return "EDIT_PARAM_VALUE";
 
     case PREV_PATCH:
         return "PREV_PATCH";
@@ -211,6 +216,10 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     // TODO: FIX SCENE ASSUMPTION
     case TOGGLE_SCENE:
         desc = "Toggle Scene A/B";
+        break;
+
+    case EDIT_PARAM_VALUE:
+        desc = "Edit Parameter Value";
         break;
 
 #if WINDOWS
