@@ -4596,7 +4596,17 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
 
     addAndMakeVisibleWithTracking(frame.get(), *typeinParamEditor);
 
-    typeinParamEditor->setBoundsToAccompany(c->getBounds(), frame->getBounds());
+    auto cBounds = c->getBounds();
+    auto cParent = cBounds.getTopLeft();
+    auto q = c->getParentComponent();
+    while (q && q != frame.get())
+    {
+        auto qc = q->getBounds().getTopLeft();
+        cParent = cParent + qc;
+        q = q->getParentComponent();
+    }
+    cBounds = cBounds.withTop(cParent.getY()).withLeft(cParent.getX());
+    typeinParamEditor->setBoundsToAccompany(cBounds, frame->getBounds());
     typeinParamEditor->setVisible(true);
     typeinParamEditor->toFront(true);
     typeinParamEditor->setReturnFocusTarget(c);

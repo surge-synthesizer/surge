@@ -93,7 +93,10 @@ void TypeinParamEditor::setBoundsToAccompany(const juce::Rectangle<int> &control
 {
     auto r = getRequiredSize();
 
-    r = r.withX(controlRect.getX()).withY(controlRect.getY() - r.getHeight());
+    auto rw = r.getWidth();
+    auto cw = controlRect.getWidth();
+    auto dw = (rw - cw) / 2;
+    r = r.withX(controlRect.getX() - dw).withY(controlRect.getY() - r.getHeight());
 
     if (!parentRect.contains(r))
     {
