@@ -99,7 +99,9 @@ struct MenuCenteredBoldLabel : juce::PopupMenu::CustomComponent
     void paint(juce::Graphics &g) override;
 
     std::string label;
+    bool isSectionHeader{false};
     static void addToMenu(juce::PopupMenu &m, const std::string label);
+    static void addToMenuAsSectionHeader(juce::PopupMenu &m, const std::string label);
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 };
@@ -152,6 +154,7 @@ struct ModMenuForAllComponent : ModMenuCustomComponent
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModMenuForAllComponent);
 };
+
 } // namespace Widgets
 } // namespace Surge
 

@@ -2358,7 +2358,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("MSEG Segment", hurl);
         tcomp->setSkin(skin, associatedBitmapStore);
-        contextMenu.addCustomItem(-1, std::move(tcomp));
+        auto hment = tcomp->getTitle();
+
+        contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
 
         contextMenu.addSeparator();
 
@@ -3029,8 +3031,9 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
         auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(menuName, hurl);
 
         tcomp->setSkin(skin, associatedBitmapStore);
+        auto hment = tcomp->getTitle();
 
-        contextMenu.addCustomItem(-1, std::move(tcomp));
+        contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
 
         contextMenu.addSeparator();
 

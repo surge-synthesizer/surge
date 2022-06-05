@@ -747,7 +747,8 @@ void PatchSelector::showClassicMenu(bool single_category)
 
         hmen->setSkin(skin, associatedBitmapStore);
         hmen->setCenterBold(false);
-        contextMenu.addCustomItem(-1, std::move(hmen));
+        auto hment = hmen->getTitle();
+        contextMenu.addCustomItem(-1, std::move(hmen), nullptr, hment);
     }
 
     auto o = juce::PopupMenu::Options();

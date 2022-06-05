@@ -1034,7 +1034,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
 
         if (!sources.empty() && !targets.empty())
         {
-            men.addSectionHeader("BY SOURCE");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(men, "BY SOURCE");
 
             for (auto s : sources)
                 men.addItem(s, [this, s]() {
@@ -1045,7 +1045,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 });
 
             men.addColumnBreak();
-            men.addSectionHeader("BY TARGET");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(men, "BY TARGET");
 
             for (auto t : targets)
                 men.addItem(t, [this, t]() {
@@ -1056,7 +1056,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
                 });
 
             men.addColumnBreak();
-            men.addSectionHeader("BY TARGET SECTION");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(men,
+                                                                            "BY TARGET SECTION");
 
             for (int t = cg_GLOBAL; t < endCG; ++t)
             {
@@ -1074,7 +1075,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
             }
 
             men.addColumnBreak();
-            men.addSectionHeader("BY TARGET SCENE");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(men, "BY TARGET SCENE");
 
             for (int t = 0; t < n_scenes + 1; ++t)
             {
@@ -1114,7 +1115,8 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
         tcomp->setSkin(skin, associatedBitmapStore);
         tcomp->setCenterBold(false);
 
-        men.addCustomItem(-1, std::move(tcomp));
+        auto hment = tcomp->getTitle();
+        men.addCustomItem(-1, std::move(tcomp), nullptr, hment);
 
         men.showMenuAsync(sge->popupMenuOptions());
     }
@@ -1186,8 +1188,9 @@ void ModulationSideControls::showAddSourceMenu()
 
     auto tcomp =
         std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation From", hurl);
+    auto hment = tcomp->getTitle();
     tcomp->setSkin(skin, associatedBitmapStore);
-    men.addCustomItem(-1, std::move(tcomp));
+    men.addCustomItem(-1, std::move(tcomp), nullptr, hment);
     men.addSeparator();
 
     for (int sc = 0; sc < n_scenes; ++sc)
@@ -1276,16 +1279,16 @@ void ModulationSideControls::showAddSourceMenu()
             }
         }
     }
-    men.addSectionHeader("GLOBAL");
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(men, "GLOBAL");
     men.addSubMenu("Macros", addMacroSub);
     men.addSubMenu("MIDI", addMIDISub);
     men.addSubMenu("Internal", addMiscSub);
-    men.addSectionHeader("SCENE A");
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(men, "SCENE A");
     men.addSubMenu("Voice LFOs", addVLFOASub);
     men.addSubMenu("Scene LFOs", addSLFOASub);
     men.addSubMenu("Envelopes", addEGASub);
     men.addSubMenu("MIDI", addMIDIASub);
-    men.addSectionHeader("SCENE B");
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(men, "SCENE B");
     men.addSubMenu("Voice LFOs", addVLFOBSub);
     men.addSubMenu("Scene LFOs", addSLFOBSub);
     men.addSubMenu("Envelopes", addEGBSub);
@@ -1311,8 +1314,9 @@ void ModulationSideControls::showAddTargetMenu()
 
     auto tcomp =
         std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Add Modulation To", hurl);
+    auto hment = tcomp->getTitle();
     tcomp->setSkin(skin, associatedBitmapStore);
-    men.addCustomItem(-1, std::move(tcomp));
+    men.addCustomItem(-1, std::move(tcomp), nullptr, hment);
     men.addSeparator();
 
     std::array<std::map<int, std::map<int, std::vector<std::pair<int, std::string>>>>, n_scenes + 1>
@@ -1425,13 +1429,14 @@ void ModulationSideControls::showAddTargetMenu()
             switch (si)
             {
             case 0:
-                men.addSectionHeader("GLOBAL");
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(men, "GLOBAL");
                 break;
             default:
                 char ai = 'A';
                 ai += si;
                 ai -= 1;
-                men.addSectionHeader(std::string("SCENE ") + ai);
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                    men, std::string("SCENE ") + ai);
                 break;
             }
         }

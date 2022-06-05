@@ -47,6 +47,10 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
                            const bool isTicked, const bool hasSubMenu, const juce::String &text,
                            const juce::String &shortcutKeyText, const juce::Drawable *icon,
                            const juce::Colour *const textColourToUse) override;
+    void drawPopupMenuSectionHeaderWithOptions(juce::Graphics &graphics,
+                                               const juce::Rectangle<int> &area,
+                                               const juce::String &sectionName,
+                                               const juce::PopupMenu::Options &options) override;
 
     void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override{};
 

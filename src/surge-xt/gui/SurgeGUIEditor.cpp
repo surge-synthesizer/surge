@@ -2210,7 +2210,8 @@ void SurgeGUIEditor::addHelpHeaderTo(const std::string &lab, const std::string &
     auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(lab, hu);
 
     tc->setSkin(currentSkin, bitmapStore);
-    m.addCustomItem(-1, std::move(tc));
+    auto ht = tc->getTitle();
+    m.addCustomItem(-1, std::move(tc), nullptr, ht);
 }
 
 void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widgets::EffectChooser *c)

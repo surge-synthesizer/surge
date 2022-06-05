@@ -2198,7 +2198,9 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
 
     auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(olname, hurl);
     hmen->setSkin(skin, associatedBitmapStore);
-    contextMenu.addCustomItem(-1, std::move(hmen));
+    auto hment = hmen->getTitle();
+
+    contextMenu.addCustomItem(-1, std::move(hmen), nullptr, hment);
 
     contextMenu.addSeparator();
 
