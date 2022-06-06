@@ -116,6 +116,8 @@ struct PatchSelector : public juce::Component,
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override { endHover(); }
 
+    bool isCurrentlyHovered() override { return favoritesHover || searchHover || browserHover; }
+
     void endHover() override
     {
         if (stuckHover)
@@ -128,6 +130,7 @@ struct PatchSelector : public juce::Component,
         // toggleCommentTooltip(false);
         repaint();
     }
+
     bool keyPressed(const juce::KeyPress &key) override;
     void showClassicMenu(bool singleCategory = false);
     bool optionallyAddFavorites(juce::PopupMenu &into, bool addColumnBreakAndHeader,

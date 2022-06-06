@@ -98,41 +98,45 @@ struct NumberField : public juce::Component,
 
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
 
-    bool isHover{false};
+    bool isHovered{false};
+
     void mouseEnter(const juce::MouseEvent &event) override
     {
         startHover(event.position);
         setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
     }
+
     void mouseExit(const juce::MouseEvent &event) override
     {
         endHover();
         setMouseCursor(juce::MouseCursor::NormalCursor);
     }
+
     void startHover(const juce::Point<float> &p) override
     {
-        isHover = true;
+        isHovered = true;
         repaint();
     }
+
     void endHover() override
     {
         if (stuckHover)
             return;
 
-        isHover = false;
+        isHovered = false;
         repaint();
     }
+
+    bool isCurrentlyHovered() override { return isHovered; }
+
     bool keyPressed(const juce::KeyPress &key) override;
+
     void focusGained(juce::Component::FocusChangeType cause) override
     {
         startHover(getBounds().getBottomLeft().toFloat());
-        repaint();
     }
-    void focusLost(juce::Component::FocusChangeType cause) override
-    {
-        endHover();
-        repaint();
-    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
 
     juce::Colour textColour, textHoverColour;
     void setTextColour(juce::Colour c)

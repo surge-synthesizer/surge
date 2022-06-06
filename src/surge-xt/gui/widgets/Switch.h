@@ -74,6 +74,7 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>, public L
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
+
     void endHover() override
     {
         if (stuckHover)
@@ -88,18 +89,17 @@ struct Switch : public juce::Component, public WidgetBaseMixin<Switch>, public L
         isHovered = true;
         repaint();
     }
+
+    bool isCurrentlyHovered() override { return isHovered; }
+
     bool keyPressed(const juce::KeyPress &key) override;
 
     void focusGained(juce::Component::FocusChangeType cause) override
     {
         startHover(getBounds().getBottomLeft().toFloat());
-        repaint();
     }
-    void focusLost(juce::Component::FocusChangeType cause) override
-    {
-        endHover();
-        repaint();
-    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
 
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }

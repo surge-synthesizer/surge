@@ -80,6 +80,8 @@ struct EffectChooser : public juce::Component,
         repaint();
     }
 
+    bool isCurrentlyHovered() override { return (currentHover >= 0) || (currentSceneHover >= 0); }
+
     void resized() override;
 
     // State for mouse events

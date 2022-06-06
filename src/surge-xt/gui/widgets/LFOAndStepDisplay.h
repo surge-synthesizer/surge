@@ -126,11 +126,12 @@ struct LFOAndStepDisplay : public juce::Component,
         repaint();
     }
 
-    void focusLost(juce::Component::FocusChangeType cause) override
+    bool isCurrentlyHovered() override
     {
-        endHover();
-        repaint();
+        return (lfoTypeHover >= 0) || (stepSeqShiftHover >= 0) || overWaveform;
     }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
 
     struct BeginStepGuard
     {

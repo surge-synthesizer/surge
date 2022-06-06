@@ -87,13 +87,10 @@ struct MultiSwitch : public juce::Component,
     {
         // fixme - probably use the location of the current element
         startHover(valueToCoordinate(getValue()));
-        repaint();
     }
-    void focusLost(juce::Component::FocusChangeType cause) override
-    {
-        endHover();
-        repaint();
-    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
+
     bool keyPressed(const juce::KeyPress &key) override;
     Surge::GUI::WheelAccumulationHelper wheelHelper;
     void mouseWheelMove(const juce::MouseEvent &event,

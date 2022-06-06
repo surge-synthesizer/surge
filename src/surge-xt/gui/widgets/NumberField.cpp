@@ -69,14 +69,21 @@ void NumberField::paint(juce::Graphics &g)
     jassert(skin);
 
     bg->draw(g, 1.0);
-    if (bgHover && isHover)
+
+    if (bgHover && isHovered)
+    {
         bgHover->draw(g, 1.0);
+    }
 
     g.setFont(skin->getFont(Fonts::Widgets::NumberField));
 
     g.setColour(textColour);
-    if (isHover)
+
+    if (isHovered)
+    {
         g.setColour(textHoverColour);
+    }
+
     g.drawText(valueToDisplay(), getLocalBounds(), juce::Justification::centred);
 }
 

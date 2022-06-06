@@ -1317,6 +1317,7 @@ struct AliasAdditiveEditor : public juce::Component,
     SurgeGUIEditor *sge;
     int scene;
     int oscInScene;
+    int topTrim = 11;
 
     std::array<juce::Rectangle<float>, AliasOscillator::n_additive_partials> sliders;
     std::array<std::unique_ptr<OverlayAsAccessibleSlider<AliasAdditiveEditor>>,
@@ -1326,11 +1327,10 @@ struct AliasAdditiveEditor : public juce::Component,
     void resized() override
     {
         auto w = 1.f * getWidth() / AliasOscillator::n_additive_partials;
-        float halfHeight = getHeight() / 2.f;
 
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
-            auto p = juce::Rectangle<float>(i * w, 0, w, getHeight());
+            auto p = juce::Rectangle<float>(i * w, topTrim, w, getHeight() - topTrim);
 
             sliders[i] = p;
             sliderAccOverlays[i]->setBounds(p.toNearestInt());
@@ -1340,7 +1340,7 @@ struct AliasAdditiveEditor : public juce::Component,
     void paint(juce::Graphics &g) override
     {
         auto w = 1.f * getWidth() / AliasOscillator::n_additive_partials;
-        float halfHeight = getHeight() / 2.f;
+        float halfHeight = sliders[0].getHeight() / 2.f;
 
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
@@ -1358,12 +1358,12 @@ struct AliasAdditiveEditor : public juce::Component,
             }
 
             g.setColour(skin->getColor(Colors::Osc::Display::Wave));
-            g.fillRect(bar);
+            g.fillRect(bar.translated(0, topTrim));
             g.setColour(skin->getColor(Colors::Osc::Display::Bounds));
             g.drawRect(sliders[i]);
         }
 
-        g.drawLine(0.f, halfHeight, getWidth(), halfHeight);
+        g.drawLine(0.f, halfHeight + topTrim, getWidth(), halfHeight + topTrim);
     }
 
     void createOptionsMenu(const bool useComponentBounds = true)
@@ -1560,8 +1560,9 @@ struct AliasAdditiveEditor : public juce::Component,
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
                 storage->getPatch().isDirty = true;
 
-                auto d = (-1.f * event.position.y / getHeight() + 0.5) * 2 *
-                         (!event.mods.isCommandDown());
+                auto pos = (event.position.y - topTrim) / sliders[clickedSlider].getHeight();
+                auto d = (-1.f * pos + 0.5) * 2 * (!event.mods.isCommandDown());
+
                 oscdata->extraConfig.data[clickedSlider] = limitpm1(d);
 
                 repaint();
@@ -1569,7 +1570,19 @@ struct AliasAdditiveEditor : public juce::Component,
         }
     }
 
-    void mouseUp(const juce::MouseEvent &event) override { mouseUpLongHold(event); }
+    void mouseUp(const juce::MouseEvent &event) override
+    {
+        mouseUpLongHold(event);
+
+        if (event.mouseWasDraggedSinceMouseDown())
+        {
+            if (!Surge::GUI::showCursor(storage))
+            {
+                juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
+                    false);
+            }
+        }
+    }
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
@@ -1608,6 +1621,11 @@ struct AliasAdditiveEditor : public juce::Component,
 
         mouseDragLongHold(event);
 
+        if (!Surge::GUI::showCursor(storage))
+        {
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        }
+
         int draggedSlider = -1;
 
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
@@ -1623,8 +1641,9 @@ struct AliasAdditiveEditor : public juce::Component,
             sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
             storage->getPatch().isDirty = true;
 
-            auto d =
-                (-1.f * event.position.y / getHeight() + 0.5) * 2 * (!event.mods.isCommandDown());
+            auto pos = (event.position.y - topTrim) / sliders[draggedSlider].getHeight();
+            auto d = (-1.f * pos + 0.5) * 2 * (!event.mods.isCommandDown());
+
             oscdata->extraConfig.data[draggedSlider] = limitpm1(d);
 
             repaint();
