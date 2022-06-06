@@ -37,8 +37,6 @@ enum KeyboardActions
     PREV_CATEGORY,
     NEXT_CATEGORY,
 
-    EDIT_PARAM_VALUE,
-
     // TODO: UPDATE WHEN ADDING MORE OSCILLATORS
     OSC_1,
     OSC_2,
@@ -55,6 +53,8 @@ enum KeyboardActions
     SHOW_MODLIST,
     SHOW_TUNING_EDITOR,
     TOGGLE_VIRTUAL_KEYBOARD,
+
+    EDIT_PARAM_VALUE,
 
     ZOOM_TO_DEFAULT,
     ZOOM_PLUS_10,
@@ -270,7 +270,7 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         desc = "Move Focus to Next Control Group";
         break;
     case FOCUS_PRIOR_CONTROL_GROUP:
-        desc = "Move Focus to Prior Control Group";
+        desc = "Move Focus to Previous Control Group";
         break;
 
     case OPEN_MANUAL:

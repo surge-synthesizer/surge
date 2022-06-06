@@ -6711,8 +6711,7 @@ void SurgeGUIEditor::setupKeymapManager()
 
     keyMapManager->addBinding(Surge::GUI::UNDO, {keymap_t::Modifiers::COMMAND, (int)'Z'});
     keyMapManager->addBinding(Surge::GUI::REDO, {keymap_t::Modifiers::COMMAND, (int)'Y'});
-    keyMapManager->addBinding(Surge::GUI::EDIT_PARAM_VALUE,
-                              {keymap_t::Modifiers::COMMAND, (int)'V'});
+    keyMapManager->addBinding(Surge::GUI::EDIT_PARAM_VALUE, {keymap_t::Modifiers::ALT, (int)'V'});
 
     keyMapManager->addBinding(Surge::GUI::PREV_PATCH,
                               {keymap_t::Modifiers::COMMAND, juce::KeyPress::leftKey});

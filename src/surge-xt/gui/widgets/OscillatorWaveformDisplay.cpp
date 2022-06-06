@@ -545,11 +545,16 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
 void OscillatorWaveformDisplay::createWTMenu(const bool useComponentBounds = true)
 {
-    auto contextMenu = juce::PopupMenu();
+    bool usesWT = uses_wavetabledata(oscdata->type.val.i);
 
-    createWTMenuItems(contextMenu, true, true);
+    if (usesWT)
+    {
+        auto contextMenu = juce::PopupMenu();
 
-    contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
+        createWTMenuItems(contextMenu, true, true);
+
+        contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
+    }
 }
 
 void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold,
