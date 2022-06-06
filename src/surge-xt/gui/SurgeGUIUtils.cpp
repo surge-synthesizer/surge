@@ -60,8 +60,8 @@ bool allowKeyboardEdits(SurgeStorage *storage)
  * Returns true if the two lines (p0-p1 and p2-p3) intersect.
  * In addition, if the lines intersect, the intersection point may be stored to floats i_x and i_y.
  */
-bool get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y,
-                           float p3_x, float p3_y, float *i_x, float *i_y)
+bool getLineIntersection(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y,
+                         float p3_x, float p3_y, float *i_x, float *i_y)
 {
     float s1_x, s1_y, s2_x, s2_y;
     float s, t;
@@ -78,12 +78,46 @@ bool get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y, float
     {
         // Collision detected
         if (i_x != NULL)
+        {
             *i_x = p0_x + (t * s1_x);
+        }
+
         if (i_y != NULL)
+        {
             *i_y = p0_y + (t * s1_y);
+        }
+
         return true;
     }
+
     return false; // No collision
+}
+
+void constrainPointOnLineWithinRectangle(const juce::Rectangle<float> rect,
+                                         const juce::Line<float> l, juce::Point<float> &p)
+{
+    auto th = juce::Line<float>{rect.getTopLeft(), rect.getTopRight()};
+    auto bh = juce::Line<float>{rect.getBottomLeft(), rect.getBottomRight()};
+    auto lv = juce::Line<float>{rect.getTopLeft(), rect.getBottomLeft()};
+    auto rv = juce::Line<float>{rect.getTopRight(), rect.getBottomRight()};
+    juce::Point<float> pt;
+
+    if (l.intersects(th, pt))
+    {
+        p = pt;
+    }
+    else if (l.intersects(bh, pt))
+    {
+        p = pt;
+    }
+    else if (l.intersects(lv, pt))
+    {
+        p = pt;
+    }
+    else if (l.intersects(rv, pt))
+    {
+        p = pt;
+    }
 }
 
 void openFileOrFolder(const std::string &f)

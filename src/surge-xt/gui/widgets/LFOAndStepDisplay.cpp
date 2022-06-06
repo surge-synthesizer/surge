@@ -1309,29 +1309,9 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
     if (dragMode == ARROW)
     {
         auto l = juce::Line<float>{arrowStart, arrowEnd};
-        juce::Point<float> p;
 
-        auto th = juce::Line<float>{rect_steps.getTopLeft(), rect_steps.getTopRight()};
-        auto bh = juce::Line<float>{rect_steps.getBottomLeft(), rect_steps.getBottomRight()};
-        auto lv = juce::Line<float>{rect_steps.getTopLeft(), rect_steps.getBottomLeft()};
-        auto rv = juce::Line<float>{rect_steps.getTopRight(), rect_steps.getBottomRight()};
+        Surge::GUI::constrainPointOnLineWithinRectangle(rect_steps, l, arrowEnd);
 
-        if (l.intersects(th, p))
-        {
-            arrowEnd = p;
-        }
-        else if (l.intersects(bh, p))
-        {
-            arrowEnd = p;
-        }
-        else if (l.intersects(lv, p))
-        {
-            arrowEnd = p;
-        }
-        else if (l.intersects(rv, p))
-        {
-            arrowEnd = p;
-        }
         l = juce::Line<float>{arrowStart, arrowEnd};
 
         auto ph = juce::Path();
@@ -1987,7 +1967,7 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
             auto r = gaterect[i];
             auto otm = ss->trigmask;
 
-            if (r.contains(event.position))
+            if (event.position.x >= r.getX() && event.position.x < r.getX() + r.getWidth())
             {
                 auto off = UINT64_MAX & ~(UINT64_C(1) << i) & ~(UINT64_C(1) << (i + 16)) &
                            ~(UINT64_C(1) << (i + 32));
@@ -2034,6 +2014,10 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
 
     if (dragMode == ARROW)
     {
+        auto l = juce::Line<float>{arrowStart, arrowEnd};
+
+        Surge::GUI::constrainPointOnLineWithinRectangle(rect_steps, l, arrowEnd);
+
         auto rmStepStart = arrowStart;
         auto rmStepCurr = arrowEnd;
 
@@ -2058,7 +2042,9 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
                 startStep = i;
             }
 
-            if (steprect[i].contains(rmStepCurr))
+            // we expand steprect so that we accept edge points on the rectangle
+            // since .contains() only checks if a point is within the rect, not ON its edges
+            if (steprect[i].expanded(1, 1).contains(rmStepCurr))
             {
                 endStep = i;
             }
