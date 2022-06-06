@@ -591,7 +591,7 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
                 }
             };
 
-            auto text = fmt::format("{} Wavetable Display", (customEditor) ? "2D" : "3D");
+            auto text = fmt::format("Switch to {} Display", (customEditor) ? "2D" : "3D");
 
             contextMenu.addItem(Surge::GUI::toOSCase(text), action);
 
@@ -606,6 +606,177 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
                 false, false, nullptr);
         }
     }
+}
+
+void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBounds,
+                                                       const bool onlyHelpEntry)
+{
+    auto contextMenu = juce::PopupMenu();
+
+    {
+        auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "alias-shape");
+        auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+        auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+            fmt::format("Alias Additive Editor{}", onlyHelpEntry ? "" : " Options"), hurl);
+
+        auto hment = tc->getTitle();
+
+        tc->setSkin(skin, associatedBitmapStore);
+
+        contextMenu.addCustomItem(-1, std::move(tc), nullptr, hment);
+
+        contextMenu.addSeparator();
+    }
+
+    if (!onlyHelpEntry)
+    {
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Sine", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
+
+                    if (qq % 4 == 2)
+                    {
+                        oscdata->extraConfig.data[qq] *= -1.f;
+                    }
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Triangle", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Sawtooth", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Square", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = storage->rand_pm1();
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Random", action);
+        }
+
+        contextMenu.addSeparator();
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    if (oscdata->extraConfig.data[qq] < 0)
+                    {
+                        oscdata->extraConfig.data[qq] *= -1;
+                    }
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Absolute", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Invert", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+                storage->getPatch().isDirty = true;
+
+                float pdata[AliasOscillator::n_additive_partials];
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    pdata[qq] = oscdata->extraConfig.data[qq];
+                }
+
+                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[15 - qq] = pdata[qq];
+                }
+
+                repaint();
+            };
+
+            contextMenu.addItem("Reverse", action);
+        }
+    }
+
+    contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
 }
 
 bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &contextMenu,
@@ -789,7 +960,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
                 if (sge)
                 {
-                    std::string announce = "Loaded Wavetable ";
+                    std::string announce = "Loaded wavetable is: ";
                     announce += storage->wt_list[id].name;
                     sge->enqueueAccessibleAnnouncement(announce);
                 }
@@ -815,7 +986,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
                 if (sge)
                 {
-                    std::string announce = "Loaded Wavetable ";
+                    std::string announce = "Loaded wavetable is: ";
                     announce += storage->wt_list[id].name;
                     sge->enqueueAccessibleAnnouncement(announce);
                 }
@@ -847,7 +1018,15 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
     {
         if (event.mods.isPopupMenu())
         {
+            // internally already queries if we're using a wavetable-based osc
             createWTMenu(false);
+
+            // we're using Alias now. TODO: this can probably be better/clearer
+            if (!usesWT)
+            {
+                createAliasOptionsMenu(false, true);
+            }
+
             return;
         }
 
@@ -1258,8 +1437,9 @@ struct AliasAdditiveEditor : public juce::Component,
                              public LongHoldMixin<AliasAdditiveEditor>,
                              public Surge::GUI::Hoverable
 {
-    AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc, SurgeGUIEditor *ed, int sc, int os)
-        : storage(s), oscdata(osc), sge(ed), scene(sc), oscInScene(os)
+    AliasAdditiveEditor(OscillatorWaveformDisplay *pD, SurgeStorage *s, OscillatorStorage *osc,
+                        SurgeGUIEditor *ed, int sc, int os)
+        : parent(pD), storage(s), oscdata(osc), sge(ed), scene(sc), oscInScene(os)
     {
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
@@ -1325,6 +1505,7 @@ struct AliasAdditiveEditor : public juce::Component,
     }
 
     OscillatorStorage *oscdata;
+    OscillatorWaveformDisplay *parent;
     SurgeStorage *storage;
     SurgeGUIEditor *sge;
     int scene;
@@ -1378,180 +1559,13 @@ struct AliasAdditiveEditor : public juce::Component,
         g.drawLine(0.f, halfHeight + topTrim, getWidth(), halfHeight + topTrim);
     }
 
-    void createOptionsMenu(const bool useComponentBounds = true)
-    {
-        auto contextMenu = juce::PopupMenu();
-
-        {
-            auto msurl = SurgeGUIEditor::helpURLForSpecial(storage, "alias-shape");
-            auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
-            auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
-                "Alias Additive Options", hurl);
-
-            auto hment = tc->getTitle();
-
-            tc->setSkin(skin, associatedBitmapStore);
-
-            contextMenu.addCustomItem(-1, std::move(tc), nullptr, hment);
-
-            contextMenu.addSeparator();
-        }
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
-                }
-                storage->getPatch().isDirty = true;
-
-                repaint();
-            };
-
-            contextMenu.addItem("Sine", action);
-        }
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
-
-                    if (qq % 4 == 2)
-                    {
-                        oscdata->extraConfig.data[qq] *= -1.f;
-                    }
-                }
-                storage->getPatch().isDirty = true;
-
-                repaint();
-            };
-
-            contextMenu.addItem("Triangle", action);
-        }
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
-                }
-                storage->getPatch().isDirty = true;
-
-                repaint();
-            };
-
-            contextMenu.addItem("Sawtooth", action);
-        }
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
-                }
-                storage->getPatch().isDirty = true;
-
-                repaint();
-            };
-
-            contextMenu.addItem("Square", action);
-        }
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = storage->rand_pm1();
-                }
-                storage->getPatch().isDirty = true;
-
-                repaint();
-            };
-
-            contextMenu.addItem("Random", action);
-        }
-
-        contextMenu.addSeparator();
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    if (oscdata->extraConfig.data[qq] < 0)
-                    {
-                        oscdata->extraConfig.data[qq] *= -1;
-                    }
-                }
-                storage->getPatch().isDirty = true;
-
-                repaint();
-            };
-
-            contextMenu.addItem("Absolute", action);
-        }
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
-                }
-                storage->getPatch().isDirty = true;
-
-                repaint();
-            };
-
-            contextMenu.addItem("Invert", action);
-        }
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-                storage->getPatch().isDirty = true;
-
-                float pdata[AliasOscillator::n_additive_partials];
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    pdata[qq] = oscdata->extraConfig.data[qq];
-                }
-
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[15 - qq] = pdata[qq];
-                }
-
-                repaint();
-            };
-
-            contextMenu.addItem("Reverse", action);
-        }
-
-        contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
-    }
-
     void mouseDown(const juce::MouseEvent &event) override
     {
         mouseDownLongHold(event);
 
         if (event.mods.isPopupMenu())
         {
-            createOptionsMenu(false);
+            parent->createAliasOptionsMenu(false);
             return;
         }
 
@@ -1639,16 +1653,36 @@ struct AliasAdditiveEditor : public juce::Component,
         }
 
         int draggedSlider = -1;
+        bool yPosActivity = false;
 
         for (int i = 0; i < AliasOscillator::n_additive_partials; ++i)
         {
-            if (sliders[i].contains(event.position))
+            if (event.position.x >= sliders[i].getX() &&
+                event.position.x < sliders[i].getX() + sliders[i].getWidth())
             {
                 draggedSlider = i;
             }
+
+            if (event.position.y >= sliders[i].getY() &&
+                event.position.y < sliders[i].getY() + sliders[i].getHeight())
+            {
+                yPosActivity = true;
+
+                if (event.position.x < sliders[0].getX())
+                {
+                    draggedSlider = 0;
+                }
+
+                int lastPartial = AliasOscillator::n_additive_partials - 1;
+
+                if (event.position.x >= sliders[lastPartial].getX())
+                {
+                    draggedSlider = lastPartial;
+                }
+            }
         }
 
-        if (draggedSlider >= 0)
+        if (draggedSlider >= 0 || yPosActivity)
         {
             sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
             storage->getPatch().isDirty = true;
@@ -1722,7 +1756,7 @@ struct AliasAdditiveEditor : public juce::Component,
 
         if (action == OpenMenu)
         {
-            createOptionsMenu();
+            parent->createAliasOptionsMenu();
             return true;
         }
 
@@ -1730,7 +1764,10 @@ struct AliasAdditiveEditor : public juce::Component,
     }
 };
 
-template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold() { asT()->createOptionsMenu(); }
+template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold()
+{
+    asT()->parent->createAliasOptionsMenu();
+}
 
 void OscillatorWaveformDisplay::showCustomEditor()
 {
@@ -1742,7 +1779,8 @@ void OscillatorWaveformDisplay::showCustomEditor()
     if (oscdata->type.val.i == ot_alias &&
         oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
     {
-        auto ed = std::make_unique<AliasAdditiveEditor>(storage, oscdata, sge, scene, oscInScene);
+        auto ed =
+            std::make_unique<AliasAdditiveEditor>(this, storage, oscdata, sge, scene, oscInScene);
         ed->setSkin(skin, associatedBitmapStore);
         customEditor = std::move(ed);
     }
@@ -1910,23 +1948,32 @@ bool OscillatorWaveformDisplay::keyPressed(const juce::KeyPress &key)
     auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
 
     if (action == None)
+    {
         return false;
+    }
 
     if (action == OpenMenu)
     {
-        if (isWtNameHovered)
+        if (isWtNameHovered || isJogLHovered || isJogRHovered)
         {
             showWavetableMenu();
+
             return true;
         }
         else
         {
             bool usesWT = uses_wavetabledata(oscdata->type.val.i);
-            if (usesWT)
+
+            // internally already queries if we're using a wavetable-based osc
+            createWTMenu();
+
+            // we're using Alias now. TODO: this can probably be better/clearer
+            if (!usesWT)
             {
-                createWTMenu();
-                return true;
+                createAliasOptionsMenu(false, true);
             }
+
+            return true;
         }
     }
 

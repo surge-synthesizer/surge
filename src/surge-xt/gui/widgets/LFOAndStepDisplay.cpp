@@ -148,8 +148,8 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
 
         q->onGetValue = [this, i](auto *) {
             uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
-            uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
-            uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
+            uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + n_stepseqsteps));
+            uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + (n_stepseqsteps * 2)));
 
             if (maski)
                 return 1.f;
@@ -162,8 +162,8 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
         q->onSetValue = [this, i](auto *, float f) {
             int q = round(f);
             uint64_t b1 = (UINT64_C(1) << i);
-            uint64_t b2 = (UINT64_C(1) << (i + 16));
-            uint64_t b3 = (UINT64_C(1) << (i + 32));
+            uint64_t b2 = (UINT64_C(1) << (i + n_stepseqsteps));
+            uint64_t b3 = (UINT64_C(1) << (i + (n_stepseqsteps * 2)));
             uint64_t maskOff = 0xFFFFFFFFFFFFFFFF;
             uint64_t maskOn = 0;
 
@@ -967,8 +967,8 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
                 auto gatebgcolor = stepcolor;
 
                 uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
-                uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
-                uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
+                uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + n_stepseqsteps));
+                uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + (n_stepseqsteps * 2)));
 
                 gstep = gstep.withTrimmedTop(1).withTrimmedLeft(1).withTrimmedRight(
                     i == n_stepseqsteps - 1 ? 1 : 0);
@@ -1480,6 +1480,10 @@ void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
         quantStep = storage->currentScale.count;
     }
 
+    draggedStep = -1;
+
+    bool yPosActivity = false;
+
     for (int i = 0; i < n_stepseqsteps; ++i)
     {
         auto r = steprect[i];
@@ -1489,12 +1493,30 @@ void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
         float ry0 = r.getY();
         float ry1 = r.getY() + r.getHeight();
 
-        if (event.position.x >= rx0 && event.position.x < rx1)
+        if ((event.position.x >= rx0 && event.position.x < rx1) || yPosActivity)
         {
-            auto bscg = BeginStepGuard(this);
             draggedStep = i;
+        }
 
+        if (event.position.y >= ry0 && event.position.y < ry1)
+        {
+            if (event.position.x < steprect[0].getX())
+            {
+                draggedStep = 0;
+                yPosActivity = true;
+            }
+
+            if (event.position.x >= steprect[n_stepseqsteps - 1].getX())
+            {
+                draggedStep = n_stepseqsteps - 1;
+                yPosActivity = true;
+            }
+        }
+
+        if (draggedStep >= 0 || yPosActivity)
+        {
             float f;
+            auto bscg = BeginStepGuard(this);
 
             if (isUnipolar())
             {
@@ -1525,7 +1547,7 @@ void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
                 }
             }
 
-            ss->steps[i] = f;
+            ss->steps[draggedStep] = f;
             stepSeqDirty();
 
             repaint();
@@ -1654,8 +1676,8 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                 dragMode = TRIGGERS;
 
                 uint64_t maski = ss->trigmask & (UINT64_C(1) << i);
-                uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + 16));
-                uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + 32));
+                uint64_t maski16 = ss->trigmask & (UINT64_C(1) << (i + n_stepseqsteps));
+                uint64_t maski32 = ss->trigmask & (UINT64_C(1) << (i + (n_stepseqsteps * 2)));
                 uint64_t maskOn = 0;
                 uint64_t maskOff = 0xFFFFFFFFFFFFFFFF;
 
@@ -1679,16 +1701,16 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                 {
                     if (maski || ~maski)
                     {
-                        maskOn = (UINT64_C(1) << (i + 16));
+                        maskOn = (UINT64_C(1) << (i + n_stepseqsteps));
                         maskOff = ~maski;
-                        dragTrigger0 = UINT64_C(1) << 16;
+                        dragTrigger0 = UINT64_C(1) << n_stepseqsteps;
                     }
 
                     if (maski16)
                     {
-                        maskOn = (UINT64_C(1) << (i + 32));
+                        maskOn = (UINT64_C(1) << (i + (n_stepseqsteps * 2)));
                         maskOff = ~maski16;
-                        dragTrigger0 = UINT64_C(1) << 32;
+                        dragTrigger0 = UINT64_C(1) << (n_stepseqsteps * 2);
                     }
                 }
 
@@ -1969,8 +1991,9 @@ void LFOAndStepDisplay::mouseDrag(const juce::MouseEvent &event)
 
             if (event.position.x >= r.getX() && event.position.x < r.getX() + r.getWidth())
             {
-                auto off = UINT64_MAX & ~(UINT64_C(1) << i) & ~(UINT64_C(1) << (i + 16)) &
-                           ~(UINT64_C(1) << (i + 32));
+                auto off = UINT64_MAX & ~(UINT64_C(1) << i) &
+                           ~(UINT64_C(1) << (i + n_stepseqsteps)) &
+                           ~(UINT64_C(1) << (i + (n_stepseqsteps * 2)));
                 auto on = dragTrigger0 << i;
 
                 ss->trigmask &= off;
