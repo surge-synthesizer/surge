@@ -3655,17 +3655,6 @@ juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(const juce::Point<int> &wh
 
     mouseMenu.addSeparator();
 
-    bool knMode = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::MenuAndEditKeybindingsFollowKeyboardFocus, true);
-
-    mouseMenu.addItem(Surge::GUI::toOSCase("Menu and Edit Keys Follow Keyboard Focus (vs Mouse)"),
-                      enabled, knMode, [this, knMode]() {
-                          Surge::Storage::updateUserDefaultValue(
-                              &(this->synth->storage),
-                              Surge::Storage::MenuAndEditKeybindingsFollowKeyboardFocus, !knMode);
-                      });
-
-    mouseMenu.addSeparator();
     return mouseMenu;
 }
 
@@ -3941,15 +3930,39 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                                     showShortcutDescription("Alt + B", u8"\U00002325B"), true,
                                     false, [this]() { toggleOverlay(KEYBINDINGS_EDITOR); });
 
+    bool knMode = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::MenuAndEditKeybindingsFollowKeyboardFocus, true);
+
+    auto kbfMenu = juce::PopupMenu();
+
+    kbfMenu.addItem(Surge::GUI::toOSCase("Follow Keyboard Focus"), true, knMode, [this]() {
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::MenuAndEditKeybindingsFollowKeyboardFocus,
+            true);
+    });
+
+    kbfMenu.addItem(Surge::GUI::toOSCase("Follow Mouse Hover Focus"), true, !knMode, [this]() {
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::MenuAndEditKeybindingsFollowKeyboardFocus,
+            false);
+    });
+
+    std::string str = "Shift + F10 and " + Surge::GUI::toOSCase("Edit Parameter Value Shortcuts");
+
+    wfMenu.addSubMenu(str, kbfMenu);
+
+    wfMenu.addSeparator();
+
     bool doAccAnn = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, true);
 
-    wfMenu.addItem(Surge::GUI::toOSCase("Add Additional Accessibility Announcements"), true,
+    wfMenu.addItem(Surge::GUI::toOSCase("Send Additional Accessibility Announcements"), true,
                    doAccAnn, [this, doAccAnn]() {
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements,
                            !doAccAnn);
                    });
+
     wfMenu.addSeparator();
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
@@ -6858,17 +6871,21 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     for (const auto &j : juceSkinComponents)
                     {
                         auto icv = dynamic_cast<Surge::GUI::IComponentTagValue *>(j.second.get());
+
                         if (icv && icv->isCurrentlyHovered())
                         {
                             fc = icv->asJuceComponent();
+
                             break;
                         }
                     }
                 }
+
                 if (auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(fc))
                 {
                     auto t = mci->asControlValueInterface()->getTag() - start_paramtags;
                     auto p = synth->storage.getPatch().param_ptr[t];
+
                     if (p->valtype == vt_float)
                     {
                         if (mod_editor && synth->isValidModulation(p->id, modsource))
@@ -6881,21 +6898,20 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                             promptForUserValueEntry(p, fc);
                         }
                     }
+
                     return true;
                 }
             }
+            break;
 
             case Surge::GUI::PREV_PATCH:
             case Surge::GUI::NEXT_PATCH:
             {
-                std::string ctrlcmd = showShortcutDescription("Ctrl", u8"\U00002318");
-
                 return promptForOKCancelWithDontAskAgain(
                     "Confirm Patch Change",
-                    fmt::format("You have used {0}+left or {0}+right to load another patch,\n"
+                    fmt::format("You have used a keyboard shortcut to load another patch,\n"
                                 "which will discard any changes made so far.\n\n"
-                                "Do you want to proceed?",
-                                ctrlcmd),
+                                "Do you want to proceed?"),
                     Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
                         closeOverlay(SAVE_PATCH);
 
@@ -6909,14 +6925,11 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::PREV_CATEGORY:
             case Surge::GUI::NEXT_CATEGORY:
             {
-                std::string shiftmac = showShortcutDescription("Shift", u8"\U000021E7");
-
                 return promptForOKCancelWithDontAskAgain(
                     "Confirm Category Change",
-                    fmt::format("You have used {0}+left or {0}+right to select another category,\n"
+                    fmt::format("You have used a keyboard shortcut to select another category,\n"
                                 "which will discard any changes made so far.\n\n"
-                                "Do you want to proceed?",
-                                shiftmac),
+                                "Do you want to proceed?"),
                     Surge::Storage::PromptToActivateCategoryAndPatchOnKeypress, [this, action]() {
                         closeOverlay(SAVE_PATCH);
 
@@ -7012,6 +7025,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             {
                 auto dir = (action == Surge::GUI::FOCUS_NEXT_CONTROL_GROUP ? 1 : -1);
                 auto fc = frame->getCurrentlyFocusedComponent();
+
                 if (fc == frame.get())
                 {
                 }
@@ -7022,18 +7036,30 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                         fc = fc->getParentComponent();
                     }
                 }
+
                 if (fc == nullptr || fc == frame.get())
+                {
                     return false;
+                }
 
                 auto cg = (int)fc->getProperties().getWithDefault("ControlGroup", -1);
+
                 if (cg < 0)
+                {
                     return false;
+                }
+
                 juce::Component *focusThis{nullptr};
+
                 for (auto c : frame->getChildren())
                 {
                     auto ccg = (int)c->getProperties().getWithDefault("ControlGroup", -1);
+
                     if (ccg < 0)
+                    {
                         continue;
+                    }
+
                     if (dir < 0)
                     {
                         if (ccg < cg)
@@ -7042,8 +7068,11 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                             {
                                 auto ncg = (int)focusThis->getProperties().getWithDefault(
                                     "ControlGroup", -1);
+
                                 if (ncg < ccg)
+                                {
                                     focusThis = c;
+                                }
                             }
                             else
                             {
@@ -7059,8 +7088,11 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                             {
                                 auto ncg = (int)focusThis->getProperties().getWithDefault(
                                     "ControlGroup", -1);
+
                                 if (ncg > ccg)
+                                {
                                     focusThis = c;
+                                }
                             }
                             else
                             {
@@ -7069,22 +7101,27 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                         }
                     }
                 }
+
                 if (focusThis)
                 {
                     // So now focus the first element of focusThis
                     if (focusThis->getWantsKeyboardFocus())
                     {
                         focusThis->grabKeyboardFocus();
+
                         return true;
                     }
+
                     for (auto c : focusThis->getChildren())
                     {
                         if (c->getWantsKeyboardFocus() && c->isShowing())
                         {
                             c->grabKeyboardFocus();
+
                             return true;
                         }
                     }
+
                     return false;
                 }
                 else
@@ -7092,22 +7129,29 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     // We are off the end. If dir = +1 grab the smallest, else the largest
                     juce::Component *wrapper;
                     int lccg = (dir > 0 ? std::numeric_limits<int>::max() : 0);
+
                     for (auto c : frame->getChildren())
                     {
                         auto ccg = (int)c->getProperties().getWithDefault("ControlGroup", -1);
+
                         if (ccg < 0)
+                        {
                             continue;
+                        }
+
                         if (dir > 0 && ccg < lccg)
                         {
                             lccg = ccg;
                             wrapper = c;
                         }
+
                         if (dir < 0 && ccg > lccg)
                         {
                             lccg = ccg;
                             wrapper = c;
                         }
                     }
+
                     if (wrapper)
                     {
                         for (auto c : wrapper->getChildren())
@@ -7115,10 +7159,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                             if (c->getWantsKeyboardFocus() && c->isShowing())
                             {
                                 c->grabKeyboardFocus();
+
                                 return true;
                             }
                         }
                     }
+
                     return false;
                 }
             }
