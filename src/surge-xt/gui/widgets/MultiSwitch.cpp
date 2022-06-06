@@ -251,6 +251,8 @@ void MultiSwitch::startHover(const juce::Point<float> &p)
 
     isHovered = true;
     hoverSelection = coordinateToSelection(p.x, p.y);
+
+    repaint();
 }
 
 void MultiSwitch::mouseExit(const juce::MouseEvent &event) { endHover(); }

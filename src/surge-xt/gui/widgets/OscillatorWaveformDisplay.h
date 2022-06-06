@@ -94,6 +94,11 @@ struct OscillatorWaveformDisplay : public juce::Component,
     bool isCustomEditorHovered{false}, isJogRHovered{false}, isJogLHovered{false},
         isWtNameHovered{false};
 
+    /*     bool isCurrentlyHovered() override
+        {
+            return isCustomEditorHovered || isJogRHovered || isJogLHovered || isWtNameHovered;
+        } */
+
     juce::Rectangle<float> customEditorBox;
     bool supportsCustomEditor();
     void showCustomEditor();

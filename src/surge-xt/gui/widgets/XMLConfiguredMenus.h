@@ -154,6 +154,7 @@ struct OscillatorMenu : public juce::Component,
         isHovered = true;
         repaint();
     }
+
     void endHover() override
     {
         if (stuckHover)
@@ -162,17 +163,17 @@ struct OscillatorMenu : public juce::Component,
         isHovered = false;
         repaint();
     }
+
+    bool isCurrentlyHovered() override { return isHovered; }
+
     bool keyPressed(const juce::KeyPress &key) override;
+
     void focusGained(juce::Component::FocusChangeType cause) override
     {
         startHover(getBounds().getBottomLeft().toFloat());
-        repaint();
     }
-    void focusLost(juce::Component::FocusChangeType cause) override
-    {
-        endHover();
-        repaint();
-    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
 
     bool text_allcaps{false};
     juce::Font::FontStyleFlags font_style{juce::Font::plain};
@@ -240,6 +241,7 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
         isHovered = true;
         repaint();
     }
+
     void endHover() override
     {
         if (stuckHover)
@@ -248,12 +250,17 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
         isHovered = false;
         repaint();
     }
+
+    bool isCurrentlyHovered() override { return isHovered; }
+
     bool keyPressed(const juce::KeyPress &key) override;
+
     void focusGained(juce::Component::FocusChangeType cause) override
     {
         startHover(getBounds().getBottomLeft().toFloat());
         repaint();
     }
+
     void focusLost(juce::Component::FocusChangeType cause) override
     {
         endHover();

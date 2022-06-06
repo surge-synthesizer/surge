@@ -87,17 +87,17 @@ struct WaveShaperSelector : public juce::Component,
         isWaveHovered = true;
         repaint();
     }
+
+    bool isCurrentlyHovered() override { return isLabelHovered || isWaveHovered; }
+
     bool keyPressed(const juce::KeyPress &key) override;
+
     void focusGained(juce::Component::FocusChangeType cause) override
     {
         startHover(getBounds().getBottomLeft().toFloat());
-        repaint();
     }
-    void focusLost(juce::Component::FocusChangeType cause) override
-    {
-        endHover();
-        repaint();
-    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
 
     void jog(int by);
 

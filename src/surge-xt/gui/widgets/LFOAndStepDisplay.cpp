@@ -227,7 +227,7 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
     auto l0 =
         std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, "Loop Start Point");
     l0->min = 0;
-    l0->max = 16;
+    l0->max = n_stepseqsteps;
     l0->step = 1;
     l0->onGetValue = [this](auto *) { return ss->loop_start; };
     l0->onSetValue = [this](auto *, float f) {
@@ -257,7 +257,7 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
 
     l0 = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, "Loop End Point");
     l0->min = 0;
-    l0->max = 16;
+    l0->max = n_stepseqsteps;
     l0->step = 1;
     l0->onGetValue = [this](auto *) { return ss->loop_end; };
     l0->onSetValue = [this](auto *, float f) {
@@ -1506,6 +1506,9 @@ void LFOAndStepDisplay::setStepValue(const juce::MouseEvent &event)
 
         float rx0 = r.getX();
         float rx1 = r.getX() + r.getWidth();
+        float ry0 = r.getY();
+        float ry1 = r.getY() + r.getHeight();
+
         if (event.position.x >= rx0 && event.position.x < rx1)
         {
             auto bscg = BeginStepGuard(this);
@@ -1773,8 +1776,8 @@ void LFOAndStepDisplay::mouseExit(const juce::MouseEvent &event)
     {
         enterExitWaveform(false);
     }
-    overWaveform = false;
-    repaint();
+
+    endHover();
 }
 
 void LFOAndStepDisplay::enterExitWaveform(bool isInWF)
@@ -2048,7 +2051,7 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
             quantStep = storage->currentScale.count;
         }
 
-        for (int i = 0; i < 16; ++i)
+        for (int i = 0; i < n_stepseqsteps; ++i)
         {
             if (steprect[i].contains(rmStepStart))
             {

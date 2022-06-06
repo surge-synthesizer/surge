@@ -123,6 +123,7 @@ struct MenuForDiscreteParams : public juce::Component,
         isHovered = true;
         repaint();
     }
+
     void endHover() override
     {
         if (stuckHover)
@@ -138,17 +139,16 @@ struct MenuForDiscreteParams : public juce::Component,
         repaint();
     }
 
+    bool isCurrentlyHovered() override { return isHovered; }
+
     bool keyPressed(const juce::KeyPress &key) override;
+
     void focusGained(juce::Component::FocusChangeType cause) override
     {
         startHover(getBounds().getBottomLeft().toFloat());
-        repaint();
     }
-    void focusLost(juce::Component::FocusChangeType cause) override
-    {
-        endHover();
-        repaint();
-    }
+
+    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
 
     juce::Point<int> mouseDownOrigin;
     bool isDraggingGlyph{false};
