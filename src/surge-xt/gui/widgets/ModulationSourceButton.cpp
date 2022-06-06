@@ -866,6 +866,18 @@ void ModulationOverviewLaunchButton::mouseDown(const juce::MouseEvent &event)
     }
 }
 
+bool ModulationOverviewLaunchButton::keyPressed(const juce::KeyPress &key)
+{
+    if (Surge::Widgets::isAccessibleKey(key))
+    {
+        if (!Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::DefaultKey::MenuAndEditKeybindingsFollowKeyboardFocus,
+                true))
+            return false;
+    }
+    return juce::Button::keyPressed(key);
+}
+
 void ModulationOverviewLaunchButton::paintButton(juce::Graphics &g,
                                                  bool shouldDrawButtonAsHighlighted,
                                                  bool shouldDrawButtonAsDown)

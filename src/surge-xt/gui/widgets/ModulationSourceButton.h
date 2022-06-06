@@ -228,11 +228,12 @@ struct ModulationSourceButton : public juce::Component,
 
 struct ModulationOverviewLaunchButton : public juce::Button,
                                         juce::Button::Listener,
-                                        Surge::GUI::SkinConsumingComponent
+                                        Surge::GUI::SkinConsumingComponent,
+                                        Surge::GUI::Hoverable
 
 {
-    ModulationOverviewLaunchButton(SurgeGUIEditor *ed)
-        : juce::Button("Open Modulation Overview"), editor(ed)
+    ModulationOverviewLaunchButton(SurgeGUIEditor *ed, SurgeStorage *s)
+        : juce::Button("Open Modulation Overview"), editor(ed), storage(s)
     {
         addListener(this);
     }
@@ -243,8 +244,15 @@ struct ModulationOverviewLaunchButton : public juce::Button,
     void buttonClicked(Button *button) override;
 
     void mouseDown(const juce::MouseEvent &event) override;
+    bool keyPressed(const juce::KeyPress &key) override;
 
-    SurgeGUIEditor *editor;
+    bool isH{false};
+    void mouseEnter(const juce::MouseEvent &event) override { isH = true; }
+    void mouseExit(const juce::MouseEvent &event) override { isH = false; }
+    bool isCurrentlyHovered() override { return isH; }
+
+    SurgeGUIEditor *editor{nullptr};
+    SurgeStorage *storage{nullptr};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationOverviewLaunchButton);
 };
 } // namespace Widgets

@@ -1389,8 +1389,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     if (!modOverviewLauncher)
     {
-        modOverviewLauncher =
-            std::make_unique<Surge::Widgets::ModulationOverviewLaunchButton>(this);
+        modOverviewLauncher = std::make_unique<Surge::Widgets::ModulationOverviewLaunchButton>(
+            this, &(synth->storage));
     }
 
     modOverviewLauncher->setBounds(moRect);
