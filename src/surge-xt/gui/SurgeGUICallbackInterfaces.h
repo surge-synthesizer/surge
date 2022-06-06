@@ -22,7 +22,14 @@ namespace Surge
 {
 namespace GUI
 {
-struct IComponentTagValue
+struct Hoverable
+{
+    virtual void startHover(const juce::Point<float> &) {}
+    virtual void endHover() {}
+    virtual bool isCurrentlyHovered() { return false; }
+};
+
+struct IComponentTagValue : public Hoverable
 {
     virtual uint32_t getTag() const = 0;
     virtual float getValue() const = 0;
@@ -31,10 +38,6 @@ struct IComponentTagValue
     bool stuckHover{false};
     virtual void stuckHoverOn() { stuckHover = true; }
     virtual void stuckHoverOff() { stuckHover = false; }
-
-    virtual void startHover(const juce::Point<float> &) {}
-    virtual void endHover() {}
-    virtual bool isCurrentlyHovered() { return false; }
 
     juce::Component *asJuceComponent()
     {

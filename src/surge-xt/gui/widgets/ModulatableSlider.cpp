@@ -750,6 +750,12 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
         return true;
     }
 
+    if (action == Return)
+    {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge && sge->promptForUserValueEntry(this))
+            return true;
+    }
     if (action == ToDefault)
     {
         notifyControlModifierDoubleClicked(juce::ModifierKeys());

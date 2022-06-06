@@ -847,6 +847,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
     void promptForUserValueEntry(Parameter *p, juce::Component *c, int modsource, int modScene,
                                  int modindex);
+    bool promptForUserValueEntry(Surge::Widgets::ModulatableControlInterface *mci);
 
     /*
     ** Skin support

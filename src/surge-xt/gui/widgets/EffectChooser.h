@@ -80,7 +80,7 @@ struct EffectChooser : public juce::Component,
         repaint();
     }
 
-    bool isCurrentlyHovered() override { return (currentHover >= 0) || (currentSceneHover >= 0); }
+    bool isCurrentlyHovered() override { return isHovered; }
 
     void resized() override;
 

@@ -74,6 +74,8 @@ struct MainFrame : public juce::Component
     juce::Component *getModButtonLayer();
     juce::Component *getSynthControlsLayer();
 
+    juce::Component *recursivelyFindFirstChildMatching(std::function<bool(juce::Component *)>);
+
     std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
     std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 

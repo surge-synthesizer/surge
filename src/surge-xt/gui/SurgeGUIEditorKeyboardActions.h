@@ -54,8 +54,6 @@ enum KeyboardActions
     SHOW_TUNING_EDITOR,
     TOGGLE_VIRTUAL_KEYBOARD,
 
-    EDIT_PARAM_VALUE,
-
     ZOOM_TO_DEFAULT,
     ZOOM_PLUS_10,
     ZOOM_PLUS_25,
@@ -89,9 +87,6 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "FIND_PATCH";
     case FAVORITE_PATCH:
         return "FAVORITE_PATCH";
-
-    case EDIT_PARAM_VALUE:
-        return "EDIT_PARAM_VALUE";
 
     case PREV_PATCH:
         return "PREV_PATCH";
@@ -216,10 +211,6 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     // TODO: FIX SCENE ASSUMPTION
     case TOGGLE_SCENE:
         desc = "Toggle Scene A/B";
-        break;
-
-    case EDIT_PARAM_VALUE:
-        desc = "Edit Parameter Value";
         break;
 
 #if WINDOWS

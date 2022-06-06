@@ -855,6 +855,8 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
     }
 }
 
+void OscillatorWaveformDisplay::mouseEnter(const juce::MouseEvent &event) { isMousedOver = true; }
+
 void OscillatorWaveformDisplay::mouseMove(const juce::MouseEvent &event)
 {
     mouseMoveLongHold(event);
@@ -1235,6 +1237,15 @@ struct WaveTable3DEditor : public juce::Component,
     }
 
     void mouseUp(const juce::MouseEvent &event) override { mouseUpLongHold(event); }
+
+    void mouseEnter(const juce::MouseEvent &event) override
+    {
+        parent->isCustomEditorHovered = true;
+    }
+    void mouseExit(const juce::MouseEvent &event) override
+    {
+        parent->isCustomEditorHovered = false;
+    }
 };
 
 template <> void LongHoldMixin<WaveTable3DEditor>::onLongHold() { asT()->parent->createWTMenu(); }
@@ -1244,7 +1255,8 @@ template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold();
 
 struct AliasAdditiveEditor : public juce::Component,
                              public Surge::GUI::SkinConsumingComponent,
-                             public LongHoldMixin<AliasAdditiveEditor>
+                             public LongHoldMixin<AliasAdditiveEditor>,
+                             public Surge::GUI::Hoverable
 {
     AliasAdditiveEditor(SurgeStorage *s, OscillatorStorage *osc, SurgeGUIEditor *ed, int sc, int os)
         : storage(s), oscdata(osc), sge(ed), scene(sc), oscInScene(os)
@@ -1695,6 +1707,27 @@ struct AliasAdditiveEditor : public juce::Component,
             repaint();
         }
     }
+
+    bool isHovered{false};
+    void mouseEnter(const juce::MouseEvent &) override { isHovered = true; }
+    void mouseExit(const juce::MouseEvent &) override { isHovered = false; }
+    bool isCurrentlyHovered() override { return isHovered; }
+
+    bool keyPressed(const juce::KeyPress &key) override
+    {
+        auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+        if (action == None)
+            return false;
+
+        if (action == OpenMenu)
+        {
+            createOptionsMenu();
+            return true;
+        }
+
+        return false;
+    }
 };
 
 template <> void LongHoldMixin<AliasAdditiveEditor>::onLongHold() { asT()->createOptionsMenu(); }
@@ -1819,6 +1852,7 @@ void OscillatorWaveformDisplay::mouseExit(const juce::MouseEvent &event)
     isJogLHovered = false;
     isJogRHovered = false;
     isWtNameHovered = false;
+    isMousedOver = false;
     repaint();
 }
 
@@ -1869,6 +1903,34 @@ void OscillatorWaveformDisplay::onOscillatorTypeChanged()
 std::unique_ptr<juce::AccessibilityHandler> OscillatorWaveformDisplay::createAccessibilityHandler()
 {
     return std::make_unique<juce::AccessibilityHandler>(*this, juce::AccessibilityRole::group);
+}
+
+bool OscillatorWaveformDisplay::keyPressed(const juce::KeyPress &key)
+{
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
+        return false;
+
+    if (action == OpenMenu)
+    {
+        if (isWtNameHovered)
+        {
+            showWavetableMenu();
+            return true;
+        }
+        else
+        {
+            bool usesWT = uses_wavetabledata(oscdata->type.val.i);
+            if (usesWT)
+            {
+                createWTMenu();
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 } // namespace Widgets

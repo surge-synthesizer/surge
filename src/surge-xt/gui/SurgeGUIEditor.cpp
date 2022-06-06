@@ -4519,6 +4519,31 @@ void SurgeGUIEditor::broadcastPluginAutomationChangeFor(Parameter *p)
 }
 //------------------------------------------------------------------------------------------------
 
+bool SurgeGUIEditor::promptForUserValueEntry(Surge::Widgets::ModulatableControlInterface *mci)
+{
+    auto t = mci->asControlValueInterface()->getTag() - start_paramtags;
+    if (t < 0 || t >= n_total_params)
+        return false;
+
+    auto p = synth->storage.getPatch().param_ptr[t];
+
+    if (p->valtype == vt_float)
+    {
+        if (mod_editor && synth->isValidModulation(p->id, modsource))
+        {
+            promptForUserValueEntry(p, mci->asJuceComponent(), modsource, current_scene,
+                                    modsource_index);
+        }
+        else
+        {
+            promptForUserValueEntry(p, mci->asJuceComponent());
+        }
+
+        return true;
+    }
+    return false;
+}
+
 void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, int ms, int modScene,
                                              int modidx)
 {
@@ -6724,7 +6749,6 @@ void SurgeGUIEditor::setupKeymapManager()
 
     keyMapManager->addBinding(Surge::GUI::UNDO, {keymap_t::Modifiers::COMMAND, (int)'Z'});
     keyMapManager->addBinding(Surge::GUI::REDO, {keymap_t::Modifiers::COMMAND, (int)'Y'});
-    keyMapManager->addBinding(Surge::GUI::EDIT_PARAM_VALUE, {keymap_t::Modifiers::ALT, (int)'V'});
 
     keyMapManager->addBinding(Surge::GUI::PREV_PATCH,
                               {keymap_t::Modifiers::COMMAND, juce::KeyPress::leftKey});
@@ -6861,48 +6885,6 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 setPatchAsFavorite(!isPatchFavorite());
                 patchSelector->setIsFavorite(isPatchFavorite());
                 return true;
-
-            case Surge::GUI::EDIT_PARAM_VALUE:
-            {
-                auto fc = frame->getCurrentlyFocusedComponent();
-
-                if (!editsFollowKeyboardFocus)
-                {
-                    for (const auto &j : juceSkinComponents)
-                    {
-                        auto icv = dynamic_cast<Surge::GUI::IComponentTagValue *>(j.second.get());
-
-                        if (icv && icv->isCurrentlyHovered())
-                        {
-                            fc = icv->asJuceComponent();
-
-                            break;
-                        }
-                    }
-                }
-
-                if (auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(fc))
-                {
-                    auto t = mci->asControlValueInterface()->getTag() - start_paramtags;
-                    auto p = synth->storage.getPatch().param_ptr[t];
-
-                    if (p->valtype == vt_float)
-                    {
-                        if (mod_editor && synth->isValidModulation(p->id, modsource))
-                        {
-                            promptForUserValueEntry(p, fc, modsource, current_scene,
-                                                    modsource_index);
-                        }
-                        else
-                        {
-                            promptForUserValueEntry(p, fc);
-                        }
-                    }
-
-                    return true;
-                }
-            }
-            break;
 
             case Surge::GUI::PREV_PATCH:
             case Surge::GUI::NEXT_PATCH:
@@ -7223,25 +7205,24 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     {
         if (Surge::Widgets::isAccessibleKey(key))
         {
-            synth->storage.userDefaultsProvider->addOverride(
-                Surge::Storage::DefaultKey::MenuAndEditKeybindingsFollowKeyboardFocus, true);
-            juce::Component *fc{nullptr};
-            for (const auto &j : juceSkinComponents)
-            {
-                auto icv = dynamic_cast<Surge::GUI::IComponentTagValue *>(j.second.get());
-                if (icv && icv->isCurrentlyHovered())
-                {
-                    fc = icv->asJuceComponent();
-                    break;
-                }
-            }
-            auto res = false;
+            auto fc = frame->recursivelyFindFirstChildMatching([](juce::Component *c) {
+                auto h = dynamic_cast<Surge::GUI::Hoverable *>(c);
+                if (h && h->isCurrentlyHovered())
+                    return true;
+                return false;
+            });
+
             if (fc)
-                res = fc->keyPressed(key);
-            synth->storage.userDefaultsProvider->clearOverride(
-                Surge::Storage::DefaultKey::MenuAndEditKeybindingsFollowKeyboardFocus);
-            if (res)
-                return res;
+            {
+                synth->storage.userDefaultsProvider->addOverride(
+                    Surge::Storage::DefaultKey::MenuAndEditKeybindingsFollowKeyboardFocus, true);
+
+                auto res = fc->keyPressed(key);
+                synth->storage.userDefaultsProvider->clearOverride(
+                    Surge::Storage::DefaultKey::MenuAndEditKeybindingsFollowKeyboardFocus);
+                if (res)
+                    return res;
+            }
         }
     }
 
