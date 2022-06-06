@@ -557,7 +557,7 @@ void OscillatorWaveformDisplay::createWTMenu(const bool useComponentBounds = tru
     }
 }
 
-void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold,
+void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, bool centered,
                                                   bool add2D3Dswitch)
 {
     if (sge)
@@ -570,7 +570,7 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
             auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Wavetables", lurl);
 
             tc->setSkin(skin, associatedBitmapStore);
-            tc->setCenterBold(centerBold);
+            tc->setCentered(centered);
 
             auto hment = tc->getTitle();
 

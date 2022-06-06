@@ -746,7 +746,7 @@ void PatchSelector::showClassicMenu(bool single_category)
         auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Patch Browser", lurl);
 
         hmen->setSkin(skin, associatedBitmapStore);
-        hmen->setCenterBold(false);
+        hmen->setCentered(false);
         auto hment = hmen->getTitle();
         contextMenu.addCustomItem(-1, std::move(hmen), nullptr, hment);
     }

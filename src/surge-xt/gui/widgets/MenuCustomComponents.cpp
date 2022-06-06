@@ -66,8 +66,11 @@ void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
     auto standardMenuItemHeight = 20;
 
     juce::Font font;
-    if (centerBold)
+
+    if (isBoldened)
+    {
         font = getLookAndFeel().getPopupMenuFont().boldened();
+    }
     else
     {
         auto ft = getLookAndFeel().getPopupMenuFont();
@@ -103,11 +106,12 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
         g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
     }
 
-    if (centerBold)
+    if (isBoldened)
     {
         g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
     }
-    else
+
+    if (!isCentered)
     {
         auto ft = getLookAndFeel().getPopupMenuFont();
         ft = ft.withHeight(ft.getHeight() - 1);
@@ -123,9 +127,9 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
         g.setColour(findColour(juce::PopupMenu::headerTextColourId));
     }
 
-    if (centerBold)
+    if (isCentered)
     {
-        auto rText = r; // not centered? trim 12 from the left here
+        auto rText = r;
         g.drawText(label, rText, juce::Justification::centred);
     }
     else
@@ -144,7 +148,7 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
 
     auto tl = r.getTopLeft();
 
-    if (!centerBold)
+    if (!isCentered)
     {
         tl = tl.translated(12, 0);
     }

@@ -79,8 +79,10 @@ struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
 
     std::string label, url;
     SurgeImage *icons{nullptr};
-    bool centerBold{true};
-    void setCenterBold(bool b) { centerBold = b; }
+    bool isCentered{true};
+    bool isBoldened{true};
+    void setCentered(bool b) { isCentered = b; }
+    void setBoldened(bool b) { isBoldened = b; }
     void launchHelp();
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
