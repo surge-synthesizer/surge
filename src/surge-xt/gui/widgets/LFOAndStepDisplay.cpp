@@ -1757,6 +1757,10 @@ void LFOAndStepDisplay::mouseExit(const juce::MouseEvent &event)
         enterExitWaveform(false);
     }
 
+    lfoTypeHover = -1;
+    overWaveform = -1;
+    stepSeqShiftHover = -1;
+
     endHover();
 }
 

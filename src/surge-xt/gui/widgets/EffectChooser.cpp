@@ -412,6 +412,35 @@ void EffectChooser::mouseMove(const juce::MouseEvent &event)
     }
 }
 
+bool EffectChooser::keyPressed(const juce::KeyPress &key)
+{
+    auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+
+    if (action == None)
+        return false;
+
+    if (action == OpenMenu)
+    {
+        if (currentHover == -1)
+        {
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+            if (sge)
+            {
+                sge->effectSettingsBackgroundClick(currentHover, this);
+                return true;
+            }
+        }
+        else
+        {
+            createFXMenu();
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void EffectChooser::getColorsForSlot(int fxslot, juce::Colour &bgcol, juce::Colour &frcol,
                                      juce::Colour &txtcol)
 {
