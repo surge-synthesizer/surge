@@ -344,5 +344,22 @@ std::unique_ptr<juce::ComponentTraverser> MainFrame::createKeyboardFocusTraverse
     return std::make_unique<GlobalKeyboardTraverser>(this);
 }
 
+juce::Component *
+MainFrame::recursivelyFindFirstChildMatching(std::function<bool(juce::Component *)> op)
+{
+    std::function<juce::Component *(juce::Component *)> rec;
+    rec = [&rec, this, &op](juce::Component *c) -> juce::Component * {
+        if (op(c))
+            return c;
+        for (auto *k : c->getChildren())
+        {
+            auto r = rec(k);
+            if (r)
+                return r;
+        }
+        return nullptr;
+    };
+    return rec(this);
+}
 } // namespace Widgets
 } // namespace Surge

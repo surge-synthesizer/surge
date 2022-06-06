@@ -38,7 +38,8 @@ template <> void LongHoldMixin<OscillatorWaveformDisplay>::onLongHold();
 
 struct OscillatorWaveformDisplay : public juce::Component,
                                    public Surge::GUI::SkinConsumingComponent,
-                                   public Surge::Widgets::LongHoldMixin<OscillatorWaveformDisplay>
+                                   public Surge::Widgets::LongHoldMixin<OscillatorWaveformDisplay>,
+                                   public Surge::GUI::Hoverable
 {
     OscillatorWaveformDisplay();
     ~OscillatorWaveformDisplay();
@@ -80,7 +81,12 @@ struct OscillatorWaveformDisplay : public juce::Component,
     void mouseDown(const juce::MouseEvent &event) override;
     void mouseUp(const juce::MouseEvent &event) override;
     void mouseMove(const juce::MouseEvent &event) override;
+
+    bool isMousedOver{false};
+    void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
+
+    bool keyPressed(const juce::KeyPress &key) override;
 
     void loadWavetable(int id);
     void loadWavetableFromFile();
@@ -94,10 +100,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
     bool isCustomEditorHovered{false}, isJogRHovered{false}, isJogLHovered{false},
         isWtNameHovered{false};
 
-    /*     bool isCurrentlyHovered() override
-        {
-            return isCustomEditorHovered || isJogRHovered || isJogLHovered || isWtNameHovered;
-        } */
+    bool isCurrentlyHovered() override { return isMousedOver || isCustomEditorHovered; }
 
     juce::Rectangle<float> customEditorBox;
     bool supportsCustomEditor();
