@@ -33,19 +33,25 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 #if HAS_CLAP_JUCE_EXTENSIONS
     if (wrapperType == wrapperType_Undefined && is_clap)
-        wrapperTypeString = std::string("Clap.v") + std::to_string(clap_version_major) + "." +
-                            std::to_string(clap_version_minor);
+        wrapperTypeString = std::string("CLAP");
 #endif
 
-    std::cout << "SurgeXT " << wrapperTypeString << "\n"
-              << "  - Version      : " << Surge::Build::FullVersionStr << " with JUCE " << std::hex
-              << JUCE_VERSION << std::dec << "\n"
-              << "  - Build Info   : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
-              << " using " << Surge::Build::BuildCompiler << "\n";
+#if BUILD_IS_DEBUG
+    std::ostringstream oss;
+    oss << "SurgeXT " << wrapperTypeString << "\n"
+        << "  - Version      : " << Surge::Build::FullVersionStr << " with JUCE " << std::hex
+        << JUCE_VERSION << std::dec << "\n"
+        << "  - Build Info   : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
+        << " using " << Surge::Build::BuildCompiler << "\n";
+#endif
 
     surge = std::make_unique<SurgeSynthesizer>(this);
-    std::cout << "  - Data         : " << surge->storage.datapath << "\n"
-              << "  - User Data    : " << surge->storage.userDataPath << std::endl;
+
+#if BUILD_IS_DEBUG
+    oss << "  - Data         : " << surge->storage.datapath << "\n"
+        << "  - User Data    : " << surge->storage.userDataPath << std::endl;
+    DBG(oss.str());
+#endif
 
     auto parent = std::make_unique<juce::AudioProcessorParameterGroup>("Root", "Root", "|");
     auto macroG = std::make_unique<juce::AudioProcessorParameterGroup>("macros", "Macros", "|");

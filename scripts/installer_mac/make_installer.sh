@@ -103,11 +103,11 @@ if [[ -d $INDIR/$FXAU ]]; then
 fi
 
 if [[ -d $INDIR/$CLAP ]]; then
-    build_flavor "CLAP" "$CLAP" "org.surge-synth-team.surge-xt.clap.pkg" "/Library/Audio/Plug-Ins/Clap"
+    build_flavor "CLAP" "$CLAP" "org.surge-synth-team.surge-xt.clap.pkg" "/Library/Audio/Plug-Ins/CLAP"
 fi
 
 if [[ -d $INDIR/$FXCLAP ]]; then
-    build_flavor "FXCLAP" "$FXCLAP" "org.surge-synth-team.surge-xt-fx.clap.pkg" "/Library/Audio/Plug-Ins/Clap"
+    build_flavor "FXCLAP" "$FXCLAP" "org.surge-synth-team.surge-xt-fx.clap.pkg" "/Library/Audio/Plug-Ins/CLAP"
 fi
 
 if [[ -d $INDIR/$LV2 ]]; then
@@ -153,7 +153,7 @@ fi
 if [[ -d $INDIR/$CLAP ]]; then
 	CLAP_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt.clap.pkg"/>'
   CLAP_CHOICE='<line choice="org.surge-synth-team.surge-xt.clap.pkg"/>'
-	CLAP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt.clap.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT Clap\"><pkg-ref id=\"org.surge-synth-team.surge-xt.clap.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt.clap.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_CLAP.pkg</pkg-ref>"
+	CLAP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt.clap.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT CLAP\"><pkg-ref id=\"org.surge-synth-team.surge-xt.clap.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt.clap.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_CLAP.pkg</pkg-ref>"
 fi
 if [[ -d $INDIR/$LV2 ]]; then
 	LV2_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt.lv2.pkg"/>'
@@ -179,7 +179,7 @@ fi
 if [[ -d $INDIR/$FXCLAP ]]; then
 	FXCLAP_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt-fx.clap.pkg"/>'
 	FXCLAP_CHOICE='<line choice="org.surge-synth-team.surge-xt-fx.clap.pkg"/>'
-	FXCLAP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT Effects Clap\"><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXCLAP.pkg</pkg-ref>"
+	FXCLAP_CHOICE_DEF="<choice id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\" visible=\"true\" start_selected=\"false\" title=\"Surge XT Effects CLAP\"><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\"/></choice><pkg-ref id=\"org.surge-synth-team.surge-xt-fx.clap.pkg\" version=\"${VERSION}\" onConclusion=\"none\">Surge_XT_FXCLAP.pkg</pkg-ref>"
 fi
 if [[ -d $INDIR/$FXLV2 ]]; then
 	FXLV2_PKG_REF='<pkg-ref id="org.surge-synth-team.surge-xt-fx.lv2.pkg"/>'
