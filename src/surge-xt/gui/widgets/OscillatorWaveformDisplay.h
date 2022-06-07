@@ -94,8 +94,11 @@ struct OscillatorWaveformDisplay : public juce::Component,
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem);
     void showWavetableMenu();
     void createWTMenu(const bool useComponentBounds);
-    void createWTMenuItems(juce::PopupMenu &contextMenu, bool centerBold = false,
+    void createWTMenuItems(juce::PopupMenu &contextMenu, bool centered = false,
                            bool add2D3Dswitch = false);
+
+    void createAliasOptionsMenu(const bool useComponentBounds = false,
+                                const bool onlyHelpEntry = false);
 
     bool isCustomEditorHovered{false}, isJogRHovered{false}, isJogLHovered{false},
         isWtNameHovered{false};

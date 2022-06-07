@@ -675,7 +675,7 @@ void FxMenu::populate()
 
         auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("FX Presets", lurl);
         hmen->setSkin(skin, associatedBitmapStore);
-        hmen->setCenterBold(false);
+        hmen->setCentered(false);
 
         menu.addCustomItem(-1, std::move(hmen), nullptr, "FX Presets");
     }

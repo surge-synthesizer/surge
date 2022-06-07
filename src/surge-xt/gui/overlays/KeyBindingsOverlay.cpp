@@ -46,11 +46,16 @@ struct KeyBindingsListRow : public juce::Component
         active->setTitle(std::string("Toggle ") + Surge::GUI::keyboardActionDescription(action));
         active->setDescription(std::string("Toggle ") +
                                Surge::GUI::keyboardActionDescription(action));
+        active->setColour(juce::ToggleButton::tickDisabledColourId,
+                          editor->currentSkin->getColor(Colors::Dialog::Checkbox::Border));
+        active->setColour(juce::ToggleButton::tickColourId,
+                          editor->currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
 
         addAndMakeVisible(*active);
 
         name = std::make_unique<juce::Label>("name", Surge::GUI::keyboardActionDescription(action));
-        name->setColour(juce::Label::textColourId, juce::Colours::white);
+        name->setColour(juce::Label::textColourId,
+                        editor->currentSkin->getColor(Colors::MSEGEditor::Text));
         name->setFont(editor->currentSkin->fontManager->getLatoAtSize(9));
         name->setAccessible(true);
         addAndMakeVisible(*name);
@@ -105,15 +110,18 @@ struct KeyBindingsListRow : public juce::Component
 
         auto act = editor->keyMapManager->bindings[action].active;
         active->setToggleState(act, juce::dontSendNotification);
+
+        auto txtColor = editor->currentSkin->getColor(Colors::MSEGEditor::Text);
+
         if (act)
         {
-            name->setColour(juce::Label::textColourId, juce::Colours::white);
-            keyDesc->setColour(juce::Label::textColourId, juce::Colours::white);
+            name->setColour(juce::Label::textColourId, txtColor);
+            keyDesc->setColour(juce::Label::textColourId, txtColor);
         }
         else
         {
-            keyDesc->setColour(juce::Label::textColourId, juce::Colours::grey);
-            name->setColour(juce::Label::textColourId, juce::Colours::grey);
+            keyDesc->setColour(juce::Label::textColourId, txtColor.withMultipliedAlpha(0.5));
+            name->setColour(juce::Label::textColourId, txtColor.withMultipliedAlpha(0.5));
         }
 
         const auto &binding = editor->keyMapManager->bindings[action];
@@ -208,7 +216,11 @@ struct KeyBindingsListBoxModel : public juce::ListBoxModel
     {
         if (rowNumber % 2 == 1)
         {
-            g.fillAll(juce::Colour(40, 40, 40));
+            g.fillAll(editor->currentSkin->getColor(Colors::FormulaEditor::Debugger::LightRow));
+        }
+        else
+        {
+            g.fillAll(editor->currentSkin->getColor(Colors::FormulaEditor::Debugger::Row));
         }
     }
 
@@ -314,7 +326,6 @@ void KeyBindingsOverlay::paint(juce::Graphics &g)
 {
     if (!skin)
     {
-        g.fillAll(juce::Colours::black);
         return;
     }
 

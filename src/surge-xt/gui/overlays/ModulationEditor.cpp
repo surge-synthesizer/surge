@@ -187,6 +187,26 @@ struct ModulationSideControls : public juce::Component,
         case tag_add_target:
             valueChanged(p);
             return true;
+        case tag_sort_by:
+        case tag_value_disp:
+            auto men = juce::PopupMenu();
+            auto st = &(editor->synth->storage);
+            auto msurl = st ? sge->helpURLForSpecial(st, "mod-list") : std::string();
+            auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+            std::string name =
+                (tag == tag_sort_by) ? "Sort Modulation List" : "Modulation List Value Display";
+
+            auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(name, hurl);
+
+            tcomp->setSkin(skin, associatedBitmapStore);
+            tcomp->setCentered(false);
+
+            auto hment = tcomp->getTitle();
+            men.addCustomItem(-1, std::move(tcomp), nullptr, hment);
+
+            men.showMenuAsync(sge->popupMenuOptions());
+
+            return true;
         }
         return true;
     }
@@ -1005,7 +1025,6 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 };
 
 void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
-
 {
     auto tag = c->getTag();
     switch (tag)
@@ -1013,10 +1032,16 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
     case tag_sort_by:
     {
         auto v = c->getValue();
+
         if (v > 0.5)
+        {
             editor->modContents->sortOrder = ModulationListContents::BY_TARGET;
+        }
         else
+        {
             editor->modContents->sortOrder = ModulationListContents::BY_SOURCE;
+        }
+
         editor->synth->storage.getPatch().dawExtraState.editor.modulationEditorState.sortOrder =
             editor->modContents->sortOrder;
         editor->modContents->rebuildFrom(editor->synth);
@@ -1024,7 +1049,6 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
     break;
     case tag_filter_by:
     {
-        // Make a popup menu to filter
         auto men = juce::PopupMenu();
         std::set<std::string> sources, targets;
 
@@ -1115,7 +1139,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
             "Filter Modulation List", hurl);
 
         tcomp->setSkin(skin, associatedBitmapStore);
-        tcomp->setCenterBold(false);
+        tcomp->setCentered(false);
 
         auto hment = tcomp->getTitle();
         men.addCustomItem(-1, std::move(tcomp), nullptr, hment);
@@ -1141,6 +1165,7 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
     case tag_value_disp:
     {
         int v = round(c->getValue() * 3);
+
         switch (v)
         {
         case 0:
@@ -1156,9 +1181,10 @@ void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
             editor->modContents->valueDisplay = ModulationListContents::ALL;
             break;
         }
-        editor->repaint();
+
         Surge::Storage::updateUserDefaultValue(&(editor->synth->storage),
                                                Storage::ModListValueDisplay, v);
+        editor->repaint();
     }
     break;
     }
