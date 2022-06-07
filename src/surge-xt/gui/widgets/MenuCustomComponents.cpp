@@ -67,15 +67,13 @@ void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 
     juce::Font font;
 
+    auto ft = getLookAndFeel().getPopupMenuFont();
+    ft = ft.withHeight(ft.getHeight() - 1);
+    font = ft;
+
     if (isBoldened)
     {
         font = getLookAndFeel().getPopupMenuFont().boldened();
-    }
-    else
-    {
-        auto ft = getLookAndFeel().getPopupMenuFont();
-        ft = ft.withHeight(ft.getHeight() - 1);
-        font = ft;
     }
 
     idealHeight =
@@ -106,16 +104,16 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
         g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
     }
 
-    if (isBoldened)
-    {
-        g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
-    }
-
     if (!isCentered)
     {
         auto ft = getLookAndFeel().getPopupMenuFont();
         ft = ft.withHeight(ft.getHeight() - 1);
         g.setFont(ft);
+    }
+
+    if (isBoldened)
+    {
+        g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
     }
 
     if (isItemHighlighted())

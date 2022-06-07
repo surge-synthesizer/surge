@@ -356,6 +356,7 @@ void OscillatorMenu::paint(juce::Graphics &g)
 void OscillatorMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
+
     if (sge)
     {
         auto sc = sge->current_scene;
@@ -367,6 +368,37 @@ void OscillatorMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     }
     osc->queue_type = type;
     osc->queue_xmldata = e;
+}
+
+void OscillatorMenu::populate()
+{
+    XMLMenuPopulator::populate();
+
+    menu.addSeparator();
+
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (sge)
+    {
+        auto hu = sge->helpURLForSpecial("oscillators");
+        auto lurl = hu;
+
+        if (hu != "")
+        {
+            lurl = sge->fullyResolvedHelpURL(hu);
+        }
+
+        auto sc = sge->current_scene;
+        auto osc = sge->current_osc[sc];
+
+        std::string title = fmt::format("Osc {} Type", osc + 1);
+
+        auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(title, lurl);
+        hmen->setSkin(skin, associatedBitmapStore);
+        hmen->setCentered(false);
+
+        menu.addCustomItem(-1, std::move(hmen), nullptr, title);
+    }
 }
 
 void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
