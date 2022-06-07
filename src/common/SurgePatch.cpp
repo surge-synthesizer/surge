@@ -128,7 +128,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         for (int osc = 0; osc < n_oscs; osc++)
         {
             // Initialize the display name here
-            scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+            // scene[sc].osc[osc].wavetable_display_name[0] = '\0';
             scene[sc].osc[osc].wavetable_formula = "";
             scene[sc].osc[osc].wavetable_formula_nframes = 10;
             scene[sc].osc[osc].wavetable_formula_res_base = 5;
@@ -1899,12 +1899,11 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     ** extra osc data handling
     */
 
-    // Blank out the display names
+    // clear out wavetable formulas
     for (int sc = 0; sc < n_scenes; sc++)
     {
         for (int osc = 0; osc < n_oscs; osc++)
         {
-            scene[sc].osc[osc].wavetable_display_name[0] = '\0';
             scene[sc].osc[osc].wavetable_formula = "";
             scene[sc].osc[osc].wavetable_formula_nframes = 10;
             scene[sc].osc[osc].wavetable_formula_res_base = 5;
