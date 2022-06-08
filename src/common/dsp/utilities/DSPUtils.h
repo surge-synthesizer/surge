@@ -193,7 +193,7 @@ inline float cubic_ipol(float y0, float y1, float y2, float y3, float mu)
     return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
 }
 
-float quad_spline_ipol(float y0, float y1, float y2, float y3, float mu, int odd)
+inline float quad_spline_ipol(float y0, float y1, float y2, float y3, float mu, int odd)
 {
     if (odd)
     {
