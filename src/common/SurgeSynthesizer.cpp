@@ -3281,6 +3281,23 @@ void SurgeSynthesizer::applyParameterPolyphonicModulation(Parameter *p, int32_t 
     if (p->scene == 0)
         return;
 
+    /*
+     * The CLAP specification says if a monophonic modulation is in effect, that the host needs
+     * to stack it with a polyphonic modulation, not the plugin. So if a polyphonic modulation
+     * starts on a parameter on a voice it includes any mono mod which may be untargeted. Since
+     * surge stacks these separately, we need to back that modulation out of the voice application.
+     */
+    float underlyingMonoMod{0};
+    auto &pt = storage.getPatch();
+    // This linear search will become, i think, quite tiresome at size
+    for (int i = 0; i < pt.paramModulationCount; ++i)
+    {
+        if (pt.monophonicParamModulations[i].param_id == p->id)
+        {
+            underlyingMonoMod = pt.monophonicParamModulations[i].value;
+        }
+    }
+
     for (auto v : voices[p->scene - 1])
     {
         if ((note_id != -1 && v->host_note_id == note_id) ||
@@ -3289,7 +3306,7 @@ void SurgeSynthesizer::applyParameterPolyphonicModulation(Parameter *p, int32_t 
                (v->originating_host_key >= 0 && v->originating_host_key == key &&
                 v->originating_host_channel >= 0 && v->originating_host_channel == channel)))))
         {
-            v->applyPolyphonicParamModulation(p, depth);
+            v->applyPolyphonicParamModulation(p, depth, underlyingMonoMod);
         }
     }
 }
