@@ -434,7 +434,7 @@ const int lt_num_deforms[n_lfo_types] = {
     0, // lt_noise
     2, // lt_snh
     3, // lt_envelope
-    0, // lt_stepseq
+    2, // lt_stepseq
     0, // lt_mseg
     3, // lt_formula
 };
