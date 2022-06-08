@@ -409,7 +409,7 @@ void AboutScreen::resized()
             "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
             "https://discord.gg/aFQDdMV",
             "https://juce.com",
-            "https://github.com/free-audio/clap"};
+            "https://cleveraudio.org"};
 
         std::vector<std::string> urllabels = {
             "Surge XT GitHub Repository", "Steinberg VST3", "Apple Audio Units",  "GNU GPL3",
