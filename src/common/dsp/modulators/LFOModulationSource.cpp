@@ -110,19 +110,6 @@ float LFOModulationSource::bend3(float x)
     return x;
 }
 
-float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
-{
-    float a0, a1, a2, a3, mu2;
-
-    mu2 = mu * mu;
-    a0 = y3 - y2 - y0 + y1;
-    a1 = y0 - y1 - a0;
-    a2 = y2 - y0;
-    a3 = y1;
-
-    return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
-}
-
 void LFOModulationSource::msegEnvelopePhaseAdjustment()
 {
     // If we have an envelope MSEG length above 1 we want phase to span the duration
@@ -945,8 +932,8 @@ void LFOModulationSource::process_block()
             if (df > 0.5f)
             {
                 float linear = (1.f - phase) * wf_history[2] + phase * wf_history[1];
-                float cubic = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1],
-                                               wf_history[0], phase);
+                float cubic =
+                    cubic_ipol(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
 
                 iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
             }
@@ -976,7 +963,7 @@ void LFOModulationSource::process_block()
 
     case lt_noise:
     {
-        iout = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
+        iout = cubic_ipol(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
 
         break;
     }
@@ -1042,31 +1029,88 @@ void LFOModulationSource::process_block()
 
         float df = localcopy[ideform].f;
 
-        if (df > 0.5f)
+        // LFO shape parameter from Shortcircuit XT!
+        if (lfo->deform.deform_type == type_2)
         {
-            float linear = (1.f - calcPhase) * wf_history[2] + calcPhase * wf_history[1];
-            float cubic = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1],
-                                           wf_history[0], calcPhase);
+            if (df > 0.5f)
+            {
+                float linear;
 
-            iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
-        }
-        else if (df > -0.0001f)
-        {
-            float cf = max(0.f, min(calcPhase / (2.f * df + 0.00001f), 1.0f));
+                if (calcPhase > 0.5f)
+                {
+                    float ph = calcPhase - 0.5f;
 
-            iout = (1.f - cf) * wf_history[2] + cf * wf_history[1];
-        }
-        else if (df > -0.5f)
-        {
-            float cf = max(0.f, min((1.f - calcPhase) / (-2.f * df + 0.00001f), 1.0f));
+                    linear = (1.f - ph) * wf_history[1] + ph * wf_history[0];
+                }
+                else
+                {
+                    float ph = calcPhase + 0.5f;
 
-            iout = (1.f - cf) * 0 + cf * wf_history[1];
+                    linear = (1.f - ph) * wf_history[2] + ph * wf_history[1];
+                }
+
+                float qbs = quad_bspline(wf_history[2], wf_history[1], wf_history[0], calcPhase);
+
+                iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * qbs;
+            }
+            else if (df > -0.0001f)
+            {
+                if (calcPhase > 0.5f)
+                {
+                    float cf = 0.5f - (calcPhase - 1.f) / (2.f * df + 0.00001f);
+
+                    cf = max(0.f, min(cf, 1.0f));
+                    iout = (1.f - cf) * wf_history[0] + cf * wf_history[1];
+                }
+                else
+                {
+                    float cf = 0.5f - (calcPhase) / (2.f * df + 0.00001f);
+
+                    cf = max(0.f, min(cf, 1.0f));
+                    iout = (1.f - cf) * wf_history[1] + cf * wf_history[2];
+                }
+            }
+            else if (df > -0.5f)
+            {
+                float cf = max(0.f, min((1.f - calcPhase) / (-2.f * df + 0.00001f), 1.0f));
+
+                iout = (1.f - cf) * 0 + cf * wf_history[1];
+            }
+            else
+            {
+                float cf = max(0.f, min(calcPhase / (2.f + 2.f * df + 0.00001f), 1.0f));
+
+                iout = (1.f - cf) * wf_history[1] + cf * 0;
+            }
         }
         else
         {
-            float cf = max(0.f, min(calcPhase / (2.f + 2.f * df + 0.00001f), 1.0f));
+            if (df > 0.5f)
+            {
+                float linear = (1.f - calcPhase) * wf_history[2] + calcPhase * wf_history[1];
+                float cubic = cubic_ipol(wf_history[3], wf_history[2], wf_history[1], wf_history[0],
+                                         calcPhase);
 
-            iout = (1.f - cf) * wf_history[1] + cf * 0;
+                iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
+            }
+            else if (df > -0.0001f)
+            {
+                float cf = max(0.f, min(calcPhase / (2.f * df + 0.00001f), 1.0f));
+
+                iout = (1.f - cf) * wf_history[2] + cf * wf_history[1];
+            }
+            else if (df > -0.5f)
+            {
+                float cf = max(0.f, min((1.f - calcPhase) / (-2.f * df + 0.00001f), 1.0f));
+
+                iout = (1.f - cf) * 0 + cf * wf_history[1];
+            }
+            else
+            {
+                float cf = max(0.f, min(calcPhase / (2.f + 2.f * df + 0.00001f), 1.0f));
+
+                iout = (1.f - cf) * wf_history[1] + cf * 0;
+            }
         }
 
         break;
