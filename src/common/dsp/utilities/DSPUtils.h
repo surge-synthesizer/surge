@@ -171,6 +171,53 @@ inline bool within_range(int lo, int value, int hi) { return ((value >= lo) && (
 
 inline float lerp(float a, float b, float x) { return (1 - x) * a + x * b; }
 
+inline float cos_ipol(float y1, float y2, float mu)
+{
+    float mu2;
+
+    mu2 = (1.f - cos(mu * M_PI)) * 0.5;
+
+    return (y1 * (1.f - mu2) + y2 * mu2);
+}
+
+inline float cubic_ipol(float y0, float y1, float y2, float y3, float mu)
+{
+    float a0, a1, a2, a3, mu2;
+
+    mu2 = mu * mu;
+    a0 = y3 - y2 - y0 + y1;
+    a1 = y0 - y1 - a0;
+    a2 = y2 - y0;
+    a3 = y1;
+
+    return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
+}
+
+float quad_spline_ipol(float y0, float y1, float y2, float y3, float mu, int odd)
+{
+    if (odd)
+    {
+        mu = 0.5f + mu * 0.5f;
+        float f0 = mu * y1 + (1.f - mu) * y0;
+        float f1 = mu * y2 + (1.f - mu) * y1;
+
+        return (mu * f1 + (1.f - mu) * f0);
+    }
+    else
+    {
+        mu = mu * 0.5f;
+        float f0 = mu * y2 + (1.f - mu) * y1;
+        float f1 = mu * y3 + (1.f - mu) * y2;
+
+        return (mu * f1 + (1.f - mu) * f0);
+    }
+}
+
+inline float quad_bspline(float y0, float y1, float y2, float mu)
+{
+    return 0.5f * (y2 * (mu * mu) + y1 * (-2 * mu * mu + 2 * mu + 1) + y0 * (mu * mu - 2 * mu + 1));
+}
+
 // panning which always lets both channels through unattenuated (seperate hard-panning)
 inline void trixpan(float &L, float &R, float x)
 {
@@ -327,24 +374,4 @@ inline char *float_to_str(float value, char *str)
     // yeah str isn't necessarily TXT_SIZE but better than nothing. TODO fix.
     snprintf(str, TXT_SIZE, "%f", value);
     return str;
-}
-
-inline char *yes_no(int value, char *str)
-{
-    if (!str)
-        return 0;
-    if (value)
-        snprintf(str, TXT_SIZE, "yes");
-    else
-        snprintf(str, TXT_SIZE, "no");
-    return str;
-}
-
-inline bool is_yes(const char *str)
-{
-    if (!str)
-        return 0;
-    if (_stricmp(str, "yes") == 0)
-        return 1;
-    return 0;
 }

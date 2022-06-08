@@ -110,24 +110,6 @@ float LFOModulationSource::bend3(float x)
     return x;
 }
 
-float CubicInterpolate(float y0, float y1, float y2, float y3, float mu)
-{
-    float a0, a1, a2, a3, mu2;
-
-    mu2 = mu * mu;
-    a0 = y3 - y2 - y0 + y1;
-    a1 = y0 - y1 - a0;
-    a2 = y2 - y0;
-    a3 = y1;
-
-    return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
-}
-
-float QuadraticBSpline(float y0, float y1, float y2, float mu)
-{
-    return 0.5f * (y2 * (mu * mu) + y1 * (-2 * mu * mu + 2 * mu + 1) + y0 * (mu * mu - 2 * mu + 1));
-}
-
 void LFOModulationSource::msegEnvelopePhaseAdjustment()
 {
     // If we have an envelope MSEG length above 1 we want phase to span the duration
@@ -950,8 +932,8 @@ void LFOModulationSource::process_block()
             if (df > 0.5f)
             {
                 float linear = (1.f - phase) * wf_history[2] + phase * wf_history[1];
-                float cubic = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1],
-                                               wf_history[0], phase);
+                float cubic =
+                    cubic_ipol(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
 
                 iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
             }
@@ -981,7 +963,7 @@ void LFOModulationSource::process_block()
 
     case lt_noise:
     {
-        iout = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
+        iout = cubic_ipol(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
 
         break;
     }
@@ -1067,8 +1049,7 @@ void LFOModulationSource::process_block()
                     linear = (1.f - ph) * wf_history[2] + ph * wf_history[1];
                 }
 
-                float qbs =
-                    QuadraticBSpline(wf_history[2], wf_history[1], wf_history[0], calcPhase);
+                float qbs = quad_bspline(wf_history[2], wf_history[1], wf_history[0], calcPhase);
 
                 iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * qbs;
             }
@@ -1107,8 +1088,8 @@ void LFOModulationSource::process_block()
             if (df > 0.5f)
             {
                 float linear = (1.f - calcPhase) * wf_history[2] + calcPhase * wf_history[1];
-                float cubic = CubicInterpolate(wf_history[3], wf_history[2], wf_history[1],
-                                               wf_history[0], calcPhase);
+                float cubic = cubic_ipol(wf_history[3], wf_history[2], wf_history[1], wf_history[0],
+                                         calcPhase);
 
                 iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
             }
