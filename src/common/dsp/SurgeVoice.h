@@ -74,7 +74,8 @@ class alignas(16) SurgeVoice
     int32_t paramModulationCount{0};
     static constexpr int maxPolyphonicParamModulations = 64;
     std::array<PolyphonicParamModulation, maxPolyphonicParamModulations> polyphonicParamModulations;
-    void applyPolyphonicParamModulation(Parameter *, double value);
+    // See comment in SurgeSynthesizer::applyParameterPolyphonicModulation for why this has 2 args
+    void applyPolyphonicParamModulation(Parameter *, double value, double underlyingMonoMod);
 
     enum NoteExpressionType
     {

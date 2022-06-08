@@ -1417,8 +1417,12 @@ void SurgeVoice::freeAllocatedElements()
     }
 }
 
-void SurgeVoice::applyPolyphonicParamModulation(Parameter *p, double value)
+void SurgeVoice::applyPolyphonicParamModulation(Parameter *p, double value,
+                                                double underlyingMonoMod)
 {
+    // For a discussion of underlyingMonoMod please see the comment in
+    // SurgeSynthesizer::applyParameterPolyphonicModulation
+
     // quickly do a search to see if i'm there
     int param_id = p->param_id_in_scene;
     for (int i = 0; i < paramModulationCount; ++i)
@@ -1441,6 +1445,7 @@ void SurgeVoice::applyPolyphonicParamModulation(Parameter *p, double value)
                 pp.value = value;
             }
 
+            pp.value -= underlyingMonoMod;
             return;
         }
     }
@@ -1465,6 +1470,7 @@ void SurgeVoice::applyPolyphonicParamModulation(Parameter *p, double value)
             pp.value = value;
         }
 
+        pp.value -= underlyingMonoMod;
         paramModulationCount++;
     }
 }
