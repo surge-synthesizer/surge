@@ -3171,6 +3171,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         }
 
+        SurgeSynthesizer::ID ptagid;
+        if (synth->fromSynthSideId(tag - start_paramtags, ptagid))
+            synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
+
         if (bvf)
             bvf->repaint();
         synth->switch_toggled_queued = true;
