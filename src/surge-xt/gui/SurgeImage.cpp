@@ -17,6 +17,7 @@
 #include "SurgeXTBinary.h"
 
 #include "fmt/core.h"
+#include "DebugHelpers.h"
 
 SurgeImage::SurgeImage(int rid)
 {
@@ -34,9 +35,16 @@ SurgeImage::SurgeImage(int rid)
 
 SurgeImage::SurgeImage(const std::string &fname)
 {
+    bool doLoad = true;
+    if (fname.find(".png") != std::string::npos)
+    {
+        doLoad = false;
+    }
     this->fname = fname;
-    drawable = juce::Drawable::createFromImageFile(juce::File(fname));
-    currentDrawable = drawable.get();
+    if (doLoad)
+    {
+        forceLoadFromFile();
+    }
 }
 
 SurgeImage::SurgeImage(std::unique_ptr<juce::Drawable> &in)
@@ -45,6 +53,15 @@ SurgeImage::SurgeImage(std::unique_ptr<juce::Drawable> &in)
 }
 
 SurgeImage::~SurgeImage() = default;
+
+void SurgeImage::forceLoadFromFile()
+{
+    if (!drawable)
+    {
+        drawable = juce::Drawable::createFromImageFile(juce::File(fname));
+        currentDrawable = drawable.get();
+    }
+}
 
 SurgeImage *SurgeImage::createFromBinaryWithPrefix(const std::string &prefix, int id)
 {
@@ -105,9 +122,17 @@ void SurgeImage::resolvePNGForZoomLevel(int zoomLevel)
 
     pngZooms[zoomLevel].second =
         std::move(std::make_unique<SurgeImage>(pngZooms[zoomLevel].first.c_str()));
+    pngZooms[zoomLevel].second->forceLoadFromFile();
 }
 
-juce::Drawable *SurgeImage::internalDrawableResolved() const { return currentDrawable; }
+juce::Drawable *SurgeImage::internalDrawableResolved()
+{
+    if (!currentDrawable && resourceID == -1)
+    {
+        forceLoadFromFile();
+    }
+    return currentDrawable;
+}
 
 juce::AffineTransform SurgeImage::scaleAdjustmentTransform() const
 {
