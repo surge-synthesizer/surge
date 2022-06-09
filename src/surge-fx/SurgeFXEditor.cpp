@@ -234,7 +234,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize(600, 55 * 6 + 80 + topSection);
-    setResizable(false, false); // For now
+    // setResizable(true, true);
+    setResizable(false, false);
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
@@ -349,38 +350,44 @@ void SurgefxAudioProcessorEditor::resized()
     picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
 
     int ypos0 = topSection - 5;
+    int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
     int byoff = 7;
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + 5, (i % 6) * 60 + ypos0, 55, 55};
+        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + 5, (i % 6) * rowHeight + ypos0,
+                                      rowHeight - 5, rowHeight - 5};
         fxParamSliders[i].setBounds(position);
 
         int buttonSize = 19;
         int buttonMargin = 1;
-        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55,
-                                   (i % 6) * 60 + ypos0 + byoff + buttonMargin, buttonSize,
+        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + rowHeight - 5,
+                                   (i % 6) * rowHeight + ypos0 + byoff + buttonMargin, buttonSize,
                                    buttonSize};
         fxTempoSync[i].setBounds(tsPos);
 
-        juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + 55,
-                                   (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + buttonSize,
+        juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + rowHeight - 5,
+                                   (i % 6) * rowHeight + ypos0 + byoff + 2 * buttonMargin +
+                                       buttonSize,
                                    buttonSize, buttonSize};
         fxDeactivated[i].setBounds(daPos);
 
-        juce::Rectangle<int> exPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
-                                   (i % 6) * 60 + ypos0 + byoff + 1 * buttonMargin + 0 * buttonSize,
-                                   buttonSize, buttonSize};
+        juce::Rectangle<int> exPos{
+            (i / 6) * getWidth() / 2 + 2 + rowHeight - 5 + buttonMargin + buttonSize,
+            (i % 6) * rowHeight + ypos0 + byoff + 1 * buttonMargin + 0 * buttonSize, buttonSize,
+            buttonSize};
         fxExtended[i].setBounds(exPos);
 
-        juce::Rectangle<int> abPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
-                                   (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + 1 * buttonSize,
-                                   buttonSize, buttonSize};
+        juce::Rectangle<int> abPos{
+            (i / 6) * getWidth() / 2 + 2 + rowHeight - 5 + buttonMargin + buttonSize,
+            (i % 6) * rowHeight + ypos0 + byoff + 2 * buttonMargin + 1 * buttonSize, buttonSize,
+            buttonSize};
         fxAbsoluted[i].setBounds(abPos);
 
         juce::Rectangle<int> dispPos{
-            (i / 6) * getWidth() / 2 + 4 + 55 + 2 * buttonMargin + 2 * buttonSize,
-            (i % 6) * 60 + ypos0, getWidth() / 2 - 68 - 2 * buttonMargin - 2 * buttonSize, 55};
+            (i / 6) * getWidth() / 2 + 4 + rowHeight - 5 + 2 * buttonMargin + 2 * buttonSize,
+            (i % 6) * rowHeight + ypos0,
+            getWidth() / 2 - rowHeight - 8 - 2 * buttonMargin - 2 * buttonSize, rowHeight - 5};
         fxParamDisplay[i].setBounds(dispPos);
     }
 

@@ -293,6 +293,7 @@ class SurgeFXParamDisplay : public juce::Component
 
     virtual void paint(juce::Graphics &g) override
     {
+        auto hScale = getHeight() / 55.0;
         auto bounds = getLocalBounds().toFloat().reduced(2.f, 2.f);
         auto edge = findColour(SurgeLookAndFeel::SurgeColourIds::paramEnabledEdge);
 
@@ -311,14 +312,15 @@ class SurgeFXParamDisplay : public juce::Component
         if (isEnabled())
         {
             g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
-            g.setFont(10);
-            g.drawSingleLineText(group, bounds.getX() + 5, bounds.getY() + 2 + 10);
-            g.setFont(12);
-            g.drawSingleLineText(name, bounds.getX() + 5, bounds.getY() + 2 + 10 + 3 + 11);
+            g.setFont(10 * hScale);
+            g.drawSingleLineText(group, bounds.getX() + 5, bounds.getY() + 2 + 10 * hScale);
+            g.setFont(12 * hScale);
+            g.drawSingleLineText(name, bounds.getX() + 5,
+                                 bounds.getY() + 2 + (10 + 3 + 11) * hScale);
 
             if (!overlayEditor->isVisible())
             {
-                g.setFont(20);
+                g.setFont(20 * hScale);
                 g.drawSingleLineText(display, bounds.getX() + 5,
                                      bounds.getY() + bounds.getHeight() - 5);
             }
