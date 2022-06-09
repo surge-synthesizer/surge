@@ -88,6 +88,30 @@ struct VKeyboardWheel : public juce::Component
     }
 };
 
+struct VKeyboardSus : public juce::Component
+{
+    std::function<void(int)> onValueChanged = [](int f) {};
+    bool isOn{false};
+    void paint(juce::Graphics &g) override
+    {
+        auto wheelSz = getLocalBounds().reduced(1, 2);
+
+        if (isOn)
+            g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelValueId));
+        else
+            g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBgId));
+        g.fillRect(wheelSz);
+        g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBorderId));
+        g.drawRect(wheelSz.expanded(1, 1));
+    }
+    void mouseUp(const juce::MouseEvent &event) override
+    {
+        isOn = !isOn;
+        onValueChanged(isOn * 127);
+        repaint();
+    }
+};
+
 //==============================================================================
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     : juce::AudioProcessorEditor(&p), processor(p)
@@ -129,6 +153,13 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     };
     modwheel = std::move(m);
 
+    auto sp = std::make_unique<VKeyboardSus>();
+    sp->onValueChanged = [this](auto f) {
+        processor.midiFromGUI.push(
+            SurgeSynthProcessor::midiR(SurgeSynthProcessor::midiR::SUSPEDAL, f));
+    };
+    suspedal = std::move(sp);
+
     tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
     tempoTypein->setFont(adapter->currentSkin->fontManager->getLatoAtSize(11));
     tempoTypein->setInputRestrictions(3, "0123456789");
@@ -146,6 +177,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     addChildComponent(*keyboard);
     addChildComponent(*pitchwheel);
     addChildComponent(*modwheel);
+    addChildComponent(*suspedal);
     addChildComponent(*tempoLabel);
     addChildComponent(*tempoTypein);
 
@@ -294,7 +326,7 @@ void SurgeSynthEditor::resized()
         keyboard->setTransform(xf);
         keyboard->setVisible(true);
 
-        auto pmr = juce::Rectangle<int>(x, y, wheels / 2, extraYSpaceForVirtualKeyboard);
+        auto pmr = juce::Rectangle<int>(x, y, wheels / 2, extraYSpaceForVirtualKeyboard - 10);
         pitchwheel->setBounds(pmr);
         pitchwheel->setTransform(xf);
         pitchwheel->setVisible(true);
@@ -302,6 +334,12 @@ void SurgeSynthEditor::resized()
         modwheel->setBounds(pmr);
         modwheel->setTransform(xf);
         modwheel->setVisible(true);
+
+        auto smr = juce::Rectangle<int>(x, y + extraYSpaceForVirtualKeyboard - 10,
+                                        wheels + margin / 3, 10);
+        suspedal->setBounds(smr);
+        suspedal->setTransform(xf);
+        suspedal->setVisible(true);
 
         if (addTempo)
         {
@@ -512,4 +550,26 @@ bool SurgeSynthEditor::keyStateChanged(bool isKeyDown, juce::Component *originat
     }
 
     return false;
+}
+
+void SurgeSynthEditor::setPitchModSustainGUI(int pitch, int mod, int sus)
+{
+    auto pw = dynamic_cast<VKeyboardWheel *>(pitchwheel.get());
+    if (pw)
+    {
+        pw->value = pitch;
+        pw->repaint();
+    }
+    auto mw = dynamic_cast<VKeyboardWheel *>(modwheel.get());
+    if (mw)
+    {
+        mw->value = mod;
+        mw->repaint();
+    }
+    auto sw = dynamic_cast<VKeyboardSus *>(suspedal.get());
+    if (sw)
+    {
+        sw->isOn = sus > 64;
+        sw->repaint();
+    }
 }
