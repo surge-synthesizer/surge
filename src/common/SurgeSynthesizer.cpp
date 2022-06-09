@@ -1680,6 +1680,9 @@ void SurgeSynthesizer::pitchBend(char channel, int value)
     {
         storage.pitch_bend = value / 8192.f;
 
+        pitchbendMIDIVal = value;
+        hasUpdatedMidiCC = true;
+
         for (int sc = 0; sc < n_scenes; sc++)
         {
             ((ControllerModulationSource *)storage.getPatch().scene[sc].modsources[ms_pitchbend])
@@ -1838,6 +1841,9 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
             ((ControllerModulationSource *)storage.getPatch().scene[sc].modsources[ms_modwheel])
                 ->set_target(fval);
         }
+
+        modwheelCC = value;
+        hasUpdatedMidiCC = true;
         break;
     case 2:
         for (int sc = 0; sc < n_scenes; sc++)
@@ -1894,6 +1900,9 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
             ((ControllerModulationSource *)storage.getPatch().scene[sc].modsources[ms_sustain])
                 ->set_target(fval);
         }
+
+        sustainpedalCC = value;
+        hasUpdatedMidiCC = true;
 
         channelState[channel].hold = value > 63; // check hold pedal
 

@@ -393,6 +393,10 @@ void SurgeSynthProcessor::processBlockMidiFromGUI()
         {
             surge->channelController(rec.ch, 1, rec.cval);
         }
+        if (rec.type == midiR::SUSPEDAL)
+        {
+            surge->channelController(rec.ch, 64, rec.cval);
+        }
     }
 }
 

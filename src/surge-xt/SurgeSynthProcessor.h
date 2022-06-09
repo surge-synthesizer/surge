@@ -296,6 +296,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
             NOTE,
             MODWHEEL,
             PITCHWHEEL,
+            SUSPEDAL,
         } type{NOTE};
         int ch{0}, note{0}, vel{0};
         bool on{false};

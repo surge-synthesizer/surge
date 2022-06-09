@@ -506,6 +506,13 @@ void SurgeGUIEditor::idle()
             accAnnounceStrings.pop_front();
     }
 
+    if (getShowVirtualKeyboard() && synth->hasUpdatedMidiCC)
+    {
+        synth->hasUpdatedMidiCC = false;
+        juceEditor->setPitchModSustainGUI(synth->pitchbendMIDIVal, synth->modwheelCC,
+                                          synth->sustainpedalCC);
+    }
+
     if (errorItemCount)
     {
         std::vector<std::pair<std::string, std::string>> cp;
