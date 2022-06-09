@@ -49,7 +49,7 @@ struct XMLMenuPopulator
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
-    int selectedIdx{0};
+    int selectedIdx{-1};
     std::string selectedName;
 
     juce::PopupMenu menu;

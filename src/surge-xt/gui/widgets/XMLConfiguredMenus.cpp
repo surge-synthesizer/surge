@@ -317,6 +317,7 @@ void XMLMenuPopulator::populate()
 
 OscillatorMenu::OscillatorMenu() : juce::Component(), WidgetBaseMixin<OscillatorMenu>(this)
 {
+    selectedIdx = -1;
     strcpy(mtype, "osc");
     setDescription("Oscillator Type");
     setTitle("Oscillator Type");
@@ -374,16 +375,25 @@ void OscillatorMenu::setOscillatorStorage(OscillatorStorage *o)
 {
     osc = o;
 
-    int idx = 0;
-    selectedIdx = -1;
-    for (auto pr : allPresets)
+    if (selectedIdx == -1)
     {
-        if (pr.itemType == osc->type.val.i && selectedIdx < 0)
-            selectedIdx = idx;
-        idx++;
+        int idx = 0;
+
+        for (auto pr : allPresets)
+        {
+            if (pr.itemType == osc->type.val.i && selectedIdx < 0)
+            {
+                selectedIdx = idx;
+            }
+
+            idx++;
+        }
+
+        if (selectedIdx < 0)
+        {
+            selectedIdx = 0;
+        }
     }
-    if (selectedIdx < 0)
-        selectedIdx = 0;
 }
 
 void OscillatorMenu::populate()
@@ -531,6 +541,7 @@ std::unique_ptr<juce::AccessibilityHandler> OscillatorMenu::createAccessibilityH
 
 FxMenu::FxMenu() : juce::Component(), WidgetBaseMixin<FxMenu>(this)
 {
+    selectedIdx = -1;
     strcpy(mtype, "fx");
     setDescription("FX Type");
     setTitle("FX Type");
@@ -558,16 +569,25 @@ void FxMenu::setFxStorage(FxStorage *s)
 {
     fx = s;
 
-    int idx = 0;
-    selectedIdx = -1;
-    for (auto pr : allPresets)
+    if (selectedIdx == -1)
     {
-        if (pr.itemType == fx->type.val.i && selectedIdx < 0)
-            selectedIdx = idx;
-        idx++;
+        int idx = 0;
+
+        for (auto pr : allPresets)
+        {
+            if (pr.itemType == fx->type.val.i && selectedIdx < 0)
+            {
+                selectedIdx = idx;
+            }
+
+            idx++;
+        }
+
+        if (selectedIdx < 0)
+        {
+            selectedIdx = 0;
+        }
     }
-    if (selectedIdx < 0)
-        selectedIdx = 0;
 }
 
 void FxMenu::mouseDown(const juce::MouseEvent &event)
