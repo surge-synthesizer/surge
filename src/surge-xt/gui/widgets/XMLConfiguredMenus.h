@@ -143,7 +143,7 @@ struct OscillatorMenu : public juce::Component,
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
 
     OscillatorStorage *osc{nullptr};
-    void setOscillatorStorage(OscillatorStorage *o) { osc = o; }
+    void setOscillatorStorage(OscillatorStorage *o);
 
     SurgeImage *bg{}, *bgHover{};
     void setBackgroundDrawable(SurgeImage *b) { bg = b; };
@@ -220,7 +220,7 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void populate() override;
 
     FxStorage *fx{nullptr}, *fxbuffer{nullptr};
-    void setFxStorage(FxStorage *s) { fx = s; }
+    void setFxStorage(FxStorage *s);
     void setFxBuffer(FxStorage *s) { fxbuffer = s; }
 
     int current_fx;
