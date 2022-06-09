@@ -134,6 +134,8 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
 #endif
         }
 
+        void mouseUp(const juce::MouseEvent &e) override { model->returnKeyPressed(row); }
+
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TARow);
     };
 
