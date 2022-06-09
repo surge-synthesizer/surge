@@ -3810,12 +3810,6 @@ void SurgeSynthesizer::processControl()
         release_anyway[1] = false;
     }
 
-    // TODO: FIX SCENE ASSUMPTION
-    if (playA && (storage.getPatch().scene[0].polymode.val.i == pm_latch) && voices[0].empty())
-        playNote(1, 60, 100, 0);
-    if (playB && (storage.getPatch().scene[1].polymode.val.i == pm_latch) && voices[1].empty())
-        playNote(2, 60, 100, 0);
-
     // interpolate MIDI controllers
     for (int i = 0; i < num_controlinterpolators; i++)
     {
@@ -3855,7 +3849,14 @@ void SurgeSynthesizer::processControl()
     if (playB)
         storage.getPatch().copy_scenedata(storage.getPatch().scenedata[1], 1);
 
-    //	if(sm == sm_morph) storage.getPatch().do_morph();
+    // TODO: FIX SCENE ASSUMPTION.
+    // Prior to 1.1 we could play before or after copying modulation data but as we
+    // introduce int mods, we need to make sure the scenedata and so on is set up before
+    // we latch
+    if (playA && (storage.getPatch().scene[0].polymode.val.i == pm_latch) && voices[0].empty())
+        playNote(1, 60, 100, 0);
+    if (playB && (storage.getPatch().scene[1].polymode.val.i == pm_latch) && voices[1].empty())
+        playNote(2, 60, 100, 0);
 
     for (int s = 0; s < n_scenes; s++)
     {
