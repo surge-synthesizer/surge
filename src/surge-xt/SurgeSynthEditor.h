@@ -82,7 +82,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void setPitchModSustainGUI(int pitch, int mod, int sus);
     std::unique_ptr<juce::Component> pitchwheel, modwheel, suspedal;
     std::unique_ptr<juce::MidiKeyboardComponent> keyboard;
-    std::unique_ptr<juce::Label> tempoLabel;
+    std::unique_ptr<juce::Label> tempoLabel, sustainLabel;
     std::unique_ptr<juce::TextEditor> tempoTypein;
 
     /* Drag and drop */
