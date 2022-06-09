@@ -370,6 +370,22 @@ void OscillatorMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     osc->queue_xmldata = e;
 }
 
+void OscillatorMenu::setOscillatorStorage(OscillatorStorage *o)
+{
+    osc = o;
+
+    int idx = 0;
+    selectedIdx = -1;
+    for (auto pr : allPresets)
+    {
+        if (pr.itemType == osc->type.val.i && selectedIdx < 0)
+            selectedIdx = idx;
+        idx++;
+    }
+    if (selectedIdx < 0)
+        selectedIdx = 0;
+}
+
 void OscillatorMenu::populate()
 {
     XMLMenuPopulator::populate();
@@ -536,6 +552,22 @@ void FxMenu::paint(juce::Graphics &g)
     auto r = getLocalBounds().reduced(2).withTrimmedLeft(4).withTrimmedRight(12);
     g.drawText(fxslot_names[current_fx], r, juce::Justification::centredLeft);
     g.drawText(fx_type_shortnames[fx->type.val.i], r, juce::Justification::centredRight);
+}
+
+void FxMenu::setFxStorage(FxStorage *s)
+{
+    fx = s;
+
+    int idx = 0;
+    selectedIdx = -1;
+    for (auto pr : allPresets)
+    {
+        if (pr.itemType == fx->type.val.i && selectedIdx < 0)
+            selectedIdx = idx;
+        idx++;
+    }
+    if (selectedIdx < 0)
+        selectedIdx = 0;
 }
 
 void FxMenu::mouseDown(const juce::MouseEvent &event)
