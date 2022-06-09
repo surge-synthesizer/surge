@@ -20,6 +20,8 @@ class SurgeImage
     SurgeImage(std::unique_ptr<juce::Drawable> &in);
     ~SurgeImage();
 
+    void forceLoadFromFile();
+
     void addPNGForZoomLevel(const std::string &fname, int zoomLevel);
     void resolvePNGForZoomLevel(int zoomLevel);
     void setPhysicalZoomFactor(int zoomFactor);
@@ -30,7 +32,7 @@ class SurgeImage
     std::string fname;
 
     void draw(juce::Graphics &g, float opacity,
-              const juce::AffineTransform &transform = juce::AffineTransform()) const
+              const juce::AffineTransform &transform = juce::AffineTransform())
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.addTransform(scaleAdjustmentTransform());
@@ -38,7 +40,7 @@ class SurgeImage
         if (idr)
             idr->draw(g, opacity, transform);
     }
-    void drawAt(juce::Graphics &g, float x, float y, float opacity) const
+    void drawAt(juce::Graphics &g, float x, float y, float opacity)
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.addTransform(scaleAdjustmentTransform());
@@ -47,7 +49,7 @@ class SurgeImage
             idr->drawAt(g, x, y, opacity);
     }
     void drawWithin(juce::Graphics &g, juce::Rectangle<float> destArea,
-                    juce::RectanglePlacement placement, float opacity) const
+                    juce::RectanglePlacement placement, float opacity)
     {
         juce::Graphics::ScopedSaveState gs(g);
         g.addTransform(scaleAdjustmentTransform());
@@ -71,7 +73,7 @@ class SurgeImage
     juce::Drawable *getDrawableButUseWithCaution() { return internalDrawableResolved(); }
 
   private:
-    juce::Drawable *internalDrawableResolved() const;
+    juce::Drawable *internalDrawableResolved();
     juce::AffineTransform scaleAdjustmentTransform() const;
 
     static std::atomic<int> instances;
