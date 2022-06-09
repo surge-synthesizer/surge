@@ -92,19 +92,25 @@ struct VKeyboardSus : public juce::Component
 {
     std::function<void(int)> onValueChanged = [](int f) {};
     bool isOn{false};
+
     void paint(juce::Graphics &g) override
     {
         auto wheelSz = getLocalBounds().reduced(1, 2);
 
-        if (isOn)
-            g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelValueId));
-        else
-            g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBgId));
+        g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBgId));
         g.fillRect(wheelSz);
+
+        if (isOn)
+        {
+            g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelValueId));
+            g.fillRect(wheelSz.reduced(1, 1));
+        }
+
         g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBorderId));
         g.drawRect(wheelSz.expanded(1, 1));
     }
-    void mouseUp(const juce::MouseEvent &event) override
+
+    void mouseDown(const juce::MouseEvent &event) override
     {
         isOn = !isOn;
         onValueChanged(isOn * 127);
@@ -173,12 +179,14 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     };
 
     tempoLabel = std::make_unique<juce::Label>("Tempo", "Tempo");
+    sustainLabel = std::make_unique<juce::Label>("Sustain", "Sustain");
 
     addChildComponent(*keyboard);
     addChildComponent(*pitchwheel);
     addChildComponent(*modwheel);
     addChildComponent(*suspedal);
     addChildComponent(*tempoLabel);
+    addChildComponent(*sustainLabel);
     addChildComponent(*tempoTypein);
 
     drawExtendedControls = adapter->getShowVirtualKeyboard();
@@ -242,6 +250,8 @@ void SurgeSynthEditor::reapplySurgeComponentColours()
 {
     tempoLabel->setColour(juce::Label::textColourId,
                           findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoLabelId));
+    sustainLabel->setColour(juce::Label::textColourId,
+                            findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoLabelId));
 
     tempoTypein->setColour(
         juce::TextEditor::backgroundColourId,
@@ -314,19 +324,20 @@ void SurgeSynthEditor::resized()
         auto x = addTempo ? 50 : 0;
         auto wheels = 32;
         auto margin = 6;
-        int tempoHeight = 14, typeinHeight = 18, yOffset = -2;
+        int noTempoSusYOffset = -16;
+        int tempoHeight = 10, typeinHeight = 14;
         int tempoBlockHeight = tempoHeight + typeinHeight;
-        int tempoBlockYPos = ((extraYSpaceForVirtualKeyboard - tempoBlockHeight) / 2) + yOffset;
 
         auto xf = juce::AffineTransform().scaled(applyZoomFactor);
         auto r = juce::Rectangle<int>(x + wheels + margin, y,
                                       adapter->getWindowSizeX() - x - wheels - margin,
                                       extraYSpaceForVirtualKeyboard);
+
         keyboard->setBounds(r);
         keyboard->setTransform(xf);
         keyboard->setVisible(true);
 
-        auto pmr = juce::Rectangle<int>(x, y, wheels / 2, extraYSpaceForVirtualKeyboard - 10);
+        auto pmr = juce::Rectangle<int>(x, y, wheels / 2, extraYSpaceForVirtualKeyboard);
         pitchwheel->setBounds(pmr);
         pitchwheel->setTransform(xf);
         pitchwheel->setVisible(true);
@@ -335,30 +346,40 @@ void SurgeSynthEditor::resized()
         modwheel->setTransform(xf);
         modwheel->setVisible(true);
 
-        auto smr = juce::Rectangle<int>(x, y + extraYSpaceForVirtualKeyboard - 10,
-                                        wheels + margin / 3, 10);
-        suspedal->setBounds(smr);
-        suspedal->setTransform(xf);
-        suspedal->setVisible(true);
-
         if (addTempo)
         {
-            tempoLabel->setBounds(4, y + tempoBlockYPos, x - 8, tempoHeight);
+            tempoLabel->setBounds(4, y, x - 8, tempoHeight);
             tempoLabel->setFont(
-                adapter->currentSkin->fontManager->getLatoAtSize(9, juce::Font::bold));
+                adapter->currentSkin->fontManager->getLatoAtSize(8, juce::Font::bold));
             tempoLabel->setJustificationType(juce::Justification::centred);
             tempoLabel->setTransform(xf);
             tempoLabel->setVisible(addTempo);
 
-            tempoTypein->setBounds(4, y + tempoBlockYPos + tempoHeight, x - 8, typeinHeight);
+            tempoTypein->setBounds(4, y + tempoHeight, x - 8, typeinHeight);
             tempoTypein->setText(
                 std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
-            tempoTypein->setFont(adapter->currentSkin->fontManager->getLatoAtSize(11));
-            tempoTypein->setIndents(4, 0);
+            tempoTypein->setFont(adapter->currentSkin->fontManager->getLatoAtSize(9));
+            tempoTypein->setIndents(4, 3);
             tempoTypein->setJustification(juce::Justification::centred);
             tempoTypein->setTransform(xf);
             tempoTypein->setVisible(addTempo);
         }
+
+        auto sml = juce::Rectangle<int>(4, y + tempoBlockHeight, x - 8, tempoHeight);
+        sml.translate(0, addTempo ? 0 : noTempoSusYOffset);
+        sustainLabel->setBounds(sml);
+        sustainLabel->setFont(
+            adapter->currentSkin->fontManager->getLatoAtSize(8, juce::Font::bold));
+        sustainLabel->setJustificationType(juce::Justification::centred);
+        sustainLabel->setTransform(xf);
+        sustainLabel->setVisible(true);
+
+        auto smr =
+            juce::Rectangle<int>(4, y + tempoBlockHeight + tempoHeight, x - 8, typeinHeight / 2);
+        smr = smr.withBottom(pmr.getBottom() - 1).translated(0, addTempo ? 0 : noTempoSusYOffset);
+        suspedal->setBounds(smr);
+        suspedal->setTransform(xf);
+        suspedal->setVisible(true);
     }
     else
     {
