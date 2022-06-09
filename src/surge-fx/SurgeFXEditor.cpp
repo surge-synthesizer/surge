@@ -113,19 +113,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     makeMenu();
     surgeLookFeel.reset(new SurgeLookAndFeel());
     setLookAndFeel(surgeLookFeel.get());
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    int topSection = 80;
-
-    setSize(600, 55 * 6 + 80 + topSection);
-    setResizable(false, false); // For now
 
     picker = std::make_unique<Picker>(this);
-    picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
     addAndMakeVisibleRecordOrder(picker.get());
-
-    int ypos0 = topSection - 5;
-    int byoff = 7;
 
     for (int i = 0; i < n_fx_params; ++i)
     {
@@ -135,8 +125,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamSliders[i].setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
         fxParamSliders[i].setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0,
                                           0);
-        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + 5, (i % 6) * 60 + ypos0, 55, 55};
-        fxParamSliders[i].setBounds(position);
         fxParamSliders[i].setChangeNotificationOnlyOnRelease(false);
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
         fxParamSliders[i].onValueChange = [i, this]() {
@@ -154,14 +142,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamSliders[i].setTitle("Parameter " + std::to_string(i) + " Knob");
         addAndMakeVisibleRecordOrder(&(fxParamSliders[i]));
 
-        int buttonSize = 19;
-        int buttonMargin = 1;
-        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55,
-                                   (i % 6) * 60 + ypos0 + byoff + buttonMargin, buttonSize,
-                                   buttonSize};
         fxTempoSync[i].setOnOffImage(BinaryData::TS_Act_svg, BinaryData::TS_Act_svgSize,
                                      BinaryData::TS_Deact_svg, BinaryData::TS_Deact_svgSize);
-        fxTempoSync[i].setBounds(tsPos);
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       juce::NotificationType::dontSendNotification);
@@ -177,12 +159,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " TempoSync");
         addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
 
-        juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + 55,
-                                   (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + buttonSize,
-                                   buttonSize, buttonSize};
         fxDeactivated[i].setOnOffImage(BinaryData::DE_Act_svg, BinaryData::DE_Act_svgSize,
                                        BinaryData::DE_Deact_svg, BinaryData::DE_Deact_svgSize);
-        fxDeactivated[i].setBounds(daPos);
         fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
                                         juce::NotificationType::dontSendNotification);
@@ -197,13 +175,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxDeactivated[i].setTitle("Parameter " + std::to_string(i) + " Deactivate");
         addAndMakeVisibleRecordOrder(&(fxDeactivated[i]));
 
-        juce::Rectangle<int> exPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
-                                   (i % 6) * 60 + ypos0 + byoff + 1 * buttonMargin + 0 * buttonSize,
-                                   buttonSize, buttonSize};
         fxExtended[i].setOnOffImage(BinaryData::EX_Act_svg, BinaryData::EX_Act_svgSize,
                                     BinaryData::EX_Deact_svg, BinaryData::EX_Deact_svgSize);
-
-        fxExtended[i].setBounds(exPos);
         fxExtended[i].setEnabled(processor.canExtend(i));
         fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
                                      juce::NotificationType::dontSendNotification);
@@ -218,13 +191,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
         addAndMakeVisibleRecordOrder(&(fxExtended[i]));
 
-        juce::Rectangle<int> abPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
-                                   (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + 1 * buttonSize,
-                                   buttonSize, buttonSize};
         fxAbsoluted[i].setOnOffImage(BinaryData::AB_Act_svg, BinaryData::AB_Act_svgSize,
                                      BinaryData::AB_Deact_svg, BinaryData::AB_Deact_svgSize);
-
-        fxAbsoluted[i].setBounds(abPos);
         fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
         fxAbsoluted[i].setToggleState(processor.getFXParamAbsolute(i),
                                       juce::NotificationType::dontSendNotification);
@@ -240,10 +208,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absoluted");
         addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
 
-        juce::Rectangle<int> dispPos{
-            (i / 6) * getWidth() / 2 + 4 + 55 + 2 * buttonMargin + 2 * buttonSize,
-            (i % 6) * 60 + ypos0, getWidth() / 2 - 68 - 2 * buttonMargin - 2 * buttonSize, 55};
-        fxParamDisplay[i].setBounds(dispPos);
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
         fxParamDisplay[i].setDisplay(processor.getParamValue(i));
@@ -258,7 +222,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
     fxNameLabel->setFont(28);
     fxNameLabel->setColour(juce::Label::textColourId, juce::Colours::black);
-    fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
     fxNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisibleRecordOrder(fxNameLabel.get());
 
@@ -267,6 +230,11 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setTitle("Surge XT Effects");
     setDescription("Surge XT Effects");
     resetLabels();
+
+    // Make sure that before the constructor has finished, you've set the
+    // editor's size to whatever you need it to be.
+    setSize(600, 55 * 6 + 80 + topSection);
+    setResizable(true, true); // For now
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
@@ -378,8 +346,46 @@ void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
 
 void SurgefxAudioProcessorEditor::resized()
 {
-    // This is generally where you'll want to lay out the positions of any
-    // subcomponents in your editor..
+    picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
+
+    int ypos0 = topSection - 5;
+    int byoff = 7;
+
+    for (int i = 0; i < n_fx_params; ++i)
+    {
+        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + 5, (i % 6) * 60 + ypos0, 55, 55};
+        fxParamSliders[i].setBounds(position);
+
+        int buttonSize = 19;
+        int buttonMargin = 1;
+        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + 55,
+                                   (i % 6) * 60 + ypos0 + byoff + buttonMargin, buttonSize,
+                                   buttonSize};
+        fxTempoSync[i].setBounds(tsPos);
+
+        juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + 55,
+                                   (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + buttonSize,
+                                   buttonSize, buttonSize};
+        fxDeactivated[i].setBounds(daPos);
+
+        juce::Rectangle<int> exPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
+                                   (i % 6) * 60 + ypos0 + byoff + 1 * buttonMargin + 0 * buttonSize,
+                                   buttonSize, buttonSize};
+        fxExtended[i].setBounds(exPos);
+
+        juce::Rectangle<int> abPos{(i / 6) * getWidth() / 2 + 2 + 55 + buttonMargin + buttonSize,
+                                   (i % 6) * 60 + ypos0 + byoff + 2 * buttonMargin + 1 * buttonSize,
+                                   buttonSize, buttonSize};
+        fxAbsoluted[i].setBounds(abPos);
+
+        juce::Rectangle<int> dispPos{
+            (i / 6) * getWidth() / 2 + 4 + 55 + 2 * buttonMargin + 2 * buttonSize,
+            (i % 6) * 60 + ypos0, getWidth() / 2 - 68 - 2 * buttonMargin - 2 * buttonSize, 55};
+        fxParamDisplay[i].setBounds(dispPos);
+    }
+
+    fxNameLabel->setFont(28);
+    fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
 }
 
 void SurgefxAudioProcessorEditor::makeMenu()

@@ -37,6 +37,9 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     };
     std::vector<FxMenu> menu;
     std::unique_ptr<juce::Component> picker;
+
+    int topSection = 80;
+
     void makeMenu();
     void showMenu();
     void toggleLatencyMode();
