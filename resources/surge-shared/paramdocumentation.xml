@@ -6,19 +6,19 @@
   <ctrl_group group="4" group_name="cg_FILTER" help_url="#filter-controls"/>
   <ctrl_group group="5" group_name="cg_ENV" help_url="#envelope-generators"/>
   <ctrl_group group="6" group_name="cg_LFO" help_url="#lfos"/>
-  <ctrl_group group="7" group_name="cg_FX" help_url="#fx-section"/>
+  <ctrl_group group="7" group_name="cg_FX" help_url="#effects"/>
 
   <!-- Special controls - bit of a hack but here they are -->
   <special id="scene-select" help_url="#the-scene-concept"/>
   <special id="osc-select" help_url="#oscillators"/>
-  <special id="mpe-menu" help_url="#mpe-options"/>
-  <special id="tun-menu" help_url="#tuning-options"/>
+  <special id="mpe-menu" help_url="#mpe-settings"/>
+  <special id="tun-menu" help_url="#tuning"/>
   <special id="zoom-menu" help_url="#zoom"/>
   <special id="patch-browser" help_url="#patch-browser"/>
-  <special id="patch-navigation" help_url="#navigating-through-presets"/>
+  <special id="patch-navigation" help_url="#navigation"/>
   <special id="save-dialog" help_url="#the-save-dialog"/>
   <special id="wavetables" help_url="#wavetable"/>
-  <special id="mseg-editor" help_url="#multi-segment-envelope-generator-mseg"/>
+  <special id="mseg-editor" help_url="#multi-segment-envelope-generator"/>
   <special id="formula-editor" help_url="#formula"/>
   <special id="mod-list" help_url="#modulation-list"/>
   <special id="macro-modbutton" help_url="#macros"/>
@@ -43,14 +43,14 @@
   <param id="filter.waveshaper_drive" help_url="#waveshaper"/>
   <param id="filter.waveshaper_type" help_url="#waveshaper"/>
   <param id="global.active_scene" help_url="#scene-select-and-scene-mode"/>
-  <param id="global.character" help_url="#fx-bypass-character-and-global-volume"/>
+  <param id="global.character" help_url="#fx-bypass-character-global-volume"/>
   <param id="scene.drift" help_url="#other-sound-generation-parameters"/>
   <param id="scene.fmdepth" help_url="#other-sound-shaping-parameters"/>
   <param id="scene.fmrouting" help_url="#other-sound-shaping-parameters"/>
-  <param id="global.fx1_return" help_url="#fx-section"/>
-  <param id="global.fx2_return" help_url="#fx-section"/>
-  <param id="global.fx_bypass" help_url="#fx-bypass-character-and-global-volume"/>
-  <param id="global.fx_disable" help_url="#fx-section"/>
+  <param id="global.fx1_return" help_url="#effects"/>
+  <param id="global.fx2_return" help_url="#effects"/>
+  <param id="global.fx_bypass" help_url="#fx-bypass-character-global-volume"/>
+  <param id="global.fx_disable" help_url="#effects"/>
   <param id="scene.gain" help_url="#other-sound-shaping-parameters"/>
   <param id="scene.keytrack_root" help_url="#other-sound-shaping-parameters"/>
   <param id="global.volume" help_url="#fx-bypass-character-and-global-volume"/>
@@ -231,10 +231,10 @@
   <param id="filter.keytrack_2" help_url=""/>
   <param id="filter.resonance_1" help_url=""/>
   <param id="filter.resonance_2" help_url=""/>
-  <param id="filter.subtype_1" help_url="#filter-algorithms"/>
-  <param id="filter.subtype_2" help_url="#filter-algorithms"/>
-  <param id="filter.type_1" help_url="#filter-algorithms"/>
-  <param id="filter.type_2" help_url="#filter-algorithms"/>
+  <param id="filter.subtype_1" help_url="#filters"/>
+  <param id="filter.subtype_2" help_url="#filters"/>
+  <param id="filter.type_1" help_url="#filters"/>
+  <param id="filter.type_2" help_url="#filters"/>
 
   <!-- Params for CG 5 -->
   <param id="aeg.attack" help_url=""/>
