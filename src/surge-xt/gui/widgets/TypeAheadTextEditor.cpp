@@ -35,6 +35,7 @@ void TypeAheadDataProvider::paintDataItem(int searchIndex, juce::Graphics &g, in
         g.fillAll(juce::Colours::white);
         g.setColour(juce::Colours::black);
     }
+
     g.drawText(textBoxValueForIndex(searchIndex), 0, 0, width, height,
                juce::Justification::centredLeft);
 }
@@ -63,17 +64,22 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
             return provider->accessibleTextForIndex(search[row]);
         }
         else
+        {
             return juce::String("Row ") + juce::String(row);
+        }
     }
 
     void returnKeyPressed(int lastRowSelected) override
     {
         auto m = juce::ModifierKeys::getCurrentModifiers();
+
         if (lastRowSelected < 0 || lastRowSelected >= search.size())
         {
             ta->dismissWithoutValue();
+
             return;
         }
+
         ta->dismissWithValue(search[lastRowSelected],
                              provider->textBoxValueForIndex(search[lastRowSelected]), m);
     }
@@ -98,6 +104,7 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
         bool isSelected{false};
         TypeAheadListBoxModel *model{nullptr};
         TARow(TypeAheadListBoxModel *m) : model(m) { setWantsKeyboardFocus(true); }
+
         void paint(juce::Graphics &g) override
         {
             model->paintListBoxItem(row, g, getWidth(), getHeight(), isSelected);
@@ -106,6 +113,7 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
         void updateAccessibility()
         {
             setAccessible(true);
+
             if (row >= 0 && row < model->search.size())
             {
                 setText(model->provider->accessibleTextForIndex(model->search[row]),
@@ -117,11 +125,13 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
             {
                 setText("", juce::dontSendNotification);
             }
+
             if (auto h = getAccessibilityHandler())
             {
                 h->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
                 h->notifyAccessibilityEvent(juce::AccessibilityEvent::textChanged);
             }
+
 #if WINDOWS
             if (auto p = getParentComponent())
             {
@@ -134,7 +144,9 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
 #endif
         }
 
-        void mouseUp(const juce::MouseEvent &e) override { model->returnKeyPressed(row); }
+        void mouseDown(const juce::MouseEvent &e) override { model->returnKeyPressed(row); }
+
+        void mouseDoubleClick(const juce::MouseEvent &e) override { model->escapeKeyPressed(); }
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TARow);
     };
@@ -142,22 +154,28 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
     juce::Component *refreshComponentForRow(int rowNumber, bool isRowSelected,
                                             juce::Component *existingComponentToUpdate) override
     {
-        TARow *row{nullptr};
+        TARow *tarow{nullptr};
+
         if (existingComponentToUpdate)
         {
-            row = dynamic_cast<TARow *>(existingComponentToUpdate);
-            if (!row)
-                delete existingComponentToUpdate;
-        }
-        if (!row)
-        {
-            row = new TARow(this);
-        }
-        row->row = rowNumber;
-        row->isSelected = isRowSelected;
-        row->updateAccessibility();
+            tarow = dynamic_cast<TARow *>(existingComponentToUpdate);
 
-        return row;
+            if (!tarow)
+            {
+                delete existingComponentToUpdate;
+            }
+        }
+
+        if (!tarow)
+        {
+            tarow = new TARow(this);
+        }
+
+        tarow->row = rowNumber;
+        tarow->isSelected = isRowSelected;
+        tarow->updateAccessibility();
+
+        return tarow;
     }
 };
 
@@ -172,12 +190,14 @@ struct TypeAheadListBox : public juce::ListBox
     void paintOverChildren(juce::Graphics &graphics) override
     {
         juce::ListBox::paintOverChildren(graphics);
+
         if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
         {
             m->provider->paintOverChildren(graphics,
                                            getLocalBounds().reduced(getOutlineThickness()));
         }
     }
+
     bool keyPressed(const juce::KeyPress &press) override
     {
         if (press.isKeyCode(juce::KeyPress::escapeKey))
@@ -185,9 +205,11 @@ struct TypeAheadListBox : public juce::ListBox
             if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
             {
                 m->escapeKeyPressed();
+
                 return true;
             }
         }
+
         return ListBox::keyPressed(press);
     }
 
@@ -225,30 +247,44 @@ void TypeAhead::dismissWithValue(int providerIdx, const std::string &s,
                      (dismissMode == DISMISS_ON_RETURN_RETAIN_ON_CMD_RETURN && !cmd) ||
                      (dismissMode == DISMISS_ON_CMD_RETURN_RETAIN_ON_RETURN && cmd) ||
                      lboxmodel->getNumRows() <= 1;
+
     setText(s, juce::NotificationType::dontSendNotification);
+
     if (doDismiss)
     {
         lbox->setVisible(false);
+
         if (isVisible())
+        {
             grabKeyboardFocus();
+        }
     }
+
     for (auto l : taList)
+    {
         l->itemSelected(providerIdx);
+    }
 }
 
 void TypeAhead::dismissWithoutValue()
 {
     lbox->setVisible(false);
     grabKeyboardFocus();
+
     for (auto l : taList)
+    {
         l->typeaheadCanceled();
+    }
 }
 
 void TypeAhead::textEditorEscapeKeyPressed(juce::TextEditor &editor)
 {
     lbox->setVisible(false);
+
     for (auto l : taList)
+    {
         l->typeaheadCanceled();
+    }
 }
 
 void TypeAhead::textEditorReturnKeyPressed(juce::TextEditor &editor)
@@ -258,7 +294,9 @@ void TypeAhead::textEditorReturnKeyPressed(juce::TextEditor &editor)
     if (setToElementZeroOnReturn && lboxmodel->getNumRows() > 0)
     {
         auto r = lboxmodel->provider->textBoxValueForIndex(lboxmodel->search[0]);
+
         setText(r, juce::NotificationType::dontSendNotification);
+
         for (auto l : taList)
         {
             l->itemSelected(0);
@@ -270,13 +308,16 @@ void TypeAhead::parentHierarchyChanged()
 {
     TextEditor::parentHierarchyChanged();
     auto p = getParentComponent();
+
     while (p && !dynamic_cast<Surge::Widgets::MainFrame *>(p))
     {
         p = p->getParentComponent();
     }
+
     if (p)
     {
         auto mf = dynamic_cast<Surge::Widgets::MainFrame *>(p);
+
         if (mf)
         {
             mf->addChildComponentThroughEditor(*lbox);
@@ -287,6 +328,7 @@ void TypeAhead::parentHierarchyChanged()
 void TypeAhead::searchAndShowLBox()
 {
     lboxmodel->setSearch(getText().toStdString());
+
     showLbox();
 
     lbox->updateContent();
@@ -296,6 +338,7 @@ void TypeAhead::searchAndShowLBox()
 void TypeAhead::showLbox()
 {
     auto p = getParentComponent();
+
     while (p && !dynamic_cast<Surge::Widgets::MainFrame *>(p))
     {
         p = p->getParentComponent();
@@ -306,6 +349,7 @@ void TypeAhead::showLbox()
             .translated(0, getHeight())
             .withHeight(
                 lboxmodel->provider->getRowHeight() * lboxmodel->provider->getDisplayedRows() + 4);
+
     if (p)
     {
         b = p->getLocalArea(this, b);
@@ -324,6 +368,7 @@ void TypeAhead::textEditorTextChanged(TextEditor &editor)
     {
         showLbox();
     }
+
     lbox->updateContent();
     lbox->repaint();
 }
@@ -341,34 +386,50 @@ bool TypeAhead::keyPressed(const juce::KeyPress &press)
             lbox->updateContent();
             lbox->repaint();
         }
+
         juce::SparseSet<int> r;
         r.addRange({0, 1});
         lbox->setSelectedRows(r);
         lbox->grabKeyboardFocus();
+
         return true;
     }
+
     return TextEditor::keyPressed(press);
 }
 
 void TypeAhead::colourChanged()
 {
     if (isColourSpecified(emptyBackgroundId))
+    {
         lbox->setColour(juce::ListBox::ColourIds::backgroundColourId,
                         findColour(ColourIds::emptyBackgroundId));
+    }
+
     if (isColourSpecified(ColourIds::borderid))
+    {
         lbox->setColour(juce::ListBox::ColourIds::outlineColourId, findColour(ColourIds::borderid));
+    }
 }
+
 void TypeAhead::focusLost(juce::Component::FocusChangeType type)
 {
     if (hasKeyboardFocus(true))
+    {
         return;
+    }
 
     if (lbox->hasKeyboardFocus(true))
+    {
         return;
+    }
 
     lbox->setVisible(false);
+
     for (auto l : taList)
+    {
         l->typeaheadCanceled();
+    }
 }
 } // namespace Widgets
 } // namespace Surge
