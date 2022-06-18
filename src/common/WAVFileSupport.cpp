@@ -332,9 +332,10 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 #if WAV_STDOUT_INFO
             std::cout << "Default Dump\n";
 
-            for( int i=0; i<cs; ++i ) std::cout << data[i];
-            std::cout << std::endl;
+            for (int i = 0; i < cs; ++i)
+                std::cout << data[i] << std::endl;
 #endif
+
             free(data);
         }
     }
