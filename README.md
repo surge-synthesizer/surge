@@ -192,7 +192,7 @@ If you are building with Visual Studio 2019, use the `-A` flag in your CMake com
 cmake -Bbuild -G"Visual Studio 16 2019" -A x64
 
 # 32-bit
-cmake -Bbuild -G"Visual Studio 16 2019" -A Win32
+cmake -Bbuild32 -G"Visual Studio 16 2019" -A Win32
 ```
 
 If you are using an older version of Visual Studio, you must specify your preference with your choice of CMake generator:
@@ -202,7 +202,7 @@ If you are using an older version of Visual Studio, you must specify your prefer
 cmake -Bbuild -G"Visual Studio 15 2017 Win64"
 
 # 32-bit
-cmake -Bbuild -G"Visual Studio 15 2017"
+cmake -Bbuild32 -G"Visual Studio 15 2017"
 ```
 
 ### Building a Mac Fat Binary (ARM/Intel)

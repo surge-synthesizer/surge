@@ -11,7 +11,7 @@
 
 ; uncomment these two lines if building the installer locally!
 ;#define SURGE_SRC "..\..\"
-;#define SURGE_BIN "..\..\build\"
+;#define SURGE_BIN "..\..\build32\Release"
 
 [Setup]
 AppId={#MyID}
@@ -66,6 +66,8 @@ Name: "custom"; Description: "Custom installation"; Flags: iscustom
 Name: "minimal"; Description: "Minimal installation"
 
 [Components]
+Name: CLAP; Description: {#MyAppName} CLAP (32-bit); Types: full compact custom minimal; Flags: checkablealone
+Name: EffectsCLAP; Description: {#MyAppName} Effects CLAP (32-bit); Types: full custom; Flags: checkablealone
 Name: VST3; Description: {#MyAppName} VST3 (32-bit); Types: full compact custom; Flags: checkablealone
 Name: EffectsVST3; Description: {#MyAppName} Effects VST3 (32-bit); Types: full custom; Flags: checkablealone
 Name: SA; Description: {#MyAppName} Standalone (32-bit); Types: full custom; Flags: checkablealone
@@ -91,6 +93,8 @@ Source: {#SURGE_SRC}\resources\fonts\Lato-Regular.ttf; DestDir: "{autofonts}"; C
 Source: {#SURGE_SRC}\resources\fonts\Lato-Bold.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Lato Bold"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: {#SURGE_SRC}\resources\fonts\Lato-BoldItalic.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Lato Bold Italic"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: {#SURGE_SRC}\resources\fonts\Lato-Italic.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Lato Italic"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} (32-bit).clap; DestDir: {commoncf32}\CLAP\{#MyAppPublisher}\; Components: CLAP; Flags: ignoreversion recursesubdirs
+Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} Effects (32-bit).clap; DestDir: {commoncf32}\CLAP\{#MyAppPublisher}\; Components: EffectsCLAP; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} (32-bit).vst3\*; DestDir: {commoncf32}\VST3\{#MyAppPublisher}\{#MyAppName} (32-bit).vst3\; Components: VST3; Flags: ignoreversion recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} Effects (32-bit).vst3\*; DestDir: {commoncf32}\VST3\{#MyAppPublisher}\{#MyAppName} Effects (32-bit).vst3\; Components: EffectsVST3; Flags: ignoreversion skipifsourcedoesntexist recursesubdirs
 Source: {#SURGE_BIN}\surge_xt_products\{#MyAppName} (32-bit).exe; DestDir: {commonpf32}\{#MyAppPublisher}\{#MyAppName}\; Components: SA; Flags: ignoreversion
@@ -139,11 +143,23 @@ begin
   Result := Result + 'Installation Locations:' + NewLine
   Result := Result + Space + 'Data Files: ' + AppData + '\' + AppName + NewLine
   
+  if IsSelected('clap') or IsSelected('effectsclap') then
+    Result := Result + Space + 'CLAP: ' + CF + '\CLAP\' + AppPublisher + '\' + NewLine;
+
   if IsSelected('vst3') or IsSelected('effectsvst3') then
     Result := Result + Space + 'VST3: ' + CF + '\VST3\' + AppPublisher + '\' + NewLine;
 
   if IsSelected('sa') or IsSelected('effectssa') then
     Result := Result + Space + 'Standalone: ' + PF + '\' + AppPublisher + '\' + AppName + '\' + NewLine;
 
-  Result := Result + Space + 'Portable Junction: ' + CF + '\VST3\' + AppPublisher + '\' + AppNameCondensed + 'Data' + NewLine
+  if (IsSelected('clap') or IsSelected('effectsclap')) and (IsSelected('vst3') or IsSelected('effectsvst3')) then
+    Result := Result + Space + 'Portable Junctions:' + NewLine
+  else
+    Result := Result + Space + 'Portable Junction:' + NewLine;
+  
+  if IsSelected('clap') or IsSelected('effectsclap') then
+    Result := Result + Space + Space + 'CLAP: ' + CF + '\CLAP\' + AppPublisher + '\' + AppNameCondensed + 'Data' + NewLine;
+
+  if IsSelected('vst3') or IsSelected('effectsvst3') then
+    Result := Result + Space + Space + 'VST3: ' + CF + '\VST3\' + AppPublisher + '\' + AppNameCondensed + 'Data' + NewLine;
 end;
