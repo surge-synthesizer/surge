@@ -247,12 +247,24 @@ struct ModulationOverviewLaunchButton : public juce::Button,
     bool keyPressed(const juce::KeyPress &key) override;
 
     bool isH{false};
-    void mouseEnter(const juce::MouseEvent &event) override { isH = true; }
-    void mouseExit(const juce::MouseEvent &event) override { isH = false; }
+
+    void mouseEnter(const juce::MouseEvent &event) override
+    {
+        isH = true;
+        repaint();
+    }
+
+    void mouseExit(const juce::MouseEvent &event) override
+    {
+        isH = false;
+        repaint();
+    }
+
     bool isCurrentlyHovered() override { return isH; }
 
     SurgeGUIEditor *editor{nullptr};
     SurgeStorage *storage{nullptr};
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationOverviewLaunchButton);
 };
 } // namespace Widgets

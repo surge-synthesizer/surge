@@ -885,23 +885,31 @@ void ModulationOverviewLaunchButton::paintButton(juce::Graphics &g,
     auto FillCol = skin->getColor(Colors::ModSource::Unused::Background);
     auto FrameCol = skin->getColor(Colors::ModSource::Unused::Border);
     auto FontCol = skin->getColor(Colors::ModSource::Unused::Text);
+    std::string msg = "List";
 
-    if (shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown)
+    if (isH)
     {
         FrameCol = skin->getColor(Colors::ModSource::Unused::BorderHover);
         FontCol = skin->getColor(Colors::ModSource::Unused::TextHover);
     }
 
-    g.fillAll(FillCol);
-    g.setColour(FrameCol);
-    g.drawRect(getLocalBounds(), 1);
-
-    std::string msg = "List";
-
     if (editor->isAnyOverlayPresent(SurgeGUIEditor::MODULATION_EDITOR))
     {
         msg = "Close";
+
+        FrameCol = skin->getColor(Colors::ModSource::Used::Border);
+        FontCol = skin->getColor(Colors::ModSource::Used::Text);
+
+        if (isH)
+        {
+            FrameCol = skin->getColor(Colors::ModSource::Used::BorderHover);
+            FontCol = skin->getColor(Colors::ModSource::Used::TextHover);
+        }
     }
+
+    g.fillAll(FillCol);
+    g.setColour(FrameCol);
+    g.drawRect(getLocalBounds(), 1);
 
     auto f = skin->fontManager->getLatoAtSize(9);
     auto h = f.getHeight() * 0.9f;
