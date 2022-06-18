@@ -1,21 +1,19 @@
 /*
-** Portable (using standard fread and so on) support for .wav files generating
-** wavetables.
+** Portable (using standard fread and so on) support for .wav files generating wavetables
 **
 ** Two things which matter in addition to the fmt and data block
 **
-**  1: The `smpl` block
-**  2: the `clm ` block - indicates a serum file
-**  3: the 'cue' block which apparently NI uses
+**  1. The 'smpl' block
+**  2. The 'clm ' block - indicates a serum file
+**  3. The 'cue ' block which apparently NI uses
 **
-** I read them in this order
+** I read them in this order:
 **
 **  1. If there is a clm block that wins, we ignore the smpl and cue block, and you get your 2048 wt
 **  2. If there is a cue block and no clm, use the offsets if they are power of 2 and regular
-**  3. Else if there is no smpl block and you have a smpl block if you have a power of 2 sample
-*length
-**     we interpret you as a wt
-**  4. otherwise as a one shot or - right now-  an error
+**  3. Else if there is no smpl block or you have a smpl block with a power of 2 sample length we
+**     interpret you as a wt
+**  4. otherwise as a one shot or - right now - an error
 */
 
 #define WAV_STDOUT_INFO 0
@@ -45,12 +43,14 @@ bool four_chars(char *v, char a, char b, char c, char d)
 bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 {
     std::string uitag = "Wavetable Import Error";
+
 #if WAV_STDOUT_INFO
     std::cout << "Loading wt_wav_portable" << std::endl;
-    std::cout << "  fn='" << fn << "'" << std::endl;
+    std::cout << "  fn = '" << fn << "'" << std::endl;
 #endif
 
     std::filebuf fp;
+
     if (!fp.open(string_to_path(fn), std::ios::binary | std::ios::in))
     {
         std::ostringstream oss;
@@ -61,8 +61,10 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     char riff[4], szd[4], wav[4];
     auto hds = fp.sgetn(riff, sizeof(riff));
+
     hds += fp.sgetn(szd, sizeof(szd));
     hds += fp.sgetn(wav, sizeof(wav));
+
     if (hds != 12)
     {
         std::ostringstream oss;
@@ -88,7 +90,6 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     // Result of data read
     bool hasSMPL = false;
     bool hasCLM = false;
-    ;
     bool hasCUE = false;
     bool hasSRGE = false;
     bool hasSRGO = false;
@@ -101,28 +102,38 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     int tbr = 4;
     char *wavdata = nullptr;
     int datasz = 0, datasamples;
+
     while (true)
     {
         char chunkType[4], chunkSzD[4];
         int br;
+
         if (fp.sgetn(chunkType, sizeof(chunkType)) != sizeof(chunkType))
         {
             break;
         }
+
         br = fp.sgetn(chunkSzD, sizeof(chunkSzD));
+
         // FIXME - deal with br
         int cs = pl_int(chunkSzD);
 
+        // RIFF requires all chunks to be in 2 byte sizes
+        if (cs % 2 == 1)
+            cs = cs + 1;
+
 #if WAV_STDOUT_INFO
-        std::cout << "  CHUNK  `";
+        std::cout << "  CHUNK  \'";
         for (int i = 0; i < 4; ++i)
             std::cout << chunkType[i];
-        std::cout << "`  sz=" << cs << std::endl;
+        std::cout << "\'  sz = " << cs << std::endl;
 #endif
+
         tbr += 8 + cs;
 
         char *data = (char *)malloc(cs);
         br = fp.sgetn(data, cs);
+
         if (br != cs)
         {
             free(data);
@@ -147,7 +158,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             dp += 2;
 
 #if WAV_STDOUT_INFO
-            std::cout << "     FMT=" << audioFormat << " x " << numChannels << " at "
+            std::cout << "     FMT = " << audioFormat << " x " << numChannels << " at "
                       << bitsPerSample << " bits" << std::endl;
 #endif
 
@@ -217,13 +228,17 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         {
             char *dp = data;
             int numCues = pl_int(dp);
+
             dp += 4;
+
             std::vector<int> chunkStarts;
+
             for (int i = 0; i < numCues; ++i)
             {
                 for (int j = 0; j < 6; ++j)
                 {
                     auto d = pl_int(dp);
+
                     if (j == 5)
                         chunkStarts.push_back(d);
 
@@ -234,6 +249,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             // Now are my chunkstarts regular
             int d = -1;
             bool regular = true;
+
             for (auto i = 1; i < chunkStarts.size(); ++i)
             {
                 if (d == -1)
@@ -263,15 +279,18 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         {
             char *dp = data;
             unsigned int samplechunk[9];
+
             for (int i = 0; i < 9; ++i)
             {
                 samplechunk[i] = pl_int(dp);
                 dp += 4;
             }
+
             unsigned int nloops = samplechunk[7];
             unsigned int sdsz = samplechunk[8];
+
 #if WAV_STDOUT_INFO
-            std::cout << "   SMPL: nloops=" << nloops << " " << sdsz << std::endl;
+            std::cout << "   SMPL: nloops = " << nloops << " " << sdsz << std::endl;
 #endif
 
             if (nloops == 0)
@@ -290,14 +309,17 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             for (int i = 0; i < nloops && i < 1; ++i)
             {
                 unsigned int loopdata[6];
+
                 for (int j = 0; j < 6; ++j)
                 {
                     loopdata[j] = pl_int(dp);
                     dp += 4;
+
 #if WAV_STDOUT_INFO
                     std::cout << "      loopdata[" << j << "] = " << loopdata[j] << std::endl;
 #endif
                 }
+
                 hasSMPL = true;
                 smplLEN = loopdata[3] - loopdata[2] + 1;
 
@@ -307,18 +329,22 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
         }
         else
         {
-            /*std::cout << "Default Dump\n";
-            for( int i=0; i<cs; ++i ) std::cout << data[i];
-            std::cout << std::endl; */
+#if WAV_STDOUT_INFO
+            std::cout << "Default Dump\n";
+
+            for (int i = 0; i < cs; ++i)
+                std::cout << data[i] << std::endl;
+#endif
+
             free(data);
         }
     }
 
 #if WAV_STDOUT_INFO
-    std::cout << "  hasCLM =" << hasCLM << " / " << clmLEN << std::endl;
-    std::cout << "  hasCUE =" << hasCUE << " / " << cueLEN << std::endl;
-    std::cout << "  hasSMPL=" << hasSMPL << "/" << smplLEN << std::endl;
-    std::cout << "  hasSRGE=" << hasSRGE << "/" << srgeLEN << std::endl;
+    std::cout << "  hasCLM  = " << hasCLM << " / " << clmLEN << std::endl;
+    std::cout << "  hasCUE  = " << hasCUE << " / " << cueLEN << std::endl;
+    std::cout << "  hasSMPL = " << hasSMPL << " / " << smplLEN << std::endl;
+    std::cout << "  hasSRGE = " << hasSRGE << " / " << srgeLEN << std::endl;
 #endif
 
     bool loopData = hasSMPL || hasCLM || hasSRGE;
@@ -335,14 +361,15 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
         if (wavdata)
             free(wavdata);
+
         return false;
     }
 
     int loopCount = datasamples / loopLen;
 
 #if WAV_STDOUT_INFO
-    std::cout << "  samples=" << datasamples << " loopLen=" << loopLen << " loopCount=" << loopCount
-              << std::endl;
+    std::cout << "  samples = " << datasamples << " loop length = " << loopLen
+              << " loop count = " << loopCount << std::endl;
 #endif
 
     // wt format header (surge internal)
@@ -415,6 +442,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
         if (wavdata)
             free(wavdata);
+
         return false;
     }
 
@@ -426,11 +454,13 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     if (wh.flags & wtf_is_sample)
     {
         auto windowSize = 1024;
+
         if (hasSRGO)
             windowSize = srgeLEN;
 
         while (windowSize * 4 > sample_length && windowSize > 8)
             windowSize = windowSize / 2;
+
         wh.n_samples = windowSize;
         wh.n_tables = (int)(sample_length / windowSize);
     }
@@ -506,6 +536,7 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
     auto fnamePre = fbase + ".wav";
     auto fname = path / (fbase + ".wav");
     int fnum = 1;
+
     while (fs::exists(fname))
     {
         fname = path / (fbase + "_" + std::to_string(fnum) + ".wav");
@@ -517,12 +548,14 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
 
     {
         std::filebuf wfp;
+
         if (!wfp.open(fname, std::ios::binary | std::ios::out))
         {
             errorMessage = "Unable to open file " + fname.u8string() + "!";
             errorMessage += std::strerror(errno);
 
             reportError(errorMessage, "Wavetable Export");
+
             return "";
         }
 
@@ -596,6 +629,7 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
 
         wfp.sputn("data", 4);
         w4i(tableSize);
+
         for (int i = 0; i < wt->n_tables; ++i)
         {
             wfp.sputn(reinterpret_cast<char *>(wt->TableF32WeakPointers[0][i]),
