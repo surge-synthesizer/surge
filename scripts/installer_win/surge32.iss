@@ -110,9 +110,16 @@ Name: "{group}\{#MyAppPublisher}\{#MyAppName}\{#MyAppName} Effects"; Filename: "
 
 [Run]
 Filename: "{cmd}"; \
+    WorkingDir: "{commoncf32}\CLAP"; \
+    Parameters: "/C mklink /D /J  ""{commoncf32}\CLAP\{#MyAppPublisher}\{#MyAppNameCondensed}Data"" ""{commonappdata}\{#MyAppName}"""; \
+    Flags: runascurrentuser; \
+    Check: WizardIsComponentSelected('CLAP') or WizardIsComponentSelected('EffectsCLAP')
+
+Filename: "{cmd}"; \
     WorkingDir: "{commoncf32}\VST3"; \
     Parameters: "/C mklink /D /J  ""{commoncf32}\VST3\{#MyAppPublisher}\{#MyAppNameCondensed}Data"" ""{commonappdata}\{#MyAppName}"""; \
-    Flags: runascurrentuser
+    Flags: runascurrentuser; \
+    Check: WizardIsComponentSelected('VST3') or WizardIsComponentSelected('EffectsVST3')
 
 [Code]
 procedure AddToReadyMemo(var Memo: string; Info, NewLine: string);
