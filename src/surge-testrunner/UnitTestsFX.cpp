@@ -265,3 +265,54 @@ TEST_CASE("High Samplerate Reverb2", "[fx]")
         }
     }
 }
+
+TEST_CASE("Waveshaper Pop", "[fx]")
+{
+    SECTION("Print the Pop")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        auto *pt = &(surge->storage.getPatch().fx[0].type);
+        auto awv = 1.f * fxt_waveshaper / (pt->val_max.i - pt->val_min.i);
+
+        auto did = surge->idForParameter(pt);
+        surge->setParameter01(did, awv, false);
+
+        auto *shaper = &(surge->storage.getPatch().fx[0].p[2]);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        shaper->val.i = (int)sst::waveshapers::WaveshaperType::wst_digital;
+        for (int i = 0; i < 8; ++i)
+            surge->process();
+
+        for (int b = 0; b < 2; ++b)
+        {
+            surge->process();
+            // Print the last 32 samples
+            for (int s = 0; s < BLOCK_SIZE; ++s)
+            {
+                std::cout << "DIGI   " << b << " " << std::setw(4) << s << " " << std::setw(16)
+                          << std::setprecision(7) << surge->output[0][s] << " " << std::setw(16)
+                          << std::setprecision(7) << surge->output[1][s] << std::endl;
+            }
+        }
+        shaper->val.i = (int)sst::waveshapers::WaveshaperType::wst_cheby2;
+        for (int b = 0; b < 3; ++b)
+        {
+            surge->process();
+
+            for (int s = 0; s < BLOCK_SIZE; ++s)
+            {
+                std::cout << "CHEBY2 " << b << " " << std::setw(4) << s << " " << std::setw(16)
+                          << std::setprecision(7) << surge->output[0][s] << " " << std::setw(16)
+                          << std::setprecision(7) << surge->output[1][s] << std::endl;
+            }
+        }
+    }
+}
