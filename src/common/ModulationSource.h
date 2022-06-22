@@ -317,7 +317,7 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
 {
   public:
     // Smoothing and Shaping Behaviors
-    Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::LEGACY;
+    Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::FAST_LINE;
 
     ControllerModulationSourceVector()
     {
@@ -327,7 +327,7 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
             value[i] = 0.f;
             changed[i] = true;
         }
-        smoothingMode = Modulator::SmoothingMode::LEGACY;
+        smoothingMode = Modulator::SmoothingMode::FAST_LINE;
         bipolar = false;
     }
     ControllerModulationSourceVector(Modulator::SmoothingMode mode)
