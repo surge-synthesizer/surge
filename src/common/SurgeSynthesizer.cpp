@@ -92,9 +92,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     SurgePatch &patch = storage.getPatch();
 
     storage.smoothingMode = (Modulator::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
-        &storage, Surge::Storage::SmoothingMode, (int)(Modulator::SmoothingMode::LEGACY));
+        &storage, Surge::Storage::SmoothingMode, (int)(Modulator::SmoothingMode::FAST_LINE));
     storage.pitchSmoothingMode = (Modulator::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
-        &storage, Surge::Storage::PitchSmoothingMode, (int)(Modulator::SmoothingMode::DIRECT));
+        &storage, Surge::Storage::PitchSmoothingMode, (int)(Modulator::SmoothingMode::FAST_LINE));
 
     patch.polylimit.val.i = DEFAULT_POLYLIMIT;
 
