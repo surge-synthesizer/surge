@@ -7412,7 +7412,8 @@ void SurgeGUIEditor::showPatchCommentTooltip(const std::string &comment)
         patchSelectorComment->setVisible(true);
         patchSelectorComment->getParentComponent()->toFront(true);
         patchSelectorComment->toFront(true);
-        patchSelectorComment->positionForComment(psb.getCentre().withY(psb.getBottom()), comment);
+        patchSelectorComment->positionForComment(psb.getCentre().withY(psb.getBottom()), comment,
+                                                 psb.getWidth());
     }
 }
 
