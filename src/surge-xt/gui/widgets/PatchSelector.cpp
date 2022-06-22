@@ -1330,12 +1330,13 @@ void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
     g.fillRect(getLocalBounds().reduced(1));
     g.setColour(skin->getColor(clr::Text));
     g.setFont(skin->fontManager->getLatoAtSize(9));
+    printf("Popup width: %d\n", getWidth());
     g.drawMultiLineText(comment, 5, g.getCurrentFont().getHeight() + 2, getWidth(),
                         juce::Justification::left);
 }
 
 void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &centerPoint,
-                                                     const std::string &c)
+                                                     const std::string &c, const int maxWidth)
 {
     comment = c;
 
@@ -1358,8 +1359,9 @@ void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &cen
 
     auto r = juce::Rectangle<int>()
                  .withCentre(juce::Point(centerPoint.x, centerPoint.y))
-                 .withSizeKeepingCentre(width + 12, height)
+                 .withSizeKeepingCentre(std::min(width + 12, maxWidth), height)
                  .translated(0, height / 2);
+
     setBounds(r);
     repaint();
 }
