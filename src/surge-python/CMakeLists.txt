@@ -1,5 +1,5 @@
 # vi:set sw=2 et:
-project(surge-python)
+project(surgepy)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/libs/pybind11 pybind11)
 pybind11_add_module(${PROJECT_NAME})
