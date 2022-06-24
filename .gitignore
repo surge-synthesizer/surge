@@ -87,6 +87,7 @@ buildxt/
 build-arm/
 build_lv2
 buildiwyu/
+buildpy/
 cmake-build-*/
 bwd/
 CMakeUserPresets.json

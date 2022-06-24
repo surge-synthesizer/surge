@@ -78,7 +78,7 @@ jobs:
           imageName: 'ubuntu-18.04'
           isLinux: True
           cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DSURGE_BUILD_PYTHON_BINDINGS=True"
-          cmakeTarget: "surge-xt_Packaged surge-fx_Packaged surge-python"
+          cmakeTarget: "surge-xt_Packaged surge-fx_Packaged surgepy"
           cmakeConfig: "Debug"
         linux-unittest:
           imageName: 'ubuntu-20.04'
