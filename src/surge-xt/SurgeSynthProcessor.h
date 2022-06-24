@@ -57,7 +57,7 @@ struct SurgeParamToJuceInfo
 struct SurgeBaseParam : juce::RangedAudioParameter
 #if HAS_CLAP_JUCE_EXTENSIONS
     ,
-                        clap_juce_extensions::clap_param_extensions
+                        clap_juce_extensions::clap_juce_parameter_capabilities
 #endif
 
 {
@@ -254,7 +254,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
 #if HAS_CLAP_JUCE_EXTENSIONS
                             public clap_juce_extensions::clap_properties,
-                            public clap_juce_extensions::clap_extensions,
+                            public clap_juce_extensions::clap_juce_audio_processor_capabilities,
 #endif
 
                             public SurgeSynthesizer::PluginLayer,
