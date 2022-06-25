@@ -444,8 +444,6 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     bool addUserLabel = false;
     int idx = 0;
 
-    contextMenu.addSectionHeader("FACTORY WAVETABLES");
-
     for (auto c : storage->wtCategoryOrdering)
     {
         if (idx == storage->firstThirdPartyWTCategory)
@@ -460,6 +458,12 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         }
 
         idx++;
+
+        // only add this section header if we actually have any factory WTs installed
+        if (idx == 1)
+        {
+            contextMenu.addSectionHeader("FACTORY WAVETABLES");
+        }
 
         PatchCategory cat = storage->wt_category[c];
 
@@ -480,6 +484,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         }
     }
 
+    contextMenu.addSeparator();
+
     /*
     We've decided to postpone this feature until after XT 1.0
     contextMenu.addSeparator();
@@ -490,13 +496,15 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     };
 
     contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
-     */
+    */
 
-    contextMenu.addSeparator();
+    // add this option only if we have any wavetables in the list
+    if (idx > 0)
+    {
+        auto refresh = [this]() { this->storage->refresh_wtlist(); };
 
-    auto refresh = [this]() { this->storage->refresh_wtlist(); };
-
-    contextMenu.addItem(Surge::GUI::toOSCase("Refresh Wavetable List"), refresh);
+        contextMenu.addItem(Surge::GUI::toOSCase("Refresh Wavetable List"), refresh);
+    }
 
     auto rnaction = [this]() {
         char c[256];
