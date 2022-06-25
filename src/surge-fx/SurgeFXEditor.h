@@ -48,6 +48,23 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     void paint(juce::Graphics &) override;
     void resized() override;
 
+    /**
+     * findLargestFittingZoomBetween
+     *
+     * Finds the largest zoom which will fit your current screen between a lower and upper bound.
+     * Will never return something smaller than lower or larger than upper. Default is as large as
+     * possible, quantized in units of zoomQuanta, with the maximum screen usage percentages
+     * protecting for screen real estate. The function also needs to know the 100% size of the UI
+     * the baseW and baseH)
+     *
+     * for instance findLargestFittingZoomBetween( 100, 200, 5, 90, bw, bh )
+     *
+     * would find the largest possible zoom which uses at most 90% of your screen real estate but
+     * would also guarantee that the result % 5 == 0.
+     */
+    int findLargestFittingZoomBetween(int zoomLow, int zoomHigh, int zoomQuanta,
+                                      int percentageOfScreenAvailable, float baseW, float baseH);
+
     void paramsChangedCallback();
     void setEffectType(int i);
 

@@ -204,6 +204,8 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
                                        shouldDrawButtonAsDown);
     }
 
+    void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override{};
+
     void paintComponentBackground(juce::Graphics &g, int w, int h)
     {
         int orangeHeight = 40;

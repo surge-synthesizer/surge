@@ -12,6 +12,7 @@
 #include "SurgeFXEditor.h"
 #include "FxPresetAndClipboardManager.h"
 #include "tinyxml/tinyxml.h"
+#include "fmt/core.h"
 
 struct Picker : public juce::Component
 {
@@ -395,6 +396,31 @@ void SurgefxAudioProcessorEditor::resized()
     fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
 }
 
+int SurgefxAudioProcessorEditor::findLargestFittingZoomBetween(
+    int zoomLow,                     // bottom of range
+    int zoomHigh,                    // top of range
+    int zoomQuanta,                  // step size
+    int percentageOfScreenAvailable, // How much to shrink actual screen
+    float baseW, float baseH)
+{
+    // Here is a very crude implementation
+    int result = zoomHigh;
+    auto screenDim = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea;
+    float sx = screenDim.getWidth() * percentageOfScreenAvailable / 100.0;
+    float sy = screenDim.getHeight() * percentageOfScreenAvailable / 100.0;
+
+    while (result > zoomLow)
+    {
+        if (result * baseW / 100.0 <= sx && result * baseH / 100.0 <= sy)
+            break;
+        result -= zoomQuanta;
+    }
+    if (result < zoomLow)
+        result = zoomLow;
+
+    return result;
+}
+
 void SurgefxAudioProcessorEditor::makeMenu()
 {
     auto storage = processor.storage.get();
@@ -435,29 +461,99 @@ void SurgefxAudioProcessorEditor::makeMenu()
 void SurgefxAudioProcessorEditor::showMenu()
 {
     auto p = juce::PopupMenu();
+
     for (const auto &m : menu)
     {
         if (m.isBreak)
+        {
             p.addColumnBreak();
+        }
+
         if (m.type == FxMenu::SECTION)
+        {
             p.addSectionHeader(m.name);
+        }
+
         if (m.type == FxMenu::FX)
+        {
             p.addItem(m.name, [this, m]() {
                 if (m.fxtype > 0)
+                {
                     setEffectType(m.fxtype);
+                }
             });
+        }
     }
+
     p.addSeparator();
+
     auto sm = juce::PopupMenu();
     sm.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
                [this]() { toggleLatencyMode(); });
-    p.addSubMenu("Settings", sm);
+
+    p.addSubMenu("Options", sm);
+
+    std::vector<int> zoomTos = {{75, 100, 125, 150, 175, 200, 300, 400}};
+    std::string lab;
+    auto dzf = 100;
+    // TODO: implement as below
+    // auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
+    // Surge::Storage::DefaultZoom, zoomFactor);
+
+    auto zm = juce::PopupMenu();
+
+    for (auto s : zoomTos) // These are somewhat arbitrary reasonable defaults
+    {
+        lab = fmt::format("Zoom to {:d}%", s);
+
+        // TODO: use this condition once we have a storable zoom factor
+        bool ticked = (s == 100) /* (s == zoomFactor)*/;
+
+        // TODO: make it actually work!
+        zm.addItem(lab, true, ticked, [this, s]() { /* resizeWindow(s);*/ });
+    }
+
+    zm.addSeparator();
+
+    zm.addItem(Surge::GUI::toOSCase("Zoom to Largest"), [this]() {
+        // regarding that 90 value, see comment in setZoomFactor
+        // int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5, 90, getWindowSizeX(),
+        // getWindowSizeY()); resizeWindow(newZF);
+    });
+
+    zm.addItem(Surge::GUI::toOSCase("Zoom to Smallest"), [this]() { /* resizeWindow(zoomTos[0]) */
+                                                                    ;
+    });
+
+    zm.addSeparator();
+
+    lab = fmt::format("Zoom to Default ({:d}%)", dzf);
+
+    zm.addItem(Surge::GUI::toOSCase(lab), [this, dzf]() { /* resizeWindow(dzf); */ });
+
+    /*     if ((int)zoomFactor != dzf)
+        {
+            lab = fmt::format("Set Current Zoom Level ({:d}%) as Default", (int)zoomFactor);
+
+            zm.addItem(Surge::GUI::toOSCase(lab), [this]() {
+                Surge::Storage::updateUserDefaultValue(&(synth->storage),
+       Surge::Storage::DefaultZoom, zoomFactor);
+            });
+        } */
+
+    if (isResizable())
+    {
+        p.addSubMenu("Zoom (WIP!)", zm);
+    }
 
     auto o = juce::PopupMenu::Options();
+
     auto r = juce::Rectangle<int>().withPosition(
         localPointToGlobal(picker->getBounds().getBottomLeft()));
+
     o = o.withTargetScreenArea(r).withPreferredPopupDirection(
         juce::PopupMenu::Options::PopupDirection::downwards);
+
     p.showMenuAsync(o);
 }
 
