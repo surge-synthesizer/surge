@@ -590,8 +590,8 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
 
     void savePatchPy(const std::string &s) { savePatchToPath(string_to_path(s)); }
 
-    std::string factoryDataPath() const { return storage.datapath; }
-    std::string userDataPath() const { return storage.userDataPath; }
+    std::string factoryDataPath() const { return storage.datapath.u8string(); }
+    std::string userDataPath() const { return storage.userDataPath.u8string(); }
 
     py::array_t<float> getOutput()
     {
