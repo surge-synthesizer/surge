@@ -63,7 +63,7 @@ PACKAGE_NAME=surge-xt
 # Date in RFC format for the Changelog
 DATE_RFC=`date --rfc-email`
 # Date in Day-of-Week Month Day Year format for the rpm config header.
-DATE_RPM=`date`
+DATE_RPM=`date +"%a %b %d %Y"`
 MSG=`git log -n 1 --pretty="%s (git hash %H)"`
 
 # generate changelog to put in install package
@@ -97,14 +97,14 @@ Group: sound
 
 %description
 Subtractive hybrid synthesizer virtual instrument.
-Surge XT includes VST3 instrument formats for use in compatible hosts and a standalone executable
-
+Surge XT includes VST3, CLAP and LV2 instrument formats for use in compatible hosts and a standalone executable
 
 %install
 install -m 0755 -d %{buildroot}%{_bindir}/
 install -m 0755 -d %{buildroot}%{_datadir}/
 install -m 0755 -d %{buildroot}%{_defaultdocdir}/
 install -m 0755 -d %{buildroot}%{_libdir}/vst3/
+install -m 0755 -d %{buildroot}%{_libdir}/clap/
 install -m 0755 -d %{buildroot}%{_libdir}/lv2/
 install -m 0755 -d %{buildroot}%{_datarootdir}
 install -m 0755 -d %{buildroot}%{_datarootdir}/surge-xt/
@@ -115,6 +115,8 @@ install -m 0644 $(pwd)/changelog.txt %{buildroot}%{_datarootdir}/surge-xt/doc/ch
 cp -r ${SOURCEDIR}/resources/data/* %{buildroot}%{_datarootdir}/surge-xt/
 cp -r "${INDIR}/Surge XT.vst3" %{buildroot}%{_libdir}/vst3/
 cp -r "${INDIR}/Surge XT Effects.vst3" %{buildroot}%{_libdir}/vst3/
+cp -r "${INDIR}/Surge XT.clap" %{buildroot}%{_libdir}/clap/
+cp -r "${INDIR}/Surge XT Effects.clap" %{buildroot}%{_libdir}/clap/
 cp -r "${INDIR}/Surge XT.lv2" %{buildroot}%{_libdir}/lv2/
 cp -r "${INDIR}/Surge XT Effects.lv2" %{buildroot}%{_libdir}/lv2/
 
@@ -130,15 +132,17 @@ find %{buildroot}%{_libdir}/vst3/ -type f -iname "*.so" -exec chmod 0644 {} +
 "%{_bindir}/Surge XT"
 "%{_bindir}/Surge XT Effects"
 "%{_libdir}/vst3/Surge XT.vst3"
-"%{_libdir}/lv2/Surge XT.lv2"
 "%{_libdir}/vst3/Surge XT Effects.vst3"
+"%{_libdir}/clap/Surge XT.clap"
+"%{_libdir}/clap/Surge XT Effects.clap"
+"%{_libdir}/lv2/Surge XT.lv2"
 "%{_libdir}/lv2/Surge XT Effects.lv2"
 "%{_datarootdir}/surge-xt/*"
 
 
 %changelog
 * ${DATE_RPM} Surge Synthesizer Team <noreply@github.com>  - ${VERSION}
-- Initial SurgeXT package
+- SurgeXT package
 - ${MSG} ${DATE_RFC}
 - For more details see https://github.com/surge-synthesizer/surge
 
