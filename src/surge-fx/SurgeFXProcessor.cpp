@@ -58,8 +58,8 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     addParameter(fxType =
                      new int_param_t("fxtype", "FX Type", fxt_delay, n_fx_types - 1, effectNum));
     fxType->getTextHandler = [this](float f, int len) -> juce::String {
-        auto i = (int)round(f * n_fx_types);
-        if (i >= 0 && i < n_fx_types)
+        auto i = 1 + (int)round(f * (n_fx_types - 2));
+        if (i >= 1 && i < n_fx_types)
             return fx_type_names[i];
         return "";
     };
