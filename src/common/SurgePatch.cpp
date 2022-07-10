@@ -2744,10 +2744,14 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement p("entry");
         p.SetAttribute("i", l);
         p.SetAttribute("bipolar", scene[0].modsources[ms_ctrl1 + l]->is_bipolar() ? 1 : 0);
-        p.SetAttribute(
-            "v", float_to_str(
-                     ((ControllerModulationSource *)scene[0].modsources[ms_ctrl1 + l])->target[0],
-                     txt2));
+
+        std::stringstream sst;
+        sst.imbue(std::locale::classic());
+        sst << std::fixed;
+        sst << std::showpoint;
+        sst << std::setprecision(14);
+        sst << (double)((ControllerModulationSource *)scene[0].modsources[ms_ctrl1 + l])->target[0];
+        p.SetAttribute("v", sst.str().c_str());
         p.SetAttribute("label", CustomControllerLabel[l]);
 
         cc.InsertEndChild(p);
