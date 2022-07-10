@@ -4186,7 +4186,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 char txt[TXT_SIZE];
                 auto nv = Parameter::intScaledToFloat(i, val_max.i, val_min.i);
                 get_display(txt, true, nv);
-                if (strcasecmp(txt, s.c_str()) == 0)
+                if (_stricmp(txt, s.c_str()) == 0)
                 {
                     ontoThis.i = i;
                     return true;
@@ -4209,13 +4209,13 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
     if (valtype == vt_bool)
     {
-        if (strcmp(s.c_str(), "On") == 0)
+        if (_stricmp(s.c_str(), "On") == 0)
         {
             ontoThis.b = true;
             return true;
         }
 
-        if (strcmp(s.c_str(), "Off") == 0)
+        if (_stricmp(s.c_str(), "Off") == 0)
         {
             ontoThis.b = false;
             return true;
@@ -4224,12 +4224,12 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         return false;
     }
 
-    if (strcmp(displayInfo.maxLabel, s.c_str()) == 0)
+    if (_stricmp(displayInfo.maxLabel, s.c_str()) == 0)
     {
         ontoThis.f = val_max.f;
         return true;
     }
-    if (strcmp(displayInfo.minLabel, s.c_str()) == 0)
+    if (_stricmp(displayInfo.minLabel, s.c_str()) == 0)
     {
         ontoThis.f = val_min.f;
         return true;
