@@ -183,7 +183,16 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
         res = res.substring(0, i);
         return res;
     }
-    float getValue() const override { return s->getMacroParameter01(macroNum); }
+    float getValue() const override
+    {
+        /*
+         * So why the target here? When we setValue we want the immediate
+         * getValue to return the same thing, but setValue sets the target
+         * So basically hide the smoothing from the externalizaion of the
+         * parameter to meet th econstraint
+         */
+        return s->getMacroParameterTarget01(macroNum);
+    }
     float getValueForText(const juce::String &text) const override
     {
         auto tf = std::atof(text.toRawUTF8());

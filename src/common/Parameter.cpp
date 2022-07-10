@@ -1928,8 +1928,8 @@ char *Parameter::get_storage_value(char *str) const
         sst.imbue(std::locale::classic());
         sst << std::fixed;
         sst << std::showpoint;
-        sst << std::setprecision(6);
-        sst << val.f;
+        sst << std::setprecision(14);
+        sst << (double)val.f;
         strxcpy(str, sst.str().c_str(), TXT_SIZE);
         break;
     };
@@ -4180,6 +4180,19 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
         else
         {
+            // Try the inverse mapping
+            for (int i = val_min.i; i <= val_max.i; ++i)
+            {
+                char txt[TXT_SIZE];
+                auto nv = Parameter::intScaledToFloat(i, val_max.i, val_min.i);
+                get_display(txt, true, nv);
+                if (_stricmp(txt, s.c_str()) == 0)
+                {
+                    ontoThis.i = i;
+                    return true;
+                }
+            }
+
             ErrorMessageMode isLarger =
                 (ni > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
             auto bound = isLarger ? val_max.i : val_min.i;
@@ -4192,6 +4205,34 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
 
         return false;
+    }
+
+    if (valtype == vt_bool)
+    {
+        if (_stricmp(s.c_str(), "On") == 0)
+        {
+            ontoThis.b = true;
+            return true;
+        }
+
+        if (_stricmp(s.c_str(), "Off") == 0)
+        {
+            ontoThis.b = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    if (_stricmp(displayInfo.maxLabel, s.c_str()) == 0)
+    {
+        ontoThis.f = val_max.f;
+        return true;
+    }
+    if (_stricmp(displayInfo.minLabel, s.c_str()) == 0)
+    {
+        ontoThis.f = val_min.f;
+        return true;
     }
 
     auto nv = std::atof(c);
@@ -4468,6 +4509,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     break;
 
     default:
+
         return false;
     }
 

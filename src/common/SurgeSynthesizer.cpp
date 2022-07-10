@@ -3519,6 +3519,13 @@ float SurgeSynthesizer::getMacroParameter01(long macroNum) const
     return storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum]->get_output01(0);
 }
 
+float SurgeSynthesizer::getMacroParameterTarget01(long macroNum) const
+{
+    return ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 +
+                                                                                 macroNum])
+        ->target[0];
+}
+
 void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
 {
     storage.getPatch().isDirty = true;

@@ -582,6 +582,7 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
         surge->playNote(nevt->channel, nevt->key, 127 * nevt->velocity, 0, nevt->note_id);
     }
     break;
+    case CLAP_EVENT_NOTE_CHOKE:
     case CLAP_EVENT_NOTE_OFF:
     {
         auto nevt = reinterpret_cast<const clap_event_note *>(evt);
@@ -591,7 +592,9 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     case CLAP_EVENT_MIDI:
     {
         auto mevt = reinterpret_cast<const clap_event_midi *>(evt);
-        applyMidi(juce::MidiMessageMetadata(mevt->data, 3, mevt->header.time));
+        auto sz = juce::MidiMessage::getMessageLengthFromFirstByte(mevt->data[0]);
+        jassert(sz <= 3 && sz > 0);
+        applyMidi(juce::MidiMessageMetadata(mevt->data, sz, mevt->header.time));
     }
     break;
     case CLAP_EVENT_PARAM_VALUE:
@@ -658,7 +661,7 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     case CLAP_EVENT_NOTE_END:
     default:
     {
-        DBG("Unknown message type " << (int)(evt->type));
+        DBG("Unknown CLAP Message type in Surge Direct " << (int)(evt->type));
         // In theory I should never get this.
         // jassertfalse
     }
