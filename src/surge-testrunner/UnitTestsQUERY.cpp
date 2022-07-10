@@ -144,4 +144,18 @@ TEST_CASE("SQL Generation", "[query]")
         auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
         REQUIRE(s == "( ( p.name LIKE '%init%' ) AND ( p.name LIKE '%sine%' ) )");
     }
+
+    SECTION("Single Quote")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("init 'sine");
+        auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
+        REQUIRE(s == "( ( p.name LIKE '%init%' ) AND ( p.name LIKE '%''sine%' ) )");
+    }
+
+    SECTION("Lots of Single Quotes Quote")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("in'it' ''sine");
+        auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
+        REQUIRE(s == "( ( p.name LIKE '%in''it''%' ) AND ( p.name LIKE '%''''sine%' ) )");
+    }
 }
