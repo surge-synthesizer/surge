@@ -187,6 +187,8 @@ struct TypeAheadListBox : public juce::ListBox
         setAccessible(true);
     }
 
+    ~TypeAheadListBox() { setModel(nullptr); }
+
     void paintOverChildren(juce::Graphics &graphics) override
     {
         juce::ListBox::paintOverChildren(graphics);
@@ -260,6 +262,8 @@ void TypeAhead::dismissWithValue(int providerIdx, const std::string &s,
         }
     }
 
+    lbox->selectRow(providerIdx);
+    lbox->repaint();
     for (auto l : taList)
     {
         l->itemSelected(providerIdx);
@@ -269,7 +273,9 @@ void TypeAhead::dismissWithValue(int providerIdx, const std::string &s,
 void TypeAhead::dismissWithoutValue()
 {
     lbox->setVisible(false);
-    grabKeyboardFocus();
+
+    if (isShowing())
+        grabKeyboardFocus();
 
     for (auto l : taList)
     {
