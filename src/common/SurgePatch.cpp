@@ -1119,6 +1119,7 @@ unsigned int SurgePatch::save_patch(void **data)
         {
             if (uses_wavetabledata(scene[sc].osc[osc].type.val.i))
             {
+                assert(scene[sc].osc[osc].wt.everBuilt);
                 memset(wth[sc][osc].tag, 0, 4);
                 wth[sc][osc].n_samples = scene[sc].osc[osc].wt.size;
                 wth[sc][osc].n_tables = scene[sc].osc[osc].wt.n_tables;

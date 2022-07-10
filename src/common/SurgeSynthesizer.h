@@ -353,6 +353,7 @@ class alignas(16) SurgeSynthesizer
     void loadPatch(int id);
     bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name);
     void selectRandomPatch();
+    std::unique_ptr<std::thread> patchLoadThread;
 
     // if increment is true, we go to next patch, else go to previous patch
     void jogCategory(bool increment);
