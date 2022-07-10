@@ -3497,6 +3497,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
 
                 if (synth->setParameter01(ptagid, val, false, force_integer))
                 {
+                    synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
                     queue_refresh = true;
                     return;
                 }
