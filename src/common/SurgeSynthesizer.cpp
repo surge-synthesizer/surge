@@ -252,6 +252,16 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
 SurgeSynthesizer::~SurgeSynthesizer()
 {
+    {
+        /*
+         * This should "never" happen due to cleanup at end of
+         * loadPatchInBackgroundThread
+         */
+        std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
+        if (patchLoadThread)
+            patchLoadThread->join();
+    }
+
     allNotesOff();
 
     for (int sc = 0; sc < n_scenes; sc++)
@@ -3720,6 +3730,10 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     synth->storage.getPatch().isDirty = false;
     synth->halt_engine = false;
 
+    // Now we want to null out the patchLoadThread since everything is done
+    auto myThread = std::move(synth->patchLoadThread);
+    myThread->detach();
+
     return;
 }
 
@@ -3768,6 +3782,8 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
             loadFx(false, false);
 
         loadOscalgos();
+
+        storage.perform_queued_wtloads();
     }
 }
 
@@ -4046,8 +4062,16 @@ void SurgeSynthesizer::process()
             allNotesOff();
             halt_engine = true;
 
-            std::thread loadThread(loadPatchInBackgroundThread, this);
-            loadThread.detach();
+            /*
+             * In theory, since we only spawn under a lock and the loading thread
+             * also holds that lock, this should "never" happen - namely the patch
+             * load thread should be null always, and we null it out with a move
+             * at the end of the thread operation.
+             */
+            if (patchLoadThread)
+                patchLoadThread->join();
+
+            patchLoadThread = std::make_unique<std::thread>(loadPatchInBackgroundThread, this);
 
             clear_block(output[0], BLOCK_SIZE_QUAD);
             clear_block(output[1], BLOCK_SIZE_QUAD);
