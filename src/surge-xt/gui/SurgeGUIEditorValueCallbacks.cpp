@@ -1673,29 +1673,54 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             (p->val.i == pm_mono || p->val.i == pm_mono_st ||
                              p->val.i == pm_mono_fp || p->val.i == pm_mono_st_fp))
                         {
-                            std::vector<std::string> labels = {"Last", "High", "Low", "Legacy"};
-                            std::vector<MonoVoicePriorityMode> vals = {
-                                ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST,
-                                NOTE_ON_LATEST_RETRIGGER_HIGHEST};
-
-                            contextMenu.addSectionHeader("NOTE PRIORITY");
-
-                            for (int i = 0; i < 4; ++i)
                             {
-                                bool isChecked = (vals[i] == synth->storage.getPatch()
-                                                                 .scene[current_scene]
-                                                                 .monoVoicePriorityMode);
-                                contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true,
-                                                    isChecked, [this, isChecked, vals, i]() {
-                                                        synth->storage.getPatch()
-                                                            .scene[current_scene]
-                                                            .monoVoicePriorityMode = vals[i];
-                                                        if (!isChecked)
-                                                            synth->storage.getPatch().isDirty =
-                                                                true;
-                                                    });
+                                std::vector<std::string> labels = {"Last", "High", "Low", "Legacy"};
+                                std::vector<MonoVoicePriorityMode> vals = {
+                                    ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST,
+                                    NOTE_ON_LATEST_RETRIGGER_HIGHEST};
+
+                                contextMenu.addSectionHeader("NOTE PRIORITY");
+
+                                for (int i = 0; i < 4; ++i)
+                                {
+                                    bool isChecked = (vals[i] == synth->storage.getPatch()
+                                                                     .scene[current_scene]
+                                                                     .monoVoicePriorityMode);
+                                    contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true,
+                                                        isChecked, [this, isChecked, vals, i]() {
+                                                            synth->storage.getPatch()
+                                                                .scene[current_scene]
+                                                                .monoVoicePriorityMode = vals[i];
+                                                            if (!isChecked)
+                                                                synth->storage.getPatch().isDirty =
+                                                                    true;
+                                                        });
+                                }
                             }
 
+                            {
+                                std::vector<std::string> labels = {"Zero", "Current"};
+                                std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO,
+                                                                           RESTART_FROM_LATEST};
+
+                                contextMenu.addSectionHeader("ENVELOPE RESTART FROM");
+
+                                for (int i = 0; i < 2; ++i)
+                                {
+                                    bool isChecked = (vals[i] == synth->storage.getPatch()
+                                                                     .scene[current_scene]
+                                                                     .monoVoiceEnvelopeMode);
+                                    contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true,
+                                                        isChecked, [this, isChecked, vals, i]() {
+                                                            synth->storage.getPatch()
+                                                                .scene[current_scene]
+                                                                .monoVoiceEnvelopeMode = vals[i];
+                                                            if (!isChecked)
+                                                                synth->storage.getPatch().isDirty =
+                                                                    true;
+                                                        });
+                                }
+                            }
                             contextMenu.addSeparator();
 
                             contextMenu.addSubMenu(

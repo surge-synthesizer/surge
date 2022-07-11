@@ -707,7 +707,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
                 key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
                 &channelState[mpeMainChannel], &channelState[channel], mpeEnabled, voiceCounter++,
-                host_noteid, host_originating_key, host_originating_channel);
+                host_noteid, host_originating_key, host_originating_channel, 0.f, 0.f);
         }
         break;
     }
@@ -781,6 +781,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
         {
             int32_t noteIdToReuse = -1;
             int16_t channelToReuse, keyToReuse;
+            SurgeVoice *stealEnvelopesFrom{nullptr};
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -792,6 +793,13 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         noteIdToReuse = v->host_note_id;
                         channelToReuse = v->originating_host_channel;
                         keyToReuse = v->originating_host_key;
+                        stealEnvelopesFrom = v;
+                    }
+                    else
+                    {
+                        // Non-gated voices only win if there's no gated voice
+                        if (!stealEnvelopesFrom)
+                            stealEnvelopesFrom = v;
                     }
                     v->uber_release();
                 }
@@ -806,6 +814,12 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             }
 
             SurgeVoice *nvoice = getUnusedVoice(scene);
+            float aegReuse{0.f}, fegReuse{0.f};
+            if (stealEnvelopesFrom &&
+                storage.getPatch().scene[scene].monoVoiceEnvelopeMode != RESTART_FROM_ZERO)
+            {
+                stealEnvelopesFrom->getAEGFEGLevel(aegReuse, fegReuse);
+            }
             if (nvoice)
             {
                 int mpeMainChannel = getMpeMainChannel(channel, key);
@@ -817,7 +831,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
                     key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
                     &channelState[mpeMainChannel], &channelState[channel], mpeEnabled,
-                    voiceCounter++, host_noteid, host_originating_key, host_originating_channel);
+                    voiceCounter++, host_noteid, host_originating_key, host_originating_channel,
+                    aegReuse, fegReuse);
             }
         }
         else
@@ -833,6 +848,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
     case pm_mono_st:
     case pm_mono_st_fp:
     {
+        std::cout << "PM MONO ST" << std::endl;
         bool found_one = false;
         int primode = storage.getPatch().scene[scene].monoVoicePriorityMode;
         bool createVoice = true;
@@ -896,6 +912,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
         if (createVoice)
         {
             list<SurgeVoice *>::const_iterator iter;
+
+            float aegStart{0.}, fegStart{0.};
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -920,7 +938,12 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 else
                 {
                     if (v->state.scene_id == scene)
+                    {
+                        if (storage.getPatch().scene[scene].monoVoiceEnvelopeMode !=
+                            RESTART_FROM_ZERO)
+                            v->getAEGFEGLevel(aegStart, fegStart);
                         v->uber_release(); // make this optional for poly legato
+                    }
                 }
             }
             if (!found_one)
@@ -930,13 +953,14 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 SurgeVoice *nvoice = getUnusedVoice(scene);
                 if (nvoice)
                 {
+                    std::cout << "SET UP FEG AEG" << std::endl;
                     voices[scene].push_back(nvoice);
                     new (nvoice) SurgeVoice(
                         &storage, &storage.getPatch().scene[scene],
                         storage.getPatch().scenedata[scene], key, velocity, channel, scene, detune,
                         &channelState[channel].keyState[key], &channelState[mpeMainChannel],
                         &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
-                        host_originating_key, host_originating_channel);
+                        host_originating_key, host_originating_channel, aegStart, fegStart);
                 }
             }
             else

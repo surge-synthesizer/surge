@@ -117,7 +117,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
                        int velocity, int channel, int scene_id, float detune,
                        MidiKeyState *keyState, MidiChannelState *mainChannelState,
                        MidiChannelState *voiceChannelState, bool mpeEnabled, int64_t voiceOrder,
-                       int32_t host_nid, int16_t host_key, int16_t host_chan)
+                       int32_t host_nid, int16_t host_key, int16_t host_chan, float aegStart,
+                       float fegStart)
 //: fb(storage,oscene)
 {
     // assign pointers
@@ -327,8 +328,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
     applyModulationToLocalcopy<true>();
 
-    ampEGSource.attack();
-    filterEGSource.attack();
+    ampEGSource.attackFrom(aegStart);
+    filterEGSource.attackFrom(fegStart);
 
     for (int i = 0; i < n_lfos_voice; i++)
     {
