@@ -38,7 +38,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     std::vector<FxMenu> menu;
     std::unique_ptr<juce::Component> picker;
 
-    int topSection = 80;
+    static constexpr int topSection = 80;
 
     void makeMenu();
     void showMenu();
@@ -78,6 +78,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     SurgefxAudioProcessor &processor;
+
+    static constexpr int baseWidth = 600, baseHeight = 55 * 6 + 80 + topSection;
 
   private:
     struct AccSlider : public juce::Slider

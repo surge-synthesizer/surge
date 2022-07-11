@@ -234,9 +234,14 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(600, 55 * 6 + 80 + topSection);
-    // setResizable(true, true);
-    setResizable(false, false);
+    auto dzf = Surge::Storage::getUserDefaultValue(processor.storage.get(),
+                                                   Surge::Storage::FXUnitDefaultZoom, 100);
+
+    setSize(0.01 * dzf * baseWidth, 0.01 * dzf * baseHeight);
+    setResizable(true, true);
+    getConstrainer()->setMinimumWidth(baseWidth * 0.75);
+    getConstrainer()->setFixedAspectRatio(baseWidth * 1.0 / baseHeight);
+    // setResizable(false, false);
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
@@ -354,13 +359,19 @@ void SurgefxAudioProcessorEditor::resized()
     int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
     int byoff = 7;
 
+    int sliderOff = 5;
+    if (getWidth() < baseWidth)
+        sliderOff = 2;
     for (int i = 0; i < n_fx_params; ++i)
     {
-        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + 5, (i % 6) * rowHeight + ypos0,
-                                      rowHeight - 5, rowHeight - 5};
+        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + sliderOff,
+                                      (i % 6) * rowHeight + ypos0, rowHeight - sliderOff,
+                                      rowHeight - sliderOff};
         fxParamSliders[i].setBounds(position);
 
         int buttonSize = 19;
+        if (getWidth() < baseWidth)
+            buttonSize = 17;
         int buttonMargin = 1;
         juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + rowHeight - 5,
                                    (i % 6) * rowHeight + ypos0 + byoff + buttonMargin, buttonSize,
@@ -493,57 +504,46 @@ void SurgefxAudioProcessorEditor::showMenu()
 
     p.addSubMenu("Options", sm);
 
-    std::vector<int> zoomTos = {{75, 100, 125, 150, 175, 200, 300, 400}};
+    std::vector<int> zoomTos = {{75, 100, 125, 150, 200}};
     std::string lab;
-    auto dzf = 100;
-    // TODO: implement as below
-    // auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
-    // Surge::Storage::DefaultZoom, zoomFactor);
+    auto dzf = Surge::Storage::getUserDefaultValue(processor.storage.get(),
+                                                   Surge::Storage::FXUnitDefaultZoom, 100);
 
     auto zm = juce::PopupMenu();
+    auto zoomTo = [this](int zf) { setSize(baseWidth * zf * 0.01, baseHeight * zf * 0.01); };
+
+    auto zoomFactor = (int)std::round(100.0 * getWidth() / baseWidth);
 
     for (auto s : zoomTos) // These are somewhat arbitrary reasonable defaults
     {
         lab = fmt::format("Zoom to {:d}%", s);
 
         // TODO: use this condition once we have a storable zoom factor
-        bool ticked = (s == 100) /* (s == zoomFactor)*/;
+        bool ticked = (s == zoomFactor);
 
         // TODO: make it actually work!
-        zm.addItem(lab, true, ticked, [this, s]() { /* resizeWindow(s);*/ });
+        zm.addItem(lab, true, ticked, [this, s, zoomTo]() { zoomTo(s); });
     }
-
-    zm.addSeparator();
-
-    zm.addItem(Surge::GUI::toOSCase("Zoom to Largest"), [this]() {
-        // regarding that 90 value, see comment in setZoomFactor
-        // int newZF = findLargestFittingZoomBetween(100.0, 500.0, 5, 90, getWindowSizeX(),
-        // getWindowSizeY()); resizeWindow(newZF);
-    });
-
-    zm.addItem(Surge::GUI::toOSCase("Zoom to Smallest"), [this]() { /* resizeWindow(zoomTos[0]) */
-                                                                    ;
-    });
 
     zm.addSeparator();
 
     lab = fmt::format("Zoom to Default ({:d}%)", dzf);
 
-    zm.addItem(Surge::GUI::toOSCase(lab), [this, dzf]() { /* resizeWindow(dzf); */ });
+    zm.addItem(Surge::GUI::toOSCase(lab), [this, dzf, zoomTo]() { zoomTo(dzf); });
 
-    /*     if ((int)zoomFactor != dzf)
-        {
-            lab = fmt::format("Set Current Zoom Level ({:d}%) as Default", (int)zoomFactor);
+    if ((int)zoomFactor != dzf)
+    {
+        lab = fmt::format("Set Current Zoom Level ({:d}%) as Default", (int)zoomFactor);
 
-            zm.addItem(Surge::GUI::toOSCase(lab), [this]() {
-                Surge::Storage::updateUserDefaultValue(&(synth->storage),
-       Surge::Storage::DefaultZoom, zoomFactor);
-            });
-        } */
+        zm.addItem(Surge::GUI::toOSCase(lab), [this, zoomFactor]() {
+            Surge::Storage::updateUserDefaultValue(processor.storage.get(),
+                                                   Surge::Storage::FXUnitDefaultZoom, zoomFactor);
+        });
+    }
 
     if (isResizable())
     {
-        p.addSubMenu("Zoom (WIP!)", zm);
+        p.addSubMenu("Zoom", zm);
     }
 
     auto o = juce::PopupMenu::Options();
