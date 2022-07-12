@@ -339,9 +339,6 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         refresh_patchlist();
     }
 
-    getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
-    load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);
-
     if (!load_wt_wt_mem(SurgeSharedBinary::windows_wt, SurgeSharedBinary::windows_wtSize,
                         &WindowWT))
     {
