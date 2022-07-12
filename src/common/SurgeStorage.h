@@ -100,11 +100,12 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                             added new Conditioner parameter (Side Low Cut)
 // 17 -> 18 (XT 1.1 nightlies) added clipping options to Delay Feedback parameter (via deform)
 //                             added Tone parameter to Phaser effect
-// 18 -> 19 (XT 1.1 release)   added String deform options (interpolation, bipolar Decay params, Stiffness options)
+// 18 -> 19 (XT 1.1 nightlies) added String deform options (interpolation, bipolar Decay params, Stiffness options)
 //                             added Extend to Delay Feedback parameter (allows negative delay)
+// 19 -> 20 (XT 1.1 release)   added voice envelope mode, but super late so don't break 19
 // clang-format on
 
-const int ff_revision = 19;
+const int ff_revision = 20;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -487,6 +488,12 @@ enum MonoVoicePriorityMode
     ALWAYS_LOWEST,
 };
 
+enum MonoVoiceEnvelopeMode
+{
+    RESTART_FROM_ZERO,
+    RESTART_FROM_LATEST
+};
+
 struct MidiKeyState
 {
     int keystate;
@@ -611,6 +618,7 @@ struct SurgeSceneStorage
     bool modsource_doprocess[n_modsources];
 
     MonoVoicePriorityMode monoVoicePriorityMode = ALWAYS_LATEST;
+    MonoVoiceEnvelopeMode monoVoiceEnvelopeMode = RESTART_FROM_ZERO;
 };
 
 const int n_stepseqsteps = 16;
