@@ -150,12 +150,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         juce::Rectangle<float> drawRect;
         bool useDrawRect = false;
         int associatedSegment;
-        bool specialEndpoint =
-            false; // For pan and zoom we need to treat the endpoint of the last segment specially
         bool active = false;
         bool dragging = false;
+        // For pan and zoom we need to treat the endpoint of the last segment specially
+        bool specialEndpoint = false;
 
-        // More coming soon
         enum Type
         {
             MOUSABLE_NODE,
@@ -201,7 +200,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                             .reduced(drawInsertX, drawInsertY)
                             .withTrimmedBottom(axisSpaceY)
                             .withTrimmedLeft(axisSpaceX)
-                            .withTrimmedTop(5);
+                            .withTrimmedTop(4);
         return drawArea;
     }
 
@@ -1739,7 +1738,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto pv = pxToVal();
             auto v = pv(where.y);
 
-            // Check if I'm on a hotzoneo
+            // Check if I'm on a hotzone
             for (auto &h : hotzones)
             {
                 if (h.rect.contains(where.toFloat()) && h.type == hotzone::MOUSABLE_NODE)
@@ -1764,7 +1763,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     }
                     case hotzone::SEGMENT_CONTROL:
                     {
-                        // Reset the control point to duration half value middle
+                        // Reset the control point to half segment duration, middle value
                         Surge::MSEG::resetControlPoint(ms, t);
 
                         modelChanged();
@@ -2412,6 +2411,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto pv = pxToVal();
             auto v = pv(iw.y);
 
+            bool isActive = (ms->editMode == MSEGStorage::ENVELOPE);
+
             actionsMenu.addItem("Split", [this, t, v]() {
                 Surge::MSEG::splitSegment(this->ms, t, v);
                 pushToUndo();
@@ -2426,14 +2427,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addSeparator();
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Double Duration"), [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCase("Double Duration"), isActive, false, [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 2.0, longestMSEG);
                 pushToUndo();
                 modelChanged();
                 zoomToFull();
             });
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Half Duration"), [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCase("Half Duration"), isActive, false, [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 0.5, longestMSEG);
                 pushToUndo();
                 modelChanged();
@@ -2456,15 +2457,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addSeparator();
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Snap Divisions"),
-                                (ms->editMode != MSEGStorage::LFO), false, [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Snap Divisions"), isActive,
+                                false, [this]() {
                                     Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
                                     pushToUndo();
                                     modelChanged();
                                 });
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Whole Units"),
-                                (ms->editMode != MSEGStorage::LFO), false, [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Whole Units"), isActive,
+                                false, [this]() {
                                     Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
                                     pushToUndo();
                                     modelChanged();
