@@ -1100,7 +1100,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_
         {
             /*
              * OK so we have a key we are about to put in the hold buffer. BUT in the
-             * RELEASE_IF_OTHERS_HELD mode we dont' want to hold it if we have other keys
+             * RELEASE_IF_OTHERS_HELD mode we don't want to hold it if we have other keys
              * down. So do we?
              */
             for (auto k = 127; k >= 0; k--) // search downwards

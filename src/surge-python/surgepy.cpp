@@ -23,7 +23,7 @@ static std::mutex spysetup_mutex;
 
 /*
  * The way we've decided to expose to python is through some wrapper objects
- * which give us the control gorup / control group entry / param hierarchy.
+ * which give us the control group / control group entry / param hierarchy.
  * So here's some small helper objects
  */
 

@@ -276,7 +276,7 @@ void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
 
     int dir = wheelHelper.accumulate(wheel);
 
-    // Veritcally aligned switches have higher values at the bottom
+    // Vertically aligned switches have higher values at the bottom
     if (rows > 1)
     {
         dir = -dir;

@@ -35,7 +35,7 @@
         zooms (but more on that below) so a good scattering of resolutions is recommended.
 
         To specify a multi-resolution PNG image, use the tag <multi-image rather than <image
-        whih has image children with a zoom level tag. If you do not have the "100" tag the
+        which has image children with a zoom level tag. If you do not have the "100" tag the
         skin engine will raise an error.
 
         We generally try to use the naming convention "name_ZZZ.png" where ZZZ is the soom
@@ -51,7 +51,7 @@
     </multi-image>
 
     <!--[doc]
-      The same aplies to a background image, of course, which we set
+      The same applies to a background image, of course, which we set
       with the special global tag 'background'
     [doc]-->
     <multi-image id="frac-bg">

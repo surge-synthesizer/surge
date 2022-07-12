@@ -100,7 +100,7 @@
  * So rather than that approach, what we do is: at every sample, figure out the
  * frequency desired *at that sample*. We then figure out the 3 generators
  * for that frequency at that sample (prior, prior - 1, and prior - 2) and differentiate
- * using a numercial second derivative. This is more CPU intensive, but it is rock
+ * using a numerical second derivative. This is more CPU intensive, but it is rock
  * solid under all sorts of frequency modulation, including FM, pitch shifts, and sync.
  *
  * Finally, that numerical integration. I use the standard second derivative form
@@ -110,7 +110,7 @@
  * having the candidate phases be +1/0/-1 rather than 0/-1/-2 but that somehow felt
  * a wee bit like cheating. Anyway, the difference is negligible.
  *
- * Other than that, FM is obivous, sync runs two clocks and resets obviously,
+ * Other than that, FM is obvious, sync runs two clocks and resets obviously,
  * and the rest is just mixing and lagging. All pretty obvious.
  */
 
@@ -361,7 +361,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
                     sphase[u] -= floor(sphase[u]); // just in case we have a very high sync
 
                     /*
-                     * So the way we do synch can be a bit aliasy. Basically we move the phase
+                     * So the way we do sync can be a bit aliasy. Basically we move the phase
                      * forward and then difference over the new phase. WHat we should really do is
                      * figure out continuous generators with sync in but ugh that's super hard and
                      * it is late in the 1.9 cycle. So instead what we do is a little compensating
