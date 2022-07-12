@@ -1734,9 +1734,21 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (da.contains(where))
         {
             auto tf = pxToTime();
-            auto t = tf(where.x);
             auto pv = pxToVal();
+            auto tp = timeToPx();
+            auto vp = valToPx();
+
+            auto t = tf(where.x);
             auto v = pv(where.y);
+
+            auto testIfLastNode = [tp, vp](juce::Point<int> where, MSEGStorage *ms) {
+                auto idx = ms->n_activeSegments;
+                auto area = juce::Rectangle<int>(where.x, where.y, 4, 4);
+                auto last_node =
+                    juce::Point<int>(tp(ms->segmentEnd[idx]), vp(ms->segments[idx].nv1));
+
+                return area.contains(last_node);
+            };
 
             // Check if I'm on a hotzone
             for (auto &h : hotzones)
@@ -1747,19 +1759,27 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     {
                     case hotzone::SEGMENT_ENDPOINT:
                     {
-                        if (event.mods.isShiftDown() && h.associatedSegment >= 0)
+                        if (ms->editMode == MSEGStorage::LFO && testIfLastNode(where, ms))
                         {
-                            Surge::MSEG::deleteSegment(ms, ms->segmentStart[h.associatedSegment]);
+                            return;
                         }
                         else
                         {
-                            Surge::MSEG::unsplitSegment(ms, t);
+                            if (event.mods.isShiftDown() && h.associatedSegment >= 0)
+                            {
+                                Surge::MSEG::deleteSegment(ms,
+                                                           ms->segmentStart[h.associatedSegment]);
+                            }
+                            else
+                            {
+                                Surge::MSEG::unsplitSegment(ms, t);
+                            }
+
+                            modelChanged();
+                            repaint();
+
+                            return;
                         }
-
-                        modelChanged();
-                        repaint();
-
-                        return;
                     }
                     case hotzone::SEGMENT_CONTROL:
                     {
