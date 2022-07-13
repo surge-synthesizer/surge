@@ -241,24 +241,14 @@ void MenuCenteredBoldLabel::paint(juce::Graphics &g)
 
 void MenuCenteredBoldLabel::addToMenu(juce::PopupMenu &m, const std::string label)
 {
-    auto q = new MenuCenteredBoldLabel(label);
-    int w, h;
-
-    q->getIdealSize(w, h);
-
-    m.addCustomItem(-1, *q, w, h, false, nullptr, label);
+    m.addCustomItem(-1, std::make_unique<MenuCenteredBoldLabel>(label), nullptr, label);
 }
 
 void MenuCenteredBoldLabel::addToMenuAsSectionHeader(juce::PopupMenu &m, const std::string label)
 {
-    auto q = new MenuCenteredBoldLabel(label);
-    int w, h;
-
-    q->getIdealSize(w, h);
-
+    auto q = std::make_unique<MenuCenteredBoldLabel>(label);
     q->isSectionHeader = true;
-
-    m.addCustomItem(-1, *q, w, h, false, nullptr, label);
+    m.addCustomItem(-1, std::move(q), nullptr, label);
 }
 
 //==============================================================================
