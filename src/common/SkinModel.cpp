@@ -319,31 +319,31 @@ Connector param_7 = Connector("osc.param_7", 0, 154).asHorizontal().inParent("os
 namespace Mixer
 {
 Connector mixer_panel = Connector("mixer.panel", 154, 263, Components::Group);
-Connector mute_o1 = Connector("mixer.mute_o1", 1, 3).asMixerMute().inParent("mixer.panel");
-Connector mute_o2 = Connector("mixer.mute_o2", 21, 3).asMixerMute().inParent("mixer.panel");
-Connector mute_o3 = Connector("mixer.mute_o3", 41, 3).asMixerMute().inParent("mixer.panel");
-Connector mute_ring12 = Connector("mixer.mute_ring12", 61, 3).asMixerMute().inParent("mixer.panel");
-Connector mute_ring23 = Connector("mixer.mute_ring23", 81, 3).asMixerMute().inParent("mixer.panel");
-Connector mute_noise = Connector("mixer.mute_noise", 101, 3).asMixerMute().inParent("mixer.panel");
+Connector mute_o1 = Connector("mixer.mute_o1", 1, 0).asMixerMute().inParent("mixer.panel");
+Connector mute_o2 = Connector("mixer.mute_o2", 21, 0).asMixerMute().inParent("mixer.panel");
+Connector mute_o3 = Connector("mixer.mute_o3", 41, 0).asMixerMute().inParent("mixer.panel");
+Connector mute_ring12 = Connector("mixer.mute_ring12", 61, 0).asMixerMute().inParent("mixer.panel");
+Connector mute_ring23 = Connector("mixer.mute_ring23", 81, 0).asMixerMute().inParent("mixer.panel");
+Connector mute_noise = Connector("mixer.mute_noise", 101, 0).asMixerMute().inParent("mixer.panel");
 
-Connector solo_o1 = Connector("mixer.solo_o1", 1, 15).asMixerSolo().inParent("mixer.panel");
-Connector solo_o2 = Connector("mixer.solo_o2", 21, 15).asMixerSolo().inParent("mixer.panel");
-Connector solo_o3 = Connector("mixer.solo_o3", 41, 15).asMixerSolo().inParent("mixer.panel");
+Connector solo_o1 = Connector("mixer.solo_o1", 1, 11).asMixerSolo().inParent("mixer.panel");
+Connector solo_o2 = Connector("mixer.solo_o2", 21, 11).asMixerSolo().inParent("mixer.panel");
+Connector solo_o3 = Connector("mixer.solo_o3", 41, 11).asMixerSolo().inParent("mixer.panel");
 Connector solo_ring12 =
-    Connector("mixer.solo_ring12", 61, 15).asMixerSolo().inParent("mixer.panel");
+    Connector("mixer.solo_ring12", 61, 11).asMixerSolo().inParent("mixer.panel");
 Connector solo_ring23 =
-    Connector("mixer.solo_ring23", 81, 15).asMixerSolo().inParent("mixer.panel");
-Connector solo_noise = Connector("mixer.solo_noise", 101, 15).asMixerSolo().inParent("mixer.panel");
+    Connector("mixer.solo_ring23", 81, 11).asMixerSolo().inParent("mixer.panel");
+Connector solo_noise = Connector("mixer.solo_noise", 101, 11).asMixerSolo().inParent("mixer.panel");
 
-Connector route_o1 = Connector("mixer.route_o1", 2, 27).asMixerRoute().inParent("mixer.panel");
-Connector route_o2 = Connector("mixer.route_o2", 22, 27).asMixerRoute().inParent("mixer.panel");
-Connector route_o3 = Connector("mixer.route_o3", 42, 27).asMixerRoute().inParent("mixer.panel");
+Connector route_o1 = Connector("mixer.route_o1", 1, 22).asMixerRoute().inParent("mixer.panel");
+Connector route_o2 = Connector("mixer.route_o2", 21, 22).asMixerRoute().inParent("mixer.panel");
+Connector route_o3 = Connector("mixer.route_o3", 41, 22).asMixerRoute().inParent("mixer.panel");
 Connector route_ring12 =
-    Connector("mixer.route_ring12", 62, 27).asMixerRoute().inParent("mixer.panel");
+    Connector("mixer.route_ring12", 61, 22).asMixerRoute().inParent("mixer.panel");
 Connector route_ring23 =
-    Connector("mixer.route_ring23", 82, 27).asMixerRoute().inParent("mixer.panel");
+    Connector("mixer.route_ring23", 81, 22).asMixerRoute().inParent("mixer.panel");
 Connector route_noise =
-    Connector("mixer.route_noise", 102, 27).asMixerRoute().inParent("mixer.panel");
+    Connector("mixer.route_noise", 101, 22).asMixerRoute().inParent("mixer.panel");
 
 Connector level_o1 =
     Connector("mixer.level_o1", 0, 38).asVertical().asWhite().inParent("mixer.panel");
