@@ -221,22 +221,22 @@ Connector::Connector(const std::string &id, float x, float y, NonParameterConnec
 Connector &Connector::asMixerSolo() noexcept
 {
     payload->defaultComponent = Components::Switch;
-    payload->w = 22;
-    payload->h = 15;
+    payload->w = 18;
+    payload->h = 11;
     return withBackground(IDB_MIXER_SOLO);
 }
 Connector &Connector::asMixerMute() noexcept
 {
     payload->defaultComponent = Components::Switch;
-    payload->w = 22;
-    payload->h = 15;
+    payload->w = 18;
+    payload->h = 11;
     return withBackground(IDB_MIXER_MUTE);
 }
 Connector &Connector::asMixerRoute() noexcept
 {
     payload->defaultComponent = Components::MultiSwitch;
-    payload->w = 22;
-    payload->h = 15;
+    payload->w = 16;
+    payload->h = 9;
     return withHSwitch2Properties(IDB_MIXER_OSC_ROUTING, 3, 1, 3);
 }
 

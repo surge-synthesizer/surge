@@ -1,23 +1,23 @@
-<svg width="22" height="45" viewBox="0 0 22 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g opacity="0.5">
-<path d="M11 4H7V11H11V4Z" fill="#FF9300"/>
+<path d="M10 1H6V8H10V1Z" fill="#FF9300"/>
 </g>
 <g opacity="0.5">
-<path d="M16 4H12V11H16V4Z" fill="#FF9300"/>
+<path d="M15 1H11V8H15V1Z" fill="#FF9300"/>
 </g>
-<path d="M6 4H2V11H6V4Z" fill="#FF9300"/>
-<path d="M11 19H7V26H11V19Z" fill="#FF9300"/>
+<path d="M5 1H1V8H5V1Z" fill="#FF9300"/>
+<path d="M10 10H6V17H10V10Z" fill="#FF9300"/>
 <g opacity="0.5">
-<path d="M16 19H12V26H16V19Z" fill="#FF9300"/>
-</g>
-<g opacity="0.5">
-<path d="M6 19H2V26H6V19Z" fill="#FF9300"/>
+<path d="M15 10H11V17H15V10Z" fill="#FF9300"/>
 </g>
 <g opacity="0.5">
-<path d="M11 34H7V41H11V34Z" fill="#FF9300"/>
+<path d="M5 10H1V17H5V10Z" fill="#FF9300"/>
 </g>
-<path d="M16 34H12V41H16V34Z" fill="#FF9300"/>
 <g opacity="0.5">
-<path d="M6 34H2V41H6V34Z" fill="#FF9300"/>
+<path d="M10 19H6V26H10V19Z" fill="#FF9300"/>
+</g>
+<path d="M15 19H11V26H15V19Z" fill="#FF9300"/>
+<g opacity="0.5">
+<path d="M5 19H1V26H5V19Z" fill="#FF9300"/>
 </g>
 </svg>
