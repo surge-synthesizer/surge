@@ -1699,11 +1699,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             }
 
                             {
-                                std::vector<std::string> labels = {"Zero", "Current"};
+                                std::vector<std::string> labels = {"Reset to Zero",
+                                                                   "Continue from Current Level"};
                                 std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO,
                                                                            RESTART_FROM_LATEST};
 
-                                contextMenu.addSectionHeader("ENVELOPE RESTART FROM");
+                                contextMenu.addSectionHeader("ENVELOPE RETRIGGER BEHAVIOR");
 
                                 for (int i = 0; i < 2; ++i)
                                 {
