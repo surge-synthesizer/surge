@@ -29,13 +29,20 @@ void TinyLittleIconButton::paint(juce::Graphics &g)
 {
     auto yp = offset * 20;
     auto xp = isHovered ? 20 : 0;
-    g.reduceClipRegion(getLocalBounds());
     auto t = juce::AffineTransform();
+
     t = t.translated(-xp, -yp);
+    g.reduceClipRegion(getLocalBounds());
+
     if (getWidth() < 20 || getHeight() < 20)
+    {
         t = t.scaled(getWidth() / 20.f);
+    }
+
     if (icons)
+    {
         icons->draw(g, 1.0, t);
+    }
 }
 
 struct TinyLittleIconButtonAH : public juce::AccessibilityHandler
@@ -63,7 +70,7 @@ std::unique_ptr<juce::AccessibilityHandler> TinyLittleIconButton::createAccessib
 
 void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
-    auto standardMenuItemHeight = 20;
+    auto standardMenuItemHeight = 25;
 
     juce::Font font;
 
@@ -146,10 +153,7 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
 
     auto tl = r.getTopLeft();
 
-    if (!isCentered)
-    {
-        tl = tl.translated(12, 0);
-    }
+    tl = tl.translated(isCentered ? 0 : 12, 2);
 
     auto clipBox = juce::Rectangle<int>(tl.x, tl.y, 20, 20);
 
@@ -162,6 +166,7 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
 }
 
 void MenuTitleHelpComponent::mouseUp(const juce::MouseEvent &e) { launchHelp(); }
+
 bool MenuTitleHelpComponent::keyPressed(const juce::KeyPress &k)
 {
     if (k.isKeyCode(juce::KeyPress::returnKey) || k.isKeyCode(juce::KeyPress::spaceKey))
@@ -203,41 +208,57 @@ std::unique_ptr<juce::AccessibilityHandler> MenuTitleHelpComponent::createAccess
 void MenuCenteredBoldLabel::getIdealSize(int &idealWidth, int &idealHeight)
 {
     getLookAndFeel().getIdealPopupMenuItemSize(label, false, -1, idealWidth, idealHeight);
+
+    if (isSectionHeader)
+    {
+        idealHeight += 12;
+    }
+    else
+    {
+        idealHeight += 8;
+    }
 }
 
 void MenuCenteredBoldLabel::paint(juce::Graphics &g)
 {
-    auto r = getLocalBounds().reduced(1);
+    auto r = getLocalBounds();
     auto ft = getLookAndFeel().getPopupMenuFont();
-    ft = ft.withHeight(ft.getHeight() - 1).boldened();
-    g.setFont(ft);
-    if (isItemHighlighted())
-    {
-        g.setColour(findColour(juce::PopupMenu::highlightedBackgroundColourId));
-        g.fillRect(r);
 
-        g.setColour(findColour(juce::PopupMenu::highlightedTextColourId));
+    ft = ft.withHeight(ft.getHeight() - 1).boldened();
+
+    g.setFont(ft);
+    g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
+
+    if (isSectionHeader)
+    {
+        g.drawText(label, r.withTrimmedLeft(12), juce::Justification::centredLeft);
     }
     else
     {
-        g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
-    }
-    if (isSectionHeader)
-        g.drawText(label, r.withTrimmedLeft(5), juce::Justification::centredLeft);
-    else
         g.drawText(label, r, juce::Justification::centred);
+    }
 }
 
 void MenuCenteredBoldLabel::addToMenu(juce::PopupMenu &m, const std::string label)
 {
-    m.addCustomItem(-1, std::make_unique<MenuCenteredBoldLabel>(label), nullptr, label);
+    auto q = new MenuCenteredBoldLabel(label);
+    int w, h;
+
+    q->getIdealSize(w, h);
+
+    m.addCustomItem(-1, *q, w, h, false, nullptr, label);
 }
 
 void MenuCenteredBoldLabel::addToMenuAsSectionHeader(juce::PopupMenu &m, const std::string label)
 {
-    auto q = std::make_unique<MenuCenteredBoldLabel>(label);
+    auto q = new MenuCenteredBoldLabel(label);
+    int w, h;
+
+    q->getIdealSize(w, h);
+
     q->isSectionHeader = true;
-    m.addCustomItem(-1, std::move(q), nullptr, label);
+
+    m.addCustomItem(-1, *q, w, h, false, nullptr, label);
 }
 
 //==============================================================================
@@ -330,7 +351,7 @@ void ModMenuCustomComponent::setIsMuted(bool b)
 {
     if (b)
     {
-        mute->accLabel = "UnMute " + source;
+        mute->accLabel = "Unmute " + source;
         mute->offset = 3; // use the 2nd (mute with bar) icon
     }
     else

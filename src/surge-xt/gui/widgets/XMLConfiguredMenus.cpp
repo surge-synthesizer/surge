@@ -248,7 +248,8 @@ void XMLMenuPopulator::populate()
 
             if (depth == 1 && hasFac && hasUser)
             {
-                m.addSectionHeader("FACTORY PRESETS");
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(m,
+                                                                                "FACTORY PRESETS");
             }
 
             for (auto c : children)
@@ -268,7 +269,8 @@ void XMLMenuPopulator::populate()
                     {
                         inFac = false;
                         m.addColumnBreak();
-                        m.addSectionHeader("USER PRESETS");
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            m, "USER PRESETS");
                     }
                     auto idx = c->idx;
                     m.addItem(c->name, [host, n = c->name, idx]() { host->loadByIndex(n, idx); });
@@ -283,7 +285,7 @@ void XMLMenuPopulator::populate()
                 {
                     if (c->colBreak)
                         m.addColumnBreak();
-                    m.addSectionHeader(c->name);
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(m, c->name);
                 }
                 break;
                 case FOLD:
@@ -684,7 +686,7 @@ void FxMenu::populate()
     XMLMenuPopulator::populate();
 
     menu.addColumnBreak();
-    menu.addSectionHeader("FUNCTIONS");
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FUNCTIONS");
 
     menu.addItem(Surge::GUI::toOSCase("Clear Current FX Unit"), [this]() {
         loadSnapshot(fxt_off, nullptr, 0);
