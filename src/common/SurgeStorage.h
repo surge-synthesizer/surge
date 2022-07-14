@@ -820,8 +820,8 @@ struct DAWExtraStateStorage
 
     bool mapChannelToOctave = false;
 
-    std::unordered_map<int, int> midictrl_map;      // param -> midictrl
-    std::unordered_map<int, int> customcontrol_map; // custom controller number -> midicontrol
+    std::map<int, int> midictrl_map;      // param -> midictrl
+    std::map<int, int> customcontrol_map; // custom controller number -> midicontrol
 
     int monoPedalMode = 0;
     int oddsoundRetuneMode = 0;

@@ -359,8 +359,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool isInputMain(int index) override { return false; }
     bool supportsDirectProcess() override { return true; }
     clap_process_status clap_direct_process(const clap_process *process) noexcept override;
-    void process_clap_event(const clap_event_header_t *e);
-
+    bool supportsDirectParamsFlush() override { return true; }
+    void clap_direct_paramsFlush(const clap_input_events * /*in*/,
+                                 const clap_output_events * /*out*/) noexcept override;
+    void process_clap_event(const clap_event_header_t *evt);
     bool supportsVoiceInfo() override { return true; }
     bool voiceInfoGet(clap_voice_info *info) override
     {
