@@ -569,6 +569,23 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
     return CLAP_PROCESS_CONTINUE;
 }
 
+void SurgeSynthProcessor::clap_direct_paramsFlush(const clap_input_events *in,
+                                                  const clap_output_events *out) noexcept
+{
+    uint32_t sz = in->size(in);
+    DBG("Param flush called with " << (int)sz);
+    for (uint32_t i = 0; i < sz; ++i)
+    {
+        auto ev = in->get(in, i);
+        process_clap_event(ev);
+        if (ev->type == CLAP_EVENT_PARAM_VALUE)
+        {
+            auto pevt = reinterpret_cast<const clap_event_param_value *>(ev);
+            auto jp = static_cast<JUCEParameterVariant *>(pevt->cookie);
+        }
+    }
+}
+
 void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
 {
     if (evt->space_id != CLAP_CORE_EVENT_SPACE_ID)
@@ -600,14 +617,15 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     case CLAP_EVENT_PARAM_VALUE:
     {
         auto pevt = reinterpret_cast<const clap_event_param_value *>(evt);
-        auto jp = static_cast<juce::AudioProcessorParameter *>(pevt->cookie);
-        jp->setValue(pevt->value);
+        auto jp = static_cast<JUCEParameterVariant *>(pevt->cookie);
+        jp->processorParam->setValue(pevt->value);
     }
     break;
     case CLAP_EVENT_PARAM_MOD:
     {
         auto pevt = reinterpret_cast<const clap_event_param_mod *>(evt);
-        auto jp = static_cast<SurgeBaseParam *>(pevt->cookie);
+        auto jv = static_cast<JUCEParameterVariant *>(pevt->cookie);
+        auto jp = static_cast<SurgeBaseParam *>(jv->processorParam);
         if (pevt->note_id >= 0)
         {
             jassert(jp->supportsPolyphonicModulation());
