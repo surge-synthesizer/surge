@@ -92,11 +92,12 @@ struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
 
 struct MenuCenteredBoldLabel : juce::PopupMenu::CustomComponent
 {
-    MenuCenteredBoldLabel(const std::string &s) : label(s), juce::PopupMenu::CustomComponent(true)
+    MenuCenteredBoldLabel(const std::string &s) : label(s), juce::PopupMenu::CustomComponent(false)
     {
         setAccessible(true);
         setTitle(label);
     }
+
     void getIdealSize(int &idealWidth, int &idealHeight) override;
     void paint(juce::Graphics &g) override;
 

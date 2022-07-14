@@ -512,7 +512,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             if (!redoStack.empty())
             {
-                contextMenu.addSectionHeader("Redo Stack");
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenu(contextMenu, "REDO STACK");
 
                 int nRedo = redoStack.size();
 
@@ -531,7 +531,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             if (!undoStack.empty())
             {
-                contextMenu.addSectionHeader("Undo Stack");
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenu(contextMenu, "UNDO STACK");
 
                 int nUndo = 1;
 
@@ -846,6 +846,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             if (first_destination)
                             {
                                 contextMenu.addSeparator();
+
                                 Surge::Widgets::MenuCenteredBoldLabel::addToMenu(contextMenu,
                                                                                  "TARGETS");
                             }
@@ -1679,7 +1680,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST,
                                     NOTE_ON_LATEST_RETRIGGER_HIGHEST};
 
-                                contextMenu.addSectionHeader("NOTE PRIORITY");
+                                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                    contextMenu, "NOTE PRIORITY");
 
                                 for (int i = 0; i < 4; ++i)
                                 {
@@ -1704,7 +1706,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO,
                                                                            RESTART_FROM_LATEST};
 
-                                contextMenu.addSectionHeader("ENVELOPE RETRIGGER BEHAVIOR");
+                                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                    contextMenu, "ENVELOPE RETRIGGER BEHAVIOR");
 
                                 for (int i = 0; i < 2; ++i)
                                 {
@@ -1879,7 +1882,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     contextMenu.addSeparator();
 
-                    contextMenu.addSectionHeader("OPTIONS");
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                    "OPTIONS");
 
                     bool isChecked = p->porta_constrate;
 
@@ -1905,7 +1909,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                             p->porta_retrigger = !p->porta_retrigger;
                                         });
 
-                    contextMenu.addSectionHeader("CURVE");
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                    "CURVE");
 
                     isChecked = (p->porta_curve == -1);
 
@@ -1940,7 +1945,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         contextMenu.addSeparator();
 
-                        contextMenu.addSectionHeader("SLOPE");
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                        "SLOPE");
 
                         for (int i = 0; i < synth->n_hpBQ; i++)
                         {
@@ -1967,7 +1973,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         {
                             contextMenu.addSeparator();
 
-                            contextMenu.addSectionHeader("DEFORM");
+                            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                contextMenu, "DEFORM");
 
                             for (int i = 0; i < lt_num_deforms[lfodata->shape.val.i]; i++)
                             {
@@ -2007,7 +2014,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         bool isChecked = false;
 
-                        contextMenu.addSectionHeader("WAVEFORM");
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                        "WAVEFORM");
 
                         for (int m : waves)
                         {
@@ -2030,7 +2038,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         isChecked = (p->deform_type & subosc);
 
-                        contextMenu.addSectionHeader("SUB-OSCILLATOR");
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            contextMenu, "SUB-OSCILLATOR");
 
                         contextMenu.addItem(
                             Surge::GUI::toOSCase("Enabled"), true, isChecked, [p, subosc, this]() {
@@ -2103,7 +2112,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         std::vector<std::string> tapeHysteresisModes = {"Normal", "Medium", "High",
                                                                         "Very High"};
 
-                        contextMenu.addSectionHeader("PRECISION");
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            contextMenu, "PRECISION");
 
                         for (int i = 0; i < tapeHysteresisModes.size(); ++i)
                         {
@@ -2129,7 +2139,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         contextMenu.addSeparator();
 
-                        contextMenu.addSectionHeader("LIMITING");
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                        "LIMITING");
 
                         std::vector<std::string> fbClipModes = {
                             "Disabled (DANGER!)", "Soft Clip (cubic)", "Soft Clip (tanh)",
@@ -2184,14 +2195,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         {
                             contextMenu.addSeparator();
 
-                            contextMenu.addSectionHeader("OVERSAMPLING");
+                            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                contextMenu, "OVERSAMPLING");
 
                             addDef(StringOscillator::os_onex, StringOscillator::os_all, "1x");
                             addDef(StringOscillator::os_twox, StringOscillator::os_all, "2x");
 
                             contextMenu.addSeparator();
 
-                            contextMenu.addSectionHeader("INTERPOLATION");
+                            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                contextMenu, "INTERPOLATION");
 
                             addDef(StringOscillator::interp_zoh, StringOscillator::interp_all,
                                    Surge::GUI::toOSCase("Zero Order Hold"));
@@ -2205,7 +2218,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         {
                             contextMenu.addSeparator();
 
-                            contextMenu.addSectionHeader("STIFFNESS FILTER");
+                            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                contextMenu, "STIFFNESS FILTER");
 
                             addDef(StringOscillator::filter_fixed, StringOscillator::filter_all,
                                    "Static");
