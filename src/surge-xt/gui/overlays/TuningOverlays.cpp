@@ -526,7 +526,7 @@ class RadialScaleGraph : public juce::Component,
 
         if (selfEditGuard == 0)
         {
-            // Someone dragged something onto me or somehing. Reset the tuning knobs
+            // Someone dragged something onto me or something. Reset the tuning knobs
             for (const auto &tk : toneKnobs)
             {
                 tk->angle = 0;

@@ -51,7 +51,7 @@ Component MultiSwitch =
                       {"Is the switch draggable as a slider via mouse/touch or not. Valid values: "
                        "true, false"})
         .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, {"accessible_as_buttons"},
-                      {"Is the accesible display buttons (true) or radio buttons (false, def)"})
+                      {"Is the accessible display buttons (true) or radio buttons (false, def)"})
         .withProperty(Component::HOVER_IMAGE, {"hover_image"},
                       {"Hover image of the switch - required if you "
                        "set the base image and want feedback on mouse hover"})
@@ -91,7 +91,7 @@ Component Switch =
         .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
                       {"Base image of the switch"})
         .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, {"accessible_as_buttons"},
-                      {"Is the accesible display buttons (true) or radio buttons (false, def)"});
+                      {"Is the accessible display buttons (true) or radio buttons (false, def)"});
 
 Component FilterSelector =
     Component("FilterSelector")
@@ -176,7 +176,7 @@ Component Label =
                       {"Resource name of the image to be displayed by the label. Overrides "
                        "background and frame/border colors"});
 
-// ToDo - obvioulsy expand properties
+// ToDo - obviously expand properties
 Component WaveShaperSelector = Component("WaveShaperSelector");
 
 } // namespace Components

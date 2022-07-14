@@ -99,7 +99,7 @@ class alignas(16) SurgeSynthesizer
      * processAudioThreadOpsWhenAudioEngineUnavailable reloads a patch if the audio thread
      * isn't running but if it is running lets the deferred queue handle it. But it has an option
      * which is *extremely dangerous* to force you to load in the current thread immediately.
-     * If you use this option and dont' know what you are doing it will explode - basically
+     * If you use this option and don't know what you are doing it will explode - basically
      * we only use it in the startup constructor path.
      */
     void

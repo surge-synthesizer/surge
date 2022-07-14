@@ -940,7 +940,7 @@ void SurgeGUIEditor::idle()
                 ** properties, so you can control them from a DAW. The
                 ** DAW control works - everything up to this path (as described
                 ** in #160) works fine and sets the value but since there's
-                ** no CControl in param the above bails out. But ading
+                ** no CControl in param the above bails out. But adding
                 ** all these controls to param[] would have the unintended
                 ** side effect of giving them all the other param[] behaviours.
                 ** So have a second array and drop select items in here so we

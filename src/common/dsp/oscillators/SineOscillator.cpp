@@ -22,8 +22,8 @@
  *
  * With Surge 1.9, we undertook a bunch of work to optimize the sine oscillator runtime at high
  * unison count with odd shapes. Basically at high unison we were doing large numbers of loops,
- * branches and so forth, and not using any of the advantage you could get by realizing the paralle
- * structure of unison. So we fixed that.
+ * branches and so forth, and not using any of the advantage you could get by realizing the
+ * parallel structure of unison. So we fixed that.
  *
  * There's two core fixes.
  *

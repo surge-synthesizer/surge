@@ -218,7 +218,7 @@ inline float quad_bspline(float y0, float y1, float y2, float mu)
     return 0.5f * (y2 * (mu * mu) + y1 * (-2 * mu * mu + 2 * mu + 1) + y0 * (mu * mu - 2 * mu + 1));
 }
 
-// panning which always lets both channels through unattenuated (seperate hard-panning)
+// panning which always lets both channels through unattenuated (separate hard-panning)
 inline void trixpan(float &L, float &R, float x)
 {
     if (x < 0.f)

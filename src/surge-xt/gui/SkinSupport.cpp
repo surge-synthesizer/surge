@@ -1034,7 +1034,7 @@ bool Skin::recursiveGroupParse(ControlGroup::ptr_t parent, TiXmlElement *control
     {
         /*
          * We now need to create all the base parent objects before we go
-         * and resolve them, since that resolutino can be recursive when
+         * and resolve them, since that resolution can be recursive when
          * looping over controls, and we don't want to actually modify controls
          * while resolving.
          */

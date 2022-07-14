@@ -26,7 +26,7 @@ namespace Widgets
 {
 /*
  * This is a pure play juce component which is referred to as such so doesn't
- * need any fo the EFVG and Mixin stuff to interact with the value callback mechanism
+ * need any for the EFVG and Mixin stuff to interact with the value callback mechanism
  */
 struct VerticalLabel : public juce::Component
 {
