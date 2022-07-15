@@ -1170,18 +1170,20 @@ struct WaveTable3DEditor : public juce::Component,
         auto &wt = oscdata->wt;
         auto pos = -1.f;
 
+        bool off = false;
         switch (oscdata->type.val.i)
         {
         case ot_wavetable:
         case ot_window:
             pos = oscdata->p[0].val.f;
+            off = oscdata->p[0].extend_range;
             break;
         default:
             pos = 0.f;
             break;
         };
 
-        auto tpos = pos * wt.n_tables;
+        auto tpos = pos * (wt.n_tables - off);
 
         // OK so now go backwards through the tables but also tilt and raise for the 3D effect
         auto smp = wt.size;
