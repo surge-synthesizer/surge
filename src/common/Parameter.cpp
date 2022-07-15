@@ -1796,9 +1796,9 @@ void Parameter::bound_value(bool force_integer)
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
             auto count = cs->getCountedSetSize();
             // OK so now val.f is between 0 and 1. So
-            auto fraccount = val.f * count;
+            auto fraccount = val.f * (count - extend_range);
             auto intcount = (int)fraccount;
-            val.f = 1.0 * intcount / count;
+            val.f = limit_range(1.0 * intcount / (count - extend_range) + 0.0001, 0., 1.);
             break;
         }
         case ct_alias_mask:
@@ -2968,8 +2968,8 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
             float f = val.f;
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
             auto count = cs->getCountedSetSize();
-            auto tl = count * f;
-            snprintf(txt, TXT_SIZE, "%.2f / %d", tl, count);
+            auto tl = (count - extend_range) * f;
+            snprintf(txt, TXT_SIZE, "%.2f / %d", tl, (count - extend_range));
         }
 
         break;
