@@ -17,13 +17,12 @@ jobs:
     strategy:
       matrix:
         macOS-unit-test:
-          imageName: 'macos-10.15'
+          imageName: 'macos-latest'
           isMac: True
           isMacUnitTest: True
           cmakeArguments: "-GXcode"
           cmakeTarget: "surge-testrunner"
           cmakeConfig: "Release"
-          xcodePath: "/Applications/Xcode_12.2.app"
         windows-x86-32bit:
           imageName: 'windows-2019'
           isWindows: True
@@ -31,21 +30,19 @@ jobs:
           cmakeConfig: "Debug"
           cmakeTarget: "surge-xt_Standalone" # just a subset for time
         macOS-x86:
-          imageName: 'macos-10.15'
+          imageName: 'macos-latest'
           isMac: True
           isMacFat: True
           cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
-          xcodePath: "/Applications/Xcode_12.2.app"
         macOS-arm:
-          imageName: 'macos-10.15'
+          imageName: 'macos-latest'
           isMac: True
           isMacFat: True
           cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
-          xcodePath: "/Applications/Xcode_12.2.app"
         windows-x64:
           imageName: 'windows-2019'
           isWindows: True
@@ -156,13 +153,6 @@ jobs:
 
         condition: variables.isLinux
         displayName: linux - run apt-get
-
-
-      - bash: |
-          set -e
-          sudo xcode-select -s $(xcodePath)
-        displayName: mac - run xcode-select
-        condition: variables.isMac
 
       - bash: |
           set -e
