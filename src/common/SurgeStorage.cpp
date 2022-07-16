@@ -1545,6 +1545,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
             getPatch().param_ptr[pid]->temposync = p.temposync;
             getPatch().param_ptr[pid]->set_extend_range(p.extend_range);
             getPatch().param_ptr[pid]->deactivated = p.deactivated;
+            getPatch().param_ptr[pid]->absolute = p.absolute;
             getPatch().param_ptr[pid]->porta_constrate = p.porta_constrate;
             getPatch().param_ptr[pid]->porta_gliss = p.porta_gliss;
             getPatch().param_ptr[pid]->porta_retrigger = p.porta_retrigger;
