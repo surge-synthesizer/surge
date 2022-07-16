@@ -185,6 +185,10 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
         hasInvalidated = true;
     }
 
+    // Once we are setup, an fx type of 0 is just an init cycle mistake
+    if (*(pdata_ival[0]) == 0 && fxdata->p[0].user_data)
+        return;
+
     if (!airwin || *(pdata_ival[0]) != lastSelected || fxdata->p[0].user_data == nullptr)
     {
         /*
