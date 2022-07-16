@@ -4098,6 +4098,14 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
         switch (ctrltype)
         {
+        case ct_fmconfig:
+        {
+            // So FMConfig has names like "2 > 1 < 3" which actually *work* with
+            // std::atoi so just clobber that and use the str compare
+            if (s.length() > 1 && s.c_str()[1] == ' ')
+                ni = val_min.i - 1;
+        }
+        break;
         case ct_midikey_or_channel:
         {
             auto sm = storage->getPatch().scenemode.val.i;
@@ -4327,6 +4335,12 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         ** log2(v/a)/b = x;
         */
 
+        // Special case where we have a minLabelValue
+        if (nv == 0 && displayInfo.minLabelValue == 0)
+        {
+            ontoThis.f = val_min.f;
+            return true;
+        }
         if (nv <= 0 || !std::isfinite(nv))
         {
             set_error_message(errMsg, "Invalid value input!", "", ErrorMessageMode::Special);

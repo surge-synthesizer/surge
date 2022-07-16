@@ -584,6 +584,8 @@ void SurgeSynthProcessor::clap_direct_paramsFlush(const clap_input_events *in,
             auto jp = static_cast<JUCEParameterVariant *>(pevt->cookie);
         }
     }
+    // Setting params can change internal state so give the synth a chance to react
+    surge->process();
 }
 
 void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
