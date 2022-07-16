@@ -1125,6 +1125,21 @@ void deleteSegment(MSEGStorage *ms, int idx)
 
     ms->n_activeSegments--;
 
+    if (ms->editMode == MSEGStorage::LFO)
+    {
+        // We need to fill up the last one to span.
+        auto ei = ms->n_activeSegments - 1;
+        ms->segmentEnd[ei] = 1.0;
+        auto cd = 0.f;
+        for (int i = 0; i < ei; ++i)
+            cd += ms->segments[i].duration;
+
+        ms->segments[ei].duration = 1.0 - cd;
+        ms->segments[ei].cpduration += 1.0 - cd;
+
+        rebuildCache(ms);
+    }
+
     if (ms->loop_start > idx)
     {
         ms->loop_start--;
