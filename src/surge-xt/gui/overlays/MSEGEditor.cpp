@@ -3413,6 +3413,9 @@ void MSEGEditor::forceRefresh()
         auto ed = dynamic_cast<MSEGCanvas *>(kid);
         if (ed)
             ed->modelChanged();
+        auto cr = dynamic_cast<MSEGControlRegion *>(kid);
+        if (cr)
+            cr->rebuild();
     }
 }
 
