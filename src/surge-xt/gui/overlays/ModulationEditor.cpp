@@ -253,17 +253,31 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 {
     struct ModListIconButton : public Surge::Widgets::TinyLittleIconButton
     {
-        ModListIconButton(int off, std::function<void()> cb)
-            : Surge::Widgets::TinyLittleIconButton(off, std::move(cb))
+        SurgeStorage *storage{nullptr};
+        ModListIconButton(int off, std::function<void()> cb, SurgeStorage *s)
+            : Surge::Widgets::TinyLittleIconButton(off, std::move(cb)), storage(s)
         {
         }
 
-        std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler()
+        std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
         {
             return std::make_unique<juce::AccessibilityHandler>(
                 *this, juce::AccessibilityRole::button,
                 juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press,
                                                        [this]() { this->callback(); }));
+        }
+
+        bool keyPressed(const juce::KeyPress &key) override
+        {
+            if (!storage)
+                return false;
+            auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
+            if (action == Widgets::Return)
+            {
+                callback();
+                return true;
+            }
+            return false;
         }
     };
     ModulationEditor *editor{nullptr};
@@ -343,22 +357,25 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         DataRowEditor(const Datum &d, ModulationListContents *c) : datum(d), contents(c)
         {
-            clearButton = std::make_unique<ModListIconButton>(1, [this]() {
-                auto me = contents->editor;
-                ModulationEditor::SelfModulationGuard g(me);
-                contents->editor->ed->pushModulationToUndoRedo(
-                    datum.destination_id + datum.idBase, (modsources)datum.source_id,
-                    datum.source_scene, datum.source_index, Surge::GUI::UndoManager::UNDO);
-                me->synth->clearModulation(datum.destination_id + datum.idBase,
-                                           (modsources)datum.source_id, datum.source_scene,
-                                           datum.source_index);
-                // The rebuild may delete this so defer
-                auto c = contents;
-                juce::Timer::callAfterDelay(1, [c, me]() {
-                    c->rebuildFrom(me->synth);
-                    me->ed->queue_refresh = true;
-                });
-            });
+            clearButton = std::make_unique<ModListIconButton>(
+                1,
+                [this]() {
+                    auto me = contents->editor;
+                    ModulationEditor::SelfModulationGuard g(me);
+                    contents->editor->ed->pushModulationToUndoRedo(
+                        datum.destination_id + datum.idBase, (modsources)datum.source_id,
+                        datum.source_scene, datum.source_index, Surge::GUI::UndoManager::UNDO);
+                    me->synth->clearModulation(datum.destination_id + datum.idBase,
+                                               (modsources)datum.source_id, datum.source_scene,
+                                               datum.source_index);
+                    // The rebuild may delete this so defer
+                    auto c = contents;
+                    juce::Timer::callAfterDelay(1, [c, me]() {
+                        c->rebuildFrom(me->synth);
+                        me->ed->queue_refresh = true;
+                    });
+                },
+                &c->editor->synth->storage);
             clearButton->setAccessible(true);
             clearButton->setTitle("Clear");
             clearButton->setDescription("Clear");
@@ -366,30 +383,36 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             addAndMakeVisible(*clearButton);
 
             muted = d.isMuted;
-            muteButton = std::make_unique<ModListIconButton>(2, [this]() {
-                auto me = contents->editor;
-                ModulationEditor::SelfModulationGuard g(me);
-                contents->editor->ed->pushModulationToUndoRedo(
-                    datum.destination_id + datum.idBase, (modsources)datum.source_id,
-                    datum.source_scene, datum.source_index, Surge::GUI::UndoManager::UNDO);
+            muteButton = std::make_unique<ModListIconButton>(
+                2,
+                [this]() {
+                    auto me = contents->editor;
+                    ModulationEditor::SelfModulationGuard g(me);
+                    contents->editor->ed->pushModulationToUndoRedo(
+                        datum.destination_id + datum.idBase, (modsources)datum.source_id,
+                        datum.source_scene, datum.source_index, Surge::GUI::UndoManager::UNDO);
 
-                me->synth->muteModulation(datum.destination_id + datum.idBase,
-                                          (modsources)datum.source_id, datum.source_scene,
-                                          datum.source_index, !muted);
-                muted = !muted;
-                contents->rebuildFrom(me->synth);
-            });
+                    me->synth->muteModulation(datum.destination_id + datum.idBase,
+                                              (modsources)datum.source_id, datum.source_scene,
+                                              datum.source_index, !muted);
+                    muted = !muted;
+                    contents->rebuildFrom(me->synth);
+                },
+                &c->editor->synth->storage);
             muteButton->setAccessible(true);
             muteButton->setWantsKeyboardFocus(true);
             addAndMakeVisible(*muteButton);
 
-            pencilButton = std::make_unique<ModListIconButton>(0, [this]() {
-                auto sge = contents->editor->ed;
-                auto p = contents->editor->synth->storage.getPatch()
-                             .param_ptr[datum.destination_id + datum.idBase];
-                sge->promptForUserValueEntry(p, pencilButton.get(), datum.source_id,
-                                             datum.source_scene, datum.source_index);
-            });
+            pencilButton = std::make_unique<ModListIconButton>(
+                0,
+                [this]() {
+                    auto sge = contents->editor->ed;
+                    auto p = contents->editor->synth->storage.getPatch()
+                                 .param_ptr[datum.destination_id + datum.idBase];
+                    sge->promptForUserValueEntry(p, pencilButton.get(), datum.source_id,
+                                                 datum.source_scene, datum.source_index);
+                },
+                &c->editor->synth->storage);
             pencilButton->setAccessible(true);
             pencilButton->setTitle("Edit");
             pencilButton->setDescription("Edit");
