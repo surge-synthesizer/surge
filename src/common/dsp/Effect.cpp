@@ -64,7 +64,11 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_airwindows:
         return new AirWindowsEffect(storage, fxdata, pd);
     case fxt_neuron:
+#if HAS_JUCE
         return new chowdsp::NeuronEffect(storage, fxdata, pd);
+#else
+        return nullptr;
+#endif
     case fxt_geq11:
         return new GraphicEQ11BandEffect(storage, fxdata, pd);
     case fxt_resonator:
@@ -88,7 +92,11 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_mstool:
         return new MSToolEffect(storage, fxdata, pd);
     case fxt_spring_reverb:
+#if HAS_JUCE
         return new chowdsp::SpringReverbEffect(storage, fxdata, pd);
+#else
+        return nullptr;
+#endif
     default:
         return 0;
     };

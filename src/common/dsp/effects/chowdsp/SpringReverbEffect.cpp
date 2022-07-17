@@ -13,6 +13,8 @@
 ** open source in September 2018.
 */
 
+#if HAS_JUCE
+
 #include "SpringReverbEffect.h"
 
 namespace chowdsp
@@ -141,3 +143,5 @@ int SpringReverbEffect::group_label_ypos(int id)
 }
 
 } // namespace chowdsp
+
+#endif

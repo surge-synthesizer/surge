@@ -22,16 +22,27 @@ set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
 set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
 surge_add_lib_subdirectory(PEGTL)
 
-juce_add_binary_data(surge-common-binary
-  NAMESPACE SurgeSharedBinary
-  HEADER_NAME SurgeSharedBinary.h
-  SOURCES
-  ${CMAKE_SOURCE_DIR}/resources/surge-shared/configuration.xml
-  ${CMAKE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
-  ${CMAKE_SOURCE_DIR}/resources/surge-shared/memoryWavetable.wt
-  ${CMAKE_SOURCE_DIR}/resources/surge-shared/windows.wt
-  ${CMAKE_SOURCE_DIR}/resources/surge-shared/paramdocumentation.xml
-  )
+if (NOT SURGE_SKIP_JUCE_FOR_RACK)
+  juce_add_binary_data(surge-common-binary
+    NAMESPACE SurgeSharedBinary
+    HEADER_NAME SurgeSharedBinary.h
+    SOURCES
+    ${CMAKE_SOURCE_DIR}/resources/surge-shared/configuration.xml
+    ${CMAKE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
+    ${CMAKE_SOURCE_DIR}/resources/surge-shared/memoryWavetable.wt
+    ${CMAKE_SOURCE_DIR}/resources/surge-shared/windows.wt
+    ${CMAKE_SOURCE_DIR}/resources/surge-shared/paramdocumentation.xml
+    )
+  target_compile_definitions(surge-common-binary PUBLIC HAS_JUCE=1 SKIP_JUCE=0)
+
+else()
+  add_library(surge-common-binary INTERFACE)
+  target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
+  #add_library(juce_dsp ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp)
+  #target_include_directories(juce_dsp PUBLIC ../../libs/JUCE/modules)
+  add_library(juce_dsp INTERFACE)
+  add_library(juce::juce_dsp ALIAS juce_dsp)
+endif()
 
 add_library(${PROJECT_NAME}
   DebugHelpers.cpp

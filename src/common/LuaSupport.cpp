@@ -20,7 +20,9 @@
 #include <sstream>
 #include <cstring>
 #include "basic_dsp.h"
+#if HAS_JUCE
 #include "SurgeSharedBinary.h"
+#endif
 #include "lua/LuaSources.h"
 
 bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::string &definition,

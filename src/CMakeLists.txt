@@ -11,8 +11,10 @@ set(SURGE_JUCE_PATH "${CMAKE_SOURCE_DIR}/libs/JUCE" CACHE STRING "Path to JUCE l
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(cmake/lib.cmake)
 
-message(STATUS "Using JUCE from ${SURGE_JUCE_PATH}")
-add_subdirectory(${SURGE_JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
+if (NOT SURGE_SKIP_JUCE_FOR_RACK)
+  message(STATUS "Using JUCE from ${SURGE_JUCE_PATH}")
+  add_subdirectory(${SURGE_JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
+endif()
 
 if(${CMAKE_VERSION} VERSION_LESS 3.20)
   message(WARNING "CMake version less than 3.20. Skipping clap builds. Please "
@@ -135,15 +137,15 @@ add_subdirectory(common)
 add_subdirectory(lua)
 add_subdirectory(platform)
 
-if(SURGE_BUILD_TESTRUNNER)
+if(SURGE_BUILD_TESTRUNNER AND NOT SURGE_SKIP_JUCE_FOR_RACK)
   add_subdirectory(surge-testrunner)
 endif()
 
-if(SURGE_BUILD_FX)
+if(SURGE_BUILD_FX AND NOT SURGE_SKIP_JUCE_FOR_RACK)
   add_subdirectory(surge-fx)
 endif()
 
-if(SURGE_BUILD_XT)
+if(SURGE_BUILD_XT AND NOT SURGE_SKIP_JUCE_FOR_RACK)
   add_subdirectory(surge-xt)
 endif()
 
@@ -155,6 +157,6 @@ if(SURGE_BUILD_FX AND SURGE_BUILD_XT AND NOT CMAKE_CROSSCOMPILING)
   surge_make_installers()
 endif()
 
-if(NOT CMAKE_CROSSCOMPILING)
+if(NOT CMAKE_CROSSCOMPILING AND NOT SURGE_SKIP_JUCE_FOR_RACK)
   include(cmake/pluginval.cmake)
 endif()
