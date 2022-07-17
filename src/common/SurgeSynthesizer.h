@@ -351,7 +351,7 @@ class alignas(16) SurgeSynthesizer
 
     void loadRaw(const void *data, int size, bool preset = false);
     void loadPatch(int id);
-    bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name);
+    bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name, bool forceIsPreset = true);
     void selectRandomPatch();
     std::unique_ptr<std::thread> patchLoadThread;
 
@@ -362,7 +362,7 @@ class alignas(16) SurgeSynthesizer
 
     void swapMetaControllers(int ct1, int ct2);
 
-    void savePatchToPath(fs::path p);
+    void savePatchToPath(fs::path p, bool refreshPatchList = true);
     void savePatch(bool factoryInPlace = false);
     void updateUsedState();
     void prepareModsourceDoProcess(int scenemask);

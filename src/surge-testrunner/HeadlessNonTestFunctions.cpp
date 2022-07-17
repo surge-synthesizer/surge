@@ -27,14 +27,16 @@ void initializePatchDB()
 
 void restreamTemplatesWithModifications()
 {
-    auto templatesDir = string_to_path("resources/data/patches_factory");
+    auto templatesDir = string_to_path("resources/data/patches_3rdparty");
     for (auto d : fs::recursive_directory_iterator(templatesDir))
     {
         if (d.path().extension() != ".fxp")
             continue;
 
+        std::cout << d.path().u8string() << std::endl;
+
         auto surge = Surge::Headless::createSurge(44100, false);
-        surge->loadPatchByPath(path_to_string(d).c_str(), -1, "ReStreamer");
+        surge->loadPatchByPath(path_to_string(d).c_str(), -1, "ReStreamer", false);
         for (int i = 0; i < 2; ++i)
             surge->process();
 
@@ -43,7 +45,7 @@ void restreamTemplatesWithModifications()
 
         if (m1 == pm_poly && m2 == pm_poly)
             continue;
-        std::cout << "ReStream " << path_to_string(d) << std::endl;
+        std::cout << "   ReStream " << path_to_string(d) << std::endl;
         if (m1 != pm_poly)
             surge->storage.getPatch().scene[0].monoVoiceEnvelopeMode =
                 MonoVoiceEnvelopeMode::RESTART_FROM_LATEST;
@@ -54,7 +56,7 @@ void restreamTemplatesWithModifications()
         for (int i = 0; i < 2; ++i)
             surge->process();
 
-        surge->savePatchToPath(d);
+        surge->savePatchToPath(d, false);
 
         /*
         if (oR < 15)
