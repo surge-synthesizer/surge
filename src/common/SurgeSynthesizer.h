@@ -351,7 +351,8 @@ class alignas(16) SurgeSynthesizer
 
     void loadRaw(const void *data, int size, bool preset = false);
     void loadPatch(int id);
-    bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name, bool forceIsPreset = true);
+    bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name,
+                         bool forceIsPreset = true);
     void selectRandomPatch();
     std::unique_ptr<std::thread> patchLoadThread;
 
