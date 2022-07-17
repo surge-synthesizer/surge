@@ -16,6 +16,7 @@ if (NOT SURGE_SKIP_LUA)
   surge_add_lib_subdirectory(LuaJitLib)
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=1)
 else()
+  # Make sure we know it is missing
   add_library(luajit-5.1 INTERFACE)
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=0)
 endif()
