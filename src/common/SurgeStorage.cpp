@@ -328,12 +328,15 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
                                 SurgeSharedBinary::configuration_xmlSize) +
                     "\n";
 #else
-    auto cxmlData = std::string("<osc/><fx/></modictr/><customctrl/>");
+    auto cxmlData = std::string("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><midictrl/>");
 #endif
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
+#if HAS_JUCE
+        std::cout << snapshotloader.ErrorDesc() << std::endl;
         reportError("Cannot parse 'configuration.xml' from memory. Internal Software Error.",
                     "Surge Incorrectly Built");
+#endif
     }
 
     load_midi_controllers();
