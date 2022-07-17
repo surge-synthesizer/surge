@@ -27,17 +27,38 @@ void initializePatchDB()
 
 void restreamTemplatesWithModifications()
 {
-    auto templatesDir = string_to_path("resources/data/patches_factory/Templates");
-    for (auto d : fs::directory_iterator(templatesDir))
+    auto templatesDir = string_to_path("resources/data/patches_3rdparty");
+    for (auto d : fs::recursive_directory_iterator(templatesDir))
     {
-        std::cout << "ReStream " << path_to_string(d) << std::endl;
-        auto surge = Surge::Headless::createSurge(44100);
-        surge->loadPatchByPath(path_to_string(d).c_str(), -1, "Templates");
-        for (int i = 0; i < 10; ++i)
+        if (d.path().extension() != ".fxp")
+            continue;
+
+        std::cout << d.path().u8string() << std::endl;
+
+        auto surge = Surge::Headless::createSurge(44100, false);
+        surge->loadPatchByPath(path_to_string(d).c_str(), -1, "ReStreamer", false);
+        for (int i = 0; i < 2; ++i)
             surge->process();
 
-        auto oR = surge->storage.getPatch().streamingRevision;
-        std::cout << "  Stream Revision : " << oR << " vs " << ff_revision << std::endl;
+        auto m1 = surge->storage.getPatch().scene[0].polymode.val.i;
+        auto m2 = surge->storage.getPatch().scene[1].polymode.val.i;
+
+        if (m1 == pm_poly && m2 == pm_poly)
+            continue;
+        std::cout << "   ReStream " << path_to_string(d) << std::endl;
+        if (m1 != pm_poly)
+            surge->storage.getPatch().scene[0].monoVoiceEnvelopeMode =
+                MonoVoiceEnvelopeMode::RESTART_FROM_LATEST;
+        if (m2 != pm_poly)
+            surge->storage.getPatch().scene[1].monoVoiceEnvelopeMode =
+                MonoVoiceEnvelopeMode::RESTART_FROM_LATEST;
+
+        for (int i = 0; i < 2; ++i)
+            surge->process();
+
+        surge->savePatchToPath(d, false);
+
+        /*
         if (oR < 15)
         {
             std::cout << "  Fixing Comb Filter" << std::endl;
@@ -58,6 +79,7 @@ void restreamTemplatesWithModifications()
 
             surge->savePatchToPath(d);
         }
+         */
     }
 }
 

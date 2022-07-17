@@ -216,7 +216,8 @@ void SurgeSynthesizer::loadPatch(int id)
     storage.getPatch().isDirty = false;
 }
 
-bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName)
+bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName,
+                                       bool forceIsPreset)
 {
     std::filebuf f;
     if (!f.open(string_to_path(fxpPath), std::ios::binary | std::ios::in))
@@ -277,7 +278,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     current_category_id = categoryId;
     storage.getPatch().name = patchName;
 
-    loadRaw(data.get(), cs, true);
+    loadRaw(data.get(), cs, forceIsPreset);
     data.reset();
 
     // OK so at this point we may have loaded a patch with a tuning override
@@ -585,7 +586,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace)
     storage.getPatch().isDirty = false;
 }
 
-void SurgeSynthesizer::savePatchToPath(fs::path filename)
+void SurgeSynthesizer::savePatchToPath(fs::path filename, bool refreshPatchList)
 {
     std::ofstream f(filename, std::ios::out | std::ios::binary);
 
@@ -616,24 +617,27 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename)
     f.write((char *)data, datasize);
     f.close();
 
-    // refresh list
-    storage.refresh_patchlist();
-    storage.initializePatchDb(true);
-
-    int idx = 0;
-    for (auto p : storage.patch_list)
+    if (refreshPatchList)
     {
-        if (p.path == filename)
-        {
-            patchid = idx;
-            current_category_id = p.category;
-        }
-        idx++;
-    }
-    refresh_editor = true;
-    midiprogramshavechanged = true;
+        // refresh list
+        storage.refresh_patchlist();
+        storage.initializePatchDb(true);
 
-    storage.getPatch().isDirty = false;
+        int idx = 0;
+        for (auto p : storage.patch_list)
+        {
+            if (p.path == filename)
+            {
+                patchid = idx;
+                current_category_id = p.category;
+            }
+            idx++;
+        }
+        refresh_editor = true;
+        midiprogramshavechanged = true;
+
+        storage.getPatch().isDirty = false;
+    }
 }
 
 unsigned int SurgeSynthesizer::saveRaw(void **data) { return storage.getPatch().save_patch(data); }
