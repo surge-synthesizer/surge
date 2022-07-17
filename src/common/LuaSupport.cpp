@@ -39,6 +39,7 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
     lua_State *L, const std::string &definition, const std::vector<std::string> functions,
     std::string &errorMessage)
 {
+#if HAS_LUA
     const char *lua_script = definition.c_str();
     auto lerr = luaL_loadbuffer(L, lua_script, strlen(lua_script), "lua-script");
     if (lerr != LUA_OK)
@@ -91,20 +92,26 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
     }
 
     return res;
+#else
+    return 0;
+#endif
 }
 
 int lua_limitRange(lua_State *L)
 {
+#if HAS_LUA
     auto x = luaL_checknumber(L, -3);
     auto low = luaL_checknumber(L, -2);
     auto high = luaL_checknumber(L, -1);
     auto res = limit_range(x, low, high);
     lua_pushnumber(L, res);
+#endif
     return 1;
 }
 
 bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
 {
+#if HAS_LUA
     if (!lua_isfunction(L, -1))
     {
         return false;
@@ -163,12 +170,15 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     // and now we are back to f>t so we can setfenv it
     lua_setfenv(L, -2);
 
+#endif
+
     // And now the stack is back to just the function wrapped
     return true;
 }
 
 bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
 {
+#if HAS_LUA
     auto guard = SGLD("loadPrologue", s);
     // now load the surge library
     auto &lua_script = LuaSources::surge_prelude;
@@ -176,6 +186,7 @@ bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
     auto load_stat = luaL_loadbuffer(s, lua_script.c_str(), lua_size, lua_script.c_str());
     auto pcall = lua_pcall(s, 0, 1, 0);
     lua_setglobal(s, "surge");
+#endif
     return true;
 }
 
@@ -185,11 +196,13 @@ Surge::LuaSupport::SGLD::~SGLD()
 {
     if (L)
     {
+#if HAS_LUA
         auto nt = lua_gettop(L);
         if (nt != top)
         {
             std::cout << "Guarded stack leak: [" << label << "] exit=" << nt << " enter=" << top
                       << std::endl;
         }
+#endif
     }
 }
