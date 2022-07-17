@@ -14,6 +14,8 @@
 */
 
 #pragma once
+
+#if HAS_JUCE
 #include "Effect.h"
 #include <vembertech/lipol.h>
 
@@ -34,6 +36,9 @@ namespace chowdsp
 ** The original implementation can be found at:
 ** https://github.com/Chowdhury-DSP/BYOD/tree/main/src/processors/other/spring_reverb
 */
+
+#if HAS_JUCE
+
 class SpringReverbEffect : public Effect
 {
   public:
@@ -74,3 +79,6 @@ class SpringReverbEffect : public Effect
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 };
 } // namespace chowdsp
+
+#endif
+#endif
