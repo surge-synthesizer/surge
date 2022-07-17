@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#if HAS_LUA
 extern "C"
 {
 #include "lua.h"
@@ -34,6 +35,9 @@ extern "C"
 
 #include "lj_arch.h"
 }
+#else
+typedef int lua_State;
+#endif
 
 namespace Surge
 {
@@ -93,10 +97,12 @@ struct SGLD
 {
     SGLD(const std::string &lab, lua_State *L) : label(lab), L(L)
     {
+#if HAS_LUA
         if (L)
         {
             top = lua_gettop(L);
         }
+#endif
     }
     ~SGLD();
 
