@@ -95,6 +95,7 @@ struct UndoManagerImpl
         int scene;
         int type;
         std::vector<UndoParam> undoParamValues;
+        std::vector<UndoModulation> undoModulations;
     };
     struct UndoWavetable
     {
@@ -519,6 +520,9 @@ struct UndoManagerImpl
             pu.paramId = p->id;
             populateUndoParamFromP(p, p->val, pu);
             r.undoParamValues.emplace_back(pu);
+
+            if (synth->isModDestUsed(p->id))
+                std::cout << "Its modulated" << std::endl;
             p++;
         }
 

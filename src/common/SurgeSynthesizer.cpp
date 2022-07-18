@@ -723,6 +723,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
 
                     channelState[channel].keyState[key].voiceOrder = voiceCounter++;
 
+                    v->resetVelocity((unsigned int)velocity);
                     v->restartAEGFEGAttack(aegStart, fegStart);
 
                     // Now end this note unless it is used by another scene
@@ -902,7 +903,6 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
     case pm_mono_st:
     case pm_mono_st_fp:
     {
-        std::cout << "PM MONO ST" << std::endl;
         bool found_one = false;
         int primode = storage.getPatch().scene[scene].monoVoicePriorityMode;
         bool createVoice = true;
@@ -1007,7 +1007,6 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 SurgeVoice *nvoice = getUnusedVoice(scene);
                 if (nvoice)
                 {
-                    std::cout << "SET UP FEG AEG" << std::endl;
                     voices[scene].push_back(nvoice);
                     new (nvoice) SurgeVoice(
                         &storage, &storage.getPatch().scene[scene],
