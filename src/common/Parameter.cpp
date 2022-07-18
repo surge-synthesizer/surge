@@ -3423,12 +3423,15 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             snprintf(txt, TXT_SIZE, "%s", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
             break;
         case ct_scenemode:
-            snprintf(txt, TXT_SIZE, "%s",
-                     scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]);
+            snprintf(
+                txt, TXT_SIZE, "%s",
+                Surge::GUI::toOSCase(scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)])
+                    .c_str());
             break;
         case ct_polymode:
             snprintf(txt, TXT_SIZE, "%s",
-                     play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]);
+                     Surge::GUI::toOSCase(play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)])
+                         .c_str());
             break;
         case ct_lfotrigmode:
             snprintf(txt, TXT_SIZE, "%s",

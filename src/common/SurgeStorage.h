@@ -148,7 +148,7 @@ const char play_mode_names[n_play_modes][64] = {
     "Mono",
     "Mono (Single Trigger)",
     "Mono (Fingered Portamento)",
-    "Mono (Single Trigger + Fingered Portamento)",
+    "Mono (Single Trigger & Fingered Portamento)",
     "Latch (Monophonic)",
 };
 
@@ -367,7 +367,7 @@ enum fx_bypass
 const char fxbypass_names[n_fx_bypass][32] = {
     "All FX",
     "No Send FX",
-    "No Send And Global FX",
+    "No Send and Global FX",
     "All FX Off",
 };
 

@@ -629,17 +629,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            contextMenu.addItem(Surge::GUI::toOSCase("Copy from " + oscname), [this, a]() {
+            contextMenu.addItem(Surge::GUI::toOSCase("Copy from ") + oscname, [this, a]() {
                 synth->storage.clipboard_copy(cp_osc, current_scene, a);
             });
 
             contextMenu.addItem(
-                Surge::GUI::toOSCase("Copy from " + oscname + " with Modulation"),
+                Surge::GUI::toOSCase("Copy from ") + oscname + Surge::GUI::toOSCase(" with Modulation"),
                 [this, a]() { synth->storage.clipboard_copy(cp_oscmod, current_scene, a); });
 
             if (synth->storage.get_clipboard_type() == cp_osc)
             {
-                contextMenu.addItem(Surge::GUI::toOSCase("Paste to " + oscname), [this, a]() {
+                contextMenu.addItem(Surge::GUI::toOSCase("Paste to ") + oscname, [this, a]() {
                     synth->clear_osc_modulation(current_scene, a);
                     synth->storage.clipboard_paste(cp_osc, current_scene, a);
                     synth->storage.getPatch().isDirty = true;
@@ -1673,16 +1673,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         if (p->ctrltype == ct_polymode && (p->val.i == pm_poly))
                         {
                             std::vector<std::string> labels = {
-                                "New Voice Every Note On",
-                                "Retrigger Voice On Same Key (Piano Mode)",
-                                "Retrigger Voice From Zero On Same Key"};
+                                "Rotate",
+                                "Reassign per Key (Continue from Current Level)",
+                                "Reassign per Key (Reset from Zero)"};
                             std::vector<PolyVoiceRepeatedKeyMode> vals = {
                                 NEW_VOICE_EVERY_NOTEON,
                                 ONE_VOICE_PER_KEY, // aka "piano mode"
                                 ONE_VOICE_PER_KEY_RESET_AEGFEG};
 
                             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                                contextMenu, "REPEATED KEY BEHAVIOR");
+                                contextMenu, "VOICE ASSIGNMENT MODE");
 
                             for (int i = 0; i < vals.size(); ++i)
                             {
