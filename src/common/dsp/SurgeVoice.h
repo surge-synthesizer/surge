@@ -181,6 +181,14 @@ class alignas(16) SurgeVoice
         ampEGSource.attackFrom(aeg);
         filterEGSource.attackFrom(feg);
     }
+
+    void resetVelocity(int midiVelocity)
+    {
+        state.velocity = midiVelocity;
+        state.fvel = midiVelocity / 127.0;
+        velocitySource.set_target(0, state.fvel);
+    }
+
     static float channelKeyEquvialent(float key, int channel, bool isMpeEnabled,
                                       SurgeStorage *storage, bool remapKeyForTuning = true);
 
@@ -252,7 +260,8 @@ class alignas(16) SurgeVoice
     std::array<ModulationSource *, n_modsources> modsources;
 
   private:
-    ModulationSource velocitySource, releaseVelocitySource;
+    ControllerModulationSource velocitySource;
+    ModulationSource releaseVelocitySource;
     ModulationSource keytrackSource;
     ControllerModulationSource polyAftertouchSource;
     ControllerModulationSource monoAftertouchSource;

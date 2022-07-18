@@ -263,7 +263,11 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     modsources[ms_keytrack] = &keytrackSource;
     modsources[ms_polyaftertouch] = &polyAftertouchSource;
 
-    velocitySource.set_output(0, state.fvel);
+    // Velocity is *almost* never reset except in poly mode so init it here
+    // then make it adapt smoothly.
+    velocitySource.init(0, state.fvel);
+    velocitySource.smoothingMode = Modulator::SmoothingMode::SLOW_EXP;
+    velocitySource.set_samplerate(storage->samplerate, storage->samplerate_inv);
     releaseVelocitySource.set_output(0, state.freleasevel);
     keytrackSource.set_output(0, 0.f);
 
@@ -686,6 +690,7 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
 {
     // Always process LFO1 so the gate retrigger always work
     lfo[0].process_block();
+    velocitySource.process_block();
 
     for (int i = 0; i < n_lfos_voice; i++)
     {
@@ -1258,7 +1263,8 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
 
     // HERE
     float Drive = db_to_linear(scene->wsunit.drive.get_extended(localcopy[id_drive].f));
-    float Gain = db_to_linear(localcopy[id_vca].f + localcopy[id_vcavel].f * (1.f - state.fvel)) *
+    float Gain = db_to_linear(localcopy[id_vca].f +
+                              localcopy[id_vcavel].f * (1.f - velocitySource.get_output(0))) *
                  modsources[ms_ampeg]->get_output(0);
     float FB = scene->feedback.get_extended(localcopy[id_feedback].f);
 
