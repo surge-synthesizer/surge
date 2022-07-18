@@ -494,6 +494,13 @@ enum MonoVoiceEnvelopeMode
     RESTART_FROM_LATEST
 };
 
+enum PolyVoiceRepeatedKeyMode
+{
+    NEW_VOICE_EVERY_NOTEON,
+    ONE_VOICE_PER_KEY, // aka "piano mode"
+    ONE_VOICE_PER_KEY_RESET_AEGFEG
+};
+
 struct MidiKeyState
 {
     int keystate;
@@ -619,6 +626,7 @@ struct SurgeSceneStorage
 
     MonoVoicePriorityMode monoVoicePriorityMode = ALWAYS_LATEST;
     MonoVoiceEnvelopeMode monoVoiceEnvelopeMode = RESTART_FROM_ZERO;
+    PolyVoiceRepeatedKeyMode polyVoiceRepeatedKeyMode = NEW_VOICE_EVERY_NOTEON;
 };
 
 const int n_stepseqsteps = 16;

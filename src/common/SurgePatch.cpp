@@ -1626,6 +1626,21 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     }
                 }
             }
+            {
+                std::string mvname = "polyVoiceRepeatedKeyMode_" + std::to_string(sc);
+                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname.c_str()));
+                storage->getPatch().scene[sc].polyVoiceRepeatedKeyMode = NEW_VOICE_EVERY_NOTEON;
+                if (mv1)
+                {
+                    // Get value
+                    int mvv;
+                    if (mv1->QueryIntAttribute("v", &mvv) == TIXML_SUCCESS)
+                    {
+                        storage->getPatch().scene[sc].polyVoiceRepeatedKeyMode =
+                            (PolyVoiceRepeatedKeyMode)mvv;
+                    }
+                }
+            }
         }
         auto *tam = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("tuningApplicationMode"));
         if (tam)
@@ -1905,6 +1920,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         for (auto &sc : scene)
         {
             sc.monoVoiceEnvelopeMode = RESTART_FROM_ZERO;
+            sc.polyVoiceRepeatedKeyMode = NEW_VOICE_EVERY_NOTEON;
         }
     }
 
@@ -2651,6 +2667,14 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         std::string mvname = "monoVoiceEnvelope_" + std::to_string(sc);
         TiXmlElement mvv(mvname.c_str());
         mvv.SetAttribute("v", storage->getPatch().scene[sc].monoVoiceEnvelopeMode);
+        nonparamconfig.InsertEndChild(mvv);
+    }
+
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        std::string mvname = "polyVoiceRepeatedKeyMode_" + std::to_string(sc);
+        TiXmlElement mvv(mvname.c_str());
+        mvv.SetAttribute("v", storage->getPatch().scene[sc].polyVoiceRepeatedKeyMode);
         nonparamconfig.InsertEndChild(mvv);
     }
 
