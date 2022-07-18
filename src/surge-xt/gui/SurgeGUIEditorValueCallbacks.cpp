@@ -634,7 +634,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             });
 
             contextMenu.addItem(
-                Surge::GUI::toOSCase("Copy from ") + oscname + Surge::GUI::toOSCase(" with Modulation"),
+                Surge::GUI::toOSCase("Copy from ") + oscname +
+                    Surge::GUI::toOSCase(" with Modulation"),
                 [this, a]() { synth->storage.clipboard_copy(cp_oscmod, current_scene, a); });
 
             if (synth->storage.get_clipboard_type() == cp_osc)
@@ -1673,8 +1674,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         if (p->ctrltype == ct_polymode && (p->val.i == pm_poly))
                         {
                             std::vector<std::string> labels = {
-                                "Rotate",
-                                "Reassign per Key (Continue from Current Level)",
+                                "Rotate", "Reassign per Key (Continue from Current Level)",
                                 "Reassign per Key (Reset from Zero)"};
                             std::vector<PolyVoiceRepeatedKeyMode> vals = {
                                 NEW_VOICE_EVERY_NOTEON,
