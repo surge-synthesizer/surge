@@ -175,6 +175,12 @@ class alignas(16) SurgeVoice
         aeg = ampEGSource.get_output(0);
         feg = filterEGSource.get_output(0);
     }
+
+    void restartAEGFEGAttack(float aeg, float feg)
+    {
+        ampEGSource.attackFrom(aeg);
+        filterEGSource.attackFrom(feg);
+    }
     static float channelKeyEquvialent(float key, int channel, bool isMpeEnabled,
                                       SurgeStorage *storage, bool remapKeyForTuning = true);
 

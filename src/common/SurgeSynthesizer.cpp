@@ -697,32 +697,71 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
     {
     case pm_poly:
     {
-        SurgeVoice *nvoice = getUnusedVoice(scene);
-
-        float aegStart{0.f}, fegStart{0.};
         auto m = storage.getPatch().scene[scene].polyVoiceRepeatedKeyMode;
+        bool reusedVoice{false};
         if (m != NEW_VOICE_EVERY_NOTEON)
         {
             for (auto v : voices[scene])
             {
                 if (v->state.key == key)
                 {
+                    float aegStart{0.f}, fegStart{0.};
                     if (m != ONE_VOICE_PER_KEY_RESET_AEGFEG)
                         v->getAEGFEGLevel(aegStart, fegStart);
-                    v->uber_release();
+
+                    auto priorNoteId = v->host_note_id;
+                    auto priorChannel = v->originating_host_channel;
+                    auto priorKey = v->originating_host_key;
+
+                    v->state.gate = true;
+                    v->state.uberrelease = false;
+                    v->state.channel = (unsigned char)channel;
+
+                    v->host_note_id = host_noteid;
+                    v->originating_host_channel = host_originating_channel;
+                    v->originating_host_key = host_originating_key;
+
+                    channelState[channel].keyState[key].voiceOrder = voiceCounter++;
+
+                    v->restartAEGFEGAttack(aegStart, fegStart);
+
+                    // Now end this note unless it is used by another scene
+                    bool endHostVoice = true;
+                    for (auto s = 0; s < n_scenes; ++s)
+                    {
+                        if (s == scene)
+                            continue;
+                        for (auto v : voices[s])
+                        {
+                            if (v->host_note_id == priorNoteId)
+                            {
+                                endHostVoice = false;
+                            }
+                        }
+                    }
+                    if (endHostVoice)
+                        notifyEndedNote(priorNoteId, priorKey, priorChannel, false);
+                    reusedVoice = true;
                 }
             }
         }
-        if (nvoice)
-        {
-            int mpeMainChannel = getMpeMainChannel(channel, key);
 
-            voices[scene].push_back(nvoice);
-            new (nvoice) SurgeVoice(
-                &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
-                key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
-                &channelState[mpeMainChannel], &channelState[channel], mpeEnabled, voiceCounter++,
-                host_noteid, host_originating_key, host_originating_channel, aegStart, fegStart);
+        if (!reusedVoice)
+        {
+            SurgeVoice *nvoice = getUnusedVoice(scene);
+
+            if (nvoice)
+            {
+                int mpeMainChannel = getMpeMainChannel(channel, key);
+
+                voices[scene].push_back(nvoice);
+                new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
+                                        storage.getPatch().scenedata[scene], key, velocity, channel,
+                                        scene, detune, &channelState[channel].keyState[key],
+                                        &channelState[mpeMainChannel], &channelState[channel],
+                                        mpeEnabled, voiceCounter++, host_noteid,
+                                        host_originating_key, host_originating_channel, 0.f, 0.f);
+            }
         }
         break;
     }
