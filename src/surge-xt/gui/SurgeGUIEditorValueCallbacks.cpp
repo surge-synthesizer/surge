@@ -1670,6 +1670,36 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 });
                         }
 
+                        if (p->ctrltype == ct_polymode && (p->val.i == pm_poly))
+                        {
+                            std::vector<std::string> labels = {
+                                "New Voice Every Note On",
+                                "Retrigger Voice On Same Key (Piano Mode)",
+                                "Retrigger Voice From Zero On Same Key"};
+                            std::vector<PolyVoiceRepeatedKeyMode> vals = {
+                                NEW_VOICE_EVERY_NOTEON,
+                                ONE_VOICE_PER_KEY, // aka "piano mode"
+                                ONE_VOICE_PER_KEY_RESET_AEGFEG};
+
+                            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                contextMenu, "REPEATED KEY BEHAVIOR");
+
+                            for (int i = 0; i < vals.size(); ++i)
+                            {
+                                bool isChecked = (vals[i] == synth->storage.getPatch()
+                                                                 .scene[current_scene]
+                                                                 .polyVoiceRepeatedKeyMode);
+                                contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true,
+                                                    isChecked, [this, isChecked, vals, i]() {
+                                                        synth->storage.getPatch()
+                                                            .scene[current_scene]
+                                                            .polyVoiceRepeatedKeyMode = vals[i];
+                                                        if (!isChecked)
+                                                            synth->storage.getPatch().isDirty =
+                                                                true;
+                                                    });
+                            }
+                        }
                         if (p->ctrltype == ct_polymode &&
                             (p->val.i == pm_mono || p->val.i == pm_mono_st ||
                              p->val.i == pm_mono_fp || p->val.i == pm_mono_st_fp))

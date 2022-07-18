@@ -698,6 +698,21 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
     case pm_poly:
     {
         SurgeVoice *nvoice = getUnusedVoice(scene);
+
+        float aegStart{0.f}, fegStart{0.};
+        auto m = storage.getPatch().scene[scene].polyVoiceRepeatedKeyMode;
+        if (m != NEW_VOICE_EVERY_NOTEON)
+        {
+            for (auto v : voices[scene])
+            {
+                if (v->state.key == key)
+                {
+                    if (m != ONE_VOICE_PER_KEY_RESET_AEGFEG)
+                        v->getAEGFEGLevel(aegStart, fegStart);
+                    v->uber_release();
+                }
+            }
+        }
         if (nvoice)
         {
             int mpeMainChannel = getMpeMainChannel(channel, key);
@@ -707,7 +722,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
                 key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
                 &channelState[mpeMainChannel], &channelState[channel], mpeEnabled, voiceCounter++,
-                host_noteid, host_originating_key, host_originating_channel, 0.f, 0.f);
+                host_noteid, host_originating_key, host_originating_channel, aegStart, fegStart);
         }
         break;
     }
