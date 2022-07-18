@@ -721,6 +721,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     v->originating_host_channel = host_originating_channel;
                     v->originating_host_key = host_originating_key;
 
+                    channelState[channel].keyState[key].voiceOrder = voiceCounter++;
+
                     v->restartAEGFEGAttack(aegStart, fegStart);
 
                     // Now end this note unless it is used by another scene
