@@ -137,6 +137,9 @@ class alignas(16) SurgeSynthesizer
 
     SurgeVoice *getUnusedVoice(int scene); // not const since it updates voice state
     void freeVoice(SurgeVoice *);
+    void reclaimVoiceFor(SurgeVoice *v, char key, char channel, char velocity, int scene,
+                         int host_note_id, int host_originating_channel, int host_originating_key,
+                         bool envFromZero = false);
     void notifyEndedNote(int32_t nid, int16_t key, int16_t chan, bool thisBlock = true);
     std::array<std::array<SurgeVoice, MAX_VOICES>, 2> voices_array;
     // TODO: FIX SCENE ASSUMPTION!
