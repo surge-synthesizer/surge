@@ -136,6 +136,8 @@ struct ModulatableSlider : public juce::Component,
 
     SurgeImage *pTray, *pHandle, *pHandleHover, *pTempoSyncHandle, *pTempoSyncHoverHandle;
 
+    std::function<std::string()> customToAccessibleString{nullptr};
+
   private:
     // I know right Here I am using private!
 
