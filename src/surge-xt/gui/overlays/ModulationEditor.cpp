@@ -430,6 +430,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             surgeLikeSlider->setTitle("Depth");
             surgeLikeSlider->setDescription("Depth");
             surgeLikeSlider->setWantsKeyboardFocus(true);
+            surgeLikeSlider->customToAccessibleString = [this] { return datum.mss.dvalplus; };
             addAndMakeVisible(*surgeLikeSlider);
 
             setAccessible(true);

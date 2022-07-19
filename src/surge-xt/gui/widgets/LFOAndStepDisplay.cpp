@@ -61,6 +61,10 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
         auto q = std::make_unique<OverlayAsAccessibleButtonWithValue<LFOAndStepDisplay>>(
             this, lt_names[i]);
         q->onPress = [this, i](auto *t) { updateShapeTo(i); };
+        q->onReturnKey = [this, i](auto *t) {
+            updateShapeTo(i);
+            return true;
+        };
         q->onGetValue = [this, i](auto *t) { return (i == lfodata->shape.val.i) ? 1 : 0; };
         typeLayer->addAndMakeVisible(*q);
         typeAccOverlays[i] = std::move(q);
