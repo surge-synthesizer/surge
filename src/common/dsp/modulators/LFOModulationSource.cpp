@@ -471,6 +471,27 @@ void LFOModulationSource::release()
     }
 }
 
+void LFOModulationSource::retriggerEnvelope()
+{
+    env_state = lfoeg_delay;
+    env_phase = 0;
+    if (localcopy[idelay].f == lfo->delay.val_min.f)
+    {
+        env_state = lfoeg_attack;
+
+        if (localcopy[iattack].f == lfo->attack.val_min.f)
+        {
+            env_state = lfoeg_hold;
+            env_val = 1.f;
+
+            if (localcopy[ihold].f == lfo->hold.val_min.f)
+            {
+                env_state = lfoeg_decay;
+            }
+        }
+    }
+}
+
 void LFOModulationSource::process_block()
 {
     if ((!phaseInitialized) ||
