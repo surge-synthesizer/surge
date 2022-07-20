@@ -172,30 +172,9 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.mpePitchBend.set_samplerate(storage->samplerate, storage->samplerate_inv);
     state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
 
-    if ((localcopy[scene->polymode.param_id_in_scene].i == pm_mono_st_fp) ||
-        (scene->portamento.val.f == scene->portamento.val_min.f))
-        state.portasrc_key = state.getPitch(storage);
-    else
-    {
-        float lk = storage->last_key[scene_id];
-        if (storage->oddsound_mts_client && storage->oddsound_mts_active)
-        {
-            lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk, channel);
-            state.portasrc_key = lk;
-        }
-        else
-        {
-            if (storage->mapChannelToOctave && !mpeEnabled)
-                state.portasrc_key =
-                    channelKeyEquvialent(lk, state.channel, mpeEnabled, storage, true);
-            else
-                state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
-        }
-    }
-    state.priorpkey = state.portasrc_key;
+    resetPortamentoFrom(storage->last_key[scene_id], channel);
 
     storage->last_key[scene_id] = key;
-    state.portaphase = 0;
     noisegenL[0] = 0.f;
     noisegenR[0] = 0.f;
     noisegenL[1] = 0.f;
@@ -1505,4 +1484,30 @@ void SurgeVoice::retriggerLFOEnvelopes()
             anLfo.retriggerEnvelope();
         }
     }
+}
+
+void SurgeVoice::resetPortamentoFrom(int key, int channel)
+{
+    if ((localcopy[scene->polymode.param_id_in_scene].i == pm_mono_st_fp) ||
+        (scene->portamento.val.f == scene->portamento.val_min.f))
+        state.portasrc_key = state.getPitch(storage);
+    else
+    {
+        float lk = key;
+        if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+        {
+            lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk, channel);
+            state.portasrc_key = lk;
+        }
+        else
+        {
+            if (storage->mapChannelToOctave && !mpeEnabled)
+                state.portasrc_key =
+                    channelKeyEquvialent(lk, state.channel, mpeEnabled, storage, true);
+            else
+                state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
+        }
+    }
+    state.priorpkey = state.portasrc_key;
+    state.portaphase = 0;
 }

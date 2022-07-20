@@ -4957,6 +4957,7 @@ void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, ch
     v->resetVelocity((unsigned int)velocity);
     v->restartAEGFEGAttack(aegStart, fegStart);
     v->retriggerLFOEnvelopes();
+    v->resetPortamentoFrom(priorKey, channel);
 
     // Now end this note unless it is used by another scene
     bool endHostVoice = true;
