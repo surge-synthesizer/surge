@@ -408,7 +408,7 @@ void OscillatorMenu::populate()
 
     if (sge)
     {
-        auto hu = sge->helpURLForSpecial("oscillators");
+        auto hu = sge->helpURLForSpecial("osc-select");
         auto lurl = hu;
 
         if (hu != "")
