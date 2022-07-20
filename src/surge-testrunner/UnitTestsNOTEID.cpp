@@ -458,8 +458,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                     if (v->state.gate)
                     {
                         ct++;
-                        REQUIRE(v->host_note_id == nidbase); // it is re-used
-                        REQUIRE(v->originating_host_key == 60);
+                        if (mode == pm_mono || mode == pm_mono_fp)
+                        {
+                            REQUIRE(v->host_note_id == nidbase + 1); // it is re-triggered
+                            REQUIRE(v->originating_host_key == 61);
+                        }
+                        else
+                        {
+                            REQUIRE(v->host_note_id == nidbase); // it is re-used
+                            REQUIRE(v->originating_host_key == 60);
+                        }
                     }
                 }
                 REQUIRE(ct == 1);
@@ -468,8 +476,18 @@ TEST_CASE("Mono Modes", "[noteid]")
                 {
                     sawOne = true;
                     REQUIRE(surge->hostNoteEndedDuringBlockCount == 1);
-                    REQUIRE(surge->endedHostNoteIds[0] == nidbase + 1);
-                    REQUIRE(surge->endedHostNoteOriginalKey[0] == 61);
+
+                    if (mode == pm_mono || mode == pm_mono_fp)
+                    {
+                        // Retrigger so original ends
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+                    }
+                    else
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase + 1);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 61);
+                    }
                 }
             }
             REQUIRE(sawOne);
@@ -485,8 +503,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                     if (v->state.gate)
                     {
                         ct++;
-                        REQUIRE(v->host_note_id == nidbase); // it is re-used
-                        REQUIRE(v->originating_host_key == 60);
+                        if (mode == pm_mono || mode == pm_mono_fp)
+                        {
+                            REQUIRE(v->host_note_id == nidbase + 1); // it is re-triggered
+                            REQUIRE(v->originating_host_key == 61);
+                        }
+                        else
+                        {
+                            REQUIRE(v->host_note_id == nidbase); // it is re-used
+                            REQUIRE(v->originating_host_key == 60);
+                        }
                     }
                 }
                 REQUIRE(ct == 1);
@@ -508,8 +534,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                     sawOne = true;
                     REQUIRE(surge->hostNoteEndedDuringBlockCount == 1);
                     // We kill the recycled
-                    REQUIRE(surge->endedHostNoteIds[0] == nidbase);
-                    REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+                    if (mode == pm_mono || mode == pm_mono_fp)
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase + 1);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 61);
+                    }
+                    else
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+                    }
                 }
             }
             REQUIRE(sawOne);
@@ -554,8 +588,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                     if (v->state.gate)
                     {
                         ct++;
-                        REQUIRE(v->host_note_id == nidbase); // it is re-used
-                        REQUIRE(v->originating_host_key == 60);
+                        if (mode == pm_mono || mode == pm_mono_fp)
+                        {
+                            REQUIRE(v->host_note_id == nidbase + 1); // it is re-used
+                            REQUIRE(v->originating_host_key == 61);
+                        }
+                        else
+                        {
+                            REQUIRE(v->host_note_id == nidbase); // it is re-used
+                            REQUIRE(v->originating_host_key == 60);
+                        }
                     }
                 }
                 REQUIRE(ct == 1);
@@ -564,8 +606,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                 {
                     sawOne = true;
                     REQUIRE(surge->hostNoteEndedDuringBlockCount == 1);
-                    REQUIRE(surge->endedHostNoteIds[0] == nidbase + 1);
-                    REQUIRE(surge->endedHostNoteOriginalKey[0] == 61);
+                    if (mode == pm_mono || mode == pm_mono_fp)
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+                    }
+                    else
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase + 1);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 61);
+                    }
                 }
             }
             REQUIRE(sawOne);
@@ -582,8 +632,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                     if (v->state.gate)
                     {
                         ct++;
-                        REQUIRE(v->host_note_id == nidbase); // it is re-used
-                        REQUIRE(v->originating_host_key == 60);
+                        if (mode == pm_mono || mode == pm_mono_fp)
+                        {
+                            REQUIRE(v->host_note_id == nidbase + 2); // it is re-triggered
+                            REQUIRE(v->originating_host_key == 63);
+                        }
+                        else
+                        {
+                            REQUIRE(v->host_note_id == nidbase); // it is re-used
+                            REQUIRE(v->originating_host_key == 60);
+                        }
                     }
                 }
                 REQUIRE(ct == 1);
@@ -592,8 +650,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                 {
                     sawOne = true;
                     REQUIRE(surge->hostNoteEndedDuringBlockCount == 1);
-                    REQUIRE(surge->endedHostNoteIds[0] == nidbase + 2);
-                    REQUIRE(surge->endedHostNoteOriginalKey[0] == 63);
+                    if (mode == pm_mono || mode == pm_mono_fp)
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase + 1);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 61);
+                    }
+                    else
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase + 2);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 63);
+                    }
                 }
             }
             REQUIRE(sawOne);
@@ -609,8 +675,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                     if (v->state.gate)
                     {
                         ct++;
-                        REQUIRE(v->host_note_id == nidbase); // it is re-used
-                        REQUIRE(v->originating_host_key == 60);
+                        if (mode == pm_mono || mode == pm_mono_fp)
+                        {
+                            REQUIRE(v->host_note_id == nidbase + 2); // it is re-used
+                            REQUIRE(v->originating_host_key == 63);
+                        }
+                        else
+                        {
+                            REQUIRE(v->host_note_id == nidbase); // it is re-used
+                            REQUIRE(v->originating_host_key == 60);
+                        }
                     }
                 }
                 REQUIRE(ct == 1);
@@ -628,8 +702,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                     if (v->state.gate)
                     {
                         ct++;
-                        REQUIRE(v->host_note_id == nidbase); // it is re-used
-                        REQUIRE(v->originating_host_key == 60);
+                        if (mode == pm_mono || mode == pm_mono_fp)
+                        {
+                            REQUIRE(v->host_note_id == nidbase + 2); // it is re-used
+                            REQUIRE(v->originating_host_key == 63);
+                        }
+                        else
+                        {
+                            REQUIRE(v->host_note_id == nidbase); // it is re-used
+                            REQUIRE(v->originating_host_key == 60);
+                        }
                     }
                 }
                 REQUIRE(ct == 1);
@@ -651,8 +733,16 @@ TEST_CASE("Mono Modes", "[noteid]")
                     sawOne = true;
                     REQUIRE(surge->hostNoteEndedDuringBlockCount == 1);
                     // We kill the recycled
-                    REQUIRE(surge->endedHostNoteIds[0] == nidbase);
-                    REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+                    if (mode == pm_mono || mode == pm_mono_fp)
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase + 2);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 63);
+                    }
+                    else
+                    {
+                        REQUIRE(surge->endedHostNoteIds[0] == nidbase);
+                        REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+                    }
                 }
             }
             REQUIRE(sawOne);

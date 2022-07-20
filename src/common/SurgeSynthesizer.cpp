@@ -825,14 +825,6 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 }
             }
 
-            if (noteIdToReuse >= 0)
-            {
-                notifyEndedNote(host_noteid, host_originating_key, host_originating_channel, false);
-                host_noteid = noteIdToReuse;
-                host_originating_channel = channelToReuse;
-                host_originating_key = keyToReuse;
-            }
-
             if (stealEnvelopesFrom &&
                 storage.getPatch().scene[scene].monoVoiceEnvelopeMode != RESTART_FROM_ZERO)
             {
@@ -842,6 +834,13 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             }
             else
             {
+                if (noteIdToReuse >= 0)
+                {
+                    // We kill the note id on the *old* voice not the *new* one on this
+                    // mode since this mode is supposed to trigger envelopes on keypress
+                    notifyEndedNote(host_noteid, noteIdToReuse, channelToReuse, keyToReuse);
+                }
+
                 SurgeVoice *nvoice = getUnusedVoice(scene);
                 float aegReuse{0.f}, fegReuse{0.f};
 
@@ -4958,6 +4957,7 @@ void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, ch
     v->resetVelocity((unsigned int)velocity);
     v->restartAEGFEGAttack(aegStart, fegStart);
     v->retriggerLFOEnvelopes();
+    v->resetPortamentoFrom(priorKey, channel);
 
     // Now end this note unless it is used by another scene
     bool endHostVoice = true;

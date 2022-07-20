@@ -190,6 +190,7 @@ class alignas(16) SurgeVoice
     }
 
     void retriggerLFOEnvelopes();
+    void resetPortamentoFrom(int key, int channel);
 
     static float channelKeyEquvialent(float key, int channel, bool isMpeEnabled,
                                       SurgeStorage *storage, bool remapKeyForTuning = true);
