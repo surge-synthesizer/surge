@@ -706,8 +706,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 if (v->state.key == key)
                 {
                     reclaimVoiceFor(v, key, channel, velocity, scene, host_noteid,
-                                    host_originating_channel, host_originating_key,
-                                    m == ONE_VOICE_PER_KEY_RESET_AEGFEG);
+                                    host_originating_channel, host_originating_key, false);
                     reusedVoice = true;
                 }
             }
@@ -4946,6 +4945,7 @@ void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, ch
     auto priorKey = v->originating_host_key;
 
     v->state.gate = true;
+    v->state.key = key;
     v->state.uberrelease = false;
     v->state.channel = (unsigned char)channel;
 

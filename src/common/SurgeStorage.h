@@ -498,7 +498,6 @@ enum PolyVoiceRepeatedKeyMode
 {
     NEW_VOICE_EVERY_NOTEON,
     ONE_VOICE_PER_KEY, // aka "piano mode"
-    ONE_VOICE_PER_KEY_RESET_AEGFEG
 };
 
 struct MidiKeyState

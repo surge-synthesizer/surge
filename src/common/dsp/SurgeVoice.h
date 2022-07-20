@@ -189,13 +189,7 @@ class alignas(16) SurgeVoice
         velocitySource.set_target(0, state.fvel);
     }
 
-    void retriggerLFOEnvelopes()
-    {
-        for (auto &anLfo : lfo)
-        {
-            anLfo.retriggerEnvelope();
-        }
-    }
+    void retriggerLFOEnvelopes();
 
     static float channelKeyEquvialent(float key, int channel, bool isMpeEnabled,
                                       SurgeStorage *storage, bool remapKeyForTuning = true);

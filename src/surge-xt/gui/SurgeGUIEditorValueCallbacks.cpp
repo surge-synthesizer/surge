@@ -1673,16 +1673,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         if (p->ctrltype == ct_polymode && (p->val.i == pm_poly))
                         {
-                            std::vector<std::string> labels = {
-                                "Rotate", "Reassign per Key (Continue from Current Level)",
-                                "Reassign per Key (Reset from Zero)"};
-                            std::vector<PolyVoiceRepeatedKeyMode> vals = {
-                                NEW_VOICE_EVERY_NOTEON,
-                                ONE_VOICE_PER_KEY, // aka "piano mode"
-                                ONE_VOICE_PER_KEY_RESET_AEGFEG};
+                            std::vector<std::string> labels = {"Stack Multiple", "Reuse Single"};
+                            std::vector<PolyVoiceRepeatedKeyMode> vals = {NEW_VOICE_EVERY_NOTEON,
+                                                                          ONE_VOICE_PER_KEY};
 
                             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                                contextMenu, "VOICE ASSIGNMENT MODE");
+                                contextMenu, "SAME KEY VOICE ALLOCATION");
 
                             for (int i = 0; i < vals.size(); ++i)
                             {

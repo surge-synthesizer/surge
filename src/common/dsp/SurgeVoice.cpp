@@ -1488,3 +1488,21 @@ void SurgeVoice::applyNoteExpression(NoteExpressionType net, float value)
     if (net != UNKNOWN)
         noteExpressions[net] = value;
 }
+
+void SurgeVoice::retriggerLFOEnvelopes()
+{
+    for (int i = 0; i < n_lfos_voice; ++i)
+    {
+        auto &anLfo = lfo[i];
+        auto &lfoData = scene->lfo[i];
+
+        if (lfoData.trigmode.val.i == lm_keytrigger)
+        {
+            anLfo.attack();
+        }
+        else
+        {
+            anLfo.retriggerEnvelope();
+        }
+    }
+}
