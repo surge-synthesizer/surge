@@ -108,6 +108,7 @@ enum DefaultKey
 
     ModListValueDisplay,
     MenuLightness,
+    ExpandModMenusWithSubMenus,
 
     UseNarratorAnnouncements,
 
