@@ -1796,9 +1796,9 @@ void Parameter::bound_value(bool force_integer)
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
             auto count = cs->getCountedSetSize();
             // OK so now val.f is between 0 and 1. So
-            auto fraccount = val.f * count;
+            auto fraccount = val.f * (count - extend_range);
             auto intcount = (int)fraccount;
-            val.f = 1.0 * intcount / count;
+            val.f = limit_range(1.0 * intcount / (count - extend_range) + 0.0001, 0., 1.);
             break;
         }
         case ct_alias_mask:
@@ -1928,8 +1928,8 @@ char *Parameter::get_storage_value(char *str) const
         sst.imbue(std::locale::classic());
         sst << std::fixed;
         sst << std::showpoint;
-        sst << std::setprecision(6);
-        sst << val.f;
+        sst << std::setprecision(14);
+        sst << (double)val.f;
         strxcpy(str, sst.str().c_str(), TXT_SIZE);
         break;
     };
@@ -2968,8 +2968,8 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
             float f = val.f;
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
             auto count = cs->getCountedSetSize();
-            auto tl = count * f;
-            snprintf(txt, TXT_SIZE, "%.2f / %d", tl, count);
+            auto tl = (count - extend_range) * f;
+            snprintf(txt, TXT_SIZE, "%.2f / %d", tl, (count - extend_range));
         }
 
         break;
@@ -3423,12 +3423,15 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             snprintf(txt, TXT_SIZE, "%s", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
             break;
         case ct_scenemode:
-            snprintf(txt, TXT_SIZE, "%s",
-                     scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]);
+            snprintf(
+                txt, TXT_SIZE, "%s",
+                Surge::GUI::toOSCase(scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)])
+                    .c_str());
             break;
         case ct_polymode:
             snprintf(txt, TXT_SIZE, "%s",
-                     play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]);
+                     Surge::GUI::toOSCase(play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)])
+                         .c_str());
             break;
         case ct_lfotrigmode:
             snprintf(txt, TXT_SIZE, "%s",
@@ -4098,6 +4101,14 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
         switch (ctrltype)
         {
+        case ct_fmconfig:
+        {
+            // So FMConfig has names like "2 > 1 < 3" which actually *work* with
+            // std::atoi so just clobber that and use the str compare
+            if (s.length() > 1 && s.c_str()[1] == ' ')
+                ni = val_min.i - 1;
+        }
+        break;
         case ct_midikey_or_channel:
         {
             auto sm = storage->getPatch().scenemode.val.i;
@@ -4180,6 +4191,19 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
         else
         {
+            // Try the inverse mapping
+            for (int i = val_min.i; i <= val_max.i; ++i)
+            {
+                char txt[TXT_SIZE];
+                auto nv = Parameter::intScaledToFloat(i, val_max.i, val_min.i);
+                get_display(txt, true, nv);
+                if (_stricmp(txt, s.c_str()) == 0)
+                {
+                    ontoThis.i = i;
+                    return true;
+                }
+            }
+
             ErrorMessageMode isLarger =
                 (ni > val_max.f) ? ErrorMessageMode::IsLarger : ErrorMessageMode::IsSmaller;
             auto bound = isLarger ? val_max.i : val_min.i;
@@ -4192,6 +4216,34 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
 
         return false;
+    }
+
+    if (valtype == vt_bool)
+    {
+        if (_stricmp(s.c_str(), "On") == 0)
+        {
+            ontoThis.b = true;
+            return true;
+        }
+
+        if (_stricmp(s.c_str(), "Off") == 0)
+        {
+            ontoThis.b = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    if (_stricmp(displayInfo.maxLabel, s.c_str()) == 0)
+    {
+        ontoThis.f = val_max.f;
+        return true;
+    }
+    if (_stricmp(displayInfo.minLabel, s.c_str()) == 0)
+    {
+        ontoThis.f = val_min.f;
+        return true;
     }
 
     auto nv = std::atof(c);
@@ -4286,6 +4338,12 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         ** log2(v/a)/b = x;
         */
 
+        // Special case where we have a minLabelValue
+        if (nv == 0 && displayInfo.minLabelValue == 0)
+        {
+            ontoThis.f = val_min.f;
+            return true;
+        }
         if (nv <= 0 || !std::isfinite(nv))
         {
             set_error_message(errMsg, "Invalid value input!", "", ErrorMessageMode::Special);
@@ -4468,6 +4526,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     break;
 
     default:
+
         return false;
     }
 

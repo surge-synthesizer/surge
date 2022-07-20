@@ -29,7 +29,7 @@ struct SurgeMemoryPools
     SurgeMemoryPools(SurgeStorage *s) : stringDelayLines(s->sinctable) {}
 
     /*
-     * The largest number of oscillator instances of a particlar
+     * The largest number of oscillator instances of a particular
      * type are scenes * oscs * max voices, but add some pad
      */
     static constexpr int maxosc = n_scenes * n_oscs * (MAX_VOICES + 8);

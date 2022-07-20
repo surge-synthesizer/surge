@@ -672,6 +672,10 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
         }
         virtual juce::String getCurrentValueAsString() const override
         {
+            if (slider->customToAccessibleString)
+            {
+                return slider->customToAccessibleString();
+            }
             auto sge = slider->firstListenerOfType<SurgeGUIEditor>();
             if (sge)
             {

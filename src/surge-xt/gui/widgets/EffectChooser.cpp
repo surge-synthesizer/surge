@@ -58,6 +58,12 @@ EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChoose
             this->notifyValueChanged();
             return true;
         };
+        q->onGetIsChecked = [this, mapi](auto *t) {
+            if (this->currentEffect == mapi)
+                return true;
+            return false;
+        };
+
         addAndMakeVisible(*q);
         slotAccOverlays[i] = std::move(q);
     }

@@ -940,7 +940,7 @@ void SurgeGUIEditor::idle()
                 ** properties, so you can control them from a DAW. The
                 ** DAW control works - everything up to this path (as described
                 ** in #160) works fine and sets the value but since there's
-                ** no CControl in param the above bails out. But ading
+                ** no CControl in param the above bails out. But adding
                 ** all these controls to param[] would have the unintended
                 ** side effect of giving them all the other param[] behaviours.
                 ** So have a second array and drop select items in here so we
@@ -7163,8 +7163,45 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
 
             case Surge::GUI::OPEN_MANUAL:
-                juce::URL(stringManual).launchInDefaultBrowser();
+            {
+                juce::Component *target = nullptr;
+                if (!editsFollowKeyboardFocus)
+                {
+                    auto fc = frame->recursivelyFindFirstChildMatching([](juce::Component *c) {
+                        auto h = dynamic_cast<Surge::GUI::Hoverable *>(c);
+                        if (h && h->isCurrentlyHovered())
+                            return true;
+                        return false;
+                    });
+                    target = fc;
+                }
+                else
+                {
+                    auto fc = frame->recursivelyFindFirstChildMatching(
+                        [](juce::Component *c) { return (c && c->hasKeyboardFocus(false)); });
+                    target = fc;
+                }
+
+                while (target && !dynamic_cast<Surge::GUI::IComponentTagValue *>(target))
+                {
+                    target = target->getParentComponent();
+                }
+
+                auto thingToOpen = std::string(stringManual);
+                if (target)
+                {
+                    auto icv = dynamic_cast<Surge::GUI::IComponentTagValue *>(target);
+                    auto tag = icv->getTag();
+                    if (tag >= start_paramtags)
+                    {
+                        thingToOpen =
+                            thingToOpen +
+                            helpURLFor(synth->storage.getPatch().param_ptr[tag - start_paramtags]);
+                    }
+                }
+                juce::URL(thingToOpen).launchInDefaultBrowser();
                 return true;
+            }
             case Surge::GUI::SKIN_LAYOUT_GRID:
             case Surge::GUI::TOGGLE_ABOUT:
             {

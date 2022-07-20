@@ -357,7 +357,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
             tooltipCountdown = -1;
             toggleCommentTooltip(false);
 
-            menu.addSectionHeader("FAVORITES");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FAVORITES");
 
             auto haveFavs = optionallyAddFavorites(menu, false, false);
 
@@ -514,7 +514,8 @@ void PatchSelector::showClassicMenu(bool single_category)
 
         std::transform(menuName.begin(), menuName.end(), menuName.begin(), ::toupper);
 
-        contextMenu.addSectionHeader("PATCHES (" + menuName + ")");
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+            contextMenu, "PATCHES (" + menuName + ")");
 
         populatePatchMenuForCategory(rightMouseCategory, contextMenu, single_category, main_e,
                                      false);
@@ -524,7 +525,8 @@ void PatchSelector::showClassicMenu(bool single_category)
         bool addedFavorites = false;
         if (patch_cat_size && storage->firstThirdPartyCategory > 0)
         {
-            contextMenu.addSectionHeader("FACTORY PATCHES");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                            "FACTORY PATCHES");
         }
 
         for (int i = 0; i < patch_cat_size; i++)
@@ -545,7 +547,7 @@ void PatchSelector::showClassicMenu(bool single_category)
                 }
 
                 contextMenu.addColumnBreak();
-                contextMenu.addSectionHeader(txt);
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, txt);
                 if (favs && optionallyAddFavorites(contextMenu, false))
                     contextMenu.addSeparator();
                 addedFavorites = true;
@@ -572,7 +574,7 @@ void PatchSelector::showClassicMenu(bool single_category)
     }
 
     contextMenu.addColumnBreak();
-    contextMenu.addSectionHeader("FUNCTIONS");
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "FUNCTIONS");
 
     auto initAction = [this]() {
         int i = 0;
@@ -791,7 +793,7 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
     if (addColumnBreak)
     {
         p.addColumnBreak();
-        p.addSectionHeader("FAVORITES");
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(p, "FAVORITES");
     }
 
     if (addToSubMenu)
@@ -1030,7 +1032,7 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
                 if (single_category)
                 {
-                    subMenu->addSectionHeader("");
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
                 }
             }
         }

@@ -284,7 +284,7 @@ older than 7 or so and clangs after 9 or 10. You will also need to install a set
 sudo apt install build-essential libcairo-dev libxkbcommon-x11-dev libxkbcommon-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-util-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libjack-jackd2-dev
 ```
 
-*You can find more info about Surge on Linux and other Unix-like distros in* [this wiki article](https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Surge-on-various-unix-like-distributions).
+*You can find more info about Surge on Linux and other Unix-like distros in* [this wiki article](https://github.com/surge-synthesizer/surge-synthesizer.github.io/wiki/Linux-and-other-unix-like-distributions).
 
 # Continuous Integration
 

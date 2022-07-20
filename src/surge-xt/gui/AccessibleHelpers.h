@@ -213,6 +213,19 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
         }
         void press() { button->onPress(mswitch); }
 
+        juce::AccessibleState getCurrentState() const override
+        {
+            auto state = AccessibilityHandler::getCurrentState();
+
+            if (button->role == juce::AccessibilityRole::radioButton)
+            {
+                state = state.withCheckable();
+                if (button->onGetIsChecked(mswitch))
+                    state = state.withChecked();
+            }
+            return state;
+        }
+
         T *mswitch;
         OverlayAsAccessibleButton<T> *button;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RBAH);
@@ -222,6 +235,7 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
     std::function<void(T *)> onPress = [](T *) {};
     std::function<bool(T *)> onMenuKey = [](T *) { return false; };
     std::function<bool(T *)> onReturnKey = [](T *) { return false; };
+    std::function<bool(T *)> onGetIsChecked = [](T *) { return false; };
 
     bool keyPressed(const juce::KeyPress &) override;
 

@@ -150,12 +150,11 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         juce::Rectangle<float> drawRect;
         bool useDrawRect = false;
         int associatedSegment;
-        bool specialEndpoint =
-            false; // For pan and zoom we need to treat the endpoint of the last segment specially
         bool active = false;
         bool dragging = false;
+        // For pan and zoom we need to treat the endpoint of the last segment specially
+        bool specialEndpoint = false;
 
-        // More coming soon
         enum Type
         {
             MOUSABLE_NODE,
@@ -201,7 +200,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                             .reduced(drawInsertX, drawInsertY)
                             .withTrimmedBottom(axisSpaceY)
                             .withTrimmedLeft(axisSpaceX)
-                            .withTrimmedTop(5);
+                            .withTrimmedTop(4);
         return drawArea;
     }
 
@@ -1735,11 +1734,23 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (da.contains(where))
         {
             auto tf = pxToTime();
-            auto t = tf(where.x);
             auto pv = pxToVal();
+            auto tp = timeToPx();
+            auto vp = valToPx();
+
+            auto t = tf(where.x);
             auto v = pv(where.y);
 
-            // Check if I'm on a hotzoneo
+            auto testIfLastNode = [tp, vp](juce::Point<int> where, MSEGStorage *ms) {
+                auto idx = ms->n_activeSegments;
+                auto area = juce::Rectangle<int>(where.x, where.y, 4, 4);
+                auto last_node =
+                    juce::Point<int>(tp(ms->segmentEnd[idx]), vp(ms->segments[idx].nv1));
+
+                return area.contains(last_node);
+            };
+
+            // Check if I'm on a hotzone
             for (auto &h : hotzones)
             {
                 if (h.rect.contains(where.toFloat()) && h.type == hotzone::MOUSABLE_NODE)
@@ -1748,23 +1759,31 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     {
                     case hotzone::SEGMENT_ENDPOINT:
                     {
-                        if (event.mods.isShiftDown() && h.associatedSegment >= 0)
+                        if (ms->editMode == MSEGStorage::LFO && testIfLastNode(where, ms))
                         {
-                            Surge::MSEG::deleteSegment(ms, ms->segmentStart[h.associatedSegment]);
+                            return;
                         }
                         else
                         {
-                            Surge::MSEG::unsplitSegment(ms, t);
+                            if (event.mods.isShiftDown() && h.associatedSegment >= 0)
+                            {
+                                Surge::MSEG::deleteSegment(ms,
+                                                           ms->segmentStart[h.associatedSegment]);
+                            }
+                            else
+                            {
+                                Surge::MSEG::unsplitSegment(ms, t);
+                            }
+
+                            modelChanged();
+                            repaint();
+
+                            return;
                         }
-
-                        modelChanged();
-                        repaint();
-
-                        return;
                     }
                     case hotzone::SEGMENT_CONTROL:
                     {
-                        // Reset the control point to duration half value middle
+                        // Reset the control point to half segment duration, middle value
                         Surge::MSEG::resetControlPoint(ms, t);
 
                         modelChanged();
@@ -2412,6 +2431,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto pv = pxToVal();
             auto v = pv(iw.y);
 
+            bool isActive = (ms->editMode == MSEGStorage::ENVELOPE);
+
             actionsMenu.addItem("Split", [this, t, v]() {
                 Surge::MSEG::splitSegment(this->ms, t, v);
                 pushToUndo();
@@ -2426,14 +2447,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addSeparator();
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Double Duration"), [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCase("Double Duration"), isActive, false, [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 2.0, longestMSEG);
                 pushToUndo();
                 modelChanged();
                 zoomToFull();
             });
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Half Duration"), [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCase("Half Duration"), isActive, false, [this]() {
                 Surge::MSEG::scaleDurations(this->ms, 0.5, longestMSEG);
                 pushToUndo();
                 modelChanged();
@@ -2456,15 +2477,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             actionsMenu.addSeparator();
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Snap Divisions"),
-                                (ms->editMode != MSEGStorage::LFO), false, [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Snap Divisions"), isActive,
+                                false, [this]() {
                                     Surge::MSEG::setAllDurationsTo(this->ms, ms->hSnapDefault);
                                     pushToUndo();
                                     modelChanged();
                                 });
 
-            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Whole Units"),
-                                (ms->editMode != MSEGStorage::LFO), false, [this]() {
+            actionsMenu.addItem(Surge::GUI::toOSCase("Quantize Nodes to Whole Units"), isActive,
+                                false, [this]() {
                                     Surge::MSEG::setAllDurationsTo(this->ms, 1.0);
                                     pushToUndo();
                                     modelChanged();
@@ -3392,6 +3413,9 @@ void MSEGEditor::forceRefresh()
         auto ed = dynamic_cast<MSEGCanvas *>(kid);
         if (ed)
             ed->modelChanged();
+        auto cr = dynamic_cast<MSEGControlRegion *>(kid);
+        if (cr)
+            cr->rebuild();
     }
 }
 

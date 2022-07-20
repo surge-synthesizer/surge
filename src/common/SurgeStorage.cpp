@@ -22,7 +22,9 @@
 #include <queue>
 #include <vembertech/vt_dsp_endian.h>
 #include "UserDefaults.h"
+#if HAS_JUCE
 #include "SurgeSharedBinary.h"
+#endif
 #include "DebugHelpers.h"
 
 #include "sst/plugininfra/paths.h"
@@ -321,13 +323,21 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     createUserDirectory();
 
     // TIXML requires a newline at end.
+#if HAS_JUCE
     auto cxmlData = std::string(SurgeSharedBinary::configuration_xml,
                                 SurgeSharedBinary::configuration_xmlSize) +
                     "\n";
+#else
+    auto cxmlData =
+        std::string("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><midictrl/>");
+#endif
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
+#if HAS_JUCE
+        std::cout << snapshotloader.ErrorDesc() << std::endl;
         reportError("Cannot parse 'configuration.xml' from memory. Internal Software Error.",
                     "Surge Incorrectly Built");
+#endif
     }
 
     load_midi_controllers();
@@ -339,9 +349,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         refresh_patchlist();
     }
 
-    getPatch().scene[0].osc[0].wt.dt = 1.0f / 512.f;
-    load_wt(0, &getPatch().scene[0].osc[0].wt, &getPatch().scene[0].osc[0]);
-
+#if HAS_JUCE
     if (!load_wt_wt_mem(SurgeSharedBinary::windows_wt, SurgeSharedBinary::windows_wtSize,
                         &WindowWT))
     {
@@ -351,6 +359,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
             << "This is a fatal internal software error which should never occur!";
         reportError(oss.str(), "Resource Loading Error");
     }
+#endif
 
     // Tuning library support
     currentScale = Tunings::evenTemperament12NoteScale();
@@ -370,6 +379,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     // Load the XML DocStrings if we are loading startup data
     if (loadWtAndPatch)
     {
+#if HAS_JUCE
         auto pdData = std::string(SurgeSharedBinary::paramdocumentation_xml,
                                   SurgeSharedBinary::paramdocumentation_xmlSize) +
                       "\n";
@@ -441,6 +451,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
                 }
             }
         }
+#endif
     }
 
     for (int s = 0; s < n_scenes; ++s)
@@ -513,6 +524,7 @@ void SurgeStorage::createUserDirectory()
                             userSkinsPath, userMidiMappingsPath})
                 fs::create_directories(s);
 
+#if HAS_JUCE
             auto rd = std::string(SurgeSharedBinary::README_UserArea_txt,
                                   SurgeSharedBinary::README_UserArea_txtSize) +
                       "\n";
@@ -520,6 +532,7 @@ void SurgeStorage::createUserDirectory()
             if (of.is_open())
                 of << rd << std::endl;
             of.close();
+#endif
         }
         catch (const fs::filesystem_error &e)
         {
@@ -1020,8 +1033,10 @@ void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)
     wt->queue_id = -1;
     if (wt_list.empty() && id == 0)
     {
+#if HAS_JUCE
         load_wt_wt_mem(SurgeSharedBinary::memoryWavetable_wt,
                        SurgeSharedBinary::memoryWavetable_wtSize, wt);
+#endif
         if (osc)
             strncpy(osc->wavetable_display_name, "Sin to Saw", TXT_SIZE);
 
@@ -1548,6 +1563,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
             getPatch().param_ptr[pid]->temposync = p.temposync;
             getPatch().param_ptr[pid]->set_extend_range(p.extend_range);
             getPatch().param_ptr[pid]->deactivated = p.deactivated;
+            getPatch().param_ptr[pid]->absolute = p.absolute;
             getPatch().param_ptr[pid]->porta_constrate = p.porta_constrate;
             getPatch().param_ptr[pid]->porta_gliss = p.porta_gliss;
             getPatch().param_ptr[pid]->porta_retrigger = p.porta_retrigger;

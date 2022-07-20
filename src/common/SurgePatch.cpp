@@ -1119,6 +1119,7 @@ unsigned int SurgePatch::save_patch(void **data)
         {
             if (uses_wavetabledata(scene[sc].osc[osc].type.val.i))
             {
+                assert(scene[sc].osc[osc].wt.everBuilt);
                 memset(wth[sc][osc].tag, 0, 4);
                 wth[sc][osc].n_samples = scene[sc].osc[osc].wt.size;
                 wth[sc][osc].n_tables = scene[sc].osc[osc].wt.n_tables;
@@ -1595,17 +1596,49 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     {
         for (int sc = 0; sc < n_scenes; ++sc)
         {
-            std::string mvname = "monoVoicePrority_" + std::to_string(sc);
-            auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname.c_str()));
-            storage->getPatch().scene[sc].monoVoicePriorityMode = ALWAYS_LATEST;
-            if (mv1)
             {
-                // Get value
-                int mvv;
-                if (mv1->QueryIntAttribute("v", &mvv) == TIXML_SUCCESS)
+                std::string mvname = "monoVoicePrority_" + std::to_string(sc);
+                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname.c_str()));
+                storage->getPatch().scene[sc].monoVoicePriorityMode = ALWAYS_LATEST;
+                if (mv1)
                 {
-                    storage->getPatch().scene[sc].monoVoicePriorityMode =
-                        (MonoVoicePriorityMode)mvv;
+                    // Get value
+                    int mvv;
+                    if (mv1->QueryIntAttribute("v", &mvv) == TIXML_SUCCESS)
+                    {
+                        storage->getPatch().scene[sc].monoVoicePriorityMode =
+                            (MonoVoicePriorityMode)mvv;
+                    }
+                }
+            }
+            {
+                std::string mvname = "monoVoiceEnvelope_" + std::to_string(sc);
+                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname.c_str()));
+                storage->getPatch().scene[sc].monoVoiceEnvelopeMode = RESTART_FROM_ZERO;
+                if (mv1)
+                {
+                    // Get value
+                    int mvv;
+                    if (mv1->QueryIntAttribute("v", &mvv) == TIXML_SUCCESS)
+                    {
+                        storage->getPatch().scene[sc].monoVoiceEnvelopeMode =
+                            (MonoVoiceEnvelopeMode)mvv;
+                    }
+                }
+            }
+            {
+                std::string mvname = "polyVoiceRepeatedKeyMode_" + std::to_string(sc);
+                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname.c_str()));
+                storage->getPatch().scene[sc].polyVoiceRepeatedKeyMode = NEW_VOICE_EVERY_NOTEON;
+                if (mv1)
+                {
+                    // Get value
+                    int mvv;
+                    if (mv1->QueryIntAttribute("v", &mvv) == TIXML_SUCCESS)
+                    {
+                        storage->getPatch().scene[sc].polyVoiceRepeatedKeyMode =
+                            (PolyVoiceRepeatedKeyMode)mvv;
+                    }
                 }
             }
         }
@@ -1880,6 +1913,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     if (revision <= 15 && polylimit.val.i == 8)
     {
         polylimit.val.i = DEFAULT_POLYLIMIT;
+    }
+
+    if (revision < 20)
+    {
+        for (auto &sc : scene)
+        {
+            sc.monoVoiceEnvelopeMode = RESTART_FROM_ZERO;
+            sc.polyVoiceRepeatedKeyMode = NEW_VOICE_EVERY_NOTEON;
+        }
     }
 
     // ensure that filtersubtype is a valid value
@@ -2620,6 +2662,22 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         nonparamconfig.InsertEndChild(mvv);
     }
 
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        std::string mvname = "monoVoiceEnvelope_" + std::to_string(sc);
+        TiXmlElement mvv(mvname.c_str());
+        mvv.SetAttribute("v", storage->getPatch().scene[sc].monoVoiceEnvelopeMode);
+        nonparamconfig.InsertEndChild(mvv);
+    }
+
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        std::string mvname = "polyVoiceRepeatedKeyMode_" + std::to_string(sc);
+        TiXmlElement mvv(mvname.c_str());
+        mvv.SetAttribute("v", storage->getPatch().scene[sc].polyVoiceRepeatedKeyMode);
+        nonparamconfig.InsertEndChild(mvv);
+    }
+
     TiXmlElement hcs("hardclipmodes");
     hcs.SetAttribute("global", (int)(storage->hardclipMode));
     for (int sc = 0; sc < n_scenes; ++sc)
@@ -2744,10 +2802,14 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement p("entry");
         p.SetAttribute("i", l);
         p.SetAttribute("bipolar", scene[0].modsources[ms_ctrl1 + l]->is_bipolar() ? 1 : 0);
-        p.SetAttribute(
-            "v", float_to_str(
-                     ((ControllerModulationSource *)scene[0].modsources[ms_ctrl1 + l])->target[0],
-                     txt2));
+
+        std::stringstream sst;
+        sst.imbue(std::locale::classic());
+        sst << std::fixed;
+        sst << std::showpoint;
+        sst << std::setprecision(14);
+        sst << (double)((ControllerModulationSource *)scene[0].modsources[ms_ctrl1 + l])->target[0];
+        p.SetAttribute("v", sst.str().c_str());
         p.SetAttribute("label", CustomControllerLabel[l]);
 
         cc.InsertEndChild(p);

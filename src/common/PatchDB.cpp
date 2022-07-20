@@ -1351,6 +1351,23 @@ int PatchDB::numberOfJobsOutstanding()
 
 std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser::Token> &t)
 {
+    auto protect = [](const std::string &s) -> std::string {
+        std::vector<std::pair<std::string, std::string>> replacements{{"'", "''"}, {"%", "%%"}};
+        auto res = s;
+        for (const auto &[search, replace] : replacements)
+        {
+            size_t pos = res.find(search);
+            // Repeat till end is reached
+            while (pos != std::string::npos)
+            {
+                // Replace this occurrence of Sub String
+                res.replace(pos, search.size(), replace);
+                // Get the next occurrence from the current position
+                pos = res.find(search, pos + replace.size());
+            }
+        }
+        return res;
+    };
     std::ostringstream oss;
     switch (t->type)
     {
@@ -1360,12 +1377,12 @@ std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser:
     case PatchDBQueryParser::KEYWORD_EQUALS:
         if ((t->content == "AUTHOR" || t->content == "AUTH") && !t->children[0]->content.empty())
         {
-            oss << "(author LIKE '%" << t->children[0]->content << "%' )";
+            oss << "(author LIKE '%" << protect(t->children[0]->content) << "%' )";
         }
         else if ((t->content == "CATEGORY" || t->content == "CAT") &&
                  !t->children[0]->content.empty())
         {
-            oss << "(category LIKE '%" << t->children[0]->content << "%' )";
+            oss << "(category LIKE '%" << protect(t->children[0]->content) << "%' )";
         }
         else
         {
@@ -1373,7 +1390,7 @@ std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser:
         }
         break;
     case PatchDBQueryParser::LITERAL:
-        oss << "( p.name LIKE '%" << t->content << "%' )";
+        oss << "( p.name LIKE '%" << protect(t->content) << "%' )";
         break;
     case PatchDBQueryParser::AND:
     case PatchDBQueryParser::OR:

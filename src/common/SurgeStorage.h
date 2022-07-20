@@ -100,11 +100,12 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                             added new Conditioner parameter (Side Low Cut)
 // 17 -> 18 (XT 1.1 nightlies) added clipping options to Delay Feedback parameter (via deform)
 //                             added Tone parameter to Phaser effect
-// 18 -> 19 (XT 1.1 release)   added String deform options (interpolation, bipolar Decay params, Stiffness options)
+// 18 -> 19 (XT 1.1 nightlies) added String deform options (interpolation, bipolar Decay params, Stiffness options)
 //                             added Extend to Delay Feedback parameter (allows negative delay)
+// 19 -> 20 (XT 1.1 release)   added voice envelope mode, but super late so don't break 19
 // clang-format on
 
-const int ff_revision = 19;
+const int ff_revision = 20;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -147,7 +148,7 @@ const char play_mode_names[n_play_modes][64] = {
     "Mono",
     "Mono (Single Trigger)",
     "Mono (Fingered Portamento)",
-    "Mono (Single Trigger + Fingered Portamento)",
+    "Mono (Single Trigger & Fingered Portamento)",
     "Latch (Monophonic)",
 };
 
@@ -366,7 +367,7 @@ enum fx_bypass
 const char fxbypass_names[n_fx_bypass][32] = {
     "All FX",
     "No Send FX",
-    "No Send And Global FX",
+    "No Send and Global FX",
     "All FX Off",
 };
 
@@ -485,6 +486,18 @@ enum MonoVoicePriorityMode
     ALWAYS_LATEST,                    // Could also be called "NOTE_ON_LATEST_RETRIGGER_LATEST"
     ALWAYS_HIGHEST,
     ALWAYS_LOWEST,
+};
+
+enum MonoVoiceEnvelopeMode
+{
+    RESTART_FROM_ZERO,
+    RESTART_FROM_LATEST
+};
+
+enum PolyVoiceRepeatedKeyMode
+{
+    NEW_VOICE_EVERY_NOTEON,
+    ONE_VOICE_PER_KEY, // aka "piano mode"
 };
 
 struct MidiKeyState
@@ -611,6 +624,8 @@ struct SurgeSceneStorage
     bool modsource_doprocess[n_modsources];
 
     MonoVoicePriorityMode monoVoicePriorityMode = ALWAYS_LATEST;
+    MonoVoiceEnvelopeMode monoVoiceEnvelopeMode = RESTART_FROM_ZERO;
+    PolyVoiceRepeatedKeyMode polyVoiceRepeatedKeyMode = NEW_VOICE_EVERY_NOTEON;
 };
 
 const int n_stepseqsteps = 16;
@@ -812,8 +827,8 @@ struct DAWExtraStateStorage
 
     bool mapChannelToOctave = false;
 
-    std::unordered_map<int, int> midictrl_map;      // param -> midictrl
-    std::unordered_map<int, int> customcontrol_map; // custom controller number -> midicontrol
+    std::map<int, int> midictrl_map;      // param -> midictrl
+    std::map<int, int> customcontrol_map; // custom controller number -> midicontrol
 
     int monoPedalMode = 0;
     int oddsoundRetuneMode = 0;

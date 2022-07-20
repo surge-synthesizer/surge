@@ -77,16 +77,36 @@ class ADSRModulationSource : public ModulationSource
             attack();
     }
 
-    virtual void attack() override
+    virtual void attack() override { attackFrom(0.f); }
+
+    virtual void attackFrom(float start)
     {
         phase = 0;
         output = 0;
         idlecount = 0;
         scalestage = 1.f;
 
+        if (start > 0)
+        {
+            output = start;
+            switch (lc[a_s].i)
+            {
+            case 0:
+                // output = sqrt(phase);
+                phase = output * output;
+                break;
+            case 1:
+                phase = output;
+                break;
+            case 2:
+                // output = phase * phase;
+                phase = sqrt(output);
+                break;
+            };
+        }
         // Reset the analog state machine too
-        _v_c1 = 0.f;
-        _v_c1_delayed = 0.f;
+        _v_c1 = start;
+        _v_c1_delayed = start;
         _discharge = 0.f;
 
         envstate = s_attack;

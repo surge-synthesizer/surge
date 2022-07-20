@@ -40,7 +40,8 @@ class alignas(16) SurgeVoice
                int velocity, int channel, int scene_id, float detune, MidiKeyState *keyState,
                MidiChannelState *mainChannelState, MidiChannelState *voiceChannelState,
                bool mpeEnabled, int64_t voiceOrder, int32_t host_note_id,
-               int16_t originating_host_key, int16_t originating_host_channel);
+               int16_t originating_host_key, int16_t originating_host_channel, float aegStart,
+               float fegStart);
     ~SurgeVoice();
 
     void release();
@@ -169,6 +170,27 @@ class alignas(16) SurgeVoice
         }
     }
 
+    void getAEGFEGLevel(float &aeg, float &feg)
+    {
+        aeg = ampEGSource.get_output(0);
+        feg = filterEGSource.get_output(0);
+    }
+
+    void restartAEGFEGAttack(float aeg, float feg)
+    {
+        ampEGSource.attackFrom(aeg);
+        filterEGSource.attackFrom(feg);
+    }
+
+    void resetVelocity(int midiVelocity)
+    {
+        state.velocity = midiVelocity;
+        state.fvel = midiVelocity / 127.0;
+        velocitySource.set_target(0, state.fvel);
+    }
+
+    void retriggerLFOEnvelopes();
+
     static float channelKeyEquvialent(float key, int channel, bool isMpeEnabled,
                                       SurgeStorage *storage, bool remapKeyForTuning = true);
 
@@ -240,7 +262,8 @@ class alignas(16) SurgeVoice
     std::array<ModulationSource *, n_modsources> modsources;
 
   private:
-    ModulationSource velocitySource, releaseVelocitySource;
+    ControllerModulationSource velocitySource;
+    ModulationSource releaseVelocitySource;
     ModulationSource keytrackSource;
     ControllerModulationSource polyAftertouchSource;
     ControllerModulationSource monoAftertouchSource;

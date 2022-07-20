@@ -123,6 +123,7 @@ struct LFOAndStepDisplay : public juce::Component,
 
         lfoTypeHover = -1;
         stepSeqShiftHover = -1;
+        overWaveform = false;
         repaint();
     }
 

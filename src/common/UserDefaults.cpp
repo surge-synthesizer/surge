@@ -244,6 +244,9 @@ std::string defaultKeyToString(DefaultKey k)
     case FXUnitAssumeFixedBlock:
         r = "fxAssumeFixedBlock";
         break;
+    case FXUnitDefaultZoom:
+        r = "fxUnitDefaultZoom";
+        break;
 
     case MenuAndEditKeybindingsFollowKeyboardFocus:
         r = "menuAndEditKeybindingsFollowKeyboardFocus";

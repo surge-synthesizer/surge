@@ -193,7 +193,7 @@ struct SwitchAH : public juce::AccessibilityHandler
               juce::AccessibilityActions()
                   .addAction(juce::AccessibilityActionType::showMenu,
                              [this]() { this->showMenu(); })
-                  .addAction(juce::AccessibilityActionType::toggle, [this]() { this->showMenu(); })
+                  .addAction(juce::AccessibilityActionType::toggle, [this]() { this->press(); })
                   .addAction(juce::AccessibilityActionType::press, [this]() { this->press(); }))
     {
     }

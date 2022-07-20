@@ -46,12 +46,15 @@ struct MainFrame : public juce::Component
     void paintOverChildren(juce::Graphics &g) override
     {
         if (!debugFocus)
+        {
             return;
+        }
+
         if (focusRectangle.getWidth() > 0 && focusRectangle.getHeight() > 0)
         {
             g.setColour(juce::Colours::red);
-            g.drawRect(focusRectangle.expanded(1), 2);
-            g.setColour(juce::Colours::yellow.withAlpha(0.1f));
+            g.drawRect(focusRectangle, 1);
+            g.setColour(juce::Colours::white.withAlpha(0.15f));
             g.fillRect(focusRectangle);
         }
     }

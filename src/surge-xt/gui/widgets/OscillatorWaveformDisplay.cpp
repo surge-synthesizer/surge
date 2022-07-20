@@ -448,7 +448,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     {
         if (idx == storage->firstThirdPartyWTCategory)
         {
-            contextMenu.addSectionHeader("3RD PARTY WAVETABLES");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                            "3RD PARTY WAVETABLES");
         }
 
         if (idx == storage->firstUserWTCategory &&
@@ -462,7 +463,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         // only add this section header if we actually have any factory WTs installed
         if (idx == 1)
         {
-            contextMenu.addSectionHeader("FACTORY WAVETABLES");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                            "FACTORY WAVETABLES");
         }
 
         PatchCategory cat = storage->wt_category[c];
@@ -474,7 +476,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
         if (addUserLabel)
         {
-            contextMenu.addSectionHeader("USER WAVETABLES");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                            "USER WAVETABLES");
             addUserLabel = false;
         }
 
@@ -605,7 +608,8 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
 
             contextMenu.addSeparator();
 
-            contextMenu.addSectionHeader("INFO");
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "INFO");
+
             contextMenu.addItem(
                 Surge::GUI::toOSCase(fmt::format("Number of Frames: {}", oscdata->wt.n_tables)),
                 false, false, nullptr);
@@ -1166,18 +1170,20 @@ struct WaveTable3DEditor : public juce::Component,
         auto &wt = oscdata->wt;
         auto pos = -1.f;
 
+        bool off = false;
         switch (oscdata->type.val.i)
         {
         case ot_wavetable:
         case ot_window:
             pos = oscdata->p[0].val.f;
+            off = oscdata->p[0].extend_range;
             break;
         default:
             pos = 0.f;
             break;
         };
 
-        auto tpos = pos * wt.n_tables;
+        auto tpos = pos * (wt.n_tables - off);
 
         // OK so now go backwards through the tables but also tilt and raise for the 3D effect
         auto smp = wt.size;

@@ -4,7 +4,7 @@ an installation, though, and in Surge 1.8, you can use that font to draw labels 
 This would allow you, in theory, to have text-free graphical assets for the background and render
 labels as strings. Button assets would still require text-in-SVGs for now.
 
-In Surge 1.8, there is minimal control over the positiong of the modulation section in the UI.
+In Surge 1.8, there is minimal control over the positioning of the modulation section in the UI.
 You can adjust the x and y position of the entire panel, or the color of an individual element
 using the mechanism described in Tutorial 02 and 03 and the labels from the skin inspector.
 In Surge 1.9, we expect to expand the ability to reponsition modulation source controls.

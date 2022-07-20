@@ -569,6 +569,25 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
     return CLAP_PROCESS_CONTINUE;
 }
 
+void SurgeSynthProcessor::clap_direct_paramsFlush(const clap_input_events *in,
+                                                  const clap_output_events *out) noexcept
+{
+    uint32_t sz = in->size(in);
+    DBG("Param flush called with " << (int)sz);
+    for (uint32_t i = 0; i < sz; ++i)
+    {
+        auto ev = in->get(in, i);
+        process_clap_event(ev);
+        if (ev->type == CLAP_EVENT_PARAM_VALUE)
+        {
+            auto pevt = reinterpret_cast<const clap_event_param_value *>(ev);
+            auto jp = static_cast<JUCEParameterVariant *>(pevt->cookie);
+        }
+    }
+    // Setting params can change internal state so give the synth a chance to react
+    surge->process();
+}
+
 void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
 {
     if (evt->space_id != CLAP_CORE_EVENT_SPACE_ID)
@@ -582,6 +601,7 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
         surge->playNote(nevt->channel, nevt->key, 127 * nevt->velocity, 0, nevt->note_id);
     }
     break;
+    case CLAP_EVENT_NOTE_CHOKE:
     case CLAP_EVENT_NOTE_OFF:
     {
         auto nevt = reinterpret_cast<const clap_event_note *>(evt);
@@ -591,20 +611,23 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     case CLAP_EVENT_MIDI:
     {
         auto mevt = reinterpret_cast<const clap_event_midi *>(evt);
-        applyMidi(juce::MidiMessageMetadata(mevt->data, 3, mevt->header.time));
+        auto sz = juce::MidiMessage::getMessageLengthFromFirstByte(mevt->data[0]);
+        jassert(sz <= 3 && sz > 0);
+        applyMidi(juce::MidiMessageMetadata(mevt->data, sz, mevt->header.time));
     }
     break;
     case CLAP_EVENT_PARAM_VALUE:
     {
         auto pevt = reinterpret_cast<const clap_event_param_value *>(evt);
-        auto jp = static_cast<juce::AudioProcessorParameter *>(pevt->cookie);
-        jp->setValue(pevt->value);
+        auto jp = static_cast<JUCEParameterVariant *>(pevt->cookie);
+        jp->processorParam->setValue(pevt->value);
     }
     break;
     case CLAP_EVENT_PARAM_MOD:
     {
         auto pevt = reinterpret_cast<const clap_event_param_mod *>(evt);
-        auto jp = static_cast<SurgeBaseParam *>(pevt->cookie);
+        auto jv = static_cast<JUCEParameterVariant *>(pevt->cookie);
+        auto jp = static_cast<SurgeBaseParam *>(jv->processorParam);
         if (pevt->note_id >= 0)
         {
             jassert(jp->supportsPolyphonicModulation());
@@ -658,7 +681,7 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     case CLAP_EVENT_NOTE_END:
     default:
     {
-        DBG("Unknown message type " << (int)(evt->type));
+        DBG("Unknown CLAP Message type in Surge Direct " << (int)(evt->type));
         // In theory I should never get this.
         // jassertfalse
     }

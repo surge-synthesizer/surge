@@ -252,6 +252,16 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
 SurgeSynthesizer::~SurgeSynthesizer()
 {
+    {
+        /*
+         * This should "never" happen due to cleanup at end of
+         * loadPatchInBackgroundThread
+         */
+        std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
+        if (patchLoadThread)
+            patchLoadThread->join();
+    }
+
     allNotesOff();
 
     for (int sc = 0; sc < n_scenes; sc++)
@@ -687,17 +697,37 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
     {
     case pm_poly:
     {
-        SurgeVoice *nvoice = getUnusedVoice(scene);
-        if (nvoice)
+        auto m = storage.getPatch().scene[scene].polyVoiceRepeatedKeyMode;
+        bool reusedVoice{false};
+        if (m != NEW_VOICE_EVERY_NOTEON)
         {
-            int mpeMainChannel = getMpeMainChannel(channel, key);
+            for (auto v : voices[scene])
+            {
+                if (v->state.key == key)
+                {
+                    reclaimVoiceFor(v, key, channel, velocity, scene, host_noteid,
+                                    host_originating_channel, host_originating_key, false);
+                    reusedVoice = true;
+                }
+            }
+        }
 
-            voices[scene].push_back(nvoice);
-            new (nvoice) SurgeVoice(
-                &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
-                key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
-                &channelState[mpeMainChannel], &channelState[channel], mpeEnabled, voiceCounter++,
-                host_noteid, host_originating_key, host_originating_channel);
+        if (!reusedVoice)
+        {
+            SurgeVoice *nvoice = getUnusedVoice(scene);
+
+            if (nvoice)
+            {
+                int mpeMainChannel = getMpeMainChannel(channel, key);
+
+                voices[scene].push_back(nvoice);
+                new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
+                                        storage.getPatch().scenedata[scene], key, velocity, channel,
+                                        scene, detune, &channelState[channel].keyState[key],
+                                        &channelState[mpeMainChannel], &channelState[channel],
+                                        mpeEnabled, voiceCounter++, host_noteid,
+                                        host_originating_key, host_originating_channel, 0.f, 0.f);
+            }
         }
         break;
     }
@@ -771,6 +801,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
         {
             int32_t noteIdToReuse = -1;
             int16_t channelToReuse, keyToReuse;
+            SurgeVoice *stealEnvelopesFrom{nullptr};
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -782,6 +813,13 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         noteIdToReuse = v->host_note_id;
                         channelToReuse = v->originating_host_channel;
                         keyToReuse = v->originating_host_key;
+                        stealEnvelopesFrom = v;
+                    }
+                    else
+                    {
+                        // Non-gated voices only win if there's no gated voice
+                        if (!stealEnvelopesFrom)
+                            stealEnvelopesFrom = v;
                     }
                     v->uber_release();
                 }
@@ -795,19 +833,32 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 host_originating_key = keyToReuse;
             }
 
-            SurgeVoice *nvoice = getUnusedVoice(scene);
-            if (nvoice)
+            if (stealEnvelopesFrom &&
+                storage.getPatch().scene[scene].monoVoiceEnvelopeMode != RESTART_FROM_ZERO)
             {
-                int mpeMainChannel = getMpeMainChannel(channel, key);
+                // stealEnvelopesFrom->getAEGFEGLevel(aegReuse, fegReuse);
+                reclaimVoiceFor(stealEnvelopesFrom, key, channel, velocity, scene, host_noteid,
+                                host_originating_channel, host_originating_key);
+            }
+            else
+            {
+                SurgeVoice *nvoice = getUnusedVoice(scene);
+                float aegReuse{0.f}, fegReuse{0.f};
 
-                voices[scene].push_back(nvoice);
-                if ((storage.getPatch().scene[scene].polymode.val.i == pm_mono_fp) && !glide)
-                    storage.last_key[scene] = key;
-                new (nvoice) SurgeVoice(
-                    &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
-                    key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
-                    &channelState[mpeMainChannel], &channelState[channel], mpeEnabled,
-                    voiceCounter++, host_noteid, host_originating_key, host_originating_channel);
+                if (nvoice)
+                {
+                    int mpeMainChannel = getMpeMainChannel(channel, key);
+
+                    voices[scene].push_back(nvoice);
+                    if ((storage.getPatch().scene[scene].polymode.val.i == pm_mono_fp) && !glide)
+                        storage.last_key[scene] = key;
+                    new (nvoice) SurgeVoice(
+                        &storage, &storage.getPatch().scene[scene],
+                        storage.getPatch().scenedata[scene], key, velocity, channel, scene, detune,
+                        &channelState[channel].keyState[key], &channelState[mpeMainChannel],
+                        &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
+                        host_originating_key, host_originating_channel, aegReuse, fegReuse);
+                }
             }
         }
         else
@@ -886,6 +937,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
         if (createVoice)
         {
             list<SurgeVoice *>::const_iterator iter;
+            SurgeVoice *recycleThis{nullptr};
+            float aegStart{0.}, fegStart{0.};
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -909,11 +962,22 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 }
                 else
                 {
-                    if (v->state.scene_id == scene)
-                        v->uber_release(); // make this optional for poly legato
+                    if (v->state.scene_id == scene && !v->state.uberrelease)
+                    {
+                        if (storage.getPatch().scene[scene].monoVoiceEnvelopeMode !=
+                            RESTART_FROM_ZERO)
+                            recycleThis = v;
+                        else
+                            v->uber_release(); // make this optional for poly legato
+                    }
                 }
             }
-            if (!found_one)
+            if (recycleThis)
+            {
+                reclaimVoiceFor(recycleThis, key, channel, velocity, scene, host_noteid,
+                                host_originating_channel, host_originating_key);
+            }
+            else if (!found_one)
             {
                 int mpeMainChannel = getMpeMainChannel(channel, key);
 
@@ -926,7 +990,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         storage.getPatch().scenedata[scene], key, velocity, channel, scene, detune,
                         &channelState[channel].keyState[key], &channelState[mpeMainChannel],
                         &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
-                        host_originating_key, host_originating_channel);
+                        host_originating_key, host_originating_channel, aegStart, fegStart);
                 }
             }
             else
@@ -1066,7 +1130,7 @@ void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_
         {
             /*
              * OK so we have a key we are about to put in the hold buffer. BUT in the
-             * RELEASE_IF_OTHERS_HELD mode we dont' want to hold it if we have other keys
+             * RELEASE_IF_OTHERS_HELD mode we don't want to hold it if we have other keys
              * down. So do we?
              */
             for (auto k = 127; k >= 0; k--) // search downwards
@@ -3519,6 +3583,13 @@ float SurgeSynthesizer::getMacroParameter01(long macroNum) const
     return storage.getPatch().scene[0].modsources[ms_ctrl1 + macroNum]->get_output01(0);
 }
 
+float SurgeSynthesizer::getMacroParameterTarget01(long macroNum) const
+{
+    return ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 +
+                                                                                 macroNum])
+        ->target[0];
+}
+
 void SurgeSynthesizer::setMacroParameter01(long macroNum, float val)
 {
     storage.getPatch().isDirty = true;
@@ -3713,6 +3784,10 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     synth->storage.getPatch().isDirty = false;
     synth->halt_engine = false;
 
+    // Now we want to null out the patchLoadThread since everything is done
+    auto myThread = std::move(synth->patchLoadThread);
+    myThread->detach();
+
     return;
 }
 
@@ -3761,6 +3836,8 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
             loadFx(false, false);
 
         loadOscalgos();
+
+        storage.perform_queued_wtloads();
     }
 }
 
@@ -4039,8 +4116,16 @@ void SurgeSynthesizer::process()
             allNotesOff();
             halt_engine = true;
 
-            std::thread loadThread(loadPatchInBackgroundThread, this);
-            loadThread.detach();
+            /*
+             * In theory, since we only spawn under a lock and the loading thread
+             * also holds that lock, this should "never" happen - namely the patch
+             * load thread should be null always, and we null it out with a move
+             * at the end of the thread operation.
+             */
+            if (patchLoadThread)
+                patchLoadThread->join();
+
+            patchLoadThread = std::make_unique<std::thread>(loadPatchInBackgroundThread, this);
 
             clear_block(output[0], BLOCK_SIZE_QUAD);
             clear_block(output[1], BLOCK_SIZE_QUAD);
@@ -4845,4 +4930,49 @@ bool SurgeSynthesizer::getParameterIsBoolean(const ID &id) const
     }
 
     return false;
+}
+
+void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, char velocity,
+                                       int scene, int host_noteid, int host_originating_channel,
+                                       int host_originating_key, bool resetToZero)
+{
+    float aegStart{0.f}, fegStart{0.};
+    if (!resetToZero)
+        v->getAEGFEGLevel(aegStart, fegStart);
+
+    auto priorNoteId = v->host_note_id;
+    auto priorChannel = v->originating_host_channel;
+    auto priorKey = v->originating_host_key;
+
+    v->state.gate = true;
+    v->state.key = key;
+    v->state.uberrelease = false;
+    v->state.channel = (unsigned char)channel;
+
+    v->host_note_id = host_noteid;
+    v->originating_host_channel = host_originating_channel;
+    v->originating_host_key = host_originating_key;
+
+    channelState[channel].keyState[key].voiceOrder = voiceCounter++;
+
+    v->resetVelocity((unsigned int)velocity);
+    v->restartAEGFEGAttack(aegStart, fegStart);
+    v->retriggerLFOEnvelopes();
+
+    // Now end this note unless it is used by another scene
+    bool endHostVoice = true;
+    for (auto s = 0; s < n_scenes; ++s)
+    {
+        if (s == scene)
+            continue;
+        for (auto v : voices[s])
+        {
+            if (v->host_note_id == priorNoteId)
+            {
+                endHostVoice = false;
+            }
+        }
+    }
+    if (endHostVoice)
+        notifyEndedNote(priorNoteId, priorKey, priorChannel, false);
 }

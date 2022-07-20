@@ -7,5 +7,25 @@
     </component-classes>
 
     <controls>
+        <control ui_identifier="mixer.mute_o1" y="3" w="18" h="11"/>
+        <control ui_identifier="mixer.mute_o2" y="3" w="18" h="11"/>
+        <control ui_identifier="mixer.mute_o3" y="3" w="18" h="11"/>
+        <control ui_identifier="mixer.mute_ring12" y="3" w="18" h="11"/>
+        <control ui_identifier="mixer.mute_ring23" y="3" w="18" h="11"/>
+        <control ui_identifier="mixer.mute_noise" y="3" w="18" h="11"/>
+
+        <control ui_identifier="mixer.solo_o1" y="15" w="18" h="11"/>
+        <control ui_identifier="mixer.solo_o2" y="15" w="18" h="11"/>
+        <control ui_identifier="mixer.solo_o3" y="15" w="18" h="11"/>
+        <control ui_identifier="mixer.solo_ring12" y="15" w="18" h="11"/>
+        <control ui_identifier="mixer.solo_ring23" y="15" w="18" h="11"/>
+        <control ui_identifier="mixer.solo_noise" y="15" w="18" h="11"/>
+
+        <control ui_identifier="mixer.route_o1" x="2" y="27" w="16" h="9"/>
+        <control ui_identifier="mixer.route_o2" x="22" y="27" w="16" h="9"/>
+        <control ui_identifier="mixer.route_o3" x="42" y="27" w="16" h="9"/>
+        <control ui_identifier="mixer.route_ring12" x="62" y="27" w="16" h="9"/>
+        <control ui_identifier="mixer.route_ring23" x="82" y="27" w="16" h="9"/>
+        <control ui_identifier="mixer.route_noise" x="102" y="27" w="16" h="9"/>
     </controls>
 </surge-skin>

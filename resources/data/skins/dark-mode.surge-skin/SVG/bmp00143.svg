@@ -1,23 +1,23 @@
-<svg width="22" height="45" viewBox="0 0 22 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="16" height="27" viewBox="0 0 16 27" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g opacity="0.5">
-<path d="M12 4H8V11H12V4Z" fill="#FF9000"/>
+<path d="M10 1H6V8H10V1Z" fill="#FF9000"/>
 </g>
 <g opacity="0.5">
-<path d="M17 4H13V11H17V4Z" fill="#FF9000"/>
+<path d="M15 1H11V8H15V1Z" fill="#FF9000"/>
 </g>
-<path d="M7 4H3V11H7V4Z" fill="#FF9000"/>
-<path d="M12 19H8V26H12V19Z" fill="#FF9000"/>
+<path d="M5 1H1V8H5V1Z" fill="#FF9000"/>
+<path d="M10 10H6V17H10V10Z" fill="#FF9000"/>
 <g opacity="0.5">
-<path d="M17 19H13V26H17V19Z" fill="#FF9000"/>
-</g>
-<g opacity="0.5">
-<path d="M7 19H3V26H7V19Z" fill="#FF9000"/>
+<path d="M15 10H11V17H15V10Z" fill="#FF9000"/>
 </g>
 <g opacity="0.5">
-<path d="M12 34H8V41H12V34Z" fill="#FF9000"/>
+<path d="M5 10H1V17H5V10Z" fill="#FF9000"/>
 </g>
-<path d="M17 34H13V41H17V34Z" fill="#FF9000"/>
 <g opacity="0.5">
-<path d="M7 34H3V41H7V34Z" fill="#FF9000"/>
+<path d="M10 19H6V26H10V19Z" fill="#FF9000"/>
+</g>
+<path d="M15 19H11V26H15V19Z" fill="#FF9000"/>
+<g opacity="0.5">
+<path d="M5 19H1V26H5V19Z" fill="#FF9000"/>
 </g>
 </svg>

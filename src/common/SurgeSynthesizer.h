@@ -99,7 +99,7 @@ class alignas(16) SurgeSynthesizer
      * processAudioThreadOpsWhenAudioEngineUnavailable reloads a patch if the audio thread
      * isn't running but if it is running lets the deferred queue handle it. But it has an option
      * which is *extremely dangerous* to force you to load in the current thread immediately.
-     * If you use this option and dont' know what you are doing it will explode - basically
+     * If you use this option and don't know what you are doing it will explode - basically
      * we only use it in the startup constructor path.
      */
     void
@@ -137,6 +137,9 @@ class alignas(16) SurgeSynthesizer
 
     SurgeVoice *getUnusedVoice(int scene); // not const since it updates voice state
     void freeVoice(SurgeVoice *);
+    void reclaimVoiceFor(SurgeVoice *v, char key, char channel, char velocity, int scene,
+                         int host_note_id, int host_originating_channel, int host_originating_key,
+                         bool envFromZero = false);
     void notifyEndedNote(int32_t nid, int16_t key, int16_t chan, bool thisBlock = true);
     std::array<std::array<SurgeVoice, MAX_VOICES>, 2> voices_array;
     // TODO: FIX SCENE ASSUMPTION!
@@ -246,6 +249,7 @@ class alignas(16) SurgeSynthesizer
 
     void setMacroParameter01(long macroNum, float val);
     float getMacroParameter01(long macroNum) const;
+    float getMacroParameterTarget01(long macroNum) const;
     void applyMacroMonophonicModulation(long macroNum, float val);
 
     void setNoteExpression(SurgeVoice::NoteExpressionType net, int32_t note_id, int16_t key,
@@ -350,8 +354,10 @@ class alignas(16) SurgeSynthesizer
 
     void loadRaw(const void *data, int size, bool preset = false);
     void loadPatch(int id);
-    bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name);
+    bool loadPatchByPath(const char *fxpPath, int categoryId, const char *name,
+                         bool forceIsPreset = true);
     void selectRandomPatch();
+    std::unique_ptr<std::thread> patchLoadThread;
 
     // if increment is true, we go to next patch, else go to previous patch
     void jogCategory(bool increment);
@@ -360,7 +366,7 @@ class alignas(16) SurgeSynthesizer
 
     void swapMetaControllers(int ct1, int ct2);
 
-    void savePatchToPath(fs::path p);
+    void savePatchToPath(fs::path p, bool refreshPatchList = true);
     void savePatch(bool factoryInPlace = false);
     void updateUsedState();
     void prepareModsourceDoProcess(int scenemask);

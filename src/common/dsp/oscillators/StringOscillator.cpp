@@ -377,7 +377,7 @@ float StringOscillator::pitchAdjustmentForStiffness()
     {
         // I just whacked at it in a tuner at levels and came up with this. These are pitch shifts
         // so basically i ran A/69/440 into a tuner with the burst chirp and saw how far we were
-        // off in frequency at 0, 25, 50 etcc then converted to notes using 12TET
+        // off in frequency at 0, 25, 50 etc... then converted to notes using 12TET
         static constexpr float retunes[] = {-0.0591202, -0.122405, -0.225738, -0.406056,
                                             -0.7590243};
         float fidx = limit_range(-4 * tv, 0.f, 4.f);

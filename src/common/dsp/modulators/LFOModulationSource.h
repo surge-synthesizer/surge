@@ -49,6 +49,7 @@ class LFOModulationSource : public ModulationSource
     virtual void attack() override;
     virtual void release() override;
     virtual void process_block() override;
+    virtual void retriggerEnvelope();
     virtual void completedModulation();
 
     int get_active_outputs() override

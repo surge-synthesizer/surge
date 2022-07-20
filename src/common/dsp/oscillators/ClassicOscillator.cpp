@@ -65,7 +65,7 @@
 ** The storage buffer is sized so there is enough room to run a FIR model of the DAC
 ** forward in time from the point of the current buffer. This means when we wrap
 ** the buffer position we need to copy the back-end FIR buffer into the front of the new
-** buffer. Other than that subtletly, the buffer is just a ring.
+** buffer. Other than that subtlety, the buffer is just a ring.
 **
 ** There's lots more details but that's the basic operating model you will see in
 ** ::process_block once you know that ::convolute generates the next blast

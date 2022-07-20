@@ -113,6 +113,7 @@ enum DefaultKey
 
     // Surge XT Effects specific defaults
     FXUnitAssumeFixedBlock,
+    FXUnitDefaultZoom,
 
     nKeys
 };

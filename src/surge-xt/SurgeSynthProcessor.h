@@ -183,7 +183,16 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
         res = res.substring(0, i);
         return res;
     }
-    float getValue() const override { return s->getMacroParameter01(macroNum); }
+    float getValue() const override
+    {
+        /*
+         * So why the target here? When we setValue we want the immediate
+         * getValue to return the same thing, but setValue sets the target
+         * So basically hide the smoothing from the externalizaion of the
+         * parameter to meet th econstraint
+         */
+        return s->getMacroParameterTarget01(macroNum);
+    }
     float getValueForText(const juce::String &text) const override
     {
         auto tf = std::atof(text.toRawUTF8());
@@ -350,8 +359,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool isInputMain(int index) override { return false; }
     bool supportsDirectProcess() override { return true; }
     clap_process_status clap_direct_process(const clap_process *process) noexcept override;
-    void process_clap_event(const clap_event_header_t *e);
-
+    bool supportsDirectParamsFlush() override { return true; }
+    void clap_direct_paramsFlush(const clap_input_events * /*in*/,
+                                 const clap_output_events * /*out*/) noexcept override;
+    void process_clap_event(const clap_event_header_t *evt);
     bool supportsVoiceInfo() override { return true; }
     bool voiceInfoGet(clap_voice_info *info) override
     {
