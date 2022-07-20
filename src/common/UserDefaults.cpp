@@ -255,7 +255,7 @@ std::string defaultKeyToString(DefaultKey k)
     case ExpandModMenusWithSubMenus:
         r = "expandModMenusWithSubmenus";
         break;
-        
+
     case nKeys:
         break;
     }

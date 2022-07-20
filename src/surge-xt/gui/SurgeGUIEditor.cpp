@@ -3973,8 +3973,8 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     bool doExpMen = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
 
-    wfMenu.addItem(Surge::GUI::toOSCase("Add SubMenus to Modulation Menu Items"), true,
-                   doExpMen, [this, doExpMen]() {
+    wfMenu.addItem(Surge::GUI::toOSCase("Add SubMenus to Modulation Menu Items"), true, doExpMen,
+                   [this, doExpMen]() {
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
                            !doExpMen);
