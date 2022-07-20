@@ -987,7 +987,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             modMenu->setIsMuted(synth->isModulationMuted(
                                 parameter->id, (modsources)thisms, use_scene, modidx));
                             auto mmt = modMenu->getTitle();
-                            contextMenu.addCustomItem(-1, std::move(modMenu), nullptr, mmt);
+                            auto pm = modMenu->createAccessibleSubMenu(&synth->storage);
+                            contextMenu.addCustomItem(-1, std::move(modMenu),
+                                                      pm.get() ? std::move(pm) : nullptr, mmt);
                             first_destination = false;
                             n_md++;
                         }
@@ -2491,7 +2493,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     comp->setSkin(currentSkin, bitmapStore);
                                     comp->setIsMuted(
                                         synth->isModulationMuted(ptag, (modsources)ms, sc, modidx));
-                                    contextMenu.addCustomItem(-1, std::move(comp), nullptr,
+                                    auto pm = comp->createAccessibleSubMenu(&synth->storage);
+                                    contextMenu.addCustomItem(-1, std::move(comp),
+                                                              pm.get() ? std::move(pm) : nullptr,
                                                               comptitle);
                                 }
                             }

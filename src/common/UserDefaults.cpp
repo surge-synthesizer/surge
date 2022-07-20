@@ -252,6 +252,10 @@ std::string defaultKeyToString(DefaultKey k)
         r = "menuAndEditKeybindingsFollowKeyboardFocus";
         break;
 
+    case ExpandModMenusWithSubMenus:
+        r = "expandModMenusWithSubmenus";
+        break;
+        
     case nKeys:
         break;
     }
