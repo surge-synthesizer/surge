@@ -3476,8 +3476,8 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     bool isFixed = false;
     std::vector<int> zoomTos = {{100, 125, 150, 175, 200, 300, 400}};
     std::string lab;
-    auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom,
-                                                   zoomFactor);
+    auto dzf =
+        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 0);
 
     if (currentSkin->hasFixedZooms())
     {
@@ -3543,11 +3543,14 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
         zoomSubMenu.addSeparator();
 
-        lab = fmt::format("Zoom to Default ({:d}%)", dzf);
+        if (dzf != 0)
+        {
+            lab = fmt::format("Zoom to Default ({:d}%)", dzf);
 
-        Surge::GUI::addMenuWithShortcut(zoomSubMenu, Surge::GUI::toOSCase(lab),
-                                        showShortcutDescription("Shift + /", u8"\U000021E7/"),
-                                        [this, dzf]() { resizeWindow(dzf); });
+            Surge::GUI::addMenuWithShortcut(zoomSubMenu, Surge::GUI::toOSCase(lab),
+                                            showShortcutDescription("Shift + /", u8"\U000021E7/"),
+                                            [this, dzf]() { resizeWindow(dzf); });
+        }
     }
 
     if ((int)zoomFactor != dzf)
