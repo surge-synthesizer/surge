@@ -4947,6 +4947,7 @@ void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, ch
     v->state.key = key;
     v->state.uberrelease = false;
     v->state.channel = (unsigned char)channel;
+    v->state.voiceChannelState = &channelState[channel];
 
     v->host_note_id = host_noteid;
     v->originating_host_channel = host_originating_channel;
