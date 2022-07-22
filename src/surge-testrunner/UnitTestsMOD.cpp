@@ -895,6 +895,7 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(surge);
 
         ControllerModulationSource a(Modulator::SmoothingMode::FAST_LINE);
+        a.set_samplerate(surge->storage.samplerate, surge->storage.samplerate_inv);
         a.init(0.5f);
         for (int i = 0; i < 10; ++i)
         {
@@ -914,6 +915,7 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(surge);
 
         ControllerModulationSource a(Modulator::SmoothingMode::DIRECT);
+        a.set_samplerate(surge->storage.samplerate, surge->storage.samplerate_inv);
         a.init(0.5f);
         for (int i = 0; i < 100; ++i)
         {
