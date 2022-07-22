@@ -78,6 +78,20 @@ void SurgeGUIEditor::idleInfowindow()
     paramInfowindow->idle();
 }
 
+std::string SurgeGUIEditor::getAccessibleModulationVoiceover(long ptag)
+{
+    auto pid = ptag - start_paramtags;
+    auto p = synth->storage.getPatch().param_ptr[pid];
+
+    ModulationDisplayInfoWindowStrings mss;
+    char pdisp[TXT_SIZE];
+    p->get_display_of_modulation_depth(
+        pdisp, synth->getModDepth(pid, modsource, current_scene, modsource_index),
+        synth->isBipolarModulation(modsource), Parameter::InfoWindow, &mss);
+
+    return mss.val + " mod " + mss.dvalplus;
+}
+
 void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
 {
     auto pid = ptag - start_paramtags;

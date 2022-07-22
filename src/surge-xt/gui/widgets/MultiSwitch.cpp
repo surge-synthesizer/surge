@@ -324,6 +324,8 @@ bool MultiSwitch::keyPressed(const juce::KeyPress &key)
     }
     else
     {
+        _DBGCOUT << "Setting integer value to " << iv << " " << 1.f * iv / (rows * columns - 1)
+                 << std::endl;
         setValue(1.f * iv / (rows * columns - 1));
     }
     notifyBeginEdit();

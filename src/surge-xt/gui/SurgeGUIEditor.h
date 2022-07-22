@@ -443,6 +443,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::string getDisplayForTag(long tag, bool external = false, float value = 0);
     float getF01FromString(long tag, const std::string &s);
     float getModulationF01FromString(long tag, const std::string &s);
+    std::string getAccessibleModulationVoiceover(long tag);
 
     void queuePatchFileLoad(const std::string &file)
     {
