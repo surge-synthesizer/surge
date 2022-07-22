@@ -629,3 +629,35 @@ std::unique_ptr<juce::ComponentTraverser> SurgefxAudioProcessorEditor::createFoc
 {
     return std::make_unique<FxFocusTrav>(this);
 }
+
+bool SurgefxAudioProcessorEditor::keyPressed(const juce::KeyPress &key)
+{
+    auto zoomTo = [this](int zf) { setSize(baseWidth * zf * 0.01, baseHeight * zf * 0.01); };
+    auto zoomFactor = (int)std::round(100.0 * getWidth() / baseWidth);
+
+    if (key.getTextCharacter() == '/' && (key.getModifiers().isShiftDown()))
+    {
+        auto dzf = Surge::Storage::getUserDefaultValue(processor.storage.get(),
+                                                       Surge::Storage::FXUnitDefaultZoom, 100);
+        zoomTo(dzf);
+        return true;
+    }
+    int incrZoom = 0;
+    if (key.getTextCharacter() == '+')
+    {
+        incrZoom = key.getModifiers().isShiftDown() ? 25 : 10;
+    }
+    if (key.getTextCharacter() == '-')
+    {
+        incrZoom = key.getModifiers().isShiftDown() ? -25 : -10;
+    }
+
+    if (incrZoom != 0)
+    {
+        auto nzf = std::clamp(zoomFactor + incrZoom, 75, 250);
+        zoomTo(nzf);
+        return true;
+    }
+
+    return false;
+}
