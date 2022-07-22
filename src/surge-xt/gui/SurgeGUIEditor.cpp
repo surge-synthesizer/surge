@@ -3973,6 +3973,19 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                            !doAccAnn);
                    });
 
+#if WINDOWS
+    bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Announce Patch Browser (Windows Workaround)"), true,
+                   doAccAnnPatch, [this, doAccAnnPatch]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage),
+                           Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
+                           !doAccAnnPatch);
+                   });
+#endif
+
     bool doExpMen = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
 

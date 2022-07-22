@@ -111,6 +111,7 @@ enum DefaultKey
     ExpandModMenusWithSubMenus,
 
     UseNarratorAnnouncements,
+    UseNarratorAnnouncementsForPatchTypeahead,
 
     // Surge XT Effects specific defaults
     FXUnitAssumeFixedBlock,

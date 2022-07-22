@@ -63,6 +63,7 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
     struct TypeAheadListener
     {
         virtual ~TypeAheadListener() = default;
+        virtual void itemFocused(int providerIndex) {}
         virtual void itemSelected(int providerIndex) = 0;
         virtual void typeaheadCanceled() = 0;
     };
@@ -75,6 +76,7 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
 
     void dismissWithValue(int providerIdx, const std::string &s, const juce::ModifierKeys &mod);
     void dismissWithoutValue();
+    void updateSelected(int providerIdx);
 
     std::unique_ptr<juce::ListBox> lbox;
     std::unique_ptr<TypeAheadListBoxModel> lboxmodel;

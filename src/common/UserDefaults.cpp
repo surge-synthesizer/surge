@@ -240,6 +240,9 @@ std::string defaultKeyToString(DefaultKey k)
     case UseNarratorAnnouncements:
         r = "useNarratorAnnouncements";
         break;
+    case UseNarratorAnnouncementsForPatchTypeahead:
+        r = "useNarratorAnnouncementsForPatchTypeahead";
+        break;
 
     case FXUnitAssumeFixedBlock:
         r = "fxAssumeFixedBlock";

@@ -151,6 +151,11 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TARow);
     };
 
+    void selectedRowsChanged(int lastRowSelected) override
+    {
+        ta->updateSelected(search[lastRowSelected]);
+    }
+
     juce::Component *refreshComponentForRow(int rowNumber, bool isRowSelected,
                                             juce::Component *existingComponentToUpdate) override
     {
@@ -280,6 +285,14 @@ void TypeAhead::dismissWithoutValue()
     for (auto l : taList)
     {
         l->typeaheadCanceled();
+    }
+}
+
+void TypeAhead::updateSelected(int providerIdx)
+{
+    for (auto l : taList)
+    {
+        l->itemFocused(providerIdx);
     }
 }
 
