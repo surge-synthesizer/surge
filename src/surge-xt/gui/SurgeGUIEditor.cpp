@@ -5657,6 +5657,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 }
             }
 
+            if (hsw->isShowing() && hsw->hasKeyboardFocus(true))
+            {
+                hsw->updateAccessibleStateOnUserValueChange();
+            }
             juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
 
             if (paramIndex >= 0)
@@ -5665,7 +5669,6 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
             return dynamic_cast<Surge::GUI::IComponentTagValue *>(
                 juceSkinComponents[skinCtrl->sessionid].get());
-            ;
         }
         else
         {
