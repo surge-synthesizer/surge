@@ -138,7 +138,7 @@ PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelecto
 
     setWantsKeyboardFocus(true);
 };
-PatchSelector::~PatchSelector() = default;
+PatchSelector::~PatchSelector() { typeAhead->removeTypeAheadListener(this); };
 
 void PatchSelector::setStorage(SurgeStorage *s)
 {
@@ -1114,6 +1114,23 @@ void PatchSelector::itemSelected(int providerIndex)
     {
         sge->queuePatchFileLoad(sr.file);
     }
+}
+
+void PatchSelector::itemFocused(int providerIndex)
+{
+#if WINDOWS
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+    if (!sge)
+        return;
+
+    auto sr = patchDbProvider->lastSearchResult[providerIndex];
+    auto doAcc = Surge::Storage::getUserDefaultValue(
+        storage, Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
+    if (doAcc)
+    {
+        sge->enqueueAccessibleAnnouncement(sr.name + " in " + sr.cat);
+    }
+#endif
 }
 
 void PatchSelector::idle() { wasTypeaheadCanceledSinceLastIdle = false; }
