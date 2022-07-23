@@ -153,7 +153,8 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
 
     void selectedRowsChanged(int lastRowSelected) override
     {
-        ta->updateSelected(search[lastRowSelected]);
+        if (lastRowSelected >= 0 && lastRowSelected < search.size())
+            ta->updateSelected(search[lastRowSelected]);
     }
 
     juce::Component *refreshComponentForRow(int rowNumber, bool isRowSelected,

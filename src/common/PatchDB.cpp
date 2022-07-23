@@ -23,6 +23,8 @@
 #include "DebugHelpers.h"
 #include <chrono>
 
+#define TRACE_DB 0
+
 namespace Surge
 {
 namespace PatchStorage
@@ -347,7 +349,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
     void openDb()
     {
+#if TRACE_DB
         std::cout << ">>> Opening r/w DB" << std::endl;
+#endif
         auto flag = SQLITE_OPEN_NOMUTEX; // basically lock
         flag |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
 
@@ -371,7 +375,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
     void closeDb()
     {
+#if TRACE_DB
         std::cout << "<<<< Closing r/w DB" << std::endl;
+#endif
         if (dbh)
             sqlite3_close(dbh);
         dbh = nullptr;
@@ -392,14 +398,18 @@ CREATE TABLE IF NOT EXISTS Favorites (
         void go(WriterWorker &w)
         {
             w.setupDatabase();
+#if TRACE_DB
             std::cout << "Done with EnQSetup" << std::endl;
+#endif
         }
     };
 
     std::atomic<bool> hasSetup{false};
     void setupDatabase()
     {
+#if TRACE_DB
         std::cout << "PatchDB : Setup Database " << dbname << std::endl;
+#endif
         /*
          * OK check my version
          */
@@ -412,11 +422,15 @@ CREATE TABLE IF NOT EXISTS Favorites (
             {
                 int id = st.col_int(0);
                 auto ver = st.col_charstar(1);
+#if TRACE_DB
                 std::cout << "        : schema check. DBVersion='" << ver << "' SchemaVersion='"
                           << schema_version << "'" << std::endl;
+#endif
                 if (strcmp(ver, schema_version) == 0)
                 {
+#if TRACE_DB
                     std::cout << "        : Schema matches. Reusing database." << std::endl;
+#endif
                     rebuild = false;
                 }
             }
@@ -436,8 +450,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
         char *emsg;
         if (rebuild)
         {
+#if TRACE_DB
             std::cout << "        : Schema missing or mismatched. Dropping and Rebuilding Database."
                       << std::endl;
+#endif
             try
             {
                 SQL::Exec(dbh, setup_sql);
@@ -510,7 +526,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
         doc.Parse(xml.c_str(), nullptr, TIXML_ENCODING_LEGACY);
         if (doc.Error())
         {
+#if TRACE_DB
             std::cout << "        - ERROR: Unable to load XML; Skipping file" << std::endl;
+#endif
             return res;
         }
 
@@ -518,7 +536,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
         if (!patch)
         {
+#if TRACE_DB
             std::cout << "        - ERROR: No 'patch' element in XML" << std::endl;
+#endif
             return res;
         }
 
@@ -529,7 +549,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         else
         {
+#if TRACE_DB
             std::cout << "        - ERROR: No Revision in XML" << std::endl;
+#endif
             return res;
         }
 
@@ -686,7 +708,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
         if (!fs::exists(p.path))
         {
+#if TRACE_DB
             std::cout << "    - Warning: Non existent " << path_to_string(p.path) << std::endl;
+#endif
             return;
         }
         // Check with
