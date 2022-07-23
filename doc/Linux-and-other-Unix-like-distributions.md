@@ -81,4 +81,4 @@ When in doubt, contact the package maintainers <br/>
 
 The latest addition among the packages is here: <br/>
 https://flathub.org/apps/details/org.surge_synth_team.surge-xt <br/>
-- **Please note:** *This flatpak includes the Standalone version only.*
+- The plugins _for use with other flatpaked apps_ is available as `org.freedesktop.LinuxAudio.Plugins.Surge-XT`
