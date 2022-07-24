@@ -1366,7 +1366,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_flangervoices:
         displayType = LinearWithScale;
-        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "Combs");
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "Voices");
         break;
 
     case ct_freq_hpf:
