@@ -598,7 +598,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     /*
      * Favorites support
      */
-    void setPatchAsFavorite(bool b);
+    void setPatchAsFavorite(const std::string &pname, bool b);
     bool isPatchFavorite();
     bool isPatchUser();
 
