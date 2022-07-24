@@ -6918,7 +6918,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
                 return true;
             case Surge::GUI::FAVORITE_PATCH:
-                setPatchAsFavorite(!isPatchFavorite());
+                setPatchAsFavorite(synth->storage.getPatch().name, !isPatchFavorite());
                 patchSelector->setIsFavorite(isPatchFavorite());
                 return true;
 
@@ -7343,7 +7343,14 @@ std::string SurgeGUIEditor::showShortcutDescription(const std::string &shortcutD
     }
 }
 
-void SurgeGUIEditor::setPatchAsFavorite(bool b) { setSpecificPatchAsFavorite(synth->patchid, b); }
+void SurgeGUIEditor::setPatchAsFavorite(const std::string &pname, bool b)
+{
+    std::ostringstream oss;
+    oss << pname << (b ? " added to " : " removed from ") << "favorite patches.";
+    enqueueAccessibleAnnouncement(oss.str());
+
+    setSpecificPatchAsFavorite(synth->patchid, b);
+}
 
 void SurgeGUIEditor::setSpecificPatchAsFavorite(int patchid, bool b)
 {
