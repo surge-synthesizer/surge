@@ -1364,6 +1364,11 @@ void Parameter::set_type(int ctrltype)
         displayType = LinearWithScale;
         displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys;
         break;
+    case ct_flangervoices:
+        displayType = LinearWithScale;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "Voices");
+        break;
+
     case ct_freq_hpf:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
