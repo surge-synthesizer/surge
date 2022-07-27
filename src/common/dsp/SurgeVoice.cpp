@@ -1511,3 +1511,25 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
     state.priorpkey = state.portasrc_key;
     state.portaphase = 0;
 }
+
+void SurgeVoice::retriggerOSCWithIndependentAttacks()
+{
+    for (int i = 0; i < n_oscs; ++i)
+    {
+        if (osc[i])
+        {
+            /*
+             * This is awfully special case but it's the best solution
+             */
+            if (scene->osc[i].type.val.i == ot_string)
+            {
+                osc[i]->init(state.getPitch(storage));
+            }
+            if (scene->osc[i].type.val.i == ot_twist &&
+                !scene->osc[i].p[n_osc_params - 2].deactivated)
+            {
+                osc[i]->init(state.getPitch(storage));
+            }
+        }
+    }
+}
