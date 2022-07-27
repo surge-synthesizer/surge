@@ -7223,9 +7223,15 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     auto tag = icv->getTag();
                     if (tag >= start_paramtags)
                     {
-                        thingToOpen =
-                            thingToOpen +
-                            helpURLFor(synth->storage.getPatch().param_ptr[tag - start_paramtags]);
+                        auto pid = tag - start_paramtags;
+                        if (pid >= 0 && pid < n_total_params &&
+                            synth->storage.getPatch().param_ptr[pid])
+                        {
+                            thingToOpen =
+                                thingToOpen +
+                                helpURLFor(
+                                    synth->storage.getPatch().param_ptr[tag - start_paramtags]);
+                        }
                     }
                 }
                 juce::URL(thingToOpen).launchInDefaultBrowser();
