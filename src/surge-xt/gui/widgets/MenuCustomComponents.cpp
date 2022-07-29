@@ -16,6 +16,7 @@
 #include "MenuCustomComponents.h"
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
+#include "UserDefaults.h"
 #include <StringOps.h>
 
 namespace Surge
@@ -335,6 +336,22 @@ void ModMenuCustomComponent::paint(juce::Graphics &g)
     g.setFont(ft);
     g.drawText(source, r, juce::Justification::centredLeft);
     g.drawText(amount, r, juce::Justification::centredRight);
+}
+
+std::unique_ptr<juce::PopupMenu> ModMenuCustomComponent::createAccessibleSubMenu(SurgeStorage *s)
+{
+    bool doExpMen =
+        Surge::Storage::getUserDefaultValue(s, Surge::Storage::ExpandModMenusWithSubMenus, false);
+
+    if (!doExpMen)
+        return nullptr;
+
+    auto res = std::make_unique<juce::PopupMenu>();
+    auto fn = callback;
+    res->addItem(edit->accLabel, [fn]() { fn(EDIT); });
+    res->addItem(mute->accLabel, [fn]() { fn(MUTE); });
+    res->addItem(clear->accLabel, [fn]() { fn(CLEAR); });
+    return std::move(res);
 }
 
 void ModMenuCustomComponent::setIsMuted(bool b)

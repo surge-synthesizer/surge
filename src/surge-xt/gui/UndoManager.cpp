@@ -483,10 +483,9 @@ struct UndoManagerImpl
         else
             pushRedo(r);
     }
-    void pushModulationChange(int paramId, const Parameter *p, modsources modsource, int sc,
-                              int idx, float val, bool muted, UndoManager::Target to)
+    void populateUndoModulation(int paramId, const Parameter *p, modsources modsource, int sc,
+                                int idx, float val, bool muted, UndoModulation &r)
     {
-        auto r = UndoModulation();
         r.paramId = paramId;
         char txt[256];
         synth->getParameterName(synth->idForParameter(p), txt);
@@ -497,6 +496,13 @@ struct UndoManagerImpl
         r.scene = sc;
         r.index = idx;
         r.muted = muted;
+    }
+
+    void pushModulationChange(int paramId, const Parameter *p, modsources modsource, int sc,
+                              int idx, float val, bool muted, UndoManager::Target to)
+    {
+        auto r = UndoModulation();
+        populateUndoModulation(paramId, p, modsource, sc, idx, val, muted, r);
 
         if (to == UndoManager::UNDO)
             pushUndo(r);
@@ -522,7 +528,26 @@ struct UndoManagerImpl
             r.undoParamValues.emplace_back(pu);
 
             if (synth->isModDestUsed(p->id))
-                std::cout << "Its modulated" << std::endl;
+            {
+                for (int ms = 1; ms < n_modsources; ms++)
+                {
+                    for (int sc = 0; sc < n_scenes; ++sc)
+                    {
+                        auto indices =
+                            synth->getModulationIndicesBetween(p->id, (modsources)ms, sc);
+                        for (auto idx : indices)
+                        {
+                            auto mr = UndoModulation();
+                            float val = synth->getModDepth01(p->id, (modsources)ms, sc, idx);
+                            bool muted = synth->isModulationMuted(p->id, (modsources)ms, sc, idx);
+                            populateUndoModulation(p->id, p, (modsources)ms, sc, idx, val, muted,
+                                                   mr);
+                            r.undoModulations.push_back(mr);
+                        }
+                    }
+                }
+            }
+
             p++;
         }
 
@@ -801,6 +826,12 @@ struct UndoManagerImpl
             for (const auto &qp : p->undoParamValues)
             {
                 restoreParamToEditor(&qp);
+            }
+
+            for (const auto &qp : p->undoModulations)
+            {
+                editor->setModulationFromUndo(qp.paramId, qp.ms, qp.scene, qp.index, qp.val,
+                                              qp.muted);
             }
             auto ann = fmt::format("{} Oscillator Type to {}, Scene {} Oscillator {}", verb,
                                    osc_type_names[p->type], (char)('A' + p->scene), p->oscNum + 1);

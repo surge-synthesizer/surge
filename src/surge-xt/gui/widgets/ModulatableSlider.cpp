@@ -679,7 +679,14 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
             auto sge = slider->firstListenerOfType<SurgeGUIEditor>();
             if (sge)
             {
-                return sge->getDisplayForTag(slider->getTag());
+                if (slider->isEditingModulation)
+                {
+                    return sge->getAccessibleModulationVoiceover(slider->getTag());
+                }
+                else
+                {
+                    return sge->getDisplayForTag(slider->getTag());
+                }
             }
             return std::to_string(slider->getValue());
         }

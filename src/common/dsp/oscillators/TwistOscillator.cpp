@@ -291,7 +291,6 @@ TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscda
     voice = std::make_unique<plaits::Voice>();
     shared_buffer = new char[16384];
     alloc = std::make_unique<stmlib::BufferAllocator>(shared_buffer, 16384);
-    voice->Init(alloc.get());
     patch = std::make_unique<plaits::Patch>();
     mod = std::make_unique<plaits::Modulations>();
 
@@ -321,6 +320,8 @@ float TwistOscillator::tuningAwarePitch(float pitch)
 
 void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
 {
+    voice->Init(alloc.get());
+
     charFilt.init(storage->getPatch().character.val.i);
 
     float tpitch = tuningAwarePitch(pitch);

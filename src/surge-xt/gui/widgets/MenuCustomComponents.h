@@ -134,6 +134,8 @@ struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     void mouseUp(const juce::MouseEvent &e) override;
     bool keyPressed(const juce::KeyPress &k) override;
 
+    std::unique_ptr<juce::PopupMenu> createAccessibleSubMenu(SurgeStorage *s);
+
     std::unique_ptr<TinyLittleIconButton> clear, mute, edit;
     std::string source, amount;
     std::function<void(OpType)> callback;

@@ -78,7 +78,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     bool drawExtendedControls{false};
     int midiKeyboardOctave{5};
-    float midiKeyboardVelocity{96.f / 127.f};
+    float midiKeyboardVelocity{127.f / 127.f}; // see issue #6409
     void setPitchModSustainGUI(int pitch, int mod, int sus);
     std::unique_ptr<juce::Component> pitchwheel, modwheel, suspedal;
     std::unique_ptr<juce::MidiKeyboardComponent> keyboard;

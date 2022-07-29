@@ -279,6 +279,15 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             }
             return false;
         }
+
+        std::function<void()> onFocusFromTabFn{nullptr};
+        void focusGained(FocusChangeType cause) override
+        {
+            if (onFocusFromTabFn && cause == FocusChangeType::focusChangedByTabKey)
+            {
+                onFocusFromTabFn();
+            }
+        }
     };
     ModulationEditor *editor{nullptr};
     ModulationListContents(ModulationEditor *e) : editor(e)
@@ -354,13 +363,16 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         static constexpr int height = 32;
         Datum datum;
         ModulationListContents *contents{nullptr};
+        int idx{0};
 
-        DataRowEditor(const Datum &d, ModulationListContents *c) : datum(d), contents(c)
+        DataRowEditor(const Datum &d, int idxi, ModulationListContents *c)
+            : datum(d), idx(idxi), contents(c)
         {
             clearButton = std::make_unique<ModListIconButton>(
                 1,
                 [this]() {
                     auto me = contents->editor;
+                    contents->preferredFocusRow = idx;
                     ModulationEditor::SelfModulationGuard g(me);
                     contents->editor->ed->pushModulationToUndoRedo(
                         datum.destination_id + datum.idBase, (modsources)datum.source_id,
@@ -380,6 +392,15 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             clearButton->setTitle("Clear");
             clearButton->setDescription("Clear");
             clearButton->setWantsKeyboardFocus(true);
+            clearButton->onFocusFromTabFn = [this]() {
+                int nAbove = 7;
+                if (idx >= nAbove)
+                {
+                    auto p = idx - nAbove;
+                    int off = (p == 0 ? 0 : -1);
+                    contents->editor->viewport->setViewPosition(0, p * height + off);
+                }
+            };
             addAndMakeVisible(*clearButton);
 
             muted = d.isMuted;
@@ -387,6 +408,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 2,
                 [this]() {
                     auto me = contents->editor;
+                    contents->preferredFocusRow = idx;
                     ModulationEditor::SelfModulationGuard g(me);
                     contents->editor->ed->pushModulationToUndoRedo(
                         datum.destination_id + datum.idBase, (modsources)datum.source_id,
@@ -407,6 +429,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                 0,
                 [this]() {
                     auto sge = contents->editor->ed;
+                    contents->preferredFocusRow = idx;
                     auto p = contents->editor->synth->storage.getPatch()
                                  .param_ptr[datum.destination_id + datum.idBase];
                     sge->promptForUserValueEntry(p, pencilButton.get(), datum.source_id,
@@ -472,6 +495,28 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             repaint();
         }
 
+        void beTheFocusedRow()
+        {
+            if (!contents->editor)
+                return;
+            if (!contents->editor->viewport)
+                return;
+            if (!surgeLikeSlider->isVisible())
+                return;
+
+            int nAbove = 7;
+            if (idx >= nAbove)
+            {
+                auto p = idx - nAbove;
+                int off = (p == 0 ? 0 : -1);
+                contents->editor->viewport->setViewPosition(0, p * height + off);
+            }
+            else
+            {
+                contents->editor->viewport->setViewPosition(0, 0);
+            }
+            surgeLikeSlider->grabKeyboardFocus();
+        }
         bool firstInSort{false}, hasFollower{false};
         bool isTop{false}, isAfterTop{false}, isLast{false};
 
@@ -937,6 +982,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
         std::string priorN = "-";
 
+        int idx = 0;
         for (const auto &d : dataRows)
         {
             auto included = filterOn == NONE || (filterOn == SOURCE && d.sname == filterString) ||
@@ -948,7 +994,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             {
                 continue;
             }
-            auto l = std::make_unique<DataRowEditor>(d, this);
+            auto l = std::make_unique<DataRowEditor>(d, idx++, this);
             auto sortName = sortOrder == BY_SOURCE ? d.sname : d.pname;
 
             l->setSkin(skin, associatedBitmapStore);
@@ -1017,7 +1063,15 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         }
 
         moved(); // to refresh the 'istop'
+
+        if (preferredFocusRow < 0 || preferredFocusRow >= dataRows.size())
+            preferredFocusRow = 0;
+
+        if (preferredFocusRow >= 0 && preferredFocusRow < rows.size() && rows[preferredFocusRow])
+            rows[preferredFocusRow]->beTheFocusedRow();
     }
+
+    int preferredFocusRow{0};
 
     void updateAllValues(const SurgeSynthesizer *synth)
     {

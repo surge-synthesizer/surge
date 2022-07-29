@@ -177,11 +177,16 @@ class ModControl
                 // FIXME - exponential creep up. We want to get there in time related to our rate
                 auto cv = lfoval.v;
 
-                // thisphase * 0.98 prevents a glitch when LFO rate is disabled and phase offset is
-                // 1 which constantly retriggers S&G
+                // thisphase * 0.98 prevents a glitch when LFO rate is disabled
+                // and phase offset is 1, which constantly retriggers S&G
                 thisrate = (rate == 0) ? thisphase * 0.98 : thisrate;
-                auto diff = (lfosandhtarget - cv) * thisrate * 2 * samplerate_inv;
-                lfoval.newValue(cv + diff);
+
+                auto diff = (lfosandhtarget - cv) * thisrate * 2;
+
+                if (thisrate >= 0.98f) // this means we skip all the time
+                    lfoval.newValue(lfosandhtarget);
+                else
+                    lfoval.newValue(cv + diff);
             }
             else
             {

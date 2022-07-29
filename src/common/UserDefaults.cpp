@@ -240,6 +240,9 @@ std::string defaultKeyToString(DefaultKey k)
     case UseNarratorAnnouncements:
         r = "useNarratorAnnouncements";
         break;
+    case UseNarratorAnnouncementsForPatchTypeahead:
+        r = "useNarratorAnnouncementsForPatchTypeahead";
+        break;
 
     case FXUnitAssumeFixedBlock:
         r = "fxAssumeFixedBlock";
@@ -250,6 +253,10 @@ std::string defaultKeyToString(DefaultKey k)
 
     case MenuAndEditKeybindingsFollowKeyboardFocus:
         r = "menuAndEditKeybindingsFollowKeyboardFocus";
+        break;
+
+    case ExpandModMenusWithSubMenus:
+        r = "expandModMenusWithSubmenus";
         break;
 
     case nKeys:

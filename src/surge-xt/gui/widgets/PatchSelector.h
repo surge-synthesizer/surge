@@ -107,6 +107,7 @@ struct PatchSelector : public juce::Component,
 
     /// TypeAhead API
     void itemSelected(int providerIndex) override;
+    void itemFocused(int providerIndex) override;
     void typeaheadCanceled() override;
 
     void resized() override;

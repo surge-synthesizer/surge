@@ -154,6 +154,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
         addAndMakeVisible(c);
     }
 
+    bool keyPressed(const juce::KeyPress &key) override;
+
   public:
     std::vector<juce::Component *> accessibleOrderWeakRefs;
 

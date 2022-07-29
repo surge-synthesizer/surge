@@ -921,6 +921,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     }
                                 }
 
+                                pushModulationToUndoRedo(md, (modsources)thisms, use_scene, modidx,
+                                                         Surge::GUI::UndoManager::UNDO);
                                 synth->clearModulation(md, thisms, use_scene, modidx);
                                 refresh_mod();
 
@@ -967,6 +969,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     break;
                                 case Surge::Widgets::ModMenuCustomComponent::MUTE:
                                 {
+                                    pushModulationToUndoRedo(ptag, (modsources)thisms, use_scene,
+                                                             modidx, Surge::GUI::UndoManager::UNDO);
                                     auto is = synth->isModulationMuted(ptag, (modsources)thisms,
                                                                        use_scene, modidx);
 
@@ -987,7 +991,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             modMenu->setIsMuted(synth->isModulationMuted(
                                 parameter->id, (modsources)thisms, use_scene, modidx));
                             auto mmt = modMenu->getTitle();
-                            contextMenu.addCustomItem(-1, std::move(modMenu), nullptr, mmt);
+                            auto pm = modMenu->createAccessibleSubMenu(&synth->storage);
+                            contextMenu.addCustomItem(-1, std::move(modMenu),
+                                                      pm.get() ? std::move(pm) : nullptr, mmt);
                             first_destination = false;
                             n_md++;
                         }
@@ -1016,7 +1022,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     if (scene == 0 || allScenes || scene == current_scene + 1)
                                         for (auto idx : synth->getModulationIndicesBetween(
                                                  md, thisms, use_scene))
+                                        {
+                                            pushModulationToUndoRedo(md, (modsources)thisms,
+                                                                     use_scene, idx,
+                                                                     Surge::GUI::UndoManager::UNDO);
+
                                             synth->clearModulation(md, thisms, use_scene, idx);
+                                        }
                                 }
 
                                 refresh_mod();
@@ -2491,7 +2503,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     comp->setSkin(currentSkin, bitmapStore);
                                     comp->setIsMuted(
                                         synth->isModulationMuted(ptag, (modsources)ms, sc, modidx));
-                                    contextMenu.addCustomItem(-1, std::move(comp), nullptr,
+                                    auto pm = comp->createAccessibleSubMenu(&synth->storage);
+                                    contextMenu.addCustomItem(-1, std::move(comp),
+                                                              pm.get() ? std::move(pm) : nullptr,
                                                               comptitle);
                                 }
                             }
@@ -2513,8 +2527,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                             auto indices = synth->getModulationIndicesBetween(
                                                 ptag, (modsources)ms, sc);
                                             for (auto idx : indices)
+                                            {
+                                                pushModulationToUndoRedo(
+                                                    ptag, (modsources)ms, sc, idx,
+                                                    Surge::GUI::UndoManager::UNDO);
+
                                                 synth->clearModulation(ptag, (modsources)ms, sc,
                                                                        idx, false);
+                                            }
                                         }
                                     }
                                 }

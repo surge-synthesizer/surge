@@ -3476,8 +3476,8 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     bool isFixed = false;
     std::vector<int> zoomTos = {{100, 125, 150, 175, 200, 300, 400}};
     std::string lab;
-    auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom,
-                                                   zoomFactor);
+    auto dzf =
+        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 0);
 
     if (currentSkin->hasFixedZooms())
     {
@@ -3543,11 +3543,14 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
         zoomSubMenu.addSeparator();
 
-        lab = fmt::format("Zoom to Default ({:d}%)", dzf);
+        if (dzf != 0)
+        {
+            lab = fmt::format("Zoom to Default ({:d}%)", dzf);
 
-        Surge::GUI::addMenuWithShortcut(zoomSubMenu, Surge::GUI::toOSCase(lab),
-                                        showShortcutDescription("Shift + /", u8"\U000021E7/"),
-                                        [this, dzf]() { resizeWindow(dzf); });
+            Surge::GUI::addMenuWithShortcut(zoomSubMenu, Surge::GUI::toOSCase(lab),
+                                            showShortcutDescription("Shift + /", u8"\U000021E7/"),
+                                            [this, dzf]() { resizeWindow(dzf); });
+        }
     }
 
     if ((int)zoomFactor != dzf)
@@ -3968,6 +3971,29 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements,
                            !doAccAnn);
+                   });
+
+#if WINDOWS
+    bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Announce Patch Browser (Windows Workaround)"), true,
+                   doAccAnnPatch, [this, doAccAnnPatch]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage),
+                           Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
+                           !doAccAnnPatch);
+                   });
+#endif
+
+    bool doExpMen = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Add SubMenus to Modulation Menu Items"), true, doExpMen,
+                   [this, doExpMen]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
+                           !doExpMen);
                    });
 
     wfMenu.addSeparator();
@@ -5644,6 +5670,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
                 }
             }
 
+            if (hsw->isShowing() && hsw->hasKeyboardFocus(true))
+            {
+                hsw->updateAccessibleStateOnUserValueChange();
+            }
             juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
 
             if (paramIndex >= 0)
@@ -5652,7 +5682,6 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
             return dynamic_cast<Surge::GUI::IComponentTagValue *>(
                 juceSkinComponents[skinCtrl->sessionid].get());
-            ;
         }
         else
         {
@@ -6889,7 +6918,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 patchSelector->toggleTypeAheadSearch(patchSelector->isTypeaheadSearchOn);
                 return true;
             case Surge::GUI::FAVORITE_PATCH:
-                setPatchAsFavorite(!isPatchFavorite());
+                setPatchAsFavorite(synth->storage.getPatch().name, !isPatchFavorite());
                 patchSelector->setIsFavorite(isPatchFavorite());
                 return true;
 
@@ -7194,9 +7223,15 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                     auto tag = icv->getTag();
                     if (tag >= start_paramtags)
                     {
-                        thingToOpen =
-                            thingToOpen +
-                            helpURLFor(synth->storage.getPatch().param_ptr[tag - start_paramtags]);
+                        auto pid = tag - start_paramtags;
+                        if (pid >= 0 && pid < n_total_params &&
+                            synth->storage.getPatch().param_ptr[pid])
+                        {
+                            thingToOpen =
+                                thingToOpen +
+                                helpURLFor(
+                                    synth->storage.getPatch().param_ptr[tag - start_paramtags]);
+                        }
                     }
                 }
                 juce::URL(thingToOpen).launchInDefaultBrowser();
@@ -7314,7 +7349,14 @@ std::string SurgeGUIEditor::showShortcutDescription(const std::string &shortcutD
     }
 }
 
-void SurgeGUIEditor::setPatchAsFavorite(bool b) { setSpecificPatchAsFavorite(synth->patchid, b); }
+void SurgeGUIEditor::setPatchAsFavorite(const std::string &pname, bool b)
+{
+    std::ostringstream oss;
+    oss << pname << (b ? " added to " : " removed from ") << "favorite patches.";
+    enqueueAccessibleAnnouncement(oss.str());
+
+    setSpecificPatchAsFavorite(synth->patchid, b);
+}
 
 void SurgeGUIEditor::setSpecificPatchAsFavorite(int patchid, bool b)
 {
