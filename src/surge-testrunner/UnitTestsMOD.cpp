@@ -1392,7 +1392,7 @@ TEST_CASE("ModLFO is well behaved", "[mod]")
     {
         DYNAMIC_SECTION("Mod Control Boundsd for type " << m)
         {
-            for (int tries = 0; tries < 10; ++tries)
+            for (int tries = 0; tries < 1000; ++tries)
             {
                 float rate = (float)rand() / (float)RAND_MAX * 10;
                 float phase_offset = 0.1 * tries;

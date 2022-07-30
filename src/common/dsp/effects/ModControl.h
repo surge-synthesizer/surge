@@ -186,7 +186,7 @@ class ModControl
                 if (thisrate >= 0.98f) // this means we skip all the time
                     lfoval.newValue(lfosandhtarget);
                 else
-                    lfoval.newValue(cv + diff);
+                    lfoval.newValue(std::clamp(cv + diff, -1.f, 1.f));
             }
             else
             {
