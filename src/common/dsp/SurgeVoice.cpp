@@ -1484,6 +1484,19 @@ void SurgeVoice::retriggerLFOEnvelopes()
             anLfo.retriggerEnvelope();
         }
     }
+
+    int ao = scene->modsources[ms_random_unipolar]->get_active_outputs();
+    rndUni.set_active_outputs(ao);
+    for (int w = 0; w < ao; ++w)
+        rndUni.set_output(w, scene->modsources[ms_random_unipolar]->get_output(w));
+
+    ao = scene->modsources[ms_random_bipolar]->get_active_outputs();
+    rndBi.set_active_outputs(ao);
+    for (int w = 0; w < ao; ++w)
+        rndBi.set_output(w, scene->modsources[ms_random_bipolar]->get_output(w));
+
+    altUni.set_output(0, scene->modsources[ms_alternate_unipolar]->get_output(0));
+    altBi.set_output(0, scene->modsources[ms_alternate_bipolar]->get_output(0));
 }
 
 void SurgeVoice::resetPortamentoFrom(int key, int channel)
