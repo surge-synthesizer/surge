@@ -477,16 +477,16 @@ void SurgeVoice::switch_toggled()
 
     for (int i = 0; i < n_oscs; i++)
     {
-        if (osctype[i] != localcopy[scene->osc[i].type.param_id_in_scene].i)
+        if (osctype[i] != scene->osc[i].type.val.i)
         {
             bool nzid = scene->drift.extend_range;
-            osc[i] = spawn_osc(localcopy[scene->osc[i].type.param_id_in_scene].i, storage,
-                               &scene->osc[i], localcopy, oscbuffer[i]);
+            osc[i] = spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy,
+                               oscbuffer[i]);
             if (osc[i])
             {
                 osc[i]->init(state.pitch, false, nzid);
             }
-            osctype[i] = localcopy[scene->osc[i].type.param_id_in_scene].i;
+            osctype[i] = scene->osc[i].type.val.i;
         }
     }
 
