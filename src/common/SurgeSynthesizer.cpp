@@ -3842,6 +3842,10 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
 
 void SurgeSynthesizer::resetStateFromTimeData()
 {
+    if (time_data.timeSigNumerator < 1)
+        time_data.timeSigNumerator = 4;
+    if (time_data.timeSigDenominator < 1)
+        time_data.timeSigDenominator = 4;
     storage.songpos = time_data.ppqPos;
     if (time_data.tempo > 0)
     {
