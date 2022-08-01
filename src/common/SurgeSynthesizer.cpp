@@ -561,7 +561,7 @@ SurgeVoice *SurgeSynthesizer::getUnusedVoice(int scene)
 
 void SurgeSynthesizer::freeVoice(SurgeVoice *v)
 {
-    if (v->host_note_id > 0)
+    if (v->host_note_id >= 0)
     {
         bool used_away = false;
         // does any other voice have this voiceid
