@@ -1803,7 +1803,7 @@ void Parameter::bound_value(bool force_integer)
             // OK so now val.f is between 0 and 1. So
             auto fraccount = val.f * (count - extend_range);
             auto intcount = (int)fraccount;
-            val.f = limit_range(1.0 * intcount / (count - extend_range) + 0.0001, 0., 1.);
+            val.f = limit_range(1.0 * intcount / (count - extend_range) + 0.000001, 0., 1.);
             break;
         }
         case ct_alias_mask:
