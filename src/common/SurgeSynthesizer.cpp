@@ -561,7 +561,7 @@ SurgeVoice *SurgeSynthesizer::getUnusedVoice(int scene)
 
 void SurgeSynthesizer::freeVoice(SurgeVoice *v)
 {
-    if (v->host_note_id > 0)
+    if (v->host_note_id >= 0)
     {
         bool used_away = false;
         // does any other voice have this voiceid
@@ -3842,6 +3842,10 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
 
 void SurgeSynthesizer::resetStateFromTimeData()
 {
+    if (time_data.timeSigNumerator < 1)
+        time_data.timeSigNumerator = 4;
+    if (time_data.timeSigDenominator < 1)
+        time_data.timeSigDenominator = 4;
     storage.songpos = time_data.ppqPos;
     if (time_data.tempo > 0)
     {

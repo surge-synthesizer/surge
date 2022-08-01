@@ -40,6 +40,7 @@ TEST_CASE("Note ID in Poly Mode Basics", "[noteid]")
         surge->process();
         REQUIRE(surge->hostNoteEndedDuringBlockCount == 0);
     }
+
     SECTION("Dual Distinct On Off, Long Sustain")
     {
         auto surge = Surge::Headless::createSurge(48000);
@@ -746,6 +747,46 @@ TEST_CASE("Mono Modes", "[noteid]")
                 }
             }
             REQUIRE(sawOne);
+        }
+    }
+}
+
+TEST_CASE("Note ID 0 is Valid", "[noteid]")
+{
+    for (auto nid : {0, 1, 77, std::numeric_limits<int32_t>::max() - 1})
+    {
+        DYNAMIC_SECTION("NoteID " << nid << " is a Valid Note")
+        {
+            int unid = 0;
+            auto surge = Surge::Headless::createSurge(48000);
+            for (int i = 0; i < 5; ++i)
+                surge->process();
+            surge->playNote(0, 60, 127, 0, unid);
+
+            for (int i = 0; i < 20; ++i)
+            {
+                surge->process();
+                REQUIRE(surge->hostNoteEndedDuringBlockCount == 0);
+                for (auto v : surge->voices[0])
+                {
+                    REQUIRE(v->host_note_id == unid);
+                    REQUIRE(v->originating_host_channel == 0);
+                    REQUIRE(v->originating_host_key == 60);
+                }
+            }
+
+            surge->releaseNote(0, 60, 127);
+            while (!surge->voices[0].empty())
+            {
+                surge->process();
+            }
+            REQUIRE(surge->hostNoteEndedDuringBlockCount == 1);
+            REQUIRE(surge->endedHostNoteIds[0] == unid);
+            REQUIRE(surge->endedHostNoteOriginalChannel[0] == 0);
+            REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
+
+            surge->process();
+            REQUIRE(surge->hostNoteEndedDuringBlockCount == 0);
         }
     }
 }

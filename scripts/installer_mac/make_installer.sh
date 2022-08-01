@@ -209,7 +209,7 @@ cat > $TMPDIR/distribution.xml << XMLEND
     ${FXLV2_PKG_REF}
     ${FXAPP_PKG_REF}
     <pkg-ref id="org.surge-synth-team.surge-xt.resources.pkg"/>
-    <options require-scripts="false" customize="always" />
+    <options require-scripts="false" customize="always" hostArchitectures="x86_64,arm64"/>
     <choices-outline>
         ${VST3_CHOICE}
         ${AU_CHOICE}

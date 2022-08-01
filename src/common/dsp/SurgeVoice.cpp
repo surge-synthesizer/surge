@@ -477,16 +477,16 @@ void SurgeVoice::switch_toggled()
 
     for (int i = 0; i < n_oscs; i++)
     {
-        if (osctype[i] != localcopy[scene->osc[i].type.param_id_in_scene].i)
+        if (osctype[i] != scene->osc[i].type.val.i)
         {
             bool nzid = scene->drift.extend_range;
-            osc[i] = spawn_osc(localcopy[scene->osc[i].type.param_id_in_scene].i, storage,
-                               &scene->osc[i], localcopy, oscbuffer[i]);
+            osc[i] = spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy,
+                               oscbuffer[i]);
             if (osc[i])
             {
                 osc[i]->init(state.pitch, false, nzid);
             }
-            osctype[i] = localcopy[scene->osc[i].type.param_id_in_scene].i;
+            osctype[i] = scene->osc[i].type.val.i;
         }
     }
 
@@ -1484,6 +1484,19 @@ void SurgeVoice::retriggerLFOEnvelopes()
             anLfo.retriggerEnvelope();
         }
     }
+
+    int ao = scene->modsources[ms_random_unipolar]->get_active_outputs();
+    rndUni.set_active_outputs(ao);
+    for (int w = 0; w < ao; ++w)
+        rndUni.set_output(w, scene->modsources[ms_random_unipolar]->get_output(w));
+
+    ao = scene->modsources[ms_random_bipolar]->get_active_outputs();
+    rndBi.set_active_outputs(ao);
+    for (int w = 0; w < ao; ++w)
+        rndBi.set_output(w, scene->modsources[ms_random_bipolar]->get_output(w));
+
+    altUni.set_output(0, scene->modsources[ms_alternate_unipolar]->get_output(0));
+    altBi.set_output(0, scene->modsources[ms_alternate_bipolar]->get_output(0));
 }
 
 void SurgeVoice::resetPortamentoFrom(int key, int channel)
