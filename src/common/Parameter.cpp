@@ -3896,6 +3896,9 @@ bool Parameter::can_be_nondestructively_modulated() const
     case ct_wstype:
     case ct_fbconfig:
     case ct_fxbypass:
+    case ct_bool_mute:
+    case ct_bool_solo:
+    case ct_oscroute:
         return false;
     }
     return true;
