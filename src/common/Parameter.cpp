@@ -2974,7 +2974,17 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
             auto count = cs->getCountedSetSize();
             auto tl = (count - extend_range) * f;
-            snprintf(txt, TXT_SIZE, "%.2f / %d", tl, (count - extend_range));
+            if (extend_range)
+            {
+                auto tlDisplay = std::clamp(tl + 1, 0.f, (1.f) * (count - extend_range) + 1);
+                snprintf(txt, TXT_SIZE, "%.2f / %d", tlDisplay, (count - extend_range) + 1);
+            }
+            else
+            {
+                auto tlDisplay =
+                    (int)std::floor(std::clamp(tl + 1, 0.f, (1.f) * (count - extend_range)));
+                snprintf(txt, TXT_SIZE, "%d / %d", tlDisplay, (count - extend_range));
+            }
         }
 
         break;
