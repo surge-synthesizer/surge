@@ -346,13 +346,26 @@ bool FilterAnalysis::shouldRepaintOnParamChange(const SurgePatch &patch, Paramet
 
 void FilterAnalysis::repushData()
 {
-    auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
-    auto &pfg = editor->getPatch().scene[editor->current_scene].level_pfg;
+    auto &ss = editor->getPatch().scene[editor->current_scene];
+    auto &fs = ss.filterunit[whichFilter];
+    auto &pfg = ss.level_pfg;
 
     auto t = fs.type.val.i;
     auto s = fs.subtype.val.i;
     auto c = fs.cutoff.val.f;
     auto r = fs.resonance.val.f;
+
+    if (whichFilter == 1)
+    {
+        if (ss.f2_cutoff_is_offset.val.b)
+        {
+            c += ss.filterunit[0].cutoff.val.f;
+        }
+        if (ss.f2_link_resonance.val.b)
+        {
+            r = ss.filterunit[0].resonance.val.f;
+        }
+    }
     auto g = pfg.val.f;
 
     evaluator->request(t, s, c, r, g);
