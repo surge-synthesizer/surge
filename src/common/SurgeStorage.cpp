@@ -1569,6 +1569,27 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
             getPatch().param_ptr[pid]->porta_retrigger = p.porta_retrigger;
             getPatch().param_ptr[pid]->porta_curve = p.porta_curve;
             getPatch().param_ptr[pid]->deform_type = p.deform_type;
+
+            /*
+             * This is a really nasty special case that the bool relative switch
+             * modifies the cross-param *type* of the filter cutoff when it is setvalue01ed
+             * This is a gross workaround for the bug in #6475 which I will ponder after pushing.
+             */
+            if (pid == getPatch().scene[scene].f2_cutoff_is_offset.id)
+            {
+                auto down = p.val.b;
+                if (down)
+                {
+                    getPatch().scene[scene].filterunit[1].cutoff.set_type(ct_freq_mod);
+                    getPatch().scene[scene].filterunit[1].cutoff.set_name("Offset");
+                }
+                else
+                {
+                    getPatch().scene[scene].filterunit[1].cutoff.set_type(
+                        ct_freq_audible_with_tunability);
+                    getPatch().scene[scene].filterunit[1].cutoff.set_name("Cutoff");
+                }
+            }
         }
 
         if (type & cp_osc)
