@@ -521,6 +521,20 @@ void EffectChooser::getColorsForSlot(int fxslot, juce::Colour &bgcol, juce::Colo
     }
 }
 
+void EffectChooser::setEffectType(int index, int type)
+{
+    fxTypes[index] = type;
+
+    if (slotAccOverlays[index] && slotAccOverlays[index]->getAccessibilityHandler())
+    {
+        std::string newd = std::string(fxslot_names[index]) + ": " + fx_type_names[type];
+        slotAccOverlays[index]->setTitle(newd);
+        slotAccOverlays[index]->setDescription(newd);
+        slotAccOverlays[index]->getAccessibilityHandler()->notifyAccessibilityEvent(
+            juce::AccessibilityEvent::titleChanged);
+    }
+}
+
 template <> struct DiscreteAHRange<EffectChooser>
 {
     static int iMaxV(EffectChooser *t) { return n_fx_slots; }
