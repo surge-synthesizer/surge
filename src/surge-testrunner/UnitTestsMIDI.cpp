@@ -1612,42 +1612,46 @@ TEST_CASE("Poly Chords Blow Through Limit", "[midi]")
 
 TEST_CASE("Mono Modes Across Channels", "[midi]")
 {
-    for (auto mode : {pm_mono, pm_mono_st, pm_mono_fp, pm_mono_st_fp})
+    for (auto env :
+         {MonoVoiceEnvelopeMode::RESTART_FROM_ZERO, MonoVoiceEnvelopeMode::RESTART_FROM_LATEST})
     {
-        for (auto secondChannel : {1, 5})
+        for (auto mode : {pm_mono, pm_mono_st, pm_mono_fp, pm_mono_st_fp})
         {
-            DYNAMIC_SECTION("On on 1, Off on " << secondChannel
-                                               << " mode=" << play_mode_names[mode])
+            for (auto secondChannel : {1, 5})
             {
-                auto surge = Surge::Headless::createSurge(44100);
-                REQUIRE(surge);
-                surge->storage.getPatch().scene[0].polymode.val.i = mode;
+                DYNAMIC_SECTION("On on 1, Off on " << secondChannel << " mode="
+                                                   << play_mode_names[mode] << " regrigger=" << env)
+                {
+                    auto surge = Surge::Headless::createSurge(44100);
+                    REQUIRE(surge);
+                    surge->storage.getPatch().scene[0].polymode.val.i = mode;
+                    surge->storage.getPatch().scene[0].monoVoiceEnvelopeMode = env;
 
-                for (int i = 0; i < 10; ++i)
-                    surge->process();
+                    for (int i = 0; i < 10; ++i)
+                        surge->process();
 
-                surge->playNote(secondChannel - 1, 60, 127, 0);
-                for (int i = 0; i < 50; ++i)
-                    surge->process();
-                REQUIRE(surge->voices[0].size() == 1);
+                    surge->playNote(secondChannel - 1, 60, 127, 0);
+                    for (int i = 0; i < 50; ++i)
+                        surge->process();
+                    REQUIRE(surge->voices[0].size() == 1);
 
-                surge->playNote(0, 65, 127, 0);
-                for (int i = 0; i < 50; ++i)
-                    surge->process();
-                REQUIRE(surge->voices[0].size() == 1);
+                    surge->playNote(0, 65, 127, 0);
+                    for (int i = 0; i < 50; ++i)
+                        surge->process();
+                    REQUIRE(surge->voices[0].size() == 1);
 
-                surge->releaseNote(secondChannel - 1, 60, 0);
-                for (int i = 0; i < 50; ++i)
-                    surge->process();
-                REQUIRE(surge->voices[0].size() == 1);
+                    surge->releaseNote(secondChannel - 1, 60, 0);
+                    for (int i = 0; i < 50; ++i)
+                        surge->process();
+                    REQUIRE(surge->voices[0].size() == 1);
 
-                surge->releaseNote(0, 65, 0);
-                for (int i = 0; i < 50; ++i)
-                    surge->process();
+                    surge->releaseNote(0, 65, 0);
+                    for (int i = 0; i < 50; ++i)
+                        surge->process();
 
-                // Removing this condition means you've solved #6287
-                if (secondChannel != 1 && mode != pm_mono_st_fp && mode != pm_mono_st)
-                    REQUIRE(surge->voices[0].size() == 0);
+                    // Enbling this means you have addressed #6287
+                    // REQUIRE(surge->voices[0].size() == 0);
+                }
             }
         }
     }
