@@ -57,7 +57,7 @@ struct EffectChooser : public juce::Component,
     int getCurrentEffect() const { return currentEffect; }
     int currentEffect{0};
 
-    void setEffectType(int index, int type) { fxTypes[index] = type; }
+    void setEffectType(int index, int type);
     std::array<int, n_fx_slots> fxTypes;
 
     void mouseDoubleClick(const juce::MouseEvent &event) override;

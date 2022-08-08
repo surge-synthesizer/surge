@@ -511,48 +511,40 @@ void SurgeVoice::switch_toggled()
         break;
     }
 
-    bool solo = (localcopy[scene->solo_o1.param_id_in_scene].b ||
-                 localcopy[scene->solo_o2.param_id_in_scene].b ||
-                 localcopy[scene->solo_o3.param_id_in_scene].b ||
-                 localcopy[scene->solo_noise.param_id_in_scene].b ||
-                 localcopy[scene->solo_ring_12.param_id_in_scene].b ||
-                 localcopy[scene->solo_ring_23.param_id_in_scene].b);
+    bool solo = (scene->solo_o1.val.b || scene->solo_o2.val.b || scene->solo_o3.val.b ||
+                 scene->solo_noise.val.b || scene->solo_ring_12.val.b || scene->solo_ring_23.val.b);
     if (solo)
     {
-        set_path(localcopy[scene->solo_o1.param_id_in_scene].b,
-                 localcopy[scene->solo_o2.param_id_in_scene].b,
-                 localcopy[scene->solo_o3.param_id_in_scene].b,
-                 FM && localcopy[scene->solo_o1.param_id_in_scene]
-                           .b, // inter-osc FM should be enabled only if carrier (osc
-                               // 1) is soloed, in case any solos are active
-                 localcopy[scene->solo_ring_12.param_id_in_scene].b,
-                 localcopy[scene->solo_ring_23.param_id_in_scene].b,
-                 localcopy[scene->solo_noise.param_id_in_scene].b);
+        set_path(scene->solo_o1.val.b, scene->solo_o2.val.b, scene->solo_o3.val.b,
+                 FM && scene->solo_o1.val.b,
+                 // inter-osc FM should be enabled only if carrier (osc
+                 // 1) is soloed, in case any solos are active
+                 scene->solo_ring_12.val.b, scene->solo_ring_23.val.b, scene->solo_noise.val.b);
 
         // pre-1.7.2 unique (single) solo paths:
         /*
-        if (localcopy[scene->solo_o1.param_id_in_scene].b)
+        if (scene->solo_o1.val.b)
            set_path(true, false, false, false, false, false, false);
-        else if (localcopy[scene->solo_o2.param_id_in_scene].b)
+        else if (scene->solo_o2.val.b)
            set_path(false, true, false, FM, false, false, false);
-        else if (localcopy[scene->solo_o3.param_id_in_scene].b)
+        else if (scene->solo_o3.val.b)
            set_path(false, false, true, false, false, false, false);
-        else if (localcopy[scene->solo_noise.param_id_in_scene].b)
+        else if (scene->solo_noise.val.b)
            set_path(false, false, false, false, false, false, true);
-        else if (localcopy[scene->solo_ring_12.param_id_in_scene].b)
+        else if (scene->solo_ring_12.val.b)
            set_path(false, false, false, false, true, false, false);
-        else if (localcopy[scene->solo_ring_23.param_id_in_scene].b)
+        else if (scene->solo_ring_23.val.b)
            set_path(false, false, false, false, false, true, false);
         */
     }
     else
     {
-        bool use_osc1 = (!localcopy[scene->mute_o1.param_id_in_scene].b);
-        bool use_osc2 = (!localcopy[scene->mute_o2.param_id_in_scene].b);
-        bool use_osc3 = (!localcopy[scene->mute_o3.param_id_in_scene].b);
-        bool use_ring12 = (!localcopy[scene->mute_ring_12.param_id_in_scene].b);
-        bool use_ring23 = (!localcopy[scene->mute_ring_23.param_id_in_scene].b);
-        bool use_noise = (!localcopy[scene->mute_noise.param_id_in_scene].b);
+        bool use_osc1 = (!scene->mute_o1.val.b);
+        bool use_osc2 = (!scene->mute_o2.val.b);
+        bool use_osc3 = (!scene->mute_o3.val.b);
+        bool use_ring12 = (!scene->mute_ring_12.val.b);
+        bool use_ring23 = (!scene->mute_ring_23.val.b);
+        bool use_noise = (!scene->mute_noise.val.b);
 
         set_path(use_osc1, use_osc2, use_osc3, FM, use_ring12, use_ring23, use_noise);
     }
@@ -772,12 +764,12 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     osclevels[le_ring23].set_target(r23);
     osclevels[le_pfg].set_target(pfg);
 
-    route[0] = routefilter(localcopy[scene->route_o1.param_id_in_scene].i);
-    route[1] = routefilter(localcopy[scene->route_o2.param_id_in_scene].i);
-    route[2] = routefilter(localcopy[scene->route_o3.param_id_in_scene].i);
-    route[3] = routefilter(localcopy[scene->route_ring_12.param_id_in_scene].i);
-    route[4] = routefilter(localcopy[scene->route_ring_23.param_id_in_scene].i);
-    route[5] = routefilter(localcopy[scene->route_noise.param_id_in_scene].i);
+    route[0] = routefilter(scene->route_o1.val.i);
+    route[1] = routefilter(scene->route_o2.val.i);
+    route[2] = routefilter(scene->route_o3.val.i);
+    route[3] = routefilter(scene->route_ring_12.val.i);
+    route[4] = routefilter(scene->route_ring_23.val.i);
+    route[5] = routefilter(scene->route_noise.val.i);
 
     float pan1 = limit_range(localcopy[pan_id].f + state.voiceChannelState->pan +
                                  state.mainChannelState->pan + (noteExpressions[PAN] * 2 - 1),
@@ -865,12 +857,10 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
         ((osc1 || ring12) && (FMmode == fm_2and3to1)))
     {
         osc[2]->process_block(
-            noteShiftFromPitchParam((localcopy[scene->osc[2].keytrack.param_id_in_scene].b
-                                         ? state.pitch
-                                         : ktrkroot + state.scenepbpitch) +
-                                        octaveSize *
-                                            localcopy[scene->osc[2].octave.param_id_in_scene].i,
-                                    2),
+            noteShiftFromPitchParam(
+                (scene->osc[2].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                    octaveSize * localcopy[scene->osc[2].octave.param_id_in_scene].i,
+                2),
             drift, is_wide);
 
         if (osc3)
@@ -901,24 +891,20 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
         if (FMmode == fm_3to2to1)
         {
             osc[1]->process_block(
-                noteShiftFromPitchParam((localcopy[scene->osc[1].keytrack.param_id_in_scene].b
-                                             ? state.pitch
-                                             : ktrkroot + state.scenepbpitch) +
-                                            octaveSize *
-                                                localcopy[scene->osc[1].octave.param_id_in_scene].i,
-                                        1),
+                noteShiftFromPitchParam(
+                    (scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                        octaveSize * localcopy[scene->osc[1].octave.param_id_in_scene].i,
+                    1),
                 drift, is_wide, true,
                 storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
         }
         else
         {
             osc[1]->process_block(
-                noteShiftFromPitchParam((localcopy[scene->osc[1].keytrack.param_id_in_scene].b
-                                             ? state.pitch
-                                             : ktrkroot + state.scenepbpitch) +
-                                            octaveSize *
-                                                localcopy[scene->osc[1].octave.param_id_in_scene].i,
-                                        1),
+                noteShiftFromPitchParam(
+                    (scene->osc[1].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                        octaveSize * localcopy[scene->osc[1].octave.param_id_in_scene].i,
+                    1),
                 drift, is_wide);
         }
 
@@ -951,36 +937,30 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
         {
             add_block(osc[1]->output, osc[2]->output, fmbuffer, BLOCK_SIZE_OS_QUAD);
             osc[0]->process_block(
-                noteShiftFromPitchParam((localcopy[scene->osc[0].keytrack.param_id_in_scene].b
-                                             ? state.pitch
-                                             : ktrkroot + state.scenepbpitch) +
-                                            octaveSize *
-                                                localcopy[scene->osc[0].octave.param_id_in_scene].i,
-                                        0),
+                noteShiftFromPitchParam(
+                    (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                        octaveSize * localcopy[scene->osc[0].octave.param_id_in_scene].i,
+                    0),
                 drift, is_wide, true,
                 storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
         }
         else if (FMmode)
         {
             osc[0]->process_block(
-                noteShiftFromPitchParam((localcopy[scene->osc[0].keytrack.param_id_in_scene].b
-                                             ? state.pitch
-                                             : ktrkroot + state.scenepbpitch) +
-                                            octaveSize *
-                                                localcopy[scene->osc[0].octave.param_id_in_scene].i,
-                                        0),
+                noteShiftFromPitchParam(
+                    (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                        octaveSize * localcopy[scene->osc[0].octave.param_id_in_scene].i,
+                    0),
                 drift, is_wide, true,
                 storage->db_to_linear(localcopy[scene->fm_depth.param_id_in_scene].f));
         }
         else
         {
             osc[0]->process_block(
-                noteShiftFromPitchParam((localcopy[scene->osc[0].keytrack.param_id_in_scene].b
-                                             ? state.pitch
-                                             : ktrkroot + state.scenepbpitch) +
-                                            octaveSize *
-                                                localcopy[scene->osc[0].octave.param_id_in_scene].i,
-                                        0),
+                noteShiftFromPitchParam(
+                    (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                        octaveSize * localcopy[scene->osc[0].octave.param_id_in_scene].i,
+                    0),
                 drift, is_wide);
         }
 
@@ -1304,7 +1284,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
         float cutoffB =
             localcopy[id_cfb].f + localcopy[id_ktb].f * keytrack + localcopy[id_emodb].f * fenv;
 
-        if (localcopy[scene->f2_cutoff_is_offset.param_id_in_scene].b)
+        if (scene->f2_cutoff_is_offset.val.b)
             cutoffB += cutoffA;
 
         CM[0].MakeCoeffs(
@@ -1313,9 +1293,7 @@ void SurgeVoice::SetQFB(QuadFilterChainState *Q, int e) // Q == 0 means init(ial
             static_cast<FilterSubType>(localcopy[scene->filterunit[0].subtype.param_id_in_scene].i),
             storage, scene->filterunit[0].cutoff.extend_range);
         CM[1].MakeCoeffs(
-            cutoffB,
-            localcopy[scene->f2_link_resonance.param_id_in_scene].b ? localcopy[id_resoa].f
-                                                                    : localcopy[id_resob].f,
+            cutoffB, scene->f2_link_resonance.val.b ? localcopy[id_resoa].f : localcopy[id_resob].f,
             static_cast<FilterType>(localcopy[scene->filterunit[1].type.param_id_in_scene].i),
             static_cast<FilterSubType>(localcopy[scene->filterunit[1].subtype.param_id_in_scene].i),
             storage, scene->filterunit[1].cutoff.extend_range);

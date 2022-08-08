@@ -573,7 +573,6 @@ void SurgeSynthProcessor::clap_direct_paramsFlush(const clap_input_events *in,
                                                   const clap_output_events *out) noexcept
 {
     uint32_t sz = in->size(in);
-    DBG("Param flush called with " << (int)sz);
     for (uint32_t i = 0; i < sz; ++i)
     {
         auto ev = in->get(in, i);
@@ -582,10 +581,16 @@ void SurgeSynthProcessor::clap_direct_paramsFlush(const clap_input_events *in,
         {
             auto pevt = reinterpret_cast<const clap_event_param_value *>(ev);
             auto jp = static_cast<JUCEParameterVariant *>(pevt->cookie);
+            jp->processorParam->setValue(pevt->value);
         }
     }
-    // Setting params can change internal state so give the synth a chance to react
-    surge->process();
+    if (!is_clap_processing)
+    {
+        // Setting params can change internal state so give the synth a chance to react
+        // although the spec is unclear whether this can be called when processing, so don't
+        // call surge process if we are!
+        surge->process();
+    }
 }
 
 void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
