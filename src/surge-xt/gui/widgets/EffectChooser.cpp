@@ -26,7 +26,7 @@ namespace Surge
 namespace Widgets
 {
 
-std::array<int, n_fx_slots> displayOrder{
+std::array<int, n_fx_slots> displayPositionToFXIndex{
     fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
 
     fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
@@ -36,8 +36,17 @@ std::array<int, n_fx_slots> displayOrder{
     fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4,
 };
 
+std::array<int, n_fx_slots> fxIndexToDisplayPosition{-1};
+
 EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChooser>(this)
 {
+    if (fxIndexToDisplayPosition[0] == -1)
+    {
+        for (int i = 0; i < n_fx_slots; ++i)
+        {
+            fxIndexToDisplayPosition[displayPositionToFXIndex[i]] = i;
+        }
+    }
     setRepaintsOnMouseActivity(true);
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
@@ -45,7 +54,7 @@ EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChoose
     for (int i = 0; i < n_fx_slots; ++i)
     {
         fxTypes[i] = fxt_off;
-        auto mapi = displayOrder[i];
+        auto mapi = displayPositionToFXIndex[i];
         auto q =
             std::make_unique<OverlayAsAccessibleButton<EffectChooser>>(this, fxslot_names[mapi]);
         q->setBounds(getEffectRectangle(mapi));
@@ -156,7 +165,7 @@ void EffectChooser::resized()
     int i = 0;
     for (const auto &q : slotAccOverlays)
     {
-        q->setBounds(getEffectRectangle(displayOrder[i]));
+        q->setBounds(getEffectRectangle(displayPositionToFXIndex[i]));
         i++;
     }
 }
@@ -525,12 +534,15 @@ void EffectChooser::setEffectType(int index, int type)
 {
     fxTypes[index] = type;
 
-    if (slotAccOverlays[index] && slotAccOverlays[index]->getAccessibilityHandler())
+    auto mapi = fxIndexToDisplayPosition[index];
+    auto &ol = slotAccOverlays[mapi];
+
+    if (ol && ol->getAccessibilityHandler())
     {
         std::string newd = std::string(fxslot_names[index]) + ": " + fx_type_names[type];
-        slotAccOverlays[index]->setTitle(newd);
-        slotAccOverlays[index]->setDescription(newd);
-        slotAccOverlays[index]->getAccessibilityHandler()->notifyAccessibilityEvent(
+        ol->setTitle(newd);
+        ol->setDescription(newd);
+        ol->getAccessibilityHandler()->notifyAccessibilityEvent(
             juce::AccessibilityEvent::titleChanged);
     }
 }
