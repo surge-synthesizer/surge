@@ -1188,7 +1188,7 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
         if (storage->patchDB->numberOfJobsOutstanding() > 0)
         {
             enable = false;
-            txt = "Updating Patch Database: " +
+            txt = "Updating patch database: " +
                   std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " items left";
         }
 
@@ -1274,6 +1274,17 @@ void PatchSelector::enableTypeAheadIfReady()
 
 bool PatchSelector::keyPressed(const juce::KeyPress &key)
 {
+    if (isTypeaheadSearchOn && storage->patchDB->numberOfJobsOutstanding() > 0)
+    {
+        // Any keypress while we are waiting is ignored other than perhaps escape
+        if (key.getKeyCode() == juce::KeyPress::escapeKey)
+        {
+            toggleTypeAheadSearch(false);
+            repaint();
+        }
+        return true;
+    }
+
     auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
 
     if (action == OpenMenu)
