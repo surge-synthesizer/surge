@@ -33,14 +33,14 @@ jobs:
           imageName: 'macos-latest'
           isMac: True
           isMacFat: True
-          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
         macOS-arm:
           imageName: 'macos-latest'
           isMac: True
           isMacFat: True
-          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
         windows-x64:
