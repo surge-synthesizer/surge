@@ -711,9 +711,10 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     contextMenu.addSeparator();
 
-    if (current_patch >= 0 && current_patch < storage->patch_list.size())
+    if (current_patch >= 0 && current_patch < storage->patch_list.size() &&
+        storage->patch_list[current_patch].category >= storage->firstUserCategory)
     {
-        Surge::GUI::addRevealInFinder(contextMenu, storage->patch_list[current_patch].path);
+        Surge::GUI::addRevealFile(contextMenu, storage->patch_list[current_patch].path);
     }
 
     contextMenu.addItem(Surge::GUI::toOSCase("Open User Patches Folder..."),

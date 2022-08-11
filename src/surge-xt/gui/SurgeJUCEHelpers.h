@@ -122,7 +122,7 @@ inline void addMenuWithShortcut(juce::PopupMenu &m, const std::string &lab,
     addMenuWithShortcut(m, lab, shortcut, true, false, action);
 }
 
-inline void addRevealInFinder(juce::PopupMenu &m, const fs::path &p)
+inline void addRevealFile(juce::PopupMenu &m, const fs::path &p)
 {
 #if LINUX
     return;
@@ -135,7 +135,7 @@ inline void addRevealInFinder(juce::PopupMenu &m, const fs::path &p)
 #if MAC
             std::string s = "Reveal in Finder...";
 #else
-            std::string s = "Open In Explorer...";
+            std::string s = "Open in Explorer...";
 #endif
             m.addItem(s, [f]() { f.revealToUser(); });
         }
