@@ -1405,8 +1405,17 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                     }
                     else
                     {
-                        // confirm that no notes are active
+                        /*
+                         * We are about to *play* a voice to replace the old voice but our
+                         * velocity here is our release velocity. So grab the prior notes
+                         * velocity since it is the best we have at this point.
+                         */
+                        auto priorNoteVel =
+                            std::clamp((char)(v->modsources[ms_velocity]->get_output(0) * 128),
+                                       (char)0, (char)127);
                         v->uber_release();
+
+                        // confirm that no notes are active
                         if (getNonUltrareleaseVoices(scene) == 0)
                         {
                             /* We need to find that last voice if we are done to restart in FP
@@ -1414,7 +1423,8 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                              */
                             v->state.gate = (polymode == pm_mono_fp);
                             doNotifyEndedNote = false;
-                            playVoice(scene, activateVoiceChannel, activateVoiceKey, velocity,
+                            playVoice(scene, activateVoiceChannel, activateVoiceKey,
+                                      priorNoteVel /* not velocity! */,
                                       channelState[activateVoiceChannel].keyState[k].lastdetune,
                                       v->host_note_id, v->originating_host_key,
                                       v->originating_host_channel);
