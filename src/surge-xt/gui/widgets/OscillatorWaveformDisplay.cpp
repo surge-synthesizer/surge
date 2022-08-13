@@ -49,7 +49,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     menuOverlays[0] = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
-        this, "Wavetable: Next", juce::AccessibilityRole::button);
+        this, "Wavetable: Previous", juce::AccessibilityRole::button);
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
         auto id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
 
@@ -72,7 +72,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     menuOverlays[1] = std::move(ol);
 
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
-        this, "Wavetable: Prev", juce::AccessibilityRole::button);
+        this, "Wavetable: Next", juce::AccessibilityRole::button);
 
     addChildComponent(*ol);
 
