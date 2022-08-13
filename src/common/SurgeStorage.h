@@ -1141,7 +1141,8 @@ class alignas(16) SurgeStorage
             return true;
         });
     int get_clipboard_type() const;
-    int getAdjacentWaveTable(int id, bool nextPrev) const;
+    // direction: false for previous, true for next
+    int getAdjacentWaveTable(int id, bool direction) const;
 
     // The in-memory patch database
     std::vector<Patch> patch_list;
