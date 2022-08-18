@@ -3540,7 +3540,10 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
         zoomSubMenu.addItem(Surge::GUI::toOSCase("Zoom to Smallest"),
                             [this]() { resizeWindow(minimumZoom); });
+    }
 
+    if ((int)zoomFactor != dzf)
+    {
         zoomSubMenu.addSeparator();
 
         if (dzf != 0)
@@ -3551,10 +3554,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
                                             showShortcutDescription("Shift + /", u8"\U000021E7/"),
                                             [this, dzf]() { resizeWindow(dzf); });
         }
-    }
 
-    if ((int)zoomFactor != dzf)
-    {
         lab = fmt::format("Set Current Zoom Level ({:d}%) as Default", (int)zoomFactor);
 
         zoomSubMenu.addItem(Surge::GUI::toOSCase(lab), [this]() {
