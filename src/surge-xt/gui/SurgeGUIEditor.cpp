@@ -3477,7 +3477,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     std::vector<int> zoomTos = {{100, 125, 150, 175, 200, 300, 400}};
     std::string lab;
     auto dzf =
-        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 0);
+        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 100);
 
     if (currentSkin->hasFixedZooms())
     {
@@ -7016,7 +7016,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::ZOOM_TO_DEFAULT:
             {
                 auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                               Surge::Storage::DefaultZoom, 0);
+                                                               Surge::Storage::DefaultZoom, 100);
                 resizeWindow(dzf);
                 return true;
             }
