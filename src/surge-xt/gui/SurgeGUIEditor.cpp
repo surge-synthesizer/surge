@@ -3977,13 +3977,11 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
 
-    wfMenu.addItem("Announce Patch Browser entries", true, doAccAnnPatch,
-                   [this, doAccAnnPatch]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage),
-                           Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
-                           !doAccAnnPatch);
-                   });
+    wfMenu.addItem("Announce Patch Browser entries", true, doAccAnnPatch, [this, doAccAnnPatch]() {
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
+            !doAccAnnPatch);
+    });
 #endif
 
     bool doExpMen = Surge::Storage::getUserDefaultValue(
