@@ -3964,7 +3964,7 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     wfMenu.addSeparator();
 
     bool doAccAnn = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, true);
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, false);
 
     wfMenu.addItem(Surge::GUI::toOSCase("Send Additional Accessibility Announcements"), true,
                    doAccAnn, [this, doAccAnn]() {
@@ -7723,7 +7723,8 @@ void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bo
 void SurgeGUIEditor::enqueueAccessibleAnnouncement(const std::string &s)
 {
     auto doAcc = Surge::Storage::getUserDefaultValue(
-        &(synth->storage), Surge::Storage::UseNarratorAnnouncements, true);
+        &(synth->storage), Surge::Storage::UseNarratorAnnouncements, false);
+
     if (doAcc)
     {
         accAnnounceStrings.push_back({s, 3});
