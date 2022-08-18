@@ -16,6 +16,7 @@
 #pragma once
 #include "Effect.h"
 #include "DSPUtils.h"
+
 #include <vembertech/lipol.h>
 
 class ResonatorEffect : public Effect

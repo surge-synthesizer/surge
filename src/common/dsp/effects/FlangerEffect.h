@@ -19,7 +19,6 @@
 #include "DSPUtils.h"
 #include "AllpassFilter.h"
 
-#include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
 
 class FlangerEffect : public Effect
