@@ -20,7 +20,6 @@
 #include "AllpassFilter.h"
 #include "ModControl.h"
 
-#include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
 
 class PhaserEffect : public Effect

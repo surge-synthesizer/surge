@@ -21,7 +21,6 @@
 
 #include "VectorizedSVFilter.h"
 
-#include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
 
 const int n_vocoder_bands = 20;
