@@ -3977,8 +3977,8 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
 
-    wfMenu.addItem(Surge::GUI::toOSCase("Announce Patch Browser (Windows Workaround)"), true,
-                   doAccAnnPatch, [this, doAccAnnPatch]() {
+    wfMenu.addItem("Announce Patch Browser entries", true, doAccAnnPatch,
+                   [this, doAccAnnPatch]() {
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage),
                            Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
@@ -3989,7 +3989,7 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     bool doExpMen = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
 
-    wfMenu.addItem(Surge::GUI::toOSCase("Add SubMenus to Modulation Menu Items"), true, doExpMen,
+    wfMenu.addItem(Surge::GUI::toOSCase("Add Sub-Menus for Modulation Menu Items"), true, doExpMen,
                    [this, doExpMen]() {
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
