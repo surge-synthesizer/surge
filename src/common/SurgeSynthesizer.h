@@ -470,7 +470,7 @@ class alignas(16) SurgeSynthesizer
     void switch_toggled();
 
     // MIDI control interpolators
-    static const int num_controlinterpolators = 128;
+    static constexpr int num_controlinterpolators = 128;
     ControllerModulationSource mControlInterpolator[num_controlinterpolators];
     bool mControlInterpolatorUsed[num_controlinterpolators];
 

@@ -24,7 +24,7 @@
 class RingModulatorEffect : public Effect
 {
   public:
-    static const int MAX_UNISON = 16;
+    static constexpr int MAX_UNISON = 16;
 
     RingModulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~RingModulatorEffect();

@@ -63,13 +63,13 @@ class FlangerEffect : public Effect
         fl_num_params,
     };
 
-    static const int COMBS_PER_CHANNEL = 4;
+    static constexpr int COMBS_PER_CHANNEL = 4;
     struct InterpDelay
     {
         // OK so lets say we want lowest tunable frequency to be 23.5hz at 96k
         // 96000/23.5 = 4084
         // And lets future proof a bit and make it a power of 2 so we can use & properly
-        static const int DELAY_SIZE = 32768, DELAY_SIZE_MASK = DELAY_SIZE - 1;
+        static constexpr int DELAY_SIZE = 32768, DELAY_SIZE_MASK = DELAY_SIZE - 1;
         float line[DELAY_SIZE];
         int k = 0;
         InterpDelay() { reset(); }

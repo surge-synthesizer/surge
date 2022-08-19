@@ -64,8 +64,8 @@ class PhaserEffect : public Effect
 
   private:
     lipol<float, true> feedback, tone;
-    static const int max_stages = 16;
-    static const int default_stages = 4;
+    static constexpr int max_stages = 16;
+    static constexpr int default_stages = 4;
     int n_stages = default_stages;
     int n_bq_units = default_stages << 1;
     int n_bq_units_initialised = 0;
