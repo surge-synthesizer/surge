@@ -595,7 +595,7 @@ void ModulatableSlider::mouseWheelMove(const juce::MouseEvent &event,
 {
     if (editTypeWas == DRAG)
         return;
-    
+
     /*
      * If I choose based on horiz/vert it only works on trackpads, so just add
      */
