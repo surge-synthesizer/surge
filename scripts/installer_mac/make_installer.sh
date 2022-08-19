@@ -40,6 +40,7 @@ build_flavor()
     flavorprod=$2
     ident=$3
     loc=$4
+    extraSigningArgs=$5
 
     echo --- BUILDING Surge_XT_${flavor}.pkg from "$flavorprod" ---
 
@@ -62,7 +63,7 @@ build_flavor()
 
       if [[ -d "$workdir/$flavorprod/Contents" ]]; then
         echo "Signing as a bundle"
-        codesign --force -s "$MAC_SIGNING_CERT" -o runtime --deep "$workdir/$flavorprod"
+        codesign --force -s "$MAC_SIGNING_CERT" -o runtime ${extraSigningArgs} --deep "$workdir/$flavorprod"
         codesign -vvv "$workdir/$flavorprod"
       fi
       if [[ -f "$workdir/$flavorprod/manifest.ttl" ]]; then
@@ -119,7 +120,7 @@ if [[ -d $INDIR/$FXLV2 ]]; then
 fi
 
 if [[ -d $INDIR/$APP ]]; then
-    build_flavor "APP" "$APP" "org.surge-synth-team.surge-xt.app.pkg" "/tmp/SXT"
+    build_flavor "APP" "$APP" "org.surge-synth-team.surge-xt.app.pkg" "/tmp/SXT" "--entitlements ${SOURCEDIR}/scripts/installer_mac/Resources/entitlements.plist"
 fi
 
 if [[ -d $INDIR/$FXAPP ]]; then
