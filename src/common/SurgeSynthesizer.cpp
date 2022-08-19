@@ -693,7 +693,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
         }
     }
 
-    switch (storage.getPatch().scene[scene].polymode.val.i)
+    auto mode = storage.getPatch().scene[scene].polymode.val.i;
+    switch (mode)
     {
     case pm_poly:
     {
@@ -802,6 +803,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             int32_t noteIdToReuse = -1;
             int16_t channelToReuse, keyToReuse;
             SurgeVoice *stealEnvelopesFrom{nullptr};
+            bool wasGated{false};
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -814,12 +816,16 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         channelToReuse = v->originating_host_channel;
                         keyToReuse = v->originating_host_key;
                         stealEnvelopesFrom = v;
+                        wasGated = true;
                     }
                     else
                     {
                         // Non-gated voices only win if there's no gated voice
                         if (!stealEnvelopesFrom)
+                        {
                             stealEnvelopesFrom = v;
+                            wasGated = false;
+                        }
                     }
                     v->uber_release();
                 }
@@ -828,9 +834,12 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             if (stealEnvelopesFrom &&
                 storage.getPatch().scene[scene].monoVoiceEnvelopeMode != RESTART_FROM_ZERO)
             {
-                // stealEnvelopesFrom->getAEGFEGLevel(aegReuse, fegReuse);
                 reclaimVoiceFor(stealEnvelopesFrom, key, channel, velocity, scene, host_noteid,
                                 host_originating_channel, host_originating_key);
+                if (mode == pm_mono_fp && !wasGated)
+                {
+                    stealEnvelopesFrom->resetPortamentoFrom(key, channel);
+                }
             }
             else
             {
