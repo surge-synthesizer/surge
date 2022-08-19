@@ -62,8 +62,7 @@ void WindowOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
     l_morph.setRate(0.05);
     update_lagvals<true>();
 
-    NumUnison = limit_range(localcopy[oscdata->p[win_unison_voices].param_id_in_scene].i, 1,
-                            MAX_UNISON - 1);
+    NumUnison = limit_range(oscdata->p[win_unison_voices].val.i, 1, MAX_UNISON - 1);
 
     if (is_display)
     {
@@ -196,8 +195,7 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
     unsigned int SizeMask = (oscdata->wt.size << 16) - 1;
     unsigned int SizeMaskWin = (storage->WindowWT.size << 16) - 1;
 
-    unsigned char SelWindow =
-        limit_range(localcopy[oscdata->p[win_window].param_id_in_scene].i, 0, 8);
+    unsigned char SelWindow = limit_range(oscdata->p[win_window].val.i, 0, 8);
 
     int Table = limit_range((int)(float)(oscdata->wt.n_tables * l_morph.v), 0,
                             (int)oscdata->wt.n_tables - 1);
