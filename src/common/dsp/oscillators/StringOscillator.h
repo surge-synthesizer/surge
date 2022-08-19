@@ -20,6 +20,7 @@
 #include "BiquadFilter.h"
 #include "OscillatorCommonFunctions.h"
 #include <random>
+#include <sst/filters/HalfRateFilter.h>
 
 class StringOscillator : public Oscillator
 {
@@ -114,7 +115,7 @@ class StringOscillator : public Oscillator
     void fillDustBuffer(float tap0, float tap1);
 
     BiquadFilter lp, hp, noiseLp;
-    HalfRateFilter halfband;
+    sst::filters::HalfRate::HalfRateFilter halfband;
     void configureLpAndHpFromTone(float playingPitch);
     float pitchAdjustmentForStiffness();
     int getOversampleLevel();

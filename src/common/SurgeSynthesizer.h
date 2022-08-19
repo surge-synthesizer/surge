@@ -19,6 +19,7 @@
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include <set>
+#include <sst/filters/HalfRateFilter.h>
 
 struct QuadFilterChainState;
 
@@ -400,7 +401,7 @@ class alignas(16) SurgeSynthesizer
     float masterfade = 0;
     bool approachingAllSoundsOff{false};
     // TODO: FIX SCENE ASSUMPTION (for halfbandA/B - use std::array)
-    HalfRateFilter halfbandA, halfbandB, halfbandIN;
+    sst::filters::HalfRate::HalfRateFilter halfbandA, halfbandB, halfbandIN;
     std::list<SurgeVoice *> voices[n_scenes];
     std::unique_ptr<Effect> fx[n_fx_slots];
     std::atomic<bool> halt_engine;

@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <memory>
 #include <vembertech/basic_dsp.h>
-#include <vembertech/halfratefilter.h>
+#include <sst/filters/HalfRateFilter.h>
 
 namespace chowdsp
 {
@@ -49,8 +49,8 @@ namespace chowdsp
 template <size_t OSFactor, size_t block_size, size_t FilterOrd = 3, bool steep = false>
 class Oversampling
 {
-    std::unique_ptr<HalfRateFilter> hr_filts_up alignas(16)[OSFactor];
-    std::unique_ptr<HalfRateFilter> hr_filts_down alignas(16)[OSFactor];
+    std::unique_ptr<sst::filters::HalfRate::HalfRateFilter> hr_filts_up alignas(16)[OSFactor];
+    std::unique_ptr<sst::filters::HalfRate::HalfRateFilter> hr_filts_down alignas(16)[OSFactor];
 
     static constexpr size_t osRatio = 1 << OSFactor;
     static constexpr size_t up_block_size = block_size * osRatio;
@@ -61,8 +61,8 @@ class Oversampling
     {
         for (size_t i = 0; i < OSFactor; ++i)
         {
-            hr_filts_up[i] = std::make_unique<HalfRateFilter>(FilterOrd, steep);
-            hr_filts_down[i] = std::make_unique<HalfRateFilter>(FilterOrd, steep);
+            hr_filts_up[i] = std::make_unique<sst::filters::HalfRate::HalfRateFilter>(FilterOrd, steep);
+            hr_filts_down[i] = std::make_unique<sst::filters::HalfRate::HalfRateFilter>(FilterOrd, steep);
         }
     }
 
