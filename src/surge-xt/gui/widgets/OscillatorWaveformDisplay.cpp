@@ -439,51 +439,60 @@ void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
     return spawn_osc(oscdata->type.val.i, storage, oscdata, tp, oscbuffer);
 }
 
-void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int selectedItem)
+void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int selectedItem,
+                                             bool singleCategory)
 {
     bool addUserLabel = false;
     int idx = 0;
 
-    for (auto c : storage->wtCategoryOrdering)
+    if (selectedItem >= 0 && selectedItem < storage->wt_list.size() && singleCategory)
     {
-        if (idx == storage->firstThirdPartyWTCategory)
+        populateMenuForCategory(contextMenu, storage->wt_list[selectedItem].category, selectedItem,
+                                true);
+    }
+    else
+    {
+        for (auto c : storage->wtCategoryOrdering)
         {
-            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
-                                                                            "3RD PARTY WAVETABLES");
-        }
+            if (idx == storage->firstThirdPartyWTCategory)
+            {
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                    contextMenu, "3RD PARTY WAVETABLES");
+            }
 
-        if (idx == storage->firstUserWTCategory &&
-            storage->firstUserWTCategory != storage->wt_category.size())
-        {
-            addUserLabel = true;
-        }
+            if (idx == storage->firstUserWTCategory &&
+                storage->firstUserWTCategory != storage->wt_category.size())
+            {
+                addUserLabel = true;
+            }
 
-        idx++;
+            idx++;
 
-        // only add this section header if we actually have any factory WTs installed
-        if (idx == 1)
-        {
-            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
-                                                                            "FACTORY WAVETABLES");
-        }
+            // only add this section header if we actually have any factory WTs installed
+            if (idx == 1)
+            {
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                    contextMenu, "FACTORY WAVETABLES");
+            }
 
-        PatchCategory cat = storage->wt_category[c];
+            PatchCategory cat = storage->wt_category[c];
 
-        if (cat.numberOfPatchesInCategoryAndChildren == 0)
-        {
-            continue;
-        }
+            if (cat.numberOfPatchesInCategoryAndChildren == 0)
+            {
+                continue;
+            }
 
-        if (addUserLabel)
-        {
-            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
-                                                                            "USER WAVETABLES");
-            addUserLabel = false;
-        }
+            if (addUserLabel)
+            {
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                "USER WAVETABLES");
+                addUserLabel = false;
+            }
 
-        if (cat.isRoot)
-        {
-            populateMenuForCategory(contextMenu, c, selectedItem);
+            if (cat.isRoot)
+            {
+                populateMenuForCategory(contextMenu, c, selectedItem);
+            }
         }
     }
 
@@ -792,12 +801,16 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
 }
 
 bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &contextMenu,
-                                                        int categoryId, int selectedItem)
+                                                        int categoryId, int selectedItem,
+                                                        bool intoTop)
 {
     int sub = 0;
     char name[NAMECHARS];
     bool selected = false;
-    juce::PopupMenu subMenu;
+    juce::PopupMenu subMenuLocal;
+    juce::PopupMenu *subMenu = &subMenuLocal;
+    if (intoTop)
+        subMenu = &contextMenu;
     PatchCategory cat = storage->wt_category[categoryId];
 
     for (auto p : storage->wtOrdering)
@@ -815,13 +828,13 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
                 selected = true;
             }
 
-            subMenu.addItem(name, true, checked, action);
+            subMenu->addItem(name, true, checked, action);
 
             sub++;
 
             if (sub != 0 && sub % 16 == 0)
             {
-                subMenu.addColumnBreak();
+                subMenu->addColumnBreak();
             }
         }
     }
@@ -843,7 +856,7 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
                 cidx++;
             }
 
-            bool checked = populateMenuForCategory(subMenu, cidx, selectedItem);
+            bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem);
 
             if (checked)
             {
@@ -869,7 +882,8 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         strncpy(name, storage->wt_category[categoryId].name.c_str(), NAMECHARS);
     }
 
-    contextMenu.addSubMenu(name, subMenu, true, nullptr, selected);
+    if (!intoTop)
+        contextMenu.addSubMenu(name, *subMenu, true, nullptr, selected);
 
     return selected;
 }
@@ -927,7 +941,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
         });
 }
 
-void OscillatorWaveformDisplay::showWavetableMenu()
+void OscillatorWaveformDisplay::showWavetableMenu(bool singleCategory)
 {
     bool usesWT = uses_wavetabledata(oscdata->type.val.i);
 
@@ -936,7 +950,7 @@ void OscillatorWaveformDisplay::showWavetableMenu()
         int id = oscdata->wt.current_id;
         juce::PopupMenu menu;
 
-        populateMenu(menu, id);
+        populateMenu(menu, id, singleCategory);
 
         auto where = sge->frame->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
 
@@ -1016,13 +1030,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
         if (waveTableName.contains(event.position) || openMenu)
         {
-            juce::PopupMenu menu;
-
-            populateMenu(menu, id);
-
-            auto where =
-                sge->frame->getLocalPoint(this, menuOverlays[0]->getBounds().getBottomLeft());
-            menu.showMenuAsync(sge->popupMenuOptions(where));
+            showWavetableMenu(event.mods.isRightButtonDown());
         }
     }
 
