@@ -61,8 +61,10 @@ class Oversampling
     {
         for (size_t i = 0; i < OSFactor; ++i)
         {
-            hr_filts_up[i] = std::make_unique<sst::filters::HalfRate::HalfRateFilter>(FilterOrd, steep);
-            hr_filts_down[i] = std::make_unique<sst::filters::HalfRate::HalfRateFilter>(FilterOrd, steep);
+            hr_filts_up[i] =
+                std::make_unique<sst::filters::HalfRate::HalfRateFilter>(FilterOrd, steep);
+            hr_filts_down[i] =
+                std::make_unique<sst::filters::HalfRate::HalfRateFilter>(FilterOrd, steep);
         }
     }
 
