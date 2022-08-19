@@ -49,8 +49,7 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     l_vskew.setRate(rate);
     l_hskew.setRate(rate);
 
-    n_unison =
-        limit_range(localcopy[oscdata->p[wt_unison_voices].param_id_in_scene].i, 1, MAX_UNISON);
+    n_unison = limit_range(oscdata->p[wt_unison_voices].val.i, 1, MAX_UNISON);
 
     if (oscdata->wt.flags & wtf_is_sample)
     {
