@@ -26,8 +26,6 @@
 class WaveShaperEffect : public Effect
 {
   public:
-    static const int MAX_UNISON = 16;
-
     WaveShaperEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~WaveShaperEffect();
     virtual const char *get_effectname() override { return "WaveShaper"; }

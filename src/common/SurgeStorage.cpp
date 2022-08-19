@@ -2423,8 +2423,6 @@ float SurgeStorage::remapKeyInMidiOnlyMode(float res)
     return res;
 }
 
-const double SurgeStorage::MIDI_0_FREQ = Tunings::MIDI_0_FREQ;
-
 namespace Surge
 {
 namespace Storage
