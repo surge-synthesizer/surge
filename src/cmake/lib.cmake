@@ -91,6 +91,7 @@ function(surge_make_installers)
     run_installer_script(installer_mac/make_installer.sh)
     add_custom_command(TARGET surge-xt-distribution
       POST_BUILD
+      USES_TERMINAL
       WORKING_DIRECTORY ${SURGE_PRODUCT_DIR}
       COMMAND zip -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-macos-${SXTVER}-pluginsonly.zip .
       )
