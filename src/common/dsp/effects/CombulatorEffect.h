@@ -17,6 +17,7 @@
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
+#include <sst/filters/HalfRateFilter.h>
 
 #include <vembertech/lipol.h>
 
@@ -66,7 +67,7 @@ class CombulatorEffect : public Effect
                                            int currentSynthStreamingRevision) override;
 
     sst::filters::QuadFilterUnitState *qfus = nullptr;
-    HalfRateFilter halfbandOUT, halfbandIN;
+    sst::filters::HalfRate::HalfRateFilter halfbandOUT, halfbandIN;
     sst::filters::FilterCoefficientMaker<SurgeStorage> coeff[3][2];
     BiquadFilter lp, hp;
     lag<float, true> freq[3], feedback, gain[3], pan2, pan3, tone, noisemix;

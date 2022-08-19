@@ -20,7 +20,6 @@
 #include "globals.h"
 #include "UnitConversions.h"
 #include <vembertech/basic_dsp.h>
-#include <vembertech/halfratefilter.h>
 #include <functional>
 #include "StringOps.h"
 

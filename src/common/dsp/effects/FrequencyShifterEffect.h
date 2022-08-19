@@ -20,11 +20,12 @@
 #include "AllpassFilter.h"
 
 #include <vembertech/lipol.h>
+#include <sst/filters/HalfRateFilter.h>
 
 class FrequencyShifterEffect : public Effect
 {
   public:
-    HalfRateFilter fr alignas(16), fi alignas(16);
+    sst::filters::HalfRate::HalfRateFilter fr alignas(16), fi alignas(16);
     lipol_ps mix alignas(16);
     FrequencyShifterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~FrequencyShifterEffect();
