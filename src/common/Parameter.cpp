@@ -3349,7 +3349,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                                 break;
                             case FilterType::fut_bp12:
                             case FilterType::fut_bp24:
-                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_bp_subtypes[i]);
+                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_def_subtypes[i]);
                                 break;
                             case FilterType::fut_notch12:
                             case FilterType::fut_notch24:
