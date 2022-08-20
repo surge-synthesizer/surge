@@ -123,10 +123,16 @@ struct ModulationSourceButton : public juce::Component,
         if ((state & 3) == 2)
         {
             toggleArmAccButton->setTitle("Disarm");
+            toggleArmAccButton->setDescription("Disarm");
         }
         else
         {
             toggleArmAccButton->setTitle("Arm");
+            toggleArmAccButton->setDescription("Arm");
+        }
+        if (auto *h = toggleArmAccButton->getAccessibilityHandler())
+        {
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
         }
     }
     int getState() const { return state; }
