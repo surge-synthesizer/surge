@@ -111,7 +111,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     using namespace sst::filters;
     auto whichModel = *pdata_ival[resonator_mode];
     FilterType type;
-    FilterSubType subtype = st_Rough;
+    FilterSubType subtype = st_Driven;
 
     switch (whichModel)
     {
