@@ -3911,7 +3911,7 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                    });
 
     int patchDirtyCheck = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::PromptToLoadOverDirtyPatch, DUNNO);
+        &(this->synth->storage), Surge::Storage::PromptToLoadOverDirtyPatch, ALWAYS);
 
     wfMenu.addItem(Surge::GUI::toOSCase("Confirm Patch Loading if Unsaved Changes Exist"), true,
                    (patchDirtyCheck != ALWAYS), [this, patchDirtyCheck]() {
@@ -7619,11 +7619,9 @@ void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
     }
 }
 
-bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &title,
-                                                       const std::string &msg,
-                                                       Surge::Storage::DefaultKey dontAskAgainKey,
-                                                       std::function<void()> okCallback,
-                                                       std::string ynMessage)
+bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
+    const ::std::string &title, const std::string &msg, Surge::Storage::DefaultKey dontAskAgainKey,
+    std::function<void()> okCallback, std::string ynMessage, AskAgainStates askAgainDef)
 {
     if (okcWithToggleAlertWindow)
     {
@@ -7632,7 +7630,8 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &titl
         return false;
     }
 
-    auto bypassed = Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, DUNNO);
+    auto bypassed =
+        Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, askAgainDef);
 
     if (bypassed == NEVER)
     {
@@ -7708,7 +7707,8 @@ void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bo
                 closeOverlay(SAVE_PATCH);
 
                 synth->jogPatchOrCategory(increment, isCategory, insideCategory);
-            });
+            },
+            "Don't ask me again", ALWAYS);
     }
     else
     {
