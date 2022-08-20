@@ -1798,7 +1798,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     (u.type.val.i == FilterType::fut_hp24))
                 {
                     u.subtype.val.i =
-                        (revision < 6) ? FilterSubType::st_SVF : FilterSubType::st_Rough;
+                        (revision < 6) ? FilterSubType::st_Standard : FilterSubType::st_Driven;
                 }
                 else if (u.type.val.i == FilterType::fut_notch12)
                 {
