@@ -6805,7 +6805,7 @@ void SurgeGUIEditor::setupKeymapManager()
     // TODO: FIX SCENE ASSUMPTION
     keyMapManager->addBinding(Surge::GUI::TOGGLE_SCENE, {keymap_t::Modifiers::ALT, (int)'S'});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_MODULATOR_ARM,
-                              {keymap_t::Modifiers::COMMAND, (int)'A'});
+                              {keymap_t::Modifiers::ALT, (int)'A'});
 
 #if WINDOWS
     keyMapManager->addBinding(Surge::GUI::TOGGLE_DEBUG_CONSOLE,
