@@ -44,6 +44,7 @@ enum KeyboardActions
 
     // TODO: FIX SCENE ASSUMPTION
     TOGGLE_SCENE,
+    TOGGLE_MODULATOR_ARM,
 
 #if WINDOWS
     TOGGLE_DEBUG_CONSOLE,
@@ -108,6 +109,8 @@ inline std::string keyboardActionName(KeyboardActions a)
     // TODO: FIX SCENE ASSUMPTION
     case TOGGLE_SCENE:
         return "TOGGLE_SCENE";
+    case TOGGLE_MODULATOR_ARM:
+        return "TOGGLE_MODULATOR_ARM";
 
 #if WINDOWS
     case TOGGLE_DEBUG_CONSOLE:
@@ -211,6 +214,10 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     // TODO: FIX SCENE ASSUMPTION
     case TOGGLE_SCENE:
         desc = "Toggle Scene A/B";
+        break;
+
+    case TOGGLE_MODULATOR_ARM:
+        desc = "Toggle Modulator Armed State";
         break;
 
 #if WINDOWS
