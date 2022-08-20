@@ -6804,6 +6804,8 @@ void SurgeGUIEditor::setupKeymapManager()
 
     // TODO: FIX SCENE ASSUMPTION
     keyMapManager->addBinding(Surge::GUI::TOGGLE_SCENE, {keymap_t::Modifiers::ALT, (int)'S'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_MODULATOR_ARM,
+                              {keymap_t::Modifiers::COMMAND, (int)'A'});
 
 #if WINDOWS
     keyMapManager->addBinding(Surge::GUI::TOGGLE_DEBUG_CONSOLE,
@@ -6975,6 +6977,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 }
 
                 changeSelectedScene(s);
+                return true;
+            }
+
+            case Surge::GUI::TOGGLE_MODULATOR_ARM:
+            {
+                toggle_mod_editing();
                 return true;
             }
 

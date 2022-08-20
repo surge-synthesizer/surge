@@ -411,6 +411,11 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
 
 void ModulationSourceButton::mouseDown(const juce::MouseEvent &event)
 {
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
     mouseMode = CLICK;
     everDragged = false;
     mouseDownLocation = event.position;
