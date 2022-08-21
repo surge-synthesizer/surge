@@ -66,7 +66,7 @@ enum DefaultKey
     LastWavetablePath,
     LastPatchPath,
 
-    TabKeyArmsModulators,
+    TabKeyArmsModulators, // TODO: remove in XT2
     MenuAndEditKeybindingsFollowKeyboardFocus,
 
     InfoWindowPopupOnIdle,
