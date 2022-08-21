@@ -619,12 +619,13 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
 
             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "INFO");
 
+            // These are enabled simply so they show up in the screen reader
             contextMenu.addItem(
                 Surge::GUI::toOSCase(fmt::format("Number of Frames: {}", oscdata->wt.n_tables)),
-                false, false, nullptr);
+                true, false, nullptr);
             contextMenu.addItem(
                 Surge::GUI::toOSCase(fmt::format("Frame Length: {} samples", oscdata->wt.size)),
-                false, false, nullptr);
+                true, false, nullptr);
         }
     }
 }
