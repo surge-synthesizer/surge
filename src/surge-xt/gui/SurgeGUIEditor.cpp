@@ -3923,15 +3923,16 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                    });
 
     wfMenu.addSeparator();
+    /*  // TODO: remove completely in XT2
+        bool tabArm = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                          Surge::Storage::TabKeyArmsModulators,
+       false);
 
-    bool tabArm = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                      Surge::Storage::TabKeyArmsModulators, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCase("Tab Key Arms Modulators"), true, tabArm, [this, tabArm]() {
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                               Surge::Storage::TabKeyArmsModulators, !tabArm);
-    });
-
+        wfMenu.addItem(Surge::GUI::toOSCase("Tab Key Arms Modulators"), true, tabArm, [this,
+       tabArm]() { Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::TabKeyArmsModulators, !tabArm);
+        });
+     */
     bool kbShortcuts = getUseKeyboardShortcuts();
 
     wfMenu.addItem(Surge::GUI::toOSCase("Use Keyboard Shortcuts"), true, kbShortcuts,
@@ -6844,6 +6845,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     auto textChar = key.getTextCharacter();
     auto keyCode = key.getKeyCode();
 
+    // TODO: Remove this Tab branch in XT2, leave the modulation arm action to the key manager
     // We treat Escape and Tab separately outside of the key manager
     if (textChar == juce::KeyPress::tabKey)
     {
