@@ -762,9 +762,12 @@ void PatchSelector::showClassicMenu(bool single_category)
         o = sge->popupMenuOptions(getBounds().getBottomLeft());
     }
 
-    contextMenu.showMenuAsync(o, [this](int) {
-        stuckHover = false;
-        endHover();
+    contextMenu.showMenuAsync(o, [that = juce::Component::SafePointer(this)](int) {
+        if (that)
+        {
+            that->stuckHover = false;
+            that->endHover();
+        }
     });
 }
 
