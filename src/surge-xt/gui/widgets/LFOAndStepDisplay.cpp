@@ -2377,8 +2377,17 @@ void LFOAndStepDisplay::setupAccessibility()
         auto t = std::string(lt_names[i]);
         if (i == lfodata->shape.val.i)
             t += "  active";
+        auto pt = typeAccOverlays[i]->getTitle();
         typeAccOverlays[i]->setTitle(t);
         typeAccOverlays[i]->setDescription(t);
+
+        if (t != pt)
+        {
+            if (auto h = typeAccOverlays[i]->getAccessibilityHandler())
+            {
+                h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+            }
+        }
     }
 
     for (const auto &s : stepSliderOverlays)
