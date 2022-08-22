@@ -67,6 +67,12 @@ EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChoose
             this->notifyValueChanged();
             return true;
         };
+        q->onMenuKey = [this, mapi](auto *t) {
+            this->currentEffect = mapi;
+            this->notifyValueChanged();
+            this->createFXMenu();
+            return true;
+        };
         q->onGetIsChecked = [this, mapi](auto *t) {
             if (this->currentEffect == mapi)
                 return true;
