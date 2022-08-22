@@ -196,6 +196,9 @@ struct MenuTitleHelpComponentAH : public juce::AccessibilityHandler
     {
     }
 
+    juce::String getTitle() const override { return itemComponent.getTitle(); }
+    juce::String getDescription() const override { return itemComponent.getDescription(); }
+
     void showHelp() { itemComponent.launchHelp(); }
 
     MenuTitleHelpComponent &itemComponent;
