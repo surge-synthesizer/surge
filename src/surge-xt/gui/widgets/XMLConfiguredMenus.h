@@ -212,7 +212,8 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void mouseWheelMove(const juce::MouseEvent &event,
                         const juce::MouseWheelDetails &wheel) override;
 
-    bool isHovered{false};
+    bool isHovered{false}, isCalledInEffectChooser{false};
+    void setCalledFromEffectChooser(bool b) { isCalledInEffectChooser = b; }
 
     void paint(juce::Graphics &g) override;
 

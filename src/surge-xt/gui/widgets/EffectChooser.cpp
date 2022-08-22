@@ -328,6 +328,7 @@ void EffectChooser::createFXMenu()
         auto c = localPointToGlobal(getEffectRectangle(currentClicked).getBottomLeft());
 
         auto where = sge->frame->getLocalPoint(nullptr, c);
+        sge->fxMenu->setCalledFromEffectChooser(true);
         sge->fxMenu->populate();
         sge->fxMenu->menu.showMenuAsync(sge->popupMenuOptions(where));
     }

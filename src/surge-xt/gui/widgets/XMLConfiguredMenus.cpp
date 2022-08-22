@@ -701,14 +701,22 @@ void FxMenu::populate()
         cfxtype = sge->effectChooser->fxTypes[cfxid];
         enableClear = cfxtype != fxt_off;
     }
-    auto cfx = std::string{"Current FX Unit"};
+
+    auto cfx = std::string{"Current FX Slot"};
     auto helpMenuText = std::string{"FX Presets"};
     auto helpMenuScreeReaderText = helpMenuText;
+
     if (cfxid >= 0 && cfxid < n_fx_slots)
     {
-        cfx = fxslot_names[cfxid];
+        cfx = fxslot_longnames[cfxid];
+
+        if (isCalledInEffectChooser)
+        {
+            helpMenuText = cfx;
+        }
+
         helpMenuScreeReaderText =
-            fmt::format("FX Presets {} {}", fxslot_names[cfxid], fx_type_names[cfxtype]);
+            fmt::format("FX Presets: {} {}", fxslot_names[cfxid], fx_type_names[cfxtype]);
     }
 
     menu.addColumnBreak();
@@ -720,6 +728,7 @@ void FxMenu::populate()
             Surge::GUI::toOSCase(fmt::format("{} {}", (isDeact ? "Activate" : "Deactivate"), cfx)),
             [that = juce::Component::SafePointer(sge->effectChooser.get())]() {
                 that->toggleSelectedDeactivation();
+                that->repaint();
             });
     }
 
