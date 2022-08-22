@@ -677,7 +677,7 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     }
 }
 
-void FxMenu::populate()
+void FxMenu::populateForContext(bool isCalledInEffectChooser)
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
@@ -708,15 +708,14 @@ void FxMenu::populate()
 
     if (cfxid >= 0 && cfxid < n_fx_slots)
     {
-        cfx = fxslot_longnames[cfxid];
-
         if (isCalledInEffectChooser)
         {
+            cfx = fxslot_longnames[cfxid];
             helpMenuText = cfx;
         }
 
         helpMenuScreeReaderText =
-            fmt::format("FX Presets: {} {}", fxslot_names[cfxid], fx_type_names[cfxtype]);
+            fmt::format("FX Presets: {} {}", fxslot_longnames[cfxid], fx_type_names[cfxtype]);
     }
 
     menu.addColumnBreak();
