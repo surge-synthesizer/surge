@@ -623,9 +623,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     SurgePatch &getPatch() { return synth->storage.getPatch(); }
     SurgeStorage *getStorage() { return &(synth->storage); }
 
-  private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
 
+  private:
     Surge::GUI::IComponentTagValue *statusMPE = nullptr, *statusTune = nullptr,
                                    *statusZoom = nullptr, *actionUndo = nullptr,
                                    *actionRedo = nullptr;

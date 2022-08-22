@@ -60,15 +60,18 @@ EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChoose
         q->setBounds(getEffectRectangle(mapi));
         q->onPress = [this, mapi](auto *t) {
             this->currentEffect = mapi;
+            this->currentClicked = mapi;
             this->notifyValueChanged();
         };
         q->onReturnKey = [this, mapi](auto *t) {
             this->currentEffect = mapi;
+            this->currentClicked = mapi;
             this->notifyValueChanged();
             return true;
         };
         q->onMenuKey = [this, mapi](auto *t) {
             this->currentEffect = mapi;
+            this->currentClicked = mapi;
             this->notifyValueChanged();
             this->createFXMenu();
             return true;
@@ -254,13 +257,18 @@ juce::Rectangle<int> EffectChooser::getEffectRectangle(int i)
     return r;
 }
 
+void EffectChooser::toggleSelectedDeactivation()
+{
+    storage->getPatch().isDirty = true;
+    deactivatedBitmask ^= (1 << currentClicked);
+    notifyValueChanged();
+}
+
 void EffectChooser::mouseDoubleClick(const juce::MouseEvent &event)
 {
     if (!event.mods.isPopupMenu() && !hasDragged && currentClicked >= 0)
     {
-        storage->getPatch().isDirty = true;
-        deactivatedBitmask ^= (1 << currentClicked);
-        notifyValueChanged();
+        toggleSelectedDeactivation();
     }
 }
 
@@ -320,6 +328,7 @@ void EffectChooser::createFXMenu()
         auto c = localPointToGlobal(getEffectRectangle(currentClicked).getBottomLeft());
 
         auto where = sge->frame->getLocalPoint(nullptr, c);
+        sge->fxMenu->populate();
         sge->fxMenu->menu.showMenuAsync(sge->popupMenuOptions(where));
     }
 }

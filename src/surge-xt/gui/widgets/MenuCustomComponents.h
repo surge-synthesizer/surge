@@ -70,6 +70,14 @@ struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
         setAccessible(true);
     }
 
+    MenuTitleHelpComponent(const std::string &l, const std::string &accL, const std::string &u)
+        : label(l), url(u), juce::PopupMenu::CustomComponent(false)
+    {
+        setTitle(accL);
+        setDescription(accL);
+        setAccessible(true);
+    }
+
     void getIdealSize(int &idealWidth, int &idealHeight) override;
 
     void mouseUp(const juce::MouseEvent &e) override;
