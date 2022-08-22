@@ -2989,14 +2989,14 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     if (tag == tag_action_undo)
     {
         undoManager()->undo();
-        juce::Timer::callAfterDelay(25, [this, control]() { control->setValue(0); });
+        juce::Timer::callAfterDelay(25, [control]() { control->setValue(0); });
         return;
     }
 
     if (tag == tag_action_redo)
     {
         undoManager()->redo();
-        juce::Timer::callAfterDelay(25, [this, control]() { control->setValue(0); });
+        juce::Timer::callAfterDelay(25, [control]() { control->setValue(0); });
         return;
     }
 

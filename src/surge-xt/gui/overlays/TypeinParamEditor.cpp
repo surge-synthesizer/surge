@@ -213,9 +213,12 @@ void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
     {
         wasInputInvalid = true;
         repaint();
-        juce::Timer::callAfterDelay(5000, [this]() {
-            wasInputInvalid = false;
-            repaint();
+        juce::Timer::callAfterDelay(5000, [that = juce::Component::SafePointer(this)]() {
+            if (that)
+            {
+                that->wasInputInvalid = false;
+                that->repaint();
+            }
         });
     }
 }
