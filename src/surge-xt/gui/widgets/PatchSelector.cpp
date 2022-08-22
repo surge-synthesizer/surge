@@ -367,9 +367,12 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
                 stuckHover = true;
                 menu.showMenuAsync(sge->popupMenuOptions(favoritesRect.getBottomLeft()),
-                                   [this](int) {
-                                       stuckHover = false;
-                                       endHover();
+                                   [that = juce::Component::SafePointer(this)](int) {
+                                       if (that)
+                                       {
+                                           that->stuckHover = false;
+                                           that->endHover();
+                                       }
                                    });
             }
 
@@ -1225,7 +1228,10 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
 
         if (!enable)
         {
-            juce::Timer::callAfterDelay(250, [this]() { this->enableTypeAheadIfReady(); });
+            juce::Timer::callAfterDelay(250, [that = juce::Component::SafePointer(this)]() {
+                if (that)
+                    that->enableTypeAheadIfReady();
+            });
         }
         else
         {
@@ -1277,7 +1283,10 @@ void PatchSelector::enableTypeAheadIfReady()
     }
     else
     {
-        juce::Timer::callAfterDelay(250, [this]() { this->enableTypeAheadIfReady(); });
+        juce::Timer::callAfterDelay(250, [that = juce::Component::SafePointer(this)]() {
+            if (that)
+                that->enableTypeAheadIfReady();
+        });
     }
 }
 
