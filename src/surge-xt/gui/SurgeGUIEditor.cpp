@@ -5899,7 +5899,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         fxMenu->selectedIdx = selectedFX[current_fx];
         // TODO: set the fxs fxb, cfx
 
-        fxMenu->populate();
+        fxMenu->populateForContext(false);
         addAndMakeVisibleWithTrackingInCG(cg_FX, *fxMenu);
         return fxMenu.get();
     }

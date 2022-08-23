@@ -602,6 +602,8 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
+    populate();
+
     stuckHoverOn();
     menu.showMenuAsync(sge->popupMenuOptions(this),
                        Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
@@ -677,7 +679,7 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     }
 }
 
-void FxMenu::populate()
+void FxMenu::populateForContext(bool isCalledInEffectChooser)
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
@@ -701,14 +703,21 @@ void FxMenu::populate()
         cfxtype = sge->effectChooser->fxTypes[cfxid];
         enableClear = cfxtype != fxt_off;
     }
-    auto cfx = std::string{"Current FX Unit"};
+
+    auto cfx = std::string{"Current FX Slot"};
     auto helpMenuText = std::string{"FX Presets"};
     auto helpMenuScreeReaderText = helpMenuText;
+
     if (cfxid >= 0 && cfxid < n_fx_slots)
     {
-        cfx = fxslot_names[cfxid];
+        if (isCalledInEffectChooser)
+        {
+            cfx = fxslot_longnames[cfxid];
+            helpMenuText = cfx;
+        }
+
         helpMenuScreeReaderText =
-            fmt::format("FX Presets {} {}", fxslot_names[cfxid], fx_type_names[cfxtype]);
+            fmt::format("FX Presets: {} {}", fxslot_longnames[cfxid], fx_type_names[cfxtype]);
     }
 
     menu.addColumnBreak();
@@ -720,6 +729,7 @@ void FxMenu::populate()
             Surge::GUI::toOSCase(fmt::format("{} {}", (isDeact ? "Activate" : "Deactivate"), cfx)),
             [that = juce::Component::SafePointer(sge->effectChooser.get())]() {
                 that->toggleSelectedDeactivation();
+                that->repaint();
             });
     }
 

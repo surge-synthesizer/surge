@@ -274,6 +274,25 @@ const char fxslot_names[n_fx_slots][NAMECHARS] = {
     "Send FX 3",     "Send FX 4",     "Global FX 3",   "Global FX 4",
 };
 
+const char fxslot_longnames[n_fx_slots][NAMECHARS] = {
+    "Scene A, Insert FX Slot 1",
+    "Scene A, Insert FX Slot 2",
+    "Scene B, Insert FX Slot 1",
+    "Scene B, Insert FX Slot 2",
+    "Send FX Slot 1",
+    "Send FX Slot 2",
+    "Global FX Slot 1",
+    "Global FX Slot 2",
+    "Scene A, Insert FX Slot 3",
+    "Scene A, Insert FX Slot 4",
+    "Scene B, Insert FX Slot 3",
+    "Scene B, Insert FX Slot 4",
+    "Send FX Slot 3",
+    "Send FX Slot 4",
+    "Global FX Slot 3",
+    "Global FX Slot 4",
+};
+
 const char fxslot_shortnames[n_fx_slots][8] = {
     "FX A1", "FX A2", "FX B1", "FX B2", "FX S1", "FX S2", "FX G1", "FX G2",
     "FX A3", "FX A4", "FX B3", "FX B4", "FX S3", "FX S4", "FX G3", "FX G4",
