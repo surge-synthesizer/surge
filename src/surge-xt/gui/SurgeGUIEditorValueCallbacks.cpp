@@ -641,7 +641,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (synth->storage.get_clipboard_type() == cp_osc)
             {
                 contextMenu.addItem(Surge::GUI::toOSCase("Paste to ") + oscname, [this, a]() {
-                    undoManager()->pushOscillator(current_scene, a);
+                    if (synth->storage.get_clipboard_type() & cp_modulator_target)
+                    {
+                        undoManager()->pushPatch();
+                    }
+                    else
+                    {
+                        undoManager()->pushOscillator(current_scene, a);
+                    }
                     synth->clear_osc_modulation(current_scene, a);
                     synth->storage.clipboard_paste(cp_osc, current_scene, a);
                     synth->storage.getPatch().isDirty = true;
@@ -1199,7 +1206,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     auto t = synth->storage.get_clipboard_type();
 
                     contextMenu.addItem(Surge::GUI::toOSCase("Paste"), [this, sc, t, lfo_id]() {
-                        undoManager()->pushFullLFO(sc, lfo_id);
+                        if (synth->storage.get_clipboard_type() & cp_modulator_target)
+                        {
+                            // Just punt and save the whole patch in this edge case
+                            undoManager()->pushPatch();
+                        }
+                        else
+                        {
+                            undoManager()->pushFullLFO(sc, lfo_id);
+                        }
                         synth->storage.clipboard_paste(
                             t, sc, lfo_id, ms_original, [this](int p, modsources m) {
                                 auto res = synth->isValidModulation(p, m);
