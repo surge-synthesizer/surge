@@ -73,7 +73,25 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
     mix.set_target_smoothed(clamp01(*f[ws_mix]));
     boost.set_target_smoothed(db_to_amp(*f[ws_postboost]));
 
-    drive.newValue(db_to_amp(*f[ws_drive]));
+    /*
+     * OK so what's all this? Well the network of halfbands and so on
+     * attenuates the input before you get to the FX which, for waveshapers,
+     * matters a lot. We wanted to meet the constraint that
+     *
+     * sin -> filterbank waveshaper -> output
+     * sin -> fxbank waveshaper with no pre/post and no bias -> output
+     *
+     * produced the same response at the same drives. To do that we need
+     * to compensate for the scale factor difference and also for the
+     * halfband filter dropping our amplitude. Moreover, we need to do
+     * that in the db calculation also, which we replicate here to change
+     * the clip limits.
+     */
+    const auto scalef = 3.f, oscalef = 1.f / 3.f, hbfComp = 2.f;
+
+    auto x = scalef * *f[ws_drive];
+    auto dnv = limit_range(powf(2.f, x / 18.f), 0.f, 8.f);
+    drive.newValue(dnv);
     bias.newValue(clamp1bp(*f[ws_bias]));
 
     float wetL alignas(16)[BLOCK_SIZE], wetR alignas(16)[BLOCK_SIZE];
@@ -122,8 +140,8 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
 
         for (int i = 0; i < BLOCK_SIZE_OS; ++i)
         {
-            din[0] = dataOS[0][i] + bias.v;
-            din[1] = dataOS[1][i] + bias.v;
+            din[0] = hbfComp * scalef * dataOS[0][i] + bias.v;
+            din[1] = hbfComp * scalef * dataOS[1][i] + bias.v;
 
             auto dat = _mm_load_ps(din);
             auto drv = _mm_set1_ps(drive.v);
@@ -134,8 +152,8 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
 
             _mm_store_ps(res, dat);
 
-            dataOS[0][i] = res[0];
-            dataOS[1][i] = res[1];
+            dataOS[0][i] = res[0] * oscalef;
+            dataOS[1][i] = res[1] * oscalef;
 
             bias.process();
             drive.process();
