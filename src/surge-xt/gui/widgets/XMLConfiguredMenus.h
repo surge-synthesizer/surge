@@ -218,6 +218,7 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
 
     void loadSnapshot(int type, TiXmlElement *e, int idx) override;
     void populateForContext(bool isCalledInEffectChooser);
+    void populate() override { populateForContext(false); };
 
     FxStorage *fx{nullptr}, *fxbuffer{nullptr};
     void setFxStorage(FxStorage *s);

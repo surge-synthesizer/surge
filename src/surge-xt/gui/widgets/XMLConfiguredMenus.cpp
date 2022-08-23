@@ -602,6 +602,8 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
+    populate();
+
     stuckHoverOn();
     menu.showMenuAsync(sge->popupMenuOptions(this),
                        Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
