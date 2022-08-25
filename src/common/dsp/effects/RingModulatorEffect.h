@@ -19,13 +19,13 @@
 #include "DSPUtils.h"
 #include "AllpassFilter.h"
 
-#include <vembertech/halfratefilter.h>
 #include <vembertech/lipol.h>
+#include <sst/filters/HalfRateFilter.h>
 
 class RingModulatorEffect : public Effect
 {
   public:
-    static const int MAX_UNISON = 16;
+    static constexpr int MAX_UNISON = 16;
 
     RingModulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~RingModulatorEffect();
@@ -70,7 +70,7 @@ class RingModulatorEffect : public Effect
     float phase[MAX_UNISON], detune_offset[MAX_UNISON], panL[MAX_UNISON], panR[MAX_UNISON];
     int last_unison = -1;
 
-    HalfRateFilter halfbandOUT, halfbandIN;
+    sst::filters::HalfRate::HalfRateFilter halfbandOUT, halfbandIN;
     BiquadFilter lp, hp;
     lipol_ps mix alignas(16);
 };

@@ -1213,7 +1213,7 @@ bool SurgeStorage::getOverrideDataHome(std::string &v)
 
 int SurgeStorage::get_clipboard_type() const { return clipboard_type; }
 
-int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev) const
+int SurgeStorage::getAdjacentWaveTable(int id, bool direction) const
 {
     int n = wt_list.size();
     if (!n)
@@ -1228,7 +1228,7 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool nextPrev) const
     {
         int order = wt_list[id].order;
 
-        if (nextPrev)
+        if (direction)
             order = (order >= (n - 1)) ? 0 : order + 1; // see comment in jogPatch for that >= vs ==
         else
             order = (order <= 0) ? n - 1 : order - 1;
@@ -2422,8 +2422,6 @@ float SurgeStorage::remapKeyInMidiOnlyMode(float res)
     }
     return res;
 }
-
-const double SurgeStorage::MIDI_0_FREQ = Tunings::MIDI_0_FREQ;
 
 namespace Surge
 {

@@ -3477,7 +3477,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     std::vector<int> zoomTos = {{100, 125, 150, 175, 200, 300, 400}};
     std::string lab;
     auto dzf =
-        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 0);
+        Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 100);
 
     if (currentSkin->hasFixedZooms())
     {
@@ -3540,7 +3540,10 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
         zoomSubMenu.addItem(Surge::GUI::toOSCase("Zoom to Smallest"),
                             [this]() { resizeWindow(minimumZoom); });
+    }
 
+    if ((int)zoomFactor != dzf)
+    {
         zoomSubMenu.addSeparator();
 
         if (dzf != 0)
@@ -3551,10 +3554,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
                                             showShortcutDescription("Shift + /", u8"\U000021E7/"),
                                             [this, dzf]() { resizeWindow(dzf); });
         }
-    }
 
-    if ((int)zoomFactor != dzf)
-    {
         lab = fmt::format("Set Current Zoom Level ({:d}%) as Default", (int)zoomFactor);
 
         zoomSubMenu.addItem(Surge::GUI::toOSCase(lab), [this]() {
@@ -3911,7 +3911,7 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                    });
 
     int patchDirtyCheck = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::PromptToLoadOverDirtyPatch, DUNNO);
+        &(this->synth->storage), Surge::Storage::PromptToLoadOverDirtyPatch, ALWAYS);
 
     wfMenu.addItem(Surge::GUI::toOSCase("Confirm Patch Loading if Unsaved Changes Exist"), true,
                    (patchDirtyCheck != ALWAYS), [this, patchDirtyCheck]() {
@@ -3923,15 +3923,16 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                    });
 
     wfMenu.addSeparator();
+    /*  // TODO: remove completely in XT2
+        bool tabArm = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                          Surge::Storage::TabKeyArmsModulators,
+       false);
 
-    bool tabArm = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                      Surge::Storage::TabKeyArmsModulators, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCase("Tab Key Arms Modulators"), true, tabArm, [this, tabArm]() {
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                               Surge::Storage::TabKeyArmsModulators, !tabArm);
-    });
-
+        wfMenu.addItem(Surge::GUI::toOSCase("Tab Key Arms Modulators"), true, tabArm, [this,
+       tabArm]() { Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::TabKeyArmsModulators, !tabArm);
+        });
+     */
     bool kbShortcuts = getUseKeyboardShortcuts();
 
     wfMenu.addItem(Surge::GUI::toOSCase("Use Keyboard Shortcuts"), true, kbShortcuts,
@@ -3964,7 +3965,7 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     wfMenu.addSeparator();
 
     bool doAccAnn = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, true);
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, false);
 
     wfMenu.addItem(Surge::GUI::toOSCase("Send Additional Accessibility Announcements"), true,
                    doAccAnn, [this, doAccAnn]() {
@@ -3977,19 +3978,17 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
 
-    wfMenu.addItem(Surge::GUI::toOSCase("Announce Patch Browser (Windows Workaround)"), true,
-                   doAccAnnPatch, [this, doAccAnnPatch]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage),
-                           Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
-                           !doAccAnnPatch);
-                   });
+    wfMenu.addItem("Announce Patch Browser entries", true, doAccAnnPatch, [this, doAccAnnPatch]() {
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
+            !doAccAnnPatch);
+    });
 #endif
 
     bool doExpMen = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
 
-    wfMenu.addItem(Surge::GUI::toOSCase("Add SubMenus to Modulation Menu Items"), true, doExpMen,
+    wfMenu.addItem(Surge::GUI::toOSCase("Add Sub-Menus for Modulation Menu Items"), true, doExpMen,
                    [this, doExpMen]() {
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
@@ -5900,7 +5899,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         fxMenu->selectedIdx = selectedFX[current_fx];
         // TODO: set the fxs fxb, cfx
 
-        fxMenu->populate();
+        fxMenu->populateForContext(false);
         addAndMakeVisibleWithTrackingInCG(cg_FX, *fxMenu);
         return fxMenu.get();
     }
@@ -6806,6 +6805,8 @@ void SurgeGUIEditor::setupKeymapManager()
 
     // TODO: FIX SCENE ASSUMPTION
     keyMapManager->addBinding(Surge::GUI::TOGGLE_SCENE, {keymap_t::Modifiers::ALT, (int)'S'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_MODULATOR_ARM,
+                              {keymap_t::Modifiers::ALT, (int)'A'});
 
 #if WINDOWS
     keyMapManager->addBinding(Surge::GUI::TOGGLE_DEBUG_CONSOLE,
@@ -6844,6 +6845,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     auto textChar = key.getTextCharacter();
     auto keyCode = key.getKeyCode();
 
+    // TODO: Remove this Tab branch in XT2, leave the modulation arm action to the key manager
     // We treat Escape and Tab separately outside of the key manager
     if (textChar == juce::KeyPress::tabKey)
     {
@@ -6980,6 +6982,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
             }
 
+            case Surge::GUI::TOGGLE_MODULATOR_ARM:
+            {
+                toggle_mod_editing();
+                return true;
+            }
+
 #if WINDOWS
             case Surge::GUI::TOGGLE_DEBUG_CONSOLE:
                 Surge::Debug::toggleConsole();
@@ -7016,7 +7024,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::ZOOM_TO_DEFAULT:
             {
                 auto dzf = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                               Surge::Storage::DefaultZoom, 0);
+                                                               Surge::Storage::DefaultZoom, 100);
                 resizeWindow(dzf);
                 return true;
             }
@@ -7621,11 +7629,9 @@ void SurgeGUIEditor::globalFocusChanged(juce::Component *fc)
     }
 }
 
-bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &title,
-                                                       const std::string &msg,
-                                                       Surge::Storage::DefaultKey dontAskAgainKey,
-                                                       std::function<void()> okCallback,
-                                                       std::string ynMessage)
+bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
+    const ::std::string &title, const std::string &msg, Surge::Storage::DefaultKey dontAskAgainKey,
+    std::function<void()> okCallback, std::string ynMessage, AskAgainStates askAgainDef)
 {
     if (okcWithToggleAlertWindow)
     {
@@ -7634,7 +7640,8 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(const ::std::string &titl
         return false;
     }
 
-    auto bypassed = Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, DUNNO);
+    auto bypassed =
+        Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, askAgainDef);
 
     if (bypassed == NEVER)
     {
@@ -7710,7 +7717,8 @@ void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bo
                 closeOverlay(SAVE_PATCH);
 
                 synth->jogPatchOrCategory(increment, isCategory, insideCategory);
-            });
+            },
+            "Don't ask me again", ALWAYS);
     }
     else
     {
@@ -7723,7 +7731,8 @@ void SurgeGUIEditor::loadPatchWithDirtyCheck(bool increment, bool isCategory, bo
 void SurgeGUIEditor::enqueueAccessibleAnnouncement(const std::string &s)
 {
     auto doAcc = Surge::Storage::getUserDefaultValue(
-        &(synth->storage), Surge::Storage::UseNarratorAnnouncements, true);
+        &(synth->storage), Surge::Storage::UseNarratorAnnouncements, false);
+
     if (doAcc)
     {
         accAnnounceStrings.push_back({s, 3});

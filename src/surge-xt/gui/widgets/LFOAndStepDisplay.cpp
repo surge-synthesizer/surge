@@ -97,6 +97,18 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
         std::string sn = "Step Value " + std::to_string(i + 1);
         auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
         q->onGetValue = [this, i](auto *T) { return ss->steps[i]; };
+        q->onValueToString = [this, i](auto *T, float f) -> std::string {
+            auto q = f * 12.f;
+            if (fabs(q - std::round(q)) < 0.001)
+            {
+                auto twl = std::string("twelths");
+                if ((int)fabs(std::round(q)) == 1)
+                    twl = "twelth";
+                auto res = fmt::format("{:.3f} ({} {})", f, (int)std::round(q), twl);
+                return res;
+            }
+            return fmt::format("{:.3f}", f);
+        };
         q->onSetValue = [this, i](auto *T, float f) {
             auto bscg = BeginStepGuard(this);
             ss->steps[i] = f;
@@ -2365,8 +2377,17 @@ void LFOAndStepDisplay::setupAccessibility()
         auto t = std::string(lt_names[i]);
         if (i == lfodata->shape.val.i)
             t += "  active";
+        auto pt = typeAccOverlays[i]->getTitle();
         typeAccOverlays[i]->setTitle(t);
         typeAccOverlays[i]->setDescription(t);
+
+        if (t != pt)
+        {
+            if (auto h = typeAccOverlays[i]->getAccessibilityHandler())
+            {
+                h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+            }
+        }
     }
 
     for (const auto &s : stepSliderOverlays)

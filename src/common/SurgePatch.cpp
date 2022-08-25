@@ -1076,8 +1076,10 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
 
                     storage->waveTableDataMutex.lock();
                     scene[sc].osc[osc].wt.BuildWT(d, *wth, false);
+                    bool hadName{true};
                     if (scene[sc].osc[osc].wavetable_display_name[0] == '\0')
                     {
+                        hadName = false;
                         if (scene[sc].osc[osc].wt.flags & wtf_is_sample)
                         {
                             strxcpy(scene[sc].osc[osc].wavetable_display_name, "(Patch Sample)",
@@ -1090,6 +1092,20 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                         }
                     }
                     storage->waveTableDataMutex.unlock();
+
+                    if (hadName && scene[sc].osc[osc].wt.current_id < 0)
+                    {
+                        for (int i = 0;
+                             i < storage->wt_list.size() && scene[sc].osc[osc].wt.current_id < 0;
+                             ++i)
+                        {
+                            if (strcmp(scene[sc].osc[osc].wavetable_display_name,
+                                       storage->wt_list[i].name.c_str()) == 0)
+                            {
+                                scene[sc].osc[osc].wt.current_id = i;
+                            }
+                        }
+                    }
 
                     dr += ph->wtsize[sc][osc];
                 }
@@ -1782,7 +1798,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     (u.type.val.i == FilterType::fut_hp24))
                 {
                     u.subtype.val.i =
-                        (revision < 6) ? FilterSubType::st_SVF : FilterSubType::st_Rough;
+                        (revision < 6) ? FilterSubType::st_Standard : FilterSubType::st_Driven;
                 }
                 else if (u.type.val.i == FilterType::fut_notch12)
                 {

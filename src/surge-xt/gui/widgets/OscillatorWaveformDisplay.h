@@ -90,9 +90,10 @@ struct OscillatorWaveformDisplay : public juce::Component,
 
     void loadWavetable(int id);
     void loadWavetableFromFile();
-    void populateMenu(juce::PopupMenu &m, int selectedItem);
-    bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem);
-    void showWavetableMenu();
+    void populateMenu(juce::PopupMenu &m, int selectedItem, bool singleCategory = false);
+    bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem,
+                                 bool intoTop = false);
+    void showWavetableMenu(bool singleCategory = false);
     void createWTMenu(const bool useComponentBounds);
     void createWTMenuItems(juce::PopupMenu &contextMenu, bool centered = false,
                            bool add2D3Dswitch = false);

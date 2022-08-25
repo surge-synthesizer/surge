@@ -623,9 +623,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     SurgePatch &getPatch() { return synth->storage.getPatch(); }
     SurgeStorage *getStorage() { return &(synth->storage); }
 
-  private:
     std::unique_ptr<Surge::Widgets::EffectChooser> effectChooser;
 
+  private:
     Surge::GUI::IComponentTagValue *statusMPE = nullptr, *statusTune = nullptr,
                                    *statusZoom = nullptr, *actionUndo = nullptr,
                                    *actionRedo = nullptr;
@@ -812,7 +812,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool promptForOKCancelWithDontAskAgain(const ::std::string &title, const std::string &msg,
                                            Surge::Storage::DefaultKey dontAskAgainKey,
                                            std::function<void()> okCallback,
-                                           std::string ynMessage = "Don't ask me again");
+                                           std::string ynMessage = "Don't ask me again",
+                                           AskAgainStates askAgainDefault = DUNNO);
 
   private:
     bool scannedForMidiPresets = false;

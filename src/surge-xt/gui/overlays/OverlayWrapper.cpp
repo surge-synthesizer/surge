@@ -312,7 +312,12 @@ struct TearOutWindow : public juce::DocumentWindow, public Surge::GUI::SkinConsu
 
         outstandingMoves++;
         // writing every move would be "bad". Add a 1 second delay.
-        juce::Timer::callAfterDelay(1000, [this]() { this->moveUpdate(); });
+        juce::Timer::callAfterDelay(1000, [that = juce::Component::SafePointer(this)]() {
+            if (that)
+            {
+                that->moveUpdate();
+            }
+        });
     }
 
     void moveUpdate()

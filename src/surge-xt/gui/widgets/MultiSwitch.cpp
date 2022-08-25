@@ -142,7 +142,10 @@ void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 
     if (draggable)
     {
-        juce::Timer::callAfterDelay(250, [this]() { this->setCursorToArrow(); });
+        juce::Timer::callAfterDelay(250, [that = juce::Component::SafePointer(this)]() {
+            if (that)
+                that->setCursorToArrow();
+        });
     }
 
     mouseDownLongHold(event);
@@ -269,7 +272,10 @@ void MultiSwitch::endHover()
 void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
                                  const juce::MouseWheelDetails &wheel)
 {
-    if (!draggable)
+    // If we aren't draggable and a drag is happening, ignore the mouse wheel gesture
+    // This (vs just a plain !draggable) reverts the 1.9 behaviour of mosue wheel throuhg
+    // the presets.
+    if (!draggable && (event.mouseWasDraggedSinceMouseDown() || event.getLengthOfMousePress() > 0))
     {
         return;
     }

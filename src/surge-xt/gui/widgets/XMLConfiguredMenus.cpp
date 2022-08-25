@@ -21,6 +21,7 @@
 #include "SurgeImage.h"
 #include "AccessibleHelpers.h"
 #include "MenuCustomComponents.h"
+#include "widgets/EffectChooser.h"
 
 namespace Surge
 {
@@ -601,6 +602,8 @@ void FxMenu::mouseDown(const juce::MouseEvent &event)
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
+    populate();
+
     stuckHoverOn();
     menu.showMenuAsync(sge->popupMenuOptions(this),
                        Surge::GUI::makeAsyncCallback<FxMenu>(this, [](auto *that, int) {
@@ -676,7 +679,7 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     }
 }
 
-void FxMenu::populate()
+void FxMenu::populateForContext(bool isCalledInEffectChooser)
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
@@ -685,10 +688,52 @@ void FxMenu::populate()
 
     XMLMenuPopulator::populate();
 
+    auto cfxid = -1;
+    auto cfxtype = 0;
+    bool addDeact = false;
+    bool isDeact = false;
+    bool enableClear = true;
+
+    if (sge)
+    {
+        cfxid = sge->effectChooser->currentClicked;
+        auto deactbm = sge->effectChooser->getDeactivatedBitmask();
+        addDeact = true;
+        isDeact = deactbm & (1 << cfxid);
+        cfxtype = sge->effectChooser->fxTypes[cfxid];
+        enableClear = cfxtype != fxt_off;
+    }
+
+    auto cfx = std::string{"Current FX Slot"};
+    auto helpMenuText = std::string{"FX Presets"};
+    auto helpMenuScreeReaderText = helpMenuText;
+
+    if (cfxid >= 0 && cfxid < n_fx_slots)
+    {
+        if (isCalledInEffectChooser)
+        {
+            cfx = fxslot_longnames[cfxid];
+            helpMenuText = cfx;
+        }
+
+        helpMenuScreeReaderText =
+            fmt::format("FX Presets: {} {}", fxslot_longnames[cfxid], fx_type_names[cfxtype]);
+    }
+
     menu.addColumnBreak();
     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FUNCTIONS");
 
-    menu.addItem(Surge::GUI::toOSCase("Clear Current FX Unit"), [this]() {
+    if (addDeact)
+    {
+        menu.addItem(
+            Surge::GUI::toOSCase(fmt::format("{} {}", (isDeact ? "Activate" : "Deactivate"), cfx)),
+            [that = juce::Component::SafePointer(sge->effectChooser.get())]() {
+                that->toggleSelectedDeactivation();
+                that->repaint();
+            });
+    }
+
+    menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfx)), enableClear, false, [this]() {
         loadSnapshot(fxt_off, nullptr, 0);
         if (getControlListener())
         {
@@ -759,11 +804,12 @@ void FxMenu::populate()
             lurl = sge->fullyResolvedHelpURL(hu);
         }
 
-        auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("FX Presets", lurl);
+        auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
+            helpMenuText, helpMenuScreeReaderText, lurl);
         hmen->setSkin(skin, associatedBitmapStore);
         hmen->setCentered(false);
 
-        menu.addCustomItem(-1, std::move(hmen), nullptr, "FX Presets");
+        menu.addCustomItem(-1, std::move(hmen), nullptr, helpMenuScreeReaderText);
     }
 }
 

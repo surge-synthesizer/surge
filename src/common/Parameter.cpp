@@ -3347,10 +3347,6 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                             case FilterType::fut_diode:
                                 snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_ldr_subtypes[i]);
                                 break;
-                            case FilterType::fut_bp12:
-                            case FilterType::fut_bp24:
-                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_bp_subtypes[i]);
-                                break;
                             case FilterType::fut_notch12:
                             case FilterType::fut_notch24:
                             case FilterType::fut_apf:
@@ -3400,6 +3396,8 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                             case FilterType::fut_none:
                             case FilterType::fut_lp12:
                             case FilterType::fut_lp24:
+                            case FilterType::fut_bp12:
+                            case FilterType::fut_bp24:
                             case FilterType::fut_hp12:
                             case FilterType::fut_hp24:
                             case FilterType::fut_SNH:

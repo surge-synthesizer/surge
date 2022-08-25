@@ -367,9 +367,12 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
 
                 stuckHover = true;
                 menu.showMenuAsync(sge->popupMenuOptions(favoritesRect.getBottomLeft()),
-                                   [this](int) {
-                                       stuckHover = false;
-                                       endHover();
+                                   [that = juce::Component::SafePointer(this)](int) {
+                                       if (that)
+                                       {
+                                           that->stuckHover = false;
+                                           that->endHover();
+                                       }
                                    });
             }
 
@@ -711,6 +714,12 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     contextMenu.addSeparator();
 
+    if (current_patch >= 0 && current_patch < storage->patch_list.size() &&
+        storage->patch_list[current_patch].category >= storage->firstUserCategory)
+    {
+        Surge::GUI::addRevealFile(contextMenu, storage->patch_list[current_patch].path);
+    }
+
     contextMenu.addItem(Surge::GUI::toOSCase("Open User Patches Folder..."),
                         [this]() { Surge::GUI::openFileOrFolder(this->storage->userPatchesPath); });
 
@@ -756,9 +765,12 @@ void PatchSelector::showClassicMenu(bool single_category)
         o = sge->popupMenuOptions(getBounds().getBottomLeft());
     }
 
-    contextMenu.showMenuAsync(o, [this](int) {
-        stuckHover = false;
-        endHover();
+    contextMenu.showMenuAsync(o, [that = juce::Component::SafePointer(this)](int) {
+        if (that)
+        {
+            that->stuckHover = false;
+            that->endHover();
+        }
     });
 }
 
@@ -1188,7 +1200,7 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
         if (storage->patchDB->numberOfJobsOutstanding() > 0)
         {
             enable = false;
-            txt = "Updating Patch Database: " +
+            txt = "Updating patch database: " +
                   std::to_string(storage->patchDB->numberOfJobsOutstanding()) + " items left";
         }
 
@@ -1216,7 +1228,10 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
 
         if (!enable)
         {
-            juce::Timer::callAfterDelay(250, [this]() { this->enableTypeAheadIfReady(); });
+            juce::Timer::callAfterDelay(250, [that = juce::Component::SafePointer(this)]() {
+                if (that)
+                    that->enableTypeAheadIfReady();
+            });
         }
         else
         {
@@ -1268,12 +1283,26 @@ void PatchSelector::enableTypeAheadIfReady()
     }
     else
     {
-        juce::Timer::callAfterDelay(250, [this]() { this->enableTypeAheadIfReady(); });
+        juce::Timer::callAfterDelay(250, [that = juce::Component::SafePointer(this)]() {
+            if (that)
+                that->enableTypeAheadIfReady();
+        });
     }
 }
 
 bool PatchSelector::keyPressed(const juce::KeyPress &key)
 {
+    if (isTypeaheadSearchOn && storage->patchDB->numberOfJobsOutstanding() > 0)
+    {
+        // Any keypress while we are waiting is ignored other than perhaps escape
+        if (key.getKeyCode() == juce::KeyPress::escapeKey)
+        {
+            toggleTypeAheadSearch(false);
+            repaint();
+        }
+        return true;
+    }
+
     auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
 
     if (action == OpenMenu)

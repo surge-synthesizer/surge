@@ -16,6 +16,8 @@
 #pragma once
 #include "Effect.h"
 #include "DSPUtils.h"
+#include <sst/filters/HalfRateFilter.h>
+
 #include <vembertech/lipol.h>
 
 class ResonatorEffect : public Effect
@@ -72,7 +74,7 @@ class ResonatorEffect : public Effect
     virtual int group_label_ypos(int id) override;
 
     sst::filters::QuadFilterUnitState *qfus = nullptr;
-    HalfRateFilter halfbandOUT, halfbandIN;
+    sst::filters::HalfRate::HalfRateFilter halfbandOUT, halfbandIN;
     sst::filters::FilterCoefficientMaker<SurgeStorage> coeff[3][2];
     lag<float, true> cutoff[3], resonance[3], bandGain[3];
     // float filterDelay[3][2][MAX_FB_COMB + FIRipol_N];

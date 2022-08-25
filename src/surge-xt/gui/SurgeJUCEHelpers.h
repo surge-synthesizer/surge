@@ -18,6 +18,7 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "SurgeGUICallbackInterfaces.h"
+#include <filesystem/import.h>
 
 namespace Surge
 {
@@ -119,6 +120,30 @@ inline void addMenuWithShortcut(juce::PopupMenu &m, const std::string &lab,
                                 const std::string &shortcut, std::function<void()> action)
 {
     addMenuWithShortcut(m, lab, shortcut, true, false, action);
+}
+
+inline void addRevealFile(juce::PopupMenu &m, const fs::path &p)
+{
+#if LINUX
+    return;
+#else
+    try
+    {
+        if (fs::exists(p) && fs::is_regular_file(p))
+        {
+            auto f = juce::File(p.u8string());
+#if MAC
+            std::string s = "Reveal in Finder...";
+#else
+            std::string s = "Open in Explorer...";
+#endif
+            m.addItem(s, [f]() { f.revealToUser(); });
+        }
+    }
+    catch (fs::filesystem_error &)
+    {
+    }
+#endif
 }
 
 } // namespace GUI

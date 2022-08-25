@@ -693,7 +693,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
         }
     }
 
-    switch (storage.getPatch().scene[scene].polymode.val.i)
+    auto mode = storage.getPatch().scene[scene].polymode.val.i;
+    switch (mode)
     {
     case pm_poly:
     {
@@ -802,6 +803,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             int32_t noteIdToReuse = -1;
             int16_t channelToReuse, keyToReuse;
             SurgeVoice *stealEnvelopesFrom{nullptr};
+            bool wasGated{false};
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -814,12 +816,16 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         channelToReuse = v->originating_host_channel;
                         keyToReuse = v->originating_host_key;
                         stealEnvelopesFrom = v;
+                        wasGated = true;
                     }
                     else
                     {
                         // Non-gated voices only win if there's no gated voice
                         if (!stealEnvelopesFrom)
+                        {
                             stealEnvelopesFrom = v;
+                            wasGated = false;
+                        }
                     }
                     v->uber_release();
                 }
@@ -828,9 +834,12 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             if (stealEnvelopesFrom &&
                 storage.getPatch().scene[scene].monoVoiceEnvelopeMode != RESTART_FROM_ZERO)
             {
-                // stealEnvelopesFrom->getAEGFEGLevel(aegReuse, fegReuse);
                 reclaimVoiceFor(stealEnvelopesFrom, key, channel, velocity, scene, host_noteid,
                                 host_originating_channel, host_originating_key);
+                if (mode == pm_mono_fp && !wasGated)
+                {
+                    stealEnvelopesFrom->resetPortamentoFrom(key, channel);
+                }
             }
             else
             {
@@ -1405,8 +1414,17 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                     }
                     else
                     {
-                        // confirm that no notes are active
+                        /*
+                         * We are about to *play* a voice to replace the old voice but our
+                         * velocity here is our release velocity. So grab the prior notes
+                         * velocity since it is the best we have at this point.
+                         */
+                        auto priorNoteVel =
+                            std::clamp((char)(v->modsources[ms_velocity]->get_output(0) * 128),
+                                       (char)0, (char)127);
                         v->uber_release();
+
+                        // confirm that no notes are active
                         if (getNonUltrareleaseVoices(scene) == 0)
                         {
                             /* We need to find that last voice if we are done to restart in FP
@@ -1414,7 +1432,8 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                              */
                             v->state.gate = (polymode == pm_mono_fp);
                             doNotifyEndedNote = false;
-                            playVoice(scene, activateVoiceChannel, activateVoiceKey, velocity,
+                            playVoice(scene, activateVoiceChannel, activateVoiceKey,
+                                      priorNoteVel /* not velocity! */,
                                       channelState[activateVoiceChannel].keyState[k].lastdetune,
                                       v->host_note_id, v->originating_host_key,
                                       v->originating_host_channel);
