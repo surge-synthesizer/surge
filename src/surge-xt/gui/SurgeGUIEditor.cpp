@@ -810,6 +810,12 @@ void SurgeGUIEditor::idle()
 
             vu[0]->setIsAudioActive(synth->audio_processing_active);
 
+            if (synth->cpu_level != vu[0]->getCpuLevel())
+            {
+                vu[0]->setCpuLevel(synth->cpu_level);
+                vuInvalid = true;
+            }
+
             if (vuInvalid)
             {
                 vu[0]->repaint();

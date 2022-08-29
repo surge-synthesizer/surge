@@ -1944,6 +1944,8 @@ void SurgeStorage::init_tables()
     // ballistics at any sample rate!
     // We have also decided to make the meters less sluggish, so we increased the cutoff to 60 Hz
     vu_falloff = exp(-2 * M_PI * (60.f * samplerate_inv));
+
+    cpu_falloff = exp(-2 * M_PI * (60.f * samplerate_inv));
 }
 
 float SurgeStorage::note_to_pitch(float x)

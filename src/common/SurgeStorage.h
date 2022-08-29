@@ -1129,6 +1129,7 @@ class alignas(16) SurgeStorage
     float poly_aftertouch[2][16][128]; // TODO: FIX SCENE ASSUMPTION
     float modsource_vu[n_modsources];
     void setSamplerate(float sr);
+    float cpu_falloff;
 
     bool getOverrideDataHome(std::string &value);
     void createUserDirectory();
