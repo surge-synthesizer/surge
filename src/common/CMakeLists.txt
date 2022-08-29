@@ -35,11 +35,11 @@ if (NOT SURGE_SKIP_JUCE_FOR_RACK)
     NAMESPACE SurgeSharedBinary
     HEADER_NAME SurgeSharedBinary.h
     SOURCES
-    ${CMAKE_SOURCE_DIR}/resources/surge-shared/configuration.xml
-    ${CMAKE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
-    ${CMAKE_SOURCE_DIR}/resources/surge-shared/memoryWavetable.wt
-    ${CMAKE_SOURCE_DIR}/resources/surge-shared/windows.wt
-    ${CMAKE_SOURCE_DIR}/resources/surge-shared/paramdocumentation.xml
+    ${SURGE_SOURCE_DIR}/resources/surge-shared/configuration.xml
+    ${SURGE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
+    ${SURGE_SOURCE_DIR}/resources/surge-shared/memoryWavetable.wt
+    ${SURGE_SOURCE_DIR}/resources/surge-shared/windows.wt
+    ${SURGE_SOURCE_DIR}/resources/surge-shared/paramdocumentation.xml
     )
   target_compile_definitions(surge-common-binary PUBLIC HAS_JUCE=1 SKIP_JUCE=0)
 
@@ -253,6 +253,7 @@ add_library(${PROJECT_NAME}
   version.h
   )
 
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 if(APPLE)
   target_compile_definitions(${PROJECT_NAME} PUBLIC MAC=1)
   target_link_libraries(${PROJECT_NAME}
@@ -290,22 +291,22 @@ endif()
 option(SURGE_RELIABLE_VERSION_INFO "Update version info on every build (off: generate only at configuration time)" ON)
 if(SURGE_RELIABLE_VERSION_INFO)
   add_custom_target(version-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${SURGE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} -D CMAKE_PROJECT_VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR}
     -D CMAKE_PROJECT_VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR}
-    -D SURGESRC=${CMAKE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
+    -D SURGESRC=${SURGE_SOURCE_DIR} -D SURGEBLD=${CMAKE_BINARY_DIR}
     -D AZURE_PIPELINE=${AZURE_PIPELINE}
     -D WIN32=${WIN32}
     -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     -D CMAKE_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}
     -D CMAKE_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
-    -P ${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake
+    -P ${SURGE_SOURCE_DIR}/cmake/versiontools.cmake
     )
   add_dependencies(${PROJECT_NAME} version-info)
 else()
-  set(SURGESRC ${CMAKE_SOURCE_DIR})
+  set(SURGESRC ${SURGE_SOURCE_DIR})
   set(SURGEBLD ${CMAKE_BINARY_DIR})
-  include(${CMAKE_SOURCE_DIR}/cmake/versiontools.cmake)
+  include(${SURGE_SOURCE_DIR}/cmake/versiontools.cmake)
 endif()
 target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/geninclude/version.cpp)
 

@@ -67,7 +67,7 @@ function(surge_juce_package target product_name)
 endfunction()
 
 function(surge_add_lib_subdirectory libname)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/libs/${libname} ${CMAKE_BINARY_DIR}/libs/${libname} EXCLUDE_FROM_ALL)
+  add_subdirectory(${SURGE_SOURCE_DIR}/libs/${libname} ${CMAKE_BINARY_DIR}/libs/${libname} EXCLUDE_FROM_ALL)
 endfunction()
 
 function(surge_make_installers)
