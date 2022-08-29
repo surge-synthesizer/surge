@@ -190,11 +190,11 @@ const char *WaveShaperEffect::group_label(int id)
     switch (id)
     {
     case 0:
-        return "Pre-Filter";
+        return "Pre-Shaper";
     case 1:
-        return "Shape";
+        return "Shaper";
     case 2:
-        return "Post-Filter";
+        return "Post-Shaper";
     case 3:
         return "Output";
     }
