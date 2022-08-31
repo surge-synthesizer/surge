@@ -226,6 +226,7 @@ void DelayEffect::process(float *dataL, float *dataR)
         hp.process_block(tbufferL, tbufferR);
     }
 
+
     pan.trixpan_blocks(dataL, dataR, wbL, wbR, BLOCK_SIZE_QUAD);
 
     feedback.MAC_2_blocks_to(tbufferL, tbufferR, wbL, wbR, BLOCK_SIZE_QUAD);

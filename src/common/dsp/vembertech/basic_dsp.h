@@ -13,29 +13,108 @@ void hardclip_block(float *x, unsigned int nquads);
 void hardclip_block8(float *x, unsigned int nquads);
 void softclip_block(float *in, unsigned int nquads);
 void tanh7_block(float *x, unsigned int nquads);
-void clear_block(float *in, unsigned int nquads);
-void accumulate_block(float *src, float *dst, unsigned int nquads);
-void copy_block(float *src, float *dst, unsigned int nquads); // copy block (requires aligned data)
-void copy_block_US(float *src, float *dst, unsigned int nquads); // copy block (unaligned source)
-void copy_block_UD(float *src, float *dst,
-                   unsigned int nquads); // copy block (unaligned destination)
-void copy_block_USUD(float *src, float *dst,
-                     unsigned int nquads); // copy block (unaligned source + destination)
-void mul_block(float *src1, float *src2, float *dst, unsigned int nquads);
-void mul_block(float *src1, float scalar, float *dst, unsigned int nquads);
-void add_block(float *src1, float *src2, float *dst, unsigned int nquads);
-void subtract_block(float *src1, float *src2, float *dst, unsigned int nquads);
-void encodeMS(float *L, float *R, float *M, float *S, unsigned int nquads);
-void decodeMS(float *M, float *S, float *L, float *R, unsigned int nquads);
+inline void clear_block(float *in, unsigned int nquads)
+{
+    const __m128 zero = _mm_setzero_ps();
+
+    for (unsigned int i = 0; i < nquads << 2; i += 4)
+    {
+        _mm_store_ps((float *)&in[i], zero);
+    }
+}
+inline void accumulate_block(float *src, float *dst, unsigned int nquads)
+{
+    for (auto i = 0; i < nquads << 2; ++i)
+    {
+        dst[i] += src[i];
+    }
+}
+
+inline void copy_block(float *src, float *dst, unsigned int nquads)
+{
+    memcpy(dst, src, (nquads << 2) * sizeof(float));
+}
+
+inline void mul_block(float *src1, float *src2, float *dst, unsigned int nquads)
+{
+    for (auto i = 0; i < nquads << 2; ++i)
+    {
+        dst[i] = src1[i] * src2[i];
+    }
+}
+inline void mul_block(float *src1, float scalar, float *dst, unsigned int nquads)
+{
+    for (auto i = 0; i < nquads << 2; ++i)
+    {
+        dst[i] = src1[i] * scalar;
+    }
+}
+inline void add_block(float *src1, float *src2, float *dst, unsigned int nquads)
+{
+    for (auto i = 0; i < nquads << 2; ++i)
+    {
+        dst[i] = src1[i] + src2[i];
+    }
+}
+
+inline void subtract_block(float *src1, float *src2, float *dst, unsigned int nquads)
+{
+    for (auto i = 0; i < nquads << 2; ++i)
+    {
+        dst[i] = src1[i] - src2[i];
+    }
+}
+
+inline void encodeMS(float *__restrict L, float *__restrict R, float *__restrict M,
+                     float *__restrict S, unsigned int nquads)
+{
+    for (auto i = 0; i < nquads << 2; ++i)
+    {
+        M[i] = 0.5f * (L[i] + R[i]);
+        S[i] = 0.5f * (L[i] - R[i]);
+    }
+}
+inline void decodeMS(float *__restrict M, float *__restrict S, float *__restrict L,
+                     float *__restrict R, unsigned int nquads)
+{
+    for (auto i = 0; i < nquads << 2; ++i)
+    {
+        L[i] = M[i] + S[i];
+        R[i] = M[i] - S[i];
+    }
+}
+
 float get_absmax(float *d, unsigned int nquads);
 float get_squaremax(float *d, unsigned int nquads);
 float get_absmax_2(float *d1, float *d2, unsigned int nquads);
-void float2i15_block(float *, short *, int);
-void i152float_block(short *, float *, int);
-void i16toi15_block(short *, short *, int);
+
+inline void float2i15_block(float *f, short *s, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        s[i] = (short)(int)limit_range((int)((float)f[i] * 16384.f), -16384, 16383);
+    }
+}
+
+inline void i152float_block(short *s, float *f, int n)
+{
+    const float scale = 1.f / 16384.f;
+    for (int i = 0; i < n; i++)
+    {
+        f[i] = (float)s[i] * scale;
+    }
+}
+
+inline void i16toi15_block(short *s, short *o, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        o[i] = s[i] >> 1;
+    }
+}
 
 float sine_ss(unsigned int x);
-int sine(int x);
+// int sine(int x);
 
 inline __m128 sum_ps_to_ss(__m128 x)
 {

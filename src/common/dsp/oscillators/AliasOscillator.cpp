@@ -153,7 +153,7 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
     case AliasOscillator::ao_waves::aow_audiobuffer:
         // TODO: correct size check here.
         // should really check BLOCK_SIZE_OS etc, make sure everything is as expected
-        static_assert(sizeof(storage->audio_in) > 0xFF,
+        static_assert(sizeof(storage->audio_in) >= 2 * BLOCK_SIZE_OS * sizeof(float),
                       "Memory region not large enough to be indexed by Alias");
 
         wavetable_mode = true;

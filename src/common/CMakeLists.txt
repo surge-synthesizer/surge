@@ -254,6 +254,7 @@ add_library(${PROJECT_NAME}
   )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(${PROJECT_NAME} PUBLIC SURGE_COMPILE_BLOCK_SIZE=${SURGE_COMPILE_BLOCK_SIZE})
 if(APPLE)
   target_compile_definitions(${PROJECT_NAME} PUBLIC MAC=1)
   target_link_libraries(${PROJECT_NAME}

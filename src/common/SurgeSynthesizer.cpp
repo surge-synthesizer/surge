@@ -4174,7 +4174,7 @@ void SurgeSynthesizer::process()
         hardclip_block8(input[1], BLOCK_SIZE_QUAD);
         copy_block(input[0], storage.audio_in_nonOS[0], BLOCK_SIZE_QUAD);
         copy_block(input[1], storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
-        halfbandIN.process_block_U2(input[0], input[1], storage.audio_in[0], storage.audio_in[1]);
+        halfbandIN.process_block_U2(input[0], input[1], storage.audio_in[0], storage.audio_in[1], BLOCK_SIZE_OS);
     }
     else
     {
@@ -4359,7 +4359,7 @@ void SurgeSynthesizer::process()
             break;
         }
 
-        halfbandA.process_block_D2(sceneout[0][0], sceneout[0][1]);
+        halfbandA.process_block_D2(sceneout[0][0], sceneout[0][1], BLOCK_SIZE_OS);
     }
 
     if (play_scene[1])
@@ -4378,7 +4378,7 @@ void SurgeSynthesizer::process()
             break;
         }
 
-        halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1]);
+        halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1], BLOCK_SIZE_OS);
     }
 
     // TODO: FIX SCENE ASSUMPTION
