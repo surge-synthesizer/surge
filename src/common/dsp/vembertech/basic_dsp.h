@@ -1,5 +1,6 @@
 #pragma once
 #include "shared.h"
+#include <cstring>
 
 template <typename T> inline T limit_range(const T &x, const T &low, const T &high)
 {
@@ -32,7 +33,7 @@ inline void accumulate_block(float *src, float *dst, unsigned int nquads)
 
 inline void copy_block(float *src, float *dst, unsigned int nquads)
 {
-    memcpy(dst, src, (nquads << 2) * sizeof(float));
+    std::memcpy((void *)dst, (const void *)src, (nquads << 2) * sizeof(float));
 }
 
 inline void mul_block(float *src1, float *src2, float *dst, unsigned int nquads)

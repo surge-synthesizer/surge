@@ -4174,7 +4174,8 @@ void SurgeSynthesizer::process()
         hardclip_block8(input[1], BLOCK_SIZE_QUAD);
         copy_block(input[0], storage.audio_in_nonOS[0], BLOCK_SIZE_QUAD);
         copy_block(input[1], storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
-        halfbandIN.process_block_U2(input[0], input[1], storage.audio_in[0], storage.audio_in[1], BLOCK_SIZE_OS);
+        halfbandIN.process_block_U2(input[0], input[1], storage.audio_in[0], storage.audio_in[1],
+                                    BLOCK_SIZE_OS);
     }
     else
     {

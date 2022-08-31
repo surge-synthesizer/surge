@@ -349,12 +349,10 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         hp.process_block(L, R);
     }
 
-
     auto cm = clamp01(*f[combulator_mix]);
 
     mix.set_target_smoothed(cm);
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
-
 }
 
 void CombulatorEffect::suspend() { init(); }
