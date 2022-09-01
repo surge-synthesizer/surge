@@ -119,7 +119,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
         processor->set_quality(*pdata_ival[nmb_quality]);
 
         int consume_ptr = 0;
-        while (frames_to_go >= nimbusprocess_blocksize)
+        while (frames_to_go + numStubs >= nimbusprocess_blocksize)
         {
             int sp = 0;
             while (numStubs > 0)
