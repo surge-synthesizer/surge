@@ -179,7 +179,8 @@ void AboutScreen::populateData()
     lowerLeft.emplace_back("Build:", buildinfo, "");
     lowerLeft.emplace_back("System:", system, "");
 
-    auto srString = fmt::format("{:.1f} kHz", storage->samplerate / 1000.0);
+    auto srString =
+        fmt::format("{:.1f} kHz / {} Sample Surge Block", storage->samplerate / 1000.0, BLOCK_SIZE);
 
     if (host != "Unknown")
     {

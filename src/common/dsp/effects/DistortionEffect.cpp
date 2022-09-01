@@ -158,8 +158,8 @@ void DistortionEffect::process(float *dataL, float *dataR)
         }
     }
 
-    hr_a.process_block_D2(bL, bR, 128);
-    hr_b.process_block_D2(bL, bR, 64);
+    hr_a.process_block_D2(bL, bR, BLOCK_SIZE * 4);
+    hr_b.process_block_D2(bL, bR, BLOCK_SIZE * 2);
 
     outgain.multiply_2_blocks_to(bL, bR, dataL, dataR, BLOCK_SIZE_QUAD);
 

@@ -50,7 +50,8 @@ void MainFrame::paint(juce::Graphics &g)
     r = r.withTrimmedTop(14);
     g.drawText(std::string(Surge::Build::BuildDate) + " " + Surge::Build::BuildTime, r,
                juce::Justification::centredTop);
-    g.drawText("DEBUG", r.reduced(2), juce::Justification::bottomLeft);
+    g.drawText(std::string("DEBUG BS=") + std::to_string(BLOCK_SIZE), r.reduced(2),
+               juce::Justification::bottomLeft);
 #endif
 }
 

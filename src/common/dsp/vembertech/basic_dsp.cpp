@@ -3,39 +3,13 @@
 #include <algorithm>
 #include <cmath>
 
-void float2i15_block(float *f, short *s, int n)
-{
-    for (int i = 0; i < n; i++)
-    {
-        s[i] = (short)(int)limit_range((int)((float)f[i] * 16384.f), -16384, 16383);
-    }
-}
-
-void i152float_block(short *s, float *f, int n)
-{
-    const float scale = 1.f / 16384.f;
-    for (int i = 0; i < n; i++)
-    {
-        f[i] = (float)s[i] * scale;
-    }
-}
-
-void i16toi15_block(short *s, short *o, int n)
-{
-    for (int i = 0; i < n; i++)
-    {
-        o[i] = s[i] >> 1;
-    }
-}
-
 void hardclip_block(float *x, unsigned int nquads)
 {
     const __m128 x_min = _mm_set1_ps(-1.0f);
     const __m128 x_max = _mm_set1_ps(1.0f);
-    for (unsigned int i = 0; i < (nquads << 2); i += 8)
+    for (unsigned int i = 0; i < (nquads); i += 4)
     {
         _mm_store_ps(x + i, _mm_max_ps(_mm_min_ps(_mm_load_ps(x + i), x_max), x_min));
-        _mm_store_ps(x + i + 4, _mm_max_ps(_mm_min_ps(_mm_load_ps(x + i + 4), x_max), x_min));
     }
 }
 
@@ -43,10 +17,9 @@ void hardclip_block8(float *x, unsigned int nquads)
 {
     const __m128 x_min = _mm_set1_ps(-8.0f);
     const __m128 x_max = _mm_set1_ps(8.0f);
-    for (unsigned int i = 0; i < (nquads << 2); i += 8)
+    for (unsigned int i = 0; i < (nquads); i += 4)
     {
         _mm_store_ps(x + i, _mm_max_ps(_mm_min_ps(_mm_load_ps(x + i), x_max), x_min));
-        _mm_store_ps(x + i + 4, _mm_max_ps(_mm_min_ps(_mm_load_ps(x + i + 4), x_max), x_min));
     }
 }
 
@@ -213,200 +186,6 @@ void tanh7_block(float *xb, unsigned int nquads)
         ((__m128 *)xb)[i + 1] = t[1];
         ((__m128 *)xb)[i + 2] = t[2];
         ((__m128 *)xb)[i + 3] = t[3];
-    }
-}
-
-void clear_block(float *in, unsigned int nquads)
-{
-    const __m128 zero = _mm_set1_ps(0.f);
-
-    for (unsigned int i = 0; i < nquads << 2; i += 4)
-    {
-        _mm_store_ps((float *)&in[i], zero);
-    }
-}
-
-void accumulate_block(float *__restrict src, float *__restrict dst,
-                      unsigned int nquads) // dst += src
-{
-    for (unsigned int i = 0; i < nquads; i += 4)
-    {
-        ((__m128 *)dst)[i] = _mm_add_ps(((__m128 *)dst)[i], ((__m128 *)src)[i]);
-        ((__m128 *)dst)[i + 1] = _mm_add_ps(((__m128 *)dst)[i + 1], ((__m128 *)src)[i + 1]);
-        ((__m128 *)dst)[i + 2] = _mm_add_ps(((__m128 *)dst)[i + 2], ((__m128 *)src)[i + 2]);
-        ((__m128 *)dst)[i + 3] = _mm_add_ps(((__m128 *)dst)[i + 3], ((__m128 *)src)[i + 3]);
-    }
-}
-
-void copy_block(float *__restrict src, float *__restrict dst, unsigned int nquads)
-{
-    float *fdst, *fsrc;
-    fdst = (float *)dst;
-    fsrc = (float *)src;
-
-    for (unsigned int i = 0; i < (nquads << 2); i += (8 << 2))
-    {
-        _mm_store_ps(&fdst[i], _mm_load_ps(&fsrc[i]));
-        _mm_store_ps(&fdst[i + 4], _mm_load_ps(&fsrc[i + 4]));
-        _mm_store_ps(&fdst[i + 8], _mm_load_ps(&fsrc[i + 8]));
-        _mm_store_ps(&fdst[i + 12], _mm_load_ps(&fsrc[i + 12]));
-        _mm_store_ps(&fdst[i + 16], _mm_load_ps(&fsrc[i + 16]));
-        _mm_store_ps(&fdst[i + 20], _mm_load_ps(&fsrc[i + 20]));
-        _mm_store_ps(&fdst[i + 24], _mm_load_ps(&fsrc[i + 24]));
-        _mm_store_ps(&fdst[i + 28], _mm_load_ps(&fsrc[i + 28]));
-    }
-}
-
-void copy_block_US(float *__restrict src, float *__restrict dst, unsigned int nquads)
-{
-    float *fdst, *fsrc;
-    fdst = (float *)dst;
-    fsrc = (float *)src;
-
-    for (unsigned int i = 0; i < (nquads << 2); i += (8 << 2))
-    {
-        _mm_store_ps(&fdst[i], _mm_loadu_ps(&fsrc[i]));
-        _mm_store_ps(&fdst[i + 4], _mm_loadu_ps(&fsrc[i + 4]));
-        _mm_store_ps(&fdst[i + 8], _mm_loadu_ps(&fsrc[i + 8]));
-        _mm_store_ps(&fdst[i + 12], _mm_loadu_ps(&fsrc[i + 12]));
-        _mm_store_ps(&fdst[i + 16], _mm_loadu_ps(&fsrc[i + 16]));
-        _mm_store_ps(&fdst[i + 20], _mm_loadu_ps(&fsrc[i + 20]));
-        _mm_store_ps(&fdst[i + 24], _mm_loadu_ps(&fsrc[i + 24]));
-        _mm_store_ps(&fdst[i + 28], _mm_loadu_ps(&fsrc[i + 28]));
-    }
-}
-
-void copy_block_UD(float *__restrict src, float *__restrict dst, unsigned int nquads)
-{
-    float *fdst, *fsrc;
-    fdst = (float *)dst;
-    fsrc = (float *)src;
-
-    for (unsigned int i = 0; i < (nquads << 2); i += (8 << 2))
-    {
-        _mm_storeu_ps(&fdst[i], _mm_load_ps(&fsrc[i]));
-        _mm_storeu_ps(&fdst[i + 4], _mm_load_ps(&fsrc[i + 4]));
-        _mm_storeu_ps(&fdst[i + 8], _mm_load_ps(&fsrc[i + 8]));
-        _mm_storeu_ps(&fdst[i + 12], _mm_load_ps(&fsrc[i + 12]));
-        _mm_storeu_ps(&fdst[i + 16], _mm_load_ps(&fsrc[i + 16]));
-        _mm_storeu_ps(&fdst[i + 20], _mm_load_ps(&fsrc[i + 20]));
-        _mm_storeu_ps(&fdst[i + 24], _mm_load_ps(&fsrc[i + 24]));
-        _mm_storeu_ps(&fdst[i + 28], _mm_load_ps(&fsrc[i + 28]));
-    }
-}
-void copy_block_USUD(float *__restrict src, float *__restrict dst, unsigned int nquads)
-{
-    float *fdst, *fsrc;
-    fdst = (float *)dst;
-    fsrc = (float *)src;
-
-    for (unsigned int i = 0; i < (nquads << 2); i += (8 << 2))
-    {
-        _mm_storeu_ps(&fdst[i], _mm_loadu_ps(&fsrc[i]));
-        _mm_storeu_ps(&fdst[i + 4], _mm_loadu_ps(&fsrc[i + 4]));
-        _mm_storeu_ps(&fdst[i + 8], _mm_loadu_ps(&fsrc[i + 8]));
-        _mm_storeu_ps(&fdst[i + 12], _mm_loadu_ps(&fsrc[i + 12]));
-        _mm_storeu_ps(&fdst[i + 16], _mm_loadu_ps(&fsrc[i + 16]));
-        _mm_storeu_ps(&fdst[i + 20], _mm_loadu_ps(&fsrc[i + 20]));
-        _mm_storeu_ps(&fdst[i + 24], _mm_loadu_ps(&fsrc[i + 24]));
-        _mm_storeu_ps(&fdst[i + 28], _mm_loadu_ps(&fsrc[i + 28]));
-    }
-}
-
-void mul_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-               unsigned int nquads)
-{
-    for (unsigned int i = 0; i < nquads; i += 4)
-    {
-        ((__m128 *)dst)[i] = _mm_mul_ps(((__m128 *)src1)[i], ((__m128 *)src2)[i]);
-        ((__m128 *)dst)[i + 1] = _mm_mul_ps(((__m128 *)src1)[i + 1], ((__m128 *)src2)[i + 1]);
-        ((__m128 *)dst)[i + 2] = _mm_mul_ps(((__m128 *)src1)[i + 2], ((__m128 *)src2)[i + 2]);
-        ((__m128 *)dst)[i + 3] = _mm_mul_ps(((__m128 *)src1)[i + 3], ((__m128 *)src2)[i + 3]);
-    }
-}
-
-void mul_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
-{
-    auto scalar_mm = _mm_set1_ps(scalar);
-    for (unsigned int i = 0; i < nquads; i += 4)
-    {
-        ((__m128 *)dst)[i] = _mm_mul_ps(((__m128 *)src1)[i], scalar_mm);
-        ((__m128 *)dst)[i + 1] = _mm_mul_ps(((__m128 *)src1)[i + 1], scalar_mm);
-        ((__m128 *)dst)[i + 2] = _mm_mul_ps(((__m128 *)src1)[i + 2], scalar_mm);
-        ((__m128 *)dst)[i + 3] = _mm_mul_ps(((__m128 *)src1)[i + 3], scalar_mm);
-    }
-}
-
-void encodeMS(float *__restrict L, float *__restrict R, float *__restrict M, float *__restrict S,
-              unsigned int nquads)
-{
-    const __m128 half = _mm_set1_ps(0.5f);
-#define L ((__m128 *)L)
-#define R ((__m128 *)R)
-#define M ((__m128 *)M)
-#define S ((__m128 *)S)
-
-    for (unsigned int i = 0; i < nquads; i += 4)
-    {
-        M[i] = _mm_mul_ps(_mm_add_ps(L[i], R[i]), half);
-        S[i] = _mm_mul_ps(_mm_sub_ps(L[i], R[i]), half);
-        M[i + 1] = _mm_mul_ps(_mm_add_ps(L[i + 1], R[i + 1]), half);
-        S[i + 1] = _mm_mul_ps(_mm_sub_ps(L[i + 1], R[i + 1]), half);
-        M[i + 2] = _mm_mul_ps(_mm_add_ps(L[i + 2], R[i + 2]), half);
-        S[i + 2] = _mm_mul_ps(_mm_sub_ps(L[i + 2], R[i + 2]), half);
-        M[i + 3] = _mm_mul_ps(_mm_add_ps(L[i + 3], R[i + 3]), half);
-        S[i + 3] = _mm_mul_ps(_mm_sub_ps(L[i + 3], R[i + 3]), half);
-    }
-#undef L
-#undef R
-#undef M
-#undef S
-}
-void decodeMS(float *__restrict M, float *__restrict S, float *__restrict L, float *__restrict R,
-              unsigned int nquads)
-{
-#define L ((__m128 *)L)
-#define R ((__m128 *)R)
-#define M ((__m128 *)M)
-#define S ((__m128 *)S)
-    for (unsigned int i = 0; i < nquads; i += 4)
-    {
-        L[i] = _mm_add_ps(M[i], S[i]);
-        R[i] = _mm_sub_ps(M[i], S[i]);
-        L[i + 1] = _mm_add_ps(M[i + 1], S[i + 1]);
-        R[i + 1] = _mm_sub_ps(M[i + 1], S[i + 1]);
-        L[i + 2] = _mm_add_ps(M[i + 2], S[i + 2]);
-        R[i + 2] = _mm_sub_ps(M[i + 2], S[i + 2]);
-        L[i + 3] = _mm_add_ps(M[i + 3], S[i + 3]);
-        R[i + 3] = _mm_sub_ps(M[i + 3], S[i + 3]);
-    }
-#undef L
-#undef R
-#undef M
-#undef S
-}
-
-void add_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-               unsigned int nquads)
-{
-    for (unsigned int i = 0; i < nquads; i += 4)
-    {
-        ((__m128 *)dst)[i] = _mm_add_ps(((__m128 *)src1)[i], ((__m128 *)src2)[i]);
-        ((__m128 *)dst)[i + 1] = _mm_add_ps(((__m128 *)src1)[i + 1], ((__m128 *)src2)[i + 1]);
-        ((__m128 *)dst)[i + 2] = _mm_add_ps(((__m128 *)src1)[i + 2], ((__m128 *)src2)[i + 2]);
-        ((__m128 *)dst)[i + 3] = _mm_add_ps(((__m128 *)src1)[i + 3], ((__m128 *)src2)[i + 3]);
-    }
-}
-
-void subtract_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-                    unsigned int nquads)
-{
-    for (unsigned int i = 0; i < nquads; i += 4)
-    {
-        ((__m128 *)dst)[i] = _mm_sub_ps(((__m128 *)src1)[i], ((__m128 *)src2)[i]);
-        ((__m128 *)dst)[i + 1] = _mm_sub_ps(((__m128 *)src1)[i + 1], ((__m128 *)src2)[i + 1]);
-        ((__m128 *)dst)[i + 2] = _mm_sub_ps(((__m128 *)src1)[i + 2], ((__m128 *)src2)[i + 2]);
-        ((__m128 *)dst)[i + 3] = _mm_sub_ps(((__m128 *)src1)[i + 3], ((__m128 *)src2)[i + 3]);
     }
 }
 

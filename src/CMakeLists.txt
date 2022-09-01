@@ -5,6 +5,9 @@ option(SURGE_BUILD_XT "Build Surge XT synth" ON)
 option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge Python bindings with pybind11" OFF)
 option(SURGE_COPY_TO_PRODUCTS "Copy built plugins to the products directory" ON)
 option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to system plugin area after build" OFF)
+if (NOT SURGE_COMPILE_BLOCK_SIZE)
+  set(SURGE_COMPILE_BLOCK_SIZE 32)
+endif()
 
 set(SURGE_JUCE_PATH "${CMAKE_SOURCE_DIR}/libs/JUCE" CACHE STRING "Path to JUCE library source tree")
 
