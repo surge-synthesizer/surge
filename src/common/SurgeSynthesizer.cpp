@@ -4101,6 +4101,8 @@ void SurgeSynthesizer::process()
     memset(endedHostNoteIds, 0, 512 * sizeof(int32_t));
 #endif
 
+    auto process_start = std::chrono::high_resolution_clock::now();
+
     if (hostNoteEndedToPushToNextBlock)
     {
         for (int i = 0; i < hostNoteEndedToPushToNextBlock; ++i)
@@ -4550,6 +4552,19 @@ void SurgeSynthesizer::process()
     {
         amp_mute.multiply_2_blocks(sceneout[sc][0], sceneout[sc][1], BLOCK_SIZE_QUAD);
     }
+
+    // Calculate how close we are to overloading the CPU
+    // (how close is the process() duration to duration)
+    auto process_end = std::chrono::high_resolution_clock::now();
+    auto duration_usec =
+        std::chrono::duration_cast<std::chrono::microseconds>(process_end - process_start);
+    auto max_duration_usec = BLOCK_SIZE * storage.dsamplerate_inv * 1000000;
+    float ratio = duration_usec.count() / max_duration_usec;
+    float c = cpu_level.load();
+    int window = max_duration_usec;
+    auto smoothed_ratio = (c * (window - 1) + ratio) / window;
+    c = c * storage.cpu_falloff;
+    cpu_level.store(max(c, smoothed_ratio));
 }
 
 SurgeSynthesizer::PluginLayer *SurgeSynthesizer::getParent()

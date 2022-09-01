@@ -391,6 +391,7 @@ class alignas(16) SurgeSynthesizer
     std::atomic<int> modwheelCC, pitchbendMIDIVal, sustainpedalCC;
 
     float vu_peak[8];
+    std::atomic<float> cpu_level{0.f};
 
     void populateDawExtraState();
 
