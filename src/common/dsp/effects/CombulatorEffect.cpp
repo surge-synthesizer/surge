@@ -173,7 +173,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
     // Upsample the input
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
-    halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1]);
+    halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1], BLOCK_SIZE_OS);
 
     /*
      * Select the coefficients. Here you have to base yourself on the mode switch and
@@ -339,7 +339,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     }
 
     /* Downsample out */
-    halfbandOUT.process_block_D2(dataOS[0], dataOS[1]);
+    halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
     copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
     copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
 

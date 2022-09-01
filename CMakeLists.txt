@@ -25,7 +25,8 @@ message(STATUS "Targeting ${SURGE_BITNESS}-bit configuration")
 # }}}
 
 # Make Sure the REpo is properly cloned {{{
-if (NOT EXISTS "${CMAKE_SOURCE_DIR}/libs/tuning-library/README.md")
+set(SURGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+if (NOT EXISTS "${SURGE_SOURCE_DIR}/libs/tuning-library/README.md")
   message(FATAL_ERROR "Cannot find the contents of the tuning-library submodule, but this usually means"
           " that you haven't done a git submodule update; and so your repo will not build properly. "
           "To resolve this, please run `git submodule update --init --recursive` and re-run cmake")

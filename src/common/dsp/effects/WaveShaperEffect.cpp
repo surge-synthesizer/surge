@@ -132,7 +132,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
 
     // Now upsample
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
-    halfbandIN.process_block_U2(wetL, wetR, dataOS[0], dataOS[1]);
+    halfbandIN.process_block_U2(wetL, wetR, dataOS[0], dataOS[1], BLOCK_SIZE_OS);
 
     if (wsptr)
     {
@@ -160,7 +160,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
         }
     }
 
-    halfbandOUT.process_block_D2(dataOS[0], dataOS[1]);
+    halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
 
     copy_block(dataOS[0], wetL, BLOCK_SIZE_QUAD);
     copy_block(dataOS[1], wetR, BLOCK_SIZE_QUAD);
@@ -190,11 +190,11 @@ const char *WaveShaperEffect::group_label(int id)
     switch (id)
     {
     case 0:
-        return "Pre-Filter";
+        return "Pre-Shaper";
     case 1:
-        return "Shape";
+        return "Shaper";
     case 2:
-        return "Post-Filter";
+        return "Post-Shaper";
     case 3:
         return "Output";
     }
