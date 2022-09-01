@@ -38,6 +38,10 @@ struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
     void setValueR(float f) { vR = f; }
     float getValueR() const { return vR; }
 
+    float cpuLevel{0.f};
+    void setCpuLevel(float f) { cpuLevel = f; }
+    float getCpuLevel() const { return cpuLevel; }
+
     Surge::ParamConfig::VUType vu_type{Surge::ParamConfig::vut_off};
     void setType(Surge::ParamConfig::VUType t) { vu_type = t; };
 
