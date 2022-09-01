@@ -125,7 +125,7 @@ void VuMeter::paint(juce::Graphics &g)
         g.setColour(juce::Colour(0xFFFF0000));
         g.setFont(skin->fontManager->getLatoAtSize(10, juce::Font::bold));
     }
-    else if(cpuLevel > 0.70)
+    else if (cpuLevel > 0.70)
     {
         g.setColour(juce::Colour(0xFFFF9000));
         g.setFont(skin->fontManager->getLatoAtSize(10));
@@ -137,7 +137,8 @@ void VuMeter::paint(juce::Graphics &g)
     }
     std::string text = std::string("");
     text += std::to_string((int)(cpuLevel * 100));
-    g.drawText(text, getLocalBounds().withTrimmedBottom(1).withTrimmedRight(2), juce::Justification::right);
+    auto bounds = getLocalBounds().withTrimmedBottom(1).withTrimmedRight(2);
+    g.drawText(text, bounds, juce::Justification::right);
 }
 
 void VuMeter::onSkinChanged()
