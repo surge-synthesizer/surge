@@ -61,6 +61,9 @@ std::string defaultKeyToString(DefaultKey k)
     case ShowGhostedLFOWaveReference:
         r = "showGhostedLFOWaveReference";
         break;
+    case ShowCPUUsage:
+        r = "showCPUUsage";
+        break;
     case Use3DWavetableView:
         r = "use3DWavetableView";
         break;
