@@ -1774,6 +1774,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
             vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
+            vu[0]->setStorage(&(synth->storage));
 
             addAndMakeVisibleWithTracking(frame.get(), *vu[0]);
 
@@ -3836,6 +3837,18 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
                             Surge::Storage::updateUserDefaultValue(
                                 &(this->synth->storage),
                                 Surge::Storage::ShowGhostedLFOWaveReference, !lfoone);
+                            this->frame->repaint();
+                        });
+
+    dispDefMenu.addSeparator();
+
+    bool cpumeter = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                        Surge::Storage::ShowCPUUsage, false);
+
+    dispDefMenu.addItem(Surge::GUI::toOSCase("Show CPU Usage in VU Meter"), true, cpumeter,
+                        [this, cpumeter]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), Surge::Storage::ShowCPUUsage, !cpumeter);
                             this->frame->repaint();
                         });
 
