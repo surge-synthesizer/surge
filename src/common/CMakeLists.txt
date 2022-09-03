@@ -51,11 +51,18 @@ else()
           ../../libs/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp
           ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp
           )
+  if (APPLE)
+    target_sources(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules/juce_core/juce_core.mm)
+  else()
+    target_sources(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules/juce_core/juce_core.cpp)
+  endif()
   target_compile_definitions(juce_dsp_rack_sub PUBLIC
           NDEBUG=$<IF:$<CONFIG:Release>,1,0>
           JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1
           JUCE_MODULE_AVAILABLE_juce_dsp=1
           JUCE_MODULE_AVAILABLE_juce_audio_basics=1
+          JUCE_MODULE_AVAILABLE_juce_core=1
+          JUCE_STANDALONE_APPLICATION=0
           )
   target_include_directories(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules)
 
