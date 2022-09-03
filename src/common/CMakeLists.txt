@@ -67,10 +67,11 @@ else()
           JUCE_MODULE_AVAILABLE_juce_audio_basics=1
           JUCE_MODULE_AVAILABLE_juce_core=1
           JUCE_STANDALONE_APPLICATION=0
+          JUCE_USE_CURL=0
+          JUCE_WEB_BROWSER=0
           )
   target_include_directories(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules)
 
-  #add_library(juce_dsp INTERFACE)
   add_library(juce::juce_dsp ALIAS juce_dsp_rack_sub)
 endif()
 
