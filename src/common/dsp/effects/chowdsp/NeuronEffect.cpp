@@ -267,4 +267,3 @@ void NeuronEffect::init_default_values()
 }
 
 } // namespace chowdsp
-

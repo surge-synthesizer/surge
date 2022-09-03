@@ -15,7 +15,6 @@
 
 #pragma once
 
-
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "ModControl.h"
@@ -114,4 +113,3 @@ class NeuronEffect : public Effect
 };
 
 } // namespace chowdsp
-
