@@ -44,6 +44,10 @@ if (NOT SURGE_SKIP_JUCE_FOR_RACK)
   target_compile_definitions(surge-common-binary PUBLIC HAS_JUCE=1 SKIP_JUCE=0)
 
 else()
+  # So what the heck is this? Well a few effects use juce_dsp so this
+  # is code which skips the entire juce build infrastructure but buids the
+  # source of juce_dsp, juce_audio_basic and juce_cde as a lib we can link
+  # into rac so we can get spring reverb and neuron
   add_library(surge-common-binary INTERFACE)
   target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
 
