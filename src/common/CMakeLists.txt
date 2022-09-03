@@ -47,16 +47,20 @@ else()
   add_library(surge-common-binary INTERFACE)
   target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
 
-  add_library(juce_dsp ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp)
-  target_compile_definitions(juce_dsp PUBLIC
+  add_library(juce_dsp_rack_sub STATIC
+          ../../libs/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp
+          ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp
+          )
+  target_compile_definitions(juce_dsp_rack_sub PUBLIC
           NDEBUG=$<IF:$<CONFIG:Release>,1,0>
           JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1
           JUCE_MODULE_AVAILABLE_juce_dsp=1
+          JUCE_MODULE_AVAILABLE_juce_audio_basics=1
           )
-  target_include_directories(juce_dsp PUBLIC ../../libs/JUCE/modules)
+  target_include_directories(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules)
 
   #add_library(juce_dsp INTERFACE)
-  add_library(juce::juce_dsp ALIAS juce_dsp)
+  add_library(juce::juce_dsp ALIAS juce_dsp_rack_sub)
 endif()
 
 add_library(${PROJECT_NAME}
