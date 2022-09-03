@@ -44,12 +44,34 @@ if (NOT SURGE_SKIP_JUCE_FOR_RACK)
   target_compile_definitions(surge-common-binary PUBLIC HAS_JUCE=1 SKIP_JUCE=0)
 
 else()
+  # So what the heck is this? Well a few effects use juce_dsp so this
+  # is code which skips the entire juce build infrastructure but buids the
+  # source of juce_dsp, juce_audio_basic and juce_cde as a lib we can link
+  # into rac so we can get spring reverb and neuron
   add_library(surge-common-binary INTERFACE)
   target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
-  #add_library(juce_dsp ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp)
-  #target_include_directories(juce_dsp PUBLIC ../../libs/JUCE/modules)
-  add_library(juce_dsp INTERFACE)
-  add_library(juce::juce_dsp ALIAS juce_dsp)
+
+  add_library(juce_dsp_rack_sub STATIC
+          ../../libs/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp
+          ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp
+          )
+  if (APPLE)
+    target_sources(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules/juce_core/juce_core.mm)
+  else()
+    target_sources(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules/juce_core/juce_core.cpp)
+  endif()
+  target_compile_definitions(juce_dsp_rack_sub PUBLIC
+          NDEBUG=$<IF:$<CONFIG:Release>,1,0>
+          JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1
+          JUCE_MODULE_AVAILABLE_juce_dsp=1
+          JUCE_MODULE_AVAILABLE_juce_audio_basics=1
+          JUCE_MODULE_AVAILABLE_juce_core=1
+          JUCE_STANDALONE_APPLICATION=0
+          )
+  target_include_directories(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules)
+
+  #add_library(juce_dsp INTERFACE)
+  add_library(juce::juce_dsp ALIAS juce_dsp_rack_sub)
 endif()
 
 add_library(${PROJECT_NAME}
