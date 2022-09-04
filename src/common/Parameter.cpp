@@ -781,7 +781,6 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_bool_mute:
     case ct_bool_solo:
-    case ct_bool_fm:
     case ct_bool_keytrack:
     case ct_bool_retrigger:
     case ct_bool_relative_switch:
@@ -904,7 +903,6 @@ void Parameter::set_type(int ctrltype)
         val_default.i = 0;
         break;
     case ct_osccount:
-    case ct_osccountWT:
         valtype = vt_int;
         val_min.i = 1;
         val_max.i = 16;
@@ -3306,7 +3304,6 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             snprintf(txt, TXT_SIZE, "%s", window_names[limit_range(i, 0, 8)]);
             break;
         case ct_osccount:
-        case ct_osccountWT:
             snprintf(txt, TXT_SIZE, "%d voice%s", i, (i > 1 ? "s" : ""));
             break;
         case ct_fxtype:
@@ -3886,27 +3883,48 @@ bool Parameter::can_be_nondestructively_modulated() const
 {
     switch (ctrltype)
     {
-        /*
-         * Because of the way these are read when we don't have a copy of
-         * the modulation state, they are best to destructively modulate.
-         */
-    case ct_character:
+    /*
+     * Because of the way these are read when we don't have a copy of
+     * the modulation state, they are best to destructively modulate.
+     */
     case ct_scenemode:
     case ct_scenesel:
     case ct_midikey_or_channel:
     case ct_polylimit:
     case ct_polymode:
-    case ct_fxtype:
+    case ct_character:
+    case ct_pbdepth:
+    case ct_midikey:
+    case ct_bool_keytrack:
+    case ct_bool_retrigger:
     case ct_osctype:
-    case ct_lfotype:
-    case ct_filtertype:
-    case ct_filtersubtype:
+    case ct_osccount:
+    case ct_pitch_octave:
+    case ct_wt2window:
+    case ct_sineoscmode:
+    case ct_sinefmlegacy:
+    case ct_fmratio_int:
+    case ct_stringosc_excitation_model:
+    case ct_twist_engine:
+    case ct_alias_wave:
+    case ct_fmconfig:
     case ct_wstype:
     case ct_fbconfig:
+    case ct_filtertype:
+    case ct_filtersubtype:
+    case ct_bool_relative_switch:
+    case ct_bool_link_switch:
     case ct_fxbypass:
+    case ct_fxtype:
     case ct_bool_mute:
     case ct_bool_solo:
     case ct_oscroute:
+    case ct_envmode:
+    case ct_envshape_attack:
+    case ct_envshape:
+    case ct_lfotype:
+    case ct_lfotrigmode:
+    case ct_bool_unipolar:
         return false;
     }
     return true;

@@ -781,6 +781,27 @@ void SurgePatch::init_default_values()
             scene[sc].lfo[l].release.val.f = scene[sc].lfo[l].release.val_max.f;
             scene[sc].lfo[l].release.val_default.f = scene[sc].lfo[l].release.val_max.f;
 
+            // one part of the fix for issue #6594
+            // FIXME: this is a bit fragile, since it assumes we have voice LFOs defined first,
+            // then scene LFOs
+            if (l >= n_lfos_voice)
+            {
+                scene[sc].lfo[l].shape.per_voice_processing = false;
+                scene[sc].lfo[l].unipolar.per_voice_processing = false;
+                scene[sc].lfo[l].trigmode.per_voice_processing = false;
+
+                scene[sc].lfo[l].rate.per_voice_processing = false;
+                scene[sc].lfo[l].start_phase.per_voice_processing = false;
+                scene[sc].lfo[l].deform.per_voice_processing = false;
+                scene[sc].lfo[l].magnitude.per_voice_processing = false;
+
+                scene[sc].lfo[l].delay.per_voice_processing = false;
+                scene[sc].lfo[l].attack.per_voice_processing = false;
+                scene[sc].lfo[l].hold.per_voice_processing = false;
+                scene[sc].lfo[l].sustain.per_voice_processing = false;
+                scene[sc].lfo[l].release.per_voice_processing = false;
+            }
+
             for (int i = 0; i < n_stepseqsteps; i++)
             {
                 stepsequences[sc][l].steps[i] = 0.f;
