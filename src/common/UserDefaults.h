@@ -21,63 +21,74 @@ namespace Storage
 // streamed as strings so feel free to change the order to whatever you want
 enum DefaultKey
 {
-    HighPrecisionReadouts,
-    SmoothingMode,
-    PitchSmoothingMode,
-    MiddleC,
-    MPEPitchBendRange,
-    RestoreMSEGSnapFromPatch,
-    UserDataPath,
-    UseODDMTS,
-    ActivateExtraOutputs,
-    MonoPedalMode,
-    ShowCursorWhileEditing,
-    TouchMouseMode,
-    ShowGhostedLFOWaveReference,
-    Use3DWavetableView,
+    // these are all the various menu options
+    DefaultZoom,
+
     DefaultSkin,
     DefaultSkinRootType,
-    DefaultZoom,
-    SliderMoveRateState,
-    RememberTabPositionsPerScene,
+    MenuLightness,
+    LayoutGridResolution,
 
-    PatchJogWraparound,
-    RetainPatchSearchboxAfterLoad,
+    HighPrecisionReadouts,
+    ModWindowShowsValues,
+    InfoWindowPopupOnIdle,
+    ShowGhostedLFOWaveReference,
+    ShowCPUUsage,
+    MiddleC,
+
+    UserDataPath,
+
+    SliderMoveRateState,
+    ShowCursorWhileEditing,
+    TouchMouseMode,
+
+    DefaultPatchAuthor,
+    DefaultPatchComment,
+    InitialPatchName,
+    InitialPatchCategory,
+    InitialPatchCategoryType,
+    AppendOriginalPatchBy,
 
     OverrideTuningOnPatchLoad,
     OverrideMappingOnPatchLoad,
 
-    DefaultPatchAuthor,
-    DefaultPatchComment,
-    AppendOriginalPatchBy,
-
-    ModWindowShowsValues,
-    LayoutGridResolution,
-
+    RememberTabPositionsPerScene,
+    RestoreMSEGSnapFromPatch,
+    ActivateExtraOutputs, // TODO: remove in XT2
+    PatchJogWraparound,
+    RetainPatchSearchboxAfterLoad,
+    PromptToLoadOverDirtyPatch,
+    TabKeyArmsModulators, // TODO: remove in XT2
+    UseKeyboardShortcuts_Plugin,
+    UseKeyboardShortcuts_Standalone,
+    MenuAndEditKeybindingsFollowKeyboardFocus,
+    UseNarratorAnnouncements,
+    UseNarratorAnnouncementsForPatchTypeahead,
+    ExpandModMenusWithSubMenus,
     ShowVirtualKeyboard_Plugin,
     ShowVirtualKeyboard_Standalone,
 
-    InitialPatchName,
-    InitialPatchCategory,
-    InitialPatchCategoryType,
+    MPEPitchBendRange,
+    PitchSmoothingMode,
 
+    SmoothingMode,
+    MonoPedalMode,
+
+    // these are persistent options sprinkled outside of the menu
+    UseODDMTS,
+    Use3DWavetableView,
+    ModListValueDisplay,
+
+    // dialog related stuff
     LastSCLPath,
     LastKBMPath,
     LastWavetablePath,
     LastPatchPath,
 
-    TabKeyArmsModulators, // TODO: remove in XT2
-    MenuAndEditKeybindingsFollowKeyboardFocus,
-
-    InfoWindowPopupOnIdle,
-
-    UseKeyboardShortcuts_Plugin,
-    UseKeyboardShortcuts_Standalone,
-
     PromptToActivateShortcutsOnAccKeypress,
     PromptToActivateCategoryAndPatchOnKeypress,
-    PromptToLoadOverDirtyPatch,
 
+    // overlay related stuff
     TuningOverlayLocation,
     ModlistOverlayLocation,
     MSEGOverlayLocation,
@@ -105,13 +116,6 @@ enum DefaultKey
     FormulaOverlayTearOutAlwaysOnTop,
     WSAnalysisOverlayTearOutAlwaysOnTop,
     FilterAnalysisOverlayTearOutAlwaysOnTop,
-
-    ModListValueDisplay,
-    MenuLightness,
-    ExpandModMenusWithSubMenus,
-
-    UseNarratorAnnouncements,
-    UseNarratorAnnouncementsForPatchTypeahead,
 
     // Surge XT Effects specific defaults
     FXUnitAssumeFixedBlock,

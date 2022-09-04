@@ -29,6 +29,7 @@ VuMeter::VuMeter() : juce::Component(), WidgetBaseMixin<VuMeter>(this)
     setWantsKeyboardFocus(false);
     setInterceptsMouseClicks(false, false);
 }
+
 VuMeter::~VuMeter() = default;
 
 void VuMeter::paint(juce::Graphics &g)
@@ -52,8 +53,10 @@ void VuMeter::paint(juce::Graphics &g)
                    juce::Justification::centred);
         return;
     }
+
     int offi;
     bool stereo = false;
+
     switch (vu_type)
     {
     case ParamConfig::vut_vu:
@@ -70,10 +73,13 @@ void VuMeter::paint(juce::Graphics &g)
         offi = 0;
         break;
     }
+
     auto t = juce::AffineTransform().translated(0, -offi * getHeight());
 
     if (hVuBars)
+    {
         hVuBars->draw(g, 1.0, t);
+    }
 
     // And now the calculation
     float w = getWidth();
@@ -95,13 +101,14 @@ void VuMeter::paint(juce::Graphics &g)
     {
         float occludeTo = std::min((scale(vL) * (w - 1)) - zerodb, 0.f); // Strictly negative
         auto dG = getLocalBounds().reduced(1, 1).withTrimmedRight(-occludeTo);
+
         g.setColour(bgCol);
         g.fillRect(dG);
     }
     else
     {
-        auto dL = getLocalBounds().reduced(1, 1);
-        auto dR = getLocalBounds().reduced(1, 1);
+        auto dL = getLocalBounds().reduced(2, 2);
+        auto dR = getLocalBounds().reduced(2, 2);
 
         auto occludeFromL = scale(vL) * w;
         auto occludeFromR = scale(vR) * w;
@@ -116,29 +123,44 @@ void VuMeter::paint(juce::Graphics &g)
         dR = dR.withTrimmedLeft(occludeFromR);
         g.setColour(bgCol);
         g.fillRect(dL);
+
         if (stereo)
+        {
             g.fillRect(dR);
+        }
     }
 
-    if (cpuLevel > 1.0)
+    if (storage)
     {
-        g.setColour(juce::Colour(0xFFFF0000));
-        g.setFont(skin->fontManager->getLatoAtSize(10, juce::Font::bold));
+        bool showCPU =
+            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::ShowCPUUsage, false);
+
+        if (showCPU)
+        {
+            if (cpuLevel < 0.33)
+            {
+                g.setColour(juce::Colour(juce::Colours::white));
+            }
+            else if (cpuLevel < 0.66)
+            {
+                g.setColour(juce::Colour(juce::Colours::yellow));
+            }
+            else if (cpuLevel < 0.95)
+            {
+                g.setColour(juce::Colour(juce::Colours::orange));
+            }
+            else
+            {
+                g.setColour(juce::Colour(juce::Colours::red));
+            }
+
+            std::string text = std::to_string((int)(std::min(cpuLevel, 1.f) * 100.f));
+            auto bounds = getLocalBounds().withTrimmedRight(3);
+
+            g.setFont(skin->fontManager->getLatoAtSize(9));
+            g.drawText(text, bounds, juce::Justification::right);
+        }
     }
-    else if (cpuLevel > 0.70)
-    {
-        g.setColour(juce::Colour(0xFFFF9000));
-        g.setFont(skin->fontManager->getLatoAtSize(10));
-    }
-    else
-    {
-        g.setColour(juce::Colour(0xFF00FF00));
-        g.setFont(skin->fontManager->getLatoAtSize(10));
-    }
-    std::string text = std::string("");
-    text += std::to_string((int)(cpuLevel * 100));
-    auto bounds = getLocalBounds().withTrimmedBottom(1).withTrimmedRight(2);
-    g.drawText(text, bounds, juce::Justification::right);
 }
 
 void VuMeter::onSkinChanged()

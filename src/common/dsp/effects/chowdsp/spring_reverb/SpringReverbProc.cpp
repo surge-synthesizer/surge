@@ -1,6 +1,5 @@
 #include <random>
 
-#if HAS_JUCE
 #include "SpringReverbProc.h"
 #include "utilities/FastMath.h"
 
@@ -150,4 +149,3 @@ void SpringReverbProc::processBlock(float *left, float *right, const int numSamp
 }
 
 } // namespace chowdsp
-#endif

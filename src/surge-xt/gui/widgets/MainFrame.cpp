@@ -72,7 +72,7 @@ void MainFrame::mouseDown(const juce::MouseEvent &event)
     if (event.mods.isPopupMenu())
     {
         auto where = getLocalPoint(nullptr, juce::Desktop::getInstance().getMousePosition());
-        editor->useDevMenu = false;
+        editor->useDevMenu = event.mods.isShiftDown();
         editor->showSettingsMenu(where, nullptr);
     }
 }

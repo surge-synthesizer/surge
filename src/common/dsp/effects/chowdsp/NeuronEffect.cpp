@@ -15,7 +15,6 @@
 
 #include "NeuronEffect.h"
 
-#if HAS_JUCE
 namespace chowdsp
 {
 
@@ -268,5 +267,3 @@ void NeuronEffect::init_default_values()
 }
 
 } // namespace chowdsp
-
-#endif

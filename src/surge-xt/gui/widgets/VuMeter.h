@@ -42,6 +42,9 @@ struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
     void setCpuLevel(float f) { cpuLevel = f; }
     float getCpuLevel() const { return cpuLevel; }
 
+    SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s) { storage = s; }
+
     Surge::ParamConfig::VUType vu_type{Surge::ParamConfig::vut_off};
     void setType(Surge::ParamConfig::VUType t) { vu_type = t; };
 

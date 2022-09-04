@@ -15,8 +15,6 @@
 
 #pragma once
 
-#if HAS_JUCE
-
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "ModControl.h"
@@ -115,5 +113,3 @@ class NeuronEffect : public Effect
 };
 
 } // namespace chowdsp
-
-#endif
