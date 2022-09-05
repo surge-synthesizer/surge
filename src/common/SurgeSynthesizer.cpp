@@ -2532,7 +2532,6 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
         }
         case ct_wstype:
         case ct_bool_mute:
-        case ct_bool_fm:
         case ct_fbconfig:
             switch_toggled_queued = true;
             break;

@@ -157,7 +157,7 @@ void WindowOscillator::init_ctrltypes()
     oscdata->p[win_unison_detune].set_name("Unison Detune");
     oscdata->p[win_unison_detune].set_type(ct_oscspread);
     oscdata->p[win_unison_voices].set_name("Unison Voices");
-    oscdata->p[win_unison_voices].set_type(ct_osccountWT);
+    oscdata->p[win_unison_voices].set_type(ct_osccount);
 }
 
 void WindowOscillator::init_default_values()
