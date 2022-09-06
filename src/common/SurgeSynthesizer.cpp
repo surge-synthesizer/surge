@@ -2725,9 +2725,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                         /*
                          * Alright well what the heck is this. "I can remove this" you may be
                          * thinking? Well - set_extend_range sets up the min and max for a value in
-                         * some cases, and when unstreaming at this point, it is totallyl unclear
+                         * some cases, and when unstreaming at this point, it is totally unclear
                          * whether it has been called correctly (and in many cases like move and
-                         * load when i come out as a none but transmogridy to the right type above
+                         * load when I come out as a none but transmogrify to the right type above
                          * it hasn't) so we just set our extended status back onto ourselves and
                          * then those side effects which didn't happen through the init path are
                          * registered here and we can safely check against min and max values
