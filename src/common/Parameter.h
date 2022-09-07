@@ -55,6 +55,7 @@ enum ctrltypes
     ct_pitch_semi7bp,
     ct_pitch_semi7bp_absolutable,
     ct_pitch,
+    ct_pitch_extendable_very_low_minval,
     ct_fmratio,
     ct_fmratio_int,
     ct_pbdepth,
@@ -78,7 +79,7 @@ enum ctrltypes
     ct_freq_audible_deactivatable_hp,
     ct_freq_audible_deactivatable_lp,
     ct_freq_audible_with_tunability, // we abuse 'extended' to mean 'use SCL tuning'
-    ct_freq_audible_with_very_low_lowerbound,
+    ct_freq_audible_very_low_minval,
     ct_freq_mod,
     ct_freq_hpf,
     ct_freq_shift,
@@ -132,8 +133,8 @@ enum ctrltypes
     ct_character,
     ct_sineoscmode,
     ct_sinefmlegacy,
-    ct_countedset_percent,            // what % through a counted set are you
-    ct_countedset_percent_extendable, // what % through a counted set are you
+    ct_countedset_percent,            // what % through a counted set are we
+    ct_countedset_percent_extendable, // what % through a counted set are we
     ct_vocoder_bandcount,
     ct_distortion_waveshape,
     ct_flangerpitch,
@@ -189,6 +190,7 @@ enum ctrltypes
     ct_mscodec,
     ct_percent_bipolar_pan, // bipolar with special text strings at -100%, +100% and 0%
     ct_spring_decay,
+
     num_ctrltypes,
 };
 

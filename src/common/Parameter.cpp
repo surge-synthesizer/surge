@@ -242,6 +242,7 @@ bool Parameter::can_extend_range() const
     case ct_percent_with_extend_to_bipolar:
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
+    case ct_pitch_extendable_very_low_minval:
     case ct_freq_reson_band1:
     case ct_freq_reson_band2:
     case ct_freq_reson_band3:
@@ -258,7 +259,7 @@ bool Parameter::can_extend_range() const
     case ct_fmratio:
     case ct_reson_res_extendable:
     case ct_freq_audible_with_tunability:
-    case ct_freq_audible_with_very_low_lowerbound:
+    case ct_freq_audible_very_low_minval:
     case ct_percent_oscdrift:
     case ct_twist_aux_mix:
     case ct_countedset_percent_extendable:
@@ -532,6 +533,7 @@ void Parameter::set_type(int ctrltype)
     switch (ctrltype)
     {
     case ct_pitch:
+    case ct_pitch_extendable_very_low_minval:
         valtype = vt_float;
         val_min.f = -60;
         val_max.f = 60;
@@ -596,7 +598,7 @@ void Parameter::set_type(int ctrltype)
         val_max.f = 70;     // 25087.71 Hz
         val_default.f = 70; // 25087.71 Hz
         break;
-    case ct_freq_audible_with_very_low_lowerbound:
+    case ct_freq_audible_very_low_minval:
         valtype = vt_float;
         val_min.f = -117.3763; // 0.5 Hz
         val_max.f = 70;        // 25087.71 Hz
@@ -1356,6 +1358,7 @@ void Parameter::set_type(int ctrltype)
         displayInfo.extendFactor = 12.0;
     case ct_pitch:
     case ct_pitch4oct:
+    case ct_pitch_extendable_very_low_minval:
     case ct_syncpitch:
     case ct_freq_mod:
     case ct_flangerpitch:
@@ -1373,7 +1376,7 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_audible_deactivatable_hp:
     case ct_freq_audible_deactivatable_lp:
     case ct_freq_audible_with_tunability:
-    case ct_freq_audible_with_very_low_lowerbound:
+    case ct_freq_audible_very_low_minval:
     case ct_freq_reson_band1:
     case ct_freq_reson_band2:
     case ct_freq_reson_band3:
@@ -1572,6 +1575,7 @@ void Parameter::set_type(int ctrltype)
     case ct_pitch_semi7bp:
     case ct_pitch:
     case ct_pitch4oct:
+    case ct_pitch_extendable_very_low_minval:
     case ct_syncpitch:
     case ct_oscspread:
         displayInfo.customFeatures |= kAllowsTuningFractionTypein;
@@ -1883,6 +1887,8 @@ bool Parameter::supportsDynamicName() const
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:
     case ct_percent_deactivatable:
+    case ct_pitch_extendable_very_low_minval:
+    case ct_freq_audible_very_low_minval:
     case ct_tape_drive:
         return true;
     default:
@@ -1977,6 +1983,24 @@ void Parameter::set_extend_range(bool er)
     {
         switch (ctrltype)
         {
+        case ct_pitch_extendable_very_low_minval:
+        {
+            val_min.f = -60.f;
+            val_max.f = 60.f;
+            val_default.f = 0.f;
+
+            if (val.f < val_min.f)
+            {
+                val.f = val_min.f;
+            }
+
+            displayType = LinearWithScale;
+            snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "semitones");
+            displayInfo.supportsNoteName = false;
+            displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys;
+            displayInfo.customFeatures |= kAllowsTuningFractionTypein;
+        }
+        break;
         case ct_freq_reson_band1:
         {
             // Why the heck are we modifying this here?
@@ -2015,6 +2039,22 @@ void Parameter::set_extend_range(bool er)
     {
         switch (ctrltype)
         {
+        case ct_pitch_extendable_very_low_minval:
+        {
+            val_min.f = -117.3763; // 0.5 Hz
+            val_max.f = 70;        // 25087.71 Hz
+            val_default.f = 3;     // 523.25 Hz
+
+            displayType = ATwoToTheBx;
+            snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "Hz");
+            displayInfo.a = 440.0;
+            displayInfo.b = 1.0f / 12.0f;
+            displayInfo.decimals = 2;
+            displayInfo.modulationCap = 880.f * powf(2.0, (val_max.f) / 12.0f);
+            displayInfo.supportsNoteName = true;
+            displayInfo.customFeatures = ParamDisplayFeatures::kAllowsModulationsInNotesAndCents;
+        }
+        break;
         case ct_freq_reson_band1:
         case ct_freq_reson_band2:
         case ct_freq_reson_band3:
@@ -2811,7 +2851,7 @@ float Parameter::quantize_modulation(float inputval) const
         case ct_freq_audible_deactivatable_hp:
         case ct_freq_audible_deactivatable_lp:
         case ct_freq_audible_with_tunability:
-        case ct_freq_audible_with_very_low_lowerbound:
+        case ct_freq_audible_very_low_minval:
         case ct_freq_reson_band1:
         case ct_freq_reson_band2:
         case ct_freq_reson_band3:
@@ -2907,13 +2947,14 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
     txt[0] = 0;
     switch (ctrltype)
     {
+    case ct_pitch_extendable_very_low_minval:
     case ct_freq_hpf:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
     case ct_freq_audible_deactivatable_hp:
     case ct_freq_audible_deactivatable_lp:
     case ct_freq_audible_with_tunability:
-    case ct_freq_audible_with_very_low_lowerbound:
+    case ct_freq_audible_very_low_minval:
     case ct_freq_reson_band1:
     case ct_freq_reson_band2:
     case ct_freq_reson_band3:
@@ -2923,6 +2964,11 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
     case ct_fmratio:
     {
         float f = val.f;
+
+        if (ctrltype == ct_pitch_extendable_very_low_minval && !extend_range)
+        {
+            break;
+        }
 
         if (ctrltype == ct_fmratio && absolute)
         {
@@ -3033,8 +3079,10 @@ void Parameter::get_display(char *txt, bool external, float ef) const
     int detailedMode = 0;
 
     if (storage)
+    {
         detailedMode =
             Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
+    }
 
     switch (valtype)
     {
@@ -3953,6 +4001,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_pitch_semi7bp_absolutable:
     case ct_pitch:
     case ct_pitch4oct:
+    case ct_pitch_extendable_very_low_minval:
     case ct_fmratio:
     case ct_syncpitch:
     case ct_amplitude:
@@ -3977,7 +4026,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_freq_audible_deactivatable_hp:
     case ct_freq_audible_deactivatable_lp:
     case ct_freq_audible_with_tunability:
-    case ct_freq_audible_with_very_low_lowerbound:
+    case ct_freq_audible_very_low_minval:
     case ct_freq_reson_band1:
     case ct_freq_reson_band2:
     case ct_freq_reson_band3:

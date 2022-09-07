@@ -103,9 +103,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 18 -> 19 (XT 1.1 nightlies) added String deform options (interpolation, bipolar Decay params, Stiffness options)
 //                             added Extend to Delay Feedback parameter (allows negative delay)
 // 19 -> 20 (XT 1.1 release)   added voice envelope mode, but super late so don't break 19
+// 20 -> 21 (XT 1.2 nightlies) added absolutable mode for Combulator Offset 1/2 (to match the behavior of Center parameter)
 // clang-format on
 
-const int ff_revision = 20;
+const int ff_revision = 21;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type

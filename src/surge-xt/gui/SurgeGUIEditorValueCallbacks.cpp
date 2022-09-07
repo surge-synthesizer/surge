@@ -1911,7 +1911,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 switch (p->ctrltype)
                 {
                 case ct_freq_audible_with_tunability:
-                case ct_freq_audible_with_very_low_lowerbound:
+                case ct_freq_audible_very_low_minval:
                     contextMenu.addItem(
                         Surge::GUI::toOSCase("Reset Filter Cutoff To Keytrack Root"),
                         [this, p, control] {
@@ -2311,7 +2311,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             txt = "Modulation Extends into Self-oscillation";
                             break;
                         case ct_freq_audible_with_tunability:
-                        case ct_freq_audible_with_very_low_lowerbound:
+                        case ct_freq_audible_very_low_minval:
                         {
                             auto hasmts = synth->storage.oddsound_mts_client &&
                                           synth->storage.oddsound_mts_active;
@@ -2321,6 +2321,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             txt = "Apply " + tuningmode + " Tuning to Filter Cutoff";
                             visible =
                                 synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL;
+                            break;
+                        }
+                        case ct_pitch_extendable_very_low_minval:
+                        {
+                            // yep folks - we're abusing extend_range to do absolutable! :)
+                            txt = "Absolute";
                             break;
                         }
                         case ct_percent_oscdrift:
@@ -2852,7 +2858,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     */
                     break;
                 case ct_freq_audible_with_tunability:
-                case ct_freq_audible_with_very_low_lowerbound:
+                case ct_freq_audible_very_low_minval:
                 {
                     if (p->extend_range || button.isAltDown())
                     {
