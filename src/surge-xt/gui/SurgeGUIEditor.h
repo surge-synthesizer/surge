@@ -372,6 +372,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         TUNING_EDITOR,
         WAVESHAPER_ANALYZER,
         FILTER_ANALYZER,
+        OSCILLOSCOPE,
         KEYBINDINGS_EDITOR,
         ACTION_HISTORY,
 

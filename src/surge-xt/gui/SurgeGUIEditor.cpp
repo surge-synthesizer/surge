@@ -1854,6 +1854,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::OSCILLOSCOPE_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::WAVESHAPER_ANALYSIS_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
             break;
@@ -4088,6 +4089,9 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Show Virtual Keyboard"),
                                     showShortcutDescription("Alt + K", u8"\U00002325K"), true,
                                     showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Open Oscilloscope"),
+                   [this]() { showOverlay(OSCILLOSCOPE); });
 
     return wfMenu;
 }
@@ -7442,7 +7446,8 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     {
         promptForOKCancelWithDontAskAgain(
             "Enable Keyboard Shortcuts",
-            "You have used a keyboard shortcut that Surge XT has assigned to a certain action,\n"
+            "You have used a keyboard shortcut that Surge XT has assigned to a certain "
+            "action,\n"
             "but the option to use keyboard shortcuts is currently disabled. "
             "\nWould you like to enable it?\n\n"
             "You can change this option later in the Workflow menu.",
