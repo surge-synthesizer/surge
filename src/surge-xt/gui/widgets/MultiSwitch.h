@@ -69,6 +69,9 @@ struct MultiSwitch : public juce::Component,
     bool draggable{false};
     void setDraggable(bool d) { draggable = d; }
 
+    bool middleClickable{false};
+    void setMiddleClickable(bool m) { middleClickable = m; }
+
     void paint(juce::Graphics &g) override;
 
     bool everDragged{false}, isMouseDown{false};

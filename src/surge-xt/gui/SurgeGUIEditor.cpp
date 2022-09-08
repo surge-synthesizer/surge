@@ -5569,7 +5569,9 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             // Special case that scene select parameter is "odd"
             if (p && p->ctrltype == ct_scenesel)
+            {
                 tag = tag_scene_select;
+            }
 
             auto frames = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FRAMES, "1");
             auto rows = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::ROWS, "1");
@@ -5599,7 +5601,13 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setHoverSwitchDrawable(std::get<1>(drawables));
             hsw->setHoverOnSwitchDrawable(std::get<2>(drawables));
 
+            if (tag == tag_mp_category || tag == tag_mp_patch)
+            {
+                hsw->setMiddleClickable(true);
+            }
+
             auto bg = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::IMAGE);
+
             if (bg.has_value())
             {
                 auto hdb = bitmapStore->getImageByStringID(*bg);
@@ -5607,6 +5615,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             }
 
             auto ho = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::HOVER_IMAGE);
+
             if (ho.has_value())
             {
                 auto hdb = bitmapStore->getImageByStringID(*ho);
@@ -5614,6 +5623,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             }
 
             auto hoo = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::HOVER_ON_IMAGE);
+
             if (hoo.has_value())
             {
                 auto hdb = bitmapStore->getImageByStringID(*hoo);
@@ -5657,6 +5667,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             {
                 auto cg = endCG;
                 bool addToGlobalControls = false;
+
                 switch (tag)
                 {
                 case tag_osc_select:
@@ -5692,11 +5703,14 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             {
                 hsw->updateAccessibleStateOnUserValueChange();
             }
+
             juceSkinComponents[skinCtrl->sessionid] = std::move(hsw);
 
             if (paramIndex >= 0)
+            {
                 nonmod_param[paramIndex] = dynamic_cast<Surge::GUI::IComponentTagValue *>(
                     juceSkinComponents[skinCtrl->sessionid].get());
+            }
 
             return dynamic_cast<Surge::GUI::IComponentTagValue *>(
                 juceSkinComponents[skinCtrl->sessionid].get());
