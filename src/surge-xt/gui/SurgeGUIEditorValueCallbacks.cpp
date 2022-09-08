@@ -405,6 +405,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 0;
     }
 
+    long tag = control->getTag();
+
+    if ((button.isCommandDown() || button.isMiddleButtonDown()) &&
+        (tag == tag_mp_patch || tag == tag_mp_category))
+    {
+        undoManager()->pushPatch();
+        synth->selectRandomPatch();
+
+        return 1;
+    }
+
     SelfModulationGuard modGuard(this);
 
     if (button.isMiddleButtonDown())
@@ -442,15 +453,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         {
             g->endHover();
         }
-    }
-
-    long tag = control->getTag();
-
-    if (button.isCommandDown() && (tag == tag_mp_patch || tag == tag_mp_category))
-    {
-        undoManager()->pushPatch();
-        synth->selectRandomPatch();
-        return 1;
     }
 
     // In these cases just move along with success. RMB does nothing on these switches
@@ -2911,7 +2913,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
         }
         // exclusive mute/solo in the mixer
-        else if (button.isCommandDown())
+        else if (button.isCommandDown() || button.isMiddleButtonDown())
         {
             if (p->ctrltype == ct_bool_mute)
             {

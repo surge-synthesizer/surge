@@ -120,6 +120,11 @@ juce::Point<float> MultiSwitch::valueToCoordinate(float val) const
 
 void MultiSwitch::mouseDown(const juce::MouseEvent &event)
 {
+    if (middleClickable && event.mods.isMiddleButtonDown())
+    {
+        notifyControlModifierClicked(event.mods);
+    }
+
     if (forwardedMainFrameMouseDowns(event))
     {
         return;
