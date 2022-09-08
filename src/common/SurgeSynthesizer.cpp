@@ -4206,7 +4206,8 @@ void SurgeSynthesizer::process()
     storage.modRoutingMutex.lock();
     processControl();
 
-    amp.set_target_smoothed(storage.db_to_linear(storage.getPatch().volume.val.f));
+    amp.set_target_smoothed(
+        storage.db_to_linear(storage.getPatch().globaldata[storage.getPatch().volume.id].f));
     amp_mute.set_target(mfade);
 
     int fx_bypass = storage.getPatch().fx_bypass.val.i;
