@@ -419,8 +419,6 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
 
     int channelmask = calculateChannelMask(channel, key);
 
-    printf("channelmask %d\n", channelmask);
-
     // TODO: FIX SCENE ASSUMPTION
     if (channelmask & 1)
     {
