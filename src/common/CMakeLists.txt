@@ -56,9 +56,15 @@ else()
           ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp
           )
   if (APPLE)
-    target_sources(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules/juce_core/juce_core.mm)
+    target_sources(juce_dsp_rack_sub PUBLIC
+            ../../libs/JUCE/modules/juce_core/juce_core.mm
+            ../../libs/JUCE/modules/juce_audio_formats/juce_audio_formats.mm
+            )
   else()
-    target_sources(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules/juce_core/juce_core.cpp)
+    target_sources(juce_dsp_rack_sub PUBLIC
+            ../../libs/JUCE/modules/juce_core/juce_core.cpp
+            ../../libs/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp
+            )
   endif()
   target_compile_definitions(juce_dsp_rack_sub PUBLIC
           NDEBUG=$<IF:$<CONFIG:Release>,1,0>
@@ -66,6 +72,7 @@ else()
           JUCE_MODULE_AVAILABLE_juce_dsp=1
           JUCE_MODULE_AVAILABLE_juce_audio_basics=1
           JUCE_MODULE_AVAILABLE_juce_core=1
+          JUCE_MODULE_VAILABLE_juce_audio_formats=1
           JUCE_STANDALONE_APPLICATION=0
           JUCE_USE_CURL=0
           JUCE_WEB_BROWSER=0
@@ -110,6 +117,7 @@ add_library(${PROJECT_NAME}
   UserDefaults.cpp
   UserDefaults.h
   WAVFileSupport.cpp
+  dsp/DSPExternalAdapterUtils.cpp
   dsp/Effect.cpp
   dsp/Effect.h
   dsp/Oscillator.cpp
@@ -349,6 +357,7 @@ target_link_libraries(${PROJECT_NAME}
   sst-plugininfra::tinyxml
   sst-plugininfra::strnatcmp
   sst-filters
+  sst-filters-extras
   sst-waveshapers
 
   surge::oddsound-mts
