@@ -4407,8 +4407,19 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         for (int i = 0; i < n; i++)
         {
             this->synth->storage.getPatch().param_ptr[i]->midictrl = -1;
+            this->synth->storage.getPatch().dawExtraState.midictrl_map[i] = -1;
+
             if (i > n_global_params)
+            {
                 this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
+                this->synth->storage.getPatch().dawExtraState.midictrl_map[i + n_scene_params] = -1;
+            }
+        }
+
+        for (int i = 0; i < n_customcontrollers; i++)
+        {
+            this->synth->storage.controllers[i] = -1;
+            this->synth->storage.getPatch().dawExtraState.customcontrol_map[i] = -1;
         }
     });
 

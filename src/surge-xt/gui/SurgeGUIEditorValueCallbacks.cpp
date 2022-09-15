@@ -257,9 +257,12 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
             std::string txt = fmt::format("Clear Learned MIDI ({} ",
                                           decodeControllerID(synth->storage.controllers[idx]));
 
-            parentMenu.addItem(Surge::GUI::toOSCase(txt) +
-                                   midicc_names[synth->storage.controllers[idx]] + ")",
-                               [this, idx]() { synth->storage.controllers[idx] = -1; });
+            parentMenu.addItem(
+                Surge::GUI::toOSCase(txt) + midicc_names[synth->storage.controllers[idx]] + ")",
+                [this, idx]() {
+                    synth->storage.controllers[idx] = -1;
+                    synth->storage.getPatch().dawExtraState.customcontrol_map[idx] = -1;
+                });
         }
 
         break;
@@ -276,6 +279,7 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                     if (ptag < n_global_params)
                     {
                         p->midictrl = -1;
+                        synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
                     }
                     else
                     {
@@ -288,6 +292,9 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
 
                         synth->storage.getPatch().param_ptr[a]->midictrl = -1;
                         synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
+                        synth->storage.getPatch().dawExtraState.midictrl_map[a] = -1;
+                        synth->storage.getPatch().dawExtraState.midictrl_map[a + n_scene_params] =
+                            -1;
                     }
                 });
         }
