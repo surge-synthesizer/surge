@@ -270,7 +270,8 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         }
 
         // draw the waveform
-        g.setColour(skin->getColor(Colors::Osc::Display::Wave));
+        g.setColour(
+            skin->getColor(Colors::Osc::Display::Wave).withMultipliedAlpha(isMuted ? 0.5f : 1.f));
         g.strokePath(wavePath, juce::PathStrokeType(1.3), tf);
     }
 
@@ -409,6 +410,7 @@ void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
 {
     auto *currOsc = &oscdata->type;
     auto *endOsc = &oscdata->retrigger;
+
     bool oscInvalid = false;
 
     while (currOsc <= endOsc && !oscInvalid)
@@ -419,6 +421,58 @@ void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
         }
 
         currOsc++;
+    }
+
+    if (oscInvalid)
+    {
+        repaint();
+    }
+}
+
+void OscillatorWaveformDisplay::repaintBasedOnOscMuteState()
+{
+    bool oscInvalid = false;
+    bool isMutedTest = false;
+
+    // grab the mute/solo states
+    auto *ms = &storage->getPatch().scene[scene].mute_o1;
+    auto *ss = &storage->getPatch().scene[scene].solo_o1;
+    bool statesMuteSolo[2][n_oscs];
+
+    for (int i = 0; i < n_oscs; i++)
+    {
+        statesMuteSolo[0][i] = ms->val.i;
+        statesMuteSolo[1][i] = ss->val.i;
+        ms++;
+        ss++;
+    }
+
+    // if current osc is muted but not soloed
+    if (statesMuteSolo[0][oscInScene] == 1 && statesMuteSolo[1][oscInScene] == 0)
+    {
+        isMutedTest = true;
+    }
+
+    // if other oscs are soloed but current isn't, it is considered muted
+    for (int i = 0; i < n_oscs; i++)
+    {
+        if (statesMuteSolo[1][i] && i != oscInScene)
+        {
+            isMutedTest = true;
+        }
+    }
+
+    // if current osc is soloed it's always active, even if it's muted (LOL!)
+    if (statesMuteSolo[1][oscInScene] == 1)
+    {
+        isMutedTest = false;
+    }
+
+    // only trigger a repaint if the mute test is a different result from the member isMuted
+    if (isMutedTest != isMuted)
+    {
+        isMuted = isMutedTest;
+        oscInvalid = true;
     }
 
     if (oscInvalid)
@@ -1311,8 +1365,10 @@ struct WaveTable3DEditor : public juce::Component,
             }
         }
 
+        g.setOpacity(parent->isMuted ? 0.5f : 1.f);
         g.drawImage(*backingImage, getLocalBounds().toFloat(),
                     juce::RectanglePlacement::fillDestination);
+        g.setOpacity(1.f);
 
         // draw currently selected frame
         {
@@ -1413,7 +1469,8 @@ struct WaveTable3DEditor : public juce::Component,
             auto tf =
                 juce::AffineTransform().scaled(w * 0.61, h * -0.17).translated(x0, y0 + (0.5 * hw));
 
-            g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D));
+            g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D)
+                            .withMultipliedAlpha(parent->isMuted ? 0.5f : 1.f));
             g.strokePath(wavePath, juce::PathStrokeType(0.85), tf);
         }
     }
@@ -1573,7 +1630,8 @@ struct AliasAdditiveEditor : public juce::Component,
                 bar = p.withBottom(halfHeight).withTop(halfHeight * (1 - v));
             }
 
-            g.setColour(skin->getColor(Colors::Osc::Display::Wave));
+            g.setColour(skin->getColor(Colors::Osc::Display::Wave)
+                            .withMultipliedAlpha(parent->isMuted ? 0.5f : 1.f));
             g.fillRect(bar.translated(0, topTrim));
             g.setColour(skin->getColor(Colors::Osc::Display::Bounds));
             g.drawRect(sliders[i]);

@@ -328,7 +328,9 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     editor_open = false;
     editor_open = false;
     queue_refresh = false;
+
     memset(param, 0, n_paramslots * sizeof(void *));
+
     for (int i = 0; i < n_fx_slots; ++i)
     {
         selectedFX[i] = -1;
@@ -336,8 +338,12 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     }
 
     for (auto i = 0; i < n_scenes; ++i)
+    {
         for (auto j = 0; j < n_lfos; ++j)
+        {
             modsource_index_cache[i][j] = 0;
+        }
+    }
 
     juceEditor = jEd;
     this->synth = synth;
@@ -355,6 +361,7 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     // init the size of the plugin
     initialZoomFactor =
         Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::DefaultZoom, 0);
+
     if (initialZoomFactor == 0)
     {
         float baseW = getWindowSizeX();
@@ -372,17 +379,23 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
         if (currentSkin->hasFixedZooms())
         {
             int zz = 100;
+
             for (auto z : currentSkin->getFixedZooms())
             {
                 if (z <= correctedZf)
+                {
                     zz = z;
+                }
             }
+
             correctedZf = zz;
         }
 
         initialZoomFactor = correctedZf;
     }
+
     int instanceZoomFactor = synth->storage.getPatch().dawExtraState.editor.instanceZoomFactor;
+
     if (instanceZoomFactor > 0)
     {
         // dawExtraState zoomFactor wins defaultZoom
@@ -397,8 +410,11 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     reloadFromSkin();
 
     auto des = &(synth->storage.getPatch().dawExtraState);
+
     if (des->isPopulated)
+    {
         loadFromDAWExtraState(synth);
+    }
 
     paramInfowindow = std::make_unique<Surge::Widgets::ParameterInfowindow>();
     paramInfowindow->setVisible(false);
@@ -420,8 +436,11 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     setupKeymapManager();
 
     if (!juceEditor->processor.undoManager)
+    {
         juceEditor->processor.undoManager =
             std::make_unique<Surge::GUI::UndoManager>(this, this->synth);
+    }
+
     juceEditor->processor.undoManager->resetEditor(this);
 }
 
@@ -439,7 +458,9 @@ SurgeGUIEditor::~SurgeGUIEditor()
 void SurgeGUIEditor::idle()
 {
     if (!synth)
+    {
         return;
+    }
 
     if (noProcessingOverlay)
     {
@@ -454,6 +475,7 @@ void SurgeGUIEditor::idle()
         if (processRunningCheckEvery++ > 3 || processRunningCheckEvery < 0)
         {
             synth->processRunning++;
+
             if (synth->processRunning > 10)
             {
                 synth->audio_processing_active = false;
@@ -464,13 +486,16 @@ void SurgeGUIEditor::idle()
     }
 
     if (pause_idle_updates)
+    {
         return;
+    }
 
     if (slowIdleCounter++ == 600)
     {
         slowIdleCounter = 0;
         juceEditor->surgeLF->updateDarkIfNeeded();
     }
+
     if (needsModUpdate)
     {
         refresh_mod();
@@ -480,6 +505,7 @@ void SurgeGUIEditor::idle()
     if (sendStructureChangeIn > 0)
     {
         sendStructureChangeIn--;
+
         if (sendStructureChangeIn == 0)
         {
             if (auto *handler = frame->getAccessibilityHandler())
@@ -492,18 +518,24 @@ void SurgeGUIEditor::idle()
     if (!accAnnounceStrings.empty())
     {
         auto h = frame->getAccessibilityHandler();
+
         if (h)
         {
             auto &nm = accAnnounceStrings.front();
+
             if (nm.second == 0)
             {
                 h->postAnnouncement(nm.first,
                                     juce::AccessibilityHandler::AnnouncementPriority::high);
             }
         }
+
         accAnnounceStrings.front().second--;
+
         if (accAnnounceStrings.front().second < 0)
+        {
             accAnnounceStrings.pop_front();
+        }
     }
 
     if (getShowVirtualKeyboard() && synth->hasUpdatedMidiCC)
@@ -521,6 +553,7 @@ void SurgeGUIEditor::idle()
             cp = errorItems;
             errorItems.clear();
         }
+
         for (const auto &p : cp)
         {
             juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, p.second, p.first);
@@ -534,10 +567,12 @@ void SurgeGUIEditor::idle()
             lastObservedMidiNoteEventCount = synth->midiNoteEvents;
 
             auto tun = getOverlayIfOpenAs<Surge::Overlays::TuningOverlay>(TUNING_EDITOR);
+
             if (tun)
             {
                 // If there are things subscribed to keys update them here
                 std::bitset<128> keyOn{0};
+
                 for (int sc = 0; sc < n_scenes; ++sc)
                 {
                     for (int k = 0; k < 128; ++k)
@@ -548,11 +583,14 @@ void SurgeGUIEditor::idle()
                         }
                     }
                 }
+
                 tun->setMidiOnKeys(keyOn);
             }
         }
+
         idleInfowindow();
         juceDeleteOnIdle.clear();
+
         /*
          * USEFUL for testing stress patch changes
          *
@@ -563,15 +601,17 @@ void SurgeGUIEditor::idle()
            runct = 0;
         }
           */
+
         if (firstIdleCountdown)
         {
-            // Linux VST3 in JUCE Hosts (maybe others?) sets up the run loop out of order, it seems
+            // Linux VST3 in JUCE hosts (maybe others?) sets up the run loop out of order, it seems
             // sometimes missing the very first invalidation. Force a redraw on the first idle
             // isFirstIdle = false;
             firstIdleCountdown--;
 
             frame->repaint();
         }
+
         if (synth->learn_param_from_cc < 0 && synth->learn_macro_from_cc < 0 &&
             synth->learn_param_from_note < 0 && midiLearnOverlay != nullptr)
         {
@@ -581,6 +621,7 @@ void SurgeGUIEditor::idle()
         if (lfoDisplayRepaintCountdown > 0)
         {
             lfoDisplayRepaintCountdown--;
+
             if (lfoDisplayRepaintCountdown == 0)
             {
                 lfoDisplay->repaint();
@@ -591,7 +632,6 @@ void SurgeGUIEditor::idle()
         {
             auto us = dynamic_cast<Surge::Widgets::Switch *>(undoButton);
             auto rs = dynamic_cast<Surge::Widgets::Switch *>(redoButton);
-
             auto hasU = undoManager()->canUndo();
             auto hasR = undoManager()->canRedo();
 
@@ -610,6 +650,7 @@ void SurgeGUIEditor::idle()
 
         {
             bool expected = true;
+
             if (synth->rawLoadNeedsUIDawExtraState.compare_exchange_weak(expected, true) &&
                 expected)
             {
@@ -622,6 +663,7 @@ void SurgeGUIEditor::idle()
         if (patchCountdown >= 0 && !pause_idle_updates)
         {
             patchCountdown--;
+
             if (patchCountdown < 0 && synth->patchid_queue >= 0)
             {
                 std::ostringstream oss;
@@ -640,6 +682,7 @@ void SurgeGUIEditor::idle()
         if (zoomInvalid)
         {
             auto rg = SurgeSynthEditor::BlockRezoom(juceEditor);
+
             setZoomFactor(getZoomFactor());
             zoomInvalid = false;
         }
@@ -655,10 +698,13 @@ void SurgeGUIEditor::idle()
             for (auto ol : overlaysForNextIdle)
             {
                 auto tag = (OverlayTags)ol.whichOverlay;
+
                 showOverlay(tag);
+
                 if (ol.isTornOut)
                 {
                     auto olw = getOverlayWrapperIfOpen(tag);
+
                     if (olw)
                     {
                         auto p =
@@ -680,6 +726,7 @@ void SurgeGUIEditor::idle()
                 .scene[current_scene]
                 .osc[current_osc[current_scene]]
                 .wt.refresh_display = false;
+
             if (oscWaveform)
             {
                 oscWaveform->repaint();
@@ -689,6 +736,7 @@ void SurgeGUIEditor::idle()
         if (polydisp)
         {
             int prior = polydisp->getPlayingVoiceCount();
+
             if (prior != synth->polydisplay)
             {
                 polydisp->setPlayingVoiceCount(synth->polydisplay);
@@ -697,9 +745,11 @@ void SurgeGUIEditor::idle()
         }
 
         bool patchChanged = false;
+
         if (patchSelector)
         {
             patchChanged = patchSelector->sel_id != synth->patchid;
+
             if (synth->storage.getPatch().isDirty != patchSelector->isDirty)
             {
                 patchSelector->isDirty = synth->storage.getPatch().isDirty;
@@ -710,6 +760,7 @@ void SurgeGUIEditor::idle()
         if (statusMPE)
         {
             auto v = statusMPE->getValue();
+
             if ((v < 0.5 && synth->mpeEnabled) || (v > 0.5 && !synth->mpeEnabled))
             {
                 statusMPE->setValue(synth->mpeEnabled ? 1 : 0);
@@ -720,18 +771,22 @@ void SurgeGUIEditor::idle()
         if (statusTune)
         {
             auto v = statusTune->getValue();
+
             if ((v < 0.5 && !synth->storage.isStandardTuning) ||
                 (v > 0.5 && synth->storage.isStandardTuning))
             {
                 bool hasmts =
                     synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+
                 statusTune->setValue(!synth->storage.isStandardTuning || hasmts);
                 statusTune->asJuceComponent()->repaint();
             }
         }
 
         if (patchSelector)
+        {
             patchSelector->idle();
+        }
 
         if (patchChanged)
         {
@@ -751,8 +806,10 @@ void SurgeGUIEditor::idle()
                     << synth->storage.getPatch().author;
                 enqueueAccessibleAnnouncement(oss.str());
             }
+
             firstTimePatchLoad = false;
         }
+
         if (queue_refresh || synth->refresh_editor || patchChanged)
         {
             queue_refresh = false;
@@ -839,6 +896,7 @@ void SurgeGUIEditor::idle()
             if (synth->refresh_ctrl_queue[i] >= 0)
             {
                 int j = synth->refresh_ctrl_queue[i];
+
                 synth->refresh_ctrl_queue[i] = -1;
 
                 if (param[j])
@@ -856,7 +914,6 @@ void SurgeGUIEditor::idle()
                         synth->refresh_ctrl_queue_value[i]);
                     param[j]->setQuantitizedDisplayValue(synth->refresh_ctrl_queue_value[i]);
                     param[j]->asJuceComponent()->repaint();
-                    // oscdisplay->invalid();
 
                     if (oscWaveform)
                     {
@@ -961,8 +1018,12 @@ void SurgeGUIEditor::idle()
                 SurgeSynthesizer::ID jid;
 
                 auto sv = 0.f;
+
                 if (synth->fromSynthSideId(j, jid))
+                {
                     sv = synth->getParameter01(jid);
+                }
+
                 auto cv = cc->getValue();
 
                 if ((sv != cv) && ((tag == fmconfig_tag || tag == filterblock_tag)))
@@ -976,6 +1037,7 @@ void SurgeGUIEditor::idle()
                             start_paramtags;
                         auto targetState =
                             (Parameter::intUnscaledFromFloat(sv, n_fm_routings - 1) == fm_off);
+
                         resetMap[targetTag] = targetState;
                     }
 
@@ -987,8 +1049,8 @@ void SurgeGUIEditor::idle()
                             synth->storage.getPatch().scene[current_scene].feedback.id +
                             start_paramtags;
                         auto targetState = (pval == fc_serial1);
-                        resetMap[targetTag] = targetState;
 
+                        resetMap[targetTag] = targetState;
                         targetTag = synth->storage.getPatch().scene[current_scene].width.id +
                                     start_paramtags;
                         targetState = (pval != fc_stereo && pval != fc_wide);
@@ -1065,7 +1127,6 @@ void SurgeGUIEditor::idle()
                synth->refresh_editor = true;
                current_scene = synth->storage.getPatch().scene_active.val.i;
             }
-
          }
 #endif
         }
@@ -1084,6 +1145,12 @@ void SurgeGUIEditor::idle()
                         ->get_target01(0));
             }
         }
+    }
+
+    // refresh waveform display if the mute state of the currently displayed osc changes
+    if (oscWaveform)
+    {
+        oscWaveform->repaintBasedOnOscMuteState();
     }
 
     if (scanJuceSkinComponents)

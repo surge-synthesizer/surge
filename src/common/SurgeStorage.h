@@ -616,11 +616,11 @@ struct SurgeSceneStorage
     Parameter fm_depth, fm_switch;
     Parameter drift, noise_colour, keytrack_root;
     Parameter osc_solo;
+    // TODO: in XT2 add osc4-6 params after osc3, not at the end!
     Parameter level_o1, level_o2, level_o3, level_noise, level_ring_12, level_ring_23, level_pfg;
-    Parameter mute_o1, mute_o2, mute_o3, mute_noise, mute_ring_12,
-        mute_ring_23; // all mute parameters must be contiguous!
-    Parameter solo_o1, solo_o2, solo_o3, solo_noise, solo_ring_12,
-        solo_ring_23; // all solo parameters must be contiguous!
+    // all mute and solo parameters must be contiguous!
+    Parameter mute_o1, mute_o2, mute_o3, mute_noise, mute_ring_12, mute_ring_23;
+    Parameter solo_o1, solo_o2, solo_o3, solo_noise, solo_ring_12, solo_ring_23;
     Parameter route_o1, route_o2, route_o3, route_noise, route_ring_12, route_ring_23;
     Parameter vca_level;
     Parameter pbrange_dn, pbrange_up;
