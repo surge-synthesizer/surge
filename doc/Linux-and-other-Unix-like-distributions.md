@@ -66,16 +66,13 @@ Users can install it with the command: <br/>
 
 ## Surge on Arch Linux
 
-There are currently two packages in the AUR available for Arch(based) distros.
+The Arch Linux port is [available](https://archlinux.org/packages/community/x86_64/surge-xt/) and maintained in the official repositories.
 
-http://aur.archlinux.org/packages/surge-xt-bin
-seems to be the recommended one
+Users can install it with the command: <br/>
+`pacman -Syu surge-xt` <br/>
 
-http://aur.archlinux.org/packages/surge-xt
-seems to be problematic with certain hardware configurations (see comment there).
-
-When in doubt, contact the package maintainers <br/>
-*and please update this document if the situation changes*
+If there are any issues specific to this port, please e-mail the maintainers (contact details found in above link)
+or file a bug report on the [bug tracker](https://bugs.archlinux.org/).
 
 ## Surge on Flathub
 
