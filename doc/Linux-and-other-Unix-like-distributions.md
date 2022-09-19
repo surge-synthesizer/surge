@@ -66,13 +66,13 @@ Users can install it with the command: <br/>
 
 ## Surge on Arch Linux
 
-The Arch Linux port is available and maintained in the official repositories.
+The Arch Linux port is [available](https://archlinux.org/packages/community/x86_64/surge-xt/) and maintained in the official repositories.
 
 Users can install it with the command: <br/>
 `pacman -Syu surge-xt` <br/>
 
-If there are any issues specific to this port, please e-mail the maintainer
-or file a bug report on the bug tracker.
+If there are any issues specific to this port, please e-mail the maintainers (contact details found in above link)
+or file a bug report on the [bug tracker](https://bugs.archlinux.org/).
 
 ## Surge on Flathub
 
