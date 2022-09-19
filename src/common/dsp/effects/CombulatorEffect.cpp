@@ -45,6 +45,7 @@ CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     {
         auto piby2 = M_PI / 2.0;
         double panAngle = 1.0 * i / (PANLAW_SIZE - 1) * piby2;
+
         panL[i] = sqrt((piby2 - panAngle) / piby2 * cos(panAngle));
         panR[i] = sqrt(panAngle * sin(panAngle) / piby2);
     }
@@ -67,10 +68,12 @@ void CombulatorEffect::init()
 {
     sampleRateReset();
     setvars(true);
+
     bi = 0;
     lp.suspend();
 
     memset(filterDelay, 0, 3 * 2 * (MAX_FB_COMB_EXTENDED + FIRipol_N) * sizeof(float));
+
     envV[0] = 0.f;
     envV[1] = 0.f;
 
@@ -90,7 +93,14 @@ void CombulatorEffect::setvars(bool init)
         }
         else
         {
-            freq[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
+            if (fxdata->p[combulator_freq1 + i].extend_range)
+            {
+                freq[i].newValue(*f[combulator_freq1 + i]);
+            }
+            else
+            {
+                freq[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
+            }
         }
 
         gain[i].newValue(amp_to_linear(limit_range(*f[combulator_gain1 + i], 0.f, 2.f)));
@@ -163,8 +173,12 @@ inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
 void CombulatorEffect::sampleRateReset()
 {
     for (int e = 0; e < 3; ++e)
+    {
         for (int c = 0; c < 2; ++c)
+        {
             coeff[e][c].setSampleRateAndBlockSize((float)storage->dsamplerate_os, BLOCK_SIZE_OS);
+        }
+    }
 }
 
 void CombulatorEffect::process(float *dataL, float *dataR)
@@ -173,6 +187,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
     // Upsample the input
     float dataOS alignas(16)[2][BLOCK_SIZE_OS];
+
     halfbandIN.process_block_U2(dataL, dataR, dataOS[0], dataOS[1], BLOCK_SIZE_OS);
 
     /*
@@ -181,6 +196,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
      * and the frequency of the particular band.
      */
     using namespace sst::filters;
+
     int type = fut_comb_pos, subtype = 1;
 
     auto filtptr =
@@ -193,6 +209,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
      * So now set up across the voices (e for 'entry' to match SurgeVoice) and the channels (c)
      */
     bool useTuning = fxdata->p[combulator_freq1].extend_range;
+
     for (int e = 0; e < 3; ++e)
     {
         for (int c = 0; c < 2; ++c)
@@ -227,10 +244,16 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         {
             auto v = dataOS[c][s];
             auto e = envV[c];
+
             if (v > e)
+            {
                 e = envA * (e - v) + v;
+            }
             else
+            {
                 e = envR * (e - v) + v;
+            }
+
             envV[c] = e;
             noise[c] =
                 noisemix.v * 3.f * envV[c] *
@@ -290,8 +313,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         dataOS[0][s] = mixl;
         dataOS[1][s] = mixr;
 
-        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS, so call process every
-        // other sample
+        // lag class only works at BLOCK_SIZE time, not BLOCK_SIZE_OS,
+        // so call process every other sample
         if (s % 2 == 0)
         {
             for (auto i = 0; i < 3; ++i)
@@ -321,6 +344,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
                 coeff[e][c].C[i] = get1f(qfus[c].C[i], e);
             }
         }
+
         for (int i = 0; i < n_filter_registers; i++)
         {
             for (int e = 0; e < 3; ++e)
@@ -340,6 +364,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
     /* Downsample out */
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
+
     copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
     copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
 
@@ -392,19 +417,83 @@ void CombulatorEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
+    // Dynamic names and bipolarity support
+    static struct DynTexDynamicNameBip : public ParameterDynamicNameFunction,
+                                         ParameterDynamicBoolFunction
+    {
+        const char *getName(const Parameter *p) const override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+
+            static char res[TXT_SIZE];
+            res[0] = 0;
+
+            switch (idx)
+            {
+            case combulator_freq1:
+                if (fx->p[combulator_freq2].extend_range && fx->p[combulator_freq3].extend_range)
+                {
+                    snprintf(res, TXT_SIZE, "%s", "Frequency 1");
+                }
+                else
+                {
+                    snprintf(res, TXT_SIZE, "%s", "Center");
+                }
+                break;
+            case combulator_freq2:
+                if (fx->p[combulator_freq2].extend_range)
+                {
+                    snprintf(res, TXT_SIZE, "%s", "Frequency 2");
+                }
+                else
+                {
+                    snprintf(res, TXT_SIZE, "%s", "Offset 2");
+                }
+                break;
+            case combulator_freq3:
+                if (fx->p[combulator_freq3].extend_range)
+                {
+                    snprintf(res, TXT_SIZE, "%s", "Frequency 3");
+                }
+                else
+                {
+                    snprintf(res, TXT_SIZE, "%s", "Offset 3");
+                }
+                break;
+            default:
+                break;
+            }
+
+            return res;
+        }
+
+        const bool getValue(const Parameter *p) const override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+            auto isBipolar = !fx->p[idx].extend_range;
+
+            return isBipolar;
+        }
+    } dynTexDynamicNameBip;
+
     fxdata->p[combulator_noise_mix].set_name("Extra Noise");
     fxdata->p[combulator_noise_mix].set_type(ct_percent);
     fxdata->p[combulator_noise_mix].posy_offset = 1;
 
     fxdata->p[combulator_freq1].set_name("Center");
-    fxdata->p[combulator_freq1].set_type(ct_freq_audible_with_very_low_lowerbound);
+    fxdata->p[combulator_freq1].set_type(ct_freq_audible_very_low_minval);
+    fxdata->p[combulator_freq1].dynamicName = &dynTexDynamicNameBip;
     fxdata->p[combulator_freq1].posy_offset = 3;
-    fxdata->p[combulator_freq2].set_name("Offset 1");
-    fxdata->p[combulator_freq2].set_type(ct_pitch);
+    fxdata->p[combulator_freq2].set_type(ct_pitch_extendable_very_low_minval);
     fxdata->p[combulator_freq2].posy_offset = 3;
-    fxdata->p[combulator_freq3].set_name("Offset 2");
-    fxdata->p[combulator_freq3].set_type(ct_pitch);
+    fxdata->p[combulator_freq2].dynamicName = &dynTexDynamicNameBip;
+    fxdata->p[combulator_freq2].dynamicBipolar = &dynTexDynamicNameBip;
+    fxdata->p[combulator_freq3].set_type(ct_pitch_extendable_very_low_minval);
     fxdata->p[combulator_freq3].posy_offset = 3;
+    fxdata->p[combulator_freq3].dynamicName = &dynTexDynamicNameBip;
+    fxdata->p[combulator_freq3].dynamicBipolar = &dynTexDynamicNameBip;
     fxdata->p[combulator_feedback].set_name("Feedback");
     fxdata->p[combulator_feedback].set_type(ct_percent_bipolar);
     fxdata->p[combulator_feedback].posy_offset = 3;
@@ -439,7 +528,9 @@ void CombulatorEffect::init_default_values()
 
     fxdata->p[combulator_freq1].val.f = -9.0f;
     fxdata->p[combulator_freq2].val.f = 0.25f;
+    fxdata->p[combulator_freq2].set_extend_range(false);
     fxdata->p[combulator_freq3].val.f = -0.25f;
+    fxdata->p[combulator_freq3].set_extend_range(false);
     fxdata->p[combulator_feedback].val.f = 0.75f;
     fxdata->p[combulator_tone].val.f = fxdata->p[combulator_tone].val_max.f;
 
@@ -460,5 +551,11 @@ void CombulatorEffect::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 17)
     {
         fxdata->p[combulator_tone].deactivated = false;
+    }
+
+    if (streamingRevision <= 20)
+    {
+        fxdata->p[combulator_freq2].set_extend_range(false);
+        fxdata->p[combulator_freq3].set_extend_range(false);
     }
 }

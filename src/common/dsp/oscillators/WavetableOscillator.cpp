@@ -128,7 +128,7 @@ void WavetableOscillator::init_ctrltypes()
     oscdata->p[wt_unison_detune].set_name("Unison Detune");
     oscdata->p[wt_unison_detune].set_type(ct_oscspread);
     oscdata->p[wt_unison_voices].set_name("Unison Voices");
-    oscdata->p[wt_unison_voices].set_type(ct_osccountWT);
+    oscdata->p[wt_unison_voices].set_type(ct_osccount);
 }
 
 void WavetableOscillator::init_default_values()

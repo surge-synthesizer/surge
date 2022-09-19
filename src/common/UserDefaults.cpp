@@ -36,6 +36,9 @@ std::string defaultKeyToString(DefaultKey k)
     case MPEPitchBendRange:
         r = "mpePitchBendRange";
         break;
+    case UseCh2Ch3ToPlayScenesIndividually:
+        r = "useCh2Ch3ToPlayScenesIndividually";
+        break;
     case RestoreMSEGSnapFromPatch:
         r = "restoreMSEGSnapFromPatch";
         break;

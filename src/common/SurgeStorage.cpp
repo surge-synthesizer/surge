@@ -359,6 +359,19 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
             << "This is a fatal internal software error which should never occur!";
         reportError(oss.str(), "Resource Loading Error");
     }
+#else
+    if (fs::exists(datapath / "windows.wt"))
+    {
+        if (!load_wt_wt(path_to_string(datapath / "windows.wt"), &WindowWT))
+        {
+            WindowWT.size = 0;
+            std::ostringstream oss;
+            oss << "Unable to load 'windows.wt' from file. "
+                << "This is a fatal internal software error which should never occur!";
+            reportError(oss.str(), "Resource Loading Error");
+            _DBGCOUT << oss.str() << std::endl;
+        }
+    }
 #endif
 
     // Tuning library support

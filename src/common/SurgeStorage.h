@@ -103,9 +103,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 18 -> 19 (XT 1.1 nightlies) added String deform options (interpolation, bipolar Decay params, Stiffness options)
 //                             added Extend to Delay Feedback parameter (allows negative delay)
 // 19 -> 20 (XT 1.1 release)   added voice envelope mode, but super late so don't break 19
+// 20 -> 21 (XT 1.2 nightlies) added absolutable mode for Combulator Offset 1/2 (to match the behavior of Center parameter)
 // clang-format on
 
-const int ff_revision = 20;
+const int ff_revision = 21;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -615,11 +616,11 @@ struct SurgeSceneStorage
     Parameter fm_depth, fm_switch;
     Parameter drift, noise_colour, keytrack_root;
     Parameter osc_solo;
+    // TODO: in XT2 add osc4-6 params after osc3, not at the end!
     Parameter level_o1, level_o2, level_o3, level_noise, level_ring_12, level_ring_23, level_pfg;
-    Parameter mute_o1, mute_o2, mute_o3, mute_noise, mute_ring_12,
-        mute_ring_23; // all mute parameters must be contiguous!
-    Parameter solo_o1, solo_o2, solo_o3, solo_noise, solo_ring_12,
-        solo_ring_23; // all solo parameters must be contiguous!
+    // all mute and solo parameters must be contiguous!
+    Parameter mute_o1, mute_o2, mute_o3, mute_noise, mute_ring_12, mute_ring_23;
+    Parameter solo_o1, solo_o2, solo_o3, solo_noise, solo_ring_12, solo_ring_23;
     Parameter route_o1, route_o2, route_o3, route_noise, route_ring_12, route_ring_23;
     Parameter vca_level;
     Parameter pbrange_dn, pbrange_up;

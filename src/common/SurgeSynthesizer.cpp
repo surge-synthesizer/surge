@@ -298,42 +298,53 @@ SurgeSynthesizer::~SurgeSynthesizer()
     }
 }
 
+// A voice is routed to a particular scene if channelmask & n.
+// So, "1" means scene A, "2" means scene B and "3" (= 2 | 1) means both.
 int SurgeSynthesizer::calculateChannelMask(int channel, int key)
 {
-    /*
-    ** Just because I always forget
-    **
-    ** A voice is routed to scene n if channelmask & n. So "1" means scene A, "2" means scene B and
-    *"3" (= 2 | 1 ) = both.
-    */
+    bool useMIDICh2Ch3 = Surge::Storage::getUserDefaultValue(
+        &storage, Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true);
+
     int channelmask = channel;
 
-    if ((channel == 0) || (channel > 2) || mpeEnabled ||
-        storage.getPatch().scenemode.val.i == sm_chsplit || storage.mapChannelToOctave)
+    if (((channel == 0 || channel > 2) && useMIDICh2Ch3) ||
+        (channel >= 0 && channel < 16 && !useMIDICh2Ch3) || mpeEnabled ||
+        storage.mapChannelToOctave || storage.getPatch().scenemode.val.i == sm_chsplit)
     {
         switch (storage.getPatch().scenemode.val.i)
         {
         case sm_single:
-            //	case sm_morph:
             if (storage.getPatch().scene_active.val.i == 1)
+            {
                 channelmask = 2;
+            }
             else
+            {
                 channelmask = 1;
+            }
             break;
         case sm_dual:
             channelmask = 3;
             break;
         case sm_split:
             if (key < storage.getPatch().splitpoint.val.i)
+            {
                 channelmask = 1;
+            }
             else
+            {
                 channelmask = 2;
+            }
             break;
         case sm_chsplit:
             if (channel < ((int)(storage.getPatch().splitpoint.val.i / 8) + 1))
+            {
                 channelmask = 1;
+            }
             else
+            {
                 channelmask = 2;
+            }
 
             break;
         }
@@ -341,9 +352,13 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
     else if (storage.getPatch().scenemode.val.i == sm_single)
     {
         if (storage.getPatch().scene_active.val.i == 1)
+        {
             channelmask = 2;
+        }
         else
+        {
             channelmask = 1;
+        }
     }
 
     return channelmask;
@@ -353,7 +368,9 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
                                 int32_t host_noteid)
 {
     if (halt_engine)
+    {
         return;
+    }
 
     if (storage.oddsound_mts_client && storage.oddsound_mts_active)
     {
@@ -2532,7 +2549,6 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
         }
         case ct_wstype:
         case ct_bool_mute:
-        case ct_bool_fm:
         case ct_fbconfig:
             switch_toggled_queued = true;
             break;
@@ -2726,9 +2742,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                         /*
                          * Alright well what the heck is this. "I can remove this" you may be
                          * thinking? Well - set_extend_range sets up the min and max for a value in
-                         * some cases, and when unstreaming at this point, it is totallyl unclear
+                         * some cases, and when unstreaming at this point, it is totally unclear
                          * whether it has been called correctly (and in many cases like move and
-                         * load when i come out as a none but transmogridy to the right type above
+                         * load when I come out as a none but transmogrify to the right type above
                          * it hasn't) so we just set our extended status back onto ourselves and
                          * then those side effects which didn't happen through the init path are
                          * registered here and we can safely check against min and max values
@@ -4207,7 +4223,8 @@ void SurgeSynthesizer::process()
     storage.modRoutingMutex.lock();
     processControl();
 
-    amp.set_target_smoothed(storage.db_to_linear(storage.getPatch().volume.val.f));
+    amp.set_target_smoothed(
+        storage.db_to_linear(storage.getPatch().globaldata[storage.getPatch().volume.id].f));
     amp_mute.set_target(mfade);
 
     int fx_bypass = storage.getPatch().fx_bypass.val.i;

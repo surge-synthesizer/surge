@@ -697,11 +697,14 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     if (sge)
     {
         cfxid = sge->effectChooser->currentClicked;
-        auto deactbm = sge->effectChooser->getDeactivatedBitmask();
-        addDeact = true;
-        isDeact = deactbm & (1 << cfxid);
-        cfxtype = sge->effectChooser->fxTypes[cfxid];
-        enableClear = cfxtype != fxt_off;
+        if (cfxid >= 0)
+        {
+            auto deactbm = sge->effectChooser->getDeactivatedBitmask();
+            addDeact = true;
+            isDeact = deactbm & (1 << cfxid);
+            cfxtype = sge->effectChooser->fxTypes[cfxid];
+            enableClear = cfxtype != fxt_off;
+        }
     }
 
     auto cfx = std::string{"Current FX Slot"};

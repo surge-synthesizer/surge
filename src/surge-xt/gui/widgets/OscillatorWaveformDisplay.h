@@ -61,6 +61,8 @@ struct OscillatorWaveformDisplay : public juce::Component,
         oscInScene = oscdata->p[0].ctrlgroup_entry;
     }
 
+    bool isMuted{false};
+
     SurgeGUIEditor *sge;
     void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
 
@@ -68,6 +70,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
     std::string getCurrentWavetableName();
 
     void repaintIfIdIsInRange(int id);
+    void repaintBasedOnOscMuteState();
 
     ::Oscillator *setupOscillator();
     unsigned char oscbuffer alignas(16)[oscillator_buffer_size];

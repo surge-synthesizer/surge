@@ -257,9 +257,12 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
             std::string txt = fmt::format("Clear Learned MIDI ({} ",
                                           decodeControllerID(synth->storage.controllers[idx]));
 
-            parentMenu.addItem(Surge::GUI::toOSCase(txt) +
-                                   midicc_names[synth->storage.controllers[idx]] + ")",
-                               [this, idx]() { synth->storage.controllers[idx] = -1; });
+            parentMenu.addItem(
+                Surge::GUI::toOSCase(txt) + midicc_names[synth->storage.controllers[idx]] + ")",
+                [this, idx]() {
+                    synth->storage.controllers[idx] = -1;
+                    synth->storage.getPatch().dawExtraState.customcontrol_map[idx] = -1;
+                });
         }
 
         break;
@@ -276,6 +279,7 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                     if (ptag < n_global_params)
                     {
                         p->midictrl = -1;
+                        synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
                     }
                     else
                     {
@@ -288,6 +292,9 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
 
                         synth->storage.getPatch().param_ptr[a]->midictrl = -1;
                         synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
+                        synth->storage.getPatch().dawExtraState.midictrl_map[a] = -1;
+                        synth->storage.getPatch().dawExtraState.midictrl_map[a + n_scene_params] =
+                            -1;
                     }
                 });
         }
@@ -405,6 +412,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         return 0;
     }
 
+    long tag = control->getTag();
+
+    if ((button.isCommandDown() || button.isMiddleButtonDown()) &&
+        (tag == tag_mp_patch || tag == tag_mp_category))
+    {
+        undoManager()->pushPatch();
+        synth->selectRandomPatch();
+
+        return 1;
+    }
+
     SelfModulationGuard modGuard(this);
 
     if (button.isMiddleButtonDown())
@@ -442,15 +460,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         {
             g->endHover();
         }
-    }
-
-    long tag = control->getTag();
-
-    if (button.isCommandDown() && (tag == tag_mp_patch || tag == tag_mp_category))
-    {
-        undoManager()->pushPatch();
-        synth->selectRandomPatch();
-        return 1;
     }
 
     // In these cases just move along with success. RMB does nothing on these switches
@@ -1911,7 +1920,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 switch (p->ctrltype)
                 {
                 case ct_freq_audible_with_tunability:
-                case ct_freq_audible_with_very_low_lowerbound:
+                case ct_freq_audible_very_low_minval:
                     contextMenu.addItem(
                         Surge::GUI::toOSCase("Reset Filter Cutoff To Keytrack Root"),
                         [this, p, control] {
@@ -2311,7 +2320,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             txt = "Modulation Extends into Self-oscillation";
                             break;
                         case ct_freq_audible_with_tunability:
-                        case ct_freq_audible_with_very_low_lowerbound:
+                        case ct_freq_audible_very_low_minval:
                         {
                             auto hasmts = synth->storage.oddsound_mts_client &&
                                           synth->storage.oddsound_mts_active;
@@ -2321,6 +2330,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             txt = "Apply " + tuningmode + " Tuning to Filter Cutoff";
                             visible =
                                 synth->storage.tuningApplicationMode == SurgeStorage::RETUNE_ALL;
+                            break;
+                        }
+                        case ct_pitch_extendable_very_low_minval:
+                        {
+                            // yep folks - we're abusing extend_range to do absolutable! :)
+                            txt = "Absolute";
                             break;
                         }
                         case ct_percent_oscdrift:
@@ -2852,7 +2867,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     */
                     break;
                 case ct_freq_audible_with_tunability:
-                case ct_freq_audible_with_very_low_lowerbound:
+                case ct_freq_audible_very_low_minval:
                 {
                     if (p->extend_range || button.isAltDown())
                     {
@@ -2905,7 +2920,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
         }
         // exclusive mute/solo in the mixer
-        else if (button.isCommandDown())
+        else if (button.isCommandDown() || button.isMiddleButtonDown())
         {
             if (p->ctrltype == ct_bool_mute)
             {

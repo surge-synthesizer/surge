@@ -287,7 +287,7 @@ void PatchSelector::mouseEnter(const juce::MouseEvent &)
 
     if (tooltipCountdown < 0)
     {
-        tooltipCountdown = 5;
+        tooltipCountdown = 3;
         juce::Timer::callAfterDelay(100, Surge::GUI::makeSafeCallback<PatchSelector>(
                                              this, [](auto *that) { that->shouldTooltip(); }));
     }
@@ -297,7 +297,7 @@ void PatchSelector::mouseMove(const juce::MouseEvent &e)
 {
     if (tooltipCountdown >= 0)
     {
-        tooltipCountdown = 5;
+        tooltipCountdown = 3;
     }
 
     // todo : apply mouse tolerance here
@@ -431,7 +431,7 @@ void PatchSelector::shouldTooltip()
     }
     else
     {
-        juce::Timer::callAfterDelay(200, Surge::GUI::makeSafeCallback<PatchSelector>(
+        juce::Timer::callAfterDelay(100, Surge::GUI::makeSafeCallback<PatchSelector>(
                                              this, [](auto *that) { that->shouldTooltip(); }));
     }
 }
