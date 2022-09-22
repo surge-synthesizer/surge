@@ -797,6 +797,7 @@ void SurgePatch::init_default_values()
 
                 scene[sc].lfo[l].delay.per_voice_processing = false;
                 scene[sc].lfo[l].attack.per_voice_processing = false;
+                scene[sc].lfo[l].decay.per_voice_processing = false;
                 scene[sc].lfo[l].hold.per_voice_processing = false;
                 scene[sc].lfo[l].sustain.per_voice_processing = false;
                 scene[sc].lfo[l].release.per_voice_processing = false;
