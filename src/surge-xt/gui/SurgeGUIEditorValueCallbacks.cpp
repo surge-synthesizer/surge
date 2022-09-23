@@ -1346,8 +1346,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 lurl = fullyResolvedHelpURL(helpurl);
             auto hmen =
                 std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(p->get_full_name(), lurl);
+            auto hment = hmen->getTitle();
             hmen->setSkin(currentSkin, bitmapStore);
-            contextMenu.addCustomItem(-1, std::move(hmen), nullptr, p->get_full_name());
+            contextMenu.addCustomItem(-1, std::move(hmen), nullptr, hment);
 
             contextMenu.addSeparator();
 
