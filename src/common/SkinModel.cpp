@@ -600,7 +600,7 @@ Connector mod_list =
 Connector filter_analysis = Connector("filter.filter_analysis.window", 300, 263, 450, 212,
                                       Components::Custom, Connector::FILTER_ANALYSIS_WINDOW);
 
-Connector oscilloscope = Connector("oscilloscope.window", 0, 0, 800, 400, Components::Custom,
+Connector oscilloscope = Connector("oscilloscope.window", 300, 263, 450, 212, Components::Custom,
                                    Connector::OSCILLOSCOPE_WINDOW);
 
 Connector ws_analysis = Connector("filter.waveshaper_analysis.window", 450, 237, 300, 160,
