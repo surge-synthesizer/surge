@@ -52,7 +52,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     right_chan_button_.onToggle = onToggle;
     right_chan_button_.setAccessible(true);
     right_chan_button_.setTitle("R CHAN");
-    right_chan_button_.setDescription("Enable input from left channel.");
+    right_chan_button_.setDescription("Enable input from right channel.");
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
 
