@@ -4090,8 +4090,11 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                                     showShortcutDescription("Alt + K", u8"\U00002325K"), true,
                                     showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
 
-    wfMenu.addItem(Surge::GUI::toOSCase("Open Oscilloscope"),
-                   [this]() { showOverlay(OSCILLOSCOPE); });
+    bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
+
+    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Open Oscilloscope"),
+                                    showShortcutDescription("Alt + O", u8"\U00002325O"), true,
+                                    showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 
     return wfMenu;
 }
@@ -6948,6 +6951,8 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::SHOW_TUNING_EDITOR, {keymap_t::Modifiers::ALT, (int)'T'});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
                               {keymap_t::Modifiers::ALT, (int)'K'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_OSCILLOSCOPE,
+                              {keymap_t::Modifiers::ALT, (int)'O'});
 
     keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t::Modifiers::SHIFT, '/'});
     keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t::Modifiers::NONE, '+'});
@@ -7148,6 +7153,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
             case Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD:
                 toggleVirtualKeyboard();
+                return true;
+            case Surge::GUI::TOGGLE_OSCILLOSCOPE:
+                toggleOverlay(SurgeGUIEditor::OSCILLOSCOPE);
                 return true;
 
             case Surge::GUI::ZOOM_TO_DEFAULT:
