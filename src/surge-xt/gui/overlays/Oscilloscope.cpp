@@ -62,6 +62,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
 {
     setAccessible(true);
     setBufferedToImage(true);
+    setOpaque(true);
 
     auto onToggle = std::bind(std::mem_fn(&Oscilloscope::toggleChannel), this);
     left_chan_button_.setStorage(storage_);
@@ -130,7 +131,6 @@ void Oscilloscope::paint(juce::Graphics &g)
                            1000.f, 2000.f, 3000.f, 4000.f, 6000.f, 8000.f, 10000.f, 20000.f})
         {
             const auto xPos = freqToX(freq, width);
-            juce::Line line{juce::Point{xPos, 0.f}, juce::Point{xPos, (float)height}};
 
             if (freq == 100.f || freq == 1000.f || freq == 10000.f)
             {
@@ -141,7 +141,7 @@ void Oscilloscope::paint(juce::Graphics &g)
                 g.setColour(secondaryLine);
             }
 
-            g.drawLine(line);
+            g.drawVerticalLine(xPos, 0, static_cast<float>(height));
 
             const bool over1000 = freq >= 1000.f;
             const auto freqString =
@@ -168,8 +168,6 @@ void Oscilloscope::paint(juce::Graphics &g)
         {
             const auto yPos = dbToY(dB, height);
 
-            juce::Line line{juce::Point{0.f, yPos}, juce::Point{(float)width, yPos}};
-
             if (dB == 0.f)
             {
                 g.setColour(primaryLine);
@@ -178,7 +176,7 @@ void Oscilloscope::paint(juce::Graphics &g)
             {
                 g.setColour(secondaryLine);
             }
-            g.drawLine(line);
+            g.drawHorizontalLine(yPos, 0, static_cast<float>(width));
 
             const auto dbString = juce::String(dB) + " dB";
             // Label will go past the end of the scopeRect.
