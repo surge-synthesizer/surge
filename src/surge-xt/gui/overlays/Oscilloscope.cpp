@@ -64,7 +64,11 @@ Oscilloscope::~Oscilloscope()
     // complete_ should come before any condition variables get signaled, to allow the data thread
     // to finish up.
     complete_.store(true, std::memory_order_seq_cst);
-    channels_off_.notify_all();
+    {
+        std::lock_guard l(channel_selection_guard_);
+        channel_selection_ = OFF;
+        channels_off_.notify_all();
+    }
     repainted_.signal();
     fft_thread_.join();
     // Data thread can perform subscriptions, so do a final unsubscribe after it's done.
