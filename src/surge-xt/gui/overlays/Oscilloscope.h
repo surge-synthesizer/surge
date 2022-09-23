@@ -72,6 +72,21 @@ class Oscilloscope : public OverlayComponent,
     // Really wish span was available.
     using FftScopeType = std::array<float, fftSize / 2>;
 
+    // Child component for handling the drawing of the background. Done as a separate child instead
+    // of in the Oscilloscope class so the display, which is repainting at 20-30 hz, doesn't mark
+    // this as dirty as it repaints. It sucks up a ton of CPU otherwise.
+    class Background : public juce::Component,
+                       public Surge::GUI::SkinConsumingComponent
+    {
+      public:
+        explicit Background();
+        void paint(juce::Graphics &g) override;
+        void updateBounds(juce::Rectangle<int> local_bounds, juce::Rectangle<int> scope_bounds);
+
+      private:
+        juce::Rectangle<int> scope_bounds_;
+    };
+
     // Child component for handling the drawing of the spectrogram.
     class Spectrogram : public juce::Component,
                         public Surge::GUI::SkinConsumingComponent
@@ -115,6 +130,7 @@ class Oscilloscope : public OverlayComponent,
     // Visual elements.
     Surge::Widgets::SelfDrawToggleButton left_chan_button_;
     Surge::Widgets::SelfDrawToggleButton right_chan_button_;
+    Background background_;
     Spectrogram spectrogram_;
 };
 

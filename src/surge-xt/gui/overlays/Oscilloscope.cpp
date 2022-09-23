@@ -61,7 +61,6 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
       spectrogram_(e, s)
 {
     setAccessible(true);
-    setBufferedToImage(true);
     setOpaque(true);
 
     auto onToggle = std::bind(std::mem_fn(&Oscilloscope::toggleChannel), this);
@@ -77,6 +76,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     right_chan_button_.setAccessible(true);
     right_chan_button_.setTitle("R CHAN");
     right_chan_button_.setDescription("Enable input from right channel.");
+    addAndMakeVisible(background_);
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
     addAndMakeVisible(spectrogram_);
@@ -101,94 +101,13 @@ Oscilloscope::~Oscilloscope()
 
 void Oscilloscope::onSkinChanged()
 {
+    background_.setSkin(skin, associatedBitmapStore);
     left_chan_button_.setSkin(skin, associatedBitmapStore);
     right_chan_button_.setSkin(skin, associatedBitmapStore);
     spectrogram_.setSkin(skin, associatedBitmapStore);
 }
 
-void Oscilloscope::paint(juce::Graphics &g)
-{
-    juce::Graphics::ScopedSaveState g1(g);
-    g.reduceClipRegion(getLocalBounds());
-    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
-
-    auto scopeRect = getScopeRect();
-    auto width = scopeRect.getWidth();
-    auto height = scopeRect.getHeight();
-    auto labelHeight = 9;
-    auto font = skin->fontManager->getLatoAtSize(7);
-    auto primaryLine = skin->getColor(Colors::MSEGEditor::Grid::Primary);
-    auto secondaryLine = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
-
-    // Horizontal grid.
-    {
-        auto gs = juce::Graphics::ScopedSaveState(g);
-        g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
-        g.setFont(font);
-
-        // Draw frequency lines.
-        for (float freq : {20.f, 30.f, 40.f, 60.f, 80.f, 100.f, 200.f, 300.f, 400.f, 600.f, 800.f,
-                           1000.f, 2000.f, 3000.f, 4000.f, 6000.f, 8000.f, 10000.f, 20000.f})
-        {
-            const auto xPos = freqToX(freq, width);
-
-            if (freq == 100.f || freq == 1000.f || freq == 10000.f)
-            {
-                g.setColour(primaryLine);
-            }
-            else
-            {
-                g.setColour(secondaryLine);
-            }
-
-            g.drawVerticalLine(xPos, 0, static_cast<float>(height));
-
-            const bool over1000 = freq >= 1000.f;
-            const auto freqString =
-                juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
-            // Label will go past the end of the scopeRect.
-            const auto labelRect = juce::Rectangle{font.getStringWidth(freqString), labelHeight}
-                                       .withBottomY(height + 13)
-                                       .withRightX((int)xPos);
-
-            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
-            g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
-        }
-    }
-
-    // Vertical grid.
-    {
-        auto gs = juce::Graphics::ScopedSaveState(g);
-        g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
-        g.setFont(font);
-
-        // Draw dB lines.
-        for (float dB :
-             {-100.f, -90.f, -80.f, -70.f, -60.f, -50.f, -40.f, -30.f, -20.f, -10.f, 0.f})
-        {
-            const auto yPos = dbToY(dB, height);
-
-            if (dB == 0.f)
-            {
-                g.setColour(primaryLine);
-            }
-            else
-            {
-                g.setColour(secondaryLine);
-            }
-            g.drawHorizontalLine(yPos, 0, static_cast<float>(width));
-
-            const auto dbString = juce::String(dB) + " dB";
-            // Label will go past the end of the scopeRect.
-            const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
-                                       .withBottomY((int)yPos)
-                                       .withRightX(width + 30); // -2
-
-            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
-            g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
-        }
-    }
-}
+void Oscilloscope::paint(juce::Graphics &g) {}
 
 void Oscilloscope::resized()
 {
@@ -197,6 +116,7 @@ void Oscilloscope::resized()
     auto w = getWidth();
     t.transformPoint(w, h);
 
+    background_.updateBounds(getLocalBounds(), getScopeRect());
     left_chan_button_.setBounds(8, 4, 15, 15);
     right_chan_button_.setBounds(23, 4, 15, 15);
     spectrogram_.setBounds(getScopeRect());
@@ -328,6 +248,101 @@ void Oscilloscope::toggleChannel()
         channel_selection_ = OFF;
     }
     channels_off_.notify_all();
+}
+
+Oscilloscope::Background::Background()
+{
+    setOpaque(true);
+}
+
+void Oscilloscope::Background::paint(juce::Graphics &g)
+{
+    juce::Graphics::ScopedSaveState g1(g);
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+
+    auto scopeRect = scope_bounds_;
+    auto width = scopeRect.getWidth();
+    auto height = scopeRect.getHeight();
+    auto labelHeight = 9;
+    auto font = skin->fontManager->getLatoAtSize(7);
+    auto primaryLine = skin->getColor(Colors::MSEGEditor::Grid::Primary);
+    auto secondaryLine = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
+
+    // Horizontal grid.
+    {
+        auto gs = juce::Graphics::ScopedSaveState(g);
+        g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
+        g.setFont(font);
+
+        // Draw frequency lines.
+        for (float freq : {20.f, 30.f, 40.f, 60.f, 80.f, 100.f, 200.f, 300.f, 400.f, 600.f, 800.f,
+                           1000.f, 2000.f, 3000.f, 4000.f, 6000.f, 8000.f, 10000.f, 20000.f})
+        {
+            const auto xPos = freqToX(freq, width);
+
+            if (freq == 100.f || freq == 1000.f || freq == 10000.f)
+            {
+                g.setColour(primaryLine);
+            }
+            else
+            {
+                g.setColour(secondaryLine);
+            }
+
+            g.drawVerticalLine(xPos, 0, static_cast<float>(height));
+
+            const bool over1000 = freq >= 1000.f;
+            const auto freqString =
+                juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
+            // Label will go past the end of the scopeRect.
+            const auto labelRect = juce::Rectangle{font.getStringWidth(freqString), labelHeight}
+                                       .withBottomY(height + 13)
+                                       .withRightX((int)xPos);
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+            g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
+        }
+    }
+
+    // Vertical grid.
+    {
+        auto gs = juce::Graphics::ScopedSaveState(g);
+        g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
+        g.setFont(font);
+
+        // Draw dB lines.
+        for (float dB :
+             {-100.f, -90.f, -80.f, -70.f, -60.f, -50.f, -40.f, -30.f, -20.f, -10.f, 0.f})
+        {
+            const auto yPos = dbToY(dB, height);
+
+            if (dB == 0.f)
+            {
+                g.setColour(primaryLine);
+            }
+            else
+            {
+                g.setColour(secondaryLine);
+            }
+            g.drawHorizontalLine(yPos, 0, static_cast<float>(width));
+
+            const auto dbString = juce::String(dB) + " dB";
+            // Label will go past the end of the scopeRect.
+            const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
+                                       .withBottomY((int)yPos)
+                                       .withRightX(width + 30); // -2
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
+            g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
+        }
+    }
+}
+
+void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
+                                            juce::Rectangle<int> scope_bounds)
+{
+    scope_bounds_ = std::move(scope_bounds);
+    setBounds(local_bounds);
 }
 
 Oscilloscope::Spectrogram::Spectrogram(SurgeGUIEditor *e, SurgeStorage *s) : editor_(e), storage_(s)
