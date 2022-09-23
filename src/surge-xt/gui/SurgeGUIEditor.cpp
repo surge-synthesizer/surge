@@ -6641,6 +6641,9 @@ void SurgeGUIEditor::showAboutScreen(int devModeGrid)
 
     // this is special - it can't make a rebuild so just add it normally
     frame->addAndMakeVisible(*aboutScreen);
+
+    auto ann = std::string("Surge XT About Screen. Version ") + Surge::Build::FullVersionStr;
+    enqueueAccessibleAnnouncement(ann);
 }
 
 void SurgeGUIEditor::hideAboutScreen()

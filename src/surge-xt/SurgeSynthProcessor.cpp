@@ -850,6 +850,8 @@ juce::AudioProcessorParameter *SurgeSynthProcessor::getBypassParameter() const
     return bypassParameter;
 }
 
+void SurgeSynthProcessor::reset() { blockPos = 0; }
+
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgeSynthProcessor(); }

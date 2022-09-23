@@ -352,6 +352,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     std::string paramClumpName(int clumpid);
     juce::MidiKeyboardState midiKeyboardState;
+    void reset() override;
 
     bool getPluginHasMainInput() const override { return false; }
 
