@@ -171,7 +171,10 @@ void Oscilloscope::paint(juce::Graphics &g)
         auto path = juce::Path();
         bool started = false;
         float binHz = storage_->samplerate / static_cast<float>(fftSize);
+        float zeroPoint = dbToY(-100, height);
         std::lock_guard<std::mutex> l(scope_data_guard_);
+        // Start path.
+        path.startNewSubPath(freqToX(lowFreq, width), zeroPoint);
         for (int i = 0; i < fftSize / 2; i++)
         {
             float hz = binHz * static_cast<float>(i);
@@ -190,14 +193,23 @@ void Oscilloscope::paint(juce::Graphics &g)
                 }
                 else
                 {
-                    path.startNewSubPath(x, y);
+                    path.startNewSubPath(x, zeroPoint);
+                    path.lineTo(x, y);
                     started = true;
                 }
             }
             else
             {
+                path.lineTo(x, zeroPoint);
+                path.closeSubPath();
                 started = false;
             }
+        }
+        // End path.
+        if (started)
+        {
+            path.lineTo(freqToX(highFreq, width), zeroPoint);
+            path.closeSubPath();
         }
         g.setColour(curveColor);
         g.fillPath(path);
