@@ -40,6 +40,7 @@
 #include "overlays/LuaEditors.h"
 #include "overlays/ModulationEditor.h"
 #include "overlays/TypeinParamEditor.h"
+#include "overlays/Oscilloscope.h"
 #include "overlays/OverlayWrapper.h"
 
 #include "widgets/EffectLabel.h"
@@ -1151,6 +1152,19 @@ void SurgeGUIEditor::idle()
     if (oscWaveform)
     {
         oscWaveform->repaintBasedOnOscMuteState();
+    }
+
+    // Force the oscilloscope, if open, to re-render for nice smooth movement.
+    auto scope = getOverlayIfOpenAs<Surge::Overlays::Oscilloscope>(OSCILLOSCOPE);
+    if (scope)
+    {
+        // Only update every other frame.
+        if (lastOverlayRefresh)
+        {
+            scope->updateDrawing();
+            lastOverlayRefresh = 0;
+        }
+        lastOverlayRefresh++;
     }
 
     if (scanJuceSkinComponents)
