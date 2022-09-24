@@ -197,7 +197,7 @@ void Oscilloscope::pullData()
         {
             // Sleep for long enough to accumulate about 4096 samples.
             std::this_thread::sleep_for(std::chrono::duration<float, std::chrono::seconds::period>(
-                2048.f / storage_->samplerate));
+                fftSize / 2.f / storage_->samplerate));
             continue;
         }
 
@@ -347,10 +347,9 @@ void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
 }
 
 Oscilloscope::Spectrogram::Spectrogram(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s), last_updated_(std::chrono::steady_clock::now())
+    : editor_(e), storage_(s), last_updated_time_(std::chrono::steady_clock::now())
 {
-    std::fill(maxes_.begin(), maxes_.end(), 0);
-    std::fill(new_scope_data_.begin(), new_scope_data_.end(), 0);
+    std::fill(new_scope_data_.begin(), new_scope_data_.end(), dbMin);
 }
 
 void Oscilloscope::Spectrogram::paint(juce::Graphics &g)
@@ -366,30 +365,27 @@ void Oscilloscope::Spectrogram::paint(juce::Graphics &g)
     float binHz = storage_->samplerate / static_cast<float>(fftSize);
     float zeroPoint = dbToY(dbMin, height);
     float maxPoint = dbToY(dbMax, height);
+    auto now = std::chrono::steady_clock::now();
 
     // Start path.
     path.startNewSubPath(freqToX(lowFreq, width), zeroPoint);
     {
         std::lock_guard l(data_lock_);
+        mtbs_ = std::chrono::duration<float>(1.f / binHz);
 
         for (int i = 0; i < fftSize / 2; i++)
         {
-            float hz = binHz * static_cast<float>(i);
+            const float hz = binHz * static_cast<float>(i);
             if (hz < lowFreq || hz > highFreq)
             {
                 continue;
             }
 
-            float x = freqToX(hz, width);
-            // y data comes in as a value from 0 - 1, representing dbMin to dbMax. We need to
-            // transform that into a value from zeroPoint to maxPoint, which represent height.
-            float y = dbToY(juce::jmap(maxes_[i], 0.f, 1.f, dbMin, dbMax), height);
-            if (std::abs(zeroPoint - y) < .1f)
-            {
-                maxes_[i] = 0;
-                y = zeroPoint;
-            }
-            // float y = dbToY(maxes_[i], height);
+            const float x = freqToX(hz, width);
+            const float y0 = displayed_data_[i];
+            const float y1 = dbToY(new_scope_data_[i], height);
+            const float y = interpolate(y0, y1, now);
+            displayed_data_[i] = y;
             if (y > 0)
             {
                 if (started)
@@ -431,40 +427,38 @@ void Oscilloscope::Spectrogram::repaintIfDirty()
     }
 }
 
+void Oscilloscope::Spectrogram::resized()
+{
+    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
+    auto height = scopeRect.getHeight();
+    std::fill(displayed_data_.begin(), displayed_data_.end(), dbToY(-100, height));
+}
+
 void Oscilloscope::Spectrogram::tick()
 {
     std::lock_guard l(data_lock_);
-    // Don't like this. Maybe rescale to 0-100 and multiply.
-    // Current plan: remap input/maxes from [-100, 0] to [0, 1] (will represent y position).
-    // Then apply decay (0.99 ^ time) to maxes.
-    // Then the drawing will map [0, 1] to the y position (remember y grows downward).
-    // Have some floor() function on it or something so the ys don't infinitely decay.
-    std::chrono::duration<double> seconds = (std::chrono::steady_clock::now() - last_updated_);
-    #if 0
-    const float decay = std::pow(0.99f, seconds.count() * 60.f);
-    #else
-    const float decay = 0.79f;
-    #endif
-    std::for_each(maxes_.begin(), maxes_.end(), [&decay](float &x) { x *= decay; });
-    std::transform(maxes_.begin(), maxes_.end(), new_scope_data_.begin(), maxes_.begin(),
-                   [](const float &l, const float &r) { return (l > r) ? l : r; });
+    // std::for_each(maxes_.begin(), maxes_.end(), [&decay](float &x) { x *= decay; });
+    // std::transform(maxes_.begin(), maxes_.end(), new_scope_data_.begin(), maxes_.begin(),
+    //                [](const float &l, const float &r) { return (l > r) ? l : r; });
     dirty_ = true;
 }
 
 void Oscilloscope::Spectrogram::updateScopeData(FftScopeType::iterator begin,
                                                 FftScopeType::iterator end)
 {
-    // Data comes in as dB (from dbMin to dbMax). We want to map that into a value from 0-1, which
-    // allows us to apply a decay multiple to it.
-    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
-    auto height = scopeRect.getHeight();
-    auto transformer = [height](const float &mag) {
-        return juce::jmap(mag, dbMin, dbMax, 0.f, 1.f);
-    };
+    // Data comes in as dB (from dbMin to dbMax).
     std::lock_guard l(data_lock_);
-    std::transform(begin, end, new_scope_data_.begin(), transformer);
-    last_updated_ = std::chrono::steady_clock::now();
+    std::move(begin, end, new_scope_data_.begin());
+    last_updated_time_ = std::chrono::steady_clock::now();
     dirty_ = true;
+}
+
+float Oscilloscope::Spectrogram::interpolate(
+    const float y0, const float y1, std::chrono::time_point<std::chrono::steady_clock> t) const
+{
+    std::chrono::duration<float> distance = (t - last_updated_time_);
+    float mu = juce::jlimit(0.f, 1.f, distance / mtbs_);
+    return y0 * (1 - mu) + y1 * mu;
 }
 
 } // namespace Overlays

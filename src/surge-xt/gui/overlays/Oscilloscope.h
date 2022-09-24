@@ -94,19 +94,21 @@ class Oscilloscope : public OverlayComponent,
 
         void paint(juce::Graphics &g) override;
         void repaintIfDirty();
+        void resized() override;
         void tick();
         void updateScopeData(FftScopeType::iterator begin, FftScopeType::iterator end);
 
       private:
-        // Want it to fully decay from 0dB to -100dB over about 4 seconds. We're painting at 20hz.
-        static constexpr float decayNum = (100.f / 4.f) * (20.f / 60.f);
+        float interpolate(const float y0, const float y1,
+                          std::chrono::time_point<std::chrono::steady_clock> t) const;
+
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
+        std::chrono::duration<float> mtbs_;
+        std::chrono::time_point<std::chrono::steady_clock> last_updated_time_;
         std::mutex data_lock_;
-        //FftScopeType current_scope_data_;
         FftScopeType new_scope_data_;
-        FftScopeType maxes_;
-        std::chrono::time_point<std::chrono::steady_clock> last_updated_;
+        FftScopeType displayed_data_;
         bool dirty_;
     };
 
