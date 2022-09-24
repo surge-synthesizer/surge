@@ -43,8 +43,8 @@ class Oscilloscope : public OverlayComponent,
                      public Surge::GUI::Hoverable
 {
   public:
-    static constexpr int fftOrder = 13;
-    static constexpr int fftSize = 8192;
+    static constexpr int fftOrder = 12;
+    static constexpr int fftSize = 4096;
     static constexpr float lowFreq = 10;
     static constexpr float highFreq = 24000;
     static constexpr float dbMin = -100;
@@ -94,14 +94,19 @@ class Oscilloscope : public OverlayComponent,
 
         void paint(juce::Graphics &g) override;
         void repaintIfDirty();
+        void tick();
         void updateScopeData(FftScopeType::iterator begin, FftScopeType::iterator end);
 
       private:
+        // Want it to fully decay from 0dB to -100dB over about 4 seconds. We're painting at 20hz.
+        static constexpr float decayNum = (100.f / 4.f) * (20.f / 60.f);
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
         std::mutex data_lock_;
-        std::vector<float> current_scope_data_;
-        std::vector<float> new_scope_data_;
+        //FftScopeType current_scope_data_;
+        FftScopeType new_scope_data_;
+        FftScopeType maxes_;
+        std::chrono::time_point<std::chrono::steady_clock> last_updated_;
         bool dirty_;
     };
 

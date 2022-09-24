@@ -122,7 +122,11 @@ void Oscilloscope::resized()
     spectrogram_.setBounds(getScopeRect());
 }
 
-void Oscilloscope::updateDrawing() { spectrogram_.repaintIfDirty(); }
+void Oscilloscope::updateDrawing()
+{
+    spectrogram_.tick();
+    spectrogram_.repaintIfDirty();
+}
 
 void Oscilloscope::visibilityChanged()
 {
@@ -193,7 +197,7 @@ void Oscilloscope::pullData()
         {
             // Sleep for long enough to accumulate about 4096 samples.
             std::this_thread::sleep_for(std::chrono::duration<float, std::chrono::seconds::period>(
-                4096.f / storage_->samplerate));
+                2048.f / storage_->samplerate));
             continue;
         }
 
@@ -342,10 +346,11 @@ void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
     setBounds(local_bounds);
 }
 
-Oscilloscope::Spectrogram::Spectrogram(SurgeGUIEditor *e, SurgeStorage *s) : editor_(e), storage_(s)
+Oscilloscope::Spectrogram::Spectrogram(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s), last_updated_(std::chrono::steady_clock::now())
 {
-    current_scope_data_.resize(fftSize / 2);
-    new_scope_data_.resize(fftSize / 2);
+    std::fill(maxes_.begin(), maxes_.end(), 0);
+    std::fill(new_scope_data_.begin(), new_scope_data_.end(), 0);
 }
 
 void Oscilloscope::Spectrogram::paint(juce::Graphics &g)
@@ -359,7 +364,8 @@ void Oscilloscope::Spectrogram::paint(juce::Graphics &g)
     auto path = juce::Path();
     bool started = false;
     float binHz = storage_->samplerate / static_cast<float>(fftSize);
-    float zeroPoint = dbToY(-100, height);
+    float zeroPoint = dbToY(dbMin, height);
+    float maxPoint = dbToY(dbMax, height);
 
     // Start path.
     path.startNewSubPath(freqToX(lowFreq, width), zeroPoint);
@@ -375,7 +381,15 @@ void Oscilloscope::Spectrogram::paint(juce::Graphics &g)
             }
 
             float x = freqToX(hz, width);
-            float y = dbToY(new_scope_data_[i], height);
+            // y data comes in as a value from 0 - 1, representing dbMin to dbMax. We need to
+            // transform that into a value from zeroPoint to maxPoint, which represent height.
+            float y = dbToY(juce::jmap(maxes_[i], 0.f, 1.f, dbMin, dbMax), height);
+            if (std::abs(zeroPoint - y) < .1f)
+            {
+                maxes_[i] = 0;
+                y = zeroPoint;
+            }
+            // float y = dbToY(maxes_[i], height);
             if (y > 0)
             {
                 if (started)
@@ -417,12 +431,39 @@ void Oscilloscope::Spectrogram::repaintIfDirty()
     }
 }
 
+void Oscilloscope::Spectrogram::tick()
+{
+    std::lock_guard l(data_lock_);
+    // Don't like this. Maybe rescale to 0-100 and multiply.
+    // Current plan: remap input/maxes from [-100, 0] to [0, 1] (will represent y position).
+    // Then apply decay (0.99 ^ time) to maxes.
+    // Then the drawing will map [0, 1] to the y position (remember y grows downward).
+    // Have some floor() function on it or something so the ys don't infinitely decay.
+    std::chrono::duration<double> seconds = (std::chrono::steady_clock::now() - last_updated_);
+    #if 0
+    const float decay = std::pow(0.99f, seconds.count() * 60.f);
+    #else
+    const float decay = 0.79f;
+    #endif
+    std::for_each(maxes_.begin(), maxes_.end(), [&decay](float &x) { x *= decay; });
+    std::transform(maxes_.begin(), maxes_.end(), new_scope_data_.begin(), maxes_.begin(),
+                   [](const float &l, const float &r) { return (l > r) ? l : r; });
+    dirty_ = true;
+}
+
 void Oscilloscope::Spectrogram::updateScopeData(FftScopeType::iterator begin,
                                                 FftScopeType::iterator end)
 {
+    // Data comes in as dB (from dbMin to dbMax). We want to map that into a value from 0-1, which
+    // allows us to apply a decay multiple to it.
+    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
+    auto height = scopeRect.getHeight();
+    auto transformer = [height](const float &mag) {
+        return juce::jmap(mag, dbMin, dbMax, 0.f, 1.f);
+    };
     std::lock_guard l(data_lock_);
-    std::move(new_scope_data_.begin(), new_scope_data_.end(), current_scope_data_.begin());
-    std::move(begin, end, new_scope_data_.begin());
+    std::transform(begin, end, new_scope_data_.begin(), transformer);
+    last_updated_ = std::chrono::steady_clock::now();
     dirty_ = true;
 }
 
