@@ -75,8 +75,7 @@ class Oscilloscope : public OverlayComponent,
     // Child component for handling the drawing of the background. Done as a separate child instead
     // of in the Oscilloscope class so the display, which is repainting at 20-30 hz, doesn't mark
     // this as dirty as it repaints. It sucks up a ton of CPU otherwise.
-    class Background : public juce::Component,
-                       public Surge::GUI::SkinConsumingComponent
+    class Background : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
         explicit Background();
@@ -88,8 +87,7 @@ class Oscilloscope : public OverlayComponent,
     };
 
     // Child component for handling the drawing of the spectrogram.
-    class Spectrogram : public juce::Component,
-                        public Surge::GUI::SkinConsumingComponent
+    class Spectrogram : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
         Spectrogram(SurgeGUIEditor *e, SurgeStorage *s);

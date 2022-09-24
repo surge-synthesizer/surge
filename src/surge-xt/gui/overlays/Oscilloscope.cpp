@@ -250,10 +250,7 @@ void Oscilloscope::toggleChannel()
     channels_off_.notify_all();
 }
 
-Oscilloscope::Background::Background()
-{
-    setOpaque(true);
-}
+Oscilloscope::Background::Background() { setOpaque(true); }
 
 void Oscilloscope::Background::paint(juce::Graphics &g)
 {
