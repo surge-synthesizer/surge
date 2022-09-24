@@ -179,6 +179,9 @@ std::string defaultKeyToString(DefaultKey k)
     case FilterAnalysisOverlayLocation:
         r = "filterAnalysisOverlayLocation";
         break;
+    case OscilloscopeOverlayLocation:
+        r = "oscilloscopeOverlayLocation";
+        break;
 
     case TuningOverlayLocationTearOut:
         r = "tuningOverlayLocationTearOut";
@@ -197,6 +200,9 @@ std::string defaultKeyToString(DefaultKey k)
         break;
     case FilterAnalysisOverlayLocationTearOut:
         r = "filterAnalysisOverlayLocationTearOut";
+        break;
+    case OscilloscopeOverlayLocationTearOut:
+        r = "oscilloscopeOverlayLocationTearOut";
         break;
 
     case TuningOverlaySizeTearOut:
@@ -217,6 +223,9 @@ std::string defaultKeyToString(DefaultKey k)
     case FilterAnalysisOverlaySizeTearOut:
         r = "filterAnalysisOverlaySizeTearOut";
         break;
+    case OscilloscopeOverlaySizeTearOut:
+        r = "oscilloscopeOverlaySizeTearOut";
+        break;
 
     case TuningOverlayTearOutAlwaysOnTop:
         r = "tuningOverlayTearOutAlwaysOnTop";
@@ -235,6 +244,9 @@ std::string defaultKeyToString(DefaultKey k)
         break;
     case FilterAnalysisOverlayTearOutAlwaysOnTop:
         r = "filterAnalysisOverlayTearOutAlwaysOnTop";
+        break;
+    case OscilloscopeOverlayTearOutAlwaysOnTop:
+        r = "oscilloscopeOverlayTearOutAlwaysOnTop";
         break;
 
     case ModListValueDisplay:

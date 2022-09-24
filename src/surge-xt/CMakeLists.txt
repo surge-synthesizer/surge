@@ -113,6 +113,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/MiniEdit.h
   gui/overlays/ModulationEditor.cpp
   gui/overlays/ModulationEditor.h
+  gui/overlays/Oscilloscope.cpp
+  gui/overlays/Oscilloscope.h
   gui/overlays/OverlayWrapper.cpp
   gui/overlays/OverlayWrapper.h
   gui/overlays/PatchDBViewer.cpp

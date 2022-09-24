@@ -22,6 +22,7 @@
 #include "overlays/TuningOverlays.h"
 #include "overlays/WaveShaperAnalysis.h"
 #include "overlays/FilterAnalysis.h"
+#include "overlays/Oscilloscope.h"
 #include "overlays/OverlayWrapper.h"
 #include "overlays/KeyBindingsOverlay.h"
 #include "widgets/MainFrame.h"
@@ -344,6 +345,24 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         fa->setMinimumSize(300, 200);
 
         return fa;
+    }
+
+    case OSCILLOSCOPE:
+    {
+        auto scope = std::make_unique<Surge::Overlays::Oscilloscope>(this, &(this->synth->storage));
+
+        locationGet(scope.get(),
+                    Surge::Skin::Connector::NonParameterConnection::OSCILLOSCOPE_WINDOW,
+                    Surge::Storage::OscilloscopeOverlayLocation);
+
+        scope->setSkin(currentSkin, bitmapStore);
+        scope->setEnclosingParentTitle("Oscilloscope");
+        scope->setCanTearOut({true, Surge::Storage::OscilloscopeOverlayLocationTearOut,
+                              Surge::Storage::OscilloscopeOverlayTearOutAlwaysOnTop});
+        scope->setCanTearOutResize({true, Surge::Storage::OscilloscopeOverlaySizeTearOut});
+        scope->setMinimumSize(800, 400);
+
+        return scope;
     }
 
     case MODULATION_EDITOR:
