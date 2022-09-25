@@ -63,6 +63,7 @@ struct FxUserPreset
     std::unordered_map<int, std::vector<Preset>> getPresetsByType();
     std::vector<Preset> getPresetsForSingleType(int type_id);
     bool hasPresetsForSingleType(int type_id);
+    bool readFromXMLSnapshot(Preset &p, TiXmlElement *);
 
     void saveFxIn(SurgeStorage *s, FxStorage *fxdata, const std::string &fn);
 
