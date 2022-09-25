@@ -67,12 +67,16 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     left_chan_button_.setStorage(storage_);
     left_chan_button_.setToggleState(true);
     left_chan_button_.onToggle = onToggle;
+    left_chan_button_.setOpaque(true);
+    left_chan_button_.setBufferedToImage(true);
     left_chan_button_.setAccessible(true);
     left_chan_button_.setTitle("L CHAN");
     left_chan_button_.setDescription("Enable input from left channel.");
     right_chan_button_.setStorage(storage_);
     right_chan_button_.setToggleState(true);
     right_chan_button_.onToggle = onToggle;
+    right_chan_button_.setOpaque(true);
+    right_chan_button_.setBufferedToImage(true);
     right_chan_button_.setAccessible(true);
     right_chan_button_.setTitle("R CHAN");
     right_chan_button_.setDescription("Enable input from right channel.");
@@ -124,8 +128,12 @@ void Oscilloscope::resized()
 
 void Oscilloscope::updateDrawing()
 {
-    spectrogram_.tick();
-    spectrogram_.repaintIfDirty();
+    std::lock_guard l(channel_selection_guard_);
+    if (channel_selection_ != OFF)
+    {
+        spectrogram_.tick();
+        spectrogram_.repaintIfDirty();
+    }
 }
 
 void Oscilloscope::visibilityChanged()
@@ -220,7 +228,7 @@ void Oscilloscope::pullData()
             std::move(dataL.begin(), dataL.begin() + mv, fft_data_.begin() + pos_);
             calculateScopeData();
             spectrogram_.updateScopeData(scope_data_.begin(), scope_data_.end());
-            juce::MessageManager::getInstance()->callAsync([this]() { spectrogram_.repaint(); });
+            //juce::MessageManager::getInstance()->callAsync([this]() { spectrogram_.repaint(); });
             std::move(dataL.begin() + mv, dataL.end(), fft_data_.begin());
             pos_ = leftovers;
         }
