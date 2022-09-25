@@ -360,7 +360,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         scope->setCanTearOut({true, Surge::Storage::OscilloscopeOverlayLocationTearOut,
                               Surge::Storage::OscilloscopeOverlayTearOutAlwaysOnTop});
         scope->setCanTearOutResize({true, Surge::Storage::OscilloscopeOverlaySizeTearOut});
-        scope->setMinimumSize(800, 400);
+        scope->setMinimumSize(300, 200);
 
         return scope;
     }

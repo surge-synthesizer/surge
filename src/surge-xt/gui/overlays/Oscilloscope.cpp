@@ -52,7 +52,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     right_chan_button_.onToggle = onToggle;
     right_chan_button_.setAccessible(true);
     right_chan_button_.setTitle("R CHAN");
-    right_chan_button_.setDescription("Enable input from left channel.");
+    right_chan_button_.setDescription("Enable input from right channel.");
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
 
@@ -64,7 +64,11 @@ Oscilloscope::~Oscilloscope()
     // complete_ should come before any condition variables get signaled, to allow the data thread
     // to finish up.
     complete_.store(true, std::memory_order_seq_cst);
-    channels_off_.notify_all();
+    {
+        std::lock_guard l(channel_selection_guard_);
+        channel_selection_ = OFF;
+        channels_off_.notify_all();
+    }
     repainted_.signal();
     fft_thread_.join();
     // Data thread can perform subscriptions, so do a final unsubscribe after it's done.
@@ -171,7 +175,10 @@ void Oscilloscope::paint(juce::Graphics &g)
         auto path = juce::Path();
         bool started = false;
         float binHz = storage_->samplerate / static_cast<float>(fftSize);
+        float zeroPoint = dbToY(-100, height);
         std::lock_guard<std::mutex> l(scope_data_guard_);
+        // Start path.
+        path.startNewSubPath(freqToX(lowFreq, width), zeroPoint);
         for (int i = 0; i < fftSize / 2; i++)
         {
             float hz = binHz * static_cast<float>(i);
@@ -190,14 +197,23 @@ void Oscilloscope::paint(juce::Graphics &g)
                 }
                 else
                 {
-                    path.startNewSubPath(x, y);
+                    path.startNewSubPath(x, zeroPoint);
+                    path.lineTo(x, y);
                     started = true;
                 }
             }
             else
             {
+                path.lineTo(x, zeroPoint);
+                path.closeSubPath();
                 started = false;
             }
+        }
+        // End path.
+        if (started)
+        {
+            path.lineTo(freqToX(highFreq, width), zeroPoint);
+            path.closeSubPath();
         }
         g.setColour(curveColor);
         g.fillPath(path);
