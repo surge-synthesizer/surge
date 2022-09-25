@@ -106,15 +106,9 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
             if (!s)
                 goto badPreset;
 
-            if (!s->Attribute("name"))
-                goto badPreset;
-
-            preset.name = s->Attribute("name");
-
             if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
                 goto badPreset;
 
-            preset.type = t;
             preset.isFactory = f.second;
 
             fs::path rpath;
@@ -136,43 +130,8 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
                 startCatPath++;
             }
 
-            for (int i = 0; i < n_fx_params; ++i)
-            {
-                double fl;
-                std::string p = "p";
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i)).c_str(), &fl) == TIXML_SUCCESS)
-                {
-                    preset.p[i] = fl;
-                }
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_temposync").c_str(), &fl) ==
-                        TIXML_SUCCESS &&
-                    fl != 0)
-                {
-                    preset.ts[i] = true;
-                }
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_extend_range").c_str(),
-                                            &fl) == TIXML_SUCCESS &&
-                    fl != 0)
-                {
-                    preset.er[i] = true;
-                }
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deactivated").c_str(),
-                                            &fl) == TIXML_SUCCESS &&
-                    fl != 0)
-                {
-                    preset.da[i] = true;
-                }
-
-                if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deform_type").c_str(),
-                                            &fl) == TIXML_SUCCESS)
-                {
-                    preset.dt[i] = (int)fl;
-                }
-            }
+            if (!readFromXMLSnapshot(preset, s))
+                goto badPreset;
 
             if (scannedPresets.find(preset.type) == scannedPresets.end())
             {
@@ -208,6 +167,59 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
             }
         });
     }
+}
+
+bool FxUserPreset::readFromXMLSnapshot(Preset &preset, TiXmlElement *s)
+{
+    if (!s->Attribute("name"))
+        return false;
+
+    preset.name = s->Attribute("name");
+
+    int t;
+    if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
+        return false;
+
+    preset.type = t;
+
+    for (int i = 0; i < n_fx_params; ++i)
+    {
+        double fl;
+        std::string p = "p";
+
+        if (s->QueryDoubleAttribute((p + std::to_string(i)).c_str(), &fl) == TIXML_SUCCESS)
+        {
+            preset.p[i] = fl;
+        }
+
+        if (s->QueryDoubleAttribute((p + std::to_string(i) + "_temposync").c_str(), &fl) ==
+                TIXML_SUCCESS &&
+            fl != 0)
+        {
+            preset.ts[i] = true;
+        }
+
+        if (s->QueryDoubleAttribute((p + std::to_string(i) + "_extend_range").c_str(), &fl) ==
+                TIXML_SUCCESS &&
+            fl != 0)
+        {
+            preset.er[i] = true;
+        }
+
+        if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deactivated").c_str(), &fl) ==
+                TIXML_SUCCESS &&
+            fl != 0)
+        {
+            preset.da[i] = true;
+        }
+
+        if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deform_type").c_str(), &fl) ==
+            TIXML_SUCCESS)
+        {
+            preset.dt[i] = (int)fl;
+        }
+    }
+    return true;
 }
 
 std::vector<FxUserPreset::Preset> FxUserPreset::getPresetsForSingleType(int id)
