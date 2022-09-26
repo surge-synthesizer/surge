@@ -72,6 +72,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     left_chan_button_.setAccessible(true);
     left_chan_button_.setTitle("L CHAN");
     left_chan_button_.setDescription("Enable input from left channel.");
+    left_chan_button_.setWantsKeyboardFocus(false);
     right_chan_button_.setStorage(storage_);
     right_chan_button_.setToggleState(true);
     right_chan_button_.onToggle = onToggle;
@@ -80,6 +81,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     right_chan_button_.setAccessible(true);
     right_chan_button_.setTitle("R CHAN");
     right_chan_button_.setDescription("Enable input from right channel.");
+    right_chan_button_.setWantsKeyboardFocus(false);
     addAndMakeVisible(background_);
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
