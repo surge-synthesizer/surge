@@ -39,6 +39,7 @@ OverlayWrapper::OverlayWrapper()
     addChildComponent(*tearOutButton);
 
     setAccessible(true);
+    setOpaque(true);
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 }
 
