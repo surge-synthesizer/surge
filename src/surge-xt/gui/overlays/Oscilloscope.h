@@ -43,8 +43,8 @@ class Oscilloscope : public OverlayComponent,
                      public Surge::GUI::Hoverable
 {
   public:
-    static constexpr int fftOrder = 12;
-    static constexpr int fftSize = 4096;
+    static constexpr int fftOrder = 13;
+    static constexpr int fftSize = 8192;
     static constexpr float lowFreq = 10;
     static constexpr float highFreq = 24000;
     static constexpr float dbMin = -100;
@@ -93,9 +93,7 @@ class Oscilloscope : public OverlayComponent,
         Spectrogram(SurgeGUIEditor *e, SurgeStorage *s);
 
         void paint(juce::Graphics &g) override;
-        void repaintIfDirty();
         void resized() override;
-        void tick();
         void updateScopeData(FftScopeType::iterator begin, FftScopeType::iterator end);
 
       private:
@@ -109,8 +107,10 @@ class Oscilloscope : public OverlayComponent,
         std::mutex data_lock_;
         FftScopeType new_scope_data_;
         FftScopeType displayed_data_;
-        bool dirty_;
     };
+
+    static float freqToX(float freq, int width);
+    static float dbToY(float db, int height);
 
     void calculateScopeData();
     juce::Rectangle<int> getScopeRect();

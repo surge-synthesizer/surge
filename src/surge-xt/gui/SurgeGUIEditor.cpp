@@ -1158,17 +1158,7 @@ void SurgeGUIEditor::idle()
     auto scope = getOverlayIfOpenAs<Surge::Overlays::Oscilloscope>(OSCILLOSCOPE);
     if (scope)
     {
-#if 0
-        // Only update every other frame.
-        if (!lastOverlayRefresh)
-        {
-            scope->updateDrawing();
-            lastOverlayRefresh = 1;
-        }
-        lastOverlayRefresh--;
-#else
         scope->updateDrawing();
-#endif
     }
 
     if (scanJuceSkinComponents)

@@ -29,26 +29,14 @@ namespace Surge
 namespace Overlays
 {
 
-namespace
+float Oscilloscope::freqToX(float freq, int width)
 {
-float freqToX(float freq, int width)
-{
-    static const float ratio = std::log(Oscilloscope::highFreq / Oscilloscope::lowFreq);
-    float xNorm = std::log(freq / Oscilloscope::lowFreq) / ratio;
+    static const float ratio = std::log(highFreq / lowFreq);
+    float xNorm = std::log(freq / lowFreq) / ratio;
     return xNorm * (float)width;
 }
 
-float xToFreq(float x, int width)
-{
-    static const float ratio = std::log(Oscilloscope::highFreq / Oscilloscope::lowFreq);
-    return Oscilloscope::lowFreq * std::exp(ratio * x / width);
-}
-
-float dbToY(float db, int height)
-{
-    return (float)height * (Oscilloscope::dbMax - db) / Oscilloscope::dbRange;
-}
-} // namespace
+float Oscilloscope::dbToY(float db, int height) { return (float)height * (dbMax - db) / dbRange; }
 
 // TODO:
 // (1) Give configuration to the user to choose FFT params (namely, desired Hz resolution).
@@ -133,8 +121,7 @@ void Oscilloscope::updateDrawing()
     std::lock_guard l(channel_selection_guard_);
     if (channel_selection_ != OFF)
     {
-        spectrogram_.tick();
-        spectrogram_.repaintIfDirty();
+        spectrogram_.repaint();
     }
 }
 
@@ -230,7 +217,6 @@ void Oscilloscope::pullData()
             std::move(dataL.begin(), dataL.begin() + mv, fft_data_.begin() + pos_);
             calculateScopeData();
             spectrogram_.updateScopeData(scope_data_.begin(), scope_data_.end());
-            //juce::MessageManager::getInstance()->callAsync([this]() { spectrogram_.repaint(); });
             std::move(dataL.begin() + mv, dataL.end(), fft_data_.begin());
             pos_ = leftovers;
         }
@@ -427,30 +413,11 @@ void Oscilloscope::Spectrogram::paint(juce::Graphics &g)
     g.fillPath(path);
 }
 
-void Oscilloscope::Spectrogram::repaintIfDirty()
-{
-    std::lock_guard l(data_lock_);
-    if (dirty_)
-    {
-        dirty_ = false;
-        repaint();
-    }
-}
-
 void Oscilloscope::Spectrogram::resized()
 {
     auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
     auto height = scopeRect.getHeight();
     std::fill(displayed_data_.begin(), displayed_data_.end(), dbToY(-100, height));
-}
-
-void Oscilloscope::Spectrogram::tick()
-{
-    std::lock_guard l(data_lock_);
-    // std::for_each(maxes_.begin(), maxes_.end(), [&decay](float &x) { x *= decay; });
-    // std::transform(maxes_.begin(), maxes_.end(), new_scope_data_.begin(), maxes_.begin(),
-    //                [](const float &l, const float &r) { return (l > r) ? l : r; });
-    dirty_ = true;
 }
 
 void Oscilloscope::Spectrogram::updateScopeData(FftScopeType::iterator begin,
@@ -460,7 +427,6 @@ void Oscilloscope::Spectrogram::updateScopeData(FftScopeType::iterator begin,
     std::lock_guard l(data_lock_);
     std::move(begin, end, new_scope_data_.begin());
     last_updated_time_ = std::chrono::steady_clock::now();
-    dirty_ = true;
 }
 
 float Oscilloscope::Spectrogram::interpolate(
