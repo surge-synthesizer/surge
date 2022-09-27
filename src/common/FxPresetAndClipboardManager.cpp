@@ -109,6 +109,7 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
             if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
                 goto badPreset;
 
+            preset.type = t;
             preset.isFactory = f.second;
 
             fs::path rpath;
@@ -177,10 +178,11 @@ bool FxUserPreset::readFromXMLSnapshot(Preset &preset, TiXmlElement *s)
     preset.name = s->Attribute("name");
 
     int t;
-    if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
-        return false;
-
-    preset.type = t;
+    if (s->QueryIntAttribute("type", &t) == TIXML_SUCCESS)
+    {
+        // The individual entry overrides the type. Thats OK!
+        preset.type = t;
+    }
 
     for (int i = 0; i < n_fx_params; ++i)
     {
