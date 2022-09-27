@@ -603,7 +603,11 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     case CLAP_EVENT_NOTE_ON:
     {
         auto nevt = reinterpret_cast<const clap_event_note *>(evt);
-        surge->playNote(nevt->channel, nevt->key, 127 * nevt->velocity, 0, nevt->note_id);
+
+        if (nevt->velocity != 0)
+            surge->playNote(nevt->channel, nevt->key, 127 * nevt->velocity, 0, nevt->note_id);
+        else
+            surge->releaseNote(nevt->channel, nevt->key, 127 * nevt->velocity, nevt->note_id);
     }
     break;
     case CLAP_EVENT_NOTE_CHOKE:
@@ -705,7 +709,10 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessageMetadata &it)
     if (m.isNoteOn())
     {
         // no note ids coming from juce- or ui- land
-        surge->playNote(ch, m.getNoteNumber(), m.getVelocity(), 0, -1);
+        if (m.getVelocity() != 0)
+            surge->playNote(ch, m.getNoteNumber(), m.getVelocity(), 0, -1);
+        else
+            surge->releaseNote(ch, m.getNoteNumber(), m.getVelocity(), -1);
     }
     else if (m.isNoteOff())
     {
@@ -842,6 +849,8 @@ juce::AudioProcessorParameter *SurgeSynthProcessor::getBypassParameter() const
 {
     return bypassParameter;
 }
+
+void SurgeSynthProcessor::reset() { blockPos = 0; }
 
 //==============================================================================
 // This creates new instances of the plugin..

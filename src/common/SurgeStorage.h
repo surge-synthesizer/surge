@@ -21,6 +21,7 @@
 
 #include "tinyxml/tinyxml.h"
 #include "filesystem/import.h"
+#include "sst/cpputils.h"
 
 #include <vector>
 #include <memory>
@@ -1043,6 +1044,9 @@ class alignas(16) SurgeStorage
     float samplerate{0}, samplerate_inv{1};
     double dsamplerate{0}, dsamplerate_inv{1};
     double dsamplerate_os{0}, dsamplerate_os_inv{1};
+    // Ring buffer that holds the audio output, used for the oscilloscope. Will hold a bit under 1/4
+    // second of data, assuming the sample rate is 48k.
+    sst::cpputils::StereoRingBuffer<float, 8192> audioOut;
 
     SurgeStorage(std::string suppliedDataPath = "");
     static std::string skipPatchLoadDataPathSentinel;

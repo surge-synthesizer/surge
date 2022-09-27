@@ -1896,7 +1896,7 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
         ** I thought it came from a roli. But I since changed the MPE state management so
         ** with 1.6.5 do this:
         */
-#if 0      
+#if 0
        // This is the invalid message which the ROLI sends. Rather than have the Roli not work
        mpeEnabled = true;
        mpeVoices = msbValue & 0xF;
@@ -4498,6 +4498,12 @@ void SurgeSynthesizer::process()
     copy_block(sceneout[0][1], output[1], BLOCK_SIZE_QUAD);
     accumulate_block(sceneout[1][0], output[0], BLOCK_SIZE_QUAD);
     accumulate_block(sceneout[1][1], output[1], BLOCK_SIZE_QUAD);
+
+    // Send output to the oscilloscope, if anyone is listening.
+    if (storage.audioOut.subscribed())
+    {
+        storage.audioOut.push(output[0], output[1], BLOCK_SIZE);
+    }
 
     bool sendused[4] = {false, false, false, false};
     // add send effects

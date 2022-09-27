@@ -328,8 +328,20 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
                                 SurgeSharedBinary::configuration_xmlSize) +
                     "\n";
 #else
-    auto cxmlData =
-        std::string("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><midictrl/>");
+    std::string cxmlData;
+
+    if (fs::exists(datapath / "configuration.xml"))
+    {
+        std::ifstream ifs(datapath / "configuration.xml");
+        std::stringstream buffer;
+        buffer << ifs.rdbuf();
+        cxmlData = buffer.str();
+    }
+    else
+    {
+        cxmlData = std::string(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><midictrl/>");
+    }
 #endif
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {

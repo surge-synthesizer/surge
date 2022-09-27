@@ -1854,6 +1854,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::OSCILLOSCOPE_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::WAVESHAPER_ANALYSIS_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
             break;
@@ -4088,6 +4089,12 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Show Virtual Keyboard"),
                                     showShortcutDescription("Alt + K", u8"\U00002325K"), true,
                                     showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
+
+    bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
+
+    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Open Oscilloscope"),
+                                    showShortcutDescription("Alt + O", u8"\U00002325O"), true,
+                                    showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 
     return wfMenu;
 }
@@ -6641,6 +6648,9 @@ void SurgeGUIEditor::showAboutScreen(int devModeGrid)
 
     // this is special - it can't make a rebuild so just add it normally
     frame->addAndMakeVisible(*aboutScreen);
+
+    auto ann = std::string("Surge XT About Screen. Version ") + Surge::Build::FullVersionStr;
+    enqueueAccessibleAnnouncement(ann);
 }
 
 void SurgeGUIEditor::hideAboutScreen()
@@ -6941,6 +6951,8 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::SHOW_TUNING_EDITOR, {keymap_t::Modifiers::ALT, (int)'T'});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
                               {keymap_t::Modifiers::ALT, (int)'K'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_OSCILLOSCOPE,
+                              {keymap_t::Modifiers::ALT, (int)'O'});
 
     keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t::Modifiers::SHIFT, '/'});
     keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t::Modifiers::NONE, '+'});
@@ -7141,6 +7153,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
             case Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD:
                 toggleVirtualKeyboard();
+                return true;
+            case Surge::GUI::TOGGLE_OSCILLOSCOPE:
+                toggleOverlay(SurgeGUIEditor::OSCILLOSCOPE);
                 return true;
 
             case Surge::GUI::ZOOM_TO_DEFAULT:
@@ -7439,7 +7454,8 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     {
         promptForOKCancelWithDontAskAgain(
             "Enable Keyboard Shortcuts",
-            "You have used a keyboard shortcut that Surge XT has assigned to a certain action,\n"
+            "You have used a keyboard shortcut that Surge XT has assigned to a certain "
+            "action,\n"
             "but the option to use keyboard shortcuts is currently disabled. "
             "\nWould you like to enable it?\n\n"
             "You can change this option later in the Workflow menu.",

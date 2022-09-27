@@ -96,6 +96,7 @@ enum DefaultKey
     FormulaOverlayLocation,
     WSAnalysisOverlayLocation,
     FilterAnalysisOverlayLocation,
+    OscilloscopeOverlayLocation,
 
     TuningOverlayLocationTearOut,
     ModlistOverlayLocationTearOut,
@@ -103,6 +104,7 @@ enum DefaultKey
     FormulaOverlayLocationTearOut,
     WSAnalysisOverlayLocationTearOut,
     FilterAnalysisOverlayLocationTearOut,
+    OscilloscopeOverlayLocationTearOut,
 
     TuningOverlaySizeTearOut,
     ModlistOverlaySizeTearOut,
@@ -110,6 +112,7 @@ enum DefaultKey
     FormulaOverlaySizeTearOut,
     WSAnalysisOverlaySizeTearOut,
     FilterAnalysisOverlaySizeTearOut,
+    OscilloscopeOverlaySizeTearOut,
 
     TuningOverlayTearOutAlwaysOnTop,
     ModlistOverlayTearOutAlwaysOnTop,
@@ -117,6 +120,7 @@ enum DefaultKey
     FormulaOverlayTearOutAlwaysOnTop,
     WSAnalysisOverlayTearOutAlwaysOnTop,
     FilterAnalysisOverlayTearOutAlwaysOnTop,
+    OscilloscopeOverlayTearOutAlwaysOnTop,
 
     // Surge XT Effects specific defaults
     FXUnitAssumeFixedBlock,

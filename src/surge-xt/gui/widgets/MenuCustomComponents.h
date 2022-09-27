@@ -62,19 +62,20 @@ struct TinyLittleIconButton : public juce::Component
 
 struct MenuTitleHelpComponent : juce::PopupMenu::CustomComponent, Surge::GUI::SkinConsumingComponent
 {
+    std::string manualAccTag = " (open manual)";
     MenuTitleHelpComponent(const std::string &l, const std::string &u)
         : label(l), url(u), juce::PopupMenu::CustomComponent(false)
     {
-        setTitle(l);
-        setDescription(l);
+        setTitle(l + manualAccTag);
+        setDescription(l + manualAccTag);
         setAccessible(true);
     }
 
     MenuTitleHelpComponent(const std::string &l, const std::string &accL, const std::string &u)
         : label(l), url(u), juce::PopupMenu::CustomComponent(false)
     {
-        setTitle(accL);
-        setDescription(accL);
+        setTitle(accL + manualAccTag);
+        setDescription(accL + manualAccTag);
         setAccessible(true);
     }
 

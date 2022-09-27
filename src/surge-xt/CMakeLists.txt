@@ -56,7 +56,7 @@ juce_add_plugin(${PROJECT_NAME}
 if(SURGE_BUILD_CLAP)
   clap_juce_extensions_plugin(TARGET surge-xt
     CLAP_ID "org.surge-synth-team.surge-xt"
-    CLAP_FEATURES "instrument" "hybrid" "free and open source")
+    CLAP_FEATURES "instrument" "synthesizer" "hybrid" "free and open source")
   target_sources(${PROJECT_NAME}_CLAP PRIVATE plugin_type_extensions/SurgeSynthClapExtensions.cpp)
 endif()
 
@@ -113,6 +113,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/MiniEdit.h
   gui/overlays/ModulationEditor.cpp
   gui/overlays/ModulationEditor.h
+  gui/overlays/Oscilloscope.cpp
+  gui/overlays/Oscilloscope.h
   gui/overlays/OverlayWrapper.cpp
   gui/overlays/OverlayWrapper.h
   gui/overlays/PatchDBViewer.cpp
