@@ -248,6 +248,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int fxbypass_tag = 0, f1subtypetag = 0, f2subtypetag = 0, filterblock_tag = 0, fmconfig_tag = 0;
     double lastTempo = 0;
     int lastTSNum = 0, lastTSDen = 0;
+    int lastOverlayRefresh = 0;
     void adjustSize(float &width, float &height) const;
 
     struct patchdata

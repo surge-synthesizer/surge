@@ -275,10 +275,12 @@ struct TearOutWindow : public juce::DocumentWindow, public Surge::GUI::SkinConsu
 
         auto tba = getTitleBarArea();
         auto tbh = tba.getHeight() + 5;
-        auto xPos = tba.getRight() - (3 * tbh);
 
+// reposition the pin button to the other side on Mac
 #if MAC
-        xPos = 3 * xPos;
+        auto xPos = tba.getX() + (2 * tbh);
+#else
+        auto xPos = tba.getRight() - (3 * tbh);
 #endif
 
         auto r = juce::Rectangle<int>(xPos, 1, tbh, tbh);
