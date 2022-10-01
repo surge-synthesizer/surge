@@ -50,6 +50,7 @@ class Oscilloscope : public OverlayComponent,
     static constexpr float dbMin = -100;
     static constexpr float dbMax = 0;
     static constexpr float dbRange = dbMax - dbMin;
+    static constexpr auto scopeWidth = std::chrono::milliseconds(100);
 
     Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s);
     virtual ~Oscilloscope();
@@ -69,6 +70,12 @@ class Oscilloscope : public OverlayComponent,
         OFF = 4,
     };
 
+    enum ScopeMode
+    {
+        WAVEFORM = 1,
+        SPECTRUM = 2,
+    };
+
     // Really wish span was available.
     using FftScopeType = std::array<float, fftSize / 2>;
 
@@ -80,9 +87,14 @@ class Oscilloscope : public OverlayComponent,
       public:
         explicit Background();
         void paint(juce::Graphics &g) override;
+        void updateBackgroundType(ScopeMode mode);
         void updateBounds(juce::Rectangle<int> local_bounds, juce::Rectangle<int> scope_bounds);
 
       private:
+        void paintSpectrogramBackground(juce::Graphics &g);
+        void paintWaveformBackground(juce::Graphics &g);
+
+        ScopeMode mode_;
         juce::Rectangle<int> scope_bounds_;
     };
 
@@ -109,10 +121,24 @@ class Oscilloscope : public OverlayComponent,
         FftScopeType displayed_data_;
     };
 
+    class SwitchButton : public Surge::Widgets::MultiSwitchSelfDraw,
+                         public Surge::GUI::IComponentTagValue::Listener
+    {
+      public:
+        explicit SwitchButton(Oscilloscope &parent);
+        void valueChanged(Surge::GUI::IComponentTagValue *p) override;
+
+      private:
+        Oscilloscope &parent_;
+    };
+
     static float freqToX(float freq, int width);
+    static float timeToX(std::chrono::milliseconds time, int width);
     static float dbToY(float db, int height);
+    static float magToY(float mag, int height);
 
     void calculateScopeData();
+    void changeScopeType();
     juce::Rectangle<int> getScopeRect();
     void pullData();
     void toggleChannel();
@@ -126,6 +152,7 @@ class Oscilloscope : public OverlayComponent,
     FftScopeType scope_data_;
     ChannelSelect channel_selection_;
     std::mutex channel_selection_guard_;
+    ScopeMode scope_mode_;
 
     // Members for the data-pulling thread.
     std::thread fft_thread_;
@@ -135,6 +162,7 @@ class Oscilloscope : public OverlayComponent,
     // Visual elements.
     Surge::Widgets::SelfDrawToggleButton left_chan_button_;
     Surge::Widgets::SelfDrawToggleButton right_chan_button_;
+    SwitchButton scope_mode_button_;
     Background background_;
     Spectrogram spectrogram_;
 };

@@ -36,6 +36,13 @@ float Oscilloscope::freqToX(float freq, int width)
     return xNorm * (float)width;
 }
 
+float Oscilloscope::timeToX(std::chrono::milliseconds time, int width)
+{
+    static const float maxf = static_cast<float>(scopeWidth.count());
+    const float timef = static_cast<float>(time.count());
+    return juce::jmap(juce::jlimit(0.f, maxf, timef), 0.f, maxf, 0.f, static_cast<float>(width));
+}
+
 float Oscilloscope::dbToY(float db, int height) { return (float)height * (dbMax - db) / dbRange; }
 
 // TODO:
@@ -45,12 +52,13 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), forward_fft_(fftOrder),
       window_(fftSize, juce::dsp::WindowingFunction<float>::hann), pos_(0), complete_(false),
       fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
-      channel_selection_(STEREO), left_chan_button_("L"), right_chan_button_("R"),
-      spectrogram_(e, s)
+      channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
+      right_chan_button_("R"), scope_mode_button_(*this), spectrogram_(e, s)
 {
     setAccessible(true);
     setOpaque(true);
 
+    background_.updateBackgroundType(SPECTRUM);
     auto onToggle = std::bind(std::mem_fn(&Oscilloscope::toggleChannel), this);
     left_chan_button_.setStorage(storage_);
     left_chan_button_.setToggleState(true);
@@ -70,9 +78,16 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     right_chan_button_.setTitle("R CHAN");
     right_chan_button_.setDescription("Enable input from right channel.");
     right_chan_button_.setWantsKeyboardFocus(false);
+    scope_mode_button_.setStorage(storage_);
+    scope_mode_button_.setRows(1);
+    scope_mode_button_.setColumns(2);
+    scope_mode_button_.setLabels({"WAVEFORM", "SPECTRUM"});
+    scope_mode_button_.setWantsKeyboardFocus(false);
+    scope_mode_button_.setValue(1.f);
     addAndMakeVisible(background_);
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
+    addAndMakeVisible(scope_mode_button_);
     addAndMakeVisible(spectrogram_);
 
     storage_->audioOut.subscribe();
@@ -98,6 +113,7 @@ void Oscilloscope::onSkinChanged()
     background_.setSkin(skin, associatedBitmapStore);
     left_chan_button_.setSkin(skin, associatedBitmapStore);
     right_chan_button_.setSkin(skin, associatedBitmapStore);
+    scope_mode_button_.setSkin(skin, associatedBitmapStore);
     spectrogram_.setSkin(skin, associatedBitmapStore);
 }
 
@@ -105,15 +121,18 @@ void Oscilloscope::paint(juce::Graphics &g) {}
 
 void Oscilloscope::resized()
 {
+    auto scopeRect = getScopeRect();
     auto t = getTransform().inverted();
     auto h = getHeight();
     auto w = getWidth();
     t.transformPoint(w, h);
+    auto rhs = scopeRect.getWidth();
 
     background_.updateBounds(getLocalBounds(), getScopeRect());
     left_chan_button_.setBounds(8, 4, 15, 15);
     right_chan_button_.setBounds(23, 4, 15, 15);
-    spectrogram_.setBounds(getScopeRect());
+    scope_mode_button_.setBounds(rhs - 97, 4, 105, 15);
+    spectrogram_.setBounds(scopeRect);
 }
 
 void Oscilloscope::updateDrawing()
@@ -159,6 +178,19 @@ void Oscilloscope::calculateScopeData()
                                               juce::Decibels::gainToDecibels((float)fftSize));
         }
     }
+}
+
+void Oscilloscope::changeScopeType()
+{
+    if (scope_mode_ == SPECTRUM)
+    {
+        scope_mode_ = WAVEFORM;
+    }
+    else
+    {
+        scope_mode_ = SPECTRUM;
+    }
+    background_.updateBackgroundType(scope_mode_);
 }
 
 juce::Rectangle<int> Oscilloscope::getScopeRect()
@@ -254,6 +286,31 @@ Oscilloscope::Background::Background() { setOpaque(true); }
 
 void Oscilloscope::Background::paint(juce::Graphics &g)
 {
+    if (mode_ == WAVEFORM)
+    {
+        paintWaveformBackground(g);
+    }
+    else
+    {
+        paintSpectrogramBackground(g);
+    }
+}
+
+void Oscilloscope::Background::updateBackgroundType(ScopeMode mode)
+{
+    mode_ = mode;
+    repaint();
+}
+
+void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
+                                            juce::Rectangle<int> scope_bounds)
+{
+    scope_bounds_ = std::move(scope_bounds);
+    setBounds(local_bounds);
+}
+
+void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
+{
     juce::Graphics::ScopedSaveState g1(g);
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
 
@@ -335,11 +392,73 @@ void Oscilloscope::Background::paint(juce::Graphics &g)
     }
 }
 
-void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
-                                            juce::Rectangle<int> scope_bounds)
+void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
 {
-    scope_bounds_ = std::move(scope_bounds);
-    setBounds(local_bounds);
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+
+    juce::Rectangle<int> labelRect;
+    auto scopeRect = scope_bounds_;
+    auto width = scopeRect.getWidth();
+    auto height = scopeRect.getHeight();
+    auto labelHeight = 9;
+    auto font = skin->fontManager->getLatoAtSize(7);
+    auto primaryLine = skin->getColor(Colors::MSEGEditor::Grid::Primary);
+    auto secondaryLine = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
+
+    {
+        auto gs = juce::Graphics::ScopedSaveState(g);
+        g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
+        g.setFont(font);
+
+        // Draw top and bottom lines.
+        g.setColour(primaryLine);
+        g.drawHorizontalLine(0, 0, width);
+        g.drawHorizontalLine(height, 0, width);
+        g.drawHorizontalLine(height / 2.f, 0, width);
+
+        // Axis labels will go past the end of the scopeRect.
+        g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+        labelRect = juce::Rectangle{font.getStringWidth("-1"), labelHeight}
+                        .withBottomY((int)height + labelHeight / 2)
+                        .withRightX(width + 15);
+        g.drawFittedText("-1", labelRect, juce::Justification::right, 1);
+        labelRect = juce::Rectangle{font.getStringWidth(" 0"), labelHeight}
+                        .withBottomY((int)(height / 2 + labelHeight / 2))
+                        .withRightX(width + 15);
+        g.drawFittedText(" 0", labelRect, juce::Justification::right, 1);
+        labelRect = juce::Rectangle{font.getStringWidth("+1"), labelHeight}
+                        .withBottomY(labelHeight / 2)
+                        .withRightX(width + 15);
+        g.drawFittedText("+1", labelRect, juce::Justification::right, 1);
+    }
+
+    // Vertical grid.
+    {
+        auto gs = juce::Graphics::ScopedSaveState(g);
+        g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
+        g.setFont(font);
+
+        for (int ms : {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
+        {
+            auto xPos = timeToX(std::chrono::milliseconds(ms), width);
+            g.setColour(secondaryLine);
+            g.drawVerticalLine(xPos, 0, height);
+
+            const auto timeString = std::to_string(ms) + "";
+            // Label will go past the end of the scopeRect.
+            const auto labelRect = juce::Rectangle{font.getStringWidth(timeString), labelHeight}
+                                       .withBottomY(height + 13)
+                                       .withRightX((int)xPos);
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
+            g.drawFittedText(timeString, labelRect, juce::Justification::bottom, 1);
+        }
+        const auto msString = "milliseconds";
+        const auto msLen = font.getStringWidth(msString);
+        const auto labelRect = juce::Rectangle{msLen, labelHeight}
+                                   .withBottomY(height + 13 + labelHeight)
+                                   .withRightX((msLen + width) / 2);
+        g.drawFittedText(msString, labelRect, juce::Justification::bottom, 1);
+    }
 }
 
 Oscilloscope::Spectrogram::Spectrogram(SurgeGUIEditor *e, SurgeStorage *s)
@@ -427,6 +546,17 @@ void Oscilloscope::Spectrogram::updateScopeData(FftScopeType::iterator begin,
     std::lock_guard l(data_lock_);
     std::move(begin, end, new_scope_data_.begin());
     last_updated_time_ = std::chrono::steady_clock::now();
+}
+
+Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)
+    : Surge::Widgets::MultiSwitchSelfDraw(), parent_(parent)
+{
+    addListener(this);
+}
+
+void Oscilloscope::SwitchButton::valueChanged(Surge::GUI::IComponentTagValue *p)
+{
+    parent_.changeScopeType();
 }
 
 float Oscilloscope::Spectrogram::interpolate(
