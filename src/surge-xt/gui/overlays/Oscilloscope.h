@@ -93,17 +93,24 @@ class Oscilloscope : public OverlayComponent,
         Spectrogram(SurgeGUIEditor *e, SurgeStorage *s);
 
         void paint(juce::Graphics &g) override;
-        void repaintIfDirty();
+        void resized() override;
         void updateScopeData(FftScopeType::iterator begin, FftScopeType::iterator end);
 
       private:
+        float interpolate(const float y0, const float y1,
+                          std::chrono::time_point<std::chrono::steady_clock> t) const;
+
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
+        std::chrono::duration<float> mtbs_;
+        std::chrono::time_point<std::chrono::steady_clock> last_updated_time_;
         std::mutex data_lock_;
-        std::vector<float> current_scope_data_;
-        std::vector<float> new_scope_data_;
-        bool dirty_;
+        FftScopeType new_scope_data_;
+        FftScopeType displayed_data_;
     };
+
+    static float freqToX(float freq, int width);
+    static float dbToY(float db, int height);
 
     void calculateScopeData();
     juce::Rectangle<int> getScopeRect();
