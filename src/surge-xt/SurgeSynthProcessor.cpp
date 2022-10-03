@@ -581,6 +581,8 @@ void SurgeSynthProcessor::clap_direct_paramsFlush(const clap_input_events *in,
         {
             auto pevt = reinterpret_cast<const clap_event_param_value *>(ev);
             auto jp = static_cast<JUCEParameterVariant *>(pevt->cookie);
+            if (!jp) // unlikely
+                jp = findParameterByParameterId(pevt->param_id);
             jp->processorParam->setValue(pevt->value);
         }
     }
@@ -629,6 +631,8 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     {
         auto pevt = reinterpret_cast<const clap_event_param_value *>(evt);
         auto jp = static_cast<JUCEParameterVariant *>(pevt->cookie);
+        if (!jp) // unlikely
+            jp = findParameterByParameterId(pevt->param_id);
         jp->processorParam->setValue(pevt->value);
     }
     break;
@@ -636,6 +640,8 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     {
         auto pevt = reinterpret_cast<const clap_event_param_mod *>(evt);
         auto jv = static_cast<JUCEParameterVariant *>(pevt->cookie);
+        if (!jv) // unlikely
+            jv = findParameterByParameterId(pevt->param_id);
         auto jp = static_cast<SurgeBaseParam *>(jv->processorParam);
         if (pevt->note_id >= 0)
         {
