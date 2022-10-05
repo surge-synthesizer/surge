@@ -41,6 +41,7 @@ class FlangerEffect : public Effect
         flw_square,
     };
 
+  public:
     enum fl_params
     {
         // Basic Control
@@ -63,6 +64,7 @@ class FlangerEffect : public Effect
         fl_num_params,
     };
 
+  private:
     static constexpr int COMBS_PER_CHANNEL = 4;
     struct InterpDelay
     {
