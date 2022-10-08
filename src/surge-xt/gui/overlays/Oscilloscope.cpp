@@ -53,7 +53,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
       window_(fftSize, juce::dsp::WindowingFunction<float>::hann), pos_(0), complete_(false),
       fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
       channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
-      right_chan_button_("R"), scope_mode_button_(*this), spectrogram_(e, s)
+      right_chan_button_("R"), scope_mode_button_(*this), spectrogram_(e, s), waveform_(e, s)
 {
     setAccessible(true);
     setOpaque(true);
@@ -89,6 +89,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     addAndMakeVisible(right_chan_button_);
     addAndMakeVisible(scope_mode_button_);
     addAndMakeVisible(spectrogram_);
+    addChildComponent(waveform_);
 
     storage_->audioOut.subscribe();
 }
@@ -99,7 +100,7 @@ Oscilloscope::~Oscilloscope()
     // to finish up.
     complete_.store(true, std::memory_order_seq_cst);
     {
-        std::lock_guard l(channel_selection_guard_);
+        std::lock_guard l(data_lock_);
         channel_selection_ = OFF;
         channels_off_.notify_all();
     }
@@ -115,6 +116,7 @@ void Oscilloscope::onSkinChanged()
     right_chan_button_.setSkin(skin, associatedBitmapStore);
     scope_mode_button_.setSkin(skin, associatedBitmapStore);
     spectrogram_.setSkin(skin, associatedBitmapStore);
+    waveform_.setSkin(skin, associatedBitmapStore);
 }
 
 void Oscilloscope::paint(juce::Graphics &g) {}
@@ -133,14 +135,22 @@ void Oscilloscope::resized()
     right_chan_button_.setBounds(23, 4, 15, 15);
     scope_mode_button_.setBounds(rhs - 97, 4, 105, 15);
     spectrogram_.setBounds(scopeRect);
+    waveform_.setBounds(scopeRect);
 }
 
 void Oscilloscope::updateDrawing()
 {
-    std::lock_guard l(channel_selection_guard_);
+    std::lock_guard l(data_lock_);
     if (channel_selection_ != OFF)
     {
-        spectrogram_.repaint();
+        if (scope_mode_ == WAVEFORM)
+        {
+            waveform_.repaint();
+        }
+        else
+        {
+            spectrogram_.repaint();
+        }
     }
 }
 
@@ -158,7 +168,8 @@ void Oscilloscope::visibilityChanged()
     }
 }
 
-void Oscilloscope::calculateScopeData()
+// Lock for member variables must be held by the caller.
+void Oscilloscope::calculateSpectrumData()
 {
     window_.multiplyWithWindowingTable(fft_data_.data(), fftSize);
     forward_fft_.performFrequencyOnlyForwardTransform(fft_data_.data());
@@ -182,13 +193,20 @@ void Oscilloscope::calculateScopeData()
 
 void Oscilloscope::changeScopeType()
 {
+    std::unique_lock l(data_lock_);
     if (scope_mode_ == SPECTRUM)
     {
         scope_mode_ = WAVEFORM;
+        spectrogram_.setVisible(false);
+        std::fill(scope_data_.begin(), scope_data_.end(), 0.f);
+        waveform_.setVisible(true);
     }
     else
     {
         scope_mode_ = SPECTRUM;
+        waveform_.setVisible(false);
+        std::fill(scope_data_.begin(), scope_data_.end(), dbMin);
+        spectrogram_.setVisible(true);
     }
     background_.updateBackgroundType(scope_mode_);
 }
@@ -204,29 +222,31 @@ void Oscilloscope::pullData()
 {
     while (!complete_.load(std::memory_order_seq_cst))
     {
-        std::unique_lock csl(channel_selection_guard_);
+        std::unique_lock l(data_lock_);
         if (channel_selection_ == OFF)
         {
             // We want to unsubscribe and sleep if we aren't going to be looking at the data, to
             // prevent useless accumulation and CPU usage.
             storage_->audioOut.unsubscribe();
-            channels_off_.wait(csl, [this]() {
+            channels_off_.wait(l, [this]() {
                 return channel_selection_ != OFF || complete_.load(std::memory_order_seq_cst);
             });
             storage_->audioOut.subscribe();
             continue;
         }
         ChannelSelect cs = channel_selection_;
-        csl.unlock();
 
         std::pair<std::vector<float>, std::vector<float>> data = storage_->audioOut.popall();
         std::vector<float> &dataL = data.first;
         std::vector<float> &dataR = data.second;
         if (dataL.empty())
         {
-            // Sleep for long enough to accumulate about 4096 samples.
+            // Sleep for long enough to accumulate about 4096 samples, or half that in waveform
+            // mode.
+            ScopeMode mode = scope_mode_;
+            l.unlock();
             std::this_thread::sleep_for(std::chrono::duration<float, std::chrono::seconds::period>(
-                fftSize / 2.f / storage_->samplerate));
+                fftSize / (mode == SPECTRUM ? 2.f : 4.f) / storage_->samplerate));
             continue;
         }
 
@@ -241,28 +261,48 @@ void Oscilloscope::pullData()
             dataL = dataR;
         }
 
-        int sz = dataL.size();
-        if (pos_ + sz >= fftSize)
+        if (scope_mode_ == WAVEFORM)
         {
-            int mv = fftSize - pos_;
-            int leftovers = sz - mv;
-            std::move(dataL.begin(), dataL.begin() + mv, fft_data_.begin() + pos_);
-            calculateScopeData();
-            spectrogram_.updateScopeData(scope_data_.begin(), scope_data_.end());
-            std::move(dataL.begin() + mv, dataL.end(), fft_data_.begin());
-            pos_ = leftovers;
+            // FIXME: Normalize dataL.
+            std::size_t sz = dataL.size();
+            if (sz >= scope_data_.size())
+            {
+                std::size_t start = dataL.size() - scope_data_.size();
+                std::move(dataL.begin() + start, dataL.end(), scope_data_.begin());
+            }
+            else
+            {
+                std::size_t insertion = scope_data_.size() - sz;
+                std::rotate(scope_data_.begin(), scope_data_.begin() + sz, scope_data_.end());
+                std::move(dataL.begin(), dataL.end(), scope_data_.begin() + insertion);
+            }
+            waveform_.updateScopeData(scope_data_.begin(), scope_data_.end());
         }
         else
         {
-            std::move(dataL.begin(), dataL.end(), fft_data_.begin() + pos_);
-            pos_ += sz;
+            int sz = dataL.size();
+            if (pos_ + sz >= fftSize)
+            {
+                int mv = fftSize - pos_;
+                int leftovers = sz - mv;
+                std::move(dataL.begin(), dataL.begin() + mv, fft_data_.begin() + pos_);
+                calculateSpectrumData();
+                spectrogram_.updateScopeData(scope_data_.begin(), scope_data_.end());
+                std::move(dataL.begin() + mv, dataL.end(), fft_data_.begin());
+                pos_ = leftovers;
+            }
+            else
+            {
+                std::move(dataL.begin(), dataL.end(), fft_data_.begin() + pos_);
+                pos_ += sz;
+            }
         }
     }
 }
 
 void Oscilloscope::toggleChannel()
 {
-    std::lock_guard l(channel_selection_guard_);
+    std::lock_guard l(data_lock_);
     if (left_chan_button_.getToggleState() && right_chan_button_.getToggleState())
     {
         channel_selection_ = STEREO;
@@ -546,6 +586,19 @@ void Oscilloscope::Spectrogram::updateScopeData(FftScopeType::iterator begin,
     std::lock_guard l(data_lock_);
     std::move(begin, end, new_scope_data_.begin());
     last_updated_time_ = std::chrono::steady_clock::now();
+}
+
+Oscilloscope::Waveform::Waveform(SurgeGUIEditor *e, SurgeStorage *s) : editor_(e), storage_(s) {}
+
+void Oscilloscope::Waveform::paint(juce::Graphics &g)
+{
+    // FIXME: Implement.
+}
+
+void Oscilloscope::Waveform::updateScopeData(FftScopeType::const_iterator begin,
+                                             FftScopeType::const_iterator end)
+{
+    // FIXME: Implement.
 }
 
 Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)

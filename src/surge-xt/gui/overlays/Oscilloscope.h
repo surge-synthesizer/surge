@@ -121,6 +121,23 @@ class Oscilloscope : public OverlayComponent,
         FftScopeType displayed_data_;
     };
 
+    // Child component for handling drawing of the waveform.
+    class Waveform : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    {
+      public:
+        Waveform(SurgeGUIEditor *e, SurgeStorage *s);
+
+        void paint(juce::Graphics &g) override;
+        void updateScopeData(FftScopeType::const_iterator begin, FftScopeType::const_iterator end);
+
+      private:
+        SurgeGUIEditor *editor_;
+        SurgeStorage *storage_;
+        std::mutex data_lock_;
+        FftScopeType scope_data_;
+    };
+
+    // Child component for handling the switch between waveform/spectrum.
     class SwitchButton : public Surge::Widgets::MultiSwitchSelfDraw,
                          public Surge::GUI::IComponentTagValue::Listener
     {
@@ -137,7 +154,7 @@ class Oscilloscope : public OverlayComponent,
     static float dbToY(float db, int height);
     static float magToY(float mag, int height);
 
-    void calculateScopeData();
+    void calculateSpectrumData();
     void changeScopeType();
     juce::Rectangle<int> getScopeRect();
     void pullData();
@@ -151,8 +168,9 @@ class Oscilloscope : public OverlayComponent,
     int pos_;
     FftScopeType scope_data_;
     ChannelSelect channel_selection_;
-    std::mutex channel_selection_guard_;
     ScopeMode scope_mode_;
+    // Global lock for all data members accessed concurrently.
+    std::mutex data_lock_;
 
     // Members for the data-pulling thread.
     std::thread fft_thread_;
@@ -165,6 +183,7 @@ class Oscilloscope : public OverlayComponent,
     SwitchButton scope_mode_button_;
     Background background_;
     Spectrogram spectrogram_;
+    Waveform waveform_;
 };
 
 } // namespace Overlays
