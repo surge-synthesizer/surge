@@ -28,6 +28,7 @@ const int rev_taps = 1 << rev_tap_bits;
 
 class Reverb1Effect : public Effect
 {
+  public:
     enum rev1_params
     {
         rev1_predelay = 0,
@@ -44,6 +45,7 @@ class Reverb1Effect : public Effect
         // rev1_variation,
     };
 
+  private:
     float delay_pan_L alignas(16)[rev_taps], delay_pan_R alignas(16)[rev_taps];
     float delay_fb alignas(16)[rev_taps];
     float delay alignas(16)[rev_taps * max_rev_dly];
