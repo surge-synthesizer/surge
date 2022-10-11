@@ -143,7 +143,8 @@ class Oscilloscope : public OverlayComponent,
         std::mutex data_lock_;
         std::chrono::milliseconds period_;
         FloatSeconds period_float_;
-        std::chrono::time_point<std::chrono::steady_clock> last_time_;
+        std::size_t period_samples_;
+        // scope_data_ will buffer an entire second of data, not just what's displayed.
         std::vector<float> scope_data_;
         sst::cpputils::SimpleRingBuffer<float, fftSize> upcoming_data_;
     };
