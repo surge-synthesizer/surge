@@ -32,6 +32,7 @@
 #include "juce_core/juce_core.h"
 #include "juce_dsp/juce_dsp.h"
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "sst/cpputils.h"
 
 namespace Surge
 {
@@ -78,6 +79,9 @@ class Oscilloscope : public OverlayComponent,
 
     // Really wish span was available.
     using FftScopeType = std::array<float, fftSize / 2>;
+
+    // Really wish std::chrono didn't suck so badly.
+    using FloatSeconds = std::chrono::duration<float>;
 
     // Child component for handling the drawing of the background. Done as a separate child instead
     // of in the Oscilloscope class so the display, which is repainting at 20-30 hz, doesn't mark
@@ -128,13 +132,20 @@ class Oscilloscope : public OverlayComponent,
         Waveform(SurgeGUIEditor *e, SurgeStorage *s);
 
         void paint(juce::Graphics &g) override;
-        void updateScopeData(FftScopeType::const_iterator begin, FftScopeType::const_iterator end);
+        void scroll();
+        void updateAudioData(const std::vector<float> &buf);
 
       private:
+        static constexpr const float refreshRate = 60.f;
+
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
         std::mutex data_lock_;
-        FftScopeType scope_data_;
+        std::chrono::milliseconds period_;
+        FloatSeconds period_float_;
+        std::chrono::time_point<std::chrono::steady_clock> last_time_;
+        std::vector<float> scope_data_;
+        sst::cpputils::SimpleRingBuffer<float, fftSize> upcoming_data_;
     };
 
     // Child component for handling the switch between waveform/spectrum.

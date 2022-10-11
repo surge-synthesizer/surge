@@ -29,8 +29,6 @@ namespace Surge
 namespace Overlays
 {
 
-inline float amp_to_db(float x) { return limit_range((float)(18.f * log2(x)), -192.f, 96.f); }
-
 float Oscilloscope::freqToX(float freq, int width)
 {
     static const float ratio = std::log(highFreq / lowFreq);
@@ -147,7 +145,7 @@ void Oscilloscope::updateDrawing()
     {
         if (scope_mode_ == WAVEFORM)
         {
-            waveform_.repaint();
+            waveform_.scroll();
         }
         else
         {
@@ -251,8 +249,6 @@ void Oscilloscope::pullData()
                 fftSize / (mode == SPECTRUM ? 2.f : 4.f) / storage_->samplerate));
             continue;
         }
-        std::cout << "dataL max: " << *std::max_element(dataL.begin(), dataL.end()) << std::endl;
-        std::cout << "in dB: " << amp_to_db(*std::max_element(dataL.begin(), dataL.end())) << std::endl;
 
         // We'll use "dataL" as our storage regardless of the channel choice.
         if (cs == STEREO)
@@ -268,19 +264,7 @@ void Oscilloscope::pullData()
         if (scope_mode_ == WAVEFORM)
         {
             // FIXME: Normalize dataL.
-            std::size_t sz = dataL.size();
-            if (sz >= scope_data_.size())
-            {
-                std::size_t start = dataL.size() - scope_data_.size();
-                std::move(dataL.begin() + start, dataL.end(), scope_data_.begin());
-            }
-            else
-            {
-                std::size_t insertion = scope_data_.size() - sz;
-                std::rotate(scope_data_.begin(), scope_data_.begin() + sz, scope_data_.end());
-                std::move(dataL.begin(), dataL.end(), scope_data_.begin() + insertion);
-            }
-            waveform_.updateScopeData(scope_data_.begin(), scope_data_.end());
+            waveform_.updateAudioData(dataL);
         }
         else
         {
@@ -599,7 +583,16 @@ float Oscilloscope::Spectrogram::interpolate(
     return y0 * (1 - mu) + y1 * mu;
 }
 
-Oscilloscope::Waveform::Waveform(SurgeGUIEditor *e, SurgeStorage *s) : editor_(e), storage_(s) {}
+Oscilloscope::Waveform::Waveform(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s), period_(100), period_float_(period_),
+      last_time_(std::chrono::steady_clock::now()),
+      scope_data_(static_cast<std::size_t>(s->samplerate * period_float_.count()))
+{
+    std::fill(scope_data_.begin(), scope_data_.end(), 0);
+    std::vector<float> tmp(fftSize - 1);
+    std::fill(tmp.begin(), tmp.end(), 0);
+    upcoming_data_.push(tmp);
+}
 
 // FIXME: This won't be right. We're assuming our width is 100ms of data, but the actual amount is
 // fftSize / 2 and that depends on the sample rate.
@@ -628,11 +621,51 @@ void Oscilloscope::Waveform::paint(juce::Graphics &g)
     g.strokePath(path, juce::PathStrokeType(1.f));
 }
 
-void Oscilloscope::Waveform::updateScopeData(FftScopeType::const_iterator begin,
-                                             FftScopeType::const_iterator end)
+void Oscilloscope::Waveform::scroll()
 {
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<float> diff(now - last_time_);
+    // Multiply the sample rate by our diff (we expect to hit 60hz in this method).
+    std::size_t advance = static_cast<std::size_t>(diff.count() * storage_->samplerate);
+    // Ensure that we aren't going to try to advance past how much data we actually store (which is
+    // the number of samples in one period).
+    if (advance >= scope_data_.size())
+    {
+        std::cout << "MAJOR ERROR: Trying to advance too far at once" << std::endl;
+        std::cout << "Time diff (seconds) = " << diff.count() << std::endl;
+        std::cout << "advance = " << advance << std::endl;
+        // Clear the ring buffer. Don't want stale data sticking around there at this point.
+        upcoming_data_.popall();
+        last_time_ = now;
+        return;
+    }
+    std::vector<float> incoming(advance);
+    std::size_t i;
+    for (i = 0; i < advance; i++)
+    {
+        auto sample = upcoming_data_.pop();
+        if (!sample)
+        {
+            // Depending on the order things happen, we can drain the ring buffer a bit too fast,
+            // or the audio thread hasn't pushed the data yet.
+            std::cout << "Drained the ring buffer too early." << std::endl;
+            break;
+        }
+        else
+        {
+            incoming[i] = *sample;
+        }
+    }
     std::unique_lock l(data_lock_);
-    std::copy(begin, end, scope_data_.begin());
+    std::rotate(scope_data_.begin(), scope_data_.begin() + i, scope_data_.end());
+    std::move(incoming.begin(), incoming.begin() + i, scope_data_.end() - i);
+    last_time_ = now;
+    repaint();
+}
+
+void Oscilloscope::Waveform::updateAudioData(const std::vector<float> &buf)
+{
+    upcoming_data_.push(buf);
 }
 
 Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)
