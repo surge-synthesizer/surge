@@ -29,6 +29,8 @@ namespace Surge
 namespace Overlays
 {
 
+inline float amp_to_db(float x) { return limit_range((float)(18.f * log2(x)), -192.f, 96.f); }
+
 float Oscilloscope::freqToX(float freq, int width)
 {
     static const float ratio = std::log(highFreq / lowFreq);
@@ -249,6 +251,8 @@ void Oscilloscope::pullData()
                 fftSize / (mode == SPECTRUM ? 2.f : 4.f) / storage_->samplerate));
             continue;
         }
+        std::cout << "dataL max: " << *std::max_element(dataL.begin(), dataL.end()) << std::endl;
+        std::cout << "in dB: " << amp_to_db(*std::max_element(dataL.begin(), dataL.end())) << std::endl;
 
         // We'll use "dataL" as our storage regardless of the channel choice.
         if (cs == STEREO)
@@ -513,7 +517,6 @@ void Oscilloscope::Spectrogram::paint(juce::Graphics &g)
     auto width = scopeRect.getWidth();
     auto height = scopeRect.getHeight();
     auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
-    auto gs = juce::Graphics::ScopedSaveState(g);
 
     auto path = juce::Path();
     bool started = false;
@@ -588,17 +591,48 @@ void Oscilloscope::Spectrogram::updateScopeData(FftScopeType::iterator begin,
     last_updated_time_ = std::chrono::steady_clock::now();
 }
 
+float Oscilloscope::Spectrogram::interpolate(
+    const float y0, const float y1, std::chrono::time_point<std::chrono::steady_clock> t) const
+{
+    std::chrono::duration<float> distance = (t - last_updated_time_);
+    float mu = juce::jlimit(0.f, 1.f, distance / mtbs_);
+    return y0 * (1 - mu) + y1 * mu;
+}
+
 Oscilloscope::Waveform::Waveform(SurgeGUIEditor *e, SurgeStorage *s) : editor_(e), storage_(s) {}
 
+// FIXME: This won't be right. We're assuming our width is 100ms of data, but the actual amount is
+// fftSize / 2 and that depends on the sample rate.
 void Oscilloscope::Waveform::paint(juce::Graphics &g)
 {
-    // FIXME: Implement.
+    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
+    auto width = scopeRect.getWidth();
+    auto height = scopeRect.getHeight();
+    auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
+
+    auto path = juce::Path();
+    float maxf = static_cast<float>(scopeWidth.count());
+
+    // Start path.
+    std::unique_lock l(data_lock_);
+    path.startNewSubPath(0.f, scope_data_[0]);
+    for (int i = 1; i < scope_data_.size(); i++)
+    {
+        const float x =
+            juce::jmap(static_cast<float>(i), 0.f, static_cast<float>(scope_data_.size()), 0.f,
+                       static_cast<float>(width));
+        const float y = juce::jmap(scope_data_[i], -1.f, 1.f, static_cast<float>(height), 0.f);
+        path.lineTo(x, y);
+    }
+    g.setColour(curveColor);
+    g.strokePath(path, juce::PathStrokeType(1.f));
 }
 
 void Oscilloscope::Waveform::updateScopeData(FftScopeType::const_iterator begin,
                                              FftScopeType::const_iterator end)
 {
-    // FIXME: Implement.
+    std::unique_lock l(data_lock_);
+    std::copy(begin, end, scope_data_.begin());
 }
 
 Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)
@@ -610,14 +644,6 @@ Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)
 void Oscilloscope::SwitchButton::valueChanged(Surge::GUI::IComponentTagValue *p)
 {
     parent_.changeScopeType();
-}
-
-float Oscilloscope::Spectrogram::interpolate(
-    const float y0, const float y1, std::chrono::time_point<std::chrono::steady_clock> t) const
-{
-    std::chrono::duration<float> distance = (t - last_updated_time_);
-    float mu = juce::jlimit(0.f, 1.f, distance / mtbs_);
-    return y0 * (1 - mu) + y1 * mu;
 }
 
 } // namespace Overlays
