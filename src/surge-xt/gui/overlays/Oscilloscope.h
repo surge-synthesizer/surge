@@ -51,7 +51,6 @@ class Oscilloscope : public OverlayComponent,
     static constexpr float dbMin = -100;
     static constexpr float dbMax = 0;
     static constexpr float dbRange = dbMax - dbMin;
-    static constexpr auto scopeWidth = std::chrono::milliseconds(100);
 
     Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s);
     virtual ~Oscilloscope();
@@ -147,6 +146,7 @@ class Oscilloscope : public OverlayComponent,
         // scope_data_ will buffer an entire second of data, not just what's displayed.
         std::vector<float> scope_data_;
         sst::cpputils::SimpleRingBuffer<float, fftSize> upcoming_data_;
+        int last_sample_rate_;
     };
 
     // Child component for handling the switch between waveform/spectrum.

@@ -38,7 +38,7 @@ float Oscilloscope::freqToX(float freq, int width)
 
 float Oscilloscope::timeToX(std::chrono::milliseconds time, int width)
 {
-    static const float maxf = static_cast<float>(scopeWidth.count());
+    static const float maxf = 100.f;
     const float timef = static_cast<float>(time.count());
     return juce::jmap(juce::jlimit(0.f, maxf, timef), 0.f, maxf, 0.f, static_cast<float>(width));
 }
@@ -586,7 +586,7 @@ float Oscilloscope::Spectrogram::interpolate(
 Oscilloscope::Waveform::Waveform(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), period_(100), period_float_(period_),
       period_samples_(static_cast<std::size_t>(s->samplerate * period_float_.count())),
-      scope_data_(s->samplerate)
+      scope_data_(s->samplerate), last_sample_rate_(s->samplerate)
 {
     std::fill(scope_data_.begin(), scope_data_.end(), 0);
 }
@@ -599,7 +599,6 @@ void Oscilloscope::Waveform::paint(juce::Graphics &g)
     auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
 
     auto path = juce::Path();
-    float maxf = static_cast<float>(scopeWidth.count());
 
     // Start path.
     std::unique_lock l(data_lock_);
@@ -626,6 +625,13 @@ void Oscilloscope::Waveform::scroll()
 {
     std::vector<float> data = upcoming_data_.popall();
     std::unique_lock l(data_lock_);
+    // Check for sample rate changes. Have to just redo everything when that happens.
+    if (last_sample_rate_ != storage_->samplerate)
+    {
+        last_sample_rate_ = storage_->samplerate;
+        scope_data_.resize(last_sample_rate_);
+        period_samples_ = static_cast<std::size_t>(last_sample_rate_ * period_float_.count());
+    }
     std::rotate(scope_data_.begin(), scope_data_.begin() + data.size(), scope_data_.end());
     std::move(data.begin(), data.end(), scope_data_.end() - data.size());
     repaint();
