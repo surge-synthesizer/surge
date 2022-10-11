@@ -604,9 +604,8 @@ void Oscilloscope::Waveform::paint(juce::Graphics &g)
     std::unique_lock l(data_lock_);
     for (int i = 0; i < period_samples_; i++)
     {
-        const float x =
-            juce::jmap(static_cast<float>(i), 0.f, static_cast<float>(period_samples_), 0.f,
-                       static_cast<float>(width));
+        const float x = juce::jmap(static_cast<float>(i), 0.f, static_cast<float>(period_samples_),
+                                   0.f, static_cast<float>(width));
         const float y = juce::jmap(scope_data_[i], -1.f, 1.f, static_cast<float>(height), 0.f);
         if (i)
         {
