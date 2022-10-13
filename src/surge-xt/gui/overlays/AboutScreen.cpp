@@ -202,7 +202,15 @@ void AboutScreen::populateData()
                            storage->userDataPath.u8string());
 
     lowerRight.clear();
-    lowerRight.emplace_back("Current Skin:", skin->displayName, skin->root + skin->name);
+
+    std::string skinFullName = skin->displayName;
+
+    if (!skin->category.empty())
+    {
+        skinFullName = skin->category + " - " + skin->displayName;
+    }
+
+    lowerRight.emplace_back("Current Skin:", skinFullName, skin->root + skin->name);
     lowerRight.emplace_back("Skin Author:", skin->author, skin->authorURL);
 }
 
