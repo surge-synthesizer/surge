@@ -39,6 +39,80 @@ namespace Surge
 namespace Overlays
 {
 
+// Waveform-specific display taken from s(m)exoscope GPL code and adapted to use with Surge.
+class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsumingComponent
+{
+  public:
+    enum TriggerType
+    {
+        kTriggerFree = 0,
+        kTriggerRising,
+        kTriggerFalling,
+        kTriggerInternal,
+        kNumTriggerTypes
+    };
+
+    struct Parameters
+    {
+        float trigger_speed = 0.5f;              // internal trigger speed, knob
+        TriggerType trigger_type = kTriggerFree; // trigger type, selection
+        float trigger_level = 0.5f;              // trigger level, slider
+        float trigger_limit = 0.5f;              // retrigger threshold, knob
+        float time_window = 0.5f;                // X-range, knob
+        float amp_window = 0.5f;                 // Y-range, knob
+        bool sync_draw = false;                  // sync redraw, on/off
+        bool freeze = false;                     // freeze display, on/off
+        bool dc_kill = false;                    // kill DC, on/off
+        // float kChannel;            // channel selection, left/right
+    };
+
+    WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s);
+
+    const Parameters &getParameters() const;
+    void setParameters(Parameters parameters);
+
+    bool frozen() const;
+
+    void paint(juce::Graphics &g) override;
+    void resized() override;
+    void process(std::vector<float> data);
+
+  private:
+    SurgeGUIEditor *editor_;
+    SurgeStorage *storage_;
+    Parameters params_;
+
+    // Global lock for the class.
+    std::mutex lock_;
+
+    std::vector<juce::Point<float>> peaks;
+    std::vector<juce::Point<float>> copy;
+
+    // Index into the peak-array.
+    std::size_t index;
+
+    // counter which is used to set the amount of samples/pixel.
+    double counter;
+
+    // max/min peak in this block.
+    float max, min, maxR, minR;
+
+    // the last peak we encountered was a maximum?
+    bool lastIsMax;
+
+    // the previous sample (for edge-triggers)
+    float previousSample;
+
+    // the internal trigger oscillator
+    double triggerPhase;
+
+    // trigger limiter
+    int triggerLimitPhase;
+
+    // DC killer.
+    double dcKill, dcFilterTemp;
+};
+
 class Oscilloscope : public OverlayComponent,
                      public Surge::GUI::SkinConsumingComponent,
                      public Surge::GUI::Hoverable
@@ -195,7 +269,8 @@ class Oscilloscope : public OverlayComponent,
     SwitchButton scope_mode_button_;
     Background background_;
     Spectrogram spectrogram_;
-    Waveform waveform_;
+    // Waveform waveform_;
+    WaveformDisplay waveform_;
 };
 
 } // namespace Overlays

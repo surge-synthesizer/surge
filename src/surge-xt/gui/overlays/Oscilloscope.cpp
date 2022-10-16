@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cmath>
 #include <functional>
+#include <limits>
 #include "RuntimeFont.h"
 #include "SkinColors.h"
 
@@ -28,6 +29,314 @@ namespace Surge
 {
 namespace Overlays
 {
+
+WaveformDisplay::WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s), counter(1.0), max(std::numeric_limits<float>::min()),
+      min(std::numeric_limits<float>::min())
+{
+}
+
+const WaveformDisplay::Parameters &WaveformDisplay::getParameters() const { return params_; }
+
+void WaveformDisplay::setParameters(Parameters parameters) { params_ = std::move(parameters); }
+
+bool WaveformDisplay::frozen() const { return params_.freeze; }
+
+void WaveformDisplay::paint(juce::Graphics &g)
+{
+#if 0
+    CPoint offset(38, 16);
+
+    CRect R(0, 0, getViewSize().getWidth(), getViewSize().getHeight());
+    back->draw(pContext, R.offset(offset), offset);
+
+    R(615 - getViewSize().left, 240 - getViewSize().top, 615 + heads->getWidth() - getViewSize().left, 240 + heads->getHeight() / 4 - getViewSize().top);
+    heads->draw(pContext, R.offset(offset), CPoint(0, (display * heads->getHeight()) / 4));
+
+    pContext->setDrawMode(CDrawMode(kAntiAliasing));
+
+    // trig-line
+    long triggerType = (long)(effect->getParameter(CSmartelectronixDisplay::kTriggerType) * CSmartelectronixDisplay::kNumTriggerTypes + 0.0001);
+
+    if (triggerType == CSmartelectronixDisplay::kTriggerRising || triggerType == CSmartelectronixDisplay::kTriggerFalling) {
+        long y = 1 + (long)((1.f - effect->getParameter(CSmartelectronixDisplay::kTriggerLevel)) * (getViewSize().getHeight() - 2));
+
+        CColor grey(229, 229, 229);
+        pContext->setFrameColor(grey);
+        pContext->drawLine(CPoint(0, y).offset(offset), CPoint(getViewSize().getWidth() - 1, y).offset(offset));
+    }
+
+    // zero-line
+    CColor orange(179, 111, 56);
+    pContext->setFrameColor(orange);
+    pContext->drawLine(CPoint(0, getViewSize().getHeight() * 0.5 - 1).offset(offset), CPoint(getViewSize().getWidth() - 1, getViewSize().getHeight() * 0.5 - 1).offset(offset));
+#endif
+
+    std::unique_lock l(lock_);
+    auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
+    auto path = juce::Path();
+
+    // waveform
+    const std::vector<juce::Point<float>> &points = (params_.sync_draw ? copy : peaks);
+    double counterSpeedInverse = std::pow(10.f, params_.time_window * 5.f - 1.5f);
+
+    g.setColour(curveColor);
+    if (counterSpeedInverse < 1.0) // draw interpolated lines
+    {
+        // CColor blue(64, 148, 172);
+        // pContext->setFrameColor(blue);
+        double phase = counterSpeedInverse;
+        double dphase = counterSpeedInverse;
+
+        double prevxi = points[0].x;
+        double prevyi = points[0].y;
+        path.startNewSubPath(prevxi, prevyi);
+
+        for (std::size_t i = 1; i < getWidth() - 1; i++)
+        {
+            int index = static_cast<int>(phase);
+            double alpha = phase - static_cast<double>(index);
+
+            double xi = i;
+            double yi = (1.0 - alpha) * points[index * 2].y + alpha * points[(index + 1) * 2].y;
+            path.lineTo(xi, yi);
+            // pContext->drawLine(CPoint(prevxi, prevyi).offset(offset), CPoint(xi,
+            // yi).offset(offset));
+            prevxi = xi;
+            prevyi = yi;
+
+            phase += dphase;
+        }
+    }
+    else
+    {
+        // CColor grey(118, 118, 118);
+        // pContext->setFrameColor(grey);
+
+        // juce::Point<float> &p1, &p2;
+        path.startNewSubPath(points[0].x, points[0].y);
+        for (std::size_t i = 0; i < points.size() - 1; i++)
+        {
+            path.lineTo(points[i].x, points[i].y);
+            // g.drawLine(points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+            // p1 = points[i];
+            // p2 = points[i + 1];
+            //  pContext->drawLine(p1.offset(offset), p2.offset(offset));
+        }
+    }
+    g.strokePath(path, juce::PathStrokeType(1.f));
+
+#if 0
+    //TODO clean this mess up...
+    if (where.x != -1) {
+        CPoint whereOffset = where;
+        whereOffset.offsetInverse(offset);
+
+        pContext->drawLine(CPoint(0, whereOffset.y).offset(offset), CPoint(getViewSize().getWidth() - 1, whereOffset.y).offset(offset));
+        pContext->drawLine(CPoint(whereOffset.x, 0).offset(offset), CPoint(whereOffset.x, getViewSize().getHeight() - 1).offset(offset));
+
+        float gain = powf(10.f, effect->getParameter(CSmartelectronixDisplay::kAmpWindow) * 6.f - 3.f);
+        float y = (-2.f * ((float)whereOffset.y + 1.f) / (float)OSC_HEIGHT + 1.f) / gain;
+        float x = (float)whereOffset.x * (float)counterSpeedInverse;
+        char text[256];
+
+        long lineSize = 10;
+
+        CColor color(179, 111, 56);
+
+        pContext->setFontColor(color);
+        pContext->setFont(kNormalFontSmaller);
+
+        readout->draw(pContext, CRect(508, 8, 508 + readout->getWidth(), 8 + readout->getHeight()).offset(offset), CPoint(0, 0));
+
+        CRect textRect(512, 10, 652, 10 + lineSize);
+        textRect.offset(offset);
+
+        sprintf(text, "y = %.5f", y);
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize);
+
+        sprintf(text, "y = %.5f dB", cf_lin2db(fabsf(y)));
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize * 2);
+
+        sprintf(text, "x = %.2f samples", x);
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize);
+
+        sprintf(text, "x = %.5f seconds", x / effect->getSampleRate());
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize);
+
+        sprintf(text, "x = %.5f ms", 1000.f * x / effect->getSampleRate());
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize);
+
+        if (x == 0)
+            sprintf(text, "x = infinite Hz");
+        else
+            sprintf(text, "x = %.3f Hz", effect->getSampleRate() / x);
+
+        pContext->drawString(text, textRect, kLeftText, true);
+    }
+#endif
+}
+
+void WaveformDisplay::process(std::vector<float> data)
+{
+    std::unique_lock l(lock_);
+    float gain = std::pow(10.f, params_.amp_window * 6.f - 3.f);
+    float triggerLevel = params_.trigger_level * 2.f - 1.f;
+    int triggerLimit = static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f));
+    double triggerSpeed = std::pow(10.0, 2.5 * params_.trigger_speed - 5.0);
+    double counterSpeed = std::pow(10.0, -params_.time_window * 5. + 1.5); // [0=>10, 1=>0.001]
+    double R = 1.0 - 250.0 / static_cast<double>(storage_->samplerate);
+
+    for (float &f : data)
+    {
+        // DC filter
+        dcKill = f - dcFilterTemp + R * dcKill;
+        dcFilterTemp = f;
+
+        if (std::abs(dcKill) < 1e-10)
+        {
+            dcKill = 0.f;
+        }
+
+        // Gain
+        float sample = params_.dc_kill ? static_cast<float>(dcKill) : f;
+        sample = juce::jlimit(-1.f, 1.f, sample * gain);
+
+        // Triggers
+        bool trigger = false;
+        switch (params_.trigger_type)
+        {
+        case kTriggerInternal:
+            // internal oscillator, nothing fancy
+            triggerPhase += triggerSpeed;
+            if (triggerPhase >= 1.0)
+            {
+                triggerPhase -= 1.0;
+                trigger = true;
+            }
+            break;
+        case kTriggerRising:
+            // trigger on a rising edge
+            if (sample >= triggerLevel && previousSample < triggerLevel)
+            {
+                trigger = true;
+            }
+            break;
+        case kTriggerFalling:
+            // trigger on a falling edge
+            if (sample <= triggerLevel && previousSample > triggerLevel)
+            {
+                trigger = true;
+            }
+            break;
+        case kTriggerFree:
+            // trigger when we've run out of the screen area
+            if (index >= getWidth())
+            {
+                trigger = true;
+            }
+            break;
+        }
+
+        // if there's a retrigger, but too fast, kill it
+        triggerLimitPhase++;
+        if (trigger && triggerLimitPhase < triggerLimit && params_.trigger_type != kTriggerFree &&
+            params_.trigger_type != kTriggerInternal)
+        {
+            trigger = false;
+        }
+
+        // @ trigger
+        if (trigger)
+        {
+            std::size_t j;
+
+            // zero peaks after the last one
+            for (j = index * 2; j < getWidth(); j += 2)
+            {
+                peaks[j].y = peaks[j + 1].y = getHeight() * 0.5f - 1.f;
+            }
+
+            // copy to a buffer for drawing!
+            for (j = 0; j < getWidth(); j++)
+            {
+                copy[j].y = peaks[j].y;
+            }
+
+            // reset everything
+            index = 0;
+            counter = 1.0;
+            max = std::numeric_limits<float>::min();
+            min = std::numeric_limits<float>::max();
+            triggerLimitPhase = 0;
+        }
+
+        // @ sample
+        if (sample > max)
+        {
+            max = sample;
+            lastIsMax = true;
+        }
+
+        if (sample < min)
+        {
+            min = sample;
+            lastIsMax = false;
+        }
+
+        counter += counterSpeed;
+
+        // @ counter
+        // the counter keeps track of how many samples/pixel we have.
+        if (counter >= 1.0)
+        {
+            if (index < getWidth())
+            {
+                // scale here, better than in the graphics thread
+                double max_Y = (getHeight() * 0.5 - max * 0.5 * getHeight()) - 1.0;
+                double min_Y = (getHeight() * 0.5 - min * 0.5 * getHeight()) - 1.0;
+
+                // thanks to David @ Plogue for this interesting hint!
+                peaks[(index << 1)].y = lastIsMax ? min_Y : max_Y;
+                peaks[(index << 1) + 1].y = lastIsMax ? max_Y : min_Y;
+
+                index++;
+            }
+
+            max = std::numeric_limits<float>::min();
+            min = std::numeric_limits<float>::max();
+            counter -= 1.0;
+        }
+
+        // store for edge-triggers
+        previousSample = sample;
+        if (trigger)
+        {
+            repaint();
+        }
+    }
+}
+
+void WaveformDisplay::resized()
+{
+    peaks.clear();
+    copy.clear();
+    for (std::size_t j = 0; j < getWidth() * 2; j += 2)
+    {
+        juce::Point<float> point;
+        point.x = static_cast<float>(j) / 2.f;
+        point.y = static_cast<float>(getHeight()) * 0.5f - 1.f;
+        peaks.push_back(point);
+        peaks.push_back(point);
+        copy.push_back(point);
+        copy.push_back(point);
+    }
+}
 
 float Oscilloscope::freqToX(float freq, int width)
 {
@@ -143,7 +452,8 @@ void Oscilloscope::updateDrawing()
     {
         if (scope_mode_ == WAVEFORM)
         {
-            waveform_.scroll();
+            // waveform_.scroll();
+            waveform_.repaint();
         }
         else
         {
@@ -278,7 +588,8 @@ void Oscilloscope::pullData()
         if (scope_mode_ == WAVEFORM)
         {
             // FIXME: Normalize dataL.
-            waveform_.updateAudioData(dataL);
+            // waveform_.updateAudioData(dataL);
+            waveform_.process(std::move(dataL));
         }
         else
         {
