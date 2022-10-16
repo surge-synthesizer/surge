@@ -58,12 +58,11 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
         TriggerType trigger_type = kTriggerFree; // trigger type, selection
         float trigger_level = 0.5f;              // trigger level, slider
         float trigger_limit = 0.5f;              // retrigger threshold, knob
-        float time_window = 0.5f;                // X-range, knob
+        float time_window = 0.75f;               // X-range, knob
         float amp_window = 0.5f;                 // Y-range, knob
         bool sync_draw = false;                  // sync redraw, on/off
         bool freeze = false;                     // freeze display, on/off
         bool dc_kill = false;                    // kill DC, on/off
-        // float kChannel;            // channel selection, left/right
     };
 
     WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s);
@@ -87,6 +86,8 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     std::vector<juce::Point<float>> peaks;
     std::vector<juce::Point<float>> copy;
+    std::vector<float> scope_data_;
+    std::size_t pos_;
 
     // Index into the peak-array.
     std::size_t index;

@@ -257,13 +257,17 @@ void WaveformDisplay::process(std::vector<float> data)
             std::size_t j;
 
             // zero peaks after the last one
-            for (j = index * 2; j < getWidth(); j += 2)
+            for (j = index * 2; j < getWidth() * 2; j += 2)
             {
                 peaks[j].y = peaks[j + 1].y = getHeight() * 0.5f - 1.f;
             }
+            //for (j = pos_+1; j < scope_data_.size(); j++)
+            //{
+            //scope_data_[j] = getHeight() * 0.5f - 1.f;
+            //}
 
             // copy to a buffer for drawing!
-            for (j = 0; j < getWidth(); j++)
+            for (j = 0; j < getWidth() * 2; j++)
             {
                 copy[j].y = peaks[j].y;
             }
