@@ -400,8 +400,9 @@ void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
             const auto freqString =
                 juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
             // Label will go past the end of the scopeRect.
-            const auto labelRect = juce::Rectangle{font.getStringWidth(freqString), labelHeight}
-                                       .withCentre(juce::Point<int>(xPos, height + 11));
+            const auto labelRect =
+                juce::Rectangle{font.getStringWidth(freqString), labelHeight}.withCentre(
+                    juce::Point<int>(xPos, height + 11));
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
             g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
