@@ -167,7 +167,7 @@ class Oscilloscope : public OverlayComponent,
     static float magToY(float mag, int height);
 
     void calculateSpectrumData();
-    void changeScopeType();
+    void changeScopeType(ScopeMode type);
     juce::Rectangle<int> getScopeRect();
     void pullData();
     void toggleChannel();
