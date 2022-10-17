@@ -63,7 +63,6 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     left_chan_button_.setStorage(storage_);
     left_chan_button_.setToggleState(true);
     left_chan_button_.onToggle = onToggle;
-    left_chan_button_.setOpaque(true);
     left_chan_button_.setBufferedToImage(true);
     left_chan_button_.setAccessible(true);
     left_chan_button_.setTitle("L CHAN");
@@ -72,7 +71,6 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     right_chan_button_.setStorage(storage_);
     right_chan_button_.setToggleState(true);
     right_chan_button_.onToggle = onToggle;
-    right_chan_button_.setOpaque(true);
     right_chan_button_.setBufferedToImage(true);
     right_chan_button_.setAccessible(true);
     right_chan_button_.setTitle("R CHAN");
@@ -81,7 +79,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     scope_mode_button_.setStorage(storage_);
     scope_mode_button_.setRows(1);
     scope_mode_button_.setColumns(2);
-    scope_mode_button_.setLabels({"WAVEFORM", "SPECTRUM"});
+    scope_mode_button_.setLabels({"Waveform", "Spectrum"});
     scope_mode_button_.setWantsKeyboardFocus(false);
     scope_mode_button_.setValue(1.f);
     addAndMakeVisible(background_);
@@ -191,24 +189,40 @@ void Oscilloscope::calculateSpectrumData()
     }
 }
 
-void Oscilloscope::changeScopeType()
+void Oscilloscope::changeScopeType(ScopeMode type)
 {
     std::unique_lock l(data_lock_);
-    if (scope_mode_ == SPECTRUM)
+    bool skipUpdate = false;
+
+    switch (type)
+    {
+    case WAVEFORM:
     {
         scope_mode_ = WAVEFORM;
         spectrogram_.setVisible(false);
         std::fill(scope_data_.begin(), scope_data_.end(), 0.f);
         waveform_.setVisible(true);
+
+        break;
     }
-    else
+    case SPECTRUM:
     {
         scope_mode_ = SPECTRUM;
         waveform_.setVisible(false);
         std::fill(scope_data_.begin(), scope_data_.end(), dbMin);
         spectrogram_.setVisible(true);
+
+        break;
     }
-    background_.updateBackgroundType(scope_mode_);
+    default:
+        skipUpdate = true;
+        break;
+    }
+
+    if (!skipUpdate)
+    {
+        background_.updateBackgroundType(scope_mode_);
+    }
 }
 
 juce::Rectangle<int> Oscilloscope::getScopeRect()
@@ -340,6 +354,7 @@ void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
 void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
 {
     juce::Graphics::ScopedSaveState g1(g);
+
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
 
     auto scopeRect = scope_bounds_;
@@ -353,16 +368,19 @@ void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
     // Horizontal grid.
     {
         auto gs = juce::Graphics::ScopedSaveState(g);
+
         g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
         g.setFont(font);
 
         // Draw frequency lines.
-        for (float freq : {20.f, 30.f, 40.f, 60.f, 80.f, 100.f, 200.f, 300.f, 400.f, 600.f, 800.f,
-                           1000.f, 2000.f, 3000.f, 4000.f, 6000.f, 8000.f, 10000.f, 20000.f})
+        for (float freq : {10.f,   20.f,   30.f,   40.f,   60.f,    80.f,    100.f,
+                           200.f,  300.f,  400.f,  600.f,  800.f,   1000.f,  2000.f,
+                           3000.f, 4000.f, 6000.f, 8000.f, 10000.f, 20000.f, 24000.f})
         {
             const auto xPos = freqToX(freq, width);
 
-            if (freq == 100.f || freq == 1000.f || freq == 10000.f)
+            if (freq == 10.f || freq == 100.f || freq == 1000.f || freq == 10000.f ||
+                freq == 24000.f)
             {
                 g.setColour(primaryLine);
             }
@@ -373,13 +391,18 @@ void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
 
             g.drawVerticalLine(xPos, 0, static_cast<float>(height));
 
+            if (freq == 10.f || freq == 24000.f)
+            {
+                continue;
+            }
+
             const bool over1000 = freq >= 1000.f;
             const auto freqString =
                 juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
             // Label will go past the end of the scopeRect.
-            const auto labelRect = juce::Rectangle{font.getStringWidth(freqString), labelHeight}
-                                       .withBottomY(height + 13)
-                                       .withRightX((int)xPos);
+            const auto labelRect =
+                juce::Rectangle{font.getStringWidth(freqString), labelHeight}.withCentre(
+                    juce::Point<int>(xPos, height + 11));
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
             g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
@@ -398,7 +421,7 @@ void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
         {
             const auto yPos = dbToY(dB, height);
 
-            if (dB == 0.f)
+            if (dB == 0.f || dB == -100.f)
             {
                 g.setColour(primaryLine);
             }
@@ -406,13 +429,14 @@ void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
             {
                 g.setColour(secondaryLine);
             }
-            g.drawHorizontalLine(yPos, 0, static_cast<float>(width));
+
+            g.drawHorizontalLine(yPos, 0, static_cast<float>(width + 1));
 
             const auto dbString = juce::String(dB) + " dB";
             // Label will go past the end of the scopeRect.
             const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
-                                       .withBottomY((int)yPos)
-                                       .withRightX(width + 30); // -2
+                                       .withBottomY((int)(yPos + (labelHeight / 2)))
+                                       .withRightX(width + 30);
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
@@ -435,6 +459,7 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
 
     {
         auto gs = juce::Graphics::ScopedSaveState(g);
+
         g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
         g.setFont(font);
 
@@ -446,18 +471,27 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
 
         // Axis labels will go past the end of the scopeRect.
         g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
-        labelRect = juce::Rectangle{font.getStringWidth("-1"), labelHeight}
+
+        labelRect = juce::Rectangle{14, labelHeight}
                         .withBottomY((int)height + labelHeight / 2)
-                        .withRightX(width + 15);
-        g.drawFittedText("-1", labelRect, juce::Justification::right, 1);
-        labelRect = juce::Rectangle{font.getStringWidth(" 0"), labelHeight}
+                        .withRightX(width + 16)
+                        .translated(2, 0);
+
+        g.drawText("-1.0", labelRect, juce::Justification::left, 1);
+
+        labelRect = juce::Rectangle{14, labelHeight}
                         .withBottomY((int)(height / 2 + labelHeight / 2))
-                        .withRightX(width + 15);
-        g.drawFittedText(" 0", labelRect, juce::Justification::right, 1);
-        labelRect = juce::Rectangle{font.getStringWidth("+1"), labelHeight}
+                        .withRightX(width + 16)
+                        .translated(2, 0);
+
+        g.drawText("0.0", labelRect, juce::Justification::left, 1);
+
+        labelRect = juce::Rectangle{14, labelHeight}
                         .withBottomY(labelHeight / 2)
-                        .withRightX(width + 15);
-        g.drawFittedText("+1", labelRect, juce::Justification::right, 1);
+                        .withRightX(width + 16)
+                        .translated(2, 0);
+
+        g.drawText("+1.0", labelRect, juce::Justification::left, 1);
     }
 
     // Vertical grid.
@@ -469,23 +503,33 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         for (int ms : {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
         {
             auto xPos = timeToX(std::chrono::milliseconds(ms), width);
-            g.setColour(secondaryLine);
-            g.drawVerticalLine(xPos, 0, height);
 
-            const auto timeString = std::to_string(ms) + "";
+            if (ms == 0 || ms == 100)
+            {
+                g.setColour(primaryLine);
+            }
+            else
+            {
+                g.setColour(secondaryLine);
+            }
+
+            g.drawVerticalLine(xPos, 0, height + 1);
+
+            auto timeString = std::to_string(ms);
+
+            if (ms == 100)
+            {
+                timeString += " ms";
+            }
+
             // Label will go past the end of the scopeRect.
-            const auto labelRect = juce::Rectangle{font.getStringWidth(timeString), labelHeight}
-                                       .withBottomY(height + 13)
-                                       .withRightX((int)xPos);
+            const auto labelRect =
+                juce::Rectangle{font.getStringWidth(timeString), labelHeight}.withCentre(
+                    juce::Point<int>(xPos, height + 13));
+
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             g.drawFittedText(timeString, labelRect, juce::Justification::bottom, 1);
         }
-        const auto msString = "milliseconds";
-        const auto msLen = font.getStringWidth(msString);
-        const auto labelRect = juce::Rectangle{msLen, labelHeight}
-                                   .withBottomY(height + 13 + labelHeight)
-                                   .withRightX((msLen + width) / 2);
-        g.drawFittedText(msString, labelRect, juce::Justification::bottom, 1);
     }
 }
 
@@ -649,7 +693,14 @@ Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)
 
 void Oscilloscope::SwitchButton::valueChanged(Surge::GUI::IComponentTagValue *p)
 {
-    parent_.changeScopeType();
+    ScopeMode type = SPECTRUM;
+
+    if (p->getValue() < 0.5)
+    {
+        type = WAVEFORM;
+    }
+
+    parent_.changeScopeType(type);
 }
 
 } // namespace Overlays
