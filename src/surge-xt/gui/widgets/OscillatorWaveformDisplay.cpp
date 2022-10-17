@@ -1353,14 +1353,16 @@ struct WaveTable3DEditor : public juce::Component,
 
                     g.setColour(skin->getColor(Colors::Osc::Display::WaveFillStart3D)
                                     .interpolatedWith(
-                                        skin->getColor(Colors::Osc::Display::WaveFillEnd3D), tpct));
+                                        skin->getColor(Colors::Osc::Display::WaveFillEnd3D), tpct)
+                                    .withMultipliedAlpha(parent->isMuted ? 0.5f : 1.f));
                     g.fillPath(ribbon);
                 }
 
                 g.setColour(
                     skin->getColor(Colors::Osc::Display::WaveStart3D)
                         .interpolatedWith(skin->getColor(Colors::Osc::Display::WaveEnd3D), tpct)
-                        .withMultipliedAlpha(1.0 - abs(0.25 - (tpct * tpct * 0.5))));
+                        .withMultipliedAlpha((1.0 - abs(0.25 - (tpct * tpct * 0.5))) *
+                                             (parent->isMuted ? 0.5f : 1.f)));
                 g.strokePath(p, juce::PathStrokeType(0.75));
             }
         }
