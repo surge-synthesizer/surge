@@ -438,13 +438,17 @@ void SurgeSynthEditor::filesDropped(const juce::StringArray &files, int x, int y
 
 void SurgeSynthEditor::beginParameterEdit(Parameter *p)
 {
+    // std::cout << "BEGIN EDIT " << p->get_name() << std::endl;
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+    par->inEditGesture = true;
     par->beginChangeGesture();
 }
 
 void SurgeSynthEditor::endParameterEdit(Parameter *p)
 {
+    //  std::cout << "END EDIT " << p->get_name() << std::endl;
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+    par->inEditGesture = false;
     par->endChangeGesture();
 }
 
