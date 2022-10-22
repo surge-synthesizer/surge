@@ -844,6 +844,12 @@ CREATE TABLE IF NOT EXISTS Favorites (
         auto *ph = (patch_header *)phd;
         auto xmlSz = vt_read_int32LE(ph->xmlsize);
 
+        if (!memcpy(ph->tag, "sub3", 4) || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
+        {
+            std::cerr << "Skipping invalid patch : [" << p.path.u8string() << "]" << std::endl;
+            return;
+        }
+
         auto xd = phd + sizeof(patch_header);
         std::string xml(xd, xd + xmlSz);
 
