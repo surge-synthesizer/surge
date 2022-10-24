@@ -51,6 +51,13 @@ struct PatchStoreDialog : public OverlayComponent,
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s);
 
+    bool showTagsField{false};
+    void setShowTagsField(bool s)
+    {
+        showTagsField = s;
+        tagEd->setVisible(s);
+    };
+
     void setName(const std::string &n) { nameEd->setText(n, juce::dontSendNotification); }
     void setAuthor(const std::string &a) { authorEd->setText(a, juce::dontSendNotification); }
     void setCategory(const std::string &c) { catEd->setText(c, juce::dontSendNotification); }
