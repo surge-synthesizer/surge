@@ -1374,7 +1374,6 @@ void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
     g.fillRect(getLocalBounds().reduced(1));
     g.setColour(skin->getColor(clr::Text));
     g.setFont(skin->fontManager->getLatoAtSize(9));
-    printf("Popup width: %d\n", getWidth());
     g.drawMultiLineText(comment, 5, g.getCurrentFont().getHeight() + 2, getWidth(),
                         juce::Justification::left);
 }
