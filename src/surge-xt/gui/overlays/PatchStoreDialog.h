@@ -54,6 +54,18 @@ struct PatchStoreDialog : public OverlayComponent,
     bool showTagsField{false};
     void setShowTagsField(bool s)
     {
+        if (s && !showTagsField)
+        {
+            auto pos = getEnclosingParentPosition();
+            pos = pos.withHeight(pos.getHeight() + 25);
+            setEnclosingParentPosition(pos);
+        }
+        if (!s && showTagsField)
+        {
+            auto pos = getEnclosingParentPosition();
+            pos = pos.withHeight(pos.getHeight() - 25);
+            setEnclosingParentPosition(pos);
+        }
         showTagsField = s;
         tagEd->setVisible(s);
     };

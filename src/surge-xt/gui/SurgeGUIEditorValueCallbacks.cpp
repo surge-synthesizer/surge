@@ -3492,12 +3492,6 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         }
 
                         psd->setShowTagsField(showTags);
-
-                        if (showTags)
-                        {
-                            auto pos = psd->getEnclosingParentPosition();
-                            pos = pos.withHeight(pos.getHeight() + 25);
-                        }
                     });
     }
     break;
