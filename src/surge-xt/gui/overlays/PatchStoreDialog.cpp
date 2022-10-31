@@ -427,7 +427,6 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
         }
 
         synth->storage.getPatch().tags = tags;
-
         synth->storage.getPatch().patchTuning.tuningStoredInPatch =
             storeTuningButton->isVisible() && storeTuningButton->getToggleState();
 
@@ -457,14 +456,10 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
 
         // Ignore whatever comes from the DAW
         synth->storage.getPatch().dawExtraState.isPopulated = false;
-        if (button == okOverButton.get())
-        {
-            synth->savePatch(true);
-        }
-        else
-        {
-            synth->savePatch();
-        }
+
+        auto m = juce::ModifierKeys::getCurrentModifiers();
+
+        synth->savePatch(button == okOverButton.get(), m.isShiftDown());
 
         onOK();
 
