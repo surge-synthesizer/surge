@@ -3491,7 +3491,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                             return;
                         }
 
-                        psd->setShowTagsField(showTags);
+                        // REVERT AFTER 112
+                        psd->setShowTagsField(false /*showTags*/);
+
+                        // END REVERT AFTER 112
                     });
     }
     break;

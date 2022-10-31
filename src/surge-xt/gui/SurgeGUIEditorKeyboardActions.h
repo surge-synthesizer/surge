@@ -54,7 +54,8 @@ enum KeyboardActions
     SHOW_MODLIST,
     SHOW_TUNING_EDITOR,
     TOGGLE_VIRTUAL_KEYBOARD,
-    TOGGLE_OSCILLOSCOPE,
+    // REVERT AFTER 112
+    // TOGGLE_OSCILLOSCOPE,
 
     ZOOM_TO_DEFAULT,
     ZOOM_PLUS_10,
@@ -127,8 +128,10 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "SHOW_TUNING_EDITOR";
     case TOGGLE_VIRTUAL_KEYBOARD:
         return "TOGGLE_VIRTUAL_KEYBOARD";
-    case TOGGLE_OSCILLOSCOPE:
-        return "TOGGLE_OSCILLOSCOPE";
+
+        // REVERT AFTER 112
+        // case TOGGLE_OSCILLOSCOPE:
+        //   return "TOGGLE_OSCILLOSCOPE";
 
     case ZOOM_TO_DEFAULT:
         return "ZOOM_TO_DEFAULT";
@@ -243,9 +246,10 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     case TOGGLE_VIRTUAL_KEYBOARD:
         desc = "Virtual Keyboard";
         break;
-    case TOGGLE_OSCILLOSCOPE:
-        desc = "Oscilloscope";
-        break;
+        // REVERT AFTER 112
+        // case TOGGLE_OSCILLOSCOPE:
+        //     desc = "Oscilloscope";
+        //     break;
 
     case ZOOM_TO_DEFAULT:
         desc = "Zoom to Default";
