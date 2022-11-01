@@ -4098,16 +4098,12 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                                     showShortcutDescription("Alt + K", u8"\U00002325K"), true,
                                     showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
 
-#if 0
-    // Revert after 112
     bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
 
     Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Open Oscilloscope"),
                                     showShortcutDescription("Alt + O", u8"\U00002325O"), true,
                                     showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 
-    // end revert after 112
-#endif
     return wfMenu;
 }
 
@@ -6963,13 +6959,8 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::SHOW_TUNING_EDITOR, {keymap_t::Modifiers::ALT, (int)'T'});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
                               {keymap_t::Modifiers::ALT, (int)'K'});
-
-#if 0
-    // REVERT AFTER 112
     keyMapManager->addBinding(Surge::GUI::TOGGLE_OSCILLOSCOPE,
                               {keymap_t::Modifiers::ALT, (int)'O'});
-    // END REVERT AFTER 112
-#endif
 
     keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t::Modifiers::SHIFT, '/'});
     keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t::Modifiers::NONE, '+'});
@@ -7171,10 +7162,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD:
                 toggleVirtualKeyboard();
                 return true;
-                // Revert after 112
-                // case Surge::GUI::TOGGLE_OSCILLOSCOPE:
-                //    toggleOverlay(SurgeGUIEditor::OSCILLOSCOPE);
-                //    return true;
+            case Surge::GUI::TOGGLE_OSCILLOSCOPE:
+                toggleOverlay(SurgeGUIEditor::OSCILLOSCOPE);
+                return true;
 
             case Surge::GUI::ZOOM_TO_DEFAULT:
             {
