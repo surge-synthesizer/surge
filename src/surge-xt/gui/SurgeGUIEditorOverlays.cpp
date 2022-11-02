@@ -97,6 +97,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
 
     // since it is now modal center in the window
     auto posRect = skinCtrl->getRect().withCentre(frame->getBounds().getCentre());
+
     pb->setEnclosingParentTitle("Save Patch");
     pb->setEnclosingParentPosition(posRect);
     pb->setHasIndependentClose(false);
@@ -405,6 +406,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
     return nullptr;
 }
+
 void SurgeGUIEditor::showOverlay(OverlayTags olt,
                                  std::function<void(Surge::Overlays::OverlayComponent *)> setup)
 {
@@ -416,12 +418,12 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
         return;
     }
 
+    setup(ol.get());
+
     // copy these before the std::move below
     auto t = ol->getEnclosingParentTitle();
     auto r = ol->getEnclosingParentPosition();
     auto c = ol->getHasIndependentClose();
-
-    setup(ol.get());
 
     std::function<void()> onClose = []() {};
     bool isModal = false;
@@ -463,6 +465,7 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
     default:
         break;
     }
+
     addJuceEditorOverlay(std::move(ol), t, olt, r, c, onClose, isModal);
 
     switch (olt)
@@ -492,6 +495,7 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
 
     getOverlayIfOpen(olt)->grabKeyboardFocus();
 }
+
 void SurgeGUIEditor::closeOverlay(OverlayTags olt)
 {
     auto olw = getOverlayWrapperIfOpen(olt);

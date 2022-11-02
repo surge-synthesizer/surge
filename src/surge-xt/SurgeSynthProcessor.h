@@ -94,6 +94,8 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
         setValueNotifyingHost(getValue());
     }
 
+    std::atomic<bool> inEditGesture{false};
+
     juce::String getName(int i) const override
     {
         juce::String res = SurgeParamToJuceInfo::getParameterName(s, p);
@@ -104,9 +106,21 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
     float getDefaultValue() const override { return 0.0; /* FIXME */ }
     void setValue(float f) override
     {
-        if (f != getValue())
+        auto matches = (f == getValue());
+        if (!matches && !inEditGesture)
+        {
             s->setParameter01(s->idForParameter(p), f, true);
+        }
+        /*
+         * In LIVE 11.1 and 11.2 this will fire and matches will be false
+        else if (inEditGesture)
+        {
+            std::cout << ">>> VST3 SUPRESSED >>> " << f << " " << (matches ? "match" : "DIFFERENT")
+                      << std::endl;
+        }
+         */
     }
+
     int getNumSteps() const override { return RangedAudioParameter::getNumSteps(); }
     float getValueForText(const juce::String &text) const override
     {

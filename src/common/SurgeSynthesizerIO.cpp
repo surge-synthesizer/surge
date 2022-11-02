@@ -516,10 +516,12 @@ void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 #include <sys/stat.h>
 #endif
 
-void SurgeSynthesizer::savePatch(bool factoryInPlace)
+void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
 {
     if (storage.getPatch().category.empty())
+    {
         storage.getPatch().category = "Default";
+    }
 
     fs::path savepath = storage.userPatchesPath;
 
@@ -533,6 +535,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace)
     try
     {
         std::string tempCat = storage.getPatch().category;
+
 #if WINDOWS
         if (tempCat[0] == '\\' || tempCat[0] == '/')
         {
@@ -566,7 +569,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace)
     fs::path filename = savepath;
     filename /= string_to_path(storage.getPatch().name + ".fxp");
 
-    if (fs::exists(filename))
+    if (fs::exists(filename) && !skipOverwrite)
     {
         storage.okCancelProvider(std::string("The patch '" + storage.getPatch().name +
                                              "' already exists in '" + storage.getPatch().category +
@@ -583,6 +586,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace)
     {
         savePatchToPath(filename);
     }
+
     storage.getPatch().isDirty = false;
 }
 

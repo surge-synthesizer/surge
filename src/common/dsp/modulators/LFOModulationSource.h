@@ -96,6 +96,11 @@ class LFOModulationSource : public ModulationSource
     Surge::MSEG::EvaluatorState msegstate;
     Surge::Formula::EvaluatorState formulastate;
 
+    inline float getPhase() { return phase; }
+    inline int getIntPhase() { return unwrappedphase_intpart; }
+    inline int getEnvState() { return env_state; }
+    inline int getStep() { return step; }
+
   private:
     pdata *localcopy;
     bool phaseInitialized;

@@ -135,27 +135,28 @@ TEST_CASE("SQL Generation", "[query]")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("init");
         auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
-        REQUIRE(s == "( p.name LIKE '%init%' )");
+        REQUIRE(s == "( p.search_over LIKE '%init%' )");
     }
 
     SECTION("Duple")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("init sine");
         auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
-        REQUIRE(s == "( ( p.name LIKE '%init%' ) AND ( p.name LIKE '%sine%' ) )");
+        REQUIRE(s == "( ( p.search_over LIKE '%init%' ) AND ( p.search_over LIKE '%sine%' ) )");
     }
 
     SECTION("Single Quote")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("init 'sine");
         auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
-        REQUIRE(s == "( ( p.name LIKE '%init%' ) AND ( p.name LIKE '%''sine%' ) )");
+        REQUIRE(s == "( ( p.search_over LIKE '%init%' ) AND ( p.search_over LIKE '%''sine%' ) )");
     }
 
     SECTION("Lots of Single Quotes Quote")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("in'it' ''sine");
         auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
-        REQUIRE(s == "( ( p.name LIKE '%in''it''%' ) AND ( p.name LIKE '%''''sine%' ) )");
+        REQUIRE(s ==
+                "( ( p.search_over LIKE '%in''it''%' ) AND ( p.search_over LIKE '%''''sine%' ) )");
     }
 }

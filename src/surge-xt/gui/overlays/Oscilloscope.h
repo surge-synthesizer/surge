@@ -32,6 +32,7 @@
 #include "juce_core/juce_core.h"
 #include "juce_dsp/juce_dsp.h"
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "sst/cpputils.h"
 
 namespace Surge
 {
@@ -69,8 +70,17 @@ class Oscilloscope : public OverlayComponent,
         OFF = 4,
     };
 
+    enum ScopeMode
+    {
+        WAVEFORM = 1,
+        SPECTRUM = 2,
+    };
+
     // Really wish span was available.
     using FftScopeType = std::array<float, fftSize / 2>;
+
+    // Really wish std::chrono didn't suck so badly.
+    using FloatSeconds = std::chrono::duration<float>;
 
     // Child component for handling the drawing of the background. Done as a separate child instead
     // of in the Oscilloscope class so the display, which is repainting at 20-30 hz, doesn't mark
@@ -80,9 +90,14 @@ class Oscilloscope : public OverlayComponent,
       public:
         explicit Background();
         void paint(juce::Graphics &g) override;
+        void updateBackgroundType(ScopeMode mode);
         void updateBounds(juce::Rectangle<int> local_bounds, juce::Rectangle<int> scope_bounds);
 
       private:
+        void paintSpectrogramBackground(juce::Graphics &g);
+        void paintWaveformBackground(juce::Graphics &g);
+
+        ScopeMode mode_;
         juce::Rectangle<int> scope_bounds_;
     };
 
@@ -109,10 +124,50 @@ class Oscilloscope : public OverlayComponent,
         FftScopeType displayed_data_;
     };
 
-    static float freqToX(float freq, int width);
-    static float dbToY(float db, int height);
+    // Child component for handling drawing of the waveform.
+    class Waveform : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    {
+      public:
+        Waveform(SurgeGUIEditor *e, SurgeStorage *s);
 
-    void calculateScopeData();
+        void paint(juce::Graphics &g) override;
+        void scroll();
+        void updateAudioData(const std::vector<float> &buf);
+
+      private:
+        static constexpr const float refreshRate = 60.f;
+
+        SurgeGUIEditor *editor_;
+        SurgeStorage *storage_;
+        std::mutex data_lock_;
+        std::chrono::milliseconds period_;
+        FloatSeconds period_float_;
+        std::size_t period_samples_;
+        // scope_data_ will buffer an entire second of data, not just what's displayed.
+        std::vector<float> scope_data_;
+        sst::cpputils::SimpleRingBuffer<float, fftSize> upcoming_data_;
+        int last_sample_rate_;
+    };
+
+    // Child component for handling the switch between waveform/spectrum.
+    class SwitchButton : public Surge::Widgets::MultiSwitchSelfDraw,
+                         public Surge::GUI::IComponentTagValue::Listener
+    {
+      public:
+        explicit SwitchButton(Oscilloscope &parent);
+        void valueChanged(Surge::GUI::IComponentTagValue *p) override;
+
+      private:
+        Oscilloscope &parent_;
+    };
+
+    static float freqToX(float freq, int width);
+    static float timeToX(std::chrono::milliseconds time, int width);
+    static float dbToY(float db, int height);
+    static float magToY(float mag, int height);
+
+    void calculateSpectrumData();
+    void changeScopeType(ScopeMode type);
     juce::Rectangle<int> getScopeRect();
     void pullData();
     void toggleChannel();
@@ -125,7 +180,9 @@ class Oscilloscope : public OverlayComponent,
     int pos_;
     FftScopeType scope_data_;
     ChannelSelect channel_selection_;
-    std::mutex channel_selection_guard_;
+    ScopeMode scope_mode_;
+    // Global lock for all data members accessed concurrently.
+    std::mutex data_lock_;
 
     // Members for the data-pulling thread.
     std::thread fft_thread_;
@@ -135,8 +192,10 @@ class Oscilloscope : public OverlayComponent,
     // Visual elements.
     Surge::Widgets::SelfDrawToggleButton left_chan_button_;
     Surge::Widgets::SelfDrawToggleButton right_chan_button_;
+    SwitchButton scope_mode_button_;
     Background background_;
     Spectrogram spectrogram_;
+    Waveform waveform_;
 };
 
 } // namespace Overlays

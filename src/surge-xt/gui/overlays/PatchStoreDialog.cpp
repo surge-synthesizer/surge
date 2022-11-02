@@ -38,9 +38,11 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
     {
         std::vector<int> res;
         std::map<std::string, int> alreadySeen;
+
         if (storage)
         {
             int idx = 0;
+
             for (auto &c : storage->patch_category)
             {
                 if (!c.isFactory || (idx < storage->firstThirdPartyCategory &&
@@ -49,6 +51,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
                     auto it = std::search(
                         c.name.begin(), c.name.end(), s.begin(), s.end(),
                         [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
+
                     if (it != c.name.end())
                     {
                         // De-duplicate if factory and user are both there.
@@ -70,6 +73,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
                                 }
                             }
                         }
+
                         res.push_back(idx);
                         alreadySeen[c.name] = idx;
                     }
@@ -77,6 +81,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
                 idx++;
             }
         }
+
         // Now sort that res
         std::sort(res.begin(), res.end(), [this](const auto &a, const auto &b) {
             const auto pa = storage->patch_category[a];
@@ -92,11 +97,13 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
                 return pb.isFactory;
             }
         });
+
         return res;
     }
 
     juce::Font font{12};
     juce::Colour hl, hlbg, txt, bg;
+
     void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
                        bool rowIsSelected) override
     {
@@ -110,6 +117,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
             g.fillAll(bg);
             g.setColour(txt);
         }
+
         g.setFont(font);
         g.drawText(textBoxValueForIndex(searchIndex), 4, 0, width - 4, height,
                    juce::Justification::centredLeft);
@@ -121,6 +129,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
         {
             return storage->patch_category[idx].name;
         }
+
         return "";
     }
 };
@@ -145,16 +154,13 @@ PatchStoreDialog::PatchStoreDialog()
     commentEd = makeEd("patch comment");
     commentEd->setMultiLine(true, true);
     commentEd->setReturnKeyStartsNewLine(true);
-    commentEd->setTitle("patch comment");
     commentEd->setJustification(juce::Justification::topLeft);
-    Surge::Widgets::fixupJuceTextEditorAccessibility(*commentEd);
-
-#if HAS_TAGS_FIELD
     tagEd = makeEd("patch tags");
-#endif
+    tagEd->setVisible(showTagsField);
 
     categoryProvider = std::make_unique<PatchStoreDialogCategoryProvider>();
     auto ta = std::make_unique<Surge::Widgets::TypeAhead>("patch category", categoryProvider.get());
+
     ta->setJustification(juce::Justification::centredLeft);
     ta->setSelectAllWhenFocused(true);
     ta->setToElementZeroOnReturn = true;
@@ -168,11 +174,10 @@ PatchStoreDialog::PatchStoreDialog()
         addAndMakeVisible(*lb);
         return std::move(lb);
     };
+
     nameEdL = makeL("Name");
     authorEdL = makeL("Author");
-#if HAS_TAGS_FIELD
     tagEdL = makeL("Tags");
-#endif
     catEdL = makeL("Category");
     commentEdL = makeL("Comment");
 
@@ -226,6 +231,7 @@ void PatchStoreDialog::paint(juce::Graphics &g)
 void PatchStoreDialog::setSurgeGUIEditor(SurgeGUIEditor *e)
 {
     editor = e;
+
     if (!editor || !editor->synth->storage.datapathOverriden)
     {
         okOverButton->setVisible(false);
@@ -236,7 +242,9 @@ void PatchStoreDialog::setSurgeGUIEditor(SurgeGUIEditor *e)
 void PatchStoreDialog::shownInParent()
 {
     if (nameEd->isShowing() && isVisible())
+    {
         nameEd->grabKeyboardFocus();
+    }
 }
 
 void PatchStoreDialog::onSkinChanged()
@@ -265,18 +273,15 @@ void PatchStoreDialog::onSkinChanged()
     resetColors(nameEd);
     resetColors(authorEd);
     resetColors(catEd);
+    resetColors(tagEd);
     resetColors(commentEd);
 
     resetLabel(nameEdL);
     resetLabel(authorEdL);
     resetLabel(catEdL);
+    resetLabel(tagEdL);
     resetLabel(commentEdL);
     resetLabel(storeTuningLabel);
-
-#if HAS_TAGS_FIELD
-    resetLabel(tagEdL);
-    resetColors(tagEd);
-#endif
 
     storeTuningButton->setColour(juce::ToggleButton::tickDisabledColourId,
                                  skin->getColor(Colors::Dialog::Checkbox::Border));
@@ -304,7 +309,7 @@ void PatchStoreDialog::setIsRename(bool b) { isRename = b; }
 void PatchStoreDialog::resized()
 {
     auto h = 25;
-    auto commH = getHeight() - 5 * h + 8;
+    auto commH = getHeight() - (5 + showTagsField) * h + 8;
     auto xSplit = 70;
     auto buttonWidth = 50;
     auto margin = 4;
@@ -329,11 +334,12 @@ void PatchStoreDialog::resized()
         nameEd->grabKeyboardFocus();
     }
 
-#if HAS_TAGS_FIELD
-    ce = ce.translated(0, h);
-    tagEd->setBounds(ce);
-    tagEd->setIndents(4, (tagEd->getHeight() - tagEd->getTextHeight()) / 2);
-#endif
+    if (showTagsField)
+    {
+        ce = ce.translated(0, h);
+        tagEd->setBounds(ce);
+        tagEd->setIndents(4, (tagEd->getHeight() - tagEd->getTextHeight()) / 2);
+    }
 
     ce = ce.translated(0, h);
 
@@ -359,10 +365,11 @@ void PatchStoreDialog::resized()
     cl = cl.translated(0, h);
     authorEdL->setBounds(cl);
 
-#if HAS_TAGS_FIELD
-    cl = cl.translated(0, h);
-    tagEdL->setBounds(cl);
-#endif
+    if (showTagsField)
+    {
+        cl = cl.translated(0, h);
+        tagEdL->setBounds(cl);
+    }
 
     cl = cl.translated(0, h);
     commentEdL->setBounds(cl);
@@ -401,22 +408,25 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
         synth->storage.getPatch().category = catEd->getText().toStdString();
         synth->storage.getPatch().comment = commentEd->getText().toStdString();
 
-#if HAS_TAGS_FIELD
         auto tagString = tagEd->getText();
         std::vector<SurgePatch::Tag> tags;
+
         while (tagString.contains(","))
         {
             auto ltag = tagString.upToFirstOccurrenceOf(",", false, true);
+
             tagString = tagString.fromFirstOccurrenceOf(",", false, true);
             tags.emplace_back(ltag.trim().toStdString());
         }
+
         tagString = tagString.trim();
+
         if (tagString.length())
+        {
             tags.emplace_back(tagString.toStdString());
+        }
 
         synth->storage.getPatch().tags = tags;
-#endif
-
         synth->storage.getPatch().patchTuning.tuningStoredInPatch =
             storeTuningButton->isVisible() && storeTuningButton->getToggleState();
 
@@ -446,14 +456,10 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
 
         // Ignore whatever comes from the DAW
         synth->storage.getPatch().dawExtraState.isPopulated = false;
-        if (button == okOverButton.get())
-        {
-            synth->savePatch(true);
-        }
-        else
-        {
-            synth->savePatch();
-        }
+
+        auto m = juce::ModifierKeys::getCurrentModifiers();
+
+        synth->savePatch(button == okOverButton.get(), m.isShiftDown());
 
         onOK();
 
@@ -464,10 +470,9 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
 
 void PatchStoreDialog::setTags(const std::vector<SurgePatch::Tag> &itags)
 {
-#if HAS_TAGS_FIELD
-
     std::string pfx = "";
     std::ostringstream oss;
+
     for (const auto &t : itags)
     {
         oss << pfx << t.tag;
@@ -475,7 +480,6 @@ void PatchStoreDialog::setTags(const std::vector<SurgePatch::Tag> &itags)
     }
 
     tagEd->setText(oss.str(), juce::NotificationType::dontSendNotification);
-#endif
 }
 
 } // namespace Overlays

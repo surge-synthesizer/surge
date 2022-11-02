@@ -30,6 +30,10 @@ void WaveShaperAnalysis::resized() {}
 
 void WaveShaperAnalysis::paint(juce::Graphics &g)
 {
+    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
+    auto width = lb.getWidth();
+    auto height = lb.getHeight();
+
     if (sliderDrivenCurve.empty() || lastDbValue != getDbValue() || lastPFG != getPFG())
     {
         recalcFromSlider();
@@ -42,10 +46,9 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
     auto xf = juce::AffineTransform()
                   .translated(0, -1.0)
                   .scaled(1, -0.5)
-                  .scaled(getWidth(), getHeight())
+                  .scaled(width, height)
                   .translated(sideOne, 2 + top)
-                  .scaled((getWidth() - sideOne - sideTwo) / getWidth(),
-                          (getHeight() - 4.0 - top) / getHeight());
+                  .scaled((width - sideOne - sideTwo) / width, (height - 4.0 - top) / height);
 
     auto re = juce::Rectangle<float>{0, -1, 1, 2}.transformedBy(xf);
 
@@ -140,7 +143,7 @@ void WaveShaperAnalysis::paint(juce::Graphics &g)
     g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
     g.drawRect(re);
 
-    auto txtr = getLocalBounds().withHeight(top - 6);
+    auto txtr = lb.withHeight(top - 6);
     std::ostringstream title;
     title << sst::waveshapers::wst_names[(int)wstype];
 

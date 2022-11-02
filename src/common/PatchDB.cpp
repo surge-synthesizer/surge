@@ -227,9 +227,8 @@ struct TxnGuard
 
 struct PatchDB::WriterWorker
 {
-    static constexpr const char *schema_version = "11"; // I will rebuild if this is not my version
+    static constexpr const char *schema_version = "14"; // I will rebuild if this is not my version
 
-    // language=SQL
     static constexpr const char *setup_sql = R"SQL(
 DROP TABLE IF EXISTS "Patches";
 DROP TABLE IF EXISTS "PatchFeature";
@@ -244,6 +243,7 @@ CREATE TABLE "Patches" (
       id integer primary key,
       path varchar(2048),
       name varchar(256),
+      search_over varchar(1024),
       category varchar(2048),
       category_type int,
       last_write_time big int
@@ -562,6 +562,17 @@ CREATE TABLE IF NOT EXISTS Favorites (
             {
                 res.emplace_back("AUTHOR", STRING, 0, meta->Attribute("author"));
             }
+
+            auto tags = TINYXML_SAFE_TO_ELEMENT(meta->FirstChild("tags"));
+            if (tags)
+            {
+                auto tag = tags->FirstChildElement();
+                while (tag)
+                {
+                    res.emplace_back("TAG", STRING, 0, tag->Attribute("tag"));
+                    tag = tag->NextSiblingElement();
+                }
+            }
         }
 
         auto parameters = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("parameters"));
@@ -801,6 +812,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
             return;
         }
 
+        std::ostringstream searchName;
+        searchName << p.name << " ";
+
         std::ifstream stream(p.path, std::ios::in | std::ios::binary);
         std::vector<uint8_t> contents((std::istreambuf_iterator<char>(stream)),
                                       std::istreambuf_iterator<char>());
@@ -844,6 +858,12 @@ CREATE TABLE IF NOT EXISTS Favorites (
         auto *ph = (patch_header *)phd;
         auto xmlSz = vt_read_int32LE(ph->xmlsize);
 
+        if (!memcpy(ph->tag, "sub3", 4) || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
+        {
+            std::cerr << "Skipping invalid patch : [" << p.path.u8string() << "]" << std::endl;
+            return;
+        }
+
         auto xd = phd + sizeof(patch_header);
         std::string xml(xd, xd + xmlSz);
 
@@ -856,6 +876,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
             auto feat = extractFeaturesFromXML(xml);
             for (auto f : feat)
             {
+                auto ftype = std::get<0>(f);
                 ins.bindi64(1, patchid);
                 ins.bind(2, std::get<0>(f));
                 ins.bind(3, (int)std::get<1>(f));
@@ -866,8 +887,28 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
                 ins.clearBindings();
                 ins.reset();
+                if (ftype == "TAG")
+                {
+                    searchName << " " << std::get<3>(f);
+                }
             }
 
+            ins.finalize();
+        }
+        catch (const SQL::Exception &e)
+        {
+            storage->reportError(e.what(), "PatchDB - FXP Features");
+            return;
+        }
+
+        auto sns = searchName.str();
+        try
+        {
+            auto ins = SQL::Statement(dbh, "UPDATE PATCHES SET search_over=?1 WHERE id=?2");
+            ins.bind(1, sns);
+            ins.bind(2, patchid);
+
+            ins.step();
             ins.finalize();
         }
         catch (const SQL::Exception &e)
@@ -1414,7 +1455,7 @@ std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser:
         }
         break;
     case PatchDBQueryParser::LITERAL:
-        oss << "( p.name LIKE '%" << protect(t->content) << "%' )";
+        oss << "( p.search_over LIKE '%" << protect(t->content) << "%' )";
         break;
     case PatchDBQueryParser::AND:
     case PatchDBQueryParser::OR:
@@ -1442,7 +1483,7 @@ PatchDB::queryFromQueryString(const std::unique_ptr<PatchDBQueryParser::Token> &
 
     // FIXME - cache this by pushing it to the worker
     std::string query = "select p.id, p.path, p.category as category, p.name, pf.feature_svalue as "
-                        "author from Patches "
+                        "author, p.search_over from Patches "
                         "as p, PatchFeature as pf where pf.patch_id == p.id and pf.feature LIKE "
                         "'AUTHOR' and " +
                         sqlWhereClauseFor(t) + " ORDER BY p.category_type, p.category, p.name";

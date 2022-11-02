@@ -4499,12 +4499,6 @@ void SurgeSynthesizer::process()
     accumulate_block(sceneout[1][0], output[0], BLOCK_SIZE_QUAD);
     accumulate_block(sceneout[1][1], output[1], BLOCK_SIZE_QUAD);
 
-    // Send output to the oscilloscope, if anyone is listening.
-    if (storage.audioOut.subscribed())
-    {
-        storage.audioOut.push(output[0], output[1], BLOCK_SIZE);
-    }
-
     bool sendused[4] = {false, false, false, false};
     // add send effects
     // TODO: FIX SCENE ASSUMPTION
@@ -4568,6 +4562,12 @@ void SurgeSynthesizer::process()
         break;
     case SurgeStorage::BYPASS_HARDCLIP:
         break;
+    }
+
+    // Send output to the oscilloscope, if anyone is listening.
+    if (storage.audioOut.subscribed())
+    {
+        storage.audioOut.push(output[0], output[1], BLOCK_SIZE);
     }
 
     // since the sceneout is now routable we also need to mute it

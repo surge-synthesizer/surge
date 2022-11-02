@@ -36,11 +36,12 @@
 #include "widgets/Switch.h"
 #include "widgets/PatchSelector.h"
 #include "widgets/ParameterInfowindow.h"
+#include "widgets/WaveShaperSelector.h"
 #include "widgets/XMLConfiguredMenus.h"
 
-#include "overlays/TypeinParamEditor.h"
-#include "widgets/WaveShaperSelector.h"
 #include "overlays/ModulationEditor.h"
+#include "overlays/PatchStoreDialog.h"
+#include "overlays/TypeinParamEditor.h"
 
 std::string decodeControllerID(int id)
 {
@@ -3478,7 +3479,20 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_store:
     {
-        showOverlay(SAVE_PATCH);
+        bool showTags = juce::ModifierKeys::currentModifiers.isShiftDown() ||
+                        juce::ModifierKeys::currentModifiers.isAltDown();
+
+        showOverlay(SurgeGUIEditor::SAVE_PATCH,
+                    [this, showTags](Surge::Overlays::OverlayComponent *co) {
+                        auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
+
+                        if (!psd)
+                        {
+                            return;
+                        }
+
+                        psd->setShowTagsField(showTags);
+                    });
     }
     break;
 
