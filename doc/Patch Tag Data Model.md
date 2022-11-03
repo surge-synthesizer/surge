@@ -73,7 +73,7 @@ Let's take the factory patch "Keyboards/DX EP.fxp". One would imagine tagging it
 - author_license: GPL-3.0-or-later
 - author_url: https://surge-synthesizer.github.io/
 
-Or imagine a sequnced MPE patch I made for a project I'm working on called "ChamberSynth":
+Or imagine a sequenced MPE patch I made for a project I'm working on called "ChamberSynth":
 
 - name: That Pad From CS4
 - author: baconpaul

@@ -115,7 +115,7 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
          * In LIVE 11.1 and 11.2 this will fire and matches will be false
         else if (inEditGesture)
         {
-            std::cout << ">>> VST3 SUPRESSED >>> " << f << " " << (matches ? "match" : "DIFFERENT")
+            std::cout << ">>> VST3 SUPPRESSED >>> " << f << " " << (matches ? "match" : "DIFFERENT")
                       << std::endl;
         }
          */

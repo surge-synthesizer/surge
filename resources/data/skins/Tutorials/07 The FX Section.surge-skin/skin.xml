@@ -1,6 +1,6 @@
 <!--[doc]
 In Surge 1.8, the FX section can only be changed in the most cursory way. The panels and components may be moved
-but individual sliders, although addressible, cannot be relocated. As such, this tutorial is blank until
+but individual sliders, although addressable, cannot be relocated. As such, this tutorial is blank until
 Surge 1.9 releases in Summer 2020.
 [doc]-->
 <surge-skin name="07 The FX Section" category="Tutorials" author="Surge Synth Team" authorURL="https://surge-synth-team.org/" version="2">
