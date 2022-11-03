@@ -1230,7 +1230,7 @@ void mirrorMSEG(MSEGStorage *ms)
 
     while (h < t)
     {
-        // endponts become starting points
+        // endpoints become starting points
         std::swap(ms->segments[h], ms->segments[t]);
         ms->segments[h].v0 = ms->segments[h].nv1;
         ms->segments[t].v0 = ms->segments[t].nv1;
