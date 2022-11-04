@@ -27,7 +27,7 @@ inline char *get_notename(char *s, int i_value, int i_offset)
     // make sure to read the notenames array in reverse for negative i_values
     int note = (i_value < 0) ? (12 - abs(i_value % 12)) : (i_value % 12);
 
-    sprintf(s, "%s%i", notenames[note], octave);
+    snprintf(s, 15, "%s%i", notenames[note], octave);
     return s;
 }
 
