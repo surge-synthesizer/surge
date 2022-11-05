@@ -150,7 +150,7 @@ void LFOModulationSource::initPhaseFromStartPhase()
     msegEnvelopePhaseAdjustment();
 }
 
-void LFOModulationSource::attack()
+void LFOModulationSource::attackFrom(float start)
 {
     // For VLFO you don't need this but SLFO get recycled, so you do
     if (!is_display)
@@ -162,6 +162,7 @@ void LFOModulationSource::attack()
     }
 
     env_state = lfoeg_delay;
+    envelopeStart = start;
 
     env_val = 0.f;
     env_phase = 0;
@@ -469,10 +470,11 @@ void LFOModulationSource::release()
     }
 }
 
-void LFOModulationSource::retriggerEnvelope()
+void LFOModulationSource::retriggerEnvelopeFrom(float start)
 {
     env_state = lfoeg_delay;
     env_phase = 0;
+    envelopeStart = start;
     if (localcopy[idelay].f == lfo->delay.val_min.f)
     {
         env_state = lfoeg_attack;
@@ -1222,15 +1224,64 @@ void LFOModulationSource::process_block()
         }
     }
 
+    // Correct the envelope for the start case
+    // (in a way which works for all sequencers except lt_envelope)
+    float useenv0{0.0};
+    float outputEnvVal{useenvval};
+    if (envRetrigMode == FROM_LAST)
+    {
+        float off = envelopeStart;
+        float scale = (1.0 - envelopeStart);
+        if (env_state == lfoeg_delay || env_state == lfoeg_attack)
+        {
+            useenvval = useenvval * scale;
+            useenv0 = off;
+            outputEnvVal = useenvval;
+        }
+    }
     auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f);
 
-    output_multi[0] = useenvval * magnf * io2;
+    output_multi[0] = useenvval * magnf * io2 + useenv0;
     output_multi[1] = io2;
-    output_multi[2] = env_val;
+    output_multi[2] = outputEnvVal + useenv0; // env_val;
 
     if (s == lt_envelope)
     {
-        output_multi[1] *= useenvval;
+        // Additional start mode corrections required
+        if (envelopeStart != 1 && envelopeStart != 0 && envRetrigMode == FROM_LAST &&
+            (env_state == lfoeg_delay || env_state == lfoeg_attack))
+        {
+            // We need to back out the deforms if we can
+            auto os = envelopeStart;
+            auto dv = localcopy[ideform].f;
+            if (lfo->deform.deform_type == type_1)
+            {
+                // type 1: r = (1-d)*p + d * p*p solve for p
+                os = (1 - dv) * envelopeStart + dv * envelopeStart * envelopeStart;
+            }
+            else if (lfo->deform.deform_type == type_2)
+            {
+                // r = r^(1+0*dv) dv>0; r^(1/(-4*dv)) dv < 0
+                if (dv > 0)
+                    os = pow(os, 1 + 9 * dv);
+                else
+                    os = pow(os, 1 / (1 - 4 * dv));
+            }
+            // type 3 (random) is non-invertible. You just get a jump then.
+            float scale = (1.0 - os);
+            useenvval = useenvval * scale / (1 - envelopeStart);
+            useenv0 = os;
+
+            output_multi[0] = useenvval * magnf * io2 + useenv0;
+
+            output_multi[1] *= useenvval;
+            output_multi[1] += useenv0;
+        }
+        else
+        {
+            output_multi[1] *= useenvval;
+            output_multi[1] += useenv0;
+        }
     }
 }
 
