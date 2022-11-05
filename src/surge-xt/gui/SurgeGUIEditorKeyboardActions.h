@@ -53,8 +53,13 @@ enum KeyboardActions
     SHOW_LFO_EDITOR,
     SHOW_MODLIST,
     SHOW_TUNING_EDITOR,
-    TOGGLE_VIRTUAL_KEYBOARD,
     TOGGLE_OSCILLOSCOPE,
+    TOGGLE_VIRTUAL_KEYBOARD,
+
+    VKB_OCTAVE_DOWN,
+    VKB_OCTAVE_UP,
+    VKB_VELOCITY_DOWN_10PCT,
+    VKB_VELOCITY_UP_10PCT,
 
     ZOOM_TO_DEFAULT,
     ZOOM_PLUS_10,
@@ -129,6 +134,15 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "TOGGLE_VIRTUAL_KEYBOARD";
     case TOGGLE_OSCILLOSCOPE:
         return "TOGGLE_OSCILLOSCOPE";
+
+    case VKB_OCTAVE_DOWN:
+        return "VKB_OCTAVE_DOWN";
+    case VKB_OCTAVE_UP:
+        return "VKB_OCTAVE_UP";
+    case VKB_VELOCITY_DOWN_10PCT:
+        return "VKB_VELOCITY_DOWN_10%";
+    case VKB_VELOCITY_UP_10PCT:
+        return "VKB_VELOCITY_UP_10%";
 
     case ZOOM_TO_DEFAULT:
         return "ZOOM_TO_DEFAULT";
@@ -245,6 +259,24 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         break;
     case TOGGLE_OSCILLOSCOPE:
         desc = "Oscilloscope";
+        break;
+
+    case VKB_OCTAVE_DOWN:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Octave Down");
+        skipOSCase = true;
+        break;
+    case VKB_OCTAVE_UP:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Octave Up");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_DOWN_10PCT:
+        desc =
+            Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity Down 10%");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_UP_10PCT:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity Up 10%");
+        skipOSCase = true;
         break;
 
     case ZOOM_TO_DEFAULT:

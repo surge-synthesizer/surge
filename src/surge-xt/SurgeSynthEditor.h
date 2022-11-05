@@ -99,7 +99,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     // access the processor object that created it.
     SurgeSynthProcessor &processor;
 
-    std::unique_ptr<SurgeGUIEditor> adapter;
+    std::unique_ptr<SurgeGUIEditor> sge;
     std::unique_ptr<juce::Drawable> logo;
 
     std::unique_ptr<SurgeJUCELookAndFeel> surgeLF;
