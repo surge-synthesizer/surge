@@ -46,11 +46,21 @@ class LFOModulationSource : public ModulationSource
     float bend1(float x);
     float bend2(float x);
     float bend3(float x);
-    virtual void attack() override;
+    virtual void attack() override { attackFrom(0.f); }
+    void attackFrom(float);
     virtual void release() override;
     virtual void process_block() override;
-    virtual void retriggerEnvelope();
+    virtual void retriggerEnvelope() { attackFrom(0.f); }
+    virtual void retriggerEnvelopeFrom(float);
     virtual void completedModulation();
+
+    enum EnvelopeRetriggerMode
+    {
+        FROM_ZERO,
+        FROM_LAST
+    } envRetrigMode{FROM_ZERO};
+
+    float envelopeStart{0.f};
 
     int get_active_outputs() override
     {
