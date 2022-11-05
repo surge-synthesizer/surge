@@ -6957,10 +6957,15 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::SHOW_LFO_EDITOR, {keymap_t::Modifiers::ALT, (int)'E'});
     keyMapManager->addBinding(Surge::GUI::SHOW_MODLIST, {keymap_t::Modifiers::ALT, (int)'M'});
     keyMapManager->addBinding(Surge::GUI::SHOW_TUNING_EDITOR, {keymap_t::Modifiers::ALT, (int)'T'});
-    keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
-                              {keymap_t::Modifiers::ALT, (int)'K'});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_OSCILLOSCOPE,
                               {keymap_t::Modifiers::ALT, (int)'O'});
+    keyMapManager->addBinding(Surge::GUI::TOGGLE_VIRTUAL_KEYBOARD,
+                              {keymap_t::Modifiers::ALT, (int)'K'});
+
+    keyMapManager->addBinding(Surge::GUI::VKB_OCTAVE_DOWN, {(int)'X'});
+    keyMapManager->addBinding(Surge::GUI::VKB_OCTAVE_UP, {(int)'C'});
+    keyMapManager->addBinding(Surge::GUI::VKB_VELOCITY_DOWN_10PCT, {(int)'9'});
+    keyMapManager->addBinding(Surge::GUI::VKB_VELOCITY_UP_10PCT, {(int)'0'});
 
     keyMapManager->addBinding(Surge::GUI::ZOOM_TO_DEFAULT, {keymap_t::Modifiers::SHIFT, '/'});
     keyMapManager->addBinding(Surge::GUI::ZOOM_PLUS_10, {keymap_t::Modifiers::NONE, '+'});
@@ -7427,7 +7432,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
             }
 
-            case Surge::GUI::n_kbdActions:
+            default:
                 break;
             }
         }
