@@ -460,9 +460,16 @@ void LFOModulationSource::release()
 {
     if (lfo->release.val.f < lfo->release.val_max.f)
     {
-        env_state = lfoeg_release;
         env_releasestart = env_val;
         env_phase = 0;
+        // If we release during the attack and are scaling the envelope we need
+        // to scale our release start point
+        if (envRetrigMode == FROM_LAST && envelopeStart != 0 &&
+            (env_state == lfoeg_attack || env_state == lfoeg_delay))
+        {
+            env_releasestart = env_releasestart * (1.0 - envelopeStart) + envelopeStart;
+        }
+        env_state = lfoeg_release;
     }
     else if (lfo->shape.val.i == lt_mseg || lfo->shape.val.i == lt_formula)
     {
