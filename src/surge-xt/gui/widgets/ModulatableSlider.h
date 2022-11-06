@@ -177,6 +177,28 @@ struct ModulatableSlider : public juce::Component,
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulatableSlider);
 };
+
+struct SelfUpdatingModulatableSlider : public ModulatableSlider, GUI::IComponentTagValue::Listener
+{
+    using CallbackFn = std::function<void(float)>;
+
+    SelfUpdatingModulatableSlider() : ModulatableSlider() { addListener(this); }
+
+    CallbackFn onUpdate = [](float _) {};
+    void setOnUpdate(CallbackFn fn) { onUpdate = std::move(fn); }
+
+    void valueChanged(IComponentTagValue *p) override
+    {
+        auto v = getValue();
+        setQuantitizedDisplayValue(v);
+        onUpdate(v);
+        repaint();
+    }
+
+  private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SelfUpdatingModulatableSlider);
+};
+
 } // namespace Widgets
 } // namespace Surge
 #endif // SURGE_XT_MODULATABLESLIDER_H
