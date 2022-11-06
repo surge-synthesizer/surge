@@ -27,6 +27,7 @@
 #include "SurgeGUICallbackInterfaces.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeStorage.h"
+#include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
 
 #include "juce_core/juce_core.h"
@@ -224,6 +225,59 @@ class Oscilloscope : public OverlayComponent,
         int last_sample_rate_;
     };
 
+    class SpectrogramParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    {
+      public:
+        SpectrogramParameters(SurgeGUIEditor *e, SurgeStorage *s);
+
+        void onSkinChanged() override;
+        void paint(juce::Graphics &g) override;
+        void resized() override;
+
+      private:
+        SurgeGUIEditor *editor_;
+        SurgeStorage *storage_;
+    };
+
+    class WaveformParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    {
+      public:
+        WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s);
+
+        std::optional<WaveformDisplay::Parameters> getParamsIfDirty();
+
+        void onSkinChanged() override;
+        void paint(juce::Graphics &g) override;
+        void resized() override;
+
+      private:
+        SurgeGUIEditor *editor_;
+        SurgeStorage *storage_;
+        WaveformDisplay::Parameters params_;
+        bool params_changed_;
+        std::mutex params_lock_;
+
+        Surge::Widgets::SelfUpdatingModulatableSlider trigger_speed_;
+        Surge::Widgets::SelfUpdatingModulatableSlider trigger_level_;
+        Surge::Widgets::SelfUpdatingModulatableSlider trigger_limit_;
+        Surge::Widgets::SelfUpdatingModulatableSlider time_window_;
+        Surge::Widgets::SelfUpdatingModulatableSlider amp_window_;
+        //WaveformTriggerTypeButton trigger_type_;
+    };
+
+    #if 0
+    class WaveformTriggerTypeButton : public Surge::Widgets::MultiSwitchSelfDraw,
+                                      public Surge::GUI::IComponentTagValue::Listener
+    {
+      public:
+        explicit WaveformTriggerTypeButton(WaveformDisplay &display);
+        void valueChanged(Surge::GUI::IcomponentTagValue *p) override;
+
+      private:
+        WaveformDisplay &display_;
+    };
+    #endif
+
     // Child component for handling the switch between waveform/spectrum.
     class SwitchButton : public Surge::Widgets::MultiSwitchSelfDraw,
                          public Surge::GUI::IComponentTagValue::Listener
@@ -240,6 +294,9 @@ class Oscilloscope : public OverlayComponent,
     static float timeToX(std::chrono::milliseconds time, int width);
     static float dbToY(float db, int height);
     static float magToY(float mag, int height);
+
+    // Height of parameter window, in pixels.
+    static constexpr const int paramsHeight = 78;
 
     void calculateSpectrumData();
     void changeScopeType(ScopeMode type);
@@ -272,6 +329,8 @@ class Oscilloscope : public OverlayComponent,
     Spectrogram spectrogram_;
     // Waveform waveform_;
     WaveformDisplay waveform_;
+    SpectrogramParameters spectrogram_parameters_;
+    WaveformParameters waveform_parameters_;
 };
 
 } // namespace Overlays

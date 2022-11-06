@@ -24,6 +24,7 @@
 #include "SkinColors.h"
 
 using namespace std::chrono_literals;
+using std::placeholders::_1;
 
 namespace Surge
 {
@@ -261,10 +262,10 @@ void WaveformDisplay::process(std::vector<float> data)
             {
                 peaks[j].y = peaks[j + 1].y = getHeight() * 0.5f - 1.f;
             }
-            //for (j = pos_+1; j < scope_data_.size(); j++)
+            // for (j = pos_+1; j < scope_data_.size(); j++)
             //{
-            //scope_data_[j] = getHeight() * 0.5f - 1.f;
-            //}
+            // scope_data_[j] = getHeight() * 0.5f - 1.f;
+            // }
 
             // copy to a buffer for drawing!
             for (j = 0; j < getWidth() * 2; j++)
@@ -360,13 +361,13 @@ float Oscilloscope::dbToY(float db, int height) { return (float)height * (dbMax 
 
 // TODO:
 // (1) Give configuration to the user to choose FFT params (namely, desired Hz resolution).
-// (2) Provide a mode that shows waveshape, not spectrum.
 Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), forward_fft_(fftOrder),
       window_(fftSize, juce::dsp::WindowingFunction<float>::hann), pos_(0), complete_(false),
       fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
       channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
-      right_chan_button_("R"), scope_mode_button_(*this), spectrogram_(e, s), waveform_(e, s)
+      right_chan_button_("R"), scope_mode_button_(*this), spectrogram_(e, s),
+      spectrogram_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s)
 {
     setAccessible(true);
     setOpaque(true);
@@ -395,12 +396,16 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     scope_mode_button_.setLabels({"Waveform", "Spectrum"});
     scope_mode_button_.setWantsKeyboardFocus(false);
     scope_mode_button_.setValue(1.f);
+    spectrogram_parameters_.setOpaque(true);
+    waveform_parameters_.setOpaque(true);
     addAndMakeVisible(background_);
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
     addAndMakeVisible(scope_mode_button_);
     addAndMakeVisible(spectrogram_);
+    addAndMakeVisible(spectrogram_parameters_);
     addChildComponent(waveform_);
+    addChildComponent(waveform_parameters_);
 
     storage_->audioOut.subscribe();
 }
@@ -427,13 +432,27 @@ void Oscilloscope::onSkinChanged()
     right_chan_button_.setSkin(skin, associatedBitmapStore);
     scope_mode_button_.setSkin(skin, associatedBitmapStore);
     spectrogram_.setSkin(skin, associatedBitmapStore);
+    spectrogram_parameters_.setSkin(skin, associatedBitmapStore);
     waveform_.setSkin(skin, associatedBitmapStore);
+    waveform_parameters_.setSkin(skin, associatedBitmapStore);
 }
 
 void Oscilloscope::paint(juce::Graphics &g) {}
 
 void Oscilloscope::resized()
 {
+    // Scope looks like the following picture.
+    // Parameters lie underneath the scope display and the x-axis scale. So:
+    // ------------------------
+    // |      top (15px)      |
+    // |                      |
+    // |    scope display     |
+    // |    (8px reduced)     |
+    // |  (30px space right)  |
+    // |                      |
+    // |    x-scale (15px)    |
+    // |      bot params      |
+    // ------------------------
     auto scopeRect = getScopeRect();
     auto t = getTransform().inverted();
     auto h = getHeight();
@@ -442,11 +461,135 @@ void Oscilloscope::resized()
     auto rhs = scopeRect.getWidth();
 
     background_.updateBounds(getLocalBounds(), getScopeRect());
+    // Top buttons: in the first 15 pixels.
     left_chan_button_.setBounds(8, 4, 15, 15);
     right_chan_button_.setBounds(23, 4, 15, 15);
     scope_mode_button_.setBounds(rhs - 97, 4, 105, 15);
+    // Spectrogram/waveform display: appears in scopeRect.
     spectrogram_.setBounds(scopeRect);
     waveform_.setBounds(scopeRect);
+    // Bottom buttons: in the bottom paramsHeight pixels.
+    spectrogram_parameters_.setBounds(0, h - paramsHeight, w, h);
+    waveform_parameters_.setBounds(0, h - paramsHeight, w, h);
+}
+
+Oscilloscope::SpectrogramParameters::SpectrogramParameters(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s)
+{
+}
+
+void Oscilloscope::SpectrogramParameters::onSkinChanged()
+{
+    // FIXME: Implement.
+}
+
+void Oscilloscope::SpectrogramParameters::paint(juce::Graphics &g)
+{
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+}
+
+void Oscilloscope::SpectrogramParameters::resized()
+{
+    // FIXME: Implement.
+}
+
+Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s)
+{
+    trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
+    trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
+    trigger_limit_.setOrientation(Surge::ParamConfig::kHorizontal);
+    time_window_.setOrientation(Surge::ParamConfig::kHorizontal);
+    amp_window_.setOrientation(Surge::ParamConfig::kHorizontal);
+    trigger_speed_.setStorage(s);
+    trigger_level_.setStorage(s);
+    trigger_limit_.setStorage(s);
+    time_window_.setStorage(s);
+    amp_window_.setStorage(s);
+    trigger_speed_.setValue(0.5);
+    trigger_level_.setValue(0.5);
+    trigger_limit_.setValue(0.5);
+    time_window_.setValue(0.75);
+    amp_window_.setValue(0.5);
+    trigger_speed_.setQuantitizedDisplayValue(0.5);
+    trigger_level_.setQuantitizedDisplayValue(0.5);
+    trigger_limit_.setQuantitizedDisplayValue(0.5);
+    time_window_.setQuantitizedDisplayValue(0.75);
+    amp_window_.setQuantitizedDisplayValue(0.5);
+    trigger_speed_.setLabel("Trigger Speed");
+    trigger_level_.setLabel("Trigger Level");
+    trigger_limit_.setLabel("Trigger Limit");
+    time_window_.setLabel("Time Window");
+    amp_window_.setLabel("Ampl Window");
+    trigger_speed_.setDescription("FIXME");
+    trigger_level_.setDescription("FIXME");
+    trigger_limit_.setDescription("FIXME");
+    time_window_.setDescription("FIXME");
+    amp_window_.setDescription("FIXME");
+    trigger_speed_.setIsLightStyle(true);
+    trigger_level_.setIsLightStyle(true);
+    trigger_limit_.setIsLightStyle(true);
+    time_window_.setIsLightStyle(true);
+    amp_window_.setIsLightStyle(true);
+    auto updateParameter = [this](float& param, float value) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        param = value;
+    };
+    trigger_speed_.setOnUpdate(std::bind(updateParameter, params_.trigger_speed, _1));
+    trigger_level_.setOnUpdate(std::bind(updateParameter, params_.trigger_level, _1));
+    trigger_limit_.setOnUpdate(std::bind(updateParameter, params_.trigger_limit, _1));
+    time_window_.setOnUpdate(std::bind(updateParameter, params_.time_window, _1));
+    amp_window_.setOnUpdate(std::bind(updateParameter, params_.amp_window, _1));
+    addAndMakeVisible(trigger_speed_);
+    addAndMakeVisible(trigger_level_);
+    addAndMakeVisible(trigger_limit_);
+    addAndMakeVisible(time_window_);
+    addAndMakeVisible(amp_window_);
+}
+
+std::optional<WaveformDisplay::Parameters> Oscilloscope::WaveformParameters::getParamsIfDirty()
+{
+    std::lock_guard l(params_lock_);
+    if (params_changed_)
+    {
+        params_changed_ = false;
+        return params_;
+    }
+    return std::nullopt;
+}
+
+void Oscilloscope::WaveformParameters::onSkinChanged()
+{
+    trigger_speed_.setSkin(skin, associatedBitmapStore);
+    trigger_level_.setSkin(skin, associatedBitmapStore);
+    trigger_limit_.setSkin(skin, associatedBitmapStore);
+    time_window_.setSkin(skin, associatedBitmapStore);
+    amp_window_.setSkin(skin, associatedBitmapStore);
+    trigger_speed_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
+    trigger_level_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
+    trigger_limit_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
+    time_window_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
+    amp_window_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
+}
+
+void Oscilloscope::WaveformParameters::paint(juce::Graphics &g)
+{
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+}
+
+void Oscilloscope::WaveformParameters::resized()
+{
+    auto t = getTransform().inverted();
+    auto h = getHeight();
+    auto w = getWidth();
+    // Stack the trigger parameters top-to-bottom.
+    trigger_speed_.setBounds(10, 0, 140, 26);
+    trigger_level_.setBounds(10, 26, 140, 26);
+    trigger_limit_.setBounds(10, 52, 140, 26);
+    // Window parameters to the right of them, slightly offset since there's only two.
+    time_window_.setBounds(160, 13, 140, 26);
+    amp_window_.setBounds(160, 39, 140, 26);
 }
 
 void Oscilloscope::updateDrawing()
@@ -514,8 +657,10 @@ void Oscilloscope::changeScopeType(ScopeMode type)
     {
         scope_mode_ = WAVEFORM;
         spectrogram_.setVisible(false);
+        spectrogram_parameters_.setVisible(false);
         std::fill(scope_data_.begin(), scope_data_.end(), 0.f);
         waveform_.setVisible(true);
+        waveform_parameters_.setVisible(true);
 
         break;
     }
@@ -523,8 +668,10 @@ void Oscilloscope::changeScopeType(ScopeMode type)
     {
         scope_mode_ = SPECTRUM;
         waveform_.setVisible(false);
+        waveform_parameters_.setVisible(false);
         std::fill(scope_data_.begin(), scope_data_.end(), dbMin);
         spectrogram_.setVisible(true);
+        spectrogram_parameters_.setVisible(true);
 
         break;
     }
@@ -542,7 +689,11 @@ void Oscilloscope::changeScopeType(ScopeMode type)
 juce::Rectangle<int> Oscilloscope::getScopeRect()
 {
     auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto scopeRect = lb.withTrimmedBottom(15).withTrimmedTop(15).withTrimmedRight(30).reduced(8);
+    auto scopeRect = lb.withTrimmedBottom(15)             // x-scale on bottom
+                         .withTrimmedBottom(paramsHeight) // params on bottom
+                         .withTrimmedTop(15)              // params on top
+                         .withTrimmedRight(30)            // y-scale on right
+                         .reduced(8);
     return scopeRect;
 }
 
