@@ -63,7 +63,7 @@ or null if there is no parent.
 
 So basically, a good implementation of `getValue()` is to look up the parent param and
 return its decctivation status, and for `getPrimaryActivationDriver()` to look up the
-parent parameter and return a pointer to it. LPG parameteres in EuroTwist do precisely this.
+parent parameter and return a pointer to it. LPG parameters in EuroTwist do precisely this.
 
 ### Follow Value Pattern
 

@@ -278,7 +278,7 @@ void MultiSwitch::mouseWheelMove(const juce::MouseEvent &event,
                                  const juce::MouseWheelDetails &wheel)
 {
     // If we aren't draggable and a drag is happening, ignore the mouse wheel gesture
-    // This (vs just a plain !draggable) reverts the 1.9 behaviour of mosue wheel throuhg
+    // This (vs just a plain !draggable) reverts the 1.9 behaviour of mouse wheel through
     // the presets.
     if (!draggable && (event.mouseWasDraggedSinceMouseDown() || event.getLengthOfMousePress() > 0))
     {

@@ -557,7 +557,7 @@ class Parameter
     // I know this is a bit gross but we have a runtime type
     ParamUserData *user_data = nullptr;
 
-    // I take a shallow copy and don't assume ownership and assume I am referencable
+    // I take a shallow copy and don't assume ownership and assume I am referenceable
     void set_user_data(ParamUserData *ud);
 
     bool supportsDynamicName() const;

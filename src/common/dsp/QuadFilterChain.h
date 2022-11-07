@@ -70,7 +70,7 @@
  * various connected filters (QuadFilterChain.cpp) down to the individual filters
  * (QuadFilterUnit.cpp) which then do the parallel evaluation.
  *
- * Those evluators get an 'active' mask on the QuadFilterChainState which tells them which voice
+ * Those evaluators get an 'active' mask on the QuadFilterChainState which tells them which voice
  * is on and off, useful if you need to unroll.
  *
  * So now the only thing we are missing is: how do we make coefficients and maintain state, since
