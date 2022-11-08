@@ -949,6 +949,38 @@ void SurgeStorage::refresh_wtlist()
             if (n2[i] == '\\')
                 n2[i] = '/';
 
+        // OK so now we need to split by path. Sigh.
+        // This is because "EMU VSCO/FOO comes after "EMU" but before "ENU/BAR"
+        auto split = [](const auto &q) {
+            std::vector<std::string> res;
+            size_t p = 0, np = 0;
+            while (np != std::string::npos)
+            {
+                np = q.find("/", p);
+                if (np == std::string::npos)
+                {
+                    res.push_back(q.substr(p));
+                }
+                else
+                {
+                    res.push_back(q.substr(p, np));
+                    p = np + 1;
+                }
+            }
+
+            return res;
+        };
+
+        auto v1 = split(n1);
+        auto v2 = split(n2);
+
+        auto sz = std::min(v1.size(), v2.size());
+        for (int i = 0; i < sz; ++i)
+        {
+            if (v1[i] != v2[i])
+                return strnatcasecmp(v1[i].c_str(), v2[i].c_str()) < 0;
+        }
+
         return strnatcasecmp(n1.c_str(), n2.c_str()) < 0;
     };
 
