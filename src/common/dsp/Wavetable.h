@@ -48,6 +48,7 @@ class Wavetable
     bool refresh_display;
     char queue_filename[256];
     char current_filename[256];
+    int frame_size_if_absent{-1};
 };
 
 enum wtflags
