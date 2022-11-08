@@ -350,7 +350,15 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     bool loopData = hasSMPL || hasCLM || hasSRGE;
     int loopLen =
         hasCLM ? clmLEN : (hasCUE ? cueLEN : (hasSRGE ? srgeLEN : (hasSMPL ? smplLEN : -1)));
+    bool fullRange = false;
 
+    if (loopLen == -1 && wt->frame_size_if_absent > 0)
+    {
+        loopLen = wt->frame_size_if_absent;
+        loopData = true;
+        fullRange = true;
+        wt->frame_size_if_absent = -1;
+    }
     if (loopLen == 0)
     {
         std::ostringstream oss;
@@ -494,6 +502,10 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     if (wavdata && wt)
     {
+        if (fullRange && (wh.flags & wtf_int16))
+        {
+            wh.flags |= wtf_int16_is_16;
+        }
         if (numChannels == 1)
         {
             waveTableDataMutex.lock();
