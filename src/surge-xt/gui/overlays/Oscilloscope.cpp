@@ -536,11 +536,11 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
         params_changed_ = true;
         param = value;
     };
-    trigger_speed_.setOnUpdate(std::bind(updateParameter, params_.trigger_speed, _1));
-    trigger_level_.setOnUpdate(std::bind(updateParameter, params_.trigger_level, _1));
-    trigger_limit_.setOnUpdate(std::bind(updateParameter, params_.trigger_limit, _1));
-    time_window_.setOnUpdate(std::bind(updateParameter, params_.time_window, _1));
-    amp_window_.setOnUpdate(std::bind(updateParameter, params_.amp_window, _1));
+    trigger_speed_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_speed), _1));
+    trigger_level_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_level), _1));
+    trigger_limit_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_limit), _1));
+    time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window), _1));
+    amp_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.amp_window), _1));
     addAndMakeVisible(trigger_speed_);
     addAndMakeVisible(trigger_level_);
     addAndMakeVisible(trigger_limit_);
@@ -600,6 +600,11 @@ void Oscilloscope::updateDrawing()
         if (scope_mode_ == WAVEFORM)
         {
             // waveform_.scroll();
+            auto params = waveform_parameters_.getParamsIfDirty();
+            if (params)
+            {
+                waveform_.setParameters(std::move(*params));
+            }
             waveform_.repaint();
         }
         else
