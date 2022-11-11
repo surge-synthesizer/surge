@@ -71,8 +71,6 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     const Parameters &getParameters() const;
     void setParameters(Parameters parameters);
 
-    bool frozen() const;
-
     void paint(juce::Graphics &g) override;
     void resized() override;
     void process(std::vector<float> data);
@@ -262,21 +260,10 @@ class Oscilloscope : public OverlayComponent,
         Surge::Widgets::SelfUpdatingModulatableSlider trigger_limit_;
         Surge::Widgets::SelfUpdatingModulatableSlider time_window_;
         Surge::Widgets::SelfUpdatingModulatableSlider amp_window_;
-        //WaveformTriggerTypeButton trigger_type_;
+        Surge::Widgets::ClosedMultiSwitchSelfDraw trigger_type_;
+        Surge::Widgets::SelfDrawToggleButton freeze_;
+        Surge::Widgets::SelfDrawToggleButton dc_kill_;
     };
-
-    #if 0
-    class WaveformTriggerTypeButton : public Surge::Widgets::MultiSwitchSelfDraw,
-                                      public Surge::GUI::IComponentTagValue::Listener
-    {
-      public:
-        explicit WaveformTriggerTypeButton(WaveformDisplay &display);
-        void valueChanged(Surge::GUI::IcomponentTagValue *p) override;
-
-      private:
-        WaveformDisplay &display_;
-    };
-    #endif
 
     // Child component for handling the switch between waveform/spectrum.
     class SwitchButton : public Surge::Widgets::MultiSwitchSelfDraw,

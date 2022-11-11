@@ -41,8 +41,6 @@ const WaveformDisplay::Parameters &WaveformDisplay::getParameters() const { retu
 
 void WaveformDisplay::setParameters(Parameters parameters) { params_ = std::move(parameters); }
 
-bool WaveformDisplay::frozen() const { return params_.freeze; }
-
 void WaveformDisplay::paint(juce::Graphics &g)
 {
 #if 0
@@ -186,6 +184,11 @@ void WaveformDisplay::paint(juce::Graphics &g)
 void WaveformDisplay::process(std::vector<float> data)
 {
     std::unique_lock l(lock_);
+    if (params_.freeze)
+    {
+        return;
+    }
+
     float gain = std::pow(10.f, params_.amp_window * 6.f - 3.f);
     float triggerLevel = params_.trigger_level * 2.f - 1.f;
     int triggerLimit = static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f));
@@ -494,7 +497,7 @@ void Oscilloscope::SpectrogramParameters::resized()
 }
 
 Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s)
+    : editor_(e), storage_(s), freeze_("Freeze"), dc_kill_("DC-Kill")
 {
     trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -546,6 +549,35 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     addAndMakeVisible(trigger_limit_);
     addAndMakeVisible(time_window_);
     addAndMakeVisible(amp_window_);
+    // The multiswitch.
+    trigger_type_.setRows(4);
+    trigger_type_.setColumns(1);
+    trigger_type_.setLabels({"Free", "Rising", "Falling", "Internal"});
+    trigger_type_.setValue(0.f);
+    trigger_type_.setWantsKeyboardFocus(false);
+    trigger_type_.setOnUpdate([this](int value) {
+        if (value >= WaveformDisplay::kNumTriggerTypes)
+        {
+            std::cout << "Unexpected trigger type provided." << std::endl;
+            std::abort();
+        }
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(value);
+    });
+    addAndMakeVisible(trigger_type_);
+    // The two toggle buttons.
+    auto toggleParam = [this](bool &param) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        param = !param;
+    };
+    freeze_.setWantsKeyboardFocus(false);
+    dc_kill_.setWantsKeyboardFocus(false);
+    freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
+    dc_kill_.onToggle = std::bind(toggleParam, std::ref(params_.dc_kill));
+    addAndMakeVisible(freeze_);
+    addAndMakeVisible(dc_kill_);
 }
 
 std::optional<WaveformDisplay::Parameters> Oscilloscope::WaveformParameters::getParamsIfDirty()
@@ -566,11 +598,15 @@ void Oscilloscope::WaveformParameters::onSkinChanged()
     trigger_limit_.setSkin(skin, associatedBitmapStore);
     time_window_.setSkin(skin, associatedBitmapStore);
     amp_window_.setSkin(skin, associatedBitmapStore);
-    trigger_speed_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
-    trigger_level_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
-    trigger_limit_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
-    time_window_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
-    amp_window_.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::plain));
+    trigger_type_.setSkin(skin, associatedBitmapStore);
+    freeze_.setSkin(skin, associatedBitmapStore);
+    dc_kill_.setSkin(skin, associatedBitmapStore);
+    auto font = skin->fontManager->getLatoAtSize(7, juce::Font::plain);
+    trigger_speed_.setFont(font);
+    trigger_level_.setFont(font);
+    trigger_limit_.setFont(font);
+    time_window_.setFont(font);
+    amp_window_.setFont(font);
 }
 
 void Oscilloscope::WaveformParameters::paint(juce::Graphics &g)
@@ -590,6 +626,11 @@ void Oscilloscope::WaveformParameters::resized()
     // Window parameters to the right of them, slightly offset since there's only two.
     time_window_.setBounds(160, 13, 140, 26);
     amp_window_.setBounds(160, 39, 140, 26);
+    // Next over, the trigger mechanism.
+    trigger_type_.setBounds(320, 13, 40, 50);
+    // Next over, the two boolean switches.
+    freeze_.setBounds(385, 19, 40, 13);
+    dc_kill_.setBounds(385, 41, 40, 13);
 }
 
 void Oscilloscope::updateDrawing()
