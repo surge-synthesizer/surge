@@ -111,6 +111,8 @@ class LFOModulationSource : public ModulationSource
     inline int getEnvState() { return env_state; }
     inline int getStep() { return step; }
 
+    float onepoleFactor{0};
+
   private:
     pdata *localcopy;
     bool phaseInitialized;
@@ -127,6 +129,8 @@ class LFOModulationSource : public ModulationSource
     bool is_display;
     int step, shuffle_id;
     int magn, rate, iattack, idecay, idelay, ihold, isustain, irelease, startphase, ideform;
+
+    float onepoleState[3];
 
     std::default_random_engine gen;
     std::uniform_real_distribution<float> distro;
