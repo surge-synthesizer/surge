@@ -77,6 +77,9 @@ void LFOModulationSource::assign(SurgeStorage *storage, LFOStorage *lfo, pdata *
     {
         wf_history[i] = 0.f;
     }
+
+    for (int i = 0; i < 3; ++i)
+        onepoleState[i] = 0.f;
 }
 
 float LFOModulationSource::bend1(float x)
@@ -1288,6 +1291,16 @@ void LFOModulationSource::process_block()
         {
             output_multi[1] *= useenvval;
             output_multi[1] += useenv0;
+        }
+
+        if (envRetrigMode == FROM_LAST && lfo->deform.deform_type != type_3)
+        {
+            // Now appy the one pole
+            float alpha = onepoleFactor;
+            output_multi[0] = (1.0 - alpha) * output_multi[0] + alpha * onepoleState[0];
+            output_multi[1] = (1.0 - alpha) * output_multi[1] + alpha * onepoleState[1];
+            onepoleState[0] = output_multi[0];
+            onepoleState[1] = output_multi[1];
         }
     }
 }
