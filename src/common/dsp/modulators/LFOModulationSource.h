@@ -110,7 +110,7 @@ class LFOModulationSource : public ModulationSource
     inline int getIntPhase() { return unwrappedphase_intpart; }
     inline int getEnvState() { return env_state; }
     inline int getStep() { return step; }
-    
+
     float onepoleFactor{0};
 
   private:
