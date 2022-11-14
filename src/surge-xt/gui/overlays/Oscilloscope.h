@@ -61,7 +61,6 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
         float trigger_limit = 0.5f;              // retrigger threshold, knob
         float time_window = 0.75f;               // X-range, knob
         float amp_window = 0.5f;                 // Y-range, knob
-        bool sync_draw = false;                  // sync redraw, on/off
         bool freeze = false;                     // freeze display, on/off
         bool dc_kill = false;                    // kill DC, on/off
     };
@@ -84,7 +83,6 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     std::mutex lock_;
 
     std::vector<juce::Point<float>> peaks;
-    std::vector<juce::Point<float>> copy;
     std::vector<float> scope_data_;
     std::size_t pos_;
 
@@ -198,31 +196,6 @@ class Oscilloscope : public OverlayComponent,
         FftScopeType displayed_data_;
     };
 
-    // Child component for handling drawing of the waveform.
-    class Waveform : public juce::Component, public Surge::GUI::SkinConsumingComponent
-    {
-      public:
-        Waveform(SurgeGUIEditor *e, SurgeStorage *s);
-
-        void paint(juce::Graphics &g) override;
-        void scroll();
-        void updateAudioData(const std::vector<float> &buf);
-
-      private:
-        static constexpr const float refreshRate = 60.f;
-
-        SurgeGUIEditor *editor_;
-        SurgeStorage *storage_;
-        std::mutex data_lock_;
-        std::chrono::milliseconds period_;
-        FloatSeconds period_float_;
-        std::size_t period_samples_;
-        // scope_data_ will buffer an entire second of data, not just what's displayed.
-        std::vector<float> scope_data_;
-        sst::cpputils::SimpleRingBuffer<float, fftSize> upcoming_data_;
-        int last_sample_rate_;
-    };
-
     class SpectrogramParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
@@ -314,7 +287,6 @@ class Oscilloscope : public OverlayComponent,
     SwitchButton scope_mode_button_;
     Background background_;
     Spectrogram spectrogram_;
-    // Waveform waveform_;
     WaveformDisplay waveform_;
     SpectrogramParameters spectrogram_parameters_;
     WaveformParameters waveform_parameters_;

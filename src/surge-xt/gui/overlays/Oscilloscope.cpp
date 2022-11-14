@@ -76,28 +76,26 @@ void WaveformDisplay::paint(juce::Graphics &g)
     auto path = juce::Path();
 
     // waveform
-    const std::vector<juce::Point<float>> &points = (params_.sync_draw ? copy : peaks);
     double counterSpeedInverse = std::pow(10.f, params_.time_window * 5.f - 1.5f);
 
     g.setColour(curveColor);
     if (counterSpeedInverse < 1.0) // draw interpolated lines
     {
-        // CColor blue(64, 148, 172);
-        // pContext->setFrameColor(blue);
         double phase = counterSpeedInverse;
         double dphase = counterSpeedInverse;
 
-        double prevxi = points[0].x;
-        double prevyi = points[0].y;
+        double prevxi = peaks[0].x;
+        double prevyi = peaks[0].y;
         path.startNewSubPath(prevxi, prevyi);
 
+        // FIXME: Interpolated lines the way I've copied it doesn't seem to work.
         for (std::size_t i = 1; i < getWidth() - 1; i++)
         {
             int index = static_cast<int>(phase);
             double alpha = phase - static_cast<double>(index);
 
             double xi = i;
-            double yi = (1.0 - alpha) * points[index * 2].y + alpha * points[(index + 1) * 2].y;
+            double yi = (1.0 - alpha) * peaks[index * 2].y + alpha * peaks[(index + 1) * 2].y;
             path.lineTo(xi, yi);
             // pContext->drawLine(CPoint(prevxi, prevyi).offset(offset), CPoint(xi,
             // yi).offset(offset));
@@ -109,18 +107,10 @@ void WaveformDisplay::paint(juce::Graphics &g)
     }
     else
     {
-        // CColor grey(118, 118, 118);
-        // pContext->setFrameColor(grey);
-
-        // juce::Point<float> &p1, &p2;
-        path.startNewSubPath(points[0].x, points[0].y);
-        for (std::size_t i = 0; i < points.size() - 1; i++)
+        path.startNewSubPath(peaks[0].x, peaks[0].y);
+        for (std::size_t i = 0; i < peaks.size() - 1; i++)
         {
-            path.lineTo(points[i].x, points[i].y);
-            // g.drawLine(points[i].x, points[i].y, points[i+1].x, points[i+1].y);
-            // p1 = points[i];
-            // p2 = points[i + 1];
-            //  pContext->drawLine(p1.offset(offset), p2.offset(offset));
+            path.lineTo(peaks[i].x, peaks[i].y);
         }
     }
     g.strokePath(path, juce::PathStrokeType(1.f));
@@ -191,9 +181,10 @@ void WaveformDisplay::process(std::vector<float> data)
 
     float gain = std::pow(10.f, params_.amp_window * 6.f - 3.f);
     float triggerLevel = params_.trigger_level * 2.f - 1.f;
-    int triggerLimit = static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f));
+    int triggerLimit =
+        static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f)); // 0=>1, 1=>10000
     double triggerSpeed = std::pow(10.0, 2.5 * params_.trigger_speed - 5.0);
-    double counterSpeed = std::pow(10.0, -params_.time_window * 5. + 1.5); // [0=>10, 1=>0.001]
+    double counterSpeed = std::pow(10.0, -params_.time_window * 5. + 1.5); // 0=>10, 1=>0.001
     double R = 1.0 - 250.0 / static_cast<double>(storage_->samplerate);
 
     for (float &f : data)
@@ -270,12 +261,6 @@ void WaveformDisplay::process(std::vector<float> data)
             // scope_data_[j] = getHeight() * 0.5f - 1.f;
             // }
 
-            // copy to a buffer for drawing!
-            for (j = 0; j < getWidth() * 2; j++)
-            {
-                copy[j].y = peaks[j].y;
-            }
-
             // reset everything
             index = 0;
             counter = 1.0;
@@ -300,7 +285,16 @@ void WaveformDisplay::process(std::vector<float> data)
         counter += counterSpeed;
 
         // @ counter
-        // the counter keeps track of how many samples/pixel we have.
+        // The counter keeps track of how many samples/pixel we have.
+        //
+        // How this works: counter is based off of a user parameter. When counter = 1, we have 1
+        // pixel per incoming sample. When it's 10, we have 10 pixels per incoming sample. And when
+        // it's 0.1, we have, you guessed it, 1 pixel per 10 incoming samples.
+        //
+        // JUCE can handle all the subpixel drawing no problem, but when we have > 1 pixel per sample
+        // then we need to do some interpolation (done in the paint() method). With <= 1 pixel per
+        // sample, it gets squashed down here into whatever the max/min was. With > 1, we end up with
+        // multiple entries of the same value that need to get interpolated.
         if (counter >= 1.0)
         {
             if (index < getWidth())
@@ -332,8 +326,8 @@ void WaveformDisplay::process(std::vector<float> data)
 
 void WaveformDisplay::resized()
 {
+    std::lock_guard l(lock_);
     peaks.clear();
-    copy.clear();
     for (std::size_t j = 0; j < getWidth() * 2; j += 2)
     {
         juce::Point<float> point;
@@ -341,8 +335,6 @@ void WaveformDisplay::resized()
         point.y = static_cast<float>(getHeight()) * 0.5f - 1.f;
         peaks.push_back(point);
         peaks.push_back(point);
-        copy.push_back(point);
-        copy.push_back(point);
     }
 }
 
@@ -534,7 +526,7 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.setIsLightStyle(true);
     time_window_.setIsLightStyle(true);
     amp_window_.setIsLightStyle(true);
-    auto updateParameter = [this](float& param, float value) {
+    auto updateParameter = [this](float &param, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         param = value;
@@ -1137,64 +1129,6 @@ float Oscilloscope::Spectrogram::interpolate(
     std::chrono::duration<float> distance = (t - last_updated_time_);
     float mu = juce::jlimit(0.f, 1.f, distance / mtbs_);
     return y0 * (1 - mu) + y1 * mu;
-}
-
-Oscilloscope::Waveform::Waveform(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s), period_(100), period_float_(period_),
-      period_samples_(static_cast<std::size_t>(s->samplerate * period_float_.count())),
-      scope_data_(s->samplerate), last_sample_rate_(s->samplerate)
-{
-    std::fill(scope_data_.begin(), scope_data_.end(), 0);
-}
-
-void Oscilloscope::Waveform::paint(juce::Graphics &g)
-{
-    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
-    auto width = scopeRect.getWidth();
-    auto height = scopeRect.getHeight();
-    auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
-
-    auto path = juce::Path();
-
-    // Start path.
-    std::unique_lock l(data_lock_);
-    for (int i = 0; i < period_samples_; i++)
-    {
-        const float x = juce::jmap(static_cast<float>(i), 0.f, static_cast<float>(period_samples_),
-                                   0.f, static_cast<float>(width));
-        const float y = juce::jmap(scope_data_[i], -1.f, 1.f, static_cast<float>(height), 0.f);
-        if (i)
-        {
-            path.lineTo(x, y);
-        }
-        else
-        {
-            path.startNewSubPath(x, y);
-        }
-    }
-    g.setColour(curveColor);
-    g.strokePath(path, juce::PathStrokeType(1.f));
-}
-
-void Oscilloscope::Waveform::scroll()
-{
-    std::vector<float> data = upcoming_data_.popall();
-    std::unique_lock l(data_lock_);
-    // Check for sample rate changes. Have to just redo everything when that happens.
-    if (last_sample_rate_ != storage_->samplerate)
-    {
-        last_sample_rate_ = storage_->samplerate;
-        scope_data_.resize(last_sample_rate_);
-        period_samples_ = static_cast<std::size_t>(last_sample_rate_ * period_float_.count());
-    }
-    std::rotate(scope_data_.begin(), scope_data_.begin() + data.size(), scope_data_.end());
-    std::move(data.begin(), data.end(), scope_data_.end() - data.size());
-    repaint();
-}
-
-void Oscilloscope::Waveform::updateAudioData(const std::vector<float> &buf)
-{
-    upcoming_data_.push(buf);
 }
 
 Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)
