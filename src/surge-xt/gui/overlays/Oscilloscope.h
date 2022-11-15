@@ -75,6 +75,10 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     void process(std::vector<float> data);
 
   private:
+    // Calculate how far into the data array we can index, given the current desired scope size.
+    // This method is called with the lock held.
+    std::size_t dataLimit();
+
     SurgeGUIEditor *editor_;
     SurgeStorage *storage_;
     Parameters params_;
@@ -84,10 +88,18 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     std::vector<juce::Point<float>> peaks;
     std::vector<float> scope_data_;
-    std::size_t pos_;
+
+    // How much time are we displaying, in seconds?
+    float time_slice_;
+
+    // Distance into the data array that we can go, given the current scope window size.
+    std::size_t period_limit_;
+
+    int samplerate_;
 
     // Index into the peak-array.
     std::size_t index;
+    std::size_t pos_;
 
     // counter which is used to set the amount of samples/pixel.
     double counter;
