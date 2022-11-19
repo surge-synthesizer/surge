@@ -106,12 +106,30 @@ void WaveformDisplay::paint(juce::Graphics &g)
     else
     {
         std::size_t last = dataLimit();
-        path.startNewSubPath(0, juce::jmap<float>(scope_data_[0], -1, 1, getHeight(), 0));
+        std::size_t step = last % getWidth();
+        std::size_t idx = step;
+        std::size_t pixel_pos = 1;
+        //std::cout << "last = " << last << "; step = " << step << std::endl;
+        float last_y = std::accumulate(scope_data_.begin(), scope_data_.begin() + step, 0.f) / static_cast<float>(step);
+        path.startNewSubPath(0, juce::jmap<float>(last_y, -1, 1, getHeight(), 0));
+        while (idx < last) {
+            std::size_t end = std::min(idx + step, last);
+            float mean = std::accumulate(scope_data_.begin() + idx, scope_data_.begin() + end, 0.f)
+                                 / static_cast<float>(end - idx);
+            path.lineTo(pixel_pos, juce::jmap<float>(mean, -1, 1, getHeight(), 0));
+            last_y = mean;
+            idx += step;
+            pixel_pos++;
+        }
+
+        #if 0
+        //path.startNewSubPath(0, juce::jmap<float>(scope_data_[0], -1, 1, getHeight(), 0));
         for (std::size_t i = 1; i < last; i++)
         {
             path.lineTo(juce::jmap<float>(i, 0, last, 0, getWidth()),
                         juce::jmap<float>(scope_data_[i], -1, 1, getHeight(), 0));
         }
+        #endif
     }
 
     #if 0
@@ -311,7 +329,7 @@ void WaveformDisplay::process(std::vector<float> data)
             repaint();
         }
     }
-    repaint();
+    //repaint();
 }
 
 void WaveformDisplay::resized()
