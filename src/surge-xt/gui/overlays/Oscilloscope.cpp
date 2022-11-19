@@ -39,7 +39,10 @@ WaveformDisplay::WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s)
 
 const WaveformDisplay::Parameters &WaveformDisplay::getParameters() const { return params_; }
 
-void WaveformDisplay::setParameters(Parameters parameters) { params_ = std::move(parameters); }
+void WaveformDisplay::setParameters(Parameters parameters) {
+    std::lock_guard l(lock_);
+    params_ = std::move(parameters);
+}
 
 void WaveformDisplay::paint(juce::Graphics &g)
 {
@@ -108,7 +111,7 @@ void WaveformDisplay::paint(juce::Graphics &g)
     else
     {
         path.startNewSubPath(peaks[0].x, peaks[0].y);
-        for (std::size_t i = 0; i < peaks.size() - 1; i++)
+        for (std::size_t i = 1; i < peaks.size() - 1; i++)
         {
             path.lineTo(peaks[i].x, peaks[i].y);
         }
@@ -254,17 +257,13 @@ void WaveformDisplay::process(std::vector<float> data)
             // zero peaks after the last one
             for (j = index * 2; j < getWidth() * 2; j += 2)
             {
-                peaks[j].y = peaks[j + 1].y = getHeight() * 0.5f - 1.f;
+                peaks[j].y = peaks[j + 1].y = juce::jmap<float>(0, -1, 1, getHeight(), 0);
             }
-            // for (j = pos_+1; j < scope_data_.size(); j++)
-            //{
-            // scope_data_[j] = getHeight() * 0.5f - 1.f;
-            // }
 
             // reset everything
             index = 0;
             counter = 1.0;
-            max = std::numeric_limits<float>::min();
+            max = std::numeric_limits<float>::lowest();
             min = std::numeric_limits<float>::max();
             triggerLimitPhase = 0;
         }
@@ -288,20 +287,19 @@ void WaveformDisplay::process(std::vector<float> data)
         // The counter keeps track of how many samples/pixel we have.
         //
         // How this works: counter is based off of a user parameter. When counter = 1, we have 1
-        // pixel per incoming sample. When it's 10, we have 10 pixels per incoming sample. And when
-        // it's 0.1, we have, you guessed it, 1 pixel per 10 incoming samples.
+        // incoming sample per pixel. When it's 10, we have 10 pixels per incoming sample. And when
+        // it's 0.1, we have, you guessed it, 10 pixels per 1 incoming sample.
         //
-        // JUCE can handle all the subpixel drawing no problem, but when we have > 1 pixel per sample
-        // then we need to do some interpolation (done in the paint() method). With <= 1 pixel per
-        // sample, it gets squashed down here into whatever the max/min was. With > 1, we end up with
-        // multiple entries of the same value that need to get interpolated.
+        // JUCE can handle all the subpixel drawing no problem, but it's ungodly slow at it. So
+        // instead we squash the data down here with maxes/mins per pixel.
         if (counter >= 1.0)
         {
             if (index < getWidth())
             {
-                // scale here, better than in the graphics thread
-                double max_Y = (getHeight() * 0.5 - max * 0.5 * getHeight()) - 1.0;
-                double min_Y = (getHeight() * 0.5 - min * 0.5 * getHeight()) - 1.0;
+                // Perform scaling here so we don't have to redo it over and over in painting.
+                // FIXME: Use amplitude window for scaling.
+                float max_Y = juce::jmap<float>(max, -1, 1, getHeight(), 0);
+                float min_Y = juce::jmap<float>(min, -1, 1, getHeight(), 0);
 
                 // thanks to David @ Plogue for this interesting hint!
                 peaks[(index << 1)].y = lastIsMax ? min_Y : max_Y;
@@ -310,7 +308,7 @@ void WaveformDisplay::process(std::vector<float> data)
                 index++;
             }
 
-            max = std::numeric_limits<float>::min();
+            max = std::numeric_limits<float>::lowest();
             min = std::numeric_limits<float>::max();
             counter -= 1.0;
         }
@@ -331,8 +329,8 @@ void WaveformDisplay::resized()
     for (std::size_t j = 0; j < getWidth() * 2; j += 2)
     {
         juce::Point<float> point;
-        point.x = static_cast<float>(j) / 2.f;
-        point.y = static_cast<float>(getHeight()) * 0.5f - 1.f;
+        point.x = j / 2;
+        point.y = juce::jmap<float>(0, -1, 1, getHeight(), 0);
         peaks.push_back(point);
         peaks.push_back(point);
     }

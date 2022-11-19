@@ -83,8 +83,6 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     std::mutex lock_;
 
     std::vector<juce::Point<float>> peaks;
-    std::vector<float> scope_data_;
-    std::size_t pos_;
 
     // Index into the peak-array.
     std::size_t index;
