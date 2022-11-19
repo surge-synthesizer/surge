@@ -19,7 +19,9 @@
 #include <chrono>
 #include <cmath>
 #include <functional>
+#include <iomanip>
 #include <limits>
+#include <sstream>
 #include "RuntimeFont.h"
 #include "SkinColors.h"
 
@@ -31,6 +33,9 @@ namespace Surge
 namespace Overlays
 {
 
+float WaveformDisplay::Parameters::triggerLevel() const { return trigger_level * 2.f - 1.f; }
+float WaveformDisplay::Parameters::gain() const { return std::pow(10.f, amp_window * 6.f - 3.f); }
+
 WaveformDisplay::WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), counter(1.0), max(std::numeric_limits<float>::min()),
       min(std::numeric_limits<float>::min())
@@ -39,7 +44,8 @@ WaveformDisplay::WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s)
 
 const WaveformDisplay::Parameters &WaveformDisplay::getParameters() const { return params_; }
 
-void WaveformDisplay::setParameters(Parameters parameters) {
+void WaveformDisplay::setParameters(Parameters parameters)
+{
     std::lock_guard l(lock_);
     params_ = std::move(parameters);
 }
@@ -182,8 +188,8 @@ void WaveformDisplay::process(std::vector<float> data)
         return;
     }
 
-    float gain = std::pow(10.f, params_.amp_window * 6.f - 3.f);
-    float triggerLevel = params_.trigger_level * 2.f - 1.f;
+    float gain = params_.gain();
+    float triggerLevel = params_.triggerLevel();
     int triggerLimit =
         static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f)); // 0=>1, 1=>10000
     double triggerSpeed = std::pow(10.0, 2.5 * params_.trigger_speed - 5.0);
@@ -630,10 +636,11 @@ void Oscilloscope::updateDrawing()
     {
         if (scope_mode_ == WAVEFORM)
         {
-            // waveform_.scroll();
             auto params = waveform_parameters_.getParamsIfDirty();
             if (params)
             {
+                background_.updateParameters(*params);
+                background_.repaint();
                 waveform_.setParameters(std::move(*params));
             }
             waveform_.repaint();
@@ -853,6 +860,11 @@ void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
     setBounds(local_bounds);
 }
 
+void Oscilloscope::Background::updateParameters(WaveformDisplay::Parameters params)
+{
+    waveform_params_ = std::move(params);
+}
+
 void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
 {
     juce::Graphics::ScopedSaveState g1(g);
@@ -974,26 +986,29 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         // Axis labels will go past the end of the scopeRect.
         g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
 
-        labelRect = juce::Rectangle{14, labelHeight}
-                        .withBottomY((int)height + labelHeight / 2)
-                        .withRightX(width + 16)
-                        .translated(2, 0);
+        std::string minus = "-";
+        std::string plus = "+";
+        std::stringstream gain;
+        gain << std::fixed << std::setprecision(2) << 1.f / waveform_params_.gain();
 
-        g.drawText("-1.0", labelRect, juce::Justification::left, 1);
+        g.drawSingleLineText(minus + gain.str(), width + 4, height + 2);
+        g.drawSingleLineText("0.0", width + 4, height / 2 + 2);
+        g.drawSingleLineText(plus + gain.str(), width + 4, 2);
 
-        labelRect = juce::Rectangle{14, labelHeight}
-                        .withBottomY((int)(height / 2 + labelHeight / 2))
-                        .withRightX(width + 16)
-                        .translated(2, 0);
-
-        g.drawText("0.0", labelRect, juce::Justification::left, 1);
-
-        labelRect = juce::Rectangle{14, labelHeight}
-                        .withBottomY(labelHeight / 2)
-                        .withRightX(width + 16)
-                        .translated(2, 0);
-
-        g.drawText("+1.0", labelRect, juce::Justification::left, 1);
+        // Draw the trigger lines, if applicable.
+        g.setColour(secondaryLine);
+        if (waveform_params_.trigger_type == WaveformDisplay::kTriggerRising)
+        {
+            g.drawHorizontalLine(
+                juce::jmap<float>(waveform_params_.triggerLevel(), -1, 1, height, 0), 0,
+                width);
+        }
+        if (waveform_params_.trigger_type == WaveformDisplay::kTriggerFalling)
+        {
+            g.drawHorizontalLine(
+                juce::jmap<float>(-waveform_params_.triggerLevel(), -1, 1, height, 0), 0,
+                width);
+        }
     }
 
     // Vertical grid.

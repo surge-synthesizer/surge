@@ -63,6 +63,12 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
         float amp_window = 0.5f;                 // Y-range, knob
         bool freeze = false;                     // freeze display, on/off
         bool dc_kill = false;                    // kill DC, on/off
+
+        // Calculate the amplitude "gain" value from the amp window 0-1 slider value.
+        float gain() const;
+
+        // Calculate the final trigger level value from the 0-1 slider value.
+        float triggerLevel() const;
     };
 
     WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s);
@@ -162,13 +168,17 @@ class Oscilloscope : public OverlayComponent,
         void paint(juce::Graphics &g) override;
         void updateBackgroundType(ScopeMode mode);
         void updateBounds(juce::Rectangle<int> local_bounds, juce::Rectangle<int> scope_bounds);
+        void updateParameters(WaveformDisplay::Parameters params);
 
       private:
         void paintSpectrogramBackground(juce::Graphics &g);
         void paintWaveformBackground(juce::Graphics &g);
 
+        // No lock on these because they can only get updated during the same thread as the one
+        // doing the painting.
         ScopeMode mode_;
         juce::Rectangle<int> scope_bounds_;
+        WaveformDisplay::Parameters waveform_params_;
     };
 
     // Child component for handling the drawing of the spectrogram.
