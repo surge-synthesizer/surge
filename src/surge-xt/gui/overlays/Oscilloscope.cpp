@@ -13,9 +13,6 @@
  ** open source in September 2018.
  */
 
-// TODO: Resize scope data based on time window. Fix the index rollover associated with it
-// (it should no longer be getWidth() at that point, which I hacked in an attempt to do).
-
 #include "Oscilloscope.h"
 
 #include <algorithm>
@@ -42,18 +39,7 @@ WaveformDisplay::WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s)
 
 const WaveformDisplay::Parameters &WaveformDisplay::getParameters() const { return params_; }
 
-void WaveformDisplay::setParameters(Parameters parameters) {
-    std::lock_guard l(lock_);
-    params_ = std::move(parameters);
-}
-
-std::size_t WaveformDisplay::dataLimit()
-{
-    // Waveform time slice should show frequencies as high as 20khz (.00005 seconds) and range up to
-    // 2 seconds of data.
-    float time_slice = juce::jmap(params_.time_window, 0.0001f, 2.f);
-    return time_slice * samplerate_;
-}
+void WaveformDisplay::setParameters(Parameters parameters) { params_ = std::move(parameters); }
 
 void WaveformDisplay::paint(juce::Graphics &g)
 {
@@ -86,53 +72,13 @@ void WaveformDisplay::paint(juce::Graphics &g)
 #endif
 
     std::unique_lock l(lock_);
-    if (!scope_data_.size())
-    {
-        return;
-    }
-
     auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
     auto path = juce::Path();
+
+    // waveform
+    double counterSpeedInverse = std::pow(10.f, params_.time_window * 5.f - 1.5f);
+
     g.setColour(curveColor);
-
-    // Waveform time slice should show frequencies as high as 20khz (.00005 seconds) and range up to
-    // 2 seconds of data.
-    float counterSpeed = juce::jmap(params_.time_window, 0.0001f, 2.f);
-    if (samplerate_ * counterSpeed < getWidth())
-    {
-        // FIXME: Draw interpolated lines.
-        std::cout << "Can't draw, counter speed too low." << std::endl;
-    }
-    else
-    {
-        std::size_t last = dataLimit();
-        std::size_t step = last % getWidth();
-        std::size_t idx = step;
-        std::size_t pixel_pos = 1;
-        //std::cout << "last = " << last << "; step = " << step << std::endl;
-        float last_y = std::accumulate(scope_data_.begin(), scope_data_.begin() + step, 0.f) / static_cast<float>(step);
-        path.startNewSubPath(0, juce::jmap<float>(last_y, -1, 1, getHeight(), 0));
-        while (idx < last) {
-            std::size_t end = std::min(idx + step, last);
-            float mean = std::accumulate(scope_data_.begin() + idx, scope_data_.begin() + end, 0.f)
-                                 / static_cast<float>(end - idx);
-            path.lineTo(pixel_pos, juce::jmap<float>(mean, -1, 1, getHeight(), 0));
-            last_y = mean;
-            idx += step;
-            pixel_pos++;
-        }
-
-        #if 0
-        //path.startNewSubPath(0, juce::jmap<float>(scope_data_[0], -1, 1, getHeight(), 0));
-        for (std::size_t i = 1; i < last; i++)
-        {
-            path.lineTo(juce::jmap<float>(i, 0, last, 0, getWidth()),
-                        juce::jmap<float>(scope_data_[i], -1, 1, getHeight(), 0));
-        }
-        #endif
-    }
-
-    #if 0
     if (counterSpeedInverse < 1.0) // draw interpolated lines
     {
         double phase = counterSpeedInverse;
@@ -159,7 +105,14 @@ void WaveformDisplay::paint(juce::Graphics &g)
             phase += dphase;
         }
     }
-    #endif
+    else
+    {
+        path.startNewSubPath(peaks[0].x, peaks[0].y);
+        for (std::size_t i = 0; i < peaks.size() - 1; i++)
+        {
+            path.lineTo(peaks[i].x, peaks[i].y);
+        }
+    }
     g.strokePath(path, juce::PathStrokeType(1.f));
 
 #if 0
@@ -220,17 +173,10 @@ void WaveformDisplay::paint(juce::Graphics &g)
 
 void WaveformDisplay::process(std::vector<float> data)
 {
-    std::lock_guard l(lock_);
+    std::unique_lock l(lock_);
     if (params_.freeze)
     {
         return;
-    }
-    if (storage_->samplerate != samplerate_)
-    {
-        samplerate_ = storage_->samplerate;
-        // Store up to 2 seconds of data.
-        scope_data_.resize(2*samplerate_, 0.f);
-        index = 0;
     }
 
     float gain = std::pow(10.f, params_.amp_window * 6.f - 3.f);
@@ -240,7 +186,6 @@ void WaveformDisplay::process(std::vector<float> data)
     double triggerSpeed = std::pow(10.0, 2.5 * params_.trigger_speed - 5.0);
     double counterSpeed = std::pow(10.0, -params_.time_window * 5. + 1.5); // 0=>10, 1=>0.001
     double R = 1.0 - 250.0 / static_cast<double>(storage_->samplerate);
-    std::size_t index_limit = dataLimit();
 
     for (float &f : data)
     {
@@ -285,8 +230,8 @@ void WaveformDisplay::process(std::vector<float> data)
             }
             break;
         case kTriggerFree:
-            // trigger when we've run out of buffer.
-            if (index >= index_limit)
+            // trigger when we've run out of the screen area
+            if (index >= getWidth())
             {
                 trigger = true;
             }
@@ -304,38 +249,93 @@ void WaveformDisplay::process(std::vector<float> data)
         // @ trigger
         if (trigger)
         {
-            // Zero data after trigger point.
-            for (std::size_t j = index + 1; j < scope_data_.size(); j++)
+            std::size_t j;
+
+            // zero peaks after the last one
+            for (j = index * 2; j < getWidth() * 2; j += 2)
             {
-                scope_data_[j] = 0;
+                peaks[j].y = peaks[j + 1].y = getHeight() * 0.5f - 1.f;
             }
+            // for (j = pos_+1; j < scope_data_.size(); j++)
+            //{
+            // scope_data_[j] = getHeight() * 0.5f - 1.f;
+            // }
 
             // reset everything
             index = 0;
             counter = 1.0;
+            max = std::numeric_limits<float>::min();
+            min = std::numeric_limits<float>::max();
             triggerLimitPhase = 0;
         }
 
         // @ sample
-        scope_data_[index] = sample;
+        if (sample > max)
+        {
+            max = sample;
+            lastIsMax = true;
+        }
+
+        if (sample < min)
+        {
+            min = sample;
+            lastIsMax = false;
+        }
+
+        counter += counterSpeed;
+
+        // @ counter
+        // The counter keeps track of how many samples/pixel we have.
+        //
+        // How this works: counter is based off of a user parameter. When counter = 1, we have 1
+        // pixel per incoming sample. When it's 10, we have 10 pixels per incoming sample. And when
+        // it's 0.1, we have, you guessed it, 1 pixel per 10 incoming samples.
+        //
+        // JUCE can handle all the subpixel drawing no problem, but when we have > 1 pixel per sample
+        // then we need to do some interpolation (done in the paint() method). With <= 1 pixel per
+        // sample, it gets squashed down here into whatever the max/min was. With > 1, we end up with
+        // multiple entries of the same value that need to get interpolated.
+        if (counter >= 1.0)
+        {
+            if (index < getWidth())
+            {
+                // scale here, better than in the graphics thread
+                double max_Y = (getHeight() * 0.5 - max * 0.5 * getHeight()) - 1.0;
+                double min_Y = (getHeight() * 0.5 - min * 0.5 * getHeight()) - 1.0;
+
+                // thanks to David @ Plogue for this interesting hint!
+                peaks[(index << 1)].y = lastIsMax ? min_Y : max_Y;
+                peaks[(index << 1) + 1].y = lastIsMax ? max_Y : min_Y;
+
+                index++;
+            }
+
+            max = std::numeric_limits<float>::min();
+            min = std::numeric_limits<float>::max();
+            counter -= 1.0;
+        }
+
         // store for edge-triggers
         previousSample = sample;
-
-        index++;
-        index %= index_limit;
-
         if (trigger)
         {
             repaint();
         }
     }
-    //repaint();
 }
 
 void WaveformDisplay::resized()
 {
     std::lock_guard l(lock_);
-    std::fill(scope_data_.begin(), scope_data_.end(), 0.f);
+    peaks.clear();
+    for (std::size_t j = 0; j < getWidth() * 2; j += 2)
+    {
+        juce::Point<float> point;
+        point.x = static_cast<float>(j) / 2.f;
+        point.y = static_cast<float>(getHeight()) * 0.5f - 1.f;
+        peaks.push_back(point);
+        peaks.push_back(point);
+    }
 }
 
 float Oscilloscope::freqToX(float freq, int width)
@@ -971,10 +971,8 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         g.setColour(primaryLine);
         g.drawHorizontalLine(0, 0, width);
         g.drawHorizontalLine(height, 0, width);
-        //g.drawHorizontalLine(height / 2.f, 0, width);
+        g.drawHorizontalLine(height / 2.f, 0, width);
 
-        #if 0
-        // FIXME: Maybe include this based on amplitude window.
         // Axis labels will go past the end of the scopeRect.
         g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
 
@@ -998,7 +996,6 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
                         .translated(2, 0);
 
         g.drawText("+1.0", labelRect, juce::Justification::left, 1);
-        #endif
     }
 
     // Vertical grid.
@@ -1006,12 +1003,7 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         auto gs = juce::Graphics::ScopedSaveState(g);
         g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
         g.setFont(font);
-        g.setColour(primaryLine);
-        g.drawVerticalLine(0, 0, height + 1);
-        g.drawVerticalLine(width, 0, height + 1);
 
-        #if 0
-        // FIXME: Maybe include this based on time window.
         for (int ms : {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
         {
             auto xPos = timeToX(std::chrono::milliseconds(ms), width);
@@ -1042,7 +1034,6 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             g.drawFittedText(timeString, labelRect, juce::Justification::bottom, 1);
         }
-        #endif
     }
 }
 
