@@ -4,6 +4,7 @@
 
 template <typename T> inline T limit_range(const T &x, const T &low, const T &high)
 {
+    assert(low <= high);
     return std::clamp(x, low, high);
 }
 
