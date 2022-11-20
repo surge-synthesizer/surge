@@ -20,6 +20,7 @@
 #include <cmath>
 #include <functional>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 #include <sstream>
 #include "RuntimeFont.h"
@@ -80,11 +81,12 @@ void WaveformDisplay::paint(juce::Graphics &g)
     pContext->drawLine(CPoint(0, getViewSize().getHeight() * 0.5 - 1).offset(offset), CPoint(getViewSize().getWidth() - 1, getViewSize().getHeight() * 0.5 - 1).offset(offset));
 #endif
 
-    std::unique_lock l(lock_);
+    std::lock_guard l(lock_);
     auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
     auto path = juce::Path();
 
     // waveform
+    std::vector<juce::Point<float>>& points = params_.sync_draw ? copy : peaks;
     double counterSpeedInverse = std::pow(10.f, params_.time_window * 5.f - 1.5f);
 
     g.setColour(curveColor);
@@ -93,21 +95,18 @@ void WaveformDisplay::paint(juce::Graphics &g)
         double phase = counterSpeedInverse;
         double dphase = counterSpeedInverse;
 
-        double prevxi = peaks[0].x;
-        double prevyi = peaks[0].y;
+        double prevxi = points[0].x;
+        double prevyi = points[0].y;
         path.startNewSubPath(prevxi, prevyi);
 
-        // FIXME: Interpolated lines the way I've copied it doesn't seem to work.
         for (std::size_t i = 1; i < getWidth() - 1; i++)
         {
             int index = static_cast<int>(phase);
             double alpha = phase - static_cast<double>(index);
 
             double xi = i;
-            double yi = (1.0 - alpha) * peaks[index * 2].y + alpha * peaks[(index + 1) * 2].y;
+            double yi = (1.0 - alpha) * points[index * 2].y + alpha * points[(index + 1) * 2].y;
             path.lineTo(xi, yi);
-            // pContext->drawLine(CPoint(prevxi, prevyi).offset(offset), CPoint(xi,
-            // yi).offset(offset));
             prevxi = xi;
             prevyi = yi;
 
@@ -116,10 +115,10 @@ void WaveformDisplay::paint(juce::Graphics &g)
     }
     else
     {
-        path.startNewSubPath(peaks[0].x, peaks[0].y);
-        for (std::size_t i = 1; i < peaks.size() - 1; i++)
+        path.startNewSubPath(points[0].x, points[0].y);
+        for (std::size_t i = 1; i < points.size(); i++)
         {
-            path.lineTo(peaks[i].x, peaks[i].y);
+            path.lineTo(points[i].x, points[i].y);
         }
     }
     g.strokePath(path, juce::PathStrokeType(1.f));
@@ -192,9 +191,9 @@ void WaveformDisplay::process(std::vector<float> data)
     float triggerLevel = params_.triggerLevel();
     int triggerLimit =
         static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f)); // 0=>1, 1=>10000
-    double triggerSpeed = std::pow(10.0, 2.5 * params_.trigger_speed - 5.0);
-    double counterSpeed = std::pow(10.0, -params_.time_window * 5. + 1.5); // 0=>10, 1=>0.001
-    double R = 1.0 - 250.0 / static_cast<double>(storage_->samplerate);
+    float triggerSpeed = std::pow(10.f, 2.5f * params_.trigger_speed - 5.f);
+    float counterSpeed = std::pow(10.f, -params_.time_window * 5.f + 1.5f); // 0=>10, 1=>0.001
+    float R = 1.f - 250.f / static_cast<float>(storage_->samplerate);
 
     for (float &f : data)
     {
@@ -226,6 +225,7 @@ void WaveformDisplay::process(std::vector<float> data)
             break;
         case kTriggerRising:
             // trigger on a rising edge
+            // fixme: something is wrong with this triggering mechanism
             if (sample >= triggerLevel && previousSample < triggerLevel)
             {
                 trigger = true;
@@ -233,6 +233,7 @@ void WaveformDisplay::process(std::vector<float> data)
             break;
         case kTriggerFalling:
             // trigger on a falling edge
+            // fixme: something is wrong with this triggering mechanism
             if (sample <= triggerLevel && previousSample > triggerLevel)
             {
                 trigger = true;
@@ -264,6 +265,12 @@ void WaveformDisplay::process(std::vector<float> data)
             for (j = index * 2; j < getWidth() * 2; j += 2)
             {
                 peaks[j].y = peaks[j + 1].y = juce::jmap<float>(0, -1, 1, getHeight(), 0);
+            }
+
+            // copy to a buffer for sync drawing
+            for (j = 0; j < getWidth() * 2; j++)
+            {
+                copy[j].y = peaks[j].y;
             }
 
             // reset everything
@@ -321,10 +328,6 @@ void WaveformDisplay::process(std::vector<float> data)
 
         // store for edge-triggers
         previousSample = sample;
-        if (trigger)
-        {
-            repaint();
-        }
     }
 }
 
@@ -332,6 +335,7 @@ void WaveformDisplay::resized()
 {
     std::lock_guard l(lock_);
     peaks.clear();
+    copy.clear();
     for (std::size_t j = 0; j < getWidth() * 2; j += 2)
     {
         juce::Point<float> point;
@@ -339,6 +343,8 @@ void WaveformDisplay::resized()
         point.y = juce::jmap<float>(0, -1, 1, getHeight(), 0);
         peaks.push_back(point);
         peaks.push_back(point);
+        copy.push_back(point);
+        copy.push_back(point);
     }
 }
 
@@ -493,7 +499,7 @@ void Oscilloscope::SpectrogramParameters::resized()
 }
 
 Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s), freeze_("Freeze"), dc_kill_("DC-Kill")
+    : editor_(e), storage_(s), freeze_("Freeze"), dc_kill_("DC-Kill"), sync_draw_("Sync")
 {
     trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -570,10 +576,13 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     };
     freeze_.setWantsKeyboardFocus(false);
     dc_kill_.setWantsKeyboardFocus(false);
+    sync_draw_.setWantsKeyboardFocus(false);
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
     dc_kill_.onToggle = std::bind(toggleParam, std::ref(params_.dc_kill));
+    sync_draw_.onToggle = std::bind(toggleParam, std::ref(params_.sync_draw));
     addAndMakeVisible(freeze_);
     addAndMakeVisible(dc_kill_);
+    addAndMakeVisible(sync_draw_);
 }
 
 std::optional<WaveformDisplay::Parameters> Oscilloscope::WaveformParameters::getParamsIfDirty()
@@ -597,6 +606,7 @@ void Oscilloscope::WaveformParameters::onSkinChanged()
     trigger_type_.setSkin(skin, associatedBitmapStore);
     freeze_.setSkin(skin, associatedBitmapStore);
     dc_kill_.setSkin(skin, associatedBitmapStore);
+    sync_draw_.setSkin(skin, associatedBitmapStore);
     auto font = skin->fontManager->getLatoAtSize(7, juce::Font::plain);
     trigger_speed_.setFont(font);
     trigger_level_.setFont(font);
@@ -624,9 +634,10 @@ void Oscilloscope::WaveformParameters::resized()
     amp_window_.setBounds(160, 39, 140, 26);
     // Next over, the trigger mechanism.
     trigger_type_.setBounds(320, 13, 40, 50);
-    // Next over, the two boolean switches.
+    // Next over, the three boolean switches.
     freeze_.setBounds(385, 19, 40, 13);
-    dc_kill_.setBounds(385, 41, 40, 13);
+    dc_kill_.setBounds(385, 38, 40, 13);
+    sync_draw_.setBounds(385, 57, 40, 13);
 }
 
 void Oscilloscope::updateDrawing()

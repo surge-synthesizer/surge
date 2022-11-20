@@ -63,6 +63,7 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
         float amp_window = 0.5f;                 // Y-range, knob
         bool freeze = false;                     // freeze display, on/off
         bool dc_kill = false;                    // kill DC, on/off
+        bool sync_draw = false;                  // sync redraw, on/off
 
         // Calculate the amplitude "gain" value from the amp window 0-1 slider value.
         float gain() const;
@@ -89,6 +90,7 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     std::mutex lock_;
 
     std::vector<juce::Point<float>> peaks;
+    std::vector<juce::Point<float>> copy;  // Copy of peaks, for sync drawing.
 
     // Index into the peak-array.
     std::size_t index;
@@ -244,6 +246,7 @@ class Oscilloscope : public OverlayComponent,
         Surge::Widgets::ClosedMultiSwitchSelfDraw trigger_type_;
         Surge::Widgets::SelfDrawToggleButton freeze_;
         Surge::Widgets::SelfDrawToggleButton dc_kill_;
+        Surge::Widgets::SelfDrawToggleButton sync_draw_;
     };
 
     // Child component for handling the switch between waveform/spectrum.
