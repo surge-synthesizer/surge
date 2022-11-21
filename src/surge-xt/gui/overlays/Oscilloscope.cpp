@@ -227,6 +227,10 @@ void WaveformDisplay::process(std::vector<float> data)
                 trigger = true;
             }
             break;
+        default:
+            // Should never happen.
+            std::cout << "Invalid trigger type. This should never happen..." << std::endl;
+            std::abort();
         }
 
         // if there's a retrigger, but too fast, kill it

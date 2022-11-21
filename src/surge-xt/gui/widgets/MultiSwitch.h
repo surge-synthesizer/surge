@@ -163,25 +163,25 @@ struct ClosedMultiSwitchSelfDraw : public MultiSwitchSelfDraw, GUI::IComponentTa
 };
 
 struct SelfDrawButton : public MultiSwitchSelfDraw, GUI::IComponentTagValue::Listener
+{
+    SelfDrawButton(const std::string &lab) : MultiSwitchSelfDraw(), label(lab)
     {
-        SelfDrawButton(const std::string &lab) : MultiSwitchSelfDraw(), label(lab)
-        {
-            setLabels({label});
-            addListener(this);
-            setRows(1);
-            setColumns(1);
-            setDraggable(false);
-            setValue(0);
-        }
-        std::string label;
-        std::function<void()> onClick = []() {};
-        void valueChanged(IComponentTagValue *p) override
-        {
-            onClick();
-            setValue(0);
-            repaint();
-        }
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SelfDrawButton);
+        setLabels({label});
+        addListener(this);
+        setRows(1);
+        setColumns(1);
+        setDraggable(false);
+        setValue(0);
+    }
+    std::string label;
+    std::function<void()> onClick = []() {};
+    void valueChanged(IComponentTagValue *p) override
+    {
+        onClick();
+        setValue(0);
+        repaint();
+    }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SelfDrawButton);
 };
 
 struct SelfDrawToggleButton : public MultiSwitchSelfDraw, GUI::IComponentTagValue::Listener
