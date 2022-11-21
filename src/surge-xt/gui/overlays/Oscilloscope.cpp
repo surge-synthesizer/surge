@@ -291,7 +291,6 @@ void WaveformDisplay::process(std::vector<float> data)
             if (index < getWidth())
             {
                 // Perform scaling here so we don't have to redo it over and over in painting.
-                // FIXME: Use amplitude window for scaling.
                 float max_Y = juce::jmap<float>(max, -1, 1, getHeight(), 0);
                 float min_Y = juce::jmap<float>(min, -1, 1, getHeight(), 0);
 
@@ -777,8 +776,6 @@ void Oscilloscope::pullData()
 
         if (scope_mode_ == WAVEFORM)
         {
-            // FIXME: Normalize dataL.
-            // waveform_.updateAudioData(dataL);
             waveform_.process(std::move(dataL));
         }
         else
