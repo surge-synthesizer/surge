@@ -65,6 +65,9 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
         bool dc_kill = false;                    // kill DC, on/off
         bool sync_draw = false;                  // sync redraw, on/off
 
+        // Number of pixels per sample, calculated from the time window 0-1 slider value.
+        float counterSpeed() const;
+
         // Calculate the amplitude "gain" value from the amp window 0-1 slider value.
         float gain() const;
 
@@ -96,7 +99,7 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     std::size_t index;
 
     // counter which is used to set the amount of samples/pixel.
-    double counter;
+    float counter;
 
     // max/min peak in this block.
     float max, min, maxR, minR;
@@ -108,13 +111,13 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     float previousSample;
 
     // the internal trigger oscillator
-    double triggerPhase;
+    float triggerPhase;
 
     // trigger limiter
     int triggerLimitPhase;
 
     // DC killer.
-    double dcKill, dcFilterTemp;
+    float dcKill, dcFilterTemp;
 };
 
 class Oscilloscope : public OverlayComponent,
@@ -166,7 +169,7 @@ class Oscilloscope : public OverlayComponent,
     class Background : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
-        explicit Background();
+        explicit Background(SurgeStorage *s);
         void paint(juce::Graphics &g) override;
         void updateBackgroundType(ScopeMode mode);
         void updateBounds(juce::Rectangle<int> local_bounds, juce::Rectangle<int> scope_bounds);
@@ -178,6 +181,7 @@ class Oscilloscope : public OverlayComponent,
 
         // No lock on these because they can only get updated during the same thread as the one
         // doing the painting.
+        SurgeStorage* storage_;
         ScopeMode mode_;
         juce::Rectangle<int> scope_bounds_;
         WaveformDisplay::Parameters waveform_params_;

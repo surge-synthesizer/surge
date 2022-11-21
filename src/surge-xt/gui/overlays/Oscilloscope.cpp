@@ -34,6 +34,10 @@ namespace Surge
 namespace Overlays
 {
 
+float WaveformDisplay::Parameters::counterSpeed() const
+{
+    return std::pow(10.f, -time_window * 5.f + 1.5f);
+}
 float WaveformDisplay::Parameters::triggerLevel() const { return trigger_level * 2.f - 1.f; }
 float WaveformDisplay::Parameters::gain() const { return std::pow(10.f, amp_window * 6.f - 3.f); }
 
@@ -86,26 +90,26 @@ void WaveformDisplay::paint(juce::Graphics &g)
     auto path = juce::Path();
 
     // waveform
-    std::vector<juce::Point<float>>& points = params_.sync_draw ? copy : peaks;
-    double counterSpeedInverse = std::pow(10.f, params_.time_window * 5.f - 1.5f);
+    std::vector<juce::Point<float>> &points = params_.sync_draw ? copy : peaks;
+    float counterSpeedInverse = 1 / params_.counterSpeed();
 
     g.setColour(curveColor);
     if (counterSpeedInverse < 1.0) // draw interpolated lines
     {
-        double phase = counterSpeedInverse;
-        double dphase = counterSpeedInverse;
+        float phase = counterSpeedInverse;
+        float dphase = counterSpeedInverse;
 
-        double prevxi = points[0].x;
-        double prevyi = points[0].y;
+        float prevxi = points[0].x;
+        float prevyi = points[0].y;
         path.startNewSubPath(prevxi, prevyi);
 
         for (std::size_t i = 1; i < getWidth() - 1; i++)
         {
             int index = static_cast<int>(phase);
-            double alpha = phase - static_cast<double>(index);
+            float alpha = phase - static_cast<float>(index);
 
-            double xi = i;
-            double yi = (1.0 - alpha) * points[index * 2].y + alpha * points[(index + 1) * 2].y;
+            float xi = i;
+            float yi = (1.0 - alpha) * points[index * 2].y + alpha * points[(index + 1) * 2].y;
             path.lineTo(xi, yi);
             prevxi = xi;
             prevyi = yi;
@@ -192,7 +196,7 @@ void WaveformDisplay::process(std::vector<float> data)
     int triggerLimit =
         static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f)); // 0=>1, 1=>10000
     float triggerSpeed = std::pow(10.f, 2.5f * params_.trigger_speed - 5.f);
-    float counterSpeed = std::pow(10.f, -params_.time_window * 5.f + 1.5f); // 0=>10, 1=>0.001
+    float counterSpeed = params_.counterSpeed();
     float R = 1.f - 250.f / static_cast<float>(storage_->samplerate);
 
     for (float &f : data)
@@ -371,7 +375,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
       window_(fftSize, juce::dsp::WindowingFunction<float>::hann), pos_(0), complete_(false),
       fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
       channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
-      right_chan_button_("R"), scope_mode_button_(*this), spectrogram_(e, s),
+      right_chan_button_("R"), scope_mode_button_(*this), background_(s), spectrogram_(e, s),
       spectrogram_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s)
 {
     setAccessible(true);
@@ -844,7 +848,7 @@ void Oscilloscope::toggleChannel()
     channels_off_.notify_all();
 }
 
-Oscilloscope::Background::Background() { setOpaque(true); }
+Oscilloscope::Background::Background(SurgeStorage *s) : storage_(s) { setOpaque(true); }
 
 void Oscilloscope::Background::paint(juce::Graphics &g)
 {
@@ -1011,14 +1015,12 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         if (waveform_params_.trigger_type == WaveformDisplay::kTriggerRising)
         {
             g.drawHorizontalLine(
-                juce::jmap<float>(waveform_params_.triggerLevel(), -1, 1, height, 0), 0,
-                width);
+                juce::jmap<float>(waveform_params_.triggerLevel(), -1, 1, height, 0), 0, width);
         }
         if (waveform_params_.trigger_type == WaveformDisplay::kTriggerFalling)
         {
             g.drawHorizontalLine(
-                juce::jmap<float>(-waveform_params_.triggerLevel(), -1, 1, height, 0), 0,
-                width);
+                juce::jmap<float>(-waveform_params_.triggerLevel(), -1, 1, height, 0), 0, width);
         }
     }
 
@@ -1028,11 +1030,15 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
         g.setFont(font);
 
-        for (int ms : {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
+        // Split the grid into 7 sections, starting from 0 and ending at wherever the counter speed
+        // says we should end at.
+        float counterSpeedInverse = 1.f / waveform_params_.counterSpeed();
+        float sampleRateInverse = 1.f / static_cast<float>(storage_->samplerate);
+        float endpoint = counterSpeedInverse * sampleRateInverse * static_cast<float>(width);
+        std::string time_unit = (endpoint >= 1.f) ? " s" : " ms";
+        for (int i = 0; i < 7; i++)
         {
-            auto xPos = timeToX(std::chrono::milliseconds(ms), width);
-
-            if (ms == 0 || ms == 100)
+            if (i == 0 || i == 6)
             {
                 g.setColour(primaryLine);
             }
@@ -1041,14 +1047,17 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
                 g.setColour(secondaryLine);
             }
 
+            int xPos = static_cast<int>(static_cast<float>(width) / 6.f * i);;
             g.drawVerticalLine(xPos, 0, height + 1);
 
-            auto timeString = std::to_string(ms);
-
-            if (ms == 100)
+            float timef = (endpoint / 6.f) * static_cast<float>(i);
+            if (endpoint < 1.f)
             {
-                timeString += " ms";
+                timef *= 1000;
             }
+            std::stringstream time;
+            time << std::fixed << std::setprecision(2) << timef;
+            std::string timeString = time.str() + time_unit;
 
             // Label will go past the end of the scopeRect.
             const auto labelRect =
