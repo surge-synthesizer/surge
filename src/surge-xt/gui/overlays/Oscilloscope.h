@@ -80,6 +80,7 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     const Parameters &getParameters() const;
     void setParameters(Parameters parameters);
 
+    void mouseDown(const juce::MouseEvent &event) override;
     void paint(juce::Graphics &g) override;
     void resized() override;
     void process(std::vector<float> data);
@@ -93,7 +94,7 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     std::mutex lock_;
 
     std::vector<juce::Point<float>> peaks;
-    std::vector<juce::Point<float>> copy;  // Copy of peaks, for sync drawing.
+    std::vector<juce::Point<float>> copy; // Copy of peaks, for sync drawing.
 
     // Index into the peak-array.
     std::size_t index;
@@ -118,6 +119,9 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     // DC killer.
     float dcKill, dcFilterTemp;
+
+    // Point that marks where a click happened.
+    juce::Point<int> clickPoint;
 };
 
 class Oscilloscope : public OverlayComponent,
@@ -181,7 +185,7 @@ class Oscilloscope : public OverlayComponent,
 
         // No lock on these because they can only get updated during the same thread as the one
         // doing the painting.
-        SurgeStorage* storage_;
+        SurgeStorage *storage_;
         ScopeMode mode_;
         juce::Rectangle<int> scope_bounds_;
         WaveformDisplay::Parameters waveform_params_;

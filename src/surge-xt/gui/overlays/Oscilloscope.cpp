@@ -55,36 +55,13 @@ void WaveformDisplay::setParameters(Parameters parameters)
     params_ = std::move(parameters);
 }
 
+void WaveformDisplay::mouseDown(const juce::MouseEvent &event)
+{
+    clickPoint = event.getEventRelativeTo(this).getMouseDownPosition();
+}
+
 void WaveformDisplay::paint(juce::Graphics &g)
 {
-#if 0
-    CPoint offset(38, 16);
-
-    CRect R(0, 0, getViewSize().getWidth(), getViewSize().getHeight());
-    back->draw(pContext, R.offset(offset), offset);
-
-    R(615 - getViewSize().left, 240 - getViewSize().top, 615 + heads->getWidth() - getViewSize().left, 240 + heads->getHeight() / 4 - getViewSize().top);
-    heads->draw(pContext, R.offset(offset), CPoint(0, (display * heads->getHeight()) / 4));
-
-    pContext->setDrawMode(CDrawMode(kAntiAliasing));
-
-    // trig-line
-    long triggerType = (long)(effect->getParameter(CSmartelectronixDisplay::kTriggerType) * CSmartelectronixDisplay::kNumTriggerTypes + 0.0001);
-
-    if (triggerType == CSmartelectronixDisplay::kTriggerRising || triggerType == CSmartelectronixDisplay::kTriggerFalling) {
-        long y = 1 + (long)((1.f - effect->getParameter(CSmartelectronixDisplay::kTriggerLevel)) * (getViewSize().getHeight() - 2));
-
-        CColor grey(229, 229, 229);
-        pContext->setFrameColor(grey);
-        pContext->drawLine(CPoint(0, y).offset(offset), CPoint(getViewSize().getWidth() - 1, y).offset(offset));
-    }
-
-    // zero-line
-    CColor orange(179, 111, 56);
-    pContext->setFrameColor(orange);
-    pContext->drawLine(CPoint(0, getViewSize().getHeight() * 0.5 - 1).offset(offset), CPoint(getViewSize().getWidth() - 1, getViewSize().getHeight() * 0.5 - 1).offset(offset));
-#endif
-
     std::lock_guard l(lock_);
     auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
     auto path = juce::Path();
@@ -128,7 +105,7 @@ void WaveformDisplay::paint(juce::Graphics &g)
     g.strokePath(path, juce::PathStrokeType(1.f));
 
 #if 0
-    //TODO clean this mess up...
+    //TODO: See about adding the readout / click point.
     if (where.x != -1) {
         CPoint whereOffset = where;
         whereOffset.offsetInverse(offset);
@@ -1047,7 +1024,8 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
                 g.setColour(secondaryLine);
             }
 
-            int xPos = static_cast<int>(static_cast<float>(width) / 6.f * i);;
+            int xPos = static_cast<int>(static_cast<float>(width) / 6.f * i);
+            ;
             g.drawVerticalLine(xPos, 0, height + 1);
 
             float timef = (endpoint / 6.f) * static_cast<float>(i);
