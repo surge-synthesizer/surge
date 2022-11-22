@@ -27,6 +27,7 @@
 #include "SurgeGUICallbackInterfaces.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeStorage.h"
+#include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
 
 #include "juce_core/juce_core.h"
@@ -38,6 +39,90 @@ namespace Surge
 {
 namespace Overlays
 {
+
+// Waveform-specific display taken from s(m)exoscope GPL code and adapted to use with Surge.
+class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsumingComponent
+{
+  public:
+    enum TriggerType
+    {
+        kTriggerFree = 0,
+        kTriggerRising,
+        kTriggerFalling,
+        kTriggerInternal,
+        kNumTriggerTypes
+    };
+
+    struct Parameters
+    {
+        float trigger_speed = 0.5f;              // internal trigger speed, knob
+        TriggerType trigger_type = kTriggerFree; // trigger type, selection
+        float trigger_level = 0.5f;              // trigger level, slider
+        float trigger_limit = 0.5f;              // retrigger threshold, knob
+        float time_window = 0.75f;               // X-range, knob
+        float amp_window = 0.5f;                 // Y-range, knob
+        bool freeze = false;                     // freeze display, on/off
+        bool dc_kill = false;                    // kill DC, on/off
+        bool sync_draw = false;                  // sync redraw, on/off
+
+        // Number of pixels per sample, calculated from the time window 0-1 slider value.
+        float counterSpeed() const;
+
+        // Calculate the amplitude "gain" value from the amp window 0-1 slider value.
+        float gain() const;
+
+        // Calculate the final trigger level value from the 0-1 slider value.
+        float triggerLevel() const;
+    };
+
+    WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s);
+
+    const Parameters &getParameters() const;
+    void setParameters(Parameters parameters);
+
+    void mouseDown(const juce::MouseEvent &event) override;
+    void paint(juce::Graphics &g) override;
+    void resized() override;
+    void process(std::vector<float> data);
+
+  private:
+    SurgeGUIEditor *editor_;
+    SurgeStorage *storage_;
+    Parameters params_;
+
+    // Global lock for the class.
+    std::mutex lock_;
+
+    std::vector<juce::Point<float>> peaks;
+    std::vector<juce::Point<float>> copy; // Copy of peaks, for sync drawing.
+
+    // Index into the peak-array.
+    std::size_t index;
+
+    // counter which is used to set the amount of samples/pixel.
+    float counter;
+
+    // max/min peak in this block.
+    float max, min, maxR, minR;
+
+    // the last peak we encountered was a maximum?
+    bool lastIsMax;
+
+    // the previous sample (for edge-triggers)
+    float previousSample;
+
+    // the internal trigger oscillator
+    float triggerPhase;
+
+    // trigger limiter
+    int triggerLimitPhase;
+
+    // DC killer.
+    float dcKill, dcFilterTemp;
+
+    // Point that marks where a click happened.
+    juce::Point<int> clickPoint;
+};
 
 class Oscilloscope : public OverlayComponent,
                      public Surge::GUI::SkinConsumingComponent,
@@ -88,17 +173,22 @@ class Oscilloscope : public OverlayComponent,
     class Background : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
-        explicit Background();
+        explicit Background(SurgeStorage *s);
         void paint(juce::Graphics &g) override;
         void updateBackgroundType(ScopeMode mode);
         void updateBounds(juce::Rectangle<int> local_bounds, juce::Rectangle<int> scope_bounds);
+        void updateParameters(WaveformDisplay::Parameters params);
 
       private:
         void paintSpectrogramBackground(juce::Graphics &g);
         void paintWaveformBackground(juce::Graphics &g);
 
+        // No lock on these because they can only get updated during the same thread as the one
+        // doing the painting.
+        SurgeStorage *storage_;
         ScopeMode mode_;
         juce::Rectangle<int> scope_bounds_;
+        WaveformDisplay::Parameters waveform_params_;
     };
 
     // Child component for handling the drawing of the spectrogram.
@@ -124,29 +214,47 @@ class Oscilloscope : public OverlayComponent,
         FftScopeType displayed_data_;
     };
 
-    // Child component for handling drawing of the waveform.
-    class Waveform : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    class SpectrogramParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
-        Waveform(SurgeGUIEditor *e, SurgeStorage *s);
+        SpectrogramParameters(SurgeGUIEditor *e, SurgeStorage *s);
 
+        void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
-        void scroll();
-        void updateAudioData(const std::vector<float> &buf);
+        void resized() override;
 
       private:
-        static constexpr const float refreshRate = 60.f;
-
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
-        std::mutex data_lock_;
-        std::chrono::milliseconds period_;
-        FloatSeconds period_float_;
-        std::size_t period_samples_;
-        // scope_data_ will buffer an entire second of data, not just what's displayed.
-        std::vector<float> scope_data_;
-        sst::cpputils::SimpleRingBuffer<float, fftSize> upcoming_data_;
-        int last_sample_rate_;
+    };
+
+    class WaveformParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    {
+      public:
+        WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s);
+
+        std::optional<WaveformDisplay::Parameters> getParamsIfDirty();
+
+        void onSkinChanged() override;
+        void paint(juce::Graphics &g) override;
+        void resized() override;
+
+      private:
+        SurgeGUIEditor *editor_;
+        SurgeStorage *storage_;
+        WaveformDisplay::Parameters params_;
+        bool params_changed_;
+        std::mutex params_lock_;
+
+        Surge::Widgets::SelfUpdatingModulatableSlider trigger_speed_;
+        Surge::Widgets::SelfUpdatingModulatableSlider trigger_level_;
+        Surge::Widgets::SelfUpdatingModulatableSlider trigger_limit_;
+        Surge::Widgets::SelfUpdatingModulatableSlider time_window_;
+        Surge::Widgets::SelfUpdatingModulatableSlider amp_window_;
+        Surge::Widgets::ClosedMultiSwitchSelfDraw trigger_type_;
+        Surge::Widgets::SelfDrawToggleButton freeze_;
+        Surge::Widgets::SelfDrawToggleButton dc_kill_;
+        Surge::Widgets::SelfDrawToggleButton sync_draw_;
     };
 
     // Child component for handling the switch between waveform/spectrum.
@@ -165,6 +273,9 @@ class Oscilloscope : public OverlayComponent,
     static float timeToX(std::chrono::milliseconds time, int width);
     static float dbToY(float db, int height);
     static float magToY(float mag, int height);
+
+    // Height of parameter window, in pixels.
+    static constexpr const int paramsHeight = 78;
 
     void calculateSpectrumData();
     void changeScopeType(ScopeMode type);
@@ -195,7 +306,9 @@ class Oscilloscope : public OverlayComponent,
     SwitchButton scope_mode_button_;
     Background background_;
     Spectrogram spectrogram_;
-    Waveform waveform_;
+    WaveformDisplay waveform_;
+    SpectrogramParameters spectrogram_parameters_;
+    WaveformParameters waveform_parameters_;
 };
 
 } // namespace Overlays

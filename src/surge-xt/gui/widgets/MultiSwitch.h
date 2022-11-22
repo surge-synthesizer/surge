@@ -150,6 +150,18 @@ struct MultiSwitchSelfDraw : public MultiSwitch
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiSwitchSelfDraw);
 };
 
+struct ClosedMultiSwitchSelfDraw : public MultiSwitchSelfDraw, GUI::IComponentTagValue::Listener
+{
+    ClosedMultiSwitchSelfDraw() : MultiSwitchSelfDraw() { addListener(this); }
+
+    using CallbackFn = std::function<void(int)>;
+    CallbackFn onUpdate = [](int _) {};
+    void setOnUpdate(CallbackFn fn) { onUpdate = std::move(fn); }
+    void valueChanged(IComponentTagValue *p) override { onUpdate(getIntegerValue()); }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ClosedMultiSwitchSelfDraw);
+};
+
 struct SelfDrawButton : public MultiSwitchSelfDraw, GUI::IComponentTagValue::Listener
 {
     SelfDrawButton(const std::string &lab) : MultiSwitchSelfDraw(), label(lab)

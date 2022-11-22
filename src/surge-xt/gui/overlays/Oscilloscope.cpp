@@ -19,15 +19,318 @@
 #include <chrono>
 #include <cmath>
 #include <functional>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <sstream>
 #include "RuntimeFont.h"
 #include "SkinColors.h"
 
 using namespace std::chrono_literals;
+using std::placeholders::_1;
 
 namespace Surge
 {
 namespace Overlays
 {
+
+float WaveformDisplay::Parameters::counterSpeed() const
+{
+    return std::pow(10.f, -time_window * 5.f + 1.5f);
+}
+float WaveformDisplay::Parameters::triggerLevel() const { return trigger_level * 2.f - 1.f; }
+float WaveformDisplay::Parameters::gain() const { return std::pow(10.f, amp_window * 6.f - 3.f); }
+
+WaveformDisplay::WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s), counter(1.0), max(std::numeric_limits<float>::min()),
+      min(std::numeric_limits<float>::min())
+{
+}
+
+const WaveformDisplay::Parameters &WaveformDisplay::getParameters() const { return params_; }
+
+void WaveformDisplay::setParameters(Parameters parameters)
+{
+    std::lock_guard l(lock_);
+    params_ = std::move(parameters);
+}
+
+void WaveformDisplay::mouseDown(const juce::MouseEvent &event)
+{
+    clickPoint = event.getEventRelativeTo(this).getMouseDownPosition();
+}
+
+void WaveformDisplay::paint(juce::Graphics &g)
+{
+    std::lock_guard l(lock_);
+    auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
+    auto path = juce::Path();
+
+    // waveform
+    std::vector<juce::Point<float>> &points = params_.sync_draw ? copy : peaks;
+    float counterSpeedInverse = 1 / params_.counterSpeed();
+
+    g.setColour(curveColor);
+    if (counterSpeedInverse < 1.0) // draw interpolated lines
+    {
+        float phase = counterSpeedInverse;
+        float dphase = counterSpeedInverse;
+
+        float prevxi = points[0].x;
+        float prevyi = points[0].y;
+        path.startNewSubPath(prevxi, prevyi);
+
+        for (std::size_t i = 1; i < getWidth() - 1; i++)
+        {
+            int index = static_cast<int>(phase);
+            float alpha = phase - static_cast<float>(index);
+
+            float xi = i;
+            float yi = (1.0 - alpha) * points[index * 2].y + alpha * points[(index + 1) * 2].y;
+            path.lineTo(xi, yi);
+            prevxi = xi;
+            prevyi = yi;
+
+            phase += dphase;
+        }
+    }
+    else
+    {
+        path.startNewSubPath(points[0].x, points[0].y);
+        for (std::size_t i = 1; i < points.size(); i++)
+        {
+            path.lineTo(points[i].x, points[i].y);
+        }
+    }
+    g.strokePath(path, juce::PathStrokeType(1.f));
+
+#if 0
+    //TODO: See about adding the readout / click point.
+    if (where.x != -1) {
+        CPoint whereOffset = where;
+        whereOffset.offsetInverse(offset);
+
+        pContext->drawLine(CPoint(0, whereOffset.y).offset(offset), CPoint(getViewSize().getWidth() - 1, whereOffset.y).offset(offset));
+        pContext->drawLine(CPoint(whereOffset.x, 0).offset(offset), CPoint(whereOffset.x, getViewSize().getHeight() - 1).offset(offset));
+
+        float gain = powf(10.f, effect->getParameter(CSmartelectronixDisplay::kAmpWindow) * 6.f - 3.f);
+        float y = (-2.f * ((float)whereOffset.y + 1.f) / (float)OSC_HEIGHT + 1.f) / gain;
+        float x = (float)whereOffset.x * (float)counterSpeedInverse;
+        char text[256];
+
+        long lineSize = 10;
+
+        CColor color(179, 111, 56);
+
+        pContext->setFontColor(color);
+        pContext->setFont(kNormalFontSmaller);
+
+        readout->draw(pContext, CRect(508, 8, 508 + readout->getWidth(), 8 + readout->getHeight()).offset(offset), CPoint(0, 0));
+
+        CRect textRect(512, 10, 652, 10 + lineSize);
+        textRect.offset(offset);
+
+        sprintf(text, "y = %.5f", y);
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize);
+
+        sprintf(text, "y = %.5f dB", cf_lin2db(fabsf(y)));
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize * 2);
+
+        sprintf(text, "x = %.2f samples", x);
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize);
+
+        sprintf(text, "x = %.5f seconds", x / effect->getSampleRate());
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize);
+
+        sprintf(text, "x = %.5f ms", 1000.f * x / effect->getSampleRate());
+        pContext->drawString(text, textRect, kLeftText, true);
+        textRect.offset(0, lineSize);
+
+        if (x == 0)
+            sprintf(text, "x = infinite Hz");
+        else
+            sprintf(text, "x = %.3f Hz", effect->getSampleRate() / x);
+
+        pContext->drawString(text, textRect, kLeftText, true);
+    }
+#endif
+}
+
+void WaveformDisplay::process(std::vector<float> data)
+{
+    std::unique_lock l(lock_);
+    if (params_.freeze)
+    {
+        return;
+    }
+
+    float gain = params_.gain();
+    float triggerLevel = params_.triggerLevel();
+    int triggerLimit =
+        static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f)); // 0=>1, 1=>10000
+    float triggerSpeed = std::pow(10.f, 2.5f * params_.trigger_speed - 5.f);
+    float counterSpeed = params_.counterSpeed();
+    float R = 1.f - 250.f / static_cast<float>(storage_->samplerate);
+
+    for (float &f : data)
+    {
+        // DC filter
+        dcKill = f - dcFilterTemp + R * dcKill;
+        dcFilterTemp = f;
+
+        if (std::abs(dcKill) < 1e-10)
+        {
+            dcKill = 0.f;
+        }
+
+        // Gain
+        float sample = params_.dc_kill ? static_cast<float>(dcKill) : f;
+        sample = juce::jlimit(-1.f, 1.f, sample * gain);
+
+        // Triggers
+        bool trigger = false;
+        switch (params_.trigger_type)
+        {
+        case kTriggerInternal:
+            // internal oscillator, nothing fancy
+            triggerPhase += triggerSpeed;
+            if (triggerPhase >= 1.0)
+            {
+                triggerPhase -= 1.0;
+                trigger = true;
+            }
+            break;
+        case kTriggerRising:
+            // trigger on a rising edge
+            // fixme: something is wrong with this triggering mechanism
+            if (sample >= triggerLevel && previousSample < triggerLevel)
+            {
+                trigger = true;
+            }
+            break;
+        case kTriggerFalling:
+            // trigger on a falling edge
+            // fixme: something is wrong with this triggering mechanism
+            if (sample <= triggerLevel && previousSample > triggerLevel)
+            {
+                trigger = true;
+            }
+            break;
+        case kTriggerFree:
+            // trigger when we've run out of the screen area
+            if (index >= getWidth())
+            {
+                trigger = true;
+            }
+            break;
+        default:
+            // Should never happen.
+            std::cout << "Invalid trigger type. This should never happen..." << std::endl;
+            std::abort();
+        }
+
+        // if there's a retrigger, but too fast, kill it
+        triggerLimitPhase++;
+        if (trigger && triggerLimitPhase < triggerLimit && params_.trigger_type != kTriggerFree &&
+            params_.trigger_type != kTriggerInternal)
+        {
+            trigger = false;
+        }
+
+        // @ trigger
+        if (trigger)
+        {
+            std::size_t j;
+
+            // zero peaks after the last one
+            for (j = index * 2; j < getWidth() * 2; j += 2)
+            {
+                peaks[j].y = peaks[j + 1].y = juce::jmap<float>(0, -1, 1, getHeight(), 0);
+            }
+
+            // copy to a buffer for sync drawing
+            for (j = 0; j < getWidth() * 2; j++)
+            {
+                copy[j].y = peaks[j].y;
+            }
+
+            // reset everything
+            index = 0;
+            counter = 1.0;
+            max = std::numeric_limits<float>::lowest();
+            min = std::numeric_limits<float>::max();
+            triggerLimitPhase = 0;
+        }
+
+        // @ sample
+        if (sample > max)
+        {
+            max = sample;
+            lastIsMax = true;
+        }
+
+        if (sample < min)
+        {
+            min = sample;
+            lastIsMax = false;
+        }
+
+        counter += counterSpeed;
+
+        // @ counter
+        // The counter keeps track of how many samples/pixel we have.
+        //
+        // How this works: counter is based off of a user parameter. When counter = 1, we have 1
+        // incoming sample per pixel. When it's 10, we have 10 pixels per incoming sample. And when
+        // it's 0.1, we have, you guessed it, 10 pixels per 1 incoming sample.
+        //
+        // JUCE can handle all the subpixel drawing no problem, but it's ungodly slow at it. So
+        // instead we squash the data down here with maxes/mins per pixel.
+        if (counter >= 1.0)
+        {
+            if (index < getWidth())
+            {
+                // Perform scaling here so we don't have to redo it over and over in painting.
+                float max_Y = juce::jmap<float>(max, -1, 1, getHeight(), 0);
+                float min_Y = juce::jmap<float>(min, -1, 1, getHeight(), 0);
+
+                // thanks to David @ Plogue for this interesting hint!
+                peaks[(index << 1)].y = lastIsMax ? min_Y : max_Y;
+                peaks[(index << 1) + 1].y = lastIsMax ? max_Y : min_Y;
+
+                index++;
+            }
+
+            max = std::numeric_limits<float>::lowest();
+            min = std::numeric_limits<float>::max();
+            counter -= 1.0;
+        }
+
+        // store for edge-triggers
+        previousSample = sample;
+    }
+}
+
+void WaveformDisplay::resized()
+{
+    std::lock_guard l(lock_);
+    peaks.clear();
+    copy.clear();
+    for (std::size_t j = 0; j < getWidth() * 2; j += 2)
+    {
+        juce::Point<float> point;
+        point.x = j / 2;
+        point.y = juce::jmap<float>(0, -1, 1, getHeight(), 0);
+        peaks.push_back(point);
+        peaks.push_back(point);
+        copy.push_back(point);
+        copy.push_back(point);
+    }
+}
 
 float Oscilloscope::freqToX(float freq, int width)
 {
@@ -47,13 +350,13 @@ float Oscilloscope::dbToY(float db, int height) { return (float)height * (dbMax 
 
 // TODO:
 // (1) Give configuration to the user to choose FFT params (namely, desired Hz resolution).
-// (2) Provide a mode that shows waveshape, not spectrum.
 Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), forward_fft_(fftOrder),
       window_(fftSize, juce::dsp::WindowingFunction<float>::hann), pos_(0), complete_(false),
       fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
       channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
-      right_chan_button_("R"), scope_mode_button_(*this), spectrogram_(e, s), waveform_(e, s)
+      right_chan_button_("R"), scope_mode_button_(*this), background_(s), spectrogram_(e, s),
+      spectrogram_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s)
 {
     setAccessible(true);
     setOpaque(true);
@@ -82,12 +385,16 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     scope_mode_button_.setLabels({"Waveform", "Spectrum"});
     scope_mode_button_.setWantsKeyboardFocus(false);
     scope_mode_button_.setValue(1.f);
+    spectrogram_parameters_.setOpaque(true);
+    waveform_parameters_.setOpaque(true);
     addAndMakeVisible(background_);
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
     addAndMakeVisible(scope_mode_button_);
     addAndMakeVisible(spectrogram_);
+    addAndMakeVisible(spectrogram_parameters_);
     addChildComponent(waveform_);
+    addChildComponent(waveform_parameters_);
 
     storage_->audioOut.subscribe();
 }
@@ -114,13 +421,27 @@ void Oscilloscope::onSkinChanged()
     right_chan_button_.setSkin(skin, associatedBitmapStore);
     scope_mode_button_.setSkin(skin, associatedBitmapStore);
     spectrogram_.setSkin(skin, associatedBitmapStore);
+    spectrogram_parameters_.setSkin(skin, associatedBitmapStore);
     waveform_.setSkin(skin, associatedBitmapStore);
+    waveform_parameters_.setSkin(skin, associatedBitmapStore);
 }
 
 void Oscilloscope::paint(juce::Graphics &g) {}
 
 void Oscilloscope::resized()
 {
+    // Scope looks like the following picture.
+    // Parameters lie underneath the scope display and the x-axis scale. So:
+    // ------------------------
+    // |      top (15px)      |
+    // |                      |
+    // |    scope display     |
+    // |    (8px reduced)     |
+    // |  (30px space right)  |
+    // |                      |
+    // |    x-scale (15px)    |
+    // |      bot params      |
+    // ------------------------
     auto scopeRect = getScopeRect();
     auto t = getTransform().inverted();
     auto h = getHeight();
@@ -129,11 +450,178 @@ void Oscilloscope::resized()
     auto rhs = scopeRect.getWidth();
 
     background_.updateBounds(getLocalBounds(), getScopeRect());
+    // Top buttons: in the first 15 pixels.
     left_chan_button_.setBounds(8, 4, 15, 15);
     right_chan_button_.setBounds(23, 4, 15, 15);
     scope_mode_button_.setBounds(rhs - 97, 4, 105, 15);
+    // Spectrogram/waveform display: appears in scopeRect.
     spectrogram_.setBounds(scopeRect);
     waveform_.setBounds(scopeRect);
+    // Bottom buttons: in the bottom paramsHeight pixels.
+    spectrogram_parameters_.setBounds(0, h - paramsHeight, w, h);
+    waveform_parameters_.setBounds(0, h - paramsHeight, w, h);
+}
+
+Oscilloscope::SpectrogramParameters::SpectrogramParameters(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s)
+{
+}
+
+void Oscilloscope::SpectrogramParameters::onSkinChanged()
+{
+    // FIXME: Implement.
+}
+
+void Oscilloscope::SpectrogramParameters::paint(juce::Graphics &g)
+{
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+}
+
+void Oscilloscope::SpectrogramParameters::resized()
+{
+    // FIXME: Implement.
+}
+
+Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s), freeze_("Freeze"), dc_kill_("DC-Kill"), sync_draw_("Sync")
+{
+    trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
+    trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
+    trigger_limit_.setOrientation(Surge::ParamConfig::kHorizontal);
+    time_window_.setOrientation(Surge::ParamConfig::kHorizontal);
+    amp_window_.setOrientation(Surge::ParamConfig::kHorizontal);
+    trigger_speed_.setStorage(s);
+    trigger_level_.setStorage(s);
+    trigger_limit_.setStorage(s);
+    time_window_.setStorage(s);
+    amp_window_.setStorage(s);
+    trigger_speed_.setValue(0.5);
+    trigger_level_.setValue(0.5);
+    trigger_limit_.setValue(0.5);
+    time_window_.setValue(0.75);
+    amp_window_.setValue(0.5);
+    trigger_speed_.setQuantitizedDisplayValue(0.5);
+    trigger_level_.setQuantitizedDisplayValue(0.5);
+    trigger_limit_.setQuantitizedDisplayValue(0.5);
+    time_window_.setQuantitizedDisplayValue(0.75);
+    amp_window_.setQuantitizedDisplayValue(0.5);
+    trigger_speed_.setLabel("Internal Trigger Speed");
+    trigger_level_.setLabel("Rise/Fall Trigger Level");
+    trigger_limit_.setLabel("Retrigger Threshold");
+    time_window_.setLabel("Time");
+    amp_window_.setLabel("Amp");
+    trigger_speed_.setDescription("Speed the internal oscillator will trigger with");
+    trigger_level_.setDescription("Minimum value a waveform must rise/fall to trigger");
+    trigger_limit_.setDescription("How fast to trigger again after a trigger happens");
+    time_window_.setDescription("X (time) scale");
+    amp_window_.setDescription("Y (amplitude) scale");
+    trigger_speed_.setIsLightStyle(true);
+    trigger_level_.setIsLightStyle(true);
+    trigger_limit_.setIsLightStyle(true);
+    time_window_.setIsLightStyle(true);
+    amp_window_.setIsLightStyle(true);
+    auto updateParameter = [this](float &param, float value) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        param = value;
+    };
+    trigger_speed_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_speed), _1));
+    trigger_level_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_level), _1));
+    trigger_limit_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_limit), _1));
+    time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window), _1));
+    amp_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.amp_window), _1));
+    addAndMakeVisible(trigger_speed_);
+    addAndMakeVisible(trigger_level_);
+    addAndMakeVisible(trigger_limit_);
+    addAndMakeVisible(time_window_);
+    addAndMakeVisible(amp_window_);
+    // The multiswitch.
+    trigger_type_.setRows(4);
+    trigger_type_.setColumns(1);
+    trigger_type_.setLabels({"Free", "Rising", "Falling", "Internal"});
+    trigger_type_.setValue(0.f);
+    trigger_type_.setWantsKeyboardFocus(false);
+    trigger_type_.setOnUpdate([this](int value) {
+        if (value >= WaveformDisplay::kNumTriggerTypes)
+        {
+            std::cout << "Unexpected trigger type provided." << std::endl;
+            std::abort();
+        }
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(value);
+    });
+    addAndMakeVisible(trigger_type_);
+    // The two toggle buttons.
+    auto toggleParam = [this](bool &param) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        param = !param;
+    };
+    freeze_.setWantsKeyboardFocus(false);
+    dc_kill_.setWantsKeyboardFocus(false);
+    sync_draw_.setWantsKeyboardFocus(false);
+    freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
+    dc_kill_.onToggle = std::bind(toggleParam, std::ref(params_.dc_kill));
+    sync_draw_.onToggle = std::bind(toggleParam, std::ref(params_.sync_draw));
+    addAndMakeVisible(freeze_);
+    addAndMakeVisible(dc_kill_);
+    addAndMakeVisible(sync_draw_);
+}
+
+std::optional<WaveformDisplay::Parameters> Oscilloscope::WaveformParameters::getParamsIfDirty()
+{
+    std::lock_guard l(params_lock_);
+    if (params_changed_)
+    {
+        params_changed_ = false;
+        return params_;
+    }
+    return std::nullopt;
+}
+
+void Oscilloscope::WaveformParameters::onSkinChanged()
+{
+    trigger_speed_.setSkin(skin, associatedBitmapStore);
+    trigger_level_.setSkin(skin, associatedBitmapStore);
+    trigger_limit_.setSkin(skin, associatedBitmapStore);
+    time_window_.setSkin(skin, associatedBitmapStore);
+    amp_window_.setSkin(skin, associatedBitmapStore);
+    trigger_type_.setSkin(skin, associatedBitmapStore);
+    freeze_.setSkin(skin, associatedBitmapStore);
+    dc_kill_.setSkin(skin, associatedBitmapStore);
+    sync_draw_.setSkin(skin, associatedBitmapStore);
+    auto font = skin->fontManager->getLatoAtSize(7, juce::Font::plain);
+    trigger_speed_.setFont(font);
+    trigger_level_.setFont(font);
+    trigger_limit_.setFont(font);
+    time_window_.setFont(font);
+    amp_window_.setFont(font);
+}
+
+void Oscilloscope::WaveformParameters::paint(juce::Graphics &g)
+{
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+}
+
+void Oscilloscope::WaveformParameters::resized()
+{
+    auto t = getTransform().inverted();
+    auto h = getHeight();
+    auto w = getWidth();
+    // Stack the trigger parameters top-to-bottom.
+    trigger_speed_.setBounds(10, 0, 140, 26);
+    trigger_level_.setBounds(10, 26, 140, 26);
+    trigger_limit_.setBounds(10, 52, 140, 26);
+    // Window parameters to the right of them, slightly offset since there's only two.
+    time_window_.setBounds(160, 13, 140, 26);
+    amp_window_.setBounds(160, 39, 140, 26);
+    // Next over, the trigger mechanism.
+    trigger_type_.setBounds(320, 13, 40, 50);
+    // Next over, the three boolean switches.
+    freeze_.setBounds(385, 19, 40, 13);
+    dc_kill_.setBounds(385, 38, 40, 13);
+    sync_draw_.setBounds(385, 57, 40, 13);
 }
 
 void Oscilloscope::updateDrawing()
@@ -143,7 +631,14 @@ void Oscilloscope::updateDrawing()
     {
         if (scope_mode_ == WAVEFORM)
         {
-            waveform_.scroll();
+            auto params = waveform_parameters_.getParamsIfDirty();
+            if (params)
+            {
+                background_.updateParameters(*params);
+                background_.repaint();
+                waveform_.setParameters(std::move(*params));
+            }
+            waveform_.repaint();
         }
         else
         {
@@ -200,8 +695,10 @@ void Oscilloscope::changeScopeType(ScopeMode type)
     {
         scope_mode_ = WAVEFORM;
         spectrogram_.setVisible(false);
+        spectrogram_parameters_.setVisible(false);
         std::fill(scope_data_.begin(), scope_data_.end(), 0.f);
         waveform_.setVisible(true);
+        waveform_parameters_.setVisible(true);
 
         break;
     }
@@ -209,8 +706,10 @@ void Oscilloscope::changeScopeType(ScopeMode type)
     {
         scope_mode_ = SPECTRUM;
         waveform_.setVisible(false);
+        waveform_parameters_.setVisible(false);
         std::fill(scope_data_.begin(), scope_data_.end(), dbMin);
         spectrogram_.setVisible(true);
+        spectrogram_parameters_.setVisible(true);
 
         break;
     }
@@ -228,7 +727,11 @@ void Oscilloscope::changeScopeType(ScopeMode type)
 juce::Rectangle<int> Oscilloscope::getScopeRect()
 {
     auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto scopeRect = lb.withTrimmedBottom(15).withTrimmedTop(15).withTrimmedRight(30).reduced(8);
+    auto scopeRect = lb.withTrimmedBottom(15)             // x-scale on bottom
+                         .withTrimmedBottom(paramsHeight) // params on bottom
+                         .withTrimmedTop(15)              // params on top
+                         .withTrimmedRight(30)            // y-scale on right
+                         .reduced(8);
     return scopeRect;
 }
 
@@ -277,8 +780,7 @@ void Oscilloscope::pullData()
 
         if (scope_mode_ == WAVEFORM)
         {
-            // FIXME: Normalize dataL.
-            waveform_.updateAudioData(dataL);
+            waveform_.process(std::move(dataL));
         }
         else
         {
@@ -324,7 +826,7 @@ void Oscilloscope::toggleChannel()
     channels_off_.notify_all();
 }
 
-Oscilloscope::Background::Background() { setOpaque(true); }
+Oscilloscope::Background::Background(SurgeStorage *s) : storage_(s) { setOpaque(true); }
 
 void Oscilloscope::Background::paint(juce::Graphics &g)
 {
@@ -349,6 +851,11 @@ void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
 {
     scope_bounds_ = std::move(scope_bounds);
     setBounds(local_bounds);
+}
+
+void Oscilloscope::Background::updateParameters(WaveformDisplay::Parameters params)
+{
+    waveform_params_ = std::move(params);
 }
 
 void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
@@ -472,26 +979,27 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         // Axis labels will go past the end of the scopeRect.
         g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
 
-        labelRect = juce::Rectangle{14, labelHeight}
-                        .withBottomY((int)height + labelHeight / 2)
-                        .withRightX(width + 16)
-                        .translated(2, 0);
+        std::string minus = "-";
+        std::string plus = "+";
+        std::stringstream gain;
+        gain << std::fixed << std::setprecision(2) << 1.f / waveform_params_.gain();
 
-        g.drawText("-1.0", labelRect, juce::Justification::left, 1);
+        g.drawSingleLineText(minus + gain.str(), width + 4, height + 2);
+        g.drawSingleLineText("0.0", width + 4, height / 2 + 2);
+        g.drawSingleLineText(plus + gain.str(), width + 4, 2);
 
-        labelRect = juce::Rectangle{14, labelHeight}
-                        .withBottomY((int)(height / 2 + labelHeight / 2))
-                        .withRightX(width + 16)
-                        .translated(2, 0);
-
-        g.drawText("0.0", labelRect, juce::Justification::left, 1);
-
-        labelRect = juce::Rectangle{14, labelHeight}
-                        .withBottomY(labelHeight / 2)
-                        .withRightX(width + 16)
-                        .translated(2, 0);
-
-        g.drawText("+1.0", labelRect, juce::Justification::left, 1);
+        // Draw the trigger lines, if applicable.
+        g.setColour(secondaryLine);
+        if (waveform_params_.trigger_type == WaveformDisplay::kTriggerRising)
+        {
+            g.drawHorizontalLine(
+                juce::jmap<float>(waveform_params_.triggerLevel(), -1, 1, height, 0), 0, width);
+        }
+        if (waveform_params_.trigger_type == WaveformDisplay::kTriggerFalling)
+        {
+            g.drawHorizontalLine(
+                juce::jmap<float>(-waveform_params_.triggerLevel(), -1, 1, height, 0), 0, width);
+        }
     }
 
     // Vertical grid.
@@ -500,11 +1008,15 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
         g.setFont(font);
 
-        for (int ms : {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
+        // Split the grid into 7 sections, starting from 0 and ending at wherever the counter speed
+        // says we should end at.
+        float counterSpeedInverse = 1.f / waveform_params_.counterSpeed();
+        float sampleRateInverse = 1.f / static_cast<float>(storage_->samplerate);
+        float endpoint = counterSpeedInverse * sampleRateInverse * static_cast<float>(width);
+        std::string time_unit = (endpoint >= 1.f) ? " s" : " ms";
+        for (int i = 0; i < 7; i++)
         {
-            auto xPos = timeToX(std::chrono::milliseconds(ms), width);
-
-            if (ms == 0 || ms == 100)
+            if (i == 0 || i == 6)
             {
                 g.setColour(primaryLine);
             }
@@ -513,14 +1025,18 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
                 g.setColour(secondaryLine);
             }
 
+            int xPos = static_cast<int>(static_cast<float>(width) / 6.f * i);
+            ;
             g.drawVerticalLine(xPos, 0, height + 1);
 
-            auto timeString = std::to_string(ms);
-
-            if (ms == 100)
+            float timef = (endpoint / 6.f) * static_cast<float>(i);
+            if (endpoint < 1.f)
             {
-                timeString += " ms";
+                timef *= 1000;
             }
+            std::stringstream time;
+            time << std::fixed << std::setprecision(2) << timef;
+            std::string timeString = time.str() + time_unit;
 
             // Label will go past the end of the scopeRect.
             const auto labelRect =
@@ -625,64 +1141,6 @@ float Oscilloscope::Spectrogram::interpolate(
     std::chrono::duration<float> distance = (t - last_updated_time_);
     float mu = juce::jlimit(0.f, 1.f, distance / mtbs_);
     return y0 * (1 - mu) + y1 * mu;
-}
-
-Oscilloscope::Waveform::Waveform(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s), period_(100), period_float_(period_),
-      period_samples_(static_cast<std::size_t>(s->samplerate * period_float_.count())),
-      scope_data_(s->samplerate), last_sample_rate_(s->samplerate)
-{
-    std::fill(scope_data_.begin(), scope_data_.end(), 0);
-}
-
-void Oscilloscope::Waveform::paint(juce::Graphics &g)
-{
-    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
-    auto width = scopeRect.getWidth();
-    auto height = scopeRect.getHeight();
-    auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
-
-    auto path = juce::Path();
-
-    // Start path.
-    std::unique_lock l(data_lock_);
-    for (int i = 0; i < period_samples_; i++)
-    {
-        const float x = juce::jmap(static_cast<float>(i), 0.f, static_cast<float>(period_samples_),
-                                   0.f, static_cast<float>(width));
-        const float y = juce::jmap(scope_data_[i], -1.f, 1.f, static_cast<float>(height), 0.f);
-        if (i)
-        {
-            path.lineTo(x, y);
-        }
-        else
-        {
-            path.startNewSubPath(x, y);
-        }
-    }
-    g.setColour(curveColor);
-    g.strokePath(path, juce::PathStrokeType(1.f));
-}
-
-void Oscilloscope::Waveform::scroll()
-{
-    std::vector<float> data = upcoming_data_.popall();
-    std::unique_lock l(data_lock_);
-    // Check for sample rate changes. Have to just redo everything when that happens.
-    if (last_sample_rate_ != storage_->samplerate)
-    {
-        last_sample_rate_ = storage_->samplerate;
-        scope_data_.resize(last_sample_rate_);
-        period_samples_ = static_cast<std::size_t>(last_sample_rate_ * period_float_.count());
-    }
-    std::rotate(scope_data_.begin(), scope_data_.begin() + data.size(), scope_data_.end());
-    std::move(data.begin(), data.end(), scope_data_.end() - data.size());
-    repaint();
-}
-
-void Oscilloscope::Waveform::updateAudioData(const std::vector<float> &buf)
-{
-    upcoming_data_.push(buf);
 }
 
 Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)
