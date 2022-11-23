@@ -114,17 +114,34 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     float qs = clamp01(*f[tm_speed]);
     qs *= qs * qs * qs;
     float speed = 0.9999 - qs * 0.0999 / 128;
-    float numberOfSteps = 32 * 48000 * storage->samplerate_inv;
+    float numberOfSteps = BLOCK_SIZE * 48000 * storage->samplerate_inv;
+
+    float lsCache[2];
+    lsCache[0] = length_smooth[0];
+    lsCache[1] = length_smooth[1];
+
     for (int i = 0; i < numberOfSteps; ++i)
     {
         length_smooth[0] = speed * length_smooth[0] + (1 - speed) * length_target[0];
         length_smooth[1] = speed * length_smooth[1] + (1 - speed) * length_target[1];
     }
 
-    oscL.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[0])) *
-                  powf(2.0, *f[tm_pitch] * (1 / 12.f)));
-    oscR.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[1])) *
-                  powf(2.0, *f[tm_pitch] * (1 / 12.f)));
+    for (int c = 0; c < 2; ++c)
+    {
+        auto l2c = log2(storage->samplerate / std::max(lsCache[c], 2.f) / Tunings::MIDI_0_FREQ);
+        auto l2s =
+            log2(storage->samplerate / std::max(length_smooth[c], 2.f) / Tunings::MIDI_0_FREQ);
+        auto dl = (l2s - l2c) * BLOCK_SIZE_INV;
+
+        for (auto k = 0; k < BLOCK_SIZE; ++k)
+        {
+            smoothedPitch[c][k] = l2c + dl * k;
+        }
+    }
+
+    auto twoToPitch = powf(2.0, *f[tm_pitch] * (1 / 12.f));
+    oscL.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[0])) * twoToPitch);
+    oscR.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[1])) * twoToPitch);
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
@@ -144,6 +161,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
             }
 
             envV[c] = e;
+            envelopeOut[c][k] = e;
         }
 
         // pitch detection
