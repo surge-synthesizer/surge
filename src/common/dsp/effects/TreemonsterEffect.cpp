@@ -126,18 +126,18 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         length_smooth[1] = speed * length_smooth[1] + (1 - speed) * length_target[1];
     }
 
-    for (int c=0; c<2; ++c)
+    for (int c = 0; c < 2; ++c)
     {
-        auto l2c = log2(storage->samplerate/std::max(lsCache[c],2.f)/Tunings::MIDI_0_FREQ);
-        auto l2s = log2(storage->samplerate/std::max(length_smooth[c],2.f)/Tunings::MIDI_0_FREQ);
-        auto dl = (l2s-l2c)*BLOCK_SIZE_INV;
+        auto l2c = log2(storage->samplerate / std::max(lsCache[c], 2.f) / Tunings::MIDI_0_FREQ);
+        auto l2s =
+            log2(storage->samplerate / std::max(length_smooth[c], 2.f) / Tunings::MIDI_0_FREQ);
+        auto dl = (l2s - l2c) * BLOCK_SIZE_INV;
 
-        for (auto k=0;k<BLOCK_SIZE; ++k)
+        for (auto k = 0; k < BLOCK_SIZE; ++k)
         {
             smoothedPitch[c][k] = l2c + dl * k;
         }
     }
-
 
     auto twoToPitch = powf(2.0, *f[tm_pitch] * (1 / 12.f));
     oscL.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[0])) * twoToPitch);
