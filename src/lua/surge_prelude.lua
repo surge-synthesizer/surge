@@ -64,5 +64,5 @@ mod.AHDEnvelope.at = function(self, phase)
     end
 end
 
-surge["mod"] = mod
+surge.mod = mod
 return surge
