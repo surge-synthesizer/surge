@@ -113,8 +113,10 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
     else
     {
         ownDelayLines = false;
-        delayLine[0] = storage->memoryPools->stringDelayLines.getItem(storage->sinctable);
-        delayLine[1] = storage->memoryPools->stringDelayLines.getItem(storage->sinctable);
+        if (!delayLine[0])
+            delayLine[0] = storage->memoryPools->stringDelayLines.getItem(storage->sinctable);
+        if (!delayLine[1])
+            delayLine[1] = storage->memoryPools->stringDelayLines.getItem(storage->sinctable);
     }
 
     memset((void *)dustBuffer, 0, 2 * (BLOCK_SIZE_OS) * sizeof(float));
