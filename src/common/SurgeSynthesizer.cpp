@@ -2727,7 +2727,7 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 
             if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
             {
-                std::copy(fxsync[s].p, fxsync[s].p+n_fx_params, storage.getPatch().fx[s].p);
+                std::copy(fxsync[s].p, fxsync[s].p + n_fx_params, storage.getPatch().fx[s].p);
             }
 
             fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
