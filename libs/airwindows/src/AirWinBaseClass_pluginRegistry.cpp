@@ -1,3 +1,4 @@
+#if SURGE_INCLUDE_AIRWINDOWS
 #include "ADClip7.h"
 #include "Air.h"
 #include "Apicolypse.h"
@@ -66,13 +67,19 @@
 #include "Verbity.h"
 #include "VariMu.h"
 #include "VoiceOfTheStarship.h"
+#else
+#include "airwindows/AirWinBaseClass.h"
+#endif
+
 #include <map>
 
 namespace
 {
 
 template <typename T> constexpr bool requiresDenorm() { return false; }
+#if SURGE_INCLUDE_AIRWINDOWS
 template <> constexpr bool requiresDenorm<DeRez2::DeRez2>() { return true; }
+#endif
 
 template <typename T> std::unique_ptr<AirWinBaseClass> create(int id, double sr, int dp)
 {
@@ -94,6 +101,11 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
 
     if (!reg.empty())
         return reg;
+
+#if !SURGE_INCLUDE_AIRWINDOWS
+    int id = 0;
+    reg.emplace_back(create<AirWindowsNoOp>, id++, -1, "NoOp", "NoOp (Airwindows Build Skipped)");
+#else
 
     /*
      * Register with streaming ID (which must be increasing and can never change), display order ID
@@ -213,6 +225,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     reg.emplace_back(create<PowerSag::PowerSag>, id++, 362, gnSaturation, "Power Sag");
     reg.emplace_back(create<TapeDust::TapeDust>, id++, 205, gnNoise, "Tape Dust");
     reg.emplace_back(create<ToVinyl4::ToVinyl4>, id++, 195, gnLoFi, "To Vinyl");
+#endif
 
     return reg;
 }
