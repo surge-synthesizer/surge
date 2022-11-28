@@ -466,7 +466,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     if (lfodata->rate.deactivated)
     {
         hasFullWave = true;
-        memcpy((void *)(&deactivateStorage), (void *)lfodata, sizeof(LFOStorage));
+        deactivateStorage = *lfodata;
         memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
 
         auto desiredRate = log2(1.f / totalEnvTime);
@@ -493,7 +493,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         {
             hasFullWave = true;
             waveIsAmpWave = true;
-            memcpy((void *)(&deactivateStorage), (void *)lfodata, sizeof(LFOStorage));
+            deactivateStorage = *lfodata;
             memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
 
             deactivateStorage.magnitude.val.f = 1.f;
