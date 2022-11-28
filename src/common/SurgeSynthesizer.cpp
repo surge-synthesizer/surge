@@ -66,11 +66,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     memset(storage.getPatch().scenedata[1], 0, sizeof(pdata) * n_scene_params);
     memset(storage.getPatch().globaldata, 0, sizeof(pdata) * n_global_params);
     memset(mControlInterpolatorUsed, 0, sizeof(bool) * num_controlinterpolators);
-    memset((void *)fxsync, 0, sizeof(FxStorage) * n_fx_slots);
 
-    std::copy(storage.getPatch().fx, storage.getPatch().fx + n_fx_slots, fxsync);
     for (int i = 0; i < n_fx_slots; i++)
     {
+        fxsync[i] = storage.getPatch().fx[i];
         fx_reload[i] = false;
         fx_reload_mod[i] = false;
     }
@@ -2727,7 +2726,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 
             if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
             {
-                std::copy(fxsync[s].p, fxsync[s].p + n_fx_params, storage.getPatch().fx[s].p);
+                std::copy(std::begin(fxsync[s].p), std::end(fxsync[s].p),
+                          std::begin(storage.getPatch().fx[s].p));
             }
 
             fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
@@ -2848,7 +2848,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             // OFF
             storage.getPatch().isDirty = true;
             if (storage.getPatch().fx[s].type.val.i != fxt_off)
-                std::copy(fxsync[s].p, fxsync[s].p + n_fx_params, storage.getPatch().fx[s].p);
+                std::copy(std::begin(fxsync[s].p), std::end(fxsync[s].p),
+                          std::begin(storage.getPatch().fx[s].p));
             if (fx[s])
             {
                 std::lock_guard<std::mutex> g(fxSpawnMutex);
