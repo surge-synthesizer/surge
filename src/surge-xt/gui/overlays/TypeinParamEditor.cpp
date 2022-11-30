@@ -182,11 +182,22 @@ bool TypeinParamEditor::handleTypein(const std::string &value, std::string &errM
         return false;
 
     bool res = false;
+
     if (typeinMode == Param)
     {
         if (p && ms > 0)
         {
             res = editor->setParameterModulationFromString(p, ms, modScene, modidx, value, errMsg);
+
+            bool focusModEditor = Surge::Storage::getUserDefaultValue(
+                &(editor->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom,
+                false);
+
+            if (activateModsourceAfterEnter > -1 && focusModEditor)
+            {
+                editor->setModsourceSelected(ms, modidx);
+                activateModsourceAfterEnter = -1;
+            }
         }
         else
         {
@@ -225,6 +236,7 @@ void TypeinParamEditor::textEditorReturnKeyPressed(juce::TextEditor &te)
 
 void TypeinParamEditor::textEditorEscapeKeyPressed(juce::TextEditor &te)
 {
+    activateModsourceAfterEnter = -1;
     doReturnFocus();
     setVisible(false);
 }

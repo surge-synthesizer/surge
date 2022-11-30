@@ -232,6 +232,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     uint64_t lastObservedMidiNoteEventCount{0};
 
     modsources getSelectedModsource() { return modsource; }
+    void setModsourceSelected(modsources ms, int ms_idx = 0);
 
   private:
     void openOrRecreateEditor();
