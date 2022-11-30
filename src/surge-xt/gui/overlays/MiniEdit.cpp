@@ -80,11 +80,16 @@ void MiniEdit::paint(juce::Graphics &g)
     g.setFont(skin->fontManager->getLatoAtSize(10, juce::Font::bold));
     g.drawText(title, tbRect, juce::Justification::centred);
 
-    auto d = associatedBitmapStore->getImage(IDB_SURGE_ICON);
+    auto icon = associatedBitmapStore->getImage(IDB_SURGE_ICON);
 
-    if (d)
+    if (icon)
     {
-        d->drawAt(g, fullRect.getX() + 2, fullRect.getY() + 2, 1.0);
+        const auto iconSize = 14;
+#if MAC
+        icon->drawAt(g, fullRect.getRight() - iconSize + 2, fullRect.getY() + 1, 1);
+#else
+        icon->drawAt(g, fullRect.getX() + 2, fullRect.getY() + 1, 1);
+#endif
     }
 
     auto bodyRect = fullRect.withTrimmedTop(18);

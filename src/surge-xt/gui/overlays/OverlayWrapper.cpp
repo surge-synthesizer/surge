@@ -81,7 +81,13 @@ void OverlayWrapper::paint(juce::Graphics &g)
 
     if (icon)
     {
+        const auto iconSize = titlebarSize;
+
+#if MAC
+        icon->drawAt(g, sp.getRight() - iconSize + 1, sp.getY() + 1, 1);
+#else
         icon->drawAt(g, sp.getX() + 2, sp.getY() + 1, 1);
+#endif
     }
 
     g.setColour(skin->getColor(Colors::Dialog::Border));
@@ -100,14 +106,22 @@ void OverlayWrapper::addAndTakeOwnership(std::unique_ptr<juce::Component> c)
 
     auto q = sp.reduced(2 * margin, 2 * margin)
                  .withTrimmedBottom(titlebarSize)
-                 .translated(0, titlebarSize + 0 * margin);
+                 .translated(0, titlebarSize);
     primaryChild = std::move(c);
     primaryChild->setBounds(q);
 
     auto buttonSize = titlebarSize;
-    auto closeButtonBounds =
+    juce::Rectangle<int> closeButtonBounds;
+    juce::Rectangle<int> tearOutButtonBounds;
+
+#if MAC
+    closeButtonBounds = getLocalBounds().withSize(buttonSize, buttonSize).translated(2, 2);
+    tearOutButtonBounds = closeButtonBounds.translated(buttonSize + 2, 0);
+#else
+    closeButtonBounds =
         getLocalBounds().withHeight(buttonSize).withLeft(getWidth() - buttonSize).translated(-2, 2);
-    auto tearOutButtonBounds = closeButtonBounds.translated(-buttonSize - 2, 0);
+    tearOutButtonBounds = closeButtonBounds.translated(-buttonSize - 2, 0);
+#endif
 
     if (showCloseButton)
     {
