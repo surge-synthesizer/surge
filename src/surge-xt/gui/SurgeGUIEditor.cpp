@@ -1209,6 +1209,25 @@ void SurgeGUIEditor::toggle_mod_editing()
     }
 }
 
+void SurgeGUIEditor::setModsourceSelected(modsources ms, int ms_idx)
+{
+    modsource = ms;
+    modsource_editor[current_scene] = modsource;
+
+    modsource_index = ms_idx;
+    // FIXME: assumed scene LFOs are always listed after all voice LFOs in the enum
+    modsource_index_cache[current_scene][ms_idx - ms_lfo1] = ms_idx;
+
+    if (gui_modsrc[modsource])
+    {
+        gui_modsrc[modsource]->modlistIndex = modsource_index;
+        gui_modsrc[modsource]->repaint();
+    }
+
+    refresh_mod();
+    synth->refresh_editor = true;
+}
+
 void SurgeGUIEditor::refresh_mod()
 {
     modsources thisms = modsource;
@@ -4088,6 +4107,17 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                        Surge::Storage::updateUserDefaultValue(
                            &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
                            !doExpMen);
+                   });
+
+    bool focusModEditor = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom, false);
+
+    wfMenu.addItem(Surge::GUI::toOSCase("Focus Modulator Editor on \"") +
+                       Surge::GUI::toOSCase("Add Modulation From\" Actions"),
+                   true, focusModEditor, [this, focusModEditor]() {
+                       Surge::Storage::updateUserDefaultValue(
+                           &(this->synth->storage),
+                           Surge::Storage::FocusModEditorAfterAddModulationFrom, !focusModEditor);
                    });
 
     wfMenu.addSeparator();

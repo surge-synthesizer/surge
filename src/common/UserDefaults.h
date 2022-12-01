@@ -65,6 +65,7 @@ enum DefaultKey
     UseNarratorAnnouncements,
     UseNarratorAnnouncementsForPatchTypeahead,
     ExpandModMenusWithSubMenus,
+    FocusModEditorAfterAddModulationFrom,
     ShowVirtualKeyboard_Plugin,
     ShowVirtualKeyboard_Standalone,
 

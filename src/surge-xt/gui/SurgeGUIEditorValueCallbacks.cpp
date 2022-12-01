@@ -2634,6 +2634,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             sprintf(tmptxt, "%s", modulatorName(ms, false).c_str());
 
                             auto *popMenu = &addMIDISub;
+                            int modIdx = -1;
 
                             // TODO FIXME: Try not to be gross!
                             if (ms >= ms_ctrl1 && ms <= ms_ctrl1 + n_customcontrollers - 1)
@@ -2643,10 +2644,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             else if (ms >= ms_lfo1 && ms <= ms_lfo1 + n_lfos_voice - 1)
                             {
                                 popMenu = &addVLFOSub;
+                                modIdx = ms;
                             }
                             else if (ms >= ms_slfo1 && ms <= ms_slfo1 + n_lfos_scene - 1)
                             {
                                 popMenu = &addSLFOSub;
+                                modIdx = ms;
                             }
                             else if (ms >= ms_ampeg && ms <= ms_filtereg)
                             {
@@ -2661,20 +2664,27 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             {
                                 int maxidx = synth->getMaxModulationIndex(current_scene, ms);
                                 auto subm = juce::PopupMenu();
+
                                 for (int i = 0; i < maxidx; ++i)
                                 {
                                     auto subn =
                                         modulatorNameWithIndex(current_scene, ms, i, false, false);
-                                    subm.addItem(subn, [this, p, bvf, ms, i]() {
+
+                                    subm.addItem(subn, [this, p, bvf, ms, modIdx, i]() {
                                         this->promptForUserValueEntry(p, bvf, ms, current_scene, i);
+
+                                        typeinParamEditor->activateModsourceAfterEnter = modIdx;
                                     });
                                 }
+
                                 popMenu->addSubMenu(tmptxt, subm);
                             }
                             else
                             {
-                                popMenu->addItem(tmptxt, [this, p, bvf, ms]() {
+                                popMenu->addItem(tmptxt, [this, p, bvf, ms, modIdx]() {
                                     this->promptForUserValueEntry(p, bvf, ms, current_scene, 0);
+
+                                    typeinParamEditor->activateModsourceAfterEnter = modIdx;
                                 });
                             }
                         }

@@ -51,6 +51,7 @@ struct TypeinParamEditor : public juce::Component,
 
     Parameter *p{nullptr};
     void setEditedParam(Parameter *pin) { p = pin; };
+    int activateModsourceAfterEnter{-1};
     bool isMod{false};
     modsources ms{ms_original};
     int modScene{-1}, modidx{0};

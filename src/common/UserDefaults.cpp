@@ -278,6 +278,10 @@ std::string defaultKeyToString(DefaultKey k)
         r = "expandModMenusWithSubmenus";
         break;
 
+    case FocusModEditorAfterAddModulationFrom:
+        r = "focusModEditorAfterAddModulationFrom";
+        break;
+
     case nKeys:
         break;
     }
