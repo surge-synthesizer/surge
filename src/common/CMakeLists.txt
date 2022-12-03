@@ -56,12 +56,12 @@ else()
           ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp
           )
   if (APPLE)
-    target_sources(juce_dsp_rack_sub PUBLIC
+    target_sources(juce_dsp_rack_sub PRIVATE
             ../../libs/JUCE/modules/juce_core/juce_core.mm
             ../../libs/JUCE/modules/juce_audio_formats/juce_audio_formats.mm
             )
   else()
-    target_sources(juce_dsp_rack_sub PUBLIC
+    target_sources(juce_dsp_rack_sub PRIVATE
             ../../libs/JUCE/modules/juce_core/juce_core.cpp
             ../../libs/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp
             )
