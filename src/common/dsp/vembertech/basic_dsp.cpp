@@ -262,24 +262,6 @@ float sine_ss(unsigned int x) // using 24-bit range as [0..2PI] input
 
     return P * (y * abs(y) - y) + y;   // Q * y + P * y * abs(y)   */
 }
-#if !_M_X64 && !defined(ARM_NEON)
-__m64 sine(__m64 x)
-{
-    __m64 xabs = _mm_xor_si64(x, _mm_srai_pi16(x, 15));
-    __m64 y = _mm_subs_pi16(_mm_srai_pi16(x, 1), _mm_mulhi_pi16(x, xabs));
-    y = _mm_slli_pi16(y, 2);
-    y = _mm_adds_pi16(y, y);
-    const __m64 Q = _mm_set1_pi16(0x6333);
-    const __m64 P = _mm_set1_pi16(0x1CCD);
-
-    __m64 yabs = _mm_xor_si64(y, _mm_srai_pi16(y, 15));
-    __m64 y1 = _mm_mulhi_pi16(Q, y);
-    __m64 y2 = _mm_mulhi_pi16(P, _mm_slli_pi16(_mm_mulhi_pi16(y, yabs), 1));
-
-    y = _mm_add_pi16(y1, y2);
-    return _mm_adds_pi16(y, y);
-}
-#endif
 
 int sine(int x) // 16-bit sine
 {
