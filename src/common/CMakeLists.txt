@@ -4,7 +4,16 @@ project(surge-common)
 surge_add_lib_subdirectory(airwindows)
 surge_add_lib_subdirectory(eurorack)
 surge_add_lib_subdirectory(fmt)
-surge_add_lib_subdirectory(oddsound-mts)
+
+# Make MTS optional
+if (NOT SURGE_SKIP_ODDSOUND_MTS)
+   surge_add_lib_subdirectory(oddsound-mts)
+else()
+   add_library(oddsound-mts INTERFACE)
+   target_compile_definitions(oddsound-mts INTERFACE SURGE_SKIP_ODDSOUND_MTS)
+   add_library(surge::oddsound-mts ALIAS oddsound-mts)
+endif()
+
 if(MINGW)
   set(HAVE_VISIBILITY 0 CACHE INTERNAL "Force-disable libsamplerate's visibility check on MinGW")
 endif()

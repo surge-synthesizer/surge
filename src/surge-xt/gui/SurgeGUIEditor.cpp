@@ -73,7 +73,9 @@
 #include <codecvt>
 #include "version.h"
 #include "ModernOscillator.h"
+#ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
+#endif
 
 #include "filesystem/import.h"
 #include "RuntimeFont.h"
@@ -3238,6 +3240,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     if (isOddsoundOn)
     {
         std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
@@ -3247,6 +3250,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         tuningSubMenu.addSeparator();
     }
+#endif
 
     if (!isOddsoundOn)
     {
@@ -3501,6 +3505,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     if (synth->juceWrapperType.compare("Standalone") != 0)
     {
         bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
@@ -3556,6 +3561,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             return tuningSubMenu;
         }
     }
+#endif
 
     return tuningSubMenu;
 }
