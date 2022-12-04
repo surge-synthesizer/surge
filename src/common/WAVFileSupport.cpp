@@ -83,7 +83,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     }
 
     // WAV HEADER
-    unsigned short audioFormat, numChannels;
+    unsigned short audioFormat, numChannels{1};
     unsigned int sampleRate, byteRate;
     unsigned short blockAlign, bitsPerSample;
 
@@ -100,8 +100,8 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     // Now start reading chunks
     int tbr = 4;
-    char *wavdata = nullptr;
-    int datasz = 0, datasamples;
+    char *wavdata{nullptr};
+    int datasz{0}, datasamples{0};
 
     while (true)
     {
