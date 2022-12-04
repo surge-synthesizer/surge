@@ -504,6 +504,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         getPatch().scene[s].drift.set_extend_range(true);
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     bool mtsMode = Surge::Storage::getUserDefaultValue(this, Surge::Storage::UseODDMTS, false);
     if (mtsMode)
     {
@@ -514,6 +515,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         oddsound_mts_client = nullptr;
         oddsound_mts_active = false;
     }
+#endif
 
     initPatchName =
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::InitialPatchName, "Init Saw");
@@ -1952,7 +1954,12 @@ void SurgeStorage::load_midi_controllers()
     }
 }
 
-SurgeStorage::~SurgeStorage() { deinitialize_oddsound(); }
+SurgeStorage::~SurgeStorage()
+{
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    deinitialize_oddsound();
+#endif
+}
 
 double shafted_tanh(double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); }
 
@@ -2378,6 +2385,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
     }
 }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
 void SurgeStorage::initialize_oddsound()
 {
     if (oddsound_mts_client)
@@ -2415,6 +2423,7 @@ void SurgeStorage::setOddsoundMTSActiveTo(bool b)
         tuningApplicationMode = patchStoredTuningApplicationMode;
     }
 }
+#endif
 
 void SurgeStorage::toggleTuningToCache()
 {

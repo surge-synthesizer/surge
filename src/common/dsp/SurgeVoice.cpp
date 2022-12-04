@@ -48,6 +48,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
     */
     auto res = key + /* mainChannelState->pitchBendInSemitones + */ mpeBend + detune;
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     if (storage->oddsound_mts_client && storage->oddsound_mts_active)
     {
         if (storage->oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT ||
@@ -60,8 +61,10 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
 
         res = res + rkey;
     }
-    else if (!storage->isStandardTuning &&
-             storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
+    else
+#endif
+        if (!storage->isStandardTuning &&
+            storage->tuningApplicationMode == SurgeStorage::RETUNE_MIDI_ONLY)
     {
         res = storage->remapKeyInMidiOnlyMode(res);
     }
@@ -400,6 +403,7 @@ void SurgeVoice::retriggerPortaIfKeyChanged()
             return storage->currentTuning.logScaledFrequencyForMidiNote(k) * 12;
         };
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
         if (storage->oddsound_mts_client && storage->oddsound_mts_active)
         {
             v4k = [this](int k) {
@@ -408,6 +412,7 @@ void SurgeVoice::retriggerPortaIfKeyChanged()
                        12;
             };
         }
+#endif
 
         auto ckey = state.pkey;
         auto start = state.priorpkey - 2;
@@ -1477,12 +1482,14 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
     else
     {
         float lk = key;
+#ifndef SURGE_SKIP_ODDSOUND_MTS
         if (storage->oddsound_mts_client && storage->oddsound_mts_active)
         {
             lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk, channel);
             state.portasrc_key = lk;
         }
         else
+#endif
         {
             if (storage->mapChannelToOctave && !mpeEnabled)
                 state.portasrc_key =

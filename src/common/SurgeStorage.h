@@ -1368,11 +1368,13 @@ class alignas(16) SurgeStorage
 
     void setTuningApplicationMode(const TuningApplicationMode m);
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     void initialize_oddsound();
     void deinitialize_oddsound();
+    void setOddsoundMTSActiveTo(bool b);
+#endif
     MTSClient *oddsound_mts_client = nullptr;
     std::atomic<bool> oddsound_mts_active{false};
-    void setOddsoundMTSActiveTo(bool b);
     uint32_t oddsound_mts_on_check = 0;
     enum OddsoundRetuneMode
     {
