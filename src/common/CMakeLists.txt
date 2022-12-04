@@ -85,6 +85,9 @@ else()
           JUCE_STANDALONE_APPLICATION=0
           JUCE_USE_CURL=0
           JUCE_WEB_BROWSER=0
+          JUCE_USE_FLAC=0
+          JUCE_USE_OGGVORBIS=0
+          JUCE_USE_WINDOWS_MEDIA_FORMAT=0
           )
   target_include_directories(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules)
 
