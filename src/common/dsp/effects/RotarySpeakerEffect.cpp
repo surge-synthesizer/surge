@@ -205,7 +205,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     ** This is a set of completely empirical scaling settings to offset gain being too crazy
     ** in the drive cycle. There's no science really, just us playing with it and listening
     */
-    float gain_tweak, compensate, drive_factor, gain_comp_factor;
+    float gain_tweak{1.f}, compensate{1.f}, drive_factor{1.f}, gain_comp_factor{1.0};
     float compensateStartsAt = 0.18;
     bool square_drive_comp = false;
 

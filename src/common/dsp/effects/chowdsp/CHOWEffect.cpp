@@ -114,8 +114,8 @@ void CHOWEffect::process_block_os(float *dataL, float *dataR)
 {
     os.upsample(dataL, dataR);
 
-    float cur_thresh, cur_ratio;
-    bool cur_flip;
+    float cur_thresh{0.f}, cur_ratio{10.f};
+    bool cur_flip{false};
 
     for (int k = 0; k < os.getUpBlockSize(); k++)
     {
