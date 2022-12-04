@@ -25,7 +25,10 @@
 
 #include <thread>
 #include <set>
+#ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
+#endif
+
 #include "SurgeMemoryPools.h"
 
 using namespace std;
@@ -372,6 +375,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
         return;
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     if (storage.oddsound_mts_client && storage.oddsound_mts_active)
     {
         if (MTS_ShouldFilterNote(storage.oddsound_mts_client, key, channel))
@@ -379,6 +383,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
             return;
         }
     }
+#endif
 
     if (learn_param_from_note >= 0 &&
         storage.getPatch().param_ptr[learn_param_from_note]->ctrltype == ct_midikey_or_channel)
@@ -4090,6 +4095,7 @@ void SurgeSynthesizer::processControl()
         if (fx[i])
             refresh_editor |= fx[i]->checkHasInvalidatedUI();
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     if (storage.oddsound_mts_client)
     {
         storage.oddsound_mts_on_check = (storage.oddsound_mts_on_check + 1) & (1024 - 1);
@@ -4104,6 +4110,7 @@ void SurgeSynthesizer::processControl()
             }
         }
     }
+#endif
 }
 
 void SurgeSynthesizer::process()
