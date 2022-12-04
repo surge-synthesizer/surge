@@ -45,7 +45,7 @@ void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
 {
 #define PREFIX_SIZE 16
 
-    char prefix[PREFIX_SIZE];
+    char prefix[PREFIX_SIZE + 1] = {};
 
     switch (ctrlgroup)
     {
@@ -82,7 +82,7 @@ void get_prefix(char *txt, ControlGroup ctrlgroup, int ctrlgroup_entry, int scen
 void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup,
                                 int ctrlgroup_entry, const char *lfoPrefixOverride) const
 {
-    char prefix[PREFIX_SIZE];
+    char prefix[PREFIX_SIZE + 1] = {};
     bool useprefix = true;
     switch (ctrlgroup)
     {
@@ -186,7 +186,7 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
 
     strxcpy(this->name, name, NAMECHARS);
     set_name(dispname);
-    char prefix[PREFIX_SIZE];
+    char prefix[TXT_SIZE + 1] = {};
     get_prefix(prefix, ctrlgroup, ctrlgroup_entry, scene);
     snprintf(name_storage, NAMECHARS, "%s%s", prefix, name);
     posy_offset = 0;
