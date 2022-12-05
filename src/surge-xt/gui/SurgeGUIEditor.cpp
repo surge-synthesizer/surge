@@ -3779,8 +3779,8 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
     auto patchDefMenu = juce::PopupMenu();
 
     patchDefMenu.addItem(Surge::GUI::toOSCase("Set Default Patch Author..."), [this, where]() {
-        std::string txt = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::DefaultPatchAuthor, "");
+        std::string txt = Surge::Storage::getUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::DefaultPatchAuthor, "");
         if (!Surge::Storage::isValidUTF8(txt))
         {
             txt = "";
@@ -3796,8 +3796,8 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
     });
 
     patchDefMenu.addItem(Surge::GUI::toOSCase("Set Default Patch Comment..."), [this, where]() {
-        std::string txt = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::DefaultPatchComment, "");
+        std::string txt = Surge::Storage::getUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::DefaultPatchComment, "");
 
         if (!Surge::Storage::isValidUTF8(txt))
         {

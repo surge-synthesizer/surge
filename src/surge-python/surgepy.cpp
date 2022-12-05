@@ -557,7 +557,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         }
         return "<error>";
     }
-    
+
     std::string getParamInfo(const SurgePyNamedParam &id)
     {
         const auto val = getParamVal(id);
