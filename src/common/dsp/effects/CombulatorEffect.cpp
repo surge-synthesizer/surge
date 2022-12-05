@@ -15,6 +15,7 @@
 
 #include "CombulatorEffect.h"
 #include "DebugHelpers.h"
+#include "fmt/core.h"
 
 CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage),
@@ -426,46 +427,45 @@ void CombulatorEffect::init_ctrltypes()
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;
 
-            static char res[TXT_SIZE];
-            res[0] = 0;
+            static std::string res;
 
             switch (idx)
             {
             case combulator_freq1:
                 if (fx->p[combulator_freq2].extend_range && fx->p[combulator_freq3].extend_range)
                 {
-                    snprintf(res, TXT_SIZE, "%s", "Frequency 1");
+                    res = fmt::format("{:s}", "Frequency 1");
                 }
                 else
                 {
-                    snprintf(res, TXT_SIZE, "%s", "Center");
+                    res = fmt::format("{:s}", "Center");
                 }
                 break;
             case combulator_freq2:
                 if (fx->p[combulator_freq2].extend_range)
                 {
-                    snprintf(res, TXT_SIZE, "%s", "Frequency 2");
+                    res = fmt::format("{:s}", "Frequency 2");
                 }
                 else
                 {
-                    snprintf(res, TXT_SIZE, "%s", "Offset 2");
+                    res = fmt::format("{:s}", "Offset 2");
                 }
                 break;
             case combulator_freq3:
                 if (fx->p[combulator_freq3].extend_range)
                 {
-                    snprintf(res, TXT_SIZE, "%s", "Frequency 3");
+                    res = fmt::format("{:s}", "Frequency 3");
                 }
                 else
                 {
-                    snprintf(res, TXT_SIZE, "%s", "Offset 3");
+                    res = fmt::format("{:s}", "Offset 3");
                 }
                 break;
             default:
                 break;
             }
 
-            return res;
+            return res.c_str();
         }
 
         const bool getValue(const Parameter *p) const override

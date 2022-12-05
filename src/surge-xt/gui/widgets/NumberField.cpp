@@ -48,8 +48,8 @@ std::string NumberField::valueToDisplay() const
         int oct_offset = 1;
         if (storage)
             oct_offset = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
-        char notename[16];
-        oss << get_notename(notename, iValue, oct_offset);
+
+        oss << get_notename(iValue, oct_offset);
     }
     break;
     case Skin::Parameters::POLY_COUNT:

@@ -841,7 +841,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto c = hp.second;
             float px = tpx(t);
             int yofs = 13;
-            char txt[16];
+            std::string txt;
 
             if (!(c & TickDrawStyle::kNoLabel))
             {
@@ -852,14 +852,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 {
                     g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
                     g.setFont(primaryFont);
-                    snprintf(txt, 16, "%d", int(t));
+                    txt = fmt::format("{:d}", int(t));
                     sw = primaryFont.getStringWidthFloat(txt);
                 }
                 else
                 {
                     g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
                     g.setFont(secondaryFont);
-                    snprintf(txt, 16, "%5.2f", t);
+                    txt = fmt::format("{:5.2f}", t);
                     sw = secondaryFont.getStringWidthFloat(txt);
                 }
 
@@ -909,7 +909,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             if (off == 0)
             {
-                char txt[16];
+                std::string txt;
                 auto value = std::get<1>(vp);
                 int ypos = 3;
 
@@ -918,7 +918,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     value = -value;
                 }
 
-                snprintf(txt, 16, "%5.1f", value);
+                txt = fmt::format("{:5.1f}", value);
+
                 g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
 
                 if (value == 1.f)
@@ -3298,7 +3299,7 @@ void MSEGControlRegion::rebuild()
         int margin = 2;
         int segWidth = btnWidth + editWidth + 10;
         int ypos = 1;
-        char svt[256];
+        std::string svt;
 
         auto mml = std::make_unique<juce::Label>();
         mml->setText("Snap to Grid", juce::dontSendNotification);
@@ -3325,7 +3326,7 @@ void MSEGControlRegion::rebuild()
         hSnapButton->setHoverSwitchDrawable(hoverBmp);
         addAndMakeVisible(*hSnapButton);
 
-        snprintf(svt, 255, "%d", (int)round(1.f / ms->hSnapDefault));
+        svt = fmt::format("{:d}", (int)round(1.f / ms->hSnapDefault));
 
         hSnapSize = std::make_unique<Surge::Widgets::NumberField>();
         hSnapSize->setControlMode(Surge::Skin::Parameters::MSEG_SNAP_H);
@@ -3359,7 +3360,7 @@ void MSEGControlRegion::rebuild()
         vSnapButton->setHoverSwitchDrawable(hoverBmp);
         addAndMakeVisible(*vSnapButton);
 
-        snprintf(svt, 255, "%d", (int)round(1.f / ms->vSnapDefault));
+        svt = fmt::format("{:d}", (int)round(1.f / ms->vSnapDefault));
 
         vSnapSize = std::make_unique<Surge::Widgets::NumberField>();
         vSnapSize->setTag(tag_vertical_value);

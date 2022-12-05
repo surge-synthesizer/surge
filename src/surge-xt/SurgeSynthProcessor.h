@@ -137,17 +137,10 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
         }
         return 0;
     }
-    juce::String getCurrentValueAsText() const override
-    {
-        char txt[TXT_SIZE];
-        p->get_display(txt);
-        return txt;
-    }
+    juce::String getCurrentValueAsText() const override { return p->get_display(); }
     juce::String getText(float normalisedValue, int i) const override
     {
-        char txt[TXT_SIZE];
-        p->get_display(txt, true, normalisedValue);
-        return txt;
+        return p->get_display(true, normalisedValue);
     }
     bool isMetaParameter() const override { return true; }
     const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }

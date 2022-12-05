@@ -167,7 +167,7 @@ void standardCutoffCurve(int ft, int sft, std::ostream &os)
         if (firstTime)
         {
             firstTime = false;
-            char fn[256], st[256], con[256], ron[256];
+            char fn[TXT_SIZE], st[TXT_SIZE], con[TXT_SIZE], ron[TXT_SIZE];
             surge->storage.getPatch().scene[0].filterunit[0].type.get_display(fn);
             surge->storage.getPatch().scene[0].filterunit[0].subtype.get_display(st);
             surge->storage.getPatch().scene[0].filterunit[0].cutoff.get_display(con);
@@ -337,7 +337,7 @@ void middleCSawIntoFilterVsCutoff(int ft, int sft, std::ostream &os)
         if (firstTime)
         {
             firstTime = false;
-            char fn[256], st[256], con[256], ron[256];
+            char fn[TXT_SIZE], st[TXT_SIZE], con[TXT_SIZE], ron[TXT_SIZE];
             surge->storage.getPatch().scene[0].filterunit[0].type.get_display(fn);
             surge->storage.getPatch().scene[0].filterunit[0].subtype.get_display(st);
             std::ostringstream oss;
@@ -441,7 +441,7 @@ void middleCSawIntoFilterVsReso(int ft, int sft, std::ostream &os)
         if (firstTime)
         {
             firstTime = false;
-            char fn[256], st[256], con[256], ron[256];
+            char fn[TXT_SIZE], st[TXT_SIZE], con[TXT_SIZE], ron[TXT_SIZE];
             surge->storage.getPatch().scene[0].filterunit[0].type.get_display(fn);
             surge->storage.getPatch().scene[0].filterunit[0].subtype.get_display(st);
             std::ostringstream oss;
@@ -629,7 +629,7 @@ void generateNLFeedbackNorms()
         {
             surge->process();
         }
-        char td[256], sd[256], cd[256];
+        char td[TXT_SIZE], sd[TXT_SIZE], cd[TXT_SIZE];
 
         surge->storage.getPatch().scene[0].filterunit[0].type.get_display(td);
         surge->storage.getPatch().scene[0].filterunit[0].subtype.get_display(sd);

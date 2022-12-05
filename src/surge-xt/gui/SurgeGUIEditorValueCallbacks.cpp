@@ -877,9 +877,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             char tmptxt[1024]; // leave room for that ubuntu 20.0 error
 
                             std::string targetName;
+
                             if (parameter->ctrlgroup == cg_LFO)
                             {
                                 char pname[TXT_SIZE];
+
                                 parameter->create_fullname(
                                     parameter->get_name(), pname, parameter->ctrlgroup,
                                     parameter->ctrlgroup_entry,
@@ -893,10 +895,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             if (allScenes && (!isGlobal && !isActiveScene))
                             {
-                                char sn[2];
-                                sn[0] = 'A' + (parameter->scene - 1);
-                                sn[1] = 0;
-                                targetName += std::string() + " (Scene " + sn + ")";
+                                targetName +=
+                                    fmt::format(" (Scene {:c})", 'A' + (parameter->scene - 1));
                             }
 
                             auto clearOp = [this, first_destination, md, n_total_md, thisms, modidx,
@@ -1116,9 +1116,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addSeparator();
 
-                char vtxt[1024];
-                snprintf(vtxt, 1024, "%s: %.*f %%", Surge::GUI::toOSCase("Edit Value").c_str(),
-                         (detailedMode ? 6 : 2), 100 * cms->get_output(0));
+                std::string vtxt = fmt::format("{:s}: {.{}f} %", Surge::GUI::toOSCase("Edit Value"),
+                                               (detailedMode ? 6 : 2), 100 * cms->get_output(0));
                 contextMenu.addItem(vtxt, [this, bvf, modsource]() {
                     promptForUserValueEntry(nullptr, bvf, modsource,
                                             0,  // controllers aren't per scene
@@ -1353,16 +1352,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             contextMenu.addSeparator();
 
-            char txt[TXT_SIZE], txt2[512];
-            p->get_display(txt);
+            std::string txt, txt2;
+
+            txt = p->get_display();
 
             if (!p->temposync)
             {
-                snprintf(txt2, 512, "%s: %s", Surge::GUI::toOSCase("Edit Value").c_str(), txt);
+                txt2 = fmt::format("{:s}: {:s}", Surge::GUI::toOSCase("Edit Value"), txt);
             }
             else
             {
-                snprintf(txt2, 512, "%s", txt);
+                txt2 = fmt::format("{:s}", txt);
             }
 
             if (p->valtype == vt_float)
@@ -1674,14 +1674,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         for (int i = p->val_min.i; i <= max; i += incr)
                         {
-                            char txt[256];
                             float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
-                            p->get_display(txt, true, ef);
-
-                            std::string displaytxt = txt;
 
                             contextMenu.addItem(
-                                displaytxt, true, (i == p->val.i), [this, ef, p, i]() {
+                                p->get_display(true, ef), true, (i == p->val.i),
+                                [this, ef, p, i]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
                                     synth->setParameter01(synth->idForParameter(p), ef, false,
                                                           false);
@@ -2381,21 +2378,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         // FIXME : What's a better aprpoach?
                         if (p->ctrltype == ct_fmratio)
                         {
-                            char txt[256], ntxt[256];
-                            memset(txt, 0, 256);
-                            strxcpy(txt, p->get_name(), 256);
+                            char txt[TXT_SIZE];
+                            std::string ntxt;
+                            memset(txt, 0, TXT_SIZE);
+                            strxcpy(txt, p->get_name(), TXT_SIZE);
 
                             if (p->absolute)
                             {
-                                snprintf(ntxt, 256, "M%c Frequency", txt[1]);
+                                ntxt = fmt::format("M{:c} Frequency", txt[1]);
                             }
                             else
                             {
                                 // Ladies and gentlemen, MC Ratio!
-                                snprintf(ntxt, 256, "M%c Ratio", txt[1]);
+                                ntxt = fmt::format("M{:c} Ratio", txt[1]);
                             }
 
-                            p->set_name(ntxt);
+                            p->set_name(ntxt.c_str());
                             synth->refresh_editor = true;
                         }
                     });
@@ -2484,7 +2482,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             {
                                 if (synth->isActiveModulation(ptag, ms, sc, modidx))
                                 {
-                                    char modtxt[256];
+                                    char modtxt[TXT_SIZE];
 
                                     p->get_display_of_modulation_depth(
                                         modtxt, synth->getModDepth(ptag, ms, sc, modidx),
@@ -2630,8 +2628,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         if ((!synth->isAnyActiveModulation(ptag, ms, current_scene) || isIndexed) &&
                             synth->isValidModulation(ptag, ms))
                         {
-                            char tmptxt[512];
-                            sprintf(tmptxt, "%s", modulatorName(ms, false).c_str());
+                            auto modName = modulatorName(ms, false);
 
                             auto *popMenu = &addMIDISub;
                             int modIdx = -1;
@@ -2677,11 +2674,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     });
                                 }
 
-                                popMenu->addSubMenu(tmptxt, subm);
+                                popMenu->addSubMenu(modName, subm);
                             }
                             else
                             {
-                                popMenu->addItem(tmptxt, [this, p, bvf, ms, modIdx]() {
+                                popMenu->addItem(modName, [this, p, bvf, ms, modIdx]() {
                                     this->promptForUserValueEntry(p, bvf, ms, current_scene, 0);
 
                                     typeinParamEditor->activateModsourceAfterEnter = modIdx;
@@ -3513,20 +3510,27 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         if ((ptag >= 0) && (ptag < synth->storage.getPatch().param_ptr.size()))
         {
             Parameter *p = synth->storage.getPatch().param_ptr[ptag];
-            if (p->is_nonlocal_on_change())
-                frame->repaint();
 
-            char pname[256], pdisp[128], txt[128];
+            if (p->is_nonlocal_on_change())
+            {
+                frame->repaint();
+            }
+
+            char pname[TXT_SIZE], pdisp[TXT_SIZE], txt[TXT_SIZE];
             bool modulate = false;
 
             // This allows us to turn on and off the editor. FIXME MSEG check it
             if (p->ctrltype == ct_lfotype)
+            {
                 synth->refresh_editor = true;
+            }
 
             auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+
             if (modsource && mod_editor && synth->isValidModulation(p->id, modsource) && mci)
             {
                 modsources thisms = modsource;
+
                 if (gui_modsrc[modsource])
                 {
                     auto cms = gui_modsrc[modsource].get();
@@ -3535,8 +3539,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                         thisms = cms->getAlternate();
 #endif
                 }
+
                 bool quantize_mod = juce::ModifierKeys::currentModifiers.isCommandDown();
                 float mv = mci->getModValue();
+
                 if (quantize_mod)
                 {
                     mv = p->quantize_modulation(mv);
@@ -3544,8 +3550,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 }
 
                 auto use_scene = 0;
+
                 if (this->synth->isModulatorDistinctPerScene(thisms))
                     use_scene = current_scene;
+
                 synth->setModDepth01(ptag, thisms, use_scene, modsource_index, mv);
 
                 mci->setModulationState(
@@ -3554,10 +3562,16 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                 mci->setIsModulationBipolar(synth->isBipolarModulation(thisms));
 
                 SurgeSynthesizer::ID ptagid;
+
                 if (synth->fromSynthSideId(ptag, ptagid))
+                {
                     synth->getParameterName(ptagid, txt);
+                }
+
                 sprintf(pname, "%s -> %s", modulatorName(thisms, true).c_str(), txt);
+
                 ModulationDisplayInfoWindowStrings mss;
+
                 p->get_display_of_modulation_depth(
                     pdisp, synth->getModDepth(ptag, thisms, use_scene, modsource_index),
                     synth->isBipolarModulation(thisms), Parameter::InfoWindow, &mss);
@@ -3651,16 +3665,27 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
 
                     auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+
                     if (mci)
+                    {
                         mci->setQuantitizedDisplayValue(p->get_value_f01());
+                    }
                     else if (bvf)
+                    {
                         bvf->repaint();
+                    }
+
                     synth->getParameterName(ptagid, pname);
                     synth->getParameterDisplay(ptagid, pdisp);
-                    char pdispalt[256];
+
+                    char pdispalt[TXT_SIZE];
+
                     synth->getParameterDisplayAlt(ptagid, pdispalt);
+
                     if (p->ctrltype == ct_polymode)
+                    {
                         modulate = true;
+                    }
                 }
 
                 if (p->ctrltype == ct_bool_unipolar || p->ctrltype == ct_lfotype)
@@ -3671,6 +3696,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
 
                 // Finally we may have to update the modulation editor
                 auto me = getOverlayIfOpenAs<Surge::Overlays::ModulationEditor>(MODULATION_EDITOR);
+
                 if (me)
                 {
                     me->updateParameterById(ptagid);

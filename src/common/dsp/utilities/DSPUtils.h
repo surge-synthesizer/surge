@@ -364,13 +364,3 @@ inline double hamming(int i, int n)
         return 0;
     return 0.54 - 0.46 * cos(2 * M_PI * i / (n - 1));
 }
-
-inline char *float_to_str(float value, char *str)
-{
-    if (!str)
-        return 0;
-    Surge::ScopedLocale localGuard;
-    // yeah str isn't necessarily TXT_SIZE but better than nothing. TODO fix.
-    snprintf(str, TXT_SIZE, "%f", value);
-    return str;
-}

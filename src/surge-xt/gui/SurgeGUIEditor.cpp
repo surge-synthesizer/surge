@@ -904,7 +904,7 @@ void SurgeGUIEditor::idle()
 
                 if (param[j])
                 {
-                    char pname[256], pdisp[256];
+                    char pname[TXT_SIZE], pdisp[TXT_SIZE];
                     SurgeSynthesizer::ID jid;
 
                     if (synth->fromSynthSideId(j, jid))
@@ -3457,13 +3457,12 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         int oct = 5 - Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                           Surge::Storage::MiddleC, 1);
-        string middle_A = "A" + to_string(oct);
+        std::string middle_A = "A" + to_string(oct);
 
         tuningSubMenu.addItem(
             Surge::GUI::toOSCase("Remap " + middle_A + " (MIDI Note 69) Directly to..."),
             [this, middle_A, where]() {
-                char c[256];
-                snprintf(c, 256, "440.0");
+                std::string c = "440.0";
                 promptForMiniEdit(
                     c, fmt::format("Enter a new frequency for {:s}:", middle_A),
                     fmt::format("Remap {:s} Frequency", middle_A), where,
@@ -3674,8 +3673,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
     if (!isFixed)
     {
         zoomSubMenu.addItem(Surge::GUI::toOSCase("Set Default Zoom Level to..."), [this, where]() {
-            char c[256];
-            snprintf(c, 256, "%d", (int)zoomFactor);
+            std::string c = fmt::format("{:d}", (int)zoomFactor);
             promptForMiniEdit(
                 c, "Enter a new value:", "Set Default Zoom Level", where,
                 [this](const std::string &s) {
@@ -3781,12 +3779,13 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
     auto patchDefMenu = juce::PopupMenu();
 
     patchDefMenu.addItem(Surge::GUI::toOSCase("Set Default Patch Author..."), [this, where]() {
-        string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+        std::string txt = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                        Surge::Storage::DefaultPatchAuthor, "");
-        char txt[256];
-        txt[0] = 0;
-        if (Surge::Storage::isValidUTF8(s))
-            strxcpy(txt, s.c_str(), 256);
+        if (!Surge::Storage::isValidUTF8(txt))
+        {
+            txt = "";
+        }
+
         promptForMiniEdit(
             txt, "Enter a default text:", "Set Default Patch Author", where,
             [this](const std::string &s) {
@@ -3797,12 +3796,14 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
     });
 
     patchDefMenu.addItem(Surge::GUI::toOSCase("Set Default Patch Comment..."), [this, where]() {
-        string s = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+        std::string txt = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                        Surge::Storage::DefaultPatchComment, "");
-        char txt[256];
-        txt[0] = 0;
-        if (Surge::Storage::isValidUTF8(s))
-            strxcpy(txt, s.c_str(), 256);
+
+        if (!Surge::Storage::isValidUTF8(txt))
+        {
+            txt = "";
+        }
+
         promptForMiniEdit(
             txt, "Enter a default text:", "Set Default Patch Comment", where,
             [this](const std::string &s) {
@@ -4507,10 +4508,9 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
 
     midiSubMenu.addItem(Surge::GUI::toOSCase("Save MIDI Mapping As..."), [this, where]() {
         this->scannedForMidiPresets = false; // force a rescan
-        char msn[256];
-        msn[0] = 0;
+
         promptForMiniEdit(
-            msn, "Enter the preset name:", "Save MIDI Mapping", where,
+            "", "Enter the preset name:", "Save MIDI Mapping", where,
             [this](const std::string &s) { this->synth->storage.storeMidiMappingToName(s); },
             mainMenu);
     });
@@ -4768,11 +4768,13 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     }
 
     std::string lab = "";
+
     if (p)
     {
         if (p->ctrlgroup == cg_LFO)
         {
             char pname[1024];
+
             p->create_fullname(p->get_name(), pname, p->ctrlgroup, p->ctrlgroup_entry,
                                modulatorName(p->ctrlgroup_entry, true).c_str());
             lab = pname;
@@ -4789,27 +4791,27 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
 
     typeinParamEditor->setMainLabel(lab);
 
-    char txt[256];
-    char ptext[1024], ptext2[1024];
-    ptext2[0] = 0;
+    char txt[TXT_SIZE];
+    std::string ptxt1, ptxt2, ptxt3;
+
     if (p)
     {
         if (ismod)
         {
-            char txt2[256];
+            std::string txt2;
 
             p->get_display_of_modulation_depth(
                 txt, synth->getModDepth(p->id, (modsources)ms, modScene, modidx),
                 synth->isBipolarModulation((modsources)ms), Parameter::TypeIn);
-            p->get_display(txt2);
+            txt2 = p->get_display();
 
-            sprintf(ptext, "current: %s", txt2);
-            sprintf(ptext2, "mod: %s", txt);
+            ptxt1 = fmt::format("current: {:s}", txt2);
+            ptxt2 = fmt::format("mod: {:s}", txt);
         }
         else
         {
             p->get_display(txt);
-            sprintf(ptext, "current: %s", txt);
+            ptxt1 = fmt::format("current: {:s}", txt);
         }
     }
     else
@@ -4820,11 +4822,11 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
                         .scene[current_scene]
                         .modsources[ms]);
 
-        sprintf(ptext, "current: %s", txt);
-        sprintf(txt, "%.*f %%", (detailedMode ? 6 : 2), 100.0 * cms->get_output(0));
+        ptxt1 = fmt::format("current: {:s}", txt);
+        ptxt3 = fmt::format("{:.{}f} %", (detailedMode ? 6 : 2), 100.0 * cms->get_output(0));
     }
 
-    typeinParamEditor->setValueLabels(ptext, ptext2);
+    typeinParamEditor->setValueLabels(ptxt1, ptxt2);
     typeinParamEditor->setEditableText(txt);
 
     if (ismod)
@@ -4842,12 +4844,14 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     auto cBounds = c->getBounds();
     auto cParent = cBounds.getTopLeft();
     auto q = c->getParentComponent();
+
     while (q && q != frame.get())
     {
         auto qc = q->getBounds().getTopLeft();
         cParent = cParent + qc;
         q = q->getParentComponent();
     }
+
     cBounds = cBounds.withTop(cParent.getY()).withLeft(cParent.getX());
     typeinParamEditor->setBoundsToAccompany(cBounds, frame->getBounds());
     typeinParamEditor->setVisible(true);
@@ -4866,69 +4870,53 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button, int forScene)
         auto useScene = forScene >= 0 ? forScene : current_scene;
         auto *lfodata = &(synth->storage.getPatch().scene[useScene].lfo[i - ms_lfo1]);
 
-        char sceneN[5], shortsceneS[5];
-        sceneN[0] = 0;
-        shortsceneS[0] = 0;
+        std::string sceneL = "Scene", shortsceneL = "S-";
+
         if (forScene >= 0)
         {
-            sceneN[0] = ' ';
-            sceneN[1] = 'A' + forScene;
-            sceneN[2] = 0;
-            shortsceneS[0] = 'A' + forScene;
-            shortsceneS[1] = ' ';
-            shortsceneS[2] = 0;
+            sceneL = fmt::format("Scene {:c}", 'A' + forScene);
+            shortsceneL = fmt::format("{:c} S-", 'A' + forScene);
         }
-        char sceneL[16];
-        snprintf(sceneL, 16, "Scene%s", sceneN);
-        char shortsceneL[16];
-        snprintf(shortsceneL, 16, "%sS-", shortsceneS);
+
+        std::string txt;
 
         if (lfodata->shape.val.i == lt_envelope)
         {
-            char txt[128];
             if (button)
-                sprintf(txt, "%sENV %d", (isS ? shortsceneL : ""), fnum + 1);
+                txt = fmt::format("{:s}ENV {:d}", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s Envelope %d", (isS ? sceneL : "Voice"), fnum + 1);
-            return std::string(txt);
+                txt = fmt::format("{:s} Envelope {:d}", (isS ? sceneL : "Voice"), fnum + 1);
         }
         else if (lfodata->shape.val.i == lt_stepseq)
         {
-            char txt[128];
             if (button)
-                sprintf(txt, "%sSEQ %d", (isS ? shortsceneL : ""), fnum + 1);
+                txt = fmt::format("{:s}SEQ {:d}", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s Step Sequencer %d", (isS ? sceneL : "Voice"), fnum + 1);
-            return std::string(txt);
+                txt = fmt::format("{:s} Step Sequencer {:d}", (isS ? sceneL : "Voice"), fnum + 1);
         }
         else if (lfodata->shape.val.i == lt_mseg)
         {
-            char txt[128];
             if (button)
-                sprintf(txt, "%sMSEG %d", (isS ? shortsceneL : ""), fnum + 1);
+                txt = fmt::format("{:s}MSEG {:d}", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s MSEG %d", (isS ? sceneL : "Voice"), fnum + 1);
-            return std::string(txt);
+                txt = fmt::format("{:s} MSEG {:d}", (isS ? sceneL : "Voice"), fnum + 1);
         }
         else if (lfodata->shape.val.i == lt_formula)
         {
-            char txt[128];
-
             if (button)
-                sprintf(txt, "%sFORM %d", (isS ? shortsceneL : ""), fnum + 1);
+                txt = fmt::format("{:s}FORM {:d}", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s Formula %d", (isS ? sceneL : "Voice"), fnum + 1);
-            return std::string(txt);
+                txt = fmt::format("{:s} Formula {:d}", (isS ? sceneL : "Voice"), fnum + 1);
         }
         else
         {
-            char txt[128];
             if (button)
-                sprintf(txt, "%sLFO %d", (isS ? shortsceneL : ""), fnum + 1);
+                txt = fmt::format("{:s}LFO {:d}", (isS ? shortsceneL : ""), fnum + 1);
             else
-                sprintf(txt, "%s LFO %d", (isS ? sceneL : "Voice"), fnum + 1);
-            return std::string(txt);
+                txt = fmt::format("{:s} LFO {:d}", (isS ? sceneL : "Voice"), fnum + 1);
         }
+
+        return txt;
     }
 
     if (i >= ms_ctrl1 && i <= ms_ctrl8)
@@ -4937,6 +4925,7 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button, int forScene)
         {
             std::string ccl =
                 std::string(synth->storage.getPatch().CustomControllerLabel[i - ms_ctrl1]);
+
             if (ccl == "-")
             {
                 return std::string(modsource_names[i]);
@@ -4950,6 +4939,7 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button, int forScene)
         {
             std::string ccl =
                 std::string(synth->storage.getPatch().CustomControllerLabel[i - ms_ctrl1]);
+
             if (ccl == "-")
             {
                 return std::string(modsource_names[i]);
@@ -4965,14 +4955,20 @@ std::string SurgeGUIEditor::modulatorName(int i, bool button, int forScene)
     {
         return "MPE Pressure";
     }
+
     if (i == ms_timbre && synth->mpeEnabled)
     {
         return "MPE Timbre";
     }
+
     if (button)
+    {
         return std::string(modsource_names_button[i]);
+    }
     else
+    {
         return std::string(modsource_names[i]);
+    }
 }
 
 std::string SurgeGUIEditor::helpURLFor(Parameter *p)
@@ -5145,19 +5141,21 @@ std::string SurgeGUIEditor::getDisplayForTag(long tag, bool external, float f)
 
         if (p->ctrltype == ct_scenemode)
         {
+            // TODO FIXME - break straming order for XT2!
             // Ahh that decision in 1.6 to not change streaming order continues to be painful
             auto iv = Parameter::intUnscaledFromFloat(f, p->val_max.i, p->val_min.i);
+
             if (iv == 3)
                 iv = 2;
             else if (iv == 2)
                 iv = 3;
+
             f = Parameter::intScaledToFloat(iv, p->val_max.i, p->val_min.i);
         }
+
         if (p)
         {
-            char txt[1024];
-            p->get_display(txt, external, f);
-            return txt;
+            return p->get_display(external, f);
         }
     }
 

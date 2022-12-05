@@ -367,24 +367,24 @@ std::string OscillatorWaveformDisplay::getCurrentWavetableName()
 {
     storage->waveTableDataMutex.lock();
 
-    char wttxt[256];
+    char wttxt[TXT_SIZE];
     int wtid = oscdata->wt.current_id;
 
     if (oscdata->wavetable_display_name[0] != '\0')
     {
-        strncpy(wttxt, oscdata->wavetable_display_name, 256);
+        strncpy(wttxt, oscdata->wavetable_display_name, TXT_SIZE);
     }
     else if ((wtid >= 0) && (wtid < storage->wt_list.size()))
     {
-        strncpy(wttxt, storage->wt_list.at(wtid).name.c_str(), 256);
+        strncpy(wttxt, storage->wt_list.at(wtid).name.c_str(), TXT_SIZE);
     }
     else if (oscdata->wt.flags & wtf_is_sample)
     {
-        strncpy(wttxt, "(Patch Sample)", 256);
+        strncpy(wttxt, "(Patch Sample)", TXT_SIZE);
     }
     else
     {
-        strncpy(wttxt, "(Patch Wavetable)", 256);
+        strncpy(wttxt, "(Patch Wavetable)", TXT_SIZE);
     }
 
     storage->waveTableDataMutex.unlock();
@@ -573,15 +573,15 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     }
 
     auto rnaction = [this]() {
-        char c[256];
-        strncpy(c, this->oscdata->wavetable_display_name, 256);
+        char c[TXT_SIZE];
+        strncpy(c, this->oscdata->wavetable_display_name, TXT_SIZE);
 
         if (sge)
         {
             sge->promptForMiniEdit(
                 c, "Enter a new name:", "Wavetable Display Name", juce::Point<int>{},
                 [this](const std::string &s) {
-                    strncpy(this->oscdata->wavetable_display_name, s.c_str(), 256);
+                    strncpy(this->oscdata->wavetable_display_name, s.c_str(), TXT_SIZE);
                     this->repaint();
                 },
                 this);
@@ -860,20 +860,20 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
                                                         bool intoTop)
 {
     int sub = 0;
-    char name[NAMECHARS];
     bool selected = false;
     juce::PopupMenu subMenuLocal;
     juce::PopupMenu *subMenu = &subMenuLocal;
-    if (intoTop)
-        subMenu = &contextMenu;
     PatchCategory cat = storage->wt_category[categoryId];
+
+    if (intoTop)
+    {
+        subMenu = &contextMenu;
+    }
 
     for (auto p : storage->wtOrdering)
     {
         if (storage->wt_list[p].category == categoryId)
         {
-            sprintf(name, "%s", storage->wt_list[p].name.c_str());
-
             auto action = [this, p]() { this->loadWavetable(p); };
             bool checked = false;
 
@@ -883,7 +883,7 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
                 selected = true;
             }
 
-            subMenu->addItem(name, true, checked, action);
+            subMenu->addItem(storage->wt_list[p].name, true, checked, action);
 
             sub++;
 
@@ -920,6 +920,8 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         }
     }
 
+    std::string name;
+
     if (!cat.isRoot)
     {
         std::string catName = storage->wt_category[categoryId].name;
@@ -930,15 +932,17 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
             catName = catName.substr(sepPos + 1);
         }
 
-        strncpy(name, catName.c_str(), NAMECHARS);
+        name = catName;
     }
     else
     {
-        strncpy(name, storage->wt_category[categoryId].name.c_str(), NAMECHARS);
+        name = storage->wt_category[categoryId].name;
     }
 
     if (!intoTop)
+    {
         contextMenu.addSubMenu(name, *subMenu, true, nullptr, selected);
+    }
 
     return selected;
 }

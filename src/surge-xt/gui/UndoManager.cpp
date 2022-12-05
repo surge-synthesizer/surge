@@ -423,8 +423,10 @@ struct UndoManagerImpl
 
     void populateUndoParamFromP(const Parameter *p, pdata val, UndoParam &r)
     {
-        char txt[256];
-        synth->getParameterName(synth->idForParameter(p), txt);
+        std::string txt;
+        char buf[TXT_SIZE];
+        synth->getParameterName(synth->idForParameter(p), buf);
+        txt = buf;
         r.name = txt;
         r.temposync = p->temposync;
         r.absolute = p->absolute;
@@ -441,16 +443,16 @@ struct UndoManagerImpl
 
         if (p->ctrltype == vt_float)
         {
-            p->get_display(txt, true, val.f);
+            txt = p->get_display(true, val.f);
         }
         else if (p->ctrltype == vt_int)
         {
-            p->get_display(txt, true,
-                           Parameter::intScaledToFloat(val.i, p->val_max.i, p->val_min.i));
+            txt = p->get_display(true,
+                                 Parameter::intScaledToFloat(val.i, p->val_max.i, p->val_min.i));
         }
         else
         {
-            sprintf(txt, "%s", (p->val.b ? "On" : "Off"));
+            txt = fmt::format("{:s}", (p->val.b ? "On" : "Off"));
         }
 
         r.formattedValue = txt;
@@ -487,7 +489,7 @@ struct UndoManagerImpl
                                 int idx, float val, bool muted, UndoModulation &r)
     {
         r.paramId = paramId;
-        char txt[256];
+        char txt[TXT_SIZE];
         synth->getParameterName(synth->idForParameter(p), txt);
         r.target_name = txt;
         r.source_name = modsource_names[modsource];
@@ -860,7 +862,7 @@ struct UndoManagerImpl
 
             if (!p->displayName.empty())
             {
-                strncpy(os->wavetable_display_name, p->displayName.c_str(), 256);
+                strncpy(os->wavetable_display_name, p->displayName.c_str(), TXT_SIZE);
             }
             if (p->current_id >= 0)
             {

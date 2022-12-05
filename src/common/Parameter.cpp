@@ -133,12 +133,18 @@ void Parameter::create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup
     // note for future devs: code here used to make a buffer of 256 bytes, write into it, then
     // incorrectly truncate to NAMECHARS (which was 64 bytes) leading to unterminated strings.
     // now tfn is also NAMECHARS and unterminated strings aren't possible. But if some behaviour
-    // changes -- this comment exists.
+    // changes, this comment exists.
     char tfn[NAMECHARS];
+
     if (useprefix)
+    {
         snprintf(tfn, NAMECHARS, "%s %s", prefix, dn);
+    }
     else
+    {
         snprintf(tfn, NAMECHARS, "%s", dn);
+    }
+
     strxcpy(fn, tfn, NAMECHARS);
 }
 
@@ -1896,6 +1902,7 @@ bool Parameter::supportsDynamicName() const
     }
     return false;
 }
+
 const char *Parameter::get_name() const
 {
     // We only even want to try this for specific types we know support it
@@ -2977,14 +2984,13 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
 
         int i_value = round(f) + ((ctrltype != ct_freq_ringmod) ? 69 : 0);
         int oct_offset = 1;
-        char notename[16];
 
         if (storage)
         {
             oct_offset = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
         }
 
-        snprintf(txt, TXT_SIZE, "~%s", get_notename(notename, i_value, oct_offset));
+        snprintf(txt, TXT_SIZE, "~%s", get_notename(i_value, oct_offset).c_str());
 
         if (ctrltype == ct_fmratio && !absolute)
         {
@@ -2998,14 +3004,13 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
         float f = val.f;
         int i_value = (int)(f);
         int oct_offset = 1;
-        char notename[16];
 
         if (storage)
         {
             oct_offset = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
         }
 
-        snprintf(txt, TXT_SIZE, "~%s", get_notename(notename, i_value, oct_offset));
+        snprintf(txt, TXT_SIZE, "~%s", get_notename(i_value, oct_offset).c_str());
 
         break;
     }
@@ -3066,10 +3071,19 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
 
 void Parameter::get_display(char *txt, bool external, float ef) const
 {
+    auto str = get_display(external, ef);
+
+    strncpy(txt, str.c_str(), TXT_SIZE - 1);
+}
+
+std::string Parameter::get_display(bool external, float ef) const
+{
+    std::string txt = "";
+
     if (ctrltype == ct_none)
     {
-        snprintf(txt, TXT_SIZE, "-");
-        return;
+        txt = "-";
+        return txt;
     }
 
     int i;
@@ -3104,12 +3118,16 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         case DelegatedToFormatter:
         {
             auto ef = dynamic_cast<ParameterExternalFormatter *>(user_data);
+            char str[TXT_SIZE];
+
             if (ef)
             {
                 // parameter called 'len' not 'size', be on the safe side here, do - 1.
                 // It used to say just '64' anyway.
-                if (ef->formatValue(this, f, txt, TXT_SIZE - 1))
-                    return;
+                if (ef->formatValue(this, f, str, TXT_SIZE - 1))
+                {
+                    return txt;
+                }
             }
             // We do not break on purpose here. DelegatedToFormatter falls back to Linear with Scale
         }
@@ -3138,28 +3156,28 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                 u = displayInfo.absoluteUnit;
             }
 
-            snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals),
-                     displayInfo.scale * f, u.c_str());
+            txt = fmt::format("{:.{}f} {:s}", displayInfo.scale * f,
+                              (detailedMode ? 6 : displayInfo.decimals), u);
 
             if (f >= val_max.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString))
             {
-                strxcpy(txt, displayInfo.maxLabel, TXT_SIZE);
+                txt = displayInfo.maxLabel;
             }
 
             if (f <= val_min.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinString))
             {
-                strxcpy(txt, displayInfo.minLabel, TXT_SIZE);
+                txt = displayInfo.minLabel;
             }
 
             if (f == val_default.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomDefaultString))
             {
-                strxcpy(txt, displayInfo.defLabel, TXT_SIZE);
+                txt = displayInfo.defLabel;
             }
 
-            return;
+            return txt;
         }
         case ATwoToTheBx:
         {
@@ -3167,9 +3185,9 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             {
                 std::string res =
                     tempoSyncNotationValue(displayInfo.tempoSyncNotationMultiplier * f);
-                snprintf(txt, TXT_SIZE, "%s", res.c_str());
+                txt = fmt::format("{:s}", res);
 
-                return;
+                return txt;
             }
 
             if (can_extend_range() && extend_range)
@@ -3187,8 +3205,8 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             {
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString)
                 {
-                    snprintf(txt, TXT_SIZE, "%s", displayInfo.maxLabel);
-                    return;
+                    txt = fmt::format("{:s}", displayInfo.maxLabel);
+                    return txt;
                 }
 
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxValue)
@@ -3201,8 +3219,8 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             {
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinString)
                 {
-                    snprintf(txt, TXT_SIZE, "%s", displayInfo.minLabel);
-                    return;
+                    txt = fmt::format("{:s}", displayInfo.minLabel);
+                    return txt;
                 }
 
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinValue)
@@ -3211,23 +3229,22 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                 }
             }
 
-            snprintf(txt, TXT_SIZE, "%.*f %s", (detailedMode ? 6 : displayInfo.decimals), dval,
-                     u.c_str());
+            txt = fmt::format("{:.{}f} {:s}", dval, (detailedMode ? 6 : displayInfo.decimals), u);
 
-            return;
+            return txt;
         }
         case Decibel:
         {
             if (f == 0)
             {
-                snprintf(txt, TXT_SIZE, "-inf dB");
+                txt = "-inf dB";
             }
             else
             {
-                snprintf(txt, TXT_SIZE, "%.*f dB", (detailedMode ? 6 : 2), amp_to_db(f));
+                txt = fmt::format("{:.{}f} dB", amp_to_db(f), (detailedMode ? 6 : 2));
             }
 
-            return;
+            return txt;
         }
         }
 
@@ -3242,7 +3259,7 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                 auto note = 69 + 69 * bpv;
                 auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
 
-                snprintf(txt, TXT_SIZE, "%.*f Hz", (detailedMode ? 6 : 2), freq);
+                txt = fmt::format("{:.{}f} Hz", freq, (detailedMode ? 6 : 2));
             }
             else
             {
@@ -3250,28 +3267,27 @@ void Parameter::get_display(char *txt, bool external, float ef) const
 
                 if (extend_range && q < 0)
                 {
-                    snprintf(txt, TXT_SIZE, "C : 1 / %.*f", (detailedMode ? 6 : 2),
-                             -get_extended(f));
+                    txt = fmt::format("C : 1 / {:.{}f}", -get_extended(f), (detailedMode ? 6 : 2));
                 }
                 else
                 {
-                    snprintf(txt, TXT_SIZE, "C : %.*f", (detailedMode ? 6 : 2), get_extended(f));
+                    txt = fmt::format("C : {:.{}f}", get_extended(f), (detailedMode ? 6 : 2));
                 }
             }
             break;
         }
         case ct_chow_ratio:
         {
-            snprintf(txt, TXT_SIZE, "1 : %.*f", (detailedMode ? 6 : 2), f);
+            txt = fmt::format("1 : {:.{}f}", f, (detailedMode ? 6 : 2));
             break;
         }
         case ct_float_toggle:
         {
-            snprintf(txt, TXT_SIZE, f > 0.5 ? "On" : "Off");
+            txt = f > 0.5 ? "On" : "Off";
             break;
         }
         default:
-            snprintf(txt, TXT_SIZE, "%.*f", (detailedMode ? 6 : 2), f);
+            txt = fmt::format("{:.{}f}", f, (detailedMode ? 6 : 2));
             break;
         }
         break;
@@ -3296,9 +3312,8 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             {
                 if (ef->formatValue(this, fv, vt, TXT_SIZE - 1))
                 {
-                    snprintf(txt, TXT_SIZE, "%s", vt);
-
-                    return;
+                    txt = fmt::format("{:s}", vt);
+                    return txt;
                 }
             }
         }
@@ -3312,11 +3327,11 @@ void Parameter::get_display(char *txt, bool external, float ef) const
 
             if (extend_range)
             {
-                snprintf(txt, TXT_SIZE, "%0.2f %s", i * 1.f / 100, unit.c_str());
+                txt = fmt::format("{:0.2f} {:s}", i * 1.f / 100, unit.c_str());
             }
             else
             {
-                snprintf(txt, TXT_SIZE, "%i %s", i, unit.c_str());
+                txt = fmt::format("{:d} {:s}", i, unit.c_str());
             }
         }
         break;
@@ -3326,14 +3341,13 @@ void Parameter::get_display(char *txt, bool external, float ef) const
 
             if (sm == sm_chsplit)
             {
-                snprintf(txt, TXT_SIZE, "Channel %d", (val.i / 8) + 1);
+                txt = fmt::format("Channel {:d}", (val.i / 8) + 1);
                 break;
             }
         }
         case ct_midikey:
         {
             int oct_offset = 1;
-            char notename[16];
 
             if (storage)
             {
@@ -3341,33 +3355,31 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                     Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
             }
 
-            snprintf(txt, TXT_SIZE, "%s", get_notename(notename, val.i, oct_offset));
+            txt = fmt::format("{:s}", get_notename(val.i, oct_offset));
 
             break;
         }
         case ct_osctype:
-            snprintf(txt, TXT_SIZE, "%s", osc_type_names[limit_range(i, 0, (int)n_osc_types - 1)]);
+            txt = fmt::format("{:s}", osc_type_names[limit_range(i, 0, (int)n_osc_types - 1)]);
             break;
         case ct_wt2window:
-            snprintf(txt, TXT_SIZE, "%s", window_names[limit_range(i, 0, 8)]);
+            txt = fmt::format("{:s}", window_names[limit_range(i, 0, 8)]);
             break;
         case ct_osccount:
-            snprintf(txt, TXT_SIZE, "%d voice%s", i, (i > 1 ? "s" : ""));
+            txt = fmt::format("{:d} voice{:s}", i, (i > 1 ? "s" : ""));
             break;
         case ct_fxtype:
-            snprintf(txt, TXT_SIZE, "%s",
-                     fx_type_shortnames[limit_range(i, 0, (int)n_fx_types - 1)]);
+            txt = fmt::format("{:s}", fx_type_shortnames[limit_range(i, 0, (int)n_fx_types - 1)]);
             break;
         case ct_reverbshape:
-            snprintf(txt, TXT_SIZE, "Type %d", i + 1);
+            txt = fmt::format("Type {:d}", i + 1);
             break;
         case ct_fxbypass:
-            snprintf(txt, TXT_SIZE, "%s", fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)]);
+            txt = fmt::format("{:s}", fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)]);
             break;
         case ct_filtertype:
-            snprintf(txt, TXT_SIZE, "%s",
-                     sst::filters::filter_type_names[limit_range(
-                         i, 0, (int)sst::filters::num_filter_types - 1)]);
+            txt = fmt::format("{:s}", sst::filters::filter_type_names[limit_range(
+                                          i, 0, (int)sst::filters::num_filter_types - 1)]);
             break;
         case ct_filtersubtype:
         {
@@ -3383,42 +3395,40 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                         const auto fType = (FilterType)type;
                         if (i >= sst::filters::fut_subcount[type])
                         {
-                            snprintf(txt, TXT_SIZE, "None");
+                            txt = "None";
                         }
                         else
                             switch (fType)
                             {
                             case FilterType::fut_lpmoog:
                             case FilterType::fut_diode:
-                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_ldr_subtypes[i]);
+                                txt = fmt::format("{:s}", sst::filters::fut_ldr_subtypes[i]);
                                 break;
                             case FilterType::fut_notch12:
                             case FilterType::fut_notch24:
                             case FilterType::fut_apf:
-                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_notch_subtypes[i]);
+                                txt = fmt::format("{:s}", sst::filters::fut_notch_subtypes[i]);
                                 break;
                             case FilterType::fut_comb_pos:
                             case FilterType::fut_comb_neg:
-                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_comb_subtypes[i]);
+                                txt = fmt::format("{:s}", sst::filters::fut_comb_subtypes[i]);
                                 break;
                             case FilterType::fut_vintageladder:
-                                snprintf(txt, TXT_SIZE, "%s",
-                                         sst::filters::fut_vintageladder_subtypes[i]);
+                                txt = fmt::format("{:s}",
+                                                  sst::filters::fut_vintageladder_subtypes[i]);
                                 break;
                             case FilterType::fut_obxd_2pole_lp:
                             case FilterType::fut_obxd_2pole_hp:
                             case FilterType::fut_obxd_2pole_n:
                             case FilterType::fut_obxd_2pole_bp:
-                                snprintf(txt, TXT_SIZE, "%s",
-                                         sst::filters::fut_obxd_2p_subtypes[i]);
+                                txt = fmt::format("{:s}", sst::filters::fut_obxd_2p_subtypes[i]);
                                 break;
                             case FilterType::fut_obxd_4pole:
-                                snprintf(txt, TXT_SIZE, "%s",
-                                         sst::filters::fut_obxd_4p_subtypes[i]);
+                                txt = fmt::format("{:s}", sst::filters::fut_obxd_4p_subtypes[i]);
                                 break;
                             case FilterType::fut_k35_lp:
                             case FilterType::fut_k35_hp:
-                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_k35_subtypes[i]);
+                                txt = fmt::format("{:s}", sst::filters::fut_k35_subtypes[i]);
                                 break;
                             case FilterType::fut_cutoffwarp_lp:
                             case FilterType::fut_cutoffwarp_hp:
@@ -3433,9 +3443,9 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                                 // "i & 3" selects the lower two bits that represent the stage count
                                 // "(i >> 2) & 3" selects the next two bits that represent the
                                 // saturator
-                                snprintf(txt, TXT_SIZE, "%s %s",
-                                         sst::filters::fut_nlf_subtypes[i & 3],
-                                         sst::filters::fut_nlf_saturators[(i >> 2) & 3]);
+                                txt =
+                                    fmt::format("{:s} {:s}", sst::filters::fut_nlf_subtypes[i & 3],
+                                                sst::filters::fut_nlf_saturators[(i >> 2) & 3]);
                                 break;
                             // don't default any more so compiler catches new ones we add
                             case FilterType::fut_none:
@@ -3446,70 +3456,70 @@ void Parameter::get_display(char *txt, bool external, float ef) const
                             case FilterType::fut_hp12:
                             case FilterType::fut_hp24:
                             case FilterType::fut_SNH:
-                                snprintf(txt, TXT_SIZE, "%s", sst::filters::fut_def_subtypes[i]);
+                                txt = fmt::format("{:s}", sst::filters::fut_def_subtypes[i]);
                                 break;
                             case FilterType::fut_tripole:
                                 // "i & 3" selects the lower two bits that represent the filter mode
                                 // "(i >> 2) & 3" selects the next two bits that represent the
                                 // output stage
-                                snprintf(txt, TXT_SIZE, "%s, %s",
-                                         sst::filters::fut_tripole_subtypes[i & 3],
-                                         sst::filters::fut_tripole_output_stage[(i >> 2) & 3]);
+                                txt = fmt::format(
+                                    "{:s}, {:s}", sst::filters::fut_tripole_subtypes[i & 3],
+                                    sst::filters::fut_tripole_output_stage[(i >> 2) & 3]);
                                 break;
                             case FilterType::num_filter_types:
-                                snprintf(txt, TXT_SIZE, "ERROR");
+                                txt = "ERROR";
                                 break;
                             }
                     }
             break;
         }
         case ct_wstype:
-            snprintf(txt, TXT_SIZE, "%s",
-                     sst::waveshapers::wst_names[limit_range(
-                         i, 0, (int)sst::waveshapers::WaveshaperType::n_ws_types - 1)]);
+            txt = fmt::format("{:s}",
+                              sst::waveshapers::wst_names[limit_range(
+                                  i, 0, (int)sst::waveshapers::WaveshaperType::n_ws_types - 1)]);
             break;
         case ct_envmode:
-            snprintf(txt, TXT_SIZE, "%s", em_names[limit_range(i, 0, (int)n_env_modes - 1)]);
+            txt = fmt::format("{:s}", em_names[limit_range(i, 0, (int)n_env_modes - 1)]);
             break;
         case ct_fbconfig:
-            snprintf(txt, TXT_SIZE, "%s", fbc_names[limit_range(i, 0, (int)n_filter_configs - 1)]);
+            txt = fmt::format("{:s}", fbc_names[limit_range(i, 0, (int)n_filter_configs - 1)]);
             break;
         case ct_fmconfig:
-            snprintf(txt, TXT_SIZE, "%s", fmr_names[limit_range(i, 0, (int)n_fm_routings - 1)]);
+            txt = fmt::format("{:s}", fmr_names[limit_range(i, 0, (int)n_fm_routings - 1)]);
             break;
         case ct_lfotype:
-            snprintf(txt, TXT_SIZE, "%s", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
+            txt = fmt::format("{:s}", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
             break;
         case ct_scenemode:
-            snprintf(
-                txt, TXT_SIZE, "%s",
-                Surge::GUI::toOSCase(scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)])
-                    .c_str());
+
+            txt = fmt::format(
+                "{:s}",
+                Surge::GUI::toOSCase(scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]));
             break;
         case ct_polymode:
-            snprintf(txt, TXT_SIZE, "%s",
-                     Surge::GUI::toOSCase(play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)])
-                         .c_str());
+            txt = fmt::format(
+                "{:s}",
+                Surge::GUI::toOSCase(play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]));
             break;
         case ct_lfotrigmode:
-            snprintf(txt, TXT_SIZE, "%s",
-                     lfo_trigger_mode_names[limit_range(i, 0, (int)n_lfo_trigger_modes - 1)]);
+            txt = fmt::format(
+                "{:s}", lfo_trigger_mode_names[limit_range(i, 0, (int)n_lfo_trigger_modes - 1)]);
             break;
         case ct_character:
-            snprintf(txt, TXT_SIZE, "%s",
-                     character_names[limit_range(i, 0, (int)n_character_modes - 1)]);
+            txt =
+                fmt::format("{:s}", character_names[limit_range(i, 0, (int)n_character_modes - 1)]);
             break;
         case ct_fmratio_int:
-            snprintf(txt, TXT_SIZE, "C : %d", i);
+            txt = fmt::format("C : %d", i);
             break;
         case ct_phaser_stages:
             if (i == 1)
             {
-                snprintf(txt, TXT_SIZE, "Legacy (4 stages)");
+                txt = "Legacy (4 stages)";
             }
             else
             {
-                snprintf(txt, TXT_SIZE, "%d", i);
+                txt = fmt::format("{:d}", i);
             }
             break;
 
@@ -3517,16 +3527,16 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "Linear");
+                txt = "Linear";
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "Quadratic");
+                txt = "Quadratic";
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "Cubic");
+                txt = "Cubic";
                 break;
             default:
-                snprintf(txt, TXT_SIZE, "%d", i);
+                txt = fmt::format("{:d}", i);
                 break;
             }
             break;
@@ -3534,16 +3544,16 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "Convex");
+                txt = "Convex";
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "Linear");
+                txt = "Linear";
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "Concave");
+                txt = "Concave";
                 break;
             default:
-                snprintf(txt, TXT_SIZE, "%d", i);
+                txt = fmt::format("{:d}", i);
                 break;
             }
             break;
@@ -3558,35 +3568,35 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             case 5:
             case 6:
             case 7:
-                snprintf(txt, TXT_SIZE, "Wave %d (TX %d)", i + 1, i + 1);
+                txt = fmt::format("Wave {:d} (TX {:d})", i + 1, i + 1);
                 break;
             default:
-                snprintf(txt, TXT_SIZE, "Wave %d", i + 1);
+                txt = fmt::format("Wave {:d}", i + 1);
             }
             break;
         case ct_sinefmlegacy:
             if (i == 0)
-                snprintf(txt, TXT_SIZE, "Legacy (<v1.6.2)");
+                txt = "Legacy (<v1.6.2)";
             else
-                snprintf(txt, TXT_SIZE, "Same as FM2/3");
+                txt = "Same as FM2/3";
             break;
         case ct_vocoder_bandcount:
-            snprintf(txt, TXT_SIZE, "%d bands", i);
+            txt = fmt::format("{:d} bands", i);
             break;
         case ct_distortion_waveshape:
-            snprintf(txt, TXT_SIZE, "%s", sst::waveshapers::wst_names[(int)FXWaveShapers[i]]);
+            txt = fmt::format("{:s}", sst::waveshapers::wst_names[(int)FXWaveShapers[i]]);
             break;
         case ct_mscodec:
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "L-R > M-S > L-R");
+                txt = "L-R > M-S > L-R";
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "L-R > M-S");
+                txt = "L-R > M-S";
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "M-S > L-R");
+                txt = "M-S > L-R";
                 break;
             }
             break;
@@ -3594,13 +3604,13 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "Filter 1");
+                txt = "Filter 1";
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "Both");
+                txt = "Both";
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "Filter 2");
+                txt = "Filter 2";
                 break;
             }
             break;
@@ -3608,23 +3618,21 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         {
             int mode = i;
 
-            std::string types;
             switch (mode)
             {
             case 0:
-                types = "Dry + Combs";
+                txt = "Dry + Combs";
                 break;
             case 1:
-                types = "Combs Only";
+                txt = "Combs Only";
                 break;
             case 2:
-                types = "Dry + Arp Combs";
+                txt = "Dry + Arp Combs";
                 break;
             case 3:
-                types = "Arp Combs Only";
+                txt = "Arp Combs Only";
                 break;
             }
-            snprintf(txt, TXT_SIZE, "%s", types.c_str());
         }
         break;
         case ct_fxlfowave:
@@ -3632,22 +3640,22 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "Sine");
+                txt = "Sine";
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "Triangle");
+                txt = "Triangle";
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "Sawtooth");
+                txt = "Sawtooth";
                 break;
             case 3:
-                snprintf(txt, TXT_SIZE, "Noise");
+                txt = "Noise";
                 break;
             case 4:
-                snprintf(txt, TXT_SIZE, "Sample & Hold");
+                txt = "Sample & Hold";
                 break;
             case 5:
-                snprintf(txt, TXT_SIZE, "Square");
+                txt = "Square";
                 break;
             }
         }
@@ -3655,68 +3663,63 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         case ct_stringosc_excitation_model:
         {
             extern std::string stringosc_excitation_name(int);
-            auto n = stringosc_excitation_name(i);
-            snprintf(txt, TXT_SIZE, "%s", n.c_str());
+            txt = fmt::format("{:s}", stringosc_excitation_name(i));
         }
         break;
         case ct_alias_wave:
         {
             extern const char *alias_wave_name[];
             extern int alias_waves_count();
-            snprintf(txt, TXT_SIZE, "%s",
-                     alias_wave_name[std::max(0, std::min(i, alias_waves_count() - 1))]);
+            txt = fmt::format("{:s}",
+                              alias_wave_name[std::max(0, std::min(i, alias_waves_count() - 1))]);
         }
         break;
         case ct_twist_engine:
         {
             extern std::string twist_engine_name(int);
-            auto n = twist_engine_name(i);
-            snprintf(txt, TXT_SIZE, "%s", n.c_str());
+            txt = fmt::format("{:s}", twist_engine_name(i));
         }
         break;
         case ct_ensemble_stages:
         {
             extern std::string ensemble_stage_name(int);
-            auto n = ensemble_stage_name(i);
-            snprintf(txt, TXT_SIZE, "%s", n.c_str());
+            txt = fmt::format("{:s}", ensemble_stage_name(i));
         }
         break;
         case ct_reson_mode:
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "Lowpass");
+                txt = "Lowpass";
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "Bandpass");
+                txt = "Bandpass";
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "Bandpass+Notch");
+                txt = "Bandpass+Notch";
                 break;
             case 3:
-                snprintf(txt, TXT_SIZE, "Highpass");
+                txt = "Highpass";
                 break;
             }
             break;
         case ct_vocoder_modulator_mode:
         {
-            std::string type;
             switch (i)
             {
             case 0:
-                type = "Monosum";
+                txt = "Monosum";
                 break;
             case 1:
-                type = "Left Only";
+                txt = "Left Only";
                 break;
             case 2:
-                type = "Right Only";
+                txt = "Right Only";
                 break;
             case 3:
-                type = "Stereo";
+                txt = "Stereo";
                 break;
             }
-            snprintf(txt, TXT_SIZE, "%s", type.c_str());
         }
         break;
 
@@ -3724,13 +3727,14 @@ void Parameter::get_display(char *txt, bool external, float ef) const
         {
             // These are all the ones with a ParameterDiscreteIndexRemapper
             auto pd = dynamic_cast<ParameterDiscreteIndexRemapper *>(user_data);
+
             if (pd)
             {
-                snprintf(txt, TXT_SIZE, "%s", pd->nameAtStreamedIndex(i).c_str());
+                txt = fmt::format("{:s}", pd->nameAtStreamedIndex(i).c_str());
             }
             else
             {
-                snprintf(txt, TXT_SIZE, "%i", i);
+                txt = fmt::format("{:d}", i);
             }
             break;
         }
@@ -3739,16 +3743,16 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0:
-                snprintf(txt, TXT_SIZE, "Granularizer");
+                txt = "Granularizer";
                 break;
             case 1:
-                snprintf(txt, TXT_SIZE, "Pitch Shifter");
+                txt = "Pitch Shifter";
                 break;
             case 2:
-                snprintf(txt, TXT_SIZE, "Looping Delay");
+                txt = "Looping Delay";
                 break;
             case 3:
-                snprintf(txt, TXT_SIZE, "Spectral Madness");
+                txt = "Spectral Madness";
                 break;
             }
         }
@@ -3764,37 +3768,34 @@ void Parameter::get_display(char *txt, bool external, float ef) const
             switch (i)
             {
             case 0: // binary 00
-                snprintf(txt, TXT_SIZE, "32k 16-bit Stereo");
+                txt = "32k 16-bit Stereo";
                 break;
             case 1: // 0b01
-                snprintf(txt, TXT_SIZE, "32k 16-bit Mono");
+                txt = "32k 16-bit Mono";
                 break;
             case 2: // 0b10
-                snprintf(txt, TXT_SIZE, "16k 8-bit Stereo");
+                txt = "16k 8-bit Stereo";
                 break;
             default: // 0b11
-                snprintf(txt, TXT_SIZE, "16k 8-bit Mono");
+                txt = "16k 8-bit Mono";
                 break;
             }
         }
         break;
         default:
-            snprintf(txt, TXT_SIZE, "%i", i);
+            txt = fmt::format("{:d}", i);
             break;
         };
         break;
     }
     case vt_bool:
-        if (external)
-            b = ef > 0.5f;
-        else
-            b = val.b;
-        if (b)
-            snprintf(txt, TXT_SIZE, "On");
-        else
-            snprintf(txt, TXT_SIZE, "Off");
+        b = external ? ef > 0.5f : val.b;
+        txt = b ? "On" : "Off";
+
         break;
     };
+
+    return txt;
 }
 
 float Parameter::get_value_f01() const
@@ -4158,8 +4159,6 @@ bool Parameter::set_value_from_string(const std::string &s, std::string &errMsg)
 bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis,
                                            std::string &errMsg)
 {
-    const char *c = s.c_str();
-
     if (valtype == vt_int)
     {
         // default out of range value to test against later
@@ -4169,7 +4168,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
         try
         {
-            ni = std::stoi(c);
+            ni = std::stoi(s);
         }
         catch (const std::invalid_argument &)
         {
@@ -4188,7 +4187,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             // So FMConfig has names like "2 > 1 < 3" which actually *work* with
             // std::atoi so just clobber that and use the str compare
-            if (s.length() > 1 && s.c_str()[1] == ' ')
+            if (s.length() > 1 && s[1] == ' ')
                 ni = val_min.i - 1;
         }
         break;
@@ -4198,7 +4197,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 
             if (sm == sm_chsplit)
             {
-                const char *strip = &(c[0]);
+                const char *strip = &(s[0]);
 
                 while (*strip != '\0' && !std::isdigit(*strip))
                 {
@@ -4234,9 +4233,9 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
                 try
                 {
                     auto a = Tunings::toneFromString(s);
-                    auto c = a.cents;
+                    auto cts = a.cents;
 
-                    ni = (int)std::round(c);
+                    ni = (int)std::round(cts);
                     factor = 100;
                 }
                 catch (const Tunings::TuningError &e)
@@ -4279,7 +4278,9 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             {
                 char txt[TXT_SIZE];
                 auto nv = Parameter::intScaledToFloat(i, val_max.i, val_min.i);
+
                 get_display(txt, true, nv);
+
                 if (_stricmp(txt, s.c_str()) == 0)
                 {
                     ontoThis.i = i;
@@ -4329,7 +4330,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         return true;
     }
 
-    auto nv = std::atof(c);
+    auto nv = std::stof(s);
 
     switch (displayType)
     {
@@ -4344,7 +4345,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             float f;
 
-            if (ef->stringToValue(this, c, f))
+            if (ef->stringToValue(this, s.c_str(), f))
             {
                 ontoThis.f = limit_range(f, val_min.f, val_max.f);
                 return true;
@@ -4535,7 +4536,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         else
         {
             // In this case we have to set nv differently
-            const char *strip = &(c[0]);
+            const char *strip = &(s[0]);
 
             while (*strip != '\0' && !std::isdigit(*strip) && *strip != '.')
             {

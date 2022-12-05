@@ -887,7 +887,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         d.sname = sname + sceneMod;
         d.pname = nm;
 
-        char pdisp[256];
+        char pdisp[TXT_SIZE];
         int ptag = p->id;
         auto thisms = (modsources)d.source_id;
 
