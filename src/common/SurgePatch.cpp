@@ -3624,7 +3624,7 @@ void SurgePatch::stepSeqFromXmlElement(StepSequencerStorage *ss, TiXmlElement *p
 
     for (int s = 0; s < n_stepseqsteps; s++)
     {
-        std::string txt = fmt::format("s{%d}", s);
+        std::string txt = fmt::format("s{:d}", s);
 
         if (p->QueryDoubleAttribute(txt, &d) == TIXML_SUCCESS)
             ss->steps[s] = (float)d;

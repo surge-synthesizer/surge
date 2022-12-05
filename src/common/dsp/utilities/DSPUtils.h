@@ -15,9 +15,9 @@
 
 #pragma once
 
-#include <iomanip>
 #include <string>
-#include <sstream>
+#include <locale>
+#include <fmt/format.h>
 
 #include "globals.h"
 #include "UnitConversions.h"
@@ -367,15 +367,9 @@ inline double hamming(int i, int n)
     return 0.54 - 0.46 * cos(2 * M_PI * i / (n - 1));
 }
 
+/* We use this function when streamimg to a patch, to make sure floating point values always use dot
+ * as a decimal separator! */
 inline std::string float_to_clocalestr(float value)
 {
-    std::stringstream sst;
-
-    sst.imbue(std::locale::classic());
-    sst << std::fixed;
-    sst << std::showpoint;
-    sst << std::setprecision(14);
-    sst << (double)value;
-
-    return sst.str();
+    return fmt::format(std::locale::classic(), "{:L}", value);
 }
