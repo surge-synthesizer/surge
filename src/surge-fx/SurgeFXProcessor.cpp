@@ -355,7 +355,7 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        std::string nm = fmt::format("fxp_{:d}", i);
+        juce::String nm = fmt::format("fxp_{:d}", i);
         float val = *(fxParams[i]);
 
         xml->setAttribute(nm, val);
