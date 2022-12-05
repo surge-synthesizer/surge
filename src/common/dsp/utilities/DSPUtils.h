@@ -15,8 +15,9 @@
 
 #pragma once
 
-#include <string.h>
-#include <sstream.h>
+#include <iomanip>
+#include <string>
+#include <sstream>
 
 #include "globals.h"
 #include "UnitConversions.h"
@@ -366,7 +367,7 @@ inline double hamming(int i, int n)
     return 0.54 - 0.46 * cos(2 * M_PI * i / (n - 1));
 }
 
-inline std::string *float_to_clocalestr(float value)
+inline std::string float_to_clocalestr(float value)
 {
     std::stringstream sst;
 
