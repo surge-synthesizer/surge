@@ -3568,7 +3568,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     synth->getParameterName(ptagid, txt);
                 }
 
-                sprintf(pname, "%s -> %s", modulatorName(thisms, true).c_str(), txt);
+                snprintf(pname, TXT_SIZE - 1, "%s -> %s", modulatorName(thisms, true).c_str(), txt);
 
                 ModulationDisplayInfoWindowStrings mss;
 
