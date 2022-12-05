@@ -609,7 +609,7 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename, bool refreshPatchList)
     fxp.numPrograms = vt_write_int32BE(1);
     fxp.version = vt_write_int32BE(1);
     fxp.fxVersion = vt_write_int32BE(1);
-    storage.getPatch().name = fxp.prgName;
+    strncpy(fxp.prgName, storage.getPatch().name.c_str(), 28);
 
     void *data;
     unsigned int datasize = storage.getPatch().save_patch(&data);

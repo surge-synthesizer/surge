@@ -2930,7 +2930,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                             // below
                             TiXmlElement mr("modrouting");
                             mr.SetAttribute("source", r->at(b).source_id);
-                            mr.SetAttribute("depth", std::to_string(r->at(b).depth));
+                            mr.SetAttribute("depth", float_to_clocalestr(r->at(b).depth));
                             mr.SetAttribute("muted", r->at(b).muted);
                             mr.SetAttribute("source_index", r->at(b).source_index);
                             p.InsertEndChild(mr);
@@ -2948,7 +2948,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                     {
                         TiXmlElement mr("modrouting");
                         mr.SetAttribute("source", r->at(b).source_id);
-                        mr.SetAttribute("depth", std::to_string(r->at(b).depth));
+                        mr.SetAttribute("depth", float_to_clocalestr(r->at(b).depth));
                         mr.SetAttribute("muted", r->at(b).muted);
                         mr.SetAttribute("source_index", r->at(b).source_index);
                         mr.SetAttribute("source_scene", r->at(b).source_scene);
@@ -3190,7 +3190,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
 
             mw.SetAttribute(
                 str,
-                std::to_string(
+                float_to_clocalestr(
                     ((ControllerModulationSource *)scene[sc].modsources[ms_modwheel])->target[0]));
         }
 
@@ -3564,12 +3564,12 @@ void SurgePatch::stepSeqToXmlElement(StepSequencerStorage *ss, TiXmlElement &p,
         txt = fmt::format("s{:d}", s);
 
         if (ss->steps[s] != 0.f)
-            p.SetAttribute(txt, std::to_string(ss->steps[s]));
+            p.SetAttribute(txt, float_to_clocalestr(ss->steps[s]));
     }
 
     p.SetAttribute("loop_start", ss->loop_start);
     p.SetAttribute("loop_end", ss->loop_end);
-    p.SetAttribute("shuffle", std::to_string(ss->shuffle));
+    p.SetAttribute("shuffle", float_to_clocalestr(ss->shuffle));
 
     if (streamMask)
     {
