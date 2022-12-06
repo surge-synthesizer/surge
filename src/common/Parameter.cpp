@@ -3126,7 +3126,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 // It used to say just '64' anyway.
                 if (ef->formatValue(this, f, str, TXT_SIZE - 1))
                 {
-                    return "";
+                    return str;
                 }
             }
             // We do not break on purpose here. DelegatedToFormatter falls back to Linear with Scale

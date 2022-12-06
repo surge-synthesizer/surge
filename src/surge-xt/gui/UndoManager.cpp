@@ -452,7 +452,7 @@ struct UndoManagerImpl
         }
         else
         {
-            txt = fmt::format("{:s}", (p->val.b ? "On" : "Off"));
+            txt = p->val.b ? "On" : "Off";
         }
 
         r.formattedValue = txt;

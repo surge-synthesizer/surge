@@ -1362,7 +1362,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
             else
             {
-                txt2 = fmt::format("{:s}", txt);
+                txt2 = txt;
             }
 
             if (p->valtype == vt_float)
