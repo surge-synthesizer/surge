@@ -277,28 +277,28 @@ void NimbusEffect::init_ctrltypes()
             {
             case 0:
                 if (idx == nmb_density)
-                    res = fmt::format("{:s}", "Density");
+                    res = "Density";
                 if (idx == nmb_texture)
-                    res = fmt::format("{:s}", "Texture");
+                    res = "Texture";
                 if (idx == nmb_size)
-                    res = fmt::format("{:s}", "Size");
+                    res = "Size";
                 break;
             case 1:
             case 2:
                 if (idx == nmb_density)
-                    res = fmt::format("{:s}", "Diffusion");
+                    res = "Diffusion";
                 if (idx == nmb_texture)
-                    res = fmt::format("{:s}", "Filter");
+                    res = "Filter";
                 if (idx == nmb_size)
-                    res = fmt::format("{:s}", "Size");
+                    res = "Size";
                 break;
             case 3:
                 if (idx == nmb_density)
-                    res = fmt::format("{:s}", "Smear");
+                    res = "Smear";
                 if (idx == nmb_texture)
-                    res = fmt::format("{:s}", "Texture");
+                    res = "Texture";
                 if (idx == nmb_size)
-                    res = fmt::format("{:s}", "Warp");
+                    res = "Warp";
                 break;
             }
 

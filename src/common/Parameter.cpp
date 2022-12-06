@@ -3126,7 +3126,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 // It used to say just '64' anyway.
                 if (ef->formatValue(this, f, str, TXT_SIZE - 1))
                 {
-                    return txt;
+                    return "";
                 }
             }
             // We do not break on purpose here. DelegatedToFormatter falls back to Linear with Scale
@@ -3183,9 +3183,7 @@ std::string Parameter::get_display(bool external, float ef) const
         {
             if (can_temposync() && temposync)
             {
-                std::string res =
-                    tempoSyncNotationValue(displayInfo.tempoSyncNotationMultiplier * f);
-                txt = fmt::format("{:s}", res);
+                txt = tempoSyncNotationValue(displayInfo.tempoSyncNotationMultiplier * f);
 
                 return txt;
             }
@@ -3205,7 +3203,7 @@ std::string Parameter::get_display(bool external, float ef) const
             {
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString)
                 {
-                    txt = fmt::format("{:s}", displayInfo.maxLabel);
+                    txt = displayInfo.maxLabel;
                     return txt;
                 }
 
@@ -3219,7 +3217,7 @@ std::string Parameter::get_display(bool external, float ef) const
             {
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinString)
                 {
-                    txt = fmt::format("{:s}", displayInfo.minLabel);
+                    txt = displayInfo.minLabel;
                     return txt;
                 }
 
@@ -3312,7 +3310,7 @@ std::string Parameter::get_display(bool external, float ef) const
             {
                 if (ef->formatValue(this, fv, vt, TXT_SIZE - 1))
                 {
-                    txt = fmt::format("{:s}", vt);
+                    txt = vt;
                     return txt;
                 }
             }
@@ -3355,31 +3353,31 @@ std::string Parameter::get_display(bool external, float ef) const
                     Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MiddleC, 1);
             }
 
-            txt = fmt::format("{:s}", get_notename(val.i, oct_offset));
+            txt = get_notename(val.i, oct_offset);
 
             break;
         }
         case ct_osctype:
-            txt = fmt::format("{:s}", osc_type_names[limit_range(i, 0, (int)n_osc_types - 1)]);
+            txt = osc_type_names[limit_range(i, 0, (int)n_osc_types - 1)];
             break;
         case ct_wt2window:
-            txt = fmt::format("{:s}", window_names[limit_range(i, 0, 8)]);
+            txt = window_names[limit_range(i, 0, 8)];
             break;
         case ct_osccount:
             txt = fmt::format("{:d} voice{:s}", i, (i > 1 ? "s" : ""));
             break;
         case ct_fxtype:
-            txt = fmt::format("{:s}", fx_type_shortnames[limit_range(i, 0, (int)n_fx_types - 1)]);
+            txt = fx_type_shortnames[limit_range(i, 0, (int)n_fx_types - 1)];
             break;
         case ct_reverbshape:
             txt = fmt::format("Type {:d}", i + 1);
             break;
         case ct_fxbypass:
-            txt = fmt::format("{:s}", fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)]);
+            txt = fxbypass_names[limit_range(i, 0, (int)n_fx_bypass - 1)];
             break;
         case ct_filtertype:
-            txt = fmt::format("{:s}", sst::filters::filter_type_names[limit_range(
-                                          i, 0, (int)sst::filters::num_filter_types - 1)]);
+            txt = sst::filters::filter_type_names[limit_range(
+                i, 0, (int)sst::filters::num_filter_types - 1)];
             break;
         case ct_filtersubtype:
         {
@@ -3402,33 +3400,32 @@ std::string Parameter::get_display(bool external, float ef) const
                             {
                             case FilterType::fut_lpmoog:
                             case FilterType::fut_diode:
-                                txt = fmt::format("{:s}", sst::filters::fut_ldr_subtypes[i]);
+                                txt = sst::filters::fut_ldr_subtypes[i];
                                 break;
                             case FilterType::fut_notch12:
                             case FilterType::fut_notch24:
                             case FilterType::fut_apf:
-                                txt = fmt::format("{:s}", sst::filters::fut_notch_subtypes[i]);
+                                txt = sst::filters::fut_notch_subtypes[i];
                                 break;
                             case FilterType::fut_comb_pos:
                             case FilterType::fut_comb_neg:
-                                txt = fmt::format("{:s}", sst::filters::fut_comb_subtypes[i]);
+                                txt = sst::filters::fut_comb_subtypes[i];
                                 break;
                             case FilterType::fut_vintageladder:
-                                txt = fmt::format("{:s}",
-                                                  sst::filters::fut_vintageladder_subtypes[i]);
+                                txt = sst::filters::fut_vintageladder_subtypes[i];
                                 break;
                             case FilterType::fut_obxd_2pole_lp:
                             case FilterType::fut_obxd_2pole_hp:
                             case FilterType::fut_obxd_2pole_n:
                             case FilterType::fut_obxd_2pole_bp:
-                                txt = fmt::format("{:s}", sst::filters::fut_obxd_2p_subtypes[i]);
+                                txt = sst::filters::fut_obxd_2p_subtypes[i];
                                 break;
                             case FilterType::fut_obxd_4pole:
-                                txt = fmt::format("{:s}", sst::filters::fut_obxd_4p_subtypes[i]);
+                                txt = sst::filters::fut_obxd_4p_subtypes[i];
                                 break;
                             case FilterType::fut_k35_lp:
                             case FilterType::fut_k35_hp:
-                                txt = fmt::format("{:s}", sst::filters::fut_k35_subtypes[i]);
+                                txt = sst::filters::fut_k35_subtypes[i];
                                 break;
                             case FilterType::fut_cutoffwarp_lp:
                             case FilterType::fut_cutoffwarp_hp:
@@ -3456,7 +3453,7 @@ std::string Parameter::get_display(bool external, float ef) const
                             case FilterType::fut_hp12:
                             case FilterType::fut_hp24:
                             case FilterType::fut_SNH:
-                                txt = fmt::format("{:s}", sst::filters::fut_def_subtypes[i]);
+                                txt = sst::filters::fut_def_subtypes[i];
                                 break;
                             case FilterType::fut_tripole:
                                 // "i & 3" selects the lower two bits that represent the filter mode
@@ -3474,40 +3471,33 @@ std::string Parameter::get_display(bool external, float ef) const
             break;
         }
         case ct_wstype:
-            txt = fmt::format("{:s}",
-                              sst::waveshapers::wst_names[limit_range(
-                                  i, 0, (int)sst::waveshapers::WaveshaperType::n_ws_types - 1)]);
+            txt = sst::waveshapers::wst_names[limit_range(
+                i, 0, (int)sst::waveshapers::WaveshaperType::n_ws_types - 1)];
             break;
         case ct_envmode:
-            txt = fmt::format("{:s}", em_names[limit_range(i, 0, (int)n_env_modes - 1)]);
+            txt = em_names[limit_range(i, 0, (int)n_env_modes - 1)];
             break;
         case ct_fbconfig:
-            txt = fmt::format("{:s}", fbc_names[limit_range(i, 0, (int)n_filter_configs - 1)]);
+            txt = fbc_names[limit_range(i, 0, (int)n_filter_configs - 1)];
             break;
         case ct_fmconfig:
-            txt = fmt::format("{:s}", fmr_names[limit_range(i, 0, (int)n_fm_routings - 1)]);
+            txt = fmr_names[limit_range(i, 0, (int)n_fm_routings - 1)];
             break;
         case ct_lfotype:
-            txt = fmt::format("{:s}", lt_names[limit_range(i, 0, (int)n_lfo_types - 1)]);
+            txt = lt_names[limit_range(i, 0, (int)n_lfo_types - 1)];
             break;
         case ct_scenemode:
 
-            txt = fmt::format(
-                "{:s}",
-                Surge::GUI::toOSCase(scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]));
+            txt = Surge::GUI::toOSCase(scene_mode_names[limit_range(i, 0, (int)n_scene_modes - 1)]);
             break;
         case ct_polymode:
-            txt = fmt::format(
-                "{:s}",
-                Surge::GUI::toOSCase(play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]));
+            txt = Surge::GUI::toOSCase(play_mode_names[limit_range(i, 0, (int)n_play_modes - 1)]);
             break;
         case ct_lfotrigmode:
-            txt = fmt::format(
-                "{:s}", lfo_trigger_mode_names[limit_range(i, 0, (int)n_lfo_trigger_modes - 1)]);
+            txt = lfo_trigger_mode_names[limit_range(i, 0, (int)n_lfo_trigger_modes - 1)];
             break;
         case ct_character:
-            txt =
-                fmt::format("{:s}", character_names[limit_range(i, 0, (int)n_character_modes - 1)]);
+            txt = character_names[limit_range(i, 0, (int)n_character_modes - 1)];
             break;
         case ct_fmratio_int:
             txt = fmt::format("C : %d", i);
@@ -3519,7 +3509,7 @@ std::string Parameter::get_display(bool external, float ef) const
             }
             else
             {
-                txt = fmt::format("{:d}", i);
+                txt = std::to_string(i);
             }
             break;
 
@@ -3536,7 +3526,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 txt = "Cubic";
                 break;
             default:
-                txt = fmt::format("{:d}", i);
+                txt = std::to_string(i);
                 break;
             }
             break;
@@ -3553,7 +3543,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 txt = "Concave";
                 break;
             default:
-                txt = fmt::format("{:d}", i);
+                txt = std::to_string(i);
                 break;
             }
             break;
@@ -3584,7 +3574,7 @@ std::string Parameter::get_display(bool external, float ef) const
             txt = fmt::format("{:d} bands", i);
             break;
         case ct_distortion_waveshape:
-            txt = fmt::format("{:s}", sst::waveshapers::wst_names[(int)FXWaveShapers[i]]);
+            txt = sst::waveshapers::wst_names[(int)FXWaveShapers[i]];
             break;
         case ct_mscodec:
             switch (i)
@@ -3663,27 +3653,26 @@ std::string Parameter::get_display(bool external, float ef) const
         case ct_stringosc_excitation_model:
         {
             extern std::string stringosc_excitation_name(int);
-            txt = fmt::format("{:s}", stringosc_excitation_name(i));
+            txt = stringosc_excitation_name(i);
         }
         break;
         case ct_alias_wave:
         {
             extern const char *alias_wave_name[];
             extern int alias_waves_count();
-            txt = fmt::format("{:s}",
-                              alias_wave_name[std::max(0, std::min(i, alias_waves_count() - 1))]);
+            txt = alias_wave_name[std::max(0, std::min(i, alias_waves_count() - 1))];
         }
         break;
         case ct_twist_engine:
         {
             extern std::string twist_engine_name(int);
-            txt = fmt::format("{:s}", twist_engine_name(i));
+            txt = twist_engine_name(i);
         }
         break;
         case ct_ensemble_stages:
         {
             extern std::string ensemble_stage_name(int);
-            txt = fmt::format("{:s}", ensemble_stage_name(i));
+            txt = ensemble_stage_name(i);
         }
         break;
         case ct_reson_mode:
@@ -3730,11 +3719,11 @@ std::string Parameter::get_display(bool external, float ef) const
 
             if (pd)
             {
-                txt = fmt::format("{:s}", pd->nameAtStreamedIndex(i).c_str());
+                txt = pd->nameAtStreamedIndex(i);
             }
             else
             {
-                txt = fmt::format("{:d}", i);
+                txt = std::to_string(i);
             }
             break;
         }

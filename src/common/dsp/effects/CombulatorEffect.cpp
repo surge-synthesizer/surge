@@ -434,31 +434,31 @@ void CombulatorEffect::init_ctrltypes()
             case combulator_freq1:
                 if (fx->p[combulator_freq2].extend_range && fx->p[combulator_freq3].extend_range)
                 {
-                    res = fmt::format("{:s}", "Frequency 1");
+                    res = "Frequency 1";
                 }
                 else
                 {
-                    res = fmt::format("{:s}", "Center");
+                    res = "Center";
                 }
                 break;
             case combulator_freq2:
                 if (fx->p[combulator_freq2].extend_range)
                 {
-                    res = fmt::format("{:s}", "Frequency 2");
+                    res = "Frequency 2";
                 }
                 else
                 {
-                    res = fmt::format("{:s}", "Offset 2");
+                    res = "Offset 2";
                 }
                 break;
             case combulator_freq3:
                 if (fx->p[combulator_freq3].extend_range)
                 {
-                    res = fmt::format("{:s}", "Frequency 3");
+                    res = "Frequency 3";
                 }
                 else
                 {
-                    res = fmt::format("{:s}", "Offset 3");
+                    res = "Offset 3";
                 }
                 break;
             default:
