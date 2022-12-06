@@ -23,6 +23,7 @@
 #include "filesystem/import.h"
 #include "Effect.h"
 
+#include <algorithm>
 #include <thread>
 #include <set>
 #ifndef SURGE_SKIP_ODDSOUND_MTS
@@ -65,11 +66,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     memset(storage.getPatch().scenedata[1], 0, sizeof(pdata) * n_scene_params);
     memset(storage.getPatch().globaldata, 0, sizeof(pdata) * n_global_params);
     memset(mControlInterpolatorUsed, 0, sizeof(bool) * num_controlinterpolators);
-    memset((void *)fxsync, 0, sizeof(FxStorage) * n_fx_slots);
 
     for (int i = 0; i < n_fx_slots; i++)
     {
-        memcpy((void *)&fxsync[i], (void *)&storage.getPatch().fx[i], sizeof(FxStorage));
+        fxsync[i] = storage.getPatch().fx[i];
         fx_reload[i] = false;
         fx_reload_mod[i] = false;
     }
@@ -2726,8 +2726,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 
             if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
             {
-                memcpy((void *)&storage.getPatch().fx[s].p, (void *)&fxsync[s].p,
-                       sizeof(Parameter) * n_fx_params);
+                std::copy(std::begin(fxsync[s].p), std::end(fxsync[s].p),
+                          std::begin(storage.getPatch().fx[s].p));
             }
 
             fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
@@ -2848,8 +2848,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             // OFF
             storage.getPatch().isDirty = true;
             if (storage.getPatch().fx[s].type.val.i != fxt_off)
-                memcpy((void *)&storage.getPatch().fx[s].p, (void *)&fxsync[s].p,
-                       sizeof(Parameter) * n_fx_params);
+                std::copy(std::begin(fxsync[s].p), std::end(fxsync[s].p),
+                          std::begin(storage.getPatch().fx[s].p));
             if (fx[s])
             {
                 std::lock_guard<std::mutex> g(fxSpawnMutex);
@@ -4823,8 +4823,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     std::lock_guard<std::recursive_mutex> lockModulation(storage.modRoutingMutex);
 
     FxStorage so, to;
-    memcpy((void *)&so, (void *)(&storage.getPatch().fx[source]), sizeof(FxStorage));
-    memcpy((void *)&to, (void *)(&storage.getPatch().fx[target]), sizeof(FxStorage));
+    so = storage.getPatch().fx[source];
+    to = storage.getPatch().fx[target];
 
     fxmodsync[source].clear();
     fxmodsync[target].clear();

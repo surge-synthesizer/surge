@@ -821,7 +821,7 @@ Surge::FxClipboard::Clipboard FxMenu::fxClipboard;
 void FxMenu::copyFX()
 {
     Surge::FxClipboard::copyFx(storage, fx, fxClipboard);
-    memcpy((void *)fxbuffer, (void *)fx, sizeof(FxStorage));
+    *fxbuffer = *fx;
 }
 
 void FxMenu::pasteFX()
