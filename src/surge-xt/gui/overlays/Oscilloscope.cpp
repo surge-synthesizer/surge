@@ -23,6 +23,7 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <fmt/core.h>
 #include "RuntimeFont.h"
 #include "SkinColors.h"
 
@@ -116,7 +117,7 @@ void WaveformDisplay::paint(juce::Graphics &g)
         float gain = powf(10.f, effect->getParameter(CSmartelectronixDisplay::kAmpWindow) * 6.f - 3.f);
         float y = (-2.f * ((float)whereOffset.y + 1.f) / (float)OSC_HEIGHT + 1.f) / gain;
         float x = (float)whereOffset.x * (float)counterSpeedInverse;
-        char text[256];
+        std::string text;
 
         long lineSize = 10;
 
@@ -130,30 +131,30 @@ void WaveformDisplay::paint(juce::Graphics &g)
         CRect textRect(512, 10, 652, 10 + lineSize);
         textRect.offset(offset);
 
-        sprintf(text, "y = %.5f", y);
+        text = fmt::format("y = {.5f}", y);
         pContext->drawString(text, textRect, kLeftText, true);
         textRect.offset(0, lineSize);
 
-        sprintf(text, "y = %.5f dB", cf_lin2db(fabsf(y)));
+        text = fmt::format("y = {.5f} dB", cf_lin2db(fabsf(y)));
         pContext->drawString(text, textRect, kLeftText, true);
         textRect.offset(0, lineSize * 2);
 
-        sprintf(text, "x = %.2f samples", x);
+        text = fmt::format("x = {.2f} spl", x);
         pContext->drawString(text, textRect, kLeftText, true);
         textRect.offset(0, lineSize);
 
-        sprintf(text, "x = %.5f seconds", x / effect->getSampleRate());
+        text = fmt::format("x = {.5f} s", x / effect->getSampleRate());
         pContext->drawString(text, textRect, kLeftText, true);
         textRect.offset(0, lineSize);
 
-        sprintf(text, "x = %.5f ms", 1000.f * x / effect->getSampleRate());
+        text = fmt::format("x = {.5f} ms", 1000.f * x / effect->getSampleRate());
         pContext->drawString(text, textRect, kLeftText, true);
         textRect.offset(0, lineSize);
 
         if (x == 0)
-            sprintf(text, "x = infinite Hz");
+            text = fmt::format("x = -inf Hz");
         else
-            sprintf(text, "x = %.3f Hz", effect->getSampleRate() / x);
+            text = fmt::format("x = {.3f} Hz", effect->getSampleRate() / x);
 
         pContext->drawString(text, textRect, kLeftText, true);
     }

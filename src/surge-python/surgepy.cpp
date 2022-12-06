@@ -471,12 +471,16 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
     {
         playNote(ch, note, vel, detune);
     }
+
     void pitchBendWithInts(int ch, int bend) { pitchBend(ch, bend); }
+
     void polyAftertouchWithInts(int channel, int key, int value)
     {
         polyAftertouch(channel, key, value);
     }
+
     void channelAftertouchWithInts(int channel, int value) { channelAftertouch(channel, value); }
+
     void channelControllerWithInts(int channel, int cc, int value)
     {
         channelController(channel, cc, value);
@@ -492,6 +496,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             return v.b;
         return 0;
     }
+
     float getParamMin(const SurgePyNamedParam &id)
     {
         auto p = storage.getPatch().param_ptr[id.getID().getSynthSideId()];
@@ -499,6 +504,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             return getv(p, p->val_min);
         return 0;
     }
+
     float getParamMax(const SurgePyNamedParam &id)
     {
         auto p = storage.getPatch().param_ptr[id.getID().getSynthSideId()];
@@ -506,6 +512,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             return getv(p, p->val_max);
         return 0;
     }
+
     float getParamDef(const SurgePyNamedParam &id)
     {
         auto p = storage.getPatch().param_ptr[id.getID().getSynthSideId()];
@@ -513,6 +520,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             return getv(p, p->val_default);
         return 0;
     }
+
     float getParamVal(const SurgePyNamedParam &id)
     {
         auto p = storage.getPatch().param_ptr[id.getID().getSynthSideId()];
@@ -520,17 +528,19 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             return getv(p, p->val);
         return 0;
     }
+
     std::string getParamDisplay(const SurgePyNamedParam &id)
     {
         auto p = storage.getPatch().param_ptr[id.getID().getSynthSideId()];
+
         if (p)
         {
-            char txt[256];
-            p->get_display(txt);
-            return txt;
+            return p->get_display();
         }
+
         return "<error>";
     }
+
     std::string getParamValType(const SurgePyNamedParam &id)
     {
         auto p = storage.getPatch().param_ptr[id.getID().getSynthSideId()];
@@ -547,6 +557,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         }
         return "<error>";
     }
+
     std::string getParamInfo(const SurgePyNamedParam &id)
     {
         const auto val = getParamVal(id);
@@ -591,6 +602,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
     void savePatchPy(const std::string &s) { savePatchToPath(string_to_path(s)); }
 
     std::string factoryDataPath() const { return storage.datapath.u8string(); }
+
     std::string userDataPath() const { return storage.userDataPath.u8string(); }
 
     py::array_t<float> getOutput()
@@ -605,22 +617,26 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         setModDepth01(to.getID().getSynthSideId(), (modsources)from.getModSource(), scene, index,
                       amt);
     }
+
     float getModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from, int scene,
                           int index)
     {
         return getModDepth01(to.getID().getSynthSideId(), (modsources)from.getModSource(), scene,
                              index);
     }
+
     bool isValidModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from)
     {
         return isValidModulation(to.getID().getSynthSideId(), (modsources)from.getModSource());
     }
+
     bool isActiveModulationPy(const SurgePyNamedParam &to, const SurgePyModSource &from, int scene,
                               int index)
     {
         return isActiveModulation(to.getID().getSynthSideId(), (modsources)from.getModSource(),
                                   scene, index);
     }
+
     bool isBipolarModulationPy(const SurgePyModSource &from)
     {
         return isBipolarModulation((modsources)from.getModSource());
@@ -634,6 +650,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         memset(buf.ptr, 0, 2 * BLOCK_SIZE * nBlocks * sizeof(float));
         return res;
     }
+
     void processMultiBlock(const py::array_t<float> &arr, int startBlock = 0, int nBlocks = -1)
     {
         auto buf = arr.request(true);
@@ -648,6 +665,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                 << buf.format << "/" << buf.size;
             throw std::invalid_argument(oss.str().c_str());
         }
+
         if (buf.ndim != 2)
         {
             std::ostringstream oss;
@@ -656,6 +674,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                 << buf.ndim << " dimensions";
             throw std::invalid_argument(oss.str().c_str());
         }
+
         if (buf.shape[0] != 2 || buf.shape[1] % BLOCK_SIZE != 0)
         {
             std::ostringstream oss;
@@ -666,6 +685,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         }
 
         size_t maxBlockStorage = buf.shape[1] / BLOCK_SIZE;
+
         if (startBlock >= maxBlockStorage)
         {
             std::ostringstream oss;
@@ -675,10 +695,12 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         }
 
         int blockIterations = maxBlockStorage - startBlock;
+
         if (nBlocks > 0)
         {
             blockIterations = nBlocks;
         }
+
         if (startBlock + blockIterations > maxBlockStorage)
         {
             std::ostringstream oss;
@@ -719,10 +741,10 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         s.name = txt;
         return s;
     }
+
     py::dict getAllModRoutings()
     {
         auto res = py::dict();
-
         auto sv = [](auto s) {
             auto r = s;
             std::sort(r.begin(), r.end(), [](const auto &a, const auto &b) {
@@ -736,9 +758,11 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
 
         auto gmr = py::list();
         auto t = sv(storage.getPatch().modulation_global);
+
         for (auto gm : t)
         {
             auto r = SurgePyModRouting();
+
             r.source = SurgePyModSource((modsources)gm.source_id);
             r.dest = surgePyNamedParamById(gm.destination_id);
             r.depth = gm.depth;
@@ -752,14 +776,17 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         res["global"] = gmr;
 
         auto scm = py::list();
+
         for (int sc = 0; sc < n_scenes; sc++)
         {
             auto ts = py::dict();
             auto sms = py::list();
             auto st = sv(storage.getPatch().scene[sc].modulation_scene);
+
             for (auto gm : st)
             {
                 auto r = SurgePyModRouting();
+
                 r.source = SurgePyModSource((modsources)gm.source_id);
                 r.dest =
                     surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
@@ -771,13 +798,16 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                                   (modsources)gm.source_id, r.source_scene, r.source_index);
                 sms.append(r);
             }
+
             ts["scene"] = sms;
 
             auto smv = py::list();
             auto vt = sv(storage.getPatch().scene[sc].modulation_voice);
+
             for (auto gm : vt)
             {
                 auto r = SurgePyModRouting();
+
                 r.source = SurgePyModSource((modsources)gm.source_id);
                 r.dest =
                     surgePyNamedParamById(gm.destination_id + storage.getPatch().scene_start[sc]);
@@ -789,11 +819,12 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
                                   (modsources)gm.source_id, gm.source_scene, gm.source_index);
                 smv.append(r);
             }
+
             ts["voice"] = smv;
             scm.append(ts);
         }
+
         res["scene"] = scm;
-        ;
 
         return res;
     }
@@ -809,6 +840,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             throw std::invalid_argument(e.what()); // convert so python sees it
         }
     }
+
     void loadKBMFile(const std::string &s)
     {
         try
@@ -820,8 +852,11 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             throw std::invalid_argument(e.what()); // convert so python sees it
         }
     }
+
     void retuneToStandardTuning() { storage.retuneTo12TETScaleC261Mapping(); }
+
     void remapToStandardKeyboard() { storage.remapToConcertCKeyboard(); }
+
     void retuneToStandardScale() { storage.retuneTo12TETScale(); }
 };
 

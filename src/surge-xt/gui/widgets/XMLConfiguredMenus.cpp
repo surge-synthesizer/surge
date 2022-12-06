@@ -645,8 +645,10 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
             {
                 double d;
                 int j;
-                char lbl[TXT_SIZE], sublbl[TXT_SIZE];
-                snprintf(lbl, TXT_SIZE, "p%i", i);
+                std::string lbl;
+
+                lbl = fmt::format("p{:d}", i);
+
                 if (fxbuffer->p[i].valtype == vt_float)
                 {
                     if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
@@ -658,17 +660,21 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
                         fxbuffer->p[i].set_storage_value(j);
                 }
 
-                snprintf(sublbl, TXT_SIZE, "p%i_temposync", i);
+                lbl = fmt::format("p{:d}_temposync", i);
                 fxbuffer->p[i].temposync =
-                    ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
-                snprintf(sublbl, TXT_SIZE, "p%i_extend_range", i);
+                    ((e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS) && (j == 1));
+
+                lbl = fmt::format("p{:d}_extend_range", i);
                 fxbuffer->p[i].set_extend_range(
-                    ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1)));
-                snprintf(sublbl, TXT_SIZE, "p%i_deactivated", i);
+                    ((e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS) && (j == 1)));
+
+                lbl = fmt::format("p{:d}_deactivated", i);
                 fxbuffer->p[i].deactivated =
-                    ((e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS) && (j == 1));
-                snprintf(sublbl, TXT_SIZE, "p%i_deform_type", i);
-                if (e->QueryIntAttribute(sublbl, &j) == TIXML_SUCCESS)
+                    ((e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS) && (j == 1));
+
+                lbl = fmt::format("p{:d}_deform_type", i);
+
+                if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
                     fxbuffer->p[i].deform_type = j;
             }
         }

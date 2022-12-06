@@ -170,8 +170,6 @@ std::string SurgeGUIEditor::tuningToHtml()
         int oct_offset = 1;
         oct_offset = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                          Surge::Storage::MiddleC, 1);
-        char notename[16];
-
         std::string rowstyle = "";
         std::string tdopen = "<td colspan=2>";
         int np = i % 12;
@@ -180,8 +178,8 @@ std::string SurgeGUIEditor::tuningToHtml()
             rowstyle = "style=\"background-color: #dddddd;\"";
             tdopen = "<td style=\"background-color: #ffffff;\">&nbsp;</td><td>";
         }
-        htmls << "<tr " << rowstyle << ">" << tdopen << i << " ("
-              << get_notename(notename, i, oct_offset) << ")</td>\n";
+        htmls << "<tr " << rowstyle << ">" << tdopen << i << " (" << get_notename(i, oct_offset)
+              << ")</td>\n";
 
         if (synth->storage.currentTuning.isMidiNoteMapped(i))
         {

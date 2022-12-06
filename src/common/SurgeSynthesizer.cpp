@@ -14,6 +14,7 @@
 */
 
 #include "SurgeSynthesizer.h"
+#include <fmt/core.h>
 #include "DSPUtils.h"
 #include <ctime>
 
@@ -2905,39 +2906,40 @@ bool SurgeSynthesizer::loadOscalgos()
             {
                 storage.getPatch().isDirty = true;
                 resend = true;
+
                 for (int k = 0; k < n_osc_params; k++)
                 {
                     double d;
                     int j;
-                    char lbl[TXT_SIZE];
+                    std::string lbl;
 
-                    snprintf(lbl, TXT_SIZE, "p%i", k);
+                    lbl = fmt::format("p{:d}", k);
 
                     if (storage.getPatch().scene[s].osc[i].p[k].valtype == vt_float)
                     {
-                        if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
+                        if (e->QueryDoubleAttribute(lbl.c_str(), &d) == TIXML_SUCCESS)
                         {
                             storage.getPatch().scene[s].osc[i].p[k].val.f = (float)d;
                         }
                     }
                     else
                     {
-                        if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                        if (e->QueryIntAttribute(lbl.c_str(), &j) == TIXML_SUCCESS)
                         {
                             storage.getPatch().scene[s].osc[i].p[k].val.i = j;
                         }
                     }
 
-                    snprintf(lbl, TXT_SIZE, "p%i_deform_type", k);
+                    lbl = fmt::format("p{:d}_deform_type", k);
 
-                    if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                    if (e->QueryIntAttribute(lbl.c_str(), &j) == TIXML_SUCCESS)
                     {
                         storage.getPatch().scene[s].osc[i].p[k].deform_type = j;
                     }
 
-                    snprintf(lbl, TXT_SIZE, "p%i_extend_range", k);
+                    lbl = fmt::format("p{:d}_extend_range", k);
 
-                    if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                    if (e->QueryIntAttribute(lbl.c_str(), &j) == TIXML_SUCCESS)
                     {
                         storage.getPatch().scene[s].osc[i].p[k].set_extend_range(j);
                     }

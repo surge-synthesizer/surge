@@ -414,7 +414,11 @@ class Parameter
     const char *get_internal_name() const;
     const char *get_storage_name() const;
     const wchar_t *getUnit() const;
+
+    /* this is now deprecated and will be removed in favor of std::string variant */
     void get_display(char *txt, bool external = false, float ef = 0.f) const;
+
+    std::string get_display(bool external = false, float ef = 0.f) const;
 
     enum ModulationDisplayMode
     {
