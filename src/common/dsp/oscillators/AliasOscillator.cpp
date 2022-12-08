@@ -261,12 +261,9 @@ void AliasOscillator::process_block_internal(const float pitch, const float drif
 
     const bool ramp_unmasked_after_threshold = (bool)oscdata->p[ao_mask].deform_type;
 
-    // clang-format off
-    // I don't know why the pipeline behaves differently?
     const uint8_t threshold =
         (uint8_t)((float)bit_mask *
                   clamp01(localcopy[oscdata->p[ao_threshold].param_id_in_scene].f));
-    // clang-format on
 
     const double two32 = 4294967296.0;
 
