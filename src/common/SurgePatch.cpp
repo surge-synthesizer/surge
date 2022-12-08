@@ -535,7 +535,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     // Assign the dynamic deactivation handlers
     static struct OscAudioInDeact : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry;
             auto osc = &(p->storage->getPatch().scene[p->scene - 1].osc[cge]);
@@ -546,7 +546,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
     static struct LfoRatePhaseDeact : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
@@ -563,7 +563,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
     static struct LfoEnvelopeDeact : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
