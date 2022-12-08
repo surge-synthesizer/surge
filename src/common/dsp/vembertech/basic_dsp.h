@@ -26,7 +26,7 @@ inline void clear_block(float *in, unsigned int nquads)
 }
 inline void accumulate_block(float *src, float *dst, unsigned int nquads)
 {
-    for (auto i = 0; i < nquads << 2; ++i)
+    for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] += src[i];
     }
@@ -39,21 +39,21 @@ inline void copy_block(float *src, float *dst, unsigned int nquads)
 
 inline void mul_block(float *src1, float *src2, float *dst, unsigned int nquads)
 {
-    for (auto i = 0; i < nquads << 2; ++i)
+    for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = src1[i] * src2[i];
     }
 }
 inline void mul_block(float *src1, float scalar, float *dst, unsigned int nquads)
 {
-    for (auto i = 0; i < nquads << 2; ++i)
+    for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = src1[i] * scalar;
     }
 }
 inline void add_block(float *src1, float *src2, float *dst, unsigned int nquads)
 {
-    for (auto i = 0; i < nquads << 2; ++i)
+    for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = src1[i] + src2[i];
     }
@@ -61,7 +61,7 @@ inline void add_block(float *src1, float *src2, float *dst, unsigned int nquads)
 
 inline void subtract_block(float *src1, float *src2, float *dst, unsigned int nquads)
 {
-    for (auto i = 0; i < nquads << 2; ++i)
+    for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = src1[i] - src2[i];
     }
@@ -70,7 +70,7 @@ inline void subtract_block(float *src1, float *src2, float *dst, unsigned int nq
 inline void encodeMS(float *__restrict L, float *__restrict R, float *__restrict M,
                      float *__restrict S, unsigned int nquads)
 {
-    for (auto i = 0; i < nquads << 2; ++i)
+    for (auto i = 0U; i < nquads << 2; ++i)
     {
         M[i] = 0.5f * (L[i] + R[i]);
         S[i] = 0.5f * (L[i] - R[i]);
@@ -79,7 +79,7 @@ inline void encodeMS(float *__restrict L, float *__restrict R, float *__restrict
 inline void decodeMS(float *__restrict M, float *__restrict S, float *__restrict L,
                      float *__restrict R, unsigned int nquads)
 {
-    for (auto i = 0; i < nquads << 2; ++i)
+    for (auto i = 0U; i < nquads << 2; ++i)
     {
         L[i] = M[i] + S[i];
         R[i] = M[i] - S[i];

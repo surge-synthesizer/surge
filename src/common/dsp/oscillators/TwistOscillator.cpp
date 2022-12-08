@@ -176,7 +176,7 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
         engineBipolars.push_back({true, false, false, true});  // Analog Hi-Hat
     }
 
-    const bool getValue(const Parameter *p) const override
+    bool getValue(const Parameter *p) const override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
 
@@ -259,7 +259,7 @@ static struct EngineDynamicDeact : public ParameterDynamicDeactivationFunction
 {
     EngineDynamicDeact() noexcept {}
 
-    const bool getValue(const Parameter *p) const override
+    bool getValue(const Parameter *p) const override
     {
         auto oscs = &(p->storage->getPatch().scene[p->scene - 1].osc[p->ctrlgroup_entry]);
         return oscs->p[TwistOscillator::twist_lpg_response].deactivated;

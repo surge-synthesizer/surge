@@ -65,24 +65,24 @@ struct LanczosResampler
         memset(input, 0, 2 * BUFFER_SZ * sizeof(float));
         if (!tablesInitialized)
         {
-            for (int t = 0; t < tableObs + 1; ++t)
+            for (size_t t = 0; t < tableObs + 1; ++t)
             {
                 double x0 = dx * t;
-                for (int i = 0; i < filterWidth; ++i)
+                for (size_t i = 0; i < filterWidth; ++i)
                 {
                     double x = x0 + i - A;
                     lanczosTable[t][i] = kernel(x);
                 }
             }
-            for (int t = 0; t < tableObs; ++t)
+            for (size_t t = 0; t < tableObs; ++t)
             {
-                for (int i = 0; i < filterWidth; ++i)
+                for (size_t i = 0; i < filterWidth; ++i)
                 {
                     lanczosTableDX[t][i] =
                         lanczosTable[(t + 1) & (tableObs - 1)][i] - lanczosTable[t][i];
                 }
             }
-            for (int i = 0; i < filterWidth; ++i)
+            for (size_t i = 0; i < filterWidth; ++i)
             {
                 // Wrap at the end - deriv is the same
                 lanczosTableDX[tableObs][i] = lanczosTable[0][i];
@@ -104,7 +104,7 @@ struct LanczosResampler
     inline void readZOH(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
-        int idx0 = (int)p0;
+        auto idx0 = (size_t)p0;
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
         if (idx0 <= A)
             idx0 += BUFFER_SZ;
@@ -115,7 +115,7 @@ struct LanczosResampler
     inline void readLin(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
-        int idx0 = (int)p0;
+        auto idx0 = (size_t)p0;
         float frac = p0 - idx0;
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
         if (idx0 <= A)
@@ -127,7 +127,7 @@ struct LanczosResampler
     inline void read(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
-        int idx0 = floor(p0);
+        size_t idx0 = floor(p0);
         double off0 = 1.0 - (p0 - idx0);
 
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);

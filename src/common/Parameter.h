@@ -264,7 +264,7 @@ struct ParameterDynamicNameFunction
  */
 struct ParameterDynamicBoolFunction
 {
-    virtual const bool getValue(const Parameter *p) const = 0;
+    virtual bool getValue(const Parameter *p) const = 0;
 };
 
 struct ParameterDynamicDeactivationFunction : public ParameterDynamicBoolFunction

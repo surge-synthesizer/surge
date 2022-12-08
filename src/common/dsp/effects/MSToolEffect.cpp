@@ -184,7 +184,7 @@ void MSToolEffect::init_ctrltypes()
     // using deactivation function from EQ3
     static struct EQD : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;
