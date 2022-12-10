@@ -1326,8 +1326,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                     getPatch().scene[scene].osc[entry].wavetable_display_name, 256);
         }
 
-        memcpy(&clipboard_extraconfig[0], &getPatch().scene[scene].osc[entry].extraConfig,
-               sizeof(OscillatorStorage::ExtraConfigurationData));
+        clipboard_extraconfig[0] = getPatch().scene[scene].osc[entry].extraConfig;
     }
 
     if (type & cp_lfo)
@@ -1338,8 +1337,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
         {
-            memcpy(&clipboard_stepsequences[0], &getPatch().stepsequences[scene][entry],
-                   sizeof(StepSequencerStorage));
+            clipboard_stepsequences[0] = getPatch().stepsequences[scene][entry];
         }
 
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
@@ -1367,8 +1365,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 
         for (int i = 0; i < n_lfos; i++)
         {
-            memcpy(&clipboard_stepsequences[i], &getPatch().stepsequences[scene][i],
-                   sizeof(StepSequencerStorage));
+            clipboard_stepsequences[i] = getPatch().stepsequences[scene][i];
             clipboard_msegs[i] = getPatch().msegs[scene][i];
             clipboard_formulae[i] = getPatch().formulamods[scene][i];
 
@@ -1384,8 +1381,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
             strncpy(clipboard_wt_names[i], getPatch().scene[scene].osc[i].wavetable_display_name,
                     256);
-            memcpy(&clipboard_extraconfig[i], &getPatch().scene[scene].osc[i].extraConfig,
-                   sizeof(OscillatorStorage::ExtraConfigurationData));
+            clipboard_extraconfig[i] = getPatch().scene[scene].osc[i].extraConfig;
         }
 
         clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
@@ -1549,8 +1545,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
         start = 1;
         getPatch().update_controls(false, &getPatch().scene[scene].osc[entry]);
 
-        memcpy(&getPatch().scene[scene].osc[entry].extraConfig, &clipboard_extraconfig[0],
-               sizeof(OscillatorStorage::ExtraConfigurationData));
+        getPatch().scene[scene].osc[entry].extraConfig = clipboard_extraconfig[0];
     }
 
     if (type & cp_lfo)
@@ -1566,8 +1561,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
 
         for (int i = 0; i < n_lfos; i++)
         {
-            memcpy(&getPatch().stepsequences[scene][i], &clipboard_stepsequences[i],
-                   sizeof(StepSequencerStorage));
+            getPatch().stepsequences[scene][i] = clipboard_stepsequences[i];
             getPatch().msegs[scene][i] = clipboard_msegs[i];
             getPatch().formulamods[scene][i] = clipboard_formulae[i];
 
@@ -1580,8 +1574,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
 
         for (int i = 0; i < n_oscs; i++)
         {
-            memcpy(&getPatch().scene[scene].osc[i].extraConfig, &clipboard_extraconfig[i],
-                   sizeof(OscillatorStorage::ExtraConfigurationData));
+            getPatch().scene[scene].osc[i].extraConfig = clipboard_extraconfig[i];
             getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
             strncpy(getPatch().scene[scene].osc[i].wavetable_display_name, clipboard_wt_names[i],
                     256);
@@ -1694,8 +1687,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
         {
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
             {
-                memcpy(&getPatch().stepsequences[scene][entry], &clipboard_stepsequences[0],
-                       sizeof(StepSequencerStorage));
+                getPatch().stepsequences[scene][entry] = clipboard_stepsequences[0];
             }
 
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)

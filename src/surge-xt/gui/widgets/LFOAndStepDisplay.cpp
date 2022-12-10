@@ -20,6 +20,7 @@
 #include "SurgeGUIUtils.h"
 #include "SurgeJUCEHelpers.h"
 #include "RuntimeFont.h"
+#include <algorithm>
 #include <chrono>
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
@@ -467,7 +468,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     {
         hasFullWave = true;
         deactivateStorage = *lfodata;
-        memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
+        std::copy(std::begin(tp), std::end(tp), std::begin(tpd), n_scene_params);
 
         auto desiredRate = log2(1.f / totalEnvTime);
         if (lfodata->shape.val.i == lt_mseg)
@@ -494,7 +495,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
             hasFullWave = true;
             waveIsAmpWave = true;
             deactivateStorage = *lfodata;
-            memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
+            std::copy(std::begin(tp), std::end(tp), std::begin(tpd));
 
             deactivateStorage.magnitude.val.f = 1.f;
             tpd[lfodata->magnitude.param_id_in_scene].f = 1.f;
