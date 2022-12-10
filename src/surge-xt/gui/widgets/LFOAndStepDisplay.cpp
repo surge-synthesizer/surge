@@ -468,7 +468,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     {
         hasFullWave = true;
         deactivateStorage = *lfodata;
-        std::copy(std::begin(tp), std::end(tp), std::begin(tpd), n_scene_params);
+        std::copy(std::begin(tp), std::end(tp), std::begin(tpd));
 
         auto desiredRate = log2(1.f / totalEnvTime);
         if (lfodata->shape.val.i == lt_mseg)
