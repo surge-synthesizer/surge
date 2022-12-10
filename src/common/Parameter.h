@@ -340,13 +340,6 @@ struct ModulationDisplayInfoWindowStrings
 
 class SurgeStorage;
 
-/*
-** WARNING!
-**
-** Parameter is copied with memcpy
-** Therefore, don't have complex types as members!
-*/
-
 class Parameter
 {
   public:
@@ -600,4 +593,5 @@ class Parameter
 };
 
 // I don't make this a member since param needs to be copyable with memcpy.
+// TODO: Don't need to worry about that anymore.
 extern std::atomic<bool> parameterNameUpdated;

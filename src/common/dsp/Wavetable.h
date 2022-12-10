@@ -13,6 +13,8 @@ const int max_wtable_samples = 2097152;
 #pragma pack(push, 1)
 struct wt_header
 {
+    // This struct can only contain scalar data that can be memcpy'd. It's read directly from data
+    // on the disk.
     char tag[4];
     unsigned int n_samples;
     unsigned short n_tables;
