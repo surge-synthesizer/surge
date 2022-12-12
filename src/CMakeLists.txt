@@ -39,7 +39,7 @@ else()
 endif()
 
 add_library(simde INTERFACE)
-target_include_directories(simde INTERFACE ${CMAKE_SOURCE_DIR}/libs/simde)
+target_include_directories(simde INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../libs/simde)
 add_library(surge::simde ALIAS simde)
 
 add_library(surge-juce INTERFACE)
