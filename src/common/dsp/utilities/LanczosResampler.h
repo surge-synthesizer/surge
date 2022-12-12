@@ -104,9 +104,9 @@ struct LanczosResampler
     inline void readZOH(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
-        auto idx0 = (size_t)p0;
+        int idx0 = (int)p0;
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
-        if (idx0 <= A)
+        if (idx0 <= (int)A)
             idx0 += BUFFER_SZ;
         L = input[0][idx0];
         R = input[1][idx0];
@@ -115,10 +115,10 @@ struct LanczosResampler
     inline void readLin(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
-        auto idx0 = (size_t)p0;
+        int idx0 = (int)p0;
         float frac = p0 - idx0;
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
-        if (idx0 <= A)
+        if (idx0 <= (int)A)
             idx0 += BUFFER_SZ;
         L = (1.0 - frac) * input[0][idx0] + frac * input[0][idx0 + 1];
         R = (1.0 - frac) * input[1][idx0] + frac * input[1][idx0 + 1];
@@ -127,11 +127,11 @@ struct LanczosResampler
     inline void read(double xBack, float &L, float &R) const
     {
         double p0 = wp - xBack;
-        size_t idx0 = floor(p0);
+        int idx0 = floor(p0);
         double off0 = 1.0 - (p0 - idx0);
 
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
-        idx0 += (idx0 <= A) * BUFFER_SZ;
+        idx0 += (idx0 <= (int)A) * BUFFER_SZ;
 
         double off0byto = off0 * tableObs;
         int tidx = (int)(off0byto);
