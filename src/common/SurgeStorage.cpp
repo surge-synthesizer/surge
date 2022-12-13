@@ -53,8 +53,9 @@ using namespace std;
 
 std::string SurgeStorage::skipPatchLoadDataPathSentinel = "<SKIP-PATCH-SENTINEL>";
 
-SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
+SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : otherscene_clients(0)
 {
+    auto suppliedDataPath = config.suppliedDataPath;
     bool loadWtAndPatch = true;
     loadWtAndPatch = !skipLoadWtAndPatch && suppliedDataPath != skipPatchLoadDataPathSentinel;
 
@@ -322,7 +323,12 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     userMidiMappingsPath = userDataPath / "MIDI Mappings";
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
     userSkinsPath = userDataPath / "Skins";
-    createUserDirectory();
+    extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
+
+    if (config.createUserDirectory)
+    {
+        createUserDirectory();
+    }
 
     // TIXML requires a newline at end.
 #if HAS_JUCE
@@ -745,11 +751,11 @@ void SurgeStorage::refresh_patchlist()
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 {
     refreshPatchOrWTListAddDir(
-        userDir, subdir, [](std::string s) -> bool { return _stricmp(s.c_str(), ".fxp") == 0; },
+        userDir, userDir ? userDataPath : datapath, subdir, [](std::string s) -> bool { return _stricmp(s.c_str(), ".fxp") == 0; },
         patch_list, patch_category);
 }
 
-void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
+void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &initialPatchPath, string subdir,
                                               std::function<bool(std::string)> filterOp,
                                               std::vector<Patch> &items,
                                               std::vector<PatchCategory> &categories)
@@ -761,7 +767,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
 
     try
     {
-        fs::path patchpath = userDir ? userDataPath : datapath;
+        fs::path patchpath = initialPatchPath;
         if (!subdir.empty())
             patchpath /= subdir;
 
@@ -934,6 +940,10 @@ void SurgeStorage::refresh_wtlist()
 
     firstThirdPartyWTCategory = wt_category.size();
     refresh_wtlistAddDir(false, "wavetables_3rdparty");
+    if (!extraThirdPartyWavetablesPath.empty())
+    {
+        refresh_wtlistFrom(false, extraThirdPartyWavetablesPath, "wavetables_3rdparty");
+    }
     firstUserWTCategory = wt_category.size();
     refresh_wtlistAddDir(true, "Wavetables");
 
@@ -1024,14 +1034,19 @@ void SurgeStorage::refresh_wtlist()
         wt_list[wtOrdering[i]].order = i;
 }
 
-void SurgeStorage::refresh_wtlistAddDir(bool userDir, std::string subdir)
+void SurgeStorage::refresh_wtlistAddDir(bool userDir, const std::string &subdir)
+{
+    refresh_wtlistFrom(userDir, userDir ? userDataPath : datapath, subdir);
+}
+
+void SurgeStorage::refresh_wtlistFrom(bool isUser, const fs::path &p, const std::string &subdir)
 {
     std::vector<std::string> supportedTableFileTypes;
     supportedTableFileTypes.push_back(".wt");
     supportedTableFileTypes.push_back(".wav");
 
     refreshPatchOrWTListAddDir(
-        userDir, subdir,
+        isUser, p, subdir,
         [supportedTableFileTypes](std::string in) -> bool {
             for (auto q : supportedTableFileTypes)
             {
