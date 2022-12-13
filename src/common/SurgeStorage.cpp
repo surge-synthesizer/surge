@@ -751,11 +751,13 @@ void SurgeStorage::refresh_patchlist()
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 {
     refreshPatchOrWTListAddDir(
-        userDir, userDir ? userDataPath : datapath, subdir, [](std::string s) -> bool { return _stricmp(s.c_str(), ".fxp") == 0; },
-        patch_list, patch_category);
+        userDir, userDir ? userDataPath : datapath, subdir,
+        [](std::string s) -> bool { return _stricmp(s.c_str(), ".fxp") == 0; }, patch_list,
+        patch_category);
 }
 
-void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &initialPatchPath, string subdir,
+void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &initialPatchPath,
+                                              string subdir,
                                               std::function<bool(std::string)> filterOp,
                                               std::vector<Patch> &items,
                                               std::vector<PatchCategory> &categories)
