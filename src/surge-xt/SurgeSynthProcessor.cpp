@@ -659,7 +659,6 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     case CLAP_EVENT_NOTE_EXPRESSION:
     {
         auto pevt = reinterpret_cast<const clap_event_note_expression *>(evt);
-        jassert(pevt->note_id == -1); // note expressions come to channel/key
         SurgeVoice::NoteExpressionType net = SurgeVoice::UNKNOWN;
         switch (pevt->expression_id)
         {
