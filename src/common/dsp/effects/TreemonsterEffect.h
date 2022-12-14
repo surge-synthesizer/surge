@@ -57,6 +57,10 @@ class TreemonsterEffect : public Effect
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
 
+    // These are outputs which you can optionally grab from outside
+    // the main processing loop. The Rack module does this.
+    float smoothedPitch[2][BLOCK_SIZE], envelopeOut[2][BLOCK_SIZE];
+
   private:
     int bi; // block increment (to keep track of events not occurring every n blocks)
     float length[2], lastval[2], length_target[2], length_smooth[2];

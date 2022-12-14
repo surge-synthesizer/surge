@@ -245,7 +245,7 @@ void PhaserEffect::init_ctrltypes()
 {
     static struct PhaserDeactivate : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;

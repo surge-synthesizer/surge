@@ -986,7 +986,7 @@ TEST_CASE("HPF Ignores Tuning Properly", "[tun][dsp]")
         // 2^x/12 = 1/2
         // x=-12
         surge->storage.getPatch().scene[0].lowcut.val.f = -12.0;
-        char txt[256];
+        char txt[TXT_SIZE];
         surge->storage.getPatch().scene[0].lowcut.get_display(txt);
 
         double priorRMS = 0;
@@ -1012,7 +1012,7 @@ TEST_CASE("HPF Ignores Tuning Properly", "[tun][dsp]")
         surge->storage.retuneToScale(s);
 
         surge->storage.getPatch().scene[0].lowcut.val.f = -12.0;
-        char txt[256];
+        char txt[TXT_SIZE];
         surge->storage.getPatch().scene[0].lowcut.get_display(txt);
 
         double priorRMS = 0;

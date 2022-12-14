@@ -37,7 +37,9 @@
 #include "version.h"
 
 #include "sst/plugininfra/strnatcmp.h"
+#ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
+#endif
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"
 #include "SurgeMemoryPools.h"
@@ -51,8 +53,9 @@ using namespace std;
 
 std::string SurgeStorage::skipPatchLoadDataPathSentinel = "<SKIP-PATCH-SENTINEL>";
 
-SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
+SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : otherscene_clients(0)
 {
+    auto suppliedDataPath = config.suppliedDataPath;
     bool loadWtAndPatch = true;
     loadWtAndPatch = !skipLoadWtAndPatch && suppliedDataPath != skipPatchLoadDataPathSentinel;
 
@@ -320,7 +323,12 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
     userMidiMappingsPath = userDataPath / "MIDI Mappings";
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
     userSkinsPath = userDataPath / "Skins";
-    createUserDirectory();
+    extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
+
+    if (config.createUserDirectory)
+    {
+        createUserDirectory();
+    }
 
     // TIXML requires a newline at end.
 #if HAS_JUCE
@@ -504,6 +512,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         getPatch().scene[s].drift.set_extend_range(true);
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     bool mtsMode = Surge::Storage::getUserDefaultValue(this, Surge::Storage::UseODDMTS, false);
     if (mtsMode)
     {
@@ -514,6 +523,7 @@ SurgeStorage::SurgeStorage(std::string suppliedDataPath) : otherscene_clients(0)
         oddsound_mts_client = nullptr;
         oddsound_mts_active = false;
     }
+#endif
 
     initPatchName =
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::InitialPatchName, "Init Saw");
@@ -741,11 +751,13 @@ void SurgeStorage::refresh_patchlist()
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
 {
     refreshPatchOrWTListAddDir(
-        userDir, subdir, [](std::string s) -> bool { return _stricmp(s.c_str(), ".fxp") == 0; },
-        patch_list, patch_category);
+        userDir, userDir ? userDataPath : datapath, subdir,
+        [](std::string s) -> bool { return _stricmp(s.c_str(), ".fxp") == 0; }, patch_list,
+        patch_category);
 }
 
-void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
+void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &initialPatchPath,
+                                              string subdir,
                                               std::function<bool(std::string)> filterOp,
                                               std::vector<Patch> &items,
                                               std::vector<PatchCategory> &categories)
@@ -757,7 +769,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, string subdir,
 
     try
     {
-        fs::path patchpath = userDir ? userDataPath : datapath;
+        fs::path patchpath = initialPatchPath;
         if (!subdir.empty())
             patchpath /= subdir;
 
@@ -930,6 +942,10 @@ void SurgeStorage::refresh_wtlist()
 
     firstThirdPartyWTCategory = wt_category.size();
     refresh_wtlistAddDir(false, "wavetables_3rdparty");
+    if (!extraThirdPartyWavetablesPath.empty())
+    {
+        refresh_wtlistFrom(false, extraThirdPartyWavetablesPath, "wavetables_3rdparty");
+    }
     firstUserWTCategory = wt_category.size();
     refresh_wtlistAddDir(true, "Wavetables");
 
@@ -948,6 +964,38 @@ void SurgeStorage::refresh_wtlist()
         for (auto i = 0; i < n2.length(); ++i)
             if (n2[i] == '\\')
                 n2[i] = '/';
+
+        // OK so now we need to split by path. Sigh.
+        // This is because "EMU VSCO/FOO comes after "EMU" but before "ENU/BAR"
+        auto split = [](const auto &q) {
+            std::vector<std::string> res;
+            size_t p = 0, np = 0;
+            while (np != std::string::npos)
+            {
+                np = q.find("/", p);
+                if (np == std::string::npos)
+                {
+                    res.push_back(q.substr(p));
+                }
+                else
+                {
+                    res.push_back(q.substr(p, np));
+                    p = np + 1;
+                }
+            }
+
+            return res;
+        };
+
+        auto v1 = split(n1);
+        auto v2 = split(n2);
+
+        auto sz = std::min(v1.size(), v2.size());
+        for (int i = 0; i < sz; ++i)
+        {
+            if (v1[i] != v2[i])
+                return strnatcasecmp(v1[i].c_str(), v2[i].c_str()) < 0;
+        }
 
         return strnatcasecmp(n1.c_str(), n2.c_str()) < 0;
     };
@@ -988,14 +1036,19 @@ void SurgeStorage::refresh_wtlist()
         wt_list[wtOrdering[i]].order = i;
 }
 
-void SurgeStorage::refresh_wtlistAddDir(bool userDir, std::string subdir)
+void SurgeStorage::refresh_wtlistAddDir(bool userDir, const std::string &subdir)
+{
+    refresh_wtlistFrom(userDir, userDir ? userDataPath : datapath, subdir);
+}
+
+void SurgeStorage::refresh_wtlistFrom(bool isUser, const fs::path &p, const std::string &subdir)
 {
     std::vector<std::string> supportedTableFileTypes;
     supportedTableFileTypes.push_back(".wt");
     supportedTableFileTypes.push_back(".wav");
 
     refreshPatchOrWTListAddDir(
-        userDir, subdir,
+        isUser, p, subdir,
         [supportedTableFileTypes](std::string in) -> bool {
             for (auto q : supportedTableFileTypes)
             {
@@ -1290,8 +1343,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                     getPatch().scene[scene].osc[entry].wavetable_display_name, 256);
         }
 
-        memcpy(&clipboard_extraconfig[0], &getPatch().scene[scene].osc[entry].extraConfig,
-               sizeof(OscillatorStorage::ExtraConfigurationData));
+        clipboard_extraconfig[0] = getPatch().scene[scene].osc[entry].extraConfig;
     }
 
     if (type & cp_lfo)
@@ -1302,8 +1354,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
         {
-            memcpy(&clipboard_stepsequences[0], &getPatch().stepsequences[scene][entry],
-                   sizeof(StepSequencerStorage));
+            clipboard_stepsequences[0] = getPatch().stepsequences[scene][entry];
         }
 
         if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
@@ -1331,8 +1382,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 
         for (int i = 0; i < n_lfos; i++)
         {
-            memcpy(&clipboard_stepsequences[i], &getPatch().stepsequences[scene][i],
-                   sizeof(StepSequencerStorage));
+            clipboard_stepsequences[i] = getPatch().stepsequences[scene][i];
             clipboard_msegs[i] = getPatch().msegs[scene][i];
             clipboard_formulae[i] = getPatch().formulamods[scene][i];
 
@@ -1348,8 +1398,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
             strncpy(clipboard_wt_names[i], getPatch().scene[scene].osc[i].wavetable_display_name,
                     256);
-            memcpy(&clipboard_extraconfig[i], &getPatch().scene[scene].osc[i].extraConfig,
-                   sizeof(OscillatorStorage::ExtraConfigurationData));
+            clipboard_extraconfig[i] = getPatch().scene[scene].osc[i].extraConfig;
         }
 
         clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
@@ -1513,8 +1562,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
         start = 1;
         getPatch().update_controls(false, &getPatch().scene[scene].osc[entry]);
 
-        memcpy(&getPatch().scene[scene].osc[entry].extraConfig, &clipboard_extraconfig[0],
-               sizeof(OscillatorStorage::ExtraConfigurationData));
+        getPatch().scene[scene].osc[entry].extraConfig = clipboard_extraconfig[0];
     }
 
     if (type & cp_lfo)
@@ -1530,8 +1578,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
 
         for (int i = 0; i < n_lfos; i++)
         {
-            memcpy(&getPatch().stepsequences[scene][i], &clipboard_stepsequences[i],
-                   sizeof(StepSequencerStorage));
+            getPatch().stepsequences[scene][i] = clipboard_stepsequences[i];
             getPatch().msegs[scene][i] = clipboard_msegs[i];
             getPatch().formulamods[scene][i] = clipboard_formulae[i];
 
@@ -1544,8 +1591,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
 
         for (int i = 0; i < n_oscs; i++)
         {
-            memcpy(&getPatch().scene[scene].osc[i].extraConfig, &clipboard_extraconfig[i],
-                   sizeof(OscillatorStorage::ExtraConfigurationData));
+            getPatch().scene[scene].osc[i].extraConfig = clipboard_extraconfig[i];
             getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
             strncpy(getPatch().scene[scene].osc[i].wavetable_display_name, clipboard_wt_names[i],
                     256);
@@ -1658,8 +1704,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
         {
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_stepseq)
             {
-                memcpy(&getPatch().stepsequences[scene][entry], &clipboard_stepsequences[0],
-                       sizeof(StepSequencerStorage));
+                getPatch().stepsequences[scene][entry] = clipboard_stepsequences[0];
             }
 
             if (getPatch().scene[scene].lfo[entry].shape.val.i == lt_mseg)
@@ -1920,7 +1965,12 @@ void SurgeStorage::load_midi_controllers()
     }
 }
 
-SurgeStorage::~SurgeStorage() { deinitialize_oddsound(); }
+SurgeStorage::~SurgeStorage()
+{
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    deinitialize_oddsound();
+#endif
+}
 
 double shafted_tanh(double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); }
 
@@ -2346,6 +2396,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
     }
 }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
 void SurgeStorage::initialize_oddsound()
 {
     if (oddsound_mts_client)
@@ -2383,6 +2434,7 @@ void SurgeStorage::setOddsoundMTSActiveTo(bool b)
         tuningApplicationMode = patchStoredTuningApplicationMode;
     }
 }
+#endif
 
 void SurgeStorage::toggleTuningToCache()
 {

@@ -20,6 +20,7 @@
 #include "SurgeGUIUtils.h"
 #include "SurgeJUCEHelpers.h"
 #include "RuntimeFont.h"
+#include <algorithm>
 #include <chrono>
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
@@ -466,8 +467,8 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
     if (lfodata->rate.deactivated)
     {
         hasFullWave = true;
-        memcpy((void *)(&deactivateStorage), (void *)lfodata, sizeof(LFOStorage));
-        memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
+        deactivateStorage = *lfodata;
+        std::copy(std::begin(tp), std::end(tp), std::begin(tpd));
 
         auto desiredRate = log2(1.f / totalEnvTime);
         if (lfodata->shape.val.i == lt_mseg)
@@ -493,8 +494,8 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         {
             hasFullWave = true;
             waveIsAmpWave = true;
-            memcpy((void *)(&deactivateStorage), (void *)lfodata, sizeof(LFOStorage));
-            memcpy((void *)tpd, (void *)tp, n_scene_params * sizeof(pdata));
+            deactivateStorage = *lfodata;
+            std::copy(std::begin(tp), std::end(tp), std::begin(tpd));
 
             deactivateStorage.magnitude.val.f = 1.f;
             tpd[lfodata->magnitude.param_id_in_scene].f = 1.f;
@@ -801,8 +802,7 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
 
                 g.drawLine(sp.getX(), sp.getY(), ep.getX(), ep.getY(), 1.0);
 
-                char s[TXT_SIZE];
-                snprintf(s, TXT_SIZE, "%d", l + 1);
+                std::string s = fmt::format("{:d}", l + 1);
 
                 juce::Point<int> tp(xp + 1, valScale * 0.0);
                 tp = tp.transformedBy(at);
@@ -874,16 +874,20 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         float yp = valScale * 0.9;
         float typ = yp;
         auto tp = juce::Point<float>(xp + 0.5, typ + 0.5).transformedBy(at);
+
         g.setColour(skin->getColor(Colors::LFO::Waveform::Ruler::Text));
         g.setFont(skin->fontManager->lfoTypeFont);
-        char txt[TXT_SIZE];
+
+        std::string txt;
         float tv = delta * l;
+
         if (fabs(roundf(tv) - tv) < 0.05)
-            snprintf(txt, TXT_SIZE, "%d s", (int)round(delta * l));
+            txt = fmt::format("{:d} s", (int)round(delta * l));
         else if (delta < 0.1)
-            snprintf(txt, TXT_SIZE, "%.2f s", delta * l);
+            txt = fmt::format("{:.2f} s", delta * l);
         else
-            snprintf(txt, TXT_SIZE, "%.1f s", delta * l);
+            txt = fmt::format("{:.1f} s", delta * l);
+
         g.drawText(txt, tp.x, tp.y, 30, 10, juce::Justification::topLeft);
 
         auto sp = juce::Point<float>(xp, valScale * 0.95).transformedBy(at);
@@ -1401,8 +1405,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
 
         labelR = labelR.withTrimmedLeft(1).withHeight(10);
 
-        char txt[TXT_SIZE];
-        snprintf(txt, TXT_SIZE, "%.*f %%", prec, ss->steps[draggedStep] * 100.f);
+        std::string txt = fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, prec);
 
         g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
         g.setFont(skin->fontManager->lfoTypeFont);
@@ -1411,9 +1414,8 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
         if (keyModMult > 0)
         {
             labelR = labelR.translated(0, 10);
-
-            snprintf(txt, TXT_SIZE, "%d/%d",
-                     (int)(floor(ss->steps[draggedStep] * keyModMult + 0.5)), keyModMult);
+            txt = fmt::format("{:d}/{:d}", (int)(floor(ss->steps[draggedStep] * keyModMult + 0.5)),
+                              keyModMult);
             g.drawText(txt, labelR, juce::Justification::centredLeft);
         }
     }

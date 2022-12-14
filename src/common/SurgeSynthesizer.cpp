@@ -14,6 +14,7 @@
 */
 
 #include "SurgeSynthesizer.h"
+#include <fmt/core.h>
 #include "DSPUtils.h"
 #include <ctime>
 
@@ -23,9 +24,13 @@
 #include "filesystem/import.h"
 #include "Effect.h"
 
+#include <algorithm>
 #include <thread>
 #include <set>
+#ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
+#endif
+
 #include "SurgeMemoryPools.h"
 
 using namespace std;
@@ -62,11 +67,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     memset(storage.getPatch().scenedata[1], 0, sizeof(pdata) * n_scene_params);
     memset(storage.getPatch().globaldata, 0, sizeof(pdata) * n_global_params);
     memset(mControlInterpolatorUsed, 0, sizeof(bool) * num_controlinterpolators);
-    memset((void *)fxsync, 0, sizeof(FxStorage) * n_fx_slots);
 
     for (int i = 0; i < n_fx_slots; i++)
     {
-        memcpy((void *)&fxsync[i], (void *)&storage.getPatch().fx[i], sizeof(FxStorage));
+        fxsync[i] = storage.getPatch().fx[i];
         fx_reload[i] = false;
         fx_reload_mod[i] = false;
     }
@@ -372,6 +376,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
         return;
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     if (storage.oddsound_mts_client && storage.oddsound_mts_active)
     {
         if (MTS_ShouldFilterNote(storage.oddsound_mts_client, key, channel))
@@ -379,6 +384,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
             return;
         }
     }
+#endif
 
     if (learn_param_from_note >= 0 &&
         storage.getPatch().param_ptr[learn_param_from_note]->ctrltype == ct_midikey_or_channel)
@@ -2721,8 +2727,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 
             if (/*!force_reload_all && */ storage.getPatch().fx[s].type.val.i)
             {
-                memcpy((void *)&storage.getPatch().fx[s].p, (void *)&fxsync[s].p,
-                       sizeof(Parameter) * n_fx_params);
+                std::copy(std::begin(fxsync[s].p), std::end(fxsync[s].p),
+                          std::begin(storage.getPatch().fx[s].p));
             }
 
             fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
@@ -2843,8 +2849,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
             // OFF
             storage.getPatch().isDirty = true;
             if (storage.getPatch().fx[s].type.val.i != fxt_off)
-                memcpy((void *)&storage.getPatch().fx[s].p, (void *)&fxsync[s].p,
-                       sizeof(Parameter) * n_fx_params);
+                std::copy(std::begin(fxsync[s].p), std::end(fxsync[s].p),
+                          std::begin(storage.getPatch().fx[s].p));
             if (fx[s])
             {
                 std::lock_guard<std::mutex> g(fxSpawnMutex);
@@ -2900,39 +2906,40 @@ bool SurgeSynthesizer::loadOscalgos()
             {
                 storage.getPatch().isDirty = true;
                 resend = true;
+
                 for (int k = 0; k < n_osc_params; k++)
                 {
                     double d;
                     int j;
-                    char lbl[TXT_SIZE];
+                    std::string lbl;
 
-                    snprintf(lbl, TXT_SIZE, "p%i", k);
+                    lbl = fmt::format("p{:d}", k);
 
                     if (storage.getPatch().scene[s].osc[i].p[k].valtype == vt_float)
                     {
-                        if (e->QueryDoubleAttribute(lbl, &d) == TIXML_SUCCESS)
+                        if (e->QueryDoubleAttribute(lbl.c_str(), &d) == TIXML_SUCCESS)
                         {
                             storage.getPatch().scene[s].osc[i].p[k].val.f = (float)d;
                         }
                     }
                     else
                     {
-                        if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                        if (e->QueryIntAttribute(lbl.c_str(), &j) == TIXML_SUCCESS)
                         {
                             storage.getPatch().scene[s].osc[i].p[k].val.i = j;
                         }
                     }
 
-                    snprintf(lbl, TXT_SIZE, "p%i_deform_type", k);
+                    lbl = fmt::format("p{:d}_deform_type", k);
 
-                    if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                    if (e->QueryIntAttribute(lbl.c_str(), &j) == TIXML_SUCCESS)
                     {
                         storage.getPatch().scene[s].osc[i].p[k].deform_type = j;
                     }
 
-                    snprintf(lbl, TXT_SIZE, "p%i_extend_range", k);
+                    lbl = fmt::format("p{:d}_extend_range", k);
 
-                    if (e->QueryIntAttribute(lbl, &j) == TIXML_SUCCESS)
+                    if (e->QueryIntAttribute(lbl.c_str(), &j) == TIXML_SUCCESS)
                     {
                         storage.getPatch().scene[s].osc[i].p[k].set_extend_range(j);
                     }
@@ -4090,6 +4097,7 @@ void SurgeSynthesizer::processControl()
         if (fx[i])
             refresh_editor |= fx[i]->checkHasInvalidatedUI();
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     if (storage.oddsound_mts_client)
     {
         storage.oddsound_mts_on_check = (storage.oddsound_mts_on_check + 1) & (1024 - 1);
@@ -4104,6 +4112,7 @@ void SurgeSynthesizer::processControl()
             }
         }
     }
+#endif
 }
 
 void SurgeSynthesizer::process()
@@ -4816,8 +4825,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     std::lock_guard<std::recursive_mutex> lockModulation(storage.modRoutingMutex);
 
     FxStorage so, to;
-    memcpy((void *)&so, (void *)(&storage.getPatch().fx[source]), sizeof(FxStorage));
-    memcpy((void *)&to, (void *)(&storage.getPatch().fx[target]), sizeof(FxStorage));
+    so = storage.getPatch().fx[source];
+    to = storage.getPatch().fx[target];
 
     fxmodsync[source].clear();
     fxmodsync[target].clear();

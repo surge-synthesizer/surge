@@ -65,24 +65,24 @@ struct LanczosResampler
         memset(input, 0, 2 * BUFFER_SZ * sizeof(float));
         if (!tablesInitialized)
         {
-            for (int t = 0; t < tableObs + 1; ++t)
+            for (size_t t = 0; t < tableObs + 1; ++t)
             {
                 double x0 = dx * t;
-                for (int i = 0; i < filterWidth; ++i)
+                for (size_t i = 0; i < filterWidth; ++i)
                 {
                     double x = x0 + i - A;
                     lanczosTable[t][i] = kernel(x);
                 }
             }
-            for (int t = 0; t < tableObs; ++t)
+            for (size_t t = 0; t < tableObs; ++t)
             {
-                for (int i = 0; i < filterWidth; ++i)
+                for (size_t i = 0; i < filterWidth; ++i)
                 {
                     lanczosTableDX[t][i] =
                         lanczosTable[(t + 1) & (tableObs - 1)][i] - lanczosTable[t][i];
                 }
             }
-            for (int i = 0; i < filterWidth; ++i)
+            for (size_t i = 0; i < filterWidth; ++i)
             {
                 // Wrap at the end - deriv is the same
                 lanczosTableDX[tableObs][i] = lanczosTable[0][i];
@@ -106,7 +106,7 @@ struct LanczosResampler
         double p0 = wp - xBack;
         int idx0 = (int)p0;
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
-        if (idx0 <= A)
+        if (idx0 <= (int)A)
             idx0 += BUFFER_SZ;
         L = input[0][idx0];
         R = input[1][idx0];
@@ -118,7 +118,7 @@ struct LanczosResampler
         int idx0 = (int)p0;
         float frac = p0 - idx0;
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
-        if (idx0 <= A)
+        if (idx0 <= (int)A)
             idx0 += BUFFER_SZ;
         L = (1.0 - frac) * input[0][idx0] + frac * input[0][idx0 + 1];
         R = (1.0 - frac) * input[1][idx0] + frac * input[1][idx0 + 1];
@@ -131,7 +131,7 @@ struct LanczosResampler
         double off0 = 1.0 - (p0 - idx0);
 
         idx0 = (idx0 + BUFFER_SZ) & (BUFFER_SZ - 1);
-        idx0 += (idx0 <= A) * BUFFER_SZ;
+        idx0 += (idx0 <= (int)A) * BUFFER_SZ;
 
         double off0byto = off0 * tableObs;
         int tidx = (int)(off0byto);

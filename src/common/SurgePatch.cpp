@@ -500,11 +500,13 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         const char *getName(const Parameter *p) const override
         {
             static char res[TXT_SIZE];
+
             if (p && p->storage)
             {
                 auto cge = p->ctrlgroup_entry - ms_lfo1;
                 auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
                 auto tp = lf->shape.val.i;
+
                 switch (tp)
                 {
                 case lt_stepseq:
@@ -533,7 +535,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     // Assign the dynamic deactivation handlers
     static struct OscAudioInDeact : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry;
             auto osc = &(p->storage->getPatch().scene[p->scene - 1].osc[cge]);
@@ -544,7 +546,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
     static struct LfoRatePhaseDeact : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
@@ -561,7 +563,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
     static struct LfoEnvelopeDeact : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto cge = p->ctrlgroup_entry - ms_lfo1;
             auto lf = &(p->storage->getPatch().scene[p->scene - 1].lfo[cge]);
@@ -1720,7 +1722,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             {
                 std::string mvname = "monoVoicePrority_" + std::to_string(sc);
-                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname.c_str()));
+                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname));
                 storage->getPatch().scene[sc].monoVoicePriorityMode = ALWAYS_LATEST;
 
                 if (mv1)
@@ -1738,7 +1740,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
             {
                 std::string mvname = "monoVoiceEnvelope_" + std::to_string(sc);
-                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname.c_str()));
+                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname));
                 storage->getPatch().scene[sc].monoVoiceEnvelopeMode = RESTART_FROM_ZERO;
 
                 if (mv1)
@@ -1756,7 +1758,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
             {
                 std::string mvname = "polyVoiceRepeatedKeyMode_" + std::to_string(sc);
-                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname.c_str()));
+                auto *mv1 = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild(mvname));
                 storage->getPatch().scene[sc].polyVoiceRepeatedKeyMode = NEW_VOICE_EVERY_NOTEON;
 
                 if (mv1)
@@ -1800,7 +1802,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             {
                 auto an = std::string("sc") + std::to_string(sc);
 
-                if (hcs->QueryIntAttribute(an.c_str(), &tv) == TIXML_SUCCESS)
+                if (hcs->QueryIntAttribute(an, &tv) == TIXML_SUCCESS)
                 {
                     storage->sceneHardclipMode[sc] = (SurgeStorage::HardClipMode)tv;
                 }
@@ -2157,7 +2159,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     {
                         std::string attr = "extra_data_" + std::to_string(qq);
 
-                        if (lkid->QueryDoubleAttribute(attr.c_str(), &tf) == TIXML_SUCCESS)
+                        if (lkid->QueryDoubleAttribute(attr, &tf) == TIXML_SUCCESS)
                         {
                             ec->data[qq] = tf;
                         }
@@ -2524,14 +2526,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 {
                     std::string con = "current_osc_" + std::to_string(sc);
 
-                    if (p->QueryIntAttribute(con.c_str(), &ival) == TIXML_SUCCESS)
+                    if (p->QueryIntAttribute(con, &ival) == TIXML_SUCCESS)
                     {
                         dawExtraState.editor.current_osc[sc] = ival;
                     }
 
                     con = "modsource_editor_" + std::to_string(sc);
 
-                    if (p->QueryIntAttribute(con.c_str(), &ival) == TIXML_SUCCESS)
+                    if (p->QueryIntAttribute(con, &ival) == TIXML_SUCCESS)
                     {
                         dawExtraState.editor.modsource_editor[sc] = (modsources)ival;
                     }
@@ -2820,8 +2822,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             for (int sc = 0; sc < n_scenes; sc++)
             {
-                char str[32];
-                snprintf(str, 32, "s%d", sc);
+                std::string str = fmt::format("s{:d}", sc);
 
                 if (mw->QueryDoubleAttribute(str, &d) == TIXML_SUCCESS)
                 {
@@ -2859,10 +2860,14 @@ struct srge_header
 
 unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed by the callee
 {
-    char tempstr[TXT_SIZE];
     assert(data);
+
     if (!data)
+    {
         return 0;
+    }
+
+    char tempstr[TXT_SIZE];
     int n = param_ptr.size();
 
     TiXmlDeclaration decl("1.0", "UTF-8", "yes");
@@ -2878,12 +2883,14 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     meta.SetAttribute("author", author);
 
     TiXmlElement tagsX("tags");
+
     for (auto t : tags)
     {
         TiXmlElement tx("tag");
         tx.SetAttribute("tag", t.tag);
         tagsX.InsertEndChild(tx);
     }
+
     meta.InsertEndChild(tagsX);
     patch.InsertEndChild(meta);
 
@@ -2923,7 +2930,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                             // below
                             TiXmlElement mr("modrouting");
                             mr.SetAttribute("source", r->at(b).source_id);
-                            mr.SetAttribute("depth", float_to_str(r->at(b).depth, tempstr));
+                            mr.SetAttribute("depth", float_to_clocalestr(r->at(b).depth));
                             mr.SetAttribute("muted", r->at(b).muted);
                             mr.SetAttribute("source_index", r->at(b).source_index);
                             p.InsertEndChild(mr);
@@ -2941,7 +2948,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                     {
                         TiXmlElement mr("modrouting");
                         mr.SetAttribute("source", r->at(b).source_id);
-                        mr.SetAttribute("depth", float_to_str(r->at(b).depth, tempstr));
+                        mr.SetAttribute("depth", float_to_clocalestr(r->at(b).depth));
                         mr.SetAttribute("muted", r->at(b).muted);
                         mr.SetAttribute("source_index", r->at(b).source_index);
                         mr.SetAttribute("source_scene", r->at(b).source_scene);
@@ -2953,7 +2960,6 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             if (param_ptr[i]->valtype == (valtypes)vt_float)
             {
                 p.SetAttribute("type", vt_float);
-                // p.SetAttribute("value",float_to_str(param_ptr[i]->val.f,tempstr));
                 p.SetAttribute("value", param_ptr[i]->get_storage_value(tempstr));
             }
             else
@@ -2994,7 +3000,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         std::string mvname = "monoVoicePrority_" + std::to_string(sc);
-        TiXmlElement mvv(mvname.c_str());
+        TiXmlElement mvv(mvname);
         mvv.SetAttribute("v", storage->getPatch().scene[sc].monoVoicePriorityMode);
         nonparamconfig.InsertEndChild(mvv);
     }
@@ -3002,7 +3008,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         std::string mvname = "monoVoiceEnvelope_" + std::to_string(sc);
-        TiXmlElement mvv(mvname.c_str());
+        TiXmlElement mvv(mvname);
         mvv.SetAttribute("v", storage->getPatch().scene[sc].monoVoiceEnvelopeMode);
         nonparamconfig.InsertEndChild(mvv);
     }
@@ -3010,7 +3016,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         std::string mvname = "polyVoiceRepeatedKeyMode_" + std::to_string(sc);
-        TiXmlElement mvv(mvname.c_str());
+        TiXmlElement mvv(mvname);
         mvv.SetAttribute("v", storage->getPatch().scene[sc].polyVoiceRepeatedKeyMode);
         nonparamconfig.InsertEndChild(mvv);
     }
@@ -3020,7 +3026,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     for (int sc = 0; sc < n_scenes; ++sc)
     {
         auto an = std::string("sc") + std::to_string(sc);
-        hcs.SetAttribute(an.c_str(), (int)(storage->sceneHardclipMode[sc]));
+        hcs.SetAttribute(an, (int)(storage->sceneHardclipMode[sc]));
     }
     nonparamconfig.InsertEndChild(hcs);
 
@@ -3045,14 +3051,18 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         {
             std::string streaming_name =
                 "osc_extra_sc" + std::to_string(sc) + "_osc" + std::to_string(os);
-            TiXmlElement on(streaming_name.c_str());
+            TiXmlElement on(streaming_name);
+
             on.SetAttribute("scene", sc);
             on.SetAttribute("osc", os);
+
             if (uses_wavetabledata(scene[sc].osc[os].type.val.i))
             {
                 on.SetAttribute("wavetable_display_name", scene[sc].osc[os].wavetable_display_name);
+
                 auto wtfo = scene[sc].osc[os].wavetable_formula;
                 auto wtfol = wtfo.length();
+
                 on.SetAttribute("wavetable_formula",
                                 base64_encode((unsigned const char *)wtfo.c_str(), wtfol));
                 on.SetAttribute("wavetable_formula_nframes",
@@ -3067,7 +3077,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             for (auto q = 0; q < ec->nData; ++q)
             {
                 std::string attr = "extra_data_" + std::to_string(q);
-                on.SetDoubleAttribute(attr.c_str(), ec->data[q]);
+                on.SetDoubleAttribute(attr, ec->data[q]);
             }
 
             eod.InsertEndChild(on);
@@ -3146,7 +3156,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         sst << std::showpoint;
         sst << std::setprecision(14);
         sst << (double)((ControllerModulationSource *)scene[0].modsources[ms_ctrl1 + l])->target[0];
-        p.SetAttribute("v", sst.str().c_str());
+        p.SetAttribute("v", sst.str());
         p.SetAttribute("label", CustomControllerLabel[l]);
 
         cc.InsertEndChild(p);
@@ -3173,16 +3183,17 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     {
         char txt[TXT_SIZE];
         TiXmlElement mw("modwheel");
+
         for (int sc = 0; sc < n_scenes; sc++)
         {
-            char str[TXT_SIZE];
-            snprintf(str, TXT_SIZE, "s%d", sc);
+            std::string str = fmt::format("s{:d}", sc);
+
             mw.SetAttribute(
                 str,
-                float_to_str(
-                    ((ControllerModulationSource *)scene[sc].modsources[ms_modwheel])->target[0],
-                    txt));
+                float_to_clocalestr(
+                    ((ControllerModulationSource *)scene[sc].modsources[ms_modwheel])->target[0]));
         }
+
         patch.InsertEndChild(mw);
     }
 
@@ -3200,15 +3211,13 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     {
         TiXmlElement pt("patchTuning");
         pt.SetAttribute("v", base64_encode((unsigned const char *)patchTuning.scaleContents.c_str(),
-                                           patchTuning.scaleContents.size())
-                                 .c_str());
+                                           patchTuning.scaleContents.size()));
         if (patchTuning.mappingContents.size() > 0)
         {
             pt.SetAttribute(
                 "m", base64_encode((unsigned const char *)patchTuning.mappingContents.c_str(),
-                                   patchTuning.mappingContents.size())
-                         .c_str());
-            pt.SetAttribute("mname", patchTuning.mappingName.c_str());
+                                   patchTuning.mappingContents.size()));
+            pt.SetAttribute("mname", patchTuning.mappingName);
         }
 
         patch.InsertEndChild(pt);
@@ -3244,9 +3253,9 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         for (int sc = 0; sc < n_scenes; sc++)
         {
             std::string con = "current_osc_" + std::to_string(sc);
-            eds.SetAttribute(con.c_str(), dawExtraState.editor.current_osc[sc]);
+            eds.SetAttribute(con, dawExtraState.editor.current_osc[sc]);
             con = "modsource_editor_" + std::to_string(sc);
-            eds.SetAttribute(con.c_str(), dawExtraState.editor.modsource_editor[sc]);
+            eds.SetAttribute(con, dawExtraState.editor.modsource_editor[sc]);
 
             if (dawExtraState.editor.msegStateIsPopulated)
             {
@@ -3284,7 +3293,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             modEd.SetAttribute("filterOn", dawExtraState.editor.modulationEditorState.filterOn);
             modEd.SetAttribute("filterInt", dawExtraState.editor.modulationEditorState.filterInt);
             modEd.SetAttribute("filterString",
-                               dawExtraState.editor.modulationEditorState.filterString.c_str());
+                               dawExtraState.editor.modulationEditorState.filterString);
             eds.InsertEndChild(modEd);
 
             TiXmlElement tunOl("tuning_overlay");
@@ -3326,8 +3335,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement tnc("tuningContents");
         tnc.SetAttribute("v",
                          base64_encode((unsigned const char *)dawExtraState.scaleContents.c_str(),
-                                       dawExtraState.scaleContents.size())
-                             .c_str());
+                                       dawExtraState.scaleContents.size()));
         dawExtraXML.InsertEndChild(tnc);
 
         TiXmlElement hmp("hasMapping");
@@ -3342,12 +3350,11 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement mpc("mappingContents");
         mpc.SetAttribute("v",
                          base64_encode((unsigned const char *)dawExtraState.mappingContents.c_str(),
-                                       dawExtraState.mappingContents.size())
-                             .c_str());
+                                       dawExtraState.mappingContents.size()));
         dawExtraXML.InsertEndChild(mpc);
 
         TiXmlElement mpn("mappingName");
-        mpn.SetAttribute("v", dawExtraState.mappingName.c_str());
+        mpn.SetAttribute("v", dawExtraState.mappingName);
         dawExtraXML.InsertEndChild(mpn);
 
         // Revision 17 adds mapChannelToOctave
@@ -3550,17 +3557,20 @@ void SurgePatch::msegFromXMLElement(MSEGStorage *ms, TiXmlElement *p, bool resto
 void SurgePatch::stepSeqToXmlElement(StepSequencerStorage *ss, TiXmlElement &p,
                                      bool streamMask) const
 {
-    char txt[TXT_SIZE], txt2[TXT_SIZE];
+    std::string txt;
+
     for (int s = 0; s < n_stepseqsteps; s++)
     {
-        snprintf(txt, TXT_SIZE, "s%i", s);
+        txt = fmt::format("s{:d}", s);
+
         if (ss->steps[s] != 0.f)
-            p.SetAttribute(txt, float_to_str(ss->steps[s], txt2));
+            p.SetAttribute(txt, float_to_clocalestr(ss->steps[s]));
     }
 
     p.SetAttribute("loop_start", ss->loop_start);
     p.SetAttribute("loop_end", ss->loop_end);
-    p.SetAttribute("shuffle", float_to_str(ss->shuffle, txt2));
+    p.SetAttribute("shuffle", float_to_clocalestr(ss->shuffle));
+
     if (streamMask)
     {
         uint64_t ttm = ss->trigmask;
@@ -3614,8 +3624,8 @@ void SurgePatch::stepSeqFromXmlElement(StepSequencerStorage *ss, TiXmlElement *p
 
     for (int s = 0; s < n_stepseqsteps; s++)
     {
-        char txt[TXT_SIZE];
-        snprintf(txt, TXT_SIZE, "s%i", s);
+        std::string txt = fmt::format("s{:d}", s);
+
         if (p->QueryDoubleAttribute(txt, &d) == TIXML_SUCCESS)
             ss->steps[s] = (float)d;
         else

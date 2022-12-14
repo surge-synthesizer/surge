@@ -236,9 +236,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
             return "-";
         }
 
-        char txt[1024];
-        fxstorage->p[fx_param_remap[i]].get_display(txt, false, 0);
-        return txt;
+        return fxstorage->p[fx_param_remap[i]].get_display(false, 0);
     }
 
     std::string getParamValueFor(int idx, float f)
@@ -248,9 +246,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
             return "-";
         }
 
-        char txt[1024];
-        fxstorage->p[fx_param_remap[idx]].get_display(txt, true, f);
-        return txt;
+        return fxstorage->p[fx_param_remap[idx]].get_display(true, f);
     }
 
     std::string getParamValueFromFloat(int i, float f)
@@ -260,10 +256,9 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
             return "-";
         }
 
-        char txt[1024];
         fxstorage->p[fx_param_remap[i]].set_value_f01(f);
-        fxstorage->p[fx_param_remap[i]].get_display(txt, false, 0);
-        return txt;
+
+        return fxstorage->p[fx_param_remap[i]].get_display(false, 0);
     }
 
     void updateJuceParamsFromStorage();

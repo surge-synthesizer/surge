@@ -185,7 +185,7 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
         // not be the case here.
         auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[n_osc_params - 2]);
 
-        char txt[256];
+        char txt[TXT_SIZE];
         ap->get_display(txt);
         float spreadWhichMatchesDisplay = ap->val.f * 16.f;
         INFO("Comparing absolute with " << txt << " " << spreadWhichMatchesDisplay);
@@ -209,7 +209,7 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
             float abss = rand() * 1.f / (float)RAND_MAX * 0.8 + 0.15;
             auto ap = &(surge->storage.getPatch().scene[0].osc[0].p[n_osc_params - 2]);
             ap->set_value_f01(abss);
-            char txt[256];
+            char txt[TXT_SIZE];
             ap->get_display(txt);
 
             INFO("Test[" << i << "] note=" << note << " at absolute spread " << abss << " = "

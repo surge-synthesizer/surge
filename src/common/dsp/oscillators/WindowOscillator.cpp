@@ -19,7 +19,7 @@
 #include <cstdint>
 #include "DebugHelpers.h"
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <intrin.h>
 #else
 namespace

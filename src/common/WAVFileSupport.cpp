@@ -83,7 +83,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     }
 
     // WAV HEADER
-    unsigned short audioFormat, numChannels;
+    unsigned short audioFormat, numChannels{1};
     unsigned int sampleRate, byteRate;
     unsigned short blockAlign, bitsPerSample;
 
@@ -100,8 +100,8 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     // Now start reading chunks
     int tbr = 4;
-    char *wavdata = nullptr;
-    int datasz = 0, datasamples;
+    char *wavdata{nullptr};
+    int datasz{0}, datasamples{0};
 
     while (true)
     {
@@ -350,7 +350,15 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     bool loopData = hasSMPL || hasCLM || hasSRGE;
     int loopLen =
         hasCLM ? clmLEN : (hasCUE ? cueLEN : (hasSRGE ? srgeLEN : (hasSMPL ? smplLEN : -1)));
+    bool fullRange = false;
 
+    if (loopLen == -1 && wt->frame_size_if_absent > 0)
+    {
+        loopLen = wt->frame_size_if_absent;
+        loopData = true;
+        fullRange = true;
+        wt->frame_size_if_absent = -1;
+    }
     if (loopLen == 0)
     {
         std::ostringstream oss;
@@ -494,6 +502,10 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
 
     if (wavdata && wt)
     {
+        if (fullRange && (wh.flags & wtf_int16))
+        {
+            wh.flags |= wtf_int16_is_16;
+        }
         if (numChannels == 1)
         {
             waveTableDataMutex.lock();

@@ -887,7 +887,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         d.sname = sname + sceneMod;
         d.pname = nm;
 
-        char pdisp[256];
+        char pdisp[TXT_SIZE];
         int ptag = p->id;
         auto thisms = (modsources)d.source_id;
 
@@ -1305,6 +1305,7 @@ void ModulationSideControls::showAddSourceMenu()
         {
             modsources ms = (modsources)modsource_display_order[k];
             popMenu = nullptr;
+
             if (ms >= ms_ctrl1 && ms <= ms_ctrl1 + n_customcontrollers - 1 && sc == 0)
             {
                 popMenu = &addMacroSub;
@@ -1352,9 +1353,11 @@ void ModulationSideControls::showAddSourceMenu()
                 {
                     int maxidx = synth->getMaxModulationIndex(sc, ms);
                     auto subm = juce::PopupMenu();
+
                     for (int i = 0; i < maxidx; ++i)
                     {
                         auto subn = sge->modulatorNameWithIndex(sc, ms, i, false, false);
+
                         subm.addItem(subn, [this, ms, i, sc, subn]() {
                             add_ms = ms;
                             add_ms_idx = i;
@@ -1366,12 +1369,14 @@ void ModulationSideControls::showAddSourceMenu()
                             repaint();
                         });
                     }
+
                     popMenu->addSubMenu(
                         sge->modulatorNameWithIndex(sc, ms, -1, false, false, false), subm);
                 }
                 else
                 {
                     auto sn = sge->modulatorNameWithIndex(sc, ms, 0, false, false);
+
                     popMenu->addItem(sn, [this, sn, sc, ms]() {
                         add_ms = ms;
                         add_ms_idx = 0;

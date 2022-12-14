@@ -230,16 +230,16 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Gr
     auto sw = fontSurge.getStringWidth(surgeLabel);
     auto vw = fontVersion.getStringWidth(surgeVersion);
 
-    auto ic = associatedBitmapStore->getImage(IDB_SURGE_ICON);
+    auto icon = associatedBitmapStore->getImage(IDB_SURGE_ICON);
 
     // Surge icon is 12 x 14 so draw that in the center
     auto titleCenter = w / 2;
     auto textMargin = Surge::Build::IsRelease ? 0 : 5;
     auto titleTextWidth = sw + vw + textMargin;
 
-    if (ic)
+    if (icon)
     {
-        ic->drawAt(g, titleCenter - (titleTextWidth / 2) - 14 - textMargin, h / 2 - 7, 1.0);
+        icon->drawAt(g, titleCenter - (titleTextWidth / 2) - 14 - textMargin, h / 2 - 7, 1.0);
     }
 
     auto boxSurge = Rectangle<int>(titleCenter - (titleTextWidth / 2), 0, sw, h);

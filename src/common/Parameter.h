@@ -264,7 +264,7 @@ struct ParameterDynamicNameFunction
  */
 struct ParameterDynamicBoolFunction
 {
-    virtual const bool getValue(const Parameter *p) const = 0;
+    virtual bool getValue(const Parameter *p) const = 0;
 };
 
 struct ParameterDynamicDeactivationFunction : public ParameterDynamicBoolFunction
@@ -340,13 +340,6 @@ struct ModulationDisplayInfoWindowStrings
 
 class SurgeStorage;
 
-/*
-** WARNING!
-**
-** Parameter is copied with memcpy
-** Therefore, don't have complex types as members!
-*/
-
 class Parameter
 {
   public:
@@ -414,7 +407,11 @@ class Parameter
     const char *get_internal_name() const;
     const char *get_storage_name() const;
     const wchar_t *getUnit() const;
+
+    /* this is now deprecated and will be removed in favor of std::string variant */
     void get_display(char *txt, bool external = false, float ef = 0.f) const;
+
+    std::string get_display(bool external = false, float ef = 0.f) const;
 
     enum ModulationDisplayMode
     {
@@ -596,4 +593,5 @@ class Parameter
 };
 
 // I don't make this a member since param needs to be copyable with memcpy.
+// TODO: Don't need to worry about that anymore.
 extern std::atomic<bool> parameterNameUpdated;

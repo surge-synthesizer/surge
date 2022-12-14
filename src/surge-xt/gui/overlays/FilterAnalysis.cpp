@@ -157,10 +157,10 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
     auto dbToY = [&](float db, int height) { return (float)height * (dbMax - db) / dbRange; };
 
-    char nm[256], snm[256];
+    std::string nm, snm;
 
-    fs.type.get_display(nm);
-    fs.subtype.get_display(snm);
+    nm = fs.type.get_display();
+    snm = fs.subtype.get_display();
 
     auto label = fmt::format("{}", nm);
 

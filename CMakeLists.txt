@@ -98,6 +98,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Any Clang
     add_compile_options(
+      -Wno-unused-command-line-argument
       -Wno-deprecated-declarations
       -Werror=inconsistent-missing-override
       -Werror=logical-op-parentheses
@@ -192,7 +193,7 @@ endforeach()
 add_custom_command(TARGET code-quality-pipeline-checks
   POST_BUILD
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMAND ${CMAKE_COMMAND} -E echo About to check clang-format
-  COMMAND git ls-files -- ${CLANG_FORMAT_GLOBS} | xargs clang-format --dry-run --Werror
+  COMMAND ${CMAKE_COMMAND} -E echo About to check clang-format using clang-format-12
+  COMMAND git ls-files -- ${CLANG_FORMAT_GLOBS} | xargs clang-format-12 --dry-run --Werror
   )
 # }}}

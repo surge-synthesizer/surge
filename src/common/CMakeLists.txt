@@ -4,7 +4,16 @@ project(surge-common)
 surge_add_lib_subdirectory(airwindows)
 surge_add_lib_subdirectory(eurorack)
 surge_add_lib_subdirectory(fmt)
-surge_add_lib_subdirectory(oddsound-mts)
+
+# Make MTS optional
+if (NOT SURGE_SKIP_ODDSOUND_MTS)
+   surge_add_lib_subdirectory(oddsound-mts)
+else()
+   add_library(oddsound-mts INTERFACE)
+   target_compile_definitions(oddsound-mts INTERFACE SURGE_SKIP_ODDSOUND_MTS)
+   add_library(surge::oddsound-mts ALIAS oddsound-mts)
+endif()
+
 if(MINGW)
   set(HAVE_VISIBILITY 0 CACHE INTERNAL "Force-disable libsamplerate's visibility check on MinGW")
 endif()
@@ -56,12 +65,12 @@ else()
           ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp
           )
   if (APPLE)
-    target_sources(juce_dsp_rack_sub PUBLIC
+    target_sources(juce_dsp_rack_sub PRIVATE
             ../../libs/JUCE/modules/juce_core/juce_core.mm
             ../../libs/JUCE/modules/juce_audio_formats/juce_audio_formats.mm
             )
   else()
-    target_sources(juce_dsp_rack_sub PUBLIC
+    target_sources(juce_dsp_rack_sub PRIVATE
             ../../libs/JUCE/modules/juce_core/juce_core.cpp
             ../../libs/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp
             )
@@ -76,6 +85,9 @@ else()
           JUCE_STANDALONE_APPLICATION=0
           JUCE_USE_CURL=0
           JUCE_WEB_BROWSER=0
+          JUCE_USE_FLAC=0
+          JUCE_USE_OGGVORBIS=0
+          JUCE_USE_WINDOWS_MEDIA_FORMAT=0
           )
   target_include_directories(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules)
 

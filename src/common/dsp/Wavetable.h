@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <StringOps.h>
 const int max_wtable_size = 4096;
 const int max_subtables = 512;
 const int max_mipmap_levels = 16;
@@ -12,6 +13,8 @@ const int max_wtable_samples = 2097152;
 #pragma pack(push, 1)
 struct wt_header
 {
+    // This struct can only contain scalar data that can be memcpy'd. It's read directly from data
+    // on the disk.
     char tag[4];
     unsigned int n_samples;
     unsigned short n_tables;
@@ -46,8 +49,9 @@ class Wavetable
 
     int current_id, queue_id;
     bool refresh_display;
-    char queue_filename[256];
-    char current_filename[256];
+    char queue_filename[TXT_SIZE];
+    char current_filename[TXT_SIZE];
+    int frame_size_if_absent{-1};
 };
 
 enum wtflags

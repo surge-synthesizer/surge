@@ -1048,7 +1048,25 @@ class alignas(16) SurgeStorage
     // second of data, assuming the sample rate is 48k.
     sst::cpputils::StereoRingBuffer<float, 8192> audioOut;
 
-    SurgeStorage(std::string suppliedDataPath = "");
+    struct SurgeStorageConfig
+    {
+        std::string suppliedDataPath{""};
+        bool createUserDirectory{true};
+        fs::path extraThirdPartyWavetablesPath{};
+
+        static SurgeStorageConfig fromDataPath(const std::string &s)
+        {
+            auto r = SurgeStorageConfig();
+            r.suppliedDataPath = s;
+            return r;
+        }
+    };
+    SurgeStorage(const SurgeStorageConfig &);
+    SurgeStorage(std::string suppliedDataPath = "")
+        : SurgeStorage(SurgeStorageConfig::fromDataPath(suppliedDataPath))
+    {
+    }
+
     static std::string skipPatchLoadDataPathSentinel;
 
     // In Surge XT, SurgeStorage can now keep a cache of errors it reports to the user
@@ -1140,11 +1158,12 @@ class alignas(16) SurgeStorage
     void createUserDirectory();
 
     void refresh_wtlist();
-    void refresh_wtlistAddDir(bool userDir, std::string subdir);
+    void refresh_wtlistAddDir(bool userDir, const std::string &subdir);
+    void refresh_wtlistFrom(bool isUser, const fs::path &from, const std::string &subdir);
     void refresh_patchlist();
     void refreshPatchlistAddDir(bool userDir, std::string subdir);
 
-    void refreshPatchOrWTListAddDir(bool userDir, std::string subdir,
+    void refreshPatchOrWTListAddDir(bool userDir, const fs::path &fromPath, std::string subdir,
                                     std::function<bool(std::string)> filterOp,
                                     std::vector<Patch> &items,
                                     std::vector<PatchCategory> &categories);
@@ -1199,6 +1218,7 @@ class alignas(16) SurgeStorage
     fs::path userWavetablesExportPath;
     fs::path userSkinsPath;
     fs::path userMidiMappingsPath;
+    fs::path extraThirdPartyWavetablesPath; // used by rack
 
     std::map<std::string, TiXmlDocument> userMidiMappingsXMLByName;
     void rescanUserMidiMappings();
@@ -1368,11 +1388,13 @@ class alignas(16) SurgeStorage
 
     void setTuningApplicationMode(const TuningApplicationMode m);
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     void initialize_oddsound();
     void deinitialize_oddsound();
+    void setOddsoundMTSActiveTo(bool b);
+#endif
     MTSClient *oddsound_mts_client = nullptr;
     std::atomic<bool> oddsound_mts_active{false};
-    void setOddsoundMTSActiveTo(bool b);
     uint32_t oddsound_mts_on_check = 0;
     enum OddsoundRetuneMode
     {
@@ -1429,7 +1451,7 @@ class alignas(16) SurgeStorage
     std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice,
         clipboard_modulation_global;
     Wavetable clipboard_wt[n_oscs];
-    char clipboard_wt_names[n_oscs][256];
+    char clipboard_wt_names[n_oscs][TXT_SIZE];
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
 

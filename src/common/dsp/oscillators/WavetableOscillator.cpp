@@ -77,7 +77,7 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     float intpart;
     shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
     tableipol = modff(shape, &intpart);
-    tableid = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2 + nointerp);
+    tableid = limit_range((int)intpart, 0, std::max((int)oscdata->wt.n_tables - 2 + nointerp, 0));
     last_tableipol = tableipol;
     last_tableid = tableid;
     hskew = 0.f;

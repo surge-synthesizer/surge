@@ -16,6 +16,7 @@
 #include "NimbusEffect.h"
 #include "samplerate.h"
 #include "DebugHelpers.h"
+#include "fmt/core.h"
 
 #ifdef _MSC_VER
 #define __attribute__(x)
@@ -269,42 +270,42 @@ void NimbusEffect::init_ctrltypes()
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;
 
-            static char res[TXT_SIZE];
-            res[0] = 0;
+            static std::string res;
             auto mode = fx->p[nmb_mode].val.i;
+
             switch (mode)
             {
             case 0:
                 if (idx == nmb_density)
-                    snprintf(res, TXT_SIZE, "%s", "Density");
+                    res = "Density";
                 if (idx == nmb_texture)
-                    snprintf(res, TXT_SIZE, "%s", "Texture");
+                    res = "Texture";
                 if (idx == nmb_size)
-                    snprintf(res, TXT_SIZE, "%s", "Size");
+                    res = "Size";
                 break;
             case 1:
             case 2:
                 if (idx == nmb_density)
-                    snprintf(res, TXT_SIZE, "%s", "Diffusion");
+                    res = "Diffusion";
                 if (idx == nmb_texture)
-                    snprintf(res, TXT_SIZE, "%s", "Filter");
+                    res = "Filter";
                 if (idx == nmb_size)
-                    snprintf(res, TXT_SIZE, "%s", "Size");
+                    res = "Size";
                 break;
             case 3:
                 if (idx == nmb_density)
-                    snprintf(res, TXT_SIZE, "%s", "Smear");
+                    res = "Smear";
                 if (idx == nmb_texture)
-                    snprintf(res, TXT_SIZE, "%s", "Texture");
+                    res = "Texture";
                 if (idx == nmb_size)
-                    snprintf(res, TXT_SIZE, "%s", "Warp");
+                    res = "Warp";
                 break;
             }
 
-            return res;
+            return res.c_str();
         }
 
-        const bool getValue(const Parameter *p) const override
+        bool getValue(const Parameter *p) const override
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto idx = p - fx->p;
@@ -335,7 +336,7 @@ void NimbusEffect::init_ctrltypes()
 
     static struct SpreadDeactivator : public ParameterDynamicDeactivationFunction
     {
-        const bool getValue(const Parameter *p) const
+        bool getValue(const Parameter *p) const
         {
             auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
             auto mode = fx->p[nmb_mode].val.i;

@@ -19,6 +19,7 @@
 
 #include "widgets/ParameterInfowindow.h"
 #include "widgets/MainFrame.h"
+#include "fmt/core.h"
 #include "DebugHelpers.h"
 
 void SurgeGUIEditor::showInfowindow(int ptag, juce::Rectangle<int> relativeTo,
@@ -103,17 +104,22 @@ void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
 
     if (isModulated)
     {
-        char pname[1024], pdisp[TXT_SIZE], txt[TXT_SIZE];
         SurgeSynthesizer::ID ptagid;
-        if (synth->fromSynthSideId(pid, ptagid))
-            synth->getParameterName(ptagid, txt);
+        char pdisp[TXT_SIZE], txt[TXT_SIZE];
         auto mn = modulatorNameWithIndex(current_scene, modsource, modsource_index, true, false);
 
-        sprintf(pname, "%s -> %s", mn.c_str(), txt);
+        if (synth->fromSynthSideId(pid, ptagid))
+        {
+            synth->getParameterName(ptagid, txt);
+        }
+
+        std::string pname = fmt::format("{:s} -> {:s}", mn, txt);
         ModulationDisplayInfoWindowStrings mss;
+
         p->get_display_of_modulation_depth(
             pdisp, synth->getModDepth(pid, modsource, current_scene, modsource_index),
             synth->isBipolarModulation(modsource), Parameter::InfoWindow, &mss);
+
         if (mss.val != "")
         {
             paramInfowindow->setLabels(pname, pdisp);

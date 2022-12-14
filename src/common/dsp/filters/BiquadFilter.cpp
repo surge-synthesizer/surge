@@ -31,15 +31,6 @@ BiquadFilter::BiquadFilter(SurgeStorage *storage)
     reg1.d[1] = 0;
     first_run = true;
 
-    /*if(storage->SSE2)
-    {
-            a1.init_SSE2();
-            a2.init_SSE2();
-            b0.init_SSE2();
-            b1.init_SSE2();
-            b2.init_SSE2();
-    }
-    else*/
     {
         a1.init_x87();
         a2.init_x87();
@@ -205,8 +196,7 @@ void BiquadFilter::coeff_orfanidisEQ(double omega, double BW, double G, double G
         double G01 = abs(G * G - G0 * G1);
         double G11 = abs(G * G - G1 * G1);
         double F01 = abs(GB * GB - G0 * G1);
-        double F11 = abs(GB * GB - G1 * G1); // blir wacko ?
-                                             // goes crazy (?)
+        double F11 = abs(GB * GB - G1 * G1); // goes crazy (?)
         double W2 = sqrt(G11 / G00) * square(tan(w0 / 2));
         double w_lower = w0 * powf(2, -0.5 * BW);
         double w_upper =
@@ -220,9 +210,6 @@ void BiquadFilter::coeff_orfanidisEQ(double omega, double BW, double G, double G
         double B = sqrt((G * G * C + GB * GB * D) / F);
         double a0 = (1 + W2 + A), a1 = -2 * (1 - W2), a2 = (1 + W2 - A), b0 = (G1 + G0 * W2 + B),
                b1 = -2 * (G1 - G0 * W2), b2 = (G1 - B + G0 * W2);
-
-        // if (c) sprintf(c,"G0: %f G: %f GB: %f G1: %f
-        // ",linear_to_dB(G0),linear_to_dB(G),linear_to_dB(GB),linear_to_dB(G1));
 
         set_coef(a0, a1, a2, b0, b1, b2);
     }
@@ -273,8 +260,6 @@ void BiquadFilter::set_coef(double a0, double a1, double a2, double b0, double b
 
 void BiquadFilter::process_block(float *data)
 {
-    /*if(storage->SSE2) process_block_SSE2(data);
-    else*/
     {
         int k;
         for (k = 0; k < BLOCK_SIZE; k++)
@@ -301,8 +286,6 @@ void BiquadFilter::process_block(float *data)
 
 void BiquadFilter::process_block_to(float *__restrict data, float *__restrict dataout)
 {
-    /*if(storage->SSE2) process_block_SSE2(data);
-    else*/
     {
         int k;
         for (k = 0; k < BLOCK_SIZE; k++)
@@ -329,8 +312,6 @@ void BiquadFilter::process_block_to(float *__restrict data, float *__restrict da
 
 void BiquadFilter::process_block_slowlag(float *__restrict dataL, float *__restrict dataR)
 {
-    /*if(storage->SSE2) process_block_slowlag_SSE2(dataL,dataR);
-    else*/
     {
         a1.process();
         a2.process();
@@ -366,8 +347,6 @@ void BiquadFilter::process_block_slowlag(float *__restrict dataL, float *__restr
 
 void BiquadFilter::process_block(float *dataL, float *dataR)
 {
-    /*if(storage->SSE2) process_block_SSE2(dataL,dataR);
-    else*/
     {
         int k;
         for (k = 0; k < BLOCK_SIZE; k++)
@@ -403,8 +382,6 @@ void BiquadFilter::process_block(float *dataL, float *dataR)
 
 void BiquadFilter::process_block_to(float *dataL, float *dataR, float *dstL, float *dstR)
 {
-    /*if(storage->SSE2) process_block_to_SSE2(dataL,dataR,dstL,dstR);
-    else*/
     {
         int k;
         for (k = 0; k < BLOCK_SIZE; k++)
@@ -440,8 +417,6 @@ void BiquadFilter::process_block_to(float *dataL, float *dataR, float *dstL, flo
 
 void BiquadFilter::process_block(double *data)
 {
-    /*if(storage->SSE2) process_block_SSE2(data);
-    else*/
     {
         int k;
         for (k = 0; k < BLOCK_SIZE; k++)
