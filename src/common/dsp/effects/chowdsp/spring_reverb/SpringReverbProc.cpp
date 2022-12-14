@@ -82,8 +82,11 @@ void SpringReverbProc::setParams(const Params &params, int numSamples)
 
     auto apfG = 0.5f - 0.4f * params.spin;
     float apfGVec alignas(16)[4] = {apfG, -apfG, apfG, -apfG};
+    VecType apfGVecAsVecType = 0;
+    for (int i = 0; i < 4; ++i)
+        apfGVecAsVecType[i] = apfGVec[i];
     for (auto &apf : vecAPFs)
-        apf.setParams(msToSamples(0.35f + 3.0f * params.size), _mm_load_ps(apfGVec));
+        apf.setParams(msToSamples(0.35f + 3.0f * params.size), apfGVecAsVecType);
 
     constexpr float dampFreqLow = 4000.0f;
     constexpr float dampFreqHigh = 18000.0f;
