@@ -4319,7 +4319,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         return true;
     }
 
-    auto nv = std::stof(s);
+    auto nv = std::atof(s.c_str());
 
     switch (displayType)
     {
