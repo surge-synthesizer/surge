@@ -3500,7 +3500,7 @@ std::string Parameter::get_display(bool external, float ef) const
             txt = character_names[limit_range(i, 0, (int)n_character_modes - 1)];
             break;
         case ct_fmratio_int:
-            txt = fmt::format("C : %d", i);
+            txt = fmt::format("C : {:d}", i);
             break;
         case ct_phaser_stages:
             if (i == 1)
