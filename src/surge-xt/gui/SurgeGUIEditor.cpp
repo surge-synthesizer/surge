@@ -4823,7 +4823,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
                         .modsources[ms]);
 
         ptxt1 = fmt::format("current: {:s}", txt);
-        ptxt3 = fmt::format("{:.{}f} %", (detailedMode ? 6 : 2), 100.0 * cms->get_output(0));
+        ptxt3 = fmt::format("{:.{}f} %", 100.0 * cms->get_output(0), (detailedMode ? 6 : 2));
     }
 
     typeinParamEditor->setValueLabels(ptxt1, ptxt2);

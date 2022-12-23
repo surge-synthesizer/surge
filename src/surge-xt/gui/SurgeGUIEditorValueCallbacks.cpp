@@ -1116,8 +1116,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addSeparator();
 
-                std::string vtxt = fmt::format("{:s}: {.{}f} %", Surge::GUI::toOSCase("Edit Value"),
-                                               (detailedMode ? 6 : 2), 100 * cms->get_output(0));
+                std::string vtxt =
+                    fmt::format("{:s}: {:.{}f} %", Surge::GUI::toOSCase("Edit Value"),
+                                100 * cms->get_output(0), (detailedMode ? 6 : 2));
                 contextMenu.addItem(vtxt, [this, bvf, modsource]() {
                     promptForUserValueEntry(nullptr, bvf, modsource,
                                             0,  // controllers aren't per scene
