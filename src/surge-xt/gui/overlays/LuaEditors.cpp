@@ -854,8 +854,9 @@ struct WavetablePreviewComponent : juce::Component
 };
 
 WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s,
-                                                 OscillatorStorage *os, Surge::GUI::Skin::ptr_t sk)
-    : CodeEditorContainerWithApply(ed, s, sk, true), osc(os)
+                                                 OscillatorStorage *os,
+                                                 Surge::GUI::Skin::ptr_t skin)
+    : CodeEditorContainerWithApply(ed, s, skin, true), osc(os)
 {
     if (osc->wavetable_formula == "")
     {
@@ -899,7 +900,7 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
     generate->addListener(this);
     addAndMakeVisible(generate.get());
 
-    renderer = std::make_unique<WavetablePreviewComponent>(storage, osc, sk);
+    renderer = std::make_unique<WavetablePreviewComponent>(storage, osc, skin);
     addAndMakeVisible(renderer.get());
 
     currentFrame = std::make_unique<juce::Slider>("currF");
