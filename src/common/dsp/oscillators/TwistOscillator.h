@@ -90,6 +90,8 @@ class TwistOscillator : public Oscillator
     float fmlagbuffer[BLOCK_SIZE_OS << 1];
     int fmwp, fmrp;
 
+    bool useCorrectLPGBlockSize{false}; // See #6760
+
 #if SAMPLERATE_LANCZOS
     std::unique_ptr<LanczosResampler> lancRes;
 #endif
