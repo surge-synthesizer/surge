@@ -1053,6 +1053,7 @@ class alignas(16) SurgeStorage
         std::string suppliedDataPath{""};
         bool createUserDirectory{true};
         fs::path extraThirdPartyWavetablesPath{};
+        bool scanWavetableAndPatches{true};
 
         static SurgeStorageConfig fromDataPath(const std::string &s)
         {

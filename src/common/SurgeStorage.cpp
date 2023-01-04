@@ -57,7 +57,8 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 {
     auto suppliedDataPath = config.suppliedDataPath;
     bool loadWtAndPatch = true;
-    loadWtAndPatch = !skipLoadWtAndPatch && suppliedDataPath != skipPatchLoadDataPathSentinel;
+    loadWtAndPatch = !skipLoadWtAndPatch && suppliedDataPath != skipPatchLoadDataPathSentinel &&
+                     config.scanWavetableAndPatches;
 
     if (suppliedDataPath == skipPatchLoadDataPathSentinel)
         suppliedDataPath = "";
