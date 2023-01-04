@@ -44,3 +44,6 @@
 [submodule "libs/sst/sst-waveshapers"]
 	path = libs/sst/sst-waveshapers
 	url = https://github.com/surge-synthesizer/sst-waveshapers
+[submodule "libs/pffft"]
+	path = libs/pffft
+	url = https://github.com/surge-synthesizer/pffft.git

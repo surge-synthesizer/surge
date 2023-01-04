@@ -387,8 +387,17 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
 
     bool lpgIsOn = !oscdata->p[twist_lpg_response].deactivated;
 
-    constexpr int max_subblock = 4;
-    int subblock = (lpgIsOn || FM) ? 1 : max_subblock;
+    // The LPG in surge 1.1 is wrong because it doesn't use the correct vlock
+    // size. This code allows you to optionally correct that while retaining legacy.
+    // See #6760 for more.
+    constexpr int max_subblock = 12; // This is the internal block size PLAITS uses
+
+    // This setting is *incorrect* but retains legacy surge XT 1.1 behavior
+    int subblock = (lpgIsOn || FM) ? 1 : 4; // retain surge legacy
+
+    // This setting allows us to correct it in VCV Rack.
+    if (lpgIsOn && useCorrectLPGBlockSize)
+        subblock = 12;
 #if SAMPLERATE_SRC
     float src_in[subblock][2];
     float src_out[BLOCK_SIZE_OS][2];

@@ -554,6 +554,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     /*
     We've decided to postpone this feature until after XT 1.0
+     */
     contextMenu.addSeparator();
 
     auto owts = [this]() {
@@ -562,7 +563,6 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     };
 
     contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
-    */
 
     // add this option only if we have any wavetables in the list
     if (idx > 0)

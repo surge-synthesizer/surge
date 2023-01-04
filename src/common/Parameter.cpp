@@ -3500,7 +3500,7 @@ std::string Parameter::get_display(bool external, float ef) const
             txt = character_names[limit_range(i, 0, (int)n_character_modes - 1)];
             break;
         case ct_fmratio_int:
-            txt = fmt::format("C : %d", i);
+            txt = fmt::format("C : {:d}", i);
             break;
         case ct_phaser_stages:
             if (i == 1)
@@ -4319,7 +4319,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         return true;
     }
 
-    auto nv = std::stof(s);
+    auto nv = std::atof(s.c_str());
 
     switch (displayType)
     {
