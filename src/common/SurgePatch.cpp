@@ -128,7 +128,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         for (int osc = 0; osc < n_oscs; osc++)
         {
             // Initialize the display name here
-            scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+            scene[sc].osc[osc].wavetable_display_name = "";
             scene[sc].osc[osc].wavetable_formula = "";
             scene[sc].osc[osc].wavetable_formula_nframes = 10;
             scene[sc].osc[osc].wavetable_formula_res_base = 5;
@@ -718,8 +718,8 @@ void SurgePatch::init_default_values()
             }
             else
                 osc.wt.queue_id = -1;
-            osc.wt.queue_filename[0] = 0;
-            osc.wt.current_filename[0] = 0;
+            osc.wt.queue_filename = "";
+            osc.wt.current_filename = "";
         }
         scene[sc].fm_depth.val.f = -24.f;
         scene[sc].portamento.val.f = scene[sc].portamento.val_min.f;
@@ -1092,29 +1092,31 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                         return;
 
                     scene[sc].osc[osc].wt.queue_id = -1;
-                    scene[sc].osc[osc].wt.queue_filename[0] = 0;
                     scene[sc].osc[osc].wt.current_id = -1;
-                    scene[sc].osc[osc].wt.current_filename[0] = 0;
+                    scene[sc].osc[osc].wt.queue_filename = "";
+                    scene[sc].osc[osc].wt.current_filename = "";
 
                     void *d = (void *)((char *)dr + sizeof(wt_header));
 
                     storage->waveTableDataMutex.lock();
                     scene[sc].osc[osc].wt.BuildWT(d, *wth, false);
+
                     bool hadName{true};
-                    if (scene[sc].osc[osc].wavetable_display_name[0] == '\0')
+
+                    if (scene[sc].osc[osc].wavetable_display_name.empty())
                     {
                         hadName = false;
+
                         if (scene[sc].osc[osc].wt.flags & wtf_is_sample)
                         {
-                            strxcpy(scene[sc].osc[osc].wavetable_display_name, "(Patch Sample)",
-                                    WAVETABLE_DISPLAY_NAME_SIZE);
+                            scene[sc].osc[osc].wavetable_display_name = "(Patch Sample)";
                         }
                         else
                         {
-                            strxcpy(scene[sc].osc[osc].wavetable_display_name, "(Patch Wavetable)",
-                                    WAVETABLE_DISPLAY_NAME_SIZE);
+                            scene[sc].osc[osc].wavetable_display_name = "(Patch Wavetable)";
                         }
                     }
+
                     storage->waveTableDataMutex.unlock();
 
                     if (hadName && scene[sc].osc[osc].wt.current_id < 0)
@@ -1123,8 +1125,8 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                              i < storage->wt_list.size() && scene[sc].osc[osc].wt.current_id < 0;
                              ++i)
                         {
-                            if (strcmp(scene[sc].osc[osc].wavetable_display_name,
-                                       storage->wt_list[i].name.c_str()) == 0)
+                            if (scene[sc].osc[osc].wavetable_display_name ==
+                                storage->wt_list[i].name)
                             {
                                 scene[sc].osc[osc].wt.current_id = i;
                             }
@@ -2102,7 +2104,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     {
         for (int osc = 0; osc < n_oscs; osc++)
         {
-            scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+            scene[sc].osc[osc].wavetable_display_name = "";
             scene[sc].osc[osc].wavetable_formula = "";
             scene[sc].osc[osc].wavetable_formula_nframes = 10;
             scene[sc].osc[osc].wavetable_formula_res_base = 5;
@@ -2124,8 +2126,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
                 if (lkid->Attribute("wavetable_display_name"))
                 {
-                    strxcpy(scene[ssc].osc[sos].wavetable_display_name,
-                            lkid->Attribute("wavetable_display_name"), WAVETABLE_DISPLAY_NAME_SIZE);
+                    scene[ssc].osc[sos].wavetable_display_name =
+                        lkid->Attribute("wavetable_display_name");
                 }
 
                 if (lkid->Attribute("wavetable_formula"))

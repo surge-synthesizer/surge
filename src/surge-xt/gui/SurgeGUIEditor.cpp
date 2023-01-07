@@ -6344,11 +6344,10 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
 
     if (fExt == ".wav" || fExt == ".wt")
     {
-        strxcpy(synth->storage.getPatch()
-                    .scene[current_scene]
-                    .osc[current_osc[current_scene]]
-                    .wt.queue_filename,
-                fname.c_str(), 255);
+        synth->storage.getPatch()
+            .scene[current_scene]
+            .osc[current_osc[current_scene]]
+            .wt.queue_filename = fname;
     }
     else if (fExt == ".scl")
     {
