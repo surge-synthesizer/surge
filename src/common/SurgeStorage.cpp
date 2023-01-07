@@ -1110,6 +1110,7 @@ void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)
 {
     wt->current_id = id;
     wt->queue_id = -1;
+
     if (wt_list.empty() && id == 0)
     {
 #if HAS_JUCE
@@ -1117,38 +1118,58 @@ void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)
                        SurgeSharedBinary::memoryWavetable_wtSize, wt);
 #endif
         if (osc)
-            strncpy(osc->wavetable_display_name, "Sin to Saw", TXT_SIZE);
+        {
+            osc->wavetable_display_name = "Sin to Saw";
+        }
 
         return;
     }
+
     if (id < 0)
+    {
         return;
+    }
+
     if (id >= wt_list.size())
+    {
         return;
+    }
+
     if (!wt)
+    {
         return;
+    }
 
     load_wt(path_to_string(wt_list[id].path), wt, osc);
 
     if (osc)
     {
-        auto n = wt_list.at(id).name;
-        strncpy(osc->wavetable_display_name, n.c_str(), 256);
+        osc->wavetable_display_name = wt_list.at(id).name;
     }
 }
 
 void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *osc)
 {
-    strncpy(wt->current_filename, wt->queue_filename, 256);
-    wt->queue_filename[0] = 0;
-    string extension = filename.substr(filename.find_last_of('.'), filename.npos);
+    wt->current_filename = wt->queue_filename;
+    wt->queue_filename = "";
+
+    std::string extension = filename.substr(filename.find_last_of('.'), filename.npos);
+
     for (unsigned int i = 0; i < extension.length(); i++)
+    {
         extension[i] = tolower(extension[i]);
+    }
+
     bool loaded = false;
+
     if (extension.compare(".wt") == 0)
+    {
         loaded = load_wt_wt(filename, wt);
+    }
     else if (extension.compare(".wav") == 0)
+    {
         loaded = load_wt_wav_portable(filename, wt);
+    }
     else
     {
         std::ostringstream oss;
@@ -1159,13 +1180,12 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
 
     if (osc && loaded)
     {
-        char sep = PATH_SEPARATOR;
-        auto fn = filename.substr(filename.find_last_of(sep) + 1, filename.npos);
+        auto fn = filename.substr(filename.find_last_of(PATH_SEPARATOR) + 1, filename.npos);
         std::string fnnoext = fn.substr(0, fn.find_last_of('.'));
 
         if (fnnoext.length() > 0)
         {
-            strncpy(osc->wavetable_display_name, fnnoext.c_str(), 256);
+            osc->wavetable_display_name = fnnoext;
         }
     }
 }
@@ -1173,9 +1193,14 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
 bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
 {
     std::filebuf f;
+
     if (!f.open(string_to_path(filename), std::ios::binary | std::ios::in))
+    {
         return false;
+    }
+
     wt_header wh;
+
     memset(&wh, 0, sizeof(wt_header));
 
     size_t read = f.sgetn(reinterpret_cast<char *>(&wh), sizeof(wh));
@@ -1187,10 +1212,15 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
     }
 
     size_t ds;
+
     if (vt_read_int16LE(wh.flags) & wtf_int16)
+    {
         ds = sizeof(short) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+    }
     else
+    {
         ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+    }
 
     const std::unique_ptr<char[]> data{new char[ds]};
     read = f.sgetn(data.get(), ds);
@@ -1340,8 +1370,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
         {
             clipboard_wt[0].Copy(&getPatch().scene[scene].osc[entry].wt);
-            strncpy(clipboard_wt_names[0],
-                    getPatch().scene[scene].osc[entry].wavetable_display_name, 256);
+            clipboard_wt_names[0] = getPatch().scene[scene].osc[entry].wavetable_display_name;
         }
 
         clipboard_extraconfig[0] = getPatch().scene[scene].osc[entry].extraConfig;
@@ -1397,8 +1426,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         for (int i = 0; i < n_oscs; i++)
         {
             clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
-            strncpy(clipboard_wt_names[i], getPatch().scene[scene].osc[i].wavetable_display_name,
-                    256);
+            clipboard_wt_names[i] = getPatch().scene[scene].osc[i].wavetable_display_name;
             clipboard_extraconfig[i] = getPatch().scene[scene].osc[i].extraConfig;
         }
 
@@ -1594,8 +1622,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
         {
             getPatch().scene[scene].osc[i].extraConfig = clipboard_extraconfig[i];
             getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
-            strncpy(getPatch().scene[scene].osc[i].wavetable_display_name, clipboard_wt_names[i],
-                    256);
+            getPatch().scene[scene].osc[i].wavetable_display_name = clipboard_wt_names[i];
         }
 
         getPatch().scene[scene].monoVoicePriorityMode = clipboard_primode;
@@ -1669,8 +1696,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
             if (uses_wavetabledata(getPatch().scene[scene].osc[entry].type.val.i))
             {
                 getPatch().scene[scene].osc[entry].wt.Copy(&clipboard_wt[0]);
-                strncpy(getPatch().scene[scene].osc[entry].wavetable_display_name,
-                        clipboard_wt_names[0], 256);
+                getPatch().scene[scene].osc[entry].wavetable_display_name = clipboard_wt_names[0];
             }
 
             // copy modroutings

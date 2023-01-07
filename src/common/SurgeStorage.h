@@ -551,8 +551,8 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     Parameter p[n_osc_params];
     Parameter keytrack, retrigger;
     Wavetable wt;
-#define WAVETABLE_DISPLAY_NAME_SIZE 256
-    char wavetable_display_name[WAVETABLE_DISPLAY_NAME_SIZE];
+
+    std::string wavetable_display_name;
     std::string wavetable_formula = "";
     int wavetable_formula_res_base = 5, // 32 * 2^this
         wavetable_formula_nframes = 10;
@@ -1452,7 +1452,7 @@ class alignas(16) SurgeStorage
     std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice,
         clipboard_modulation_global;
     Wavetable clipboard_wt[n_oscs];
-    char clipboard_wt_names[n_oscs][TXT_SIZE];
+    std::array<std::string, n_oscs> clipboard_wt_names;
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
 

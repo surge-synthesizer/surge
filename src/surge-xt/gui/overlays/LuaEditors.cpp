@@ -990,7 +990,7 @@ void WavetableEquationEditor::buttonClicked(juce::Button *button)
                                                    respt, nfr, wh, &wd);
         storage->waveTableDataMutex.lock();
         osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
-        snprintf(osc->wavetable_display_name, 256, "Scripted Wavetable");
+        osc->wavetable_display_name = "Scripted Wavetable";
         storage->waveTableDataMutex.unlock();
 
         delete[] wd;

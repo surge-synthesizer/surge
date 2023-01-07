@@ -39,9 +39,9 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        char lb[TXT_SIZE], nm[TXT_SIZE];
-        snprintf(lb, TXT_SIZE, "fx_parm_%d", i);
-        snprintf(nm, TXT_SIZE, "FX Parameter %d", i);
+        std::string lb, nm;
+        lb = fmt::format("fx_parm_{:d}", i);
+        nm = fmt::format("FX Parameter {:d}", i);
 
         addParameter(fxParams[i] =
                          new float_param_t(lb, nm, juce::NormalisableRange<float>(0.0, 1.0),
@@ -69,9 +69,10 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        char lb[TXT_SIZE], nm[TXT_SIZE];
-        snprintf(lb, TXT_SIZE, "fx_temposync_%d", i);
-        snprintf(nm, TXT_SIZE, "Feature Param %d", i);
+        // FIXME - is this even used here?!
+        std::string lb, nm;
+        lb = fmt::format("fx_temposync_{:d}", i);
+        nm = fmt::format("Feature Param {:d}", i);
 
         paramFeatures[i] = paramFeatureFromParam(&(fxstorage->p[fx_param_remap[i]]));
     }
