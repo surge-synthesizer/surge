@@ -573,8 +573,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     }
 
     auto rnaction = [this]() {
-        std::string c;
-        c = this->oscdata->wavetable_display_name;
+        auto c = this->oscdata->wavetable_display_name;
 
         if (sge)
         {
