@@ -189,6 +189,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     storage.getPatch().name = "Init";
     storage.getPatch().comment = "";
     storage.getPatch().author = "Surge Synth Team";
+    storage.getPatch().license = "Licensed under the maximally permissive CC0 license";
     midiprogramshavechanged = false;
 
     for (int i = 0; i < BLOCK_SIZE; i++)

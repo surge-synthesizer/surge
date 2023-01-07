@@ -204,7 +204,7 @@ struct PatchSelectorCommentTooltip : public juce::Component,
 
     std::string comment;
     void positionForComment(const juce::Point<int> &centerPoint, const std::string &comment,
-                            const int maxWidth);
+                            const int maxTooltipWidth);
 
   protected:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelectorCommentTooltip);

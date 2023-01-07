@@ -1334,6 +1334,17 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             author = s;
         }
 
+        s = meta->Attribute("license");
+
+        if (s)
+        {
+            license = s;
+        }
+        else
+        {
+            license = "";
+        }
+
         auto *tagsX = TINYXML_SAFE_TO_ELEMENT(meta->FirstChild("tags"));
         tags.clear();
 
@@ -2883,6 +2894,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     meta.SetAttribute("category", this->category);
     meta.SetAttribute("comment", comment);
     meta.SetAttribute("author", author);
+    meta.SetAttribute("license", license);
 
     TiXmlElement tagsX("tags");
 

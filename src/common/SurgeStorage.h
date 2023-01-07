@@ -924,7 +924,7 @@ class SurgePatch
     SurgeStorage *storage;
 
     // metadata
-    std::string name, category, author, comment;
+    std::string name, category, author, license, comment;
 
     struct Tag
     {
