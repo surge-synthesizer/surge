@@ -1379,30 +1379,41 @@ void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
 }
 
 void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &centerPoint,
-                                                     const std::string &c, const int maxWidth)
+                                                     const std::string &c,
+                                                     const int maxTooltipWidth)
 {
     comment = c;
 
     std::stringstream ss(comment);
     std::string to;
 
-    int idx = 0;
+    int numLines = 0;
 
     auto ft = skin->fontManager->getLatoAtSize(9);
-    auto width = 0;
+    auto width = 0.f;
 
     while (std::getline(ss, to, '\n'))
     {
-        auto w = ft.getStringWidth(to);
+        auto w = ft.getStringWidthFloat(to);
+
+        // in case of an empty line, we still need to count it as an extra row
+        // so bump it up a bit so that the rows calculation ceils to 1
+        if (w == 0.f)
+        {
+            w = 1.f;
+        }
+
+        auto rows = std::ceil(w / (float)maxTooltipWidth);
+
         width = std::max(w, width);
-        idx++;
+        numLines += (int)rows;
     }
 
-    auto height = std::max(idx * (ft.getHeight() + 2), 30.f);
+    auto height = std::max(numLines * (ft.getHeight() + 2), 30.f);
 
     auto r = juce::Rectangle<int>()
                  .withCentre(juce::Point(centerPoint.x, centerPoint.y))
-                 .withSizeKeepingCentre(std::min(width + 12, maxWidth), height)
+                 .withSizeKeepingCentre(std::min(width, (float)maxTooltipWidth), height)
                  .translated(0, height / 2);
 
     setBounds(r);
