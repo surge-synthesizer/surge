@@ -76,6 +76,7 @@
 #include "ModernOscillator.h"
 #ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
+#include "libMTSMaster.h"
 #endif
 
 #include "filesystem/import.h"
@@ -3544,17 +3545,47 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         }
     });
 
+    auto canMaster = MTS_CanRegisterMaster();
+
     std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Main");
-    tuningSubMenu.addItem(mtxt, true, getStorage()->oddsound_mts_active_as_main, [this]() {
-        if (getStorage()->oddsound_mts_active_as_main)
+    tuningSubMenu.addItem(mtxt, canMaster || getStorage()->oddsound_mts_active_as_main,
+                          getStorage()->oddsound_mts_active_as_main, [this]() {
+                              if (getStorage()->oddsound_mts_active_as_main)
+                              {
+                                  this->synth->storage.disconnect_as_oddsound_main();
+                              }
+                              else
+                              {
+                                  this->synth->storage.connect_as_oddsound_main();
+                              }
+                          });
+    if (getStorage()->oddsound_mts_active_as_main)
+    {
+        auto nc = MTS_GetNumClients();
+        tuningSubMenu.addItem("MTS has " + std::to_string(nc) + " clients", false, false, []() {});
+    }
+    if (getStorage()->oddsound_mts_active_as_main || !canMaster)
+    {
+        if (MTS_HasIPC())
         {
-            this->synth->storage.disconnect_as_oddsound_main();
+            tuningSubMenu.addItem("Re-Initialize MTS Library and IPC", true, false, []() {
+                auto cb = juce::ModalCallbackFunction::create([](int okcs) {
+                    if (okcs)
+                    {
+                        MTS_Reinitialize();
+                    }
+                });
+                std::string msg =
+                    "Re-Initializing MTS will disconnect all clients, including "
+                    "this one, and will generally require you to restart your DAW and sessions, "
+                    "but it will clear up after particularly nasty crashes or IPC issues. "
+                    "Unless you are sure you want to do this, you probably dont.";
+                juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon,
+                                                   "ReInitialize MTS-ESP", msg, "Yes", "No",
+                                                   nullptr, cb);
+            });
         }
-        else
-        {
-            this->synth->storage.connect_as_oddsound_main();
-        }
-    });
+    }
 
     if (tsMode && !this->synth->storage.oddsound_mts_client &&
         !getStorage()->oddsound_mts_active_as_main)
