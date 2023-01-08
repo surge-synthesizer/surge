@@ -42,6 +42,7 @@
 #include "overlays/TypeinParamEditor.h"
 #include "overlays/Oscilloscope.h"
 #include "overlays/OverlayWrapper.h"
+#include "overlays/FilterAnalysis.h"
 
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
@@ -930,6 +931,21 @@ void SurgeGUIEditor::idle()
                     if (lfoDisplay)
                     {
                         lfoDisplay->invalidateIfIdIsInRange(j);
+                    }
+
+                    auto sp = getStorage()->getPatch().param_ptr[j];
+                    if (sp)
+                    {
+                        if (sp->ctrlgroup == cg_FILTER)
+                        {
+                            // force repaint any filter overlays
+                            auto fa = getOverlayIfOpenAs<Surge::Overlays::FilterAnalysis>(
+                                OverlayTags::FILTER_ANALYZER);
+                            if (fa)
+                            {
+                                fa->forceDataRefresh();
+                            }
+                        }
                     }
                 }
             }
