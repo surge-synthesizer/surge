@@ -1800,6 +1800,23 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             }
         }
 
+        auto mts_main =
+            TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("oddsound_mts_active_as_main"));
+        if (mts_main)
+        {
+            int tv;
+
+            if (tam->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
+            {
+                if (tv)
+                {
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+                    storage->connect_as_oddsound_main();
+#endif
+                }
+            }
+        }
+
         auto *hcs = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("hardclipmodes"));
 
         if (hcs)
@@ -3046,7 +3063,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
 
     // Revision 16 adds the TAM
     TiXmlElement tam("tuningApplicationMode");
-    if (storage->oddsound_mts_active)
+    if (storage->oddsound_mts_active_as_client)
     {
         tam.SetAttribute("v", (int)(storage->patchStoredTuningApplicationMode));
     }
@@ -3055,6 +3072,11 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         tam.SetAttribute("v", (int)(storage->tuningApplicationMode));
     }
     nonparamconfig.InsertEndChild(tam);
+
+    // Revision 21 adds MTS as main
+    TiXmlElement oam("oddsound_mts_active_as_main");
+    oam.SetAttribute("v", (int)(storage->oddsound_mts_active_as_main));
+    nonparamconfig.InsertEndChild(oam);
 
     patch.InsertEndChild(nonparamconfig);
 

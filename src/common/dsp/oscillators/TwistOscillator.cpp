@@ -306,7 +306,7 @@ TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscda
 float TwistOscillator::tuningAwarePitch(float pitch)
 {
     if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL &&
-        !(storage->oddsound_mts_client && storage->oddsound_mts_active) &&
+        !(storage->oddsound_mts_client && storage->oddsound_mts_active_as_client) &&
         !(storage->isStandardTuning))
     {
         auto idx = (int)floor(pitch);

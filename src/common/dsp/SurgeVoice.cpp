@@ -51,7 +51,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
     auto res = key + /* mainChannelState->pitchBendInSemitones + */ mpeBend + detune;
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+    if (storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
     {
         if (storage->oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT ||
             key != keyRetuningForKey)
@@ -80,7 +80,7 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, bool isMpeEnabled
                                        SurgeStorage *storage, bool remapKeyForTuning)
 {
     float res = key;
-    if (storage->mapChannelToOctave && !storage->oddsound_mts_active && !isMpeEnabled)
+    if (storage->mapChannelToOctave && !storage->oddsound_mts_active_as_client && !isMpeEnabled)
     {
         if (remapKeyForTuning)
         {
@@ -390,7 +390,7 @@ void SurgeVoice::legato(int key, int velocity, char detune)
 
 void SurgeVoice::retriggerPortaIfKeyChanged()
 {
-    if (!storage->oddsound_mts_active &&
+    if (!storage->oddsound_mts_active_as_client &&
         (storage->isStandardTuning || storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL))
     {
         if (floor(state.pkey + 0.5) != state.priorpkey)
@@ -406,7 +406,7 @@ void SurgeVoice::retriggerPortaIfKeyChanged()
         };
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-        if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+        if (storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
         {
             v4k = [this](int k) {
                 return log2f(MTS_NoteToFrequency(storage->oddsound_mts_client, k, state.channel) /
@@ -1485,7 +1485,7 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
     {
         float lk = key;
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-        if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+        if (storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
         {
             lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk, channel);
             state.portasrc_key = lk;
