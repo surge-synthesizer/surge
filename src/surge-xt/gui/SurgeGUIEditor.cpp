@@ -3547,7 +3547,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
     auto canMaster = MTS_CanRegisterMaster();
 
-    std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Main");
+    std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Source");
     tuningSubMenu.addItem(mtxt, canMaster || getStorage()->oddsound_mts_active_as_main,
                           getStorage()->oddsound_mts_active_as_main, [this]() {
                               if (getStorage()->oddsound_mts_active_as_main)
@@ -7079,6 +7079,7 @@ void SurgeGUIEditor::setupKeymapManager()
 
     keyMapManager->addBinding(Surge::GUI::OPEN_MANUAL, {juce::KeyPress::F1Key});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_ABOUT, {juce::KeyPress::F12Key});
+    keyMapManager->addBinding(Surge::GUI::ANNOUNCE_STATE, {keymap_t::Modifiers::ALT, (int)'0'});
 
     keyMapManager->unstreamFromXML();
 }
@@ -7491,6 +7492,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 juce::URL(thingToOpen).launchInDefaultBrowser();
                 return true;
             }
+            case Surge::GUI::ANNOUNCE_STATE:
+                announceGuiState();
+                break;
             case Surge::GUI::SKIN_LAYOUT_GRID:
             case Surge::GUI::TOGGLE_ABOUT:
             {
@@ -7590,6 +7594,27 @@ std::string SurgeGUIEditor::showShortcutDescription(const std::string &shortcutD
     {
         return "";
     }
+}
+
+void SurgeGUIEditor::announceGuiState()
+{
+    std::ostringstream oss;
+
+    auto s = getStorage();
+    auto ot = s->getPatch().scene[current_scene].osc[current_osc[current_scene]].type.val.i;
+    auto ft = s->getPatch().fx[current_fx].type.val.i;
+    auto ms = s->getPatch()
+                  .scene[current_scene]
+                  .lfo[modsource_editor[current_scene] - ms_lfo1]
+                  .shape.val.i;
+
+    oss << "SurgeXT. Patch '" << s->getPatch().name << "'. Scene "
+        << (current_scene == 0 ? "A" : "B") << ". "
+        << " Oscillator " << (current_osc[current_scene] + 1) << " " << osc_type_names[ot] << "."
+        << " Modulator " << modulatorName(modsource_editor[current_scene], false) << " "
+        << lt_names[ms] << ". " << fxslot_names[current_fx] << " " << fx_type_names[ft] << "."
+        << std::endl;
+    enqueueAccessibleAnnouncement(oss.str());
 }
 
 std::string SurgeGUIEditor::showShortcutDescription(const std::string &shortcutDesc)

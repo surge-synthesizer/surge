@@ -76,6 +76,8 @@ enum KeyboardActions
     OPEN_MANUAL,
     TOGGLE_ABOUT,
 
+    ANNOUNCE_STATE,
+
     n_kbdActions
 };
 
@@ -169,6 +171,8 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "OPEN_MANUAL";
     case TOGGLE_ABOUT:
         return "TOGGLE_ABOUT";
+    case ANNOUNCE_STATE:
+        return "ANNOUNCE_STATE";
 
     case n_kbdActions:
         jassert(false);
@@ -315,6 +319,9 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     case TOGGLE_ABOUT:
         desc = "About Surge XT";
         skipOSCase = true;
+        break;
+    case ANNOUNCE_STATE:
+        desc = "Announce Editor State with Accessible API";
         break;
 
     default:
