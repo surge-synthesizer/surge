@@ -2323,7 +2323,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         case ct_freq_audible_very_low_minval:
                         {
                             auto hasmts = synth->storage.oddsound_mts_client &&
-                                          synth->storage.oddsound_mts_active;
+                                          synth->storage.oddsound_mts_active_as_client;
 
                             std::string tuningmode = hasmts ? "MTS" : "SCL/KBM";
 

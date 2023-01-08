@@ -39,6 +39,7 @@
 #include "sst/plugininfra/strnatcmp.h"
 #ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
+#include "libMTSMaster.h"
 #endif
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"
@@ -522,7 +523,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     else
     {
         oddsound_mts_client = nullptr;
-        oddsound_mts_active = false;
+        oddsound_mts_active_as_client = false;
     }
 #endif
 
@@ -1995,6 +1996,9 @@ void SurgeStorage::load_midi_controllers()
 SurgeStorage::~SurgeStorage()
 {
 #ifndef SURGE_SKIP_ODDSOUND_MTS
+    if (oddsound_mts_active_as_main)
+        disconnect_as_oddsound_main();
+
     deinitialize_oddsound();
 #endif
 }
@@ -2261,6 +2265,7 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
         table_note_omega[1][i] =
             (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
     }
+    tuningUpdates++;
     return true;
 }
 
@@ -2269,7 +2274,7 @@ void SurgeStorage::setTuningApplicationMode(const TuningApplicationMode m)
     tuningApplicationMode = m;
     patchStoredTuningApplicationMode = m;
     resetToCurrentScaleAndMapping();
-    if (oddsound_mts_active)
+    if (oddsound_mts_active_as_client)
     {
         tuningApplicationMode = RETUNE_MIDI_ONLY;
     }
@@ -2449,8 +2454,8 @@ void SurgeStorage::deinitialize_oddsound()
 
 void SurgeStorage::setOddsoundMTSActiveTo(bool b)
 {
-    bool poa = oddsound_mts_active;
-    oddsound_mts_active = b;
+    bool poa = oddsound_mts_active_as_client;
+    oddsound_mts_active_as_client = b;
     if (b && b != poa)
     {
         // Oddsound right now is MIDI_ONLY so force that to avoid lingering problems
@@ -2460,6 +2465,42 @@ void SurgeStorage::setOddsoundMTSActiveTo(bool b)
     {
         tuningApplicationMode = patchStoredTuningApplicationMode;
     }
+}
+
+void SurgeStorage::connect_as_oddsound_main()
+{
+    if (oddsound_mts_client)
+    {
+        deinitialize_oddsound();
+    }
+    if (oddsound_mts_active_as_main) // should never happen
+    {
+        MTS_DeregisterMaster();
+    }
+    oddsound_mts_active_as_main = true;
+    MTS_RegisterMaster();
+    lastSentTuningUpdate = -1;
+}
+void SurgeStorage::disconnect_as_oddsound_main()
+{
+    oddsound_mts_active_as_main = false;
+    MTS_DeregisterMaster();
+    initialize_oddsound();
+}
+void SurgeStorage::send_tuning_update()
+{
+    if (lastSentTuningUpdate == tuningUpdates)
+        return;
+
+    lastSentTuningUpdate = tuningUpdates;
+    if (!oddsound_mts_active_as_main)
+        return;
+
+    for (int i = 0; i < 128; ++i)
+    {
+        MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
+    }
+    MTS_SetScaleName(currentTuning.scale.description.c_str());
 }
 #endif
 

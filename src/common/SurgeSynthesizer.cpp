@@ -378,7 +378,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    if (storage.oddsound_mts_client && storage.oddsound_mts_active)
+    if (storage.oddsound_mts_client && storage.oddsound_mts_active_as_client)
     {
         if (MTS_ShouldFilterNote(storage.oddsound_mts_client, key, channel))
         {
@@ -4104,10 +4104,10 @@ void SurgeSynthesizer::processControl()
         storage.oddsound_mts_on_check = (storage.oddsound_mts_on_check + 1) & (1024 - 1);
         if (storage.oddsound_mts_on_check == 0)
         {
-            bool prior = storage.oddsound_mts_active;
+            bool prior = storage.oddsound_mts_active_as_client;
             storage.setOddsoundMTSActiveTo(MTS_HasMaster(storage.oddsound_mts_client));
 
-            if (prior != storage.oddsound_mts_active)
+            if (prior != storage.oddsound_mts_active_as_client)
             {
                 refresh_editor = true;
             }

@@ -548,6 +548,10 @@ void SurgeGUIEditor::idle()
                                           synth->sustainpedalCC);
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    getStorage()->send_tuning_update();
+#endif
+
     if (errorItemCount)
     {
         std::vector<std::pair<std::string, std::string>> cp;
@@ -778,8 +782,8 @@ void SurgeGUIEditor::idle()
             if ((v < 0.5 && !synth->storage.isStandardTuning) ||
                 (v > 0.5 && synth->storage.isStandardTuning))
             {
-                bool hasmts =
-                    synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+                bool hasmts = synth->storage.oddsound_mts_client &&
+                              synth->storage.oddsound_mts_active_as_client;
 
                 statusTune->setValue(!synth->storage.isStandardTuning || hasmts);
                 statusTune->asJuceComponent()->repaint();
@@ -1698,7 +1702,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::STATUS_TUNE:
         {
             statusTune = layoutComponentForSkin(skinCtrl, tag_status_tune);
-            auto hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+            auto hasmts =
+                synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active_as_client;
             statusTune->setValue(synth->storage.isStandardTuning ? hasmts
                                                                  : synth->storage.isToggledToCache);
             setAccessibilityInformationByTitleAndAction(statusTune->asJuceComponent(), "Tune",
@@ -2166,7 +2171,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     }
 
     // if the Tuning Editor was open and ODDSound was activated (which causes a refresh), close it
-    if (synth->storage.oddsound_mts_active)
+    if (synth->storage.oddsound_mts_active_as_client)
     {
         closeOverlay(TUNING_EDITOR);
     }
@@ -2715,7 +2720,8 @@ void SurgeGUIEditor::toggleTuning()
 
     if (statusTune)
     {
-        bool hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+        bool hasmts =
+            synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active_as_client;
         statusTune->setValue(this->synth->storage.isStandardTuning ? hasmts : 1);
     }
 
@@ -3225,8 +3231,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     bool isScaleEnabled = !synth->storage.isStandardScale;
     bool isMappingEnabled = !synth->storage.isStandardMapping;
 
-    bool isOddsoundOn =
-        this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client;
+    bool isOddsoundOnAsClient = this->synth->storage.oddsound_mts_active_as_client &&
+                                this->synth->storage.oddsound_mts_client;
 
     auto tuningSubMenu = juce::PopupMenu();
     auto hu = helpURLForSpecial("tun-menu");
@@ -3235,13 +3241,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     {
         auto lurl = fullyResolvedHelpURL(hu);
 
-        addHelpHeaderTo(isOddsoundOn ? "Tuning (MTS-ESP)" : "Tuning", lurl, tuningSubMenu);
+        addHelpHeaderTo(isOddsoundOnAsClient ? "Tuning (MTS-ESP)" : "Tuning", lurl, tuningSubMenu);
 
         tuningSubMenu.addSeparator();
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    if (isOddsoundOn)
+    if (isOddsoundOnAsClient)
     {
         std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
 
@@ -3252,7 +3258,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     }
 #endif
 
-    if (!isOddsoundOn)
+    if (!isOddsoundOnAsClient)
     {
         if (isScaleEnabled)
         {
@@ -3505,61 +3511,71 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    if (synth->juceWrapperType.compare("Standalone") != 0)
-    {
-        bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                          Surge::Storage::UseODDMTS, false);
-        std::string txt = "Use ODDSound" + Surge::GUI::toOSCase(" MTS-ESP");
+    bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                      Surge::Storage::UseODDMTS, false);
+    std::string txt = "Use ODDSound" + Surge::GUI::toOSCase(" MTS-ESP");
 
-        tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::UseODDMTS, !tsMode);
-            if (tsMode)
-            {
-                this->synth->storage.deinitialize_oddsound();
-            }
-            else
-            {
-                this->synth->storage.initialize_oddsound();
-            }
+    tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
+        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
+                                               !tsMode);
+        if (tsMode)
+        {
+            this->synth->storage.deinitialize_oddsound();
+        }
+        else
+        {
+            this->synth->storage.initialize_oddsound();
+        }
+    });
+
+    std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Main");
+    tuningSubMenu.addItem(mtxt, true, getStorage()->oddsound_mts_active_as_main, [this]() {
+        if (getStorage()->oddsound_mts_active_as_main)
+        {
+            this->synth->storage.disconnect_as_oddsound_main();
+        }
+        else
+        {
+            this->synth->storage.connect_as_oddsound_main();
+        }
+    });
+
+    if (tsMode && !this->synth->storage.oddsound_mts_client &&
+        !getStorage()->oddsound_mts_active_as_main)
+    {
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Reconnect to MTS-ESP"), [this]() {
+            this->synth->storage.initialize_oddsound();
+            this->synth->refresh_editor = true;
+        });
+    }
+
+    if (this->synth->storage.oddsound_mts_active_as_client &&
+        this->synth->storage.oddsound_mts_client)
+    {
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect from MTS-ESP"), [this]() {
+            auto q = this->synth->storage.oddsound_mts_client;
+            this->synth->storage.oddsound_mts_active_as_client = false;
+            this->synth->storage.oddsound_mts_client = nullptr;
+            MTS_DeregisterClient(q);
         });
 
-        if (tsMode && !this->synth->storage.oddsound_mts_client)
-        {
-            tuningSubMenu.addItem(Surge::GUI::toOSCase("Reconnect to MTS-ESP"), [this]() {
-                this->synth->storage.initialize_oddsound();
-                this->synth->refresh_editor = true;
+        tuningSubMenu.addSeparator();
+
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCase("Query Tuning at Note On Only"), true,
+            (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
+            [this]() {
+                if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
+                }
+                else
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
+                }
             });
-        }
-
-        if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
-        {
-            tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect from MTS-ESP"), [this]() {
-                auto q = this->synth->storage.oddsound_mts_client;
-                this->synth->storage.oddsound_mts_active = false;
-                this->synth->storage.oddsound_mts_client = nullptr;
-                MTS_DeregisterClient(q);
-            });
-
-            tuningSubMenu.addSeparator();
-
-            tuningSubMenu.addItem(
-                Surge::GUI::toOSCase("Query Tuning at Note On Only"), true,
-                (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
-                [this]() {
-                    if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
-                    {
-                        this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
-                    }
-                    else
-                    {
-                        this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
-                    }
-                });
-
-            return tuningSubMenu;
-        }
     }
+
 #endif
 
     return tuningSubMenu;
