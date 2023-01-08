@@ -474,6 +474,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::deque<std::pair<std::string, int>> accAnnounceStrings;
     void enqueueAccessibleAnnouncement(const std::string &s);
+    void announceGuiState();
     void setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
                                                 const std::string &action);
 
