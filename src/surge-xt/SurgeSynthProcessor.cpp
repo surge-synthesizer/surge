@@ -609,6 +609,13 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
             surge->playNote(nevt->channel, nevt->key, 127 * nevt->velocity, 0, nevt->note_id);
         else
             surge->releaseNote(nevt->channel, nevt->key, 127 * nevt->velocity, nevt->note_id);
+
+        {
+            // We need to remember to update the virtual keyboard
+            auto m = juce::MidiMessage::noteOn(nevt->channel, nevt->key, (float)nevt->velocity);
+            juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
+            midiKeyboardState.processNextMidiEvent(m);
+        }
     }
     break;
     case CLAP_EVENT_NOTE_CHOKE:
@@ -616,6 +623,13 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     {
         auto nevt = reinterpret_cast<const clap_event_note *>(evt);
         surge->releaseNote(nevt->channel, nevt->key, 127 * nevt->velocity, nevt->note_id);
+
+        {
+            // We need to remember to update the virtual keyboard
+            auto m = juce::MidiMessage::noteOff(nevt->channel, nevt->key);
+            juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
+            midiKeyboardState.processNextMidiEvent(m);
+        }
     }
     break;
     case CLAP_EVENT_MIDI:
