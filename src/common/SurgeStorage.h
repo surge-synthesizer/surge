@@ -172,6 +172,12 @@ enum deform_type
     n_deform_types,
 };
 
+enum NoiseColorChannels
+{
+    STEREO = 0,
+    MONO = 1
+};
+
 enum lfo_trigger_mode
 {
     lm_freerun = 0,
