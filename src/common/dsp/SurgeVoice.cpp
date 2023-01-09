@@ -1039,6 +1039,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     if (noise)
     {
         float noisecol = limit_range(localcopy[scene->noise_colour.param_id_in_scene].f, -1.f, 1.f);
+        auto is_stereo_noise = scene->noise_colour.deform_type == NoiseColorChannels::STEREO;
         for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
         {
             ((float *)tblock)[i] =
@@ -1046,9 +1047,17 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
             ((float *)tblock)[i + 1] = ((float *)tblock)[i];
             if (is_wide)
             {
-                ((float *)tblockR)[i] = correlated_noise_o2mk2_storagerng(
-                    noisegenR[0], noisegenR[1], noisecol, storage);
-                ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
+                if (is_stereo_noise)
+                {
+                    ((float *)tblockR)[i] = correlated_noise_o2mk2_storagerng(
+                        noisegenR[0], noisegenR[1], noisecol, storage);
+                    ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
+                }
+                else
+                {
+                    ((float *)tblockR)[i] = ((float *)tblock)[i];
+                    ((float *)tblockR)[i + 1] = ((float *)tblock)[i + 1];
+                }
             }
         }
 

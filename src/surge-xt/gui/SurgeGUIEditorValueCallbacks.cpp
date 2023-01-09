@@ -2298,6 +2298,27 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         break;
                     }
+                    case ct_noise_color:
+                    {
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+                        contextMenu.addItem(
+                            "Mono", true, dt == NoiseColorChannels::MONO, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = NoiseColorChannels::MONO,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "Stereo", true, dt == NoiseColorChannels::STEREO, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = NoiseColorChannels::STEREO,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                    }
                     default:
                     {
                         break;

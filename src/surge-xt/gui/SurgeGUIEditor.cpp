@@ -7608,8 +7608,8 @@ void SurgeGUIEditor::announceGuiState()
                   .lfo[modsource_editor[current_scene] - ms_lfo1]
                   .shape.val.i;
 
-    oss << "SurgeXT. Patch '" << s->getPatch().name << "'. Scene "
-        << (current_scene == 0 ? "A" : "B") << ". "
+    oss << "Patch '" << s->getPatch().name << "'. Scene " << (current_scene == 0 ? "A" : "B")
+        << ". "
         << " Oscillator " << (current_osc[current_scene] + 1) << " " << osc_type_names[ot] << "."
         << " Modulator " << modulatorName(modsource_editor[current_scene], false) << " "
         << lt_names[ms] << ". " << fxslot_names[current_fx] << " " << fx_type_names[ft] << "."

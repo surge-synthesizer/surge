@@ -172,9 +172,11 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                             ct_percent_oscdrift, Surge::Skin::Scene::drift, sc_id,
                                             cg_GLOBAL, 0, true));
 
-        a->push_back(scene[sc].noise_colour.assign(
-            p_id.next(), id_s++, "noisecol", "Noise Color", ct_percent_bipolar,
-            Surge::Skin::Scene::noise_color, sc_id, cg_GLOBAL, 0, true, sceasy));
+        a->push_back(scene[sc].noise_colour.assign(p_id.next(), id_s++, "noisecol", "Noise Color",
+                                                   ct_noise_color, Surge::Skin::Scene::noise_color,
+                                                   sc_id, cg_GLOBAL, 0, true, sceasy));
+        scene[sc].noise_colour.deform_type = NoiseColorChannels::STEREO;
+
         a->push_back(scene[sc].keytrack_root.assign(
             p_id.next(), id_s++, "ktrkroot", "Keytrack Root Key", ct_midikey,
             Surge::Skin::Scene::keytrack_root, sc_id, cg_GLOBAL, 0, false));
@@ -1516,7 +1518,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             {
                 if (param_ptr[i]->has_deformoptions())
                 {
-                    param_ptr[i]->deform_type = type_1;
+                    if (param_ptr[i]->ctrltype == ct_noise_color)
+                    {
+                        param_ptr[i]->deform_type = NoiseColorChannels::STEREO;
+                    }
+                    else
+                    {
+                        param_ptr[i]->deform_type = type_1;
+                    }
                 }
             }
 
