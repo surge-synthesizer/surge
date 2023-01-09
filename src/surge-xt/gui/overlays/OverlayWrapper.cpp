@@ -460,6 +460,9 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     dw->supressMoveUpdates = true;
     dw->setContentNonOwned(this, false);
     dw->setSkin(skin, associatedBitmapStore);
+    // This doesn't work but i think that's because we drop the icon in our DW L&F
+    // It does, however, create a renderable image
+    // dw->setIcon(associatedBitmapStore->getImage(IDB_SURGE_ICON)->asJuceImage());
 
     auto brd = dw->getContentComponentBorder();
 

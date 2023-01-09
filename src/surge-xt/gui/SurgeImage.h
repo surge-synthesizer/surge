@@ -72,6 +72,8 @@ class SurgeImage
      */
     juce::Drawable *getDrawableButUseWithCaution() { return internalDrawableResolved(); }
 
+    juce::Image asJuceImage(float scaleBy = 1.0);
+
   private:
     juce::Drawable *internalDrawableResolved();
     juce::AffineTransform scaleAdjustmentTransform() const;
