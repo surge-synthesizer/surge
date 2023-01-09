@@ -1809,23 +1809,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             }
         }
 
-        auto mts_main =
-            TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("oddsound_mts_active_as_main"));
-        if (mts_main)
-        {
-            int tv;
-
-            if (tam->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
-            {
-                if (tv)
-                {
-#ifndef SURGE_SKIP_ODDSOUND_MTS
-                    storage->connect_as_oddsound_main();
-#endif
-                }
-            }
-        }
-
         auto *hcs = TINYXML_SAFE_TO_ELEMENT(nonparamconfig->FirstChild("hardclipmodes"));
 
         if (hcs)
@@ -2748,6 +2731,22 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 dawExtraState.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
             }
 
+            auto mts_main = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oddsound_mts_active_as_main"));
+            if (mts_main)
+            {
+                int tv;
+
+                if (mts_main->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
+                {
+                    if (tv)
+                    {
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+                        storage->connect_as_oddsound_main();
+#endif
+                    }
+                }
+            }
+
             /*
              * We originally stored scale as 'hasTuning' but cleaned it all up in 1.9 in
              * the data structures. To not break old sessions though we kept the wrong names in the
@@ -3082,11 +3081,6 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     }
     nonparamconfig.InsertEndChild(tam);
 
-    // Revision 21 adds MTS as main
-    TiXmlElement oam("oddsound_mts_active_as_main");
-    oam.SetAttribute("v", (int)(storage->oddsound_mts_active_as_main));
-    nonparamconfig.InsertEndChild(oam);
-
     patch.InsertEndChild(nonparamconfig);
 
     TiXmlElement eod("extraoscdata");
@@ -3371,6 +3365,11 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement tun("hasTuning"); // see comment: Keep this name here for legacy compat
         tun.SetAttribute("v", dawExtraState.hasScale ? 1 : 0);
         dawExtraXML.InsertEndChild(tun);
+
+        // Revision 21 adds MTS as main
+        TiXmlElement oam("oddsound_mts_active_as_main");
+        oam.SetAttribute("v", (int)(storage->oddsound_mts_active_as_main));
+        dawExtraXML.InsertEndChild(oam);
 
         /*
         ** we really want a cdata here but TIXML is ambiguous whether
