@@ -3824,6 +3824,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     }
 
     synth->storage.getPatch().isDirty = false;
+    synth->patchChanged = true;
     synth->halt_engine = false;
 
     // Now we want to null out the patchLoadThread since everything is done
