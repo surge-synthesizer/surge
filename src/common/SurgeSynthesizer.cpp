@@ -1084,6 +1084,29 @@ void SurgeSynthesizer::releaseScene(int s)
     halfbandIN.reset();
 }
 
+void SurgeSynthesizer::chokeNote(char channel, char key, char velocity, int32_t host_noteid)
+{
+    /*
+     * The strategy here is pretty simple. Do a release note, then go find any voice
+     * that matches me and do an uber-release. There may be some wierdo MPE mono
+     * choke drum edge case this won't work with but in the bitwig drum machine at
+     * least it works great!
+     */
+    releaseNote(channel, key, velocity, host_noteid);
+
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        for (auto *v : voices[sc])
+        {
+            if (v->state.key == key && v->state.channel == channel &&
+                (host_noteid == -1 || (v->host_note_id == host_noteid)))
+            {
+                v->uber_release();
+            }
+        }
+    }
+}
+
 void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_t host_noteid)
 {
     midiNoteEvents++;
