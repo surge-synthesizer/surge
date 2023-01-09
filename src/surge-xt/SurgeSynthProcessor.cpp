@@ -409,6 +409,13 @@ void SurgeSynthProcessor::processBlockPostFunction()
             updateHostDisplay(
                 juce::AudioProcessorListener::ChangeDetails().withParameterInfoChanged(true));
         }
+        if (std::atomic_exchange(&surge->patchChanged, false))
+        {
+            updateHostDisplay(juce::AudioProcessorListener::ChangeDetails()
+                                  .withParameterInfoChanged(true)
+                                  .withProgramChanged(true)
+                                  .withNonParameterStateChanged(true));
+        }
     }
 }
 

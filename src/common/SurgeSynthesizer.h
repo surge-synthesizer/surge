@@ -58,6 +58,7 @@ class alignas(16) SurgeSynthesizer
         send alignas(16)[n_send_slots][n_scenes];
 
     std::atomic<bool> audio_processing_active;
+    std::atomic<bool> patchChanged{false};
 
     // methods
   public:
