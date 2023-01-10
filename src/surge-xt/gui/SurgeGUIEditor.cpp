@@ -3530,7 +3530,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 #ifndef SURGE_SKIP_ODDSOUND_MTS
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::UseODDMTS, false);
-    std::string txt = "Use ODDSound" + Surge::GUI::toOSCase(" MTS-ESP");
+    std::string txt = "Use ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Client and Source Features");
 
     tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
@@ -3590,7 +3590,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     if (tsMode && !this->synth->storage.oddsound_mts_client &&
         !getStorage()->oddsound_mts_active_as_main)
     {
-        tuningSubMenu.addItem(Surge::GUI::toOSCase("Reconnect to MTS-ESP"), [this]() {
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Reconnect As Client to MTS-ESP"), [this]() {
             this->synth->storage.initialize_oddsound();
             this->synth->refresh_editor = true;
         });
@@ -3599,7 +3599,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     if (this->synth->storage.oddsound_mts_active_as_client &&
         this->synth->storage.oddsound_mts_client)
     {
-        tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect from MTS-ESP"), [this]() {
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect As Client from MTS-ESP"), [this]() {
             auto q = this->synth->storage.oddsound_mts_client;
             this->synth->storage.oddsound_mts_active_as_client = false;
             this->synth->storage.oddsound_mts_client = nullptr;
