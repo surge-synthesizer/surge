@@ -2473,12 +2473,30 @@ void SurgeStorage::connect_as_oddsound_main()
     {
         deinitialize_oddsound();
     }
-    if (oddsound_mts_active_as_main) // should never happen
+    if (oddsound_mts_active_as_main)
+    // should never happen. This is different from can-register;
+    // this is "I am registered as the main"
     {
         MTS_DeregisterMaster();
+        oddsound_mts_active_as_main = false;
     }
-    oddsound_mts_active_as_main = true;
-    MTS_RegisterMaster();
+
+    // so now if there is a main it isn't me so check if I can register
+    if (MTS_CanRegisterMaster())
+    {
+        oddsound_mts_active_as_main = true;
+        MTS_RegisterMaster();
+    }
+    else
+    {
+        reportError(
+            "Another software program is registered as an MTS Source. "
+            "As such, this session cannot become a source and that other program "
+            "will provide tuning information to this setting. If you want to "
+            "reset the MTS system, use the 'Reinitialize MTS' menu in Surge, or "
+            "alternately, quit that other program and re-attempt to become a source in Surge.",
+            "MTS Source Initialization Error");
+    }
     lastSentTuningUpdate = -1;
 }
 void SurgeStorage::disconnect_as_oddsound_main()
