@@ -3547,41 +3547,53 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
     auto canMaster = MTS_CanRegisterMaster();
 
-    std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Source");
-    tuningSubMenu.addItem(mtxt, canMaster || getStorage()->oddsound_mts_active_as_main,
-                          getStorage()->oddsound_mts_active_as_main, [this]() {
-                              if (getStorage()->oddsound_mts_active_as_main)
-                              {
-                                  this->synth->storage.disconnect_as_oddsound_main();
-                              }
-                              else
-                              {
-                                  this->synth->storage.connect_as_oddsound_main();
-                              }
-                          });
+    tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
+                                                 false);
+
+    if (tsMode)
+    {
+        std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Source");
+
+        tuningSubMenu.addItem(mtxt, canMaster || getStorage()->oddsound_mts_active_as_main,
+                              getStorage()->oddsound_mts_active_as_main, [this]() {
+                                  if (getStorage()->oddsound_mts_active_as_main)
+                                  {
+                                      this->synth->storage.disconnect_as_oddsound_main();
+                                  }
+                                  else
+                                  {
+                                      this->synth->storage.connect_as_oddsound_main();
+                                  }
+                              });
+    }
+
     if (getStorage()->oddsound_mts_active_as_main)
     {
         auto nc = MTS_GetNumClients();
-        tuningSubMenu.addItem("MTS has " + std::to_string(nc) + " clients", false, false, []() {});
+        tuningSubMenu.addItem("MTS-ESP has " + std::to_string(nc) + " clients", false, false,
+                              []() {});
     }
+
     if (getStorage()->oddsound_mts_active_as_main || !canMaster)
     {
         if (MTS_HasIPC())
         {
-            tuningSubMenu.addItem("Re-Initialize MTS Library and IPC", true, false, []() {
+            tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, []() {
                 auto cb = juce::ModalCallbackFunction::create([](int okcs) {
                     if (okcs)
                     {
                         MTS_Reinitialize();
                     }
                 });
+
                 std::string msg =
-                    "Re-Initializing MTS will disconnect all clients, including "
-                    "this one, and will generally require you to restart your DAW and sessions, "
+                    "Reinitializing MTS will disconnect all clients, including "
+                    "this one, and will generally require you to restart your DAW session, "
                     "but it will clear up after particularly nasty crashes or IPC issues. "
-                    "Unless you are sure you want to do this, you probably dont.";
+                    "Are you sure you want to do this?";
+
                 juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon,
-                                                   "ReInitialize MTS-ESP", msg, "Yes", "No",
+                                                   "Reinitialize MTS-ESP", msg, "Yes", "No",
                                                    nullptr, cb);
             });
         }
@@ -3590,7 +3602,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     if (tsMode && !this->synth->storage.oddsound_mts_client &&
         !getStorage()->oddsound_mts_active_as_main)
     {
-        tuningSubMenu.addItem(Surge::GUI::toOSCase("Reconnect As Client to MTS-ESP"), [this]() {
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Reconnect as Client to MTS-ESP"), [this]() {
             this->synth->storage.initialize_oddsound();
             this->synth->refresh_editor = true;
         });
@@ -3599,7 +3611,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     if (this->synth->storage.oddsound_mts_active_as_client &&
         this->synth->storage.oddsound_mts_client)
     {
-        tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect As Client from MTS-ESP"), [this]() {
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect as Client from MTS-ESP"), [this]() {
             auto q = this->synth->storage.oddsound_mts_client;
             this->synth->storage.oddsound_mts_active_as_client = false;
             this->synth->storage.oddsound_mts_client = nullptr;

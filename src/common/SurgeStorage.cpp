@@ -2489,13 +2489,13 @@ void SurgeStorage::connect_as_oddsound_main()
     }
     else
     {
-        reportError(
-            "Another software program is registered as an MTS Source. "
-            "As such, this session cannot become a source and that other program "
-            "will provide tuning information to this setting. If you want to "
-            "reset the MTS system, use the 'Reinitialize MTS' menu in Surge, or "
-            "alternately, quit that other program and re-attempt to become a source in Surge.",
-            "MTS Source Initialization Error");
+        reportError("Another software program is registered as an MTS-ESP source. "
+                    "As such, this session cannot become a source and that other program "
+                    "will provide tuning information to this setting. If you want to "
+                    "reset the MTS-ESP system, use the 'Reinitialize MTS-ESP' option in Surge XT. "
+                    "Alternatively, quit the other program and attempt re-enabling Act as MTS-ESP "
+                    "source option.",
+                    "MTS-ESP Source Initialization Error");
     }
     lastSentTuningUpdate = -1;
 }
