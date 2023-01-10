@@ -871,7 +871,12 @@ SurgeSynthesizer *createSurge(float sr)
     return surge;
 }
 
+// Prefix _ if using shared object within a Python package built with scikit-build
+#ifdef SKBUILD
+PYBIND11_MODULE(_surgepy, m)
+#else
 PYBIND11_MODULE(surgepy, m)
+#endif
 {
     m.doc() = "Python bindings for Surge Synthesizer";
     m.def("createSurge", &createSurge, "Create a surge instance", py::arg("sampleRate"));
