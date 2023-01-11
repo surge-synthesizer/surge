@@ -13,7 +13,6 @@
  ** open source in September 2018.
  */
 
-#include <iostream>
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIEditorTags.h"
 
@@ -143,6 +142,11 @@ void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
         paramInfowindow->setLabels("", pdisp, pdispalt);
         paramInfowindow->clearMDIWS();
     }
+}
+
+void SurgeGUIEditor::updateInfowindowContents(const std::string &display)
+{
+    paramInfowindow->setLabels("fixme::", display);
 }
 
 void SurgeGUIEditor::repaintFrame() { frame->repaint(); }

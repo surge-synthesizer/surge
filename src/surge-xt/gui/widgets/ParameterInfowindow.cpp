@@ -171,6 +171,11 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
         {
             jassert(false);
         }
+        if (r.getRight() > parentRect.getRight())
+        {
+            // push left
+            r = r.withX(controlRect.getX() - w).withWidth(w);
+        }
     }
 
     setBounds(r);

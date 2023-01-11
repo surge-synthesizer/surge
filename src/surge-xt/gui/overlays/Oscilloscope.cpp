@@ -357,7 +357,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
       fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
       channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
       right_chan_button_("R"), scope_mode_button_(*this), background_(s), spectrogram_(e, s),
-      spectrogram_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s)
+      spectrogram_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s, this)
 {
     setAccessible(true);
     setOpaque(true);
@@ -483,8 +483,10 @@ void Oscilloscope::SpectrogramParameters::resized()
     // FIXME: Implement.
 }
 
-Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s), freeze_("Freeze"), dc_kill_("DC-Kill"), sync_draw_("Sync")
+Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s,
+                                                     juce::Component *parent)
+    : editor_(e), storage_(s), parent_(parent), freeze_("Freeze"), dc_kill_("DC-Kill"),
+      sync_draw_("Sync")
 {
     trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -496,11 +498,11 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.setStorage(s);
     time_window_.setStorage(s);
     amp_window_.setStorage(s);
-    trigger_speed_.setValue(0.5);
-    trigger_level_.setValue(0.5);
-    trigger_limit_.setValue(0.5);
-    time_window_.setValue(0.75);
-    amp_window_.setValue(0.5);
+    trigger_speed_.setDefaultValue(0.5);
+    trigger_level_.setDefaultValue(0.5);
+    trigger_limit_.setDefaultValue(0.5);
+    time_window_.setDefaultValue(0.75);
+    amp_window_.setDefaultValue(0.5);
     trigger_speed_.setQuantitizedDisplayValue(0.5);
     trigger_level_.setQuantitizedDisplayValue(0.5);
     trigger_limit_.setQuantitizedDisplayValue(0.5);
@@ -531,6 +533,16 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_limit), _1));
     time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window), _1));
     amp_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.amp_window), _1));
+    trigger_speed_.setRootWindow(parent_);
+    trigger_level_.setRootWindow(parent_);
+    trigger_limit_.setRootWindow(parent_);
+    time_window_.setRootWindow(parent_);
+    amp_window_.setRootWindow(parent_);
+    trigger_speed_.setPrecision(2);
+    trigger_level_.setPrecision(2);
+    trigger_limit_.setPrecision(2);
+    time_window_.setPrecision(2);
+    amp_window_.setPrecision(2);
     addAndMakeVisible(trigger_speed_);
     addAndMakeVisible(trigger_level_);
     addAndMakeVisible(trigger_limit_);
