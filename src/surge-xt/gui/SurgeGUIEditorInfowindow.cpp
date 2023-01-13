@@ -144,11 +144,6 @@ void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
     }
 }
 
-void SurgeGUIEditor::updateInfowindowContents(const std::string &display)
-{
-    paramInfowindow->setLabels("fixme::", display);
-}
-
 void SurgeGUIEditor::repaintFrame() { frame->repaint(); }
 
 void SurgeGUIEditor::enqueueFutureInfowindow(int ptag, const juce::Rectangle<int> &around,
