@@ -1534,3 +1534,24 @@ void SurgeVoice::retriggerOSCWithIndependentAttacks()
         }
     }
 }
+
+bool SurgeVoice::matchesChannelKeyId(int16_t channel, int16_t key, int32_t nid)
+{
+    bool chanMatch{false}, keyMatch{false}, nidMatch{false};
+    if (channel == -1)
+        chanMatch = true;
+    else
+        chanMatch = (state.channel == channel);
+
+    if (key == -1)
+        keyMatch = true;
+    else
+        keyMatch = (state.key == key);
+
+    if (nid == -1)
+        nidMatch = true;
+    else
+        nidMatch = (host_note_id == nid);
+
+    return chanMatch && keyMatch && nidMatch;
+}

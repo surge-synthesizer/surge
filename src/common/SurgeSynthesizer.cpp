@@ -1084,7 +1084,7 @@ void SurgeSynthesizer::releaseScene(int s)
     halfbandIN.reset();
 }
 
-void SurgeSynthesizer::chokeNote(char channel, char key, char velocity, int32_t host_noteid)
+void SurgeSynthesizer::chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid)
 {
     /*
      * The strategy here is pretty simple. Do a release note, then go find any voice
@@ -1098,8 +1098,7 @@ void SurgeSynthesizer::chokeNote(char channel, char key, char velocity, int32_t 
     {
         for (auto *v : voices[sc])
         {
-            if (v->state.key == key && v->state.channel == channel &&
-                (host_noteid == -1 || (v->host_note_id == host_noteid)))
+            if (v->matchesChannelKeyId(channel, key, host_noteid))
             {
                 v->uber_release();
             }
@@ -1707,11 +1706,7 @@ void SurgeSynthesizer::setNoteExpression(SurgeVoice::NoteExpressionType net, int
     {
         for (auto v : voices[sc])
         {
-            if ((note_id == -1 &&
-                 ((v->state.key == key && v->state.channel == channel) ||
-                  (v->originating_host_key >= 0 && v->originating_host_key == key &&
-                   v->originating_host_channel >= 0 && v->originating_host_channel == channel))) ||
-                (note_id != -1 && v->host_note_id == note_id))
+            if (v->matchesChannelKeyId(channel, key, note_id))
             {
                 v->applyNoteExpression(net, value);
             }
@@ -3438,11 +3433,7 @@ void SurgeSynthesizer::applyParameterPolyphonicModulation(Parameter *p, int32_t 
 
     for (auto v : voices[p->scene - 1])
     {
-        if ((note_id != -1 && v->host_note_id == note_id) ||
-            (note_id == -1 &&
-             (((v->state.key == key && v->state.channel == channel) ||
-               (v->originating_host_key >= 0 && v->originating_host_key == key &&
-                v->originating_host_channel >= 0 && v->originating_host_channel == channel)))))
+        if (v->matchesChannelKeyId(channel, key, note_id))
         {
             v->applyPolyphonicParamModulation(p, depth, underlyingMonoMod);
         }
