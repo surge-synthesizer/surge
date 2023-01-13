@@ -16,6 +16,7 @@
 #ifndef SURGE_XT_MODULATABLESLIDER_H
 #define SURGE_XT_MODULATABLESLIDER_H
 
+#include "ParameterInfowindow.h"
 #include "SkinSupport.h"
 #include "WidgetBaseMixin.h"
 #include "ModulatableControlInterface.h"
@@ -178,7 +179,13 @@ struct ModulatableSlider : public juce::Component,
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulatableSlider);
 };
 
-struct SelfUpdatingModulatableSlider : public ModulatableSlider, GUI::IComponentTagValue::Listener
+// A "modulatable" slider, that looks like the above class, but *is not* used for modulating a
+// parameter. Basically, use it when you need a slider but it doesn't actually need to be a
+// parameter that you modulate. Fakes all the stuff like drawing, double-click-to-reset, hovering,
+// etc. that the ModulatableSlider gives you.
+struct SelfUpdatingModulatableSlider : public ModulatableSlider,
+                                       public juce::Timer,
+                                       GUI::IComponentTagValue::Listener
 {
     using CallbackFn = std::function<void(float)>;
 
@@ -187,13 +194,85 @@ struct SelfUpdatingModulatableSlider : public ModulatableSlider, GUI::IComponent
     CallbackFn onUpdate = [](float _) {};
     void setOnUpdate(CallbackFn fn) { onUpdate = std::move(fn); }
 
+    float defaultValue = 0.f;
+    void setDefaultValue(float f)
+    {
+        defaultValue = f;
+        setValue(f);
+    }
+
+    void setValue(float f) override
+    {
+        ModulatableSlider::setValue(f);
+        infoWindow.setLabels("", createDisplayString());
+    }
+
     void valueChanged(IComponentTagValue *p) override
     {
         auto v = getValue();
         setQuantitizedDisplayValue(v);
+        infoWindow.setLabels("", createDisplayString());
         onUpdate(v);
         repaint();
     }
+
+    int32_t controlModifierClicked(IComponentTagValue *p, const juce::ModifierKeys &mods,
+                                   bool isDoubleClickEvent) override
+    {
+        if (isDoubleClickEvent)
+        {
+            setValue(defaultValue);
+            valueChanged(p);
+        }
+        return 0;
+    }
+
+    void onSkinChanged() override;
+
+    // Pieces that allow for the pop-up hover window to work. If you want the hover information to
+    // appear, you must set the root window that it will appear in (generally either the
+    // SurgeGUIEditor singleton or whatever Overlay this slider is in).
+    //
+    // This should only ever be set once! It will throw otherwise!
+    juce::Component *rootWindow{nullptr};
+    void setRootWindow(juce::Component *root)
+    {
+        if (rootWindow)
+        {
+            throw(std::runtime_error("Attempting to re-set the root window."));
+        }
+        rootWindow = root;
+    }
+
+    void mouseEnter(const juce::MouseEvent &event) override;
+    void mouseExit(const juce::MouseEvent &event) override;
+    void timerCallback() override;
+    bool infoWindowInitialized{false};
+    bool infoWindowShowing{false};
+    ParameterInfowindow infoWindow;
+
+    // Some additional parts to make the informational window a little more nicer.
+    std::string unit{""};
+    void setUnit(const std::string &u)
+    {
+        unit = u;
+        infoWindow.setLabels("", createDisplayString());
+    }
+    std::size_t precision{0};
+    void setPrecision(const std::size_t p)
+    {
+        precision = p;
+        infoWindow.setLabels("", createDisplayString());
+    }
+    float lowEnd{0.f};
+    float highEnd{1.f};
+    void setRange(const float low, const float high)
+    {
+        lowEnd = low;
+        highEnd = high;
+        infoWindow.setLabels("", createDisplayString());
+    }
+    std::string createDisplayString() const;
 
   private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SelfUpdatingModulatableSlider);

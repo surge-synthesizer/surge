@@ -13,6 +13,9 @@
 ** open source in September 2018.
 */
 
+#include <iostream>
+#include <fmt/core.h>
+
 #include "ModulatableSlider.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeImageStore.h"
@@ -834,6 +837,63 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
     notifyEndEdit();
     repaint();
     return true;
+}
+
+void SelfUpdatingModulatableSlider::mouseEnter(const juce::MouseEvent &event)
+{
+    ModulatableSlider::mouseEnter(event);
+    if (!infoWindowInitialized && rootWindow)
+    {
+        infoWindowInitialized = true;
+        rootWindow->addChildComponent(infoWindow);
+        infoWindow.setOpaque(true);
+    }
+    if (infoWindowInitialized)
+    {
+        startTimer(500);
+    }
+}
+
+void SelfUpdatingModulatableSlider::mouseExit(const juce::MouseEvent &event)
+{
+    ModulatableSlider::mouseExit(event);
+    stopTimer();
+    if (infoWindowShowing)
+    {
+        infoWindowShowing = false;
+        infoWindow.setVisible(false);
+    }
+}
+
+void SelfUpdatingModulatableSlider::timerCallback()
+{
+    if (!infoWindowShowing)
+    {
+        infoWindowShowing = true;
+        stopTimer();
+        infoWindow.getParentComponent()->toFront(false);
+        infoWindow.toFront(false);
+        infoWindow.setBoundsToAccompany(
+            rootWindow->getLocalArea(this, getLocalBounds()),
+            rootWindow->getLocalBounds().transformedBy(rootWindow->getTransform().inverted()));
+        infoWindow.setVisible(true);
+    }
+}
+
+void SelfUpdatingModulatableSlider::onSkinChanged()
+{
+    ModulatableSlider::onSkinChanged();
+    infoWindow.setSkin(skin, associatedBitmapStore);
+}
+
+std::string SelfUpdatingModulatableSlider::createDisplayString() const
+{
+    float scaled = juce::jmap(getValue(), lowEnd, highEnd);
+    if (precision == 0)
+    {
+        return fmt::format("{}{}", static_cast<int>(scaled), unit);
+    }
+    return fmt::format("{:.{}f}{}", scaled, precision, unit);
 }
 
 } // namespace Widgets
