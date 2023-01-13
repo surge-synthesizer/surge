@@ -7329,6 +7329,11 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
                 auto cg = (int)fc->getProperties().getWithDefault("ControlGroup", -1);
 
+                // special case - allow jump off the patch selector
+                if (dynamic_cast<Surge::Widgets::PatchSelector *>(fc))
+                {
+                    cg = dir < 0 ? 10000000 : 0;
+                }
                 if (cg < 0)
                 {
                     return false;
