@@ -1006,7 +1006,8 @@ PYBIND11_MODULE(surgepy, m)
              "Load an KBM mapping file and apply tuning to this instance")
         .def("remapToStandardKeyboard",
              &SurgeSynthesizerWithPythonExtensions::remapToStandardKeyboard,
-             "Return to standard C centered keyboard mapping");
+             "Return to standard C centered keyboard mapping")
+        .def_readwrite("mpeEnabled", &SurgeSynthesizerWithPythonExtensions::mpeEnabled);
 
     py::class_<SurgePyControlGroup>(m, "SurgeControlGroup")
         .def("getId", &SurgePyControlGroup::getControlGroupId)
