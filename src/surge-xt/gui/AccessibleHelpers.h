@@ -378,6 +378,7 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     std::function<void(T *, int, bool, bool)> onJogValue = [](T *, int, bool, bool) {
         jassert(false);
     };
+    std::function<void(T *)> onMenuKey = [](T *) {};
     // called with 1 0 -1 for max default min
     std::function<void(T *, int)> onMinMaxDef = [](T *, int) {};
 
@@ -547,6 +548,12 @@ template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::
         onMinMaxDef(under, 0);
         if (ah)
             ah->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
+        return true;
+    }
+
+    if (action == OpenMenu)
+    {
+        onMenuKey(under);
         return true;
     }
     return false;
