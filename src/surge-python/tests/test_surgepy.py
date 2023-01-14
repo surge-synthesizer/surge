@@ -25,3 +25,20 @@ def test_render_note():
     s.playNote(0, 60, 127, 0)
     s.processMultiBlock(buf)
     assert not np.all(buf == 0.0)
+
+
+def test_default_mpeEnabled():
+    """
+    Test that mpeEnabled flag is False by default.
+    """
+    s = surgepy.createSurge(44100)
+    assert s.mpeEnabled is False
+
+
+def test_set_mpeEnabled():
+    """
+    Test that setting mpeEnabled really changes its value.
+    """
+    s = surgepy.createSurge(44100)
+    s.mpeEnabled = True
+    assert s.mpeEnabled is True
