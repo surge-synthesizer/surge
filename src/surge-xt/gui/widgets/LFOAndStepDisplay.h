@@ -116,6 +116,9 @@ struct LFOAndStepDisplay : public juce::Component,
                         const juce::MouseWheelDetails &wheel) override;
     void mouseExit(const juce::MouseEvent &event) override;
 
+    void showStepRMB(const juce::MouseEvent &);
+    void showStepRMB(int step);
+
     void endHover() override
     {
         if (stuckHover)

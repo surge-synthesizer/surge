@@ -152,6 +152,7 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
             stepSeqDirty();
             repaint();
         };
+        q->onMenuKey = [this, i](auto *t) { showStepRMB(i); };
         stepLayer->addChildComponent(*q);
         stepSliderOverlays[i] = std::move(q);
     }
@@ -1675,6 +1676,12 @@ void LFOAndStepDisplay::mouseDown(const juce::MouseEvent &event)
                     dragMode = ARROW;
                     arrowStart = event.position;
                     arrowEnd = event.position;
+                    juce::Timer::callAfterDelay(
+                        1000, [w = juce::Component::SafePointer(this), event] {
+                            if (w && w->dragMode == ARROW &&
+                                w->arrowStart.getDistanceSquaredFrom(w->arrowEnd) < 2)
+                                w->showStepRMB(event);
+                        });
                 }
                 else
                 {
@@ -2057,7 +2064,12 @@ void LFOAndStepDisplay::mouseUp(const juce::MouseEvent &event)
         }
     }
 
-    if (dragMode == ARROW)
+    if (dragMode == ARROW && (!event.mouseWasDraggedSinceMouseDown() ||
+                              (arrowStart.getDistanceSquaredFrom(arrowEnd) < 2)))
+    {
+        showStepRMB(event);
+    }
+    else if (dragMode == ARROW)
     {
         auto l = juce::Line<float>{arrowStart, arrowEnd};
 
@@ -2459,6 +2471,45 @@ void LFOAndStepDisplay::stepSeqDirty()
     jassert(stepDirtyCount == 1);
     storage->getPatch().isDirty = true;
     guiEditor->undoManager()->pushStepSequencer(scene, lfoid, undoStorageCopy);
+}
+
+void LFOAndStepDisplay::showStepRMB(const juce::MouseEvent &event)
+{
+    dragMode = NONE;
+
+    for (int i = 0; i < n_stepseqsteps; ++i)
+    {
+        if (steprect[i].contains(event.position))
+        {
+            showStepRMB(i);
+        }
+    }
+}
+
+void LFOAndStepDisplay::showStepRMB(int i)
+{
+
+    auto contextMenu = juce::PopupMenu();
+
+    std::string olname = "Step Sequencer";
+    std::string helpname = "step-sequencer";
+
+    auto msurl = storage ? SurgeGUIEditor::helpURLForSpecial(storage, helpname) : std::string();
+    auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+
+    auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(olname, hurl);
+    hmen->setSkin(skin, associatedBitmapStore);
+    auto hment = hmen->getTitle();
+
+    contextMenu.addCustomItem(-1, std::move(hmen), nullptr, hment);
+
+    contextMenu.addSeparator();
+
+    auto msg = fmt::format("Edit Step {}: {:.3f}", i + 1, ss->steps[i]);
+    contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false,
+                        [i]() { std::cout << "Would edit step " << i << std::endl; });
+
+    contextMenu.showMenuAsync(guiEditor->popupMenuOptions());
 }
 
 } // namespace Widgets
