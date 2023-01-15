@@ -656,9 +656,9 @@ void Oscilloscope::WaveformParameters::resized()
     // Next over, the trigger mechanism.
     trigger_type_.setBounds(320, 13, 40, 50);
     // Next over, the three boolean switches.
-    freeze_.setBounds(385, 19, 40, 13);
-    dc_kill_.setBounds(385, 38, 40, 13);
-    sync_draw_.setBounds(385, 57, 40, 13);
+    freeze_.setBounds(385, 13, 40, 13);
+    dc_kill_.setBounds(385, 32, 40, 13);
+    sync_draw_.setBounds(385, 51, 40, 13);
 }
 
 void Oscilloscope::updateDrawing()
