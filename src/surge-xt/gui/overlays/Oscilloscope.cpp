@@ -522,6 +522,7 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_speed_.setUnit(" Hz");
     trigger_limit_.setRange(1, 10000);
     trigger_limit_.setUnit(" Samples");
+    trigger_level_.setRange(-1, 1);
     trigger_speed_.setIsLightStyle(true);
     trigger_level_.setIsLightStyle(true);
     trigger_limit_.setIsLightStyle(true);
@@ -532,11 +533,18 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
         params_changed_ = true;
         param = value;
     };
+    auto updateAmpWindow = [this](float value) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        params_.amp_window = value;
+        float gain = 1.f / params_.gain();
+        trigger_level_.setRange(-gain, gain);
+    };
     trigger_speed_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_speed), _1));
     trigger_level_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_level), _1));
     trigger_limit_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_limit), _1));
     time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window), _1));
-    amp_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.amp_window), _1));
+    amp_window_.setOnUpdate(updateAmpWindow);
     trigger_speed_.setRootWindow(parent_);
     trigger_level_.setRootWindow(parent_);
     trigger_limit_.setRootWindow(parent_);
