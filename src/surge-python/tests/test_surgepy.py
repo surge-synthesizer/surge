@@ -42,3 +42,14 @@ def test_set_mpeEnabled():
     s = surgepy.createSurge(44100)
     s.mpeEnabled = True
     assert s.mpeEnabled is True
+
+
+def test_default_tuningApplicationMode():
+    s = surgepy.createSurge(44100)
+    assert s.tuningApplicationMode == surgepy.TuningApplicationMode.RETUNE_MIDI_ONLY
+
+
+def test_set_tuningApplicationMode():
+    s = surgepy.createSurge(44100)
+    s.tuningApplicationMode = surgepy.TuningApplicationMode.RETUNE_ALL
+    assert s.tuningApplicationMode == surgepy.TuningApplicationMode.RETUNE_ALL
