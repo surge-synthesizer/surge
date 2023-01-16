@@ -49,7 +49,6 @@ constexpr int fftSize = 8192;
 using FftScopeType = std::array<float, fftSize / 2>;
 } // namespace internal
 
-
 // Waveform-specific display taken from s(m)exoscope GPL code and adapted to use with Surge.
 class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
@@ -144,7 +143,26 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     static constexpr float dbMax = 0;
     static constexpr float dbRange = dbMax - dbMin;
 
+    struct Parameters
+    {
+        float noise_floor = -100.f; // Noise floor level, bottom of the scope. Min -100. Slider.
+        float max_db = 0.f;         // Maximum dB displayed. Slider. Maxes out at 0. Slider.
+        bool freeze = false;        // Freeze display, on/off.
+
+        // Range of decibels shown in the display, calculated from slider values.
+        float dbRange() const;
+
+        // Calculate the noise floor in decibels from the slider value.
+        float noiseFloor() const;
+
+        // Calculate the maximum decibels shown from the slider value.
+        float maxDb() const;
+    };
+
     SpectrumDisplay(SurgeGUIEditor *e, SurgeStorage *s);
+
+    const Parameters &getParameters() const;
+    void setParameters(Parameters parameters);
 
     void paint(juce::Graphics &g) override;
     void resized() override;
@@ -157,6 +175,7 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     SurgeGUIEditor *editor_;
     SurgeStorage *storage_;
+    Parameters params_;
     std::chrono::duration<float> mtbs_;
     std::chrono::time_point<std::chrono::steady_clock> last_updated_time_;
     std::mutex data_lock_;
@@ -203,6 +222,7 @@ class Oscilloscope : public OverlayComponent,
         void paint(juce::Graphics &g) override;
         void updateBackgroundType(ScopeMode mode);
         void updateBounds(juce::Rectangle<int> local_bounds, juce::Rectangle<int> scope_bounds);
+        void updateParameters(SpectrumDisplay::Parameters params);
         void updateParameters(WaveformDisplay::Parameters params);
 
       private:
@@ -214,13 +234,16 @@ class Oscilloscope : public OverlayComponent,
         SurgeStorage *storage_;
         ScopeMode mode_;
         juce::Rectangle<int> scope_bounds_;
+        SpectrumDisplay::Parameters spectrum_params_;
         WaveformDisplay::Parameters waveform_params_;
     };
 
     class SpectrumParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
-        SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s);
+        SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
+
+        std::optional<SpectrumDisplay::Parameters> getParamsIfDirty();
 
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
@@ -229,6 +252,15 @@ class Oscilloscope : public OverlayComponent,
       private:
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
+        juce::Component
+            *parent_; // Saved here so we can provide it to the children at construction time.
+        SpectrumDisplay::Parameters params_;
+        bool params_changed_;
+        std::mutex params_lock_;
+
+        Surge::Widgets::SelfUpdatingModulatableSlider noise_floor_;
+        Surge::Widgets::SelfUpdatingModulatableSlider max_db_;
+        Surge::Widgets::SelfDrawToggleButton freeze_;
     };
 
     class WaveformParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent

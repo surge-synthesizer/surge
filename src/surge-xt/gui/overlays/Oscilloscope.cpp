@@ -54,6 +54,10 @@ float WaveformDisplay::Parameters::counterSpeed() const
 float WaveformDisplay::Parameters::triggerLevel() const { return trigger_level * 2.f - 1.f; }
 float WaveformDisplay::Parameters::gain() const { return std::pow(10.f, amp_window * 6.f - 3.f); }
 
+float SpectrumDisplay::Parameters::dbRange() const { return std::max(maxDb() - noiseFloor(), 0.f); }
+float SpectrumDisplay::Parameters::noiseFloor() const { return (noise_floor - 2.f) * 50.f; }
+float SpectrumDisplay::Parameters::maxDb() const { return (max_db - 1.f) * 50.f; }
+
 WaveformDisplay::WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), counter(1.0), max(std::numeric_limits<float>::min()),
       min(std::numeric_limits<float>::min())
@@ -351,6 +355,14 @@ SpectrumDisplay::SpectrumDisplay(SurgeGUIEditor *e, SurgeStorage *s)
     std::fill(new_scope_data_.begin(), new_scope_data_.end(), dbMin);
 }
 
+const SpectrumDisplay::Parameters &SpectrumDisplay::getParameters() const { return params_; }
+
+void SpectrumDisplay::setParameters(Parameters parameters)
+{
+    std::lock_guard l(data_lock_);
+    params_ = std::move(parameters);
+}
+
 void SpectrumDisplay::paint(juce::Graphics &g)
 {
     auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
@@ -447,7 +459,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
       complete_(false), fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
       channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
       right_chan_button_("R"), scope_mode_button_(*this), background_(s), spectrum_(e, s),
-      spectrum_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s, this)
+      spectrum_parameters_(e, s, this), waveform_(e, s), waveform_parameters_(e, s, this)
 {
     setAccessible(true);
     setOpaque(true);
@@ -551,26 +563,6 @@ void Oscilloscope::resized()
     // Bottom buttons: in the bottom paramsHeight pixels.
     spectrum_parameters_.setBounds(0, h - paramsHeight, w, h);
     waveform_parameters_.setBounds(0, h - paramsHeight, w, h);
-}
-
-Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s)
-{
-}
-
-void Oscilloscope::SpectrumParameters::onSkinChanged()
-{
-    // FIXME: Implement.
-}
-
-void Oscilloscope::SpectrumParameters::paint(juce::Graphics &g)
-{
-    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
-}
-
-void Oscilloscope::SpectrumParameters::resized()
-{
-    // FIXME: Implement.
 }
 
 Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s,
@@ -727,6 +719,90 @@ void Oscilloscope::WaveformParameters::resized()
     sync_draw_.setBounds(385, 57, 40, 13);
 }
 
+Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s,
+                                                     juce::Component *parent)
+    : editor_(e), storage_(s), parent_(parent), freeze_("Freeze")
+{
+    noise_floor_.setOrientation(Surge::ParamConfig::kHorizontal);
+    max_db_.setOrientation(Surge::ParamConfig::kHorizontal);
+    noise_floor_.setStorage(s);
+    max_db_.setStorage(s);
+    noise_floor_.setDefaultValue(0);
+    max_db_.setDefaultValue(1);
+    noise_floor_.setQuantitizedDisplayValue(0);
+    max_db_.setQuantitizedDisplayValue(1);
+    noise_floor_.setLabel("Noise Floor");
+    max_db_.setLabel("Max dB");
+    noise_floor_.setDescription("Bottom of the display.");
+    max_db_.setDescription("Top of the display.");
+    noise_floor_.setIsLightStyle(true);
+    max_db_.setIsLightStyle(true);
+    auto updateParameter = [this](float &param, float value) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        param = value;
+    };
+    noise_floor_.setOnUpdate(std::bind(updateParameter, std::ref(params_.noise_floor), _1));
+    max_db_.setOnUpdate(std::bind(updateParameter, std::ref(params_.max_db), _1));
+    noise_floor_.setRootWindow(parent_);
+    max_db_.setRootWindow(parent_);
+    noise_floor_.setPrecision(1);
+    max_db_.setPrecision(1);
+    noise_floor_.setRange(-100, -50);
+    noise_floor_.setUnit(" dB");
+    max_db_.setRange(-50, 0);
+    max_db_.setUnit(" dB");
+    addAndMakeVisible(noise_floor_);
+    addAndMakeVisible(max_db_);
+    // The toggle button.
+    auto toggleParam = [this](bool &param) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        param = !param;
+    };
+    freeze_.setWantsKeyboardFocus(false);
+    freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
+    addAndMakeVisible(freeze_);
+}
+
+std::optional<SpectrumDisplay::Parameters> Oscilloscope::SpectrumParameters::getParamsIfDirty()
+{
+    std::lock_guard l(params_lock_);
+    if (params_changed_)
+    {
+        params_changed_ = false;
+        return params_;
+    }
+    return std::nullopt;
+}
+
+void Oscilloscope::SpectrumParameters::onSkinChanged()
+{
+    noise_floor_.setSkin(skin, associatedBitmapStore);
+    max_db_.setSkin(skin, associatedBitmapStore);
+    freeze_.setSkin(skin, associatedBitmapStore);
+    auto font = skin->fontManager->getLatoAtSize(7, juce::Font::plain);
+    noise_floor_.setFont(font);
+    max_db_.setFont(font);
+}
+
+void Oscilloscope::SpectrumParameters::paint(juce::Graphics &g)
+{
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+}
+
+void Oscilloscope::SpectrumParameters::resized()
+{
+    auto t = getTransform().inverted();
+    auto h = getHeight();
+    auto w = getWidth();
+    // Stack the slider parameters top-to-bottom.
+    noise_floor_.setBounds(10, 0, 140, 26);
+    max_db_.setBounds(10, 26, 140, 26);
+    // Next over, the boolean switche.
+    freeze_.setBounds(385, 19, 40, 13);
+}
+
 void Oscilloscope::updateDrawing()
 {
     std::lock_guard l(data_lock_);
@@ -745,6 +821,13 @@ void Oscilloscope::updateDrawing()
         }
         else
         {
+            auto params = spectrum_parameters_.getParamsIfDirty();
+            if (params)
+            {
+                background_.updateParameters(*params);
+                background_.repaint();
+                spectrum_.setParameters(std::move(*params));
+            }
             spectrum_.repaint();
         }
     }
@@ -955,6 +1038,11 @@ void Oscilloscope::Background::updateBounds(juce::Rectangle<int> local_bounds,
 {
     scope_bounds_ = std::move(scope_bounds);
     setBounds(local_bounds);
+}
+
+void Oscilloscope::Background::updateParameters(SpectrumDisplay::Parameters params)
+{
+    spectrum_params_ = std::move(params);
 }
 
 void Oscilloscope::Background::updateParameters(WaveformDisplay::Parameters params)
