@@ -35,6 +35,18 @@ namespace Surge
 namespace Overlays
 {
 
+static float freqToX(float freq, int width)
+{
+    static const float ratio = std::log(SpectrumDisplay::highFreq / SpectrumDisplay::lowFreq);
+    float xNorm = std::log(freq / SpectrumDisplay::lowFreq) / ratio;
+    return xNorm * (float)width;
+}
+
+static float dbToY(float db, int height)
+{
+    return (float)height * (SpectrumDisplay::dbMax - db) / SpectrumDisplay::dbRange;
+}
+
 float WaveformDisplay::Parameters::counterSpeed() const
 {
     return std::pow(10.f, -time_window * 5.f + 1.5f);
@@ -333,31 +345,109 @@ void WaveformDisplay::resized()
     }
 }
 
-float Oscilloscope::freqToX(float freq, int width)
+SpectrumDisplay::SpectrumDisplay(SurgeGUIEditor *e, SurgeStorage *s)
+    : editor_(e), storage_(s), last_updated_time_(std::chrono::steady_clock::now())
 {
-    static const float ratio = std::log(highFreq / lowFreq);
-    float xNorm = std::log(freq / lowFreq) / ratio;
-    return xNorm * (float)width;
+    std::fill(new_scope_data_.begin(), new_scope_data_.end(), dbMin);
 }
 
-float Oscilloscope::timeToX(std::chrono::milliseconds time, int width)
+void SpectrumDisplay::paint(juce::Graphics &g)
 {
-    static const float maxf = 100.f;
-    const float timef = static_cast<float>(time.count());
-    return juce::jmap(juce::jlimit(0.f, maxf, timef), 0.f, maxf, 0.f, static_cast<float>(width));
+    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
+    auto width = scopeRect.getWidth();
+    auto height = scopeRect.getHeight();
+    auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
+
+    auto path = juce::Path();
+    bool started = false;
+    float binHz = storage_->samplerate / static_cast<float>(internal::fftSize);
+    float zeroPoint = dbToY(dbMin, height);
+    float maxPoint = dbToY(dbMax, height);
+    auto now = std::chrono::steady_clock::now();
+
+    // Start path.
+    path.startNewSubPath(freqToX(lowFreq, width), zeroPoint);
+    {
+        std::lock_guard l(data_lock_);
+        mtbs_ = std::chrono::duration<float>(1.f / binHz);
+
+        for (int i = 0; i < internal::fftSize / 2; i++)
+        {
+            const float hz = binHz * static_cast<float>(i);
+            if (hz < lowFreq || hz > highFreq)
+            {
+                continue;
+            }
+
+            const float x = freqToX(hz, width);
+            const float y0 = displayed_data_[i];
+            const float y1 = dbToY(new_scope_data_[i], height);
+            const float y = interpolate(y0, y1, now);
+            displayed_data_[i] = y;
+            if (y > 0)
+            {
+                if (started)
+                {
+                    path.lineTo(x, y);
+                }
+                else
+                {
+                    path.startNewSubPath(x, zeroPoint);
+                    path.lineTo(x, y);
+                    started = true;
+                }
+            }
+            else
+            {
+                path.lineTo(x, zeroPoint);
+                path.closeSubPath();
+                started = false;
+            }
+        }
+    }
+    // End path.
+    if (started)
+    {
+        path.lineTo(freqToX(highFreq, width), zeroPoint);
+        path.closeSubPath();
+    }
+    g.setColour(curveColor);
+    g.fillPath(path);
 }
 
-float Oscilloscope::dbToY(float db, int height) { return (float)height * (dbMax - db) / dbRange; }
+void SpectrumDisplay::resized()
+{
+    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
+    auto height = scopeRect.getHeight();
+    std::fill(displayed_data_.begin(), displayed_data_.end(), dbToY(-100, height));
+}
+
+void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
+                                      internal::FftScopeType::iterator end)
+{
+    // Data comes in as dB (from dbMin to dbMax).
+    std::lock_guard l(data_lock_);
+    std::move(begin, end, new_scope_data_.begin());
+    last_updated_time_ = std::chrono::steady_clock::now();
+}
+
+float SpectrumDisplay::interpolate(const float y0, const float y1,
+                                   std::chrono::time_point<std::chrono::steady_clock> t) const
+{
+    std::chrono::duration<float> distance = (t - last_updated_time_);
+    float mu = juce::jlimit(0.f, 1.f, distance / mtbs_);
+    return y0 * (1 - mu) + y1 * mu;
+}
 
 // TODO:
 // (1) Give configuration to the user to choose FFT params (namely, desired Hz resolution).
 Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s), forward_fft_(fftOrder),
-      window_(fftSize, juce::dsp::WindowingFunction<float>::hann), pos_(0), complete_(false),
-      fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
+    : editor_(e), storage_(s), forward_fft_(internal::fftOrder),
+      window_(internal::fftSize, juce::dsp::WindowingFunction<float>::hann), pos_(0),
+      complete_(false), fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
       channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
-      right_chan_button_("R"), scope_mode_button_(*this), background_(s), spectrogram_(e, s),
-      spectrogram_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s, this)
+      right_chan_button_("R"), scope_mode_button_(*this), background_(s), spectrum_(e, s),
+      spectrum_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s, this)
 {
     setAccessible(true);
     setOpaque(true);
@@ -386,14 +476,14 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     scope_mode_button_.setLabels({"Waveform", "Spectrum"});
     scope_mode_button_.setWantsKeyboardFocus(false);
     scope_mode_button_.setValue(1.f);
-    spectrogram_parameters_.setOpaque(true);
+    spectrum_parameters_.setOpaque(true);
     waveform_parameters_.setOpaque(true);
     addAndMakeVisible(background_);
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
     addAndMakeVisible(scope_mode_button_);
-    addAndMakeVisible(spectrogram_);
-    addAndMakeVisible(spectrogram_parameters_);
+    addAndMakeVisible(spectrum_);
+    addAndMakeVisible(spectrum_parameters_);
     addChildComponent(waveform_);
     addChildComponent(waveform_parameters_);
 
@@ -421,8 +511,8 @@ void Oscilloscope::onSkinChanged()
     left_chan_button_.setSkin(skin, associatedBitmapStore);
     right_chan_button_.setSkin(skin, associatedBitmapStore);
     scope_mode_button_.setSkin(skin, associatedBitmapStore);
-    spectrogram_.setSkin(skin, associatedBitmapStore);
-    spectrogram_parameters_.setSkin(skin, associatedBitmapStore);
+    spectrum_.setSkin(skin, associatedBitmapStore);
+    spectrum_parameters_.setSkin(skin, associatedBitmapStore);
     waveform_.setSkin(skin, associatedBitmapStore);
     waveform_parameters_.setSkin(skin, associatedBitmapStore);
 }
@@ -455,30 +545,30 @@ void Oscilloscope::resized()
     left_chan_button_.setBounds(8, 4, 15, 15);
     right_chan_button_.setBounds(23, 4, 15, 15);
     scope_mode_button_.setBounds(rhs - 97, 4, 105, 15);
-    // Spectrogram/waveform display: appears in scopeRect.
-    spectrogram_.setBounds(scopeRect);
+    // Spectrum/waveform display: appears in scopeRect.
+    spectrum_.setBounds(scopeRect);
     waveform_.setBounds(scopeRect);
     // Bottom buttons: in the bottom paramsHeight pixels.
-    spectrogram_parameters_.setBounds(0, h - paramsHeight, w, h);
+    spectrum_parameters_.setBounds(0, h - paramsHeight, w, h);
     waveform_parameters_.setBounds(0, h - paramsHeight, w, h);
 }
 
-Oscilloscope::SpectrogramParameters::SpectrogramParameters(SurgeGUIEditor *e, SurgeStorage *s)
+Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s)
 {
 }
 
-void Oscilloscope::SpectrogramParameters::onSkinChanged()
+void Oscilloscope::SpectrumParameters::onSkinChanged()
 {
     // FIXME: Implement.
 }
 
-void Oscilloscope::SpectrogramParameters::paint(juce::Graphics &g)
+void Oscilloscope::SpectrumParameters::paint(juce::Graphics &g)
 {
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
 }
 
-void Oscilloscope::SpectrogramParameters::resized()
+void Oscilloscope::SpectrumParameters::resized()
 {
     // FIXME: Implement.
 }
@@ -655,7 +745,7 @@ void Oscilloscope::updateDrawing()
         }
         else
         {
-            spectrogram_.repaint();
+            spectrum_.repaint();
         }
     }
 }
@@ -677,22 +767,23 @@ void Oscilloscope::visibilityChanged()
 // Lock for member variables must be held by the caller.
 void Oscilloscope::calculateSpectrumData()
 {
-    window_.multiplyWithWindowingTable(fft_data_.data(), fftSize);
+    window_.multiplyWithWindowingTable(fft_data_.data(), internal::fftSize);
     forward_fft_.performFrequencyOnlyForwardTransform(fft_data_.data());
 
-    float binHz = storage_->samplerate / static_cast<float>(fftSize);
-    for (int i = 0; i < fftSize / 2; i++)
+    float binHz = storage_->samplerate / static_cast<float>(internal::fftSize);
+    for (int i = 0; i < internal::fftSize / 2; i++)
     {
         float hz = binHz * static_cast<float>(i);
-        if (hz < lowFreq || hz > highFreq)
+        if (hz < SpectrumDisplay::lowFreq || hz > SpectrumDisplay::highFreq)
         {
-            scope_data_[i] = dbMin;
+            scope_data_[i] = SpectrumDisplay::dbMin;
         }
         else
         {
-            scope_data_[i] = juce::jlimit(dbMin, dbMax,
-                                          juce::Decibels::gainToDecibels(fft_data_[i]) -
-                                              juce::Decibels::gainToDecibels((float)fftSize));
+            scope_data_[i] =
+                juce::jlimit(SpectrumDisplay::dbMin, SpectrumDisplay::dbMax,
+                             juce::Decibels::gainToDecibels(fft_data_[i]) -
+                                 juce::Decibels::gainToDecibels((float)internal::fftSize));
         }
     }
 }
@@ -707,8 +798,8 @@ void Oscilloscope::changeScopeType(ScopeMode type)
     case WAVEFORM:
     {
         scope_mode_ = WAVEFORM;
-        spectrogram_.setVisible(false);
-        spectrogram_parameters_.setVisible(false);
+        spectrum_.setVisible(false);
+        spectrum_parameters_.setVisible(false);
         std::fill(scope_data_.begin(), scope_data_.end(), 0.f);
         waveform_.setVisible(true);
         waveform_parameters_.setVisible(true);
@@ -720,9 +811,9 @@ void Oscilloscope::changeScopeType(ScopeMode type)
         scope_mode_ = SPECTRUM;
         waveform_.setVisible(false);
         waveform_parameters_.setVisible(false);
-        std::fill(scope_data_.begin(), scope_data_.end(), dbMin);
-        spectrogram_.setVisible(true);
-        spectrogram_parameters_.setVisible(true);
+        std::fill(scope_data_.begin(), scope_data_.end(), SpectrumDisplay::dbMin);
+        spectrum_.setVisible(true);
+        spectrum_parameters_.setVisible(true);
 
         break;
     }
@@ -776,7 +867,7 @@ void Oscilloscope::pullData()
             ScopeMode mode = scope_mode_;
             l.unlock();
             std::this_thread::sleep_for(std::chrono::duration<float, std::chrono::seconds::period>(
-                fftSize / (mode == SPECTRUM ? 2.f : 4.f) / storage_->samplerate));
+                internal::fftSize / (mode == SPECTRUM ? 2.f : 4.f) / storage_->samplerate));
             continue;
         }
 
@@ -798,13 +889,13 @@ void Oscilloscope::pullData()
         else
         {
             int sz = dataL.size();
-            if (pos_ + sz >= fftSize)
+            if (pos_ + sz >= internal::fftSize)
             {
-                int mv = fftSize - pos_;
+                int mv = internal::fftSize - pos_;
                 int leftovers = sz - mv;
                 std::move(dataL.begin(), dataL.begin() + mv, fft_data_.begin() + pos_);
                 calculateSpectrumData();
-                spectrogram_.updateScopeData(scope_data_.begin(), scope_data_.end());
+                spectrum_.updateScopeData(scope_data_.begin(), scope_data_.end());
                 std::move(dataL.begin() + mv, dataL.end(), fft_data_.begin());
                 pos_ = leftovers;
             }
@@ -849,7 +940,7 @@ void Oscilloscope::Background::paint(juce::Graphics &g)
     }
     else
     {
-        paintSpectrogramBackground(g);
+        paintSpectrumBackground(g);
     }
 }
 
@@ -871,7 +962,7 @@ void Oscilloscope::Background::updateParameters(WaveformDisplay::Parameters para
     waveform_params_ = std::move(params);
 }
 
-void Oscilloscope::Background::paintSpectrogramBackground(juce::Graphics &g)
+void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
 {
     juce::Graphics::ScopedSaveState g1(g);
 
@@ -1060,100 +1151,6 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
             g.drawFittedText(timeString, labelRect, juce::Justification::bottom, 1);
         }
     }
-}
-
-Oscilloscope::Spectrogram::Spectrogram(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s), last_updated_time_(std::chrono::steady_clock::now())
-{
-    std::fill(new_scope_data_.begin(), new_scope_data_.end(), dbMin);
-}
-
-void Oscilloscope::Spectrogram::paint(juce::Graphics &g)
-{
-    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
-    auto width = scopeRect.getWidth();
-    auto height = scopeRect.getHeight();
-    auto curveColor = skin->getColor(Colors::MSEGEditor::Curve);
-
-    auto path = juce::Path();
-    bool started = false;
-    float binHz = storage_->samplerate / static_cast<float>(fftSize);
-    float zeroPoint = dbToY(dbMin, height);
-    float maxPoint = dbToY(dbMax, height);
-    auto now = std::chrono::steady_clock::now();
-
-    // Start path.
-    path.startNewSubPath(freqToX(lowFreq, width), zeroPoint);
-    {
-        std::lock_guard l(data_lock_);
-        mtbs_ = std::chrono::duration<float>(1.f / binHz);
-
-        for (int i = 0; i < fftSize / 2; i++)
-        {
-            const float hz = binHz * static_cast<float>(i);
-            if (hz < lowFreq || hz > highFreq)
-            {
-                continue;
-            }
-
-            const float x = freqToX(hz, width);
-            const float y0 = displayed_data_[i];
-            const float y1 = dbToY(new_scope_data_[i], height);
-            const float y = interpolate(y0, y1, now);
-            displayed_data_[i] = y;
-            if (y > 0)
-            {
-                if (started)
-                {
-                    path.lineTo(x, y);
-                }
-                else
-                {
-                    path.startNewSubPath(x, zeroPoint);
-                    path.lineTo(x, y);
-                    started = true;
-                }
-            }
-            else
-            {
-                path.lineTo(x, zeroPoint);
-                path.closeSubPath();
-                started = false;
-            }
-        }
-    }
-    // End path.
-    if (started)
-    {
-        path.lineTo(freqToX(highFreq, width), zeroPoint);
-        path.closeSubPath();
-    }
-    g.setColour(curveColor);
-    g.fillPath(path);
-}
-
-void Oscilloscope::Spectrogram::resized()
-{
-    auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
-    auto height = scopeRect.getHeight();
-    std::fill(displayed_data_.begin(), displayed_data_.end(), dbToY(-100, height));
-}
-
-void Oscilloscope::Spectrogram::updateScopeData(FftScopeType::iterator begin,
-                                                FftScopeType::iterator end)
-{
-    // Data comes in as dB (from dbMin to dbMax).
-    std::lock_guard l(data_lock_);
-    std::move(begin, end, new_scope_data_.begin());
-    last_updated_time_ = std::chrono::steady_clock::now();
-}
-
-float Oscilloscope::Spectrogram::interpolate(
-    const float y0, const float y1, std::chrono::time_point<std::chrono::steady_clock> t) const
-{
-    std::chrono::duration<float> distance = (t - last_updated_time_);
-    float mu = juce::jlimit(0.f, 1.f, distance / mtbs_);
-    return y0 * (1 - mu) + y1 * mu;
 }
 
 Oscilloscope::SwitchButton::SwitchButton(Oscilloscope &parent)

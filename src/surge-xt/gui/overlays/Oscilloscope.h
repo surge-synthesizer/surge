@@ -40,6 +40,16 @@ namespace Surge
 namespace Overlays
 {
 
+namespace internal
+{
+constexpr int fftOrder = 13;
+constexpr int fftSize = 8192;
+
+// Really wish span was available.
+using FftScopeType = std::array<float, fftSize / 2>;
+} // namespace internal
+
+
 // Waveform-specific display taken from s(m)exoscope GPL code and adapted to use with Surge.
 class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
@@ -124,19 +134,41 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     juce::Point<int> clickPoint;
 };
 
-class Oscilloscope : public OverlayComponent,
-                     public Surge::GUI::SkinConsumingComponent,
-                     public Surge::GUI::Hoverable
+// Spectrum-specific display.
+class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
   public:
-    static constexpr int fftOrder = 13;
-    static constexpr int fftSize = 8192;
     static constexpr float lowFreq = 10;
     static constexpr float highFreq = 24000;
     static constexpr float dbMin = -100;
     static constexpr float dbMax = 0;
     static constexpr float dbRange = dbMax - dbMin;
 
+    SpectrumDisplay(SurgeGUIEditor *e, SurgeStorage *s);
+
+    void paint(juce::Graphics &g) override;
+    void resized() override;
+    void updateScopeData(internal::FftScopeType::iterator begin,
+                         internal::FftScopeType::iterator end);
+
+  private:
+    float interpolate(const float y0, const float y1,
+                      std::chrono::time_point<std::chrono::steady_clock> t) const;
+
+    SurgeGUIEditor *editor_;
+    SurgeStorage *storage_;
+    std::chrono::duration<float> mtbs_;
+    std::chrono::time_point<std::chrono::steady_clock> last_updated_time_;
+    std::mutex data_lock_;
+    internal::FftScopeType new_scope_data_;
+    internal::FftScopeType displayed_data_;
+};
+
+class Oscilloscope : public OverlayComponent,
+                     public Surge::GUI::SkinConsumingComponent,
+                     public Surge::GUI::Hoverable
+{
+  public:
     Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s);
     virtual ~Oscilloscope();
 
@@ -161,12 +193,6 @@ class Oscilloscope : public OverlayComponent,
         SPECTRUM = 2,
     };
 
-    // Really wish span was available.
-    using FftScopeType = std::array<float, fftSize / 2>;
-
-    // Really wish std::chrono didn't suck so badly.
-    using FloatSeconds = std::chrono::duration<float>;
-
     // Child component for handling the drawing of the background. Done as a separate child instead
     // of in the Oscilloscope class so the display, which is repainting at 20-30 hz, doesn't mark
     // this as dirty as it repaints. It sucks up a ton of CPU otherwise.
@@ -180,7 +206,7 @@ class Oscilloscope : public OverlayComponent,
         void updateParameters(WaveformDisplay::Parameters params);
 
       private:
-        void paintSpectrogramBackground(juce::Graphics &g);
+        void paintSpectrumBackground(juce::Graphics &g);
         void paintWaveformBackground(juce::Graphics &g);
 
         // No lock on these because they can only get updated during the same thread as the one
@@ -191,33 +217,10 @@ class Oscilloscope : public OverlayComponent,
         WaveformDisplay::Parameters waveform_params_;
     };
 
-    // Child component for handling the drawing of the spectrogram.
-    class Spectrogram : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    class SpectrumParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
-        Spectrogram(SurgeGUIEditor *e, SurgeStorage *s);
-
-        void paint(juce::Graphics &g) override;
-        void resized() override;
-        void updateScopeData(FftScopeType::iterator begin, FftScopeType::iterator end);
-
-      private:
-        float interpolate(const float y0, const float y1,
-                          std::chrono::time_point<std::chrono::steady_clock> t) const;
-
-        SurgeGUIEditor *editor_;
-        SurgeStorage *storage_;
-        std::chrono::duration<float> mtbs_;
-        std::chrono::time_point<std::chrono::steady_clock> last_updated_time_;
-        std::mutex data_lock_;
-        FftScopeType new_scope_data_;
-        FftScopeType displayed_data_;
-    };
-
-    class SpectrogramParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
-    {
-      public:
-        SpectrogramParameters(SurgeGUIEditor *e, SurgeStorage *s);
+        SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s);
 
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
@@ -271,11 +274,6 @@ class Oscilloscope : public OverlayComponent,
         Oscilloscope &parent_;
     };
 
-    static float freqToX(float freq, int width);
-    static float timeToX(std::chrono::milliseconds time, int width);
-    static float dbToY(float db, int height);
-    static float magToY(float mag, int height);
-
     // Height of parameter window, in pixels.
     static constexpr const int paramsHeight = 78;
 
@@ -289,9 +287,9 @@ class Oscilloscope : public OverlayComponent,
     SurgeStorage *storage_{nullptr};
     juce::dsp::FFT forward_fft_;
     juce::dsp::WindowingFunction<float> window_;
-    std::array<float, 2 * fftSize> fft_data_;
+    std::array<float, 2 * internal::fftSize> fft_data_;
     int pos_;
-    FftScopeType scope_data_;
+    internal::FftScopeType scope_data_;
     ChannelSelect channel_selection_;
     ScopeMode scope_mode_;
     // Global lock for all data members accessed concurrently.
@@ -307,9 +305,9 @@ class Oscilloscope : public OverlayComponent,
     Surge::Widgets::SelfDrawToggleButton right_chan_button_;
     SwitchButton scope_mode_button_;
     Background background_;
-    Spectrogram spectrogram_;
+    SpectrumDisplay spectrum_;
     WaveformDisplay waveform_;
-    SpectrogramParameters spectrogram_parameters_;
+    SpectrumParameters spectrum_parameters_;
     WaveformParameters waveform_parameters_;
 };
 
