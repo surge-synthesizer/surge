@@ -26,6 +26,13 @@ setup(
     install_requires=["numpy"],
     packages=["surgepy"],
     cmake_source_dir="../..",
-    cmake_args=["-DSURGE_BUILD_PYTHON_BINDINGS=TRUE"],
+    cmake_args=[
+        "-DSURGE_BUILD_PYTHON_BINDINGS=TRUE",
+        "-DSURGE_SKIP_JUCE_FOR_RACK=TRUE",
+        "-DSURGE_SKIP_ODDSOUND_MTS=TRUE",
+        "-DSURGE_SKIP_VST3=TRUE",
+        "-DSURGE_SKIP_ALSA=TRUE",
+        "-DSURGE_SKIP_STANDALONE=TRUE",
+    ],
     cmake_process_manifest_hook=just_surgepy,
 )
