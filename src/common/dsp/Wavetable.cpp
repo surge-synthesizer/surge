@@ -247,7 +247,7 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
     for (int j = wdata_tables; j < this->n_tables; j++)
     {
         memset(this->TableF32WeakPointers[0][j], 0, this->size * sizeof(float));
-        memset(this->TableI16WeakPointers[0][j], 0, this->size * sizeof(short));
+        memset(this->TableI16WeakPointers[0][j], 0, (this->size + FIRoffsetI16) * sizeof(short));
     }
 
     for (int j = 0; j < wdata_tables; j++)

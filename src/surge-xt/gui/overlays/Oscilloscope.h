@@ -231,7 +231,7 @@ class Oscilloscope : public OverlayComponent,
     class WaveformParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
     {
       public:
-        WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s);
+        WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
 
         std::optional<WaveformDisplay::Parameters> getParamsIfDirty();
 
@@ -242,6 +242,8 @@ class Oscilloscope : public OverlayComponent,
       private:
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
+        juce::Component
+            *parent_; // Saved here so we can provide it to the children at construction time.
         WaveformDisplay::Parameters params_;
         bool params_changed_;
         std::mutex params_lock_;

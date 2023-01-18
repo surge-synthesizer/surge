@@ -862,7 +862,7 @@ struct UndoManagerImpl
 
             if (!p->displayName.empty())
             {
-                strncpy(os->wavetable_display_name, p->displayName.c_str(), TXT_SIZE);
+                os->wavetable_display_name = p->displayName;
             }
             if (p->current_id >= 0)
             {

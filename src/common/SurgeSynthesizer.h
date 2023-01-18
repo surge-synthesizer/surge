@@ -58,6 +58,7 @@ class alignas(16) SurgeSynthesizer
         send alignas(16)[n_send_slots][n_scenes];
 
     std::atomic<bool> audio_processing_active;
+    std::atomic<bool> patchChanged{false};
 
     // methods
   public:
@@ -71,6 +72,7 @@ class alignas(16) SurgeSynthesizer
     virtual ~SurgeSynthesizer();
     void playNote(char channel, char key, char velocity, char detune, int32_t host_noteid = -1);
     void releaseNote(char channel, char key, char velocity, int32_t host_noteid = -1);
+    void chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid = -1);
     void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity,
                                   int32_t host_noteid = -1);
     void pitchBend(char channel, int value);

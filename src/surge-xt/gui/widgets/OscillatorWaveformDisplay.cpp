@@ -367,24 +367,24 @@ std::string OscillatorWaveformDisplay::getCurrentWavetableName()
 {
     storage->waveTableDataMutex.lock();
 
-    char wttxt[TXT_SIZE];
+    std::string wttxt;
     int wtid = oscdata->wt.current_id;
 
-    if (oscdata->wavetable_display_name[0] != '\0')
+    if (!oscdata->wavetable_display_name.empty())
     {
-        strncpy(wttxt, oscdata->wavetable_display_name, TXT_SIZE);
+        wttxt = oscdata->wavetable_display_name;
     }
     else if ((wtid >= 0) && (wtid < storage->wt_list.size()))
     {
-        strncpy(wttxt, storage->wt_list.at(wtid).name.c_str(), TXT_SIZE);
+        wttxt = storage->wt_list.at(wtid).name;
     }
     else if (oscdata->wt.flags & wtf_is_sample)
     {
-        strncpy(wttxt, "(Patch Sample)", TXT_SIZE);
+        wttxt = "(Patch Sample)";
     }
     else
     {
-        strncpy(wttxt, "(Patch Wavetable)", TXT_SIZE);
+        wttxt = "(Patch Wavetable)";
     }
 
     storage->waveTableDataMutex.unlock();
@@ -573,15 +573,14 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     }
 
     auto rnaction = [this]() {
-        char c[TXT_SIZE];
-        strncpy(c, this->oscdata->wavetable_display_name, TXT_SIZE);
+        auto c = this->oscdata->wavetable_display_name;
 
         if (sge)
         {
             sge->promptForMiniEdit(
                 c, "Enter a new name:", "Wavetable Display Name", juce::Point<int>{},
                 [this](const std::string &s) {
-                    strncpy(this->oscdata->wavetable_display_name, s.c_str(), TXT_SIZE);
+                    this->oscdata->wavetable_display_name = s;
                     this->repaint();
                 },
                 this);
@@ -988,7 +987,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
 
-            strncpy(this->oscdata->wt.queue_filename, rString.c_str(), 255);
+            this->oscdata->wt.queue_filename = rString;
 
             auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
 

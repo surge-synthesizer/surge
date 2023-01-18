@@ -200,8 +200,7 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
     auto mocs = layouts.getMainOutputChannelSet();
     auto mics = layouts.getMainInputChannelSet();
 
-    auto outputValid = (mocs == juce::AudioChannelSet::stereo()) ||
-                       (mocs == juce::AudioChannelSet::mono()) || (mocs.isDisabled());
+    auto outputValid = (mocs == juce::AudioChannelSet::stereo()) || (mocs.isDisabled());
     auto inputValid = (mics == juce::AudioChannelSet::stereo()) ||
                       (mics == juce::AudioChannelSet::mono()) || (mics.isDisabled());
 
@@ -410,6 +409,13 @@ void SurgeSynthProcessor::processBlockPostFunction()
             updateHostDisplay(
                 juce::AudioProcessorListener::ChangeDetails().withParameterInfoChanged(true));
         }
+        if (std::atomic_exchange(&surge->patchChanged, false))
+        {
+            updateHostDisplay(juce::AudioProcessorListener::ChangeDetails()
+                                  .withParameterInfoChanged(true)
+                                  .withProgramChanged(true)
+                                  .withNonParameterStateChanged(true));
+        }
     }
 }
 
@@ -610,13 +616,39 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
             surge->playNote(nevt->channel, nevt->key, 127 * nevt->velocity, 0, nevt->note_id);
         else
             surge->releaseNote(nevt->channel, nevt->key, 127 * nevt->velocity, nevt->note_id);
+
+        {
+            // We need to remember to update the virtual keyboard
+            auto m = juce::MidiMessage::noteOn(nevt->channel + 1, nevt->key, (float)nevt->velocity);
+            juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
+            midiKeyboardState.processNextMidiEvent(m);
+        }
     }
     break;
     case CLAP_EVENT_NOTE_CHOKE:
+    {
+        auto nevt = reinterpret_cast<const clap_event_note *>(evt);
+        surge->chokeNote(nevt->channel, nevt->key, 127 * nevt->velocity, nevt->note_id);
+
+        {
+            // We need to remember to update the virtual keyboard
+            auto m = juce::MidiMessage::noteOff(nevt->channel + 1, nevt->key);
+            juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
+            midiKeyboardState.processNextMidiEvent(m);
+        }
+    }
+    break;
     case CLAP_EVENT_NOTE_OFF:
     {
         auto nevt = reinterpret_cast<const clap_event_note *>(evt);
         surge->releaseNote(nevt->channel, nevt->key, 127 * nevt->velocity, nevt->note_id);
+
+        {
+            // We need to remember to update the virtual keyboard
+            auto m = juce::MidiMessage::noteOff(nevt->channel + 1, nevt->key);
+            juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
+            midiKeyboardState.processNextMidiEvent(m);
+        }
     }
     break;
     case CLAP_EVENT_MIDI:

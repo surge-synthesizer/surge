@@ -72,6 +72,7 @@ struct PatchStoreDialog : public OverlayComponent,
 
     void setName(const std::string &n) { nameEd->setText(n, juce::dontSendNotification); }
     void setAuthor(const std::string &a) { authorEd->setText(a, juce::dontSendNotification); }
+    void setLicense(const std::string &a) { licenseEd->setText(a, juce::dontSendNotification); }
     void setCategory(const std::string &c) { catEd->setText(c, juce::dontSendNotification); }
     void setComment(const std::string &c) { commentEd->setText(c, juce::dontSendNotification); }
     void setTags(const std::vector<SurgePatch::Tag> &t);
@@ -79,8 +80,8 @@ struct PatchStoreDialog : public OverlayComponent,
 
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
-    std::unique_ptr<juce::TextEditor> nameEd, authorEd, catEd, tagEd, commentEd;
-    std::unique_ptr<juce::Label> nameEdL, authorEdL, catEdL, tagEdL, commentEdL;
+    std::unique_ptr<juce::TextEditor> nameEd, authorEd, catEd, licenseEd, tagEd, commentEd;
+    std::unique_ptr<juce::Label> nameEdL, authorEdL, catEdL, licenseEdL, tagEdL, commentEdL;
     std::unique_ptr<Widgets::SurgeTextButton> okButton, okOverButton, cancelButton;
     std::unique_ptr<juce::Label> storeTuningLabel;
     std::unique_ptr<juce::ToggleButton> storeTuningButton;

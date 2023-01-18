@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "SurgeSynthesizer.h"
+#include "SurgeStorage.h"
 #include "version.h"
 #include "filesystem/import.h"
 
@@ -858,6 +859,16 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
     void remapToStandardKeyboard() { storage.remapToConcertCKeyboard(); }
 
     void retuneToStandardScale() { storage.retuneTo12TETScale(); }
+
+    void setTuningApplicationMode(SurgeStorage::TuningApplicationMode m)
+    {
+        storage.tuningApplicationMode = m;
+    }
+
+    SurgeStorage::TuningApplicationMode getTuningApplicationMode() const
+    {
+        return storage.tuningApplicationMode;
+    }
 };
 
 SurgeSynthesizer *createSurge(float sr)
@@ -871,7 +882,12 @@ SurgeSynthesizer *createSurge(float sr)
     return surge;
 }
 
+// Prefix _ if using shared object within a Python package built with scikit-build
+#ifdef SKBUILD
+PYBIND11_MODULE(_surgepy, m)
+#else
 PYBIND11_MODULE(surgepy, m)
+#endif
 {
     m.doc() = "Python bindings for Surge Synthesizer";
     m.def("createSurge", &createSurge, "Create a surge instance", py::arg("sampleRate"));
@@ -1001,7 +1017,11 @@ PYBIND11_MODULE(surgepy, m)
              "Load an KBM mapping file and apply tuning to this instance")
         .def("remapToStandardKeyboard",
              &SurgeSynthesizerWithPythonExtensions::remapToStandardKeyboard,
-             "Return to standard C centered keyboard mapping");
+             "Return to standard C centered keyboard mapping")
+        .def_readwrite("mpeEnabled", &SurgeSynthesizerWithPythonExtensions::mpeEnabled)
+        .def_property("tuningApplicationMode",
+                      &SurgeSynthesizerWithPythonExtensions::getTuningApplicationMode,
+                      &SurgeSynthesizerWithPythonExtensions::setTuningApplicationMode);
 
     py::class_<SurgePyControlGroup>(m, "SurgeControlGroup")
         .def("getId", &SurgePyControlGroup::getControlGroupId)
@@ -1212,4 +1232,8 @@ PYBIND11_MODULE(surgepy, m)
         C(FilterType::fut_resonancewarp_ap);
         C(FilterType::fut_tripole);
     }
+
+    py::enum_<SurgeStorage::TuningApplicationMode>(m, "TuningApplicationMode")
+        .value("RETUNE_ALL", SurgeStorage::TuningApplicationMode::RETUNE_ALL)
+        .value("RETUNE_MIDI_ONLY", SurgeStorage::TuningApplicationMode::RETUNE_MIDI_ONLY);
 }

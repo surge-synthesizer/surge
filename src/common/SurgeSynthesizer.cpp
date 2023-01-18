@@ -189,6 +189,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     storage.getPatch().name = "Init";
     storage.getPatch().comment = "";
     storage.getPatch().author = "Surge Synth Team";
+    storage.getPatch().license = "Licensed under the maximally permissive CC0 license";
     midiprogramshavechanged = false;
 
     for (int i = 0; i < BLOCK_SIZE; i++)
@@ -377,7 +378,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    if (storage.oddsound_mts_client && storage.oddsound_mts_active)
+    if (storage.oddsound_mts_client && storage.oddsound_mts_active_as_client)
     {
         if (MTS_ShouldFilterNote(storage.oddsound_mts_client, key, channel))
         {
@@ -1083,6 +1084,28 @@ void SurgeSynthesizer::releaseScene(int s)
     halfbandIN.reset();
 }
 
+void SurgeSynthesizer::chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid)
+{
+    /*
+     * The strategy here is pretty simple. Do a release note, then go find any voice
+     * that matches me and do an uber-release. There may be some wierdo MPE mono
+     * choke drum edge case this won't work with but in the bitwig drum machine at
+     * least it works great!
+     */
+    releaseNote(channel, key, velocity, host_noteid);
+
+    for (int sc = 0; sc < n_scenes; ++sc)
+    {
+        for (auto *v : voices[sc])
+        {
+            if (v->matchesChannelKeyId(channel, key, host_noteid))
+            {
+                v->uber_release();
+            }
+        }
+    }
+}
+
 void SurgeSynthesizer::releaseNote(char channel, char key, char velocity, int32_t host_noteid)
 {
     midiNoteEvents++;
@@ -1683,11 +1706,7 @@ void SurgeSynthesizer::setNoteExpression(SurgeVoice::NoteExpressionType net, int
     {
         for (auto v : voices[sc])
         {
-            if ((note_id == -1 &&
-                 ((v->state.key == key && v->state.channel == channel) ||
-                  (v->originating_host_key >= 0 && v->originating_host_key == key &&
-                   v->originating_host_channel >= 0 && v->originating_host_channel == channel))) ||
-                (note_id != -1 && v->host_note_id == note_id))
+            if (v->matchesChannelKeyId(channel, key, note_id))
             {
                 v->applyNoteExpression(net, value);
             }
@@ -3414,11 +3433,7 @@ void SurgeSynthesizer::applyParameterPolyphonicModulation(Parameter *p, int32_t 
 
     for (auto v : voices[p->scene - 1])
     {
-        if ((note_id != -1 && v->host_note_id == note_id) ||
-            (note_id == -1 &&
-             (((v->state.key == key && v->state.channel == channel) ||
-               (v->originating_host_key >= 0 && v->originating_host_key == key &&
-                v->originating_host_channel >= 0 && v->originating_host_channel == channel)))))
+        if (v->matchesChannelKeyId(channel, key, note_id))
         {
             v->applyPolyphonicParamModulation(p, depth, underlyingMonoMod);
         }
@@ -3823,6 +3838,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     }
 
     synth->storage.getPatch().isDirty = false;
+    synth->patchChanged = true;
     synth->halt_engine = false;
 
     // Now we want to null out the patchLoadThread since everything is done
@@ -4103,10 +4119,10 @@ void SurgeSynthesizer::processControl()
         storage.oddsound_mts_on_check = (storage.oddsound_mts_on_check + 1) & (1024 - 1);
         if (storage.oddsound_mts_on_check == 0)
         {
-            bool prior = storage.oddsound_mts_active;
+            bool prior = storage.oddsound_mts_active_as_client;
             storage.setOddsoundMTSActiveTo(MTS_HasMaster(storage.oddsound_mts_client));
 
-            if (prior != storage.oddsound_mts_active)
+            if (prior != storage.oddsound_mts_active_as_client)
             {
                 refresh_editor = true;
             }

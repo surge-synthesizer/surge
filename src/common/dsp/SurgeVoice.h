@@ -57,6 +57,8 @@ class alignas(16) SurgeVoice
     SurgeVoiceState state;
     int age, age_release;
 
+    bool matchesChannelKeyId(int16_t channel, int16_t key, int32_t host_noteid);
+
     /*
      * Begin implementing host-provided identifiers for voices for polyphonic
      * modulators, note expressions, and so on

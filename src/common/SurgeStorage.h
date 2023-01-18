@@ -105,6 +105,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                             added Extend to Delay Feedback parameter (allows negative delay)
 // 19 -> 20 (XT 1.1 release)   added voice envelope mode, but super late so don't break 19
 // 20 -> 21 (XT 1.2 nightlies) added absolutable mode for Combulator Offset 1/2 (to match the behavior of Center parameter)
+//                                   oddsound_as_mts_main
 // clang-format on
 
 const int ff_revision = 21;
@@ -169,6 +170,12 @@ enum deform_type
     type_4,
 
     n_deform_types,
+};
+
+enum NoiseColorChannels
+{
+    STEREO = 0,
+    MONO = 1
 };
 
 enum lfo_trigger_mode
@@ -551,8 +558,8 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     Parameter p[n_osc_params];
     Parameter keytrack, retrigger;
     Wavetable wt;
-#define WAVETABLE_DISPLAY_NAME_SIZE 256
-    char wavetable_display_name[WAVETABLE_DISPLAY_NAME_SIZE];
+
+    std::string wavetable_display_name;
     std::string wavetable_formula = "";
     int wavetable_formula_res_base = 5, // 32 * 2^this
         wavetable_formula_nframes = 10;
@@ -924,7 +931,7 @@ class SurgePatch
     SurgeStorage *storage;
 
     // metadata
-    std::string name, category, author, comment;
+    std::string name, category, author, license, comment;
 
     struct Tag
     {
@@ -1304,6 +1311,7 @@ class alignas(16) SurgeStorage
     bool isStandardTuningAndHasNoToggle();
     void resetTuningToggle();
 
+    std::atomic<uint64_t> tuningUpdates{2}; // the 'last sent' starts at 0. just a different value
     bool retuneToScale(const Tunings::Scale &s)
     {
         currentScale = s;
@@ -1393,10 +1401,16 @@ class alignas(16) SurgeStorage
     void initialize_oddsound();
     void deinitialize_oddsound();
     void setOddsoundMTSActiveTo(bool b);
+
+    void connect_as_oddsound_main();
+    void disconnect_as_oddsound_main();
+    uint64_t lastSentTuningUpdate{0}; // since tuning udpate starts at 2
+    void send_tuning_update();
 #endif
     MTSClient *oddsound_mts_client = nullptr;
-    std::atomic<bool> oddsound_mts_active{false};
+    std::atomic<bool> oddsound_mts_active_as_client{false};
     uint32_t oddsound_mts_on_check = 0;
+    std::atomic<bool> oddsound_mts_active_as_main{false};
     enum OddsoundRetuneMode
     {
         RETUNE_CONSTANT = 0,
@@ -1409,9 +1423,9 @@ class alignas(16) SurgeStorage
      */
     inline bool tuningTableIs12TET()
     {
-        if ((isStandardTuning) ||                           // nothing changed
-            (oddsound_mts_client && oddsound_mts_active) || // MTS in command
-            tuningApplicationMode == RETUNE_MIDI_ONLY       // tune the keyboard, not the tables
+        if ((isStandardTuning) ||                                     // nothing changed
+            (oddsound_mts_client && oddsound_mts_active_as_client) || // MTS in command
+            tuningApplicationMode == RETUNE_MIDI_ONLY // tune the keyboard, not the tables
         )
             return true;
         return false;
@@ -1452,7 +1466,7 @@ class alignas(16) SurgeStorage
     std::vector<ModulationRouting> clipboard_modulation_scene, clipboard_modulation_voice,
         clipboard_modulation_global;
     Wavetable clipboard_wt[n_oscs];
-    char clipboard_wt_names[n_oscs][TXT_SIZE];
+    std::array<std::string, n_oscs> clipboard_wt_names;
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
 

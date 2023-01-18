@@ -387,7 +387,7 @@ TEST_CASE("Stream WaveTable Names", "[io]")
                         if (1.0 * rand() / RAND_MAX > 0.8)
                         {
                             auto sn = std::string("renamed blurg ") + std::to_string(rand());
-                            strncpy(patch->scene[s].osc[o].wavetable_display_name, sn.c_str(), 256);
+                            patch->scene[s].osc[o].wavetable_display_name = sn;
                             REQUIRE(std::string(patch->scene[s].osc[o].wavetable_display_name) ==
                                     sn);
                         }

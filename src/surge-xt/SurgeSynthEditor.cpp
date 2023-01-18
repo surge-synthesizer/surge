@@ -469,6 +469,10 @@ void SurgeSynthEditor::endMacroEdit(long macroNum)
 
 juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 {
+    // See issue 6752
+    if (juce::PluginHostType().isReason())
+        return {};
+
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
 
     if (auto *c = getHostContext())
@@ -480,6 +484,10 @@ juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 
 juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 {
+    // See issue 6752
+    if (juce::PluginHostType().isReason())
+        return {};
+
     auto par = processor.macrosById[macro];
 
     if (auto *c = getHostContext())

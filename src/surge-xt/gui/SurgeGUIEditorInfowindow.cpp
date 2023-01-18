@@ -13,7 +13,6 @@
  ** open source in September 2018.
  */
 
-#include <iostream>
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIEditorTags.h"
 

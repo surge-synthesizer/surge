@@ -128,7 +128,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         for (int osc = 0; osc < n_oscs; osc++)
         {
             // Initialize the display name here
-            scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+            scene[sc].osc[osc].wavetable_display_name = "";
             scene[sc].osc[osc].wavetable_formula = "";
             scene[sc].osc[osc].wavetable_formula_nframes = 10;
             scene[sc].osc[osc].wavetable_formula_res_base = 5;
@@ -172,9 +172,11 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                             ct_percent_oscdrift, Surge::Skin::Scene::drift, sc_id,
                                             cg_GLOBAL, 0, true));
 
-        a->push_back(scene[sc].noise_colour.assign(
-            p_id.next(), id_s++, "noisecol", "Noise Color", ct_percent_bipolar,
-            Surge::Skin::Scene::noise_color, sc_id, cg_GLOBAL, 0, true, sceasy));
+        a->push_back(scene[sc].noise_colour.assign(p_id.next(), id_s++, "noisecol", "Noise Color",
+                                                   ct_noise_color, Surge::Skin::Scene::noise_color,
+                                                   sc_id, cg_GLOBAL, 0, true, sceasy));
+        scene[sc].noise_colour.deform_type = NoiseColorChannels::STEREO;
+
         a->push_back(scene[sc].keytrack_root.assign(
             p_id.next(), id_s++, "ktrkroot", "Keytrack Root Key", ct_midikey,
             Surge::Skin::Scene::keytrack_root, sc_id, cg_GLOBAL, 0, false));
@@ -718,8 +720,8 @@ void SurgePatch::init_default_values()
             }
             else
                 osc.wt.queue_id = -1;
-            osc.wt.queue_filename[0] = 0;
-            osc.wt.current_filename[0] = 0;
+            osc.wt.queue_filename = "";
+            osc.wt.current_filename = "";
         }
         scene[sc].fm_depth.val.f = -24.f;
         scene[sc].portamento.val.f = scene[sc].portamento.val_min.f;
@@ -1092,29 +1094,31 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                         return;
 
                     scene[sc].osc[osc].wt.queue_id = -1;
-                    scene[sc].osc[osc].wt.queue_filename[0] = 0;
                     scene[sc].osc[osc].wt.current_id = -1;
-                    scene[sc].osc[osc].wt.current_filename[0] = 0;
+                    scene[sc].osc[osc].wt.queue_filename = "";
+                    scene[sc].osc[osc].wt.current_filename = "";
 
                     void *d = (void *)((char *)dr + sizeof(wt_header));
 
                     storage->waveTableDataMutex.lock();
                     scene[sc].osc[osc].wt.BuildWT(d, *wth, false);
+
                     bool hadName{true};
-                    if (scene[sc].osc[osc].wavetable_display_name[0] == '\0')
+
+                    if (scene[sc].osc[osc].wavetable_display_name.empty())
                     {
                         hadName = false;
+
                         if (scene[sc].osc[osc].wt.flags & wtf_is_sample)
                         {
-                            strxcpy(scene[sc].osc[osc].wavetable_display_name, "(Patch Sample)",
-                                    WAVETABLE_DISPLAY_NAME_SIZE);
+                            scene[sc].osc[osc].wavetable_display_name = "(Patch Sample)";
                         }
                         else
                         {
-                            strxcpy(scene[sc].osc[osc].wavetable_display_name, "(Patch Wavetable)",
-                                    WAVETABLE_DISPLAY_NAME_SIZE);
+                            scene[sc].osc[osc].wavetable_display_name = "(Patch Wavetable)";
                         }
                     }
+
                     storage->waveTableDataMutex.unlock();
 
                     if (hadName && scene[sc].osc[osc].wt.current_id < 0)
@@ -1123,8 +1127,8 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                              i < storage->wt_list.size() && scene[sc].osc[osc].wt.current_id < 0;
                              ++i)
                         {
-                            if (strcmp(scene[sc].osc[osc].wavetable_display_name,
-                                       storage->wt_list[i].name.c_str()) == 0)
+                            if (scene[sc].osc[osc].wavetable_display_name ==
+                                storage->wt_list[i].name)
                             {
                                 scene[sc].osc[osc].wt.current_id = i;
                             }
@@ -1332,6 +1336,17 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             author = s;
         }
 
+        s = meta->Attribute("license");
+
+        if (s)
+        {
+            license = s;
+        }
+        else
+        {
+            license = "";
+        }
+
         auto *tagsX = TINYXML_SAFE_TO_ELEMENT(meta->FirstChild("tags"));
         tags.clear();
 
@@ -1503,7 +1518,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             {
                 if (param_ptr[i]->has_deformoptions())
                 {
-                    param_ptr[i]->deform_type = type_1;
+                    if (param_ptr[i]->ctrltype == ct_noise_color)
+                    {
+                        param_ptr[i]->deform_type = NoiseColorChannels::STEREO;
+                    }
+                    else
+                    {
+                        param_ptr[i]->deform_type = type_1;
+                    }
                 }
             }
 
@@ -2102,7 +2124,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     {
         for (int osc = 0; osc < n_oscs; osc++)
         {
-            scene[sc].osc[osc].wavetable_display_name[0] = '\0';
+            scene[sc].osc[osc].wavetable_display_name = "";
             scene[sc].osc[osc].wavetable_formula = "";
             scene[sc].osc[osc].wavetable_formula_nframes = 10;
             scene[sc].osc[osc].wavetable_formula_res_base = 5;
@@ -2124,8 +2146,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
                 if (lkid->Attribute("wavetable_display_name"))
                 {
-                    strxcpy(scene[ssc].osc[sos].wavetable_display_name,
-                            lkid->Attribute("wavetable_display_name"), WAVETABLE_DISPLAY_NAME_SIZE);
+                    scene[ssc].osc[sos].wavetable_display_name =
+                        lkid->Attribute("wavetable_display_name");
                 }
 
                 if (lkid->Attribute("wavetable_formula"))
@@ -2709,6 +2731,22 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 dawExtraState.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
             }
 
+            auto mts_main = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oddsound_mts_active_as_main"));
+            if (mts_main)
+            {
+                int tv;
+
+                if (mts_main->QueryIntAttribute("v", &tv) == TIXML_SUCCESS)
+                {
+                    if (tv)
+                    {
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+                        storage->connect_as_oddsound_main();
+#endif
+                    }
+                }
+            }
+
             /*
              * We originally stored scale as 'hasTuning' but cleaned it all up in 1.9 in
              * the data structures. To not break old sessions though we kept the wrong names in the
@@ -2881,6 +2919,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     meta.SetAttribute("category", this->category);
     meta.SetAttribute("comment", comment);
     meta.SetAttribute("author", author);
+    meta.SetAttribute("license", license);
 
     TiXmlElement tagsX("tags");
 
@@ -3032,7 +3071,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
 
     // Revision 16 adds the TAM
     TiXmlElement tam("tuningApplicationMode");
-    if (storage->oddsound_mts_active)
+    if (storage->oddsound_mts_active_as_client)
     {
         tam.SetAttribute("v", (int)(storage->patchStoredTuningApplicationMode));
     }
@@ -3326,6 +3365,11 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement tun("hasTuning"); // see comment: Keep this name here for legacy compat
         tun.SetAttribute("v", dawExtraState.hasScale ? 1 : 0);
         dawExtraXML.InsertEndChild(tun);
+
+        // Revision 21 adds MTS as main
+        TiXmlElement oam("oddsound_mts_active_as_main");
+        oam.SetAttribute("v", (int)(storage->oddsound_mts_active_as_main));
+        dawExtraXML.InsertEndChild(oam);
 
         /*
         ** we really want a cdata here but TIXML is ambiguous whether

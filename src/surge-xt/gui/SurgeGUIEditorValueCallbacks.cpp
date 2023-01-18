@@ -2298,6 +2298,36 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         break;
                     }
+                    case ct_noise_color:
+                    {
+                        if (synth->storage.getPatch()
+                                .scene[current_scene]
+                                .filterblock_configuration.val.i == fc_wide)
+                        {
+                            contextMenu.addSeparator();
+                            auto dt = p->deform_type;
+
+                            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                contextMenu, "NOISE GENERATOR MODE");
+
+                            contextMenu.addItem(
+                                "Mono", true, dt == NoiseColorChannels::MONO, [this, p]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                    p->deform_type = NoiseColorChannels::MONO,
+                                    synth->storage.getPatch().isDirty = true;
+                                    frame->repaint();
+                                });
+                            contextMenu.addItem(
+                                "Stereo", true, dt == NoiseColorChannels::STEREO, [this, p]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                    p->deform_type = NoiseColorChannels::STEREO,
+                                    synth->storage.getPatch().isDirty = true;
+                                    frame->repaint();
+                                });
+                        }
+                    }
                     default:
                     {
                         break;
@@ -2323,7 +2353,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         case ct_freq_audible_very_low_minval:
                         {
                             auto hasmts = synth->storage.oddsound_mts_client &&
-                                          synth->storage.oddsound_mts_active;
+                                          synth->storage.oddsound_mts_active_as_client;
 
                             std::string tuningmode = hasmts ? "MTS" : "SCL/KBM";
 

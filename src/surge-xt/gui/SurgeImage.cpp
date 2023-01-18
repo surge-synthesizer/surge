@@ -145,3 +145,15 @@ juce::AffineTransform SurgeImage::scaleAdjustmentTransform() const
 
     return res;
 }
+
+juce::Image SurgeImage::asJuceImage(float scaleBy)
+{
+    auto d = internalDrawableResolved();
+    if (!d)
+        return {};
+
+    juce::Image res(juce::Image::ARGB, d->getWidth() * scaleBy, d->getHeight() * scaleBy, true);
+    juce::Graphics g(res);
+    d->draw(g, 1.f, juce::AffineTransform::scale(scaleBy));
+    return res;
+}

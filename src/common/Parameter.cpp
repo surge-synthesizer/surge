@@ -339,6 +339,7 @@ bool Parameter::has_deformoptions() const
     case ct_alias_mask:
     case ct_tape_drive:
     case ct_dly_fb_clippingmodes:
+    case ct_noise_color:
         return true;
     default:
         break;
@@ -374,6 +375,7 @@ bool Parameter::is_bipolar() const
     case ct_percent_bipolar_pan:
     case ct_percent_bipolar_stringbal:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
+    case ct_noise_color:
     case ct_twist_aux_mix:
     case ct_freq_shift:
     case ct_osc_feedback_negative:
@@ -998,6 +1000,7 @@ void Parameter::set_type(int ctrltype)
     case ct_percent_bipolar_stringbal:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:
+    case ct_noise_color:
         val_min.f = -1;
         val_max.f = 1;
         valtype = vt_float;
@@ -1294,6 +1297,7 @@ void Parameter::set_type(int ctrltype)
     case ct_percent_oscdrift:
     case ct_percent200:
     case ct_percent_bipolar:
+    case ct_noise_color:
     case ct_percent_bipolar_with_string_filter_hook:
     case ct_lfodeform:
     case ct_rotarydrive:
@@ -1638,6 +1642,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_percent_bipolar_stringbal:
         case ct_percent_bipolar_w_dynamic_unipolar_formatting:
         case ct_twist_aux_mix:
+        case ct_noise_color:
         case ct_rotarydrive:
         case ct_osc_feedback:
         case ct_osc_feedback_negative:
@@ -3987,6 +3992,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_percent_bipolar_stringbal:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_twist_aux_mix:
+    case ct_noise_color:
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
     case ct_pitch:

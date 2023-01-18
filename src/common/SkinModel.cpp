@@ -606,7 +606,7 @@ Connector oscilloscope = Connector("oscilloscope.window", 300, 263, 450, 212, Co
 Connector ws_analysis = Connector("filter.waveshaper_analysis.window", 450, 237, 300, 160,
                                   Components::Custom, Connector::WAVESHAPER_ANALYSIS_WINDOW);
 
-Connector save_patch_dialog = Connector("controls.patch.save.window", 157, 57, 390, 270,
+Connector save_patch_dialog = Connector("controls.patch.save.window", 157, 57, 390, 300,
                                         Components::Custom, Connector::SAVE_PATCH_DIALOG);
 
 // modulation panel is special, so it shows up as 'CUSTOM' with no connector and is special-cased in

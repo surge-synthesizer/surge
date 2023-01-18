@@ -38,6 +38,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
     std::string name = synth->storage.getPatch().name;
     std::string category = synth->storage.getPatch().category;
     std::string author = synth->storage.getPatch().author;
+    std::string license = synth->storage.getPatch().license;
     std::string comments = synth->storage.getPatch().comment;
 
     auto defaultAuthor = Surge::Storage::getUserDefaultValue(
@@ -88,6 +89,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::makeStorePatc
     pb->setSkin(currentSkin);
     pb->setName(name);
     pb->setAuthor(author);
+    pb->setLicense(license);
     pb->setCategory(category);
     pb->setComment(comments);
     pb->setTags(synth->storage.getPatch().tags);

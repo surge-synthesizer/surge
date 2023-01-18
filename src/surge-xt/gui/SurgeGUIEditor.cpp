@@ -42,6 +42,7 @@
 #include "overlays/TypeinParamEditor.h"
 #include "overlays/Oscilloscope.h"
 #include "overlays/OverlayWrapper.h"
+#include "overlays/FilterAnalysis.h"
 
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
@@ -75,6 +76,7 @@
 #include "ModernOscillator.h"
 #ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
+#include "libMTSMaster.h"
 #endif
 
 #include "filesystem/import.h"
@@ -548,6 +550,10 @@ void SurgeGUIEditor::idle()
                                           synth->sustainpedalCC);
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    getStorage()->send_tuning_update();
+#endif
+
     if (errorItemCount)
     {
         std::vector<std::pair<std::string, std::string>> cp;
@@ -778,8 +784,8 @@ void SurgeGUIEditor::idle()
             if ((v < 0.5 && !synth->storage.isStandardTuning) ||
                 (v > 0.5 && synth->storage.isStandardTuning))
             {
-                bool hasmts =
-                    synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+                bool hasmts = synth->storage.oddsound_mts_client &&
+                              synth->storage.oddsound_mts_active_as_client;
 
                 statusTune->setValue(!synth->storage.isStandardTuning || hasmts);
                 statusTune->asJuceComponent()->repaint();
@@ -926,6 +932,21 @@ void SurgeGUIEditor::idle()
                     if (lfoDisplay)
                     {
                         lfoDisplay->invalidateIfIdIsInRange(j);
+                    }
+
+                    auto sp = getStorage()->getPatch().param_ptr[j];
+                    if (sp)
+                    {
+                        if (sp->ctrlgroup == cg_FILTER)
+                        {
+                            // force repaint any filter overlays
+                            auto fa = getOverlayIfOpenAs<Surge::Overlays::FilterAnalysis>(
+                                OverlayTags::FILTER_ANALYZER);
+                            if (fa)
+                            {
+                                fa->forceDataRefresh();
+                            }
+                        }
                     }
                 }
             }
@@ -1698,7 +1719,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::STATUS_TUNE:
         {
             statusTune = layoutComponentForSkin(skinCtrl, tag_status_tune);
-            auto hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+            auto hasmts =
+                synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active_as_client;
             statusTune->setValue(synth->storage.isStandardTuning ? hasmts
                                                                  : synth->storage.isToggledToCache);
             setAccessibilityInformationByTitleAndAction(statusTune->asJuceComponent(), "Tune",
@@ -2166,7 +2188,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     }
 
     // if the Tuning Editor was open and ODDSound was activated (which causes a refresh), close it
-    if (synth->storage.oddsound_mts_active)
+    if (synth->storage.oddsound_mts_active_as_client)
     {
         closeOverlay(TUNING_EDITOR);
     }
@@ -2715,7 +2737,8 @@ void SurgeGUIEditor::toggleTuning()
 
     if (statusTune)
     {
-        bool hasmts = synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active;
+        bool hasmts =
+            synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active_as_client;
         statusTune->setValue(this->synth->storage.isStandardTuning ? hasmts : 1);
     }
 
@@ -3225,8 +3248,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     bool isScaleEnabled = !synth->storage.isStandardScale;
     bool isMappingEnabled = !synth->storage.isStandardMapping;
 
-    bool isOddsoundOn =
-        this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client;
+    bool isOddsoundOnAsClient = this->synth->storage.oddsound_mts_active_as_client &&
+                                this->synth->storage.oddsound_mts_client;
 
     auto tuningSubMenu = juce::PopupMenu();
     auto hu = helpURLForSpecial("tun-menu");
@@ -3235,13 +3258,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     {
         auto lurl = fullyResolvedHelpURL(hu);
 
-        addHelpHeaderTo(isOddsoundOn ? "Tuning (MTS-ESP)" : "Tuning", lurl, tuningSubMenu);
+        addHelpHeaderTo(isOddsoundOnAsClient ? "Tuning (MTS-ESP)" : "Tuning", lurl, tuningSubMenu);
 
         tuningSubMenu.addSeparator();
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    if (isOddsoundOn)
+    if (isOddsoundOnAsClient)
     {
         std::string mtsScale = MTS_GetScaleName(synth->storage.oddsound_mts_client);
 
@@ -3252,7 +3275,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     }
 #endif
 
-    if (!isOddsoundOn)
+    if (!isOddsoundOnAsClient)
     {
         if (isScaleEnabled)
         {
@@ -3505,61 +3528,113 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    if (synth->juceWrapperType.compare("Standalone") != 0)
-    {
-        bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                          Surge::Storage::UseODDMTS, false);
-        std::string txt = "Use ODDSound" + Surge::GUI::toOSCase(" MTS-ESP");
+    bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                      Surge::Storage::UseODDMTS, false);
+    std::string txt = "Use ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Client and Source Features");
 
-        tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::UseODDMTS, !tsMode);
-            if (tsMode)
-            {
-                this->synth->storage.deinitialize_oddsound();
-            }
-            else
-            {
-                this->synth->storage.initialize_oddsound();
-            }
-        });
-
-        if (tsMode && !this->synth->storage.oddsound_mts_client)
+    tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
+        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
+                                               !tsMode);
+        if (tsMode)
         {
-            tuningSubMenu.addItem(Surge::GUI::toOSCase("Reconnect to MTS-ESP"), [this]() {
-                this->synth->storage.initialize_oddsound();
-                this->synth->refresh_editor = true;
-            });
+            this->synth->storage.deinitialize_oddsound();
         }
-
-        if (this->synth->storage.oddsound_mts_active && this->synth->storage.oddsound_mts_client)
+        else
         {
-            tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect from MTS-ESP"), [this]() {
-                auto q = this->synth->storage.oddsound_mts_client;
-                this->synth->storage.oddsound_mts_active = false;
-                this->synth->storage.oddsound_mts_client = nullptr;
-                MTS_DeregisterClient(q);
-            });
+            this->synth->storage.initialize_oddsound();
+        }
+    });
 
-            tuningSubMenu.addSeparator();
+    auto canMaster = MTS_CanRegisterMaster();
 
-            tuningSubMenu.addItem(
-                Surge::GUI::toOSCase("Query Tuning at Note On Only"), true,
-                (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
-                [this]() {
-                    if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
+    tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
+                                                 false);
+
+    if (tsMode)
+    {
+        std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Source");
+
+        tuningSubMenu.addItem(mtxt, canMaster || getStorage()->oddsound_mts_active_as_main,
+                              getStorage()->oddsound_mts_active_as_main, [this]() {
+                                  if (getStorage()->oddsound_mts_active_as_main)
+                                  {
+                                      this->synth->storage.disconnect_as_oddsound_main();
+                                  }
+                                  else
+                                  {
+                                      this->synth->storage.connect_as_oddsound_main();
+                                  }
+                              });
+    }
+
+    if (getStorage()->oddsound_mts_active_as_main)
+    {
+        auto nc = MTS_GetNumClients();
+        tuningSubMenu.addItem("MTS-ESP has " + std::to_string(nc) + " clients", false, false,
+                              []() {});
+    }
+
+    if (getStorage()->oddsound_mts_active_as_main || !canMaster)
+    {
+        if (MTS_HasIPC())
+        {
+            tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, []() {
+                auto cb = juce::ModalCallbackFunction::create([](int okcs) {
+                    if (okcs)
                     {
-                        this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
-                    }
-                    else
-                    {
-                        this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
+                        MTS_Reinitialize();
                     }
                 });
 
-            return tuningSubMenu;
+                std::string msg =
+                    "Reinitializing MTS will disconnect all clients, including "
+                    "this one, and will generally require you to restart your DAW session, "
+                    "but it will clear up after particularly nasty crashes or IPC issues. "
+                    "Are you sure you want to do this?";
+
+                juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon,
+                                                   "Reinitialize MTS-ESP", msg, "Yes", "No",
+                                                   nullptr, cb);
+            });
         }
     }
+
+    if (tsMode && !this->synth->storage.oddsound_mts_client &&
+        !getStorage()->oddsound_mts_active_as_main)
+    {
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Reconnect as Client to MTS-ESP"), [this]() {
+            this->synth->storage.initialize_oddsound();
+            this->synth->refresh_editor = true;
+        });
+    }
+
+    if (this->synth->storage.oddsound_mts_active_as_client &&
+        this->synth->storage.oddsound_mts_client)
+    {
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect as Client from MTS-ESP"), [this]() {
+            auto q = this->synth->storage.oddsound_mts_client;
+            this->synth->storage.oddsound_mts_active_as_client = false;
+            this->synth->storage.oddsound_mts_client = nullptr;
+            MTS_DeregisterClient(q);
+        });
+
+        tuningSubMenu.addSeparator();
+
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCase("Query Tuning at Note On Only"), true,
+            (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
+            [this]() {
+                if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
+                }
+                else
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
+                }
+            });
+    }
+
 #endif
 
     return tuningSubMenu;
@@ -6344,11 +6419,10 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
 
     if (fExt == ".wav" || fExt == ".wt")
     {
-        strxcpy(synth->storage.getPatch()
-                    .scene[current_scene]
-                    .osc[current_osc[current_scene]]
-                    .wt.queue_filename,
-                fname.c_str(), 255);
+        synth->storage.getPatch()
+            .scene[current_scene]
+            .osc[current_osc[current_scene]]
+            .wt.queue_filename = fname;
     }
     else if (fExt == ".scl")
     {
@@ -7017,6 +7091,7 @@ void SurgeGUIEditor::setupKeymapManager()
 
     keyMapManager->addBinding(Surge::GUI::OPEN_MANUAL, {juce::KeyPress::F1Key});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_ABOUT, {juce::KeyPress::F12Key});
+    keyMapManager->addBinding(Surge::GUI::ANNOUNCE_STATE, {keymap_t::Modifiers::ALT, (int)'0'});
 
     keyMapManager->unstreamFromXML();
 }
@@ -7254,6 +7329,11 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
                 auto cg = (int)fc->getProperties().getWithDefault("ControlGroup", -1);
 
+                // special case - allow jump off the patch selector
+                if (dynamic_cast<Surge::Widgets::PatchSelector *>(fc))
+                {
+                    cg = dir < 0 ? 10000000 : 0;
+                }
                 if (cg < 0)
                 {
                     return false;
@@ -7429,6 +7509,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 juce::URL(thingToOpen).launchInDefaultBrowser();
                 return true;
             }
+            case Surge::GUI::ANNOUNCE_STATE:
+                announceGuiState();
+                break;
             case Surge::GUI::SKIN_LAYOUT_GRID:
             case Surge::GUI::TOGGLE_ABOUT:
             {
@@ -7528,6 +7611,27 @@ std::string SurgeGUIEditor::showShortcutDescription(const std::string &shortcutD
     {
         return "";
     }
+}
+
+void SurgeGUIEditor::announceGuiState()
+{
+    std::ostringstream oss;
+
+    auto s = getStorage();
+    auto ot = s->getPatch().scene[current_scene].osc[current_osc[current_scene]].type.val.i;
+    auto ft = s->getPatch().fx[current_fx].type.val.i;
+    auto ms = s->getPatch()
+                  .scene[current_scene]
+                  .lfo[modsource_editor[current_scene] - ms_lfo1]
+                  .shape.val.i;
+
+    oss << "Patch '" << s->getPatch().name << "'. Scene " << (current_scene == 0 ? "A" : "B")
+        << ". "
+        << " Oscillator " << (current_osc[current_scene] + 1) << " " << osc_type_names[ot] << "."
+        << " Modulator " << modulatorName(modsource_editor[current_scene], false) << " "
+        << lt_names[ms] << ". " << fxslot_names[current_fx] << " " << fx_type_names[ft] << "."
+        << std::endl;
+    enqueueAccessibleAnnouncement(oss.str());
 }
 
 std::string SurgeGUIEditor::showShortcutDescription(const std::string &shortcutDesc)

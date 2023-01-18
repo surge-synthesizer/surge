@@ -8,7 +8,6 @@ const int max_mipmap_levels = 16;
 // size. So lets fix that! This size is consistent with the check in WaveTable.cpp //
 // CheckRequiredWTSize with ts and tc at 1024 and 512
 const int max_wtable_samples = 2097152;
-// const int max_wtable_samples =  268000; // delay pops 4 uses the most
 
 #pragma pack(push, 1)
 struct wt_header
@@ -49,8 +48,8 @@ class Wavetable
 
     int current_id, queue_id;
     bool refresh_display;
-    char queue_filename[TXT_SIZE];
-    char current_filename[TXT_SIZE];
+    std::string queue_filename;
+    std::string current_filename;
     int frame_size_if_absent{-1};
 };
 

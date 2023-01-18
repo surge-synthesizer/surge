@@ -357,7 +357,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
       fft_thread_(std::bind(std::mem_fn(&Oscilloscope::pullData), this)),
       channel_selection_(STEREO), scope_mode_(SPECTRUM), left_chan_button_("L"),
       right_chan_button_("R"), scope_mode_button_(*this), background_(s), spectrogram_(e, s),
-      spectrogram_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s)
+      spectrogram_parameters_(e, s), waveform_(e, s), waveform_parameters_(e, s, this)
 {
     setAccessible(true);
     setOpaque(true);
@@ -483,8 +483,10 @@ void Oscilloscope::SpectrogramParameters::resized()
     // FIXME: Implement.
 }
 
-Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s)
-    : editor_(e), storage_(s), freeze_("Freeze"), dc_kill_("DC-Kill"), sync_draw_("Sync")
+Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s,
+                                                     juce::Component *parent)
+    : editor_(e), storage_(s), parent_(parent), freeze_("Freeze"), dc_kill_("DC-Kill"),
+      sync_draw_("Sync")
 {
     trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -496,11 +498,11 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.setStorage(s);
     time_window_.setStorage(s);
     amp_window_.setStorage(s);
-    trigger_speed_.setValue(0.5);
-    trigger_level_.setValue(0.5);
-    trigger_limit_.setValue(0.5);
-    time_window_.setValue(0.75);
-    amp_window_.setValue(0.5);
+    trigger_speed_.setDefaultValue(0.5);
+    trigger_level_.setDefaultValue(0.5);
+    trigger_limit_.setDefaultValue(0.5);
+    time_window_.setDefaultValue(0.75);
+    amp_window_.setDefaultValue(0.5);
     trigger_speed_.setQuantitizedDisplayValue(0.5);
     trigger_level_.setQuantitizedDisplayValue(0.5);
     trigger_limit_.setQuantitizedDisplayValue(0.5);
@@ -516,6 +518,11 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.setDescription("How fast to trigger again after a trigger happens");
     time_window_.setDescription("X (time) scale");
     amp_window_.setDescription("Y (amplitude) scale");
+    trigger_speed_.setRange(0.441f, 139.4f);
+    trigger_speed_.setUnit(" Hz");
+    trigger_limit_.setRange(1, 10000);
+    trigger_limit_.setUnit(" Samples");
+    trigger_level_.setRange(-1, 1);
     trigger_speed_.setIsLightStyle(true);
     trigger_level_.setIsLightStyle(true);
     trigger_limit_.setIsLightStyle(true);
@@ -526,11 +533,31 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
         params_changed_ = true;
         param = value;
     };
+    auto updateAmpWindow = [this](float value) {
+        std::lock_guard l(params_lock_);
+        params_changed_ = true;
+        params_.amp_window = value;
+        float gain = 1.f / params_.gain();
+        trigger_level_.setRange(-gain, gain);
+    };
     trigger_speed_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_speed), _1));
     trigger_level_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_level), _1));
     trigger_limit_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_limit), _1));
     time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window), _1));
-    amp_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.amp_window), _1));
+    amp_window_.setOnUpdate(updateAmpWindow);
+    trigger_speed_.setRootWindow(parent_);
+    trigger_level_.setRootWindow(parent_);
+    trigger_limit_.setRootWindow(parent_);
+    time_window_.setRootWindow(parent_);
+    amp_window_.setRootWindow(parent_);
+    trigger_speed_.setPrecision(2);
+    trigger_level_.setPrecision(2);
+    trigger_limit_.setPrecision(0);
+    time_window_.setPrecision(2);
+    amp_window_.setPrecision(2);
+    // These two are deactivated by default, since the default trigger type is "free".
+    trigger_level_.setDeactivated(true);
+    trigger_speed_.setDeactivated(true);
     addAndMakeVisible(trigger_speed_);
     addAndMakeVisible(trigger_level_);
     addAndMakeVisible(trigger_limit_);
@@ -551,6 +578,15 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(value);
+        if (params_.trigger_type == WaveformDisplay::kTriggerInternal)
+            trigger_speed_.setDeactivated(false);
+        else
+            trigger_speed_.setDeactivated(true);
+        if (params_.trigger_type == WaveformDisplay::kTriggerRising ||
+            params_.trigger_type == WaveformDisplay::kTriggerFalling)
+            trigger_level_.setDeactivated(false);
+        else
+            trigger_level_.setDeactivated(true);
     });
     addAndMakeVisible(trigger_type_);
     // The two toggle buttons.
@@ -620,9 +656,9 @@ void Oscilloscope::WaveformParameters::resized()
     // Next over, the trigger mechanism.
     trigger_type_.setBounds(320, 13, 40, 50);
     // Next over, the three boolean switches.
-    freeze_.setBounds(385, 19, 40, 13);
-    dc_kill_.setBounds(385, 38, 40, 13);
-    sync_draw_.setBounds(385, 57, 40, 13);
+    freeze_.setBounds(385, 13, 40, 13);
+    dc_kill_.setBounds(385, 32, 40, 13);
+    sync_draw_.setBounds(385, 51, 40, 13);
 }
 
 void Oscilloscope::updateDrawing()

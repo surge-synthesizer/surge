@@ -151,12 +151,14 @@ PatchStoreDialog::PatchStoreDialog()
     nameEd->setWantsKeyboardFocus(true);
     authorEd = makeEd("patch author");
     authorEd->setSelectAllWhenFocused(true);
+    tagEd = makeEd("patch tags");
+    tagEd->setVisible(showTagsField);
+    licenseEd = makeEd("patch license");
+    licenseEd->setSelectAllWhenFocused(true);
     commentEd = makeEd("patch comment");
     commentEd->setMultiLine(true, true);
     commentEd->setReturnKeyStartsNewLine(true);
     commentEd->setJustification(juce::Justification::topLeft);
-    tagEd = makeEd("patch tags");
-    tagEd->setVisible(showTagsField);
 
     categoryProvider = std::make_unique<PatchStoreDialogCategoryProvider>();
     auto ta = std::make_unique<Surge::Widgets::TypeAhead>("patch category", categoryProvider.get());
@@ -178,6 +180,7 @@ PatchStoreDialog::PatchStoreDialog()
     nameEdL = makeL("Name");
     authorEdL = makeL("Author");
     tagEdL = makeL("Tags");
+    licenseEdL = makeL("License");
     catEdL = makeL("Category");
     commentEdL = makeL("Comment");
 
@@ -274,12 +277,14 @@ void PatchStoreDialog::onSkinChanged()
     resetColors(authorEd);
     resetColors(catEd);
     resetColors(tagEd);
+    resetColors(licenseEd);
     resetColors(commentEd);
 
     resetLabel(nameEdL);
     resetLabel(authorEdL);
     resetLabel(catEdL);
     resetLabel(tagEdL);
+    resetLabel(licenseEdL);
     resetLabel(commentEdL);
     resetLabel(storeTuningLabel);
 
@@ -309,7 +314,7 @@ void PatchStoreDialog::setIsRename(bool b) { isRename = b; }
 void PatchStoreDialog::resized()
 {
     auto h = 25;
-    auto commH = getHeight() - (5 + showTagsField) * h + 8;
+    auto commH = getHeight() - (6 + showTagsField) * h + 8;
     auto xSplit = 70;
     auto buttonWidth = 50;
     auto margin = 4;
@@ -328,6 +333,9 @@ void PatchStoreDialog::resized()
     ce = ce.translated(0, h);
     authorEd->setBounds(ce);
     authorEd->setIndents(4, (authorEd->getHeight() - authorEd->getTextHeight()) / 2);
+    ce = ce.translated(0, h);
+    licenseEd->setBounds(ce);
+    licenseEd->setIndents(4, (licenseEd->getHeight() - licenseEd->getTextHeight()) / 2);
 
     if (isVisible())
     {
@@ -364,6 +372,8 @@ void PatchStoreDialog::resized()
     catEdL->setBounds(cl);
     cl = cl.translated(0, h);
     authorEdL->setBounds(cl);
+    cl = cl.translated(0, h);
+    licenseEdL->setBounds(cl);
 
     if (showTagsField)
     {
@@ -406,6 +416,7 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
         synth->storage.getPatch().name = nameEd->getText().toStdString();
         synth->storage.getPatch().author = authorEd->getText().toStdString();
         synth->storage.getPatch().category = catEd->getText().toStdString();
+        synth->storage.getPatch().license = licenseEd->getText().toStdString();
         synth->storage.getPatch().comment = commentEd->getText().toStdString();
 
         auto tagString = tagEd->getText();

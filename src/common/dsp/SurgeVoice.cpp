@@ -51,7 +51,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
     auto res = key + /* mainChannelState->pitchBendInSemitones + */ mpeBend + detune;
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+    if (storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
     {
         if (storage->oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT ||
             key != keyRetuningForKey)
@@ -80,7 +80,7 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, bool isMpeEnabled
                                        SurgeStorage *storage, bool remapKeyForTuning)
 {
     float res = key;
-    if (storage->mapChannelToOctave && !storage->oddsound_mts_active && !isMpeEnabled)
+    if (storage->mapChannelToOctave && !storage->oddsound_mts_active_as_client && !isMpeEnabled)
     {
         if (remapKeyForTuning)
         {
@@ -390,7 +390,7 @@ void SurgeVoice::legato(int key, int velocity, char detune)
 
 void SurgeVoice::retriggerPortaIfKeyChanged()
 {
-    if (!storage->oddsound_mts_active &&
+    if (!storage->oddsound_mts_active_as_client &&
         (storage->isStandardTuning || storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL))
     {
         if (floor(state.pkey + 0.5) != state.priorpkey)
@@ -406,7 +406,7 @@ void SurgeVoice::retriggerPortaIfKeyChanged()
         };
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-        if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+        if (storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
         {
             v4k = [this](int k) {
                 return log2f(MTS_NoteToFrequency(storage->oddsound_mts_client, k, state.channel) /
@@ -1039,6 +1039,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     if (noise)
     {
         float noisecol = limit_range(localcopy[scene->noise_colour.param_id_in_scene].f, -1.f, 1.f);
+        auto is_stereo_noise = scene->noise_colour.deform_type == NoiseColorChannels::STEREO;
         for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
         {
             ((float *)tblock)[i] =
@@ -1046,9 +1047,17 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
             ((float *)tblock)[i + 1] = ((float *)tblock)[i];
             if (is_wide)
             {
-                ((float *)tblockR)[i] = correlated_noise_o2mk2_storagerng(
-                    noisegenR[0], noisegenR[1], noisecol, storage);
-                ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
+                if (is_stereo_noise)
+                {
+                    ((float *)tblockR)[i] = correlated_noise_o2mk2_storagerng(
+                        noisegenR[0], noisegenR[1], noisecol, storage);
+                    ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
+                }
+                else
+                {
+                    ((float *)tblockR)[i] = ((float *)tblock)[i];
+                    ((float *)tblockR)[i + 1] = ((float *)tblock)[i + 1];
+                }
             }
         }
 
@@ -1485,7 +1494,7 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
     {
         float lk = key;
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-        if (storage->oddsound_mts_client && storage->oddsound_mts_active)
+        if (storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
         {
             lk += MTS_RetuningInSemitones(storage->oddsound_mts_client, lk, channel);
             state.portasrc_key = lk;
@@ -1524,4 +1533,25 @@ void SurgeVoice::retriggerOSCWithIndependentAttacks()
             }
         }
     }
+}
+
+bool SurgeVoice::matchesChannelKeyId(int16_t channel, int16_t key, int32_t nid)
+{
+    bool chanMatch{false}, keyMatch{false}, nidMatch{false};
+    if (channel == -1)
+        chanMatch = true;
+    else
+        chanMatch = (state.channel == channel);
+
+    if (key == -1)
+        keyMatch = true;
+    else
+        keyMatch = (state.key == key);
+
+    if (nid == -1)
+        nidMatch = true;
+    else
+        nidMatch = (host_note_id == nid);
+
+    return chanMatch && keyMatch && nidMatch;
 }

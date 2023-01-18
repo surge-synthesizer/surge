@@ -261,12 +261,17 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
 
     int cs = vt_read_int32BE(fxp.chunkSize);
     std::unique_ptr<char[]> data{new char[cs]};
+
     if (f.sgetn(data.get(), cs) != cs)
+    {
         perror("Error while loading patch!");
+    }
+
     f.close();
 
     storage.getPatch().comment = "";
     storage.getPatch().author = "";
+
     if (categoryId >= 0)
     {
         storage.getPatch().category = storage.patch_category[categoryId].name;
@@ -275,6 +280,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     {
         storage.getPatch().category = "Drag & Drop";
     }
+
     current_category_id = categoryId;
     storage.getPatch().name = patchName;
 

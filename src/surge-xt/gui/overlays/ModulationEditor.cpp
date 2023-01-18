@@ -131,6 +131,15 @@ struct ModulationSideControls : public juce::Component,
         dispW->setValue(dwv / 3.0);
         dispW->setDraggable(true);
         valueChanged(dispW.get());
+
+        copyW = std::make_unique<Surge::Widgets::SelfDrawButton>("Copy to Clipboard");
+        copyW->setAccessible(true);
+        copyW->setStorage(&(editor->synth->storage));
+        copyW->setTitle("Copy to Clipboard");
+        copyW->setDescription("Copy to Clipboard");
+        copyW->setSkin(skin);
+        copyW->onClick = [this]() { doCopyToClipboard(); };
+        addAndMakeVisible(*copyW);
     }
 
     void resized() override
@@ -162,6 +171,9 @@ struct ModulationSideControls : public juce::Component,
         dispL->setBounds(b);
         b = b.translated(0, h);
         dispW->setBounds(b.withHeight(h * 4));
+
+        b = b.translated(0, h * 4.5 + m);
+        copyW->setBounds(b);
     }
 
     void paint(juce::Graphics &g) override
@@ -241,9 +253,12 @@ struct ModulationSideControls : public juce::Component,
         }
     }
 
+    void doCopyToClipboard();
+
     std::unique_ptr<juce::Label> sortL, filterL, addL, dispL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> sortW, filterW, addSourceW, addTargetW,
         dispW;
+    std::unique_ptr<Surge::Widgets::SelfDrawButton> copyW;
     SurgeGUIEditor *sge;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationSideControls);
@@ -515,7 +530,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             {
                 contents->editor->viewport->setViewPosition(0, 0);
             }
-            surgeLikeSlider->grabKeyboardFocus();
+            if (surgeLikeSlider->isShowing())
+                surgeLikeSlider->grabKeyboardFocus();
         }
         bool firstInSort{false}, hasFollower{false};
         bool isTop{false}, isAfterTop{false}, isLast{false};
@@ -1101,6 +1117,18 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModulationListContents);
 };
+
+void ModulationSideControls::doCopyToClipboard()
+{
+    std::ostringstream oss;
+    oss << "Modulation List for " << editor->ed->getStorage()->getPatch().name << "\n";
+    for (const auto &r : editor->modContents->dataRows)
+    {
+        oss << "  Source: " << r.sname << "; Target: " << r.pname << "; Depth:  " << r.mss.valplus
+            << " " << (r.isBipolar ? "(Bipolar)" : "(Unipolar)") << "\n";
+    }
+    juce::SystemClipboard::copyTextToClipboard(oss.str());
+}
 
 void ModulationSideControls::valueChanged(GUI::IComponentTagValue *c)
 {
