@@ -388,7 +388,7 @@ void NimbusEffect::init_ctrltypes()
 
     ypos += 2;
     fxdata->p[nmb_freeze].set_name("Freeze");
-    fxdata->p[nmb_freeze].set_type(ct_float_toggle); // so it is modulatable. 50% above is frozen
+    fxdata->p[nmb_freeze].set_type(ct_float_toggle); // so that it can be modulated
     fxdata->p[nmb_freeze].posy_offset = ypos;
     fxdata->p[nmb_feedback].set_name("Feedback");
     fxdata->p[nmb_feedback].set_type(ct_percent);

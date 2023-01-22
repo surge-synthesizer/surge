@@ -4822,6 +4822,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     typeinParamEditor->setSkin(currentSkin, bitmapStore);
 
     bool ismod = p && ms > 0;
+    std::string lab = "";
 
     jassert(c);
 
@@ -4829,20 +4830,19 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     {
         if (!p->can_setvalue_from_string())
         {
+            synth->storage.reportError(
+                "This parameter does not support editing its value by text input.\n\n"
+                "Please report this finding to Surge Synth Team in order to fix the problem!",
+                "Error");
             return;
         }
-    }
 
-    if (p)
-    {
         typeinParamEditor->setTypeinMode(Surge::Overlays::TypeinParamEditor::Param);
     }
     else
     {
         typeinParamEditor->setTypeinMode(Surge::Overlays::TypeinParamEditor::Control);
     }
-
-    std::string lab = "";
 
     if (p)
     {
@@ -5271,7 +5271,7 @@ float SurgeGUIEditor::getModulationF01FromString(long tag, const std::string &s)
         {
             bool valid = false;
             std::string errMsg;
-            float mv = p->calculate_modulation_value_from_string(s, errMsg, valid);
+            float mv = p->set_modulation_value_from_string(s, errMsg, valid);
             if (valid)
                 return mv;
         }

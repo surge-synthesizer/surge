@@ -3887,7 +3887,7 @@ bool SurgeGUIEditor::setParameterModulationFromString(Parameter *p, modsources m
         return false;
 
     bool valid = false;
-    auto mv = p->calculate_modulation_value_from_string(s, errMsg, valid);
+    auto mv = p->set_modulation_value_from_string(s, errMsg, valid);
 
     if (!valid)
     {

@@ -90,7 +90,7 @@ void SpringReverbEffect::init_ctrltypes()
     fxdata->p[spring_reverb_chaos].posy_offset = 3;
 
     fxdata->p[spring_reverb_knock].set_name("Knock");
-    fxdata->p[spring_reverb_knock].set_type(ct_float_toggle);
+    fxdata->p[spring_reverb_knock].set_type(ct_float_toggle); // so that it can be modulated
     fxdata->p[spring_reverb_knock].val_default.f = 0.0f;
     fxdata->p[spring_reverb_knock].posy_offset = 3;
 
