@@ -4965,7 +4965,7 @@ float Parameter::set_modulation_value_from_string(const std::string &s, std::str
             valid = false;
         }
 
-        return mv;
+        return rmv;
     }
     case ct_fmratio:
     {
