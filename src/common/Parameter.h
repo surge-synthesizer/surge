@@ -455,7 +455,8 @@ class Parameter
     float get_modulation_f01(float mod) const;
     float set_modulation_f01(float v) const;
 
-    float set_modulation_value_from_string(const std::string &s, std::string &errMsg, bool &valid);
+    float calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
+                                                 bool &valid);
 
     void bound_value(bool force_integer = false);
     std::string tempoSyncNotationValue(float f) const;

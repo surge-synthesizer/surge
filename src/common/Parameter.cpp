@@ -4686,8 +4686,8 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 }
 
 // This function returns a value in range [-1, 1], scaled by the minimum and maximums
-float Parameter::set_modulation_value_from_string(const std::string &s, std::string &errMsg,
-                                                  bool &valid)
+float Parameter::calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
+                                                        bool &valid)
 {
     errMsg = "Input is out of bounds!";
     valid = true;

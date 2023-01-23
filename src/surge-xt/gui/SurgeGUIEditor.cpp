@@ -5271,7 +5271,7 @@ float SurgeGUIEditor::getModulationF01FromString(long tag, const std::string &s)
         {
             bool valid = false;
             std::string errMsg;
-            float mv = p->set_modulation_value_from_string(s, errMsg, valid);
+            float mv = p->calculate_modulation_value_from_string(s, errMsg, valid);
             if (valid)
                 return mv;
         }
