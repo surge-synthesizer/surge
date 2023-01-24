@@ -24,6 +24,7 @@
 #include <chrono>
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
+#include "overlays/TypeinParamEditor.h"
 
 namespace Surge
 {
@@ -2506,8 +2507,54 @@ void LFOAndStepDisplay::showStepRMB(int i)
     contextMenu.addSeparator();
 
     auto msg = fmt::format("Edit Step {}: {:.3f}", i + 1, ss->steps[i]);
-    contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false,
-                        [i]() { std::cout << "Would edit step " << i << std::endl; });
+    auto handleTypein = [this, i](const std::string &s) {
+        auto divPos = s.find("/");
+        float v = 0.f;
+        if (divPos != std::string::npos)
+        {
+            auto n = s.substr(0, divPos);
+            auto d = s.substr(divPos + 1);
+            auto nv = std::atof(n.c_str());
+            auto dv = std::atof(d.c_str());
+            if (dv == 0)
+            {
+                return false;
+            }
+            v = nv / dv;
+        }
+        else
+        {
+            v = std::atof(s.c_str());
+        }
+        ss->steps[i] = std::clamp(v, -1.f, 1.f);
+        repaint();
+        return true;
+    };
+
+    contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false, [this, i, handleTypein]() {
+        if (!stepEditor)
+        {
+            stepEditor = std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
+            getParentComponent()->addChildComponent(*stepEditor);
+        }
+        stepEditor->callback = handleTypein;
+        stepEditor->setMainLabel("Edit Step " + std::to_string(i + 1));
+        stepEditor->setValueLabels(fmt::format("current: {:.3f}", ss->steps[i]), "");
+        stepEditor->setSkin(skin, associatedBitmapStore);
+        stepEditor->setEditableText(fmt::format("{:.3f}", ss->steps[i]));
+
+        auto topOfControl = getY();
+        auto pb = getBounds();
+        auto cx = steprect[i].getCentreX() + getX();
+
+        auto r = stepEditor->getRequiredSize();
+        cx -= r.getWidth() / 2;
+        r = r.withBottomY(topOfControl).withX(cx);
+        stepEditor->setBounds(r);
+
+        stepEditor->setVisible(true);
+        stepEditor->grabFocus();
+    });
 
     contextMenu.showMenuAsync(guiEditor->popupMenuOptions());
 }

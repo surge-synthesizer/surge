@@ -23,6 +23,10 @@
 
 namespace Surge
 {
+namespace Overlays
+{
+struct TypeinLambdaEditor;
+}
 namespace Widgets
 {
 struct LFOAndStepDisplay : public juce::Component,
@@ -211,6 +215,8 @@ struct LFOAndStepDisplay : public juce::Component,
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepSliderOverlays;
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepTriggerOverlays;
     std::array<std::unique_ptr<juce::Component>, 2> loopEndOverlays;
+
+    std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> stepEditor;
 
     SurgeGUIEditor *guiEditor;
 
