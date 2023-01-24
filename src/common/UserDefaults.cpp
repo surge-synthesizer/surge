@@ -282,6 +282,10 @@ std::string defaultKeyToString(DefaultKey k)
         r = "focusModEditorAfterAddModulationFrom";
         break;
 
+    case IgnoreMIDIProgramChange:
+        r = "ignoreMidiProgramChange";
+        break;
+
     case nKeys:
         break;
     }
