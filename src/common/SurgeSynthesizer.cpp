@@ -1839,6 +1839,12 @@ void SurgeSynthesizer::polyAftertouch(char channel, int key, int value)
 
 void SurgeSynthesizer::programChange(char channel, int value)
 {
+    auto ignorePC = Surge::Storage::getUserDefaultValue(
+        &(storage), Surge::Storage::IgnoreMIDIProgramChange, false);
+
+    if (ignorePC)
+        return;
+
     PCH = value;
     // load_patch((CC0<<7) + PCH);
     patchid_queue = (CC0 << 7) + PCH;

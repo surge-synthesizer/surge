@@ -127,6 +127,8 @@ enum DefaultKey
     FXUnitAssumeFixedBlock,
     FXUnitDefaultZoom,
 
+    IgnoreMIDIProgramChange,
+
     nKeys
 };
 
