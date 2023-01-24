@@ -620,6 +620,9 @@ struct FxStorage
 struct SurgeSceneStorage
 {
     OscillatorStorage osc[n_oscs];
+
+    // If you change the start and end points of this param list the iteration in the
+    // dump to HTML will break.
     Parameter pitch, octave;
     Parameter fm_depth, fm_switch;
     Parameter drift, noise_colour, keytrack_root;

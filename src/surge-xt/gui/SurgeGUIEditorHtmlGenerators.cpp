@@ -2,6 +2,7 @@
 #include "UserDefaults.h"
 #include <set>
 #include "fmt/core.h"
+#include "sst/cpputils.h"
 
 namespace Surge
 {
@@ -632,5 +633,196 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
         htmls << "</ul>\n";
     }
     endSection();
+    return htmls.str();
+}
+
+std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
+{
+    std::ostringstream htmls;
+
+    htmls << "<pre>\n";
+
+    const auto &patch = synth->storage.getPatch();
+
+    std::vector<int> scenes;
+    if (patch.scenemode.val.i == sm_single)
+    {
+        scenes.push_back(patch.scene_active.val.i);
+    }
+    else
+    {
+        for (int i = 0; i < n_scenes; ++i)
+            scenes.push_back(i);
+    }
+
+    htmls << "Patch " << patch.name << " / " << patch.category << "\n";
+
+    auto dumpParam = [&htmls, includeDefaults](const Parameter &p, const std::string &pfx = "") {
+        if (p.ctrltype == ct_none)
+            return;
+
+        if (includeDefaults || p.get_value_f01() != p.get_default_value_f01())
+        {
+            htmls << pfx << p.get_name() << " = " << p.get_display() << "\n";
+        }
+    };
+
+    // Global Stuff - polylimit, fx bypass, character
+    htmls << "\nGlobal Patch Settings\n";
+    for (const auto &par : {patch.scene_active, patch.scenemode, patch.splitpoint, patch.volume,
+                            patch.polylimit, patch.fx_bypass, patch.character})
+    {
+        dumpParam(par, "   ");
+    }
+
+    std::ostringstream mods;
+    std::set<std::pair<int, int>> modsourceSceneActive;
+
+    mods << "Global Modulation\n";
+    for (const auto &mr : patch.modulation_global)
+    {
+        mods << "    " << modulatorName(mr.source_id, false) << " -> "
+             << patch.param_ptr[mr.destination_id]->get_name() << " @ " << mr.depth << std::endl;
+        modsourceSceneActive.emplace(mr.source_id, mr.source_scene);
+    }
+
+    for (const auto &scn : scenes)
+    {
+        for (const auto &[rt, n] : {std::make_pair(patch.scene[scn].modulation_voice, "Voice"),
+                                    {patch.scene[scn].modulation_scene, "Scene"}})
+        {
+            mods << "Scene " << (char)('A' + scn) << " " << n << " Routing\n";
+            for (const auto &mr : rt)
+            {
+                mods << "    " << modulatorName(mr.source_id, false) << " -> "
+                     << patch.param_ptr[mr.destination_id + patch.scene_start[scn]]->get_name()
+                     << " @ " << mr.depth << std::endl;
+                modsourceSceneActive.emplace(mr.source_id, mr.source_scene);
+            }
+        }
+    }
+
+    for (const auto &scn : scenes)
+    {
+        htmls << "\nScene " << (char)('A' + scn) << "\n";
+        std::string pfx = "    ";
+        const auto &sc = patch.scene[scn];
+        int idx{1};
+        for (const auto &o : sc.osc)
+        {
+            htmls << pfx << "Oscillator " << idx << " : " << o.type.get_display() << "\n";
+            auto opfx = pfx + "    ";
+            const auto *p = &(o.type);
+            p++;
+            const auto *e = &(o.retrigger);
+            while (p <= e)
+            {
+                dumpParam(*p, opfx);
+                p++;
+            }
+            if (uses_wavetabledata(idx - 1))
+            {
+                htmls << opfx << "Wavetable : " << o.wavetable_display_name << std::endl;
+            }
+            idx++;
+        }
+        const auto *p = &(sc.pitch);
+        const auto *e = &(sc.send_level[n_send_slots - 1]);
+        while (p <= e)
+        {
+            dumpParam(*p, pfx);
+            p++;
+        }
+
+        idx = 1;
+        for (const auto &f : sc.filterunit)
+        {
+            if (f.type.val.i != sst::filters::fut_none)
+            {
+                htmls << pfx << "Filter " << idx << " : " << f.type.get_display() << "\n";
+                auto opfx = pfx + "    ";
+                const auto *p = &(f.subtype);
+
+                // force subtype
+                htmls << opfx << p->get_name() << " = " << p->get_display() << "\n";
+                p++;
+                const auto *e = &(f.keytrack);
+                while (p <= e)
+                {
+                    dumpParam(*p, opfx);
+                    p++;
+                }
+                if (idx == 2)
+                    dumpParam(sc.f2_cutoff_is_offset, opfx);
+                dumpParam(sc.f2_link_resonance, opfx);
+                idx++;
+            }
+        }
+
+        dumpParam(sc.feedback, pfx);
+        dumpParam(sc.filterblock_configuration, pfx);
+        dumpParam(sc.filter_balance, pfx);
+        dumpParam(sc.lowcut, pfx);
+
+        if (sc.wsunit.type.val.i != (int)sst::waveshapers::WaveshaperType::wst_none)
+        {
+            dumpParam(sc.wsunit.type, pfx);
+            dumpParam(sc.wsunit.drive, pfx + "    ");
+        }
+
+        for (const auto &idx : {ms_ampeg, ms_filtereg})
+        {
+            const auto &en = sc.adsr[idx - ms_ampeg];
+            htmls << pfx << (idx == ms_ampeg ? "AEG" : "FEG") << "\n";
+            const auto *p = &(en.a);
+            const auto *e = &(en.mode);
+            while (p <= e)
+            {
+                dumpParam(*p, pfx + "    ");
+                p++;
+            }
+        }
+
+        for (const auto &[li, lf] : sst::cpputils::enumerate(sc.lfo))
+        {
+            auto ms = ms_lfo1 + li;
+            if (modsourceSceneActive.find({ms, scn}) != modsourceSceneActive.end())
+            {
+                htmls << pfx << modulatorName(ms, false) << "\n";
+                const auto *p = &(lf.rate);
+                const auto *e = &(lf.release);
+                while (p <= e)
+                {
+                    dumpParam(*p, pfx + "    ");
+                    p++;
+                }
+            }
+        }
+
+        // Scenes
+    }
+
+    // FX
+    htmls << "\nFX\n";
+    for (int i = 0; i < n_fx_slots; ++i)
+    {
+        if (includeDefaults || patch.fx[i].type.val.i != fxt_off)
+        {
+            const auto &fx = patch.fx[i];
+            auto pfx = "        ";
+            htmls << "   " << fxslot_names[i] << ": " << fx_type_names[fx.type.val.i] << "\n";
+            if (i == fxslot_send1 || i == fxslot_send2 || i == fxslot_send3 || i == fxslot_send4)
+            {
+                dumpParam(fx.return_level, pfx);
+            }
+            for (const auto &p : fx.p)
+                dumpParam(p, pfx);
+        }
+    }
+
+    htmls << "\n" << mods.str() << "\n";
+
+    htmls << "</pre>\n";
+
     return htmls.str();
 }

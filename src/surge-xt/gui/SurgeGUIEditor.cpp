@@ -2928,10 +2928,13 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("Mouse Behavior"), mouseMenu);
 
     auto patchDefMenu = makePatchDefaultsMenu(where);
-    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Patch Defaults"), patchDefMenu);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Patch Settings"), patchDefMenu);
 
     auto wfMenu = makeWorkflowMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("Workflow"), wfMenu);
+
+    auto accMenu = makeAccesibilityMenu(where);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Accessibility"), accMenu);
 
     settingsMenu.addSeparator();
 
@@ -3966,6 +3969,12 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
 
     patchDefMenu.addSubMenu(Surge::GUI::toOSCase("Tuning on Patch Load"), tuningOnLoadMenu);
 
+    patchDefMenu.addSeparator();
+    patchDefMenu.addItem(Surge::GUI::toOSCase("Export Patch as Text (Non-Default Values)"), true,
+                         false, [this]() { showHTML(patchToHtml()); });
+    patchDefMenu.addItem(Surge::GUI::toOSCase("Export Patch as Text (All Values)"), true, false,
+                         [this]() { showHTML(patchToHtml(true)); });
+
     return patchDefMenu;
 }
 
@@ -4160,50 +4169,6 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     wfMenu.addSeparator();
 
-    bool doAccAnn = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCase("Send Additional Accessibility Announcements"), true,
-                   doAccAnn, [this, doAccAnn]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements,
-                           !doAccAnn);
-                   });
-
-#if WINDOWS
-    bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
-
-    wfMenu.addItem("Announce Patch Browser entries", true, doAccAnnPatch, [this, doAccAnnPatch]() {
-        Surge::Storage::updateUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
-            !doAccAnnPatch);
-    });
-#endif
-
-    bool doExpMen = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCase("Add Sub-Menus for Modulation Menu Items"), true, doExpMen,
-                   [this, doExpMen]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
-                           !doExpMen);
-                   });
-
-    bool focusModEditor = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCase("Focus Modulator Editor on \"") +
-                       Surge::GUI::toOSCase("Add Modulation From\" Actions"),
-                   true, focusModEditor, [this, focusModEditor]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage),
-                           Surge::Storage::FocusModEditorAfterAddModulationFrom, !focusModEditor);
-                   });
-
-    wfMenu.addSeparator();
-
     bool showVirtualKeyboard = getShowVirtualKeyboard();
 
     Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Show Virtual Keyboard"),
@@ -4217,6 +4182,89 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                                     showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 
     return wfMenu;
+}
+
+juce::PopupMenu SurgeGUIEditor::makeAccesibilityMenu(const juce::Point<int> &rect)
+{
+    auto accMenu = juce::PopupMenu();
+
+    accMenu.addItem(Surge::GUI::toOSCase("Set All Recommended Accessibility Options"), true, false,
+                    [this]() { setRecommendedAccessibility(); });
+    accMenu.addSeparator();
+
+    bool doAccAnn = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, false);
+
+    accMenu.addItem(Surge::GUI::toOSCase("Send Additional Accessibility Announcements"), true,
+                    doAccAnn, [this, doAccAnn]() {
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements,
+                            !doAccAnn);
+                    });
+
+#if WINDOWS
+    bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
+
+    accMenu.addItem("Announce Patch Browser entries", true, doAccAnnPatch, [this, doAccAnnPatch]() {
+        Surge::Storage::updateUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
+            !doAccAnnPatch);
+    });
+#endif
+
+    bool doExpMen = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
+
+    accMenu.addItem(Surge::GUI::toOSCase("Add Sub-Menus for Modulation Menu Items"), true, doExpMen,
+                    [this, doExpMen]() {
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
+                            !doExpMen);
+                    });
+
+    bool focusModEditor = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom, false);
+
+    accMenu.addItem(Surge::GUI::toOSCase("Focus Modulator Editor on \"") +
+                        Surge::GUI::toOSCase("Add Modulation From\" Actions"),
+                    true, focusModEditor, [this, focusModEditor]() {
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage),
+                            Surge::Storage::FocusModEditorAfterAddModulationFrom, !focusModEditor);
+                    });
+
+    return accMenu;
+}
+
+void SurgeGUIEditor::setRecommendedAccessibility()
+{
+    std::ostringstream oss;
+    oss << "Set Accessibility Options: ";
+
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::UseKeyboardShortcuts_Plugin, true);
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::UseKeyboardShortcuts_Standalone, true);
+    oss << "Keyboard shortcuts on; ";
+
+    Surge::Storage::updateUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::MenuAndEditKeybindingsFollowKeyboardFocus, true);
+    oss << "Menu Follows Keyboard; ";
+
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::UseNarratorAnnouncements, true);
+    Surge::Storage::updateUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
+    oss << "Narrator announcements on; ";
+
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::ExpandModMenusWithSubMenus, true);
+    Surge::Storage::updateUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom, true);
+    oss << "Expanded Modulation Menus and Modulation Focus.";
+
+    enqueueAccessibleAnnouncement(oss.str());
 }
 
 bool SurgeGUIEditor::getShowVirtualKeyboard()
