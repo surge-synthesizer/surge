@@ -2507,30 +2507,31 @@ void LFOAndStepDisplay::showStepRMB(int i)
     contextMenu.addSeparator();
 
     auto msg = fmt::format("Edit Step {}: {:.3f}", i + 1, ss->steps[i]);
-    contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false, [this, i]() {
-        auto handleTypein = [that = this, i](const std::string &s) {
-            auto divPos = s.find("/");
-            float v = 0.f;
-            if (divPos != std::string::npos)
+    auto handleTypein = [this, i](const std::string &s) {
+        auto divPos = s.find("/");
+        float v = 0.f;
+        if (divPos != std::string::npos)
+        {
+            auto n = s.substr(0, divPos);
+            auto d = s.substr(divPos + 1);
+            auto nv = std::atof(n.c_str());
+            auto dv = std::atof(d.c_str());
+            if (dv == 0)
             {
-                auto n = s.substr(0, divPos);
-                auto d = s.substr(divPos + 1);
-                auto nv = std::atof(n.c_str());
-                auto dv = std::atof(d.c_str());
-                if (dv == 0)
-                {
-                    return false;
-                }
-                v = nv / dv;
+                return false;
             }
-            else
-            {
-                v = std::atof(s.c_str());
-            }
-            that->ss->steps[i] = v;
-            that->repaint();
-            return true;
-        };
+            v = nv / dv;
+        }
+        else
+        {
+            v = std::atof(s.c_str());
+        }
+        ss->steps[i] = std::clamp(v, -1.f, 1.f);
+        repaint();
+        return true;
+    };
+
+    contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false, [this, i, handleTypein]() {
         if (!stepEditor)
         {
             stepEditor = std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
