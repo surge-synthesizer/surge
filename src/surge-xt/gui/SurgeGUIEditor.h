@@ -337,6 +337,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::string midiMappingToHtml();
 
+    std::string patchToHtml(bool includeDefaults = false);
+
     // These are unused right now
     enum SkinInspectorFlags
     {
@@ -780,11 +782,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu makePatchDefaultsMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeValueDisplaysMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeWorkflowMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeAccesibilityMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeDataMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeMidiMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeDevMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeLfoMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
+
+    void setRecommendedAccessibility();
 
   public:
     void addHelpHeaderTo(const std::string &lab, const std::string &hu, juce::PopupMenu &m) const;
