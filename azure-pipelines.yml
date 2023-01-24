@@ -169,7 +169,7 @@ jobs:
       - bash: |
           sudo xcode-select -s /Applications/Xcode_13.4.1.app
         displayName: Select XCode 13.4.1
-        condigion: variables.isMac
+        condition: variables.isMac
 
       - bash: |
           set -e
