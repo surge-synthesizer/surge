@@ -28,9 +28,9 @@ message(STATUS "Targeting ${SURGE_BITNESS}-bit configuration")
 # Make Sure the REpo is properly cloned {{{
 set(SURGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 if (NOT EXISTS "${SURGE_SOURCE_DIR}/libs/tuning-library/README.md")
-  message(FATAL_ERROR "Cannot find the contents of the tuning-library submodule, but this usually means"
-          " that you haven't done a git submodule update; and so your repo will not build properly. "
-          "To resolve this, please run `git submodule update --init --recursive` and re-run cmake")
+  message(FATAL_ERROR "Cannot find the contents of the tuning-library submodule. This usually means"
+          " that you haven't done a submodule update, so the repository will not build properly. "
+          "To resolve this, please run `git submodule update --init --recursive` and re-run CMake!")
 endif()
 
 # }}}
@@ -46,7 +46,7 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   if (${SURGE_SANITIZE})
-    message(STATUS "Sanitizer is On" )
+    message(STATUS "Sanitizer is on" )
   endif()
   # Any Clang or any GCC
   add_compile_options(
