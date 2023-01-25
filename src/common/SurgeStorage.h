@@ -607,6 +607,12 @@ struct LFOStorage
     Parameter rate, shape, start_phase, magnitude, deform;
     Parameter trigmode, unipolar;
     Parameter delay, hold, attack, decay, sustain, release;
+
+    enum LFOExtraOutputAmplitude
+    {
+        UNSCALED,
+        SCALED
+    } lfoExtraAmplitude{UNSCALED};
 };
 
 struct FxStorage
