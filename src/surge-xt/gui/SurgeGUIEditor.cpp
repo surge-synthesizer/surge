@@ -293,16 +293,6 @@ class DroppedUserDataHandler
 };
 
 Surge::GUI::ModulationGrid *Surge::GUI::ModulationGrid::grid = nullptr;
-/*
- * See the comment in SurgeGUIUtils.cpp
- */
-namespace Surge
-{
-namespace GUI
-{
-extern void setIsStandalone(bool b);
-}
-} // namespace Surge
 
 SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 {
