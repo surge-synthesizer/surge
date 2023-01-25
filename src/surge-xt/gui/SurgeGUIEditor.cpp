@@ -6861,6 +6861,7 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
                                                                  const std::string &title,
                                                                  const std::string &action)
 {
+    auto currT = c->getTitle().toStdString();
 #if MAC
     c->setDescription(title);
     c->setTitle(title);
@@ -6868,6 +6869,14 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
     c->setDescription(action);
     c->setTitle(title);
 #endif
+
+    if (currT != title)
+    {
+        if (auto h = c->getAccessibilityHandler())
+        {
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+        }
+    }
 }
 
 std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index, bool shortV)

@@ -377,8 +377,23 @@ bool MenuForDiscreteParams::keyPressed(const juce::KeyPress &key)
     setValue(nextValueInOrder(value, -dir));
     notifyValueChanged();
     notifyEndEdit();
+
+    rebuildOnFocus = true;
     repaint();
     return true;
+}
+
+void MenuForDiscreteParams::focusLost(juce::Component::FocusChangeType cause)
+{
+    endHover();
+    if (rebuildOnFocus)
+    {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        if (sge)
+        {
+            sge->queue_refresh = true;
+        }
+    }
 }
 
 } // namespace Widgets
