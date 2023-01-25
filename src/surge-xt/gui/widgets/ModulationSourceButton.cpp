@@ -406,6 +406,30 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
 
             idx++;
         }
+
+        if (modsource >= ms_lfo1 && modsource <= ms_slfo6)
+        {
+            auto &lf =
+                sge->getStorage()->getPatch().scene[sge->current_scene].lfo[modsource - ms_lfo1];
+
+            auto sh = lf.shape.val.i;
+            if (sh != lt_formula)
+            {
+                menu.addSeparator();
+                bool sc = lf.lfoExtraAmplitude == LFOStorage::SCALED;
+                menu.addItem(Surge::GUI::toOSCase("Scale Raw / EG By Amplitude"), true, sc,
+                             [sge, modsource] {
+                                 auto &lf = sge->getStorage()
+                                                ->getPatch()
+                                                .scene[sge->current_scene]
+                                                .lfo[modsource - ms_lfo1];
+                                 if (lf.lfoExtraAmplitude == LFOStorage::SCALED)
+                                     lf.lfoExtraAmplitude = LFOStorage::UNSCALED;
+                                 else
+                                     lf.lfoExtraAmplitude = LFOStorage::SCALED;
+                             });
+            }
+        }
     }
 }
 

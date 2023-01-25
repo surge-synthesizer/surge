@@ -2354,6 +2354,36 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         scene[0].modsources[ms_ctrl1 + i]->reset();
     }
 
+    {
+        /*
+         * Reset to UNSCALED then try and read
+         */
+        for (int sc = 0; sc < n_scenes; sc++)
+        {
+            for (int l = 0; l < n_lfos; l++)
+            {
+                scene[sc].lfo[l].lfoExtraAmplitude = LFOStorage::UNSCALED;
+            }
+        }
+        auto *el = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("extralfo"));
+        if (el)
+        {
+            auto l = TINYXML_SAFE_TO_ELEMENT(el->FirstChild("lfo"));
+            while (l)
+            {
+                int sc, id, val;
+                if (l->QueryIntAttribute("scene", &sc) == TIXML_SUCCESS &&
+                    l->QueryIntAttribute("i", &id) == TIXML_SUCCESS &&
+                    l->QueryIntAttribute("extraAmplitude", &val) == TIXML_SUCCESS && sc >= 0 &&
+                    id >= 0 && sc < n_scenes && id < n_lfos)
+                {
+                    scene[sc].lfo[id].lfoExtraAmplitude = (LFOStorage::LFOExtraOutputAmplitude)val;
+                }
+                l = TINYXML_SAFE_TO_ELEMENT(l->NextSiblingElement("lfo"));
+            }
+        }
+    }
+
     TiXmlElement *cc = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("customcontroller"));
 
     if (cc)
@@ -3180,6 +3210,21 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         }
     }
     patch.InsertEndChild(formulae);
+
+    TiXmlElement extralfo("extralfo");
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        for (int l = 0; l < n_lfos; l++)
+        {
+            TiXmlElement p("lfo");
+            p.SetAttribute("scene", sc);
+            p.SetAttribute("i", l);
+
+            p.SetAttribute("extraAmplitude", scene[sc].lfo[l].lfoExtraAmplitude);
+            extralfo.InsertEndChild(p);
+        }
+    }
+    patch.InsertEndChild(extralfo);
 
     TiXmlElement cc("customcontroller");
     for (int l = 0; l < n_customcontrollers; l++)

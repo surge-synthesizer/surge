@@ -1255,6 +1255,12 @@ void LFOModulationSource::process_block()
     output_multi[1] = io2;
     output_multi[2] = outputEnvVal + useenv0; // env_val;
 
+    if (lfo->lfoExtraAmplitude == LFOStorage::SCALED)
+    {
+        output_multi[1] *= magnf;
+        output_multi[2] *= magnf;
+    }
+
     if (s == lt_envelope)
     {
         // Additional start mode corrections required
