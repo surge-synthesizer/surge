@@ -249,6 +249,28 @@ std::string defaultKeyToString(DefaultKey k)
         r = "oscilloscopeOverlayTearOutAlwaysOnTop";
         break;
 
+    case TuningOverlayTearOutAlwaysOnTop_Plugin:
+        r = "tuningOverlayTearOutAlwaysOnTop_Plugin";
+        break;
+    case ModlistOverlayTearOutAlwaysOnTop_Plugin:
+        r = "modlistOverlayTearOutAlwaysOnTop_Plugin";
+        break;
+    case MSEGOverlayTearOutAlwaysOnTop_Plugin:
+        r = "msegOverlayTearOutAlwaysOnTop_Plugin";
+        break;
+    case FormulaOverlayTearOutAlwaysOnTop_Plugin:
+        r = "formulaOverlayTearOutAlwaysOnTop_Plugin";
+        break;
+    case WSAnalysisOverlayTearOutAlwaysOnTop_Plugin:
+        r = "wsAnalysisOverlayTearOutAlwaysOnTop_Plugin";
+        break;
+    case FilterAnalysisOverlayTearOutAlwaysOnTop_Plugin:
+        r = "filterAnalysisOverlayTearOutAlwaysOnTop_Plugin";
+        break;
+    case OscilloscopeOverlayTearOutAlwaysOnTop_Plugin:
+        r = "oscilloscopeOverlayTearOutAlwaysOnTop_Plugin";
+        break;
+
     case ModListValueDisplay:
         r = "modListValueDisplay";
         break;
