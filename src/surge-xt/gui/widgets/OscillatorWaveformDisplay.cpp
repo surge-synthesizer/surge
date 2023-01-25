@@ -1891,6 +1891,11 @@ void OscillatorWaveformDisplay::showCustomEditor()
         customEditorAccOverlay->setTitle("Close Custom Editor");
         customEditorAccOverlay->setDescription("Close Custom Editor");
     }
+
+    if (auto h = getAccessibilityHandler())
+    {
+        h->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
+    }
 }
 
 void OscillatorWaveformDisplay::hideCustomEditor()
@@ -1904,6 +1909,11 @@ void OscillatorWaveformDisplay::hideCustomEditor()
 
     customEditorAccOverlay->setTitle("Open Custom Editor");
     customEditorAccOverlay->setDescription("Open Custom Editor");
+
+    if (auto h = getAccessibilityHandler())
+    {
+        h->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
+    }
 
     repaint();
 }

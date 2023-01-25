@@ -143,12 +143,14 @@ struct MenuForDiscreteParams : public juce::Component,
 
     bool keyPressed(const juce::KeyPress &key) override;
 
+    bool rebuildOnFocus = false;
     void focusGained(juce::Component::FocusChangeType cause) override
     {
+        rebuildOnFocus = false;
         startHover(getBounds().getBottomLeft().toFloat());
     }
 
-    void focusLost(juce::Component::FocusChangeType cause) override { endHover(); }
+    void focusLost(juce::Component::FocusChangeType cause) override;
 
     juce::Point<int> mouseDownOrigin;
     bool isDraggingGlyph{false};
