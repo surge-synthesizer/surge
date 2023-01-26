@@ -429,6 +429,8 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
                                  else
                                      lf.lfoExtraAmplitude = LFOStorage::SCALED;
                              });
+
+                sge->queueRebuildUI();
             }
         }
     }

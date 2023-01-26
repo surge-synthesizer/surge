@@ -1167,6 +1167,11 @@ void SurgeGUIEditor::idle()
         oscWaveform->repaintBasedOnOscMuteState();
     }
 
+    if (lfoDisplay)
+    {
+        lfoDisplay->repaint();
+    }
+
     // Force the oscilloscope, if open, to re-render for nice smooth movement.
     auto scope = getOverlayIfOpenAs<Surge::Overlays::Oscilloscope>(OSCILLOSCOPE);
     if (scope)
