@@ -450,6 +450,8 @@ SurgeGUIEditor::~SurgeGUIEditor()
     synth->storage.removeErrorListener(this);
 }
 
+void SurgeGUIEditor::forceLFODisplayRebuild() { lfoDisplay->repaint(); }
+
 void SurgeGUIEditor::idle()
 {
     if (!synth)
@@ -623,7 +625,7 @@ void SurgeGUIEditor::idle()
 
             if (lfoDisplayRepaintCountdown == 0)
             {
-                lfoDisplay->repaint();
+                forceLFODisplayRebuild();
             }
         }
 
@@ -1165,11 +1167,6 @@ void SurgeGUIEditor::idle()
     if (oscWaveform)
     {
         oscWaveform->repaintBasedOnOscMuteState();
-    }
-
-    if (lfoDisplay)
-    {
-        lfoDisplay->repaint();
     }
 
     // Force the oscilloscope, if open, to re-render for nice smooth movement.
