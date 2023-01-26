@@ -752,6 +752,7 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     noise_floor_.setUnit(" dB");
     max_db_.setRange(-50, 0);
     max_db_.setUnit(" dB");
+#if 0
     addAndMakeVisible(noise_floor_);
     addAndMakeVisible(max_db_);
     // The toggle button.
@@ -763,6 +764,7 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     freeze_.setWantsKeyboardFocus(false);
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
     addAndMakeVisible(freeze_);
+#endif
 }
 
 std::optional<SpectrumDisplay::Parameters> Oscilloscope::SpectrumParameters::getParamsIfDirty()
