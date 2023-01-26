@@ -424,7 +424,7 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
                                                 ->getPatch()
                                                 .scene[sge->current_scene]
                                                 .lfo[modsource - ms_lfo1];
-                                                
+
                                  if (lf.lfoExtraAmplitude == LFOStorage::SCALED)
                                      lf.lfoExtraAmplitude = LFOStorage::UNSCALED;
                                  else
