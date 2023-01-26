@@ -450,6 +450,8 @@ SurgeGUIEditor::~SurgeGUIEditor()
     synth->storage.removeErrorListener(this);
 }
 
+void SurgeGUIEditor::forceLFODisplayRebuild() { lfoDisplay->repaint(); }
+
 void SurgeGUIEditor::idle()
 {
     if (!synth)
@@ -623,7 +625,7 @@ void SurgeGUIEditor::idle()
 
             if (lfoDisplayRepaintCountdown == 0)
             {
-                lfoDisplay->repaint();
+                forceLFODisplayRebuild();
             }
         }
 

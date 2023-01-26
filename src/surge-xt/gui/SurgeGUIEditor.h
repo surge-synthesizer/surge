@@ -128,6 +128,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool queue_refresh;
     virtual void toggle_mod_editing();
 
+    void forceLFODisplayRebuild();
+
     static long applyParameterOffset(long index);
     static long unapplyParameterOffset(long index);
 
