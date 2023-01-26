@@ -3910,8 +3910,8 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
     bool appendOGPatchBy = Surge::Storage::getUserDefaultValue(
         &(synth->storage), Surge::Storage::AppendOriginalPatchBy, true);
 
-    patchDefMenu.addItem(Surge::GUI::toOSCase("Append Original Author to Modified Patches"), true,
-                         appendOGPatchBy, [this, appendOGPatchBy]() {
+    patchDefMenu.addItem(Surge::GUI::toOSCase("Append Original Author Name to Modified Patches"),
+                         true, appendOGPatchBy, [this, appendOGPatchBy]() {
                              Surge::Storage::updateUserDefaultValue(
                                  &(this->synth->storage), Surge::Storage::AppendOriginalPatchBy,
                                  !appendOGPatchBy);
@@ -3960,9 +3960,9 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
     patchDefMenu.addSubMenu(Surge::GUI::toOSCase("Tuning on Patch Load"), tuningOnLoadMenu);
 
     patchDefMenu.addSeparator();
-    patchDefMenu.addItem(Surge::GUI::toOSCase("Export Patch as Text (Non-Default Values)"), true,
-                         false, [this]() { showHTML(patchToHtml()); });
-    patchDefMenu.addItem(Surge::GUI::toOSCase("Export Patch as Text (All Values)"), true, false,
+    patchDefMenu.addItem(Surge::GUI::toOSCase("Export Patch as Text (Non-Default Parameters Only)"),
+                         true, false, [this]() { showHTML(patchToHtml()); });
+    patchDefMenu.addItem(Surge::GUI::toOSCase("Export Patch as Text (All Parameters)"), true, false,
                          [this]() { showHTML(patchToHtml(true)); });
 
     return patchDefMenu;
@@ -4196,11 +4196,13 @@ juce::PopupMenu SurgeGUIEditor::makeAccesibilityMenu(const juce::Point<int> &rec
     bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
         &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
 
-    accMenu.addItem("Announce Patch Browser entries", true, doAccAnnPatch, [this, doAccAnnPatch]() {
-        Surge::Storage::updateUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
-            !doAccAnnPatch);
-    });
+    accMenu.addItem(Surge::GUI::toOSCase("Announce Patch Browser Entries"), true, doAccAnnPatch,
+                    [this, doAccAnnPatch]() {
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage),
+                            Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
+                            !doAccAnnPatch);
+                    });
 #endif
 
     bool doExpMen = Surge::Storage::getUserDefaultValue(
@@ -4618,6 +4620,17 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         });
 
     midiSubMenu.addSeparator();
+    bool igMID = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::IgnoreMIDIProgramChange, false);
+
+    midiSubMenu.addItem("Ignore MIDI Program Change" + Surge::GUI::toOSCase(" Messages"), true,
+                        igMID, [this, igMID]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), Surge::Storage::IgnoreMIDIProgramChange,
+                                !igMID);
+                        });
+
+    midiSubMenu.addSeparator();
 
     midiSubMenu.addItem(Surge::GUI::toOSCase("Save MIDI Mapping As..."), [this, where]() {
         this->scannedForMidiPresets = false; // force a rescan
@@ -4672,22 +4685,14 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         if (!gotOne)
         {
             gotOne = true;
+
             midiSubMenu.addSeparator();
+            midiSubMenu.addSectionHeader("USER MIDI MAPPINGS");
         }
 
         midiSubMenu.addItem(p.first,
                             [this, p] { this->synth->storage.loadMidiMappingByName(p.first); });
     }
-
-    midiSubMenu.addSeparator();
-    bool igMID = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::IgnoreMIDIProgramChange, false);
-
-    midiSubMenu.addItem(
-        Surge::GUI::toOSCase("Ignore MIDI Program Change Messages"), true, igMID, [this, igMID]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::IgnoreMIDIProgramChange, !igMID);
-        });
 
     return midiSubMenu;
 }
