@@ -417,8 +417,9 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
             {
                 menu.addSeparator();
                 bool sc = lf.lfoExtraAmplitude == LFOStorage::SCALED;
-                menu.addItem(Surge::GUI::toOSCase("Scale Raw / EG By Amplitude"), true, sc,
-                             [sge, modsource] {
+                menu.addItem(Surge::GUI::toOSCase("Amplitude Parameter Applies to ") +
+                                 Surge::GUI::toOSCase("Raw and EG Outputs"),
+                             true, sc, [sge, modsource] {
                                  auto &lf = sge->getStorage()
                                                 ->getPatch()
                                                 .scene[sge->current_scene]
