@@ -373,6 +373,32 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
         hasDragged = false;
         repaint();
     }
+    else
+    {
+        if (event.mods.isAltDown())
+        {
+            for (int i = 0; i < n_fx_slots; ++i)
+            {
+                auto r = getEffectRectangle(i);
+
+                if (r.contains(event.getPosition()))
+                {
+                    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+                    if (sge)
+                    {
+                        // setting both source and target to the same FX slot ID
+                        // and using FX reorder mode NONE will delete the FX
+                        sge->swapFX(i, i, SurgeSynthesizer::FXReorderMode::NONE);
+                        currentEffect = i;
+                        notifyValueChanged();
+
+                        repaint();
+                    }
+                }
+            }
+        }
+    }
 }
 
 void EffectChooser::mouseDrag(const juce::MouseEvent &event)
