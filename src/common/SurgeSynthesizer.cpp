@@ -4873,13 +4873,13 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         if (source == target)
         {
             fxsync[source].type.val.i = 0;
+            fxsync[target].type.val.i = 0;
         }
     }
     break;
     case FXReorderMode::MOVE:
     {
         fxsync[source].type.val.i = 0;
-        fxsync[target].type.val.i = 0;
     }
     break;
     case FXReorderMode::SWAP:
