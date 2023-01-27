@@ -4842,7 +4842,9 @@ void SurgeSynthesizer::changeModulatorSmoothing(Modulator::SmoothingMode m)
 void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
 {
     if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots)
+    {
         return;
+    }
 
     std::lock_guard<std::recursive_mutex> lockModulation(storage.modRoutingMutex);
 
@@ -4854,6 +4856,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     fxmodsync[target].clear();
 
     fxsync[target].type.val.i = so.type.val.i;
+
     Effect *t_fx = spawn_effect(fxsync[target].type.val.i, &storage, &fxsync[target], 0);
 
     if (t_fx)
@@ -4863,14 +4866,28 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         delete t_fx;
     }
 
-    if (m == FXReorderMode::MOVE)
+    switch (m)
+    {
+    case FXReorderMode::NONE:
+    {
+        if (source == target)
+        {
+            fxsync[source].type.val.i = 0;
+            fxsync[target].type.val.i = 0;
+        }
+    }
+    break;
+    case FXReorderMode::MOVE:
     {
         fxsync[source].type.val.i = 0;
     }
-    else if (m == FXReorderMode::SWAP)
+    break;
+    case FXReorderMode::SWAP:
     {
         fxsync[source].type.val.i = to.type.val.i;
+
         t_fx = spawn_effect(fxsync[source].type.val.i, &storage, &fxsync[source], 0);
+
         if (t_fx)
         {
             t_fx->init_ctrltypes();
@@ -4878,7 +4895,9 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
             delete t_fx;
         }
     }
-    // else leave the source alone
+    default:
+        break;
+    }
 
     /*
      * OK we can't copy the params - they contain things like id in scene - we need to copy the
@@ -4895,7 +4914,10 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     for (int i = 0; i < n_fx_params; ++i)
     {
         if (m == FXReorderMode::SWAP)
+        {
             cp(fxsync[source].p[i], to.p[i]);
+        }
+
         cp(fxsync[target].p[i], so.p[i]);
     }
 
@@ -4959,7 +4981,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
             deleteThese.push_back(i);
         }
 
-        if (m == FXReorderMode::MOVE || m == SWAP)
+        if (m == FXReorderMode::MOVE || m == FXReorderMode::SWAP)
         {
             // and if we are moving or swapping delete anything we left behind
             if (mv->at(i).destination_id >= fxsync[source].p[0].id &&
@@ -5002,6 +5024,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         // It's a copy
         startingBitmask = (startingBitmask & ~(1 << target)) | (sourceBitmask << target);
     }
+
     storage.getPatch().fx_disable.val.i = startingBitmask;
     fx_suspend_bitmask = startingBitmask;
 

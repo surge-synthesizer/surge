@@ -6639,17 +6639,28 @@ void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
 void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)
 {
     if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots)
+    {
         return;
+    }
 
     auto t = fxPresetName[target];
+
     fxPresetName[target] = fxPresetName[source];
-    if (m == SurgeSynthesizer::SWAP)
+
+    if (m == SurgeSynthesizer::FXReorderMode::SWAP)
+    {
         fxPresetName[source] = t;
-    if (m == SurgeSynthesizer::MOVE)
+    }
+
+    if (m == SurgeSynthesizer::FXReorderMode::MOVE ||
+        (source == target && m == SurgeSynthesizer::FXReorderMode::NONE))
+    {
         fxPresetName[source] = "";
+    }
 
     synth->reorderFx(source, target, m);
-    // the effect chooser caches the bitmask so reset it after a swap
+
+    // effectChooser caches the bitmask, so reset it after a swap
     effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
 }
 
