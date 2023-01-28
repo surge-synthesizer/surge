@@ -943,8 +943,12 @@ void SurgeStorage::refresh_wtlist()
     refresh_wtlistAddDir(false, "wavetables");
 
     firstThirdPartyWTCategory = wt_category.size();
-    refresh_wtlistAddDir(false, "wavetables_3rdparty");
-    if (!extraThirdPartyWavetablesPath.empty())
+    if (extraThirdPartyWavetablesPath.empty() ||
+        !fs::is_directory(extraThirdPartyWavetablesPath / "wavetables_3rdparty"))
+    {
+        refresh_wtlistAddDir(false, "wavetables_3rdparty");
+    }
+    else
     {
         refresh_wtlistFrom(false, extraThirdPartyWavetablesPath, "wavetables_3rdparty");
     }
