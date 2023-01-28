@@ -11,3 +11,16 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.cibuildwheel]
+container-engine = "podman"
+build-verbosity = 3
+build = [
+    "cp37-manylinux_x86_64",
+    "cp38-manylinux_x86_64",
+    "cp39-manylinux_x86_64",
+    "cp310-manylinux_x86_64",
+    "cp311-manylinux_x86_64",
+]
+test-requires = "pytest"
+test-command = "pytest {project}/src/surge-python/"

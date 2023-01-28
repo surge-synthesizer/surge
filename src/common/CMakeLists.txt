@@ -310,10 +310,16 @@ if(APPLE)
     )
 elseif(UNIX)
   target_compile_definitions(${PROJECT_NAME} PUBLIC LINUX=1)
-  target_link_libraries(${PROJECT_NAME} PRIVATE
-    pthread
-    -Wl,--no-undefined
-    )
+  if(SKBUILD)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+      pthread
+      )
+  else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+      pthread
+      -Wl,--no-undefined
+      )
+  endif()
   if(CMAKE_SYSTEM_NAME MATCHES "BSD")
     target_link_libraries(${PROJECT_NAME} PRIVATE execinfo)
   endif()
