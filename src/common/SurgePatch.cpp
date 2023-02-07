@@ -2907,7 +2907,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
     if (compat)
     {
-        auto comb = TINYXML_SAFE_TO_ELEMENT(compat->FirstChild("correctlyTuneCombFilter"));
+        auto comb = TINYXML_SAFE_TO_ELEMENT(compat->FirstChild("correctlyTunedCombFilter"));
 
         if (comb)
         {
