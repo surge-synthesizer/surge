@@ -9,7 +9,7 @@ if (NOT SURGE_COMPILE_BLOCK_SIZE)
   set(SURGE_COMPILE_BLOCK_SIZE 32)
 endif()
 
-set(SURGE_JUCE_PATH "${CMAKE_SOURCE_DIR}/libs/JUCE" CACHE STRING "Path to JUCE library source tree")
+set(SURGE_JUCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../libs/JUCE" CACHE STRING "Path to JUCE library source tree")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(cmake/lib.cmake)
