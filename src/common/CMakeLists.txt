@@ -62,18 +62,18 @@ else()
   target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
 
   add_library(juce_dsp_rack_sub STATIC
-          ../../libs/JUCE/modules/juce_audio_basics/juce_audio_basics.cpp
-          ../../libs/JUCE/modules/juce_dsp/juce_dsp.cpp
+          ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.cpp
+          ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
           )
   if (APPLE)
     target_sources(juce_dsp_rack_sub PRIVATE
-            ../../libs/JUCE/modules/juce_core/juce_core.mm
-            ../../libs/JUCE/modules/juce_audio_formats/juce_audio_formats.mm
+            ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.mm
+            ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.mm
             )
   else()
     target_sources(juce_dsp_rack_sub PRIVATE
-            ../../libs/JUCE/modules/juce_core/juce_core.cpp
-            ../../libs/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp
+            ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.cpp
+            ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.cpp
             )
   endif()
   target_compile_definitions(juce_dsp_rack_sub PUBLIC
@@ -90,7 +90,7 @@ else()
           JUCE_USE_OGGVORBIS=0
           JUCE_USE_WINDOWS_MEDIA_FORMAT=0
           )
-  target_include_directories(juce_dsp_rack_sub PUBLIC ../../libs/JUCE/modules)
+  target_include_directories(juce_dsp_rack_sub PUBLIC ${SURGE_JUCE_PATH}/modules)
 
   add_library(juce::juce_dsp ALIAS juce_dsp_rack_sub)
 endif()
