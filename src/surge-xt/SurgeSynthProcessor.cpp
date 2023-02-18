@@ -204,12 +204,10 @@ bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) con
     auto inputValid = (mics == juce::AudioChannelSet::stereo()) ||
                       (mics == juce::AudioChannelSet::mono()) || (mics.isDisabled());
 
-    /*
-     * Check the 6 output shape
-     */
+    // Check the 6 output shape
     auto c1 = layouts.getNumChannels(false, 1);
     auto c2 = layouts.getNumChannels(false, 2);
-    auto sceneOut = (c1 == 0 && c2 == 0) || (c1 == 2 && c2 == 2);
+    auto sceneOut = (c1 == 0 || c1 == 2) && (c2 == 0 || c2 == 2);
 
     return outputValid && inputValid && sceneOut;
 }
@@ -223,6 +221,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     // Make sure we have a main output
     auto mb = getBus(false, 0);
+
     if (mb->getNumberOfChannels() != 2 || !mb->isEnabled())
     {
         // We have to have a stereo output
@@ -236,10 +235,12 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             surge->allNotesOff();
             bypassCountdown = 8; // let us fade out by doing a halted process
         }
+
         if (bypassCountdown == 0)
         {
             return;
         }
+
         bypassCountdown--;
         surge->audio_processing_active = false;
         priorCallWasProcessBlockNotBypassed = false;
@@ -252,19 +253,20 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         // deactivated so
         surge->allNotesOff();
     }
+
     surge->audio_processing_active = true;
 
     processBlockPlayhead();
     processBlockMidiFromGUI();
 
     auto mainOutput = getBusBuffer(buffer, false, 0);
-
     auto mainInput = getBusBuffer(buffer, true, 0);
     auto sceneAOutput = getBusBuffer(buffer, false, 1);
     auto sceneBOutput = getBusBuffer(buffer, false, 2);
 
     auto midiIt = midiMessages.findNextSamplePosition(0);
     int nextMidi = -1;
+
     if (midiIt != midiMessages.cend())
     {
         nextMidi = (*midiIt).samplePosition;
@@ -276,6 +278,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         {
             applyMidi(*midiIt);
             midiIt++;
+
             if (midiIt == midiMessages.cend())
             {
                 nextMidi = -1;
@@ -285,18 +288,22 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                 nextMidi = (*midiIt).samplePosition;
             }
         }
+
         auto outL = mainOutput.getWritePointer(0, i);
         auto outR = mainOutput.getWritePointer(1, i);
 
         if (blockPos == 0 && mainInput.getNumChannels() > 0)
         {
             auto inL = mainInput.getReadPointer(0, i);
-            auto inR = inL;                     // assume mono
+            auto inR = inL; // assume mono
+
             if (mainInput.getNumChannels() > 1) // unless its not
             {
                 inR = mainInput.getReadPointer(1, i);
             }
+
             surge->process_input = true;
+
             memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
             memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
         }
@@ -304,32 +311,41 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         {
             surge->process_input = false;
         }
+
         if (blockPos == 0)
         {
             surge->process();
             surge->time_data.ppqPos +=
                 (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
         }
+
         *outL = surge->output[0][blockPos];
         *outR = surge->output[1][blockPos];
 
-        if (surge->activateExtraOutputs && sceneAOutput.getNumChannels() == 2 &&
-            sceneBOutput.getNumChannels() == 2)
+        if (surge->activateExtraOutputs)
         {
-            auto sAL = sceneAOutput.getWritePointer(0, i);
-            auto sAR = sceneAOutput.getWritePointer(1, i);
-            auto sBL = sceneBOutput.getWritePointer(0, i);
-            auto sBR = sceneBOutput.getWritePointer(1, i);
+            if (sceneAOutput.getNumChannels() == 2)
+            {
+                auto sAL = sceneAOutput.getWritePointer(0, i);
+                auto sAR = sceneAOutput.getWritePointer(1, i);
 
-            if (sAL && sAR)
-            {
-                *sAL = surge->sceneout[0][0][blockPos];
-                *sAR = surge->sceneout[0][1][blockPos];
+                if (sAL && sAR)
+                {
+                    *sAL = surge->sceneout[0][0][blockPos];
+                    *sAR = surge->sceneout[0][1][blockPos];
+                }
             }
-            if (sBL && sBR)
+
+            if (sceneBOutput.getNumChannels() == 2)
             {
-                *sBL = surge->sceneout[1][0][blockPos];
-                *sBR = surge->sceneout[1][1][blockPos];
+                auto sBL = sceneBOutput.getWritePointer(0, i);
+                auto sBR = sceneBOutput.getWritePointer(1, i);
+
+                if (sBL && sBR)
+                {
+                    *sBL = surge->sceneout[1][0][blockPos];
+                    *sBR = surge->sceneout[1][1][blockPos];
+                }
             }
         }
 
@@ -349,6 +365,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 void SurgeSynthProcessor::processBlockPlayhead()
 {
     auto playhead = getPlayHead();
+
     if (playhead)
     {
         juce::AudioPlayHead::CurrentPositionInfo cp;
@@ -357,7 +374,9 @@ void SurgeSynthProcessor::processBlockPlayhead()
 
         // isRecording should always imply isPlaying but better safe than sorry
         if (cp.isPlaying || cp.isRecording)
+        {
             surge->time_data.ppqPos = cp.ppqPosition;
+        }
 
         surge->time_data.timeSigNumerator = cp.timeSigNumerator;
         surge->time_data.timeSigDenominator = cp.timeSigDenominator;
@@ -375,6 +394,7 @@ void SurgeSynthProcessor::processBlockPlayhead()
 void SurgeSynthProcessor::processBlockMidiFromGUI()
 {
     midiR rec;
+
     while (midiFromGUI.pop(rec))
     {
         if (rec.type == midiR::NOTE)
