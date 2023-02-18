@@ -300,6 +300,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void enqueueFXChainClear(int fxchain);
     void swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m);
 
+    // clang-format off
+    static int constexpr fxslot_order[n_fx_slots] = 
+        {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
+         fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
+         fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
+         fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
+    // clang-format on
+
     /*
     ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
     */
