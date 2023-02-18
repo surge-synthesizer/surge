@@ -6622,16 +6622,11 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
 
 void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
 {
-    int fxSlotOrder[n_fx_slots] = {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
-                                   fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
-                                   fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
-                                   fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
-
     for (int i = 0; i < n_fx_slots; i++)
     {
         if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
         {
-            synth->enqueueFXOff(fxSlotOrder[i]);
+            synth->enqueueFXOff(fxslot_order[i]);
         }
     }
 }
