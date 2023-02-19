@@ -38,8 +38,9 @@ else()
   set(SURGE_USE_ALSA TRUE)
 endif()
 
+set(SURGE_SIMDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../libs/simde" CACHE STRING "Path to simde library source tree")
 add_library(simde INTERFACE)
-target_include_directories(simde INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../libs/simde)
+target_include_directories(simde INTERFACE ${SURGE_SIMDE_PATH})
 add_library(surge::simde ALIAS simde)
 
 add_library(surge-juce INTERFACE)
