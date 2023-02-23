@@ -889,10 +889,10 @@ PYBIND11_MODULE(_surgepy, m)
 PYBIND11_MODULE(surgepy, m)
 #endif
 {
-    m.doc() = "Python bindings for Surge Synthesizer";
-    m.def("createSurge", &createSurge, "Create a surge instance", py::arg("sampleRate"));
+    m.doc() = "Python bindings for Surge XT Synthesizer";
+    m.def("createSurge", &createSurge, "Create a Surge XT instance", py::arg("sampleRate"));
     m.def(
-        "getVersion", []() { return Surge::Build::FullVersionStr; }, "Get the version of Surge");
+        "getVersion", []() { return Surge::Build::FullVersionStr; }, "Get the version of Surge XT");
     py::class_<SurgeSynthesizer::ID>(m, "SurgeSynthesizer_ID")
         .def(py::init<>())
         .def("getSynthSideId", &SurgeSynthesizer::ID::getSynthSideId)
@@ -920,24 +920,24 @@ PYBIND11_MODULE(surgepy, m)
         .def("createSynthSideId", &SurgeSynthesizerWithPythonExtensions::createSynthSideId)
 
         .def("getParameterName", &SurgeSynthesizerWithPythonExtensions::getParameterName_py,
-             "Given a parameter, return its name as displayed by the Synth.")
+             "Given a parameter, return its name as displayed by the synth.")
 
         .def("playNote", &SurgeSynthesizerWithPythonExtensions::playNoteWithInts,
-             "Trigger a note on this Surge instance.", py::arg("channel"), py::arg("midiNote"),
+             "Trigger a note on this Surge XT instance.", py::arg("channel"), py::arg("midiNote"),
              py::arg("velocity"), py::arg("detune") = 0)
         .def("releaseNote", &SurgeSynthesizerWithPythonExtensions::releaseNoteWithInts,
-             "Release a note on this Surge instance.", py::arg("channel"), py::arg("midiNote"),
+             "Release a note on this Surge XT instance.", py::arg("channel"), py::arg("midiNote"),
              py::arg("releaseVelocity") = 0)
         .def("pitchBend", &SurgeSynthesizerWithPythonExtensions::pitchBendWithInts,
              "Set the pitch bend value on channel ch", py::arg("channel"), py::arg("bend"))
         .def("allNotesOff", &SurgeSynthesizer::allNotesOff, "Turn off all playing notes")
         .def("polyAftertouch", &SurgeSynthesizerWithPythonExtensions::polyAftertouchWithInts,
-             "Send the poly aftertouch midi message", py::arg("channel"), py::arg("key"),
+             "Send the poly aftertouch MIDI message", py::arg("channel"), py::arg("key"),
              py::arg("value"))
         .def("channelAftertouch", &SurgeSynthesizerWithPythonExtensions::channelAftertouchWithInts,
-             "Send the channel aftertouch midi message", py::arg("channel"), py::arg("value"))
+             "Send the channel aftertouch MIDI message", py::arg("channel"), py::arg("value"))
         .def("channelController", &SurgeSynthesizerWithPythonExtensions::channelControllerWithInts,
-             "Set midi controller on channel to value", py::arg("channel"), py::arg("cc"),
+             "Set MIDI controller on channel to value", py::arg("channel"), py::arg("cc"),
              py::arg("value"))
 
         .def("getParamMin", &SurgeSynthesizerWithPythonExtensions::getParamMin,
@@ -947,9 +947,9 @@ PYBIND11_MODULE(surgepy, m)
         .def("getParamDef", &SurgeSynthesizerWithPythonExtensions::getParamDef,
              "Parameter default value, as a float")
         .def("getParamVal", &SurgeSynthesizerWithPythonExtensions::getParamVal,
-             "Parameter current value in this Surge instance, as a float")
+             "Parameter current value in this Surge XT instance, as a float")
         .def("getParamValType", &SurgeSynthesizerWithPythonExtensions::getParamValType,
-             "Parameter type. float, int or bool are supported")
+             "Parameter types float, int or bool are supported")
 
         .def("getParamDisplay", &SurgeSynthesizerWithPythonExtensions::getParamDisplay,
              "Parameter value display (stringified and formatted)")
@@ -960,12 +960,12 @@ PYBIND11_MODULE(surgepy, m)
              "Set a parameter value", py::arg("param"), py::arg("toThis"))
 
         .def("loadPatch", &SurgeSynthesizerWithPythonExtensions::loadPatchPy,
-             "Load a Surge .fxp patch from the file system.", py::arg("path"))
+             "Load a Surge XT .fxp patch from the file system.", py::arg("path"))
         .def("savePatch", &SurgeSynthesizerWithPythonExtensions::savePatchPy,
-             "Save the current state of Surge to an .fxp file.", py::arg("path"))
+             "Save the current state of Surge XT to an .fxp file.", py::arg("path"))
 
         .def("getModSource", &SurgeSynthesizerWithPythonExtensions::getModSource,
-             "Given a constant from surge.constants.ms_* provide a modulator object",
+             "Given a constant from surge.constants.ms_*, provide a modulator object",
              py::arg("modId"))
         .def("setModDepth01", &SurgeSynthesizerWithPythonExtensions::setModulationPy,
              "Set a modulation to a given depth", py::arg("targetParameter"),
@@ -985,25 +985,25 @@ PYBIND11_MODULE(surgepy, m)
              "Is the given modulation source bipolar?", py::arg("modulationSource"))
 
         .def("getAllModRoutings", &SurgeSynthesizerWithPythonExtensions::getAllModRoutings,
-             "Get the entire modulation matrix for this instance")
+             "Get the entire modulation matrix for this instance.")
 
         .def("process", &SurgeSynthesizer::process,
-             "Run surge for one block and update the internal output buffer.")
+             "Run Surge XT for one block and update the internal output buffer.")
         .def("getOutput", &SurgeSynthesizerWithPythonExtensions::getOutput,
-             "Retrieve the internal output buffer as a 2xBLOCK_SIZE numpy array.")
+             "Retrieve the internal output buffer as a 2 * BLOCK_SIZE numpy array.")
 
         .def("createMultiBlock", &SurgeSynthesizerWithPythonExtensions::createMultiBlock,
-             "Create a numpy array suitable to hold up to b blocks of Surge processing in "
+             "Create a numpy array suitable to hold up to b blocks of Surge XT processing in "
              "processMultiBlock",
              py::arg("blockCapacity"))
         .def("processMultiBlock", &SurgeSynthesizerWithPythonExtensions::processMultiBlock,
-             "Run the surge engine for multiple blocks, updating the value in the numpy array. "
+             "Run the Surge XT engine for multiple blocks, updating the value in the numpy array. "
              "Either populate the\n"
              "entire array, or starting at startBlock position in the output, populate nBlocks.",
              py::arg("val"), py::arg("startBlock") = 0, py::arg("nBlocks") = -1)
 
         .def("getPatch", &SurgeSynthesizerWithPythonExtensions::getPatchAsPy,
-             "Get a python dictionary with the Surge parameters laid out in the logical patch "
+             "Get a Python dictionary with the Surge XT parameters laid out in the logical patch "
              "format")
 
         .def("loadSCLFile", &SurgeSynthesizerWithPythonExtensions::loadSCLFile,
@@ -1014,10 +1014,10 @@ PYBIND11_MODULE(surgepy, m)
         .def("retuneToStandardScale", &SurgeSynthesizerWithPythonExtensions::retuneToStandardScale,
              "Return this instance to 12-TET Scale")
         .def("loadKBMFile", &SurgeSynthesizerWithPythonExtensions::loadKBMFile,
-             "Load an KBM mapping file and apply tuning to this instance")
+             "Load a KBM mapping file and apply tuning to this instance")
         .def("remapToStandardKeyboard",
              &SurgeSynthesizerWithPythonExtensions::remapToStandardKeyboard,
-             "Return to standard C centered keyboard mapping")
+             "Return to standard C-centered keyboard mapping")
         .def_readwrite("mpeEnabled", &SurgeSynthesizerWithPythonExtensions::mpeEnabled)
         .def_property("tuningApplicationMode",
                       &SurgeSynthesizerWithPythonExtensions::getTuningApplicationMode,
@@ -1059,7 +1059,8 @@ PYBIND11_MODULE(surgepy, m)
             return oss.str();
         });
 
-    py::module m_const = m.def_submodule("constants", "Constants which are used to navigate Surge");
+    py::module m_const =
+        m.def_submodule("constants", "Constants which are used to navigate Surge XT");
 
 #define C(x) m_const.attr(#x) = py::int_((int)(x));
     C(cg_GLOBAL);

@@ -672,7 +672,7 @@ void SurgeGUIEditor::idle()
                 oss << "Loading patch " << synth->patchid_queue
                     << " has not occurred after 200 idle cycles. This means that the audio system"
                     << " is delayed while loading many patches in a row. The audio system has to be"
-                    << " running in order to load Surge patches. If the audio system is working,"
+                    << " running in order to load Surge XT patches. If the audio system is working,"
                        " you can probably ignore this message and continue once Surge XT catches "
                        "up.";
 
@@ -2261,7 +2261,8 @@ bool SurgeGUIEditor::open(void *parent)
         auto db = Surge::GUI::SkinDB::get();
 
         std::ostringstream oss;
-        oss << "Unable to load current skin! Reverting the skin to Surge Classic.\n\nSkin Error:\n"
+        oss << "Unable to load current skin! Reverting the skin to Surge XT Classic.\n\nSkin "
+               "Error:\n"
             << db->getAndResetErrorString();
 
         auto msg = std::string(oss.str());
@@ -2889,7 +2890,7 @@ void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf
     }
     else
     {
-        msg << "Surge chose the largest fitting zoom level of " << zf << "%.";
+        msg << "Surge XT chose the largest fitting zoom level of " << zf << "%.";
     }
     synth->storage.reportError(msg.str(), "Zoom Level Adjusted");
 #endif
@@ -2972,16 +2973,16 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
         juce::URL(fmt::format("{}skin-library", stringWebsite)).launchInDefaultBrowser();
     });
 
-    Surge::GUI::addMenuWithShortcut(settingsMenu, Surge::GUI::toOSCase("Surge Manual..."),
+    Surge::GUI::addMenuWithShortcut(settingsMenu, Surge::GUI::toOSCase("Surge XT Manual..."),
                                     showShortcutDescription("F1"),
                                     []() { juce::URL(stringManual).launchInDefaultBrowser(); });
 
-    settingsMenu.addItem(Surge::GUI::toOSCase("Surge Website..."),
+    settingsMenu.addItem(Surge::GUI::toOSCase("Surge XT Website..."),
                          []() { juce::URL(stringWebsite).launchInDefaultBrowser(); });
 
     settingsMenu.addSeparator();
 
-    Surge::GUI::addMenuWithShortcut(settingsMenu, "About Surge", showShortcutDescription("F12"),
+    Surge::GUI::addMenuWithShortcut(settingsMenu, "About Surge XT", showShortcutDescription("F12"),
                                     [this]() { this->showAboutScreen(); });
 
     settingsMenu.showMenuAsync(popupMenuOptions(where),
@@ -5202,7 +5203,7 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
     {
         std::ostringstream oss;
         oss << "Unable to load " << entry.root << entry.name
-            << " skin! Reverting the skin to Surge Classic.\n\nSkin Error:\n"
+            << " skin! Reverting the skin to Surge XT Classic.\n\nSkin Error:\n"
             << db->getAndResetErrorString();
 
         auto msg = std::string(oss.str());
@@ -7248,6 +7249,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::FAVORITE_PATCH:
                 setPatchAsFavorite(synth->storage.getPatch().name, !isPatchFavorite());
                 patchSelector->setIsFavorite(isPatchFavorite());
+                return true;
+            case Surge::GUI::INITIALIZE_PATCH:
+                patchSelector->loadInitPatch();
                 return true;
 
             case Surge::GUI::PREV_PATCH:

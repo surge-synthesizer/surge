@@ -906,10 +906,10 @@ end)FN");
     }
 }
 
-TEST_CASE("Two Surges", "[formula]")
+TEST_CASE("Two Surge XTs", "[formula]")
 {
     // this attempts but fails to reproduce 5753 but i left it here anyway
-    SECTION("Two Surges on Tutorial 3")
+    SECTION("Two Surge XTs on Tutorial 3")
     {
         auto s1 = Surge::Test::surgeOnSine();
         auto s2 = Surge::Test::surgeOnSine();

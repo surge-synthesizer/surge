@@ -38,7 +38,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 #if BUILD_IS_DEBUG
     std::ostringstream oss;
-    oss << "SurgeXT " << wrapperTypeString << "\n"
+    oss << "Surge XT " << wrapperTypeString << "\n"
         << "  - Version      : " << Surge::Build::FullVersionStr << " with JUCE " << std::hex
         << JUCE_VERSION << std::dec << "\n"
         << "  - Build Info   : " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
@@ -747,7 +747,7 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
     case CLAP_EVENT_NOTE_END:
     default:
     {
-        DBG("Unknown CLAP Message type in Surge Direct " << (int)(evt->type));
+        DBG("Unknown CLAP Message type in Surge XT Direct " << (int)(evt->type));
         // In theory I should never get this.
         // jassertfalse
     }

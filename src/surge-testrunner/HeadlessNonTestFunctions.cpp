@@ -516,7 +516,7 @@ void filterAnalyzer(int ft, int sft, std::ostream &os)
 [[noreturn]] void performancePlay(const std::string &patchName, int mode)
 {
     auto surge = Surge::Headless::createSurge(48000);
-    std::cout << "Performance Mode with surge at 48k\n"
+    std::cout << "Performance Mode with Surge XT at 48k\n"
               << "-- Ctrl-C to exit\n"
               << "-- patchName = " << patchName << "\n"
               << "-- mode = " << mode << std::endl;

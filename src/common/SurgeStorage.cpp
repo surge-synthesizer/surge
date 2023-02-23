@@ -71,9 +71,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     else if (samplerate < 12000 || samplerate > 48000 * 32)
     {
         std::ostringstream oss;
-        oss << "Warning: SurgeStorage constructed with invalid samplerate :" << samplerate
-            << " - resetting to 48000 until Audio System tells us otherwise" << std::endl;
-        reportError(oss.str(), "SampleRate Corrputed on Startup");
+        oss << "Warning: SurgeStorage constructed with invalid samplerate: " << samplerate
+            << " - resetting to 48000 until audio system tells us otherwise" << std::endl;
+        reportError(oss.str(), "Sample Rate Corrupted on Startup");
         setSamplerate(48000);
     }
     else
@@ -1179,7 +1179,7 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
     {
         std::ostringstream oss;
         oss << "Unable to load file with extension " << extension
-            << "! Surge only supports .wav and .wt wavetable files!";
+            << "! Surge XT only supports .wav and .wt wavetable files!";
         reportError(oss.str(), "Error");
     }
 
@@ -1245,7 +1245,7 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
             << max_wtable_size << " samples per frame.\n"
             << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
                "potentially volatile state\n."
-            << "It is recommended to restart Surge and not load "
+            << "It is recommended to restart Surge XT and not load "
                "the problematic wavetable again.\n\n"
             << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
@@ -1297,7 +1297,7 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
             << max_wtable_size << " samples per frame.\n"
             << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
                "potentially volatile state\n."
-            << "It is recommended to restart Surge and not load "
+            << "It is recommended to restart Surge XT and not load "
                "the problematic wavetable again.\n\n"
             << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
