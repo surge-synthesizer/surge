@@ -31,6 +31,7 @@ enum KeyboardActions
     SAVE_PATCH,
     FIND_PATCH,
     FAVORITE_PATCH,
+    INITIALIZE_PATCH,
 
     PREV_PATCH,
     NEXT_PATCH,
@@ -96,6 +97,8 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "FIND_PATCH";
     case FAVORITE_PATCH:
         return "FAVORITE_PATCH";
+    case INITIALIZE_PATCH:
+        return "INITIALIZE_PATCH";
 
     case PREV_PATCH:
         return "PREV_PATCH";
@@ -206,6 +209,9 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         break;
     case FAVORITE_PATCH:
         desc = "Mark Patch as Favorite";
+        break;
+    case INITIALIZE_PATCH:
+        desc = "Initialize Patch";
         break;
 
     case PREV_PATCH:

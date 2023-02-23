@@ -575,27 +575,9 @@ void PatchSelector::showClassicMenu(bool single_category)
     contextMenu.addColumnBreak();
     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "FUNCTIONS");
 
-    auto initAction = [this]() {
-        int i = 0;
-
-        bool lookingForFactory = (storage->initPatchCategoryType == "Factory");
-        for (auto p : storage->patch_list)
-        {
-            if (p.name == storage->initPatchName &&
-                storage->patch_category[p.category].name == storage->initPatchCategory &&
-                storage->patch_category[p.category].isFactory == lookingForFactory)
-            {
-                loadPatch(i);
-                break;
-            }
-
-            ++i;
-        }
-    };
-
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
-    contextMenu.addItem(Surge::GUI::toOSCase("Initialize Patch"), initAction);
+    contextMenu.addItem(Surge::GUI::toOSCase("Initialize Patch"), [this]() { loadInitPatch(); });
 
     contextMenu.addItem(Surge::GUI::toOSCase("Set Current Patch as Default"), [this]() {
         Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::InitialPatchName,
@@ -679,14 +661,13 @@ void PatchSelector::showClassicMenu(bool single_category)
                     });
             });
 
-            contextMenu.addItem(Surge::GUI::toOSCase("Delete Patch"), [this, initAction]() {
-                auto cb = juce::ModalCallbackFunction::create([this, initAction](int okcs) {
+            contextMenu.addItem(Surge::GUI::toOSCase("Delete Patch"), [this]() {
+                auto cb = juce::ModalCallbackFunction::create([this](int okcs) {
                     if (okcs)
                     {
                         fs::remove(storage->patch_list[current_patch].path);
                         storage->refresh_patchlist();
                         storage->initializePatchDb(true);
-                        initAction();
                     }
                 });
 
@@ -1106,6 +1087,25 @@ void PatchSelector::loadPatch(int id)
 
         enqueue_sel_id = id;
         notifyValueChanged();
+    }
+}
+
+void PatchSelector::loadInitPatch()
+{
+    int i = 0;
+    bool lookingForFactory = (storage->initPatchCategoryType == "Factory");
+
+    for (auto p : storage->patch_list)
+    {
+        if (p.name == storage->initPatchName &&
+            storage->patch_category[p.category].name == storage->initPatchCategory &&
+            storage->patch_category[p.category].isFactory == lookingForFactory)
+        {
+            loadPatch(i);
+            break;
+        }
+
+        ++i;
     }
 }
 

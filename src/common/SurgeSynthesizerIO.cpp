@@ -254,7 +254,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
         //   'cjs3'. ";
         //}
         oss << "This error usually occurs when you attempt to load an .fxp that belongs to another "
-               "plugin into Surge.";
+               "plugin into Surge XT.";
         storage.reportError(oss.str(), "Unknown FXP File");
         return false;
     }
