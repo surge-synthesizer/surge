@@ -2206,7 +2206,6 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         learn_macro_from_cc = -1;
     }
 
-    // if(storage.getPatch().scene_active.val.i == 1)
     for (int i = 0; i < n_global_params; i++)
     {
         if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded)
