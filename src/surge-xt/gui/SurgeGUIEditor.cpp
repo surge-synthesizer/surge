@@ -923,10 +923,11 @@ void SurgeGUIEditor::idle()
 
                     if (lfoDisplay)
                     {
-                        lfoDisplay->invalidateIfIdIsInRange(j);
+                        lfoDisplay->repaintIfIdIsInRange(j);
                     }
 
                     auto sp = getStorage()->getPatch().param_ptr[j];
+
                     if (sp)
                     {
                         if (sp->ctrlgroup == cg_FILTER)
@@ -934,6 +935,7 @@ void SurgeGUIEditor::idle()
                             // force repaint any filter overlays
                             auto fa = getOverlayIfOpenAs<Surge::Overlays::FilterAnalysis>(
                                 OverlayTags::FILTER_ANALYZER);
+
                             if (fa)
                             {
                                 fa->forceDataRefresh();
@@ -955,7 +957,7 @@ void SurgeGUIEditor::idle()
             {
                 lfoDisplay->setTimeSignature(synth->time_data.timeSigNumerator,
                                              synth->time_data.timeSigDenominator);
-                lfoDisplay->invalidateIfAnythingIsTemposynced();
+                lfoDisplay->repaintIfAnythingIsTemposynced();
             }
         }
 
@@ -1005,7 +1007,7 @@ void SurgeGUIEditor::idle()
 
                 if (lfoDisplay)
                 {
-                    lfoDisplay->invalidateIfIdIsInRange(j);
+                    lfoDisplay->repaintIfIdIsInRange(j);
                 }
             }
             else if ((j >= 0) && (j < n_total_params) && nonmod_param[j])
@@ -1088,8 +1090,8 @@ void SurgeGUIEditor::idle()
 
                 if (synth->storage.getPatch().param_ptr[j]->ctrltype == ct_scenemode)
                 {
-                    // This is gross hack for our reordering of scenemode. Basically take the
-                    // automation value and turn it into the UI value
+                    // This is gross hack for our reordering of scene mode
+                    // Basically take the automation value and turn it into the UI value
                     auto pval = Parameter::intUnscaledFromFloat(sv, n_scene_modes - 1);
 
                     if (pval == sm_dual)
@@ -1171,6 +1173,7 @@ void SurgeGUIEditor::idle()
 
     // Force the oscilloscope, if open, to re-render for nice smooth movement.
     auto scope = getOverlayIfOpenAs<Surge::Overlays::Oscilloscope>(OSCILLOSCOPE);
+
     if (scope)
     {
         scope->updateDrawing();

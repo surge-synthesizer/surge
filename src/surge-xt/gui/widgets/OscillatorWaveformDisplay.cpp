@@ -408,19 +408,19 @@ void OscillatorWaveformDisplay::resized()
 
 void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
 {
-    auto *currOsc = &oscdata->type;
-    auto *endOsc = &oscdata->retrigger;
+    auto *firstOscParam = &oscdata->type;
+    auto *lastOscParam = &oscdata->retrigger;
 
     bool oscInvalid = false;
 
-    while (currOsc <= endOsc && !oscInvalid)
+    while (firstOscParam <= lastOscParam && !oscInvalid)
     {
-        if (currOsc->id == id)
+        if (firstOscParam->id == id)
         {
             oscInvalid = true;
         }
 
-        currOsc++;
+        firstOscParam++;
     }
 
     if (oscInvalid)
