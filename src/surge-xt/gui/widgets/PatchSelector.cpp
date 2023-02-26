@@ -28,6 +28,13 @@
 #include "AccessibleHelpers.h"
 #include "SurgeJUCEHelpers.h"
 
+/*
+ * It is an arbitrary number that we set as an ID for patch menu items.
+ * It is not necessarily to be unique among all menu items, only among a sub menu, so it can
+ * be a constant.
+ */
+#define ID_TO_PRESELECT_MENU_ITEMS 636133
+
 namespace Surge
 {
 namespace Widgets
@@ -762,7 +769,8 @@ void PatchSelector::showClassicMenu(bool single_category)
 
     if (sge)
     {
-        o = sge->popupMenuOptions(getBounds().getBottomLeft());
+        o = sge->popupMenuOptions(getBounds().getBottomLeft())
+                .withInitiallySelectedItem(ID_TO_PRESELECT_MENU_ITEMS);
     }
 
     contextMenu.showMenuAsync(o, [that = juce::Component::SafePointer(this)](int) {
@@ -1025,6 +1033,9 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
             auto item = juce::PopupMenu::Item(name).setEnabled(true).setTicked(thisCheck).setAction(
                 [this, p]() { this->loadPatch(p); });
 
+            if (thisCheck)
+                item.setID(ID_TO_PRESELECT_MENU_ITEMS);
+
             if (isFav && associatedBitmapStore)
             {
                 auto img = associatedBitmapStore->getImage(IDB_FAVORITE_MENU_ICON);
@@ -1087,7 +1098,11 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
         if (!single_category)
         {
-            contextMenu.addSubMenu(name, *subMenu, true, nullptr, amIChecked);
+            if (amIChecked)
+                contextMenu.addSubMenu(name, *subMenu, true, nullptr, amIChecked,
+                                       ID_TO_PRESELECT_MENU_ITEMS);
+            else
+                contextMenu.addSubMenu(name, *subMenu, true, nullptr, amIChecked);
         }
 
         main_e++;
