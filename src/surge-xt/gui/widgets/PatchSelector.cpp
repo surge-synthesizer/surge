@@ -33,7 +33,7 @@
  * It is not necessarily to be unique among all menu items, only among a sub menu, so it can
  * be a constant.
  */
-#define ID_TO_PRESELECT_MENU_ITEMS 636133
+static constexpr int ID_TO_PRESELECT_MENU_ITEMS = 636133;
 
 namespace Surge
 {
