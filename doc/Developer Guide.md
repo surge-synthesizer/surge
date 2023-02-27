@@ -64,7 +64,7 @@ If your IDE is set to auto-format cmake files make sure to configure it accordin
 
 ### Naming
 
-* `#define` constants are `UPPERCASE_VARIABLES`
+* used to `#define` constants as `UPPERCASE_VARIABLES`, but prefer `static constexpr <type> UPPERCASE_VARIABLES`. 
 * `class HaveCamelCaseNames`
 * `void functionsAreCamelCaseWithLowerFirst`
 * We are not using `s_` or `m_` or equivalent notations for members or statics
