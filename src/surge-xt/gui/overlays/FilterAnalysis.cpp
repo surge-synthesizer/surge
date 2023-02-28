@@ -240,6 +240,14 @@ void FilterAnalysis::paint(juce::Graphics &g)
         }
     }
 
+    // draw a circle
+
+    int xDraw = freqToX(evaluator->cutoff, width);
+    int yDraw = dbToY(evaluator->resonance, height);
+    g.setColour (juce::Colours::red); // set the color of the circle
+    g.drawEllipse (xDraw, yDraw, 5, 5, 1);
+
+
     // construct filter response curve
     if (catchUpStore != evaluator->outboundUpdates)
     {
