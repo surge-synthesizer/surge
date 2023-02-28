@@ -19,6 +19,7 @@
 #include <fmt/core.h>
 #include "sst/filters/FilterPlotter.h"
 #include <thread>
+#include "Tunings.h"
 
 namespace Surge
 {
@@ -145,7 +146,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
 
     static constexpr auto lowFreq = 10.f;
-    static constexpr auto highFreq = 24000.f;
+    static constexpr auto highFreq = 25087.71f;
     static constexpr auto dbMin = -42.f;
     static constexpr auto dbMax = 12.f;
     constexpr auto dbRange = dbMax - dbMin;
@@ -241,8 +242,9 @@ void FilterAnalysis::paint(juce::Graphics &g)
     }
 
     // draw a circle
-
-    int xDraw = freqToX(evaluator->cutoff, width);
+    Tunings::Tuning tuning{};
+    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0);
+    int xDraw = freqToX(freq, width);
     int yDraw = dbToY(evaluator->resonance, height);
     g.setColour (juce::Colours::red); // set the color of the circle
     g.drawEllipse (xDraw, yDraw, 5, 5, 1);
