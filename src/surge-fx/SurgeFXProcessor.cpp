@@ -186,6 +186,20 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         resetFxParams(true);
     }
 
+    auto sampl = buffer.getNumSamples();
+    if (nonLatentBlockMode && ((sampl & ~(BLOCK_SIZE - 1)) != sampl))
+    {
+        nonLatentBlockMode = false;
+        input_position = 0;
+        output_position = 0;
+        memset(output_buffer, 0, sizeof(output_buffer));
+        memset(input_buffer, 0, sizeof(input_buffer));
+        memset(sidechain_buffer, 0, sizeof(sidechain_buffer));
+
+        setLatencySamples(BLOCK_SIZE);
+        updateHostDisplay(ChangeDetails().withLatencyChanged(true));
+    }
+
     auto mainInput = getBusBuffer(buffer, true, 0);
 
     int inChanL = 0;
