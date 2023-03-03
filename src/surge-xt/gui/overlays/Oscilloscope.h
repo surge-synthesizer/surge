@@ -143,8 +143,8 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     struct Parameters
     {
         float noise_floor = 0.f; // Noise floor level, bottom of the scope. Min -100. Slider.
-        float max_db = 1.f;         // Maximum dB displayed. Slider. Maxes out at 0. Slider.
-        bool freeze = false;        // Freeze display, on/off.
+        float max_db = 1.f;      // Maximum dB displayed. Slider. Maxes out at 0. Slider.
+        bool freeze = false;     // Freeze display, on/off.
 
         // Range of decibels shown in the display, calculated from slider values.
         float dbRange() const;
