@@ -395,7 +395,7 @@ void Reverb1Effect::init_default_values()
     fxdata->p[rev1_highcut].val.f = 72.0f;
     fxdata->p[rev1_highcut].deactivated = false;
 
-    fxdata->p[rev1_mix].val.f = 1.0f;
+    fxdata->p[rev1_mix].val.f = 0.5f;
     fxdata->p[rev1_width].val.f = 0.0f;
 
     // fxdata->p[rev1_variation].val.f = 0.f;
