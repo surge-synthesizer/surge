@@ -146,7 +146,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
 
     static constexpr auto lowFreq = 10.f;
-    static constexpr auto highFreq = 25087.71f;
+    static constexpr auto highFreq = 24000.f;
     static constexpr auto dbMin = -42.f;
     static constexpr auto dbMax = 12.f;
     constexpr auto dbRange = dbMax - dbMin;
@@ -243,6 +243,9 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
     //draws the ruler to show the position of cutoff frequency and resonance
     {
+        //TODO: why don't circle coincide with the ruler?
+        //TODO: How to start the ruler from 0?
+
         //    Tunings::Tuning tuning{};
         //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
         double freq = std::pow(2, evaluator->cutoff / 12) * 440.0;
@@ -253,7 +256,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
         g.setColour(juce::Colours::red); // set the color of the circle
         int r = 5;
-        g.drawEllipse(cutoffFrequencyPositionX + r / 2 + 1, yDraw + r / 2 + 1, r, r, 1);
+        g.drawEllipse(cutoffFrequencyPositionX + r / 2, yDraw + r / 2, r, r, 1);
         int yDbStart = dbToY(dbMin, height);
         int yDbMax = dbToY(dbMax, height);
 
