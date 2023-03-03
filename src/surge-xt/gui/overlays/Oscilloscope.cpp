@@ -361,6 +361,12 @@ const SpectrumDisplay::Parameters &SpectrumDisplay::getParameters() const { retu
 void SpectrumDisplay::setParameters(Parameters parameters)
 {
     std::lock_guard l(data_lock_);
+    // Check if the new params for noise floor/ceiling are different. If they are, consider the
+    // display "dirty" (ie, stop interpolating distance, jump right to the new thing).
+    if (params_.dbRange() != parameters.dbRange())
+    {
+        display_dirty_ = true;
+    }
     params_ = std::move(parameters);
 }
 
@@ -397,7 +403,7 @@ void SpectrumDisplay::paint(juce::Graphics &g)
             const float x = freqToX(hz, width);
             const float y0 = displayed_data_[i];
             const float y1 = dbToY(new_scope_data_[i], height, dbMin, dbMax);
-            const float y = interpolate(y0, y1, now);
+            const float y = display_dirty_ ? y1 : interpolate(y0, y1, now);
             displayed_data_[i] = y;
             if (y > 0)
             {
@@ -428,6 +434,7 @@ void SpectrumDisplay::paint(juce::Graphics &g)
     }
     g.setColour(curveColor);
     g.fillPath(path);
+    display_dirty_ = false;
 }
 
 void SpectrumDisplay::resized()
@@ -452,6 +459,7 @@ void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
                          juce::Decibels::gainToDecibels(f) -
                              juce::Decibels::gainToDecibels((float)internal::fftSize));
     }
+    std::cout << "Updated scope data; max dB is " << *std::max_element(new_scope_data_.begin(), new_scope_data_.end()) << std::endl;
     last_updated_time_ = std::chrono::steady_clock::now();
 }
 

@@ -179,6 +179,7 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     std::mutex data_lock_;
     internal::FftScopeType new_scope_data_;
     internal::FftScopeType displayed_data_;
+    bool display_dirty_;
 };
 
 class Oscilloscope : public OverlayComponent,
