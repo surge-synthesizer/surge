@@ -38,6 +38,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     int output_position{-1};
 
     bool nonLatentBlockMode{true};
+
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
