@@ -242,12 +242,17 @@ void FilterAnalysis::paint(juce::Graphics &g)
     }
 
     // draw a circle
-    Tunings::Tuning tuning{};
-    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0);
+//    Tunings::Tuning tuning{};
+//    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
+     double freq = std::pow(2 , evaluator->cutoff/12) * 440.0;
     int xDraw = freqToX(freq, width);
-    int yDraw = dbToY(evaluator->resonance, height);
+
+    float db = juce::jmap(evaluator->resonance, 0.0f, 1.0f, dbMin, dbMax);
+    int yDraw = dbToY(db, height);
+
     g.setColour (juce::Colours::red); // set the color of the circle
-    g.drawEllipse (xDraw, yDraw, 5, 5, 1);
+    int r = 5;
+    g.drawEllipse (xDraw + r/2+1, yDraw + r/2+1, r, r, 1);
 
 
     // construct filter response curve
