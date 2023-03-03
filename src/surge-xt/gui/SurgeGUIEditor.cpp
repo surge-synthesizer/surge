@@ -5714,6 +5714,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hs->setIsSemitone(style & kSemitone);
         hs->setIsLightStyle(style & kWhite);
         hs->setIsMiniVertical(style & kMini);
+        hs->parameterType = (ctrltypes)p->ctrltype;
 
         hs->setBounds(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs, styleW, styleH);
         hs->setTag(tag);

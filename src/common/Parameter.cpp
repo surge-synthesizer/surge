@@ -1820,11 +1820,15 @@ void Parameter::bound_value(bool force_integer)
         case ct_countedset_percent_extendable:
         {
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
-            auto count = cs->getCountedSetSize();
-            // OK so now val.f is between 0 and 1. So
-            auto fraccount = val.f * (count - extend_range);
-            auto intcount = (int)fraccount;
-            val.f = limit_range(1.0 * intcount / (count - extend_range) + 0.000001, 0., 1.);
+            if (cs)
+            {
+                auto count = cs->getCountedSetSize();
+                // OK so now val.f is between 0 and 1. So
+                auto fraccount = val.f * (count - extend_range);
+                auto intcount = (int)fraccount;
+                val.f = limit_range(1.0 * intcount / std::max(1, (count - extend_range)) + 0.000001,
+                                    0., 1.);
+            }
             break;
         }
         case ct_alias_mask:
