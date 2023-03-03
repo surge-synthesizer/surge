@@ -436,7 +436,7 @@ accessibleEditActionInternal(const juce::KeyPress &key)
     {
         if (key.getModifiers().isShiftDown())
             return {Decrease, Fine};
-        if (key.getModifiers().isCtrlDown())
+        if (key.getModifiers().isCommandDown())
             return {Decrease, Quantized};
         return {Decrease, NoModifier};
     }
@@ -445,7 +445,7 @@ accessibleEditActionInternal(const juce::KeyPress &key)
     {
         if (key.getModifiers().isShiftDown())
             return {Increase, Fine};
-        if (key.getModifiers().isCtrlDown())
+        if (key.getModifiers().isCommandDown())
             return {Increase, Quantized};
         return {Increase, NoModifier};
     }

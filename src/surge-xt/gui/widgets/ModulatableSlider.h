@@ -57,6 +57,8 @@ struct ModulatableSlider : public juce::Component,
     static MoveRateState sliderMoveRateState;
     static TouchscreenMode touchscreenMode;
 
+    ctrltypes parameterType{ct_none};
+
     /**
      * The slider is 'light' backgrounded (which matters in the classic skin only)
      * @param b

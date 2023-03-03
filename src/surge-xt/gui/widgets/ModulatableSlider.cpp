@@ -806,8 +806,36 @@ bool ModulatableSlider::keyPressed(const juce::KeyPress &key)
         dv *= 0.1;
         break;
     case Quantized:
-        // the value set handler handles this, oddly
+    {
+        /* the value set handler handles this, oddly. But we
+         * can fake it. This code should all go in XT2 of course.
+         * I apologize for this code but it adds a super useful
+         * accessibility function without rewriting the whole shebang.
+         * This basically does a linear search across the parameter bind
+         * to find the next step.
+         */
+        if (parameterType != ct_none)
+        {
+            Parameter pp;
+            pp.ctrltype = parameterType;
+            pp.valtype = vt_float;
+            pp.set_type(parameterType);
+            auto v = getValue();
+            auto sv = 0.005 * (action == Increase ? 1 : -1);
+            pp.set_value_f01(v, true);
+            auto fv = pp.val.f;
+            while (v <= 1.f && v >= 0.f)
+            {
+                v += sv;
+                pp.set_value_f01(v, true);
+                if (pp.val.f != fv)
+                    break;
+            }
+            value = v;
+            dv = 0;
+        }
         break;
+    }
     }
 
     if (isEditingModulation)
