@@ -45,7 +45,8 @@ static float freqToX(float freq, int width)
 static float dbToY(float db, int height, float dbMin = -100.f, float dbMax = 0.f)
 {
     float range = dbMax - dbMin;
-    return (float)height * (dbMax - db) / range;
+    // If dbMax/dbMin change and the data hasn't been updated yet due to locking, can get weirdness.
+    return std::max((float)height * (dbMax - db) / range, 0.f);
 }
 
 float WaveformDisplay::Parameters::counterSpeed() const
@@ -366,6 +367,9 @@ void SpectrumDisplay::setParameters(Parameters parameters)
     if (params_.dbRange() != parameters.dbRange())
     {
         display_dirty_ = true;
+        // Also rescale the scope data.
+        std::transform(new_scope_data_.begin(), new_scope_data_.end(), new_scope_data_.begin(),
+                       std::bind(juce::jlimit<float>, params_.noiseFloor(), params_.maxDb(), _1));
     }
     params_ = std::move(parameters);
 }
@@ -405,7 +409,13 @@ void SpectrumDisplay::paint(juce::Graphics &g)
             const float y1 = dbToY(new_scope_data_[i], height, dbMin, dbMax);
             const float y = display_dirty_ ? y1 : interpolate(y0, y1, now);
             displayed_data_[i] = y;
-            if (y > 0)
+            if (y >= zeroPoint)
+            {
+                path.lineTo(x, zeroPoint);
+                path.closeSubPath();
+                started = false;
+            }
+            else
             {
                 if (started)
                 {
@@ -417,12 +427,6 @@ void SpectrumDisplay::paint(juce::Graphics &g)
                     path.lineTo(x, y);
                     started = true;
                 }
-            }
-            else
-            {
-                path.lineTo(x, zeroPoint);
-                path.closeSubPath();
-                started = false;
             }
         }
     }
