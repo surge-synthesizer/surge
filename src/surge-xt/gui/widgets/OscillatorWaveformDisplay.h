@@ -23,6 +23,7 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "Oscillator.h"
+#include "AccessibleHelpers.h"
 
 class SurgeStorage;
 class SurgeGUIEditor;

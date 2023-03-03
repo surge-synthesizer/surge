@@ -98,7 +98,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
         this, customEditor ? "Close Custom Editor" : "Open Custom Editor",
         juce::AccessibilityRole::button);
-
+    ol->setWantsKeyboardFocus(true);
     addChildComponent(*ol);
 
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
@@ -114,6 +114,21 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             d->customEditorAccOverlay->setDescription("Open Custom Editor");
             d->customEditorAccOverlay->setTitle("Open Custom Editor");
         }
+    };
+    ol->onReturnKey = [this](OscillatorWaveformDisplay *d) {
+        if (customEditor)
+        {
+            hideCustomEditor();
+            d->customEditorAccOverlay->setDescription("Close Custom Editor");
+            d->customEditorAccOverlay->setTitle("Close Custom Editor");
+        }
+        else
+        {
+            showCustomEditor();
+            d->customEditorAccOverlay->setDescription("Open Custom Editor");
+            d->customEditorAccOverlay->setTitle("Open Custom Editor");
+        }
+        return true;
     };
 
     customEditorAccOverlay = std::move(ol);
@@ -403,7 +418,13 @@ void OscillatorWaveformDisplay::resized()
     menuOverlays[2]->setBounds(rightJog.toNearestInt());
     waveTableName = wtr.withTrimmedRight(wtbheight).withTrimmedLeft(wtbheight);
     menuOverlays[0]->setBounds(waveTableName.toNearestInt());
-    customEditorAccOverlay->setBounds(wtl.toNearestInt());
+
+    customEditorBox = getLocalBounds()
+                          .withTop(getHeight() - wtbheight)
+                          .withRight(60)
+                          .withTrimmedBottom(1)
+                          .toFloat();
+    customEditorAccOverlay->setBounds(customEditorBox.toNearestInt());
 }
 
 void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
@@ -1577,6 +1598,11 @@ struct AliasAdditiveEditor : public juce::Component,
                 oscdata->extraConfig.data[i] = limitpm1(val);
                 storage->getPatch().isDirty = true;
                 repaint();
+            };
+
+            q->onMenuKey = [this](auto *t) {
+                parent->createAliasOptionsMenu();
+                return true;
             };
 
             addAndMakeVisible(*q);
