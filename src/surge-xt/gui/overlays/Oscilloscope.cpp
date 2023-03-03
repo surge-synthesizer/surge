@@ -459,7 +459,6 @@ void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
                          juce::Decibels::gainToDecibels(f) -
                              juce::Decibels::gainToDecibels((float)internal::fftSize));
     }
-    std::cout << "Updated scope data; max dB is " << *std::max_element(new_scope_data_.begin(), new_scope_data_.end()) << std::endl;
     last_updated_time_ = std::chrono::steady_clock::now();
 }
 
@@ -798,6 +797,7 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     max_db_.setUnit(" dB");
     addAndMakeVisible(noise_floor_);
     addAndMakeVisible(max_db_);
+#if 0
     // The toggle button.
     auto toggleParam = [this](bool &param) {
         std::lock_guard l(params_lock_);
@@ -807,6 +807,7 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     freeze_.setWantsKeyboardFocus(false);
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
     addAndMakeVisible(freeze_);
+#endif
 }
 
 std::optional<SpectrumDisplay::Parameters> Oscilloscope::SpectrumParameters::getParamsIfDirty()
@@ -901,24 +902,6 @@ void Oscilloscope::calculateSpectrumData()
     // float dbMin = spectrum_parameters_.noiseFloor();
     // float dbMax = spectrum_parameters_.maxDb();
 
-#if 0
-    float binHz = storage_->samplerate / static_cast<float>(internal::fftSize);
-    for (int i = 0; i < internal::fftSize / 2; i++)
-    {
-        float hz = binHz * static_cast<float>(i);
-        if (hz < SpectrumDisplay::lowFreq || hz > SpectrumDisplay::highFreq)
-        {
-            scope_data_[i] = dbMin;
-        }
-        else
-        {
-            scope_data_[i] =
-                juce::jlimit(dbMin, dbMax,
-                             juce::Decibels::gainToDecibels(fft_data_[i]) -
-                                 juce::Decibels::gainToDecibels((float)internal::fftSize));
-        }
-    }
-#else
     float binHz = storage_->samplerate / static_cast<float>(internal::fftSize);
     for (int i = 0; i < internal::fftSize / 2; i++)
     {
@@ -932,7 +915,6 @@ void Oscilloscope::calculateSpectrumData()
             scope_data_[i] = fft_data_[i];
         }
     }
-#endif
 }
 
 void Oscilloscope::changeScopeType(ScopeMode type)
