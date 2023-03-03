@@ -906,10 +906,6 @@ void Oscilloscope::calculateSpectrumData()
 {
     window_.multiplyWithWindowingTable(fft_data_.data(), internal::fftSize);
     forward_fft_.performFrequencyOnlyForwardTransform(fft_data_.data());
-    float dbMin = -100.f;
-    float dbMax = 0.f;
-    // float dbMin = spectrum_parameters_.noiseFloor();
-    // float dbMax = spectrum_parameters_.maxDb();
 
     float binHz = storage_->samplerate / static_cast<float>(internal::fftSize);
     for (int i = 0; i < internal::fftSize / 2; i++)
