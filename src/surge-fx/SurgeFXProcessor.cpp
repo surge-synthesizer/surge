@@ -187,7 +187,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     }
 
     auto sampl = buffer.getNumSamples();
-    if (nonLatentBlockMode && ((sampl & ~(BLOCK_SIZE-1)) != sampl))
+    if (nonLatentBlockMode && ((sampl & ~(BLOCK_SIZE - 1)) != sampl))
     {
         nonLatentBlockMode = false;
         input_position = 0;
