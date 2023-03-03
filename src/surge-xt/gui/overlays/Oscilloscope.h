@@ -139,23 +139,20 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
   public:
     static constexpr float lowFreq = 10;
     static constexpr float highFreq = 24000;
-    static constexpr float dbMin = -100;
-    static constexpr float dbMax = 0;
-    static constexpr float dbRange = dbMax - dbMin;
 
     struct Parameters
     {
-        float noise_floor = -100.f; // Noise floor level, bottom of the scope. Min -100. Slider.
-        float max_db = 0.f;         // Maximum dB displayed. Slider. Maxes out at 0. Slider.
-        bool freeze = false;        // Freeze display, on/off.
+        float noise_floor = 0.f; // Noise floor level, bottom of the scope. Min -100. Slider.
+        float max_db = 1.f;      // Maximum dB displayed. Slider. Maxes out at 0. Slider.
+        bool freeze = false;     // Freeze display, on/off.
 
         // Range of decibels shown in the display, calculated from slider values.
         float dbRange() const;
 
-        // Calculate the noise floor in decibels from the slider value.
+        // Calculate the noise floor in decibels from the slider value (noise_floor).
         float noiseFloor() const;
 
-        // Calculate the maximum decibels shown from the slider value.
+        // Calculate the maximum decibels shown from the slider value (max_db).
         float maxDb() const;
     };
 
@@ -172,6 +169,8 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
   private:
     float interpolate(const float y0, const float y1,
                       std::chrono::time_point<std::chrono::steady_clock> t) const;
+    // data_lock_ *must* be held by the caller.
+    void recalculateScopeData();
 
     SurgeGUIEditor *editor_;
     SurgeStorage *storage_;
@@ -181,6 +180,10 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     std::mutex data_lock_;
     internal::FftScopeType new_scope_data_;
     internal::FftScopeType displayed_data_;
+    // Why a third array? We calculate into the other two, and if the parameters
+    // change we have to update our calculations from the beginning.
+    internal::FftScopeType incoming_scope_data_;
+    bool display_dirty_;
 };
 
 class Oscilloscope : public OverlayComponent,

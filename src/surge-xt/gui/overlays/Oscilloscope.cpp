@@ -42,9 +42,11 @@ static float freqToX(float freq, int width)
     return xNorm * (float)width;
 }
 
-static float dbToY(float db, int height)
+static float dbToY(float db, int height, float dbMin = -100.f, float dbMax = 0.f)
 {
-    return (float)height * (SpectrumDisplay::dbMax - db) / SpectrumDisplay::dbRange;
+    float range = dbMax - dbMin;
+    // If dbMax/dbMin change and the data hasn't been updated yet due to locking, can get weirdness.
+    return std::max((float)height * (dbMax - db) / range, 0.f);
 }
 
 float WaveformDisplay::Parameters::counterSpeed() const
@@ -352,7 +354,7 @@ void WaveformDisplay::resized()
 SpectrumDisplay::SpectrumDisplay(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), last_updated_time_(std::chrono::steady_clock::now())
 {
-    std::fill(new_scope_data_.begin(), new_scope_data_.end(), dbMin);
+    std::fill(new_scope_data_.begin(), new_scope_data_.end(), -100.f);
 }
 
 const SpectrumDisplay::Parameters &SpectrumDisplay::getParameters() const { return params_; }
@@ -360,11 +362,20 @@ const SpectrumDisplay::Parameters &SpectrumDisplay::getParameters() const { retu
 void SpectrumDisplay::setParameters(Parameters parameters)
 {
     std::lock_guard l(data_lock_);
+    // Check if the new params for noise floor/ceiling are different. If they are, consider the
+    // display "dirty" (ie, stop interpolating distance, jump right to the new thing).
+    bool changedVisible = params_.dbRange() != parameters.dbRange();
     params_ = std::move(parameters);
+    if (changedVisible)
+    {
+        display_dirty_ = true;
+        recalculateScopeData();
+    }
 }
 
 void SpectrumDisplay::paint(juce::Graphics &g)
 {
+    std::lock_guard l(data_lock_);
     auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
     auto width = scopeRect.getWidth();
     auto height = scopeRect.getHeight();
@@ -373,14 +384,15 @@ void SpectrumDisplay::paint(juce::Graphics &g)
     auto path = juce::Path();
     bool started = false;
     float binHz = storage_->samplerate / static_cast<float>(internal::fftSize);
-    float zeroPoint = dbToY(dbMin, height);
-    float maxPoint = dbToY(dbMax, height);
+    float dbMin = params_.noiseFloor();
+    float dbMax = params_.maxDb();
+    float zeroPoint = dbToY(dbMin, height, dbMin, dbMax);
+    float maxPoint = dbToY(dbMax, height, dbMin, dbMax);
     auto now = std::chrono::steady_clock::now();
 
     // Start path.
     path.startNewSubPath(freqToX(lowFreq, width), zeroPoint);
     {
-        std::lock_guard l(data_lock_);
         mtbs_ = std::chrono::duration<float>(1.f / binHz);
 
         for (int i = 0; i < internal::fftSize / 2; i++)
@@ -393,10 +405,16 @@ void SpectrumDisplay::paint(juce::Graphics &g)
 
             const float x = freqToX(hz, width);
             const float y0 = displayed_data_[i];
-            const float y1 = dbToY(new_scope_data_[i], height);
-            const float y = interpolate(y0, y1, now);
+            const float y1 = dbToY(new_scope_data_[i], height, dbMin, dbMax);
+            const float y = display_dirty_ ? y1 : interpolate(y0, y1, now);
             displayed_data_[i] = y;
-            if (y > 0)
+            if (y >= zeroPoint)
+            {
+                path.lineTo(x, zeroPoint);
+                path.closeSubPath();
+                started = false;
+            }
+            else
             {
                 if (started)
                 {
@@ -409,12 +427,6 @@ void SpectrumDisplay::paint(juce::Graphics &g)
                     started = true;
                 }
             }
-            else
-            {
-                path.lineTo(x, zeroPoint);
-                path.closeSubPath();
-                started = false;
-            }
         }
     }
     // End path.
@@ -425,13 +437,28 @@ void SpectrumDisplay::paint(juce::Graphics &g)
     }
     g.setColour(curveColor);
     g.fillPath(path);
+    display_dirty_ = false;
+}
+
+void SpectrumDisplay::recalculateScopeData()
+{
+    // data_lock_ *must* be held by the caller.
+    const float dbMin = params_.noiseFloor();
+    const float dbMax = params_.maxDb();
+    const float offset = juce::Decibels::gainToDecibels((float)internal::fftSize);
+    std::transform(incoming_scope_data_.begin(), incoming_scope_data_.end(),
+                   new_scope_data_.begin(), [=](const float f) {
+                       return juce::jlimit(dbMin, dbMax,
+                                           juce::Decibels::gainToDecibels(f) - offset);
+                   });
 }
 
 void SpectrumDisplay::resized()
 {
     auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
     auto height = scopeRect.getHeight();
-    std::fill(displayed_data_.begin(), displayed_data_.end(), dbToY(-100, height));
+    std::fill(displayed_data_.begin(), displayed_data_.end(),
+              dbToY(params_.noiseFloor(), height, params_.noiseFloor(), params_.maxDb()));
 }
 
 void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
@@ -439,8 +466,9 @@ void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
 {
     // Data comes in as dB (from dbMin to dbMax).
     std::lock_guard l(data_lock_);
-    std::move(begin, end, new_scope_data_.begin());
+    std::move(begin, end, incoming_scope_data_.begin());
     last_updated_time_ = std::chrono::steady_clock::now();
+    recalculateScopeData();
 }
 
 float SpectrumDisplay::interpolate(const float y0, const float y1,
@@ -504,8 +532,8 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
 
 Oscilloscope::~Oscilloscope()
 {
-    // complete_ should come before any condition variables get signaled, to allow the data thread
-    // to finish up.
+    // complete_ should come before any condition variables get signaled, to allow the data
+    // thread to finish up.
     complete_.store(true, std::memory_order_seq_cst);
     {
         std::lock_guard l(data_lock_);
@@ -776,9 +804,9 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     noise_floor_.setUnit(" dB");
     max_db_.setRange(-50, 0);
     max_db_.setUnit(" dB");
-#if 0
     addAndMakeVisible(noise_floor_);
     addAndMakeVisible(max_db_);
+#if 0
     // The toggle button.
     auto toggleParam = [this](bool &param) {
         std::lock_guard l(params_lock_);
@@ -861,8 +889,8 @@ void Oscilloscope::updateDrawing()
 
 void Oscilloscope::visibilityChanged()
 {
-    // Not sure aside from construction when visibility might be changed in Juce, so putting this
-    // here for additional safety.
+    // Not sure aside from construction when visibility might be changed in Juce, so putting
+    // this here for additional safety.
     if (isVisible())
     {
         storage_->audioOut.subscribe();
@@ -885,14 +913,11 @@ void Oscilloscope::calculateSpectrumData()
         float hz = binHz * static_cast<float>(i);
         if (hz < SpectrumDisplay::lowFreq || hz > SpectrumDisplay::highFreq)
         {
-            scope_data_[i] = SpectrumDisplay::dbMin;
+            scope_data_[i] = 0;
         }
         else
         {
-            scope_data_[i] =
-                juce::jlimit(SpectrumDisplay::dbMin, SpectrumDisplay::dbMax,
-                             juce::Decibels::gainToDecibels(fft_data_[i]) -
-                                 juce::Decibels::gainToDecibels((float)internal::fftSize));
+            scope_data_[i] = fft_data_[i];
         }
     }
 }
@@ -920,7 +945,7 @@ void Oscilloscope::changeScopeType(ScopeMode type)
         scope_mode_ = SPECTRUM;
         waveform_.setVisible(false);
         waveform_parameters_.setVisible(false);
-        std::fill(scope_data_.begin(), scope_data_.end(), SpectrumDisplay::dbMin);
+        std::fill(scope_data_.begin(), scope_data_.end(), 0.f);
         spectrum_.setVisible(true);
         spectrum_parameters_.setVisible(true);
 
@@ -1141,12 +1166,15 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
         g.setFont(font);
 
         // Draw dB lines.
-        for (float dB :
-             {-100.f, -90.f, -80.f, -70.f, -60.f, -50.f, -40.f, -30.f, -20.f, -10.f, 0.f})
+        float minDb = spectrum_params_.noiseFloor();
+        float maxDb = spectrum_params_.maxDb();
+        float step = spectrum_params_.dbRange() / 10.f;
+        float dB = minDb;
+        for (int i = 0; i < 11; i++, dB += step)
         {
-            const auto yPos = dbToY(dB, height);
+            const auto yPos = dbToY(dB, height, minDb, maxDb);
 
-            if (dB == 0.f || dB == -100.f)
+            if (std::abs(dB - minDb) < .005 || std::abs(dB - maxDb) < .005)
             {
                 g.setColour(primaryLine);
             }
@@ -1157,7 +1185,12 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
 
             g.drawHorizontalLine(yPos, 0, static_cast<float>(width + 1));
 
-            const auto dbString = juce::String(dB) + " dB";
+            std::ostringstream convert;
+            convert << std::fixed << std::setprecision(1);
+            convert << dB;
+            std::string converted = convert.str();
+            const auto dbString =
+                juce::String(converted.substr(0, converted.find_last_not_of('0') + 1) + " dB");
             // Label will go past the end of the scopeRect.
             const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
                                        .withBottomY((int)(yPos + (labelHeight / 2)))
@@ -1226,8 +1259,8 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
         g.setFont(font);
 
-        // Split the grid into 7 sections, starting from 0 and ending at wherever the counter speed
-        // says we should end at.
+        // Split the grid into 7 sections, starting from 0 and ending at wherever the counter
+        // speed says we should end at.
         float counterSpeedInverse = 1.f / waveform_params_.counterSpeed();
         float sampleRateInverse = 1.f / static_cast<float>(storage_->samplerate);
         float endpoint = counterSpeedInverse * sampleRateInverse * static_cast<float>(width);
