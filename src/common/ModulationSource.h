@@ -16,6 +16,8 @@
 #pragma once
 
 #include <random>
+#include <cassert>
+
 #include "basic_dsp.h"
 
 enum modsrctype
@@ -484,8 +486,12 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
                 }
                 else
                 {
-                    float a = (mode == Modulator::SmoothingMode::FAST_EXP ? 0.99f : 0.9f) * 44100 *
-                              samplerate_inv * b;
+                    // Don't allow us to push outside of [target,value]
+                    // so clamp the interpolator to 0,1
+                    float a =
+                        std::clamp((mode == Modulator::SmoothingMode::FAST_EXP ? 0.99f : 0.9f) *
+                                       44100 * samplerate_inv * b,
+                                   0.f, 1.f);
 
                     value[idx] = (1 - a) * value[idx] + a * target[idx];
                 }
@@ -516,11 +522,8 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
                 value[idx] = target[idx];
             }
 
-            // GitHub issue #6835
-            if (std::isinf(value[idx]))
-            {
-                value[idx] = 0.f;
-            }
+            // Just in case #6835 sneaks back
+            assert(!std::isnan(value[idx]) && !std::isinf(value[idx]));
         }
     }
 
