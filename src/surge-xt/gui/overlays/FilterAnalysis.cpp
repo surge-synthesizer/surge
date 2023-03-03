@@ -245,14 +245,30 @@ void FilterAnalysis::paint(juce::Graphics &g)
 //    Tunings::Tuning tuning{};
 //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
      double freq = std::pow(2 , evaluator->cutoff/12) * 440.0;
-    int xDraw = freqToX(freq, width);
+    int cutoffFrequencyPositionX = freqToX(freq, width);
 
     float db = juce::jmap(evaluator->resonance, 0.0f, 1.0f, dbMin, dbMax);
     int yDraw = dbToY(db, height);
 
     g.setColour (juce::Colours::red); // set the color of the circle
     int r = 5;
-    g.drawEllipse (xDraw + r/2+1, yDraw + r/2+1, r, r, 1);
+    g.drawEllipse (cutoffFrequencyPositionX + r/2+1, yDraw + r/2+1, r, r, 1);
+    int yDbStart = dbToY(dbMin, height);
+    int yDbMax = dbToY(dbMax, height);
+
+    const int rulerHeight = yDbMax - yDbStart;
+
+    // Draw vertical line
+    g.setColour(juce::Colours::white);
+    g.drawLine(cutoffFrequencyPositionX, yDbStart, cutoffFrequencyPositionX, yDbMax, 1);
+
+    // Draw ruler steps
+    const int rulerStep = rulerHeight / 10; // calculate step height
+    g.setColour(juce::Colours::grey);
+    for (int i = 0; i <= 10; ++i) {
+        int y = yDbStart + i * rulerStep;
+        g.drawLine(cutoffFrequencyPositionX - 5, y, cutoffFrequencyPositionX + 5, y, 1);
+    }
 
 
     // construct filter response curve
