@@ -169,6 +169,8 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
   private:
     float interpolate(const float y0, const float y1,
                       std::chrono::time_point<std::chrono::steady_clock> t) const;
+    // data_lock_ *must* be held by the caller.
+    void recalculateScopeData();
 
     SurgeGUIEditor *editor_;
     SurgeStorage *storage_;
@@ -178,6 +180,9 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     std::mutex data_lock_;
     internal::FftScopeType new_scope_data_;
     internal::FftScopeType displayed_data_;
+    // Why a third array? We calculate into the other two, and if the parameters
+    // change we have to update our calculations from the beginning.
+    internal::FftScopeType incoming_scope_data_;
     bool display_dirty_;
 };
 

@@ -364,14 +364,13 @@ void SpectrumDisplay::setParameters(Parameters parameters)
     std::lock_guard l(data_lock_);
     // Check if the new params for noise floor/ceiling are different. If they are, consider the
     // display "dirty" (ie, stop interpolating distance, jump right to the new thing).
-    if (params_.dbRange() != parameters.dbRange())
+    bool changedVisible = params_.dbRange() != parameters.dbRange();
+    params_ = std::move(parameters);
+    if (changedVisible)
     {
         display_dirty_ = true;
-        // Also rescale the scope data.
-        std::transform(new_scope_data_.begin(), new_scope_data_.end(), new_scope_data_.begin(),
-                       std::bind(juce::jlimit<float>, params_.noiseFloor(), params_.maxDb(), _1));
+        recalculateScopeData();
     }
-    params_ = std::move(parameters);
 }
 
 void SpectrumDisplay::paint(juce::Graphics &g)
@@ -441,6 +440,19 @@ void SpectrumDisplay::paint(juce::Graphics &g)
     display_dirty_ = false;
 }
 
+void SpectrumDisplay::recalculateScopeData()
+{
+    // data_lock_ *must* be held by the caller.
+    const float dbMin = params_.noiseFloor();
+    const float dbMax = params_.maxDb();
+    const float offset = juce::Decibels::gainToDecibels((float)internal::fftSize);
+    std::transform(incoming_scope_data_.begin(), incoming_scope_data_.end(),
+                   new_scope_data_.begin(), [=](const float f) {
+                       return juce::jlimit(dbMin, dbMax,
+                                           juce::Decibels::gainToDecibels(f) - offset);
+                   });
+}
+
 void SpectrumDisplay::resized()
 {
     auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
@@ -454,16 +466,9 @@ void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
 {
     // Data comes in as dB (from dbMin to dbMax).
     std::lock_guard l(data_lock_);
-    std::move(begin, end, new_scope_data_.begin());
-    float dbMin = params_.noiseFloor();
-    float dbMax = params_.maxDb();
-    for (float &f : new_scope_data_)
-    {
-        f = juce::jlimit(dbMin, dbMax,
-                         juce::Decibels::gainToDecibels(f) -
-                             juce::Decibels::gainToDecibels((float)internal::fftSize));
-    }
+    std::move(begin, end, incoming_scope_data_.begin());
     last_updated_time_ = std::chrono::steady_clock::now();
+    recalculateScopeData();
 }
 
 float SpectrumDisplay::interpolate(const float y0, const float y1,
@@ -527,8 +532,8 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
 
 Oscilloscope::~Oscilloscope()
 {
-    // complete_ should come before any condition variables get signaled, to allow the data thread
-    // to finish up.
+    // complete_ should come before any condition variables get signaled, to allow the data
+    // thread to finish up.
     complete_.store(true, std::memory_order_seq_cst);
     {
         std::lock_guard l(data_lock_);
@@ -884,8 +889,8 @@ void Oscilloscope::updateDrawing()
 
 void Oscilloscope::visibilityChanged()
 {
-    // Not sure aside from construction when visibility might be changed in Juce, so putting this
-    // here for additional safety.
+    // Not sure aside from construction when visibility might be changed in Juce, so putting
+    // this here for additional safety.
     if (isVisible())
     {
         storage_->audioOut.subscribe();
@@ -1258,8 +1263,8 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
         g.setFont(font);
 
-        // Split the grid into 7 sections, starting from 0 and ending at wherever the counter speed
-        // says we should end at.
+        // Split the grid into 7 sections, starting from 0 and ending at wherever the counter
+        // speed says we should end at.
         float counterSpeedInverse = 1.f / waveform_params_.counterSpeed();
         float sampleRateInverse = 1.f / static_cast<float>(storage_->samplerate);
         float endpoint = counterSpeedInverse * sampleRateInverse * static_cast<float>(width);
