@@ -139,23 +139,21 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
   public:
     static constexpr float lowFreq = 10;
     static constexpr float highFreq = 24000;
-    static constexpr float dbMin = -100;
-    static constexpr float dbMax = 0;
-    static constexpr float dbRange = dbMax - dbMin;
 
     struct Parameters
     {
-        float noise_floor = -100.f; // Noise floor level, bottom of the scope. Min -100. Slider.
-        float max_db = 0.f;         // Maximum dB displayed. Slider. Maxes out at 0. Slider.
+        float noise_floor = 0.f; // Noise floor level, bottom of the scope. Min -100. Slider.
+        float max_db = 1.f;         // Maximum dB displayed. Slider. Maxes out at 0. Slider.
+        float smoothing = 0.f;      // Smoothing level, represents how fast the spectrum decays.
         bool freeze = false;        // Freeze display, on/off.
 
         // Range of decibels shown in the display, calculated from slider values.
         float dbRange() const;
 
-        // Calculate the noise floor in decibels from the slider value.
+        // Calculate the noise floor in decibels from the slider value (noise_floor).
         float noiseFloor() const;
 
-        // Calculate the maximum decibels shown from the slider value.
+        // Calculate the maximum decibels shown from the slider value (max_db).
         float maxDb() const;
     };
 
@@ -260,6 +258,7 @@ class Oscilloscope : public OverlayComponent,
 
         Surge::Widgets::SelfUpdatingModulatableSlider noise_floor_;
         Surge::Widgets::SelfUpdatingModulatableSlider max_db_;
+        Surge::Widgets::SelfUpdatingModulatableSlider smoothing_;
         Surge::Widgets::SelfDrawToggleButton freeze_;
     };
 
