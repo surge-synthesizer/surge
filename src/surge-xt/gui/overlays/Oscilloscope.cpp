@@ -364,7 +364,8 @@ void SpectrumDisplay::setParameters(Parameters parameters)
     std::lock_guard l(data_lock_);
     // Check if the new params for noise floor/ceiling are different. If they are, consider the
     // display "dirty" (ie, stop interpolating distance, jump right to the new thing).
-    bool changedVisible = params_.dbRange() != parameters.dbRange();
+    bool changedVisible =
+        (params_.dbRange() != parameters.dbRange()) || (params_.freeze != parameters.freeze);
     params_ = std::move(parameters);
     if (changedVisible)
     {
@@ -406,7 +407,7 @@ void SpectrumDisplay::paint(juce::Graphics &g)
             const float x = freqToX(hz, width);
             const float y0 = displayed_data_[i];
             const float y1 = dbToY(new_scope_data_[i], height, dbMin, dbMax);
-            const float y = display_dirty_ ? y1 : interpolate(y0, y1, now);
+            const float y = params_.freeze ? y0 : (display_dirty_ ? y1 : interpolate(y0, y1, now));
             displayed_data_[i] = y;
             if (y >= zeroPoint)
             {
@@ -468,7 +469,8 @@ void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
     std::lock_guard l(data_lock_);
     std::move(begin, end, incoming_scope_data_.begin());
     last_updated_time_ = std::chrono::steady_clock::now();
-    recalculateScopeData();
+    if (!params_.freeze)
+        recalculateScopeData();
 }
 
 float SpectrumDisplay::interpolate(const float y0, const float y1,
@@ -806,7 +808,6 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     max_db_.setUnit(" dB");
     addAndMakeVisible(noise_floor_);
     addAndMakeVisible(max_db_);
-#if 0
     // The toggle button.
     auto toggleParam = [this](bool &param) {
         std::lock_guard l(params_lock_);
@@ -816,7 +817,6 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     freeze_.setWantsKeyboardFocus(false);
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
     addAndMakeVisible(freeze_);
-#endif
 }
 
 std::optional<SpectrumDisplay::Parameters> Oscilloscope::SpectrumParameters::getParamsIfDirty()
