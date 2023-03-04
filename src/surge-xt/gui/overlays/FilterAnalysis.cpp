@@ -239,46 +239,43 @@ void FilterAnalysis::paint(juce::Graphics &g)
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
         }
-    }
 
-    //draws the ruler to show the position of cutoff frequency and resonance
-    {
-        //TODO: How to start the ruler from 0?
-        //TODO: length of ruler steps should be proportional to the height
-
-        //    Tunings::Tuning tuning{};
-        //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
-//        g.addTransform(juce::AffineTransform().translated(dRect.getX(), dRect.getY()));
-        std::cout << "evaluator->cutoff: " << evaluator->cutoff << std::endl;
-        std::cout << "evaluator->resonance: " << evaluator->resonance << std::endl;
-        double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
-        std::cout << "frequency: " << freq << std::endl;
-        int cutoffFrequencyPositionX = freqToX(freq, width);
-
-        int yDraw = evaluator->resonance * height;
-
-        g.setColour(juce::Colours::red); // set the color of the circle
-        int r = 5;
-        g.drawEllipse(cutoffFrequencyPositionX - r / 2, yDraw + r / 2, r, r, 1);
-        int yDbStart = 0;
-
-
-        // Draw vertical line
-        const auto xPos = freqToX(freq, width);
-        juce::Line line{juce::Point{xPos, 0.f}, juce::Point{xPos, (float)height}};
-        g.setColour(juce::Colours::red);
-        g.drawLine(line);
-
-        // Draw ruler steps
-        const int rulerStep = height / 10; // calculate step height
-        g.setColour(juce::Colours::grey);
-        for (int i = 0; i <= 10; ++i)
+        // draws the ruler to show the position of cutoff frequency and resonance
         {
-            int y = yDbStart + i * rulerStep;
-            g.drawLine(cutoffFrequencyPositionX - 5, y, cutoffFrequencyPositionX + 5, y, 1);
+            // TODO: How to start the ruler from 0?
+            // TODO: length of ruler steps should be proportional to the height
+
+            //    Tunings::Tuning tuning{};
+            //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
+            //        g.addTransform(juce::AffineTransform().translated(dRect.getX(), dRect.getY()));
+            std::cout << "evaluator->cutoff: " << evaluator->cutoff << std::endl;
+            std::cout << "evaluator->resonance: " << evaluator->resonance << std::endl;
+            double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
+            std::cout << "frequency: " << freq << std::endl;
+            int cutoffFrequencyPositionX = freqToX(freq, width);
+
+            int yDraw = height - evaluator->resonance * height;
+
+            g.setColour(juce::Colours::red); // set the color of the circle
+            int r = 5;
+            g.drawEllipse(cutoffFrequencyPositionX - r / 2, yDraw + r / 2, r, r, 1);
+
+            // Draw vertical line
+            const auto xPos = freqToX(freq, width);
+            juce::Line line{juce::Point{xPos, 0.f}, juce::Point{xPos, (float)height}};
+            g.setColour(juce::Colours::red);
+            g.drawLine(line);
+
+            // Draw ruler steps
+            const int rulerStep = height / 10; // calculate step height
+            g.setColour(juce::Colours::grey);
+            for (int i = 0; i < 10; ++i)
+            {
+                int y = i * rulerStep;
+                g.drawLine(cutoffFrequencyPositionX - 5, y, cutoffFrequencyPositionX + 5, y, 1);
+            }
         }
     }
-
     // construct filter response curve
     if (catchUpStore != evaluator->outboundUpdates)
     {
