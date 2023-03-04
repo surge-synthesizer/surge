@@ -355,6 +355,7 @@ void WaveformDisplay::resized()
 SpectrumDisplay::SpectrumDisplay(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), last_updated_time_(std::chrono::steady_clock::now())
 {
+    std::fill(incoming_scope_data_.begin(), incoming_scope_data_.end(), 0.f);
     std::fill(new_scope_data_.begin(), new_scope_data_.end(), -100.f);
 }
 
@@ -451,12 +452,11 @@ void SpectrumDisplay::recalculateScopeData()
     const float dbMin = params_.noiseFloor();
     const float dbMax = params_.maxDb();
     const float offset = juce::Decibels::gainToDecibels((float)internal::fftSize);
-    std::transform(
-        incoming_scope_data_.begin(), incoming_scope_data_.end(), new_scope_data_.begin(),
-        new_scope_data_.begin(), [=](const float f1, const float f2) {
-            return std::max(
-                f2, juce::jlimit(dbMin, dbMax, juce::Decibels::gainToDecibels(f1) - offset));
-        });
+    std::transform(incoming_scope_data_.begin(), incoming_scope_data_.end(),
+                   new_scope_data_.begin(), [=](const float f) {
+                       return juce::jlimit(dbMin, dbMax,
+                                           juce::Decibels::gainToDecibels(f) - offset);
+                   });
 }
 
 void SpectrumDisplay::resized()
@@ -475,19 +475,13 @@ void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
 {
     // Data comes in as gain.
     std::lock_guard l(data_lock_);
-    std::move(begin, end, incoming_scope_data_.begin());
+    // Decay existing data, and move new data in if it's larger.
+    const float decay = (1.f - params_.decay_rate);
+    std::transform(begin, end, incoming_scope_data_.begin(), incoming_scope_data_.begin(),
+                   [decay](const float fn, const float f) { return std::max(f * decay, fn); });
     last_updated_time_ = std::chrono::steady_clock::now();
     if (!params_.freeze)
-    {
-        // Decay existing data.
-        const float dbMin = params_.noiseFloor();
-        const float decay = (1.f - params_.decay_rate);
-        const float shift = -params_.noiseFloor() + 1.f;
-        std::transform(new_scope_data_.begin(), new_scope_data_.end(), new_scope_data_.begin(),
-                       [=](const float f) { return std::max(dbMin, (f + shift) * decay - shift); });
-        // Calculate new data.
         recalculateScopeData();
-    }
 }
 
 float SpectrumDisplay::interpolate(const float y0, const float y1,
@@ -802,10 +796,10 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     decay_rate_.setStorage(s);
     noise_floor_.setDefaultValue(0);
     max_db_.setDefaultValue(1);
-    decay_rate_.setDefaultValue(0);
+    decay_rate_.setDefaultValue(1);
     noise_floor_.setQuantitizedDisplayValue(0);
     max_db_.setQuantitizedDisplayValue(1);
-    decay_rate_.setQuantitizedDisplayValue(0);
+    decay_rate_.setQuantitizedDisplayValue(1);
     noise_floor_.setLabel("Noise Floor");
     max_db_.setLabel("Max dB");
     decay_rate_.setLabel("Decay rate");
@@ -828,7 +822,7 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     decay_rate_.setRootWindow(parent_);
     noise_floor_.setPrecision(1);
     max_db_.setPrecision(1);
-    decay_rate_.setPrecision(1);
+    decay_rate_.setPrecision(2);
     noise_floor_.setRange(-100, -50);
     noise_floor_.setUnit(" dB");
     max_db_.setRange(-50, 0);
