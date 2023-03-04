@@ -42,6 +42,7 @@ static float freqToX(float freq, int width)
     return xNorm * (float)width;
 }
 
+// This could, in theory, divide by zero, so be careful with how you call it.
 static float dbToY(float db, int height, float dbMin = -100.f, float dbMax = 0.f)
 {
     float range = dbMax - dbMin;
@@ -377,6 +378,9 @@ void SpectrumDisplay::setParameters(Parameters parameters)
 void SpectrumDisplay::paint(juce::Graphics &g)
 {
     std::lock_guard l(data_lock_);
+    if (params_.dbRange() == 0.0f)
+        return;
+
     auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
     auto width = scopeRect.getWidth();
     auto height = scopeRect.getHeight();
@@ -459,7 +463,10 @@ void SpectrumDisplay::resized()
     auto scopeRect = getLocalBounds().transformedBy(getTransform().inverted());
     auto height = scopeRect.getHeight();
     std::fill(displayed_data_.begin(), displayed_data_.end(),
-              dbToY(params_.noiseFloor(), height, params_.noiseFloor(), params_.maxDb()));
+              // We're essentially filling with the calculated equivalent of the bottom of the
+              // graph, so the fact that we're not calling with the actual noise floor or dB ceiling
+              // is immaterial.
+              dbToY(-100.f, height, -100.f, 0.f));
 }
 
 void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
@@ -1106,6 +1113,8 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
     juce::Graphics::ScopedSaveState g1(g);
 
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+    if (spectrum_params_.dbRange() == 0.0f)
+        return;
 
     auto scopeRect = scope_bounds_;
     auto width = scopeRect.getWidth();
