@@ -144,6 +144,7 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
     {
         float noise_floor = 0.f; // Noise floor level, bottom of the scope. Min -100. Slider.
         float max_db = 1.f;      // Maximum dB displayed. Slider. Maxes out at 0. Slider.
+        float decay_rate = 0.f;  // Rate of decay of existing spectrum data. Slider.
         bool freeze = false;     // Freeze display, on/off.
 
         // Range of decibels shown in the display, calculated from slider values.
@@ -263,6 +264,7 @@ class Oscilloscope : public OverlayComponent,
 
         Surge::Widgets::SelfUpdatingModulatableSlider noise_floor_;
         Surge::Widgets::SelfUpdatingModulatableSlider max_db_;
+        Surge::Widgets::SelfUpdatingModulatableSlider decay_rate_;
         Surge::Widgets::SelfDrawToggleButton freeze_;
     };
 

@@ -451,11 +451,12 @@ void SpectrumDisplay::recalculateScopeData()
     const float dbMin = params_.noiseFloor();
     const float dbMax = params_.maxDb();
     const float offset = juce::Decibels::gainToDecibels((float)internal::fftSize);
-    std::transform(incoming_scope_data_.begin(), incoming_scope_data_.end(),
-                   new_scope_data_.begin(), [=](const float f) {
-                       return juce::jlimit(dbMin, dbMax,
-                                           juce::Decibels::gainToDecibels(f) - offset);
-                   });
+    std::transform(
+        incoming_scope_data_.begin(), incoming_scope_data_.end(), new_scope_data_.begin(),
+        new_scope_data_.begin(), [=](const float f1, const float f2) {
+            return std::max(
+                f2, juce::jlimit(dbMin, dbMax, juce::Decibels::gainToDecibels(f1) - offset));
+        });
 }
 
 void SpectrumDisplay::resized()
@@ -472,12 +473,21 @@ void SpectrumDisplay::resized()
 void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
                                       internal::FftScopeType::iterator end)
 {
-    // Data comes in as dB (from dbMin to dbMax).
+    // Data comes in as gain.
     std::lock_guard l(data_lock_);
     std::move(begin, end, incoming_scope_data_.begin());
     last_updated_time_ = std::chrono::steady_clock::now();
     if (!params_.freeze)
+    {
+        // Decay existing data.
+        const float dbMin = params_.noiseFloor();
+        const float decay = (1.f - params_.decay_rate);
+        const float shift = -params_.noiseFloor() + 1.f;
+        std::transform(new_scope_data_.begin(), new_scope_data_.end(), new_scope_data_.begin(),
+                       [=](const float f) { return std::max(dbMin, (f + shift) * decay - shift); });
+        // Calculate new data.
         recalculateScopeData();
+    }
 }
 
 float SpectrumDisplay::interpolate(const float y0, const float y1,
@@ -786,18 +796,25 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
 {
     noise_floor_.setOrientation(Surge::ParamConfig::kHorizontal);
     max_db_.setOrientation(Surge::ParamConfig::kHorizontal);
+    decay_rate_.setOrientation(Surge::ParamConfig::kHorizontal);
     noise_floor_.setStorage(s);
     max_db_.setStorage(s);
+    decay_rate_.setStorage(s);
     noise_floor_.setDefaultValue(0);
     max_db_.setDefaultValue(1);
+    decay_rate_.setDefaultValue(0);
     noise_floor_.setQuantitizedDisplayValue(0);
     max_db_.setQuantitizedDisplayValue(1);
+    decay_rate_.setQuantitizedDisplayValue(0);
     noise_floor_.setLabel("Noise Floor");
     max_db_.setLabel("Max dB");
+    decay_rate_.setLabel("Decay rate");
     noise_floor_.setDescription("Bottom of the display.");
     max_db_.setDescription("Top of the display.");
+    decay_rate_.setDescription("Control how fast the current data decays.");
     noise_floor_.setIsLightStyle(true);
     max_db_.setIsLightStyle(true);
+    decay_rate_.setIsLightStyle(true);
     auto updateParameter = [this](float &param, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
@@ -805,16 +822,20 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     };
     noise_floor_.setOnUpdate(std::bind(updateParameter, std::ref(params_.noise_floor), _1));
     max_db_.setOnUpdate(std::bind(updateParameter, std::ref(params_.max_db), _1));
+    decay_rate_.setOnUpdate(std::bind(updateParameter, std::ref(params_.decay_rate), _1));
     noise_floor_.setRootWindow(parent_);
     max_db_.setRootWindow(parent_);
+    decay_rate_.setRootWindow(parent_);
     noise_floor_.setPrecision(1);
     max_db_.setPrecision(1);
+    decay_rate_.setPrecision(1);
     noise_floor_.setRange(-100, -50);
     noise_floor_.setUnit(" dB");
     max_db_.setRange(-50, 0);
     max_db_.setUnit(" dB");
     addAndMakeVisible(noise_floor_);
     addAndMakeVisible(max_db_);
+    addAndMakeVisible(decay_rate_);
     // The toggle button.
     auto toggleParam = [this](bool &param) {
         std::lock_guard l(params_lock_);
@@ -841,10 +862,12 @@ void Oscilloscope::SpectrumParameters::onSkinChanged()
 {
     noise_floor_.setSkin(skin, associatedBitmapStore);
     max_db_.setSkin(skin, associatedBitmapStore);
+    decay_rate_.setSkin(skin, associatedBitmapStore);
     freeze_.setSkin(skin, associatedBitmapStore);
     auto font = skin->fontManager->getLatoAtSize(7, juce::Font::plain);
     noise_floor_.setFont(font);
     max_db_.setFont(font);
+    decay_rate_.setFont(font);
 }
 
 void Oscilloscope::SpectrumParameters::paint(juce::Graphics &g)
@@ -860,6 +883,7 @@ void Oscilloscope::SpectrumParameters::resized()
     // Stack the slider parameters top-to-bottom.
     noise_floor_.setBounds(10, 0, 140, 26);
     max_db_.setBounds(10, 26, 140, 26);
+    decay_rate_.setBounds(10, 52, 140, 26);
     // Next over, the boolean switche.
     freeze_.setBounds(385, 19, 40, 13);
 }
