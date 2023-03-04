@@ -243,12 +243,12 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
     //draws the ruler to show the position of cutoff frequency and resonance
     {
-        //TODO: why don't circle coincide with the ruler?
         //TODO: How to start the ruler from 0?
+        //TODO: length of ruler steps should be proportional to the height
 
         //    Tunings::Tuning tuning{};
         //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
-        double freq = std::pow(2, evaluator->cutoff / 12) * 440.0;
+        double freq = std::pow(2, (evaluator->cutoff+1) / 12) * 440.0;
         int cutoffFrequencyPositionX = freqToX(freq, width);
 
         float db = juce::jmap(evaluator->resonance, 0.0f, 1.0f, dbMin, dbMax);
@@ -256,7 +256,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
         g.setColour(juce::Colours::red); // set the color of the circle
         int r = 5;
-        g.drawEllipse(cutoffFrequencyPositionX + r / 2, yDraw + r / 2, r, r, 1);
+        g.drawEllipse(cutoffFrequencyPositionX - r / 2, yDraw + r / 2, r, r, 1);
         int yDbStart = dbToY(dbMin, height);
         int yDbMax = dbToY(dbMax, height);
 
