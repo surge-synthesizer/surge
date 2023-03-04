@@ -55,7 +55,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
                     if (it != c.name.end())
                     {
                         // De-duplicate if factory and user are both there.
-                        // Replies on fact that factory comes before yser in order.
+                        // Replies on fact that factory comes before user in order.
                         if (alreadySeen.find(c.name) != alreadySeen.end())
                         {
                             auto didx = alreadySeen[c.name];
