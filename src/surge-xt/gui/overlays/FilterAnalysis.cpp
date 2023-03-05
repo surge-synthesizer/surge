@@ -243,7 +243,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
         // draws the ruler to show the position of cutoff frequency and resonance
         {
             // TODO: How to start the ruler from 0?
-            // TODO: length of ruler steps should be proportional to the height
+            // TODO: length of ruler steps should be proportional to the widsth
 
             //    Tunings::Tuning tuning{};
             //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
@@ -267,12 +267,17 @@ void FilterAnalysis::paint(juce::Graphics &g)
             g.drawLine(line);
 
             // Draw ruler steps
-            const int rulerStep = height / 10; // calculate step height
+            const int rulerStep = height / 10;
             g.setColour(juce::Colours::grey);
             for (int i = 0; i < 10; ++i)
             {
                 int y = i * rulerStep;
-                g.drawLine(cutoffFrequencyPositionX - 5, y, cutoffFrequencyPositionX + 5, y, 1);
+                float lineLength = width * 0.01f;
+                float startX = cutoffFrequencyPositionX - (lineLength / 2.0f);
+                float endX = cutoffFrequencyPositionX + (lineLength / 2.0f);
+
+                g.drawLine(startX, y, endX, y, 1);
+
             }
         }
     }
