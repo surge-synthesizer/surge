@@ -378,11 +378,11 @@ void TwistOscillator::process_block_internal(float pitch, float drift, bool ster
     patch->note = pitch + drift * driftv;
     patch->engine = oscdata->p[twist_engine].val.i;
 
-    harm.newValue(fvbp(twist_harmonics));
-    timb.newValue(fvbp(twist_timbre));
-    morph.newValue(fvbp(twist_morph));
-    lpgcol.newValue(fv(twist_lpg_response));
-    lpgdec.newValue(fv(twist_lpg_decay));
+    harm.newValue(limit_range(fvbp(twist_harmonics), -1.f, 1.f));
+    timb.newValue(limit_range(fvbp(twist_timbre), -1.f, 1.f));
+    morph.newValue(limit_range(fvbp(twist_morph), -1.f, 1.f));
+    lpgcol.newValue(limit_range(fv(twist_lpg_response), 0.f, 1.f));
+    lpgdec.newValue(limit_range(fv(twist_lpg_decay), 0.f, 1.f));
     auxmix.newValue(limit_range(fvbp(twist_aux_mix), -1.f, 1.f));
 
     bool lpgIsOn = !oscdata->p[twist_lpg_response].deactivated;
