@@ -146,7 +146,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
 
     static constexpr auto lowFreq = 10.f;
-    static constexpr auto highFreq = 24000.f;
+    static constexpr auto highFreq = 25090.f;
     static constexpr auto dbMin = -42.f;
     static constexpr auto dbMax = 12.f;
     constexpr auto dbRange = dbMax - dbMin;
