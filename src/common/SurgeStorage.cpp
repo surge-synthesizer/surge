@@ -1853,6 +1853,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_voice[i].source_id;
                 m.source_index = clipboard_modulation_voice[i].source_index;
+                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
                 m.depth = clipboard_modulation_voice[i].depth;
                 m.destination_id = clipboard_modulation_voice[i].destination_id;
                 pushBackOrOverride(getPatch().scene[scene].modulation_voice, m);
@@ -1864,6 +1865,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_scene[i].source_id;
                 m.source_index = clipboard_modulation_scene[i].source_index;
+                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
                 m.depth = clipboard_modulation_scene[i].depth;
                 m.destination_id = clipboard_modulation_scene[i].destination_id;
                 pushBackOrOverride(getPatch().scene[scene].modulation_scene, m);
