@@ -1229,7 +1229,19 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
 
     const std::unique_ptr<char[]> data{new char[ds]};
     read = f.sgetn(data.get(), ds);
-    // FIXME - error if read != ds
+
+    if (read != ds)
+    {
+        /* Somehow the file is corrupt. We have a few options
+         * including throw an error here but I think
+         * the best thing to do is just zero pad. In the
+         * factory set, the 'OneShot/Pulse' wavetable
+         * has this problem as a future test case.
+         */
+        auto dpad = data.get() + read;
+        auto drest = ds - read;
+        memset(dpad, 0, drest);
+    }
 
     waveTableDataMutex.lock();
     bool wasBuilt = wt->BuildWT(data.get(), wh, false);
