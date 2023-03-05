@@ -242,26 +242,19 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
         // draws the ruler to show the position of cutoff frequency and resonance
         {
-            // TODO: How to start the ruler from 0?
-            // TODO: length of ruler steps should be proportional to the widsth
-
             //    Tunings::Tuning tuning{};
             //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
-            //        g.addTransform(juce::AffineTransform().translated(dRect.getX(), dRect.getY()));
-            std::cout << "evaluator->cutoff: " << evaluator->cutoff << std::endl;
-            std::cout << "evaluator->resonance: " << evaluator->resonance << std::endl;
             double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
-            std::cout << "frequency: " << freq << std::endl;
-            int cutoffFrequencyPositionX = freqToX(freq, width);
+            const auto xPos = freqToX(freq, width);
 
             int yDraw = height - evaluator->resonance * height;
 
-            g.setColour(juce::Colours::red); // set the color of the circle
-            int r = 5;
-            g.drawEllipse(cutoffFrequencyPositionX - r / 2, yDraw + r / 2, r, r, 1);
+            g.setColour(juce::Colours::red);
+            float r =  width * 0.008f;;
+            g.fillEllipse(xPos - r / 2.f, yDraw - r / 2.f, r, r);
+
 
             // Draw vertical line
-            const auto xPos = freqToX(freq, width);
             juce::Line line{juce::Point{xPos, 0.f}, juce::Point{xPos, (float)height}};
             g.setColour(juce::Colours::red);
             g.drawLine(line);
@@ -273,8 +266,8 @@ void FilterAnalysis::paint(juce::Graphics &g)
             {
                 int y = i * rulerStep;
                 float lineLength = width * 0.01f;
-                float startX = cutoffFrequencyPositionX - (lineLength / 2.0f);
-                float endX = cutoffFrequencyPositionX + (lineLength / 2.0f);
+                float startX = xPos - (lineLength / 2.0f);
+                float endX = xPos + (lineLength / 2.0f);
 
                 g.drawLine(startX, y, endX, y, 1);
 
