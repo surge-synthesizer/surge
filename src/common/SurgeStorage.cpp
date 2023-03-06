@@ -2580,17 +2580,18 @@ bool SurgeStorage::isStandardTuningAndHasNoToggle()
 
 void SurgeStorage::resetTuningToggle() { isToggledToCache = false; }
 
-void SurgeStorage::reportError(const std::string &msg, const std::string &title)
+void SurgeStorage::reportError(const std::string &msg, const std::string &title,
+                               const ErrorType errorType)
 {
     std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;
     if (errorListeners.empty())
     {
         std::lock_guard<std::mutex> g(preListenerErrorMutex);
-        preListenerErrors.emplace_back(msg, title);
+        preListenerErrors.emplace_back(msg, title, errorType);
     }
 
     for (auto l : errorListeners)
-        l->onSurgeError(msg, title);
+        l->onSurgeError(msg, title, errorType);
 }
 
 float SurgeStorage::remapKeyInMidiOnlyMode(float res)

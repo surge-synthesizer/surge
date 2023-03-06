@@ -6858,7 +6858,8 @@ void SurgeGUIEditor::hideMidiLearnOverlay()
     }
 }
 
-void SurgeGUIEditor::onSurgeError(const string &msg, const string &title)
+void SurgeGUIEditor::onSurgeError(const string &msg, const string &title,
+                                  const SurgeStorage::ErrorType &et)
 {
     std::lock_guard<std::mutex> g(errorItemsMutex);
     errorItems.emplace_back(msg, title);

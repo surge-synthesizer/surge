@@ -1087,24 +1087,31 @@ class alignas(16) SurgeStorage
     static std::string skipPatchLoadDataPathSentinel;
 
     // In Surge XT, SurgeStorage can now keep a cache of errors it reports to the user
-    void reportError(const std::string &msg, const std::string &title);
+    enum ErrorType
+    {
+        GENERAL_ERROR = 1,
+        AUDIO_CONFIGURATION = 2,
+    };
+    void reportError(const std::string &msg, const std::string &title,
+                     const ErrorType errorType = GENERAL_ERROR);
     struct ErrorListener
     {
         // This can be called from any thread, beware! But it is called only
         // when an error occursm so if you want to be sloppy and just lock, that's OK
-        virtual void onSurgeError(const std::string &msg, const std::string &title) = 0;
+        virtual void onSurgeError(const std::string &msg, const std::string &title,
+                                  const ErrorType &errorType) = 0;
     };
     std::unordered_set<ErrorListener *> errorListeners;
     // this mutex is ONLY locked in the error path and when registering a listener
     // (from the UI thread)
     std::mutex preListenerErrorMutex;
-    std::vector<std::pair<std::string, std::string>> preListenerErrors;
+    std::vector<std::tuple<std::string, std::string, ErrorType>> preListenerErrors;
     void addErrorListener(ErrorListener *l)
     {
         errorListeners.insert(l);
         std::lock_guard<std::mutex> g(preListenerErrorMutex);
         for (auto p : preListenerErrors)
-            l->onSurgeError(p.first, p.second);
+            l->onSurgeError(std::get<0>(p), std::get<1>(p), std::get<2>(p));
         preListenerErrors.clear();
     }
     void removeErrorListener(ErrorListener *l) { errorListeners.erase(l); }
