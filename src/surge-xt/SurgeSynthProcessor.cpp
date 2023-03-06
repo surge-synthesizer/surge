@@ -108,6 +108,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         }
     }
 
+    memset(inputLatentBuffer, 0, sizeof(inputLatentBuffer));
+
     surge->hostProgram = juce::PluginHostType().getHostDescription();
     surge->juceWrapperType = wrapperTypeString;
 
@@ -272,6 +274,27 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         nextMidi = (*midiIt).samplePosition;
     }
 
+    const float *incL{nullptr}, *incR{nullptr};
+    if (mainInput.getNumChannels() > 0)
+    {
+        incL = mainInput.getReadPointer(0);
+        incR = incL;
+    }
+    if (mainInput.getNumChannels() > 1)
+    {
+        incR = mainInput.getReadPointer(1);
+    }
+
+    auto sc = buffer.getNumSamples();
+    if ((sc & ~(BLOCK_SIZE - 1)) != sc)
+    {
+        // TODO: We should probably show a user warning of some form here.
+        // surge->reportError would work but doesn't have a "dont show again" option
+        // so that requires some code. For now this will just lag input by 32 samples
+        // to make sure we at least don't distort, which improves things for 1.2
+        inputIsLatent = true;
+    }
+
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {
         while (i == nextMidi)
@@ -292,20 +315,23 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         auto outL = mainOutput.getWritePointer(0, i);
         auto outR = mainOutput.getWritePointer(1, i);
 
-        if (blockPos == 0 && mainInput.getNumChannels() > 0)
+        if (blockPos == 0 && incL && incR)
         {
-            auto inL = mainInput.getReadPointer(0, i);
-            auto inR = inL; // assume mono
-
-            if (mainInput.getNumChannels() > 1) // unless its not
-            {
-                inR = mainInput.getReadPointer(1, i);
-            }
-
             surge->process_input = true;
 
-            memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
-            memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
+            if (inputIsLatent)
+            {
+                memcpy(&(surge->input[0][0]), inputLatentBuffer[0], BLOCK_SIZE * sizeof(float));
+                memcpy(&(surge->input[1][0]), inputLatentBuffer[1], BLOCK_SIZE * sizeof(float));
+            }
+            else
+            {
+                auto inL = incL + i;
+                auto inR = incR + i;
+
+                memcpy(&(surge->input[0][0]), inL, BLOCK_SIZE * sizeof(float));
+                memcpy(&(surge->input[1][0]), inR, BLOCK_SIZE * sizeof(float));
+            }
         }
         else
         {
@@ -317,6 +343,12 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             surge->process();
             surge->time_data.ppqPos +=
                 (double)BLOCK_SIZE * surge->time_data.tempo / (60. * surge->storage.samplerate);
+        }
+
+        if (inputIsLatent && incL && incR)
+        {
+            inputLatentBuffer[0][blockPos] = incL[i];
+            inputLatentBuffer[1][blockPos] = incR[i];
         }
 
         *outL = surge->output[0][blockPos];
