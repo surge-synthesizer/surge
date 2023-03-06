@@ -437,12 +437,29 @@ void FilterAnalysis::resized()
     catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
 }
 void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
-//https://github.com/surge-synthesizer/surge/blob/main/src/surge-xt/gui/SurgeGUIEditorValueCallbacks.cpp#L1923
     if (event.mods.isLeftButtonDown())
     {
         auto &ss = editor->getPatch().scene[editor->current_scene];
         auto &fs = ss.filterunit[whichFilter];
-        fs.cutoff.set_storage_value(1.0f);
+
+        auto lb = getLocalBounds().transformedBy(getTransform().inverted());
+        auto dRect = lb.withTrimmedTop(15).reduced(4);
+        auto width = dRect.getWidth();
+        auto height = dRect.getHeight();
+        static constexpr auto lowFreq = 10.f;
+        static constexpr auto highFreq = 25090.f;
+
+        auto xToFreq = [&](float x, int width) {
+            auto xNorm = x / (float)width;
+            auto freq = std::pow(highFreq / lowFreq, xNorm) * lowFreq;
+            return freq;
+        };
+
+        float freq = xToFreq(event.x, width);
+
+        float cutoff = 12.0f * std::log2(freq / 440.0f);
+        fs.cutoff.val.f = cutoff;
+
     }
 }
 
