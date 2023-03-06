@@ -43,7 +43,7 @@ static float freqToX(float freq, int width)
 }
 
 // This could, in theory, divide by zero, so be careful with how you call it.
-static float dbToY(float db, int height, float dbMin = -100.f, float dbMax = 0.f)
+static float dbToY(float db, int height, float dbMin = -96.f, float dbMax = 0.f)
 {
     float range = dbMax - dbMin;
     // If dbMax/dbMin change and the data hasn't been updated yet due to locking, can get weirdness.
@@ -54,12 +54,21 @@ float WaveformDisplay::Parameters::counterSpeed() const
 {
     return std::pow(10.f, -time_window * 5.f + 1.5f);
 }
-float WaveformDisplay::Parameters::triggerLevel() const { return trigger_level * 2.f - 1.f; }
-float WaveformDisplay::Parameters::gain() const { return std::pow(10.f, amp_window * 6.f - 3.f); }
 
-float SpectrumDisplay::Parameters::dbRange() const { return std::max(maxDb() - noiseFloor(), 0.f); }
-float SpectrumDisplay::Parameters::noiseFloor() const { return (noise_floor - 2.f) * 50.f; }
-float SpectrumDisplay::Parameters::maxDb() const { return (max_db - 1.f) * 50.f; }
+float WaveformDisplay::Parameters::triggerLevel() const { return trigger_level * 2.f - 1.f; }
+float WaveformDisplay::Parameters::gain() const { return std::pow(10.f, amp_window * 4.f - 2.f); }
+
+float SpectrumDisplay::Parameters::dbRange() const
+{
+    return std::max(std::floor(maxDb() - noiseFloor()), 0.f);
+}
+
+float SpectrumDisplay::Parameters::noiseFloor() const
+{
+    return std::floor((noise_floor - 2.f) * 48.f);
+}
+
+float SpectrumDisplay::Parameters::maxDb() const { return std::floor((max_db - 1.f) * 36.f); }
 
 WaveformDisplay::WaveformDisplay(SurgeGUIEditor *e, SurgeStorage *s)
     : editor_(e), storage_(s), counter(1.0), max(std::numeric_limits<float>::min()),
@@ -91,23 +100,25 @@ void WaveformDisplay::paint(juce::Graphics &g)
     float counterSpeedInverse = 1 / params_.counterSpeed();
 
     g.setColour(curveColor);
+
     if (counterSpeedInverse < 1.0) // draw interpolated lines
     {
         float phase = counterSpeedInverse;
         float dphase = counterSpeedInverse;
-
         float prevxi = points[0].x;
         float prevyi = points[0].y;
+
         path.startNewSubPath(prevxi, prevyi);
 
         for (std::size_t i = 1; i < getWidth() - 1; i++)
         {
             int index = static_cast<int>(phase);
             float alpha = phase - static_cast<float>(index);
-
             float xi = i;
             float yi = (1.0 - alpha) * points[index * 2].y + alpha * points[(index + 1) * 2].y;
+
             path.lineTo(xi, yi);
+
             prevxi = xi;
             prevyi = yi;
 
@@ -117,11 +128,13 @@ void WaveformDisplay::paint(juce::Graphics &g)
     else
     {
         path.startNewSubPath(points[0].x, points[0].y);
+
         for (std::size_t i = 1; i < points.size(); i++)
         {
             path.lineTo(points[i].x, points[i].y);
         }
     }
+
     g.strokePath(path, juce::PathStrokeType(1.f));
 
 #if 0
@@ -193,6 +206,7 @@ void WaveformDisplay::process(std::vector<float> data)
     int triggerLimit =
         static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f)); // 0=>1, 1=>10000
     float triggerSpeed = std::pow(10.f, 2.5f * params_.trigger_speed - 5.f);
+    printf("%.5f\n", triggerSpeed);
     float counterSpeed = params_.counterSpeed();
     float R = 1.f - 250.f / static_cast<float>(storage_->samplerate);
 
@@ -306,7 +320,7 @@ void WaveformDisplay::process(std::vector<float> data)
         //
         // How this works: counter is based off of a user parameter. When counter = 1, we have 1
         // incoming sample per pixel. When it's 10, we have 10 pixels per incoming sample. And when
-        // it's 0.1, we have, you guessed it, 10 pixels per 1 incoming sample.
+        // it's 0.1, we have, you guessed it, 10 incoming samples per pixel.
         //
         // JUCE can handle all the subpixel drawing no problem, but it's ungodly slow at it. So
         // instead we squash the data down here with maxes/mins per pixel.
@@ -338,8 +352,10 @@ void WaveformDisplay::process(std::vector<float> data)
 void WaveformDisplay::resized()
 {
     std::lock_guard l(lock_);
+
     peaks.clear();
     copy.clear();
+
     for (std::size_t j = 0; j < getWidth() * 2; j += 2)
     {
         juce::Point<float> point;
@@ -379,6 +395,7 @@ void SpectrumDisplay::setParameters(Parameters parameters)
 void SpectrumDisplay::paint(juce::Graphics &g)
 {
     std::lock_guard l(data_lock_);
+
     if (params_.dbRange() == 0.0f)
         return;
 
@@ -404,6 +421,7 @@ void SpectrumDisplay::paint(juce::Graphics &g)
         for (int i = 0; i < internal::fftSize / 2; i++)
         {
             const float hz = binHz * static_cast<float>(i);
+
             if (hz < lowFreq || hz > highFreq)
             {
                 continue;
@@ -413,7 +431,9 @@ void SpectrumDisplay::paint(juce::Graphics &g)
             const float y0 = displayed_data_[i];
             const float y1 = dbToY(new_scope_data_[i], height, dbMin, dbMax);
             const float y = params_.freeze ? y0 : (display_dirty_ ? y1 : interpolate(y0, y1, now));
+
             displayed_data_[i] = y;
+
             if (y >= zeroPoint)
             {
                 path.lineTo(x, zeroPoint);
@@ -436,13 +456,16 @@ void SpectrumDisplay::paint(juce::Graphics &g)
         }
     }
     // End path.
+
     if (started)
     {
         path.lineTo(freqToX(highFreq, width), zeroPoint);
         path.closeSubPath();
     }
+
     g.setColour(curveColor);
     g.fillPath(path);
+
     display_dirty_ = false;
 }
 
@@ -467,7 +490,7 @@ void SpectrumDisplay::resized()
               // We're essentially filling with the calculated equivalent of the bottom of the
               // graph, so the fact that we're not calling with the actual noise floor or dB ceiling
               // is immaterial.
-              dbToY(-100.f, height, -100.f, 0.f));
+              dbToY(-96.f, height, -96.f, 0.f));
 }
 
 void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
@@ -475,13 +498,19 @@ void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
 {
     // Data comes in as gain.
     std::lock_guard l(data_lock_);
+
     // Decay existing data, and move new data in if it's larger.
-    const float decay = (1.f - params_.decay_rate);
+    const float decay = (1.f - (params_.decay_rate * 0.9f));
+
     std::transform(begin, end, incoming_scope_data_.begin(), incoming_scope_data_.begin(),
                    [decay](const float fn, const float f) { return std::max(f * decay, fn); });
+
     last_updated_time_ = std::chrono::steady_clock::now();
+
     if (!params_.freeze)
+    {
         recalculateScopeData();
+    }
 }
 
 float SpectrumDisplay::interpolate(const float y0, const float y1,
@@ -512,7 +541,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     left_chan_button_.onToggle = onToggle;
     left_chan_button_.setBufferedToImage(true);
     left_chan_button_.setAccessible(true);
-    left_chan_button_.setTitle("L CHAN");
+    left_chan_button_.setTitle("Left Channel");
     left_chan_button_.setDescription("Enable input from left channel.");
     left_chan_button_.setWantsKeyboardFocus(false);
     right_chan_button_.setStorage(storage_);
@@ -520,7 +549,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     right_chan_button_.onToggle = onToggle;
     right_chan_button_.setBufferedToImage(true);
     right_chan_button_.setAccessible(true);
-    right_chan_button_.setTitle("R CHAN");
+    right_chan_button_.setTitle("Right Channel");
     right_chan_button_.setDescription("Enable input from right channel.");
     right_chan_button_.setWantsKeyboardFocus(false);
     scope_mode_button_.setStorage(storage_);
@@ -595,9 +624,9 @@ void Oscilloscope::resized()
 
     background_.updateBounds(getLocalBounds(), getScopeRect());
     // Top buttons: in the first 15 pixels.
-    left_chan_button_.setBounds(8, 4, 15, 15);
-    right_chan_button_.setBounds(23, 4, 15, 15);
-    scope_mode_button_.setBounds(rhs - 97, 4, 105, 15);
+    left_chan_button_.setBounds(8, 4, 14, 14);
+    right_chan_button_.setBounds(23, 4, 14, 14);
+    scope_mode_button_.setBounds(rhs - 97, 4, 105, 14);
     // Spectrum/waveform display: appears in scopeRect.
     spectrum_.setBounds(scopeRect);
     waveform_.setBounds(scopeRect);
@@ -608,7 +637,7 @@ void Oscilloscope::resized()
 
 Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s,
                                                      juce::Component *parent)
-    : editor_(e), storage_(s), parent_(parent), freeze_("Freeze"), dc_kill_("DC-Kill"),
+    : editor_(e), storage_(s), parent_(parent), freeze_("Freeze"), dc_kill_("DC Block"),
       sync_draw_("Sync")
 {
     trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -616,46 +645,67 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_limit_.setOrientation(Surge::ParamConfig::kHorizontal);
     time_window_.setOrientation(Surge::ParamConfig::kHorizontal);
     amp_window_.setOrientation(Surge::ParamConfig::kHorizontal);
+
     trigger_speed_.setStorage(s);
     trigger_level_.setStorage(s);
     trigger_limit_.setStorage(s);
     time_window_.setStorage(s);
     amp_window_.setStorage(s);
+
     trigger_speed_.setDefaultValue(0.5);
     trigger_level_.setDefaultValue(0.5);
     trigger_limit_.setDefaultValue(0.5);
-    time_window_.setDefaultValue(0.75);
+    time_window_.setDefaultValue(0.5);
     amp_window_.setDefaultValue(0.5);
+
     trigger_speed_.setQuantitizedDisplayValue(0.5);
     trigger_level_.setQuantitizedDisplayValue(0.5);
     trigger_limit_.setQuantitizedDisplayValue(0.5);
-    time_window_.setQuantitizedDisplayValue(0.75);
+    time_window_.setQuantitizedDisplayValue(0.5);
     amp_window_.setQuantitizedDisplayValue(0.5);
-    trigger_speed_.setLabel("Internal Trigger Speed");
-    trigger_level_.setLabel("Rise/Fall Trigger Level");
+
+    trigger_speed_.setLabel("Internal Trigger Freq");
+    trigger_level_.setLabel("Trigger Level");
     trigger_limit_.setLabel("Retrigger Threshold");
-    time_window_.setLabel("Time");
-    amp_window_.setLabel("Amp");
-    trigger_speed_.setDescription("Speed the internal oscillator will trigger with");
+    time_window_.setLabel("Time Scaling");
+    amp_window_.setLabel("Amplitude Scaling");
+
+    trigger_speed_.setDescription("Rate at which the internal oscillator will run");
     trigger_level_.setDescription("Minimum value a waveform must rise/fall to trigger");
     trigger_limit_.setDescription("How fast to trigger again after a trigger happens");
-    time_window_.setDescription("X (time) scale");
-    amp_window_.setDescription("Y (amplitude) scale");
+    time_window_.setDescription("X axis (time) scale adjustment");
+    amp_window_.setDescription("Y axis (amplitude) scale adjustment");
+
     trigger_speed_.setRange(0.441f, 139.4f);
-    trigger_speed_.setUnit(" Hz");
     trigger_limit_.setRange(1, 10000);
+    trigger_level_.setRange(-100, 100);
+    time_window_.setRange(-100, 100);
+    amp_window_.setRange(-100, 100);
+
+    trigger_speed_.setUnit(" Hz");
     trigger_limit_.setUnit(" Samples");
-    trigger_level_.setRange(-1, 1);
+    trigger_level_.setUnit(" %");
+    time_window_.setUnit(" %");
+    amp_window_.setUnit(" %");
+
+    trigger_speed_.setPrecision(3);
+    trigger_level_.setPrecision(2);
+    trigger_limit_.setPrecision(0);
+    time_window_.setPrecision(2);
+    amp_window_.setPrecision(2);
+
     trigger_speed_.setIsLightStyle(true);
     trigger_level_.setIsLightStyle(true);
     trigger_limit_.setIsLightStyle(true);
     time_window_.setIsLightStyle(true);
     amp_window_.setIsLightStyle(true);
+
     auto updateParameter = [this](float &param, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         param = value;
     };
+
     auto updateAmpWindow = [this](float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
@@ -663,29 +713,30 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
         float gain = 1.f / params_.gain();
         trigger_level_.setRange(-gain, gain);
     };
+
     trigger_speed_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_speed), _1));
     trigger_level_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_level), _1));
     trigger_limit_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_limit), _1));
     time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window), _1));
     amp_window_.setOnUpdate(updateAmpWindow);
+
     trigger_speed_.setRootWindow(parent_);
     trigger_level_.setRootWindow(parent_);
     trigger_limit_.setRootWindow(parent_);
     time_window_.setRootWindow(parent_);
     amp_window_.setRootWindow(parent_);
-    trigger_speed_.setPrecision(2);
-    trigger_level_.setPrecision(2);
-    trigger_limit_.setPrecision(0);
-    time_window_.setPrecision(2);
-    amp_window_.setPrecision(2);
-    // These two are deactivated by default, since the default trigger type is "free".
-    trigger_level_.setDeactivated(true);
+
+    // These are deactivated by default, since the default trigger type is "free".
     trigger_speed_.setDeactivated(true);
+    trigger_level_.setDeactivated(true);
+    trigger_limit_.setDeactivated(true);
+
     addAndMakeVisible(trigger_speed_);
     addAndMakeVisible(trigger_level_);
     addAndMakeVisible(trigger_limit_);
     addAndMakeVisible(time_window_);
     addAndMakeVisible(amp_window_);
+
     // The multiswitch.
     trigger_type_.setRows(4);
     trigger_type_.setColumns(1);
@@ -701,29 +752,47 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(value);
+
         if (params_.trigger_type == WaveformDisplay::kTriggerInternal)
+        {
             trigger_speed_.setDeactivated(false);
+        }
         else
+        {
             trigger_speed_.setDeactivated(true);
+        }
+
         if (params_.trigger_type == WaveformDisplay::kTriggerRising ||
             params_.trigger_type == WaveformDisplay::kTriggerFalling)
+        {
+
             trigger_level_.setDeactivated(false);
+            trigger_limit_.setDeactivated(false);
+        }
         else
+        {
             trigger_level_.setDeactivated(true);
+            trigger_limit_.setDeactivated(true);
+        }
     });
+
     addAndMakeVisible(trigger_type_);
+
     // The two toggle buttons.
     auto toggleParam = [this](bool &param) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         param = !param;
     };
+
     freeze_.setWantsKeyboardFocus(false);
     dc_kill_.setWantsKeyboardFocus(false);
     sync_draw_.setWantsKeyboardFocus(false);
+
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
     dc_kill_.onToggle = std::bind(toggleParam, std::ref(params_.dc_kill));
     sync_draw_.onToggle = std::bind(toggleParam, std::ref(params_.sync_draw));
+
     addAndMakeVisible(freeze_);
     addAndMakeVisible(dc_kill_);
     addAndMakeVisible(sync_draw_);
@@ -751,7 +820,9 @@ void Oscilloscope::WaveformParameters::onSkinChanged()
     freeze_.setSkin(skin, associatedBitmapStore);
     dc_kill_.setSkin(skin, associatedBitmapStore);
     sync_draw_.setSkin(skin, associatedBitmapStore);
-    auto font = skin->fontManager->getLatoAtSize(7, juce::Font::plain);
+
+    auto font = skin->fontManager->getLatoAtSize(9, juce::Font::plain);
+
     trigger_speed_.setFont(font);
     trigger_level_.setFont(font);
     trigger_limit_.setFont(font);
@@ -761,7 +832,7 @@ void Oscilloscope::WaveformParameters::onSkinChanged()
 
 void Oscilloscope::WaveformParameters::paint(juce::Graphics &g)
 {
-    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Panel));
 }
 
 void Oscilloscope::WaveformParameters::resized()
@@ -769,19 +840,21 @@ void Oscilloscope::WaveformParameters::resized()
     auto t = getTransform().inverted();
     auto h = getHeight();
     auto w = getWidth();
+    auto buttonWidth = 49;
+
+    // The trigger mechanism.
+    trigger_type_.setBounds(12, 14, buttonWidth, 52);
     // Stack the trigger parameters top-to-bottom.
-    trigger_speed_.setBounds(10, 0, 140, 26);
-    trigger_level_.setBounds(10, 26, 140, 26);
-    trigger_limit_.setBounds(10, 52, 140, 26);
+    trigger_speed_.setBounds(73, 0, 140, 26);
+    trigger_level_.setBounds(73, 25, 140, 26);
+    trigger_limit_.setBounds(73, 50, 140, 26);
     // Window parameters to the right of them, slightly offset since there's only two.
-    time_window_.setBounds(160, 13, 140, 26);
-    amp_window_.setBounds(160, 39, 140, 26);
-    // Next over, the trigger mechanism.
-    trigger_type_.setBounds(320, 13, 40, 50);
+    time_window_.setBounds(210, 12, 140, 26);
+    amp_window_.setBounds(210, 37, 140, 26);
     // Next over, the three boolean switches.
-    freeze_.setBounds(385, 13, 40, 13);
-    dc_kill_.setBounds(385, 32, 40, 13);
-    sync_draw_.setBounds(385, 51, 40, 13);
+    freeze_.setBounds(369, 14, buttonWidth, 14);
+    dc_kill_.setBounds(369, 33, buttonWidth, 14);
+    sync_draw_.setBounds(369, 52, buttonWidth, 14);
 }
 
 Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s,
@@ -791,64 +864,84 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     noise_floor_.setOrientation(Surge::ParamConfig::kHorizontal);
     max_db_.setOrientation(Surge::ParamConfig::kHorizontal);
     decay_rate_.setOrientation(Surge::ParamConfig::kHorizontal);
+
     noise_floor_.setStorage(s);
     max_db_.setStorage(s);
     decay_rate_.setStorage(s);
+
     noise_floor_.setDefaultValue(0);
     max_db_.setDefaultValue(1);
     decay_rate_.setDefaultValue(1);
+
     noise_floor_.setQuantitizedDisplayValue(0);
     max_db_.setQuantitizedDisplayValue(1);
     decay_rate_.setQuantitizedDisplayValue(1);
-    noise_floor_.setLabel("Noise Floor");
-    max_db_.setLabel("Max dB");
-    decay_rate_.setLabel("Decay rate");
+
+    noise_floor_.setLabel("Min Level");
+    max_db_.setLabel("Max Level ");
+    decay_rate_.setLabel("Decay Rate");
+
     noise_floor_.setDescription("Bottom of the display.");
     max_db_.setDescription("Top of the display.");
     decay_rate_.setDescription("Control how fast the current data decays.");
+
     noise_floor_.setIsLightStyle(true);
     max_db_.setIsLightStyle(true);
     decay_rate_.setIsLightStyle(true);
+
+    noise_floor_.setPrecision(0);
+    max_db_.setPrecision(0);
+    decay_rate_.setPrecision(2);
+
+    noise_floor_.setRange(-96, -48);
+    max_db_.setRange(-36, 0);
+    decay_rate_.setRange(0, 100);
+
+    noise_floor_.setUnit(" dB");
+    max_db_.setUnit(" dB");
+    decay_rate_.setUnit(" %");
+
     auto updateParameter = [this](float &param, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         param = value;
     };
+
     noise_floor_.setOnUpdate(std::bind(updateParameter, std::ref(params_.noise_floor), _1));
     max_db_.setOnUpdate(std::bind(updateParameter, std::ref(params_.max_db), _1));
     decay_rate_.setOnUpdate(std::bind(updateParameter, std::ref(params_.decay_rate), _1));
+
     noise_floor_.setRootWindow(parent_);
     max_db_.setRootWindow(parent_);
     decay_rate_.setRootWindow(parent_);
-    noise_floor_.setPrecision(1);
-    max_db_.setPrecision(1);
-    decay_rate_.setPrecision(2);
-    noise_floor_.setRange(-100, -50);
-    noise_floor_.setUnit(" dB");
-    max_db_.setRange(-50, 0);
-    max_db_.setUnit(" dB");
+
     addAndMakeVisible(noise_floor_);
     addAndMakeVisible(max_db_);
     addAndMakeVisible(decay_rate_);
+
     // The toggle button.
     auto toggleParam = [this](bool &param) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         param = !param;
     };
+
     freeze_.setWantsKeyboardFocus(false);
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
+
     addAndMakeVisible(freeze_);
 }
 
 std::optional<SpectrumDisplay::Parameters> Oscilloscope::SpectrumParameters::getParamsIfDirty()
 {
     std::lock_guard l(params_lock_);
+
     if (params_changed_)
     {
         params_changed_ = false;
         return params_;
     }
+
     return std::nullopt;
 }
 
@@ -858,7 +951,9 @@ void Oscilloscope::SpectrumParameters::onSkinChanged()
     max_db_.setSkin(skin, associatedBitmapStore);
     decay_rate_.setSkin(skin, associatedBitmapStore);
     freeze_.setSkin(skin, associatedBitmapStore);
-    auto font = skin->fontManager->getLatoAtSize(7, juce::Font::plain);
+
+    auto font = skin->fontManager->getLatoAtSize(9, juce::Font::plain);
+
     noise_floor_.setFont(font);
     max_db_.setFont(font);
     decay_rate_.setFont(font);
@@ -866,7 +961,7 @@ void Oscilloscope::SpectrumParameters::onSkinChanged()
 
 void Oscilloscope::SpectrumParameters::paint(juce::Graphics &g)
 {
-    g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+    g.fillAll(skin->getColor(Colors::MSEGEditor::Panel));
 }
 
 void Oscilloscope::SpectrumParameters::resized()
@@ -874,12 +969,14 @@ void Oscilloscope::SpectrumParameters::resized()
     auto t = getTransform().inverted();
     auto h = getHeight();
     auto w = getWidth();
+    auto buttonWidth = 49;
+
     // Stack the slider parameters top-to-bottom.
-    noise_floor_.setBounds(10, 0, 140, 26);
-    max_db_.setBounds(10, 26, 140, 26);
-    decay_rate_.setBounds(10, 52, 140, 26);
-    // Next over, the boolean switche.
-    freeze_.setBounds(385, 19, 40, 13);
+    noise_floor_.setBounds(12, 0, 140, 26);
+    max_db_.setBounds(12, 25, 140, 26);
+    decay_rate_.setBounds(12, 50, 140, 26);
+    // Next over, the boolean switch.
+    freeze_.setBounds(369, 14, buttonWidth, 14);
 }
 
 void Oscilloscope::updateDrawing()
@@ -1131,6 +1228,7 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
     juce::Graphics::ScopedSaveState g1(g);
 
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+
     if (spectrum_params_.dbRange() == 0.0f)
         return;
 
@@ -1152,12 +1250,12 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
         // Draw frequency lines.
         for (float freq : {10.f,   20.f,   30.f,   40.f,   60.f,    80.f,    100.f,
                            200.f,  300.f,  400.f,  600.f,  800.f,   1000.f,  2000.f,
-                           3000.f, 4000.f, 6000.f, 8000.f, 10000.f, 20000.f, 24000.f})
+                           3000.f, 4000.f, 6000.f, 8000.f, 10000.f, 20000.f, 25000.f})
         {
             const auto xPos = freqToX(freq, width);
 
             if (freq == 10.f || freq == 100.f || freq == 1000.f || freq == 10000.f ||
-                freq == 24000.f)
+                freq == 25000.f)
             {
                 g.setColour(primaryLine);
             }
@@ -1168,7 +1266,7 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
 
             g.drawVerticalLine(xPos, 0, static_cast<float>(height));
 
-            if (freq == 10.f || freq == 24000.f)
+            if (freq == 10.f || freq == 25000.f)
             {
                 continue;
             }
@@ -1179,7 +1277,7 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
             // Label will go past the end of the scopeRect.
             const auto labelRect =
                 juce::Rectangle{font.getStringWidth(freqString), labelHeight}.withCentre(
-                    juce::Point<int>(xPos, height + 11));
+                    juce::Point<int>(xPos, height + 10));
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
             g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
@@ -1195,9 +1293,10 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
         // Draw dB lines.
         float minDb = spectrum_params_.noiseFloor();
         float maxDb = spectrum_params_.maxDb();
-        float step = spectrum_params_.dbRange() / 10.f;
+        float step = spectrum_params_.dbRange() / 8.f;
         float dB = minDb;
-        for (int i = 0; i < 11; i++, dB += step)
+
+        for (int i = 0; i < 9; i++, dB += step)
         {
             const auto yPos = dbToY(dB, height, minDb, maxDb);
 
@@ -1215,13 +1314,13 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
             std::ostringstream convert;
             convert << std::fixed << std::setprecision(1);
             convert << dB;
-            std::string converted = convert.str();
-            const auto dbString =
-                juce::String(converted.substr(0, converted.find_last_not_of('0') + 1) + " dB");
+
+            std::string dbString = convert.str() + " dB";
+
             // Label will go past the end of the scopeRect.
             const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
-                                       .withBottomY((int)(yPos + (labelHeight / 2)))
-                                       .withRightX(width + 30);
+                                       .withBottomY((int)(yPos + (labelHeight / 2)) + 1)
+                                       .withRightX(width + 32);
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
@@ -1260,19 +1359,23 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         std::string minus = "-";
         std::string plus = "+";
         std::stringstream gain;
-        gain << std::fixed << std::setprecision(2) << 1.f / waveform_params_.gain();
+        const unsigned prec = waveform_params_.gain() > 1.f ? 2 : 0;
+
+        gain << std::fixed << std::setprecision(prec) << 1.f / waveform_params_.gain();
 
         g.drawSingleLineText(minus + gain.str(), width + 4, height + 2);
-        g.drawSingleLineText("0.0", width + 4, height / 2 + 2);
+        g.drawSingleLineText((prec == 2 ? "0.00" : "0"), width + 4, height / 2 + 2);
         g.drawSingleLineText(plus + gain.str(), width + 4, 2);
 
         // Draw the trigger lines, if applicable.
         g.setColour(secondaryLine);
+
         if (waveform_params_.trigger_type == WaveformDisplay::kTriggerRising)
         {
             g.drawHorizontalLine(
                 juce::jmap<float>(waveform_params_.triggerLevel(), -1, 1, height, 0), 0, width);
         }
+
         if (waveform_params_.trigger_type == WaveformDisplay::kTriggerFalling)
         {
             g.drawHorizontalLine(
@@ -1286,15 +1389,18 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         g.addTransform(juce::AffineTransform().translated(scopeRect.getX(), scopeRect.getY()));
         g.setFont(font);
 
-        // Split the grid into 7 sections, starting from 0 and ending at wherever the counter
+        // Split the grid into multiple sections, starting from 0 and ending at wherever the counter
         // speed says we should end at.
+        const unsigned numLines = 11;
+        const unsigned numSections = numLines - 1;
         float counterSpeedInverse = 1.f / waveform_params_.counterSpeed();
         float sampleRateInverse = 1.f / static_cast<float>(storage_->samplerate);
         float endpoint = counterSpeedInverse * sampleRateInverse * static_cast<float>(width);
         std::string time_unit = (endpoint >= 1.f) ? " s" : " ms";
-        for (int i = 0; i < 7; i++)
+
+        for (int i = 0; i <= numSections; i++)
         {
-            if (i == 0 || i == 6)
+            if (i == 0 || i == numSections)
             {
                 g.setColour(primaryLine);
             }
@@ -1303,26 +1409,43 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
                 g.setColour(secondaryLine);
             }
 
-            int xPos = static_cast<int>(static_cast<float>(width) / 6.f * i);
-            ;
+            int xPos = (int)((float)width / (float)numSections * i);
+
             g.drawVerticalLine(xPos, 0, height + 1);
 
-            float timef = (endpoint / 6.f) * static_cast<float>(i);
+            float timef = (endpoint / numSections) * (float)i;
+
             if (endpoint < 1.f)
             {
                 timef *= 1000;
             }
+
             std::stringstream time;
             time << std::fixed << std::setprecision(2) << timef;
             std::string timeString = time.str() + time_unit;
 
+            // we don't need decimals for the very first notch on the horizontal axis
+            if (timef == 0.f)
+            {
+                timeString = "0 " + time_unit;
+            }
+
             // Label will go past the end of the scopeRect.
-            const auto labelRect =
-                juce::Rectangle{font.getStringWidth(timeString), labelHeight}.withCentre(
-                    juce::Point<int>(xPos, height + 13));
+            auto labelWidth = font.getStringWidth(timeString);
+            auto labelRect = juce::Rectangle{labelWidth, labelHeight}.withCentre(
+                juce::Point<int>(xPos, height + 10));
+            auto justify = juce::Justification::bottom;
+
+            // left-align the zero label
+            if (timef == 0.f)
+            {
+                labelRect.setX(xPos);
+                labelRect.setWidth(labelWidth);
+                justify = juce::Justification::bottomLeft;
+            }
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
-            g.drawFittedText(timeString, labelRect, juce::Justification::bottom, 1);
+            g.drawFittedText(timeString, labelRect, justify, 1);
         }
     }
 }
