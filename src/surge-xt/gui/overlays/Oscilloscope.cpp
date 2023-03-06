@@ -206,7 +206,6 @@ void WaveformDisplay::process(std::vector<float> data)
     int triggerLimit =
         static_cast<int>(std::pow(10.f, params_.trigger_limit * 4.f)); // 0=>1, 1=>10000
     float triggerSpeed = std::pow(10.f, 2.5f * params_.trigger_speed - 5.f);
-    printf("%.5f\n", triggerSpeed);
     float counterSpeed = params_.counterSpeed();
     float R = 1.f - 250.f / static_cast<float>(storage_->samplerate);
 
@@ -500,7 +499,7 @@ void SpectrumDisplay::updateScopeData(internal::FftScopeType::iterator begin,
     std::lock_guard l(data_lock_);
 
     // Decay existing data, and move new data in if it's larger.
-    const float decay = (1.f - (params_.decay_rate * 0.9f));
+    const float decay = 1.f - sqrt(params_.decay_rate);
 
     std::transform(begin, end, incoming_scope_data_.begin(), incoming_scope_data_.begin(),
                    [decay](const float fn, const float f) { return std::max(f * decay, fn); });
@@ -1359,7 +1358,7 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
         std::string minus = "-";
         std::string plus = "+";
         std::stringstream gain;
-        const unsigned prec = waveform_params_.gain() > 1.f ? 2 : 0;
+        const unsigned int prec = waveform_params_.gain() > 1.f ? 2 : 0;
 
         gain << std::fixed << std::setprecision(prec) << 1.f / waveform_params_.gain();
 
@@ -1391,8 +1390,8 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
 
         // Split the grid into multiple sections, starting from 0 and ending at wherever the counter
         // speed says we should end at.
-        const unsigned numLines = 11;
-        const unsigned numSections = numLines - 1;
+        const unsigned int numLines = 11;
+        const unsigned int numSections = numLines - 1;
         float counterSpeedInverse = 1.f / waveform_params_.counterSpeed();
         float sampleRateInverse = 1.f / static_cast<float>(storage_->samplerate);
         float endpoint = counterSpeedInverse * sampleRateInverse * static_cast<float>(width);
