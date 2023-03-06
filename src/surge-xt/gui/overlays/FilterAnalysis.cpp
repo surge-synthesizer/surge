@@ -141,6 +141,8 @@ void FilterAnalysis::onSkinChanged()
     f2Button->setSkin(skin, associatedBitmapStore);
 }
 
+
+
 void FilterAnalysis::paint(juce::Graphics &g)
 {
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
@@ -433,6 +435,15 @@ void FilterAnalysis::resized()
     f2Button->setBounds(w - 42, 2, 40, 15);
 
     catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
+}
+void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
+//https://github.com/surge-synthesizer/surge/blob/main/src/surge-xt/gui/SurgeGUIEditorValueCallbacks.cpp#L1923
+    if (event.mods.isLeftButtonDown())
+    {
+        auto &ss = editor->getPatch().scene[editor->current_scene];
+        auto &fs = ss.filterunit[whichFilter];
+        fs.cutoff.set_storage_value(1.0f);
+    }
 }
 
 } // namespace Overlays
