@@ -1098,7 +1098,8 @@ class alignas(16) SurgeStorage
     {
         // This can be called from any thread, beware! But it is called only
         // when an error occursm so if you want to be sloppy and just lock, that's OK
-        virtual void onSurgeError(const std::string &msg, const std::string &title, const ErrorType &errorType) = 0;
+        virtual void onSurgeError(const std::string &msg, const std::string &title,
+                                  const ErrorType &errorType) = 0;
     };
     std::unordered_set<ErrorListener *> errorListeners;
     // this mutex is ONLY locked in the error path and when registering a listener

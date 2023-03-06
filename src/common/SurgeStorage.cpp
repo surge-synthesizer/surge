@@ -2580,7 +2580,8 @@ bool SurgeStorage::isStandardTuningAndHasNoToggle()
 
 void SurgeStorage::resetTuningToggle() { isToggledToCache = false; }
 
-void SurgeStorage::reportError(const std::string &msg, const std::string &title, const ErrorType errorType)
+void SurgeStorage::reportError(const std::string &msg, const std::string &title,
+                               const ErrorType errorType)
 {
     std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;
     if (errorListeners.empty())

@@ -119,7 +119,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::atomic<int> errorItemCount{0};
     std::vector<std::pair<std::string, std::string>> errorItems;
     std::mutex errorItemsMutex;
-    void onSurgeError(const std::string &msg, const std::string &title, const SurgeStorage::ErrorType &type) override;
+    void onSurgeError(const std::string &msg, const std::string &title,
+                      const SurgeStorage::ErrorType &type) override;
 
     static int start_paramtag_value;
 
