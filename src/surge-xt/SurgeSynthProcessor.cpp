@@ -286,13 +286,13 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     }
 
     auto sc = buffer.getNumSamples();
-    if ((sc & ~(BLOCK_SIZE - 1)) != sc)
-    {
-        surge->storage.reportError(
-            "Audio Block is not a multiple of BLOCK_SIZE. Input will be latent.", "Latent Input",
-            SurgeStorage::AUDIO_CONFIGURATION);
-        inputIsLatent = true;
-    }
+    if (!inputIsLatent && (sc & ~(BLOCK_SIZE - 1)) != sc))
+        {
+            surge->storage.reportError(
+                "Audio Block is not a multiple of BLOCK_SIZE. Input will be latent.",
+                "Latent Input", SurgeStorage::AUDIO_CONFIGURATION);
+            inputIsLatent = true;
+        }
 
     for (int i = 0; i < buffer.getNumSamples(); i++)
     {

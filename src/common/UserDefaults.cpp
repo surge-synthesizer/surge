@@ -308,6 +308,10 @@ std::string defaultKeyToString(DefaultKey k)
         r = "ignoreMidiProgramChange";
         break;
 
+    case DontShowAudioErrorsAgain:
+        r = "dontShowAudioErrorsAgain";
+        break;
+
     case nKeys:
         break;
     }
