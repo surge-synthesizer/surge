@@ -64,12 +64,12 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     struct Parameters
     {
-        float trigger_speed = 0.5f;              // internal trigger speed, knob
+        float trigger_speed = 0.5f;              // internal trigger speed, slider
         TriggerType trigger_type = kTriggerFree; // trigger type, selection
         float trigger_level = 0.5f;              // trigger level, slider
-        float trigger_limit = 0.5f;              // retrigger threshold, knob
-        float time_window = 0.75f;               // X-range, knob
-        float amp_window = 0.5f;                 // Y-range, knob
+        float trigger_limit = 0.5f;              // retrigger threshold, slider
+        float time_window = 0.5f;                // X-range, slider
+        float amp_window = 0.5f;                 // Y-range, slider
         bool freeze = false;                     // freeze display, on/off
         bool dc_kill = false;                    // kill DC, on/off
         bool sync_draw = false;                  // sync redraw, on/off
@@ -138,7 +138,7 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 {
   public:
     static constexpr float lowFreq = 10;
-    static constexpr float highFreq = 24000;
+    static constexpr float highFreq = 25000;
 
     struct Parameters
     {
@@ -312,7 +312,7 @@ class Oscilloscope : public OverlayComponent,
     };
 
     // Height of parameter window, in pixels.
-    static constexpr const int paramsHeight = 78;
+    static constexpr const int paramsHeight = 80;
 
     void calculateSpectrumData();
     void changeScopeType(ScopeMode type);
