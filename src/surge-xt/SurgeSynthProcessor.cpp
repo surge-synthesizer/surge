@@ -288,10 +288,9 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     auto sc = buffer.getNumSamples();
     if ((sc & ~(BLOCK_SIZE - 1)) != sc)
     {
-        // TODO: We should probably show a user warning of some form here.
-        // surge->reportError would work but doesn't have a "dont show again" option
-        // so that requires some code. For now this will just lag input by 32 samples
-        // to make sure we at least don't distort, which improves things for 1.2
+        surge->storage.reportError("Audio Block is not a multiple of BLOCK_SIZE. Input will be latent.",
+                                   "Latent Input",
+                                   SurgeStorage::AUDIO_CONFIGURATION);
         inputIsLatent = true;
     }
 
