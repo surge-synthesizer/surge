@@ -66,16 +66,21 @@ class alignas(16) AirWindowsEffect : public Effect
     {
         AWFxSelectorMapper() {}
 
+        // See #6619 for this defense which works around a different problem
+        inline int safeIdx(int i) const { return std::clamp(i, 0, (int)fxreg.size() - 1); }
         virtual int remapStreamedIndexToDisplayIndex(int i) const override
         {
-            return fxreg[i].displayOrder;
+            return fxreg[safeIdx(i)].displayOrder;
         }
-        virtual std::string nameAtStreamedIndex(int i) const override { return fxreg[i].name; }
+        virtual std::string nameAtStreamedIndex(int i) const override
+        {
+            return fxreg[safeIdx(i)].name;
+        }
         virtual bool hasGroupNames() const override { return true; }
 
         virtual std::string groupNameAtStreamedIndex(int i) const override
         {
-            return fxreg[i].groupName;
+            return fxreg[safeIdx(i)].groupName;
         }
 
         bool supportsTotalIndexOrdering() const override { return true; }
