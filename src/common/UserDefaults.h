@@ -137,6 +137,8 @@ enum DefaultKey
 
     IgnoreMIDIProgramChange,
 
+    DontShowAudioErrorsAgain,
+
     nKeys
 };
 

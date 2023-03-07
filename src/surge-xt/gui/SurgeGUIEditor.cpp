@@ -549,16 +549,24 @@ void SurgeGUIEditor::idle()
 
     if (errorItemCount)
     {
-        std::vector<std::pair<std::string, std::string>> cp;
+        decltype(errorItems) cp;
         {
             std::lock_guard<std::mutex> g(errorItemsMutex);
             cp = errorItems;
             errorItems.clear();
         }
 
-        for (const auto &p : cp)
+        for (const auto &[msg, title, code] : cp)
         {
-            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, p.second, p.first);
+            if (code == SurgeStorage::AUDIO_CONFIGURATION)
+            {
+                promptForOKCancelWithDontAskAgain(
+                    title, msg, Surge::Storage::DefaultKey::DontShowAudioErrorsAgain, []() {});
+            }
+            else
+            {
+                juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, title, msg);
+            }
         }
     }
 
@@ -6862,7 +6870,7 @@ void SurgeGUIEditor::onSurgeError(const string &msg, const string &title,
                                   const SurgeStorage::ErrorType &et)
 {
     std::lock_guard<std::mutex> g(errorItemsMutex);
-    errorItems.emplace_back(msg, title);
+    errorItems.emplace_back(msg, title, et);
     errorItemCount++;
 }
 
