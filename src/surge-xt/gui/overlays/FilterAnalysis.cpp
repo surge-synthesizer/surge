@@ -459,7 +459,6 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
 
         float cutoff = 12.0f * std::log2(freq / 440.0f);
         fs.cutoff.val.f = cutoff;
-        editor->filterCutoffSlider[whichFilter]->setVisible(true);
         editor->filterCutoffSlider[whichFilter]->repaint();
         repushData();
     }
