@@ -448,6 +448,10 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         auto dRect = lb.withTrimmedTop(15).reduced(4);
         auto width = dRect.getWidth();
         auto height = dRect.getHeight();
+        juce::Point<int> mousePoint = event.getPosition().transformedBy(getTransform().inverted());
+        mousePoint.y -= 15+4;
+        mousePoint.x -= 4;
+
         static constexpr auto lowFreq = 10.f;
         static constexpr auto highFreq = 25090.f; //TODO: move the constant at one place
 
@@ -457,14 +461,14 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
             return freq;
         };
 
-        float freq = xToFreq(event.x, width); //TODO, take the transformation into account
+        float freq = xToFreq(mousePoint.x, width);
         //TODO: get rid of the lambda
         
         
         float lowerLimit = -60.f;
         float upperLimit = 70.f;
         float cutoff = juce::jlimit(lowerLimit, upperLimit, 12.0f * std::log2(freq / 440.0f));
-        float resonance = juce::jlimit(0.f,1.f, (height - event.y) / (float)height);
+        float resonance = juce::jlimit(0.f,1.f, (height - mousePoint.y) / (float)height);
 
         float f =  juce::jmap(cutoff, lowerLimit, upperLimit, 0.0f, 1.0f );
         fs.cutoff.val.f = cutoff;
