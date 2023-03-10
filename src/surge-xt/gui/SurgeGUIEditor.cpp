@@ -1967,11 +1967,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
                 if (strcmp(p->ui_identifier, "filter.cutoff_1") == 0 && comp)
                 {
-                    filterCutoffSlider[0] = comp->asJuceComponent();
+                    filterCutoffSlider[0] = param[p->id];
                 }
                 if (strcmp(p->ui_identifier, "filter.cutoff_2") == 0 && comp)
                 {
-                    filterCutoffSlider[1] = comp->asJuceComponent();
+                    filterCutoffSlider[1] = param[p->id];
                 }
 
                 if (strcmp(p->ui_identifier, "lfo.rate") == 0 && comp)

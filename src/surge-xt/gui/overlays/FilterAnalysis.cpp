@@ -248,6 +248,8 @@ void FilterAnalysis::paint(juce::Graphics &g)
             //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
             double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
             const auto xPos = freqToX(freq, width);
+            std::cout << "fs.cutoff.val.f: "<< fs.cutoff.val.f << std::endl;
+            std::cout << "cutoff: "<< evaluator->cutoff << std::endl;
 
             int yDraw = height - evaluator->resonance * height;
 
@@ -447,7 +449,7 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         auto width = dRect.getWidth();
         auto height = dRect.getHeight();
         static constexpr auto lowFreq = 10.f;
-        static constexpr auto highFreq = 25090.f;
+        static constexpr auto highFreq = 25090.f; //TODO: move the constant at one place
 
         auto xToFreq = [&](float x, int width) {
             auto xNorm = x / (float)width;
@@ -455,11 +457,18 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
             return freq;
         };
 
-        float freq = xToFreq(event.x, width);
+        float freq = xToFreq(event.x, width); //TODO, take the transformation into account
 
-        float cutoff = 12.0f * std::log2(freq / 440.0f);
+        float lowerLimit = -60.f;
+        float upperLimit = 70.f;
+        float cutoff = juce::jlimit(lowerLimit, upperLimit, 12.0f * std::log2(freq / 440.0f));
+
+
+        float f =  juce::jmap(cutoff, lowerLimit, upperLimit, 0.0f, 1.0f );
         fs.cutoff.val.f = cutoff;
-        editor->filterCutoffSlider[whichFilter]->repaint();
+        editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->setValue(f);
+        editor->filterCutoffSlider[whichFilter]->setQuantitizedDisplayValue(f);
+        editor->filterCutoffSlider[whichFilter]->asJuceComponent()->repaint();
         repushData();
     }
 }
