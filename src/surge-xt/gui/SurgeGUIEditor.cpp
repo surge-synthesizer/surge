@@ -1973,6 +1973,14 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 {
                     filterCutoffSlider[1] = param[p->id];
                 }
+                if (strcmp(p->ui_identifier, "filter.resonance_1") == 0 && comp)
+                {
+                    filterResonanceSlider[0] = param[p->id];
+                }
+                if (strcmp(p->ui_identifier, "filter.resonance_2") == 0 && comp)
+                {
+                    filterResonanceSlider[1] = param[p->id];
+                }
 
                 if (strcmp(p->ui_identifier, "lfo.rate") == 0 && comp)
                 {

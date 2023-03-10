@@ -248,8 +248,8 @@ void FilterAnalysis::paint(juce::Graphics &g)
             //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
             double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
             const auto xPos = freqToX(freq, width);
-            std::cout << "fs.cutoff.val.f: "<< fs.cutoff.val.f << std::endl;
-            std::cout << "cutoff: "<< evaluator->cutoff << std::endl;
+
+            std::cout << evaluator->resonance << std::endl;
 
             int yDraw = height - evaluator->resonance * height;
 
@@ -458,17 +458,25 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         };
 
         float freq = xToFreq(event.x, width); //TODO, take the transformation into account
-
+        //TODO: get rid of the lambda
+        
+        
         float lowerLimit = -60.f;
         float upperLimit = 70.f;
         float cutoff = juce::jlimit(lowerLimit, upperLimit, 12.0f * std::log2(freq / 440.0f));
-
+        float resonance = juce::jlimit(0.f,1.f, (height - event.y) / (float)height);
 
         float f =  juce::jmap(cutoff, lowerLimit, upperLimit, 0.0f, 1.0f );
         fs.cutoff.val.f = cutoff;
+        fs.resonance.val.f = resonance;
+
+        //TODO:: check for nullptr
         editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->setValue(f);
         editor->filterCutoffSlider[whichFilter]->setQuantitizedDisplayValue(f);
         editor->filterCutoffSlider[whichFilter]->asJuceComponent()->repaint();
+        editor->filterResonanceSlider[whichFilter]->asControlValueInterface()->setValue(resonance);
+        editor->filterResonanceSlider[whichFilter]->setQuantitizedDisplayValue(resonance);
+        editor->filterResonanceSlider[whichFilter]->asJuceComponent()->repaint();
         repushData();
     }
 }
