@@ -148,7 +148,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
 
     static constexpr auto lowFreq = 10.f;
-    static constexpr auto highFreq = 25090.f;
+    static constexpr auto highFreq = 25087.f;
     static constexpr auto dbMin = -42.f;
     static constexpr auto dbMax = 12.f;
     constexpr auto dbRange = dbMax - dbMin;
@@ -449,7 +449,7 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         auto width = dRect.getWidth();
         auto height = dRect.getHeight();
         juce::Point<int> mousePoint = event.getPosition().transformedBy(getTransform().inverted());
-        mousePoint.y -= 15+4;
+        mousePoint.y -= 15+4; //TODO: it doesn't work when the window is big
         mousePoint.x -= 4;
 
         static constexpr auto lowFreq = 10.f;
