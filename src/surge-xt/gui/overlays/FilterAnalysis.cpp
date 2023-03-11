@@ -251,19 +251,19 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
             int yDraw = height - evaluator->resonance * height;
 
-            g.setColour(juce::Colours::red);
+            g.setColour(skin->getColor(Colors::MSEGEditor::CurveHighlight));
             float r =  width * 0.008f;;
             g.fillEllipse(xPos - r / 2.f, yDraw - r / 2.f, r, r);
 
 
             // Draw vertical line
             juce::Line line{juce::Point{xPos, 0.f}, juce::Point{xPos, (float)height}};
-            g.setColour(juce::Colours::red);
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Line));
             g.drawLine(line);
 
             // Draw ruler steps
             const int rulerStep = height / 10;
-            g.setColour(juce::Colours::grey);
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Line));
             for (int i = 0; i < 10; ++i)
             {
                 int y = i * rulerStep;
