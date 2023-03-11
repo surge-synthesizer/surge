@@ -249,8 +249,6 @@ void FilterAnalysis::paint(juce::Graphics &g)
             double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
             const auto xPos = freqToX(freq, width);
 
-            std::cout << evaluator->resonance << std::endl;
-
             int yDraw = height - evaluator->resonance * height;
 
             g.setColour(juce::Colours::red);
@@ -448,9 +446,14 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         auto dRect = lb.withTrimmedTop(15).reduced(4);
         auto width = dRect.getWidth();
         auto height = dRect.getHeight();
-        juce::Point<int> mousePoint = event.getPosition().transformedBy(getTransform().inverted());
-        mousePoint.y -= 15+4; //TODO: it doesn't work when the window is big
-        mousePoint.x -= 4;
+        juce::Point<int> mousePoint =
+            event
+                .getPosition()
+                .transformedBy(
+                    juce::AffineTransform()
+                                .translated(dRect.getX(), dRect.getY())
+                                .inverted()
+                );
 
         static constexpr auto lowFreq = 10.f;
         static constexpr auto highFreq = 25090.f; //TODO: move the constant at one place
