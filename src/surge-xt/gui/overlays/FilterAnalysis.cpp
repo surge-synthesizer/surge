@@ -439,6 +439,7 @@ void FilterAnalysis::resized()
 
     catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
 }
+
 void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
     if (event.mods.isLeftButtonDown())
     {
@@ -479,6 +480,9 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         editor->filterResonanceSlider[whichFilter]->asJuceComponent()->repaint();
         repushData();
     }
+}
+void FilterAnalysis::mouseDown(const juce::MouseEvent &event) {
+    mouseDrag(event);
 }
 
 } // namespace Overlays
