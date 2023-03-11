@@ -477,7 +477,8 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         fs.cutoff.val.f = cutoff;
         fs.resonance.val.f = resonance;
 
-        //TODO:: check for nullptr
+        jassert(editor->filterCutoffSlider[whichFilter] != nullptr); //  filter.cutoff_1 or filter.cutoff_2 is not assigned in SurgeGuiEditor.cpp
+        jassert(editor->filterResonanceSlider[whichFilter] != nullptr); // filter.resonance_1 or filter.resonance_2 is not assigned in SurgeGuiEditor
         editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->setValue(f);
         editor->filterCutoffSlider[whichFilter]->setQuantitizedDisplayValue(f);
         editor->filterCutoffSlider[whichFilter]->asJuceComponent()->repaint();
