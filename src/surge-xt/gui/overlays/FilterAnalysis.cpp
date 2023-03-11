@@ -21,6 +21,9 @@
 #include <thread>
 #include "Tunings.h"
 
+static constexpr auto LOWER_FREQ_IN_GRAPH = 10.f;
+static constexpr auto HIGHER_FREQ_IN_GRAPH = 25087.f;
+
 namespace Surge
 {
 namespace Overlays
@@ -147,14 +150,14 @@ void FilterAnalysis::paint(juce::Graphics &g)
 {
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
 
-    static constexpr auto lowFreq = 10.f;
-    static constexpr auto highFreq = 25087.f;
     static constexpr auto dbMin = -42.f;
     static constexpr auto dbMax = 12.f;
     constexpr auto dbRange = dbMax - dbMin;
 
     auto freqToX = [&](float freq, int width) {
-        auto xNorm = std::log(freq / lowFreq) / std::log(highFreq / lowFreq);
+        auto xNorm = std::log(freq / LOWER_FREQ_IN_GRAPH)
+                               /
+                          std::log(HIGHER_FREQ_IN_GRAPH / LOWER_FREQ_IN_GRAPH);
         return xNorm * (float)width;
     };
 
@@ -302,7 +305,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
         {
             for (int i = 0; i < nPoints; ++i)
             {
-                if (freqAxis[i] < lowFreq / 2.f || freqAxis[i] > highFreq * 1.01f)
+                if (freqAxis[i] < LOWER_FREQ_IN_GRAPH / 2.f || freqAxis[i] > HIGHER_FREQ_IN_GRAPH * 1.01f)
                 {
                     continue;
                 }
@@ -455,14 +458,10 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
                                 .inverted()
                 );
 
-        static constexpr auto lowFreq = 10.f;
-        static constexpr auto highFreq = 25090.f; //TODO: move the constant at one place
-
         auto xNorm = mousePoint.x / (float)width;
-        auto freq = std::pow(highFreq / lowFreq, xNorm) * lowFreq;
-
-        float lowerLimit = -60.f;
-        float upperLimit = 70.f;
+        auto freq = std::pow(HIGHER_FREQ_IN_GRAPH / LOWER_FREQ_IN_GRAPH, xNorm) * LOWER_FREQ_IN_GRAPH;
+        static constexpr auto lowerLimit = -60.f;
+        static constexpr auto upperLimit = 70.f;
         float cutoff = juce::jlimit(lowerLimit, upperLimit, 12.0f * std::log2(freq / 440.0f));
         float resonance = juce::jlimit(0.f,1.f, (height - mousePoint.y) / (float)height);
 
