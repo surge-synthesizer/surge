@@ -458,16 +458,9 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         static constexpr auto lowFreq = 10.f;
         static constexpr auto highFreq = 25090.f; //TODO: move the constant at one place
 
-        auto xToFreq = [&](float x, int width) {
-            auto xNorm = x / (float)width;
-            auto freq = std::pow(highFreq / lowFreq, xNorm) * lowFreq;
-            return freq;
-        };
+        auto xNorm = mousePoint.x / (float)width;
+        auto freq = std::pow(highFreq / lowFreq, xNorm) * lowFreq;
 
-        float freq = xToFreq(mousePoint.x, width);
-        //TODO: get rid of the lambda
-        
-        
         float lowerLimit = -60.f;
         float upperLimit = 70.f;
         float cutoff = juce::jlimit(lowerLimit, upperLimit, 12.0f * std::log2(freq / 440.0f));
