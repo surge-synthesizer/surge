@@ -678,7 +678,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::Component *mpeStatus{nullptr}, *zoomStatus{nullptr}, *tuneStatus{nullptr},
         *mainMenu{nullptr}, *lfoMenuButton{nullptr}, *undoButton{nullptr}, *redoButton{nullptr},
         *lfoRateSlider{nullptr};
-
+    Surge::Widgets::ModulatableControlInterface *filterCutoffSlider[2]{nullptr, nullptr},
+        *filterResonanceSlider[2]{nullptr, nullptr};
     /*
      * This is the JUCE component management
      */

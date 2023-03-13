@@ -1518,6 +1518,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     // reset the lfo rate slider pointer
     lfoRateSlider = nullptr;
+    filterCutoffSlider[0] = nullptr;
+    filterCutoffSlider[1] = nullptr;
+    filterResonanceSlider[0] = nullptr;
+    filterResonanceSlider[1] = nullptr;
 
     auto moRect = positionForModOverview();
 
@@ -1971,6 +1975,23 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 currentSkin->resolveBaseParentOffsets(skinCtrl);
                 auto comp = layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
                                                    style | conn.payload->controlStyleFlags);
+
+                if (strcmp(p->ui_identifier, "filter.cutoff_1") == 0 && comp)
+                {
+                    filterCutoffSlider[0] = param[p->id];
+                }
+                if (strcmp(p->ui_identifier, "filter.cutoff_2") == 0 && comp)
+                {
+                    filterCutoffSlider[1] = param[p->id];
+                }
+                if (strcmp(p->ui_identifier, "filter.resonance_1") == 0 && comp)
+                {
+                    filterResonanceSlider[0] = param[p->id];
+                }
+                if (strcmp(p->ui_identifier, "filter.resonance_2") == 0 && comp)
+                {
+                    filterResonanceSlider[1] = param[p->id];
+                }
 
                 if (strcmp(p->ui_identifier, "lfo.rate") == 0 && comp)
                 {
