@@ -271,7 +271,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
                 float startX = xPos - (lineLength / 2.0f);
                 float endX = xPos + (lineLength / 2.0f);
 
-                g.drawLine(startX, y, endX, y, 1);
+                g.drawHorizontalLine(y, startX, endX);
 
             }
         }
