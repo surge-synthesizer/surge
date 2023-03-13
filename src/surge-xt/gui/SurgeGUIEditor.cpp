@@ -1511,6 +1511,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
     lfoRateSlider = nullptr;
     filterCutoffSlider[0] = nullptr;
     filterCutoffSlider[1] = nullptr;
+    filterResonanceSlider[0] = nullptr;
+    filterResonanceSlider[1] = nullptr;
 
     auto moRect = positionForModOverview();
 
