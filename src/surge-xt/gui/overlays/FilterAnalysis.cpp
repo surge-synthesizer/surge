@@ -478,6 +478,9 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         repushData();
     }
 }
+
+// mouseDrag doesn't catch cases when we just click with the left mouse button,
+// mouseDrag only catches movements holding the button. So let's catch it here.
 void FilterAnalysis::mouseDown(const juce::MouseEvent &event) {
     mouseDrag(event);
 }
