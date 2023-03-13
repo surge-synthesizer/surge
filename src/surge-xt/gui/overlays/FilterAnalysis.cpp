@@ -144,8 +144,6 @@ void FilterAnalysis::onSkinChanged()
     f2Button->setSkin(skin, associatedBitmapStore);
 }
 
-
-
 void FilterAnalysis::paint(juce::Graphics &g)
 {
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
@@ -155,9 +153,8 @@ void FilterAnalysis::paint(juce::Graphics &g)
     constexpr auto dbRange = dbMax - dbMin;
 
     auto freqToX = [&](float freq, int width) {
-        auto xNorm = std::log(freq / LOWER_FREQ_IN_GRAPH)
-                               /
-                          std::log(HIGHER_FREQ_IN_GRAPH / LOWER_FREQ_IN_GRAPH);
+        auto xNorm = std::log(freq / LOWER_FREQ_IN_GRAPH) /
+                     std::log(HIGHER_FREQ_IN_GRAPH / LOWER_FREQ_IN_GRAPH);
         return xNorm * (float)width;
     };
 
@@ -248,14 +245,16 @@ void FilterAnalysis::paint(juce::Graphics &g)
         // draws the ruler to show the position of cutoff frequency and resonance
         {
             //    Tunings::Tuning tuning{};
-            //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be, but not gradual
+            //    double freq = tuning.frequencyForMidiNote(evaluator->cutoff + 69.0); // might be,
+            //    but not gradual
             double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
             const auto xPos = freqToX(freq, width);
 
             int yDraw = height - evaluator->resonance * height;
 
             g.setColour(skin->getColor(Colors::MSEGEditor::CurveHighlight));
-            float r =  width * 0.008f;;
+            float r = width * 0.008f;
+
             g.fillEllipse(xPos - r / 2.f, yDraw - r / 2.f, r, r);
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Line));
@@ -272,7 +271,6 @@ void FilterAnalysis::paint(juce::Graphics &g)
                 float endX = xPos + (lineLength / 2.0f);
 
                 g.drawHorizontalLine(y, startX, endX);
-
             }
         }
     }
@@ -302,7 +300,8 @@ void FilterAnalysis::paint(juce::Graphics &g)
         {
             for (int i = 0; i < nPoints; ++i)
             {
-                if (freqAxis[i] < LOWER_FREQ_IN_GRAPH / 2.f || freqAxis[i] > HIGHER_FREQ_IN_GRAPH * 1.01f)
+                if (freqAxis[i] < LOWER_FREQ_IN_GRAPH / 2.f ||
+                    freqAxis[i] > HIGHER_FREQ_IN_GRAPH * 1.01f)
                 {
                     continue;
                 }
@@ -437,7 +436,8 @@ void FilterAnalysis::resized()
     catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
 }
 
-void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
+void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
+{
     if (event.mods.isLeftButtonDown())
     {
         auto &ss = editor->getPatch().scene[editor->current_scene];
@@ -447,28 +447,27 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
         auto dRect = lb.withTrimmedTop(15).reduced(4);
         auto width = dRect.getWidth();
         auto height = dRect.getHeight();
-        juce::Point<int> mousePoint =
-            event
-                .getPosition()
-                .transformedBy(
-                    juce::AffineTransform()
-                                .translated(dRect.getX(), dRect.getY())
-                                .inverted()
-                );
+        juce::Point<int> mousePoint = event.getPosition().transformedBy(
+            juce::AffineTransform().translated(dRect.getX(), dRect.getY()).inverted());
 
         auto xNorm = mousePoint.x / (float)width;
-        auto freq = std::pow(HIGHER_FREQ_IN_GRAPH / LOWER_FREQ_IN_GRAPH, xNorm) * LOWER_FREQ_IN_GRAPH;
+        auto freq =
+            std::pow(HIGHER_FREQ_IN_GRAPH / LOWER_FREQ_IN_GRAPH, xNorm) * LOWER_FREQ_IN_GRAPH;
         static constexpr auto lowerLimit = -60.f;
         static constexpr auto upperLimit = 70.f;
         float cutoff = juce::jlimit(lowerLimit, upperLimit, 12.0f * std::log2(freq / 440.0f));
-        float resonance = juce::jlimit(0.f,1.f, (height - mousePoint.y) / (float)height);
+        float resonance = juce::jlimit(0.f, 1.f, (height - mousePoint.y) / (float)height);
 
-        float f =  juce::jmap(cutoff, lowerLimit, upperLimit, 0.0f, 1.0f );
+        float f = juce::jmap(cutoff, lowerLimit, upperLimit, 0.0f, 1.0f);
         fs.cutoff.val.f = cutoff;
         fs.resonance.val.f = resonance;
 
-        jassert(editor->filterCutoffSlider[whichFilter] != nullptr); //  filter.cutoff_1 or filter.cutoff_2 is not assigned in SurgeGuiEditor.cpp
-        jassert(editor->filterResonanceSlider[whichFilter] != nullptr); // filter.resonance_1 or filter.resonance_2 is not assigned in SurgeGuiEditor
+        jassert(
+            editor->filterCutoffSlider[whichFilter] !=
+            nullptr); //  filter.cutoff_1 or filter.cutoff_2 is not assigned in SurgeGuiEditor.cpp
+        jassert(
+            editor->filterResonanceSlider[whichFilter] !=
+            nullptr); // filter.resonance_1 or filter.resonance_2 is not assigned in SurgeGuiEditor
         editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->setValue(f);
         editor->filterCutoffSlider[whichFilter]->setQuantitizedDisplayValue(f);
         editor->filterCutoffSlider[whichFilter]->asJuceComponent()->repaint();
@@ -481,9 +480,7 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event) {
 
 // mouseDrag doesn't catch cases when we just click with the left mouse button,
 // mouseDrag only catches movements holding the button. So let's catch it here.
-void FilterAnalysis::mouseDown(const juce::MouseEvent &event) {
-    mouseDrag(event);
-}
+void FilterAnalysis::mouseDown(const juce::MouseEvent &event) { mouseDrag(event); }
 
 } // namespace Overlays
 }; // namespace Surge
