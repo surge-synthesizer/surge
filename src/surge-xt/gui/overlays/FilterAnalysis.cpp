@@ -340,7 +340,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
             const int yPos = height - evaluator->resonance * height;
             const float r = width * 0.0175f;
 
-            g.setColour(skin->getColor(Colors::MSEGEditor::Curve).withMultipliedAlpha(0.333));
+            g.setColour(skin->getColor(Colors::MSEGEditor::Curve).withMultipliedAlpha(0.666));
             g.drawVerticalLine(xPos, 0.f, height);
             g.drawHorizontalLine(yPos, 0.f, width);
 
@@ -488,12 +488,8 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
     if (dRect.contains(where.toInt()))
     {
         isPressed = true;
-        mouseDrag(event);
-    }
-
-    if (withinHotzone)
-    {
         hideCursor(where.toInt());
+        mouseDrag(event);
     }
 }
 
@@ -533,7 +529,7 @@ void FilterAnalysis::mouseMove(const juce::MouseEvent &event)
         repaint();
     }
 
-    if (isHovered && !cursorHidden)
+    if (isHovered)
     {
         setMouseCursor(juce::MouseCursor::UpDownLeftRightResizeCursor);
         reset = true;
