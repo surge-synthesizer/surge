@@ -434,13 +434,14 @@ void FilterAnalysis::resized()
 
 void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 {
-    if (event.mods.isLeftButtonDown())
+    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
+    auto dRect = lb.withTrimmedTop(15).reduced(4);
+
+    if (event.mods.isLeftButtonDown() && dRect.contains(event.position.toInt()))
     {
         auto &ss = editor->getPatch().scene[editor->current_scene];
         auto &fs = ss.filterunit[whichFilter];
 
-        auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-        auto dRect = lb.withTrimmedTop(15).reduced(4);
         auto width = dRect.getWidth();
         auto height = dRect.getHeight();
 
