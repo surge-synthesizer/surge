@@ -166,6 +166,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/WidgetBaseMixin.h
   gui/widgets/XMLConfiguredMenus.cpp
   gui/widgets/XMLConfiguredMenus.h
+
+  osc/OSCListener.h
   )
 
 if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
@@ -202,6 +204,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   juce::juce_audio_utils
   juce::juce_audio_processors
   juce::juce_audio_plugin_client
+  juce::juce_osc
   surge-xt-binary
   sst-filters-extras
   )
@@ -209,6 +212,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME}
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/gui
+  ${CMAKE_CURRENT_SOURCE_DIR}/osc
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 

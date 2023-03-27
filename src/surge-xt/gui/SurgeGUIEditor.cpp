@@ -28,6 +28,8 @@
 #include "ModulatorPresetManager.h"
 #include "ModulationSource.h"
 
+#include "osc/OSCListener.h"
+
 #include "SurgeSynthEditor.h"
 #include "SurgeJUCELookAndFeel.h"
 
@@ -2970,7 +2972,10 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     auto midiSubMenu = makeMidiMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("MIDI Settings"), midiSubMenu);
 
-    auto tuningSubMenu = makeTuningMenu(where, false);
+    auto oscSubMenu = makeOSCMenu(where);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Open Sound Control"), oscSubMenu);
+
+   auto tuningSubMenu = makeTuningMenu(where, false);
     settingsMenu.addSubMenu("Tuning", tuningSubMenu);
 
     settingsMenu.addSeparator();
@@ -4604,12 +4609,30 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
     return dataSubMenu;
 }
 
+juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
+{
+    auto oscSubMenu = juce::PopupMenu();
+    bool alreadyListening = Surge::OSC::listening;
+    if (alreadyListening) {
+         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Listener"),
+            [this]() {
+                Surge::OSC::stopListening();
+            });
+   } else {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Listener"),
+            [this]() {
+                Surge::OSC::OSCListener sOSC(9001);
+            });
+    }
+
+    return oscSubMenu;
+}
+
 // builds a menu for setting controller smoothing, used in ::makeMidiMenu and ::makeMpeMenu
 // key is the key given to getUserDefaultValue,
 // default is a value to default to,
 // setSmooth is a function called to set the smoothing value
-juce::PopupMenu
-SurgeGUIEditor::makeSmoothMenu(const juce::Point<int> &where, const Surge::Storage::DefaultKey &key,
+juce::PopupMenu SurgeGUIEditor::makeSmoothMenu(const juce::Point<int> &where, const Surge::Storage::DefaultKey &key,
                                int defaultValue,
                                std::function<void(Modulator::SmoothingMode)> setSmooth)
 {
