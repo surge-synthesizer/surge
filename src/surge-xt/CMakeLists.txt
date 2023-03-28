@@ -167,6 +167,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/XMLConfiguredMenus.cpp
   gui/widgets/XMLConfiguredMenus.h
 
+  osc/OSCListener.cpp
   osc/OSCListener.h
   )
 

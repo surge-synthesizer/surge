@@ -4612,16 +4612,16 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
 juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 {
     auto oscSubMenu = juce::PopupMenu();
-    bool alreadyListening = Surge::OSC::listening;
-    if (alreadyListening) {
+
+    if (oscListener.listening) {
          oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Listener"),
             [this]() {
-                Surge::OSC::stopListening();
+                oscListener.stopListening();
             });
    } else {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Listener"),
             [this]() {
-                Surge::OSC::OSCListener sOSC(9001);
+                oscListener.connectToOSC(9001);
             });
     }
 

@@ -35,6 +35,8 @@
 #include "overlays/TuningOverlays.h"
 #include "widgets/ModulatableControlInterface.h"
 
+#include "../osc/OSCListener.h"
+
 #include "juce_gui_basics/juce_gui_basics.h"
 
 #include <vector>
@@ -238,6 +240,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setModsourceSelected(modsources ms, int ms_idx = 0);
 
   private:
+    Surge::OSC::OSCListener oscListener;
     void openOrRecreateEditor();
     std::unique_ptr<Surge::Overlays::OverlayComponent> makeStorePatchDialog();
     void close_editor();

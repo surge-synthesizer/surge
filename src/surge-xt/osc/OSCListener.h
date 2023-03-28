@@ -21,46 +21,22 @@ namespace Surge
 namespace OSC
 {
 
-static bool listening = false;
-static void stopListening() {
-     listening = false;
-};
 
 class OSCListener
-          : private juce::OSCReceiver,
-                    juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
+     : public juce::OSCReceiver,
+              juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
 {
 public:
-     OSCListener(int port) {
-          if (!connect(port)) {
-               std::cout << "Error: could not connect to UDP port " << std::to_string(port) << std::endl;
-          } else {
-               addListener(this);
-               listening = true;
-               std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
-          }
-     };
+     OSCListener();
+     ~OSCListener();
 
-private:
-     void oscMessageReceived (const juce::OSCMessage& message) override {
-          std::string msg = "Got OSC msg.";
-          // msg = message.getAddressPattern().toString();
-          std::cout << "SurgeOSC: " << msg << std::endl;
-     };
+     bool listening = false;
 
-     void oscBundleReceived (const juce::OSCBundle &bundle) override {
-          std::string msg = "Got OSC bundle.";
-          std::cout << "SurgeOSC: " << msg << std::endl;
-          
-          for (int i = 0; i < bundle.size(); ++i)
-          {
-               auto elem = bundle[i];
-               if (elem.isMessage())
-                    oscMessageReceived (elem.getMessage());
-               else if (elem.isBundle())
-                    oscBundleReceived (elem.getBundle());
-          }
-     }
+     void connectToOSC(int port);
+     void stopListening();
+
+     void oscMessageReceived (const juce::OSCMessage& message) override;
+     void oscBundleReceived (const juce::OSCBundle &bundle) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OSCListener)
 };
