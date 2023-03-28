@@ -693,12 +693,6 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setPrecision(2);
     amp_window_.setPrecision(2);
 
-    trigger_speed_.setIsLightStyle(true);
-    trigger_level_.setIsLightStyle(true);
-    trigger_limit_.setIsLightStyle(true);
-    time_window_.setIsLightStyle(true);
-    amp_window_.setIsLightStyle(true);
-
     auto updateParameter = [this](float &param, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
@@ -883,10 +877,6 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     noise_floor_.setDescription("Bottom of the display.");
     max_db_.setDescription("Top of the display.");
     decay_rate_.setDescription("Control how fast the current data decays.");
-
-    noise_floor_.setIsLightStyle(true);
-    max_db_.setIsLightStyle(true);
-    decay_rate_.setIsLightStyle(true);
 
     noise_floor_.setPrecision(0);
     max_db_.setPrecision(0);
