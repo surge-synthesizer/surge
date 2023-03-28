@@ -397,6 +397,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     float inputLatentBuffer alignas(16)[2][BLOCK_SIZE];
     bool inputIsLatent{false};
 
+    // Have we warned about bad configurations
+    bool warnedAboutBadConfig{false};
+
   public:
     std::unique_ptr<Surge::GUI::UndoManager> undoManager;
 

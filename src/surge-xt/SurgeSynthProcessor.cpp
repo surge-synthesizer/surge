@@ -227,6 +227,32 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     if (mb->getNumberOfChannels() != 2 || !mb->isEnabled())
     {
         // We have to have a stereo output
+        if (!warnedAboutBadConfig)
+        {
+            std::ostringstream msg;
+            msg << "SurgeXT was not configured with a stereo output. \n"
+                << "SurgeXT requires at least a main stereo output but the \n"
+                << "main bus has " << mb->getNumberOfChannels() << " channels "
+                << "and enablement state " << (mb->isEnabled() ? "True" : "False");
+            surge->storage.reportError(msg.str(), "Bus Configuration Error");
+            warnedAboutBadConfig = true;
+        }
+        return;
+    }
+
+    if (buffer.getNumChannels() < 2 && mb->isEnabled())
+    {
+        if (!warnedAboutBadConfig)
+        {
+            std::ostringstream msg;
+            msg << "SurgeXT did not receive a stereo processing buffer. \n"
+                << "SurgeXT requires at least a main stereo output but the \n"
+                << "provided buffer has " << buffer.getNumChannels() << " channels\n"
+                << "and is enabled. This seems to happen with bluetooth headsets\n"
+                << "in JUCE on macOS when you use the headset as an input and output.";
+            surge->storage.reportError(msg.str(), "Bus Configuration Error");
+            warnedAboutBadConfig = true;
+        }
         return;
     }
 
