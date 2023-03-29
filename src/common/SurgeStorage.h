@@ -846,6 +846,26 @@ struct DAWExtraStateStorage
             int filterInt{0};
         } modulationEditorState;
 
+        struct OscilloscopeOverlayState
+        {
+            int mode = 0;  // 0 for waveform, 1 for spectrum.
+
+            // Waveform values.
+            float trigger_speed = 0.5f;
+            float trigger_level = 0.5f;
+            float trigger_limit = 0.5f;
+            float time_window = 0.5f;
+            float amp_window = 0.5f;
+            int trigger_type = 0;
+            bool dc_kill = false;
+            bool sync_draw = false;
+
+            // Spectrum values.
+            float noise_floor = 0.f;
+            float max_db = 1.f;
+            float decay_rate = 1.f;
+        } oscilloscopeOverlayState;
+
         struct TuningOverlayState
         {
             int editMode = 0;

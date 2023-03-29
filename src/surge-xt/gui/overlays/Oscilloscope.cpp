@@ -568,6 +568,11 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     addChildComponent(waveform_);
     addChildComponent(waveform_parameters_);
 
+    // Set the initial mode based on the DAW state.
+    int mode = juce::jlimit(0, 1, s->getPatch().dawExtraState.editor.oscilloscopeOverlayState.mode);
+    scope_mode_button_.setValue(static_cast<float>(mode));
+    changeScopeType(static_cast<ScopeMode>(mode));
+
     storage_->audioOut.subscribe();
 }
 
@@ -584,6 +589,10 @@ Oscilloscope::~Oscilloscope()
     fft_thread_.join();
     // Data thread can perform subscriptions, so do a final unsubscribe after it's done.
     storage_->audioOut.unsubscribe();
+
+    // Save the scope mode to the DAW state.
+    storage_->getPatch().dawExtraState.editor.oscilloscopeOverlayState.mode =
+        static_cast<int>(scope_mode_);
 }
 
 void Oscilloscope::onSkinChanged()
@@ -639,6 +648,19 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     : editor_(e), storage_(s), parent_(parent), freeze_("Freeze"), dc_kill_("DC Block"),
       sync_draw_("Sync")
 {
+    // Initialize parameters from the DAW state.
+    auto state = s->getPatch().dawExtraState.editor.oscilloscopeOverlayState;
+    params_.trigger_speed = juce::jlimit(0.f, 1.f, state.trigger_speed);
+    params_.trigger_level = juce::jlimit(0.f, 1.f, state.trigger_level);
+    params_.trigger_limit = juce::jlimit(0.f, 1.f, state.trigger_limit);
+    params_.time_window = juce::jlimit(0.f, 1.f, state.time_window);
+    params_.amp_window = juce::jlimit(0.f, 1.f, state.amp_window);
+    params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(
+        juce::jlimit(0, WaveformDisplay::kNumTriggerTypes - 1,
+                     state.trigger_type));
+    params_.dc_kill = state.dc_kill;
+    params_.sync_draw = state.sync_draw;
+
     trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_limit_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -651,17 +673,17 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setStorage(s);
     amp_window_.setStorage(s);
 
-    trigger_speed_.setDefaultValue(0.5);
-    trigger_level_.setDefaultValue(0.5);
-    trigger_limit_.setDefaultValue(0.5);
-    time_window_.setDefaultValue(0.5);
-    amp_window_.setDefaultValue(0.5);
+    trigger_speed_.setDefaultValue(params_.trigger_speed);
+    trigger_level_.setDefaultValue(params_.trigger_level);
+    trigger_limit_.setDefaultValue(params_.trigger_limit);
+    time_window_.setDefaultValue(params_.time_window);
+    amp_window_.setDefaultValue(params_.amp_window);
 
-    trigger_speed_.setQuantitizedDisplayValue(0.5);
-    trigger_level_.setQuantitizedDisplayValue(0.5);
-    trigger_limit_.setQuantitizedDisplayValue(0.5);
-    time_window_.setQuantitizedDisplayValue(0.5);
-    amp_window_.setQuantitizedDisplayValue(0.5);
+    trigger_speed_.setQuantitizedDisplayValue(params_.trigger_speed);
+    trigger_level_.setQuantitizedDisplayValue(params_.trigger_level);
+    trigger_limit_.setQuantitizedDisplayValue(params_.trigger_limit);
+    time_window_.setQuantitizedDisplayValue(params_.time_window);
+    amp_window_.setQuantitizedDisplayValue(params_.amp_window);
 
     trigger_speed_.setLabel("Internal Trigger Freq");
     trigger_level_.setLabel("Trigger Level");
@@ -734,7 +756,7 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_type_.setRows(4);
     trigger_type_.setColumns(1);
     trigger_type_.setLabels({"Free", "Rising", "Falling", "Internal"});
-    trigger_type_.setValue(0.f);
+    trigger_type_.setValue(static_cast<float>(params_.trigger_type));
     trigger_type_.setWantsKeyboardFocus(false);
     trigger_type_.setOnUpdate([this](int value) {
         if (value >= WaveformDisplay::kNumTriggerTypes)
@@ -771,12 +793,17 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
 
     addAndMakeVisible(trigger_type_);
 
-    // The two toggle buttons.
+    // The three toggle buttons.
     auto toggleParam = [this](bool &param) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         param = !param;
     };
+
+    dc_kill_.setValue(static_cast<float>(params_.dc_kill));
+    sync_draw_.setValue(static_cast<float>(params_.sync_draw));
+    dc_kill_.isToggled = params_.dc_kill;
+    sync_draw_.isToggled = params_.sync_draw;
 
     freeze_.setWantsKeyboardFocus(false);
     dc_kill_.setWantsKeyboardFocus(false);
@@ -789,6 +816,21 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     addAndMakeVisible(freeze_);
     addAndMakeVisible(dc_kill_);
     addAndMakeVisible(sync_draw_);
+}
+
+Oscilloscope::WaveformParameters::~WaveformParameters()
+{
+    // Save parameters to DAW state.
+    std::lock_guard l(params_lock_);
+    auto *state = &storage_->getPatch().dawExtraState.editor.oscilloscopeOverlayState;
+    state->trigger_speed = params_.trigger_speed;
+    state->trigger_level = params_.trigger_level;
+    state->trigger_limit = params_.trigger_limit;
+    state->time_window = params_.time_window;
+    state->amp_window = params_.amp_window;
+    state->trigger_type = static_cast<int>(params_.trigger_type);
+    state->dc_kill = params_.dc_kill;
+    state->sync_draw = params_.sync_draw;
 }
 
 std::optional<WaveformDisplay::Parameters> Oscilloscope::WaveformParameters::getParamsIfDirty()
@@ -854,6 +896,12 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
                                                      juce::Component *parent)
     : editor_(e), storage_(s), parent_(parent), freeze_("Freeze")
 {
+    // Initialize parameters from the DAW state.
+    auto state = s->getPatch().dawExtraState.editor.oscilloscopeOverlayState;
+    params_.noise_floor = juce::jlimit(0.f, 1.f, state.noise_floor);
+    params_.max_db = juce::jlimit(0.f, 1.f, state.max_db);
+    params_.decay_rate = juce::jlimit(0.f, 1.f, state.decay_rate);
+
     noise_floor_.setOrientation(Surge::ParamConfig::kHorizontal);
     max_db_.setOrientation(Surge::ParamConfig::kHorizontal);
     decay_rate_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -862,13 +910,13 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     max_db_.setStorage(s);
     decay_rate_.setStorage(s);
 
-    noise_floor_.setDefaultValue(0);
-    max_db_.setDefaultValue(1);
-    decay_rate_.setDefaultValue(1);
+    noise_floor_.setDefaultValue(params_.noise_floor);
+    max_db_.setDefaultValue(params_.max_db);
+    decay_rate_.setDefaultValue(params_.decay_rate);
 
-    noise_floor_.setQuantitizedDisplayValue(0);
-    max_db_.setQuantitizedDisplayValue(1);
-    decay_rate_.setQuantitizedDisplayValue(1);
+    noise_floor_.setQuantitizedDisplayValue(params_.noise_floor);
+    max_db_.setQuantitizedDisplayValue(params_.max_db);
+    decay_rate_.setQuantitizedDisplayValue(params_.decay_rate);
 
     noise_floor_.setLabel("Min Level");
     max_db_.setLabel("Max Level ");
@@ -919,6 +967,16 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
 
     addAndMakeVisible(freeze_);
+}
+
+Oscilloscope::SpectrumParameters::~SpectrumParameters()
+{
+    // Save parameters to DAW state.
+    std::lock_guard l(params_lock_);
+    auto *state = &storage_->getPatch().dawExtraState.editor.oscilloscopeOverlayState;
+    state->noise_floor = params_.noise_floor;
+    state->max_db = params_.max_db;
+    state->decay_rate = params_.decay_rate;
 }
 
 std::optional<SpectrumDisplay::Parameters> Oscilloscope::SpectrumParameters::getParamsIfDirty()
