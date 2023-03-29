@@ -129,6 +129,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamSliders[i].setChangeNotificationOnlyOnRelease(false);
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
         fxParamSliders[i].onValueChange = [i, this]() {
+            this->processor.prepareParametersAbsentAudio();
             this->processor.setFXParamValue01(i, this->fxParamSliders[i].getValue());
             fxParamDisplay[i].setDisplay(
                 processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
@@ -209,6 +210,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absoluted");
         addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
 
+        processor.prepareParametersAbsentAudio();
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
         fxParamDisplay[i].setDisplay(processor.getParamValue(i));
@@ -252,6 +254,7 @@ SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
 
 void SurgefxAudioProcessorEditor::resetLabels()
 {
+    processor.prepareParametersAbsentAudio();
     auto st = [](auto &thing, const std::string &title) {
         thing.setTitle(title);
         if (auto *handler = thing.getAccessibilityHandler())
