@@ -158,6 +158,7 @@ bool SurgefxAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) c
 void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                          juce::MidiBuffer &midiMessages)
 {
+    audioRunning = true;
     if (resettingFx || !surge_effect)
         return;
 
@@ -682,6 +683,23 @@ void SurgefxAudioProcessor::setupStorageRanges(Parameter *start, Parameter *endI
     storage_id_end = max_id + 1;
 }
 
+void SurgefxAudioProcessor::prepareParametersAbsentAudio()
+{
+    if (!audioRunning)
+    {
+        if (getEffectType() == fxt_airwindows)
+        {
+            /*
+             * Airwindows needs to set up its internal state with a process
+             * See #6897
+             */
+            float dL alignas(16)[BLOCK_SIZE], dR alignas(16)[BLOCK_SIZE];
+            memset(dL, 0, sizeof(dL));
+            memset(dR, 0, sizeof(dR));
+            surge_effect->process_ringout(dL, dR);
+        }
+    }
+}
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgefxAudioProcessor(); }
