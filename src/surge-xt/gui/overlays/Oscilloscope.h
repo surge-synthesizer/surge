@@ -64,6 +64,8 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     struct Parameters
     {
+        // These default values are set as a defensive measure, but in general
+        // these are saved and restored (with defaults) from the DAW state.
         float trigger_speed = 0.5f;              // internal trigger speed, slider
         TriggerType trigger_type = kTriggerFree; // trigger type, selection
         float trigger_level = 0.5f;              // trigger level, slider
@@ -142,6 +144,9 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     struct Parameters
     {
+        // These default values are set as a defensive measure, but in general
+        // these are saved and restored (with defaults) from the DAW state.
+
         float noise_floor = 0.f; // Noise floor level, bottom of the scope. Min -100. Slider.
         float max_db = 1.f;      // Maximum dB displayed. Slider. Maxes out at 0. Slider.
         float decay_rate = 1.f;  // Rate of decay of existing spectrum data. Slider.
@@ -212,8 +217,8 @@ class Oscilloscope : public OverlayComponent,
 
     enum ScopeMode
     {
-        WAVEFORM = 1,
-        SPECTRUM = 2,
+        WAVEFORM = 0,
+        SPECTRUM = 1,
     };
 
     // Child component for handling the drawing of the background. Done as a separate child instead

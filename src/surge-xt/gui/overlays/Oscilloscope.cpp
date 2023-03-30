@@ -568,6 +568,11 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     addChildComponent(waveform_);
     addChildComponent(waveform_parameters_);
 
+    // Set the initial mode based on the DAW state.
+    int mode = juce::jlimit(0, 1, s->getPatch().dawExtraState.editor.oscilloscopeOverlayState.mode);
+    scope_mode_button_.setValue(static_cast<float>(mode));
+    changeScopeType(static_cast<ScopeMode>(mode));
+
     storage_->audioOut.subscribe();
 }
 
@@ -639,6 +644,18 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     : editor_(e), storage_(s), parent_(parent), freeze_("Freeze"), dc_kill_("DC Block"),
       sync_draw_("Sync")
 {
+    // Initialize parameters from the DAW state.
+    auto *state = &s->getPatch().dawExtraState.editor.oscilloscopeOverlayState;
+    params_.trigger_speed = juce::jlimit(0.f, 1.f, state->trigger_speed);
+    params_.trigger_level = juce::jlimit(0.f, 1.f, state->trigger_level);
+    params_.trigger_limit = juce::jlimit(0.f, 1.f, state->trigger_limit);
+    params_.time_window = juce::jlimit(0.f, 1.f, state->time_window);
+    params_.amp_window = juce::jlimit(0.f, 1.f, state->amp_window);
+    params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(
+        juce::jlimit(0, WaveformDisplay::kNumTriggerTypes - 1, state->trigger_type));
+    params_.dc_kill = state->dc_kill;
+    params_.sync_draw = state->sync_draw;
+
     trigger_speed_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_level_.setOrientation(Surge::ParamConfig::kHorizontal);
     trigger_limit_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -651,17 +668,17 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setStorage(s);
     amp_window_.setStorage(s);
 
-    trigger_speed_.setDefaultValue(0.5);
-    trigger_level_.setDefaultValue(0.5);
-    trigger_limit_.setDefaultValue(0.5);
-    time_window_.setDefaultValue(0.5);
-    amp_window_.setDefaultValue(0.5);
+    trigger_speed_.setDefaultValue(params_.trigger_speed);
+    trigger_level_.setDefaultValue(params_.trigger_level);
+    trigger_limit_.setDefaultValue(params_.trigger_limit);
+    time_window_.setDefaultValue(params_.time_window);
+    amp_window_.setDefaultValue(params_.amp_window);
 
-    trigger_speed_.setQuantitizedDisplayValue(0.5);
-    trigger_level_.setQuantitizedDisplayValue(0.5);
-    trigger_limit_.setQuantitizedDisplayValue(0.5);
-    time_window_.setQuantitizedDisplayValue(0.5);
-    amp_window_.setQuantitizedDisplayValue(0.5);
+    trigger_speed_.setQuantitizedDisplayValue(params_.trigger_speed);
+    trigger_level_.setQuantitizedDisplayValue(params_.trigger_level);
+    trigger_limit_.setQuantitizedDisplayValue(params_.trigger_limit);
+    time_window_.setQuantitizedDisplayValue(params_.time_window);
+    amp_window_.setQuantitizedDisplayValue(params_.amp_window);
 
     trigger_speed_.setLabel("Internal Trigger Freq");
     trigger_level_.setLabel("Trigger Level");
@@ -693,24 +710,30 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setPrecision(2);
     amp_window_.setPrecision(2);
 
-    auto updateParameter = [this](float &param, float value) {
+    auto updateParameter = [this](float &param, float &backer, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         param = value;
+        backer = value; // Update DAW state.
     };
 
-    auto updateAmpWindow = [this](float value) {
+    auto updateAmpWindow = [this, state](float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         params_.amp_window = value;
+        state->amp_window = value; // Update DAW state.
         float gain = 1.f / params_.gain();
         trigger_level_.setRange(-gain, gain);
     };
 
-    trigger_speed_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_speed), _1));
-    trigger_level_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_level), _1));
-    trigger_limit_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_limit), _1));
-    time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window), _1));
+    trigger_speed_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_speed),
+                                         std::ref(state->trigger_speed), _1));
+    trigger_level_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_level),
+                                         std::ref(state->trigger_level), _1));
+    trigger_limit_.setOnUpdate(std::bind(updateParameter, std::ref(params_.trigger_limit),
+                                         std::ref(state->trigger_limit), _1));
+    time_window_.setOnUpdate(std::bind(updateParameter, std::ref(params_.time_window),
+                                       std::ref(state->time_window), _1));
     amp_window_.setOnUpdate(updateAmpWindow);
 
     trigger_speed_.setRootWindow(parent_);
@@ -734,17 +757,18 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_type_.setRows(4);
     trigger_type_.setColumns(1);
     trigger_type_.setLabels({"Free", "Rising", "Falling", "Internal"});
-    trigger_type_.setValue(0.f);
+    trigger_type_.setIntegerValue(static_cast<int>(params_.trigger_type));
     trigger_type_.setWantsKeyboardFocus(false);
-    trigger_type_.setOnUpdate([this](int value) {
+    trigger_type_.setOnUpdate([this, state](int value) {
         if (value >= WaveformDisplay::kNumTriggerTypes)
         {
-            std::cout << "Unexpected trigger type provided." << std::endl;
+            std::cout << "Unexpected trigger type provided: " << value << std::endl;
             std::abort();
         }
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(value);
+        state->trigger_type = static_cast<int>(params_.trigger_type); // Update DAW state.
 
         if (params_.trigger_type == WaveformDisplay::kTriggerInternal)
         {
@@ -768,23 +792,35 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
             trigger_limit_.setDeactivated(true);
         }
     });
+    // Explicitly inform the switch that the value has been updated, to take
+    // our initial value into account and color the switch appropriately.
+    trigger_type_.valueChanged(nullptr);
 
     addAndMakeVisible(trigger_type_);
 
-    // The two toggle buttons.
-    auto toggleParam = [this](bool &param) {
+    // The three toggle buttons.
+    auto toggleParam = [this](bool &param, bool *backer) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         param = !param;
+        if (backer)
+        {
+            *backer = param; // Save to DAW state.
+        }
     };
+
+    dc_kill_.setValue(static_cast<float>(params_.dc_kill));
+    sync_draw_.setValue(static_cast<float>(params_.sync_draw));
+    dc_kill_.isToggled = params_.dc_kill;
+    sync_draw_.isToggled = params_.sync_draw;
 
     freeze_.setWantsKeyboardFocus(false);
     dc_kill_.setWantsKeyboardFocus(false);
     sync_draw_.setWantsKeyboardFocus(false);
 
-    freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
-    dc_kill_.onToggle = std::bind(toggleParam, std::ref(params_.dc_kill));
-    sync_draw_.onToggle = std::bind(toggleParam, std::ref(params_.sync_draw));
+    freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze), nullptr);
+    dc_kill_.onToggle = std::bind(toggleParam, std::ref(params_.dc_kill), &state->dc_kill);
+    sync_draw_.onToggle = std::bind(toggleParam, std::ref(params_.sync_draw), &state->sync_draw);
 
     addAndMakeVisible(freeze_);
     addAndMakeVisible(dc_kill_);
@@ -854,6 +890,12 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
                                                      juce::Component *parent)
     : editor_(e), storage_(s), parent_(parent), freeze_("Freeze")
 {
+    // Initialize parameters from the DAW state.
+    auto *state = &s->getPatch().dawExtraState.editor.oscilloscopeOverlayState;
+    params_.noise_floor = juce::jlimit(0.f, 1.f, state->noise_floor);
+    params_.max_db = juce::jlimit(0.f, 1.f, state->max_db);
+    params_.decay_rate = juce::jlimit(0.f, 1.f, state->decay_rate);
+
     noise_floor_.setOrientation(Surge::ParamConfig::kHorizontal);
     max_db_.setOrientation(Surge::ParamConfig::kHorizontal);
     decay_rate_.setOrientation(Surge::ParamConfig::kHorizontal);
@@ -862,13 +904,13 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     max_db_.setStorage(s);
     decay_rate_.setStorage(s);
 
-    noise_floor_.setDefaultValue(0);
-    max_db_.setDefaultValue(1);
-    decay_rate_.setDefaultValue(1);
+    noise_floor_.setDefaultValue(params_.noise_floor);
+    max_db_.setDefaultValue(params_.max_db);
+    decay_rate_.setDefaultValue(params_.decay_rate);
 
-    noise_floor_.setQuantitizedDisplayValue(0);
-    max_db_.setQuantitizedDisplayValue(1);
-    decay_rate_.setQuantitizedDisplayValue(1);
+    noise_floor_.setQuantitizedDisplayValue(params_.noise_floor);
+    max_db_.setQuantitizedDisplayValue(params_.max_db);
+    decay_rate_.setQuantitizedDisplayValue(params_.decay_rate);
 
     noise_floor_.setLabel("Min Level");
     max_db_.setLabel("Max Level ");
@@ -890,15 +932,19 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     max_db_.setUnit(" dB");
     decay_rate_.setUnit(" %");
 
-    auto updateParameter = [this](float &param, float value) {
+    auto updateParameter = [this](float &param, float &backer, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
+        backer = value; // Save to DAW state.
         param = value;
     };
 
-    noise_floor_.setOnUpdate(std::bind(updateParameter, std::ref(params_.noise_floor), _1));
-    max_db_.setOnUpdate(std::bind(updateParameter, std::ref(params_.max_db), _1));
-    decay_rate_.setOnUpdate(std::bind(updateParameter, std::ref(params_.decay_rate), _1));
+    noise_floor_.setOnUpdate(std::bind(updateParameter, std::ref(params_.noise_floor),
+                                       std::ref(state->noise_floor), _1));
+    max_db_.setOnUpdate(
+        std::bind(updateParameter, std::ref(params_.max_db), std::ref(state->max_db), _1));
+    decay_rate_.setOnUpdate(
+        std::bind(updateParameter, std::ref(params_.decay_rate), std::ref(state->decay_rate), _1));
 
     noise_floor_.setRootWindow(parent_);
     max_db_.setRootWindow(parent_);
@@ -1070,6 +1116,9 @@ void Oscilloscope::changeScopeType(ScopeMode type)
     if (!skipUpdate)
     {
         background_.updateBackgroundType(scope_mode_);
+        // Save the scope mode to the DAW state.
+        storage_->getPatch().dawExtraState.editor.oscilloscopeOverlayState.mode =
+            static_cast<int>(scope_mode_);
     }
 }
 
