@@ -65,6 +65,7 @@ struct MultiSwitch : public juce::Component,
     int getIntegerValue() const { return (int)(value * (float)(rows * columns - 1) + 0.5f); }
     int getIntegerValueFrom(float v) const { return (int)(v * (float)(rows * columns - 1) + 0.5f); }
     void setValue(float f) override { value = f; }
+    void setIntegerValue(int v) { setValue(static_cast<float>(v) / (rows * columns - 1)); }
 
     bool draggable{false};
     void setDraggable(bool d) { draggable = d; }
