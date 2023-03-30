@@ -251,7 +251,6 @@ class Oscilloscope : public OverlayComponent,
     {
       public:
         SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
-        ~SpectrumParameters();
 
         std::optional<SpectrumDisplay::Parameters> getParamsIfDirty();
 
@@ -278,7 +277,6 @@ class Oscilloscope : public OverlayComponent,
     {
       public:
         WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
-        ~WaveformParameters();
 
         std::optional<WaveformDisplay::Parameters> getParamsIfDirty();
 
