@@ -754,18 +754,18 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     trigger_type_.setRows(4);
     trigger_type_.setColumns(1);
     trigger_type_.setLabels({"Free", "Rising", "Falling", "Internal"});
-    trigger_type_.setValue(static_cast<float>(params_.trigger_type));
+    trigger_type_.setIntegerValue(static_cast<int>(params_.trigger_type));
     trigger_type_.setWantsKeyboardFocus(false);
     trigger_type_.setOnUpdate([this, state](int value) {
         if (value >= WaveformDisplay::kNumTriggerTypes)
         {
-            std::cout << "Unexpected trigger type provided." << std::endl;
+            std::cout << "Unexpected trigger type provided: " << value << std::endl;
             std::abort();
         }
         std::lock_guard l(params_lock_);
         params_changed_ = true;
         params_.trigger_type = static_cast<WaveformDisplay::TriggerType>(value);
-        state->trigger_type = static_cast<int>(value);  // Update DAW state.
+        state->trigger_type = static_cast<int>(params_.trigger_type);  // Update DAW state.
 
         if (params_.trigger_type == WaveformDisplay::kTriggerInternal)
         {
@@ -789,6 +789,9 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
             trigger_limit_.setDeactivated(true);
         }
     });
+    // Explicitly inform the switch that the value has been updated, to take
+    // our initial value into account and color the switch appropriately.
+    trigger_type_.valueChanged(nullptr);
 
     addAndMakeVisible(trigger_type_);
 
