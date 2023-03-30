@@ -848,7 +848,7 @@ struct DAWExtraStateStorage
 
         struct OscilloscopeOverlayState
         {
-            int mode = 0;  // 0 for waveform, 1 for spectrum.
+            int mode = 0; // 0 for waveform, 1 for spectrum.
 
             // Waveform values.
             float trigger_speed = 0.5f;
