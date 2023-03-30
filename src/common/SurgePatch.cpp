@@ -2719,6 +2719,26 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         }
                     }
                 }
+                {
+                    auto oos = &(dawExtraState.editor.oscilloscopeOverlayState);
+                    auto node = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("oscilloscope_overlay"));
+
+                    if (node)
+                    {
+                        node->QueryIntAttribute("mode", &oos->mode);
+                        node->QueryFloatAttribute("trigger_speed", &oos->trigger_speed);
+                        node->QueryFloatAttribute("trigger_level", &oos->trigger_level);
+                        node->QueryFloatAttribute("time_window", &oos->time_window);
+                        node->QueryFloatAttribute("amp_window", &oos->amp_window);
+                        node->QueryIntAttribute("trigger_type", &oos->trigger_type);
+                        node->QueryBoolAttribute("dc_kill", &oos->dc_kill);
+                        node->QueryBoolAttribute("sync_draw", &oos->sync_draw);
+
+                        node->QueryFloatAttribute("noise_floor", &oos->noise_floor);
+                        node->QueryFloatAttribute("max_db", &oos->max_db);
+                        node->QueryFloatAttribute("decay_rate", &oos->decay_rate);
+                    }
+                }
             } // end of editor populated block
 
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpeEnabled"));
@@ -3384,6 +3404,22 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             tunOl.SetAttribute("editMode", dawExtraState.editor.tuningOverlayState.editMode);
             eds.InsertEndChild(tunOl);
         }
+
+        // Add the oscilloscope settings
+        TiXmlElement scope("oscilloscope_overlay");
+        scope.SetAttribute("mode", dawExtraState.editor.oscilloscopeOverlayState.mode);
+        scope.SetDoubleAttribute("trigger_speed", dawExtraState.editor.oscilloscopeOverlayState.trigger_speed);
+        scope.SetDoubleAttribute("trigger_level", dawExtraState.editor.oscilloscopeOverlayState.trigger_level);
+        scope.SetDoubleAttribute("trigger_limit", dawExtraState.editor.oscilloscopeOverlayState.trigger_limit);
+        scope.SetDoubleAttribute("time_window", dawExtraState.editor.oscilloscopeOverlayState.time_window);
+        scope.SetDoubleAttribute("amp_window", dawExtraState.editor.oscilloscopeOverlayState.amp_window);
+        scope.SetAttribute("trigger_type", dawExtraState.editor.oscilloscopeOverlayState.trigger_type);
+        scope.SetAttribute("dc_kill", dawExtraState.editor.oscilloscopeOverlayState.dc_kill);
+        scope.SetAttribute("sync_draw", dawExtraState.editor.oscilloscopeOverlayState.sync_draw);
+        scope.SetDoubleAttribute("noise_floor", dawExtraState.editor.oscilloscopeOverlayState.noise_floor);
+        scope.SetDoubleAttribute("max_db", dawExtraState.editor.oscilloscopeOverlayState.max_db);
+        scope.SetDoubleAttribute("decay_rate", dawExtraState.editor.oscilloscopeOverlayState.decay_rate);
+        eds.InsertEndChild(scope);
 
         dawExtraXML.InsertEndChild(eds);
 
