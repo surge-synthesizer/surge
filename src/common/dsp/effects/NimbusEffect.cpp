@@ -175,38 +175,47 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
         if (frames_to_go > 0)
         {
-            numStubs = frames_to_go;
-            for (int i = 0; i < numStubs; ++i)
+            int startSub = numStubs;
+            int addStub = frames_to_go;
+            numStubs += frames_to_go;
+
+            for (int i = 0; i < addStub; ++i)
             {
-                stub_input[0][i] = resample_into[consume_ptr][0];
-                stub_input[1][i] = resample_into[consume_ptr][1];
+                stub_input[0][i + startSub] = resample_into[consume_ptr][0];
+                stub_input[1][i + startSub] = resample_into[consume_ptr][1];
                 consume_ptr++;
             }
         }
 
-        SRC_DATA odata;
-        odata.end_of_input = 0;
-        odata.src_ratio = processor_sr_inv * storage->samplerate;
-        odata.data_in = &(resample_this[0][0]);
-        odata.data_out = &(resample_into[0][0]);
-        odata.input_frames = outpos;
-        odata.output_frames = BLOCK_SIZE << 3;
-        auto reso = src_process(euroSR_to_surgeSR, &odata);
-        if (!builtBuffer)
-            created += odata.output_frames_gen;
-
-        size_t w = resampWritePtr;
-        for (int i = 0; i < odata.output_frames_gen; ++i)
+        if (outpos > 0)
         {
-            resampled_output[w][0] = resample_into[i][0];
-            resampled_output[w][1] = resample_into[i][1];
+            SRC_DATA odata;
+            odata.end_of_input = 0;
+            odata.src_ratio = processor_sr_inv * storage->samplerate;
+            odata.data_in = &(resample_this[0][0]);
+            odata.data_out = &(resample_into[0][0]);
+            odata.input_frames = outpos;
+            odata.output_frames = BLOCK_SIZE << 3;
+            auto reso = src_process(euroSR_to_surgeSR, &odata);
+            if (!builtBuffer)
+                created += odata.output_frames_gen;
 
-            w = (w + 1U) & (raw_out_sz - 1U);
+            size_t w = resampWritePtr;
+            for (int i = 0; i < odata.output_frames_gen; ++i)
+            {
+                resampled_output[w][0] = resample_into[i][0];
+                resampled_output[w][1] = resample_into[i][1];
+
+                w = (w + 1U) & (raw_out_sz - 1U);
+            }
+            resampWritePtr = w;
         }
-        resampWritePtr = w;
     }
 
-    bool rpi = (created) > (BLOCK_SIZE + 8); // leave some buffer
+    // If you hit this you need to adjust this gapping ratio probably.
+    static_assert(BLOCK_SIZE >= nimbusprocess_blocksize);
+    int ratio = std::max((int)std::ceil(processor_sr_inv * storage->samplerate) - 2, 0);
+    bool rpi = (created) > (BLOCK_SIZE * (1 + ratio) + 8); // leave some buffer
     if (rpi)
         builtBuffer = true;
 
