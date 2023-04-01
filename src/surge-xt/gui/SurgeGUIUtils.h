@@ -20,5 +20,10 @@ void constrainPointOnLineWithinRectangle(const juce::Rectangle<float> rect,
 
 void openFileOrFolder(const std::string &f);
 inline void openFileOrFolder(const fs::path &f) { openFileOrFolder(path_to_string(f)); }
+
+// Are we standalone exe vs a plugin (clap, vst, au, etc...)
+void setIsStandalone(bool);
+bool getIsStandalone();
+
 } // namespace GUI
 } // namespace Surge

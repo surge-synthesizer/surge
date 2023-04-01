@@ -393,6 +393,13 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     int32_t non_clap_noteid{1};
 
+    // For non-block-size uniform blocks we need to lag input
+    float inputLatentBuffer alignas(16)[2][BLOCK_SIZE];
+    bool inputIsLatent{false};
+
+    // Have we warned about bad configurations
+    bool warnedAboutBadConfig{false};
+
   public:
     std::unique_ptr<Surge::GUI::UndoManager> undoManager;
 

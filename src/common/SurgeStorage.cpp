@@ -71,9 +71,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     else if (samplerate < 12000 || samplerate > 48000 * 32)
     {
         std::ostringstream oss;
-        oss << "Warning: SurgeStorage constructed with invalid samplerate :" << samplerate
-            << " - resetting to 48000 until Audio System tells us otherwise" << std::endl;
-        reportError(oss.str(), "SampleRate Corrputed on Startup");
+        oss << "Warning: SurgeStorage constructed with invalid samplerate: " << samplerate
+            << " - resetting to 48000 until audio system tells us otherwise" << std::endl;
+        reportError(oss.str(), "Sample Rate Corrupted on Startup");
         setSamplerate(48000);
     }
     else
@@ -943,8 +943,12 @@ void SurgeStorage::refresh_wtlist()
     refresh_wtlistAddDir(false, "wavetables");
 
     firstThirdPartyWTCategory = wt_category.size();
-    refresh_wtlistAddDir(false, "wavetables_3rdparty");
-    if (!extraThirdPartyWavetablesPath.empty())
+    if (extraThirdPartyWavetablesPath.empty() ||
+        !fs::is_directory(extraThirdPartyWavetablesPath / "wavetables_3rdparty"))
+    {
+        refresh_wtlistAddDir(false, "wavetables_3rdparty");
+    }
+    else
     {
         refresh_wtlistFrom(false, extraThirdPartyWavetablesPath, "wavetables_3rdparty");
     }
@@ -1175,7 +1179,7 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
     {
         std::ostringstream oss;
         oss << "Unable to load file with extension " << extension
-            << "! Surge only supports .wav and .wt wavetable files!";
+            << "! Surge XT only supports .wav and .wt wavetable files!";
         reportError(oss.str(), "Error");
     }
 
@@ -1225,7 +1229,19 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
 
     const std::unique_ptr<char[]> data{new char[ds]};
     read = f.sgetn(data.get(), ds);
-    // FIXME - error if read != ds
+
+    if (read != ds)
+    {
+        /* Somehow the file is corrupt. We have a few options
+         * including throw an error here but I think
+         * the best thing to do is just zero pad. In the
+         * factory set, the 'OneShot/Pulse' wavetable
+         * has this problem as a future test case.
+         */
+        auto dpad = data.get() + read;
+        auto drest = ds - read;
+        memset(dpad, 0, drest);
+    }
 
     waveTableDataMutex.lock();
     bool wasBuilt = wt->BuildWT(data.get(), wh, false);
@@ -1241,7 +1257,7 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
             << max_wtable_size << " samples per frame.\n"
             << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
                "potentially volatile state\n."
-            << "It is recommended to restart Surge and not load "
+            << "It is recommended to restart Surge XT and not load "
                "the problematic wavetable again.\n\n"
             << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
@@ -1293,7 +1309,7 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
             << max_wtable_size << " samples per frame.\n"
             << "In some cases, Surge XT detects this situation inconsistently, which can lead to a "
                "potentially volatile state\n."
-            << "It is recommended to restart Surge and not load "
+            << "It is recommended to restart Surge XT and not load "
                "the problematic wavetable again.\n\n"
             << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
@@ -1837,6 +1853,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_voice[i].source_id;
                 m.source_index = clipboard_modulation_voice[i].source_index;
+                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
                 m.depth = clipboard_modulation_voice[i].depth;
                 m.destination_id = clipboard_modulation_voice[i].destination_id;
                 pushBackOrOverride(getPatch().scene[scene].modulation_voice, m);
@@ -1848,6 +1865,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 ModulationRouting m;
                 m.source_id = clipboard_modulation_scene[i].source_id;
                 m.source_index = clipboard_modulation_scene[i].source_index;
+                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
                 m.depth = clipboard_modulation_scene[i].depth;
                 m.destination_id = clipboard_modulation_scene[i].destination_id;
                 pushBackOrOverride(getPatch().scene[scene].modulation_scene, m);
@@ -2562,17 +2580,18 @@ bool SurgeStorage::isStandardTuningAndHasNoToggle()
 
 void SurgeStorage::resetTuningToggle() { isToggledToCache = false; }
 
-void SurgeStorage::reportError(const std::string &msg, const std::string &title)
+void SurgeStorage::reportError(const std::string &msg, const std::string &title,
+                               const ErrorType errorType)
 {
     std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;
     if (errorListeners.empty())
     {
         std::lock_guard<std::mutex> g(preListenerErrorMutex);
-        preListenerErrors.emplace_back(msg, title);
+        preListenerErrors.emplace_back(msg, title, errorType);
     }
 
     for (auto l : errorListeners)
-        l->onSurgeError(msg, title);
+        l->onSurgeError(msg, title, errorType);
 }
 
 float SurgeStorage::remapKeyInMidiOnlyMode(float res)

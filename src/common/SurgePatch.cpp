@@ -2354,6 +2354,36 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         scene[0].modsources[ms_ctrl1 + i]->reset();
     }
 
+    {
+        /*
+         * Reset to UNSCALED then try and read
+         */
+        for (int sc = 0; sc < n_scenes; sc++)
+        {
+            for (int l = 0; l < n_lfos; l++)
+            {
+                scene[sc].lfo[l].lfoExtraAmplitude = LFOStorage::UNSCALED;
+            }
+        }
+        auto *el = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("extralfo"));
+        if (el)
+        {
+            auto l = TINYXML_SAFE_TO_ELEMENT(el->FirstChild("lfo"));
+            while (l)
+            {
+                int sc, id, val;
+                if (l->QueryIntAttribute("scene", &sc) == TIXML_SUCCESS &&
+                    l->QueryIntAttribute("i", &id) == TIXML_SUCCESS &&
+                    l->QueryIntAttribute("extraAmplitude", &val) == TIXML_SUCCESS && sc >= 0 &&
+                    id >= 0 && sc < n_scenes && id < n_lfos)
+                {
+                    scene[sc].lfo[id].lfoExtraAmplitude = (LFOStorage::LFOExtraOutputAmplitude)val;
+                }
+                l = TINYXML_SAFE_TO_ELEMENT(l->NextSiblingElement("lfo"));
+            }
+        }
+    }
+
     TiXmlElement *cc = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("customcontroller"));
 
     if (cc)
@@ -2689,6 +2719,26 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         }
                     }
                 }
+                {
+                    auto oos = &(dawExtraState.editor.oscilloscopeOverlayState);
+                    auto node = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("oscilloscope_overlay"));
+
+                    if (node)
+                    {
+                        node->QueryIntAttribute("mode", &oos->mode);
+                        node->QueryFloatAttribute("trigger_speed", &oos->trigger_speed);
+                        node->QueryFloatAttribute("trigger_level", &oos->trigger_level);
+                        node->QueryFloatAttribute("time_window", &oos->time_window);
+                        node->QueryFloatAttribute("amp_window", &oos->amp_window);
+                        node->QueryIntAttribute("trigger_type", &oos->trigger_type);
+                        node->QueryBoolAttribute("dc_kill", &oos->dc_kill);
+                        node->QueryBoolAttribute("sync_draw", &oos->sync_draw);
+
+                        node->QueryFloatAttribute("noise_floor", &oos->noise_floor);
+                        node->QueryFloatAttribute("max_db", &oos->max_db);
+                        node->QueryFloatAttribute("decay_rate", &oos->decay_rate);
+                    }
+                }
             } // end of editor populated block
 
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpeEnabled"));
@@ -2877,7 +2927,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
     if (compat)
     {
-        auto comb = TINYXML_SAFE_TO_ELEMENT(compat->FirstChild("correctlyTuneCombFilter"));
+        auto comb = TINYXML_SAFE_TO_ELEMENT(compat->FirstChild("correctlyTunedCombFilter"));
 
         if (comb)
         {
@@ -3181,6 +3231,21 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     }
     patch.InsertEndChild(formulae);
 
+    TiXmlElement extralfo("extralfo");
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        for (int l = 0; l < n_lfos; l++)
+        {
+            TiXmlElement p("lfo");
+            p.SetAttribute("scene", sc);
+            p.SetAttribute("i", l);
+
+            p.SetAttribute("extraAmplitude", scene[sc].lfo[l].lfoExtraAmplitude);
+            extralfo.InsertEndChild(p);
+        }
+    }
+    patch.InsertEndChild(extralfo);
+
     TiXmlElement cc("customcontroller");
     for (int l = 0; l < n_customcontrollers; l++)
     {
@@ -3339,6 +3404,30 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             tunOl.SetAttribute("editMode", dawExtraState.editor.tuningOverlayState.editMode);
             eds.InsertEndChild(tunOl);
         }
+
+        // Add the oscilloscope settings
+        TiXmlElement scope("oscilloscope_overlay");
+        scope.SetAttribute("mode", dawExtraState.editor.oscilloscopeOverlayState.mode);
+        scope.SetDoubleAttribute("trigger_speed",
+                                 dawExtraState.editor.oscilloscopeOverlayState.trigger_speed);
+        scope.SetDoubleAttribute("trigger_level",
+                                 dawExtraState.editor.oscilloscopeOverlayState.trigger_level);
+        scope.SetDoubleAttribute("trigger_limit",
+                                 dawExtraState.editor.oscilloscopeOverlayState.trigger_limit);
+        scope.SetDoubleAttribute("time_window",
+                                 dawExtraState.editor.oscilloscopeOverlayState.time_window);
+        scope.SetDoubleAttribute("amp_window",
+                                 dawExtraState.editor.oscilloscopeOverlayState.amp_window);
+        scope.SetAttribute("trigger_type",
+                           dawExtraState.editor.oscilloscopeOverlayState.trigger_type);
+        scope.SetAttribute("dc_kill", dawExtraState.editor.oscilloscopeOverlayState.dc_kill);
+        scope.SetAttribute("sync_draw", dawExtraState.editor.oscilloscopeOverlayState.sync_draw);
+        scope.SetDoubleAttribute("noise_floor",
+                                 dawExtraState.editor.oscilloscopeOverlayState.noise_floor);
+        scope.SetDoubleAttribute("max_db", dawExtraState.editor.oscilloscopeOverlayState.max_db);
+        scope.SetDoubleAttribute("decay_rate",
+                                 dawExtraState.editor.oscilloscopeOverlayState.decay_rate);
+        eds.InsertEndChild(scope);
 
         dawExtraXML.InsertEndChild(eds);
 

@@ -1,4 +1,5 @@
 #include "lipol.h"
+#include "globals.h"
 
 const __m128 two = _mm_set1_ps(2.f);
 const __m128 four = _mm_set1_ps(4.f);
@@ -10,7 +11,7 @@ lipol_ps::lipol_ps()
     coef = _mm_set1_ps(0.25f);
     coef_m1 = _mm_sub_ss(m128_one, coef);
     m128_lipolstarter = _mm_set_ps(1.f, 0.75f, 0.5f, 0.25f);
-    set_blocksize(64);
+    set_blocksize(BLOCK_SIZE_OS);
 }
 
 void lipol_ps::set_blocksize(int bs)

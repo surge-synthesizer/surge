@@ -38,6 +38,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     int output_position{-1};
 
     bool nonLatentBlockMode{true};
+
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -320,6 +321,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     std::atomic<bool> isUserEditing[n_fx_params + 1];
     std::atomic<bool> wasParamFeatureChanged[n_fx_params];
     std::function<void()> paramChangeListener;
+
     float lastBPM = -1;
     bool supressParameterUpdates = false;
     struct SupressGuard
@@ -348,7 +350,10 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     void copyGlobaldataSubset(int start, int end);
     void setupStorageRanges(Parameter *start, Parameter *endIncluding);
 
+    std::atomic<bool> audioRunning{false};
+
   public:
+    void prepareParametersAbsentAudio();
     void setParameterByString(int i, const std::string &s);
     float getParameterValueForString(int i, const std::string &s);
     bool canSetParameterByString(int i);

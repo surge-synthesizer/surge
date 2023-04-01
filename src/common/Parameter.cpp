@@ -1577,6 +1577,14 @@ void Parameter::set_type(int ctrltype)
     case ct_pbdepth:
         displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys;
         break;
+
+    case ct_float_toggle:
+        displayInfo.scale = 100.0f;
+        displayInfo.decimals = 2;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
+        snprintf(displayInfo.minLabel, DISPLAYINFO_TXT_SIZE, "Off");
+        snprintf(displayInfo.maxLabel, DISPLAYINFO_TXT_SIZE, "On");
+        break;
     }
 
     switch (ctrltype)
@@ -1812,11 +1820,15 @@ void Parameter::bound_value(bool force_integer)
         case ct_countedset_percent_extendable:
         {
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
-            auto count = cs->getCountedSetSize();
-            // OK so now val.f is between 0 and 1. So
-            auto fraccount = val.f * (count - extend_range);
-            auto intcount = (int)fraccount;
-            val.f = limit_range(1.0 * intcount / (count - extend_range) + 0.000001, 0., 1.);
+            if (cs)
+            {
+                auto count = cs->getCountedSetSize();
+                // OK so now val.f is between 0 and 1. So
+                auto fraccount = val.f * (count - extend_range);
+                auto intcount = (int)fraccount;
+                val.f = limit_range(1.0 * intcount / std::max(1, (count - extend_range)) + 0.000001,
+                                    0., 1.);
+            }
             break;
         }
         case ct_alias_mask:
@@ -2251,11 +2263,15 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                                                 ModulationDisplayMode displaymode,
                                                 ModulationDisplayInfoWindowStrings *iw) const
 {
+#define ITXT_SIZE 1024
+
     int detailedMode = false;
 
     if (storage)
+    {
         detailedMode =
             Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
+    }
 
     int dp = (detailedMode ? 6 : displayInfo.decimals);
 
@@ -2263,6 +2279,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
     float mf = modulationDepth;
     float f = val.f;
+
     switch (displayType)
     {
     case Custom:
@@ -2284,19 +2301,23 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 mf = mf * 0.5;
             }
         }
+
         if (can_extend_range())
         {
-            f = get_extended(f);
             // mf is handed to me extended already
+            f = get_extended(f);
         }
+
         if (can_be_absolute() && absolute)
         {
             f = displayInfo.absoluteFactor * f;
             mf = displayInfo.absoluteFactor * mf;
             u = displayInfo.absoluteUnit;
         }
+
         f *= displayInfo.scale;
         mf *= displayInfo.scale;
+
         switch (displaymode)
         {
         case TypeIn:
@@ -2309,15 +2330,14 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             else
                 snprintf(txt, TXT_SIZE, "%.*f %s", dp, mf, u.c_str());
             return;
-            break;
         case InfoWindow:
         {
             if (isBipolar)
             {
                 if (iw)
                 {
-#define ITXT_SIZE 1024
                     char itxt[ITXT_SIZE];
+
                     snprintf(itxt, ITXT_SIZE, "%.*f %s", dp, f, u.c_str());
                     iw->val = itxt;
                     snprintf(itxt, ITXT_SIZE, "%.*f", dp, f + mf);
@@ -2329,6 +2349,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     snprintf(itxt, ITXT_SIZE, "%s%.*f", (mf < 0 ? "+" : ""), dp, -mf);
                     iw->dvalminus = itxt;
                 }
+
                 snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, f - mf, lowersep, dp, f,
                          uppersep, dp, f + mf, u.c_str());
             }
@@ -2346,10 +2367,10 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     iw->dvalplus = itxt;
                     iw->dvalminus = "";
                 }
+
                 snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s", dp, f, uppersep, dp, f + mf, u.c_str());
             }
             return;
-            break;
         }
         }
 
@@ -2489,7 +2510,6 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             }
             return;
         }
-
         break;
     }
     case Decibel:
@@ -2533,6 +2553,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 iw->valminus = isBipolar ? negval : "";
 
                 char dtxt[TXT_SIZE];
+
                 snprintf(dtxt, TXT_SIZE, "%s%.*f %s", (mp - v > 0 ? "+" : ""), dp,
                          limit_range(mp, -192.f, 500.f) - limit_range(v, -192.f, 500.f),
                          displayInfo.unit);
@@ -2543,6 +2564,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                          displayInfo.unit);
                 iw->dvalminus = isBipolar ? dtxt : "";
             }
+
             if (isBipolar)
             {
                 snprintf(txt, TXT_SIZE, "%s %s %s %s %s dB", negval, lowersep, val, uppersep,
@@ -2552,15 +2574,52 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 snprintf(txt, TXT_SIZE, "%s %s %s dB", val, uppersep, posval);
             }
+
             break;
         }
         return;
-        break;
     }
     }
 
     switch (ctrltype)
     {
+    case ct_float_toggle:
+    {
+        f *= displayInfo.scale;
+        mf *= displayInfo.scale;
+
+        switch (displaymode)
+        {
+        case TypeIn:
+            snprintf(txt, TXT_SIZE, "%.*f %s", dp, mf, displayInfo.unit);
+            return;
+        case Menu:
+            snprintf(txt, TXT_SIZE, "%.*f %s", dp, mf, displayInfo.unit);
+            return;
+        case InfoWindow:
+        {
+            if (iw)
+            {
+                char itxt[ITXT_SIZE];
+
+                snprintf(itxt, ITXT_SIZE, "%.*f %s", dp, f, displayInfo.unit);
+                iw->val = itxt;
+                snprintf(itxt, ITXT_SIZE, "%.*f", dp, f + mf);
+                iw->valplus = itxt;
+                iw->valminus = "";
+                snprintf(itxt, ITXT_SIZE, "%s%.*f", (mf > 0 ? "+" : ""), dp, mf);
+                iw->dvalplus = itxt;
+                iw->dvalminus = "";
+            }
+
+            snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s", dp, f, uppersep, dp, f + mf,
+                     displayInfo.unit);
+            return;
+        }
+        }
+
+        break;
+    }
     case ct_fmratio:
     {
         if (absolute)
@@ -2592,21 +2651,26 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         snprintf(txt, TXT_SIZE, "%.*f Hz", dp, val);
                         tg = txt;
                     };
+
                     put(iw->val, freq);
                     put(iw->valplus, frequp);
                     put(iw->valminus, freqdn);
                     put(iw->dvalplus, frequp - freq);
                     put(iw->dvalminus, freq - freqdn);
+
                     snprintf(txt, TXT_SIZE, "%.*f Hz %.*f Hz %.*f Hz", dp, freqdn, dp, freq, dp,
                              frequp);
                     break;
                 }
             }
+
             return;
         }
-        float mf = modulationDepth;
+
         // OK so this is already handed to us extended and this one is weird so
+        float mf = modulationDepth;
         auto qq = mf;
+
         if (extend_range)
         {
             if (mf < 0)
@@ -2617,11 +2681,13 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 qq = mf - 1;
             }
+
             qq = (qq + 31) / 64;
         }
 
         float exmf = qq;
         int dp = (detailedMode ? 6 : 2);
+
         switch (displaymode)
         {
         case TypeIn:
@@ -2633,8 +2699,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 snprintf(txt, TXT_SIZE, "C : %.*f", dp, mf);
             }
+
             return;
-            break;
         case Menu:
         {
             if (extend_range)
@@ -2660,8 +2726,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     snprintf(txt, TXT_SIZE, "C : %.*f", dp, mf);
                 }
             }
+
             return;
-            break;
         }
         case InfoWindow:
             if (iw)
@@ -2670,6 +2736,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 {
                     char dtxt[TXT_SIZE];
                     float ev = get_extended(val.f);
+
                     if (ev < 0)
                     {
                         snprintf(dtxt, TXT_SIZE, "C : 1 / %.*f", dp, -ev);
@@ -2678,6 +2745,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     {
                         snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, ev);
                     }
+
                     iw->val = dtxt;
 
                     auto upval = get_extended(val.f + (qq * 32));
@@ -2687,15 +2755,18 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         snprintf(dtxt, TXT_SIZE, "C : 1 / %.*f", dp, -upval);
                     else
                         snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, upval);
+
                     iw->valplus = dtxt;
                     snprintf(dtxt, TXT_SIZE, "%.*f", dp, qq * 31 * 2);
                     iw->dvalplus = dtxt;
+
                     if (isBipolar)
                     {
                         if (dnval < 0)
                             snprintf(dtxt, TXT_SIZE, "C : 1/%.*f", dp, -dnval);
                         else
                             snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, dnval);
+
                         iw->valminus = dtxt;
 
                         snprintf(dtxt, TXT_SIZE, "%.*f", dp, -(qq * 31 * 2));
@@ -2705,12 +2776,14 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 else
                 {
                     char dtxt[TXT_SIZE];
+
                     snprintf(dtxt, TXT_SIZE, "C : %.*f", dp, val.f);
                     iw->val = dtxt;
                     snprintf(dtxt, TXT_SIZE, "%.*f", dp, val.f + mf);
                     iw->valplus = dtxt;
                     snprintf(dtxt, TXT_SIZE, "%.*f", dp, mf);
                     iw->dvalplus = dtxt;
+
                     if (isBipolar)
                     {
                         snprintf(dtxt, TXT_SIZE, "%.*f", dp, val.f - mf);
@@ -2720,10 +2793,10 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     }
                 }
             }
-            // not really used any more bot don't leave it uninit
+
+            // not really used any more bot don't leave it uninitialized
             snprintf(txt, TXT_SIZE, "C: %.*f %s %.*f", 2, val.f, (mf >= 0 ? "+/-" : "-/+"), 2, mf);
             return;
-            break;
         }
     }
     default:
@@ -2734,6 +2807,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
             auto mp = modulationDepth;
             auto mn = -modulationDepth;
+
             switch (displaymode)
             {
             case TypeIn:
@@ -2804,6 +2878,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         break;
     }
     }
+
+#undef ITXT_SIZE
 }
 
 float Parameter::quantize_modulation(float inputval) const
@@ -3999,6 +4075,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_pitch4oct:
     case ct_pitch_extendable_very_low_minval:
     case ct_fmratio:
+    case ct_float_toggle:
     case ct_syncpitch:
     case ct_amplitude:
     case ct_amplitude_clipper:
@@ -4870,6 +4947,30 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
     switch (ctrltype)
     {
+    case ct_float_toggle:
+    {
+        mv /= displayInfo.scale;
+
+        float minval = val_min.f;
+        float maxval = val_max.f;
+
+        auto rmv = mv / (val_max.f - val_min.f);
+
+        if (rmv > 1 || rmv < -1)
+        {
+            auto bound = (maxval - minval) * displayInfo.scale;
+
+            ErrorMessageMode isLarger =
+                (rmv < -1) ? ErrorMessageMode::IsSmaller : ErrorMessageMode::IsLarger;
+
+            set_error_message(errMsg, fmt::format("{:g}", (rmv < -1) ? -bound : bound),
+                              displayInfo.unit, isLarger);
+
+            valid = false;
+        }
+
+        return rmv;
+    }
     case ct_fmratio:
     {
         int pos{0};

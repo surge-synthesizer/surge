@@ -38,11 +38,47 @@ struct FilterAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCompon
     SurgeStorage *storage{nullptr};
     FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s);
     ~FilterAnalysis();
+    void mouseDrag(const juce::MouseEvent &event) override;
+    void mouseDown(const juce::MouseEvent &event) override;
+    void mouseUp(const juce::MouseEvent &event) override;
+    void mouseMove(const juce::MouseEvent &event) override;
     void paint(juce::Graphics &g) override;
     void onSkinChanged() override;
     void resized() override;
     void repushData();
     void forceDataRefresh() override { repushData(); }
+
+    juce::Rectangle<float> hotzone;
+    juce::Point<int> cursorHideOrigin;
+
+    bool isHovered{false}, isPressed{false}, cursorHidden{false};
+
+    void showCursorAt(const juce::Point<float> &w) { cursorHideOrigin = w.toInt(); }
+    void showCursorAt(const juce::Point<int> &w) { cursorHideOrigin = w; }
+
+    void guaranteeCursorShown()
+    {
+        if (!Surge::GUI::showCursor(storage) && cursorHidden)
+        {
+            auto h = localPointToGlobal(cursorHideOrigin);
+
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(false);
+            juce::Desktop::getInstance().getMainMouseSource().setScreenPosition(h.toFloat());
+
+            cursorHidden = false;
+        }
+    }
+
+    void hideCursor(const juce::Point<int> &w)
+    {
+        cursorHideOrigin = w;
+
+        if (!Surge::GUI::showCursor(storage))
+        {
+            cursorHidden = true;
+            juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(true);
+        }
+    }
 
     int whichFilter{0};
     void selectFilter(int which);

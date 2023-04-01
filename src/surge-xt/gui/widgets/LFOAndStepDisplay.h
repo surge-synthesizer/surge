@@ -23,6 +23,10 @@
 
 namespace Surge
 {
+namespace Overlays
+{
+struct TypeinLambdaEditor;
+}
 namespace Widgets
 {
 struct LFOAndStepDisplay : public juce::Component,
@@ -45,32 +49,64 @@ struct LFOAndStepDisplay : public juce::Component,
     bool isFormula() { return lfodata->shape.val.i == lt_formula; }
     bool isUnipolar() { return lfodata->unipolar.val.b; }
 
-    void invalidateIfIdIsInRange(int j) {}
-    void invalidateIfAnythingIsTemposynced()
+    void repaintIfIdIsInRange(int id)
+    {
+        auto *firstLfoParam = &lfodata->rate;
+        auto *lastLfoParam = &lfodata->release;
+
+        bool lfoInvalid = false;
+
+        while (firstLfoParam <= lastLfoParam && !lfoInvalid)
+        {
+            if (firstLfoParam->id == id)
+            {
+                lfoInvalid = true;
+            }
+
+            firstLfoParam++;
+        }
+
+        if (lfoInvalid)
+        {
+            repaint();
+        }
+    }
+
+    void repaintIfAnythingIsTemposynced()
     {
         if (isAnythingTemposynced())
+        {
             repaint();
+        }
     }
     bool isAnythingTemposynced()
     {
         bool drawBeats = false;
         auto *c = &lfodata->rate;
         auto *e = &lfodata->release;
+
         while (c <= e && !drawBeats)
         {
             if (c->temposync)
+            {
                 drawBeats = true;
+            }
+
             ++c;
         }
+
         return drawBeats;
     }
 
     int lfoid{-1};
+
     void setLFOID(int l) // from 0
     {
         lfoid = l;
     }
+
     int scene{-1};
+
     void setScene(int l) // from 0
     {
         scene = l;
@@ -211,6 +247,8 @@ struct LFOAndStepDisplay : public juce::Component,
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepSliderOverlays;
     std::array<std::unique_ptr<juce::Component>, n_stepseqsteps> stepTriggerOverlays;
     std::array<std::unique_ptr<juce::Component>, 2> loopEndOverlays;
+
+    std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> stepEditor;
 
     SurgeGUIEditor *guiEditor;
 

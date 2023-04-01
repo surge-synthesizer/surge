@@ -354,7 +354,7 @@ void DelayEffect::init_default_values()
     fxdata->p[dly_time_left].val.f = -2.f;
     fxdata->p[dly_time_right].val.f = -2.f;
     fxdata->p[dly_time_right].deactivated = false;
-    fxdata->p[dly_feedback].val.f = 0.0f;
+    fxdata->p[dly_feedback].val.f = 0.5f;
     fxdata->p[dly_feedback].deform_type = 1;
     fxdata->p[dly_feedback].set_extend_range(false);
     fxdata->p[dly_crossfeed].val.f = 0.0f;
@@ -368,7 +368,7 @@ void DelayEffect::init_default_values()
     fxdata->p[dly_mod_rate].val.f = -2.f;
     fxdata->p[dly_mod_depth].val.f = 0.f;
     fxdata->p[dly_input_channel].val.f = 0.f;
-    fxdata->p[dly_mix].val.f = 1.f;
+    fxdata->p[dly_mix].val.f = 0.5f;
     fxdata->p[dly_width].val.f = 0.f;
 }
 

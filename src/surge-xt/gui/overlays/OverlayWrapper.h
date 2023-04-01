@@ -20,6 +20,7 @@
 #include "UserDefaults.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "SurgeGUIUtils.h"
 
 class SurgeGUIEditor;
 class SurgeImage;
@@ -77,19 +78,24 @@ struct OverlayWrapper : public juce::Component,
     SurgeImage *icon{nullptr};
     void setIcon(SurgeImage *d) { icon = d; }
 
-    std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> canTearOutData{
-        false, Surge::Storage::nKeys, Surge::Storage::nKeys};
+    // this is can, size key, standalone pin key, plugin pin key
+    typedef std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey,
+                       Surge::Storage::DefaultKey>
+        tearoutTuple_t;
+    tearoutTuple_t canTearOutData{false, Surge::Storage::nKeys, Surge::Storage::nKeys,
+                                  Surge::Storage::nKeys};
     bool canTearOut, isAlwaysOnTop;
-    void setCanTearOut(std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> t)
+    // this tuple is can: the sie key,
+    void setCanTearOut(tearoutTuple_t t)
     {
         canTearOutData = t;
         canTearOut = std::get<0>(t);
-        isAlwaysOnTop = Surge::Storage::getUserDefaultValue(storage, std::get<2>(t), false);
+        if (Surge::GUI::getIsStandalone())
+            isAlwaysOnTop = Surge::Storage::getUserDefaultValue(storage, std::get<2>(t), false);
+        else
+            isAlwaysOnTop = Surge::Storage::getUserDefaultValue(storage, std::get<3>(t), true);
     }
-    std::tuple<bool, Surge::Storage::DefaultKey, Surge::Storage::DefaultKey> getCanTearOut()
-    {
-        return canTearOutData;
-    }
+    tearoutTuple_t getCanTearOut() { return canTearOutData; }
 
     std::pair<bool, Surge::Storage::DefaultKey> canTearOutResizePair{false, Surge::Storage::nKeys};
     bool canTearOutResize;

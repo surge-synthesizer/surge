@@ -39,7 +39,6 @@ OverlayWrapper::OverlayWrapper()
     addChildComponent(*tearOutButton);
 
     setAccessible(true);
-    setOpaque(true);
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 }
 
@@ -260,9 +259,16 @@ struct TearOutWindow : public juce::DocumentWindow, public Surge::GUI::SkinConsu
     {
         isPinned = !isPinned;
 
-        Surge::Storage::updateUserDefaultValue(wrapping->storage,
-                                               std::get<2>(wrapping->canTearOutData), isPinned);
-
+        if (Surge::GUI::getIsStandalone())
+        {
+            Surge::Storage::updateUserDefaultValue(wrapping->storage,
+                                                   std::get<2>(wrapping->canTearOutData), isPinned);
+        }
+        else
+        {
+            Surge::Storage::updateUserDefaultValue(wrapping->storage,
+                                                   std::get<3>(wrapping->canTearOutData), isPinned);
+        }
         setAlwaysOnTop(isPinned);
         repaint();
     }

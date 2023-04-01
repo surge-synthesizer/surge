@@ -98,7 +98,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
         this, customEditor ? "Close Custom Editor" : "Open Custom Editor",
         juce::AccessibilityRole::button);
-
+    ol->setWantsKeyboardFocus(true);
     addChildComponent(*ol);
 
     ol->onPress = [this](OscillatorWaveformDisplay *d) {
@@ -114,6 +114,21 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             d->customEditorAccOverlay->setDescription("Open Custom Editor");
             d->customEditorAccOverlay->setTitle("Open Custom Editor");
         }
+    };
+    ol->onReturnKey = [this](OscillatorWaveformDisplay *d) {
+        if (customEditor)
+        {
+            hideCustomEditor();
+            d->customEditorAccOverlay->setDescription("Close Custom Editor");
+            d->customEditorAccOverlay->setTitle("Close Custom Editor");
+        }
+        else
+        {
+            showCustomEditor();
+            d->customEditorAccOverlay->setDescription("Open Custom Editor");
+            d->customEditorAccOverlay->setTitle("Open Custom Editor");
+        }
+        return true;
     };
 
     customEditorAccOverlay = std::move(ol);
@@ -403,24 +418,30 @@ void OscillatorWaveformDisplay::resized()
     menuOverlays[2]->setBounds(rightJog.toNearestInt());
     waveTableName = wtr.withTrimmedRight(wtbheight).withTrimmedLeft(wtbheight);
     menuOverlays[0]->setBounds(waveTableName.toNearestInt());
-    customEditorAccOverlay->setBounds(wtl.toNearestInt());
+
+    customEditorBox = getLocalBounds()
+                          .withTop(getHeight() - wtbheight)
+                          .withRight(60)
+                          .withTrimmedBottom(1)
+                          .toFloat();
+    customEditorAccOverlay->setBounds(customEditorBox.toNearestInt());
 }
 
 void OscillatorWaveformDisplay::repaintIfIdIsInRange(int id)
 {
-    auto *currOsc = &oscdata->type;
-    auto *endOsc = &oscdata->retrigger;
+    auto *firstOscParam = &oscdata->type;
+    auto *lastOscParam = &oscdata->retrigger;
 
     bool oscInvalid = false;
 
-    while (currOsc <= endOsc && !oscInvalid)
+    while (firstOscParam <= lastOscParam && !oscInvalid)
     {
-        if (currOsc->id == id)
+        if (firstOscParam->id == id)
         {
             oscInvalid = true;
         }
 
-        currOsc++;
+        firstOscParam++;
     }
 
     if (oscInvalid)
@@ -554,7 +575,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     /*
     We've decided to postpone this feature until after XT 1.0
-     */
+
     contextMenu.addSeparator();
 
     auto owts = [this]() {
@@ -563,6 +584,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     };
 
     contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
+    */
 
     // add this option only if we have any wavetables in the list
     if (idx > 0)
@@ -1578,6 +1600,11 @@ struct AliasAdditiveEditor : public juce::Component,
                 repaint();
             };
 
+            q->onMenuKey = [this](auto *t) {
+                parent->createAliasOptionsMenu();
+                return true;
+            };
+
             addAndMakeVisible(*q);
 
             sliderAccOverlays[i] = std::move(q);
@@ -1890,6 +1917,11 @@ void OscillatorWaveformDisplay::showCustomEditor()
         customEditorAccOverlay->setTitle("Close Custom Editor");
         customEditorAccOverlay->setDescription("Close Custom Editor");
     }
+
+    if (auto h = getAccessibilityHandler())
+    {
+        h->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
+    }
 }
 
 void OscillatorWaveformDisplay::hideCustomEditor()
@@ -1903,6 +1935,11 @@ void OscillatorWaveformDisplay::hideCustomEditor()
 
     customEditorAccOverlay->setTitle("Open Custom Editor");
     customEditorAccOverlay->setDescription("Open Custom Editor");
+
+    if (auto h = getAccessibilityHandler())
+    {
+        h->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
+    }
 
     repaint();
 }

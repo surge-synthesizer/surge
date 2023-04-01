@@ -123,9 +123,21 @@ enum DefaultKey
     FilterAnalysisOverlayTearOutAlwaysOnTop,
     OscilloscopeOverlayTearOutAlwaysOnTop,
 
+    TuningOverlayTearOutAlwaysOnTop_Plugin,
+    ModlistOverlayTearOutAlwaysOnTop_Plugin,
+    MSEGOverlayTearOutAlwaysOnTop_Plugin,
+    FormulaOverlayTearOutAlwaysOnTop_Plugin,
+    WSAnalysisOverlayTearOutAlwaysOnTop_Plugin,
+    FilterAnalysisOverlayTearOutAlwaysOnTop_Plugin,
+    OscilloscopeOverlayTearOutAlwaysOnTop_Plugin,
+
     // Surge XT Effects specific defaults
     FXUnitAssumeFixedBlock,
     FXUnitDefaultZoom,
+
+    IgnoreMIDIProgramChange,
+
+    DontShowAudioErrorsAgain,
 
     nKeys
 };

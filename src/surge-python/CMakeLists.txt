@@ -12,11 +12,19 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 if(UNIX AND NOT APPLE)
   find_package(Threads REQUIRED)
-  target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    Threads::Threads
-    ${PYTHON_LIBRARIES}
-    )
+
+  if(SKBUILD)
+    target_link_libraries(${PROJECT_NAME}
+      PRIVATE
+      Threads::Threads
+      )
+  else()
+    target_link_libraries(${PROJECT_NAME}
+      PRIVATE
+      Threads::Threads
+      ${PYTHON_LIBRARIES}
+      )
+  endif()
 
   if(CMAKE_SYSTEM_NAME MATCHES "BSD")
     target_link_libraries(${PROJECT_NAME} PRIVATE execinfo)

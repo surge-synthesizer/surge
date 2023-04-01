@@ -153,7 +153,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         jassert(false); // Make a key for me please!
 
-        pt->setCanTearOut({true, Surge::Storage::nKeys, Surge::Storage::nKeys});
+        pt->setCanTearOut(
+            {true, Surge::Storage::nKeys, Surge::Storage::nKeys, Surge::Storage::nKeys});
 
         return pt;
     }
@@ -209,7 +210,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         mse->setEnclosingParentTitle(title);
         mse->setCanTearOut({true, Surge::Storage::MSEGOverlayLocationTearOut,
-                            Surge::Storage::MSEGOverlayTearOutAlwaysOnTop});
+                            Surge::Storage::MSEGOverlayTearOutAlwaysOnTop,
+                            Surge::Storage::MSEGOverlayTearOutAlwaysOnTop_Plugin});
         mse->setCanTearOutResize({true, Surge::Storage::MSEGOverlaySizeTearOut});
         mse->setMinimumSize(600, 250);
         locationGet(mse.get(), Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW,
@@ -259,7 +261,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         fme->setSkin(currentSkin, bitmapStore);
         fme->setEnclosingParentTitle(title);
         fme->setCanTearOut({true, Surge::Storage::FormulaOverlayLocationTearOut,
-                            Surge::Storage::FormulaOverlayTearOutAlwaysOnTop});
+                            Surge::Storage::FormulaOverlayTearOutAlwaysOnTop,
+                            Surge::Storage::FormulaOverlayTearOutAlwaysOnTop_Plugin});
         fme->setCanTearOutResize({true, Surge::Storage::FormulaOverlaySizeTearOut});
         fme->setMinimumSize(500, 250);
         locationGet(fme.get(),
@@ -284,7 +287,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         te->setTuning(synth->storage.currentTuning);
         te->setEnclosingParentTitle("Tuning Editor");
         te->setCanTearOut({true, Surge::Storage::TuningOverlayLocationTearOut,
-                           Surge::Storage::TuningOverlayTearOutAlwaysOnTop});
+                           Surge::Storage::TuningOverlayTearOutAlwaysOnTop,
+                           Surge::Storage::TuningOverlayTearOutAlwaysOnTop_Plugin});
         te->setCanTearOutResize({true, Surge::Storage::TuningOverlaySizeTearOut});
         te->setMinimumSize(730, 400);
         locationGet(te.get(), Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW,
@@ -325,7 +329,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         wsa->setEnclosingParentTitle("Waveshaper Analysis");
         wsa->setWSType(synth->storage.getPatch().scene[current_scene].wsunit.type.val.i);
         wsa->setCanTearOut({true, Surge::Storage::WSAnalysisOverlayLocationTearOut,
-                            Surge::Storage::WSAnalysisOverlayTearOutAlwaysOnTop});
+                            Surge::Storage::WSAnalysisOverlayTearOutAlwaysOnTop,
+                            Surge::Storage::WSAnalysisOverlayTearOutAlwaysOnTop_Plugin});
         wsa->setCanTearOutResize({true, Surge::Storage::WSAnalysisOverlaySizeTearOut});
         wsa->setMinimumSize(300, 160);
 
@@ -343,7 +348,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         fa->setSkin(currentSkin, bitmapStore);
         fa->setEnclosingParentTitle("Filter Analysis");
         fa->setCanTearOut({true, Surge::Storage::FilterAnalysisOverlayLocationTearOut,
-                           Surge::Storage::FilterAnalysisOverlayTearOutAlwaysOnTop});
+                           Surge::Storage::FilterAnalysisOverlayTearOutAlwaysOnTop,
+                           Surge::Storage::FilterAnalysisOverlayTearOutAlwaysOnTop_Plugin});
         fa->setCanTearOutResize({true, Surge::Storage::FilterAnalysisOverlaySizeTearOut});
         fa->setMinimumSize(300, 200);
 
@@ -361,7 +367,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         scope->setSkin(currentSkin, bitmapStore);
         scope->setEnclosingParentTitle("Oscilloscope");
         scope->setCanTearOut({true, Surge::Storage::OscilloscopeOverlayLocationTearOut,
-                              Surge::Storage::OscilloscopeOverlayTearOutAlwaysOnTop});
+                              Surge::Storage::OscilloscopeOverlayTearOutAlwaysOnTop,
+                              Surge::Storage::OscilloscopeOverlayTearOutAlwaysOnTop_Plugin});
         scope->setCanTearOutResize({true, Surge::Storage::OscilloscopeOverlaySizeTearOut});
         scope->setMinimumSize(500, 300);
 
@@ -373,7 +380,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         auto me = std::make_unique<Surge::Overlays::ModulationEditor>(this, this->synth);
         me->setEnclosingParentTitle("Modulation List");
         me->setCanTearOut({true, Surge::Storage::ModlistOverlayLocationTearOut,
-                           Surge::Storage::ModlistOverlayTearOutAlwaysOnTop});
+                           Surge::Storage::ModlistOverlayTearOutAlwaysOnTop,
+                           Surge::Storage::ModlistOverlayTearOutAlwaysOnTop_Plugin});
         me->setCanTearOutResize({true, Surge::Storage::ModlistOverlaySizeTearOut});
         me->setMinimumSize(600, 300);
         me->setSkin(currentSkin, bitmapStore);

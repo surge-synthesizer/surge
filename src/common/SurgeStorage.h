@@ -607,6 +607,12 @@ struct LFOStorage
     Parameter rate, shape, start_phase, magnitude, deform;
     Parameter trigmode, unipolar;
     Parameter delay, hold, attack, decay, sustain, release;
+
+    enum LFOExtraOutputAmplitude
+    {
+        UNSCALED,
+        SCALED
+    } lfoExtraAmplitude{UNSCALED};
 };
 
 struct FxStorage
@@ -620,6 +626,9 @@ struct FxStorage
 struct SurgeSceneStorage
 {
     OscillatorStorage osc[n_oscs];
+
+    // If you change the start and end points of this param list the iteration in the
+    // dump to HTML will break.
     Parameter pitch, octave;
     Parameter fm_depth, fm_switch;
     Parameter drift, noise_colour, keytrack_root;
@@ -836,6 +845,26 @@ struct DAWExtraStateStorage
             std::string filterString{""};
             int filterInt{0};
         } modulationEditorState;
+
+        struct OscilloscopeOverlayState
+        {
+            int mode = 0; // 0 for waveform, 1 for spectrum.
+
+            // Waveform values.
+            float trigger_speed = 0.5f;
+            float trigger_level = 0.5f;
+            float trigger_limit = 0.5f;
+            float time_window = 0.5f;
+            float amp_window = 0.5f;
+            int trigger_type = 0;
+            bool dc_kill = false;
+            bool sync_draw = false;
+
+            // Spectrum values.
+            float noise_floor = 0.f;
+            float max_db = 1.f;
+            float decay_rate = 1.f;
+        } oscilloscopeOverlayState;
 
         struct TuningOverlayState
         {
@@ -1078,24 +1107,31 @@ class alignas(16) SurgeStorage
     static std::string skipPatchLoadDataPathSentinel;
 
     // In Surge XT, SurgeStorage can now keep a cache of errors it reports to the user
-    void reportError(const std::string &msg, const std::string &title);
+    enum ErrorType
+    {
+        GENERAL_ERROR = 1,
+        AUDIO_CONFIGURATION = 2,
+    };
+    void reportError(const std::string &msg, const std::string &title,
+                     const ErrorType errorType = GENERAL_ERROR);
     struct ErrorListener
     {
         // This can be called from any thread, beware! But it is called only
         // when an error occursm so if you want to be sloppy and just lock, that's OK
-        virtual void onSurgeError(const std::string &msg, const std::string &title) = 0;
+        virtual void onSurgeError(const std::string &msg, const std::string &title,
+                                  const ErrorType &errorType) = 0;
     };
     std::unordered_set<ErrorListener *> errorListeners;
     // this mutex is ONLY locked in the error path and when registering a listener
     // (from the UI thread)
     std::mutex preListenerErrorMutex;
-    std::vector<std::pair<std::string, std::string>> preListenerErrors;
+    std::vector<std::tuple<std::string, std::string, ErrorType>> preListenerErrors;
     void addErrorListener(ErrorListener *l)
     {
         errorListeners.insert(l);
         std::lock_guard<std::mutex> g(preListenerErrorMutex);
         for (auto p : preListenerErrors)
-            l->onSurgeError(p.first, p.second);
+            l->onSurgeError(std::get<0>(p), std::get<1>(p), std::get<2>(p));
         preListenerErrors.clear();
     }
     void removeErrorListener(ErrorListener *l) { errorListeners.erase(l); }

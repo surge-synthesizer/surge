@@ -16,6 +16,8 @@
 #pragma once
 
 #include <random>
+#include <cassert>
+
 #include "basic_dsp.h"
 
 enum modsrctype
@@ -246,8 +248,11 @@ class ModulationSource
     ModulationSource()
     {
         for (int i = 0; i < vecsize; ++i)
+        {
             voutput[i] = 0.f;
+        }
     }
+
     virtual ~ModulationSource() {}
     virtual const char *get_title() { return 0; }
     virtual int get_type() { return mst_undefined; }
@@ -255,33 +260,53 @@ class ModulationSource
     virtual void attack(){};
     virtual void release(){};
     virtual void reset(){};
+
     // override these if you support indices
     virtual void set_active_outputs(int ao) { active_outputs = ao; }
     virtual int get_active_outputs() { return active_outputs; }
+
     virtual float get_output(int which)
     {
         if (which == 0)
+        {
             return output;
+        }
         else if (which < vecsize)
+        {
             return voutput[which];
+        }
         else
+        {
             return 0.f;
+        }
     }
+
     virtual float get_output01(int which)
     {
         if (which == 0)
+        {
             return output;
+        }
         else if (which < vecsize)
+        {
             return voutput[which];
+        }
         else
+        {
             return 0.f;
+        }
     }
+
     virtual void set_output(int which, float f)
     {
         if (which == 0)
+        {
             output = f;
+        }
         else if (which < vecsize)
+        {
             voutput[which] = f;
+        }
     }
 
     virtual bool per_voice() { return false; }
@@ -316,7 +341,7 @@ enum SmoothingMode
 template <int NDX = 1> class ControllerModulationSourceVector : public ModulationSource
 {
   public:
-    // Smoothing and Shaping Behaviors
+    // smoothing and shaping behaviors
     Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::LEGACY;
 
     ControllerModulationSourceVector()
@@ -330,6 +355,7 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
         smoothingMode = Modulator::SmoothingMode::LEGACY;
         bipolar = false;
     }
+
     ControllerModulationSourceVector(Modulator::SmoothingMode mode)
         : ControllerModulationSourceVector()
     {
@@ -356,6 +382,7 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
         assert(NDX == 1);
         init(0, f);
     }
+
     void init(int idx, float f)
     {
         target[idx] = f;
@@ -378,12 +405,20 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
     void set_target01(int idx, float f, bool updatechanged = true)
     {
         if (bipolar)
+        {
             target[idx] = 2.f * f - 1.f;
+        }
         else
+        {
             target[idx] = f;
+        }
+
         startingpoint[idx] = value[idx];
+
         if (updatechanged)
+        {
             changed[idx] = true;
+        }
     }
 
     virtual float get_output(int which) override { return value[which]; }
@@ -391,14 +426,20 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
     virtual float get_output01(int i) override
     {
         if (bipolar)
+        {
             return 0.5f + 0.5f * value[i];
+        }
+
         return value[i];
     }
 
     virtual float get_target01(int idx)
     {
         if (bipolar)
+        {
             return 0.5f + 0.5f * target[idx];
+        }
+
         return target[idx];
     }
 
@@ -407,9 +448,13 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
         if (changed[idx])
         {
             if (reset)
+            {
                 changed[idx] = false;
+            }
+
             return true;
         }
+
         return false;
     }
 
@@ -419,13 +464,14 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
         {
             target[idx] = 0.f;
             value[idx] = 0.f;
-            value[idx] = 0.f;
             bipolar = false;
         }
     }
+
     inline void processSmoothing(Modulator::SmoothingMode mode, float sigma)
     {
         assert(samplerate > 1000);
+
         for (int idx = 0; idx < NDX; ++idx)
         {
             if (mode == Modulator::SmoothingMode::LEGACY ||
@@ -433,28 +479,34 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
                 mode == Modulator::SmoothingMode::FAST_EXP)
             {
                 float b = fabs(target[idx] - value[idx]);
+
                 if (b < sigma && mode != Modulator::SmoothingMode::LEGACY)
                 {
                     value[idx] = target[idx];
                 }
                 else
                 {
-                    float a = (mode == Modulator::SmoothingMode::FAST_EXP ? 0.99f : 0.9f) * 44100 *
-                              samplerate_inv * b;
+                    // Don't allow us to push outside of [target,value]
+                    // so clamp the interpolator to 0,1
+                    float a =
+                        std::clamp((mode == Modulator::SmoothingMode::FAST_EXP ? 0.99f : 0.9f) *
+                                       44100 * samplerate_inv * b,
+                                   0.f, 1.f);
+
                     value[idx] = (1 - a) * value[idx] + a * target[idx];
                 }
+
                 return;
             };
+
             if (mode == Modulator::SmoothingMode::FAST_LINE)
             {
-                /*
-                 * Apply a constant change until we get there.
-                 * Rate is set so we cover the entire range (0,1)
-                 * in 50 blocks at 44k
-                 */
+                // Apply a constant change until we get there
+                // Rate is set so we cover the entire [0, 1] range in 50 blocks at 44.1k
                 float sampf = samplerate / 44100;
                 float da = (target[idx] - startingpoint[idx]) / (50 * sampf);
                 float b = target[idx] - value[idx];
+
                 if (fabs(b) < fabs(da))
                 {
                     value[idx] = target[idx];
@@ -464,15 +516,21 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
                     value[idx] += da;
                 }
             }
+
             if (mode == Modulator::SmoothingMode::DIRECT)
             {
                 value[idx] = target[idx];
             }
+
+            // Just in case #6835 sneaks back
+            assert(!std::isnan(value[idx]) && !std::isinf(value[idx]));
         }
     }
+
     virtual void process_block() override
     {
         assert(samplerate > 1000);
+
         processSmoothing(smoothingMode,
                          smoothingMode == Modulator::SmoothingMode::FAST_EXP ? 0.005f : 0.0025f);
     }
@@ -480,16 +538,23 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
     virtual bool process_block_until_close(float sigma)
     {
         assert(samplerate > 1000);
+
         if (smoothingMode == Modulator::SmoothingMode::LEGACY)
+        {
             processSmoothing(Modulator::SmoothingMode::SLOW_EXP, sigma);
+        }
         else
+        {
             processSmoothing(smoothingMode, sigma);
+        }
 
         auto res = (value[0] != target[0]);
+
         for (int i = 1; i < NDX; ++i)
         {
             res &= (value[i] != target[i]);
         }
+
         return res;
     }
 

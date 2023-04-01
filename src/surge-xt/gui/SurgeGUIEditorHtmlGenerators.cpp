@@ -1,7 +1,9 @@
 #include "SurgeGUIEditor.h"
 #include "UserDefaults.h"
+#include <algorithm>
 #include <set>
 #include "fmt/core.h"
+#include "sst/cpputils.h"
 
 namespace Surge
 {
@@ -112,7 +114,7 @@ std::string SurgeGUIEditor::tuningToHtml()
     if (!synth->storage.isStandardMapping)
     {
         htmls << "Scale position 0 maps to MIDI note " << synth->storage.currentMapping.middleNote
-              << "\n</br>"
+              << "\n<br/>"
               << "MIDI note " << synth->storage.currentMapping.tuningConstantNote
               << " is set to a frequency of " << synth->storage.currentMapping.tuningFrequency
               << " Hz.\n</div> ";
@@ -209,7 +211,7 @@ std::string SurgeGUIEditor::tuningToHtml()
       <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="rawscl">Tuning Raw File</a>:
            )HTML"
-          << synth->storage.currentScale.name << "</div></br>\n<pre>\n"
+          << synth->storage.currentScale.name << "</div><br/>\n<pre>\n"
           << synth->storage.currentScale.rawText << R"HTML(
       </pre>
     </div>
@@ -222,7 +224,7 @@ std::string SurgeGUIEditor::tuningToHtml()
       <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="rawkbm">Keyboard Mapping Raw File</a>:
            )HTML"
-              << synth->storage.currentMapping.name << "</div></br>\n<pre>\n"
+              << synth->storage.currentMapping.name << "</div><br/>\n<pre>\n"
               << synth->storage.currentMapping.rawText << R"HTML(
       </pre>
     </div>
@@ -235,7 +237,7 @@ std::string SurgeGUIEditor::tuningToHtml()
         <div style="font-size: 13pt; font-family: Lato; font-weight: 600; color: #123463;">
         <a name="matrices">Interval Matrices</a>:
            )HTML"
-          << synth->storage.currentScale.name << "</div></br>\n";
+          << synth->storage.currentScale.name << "</div><br/>\n";
 
     if (synth->storage.currentMapping.count > 48)
     {
@@ -632,5 +634,435 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
         htmls << "</ul>\n";
     }
     endSection();
+    return htmls.str();
+}
+
+std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
+{
+    std::ostringstream htmls;
+    std::string tab2 = "\t\t";
+    std::string tab3 = tab2 + "\t";
+    std::string tab4 = tab3 + "\t";
+    std::string tab5 = tab4 + "\t";
+
+    auto dumpParam = [&htmls, includeDefaults, tab3](const Parameter &p) {
+        if (p.ctrltype == ct_none)
+        {
+            return;
+        }
+
+        if (includeDefaults || p.get_value_f01() != p.get_default_value_f01())
+        {
+            htmls << tab3 << "<b>" << p.get_name() << ":</b> " << p.get_display() << "<br/>\n";
+        }
+    };
+
+    const auto &patch = synth->storage.getPatch();
+
+    std::vector<int> scenes;
+
+    if (patch.scenemode.val.i == sm_single)
+    {
+        scenes.push_back(patch.scene_active.val.i);
+    }
+    else
+    {
+        for (int i = 0; i < n_scenes; ++i)
+        {
+            scenes.push_back(i);
+        }
+    }
+
+    htmls << R"HTML(<html>
+    <head>
+        <link rel ="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato"/>
+
+        <style>
+            h1, h2, h3 { font-family: Lato; color: #123463; margin: 6pt; margin-left: 12pt; }
+
+            h1 { font-size: 20pt; }
+            h2 { font-size: 16pt; }
+            h3 { font-size: 13pt; margin-left: 8pt; }
+
+            p { font-family: Lato; font-size: 12pt; margin: 2pt; line-height: 1.5; padding-left: 4pt; }
+
+            .header { border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt; }
+
+            .frame { margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; }
+        </style>
+    </head>
+
+    <body style="font-family: Lato; margin: 0pt; background: #CDCED4">
+
+        <div class="header">
+            <div style="font-size: 20pt; padding: 2pt; color: #123463;">
+                Surge XT Patch Export To Text
+            </div>
+        </div>
+)HTML";
+
+    auto cat = patch.category;
+    std::replace(cat.begin(), cat.end(), '\\', '/');
+
+    htmls << std::endl << tab2 << "<div class=\"frame\">\n";
+    htmls << tab3 << "<p>" << std::endl;
+    htmls << tab4 << "<b>Patch Name:</b> " << patch.name << "<br/> " << std::endl
+          << tab4 << "<b>Category:</b> " << cat << std::endl
+          << tab3 << "</p>" << std::endl;
+    htmls << tab2 << "</div>\n";
+
+    // global stuff - poly limit, fx bypass, character
+    htmls << std::endl << tab2 << "<div class=\"frame\">\n";
+    htmls << tab3 << "<h2>Global Patch Settings</h2>\n" << tab3 << "<p>\n";
+
+    for (const auto &par : {patch.scene_active, patch.scenemode, patch.splitpoint, patch.volume,
+                            patch.polylimit, patch.fx_bypass, patch.character})
+    {
+        htmls << "\t";
+        dumpParam(par);
+    }
+
+    htmls << tab3 << "</p>\n";
+    htmls << tab2 << "</div>\n";
+
+    std::ostringstream mods;
+    std::ostringstream globmods;
+    std::set<std::pair<int, int>> modsourceSceneActive;
+
+    for (const auto &mr : patch.modulation_global)
+    {
+        char depth[TXT_SIZE];
+        auto p = patch.param_ptr[mr.destination_id];
+        int ptag = p->id;
+        auto thisms = (modsources)mr.source_id;
+
+        p->get_display_of_modulation_depth(
+            depth, synth->getModDepth(ptag, thisms, mr.source_scene, mr.source_index),
+            synth->isBipolarModulation(thisms), Parameter::Menu);
+
+        globmods << tab4 << "<b>" << modulatorName(mr.source_id, false) << " -> "
+                 << p->get_full_name() << ":</b> " << depth << "<br/>\n";
+        modsourceSceneActive.emplace(mr.source_id, mr.source_scene);
+    }
+
+    if (globmods.tellp() != std::streampos(0))
+    {
+        mods << std::endl << tab2 << "<div class=\"frame\">\n";
+        mods << tab3 << "<h2>Global Modulation Targets</h2>\n" << tab3 << "<p>" << std::endl;
+        mods << globmods.str();
+        mods << tab3 << "</p>\n";
+        mods << tab2 << "</div>\n";
+    }
+
+    for (const auto &scn : scenes)
+    {
+        std::ostringstream scenemods;
+        int idx{0};
+
+        for (const auto &[rt, n] : {std::make_pair(patch.scene[scn].modulation_voice, "Voice"),
+                                    {patch.scene[scn].modulation_scene, "Scene"}})
+        {
+            std::ostringstream curscenemods;
+
+            for (const auto &mr : rt)
+            {
+                char depth[TXT_SIZE];
+                auto p = patch.param_ptr[mr.destination_id + patch.scene_start[scn]];
+                int ptag = p->id;
+                auto thisms = (modsources)mr.source_id;
+
+                p->get_display_of_modulation_depth(
+                    depth, synth->getModDepth(ptag, thisms, scn, mr.source_index),
+                    synth->isBipolarModulation(thisms), Parameter::Menu);
+
+                curscenemods << tab4 << "<b>" << modulatorName(thisms, false) << " -> "
+                             << p->get_full_name() << ":</b> " << depth << "<br/>\n";
+                modsourceSceneActive.emplace(thisms, mr.source_scene);
+            }
+
+            if (curscenemods.tellp() != std::streampos(0))
+            {
+                scenemods << tab3 << "<h2>Scene " << (char)('A' + scn) << " " << n
+                          << " Modulation Targets</h2>\n"
+                          << tab3 << "<p>\n";
+                scenemods << curscenemods.str();
+                scenemods << tab3 << "</p>\n";
+
+                if (idx == 0)
+                {
+                    scenemods << std::endl;
+                }
+            }
+
+            idx++;
+        }
+
+        if (scenemods.tellp() != std::streampos(0))
+        {
+            mods << std::endl << tab2 << "<div class=\"frame\">\n";
+            mods << scenemods.str();
+            mods << tab2 << "</div>\n";
+        }
+    }
+
+    for (const auto &scn : scenes)
+    {
+        htmls << std::endl << tab2 << "<div class=\"frame\">" << std::endl;
+        htmls << tab3 << "<h2>Scene " << (char)('A' + scn) << "</h2>" << std::endl;
+
+        const auto &sc = patch.scene[scn];
+        int idx{1};
+
+        htmls << std::endl
+              << tab3 << "<h3>Scene Settings</h3>" << std::endl
+              << tab3 << "<p>" << std::endl;
+
+        for (const auto &par : {sc.polymode, sc.portamento, sc.pitch, sc.octave, sc.pbrange_dn,
+                                sc.pbrange_dn, sc.keytrack_root, sc.drift})
+        {
+            htmls << "\t";
+            dumpParam(par);
+        }
+
+        htmls << tab3 << "</p>" << std::endl;
+
+        for (const auto &o : sc.osc)
+        {
+            htmls << std::endl
+                  << tab3 << "<h3>Oscillator " << idx << ": " << o.type.get_display() << "</h3>"
+                  << std::endl;
+            htmls << tab3 << "<p>\n";
+
+            const auto *p = &(o.type);
+            const auto *e = &(o.retrigger);
+
+            p++;
+
+            while (p <= e)
+            {
+                htmls << "\t";
+                dumpParam(*p);
+                p++;
+            }
+
+            if (uses_wavetabledata(o.type.val.i))
+            {
+                htmls << tab4 << "<b>Wavetable:</b> " << o.wavetable_display_name << std::endl;
+            }
+
+            htmls << tab3 << "</p>\n";
+
+            idx++;
+        }
+
+        htmls << std::endl
+              << tab3 << "<h3>Oscillator FM</h3>" << std::endl
+              << tab3 << "<p>" << std::endl;
+
+        for (const auto &par : {sc.fm_switch, sc.fm_depth})
+        {
+            htmls << "\t";
+            dumpParam(par);
+        }
+
+        htmls << tab3 << "</p>" << std::endl;
+
+        htmls << std::endl << tab3 << "<h3>Mixer</h3>\n" << tab3 << "<p>" << std::endl;
+
+        {
+            const auto *p = &(sc.level_o1);
+            const auto *e = &(sc.route_ring_23);
+
+            while (p <= e)
+            {
+                htmls << "\t";
+                dumpParam(*p);
+                p++;
+            }
+
+            htmls << tab3 << "</p>" << std::endl;
+        }
+
+        if (sc.wsunit.type.val.i != (int)sst::waveshapers::WaveshaperType::wst_none)
+        {
+            htmls << std::endl
+                  << tab3 << "<h3>Waveshaper</h3>" << std::endl
+                  << tab3 << "<p>" << std::endl;
+
+            htmls << "\t";
+            dumpParam(sc.wsunit.type);
+            htmls << "\t";
+            dumpParam(sc.wsunit.drive);
+
+            htmls << tab3 << "</p>" << std::endl;
+        }
+
+        idx = 1;
+
+        for (const auto &f : sc.filterunit)
+        {
+            if (f.type.val.i != sst::filters::fut_none)
+            {
+                htmls << std::endl
+                      << tab3 << "<h3>Filter " << idx << "</h3>" << std::endl
+                      << tab3 << "<p>" << std::endl;
+
+                htmls << tab4 << "<b>Type:</b> " << f.type.get_display() << "<br/>" << std::endl;
+                htmls << tab4 << "<b>Subtype:</b> " << f.subtype.get_display() << "<br/>"
+                      << std::endl;
+
+                const auto *p = &(f.cutoff);
+                const auto *e = &(f.keytrack);
+
+                while (p <= e)
+                {
+                    htmls << "\t";
+                    dumpParam(*p);
+                    p++;
+                }
+
+                if (idx == 2)
+                {
+                    htmls << "\t";
+                    dumpParam(sc.f2_cutoff_is_offset);
+                    htmls << "\t";
+                    dumpParam(sc.f2_link_resonance);
+                }
+
+                htmls << tab3 << "</p>" << std::endl;
+
+                idx++;
+            }
+        }
+
+        htmls << std::endl
+              << tab3 << "<h3>Filter Block</h3>" << std::endl
+              << tab3 << "<p>" << std::endl;
+
+        for (const auto &par :
+             {sc.filterblock_configuration, sc.filter_balance, sc.feedback, sc.lowcut})
+        {
+            htmls << "\t";
+            dumpParam(par);
+        }
+
+        htmls << tab3 << "</p>" << std::endl;
+
+        htmls << std::endl
+              << tab3 << "<h3>Amplifier</h3>" << std::endl
+              << tab3 << "<p>" << std::endl;
+
+        for (const auto &par : {sc.vca_level, sc.vca_velsense})
+        {
+            htmls << "\t";
+            dumpParam(par);
+        }
+
+        htmls << tab3 << "</p>" << std::endl << std::endl;
+
+        htmls << tab3 << "<h3>Scene Output</h3>" << std::endl << tab3 << "<p>" << std::endl;
+
+        {
+            const auto *p = &(sc.volume);
+            const auto *e = &(sc.send_level[n_send_slots - 1]);
+
+            while (p <= e)
+            {
+                htmls << "\t";
+                dumpParam(*p);
+                p++;
+            }
+
+            htmls << tab3 << "</p>" << std::endl;
+        }
+
+        for (const auto &idx : {ms_ampeg, ms_filtereg})
+        {
+            const auto &en = sc.adsr[idx - ms_ampeg];
+
+            htmls << std::endl
+                  << tab3 << "<h3>" << (idx == ms_ampeg ? "Amplifier EG" : "Filter EG") << "</h3>"
+                  << std::endl
+                  << tab3 << "<p>" << std::endl;
+
+            const auto *p = &(en.a);
+            const auto *e = &(en.mode);
+
+            while (p <= e)
+            {
+                htmls << "\t";
+                dumpParam(*p);
+                p++;
+            }
+
+            htmls << tab3 << "</p>" << std::endl;
+        }
+
+        for (const auto &[li, lf] : sst::cpputils::enumerate(sc.lfo))
+        {
+            auto ms = ms_lfo1 + li;
+
+            if (modsourceSceneActive.find({ms, scn}) != modsourceSceneActive.end())
+            {
+                htmls << std::endl
+                      << tab3 << "<h3>" << modulatorName(ms, false) << "</h3>" << std::endl
+                      << tab3 << "<p>" << std::endl;
+
+                const auto *p = &(lf.rate);
+                const auto *e = &(lf.release);
+
+                while (p <= e)
+                {
+                    htmls << "\t";
+                    dumpParam(*p);
+                    p++;
+                }
+
+                htmls << tab3 << "</p>" << std::endl;
+            }
+        }
+
+        htmls << tab2 << "</div>" << std::endl;
+        // Scenes
+    }
+
+    // FX
+    htmls << std::endl << tab2 << "<div class=\"frame\">" << std::endl;
+    htmls << tab3 << "<h2>Effects</h2>" << std::endl;
+
+    for (int i = 0; i < n_fx_slots; ++i)
+    {
+        if (includeDefaults || patch.fx[fxslot_order[i]].type.val.i != fxt_off)
+        {
+            const auto &fx = patch.fx[fxslot_order[i]];
+
+            htmls << std::endl
+                  << tab3 << "<h3>" << fxslot_names[fxslot_order[i]] << ": "
+                  << fx_type_names[fx.type.val.i] << "</h3>\n"
+                  << tab3 << "<p>\n";
+
+            if (fxslot_order[i] == fxslot_send1 || fxslot_order[i] == fxslot_send2 ||
+                fxslot_order[i] == fxslot_send3 || fxslot_order[i] == fxslot_send4)
+            {
+                htmls << "\t";
+                dumpParam(fx.return_level);
+            }
+
+            for (const auto &p : fx.p)
+            {
+                if (p.ctrltype != ct_none)
+                    htmls << "\t";
+
+                dumpParam(p);
+            }
+
+            htmls << tab3 << "</p>\n";
+        }
+    }
+
+    htmls << tab2 << "</div>" << std::endl << mods.str();
+
+    htmls << "\t</body>\n</html>";
+
     return htmls.str();
 }

@@ -15,7 +15,7 @@
  */
 int main(int argc, char **argv)
 {
-    std::cout << "# surge-headless: " << Surge::Build::FullVersionStr
+    std::cout << "# surge-xt-headless: " << Surge::Build::FullVersionStr
               << " built: " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime << "\n";
 
     if (argc > 2 && strcmp(argv[1], "--non-test") == 0)

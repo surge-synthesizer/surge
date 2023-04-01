@@ -26,16 +26,6 @@ namespace Surge
 namespace Widgets
 {
 
-std::array<int, n_fx_slots> displayPositionToFXIndex{
-    fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
-
-    fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
-
-    fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
-
-    fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4,
-};
-
 std::array<int, n_fx_slots> fxIndexToDisplayPosition{-1};
 
 EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChooser>(this)
@@ -44,7 +34,7 @@ EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChoose
     {
         for (int i = 0; i < n_fx_slots; ++i)
         {
-            fxIndexToDisplayPosition[displayPositionToFXIndex[i]] = i;
+            fxIndexToDisplayPosition[SurgeGUIEditor::fxslot_order[i]] = i;
         }
     }
     setRepaintsOnMouseActivity(true);
@@ -54,7 +44,7 @@ EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChoose
     for (int i = 0; i < n_fx_slots; ++i)
     {
         fxTypes[i] = fxt_off;
-        auto mapi = displayPositionToFXIndex[i];
+        auto mapi = SurgeGUIEditor::fxslot_order[i];
         auto q =
             std::make_unique<OverlayAsAccessibleButton<EffectChooser>>(this, fxslot_names[mapi]);
         q->setBounds(getEffectRectangle(mapi));
@@ -174,7 +164,7 @@ void EffectChooser::resized()
     int i = 0;
     for (const auto &q : slotAccOverlays)
     {
-        q->setBounds(getEffectRectangle(displayPositionToFXIndex[i]));
+        q->setBounds(getEffectRectangle(SurgeGUIEditor::fxslot_order[i]));
         i++;
     }
 }
@@ -372,6 +362,32 @@ void EffectChooser::mouseUp(const juce::MouseEvent &event)
 
         hasDragged = false;
         repaint();
+    }
+    else
+    {
+        if (event.mods.isAltDown())
+        {
+            for (int i = 0; i < n_fx_slots; ++i)
+            {
+                auto r = getEffectRectangle(i);
+
+                if (r.contains(event.getPosition()))
+                {
+                    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+                    if (sge)
+                    {
+                        // setting both source and target to the same FX slot ID
+                        // and using FX reorder mode NONE will delete the FX
+                        sge->swapFX(i, i, SurgeSynthesizer::FXReorderMode::NONE);
+                        currentEffect = i;
+                        notifyValueChanged();
+
+                        repaint();
+                    }
+                }
+            }
+        }
     }
 }
 

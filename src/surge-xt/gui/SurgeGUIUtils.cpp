@@ -35,6 +35,7 @@ bool isTouchMode(SurgeStorage *storage)
  */
 static bool isStandalone{false};
 void setIsStandalone(bool b) { isStandalone = b; }
+bool getIsStandalone() { return isStandalone; }
 
 bool allowKeyboardEdits(SurgeStorage *storage)
 {

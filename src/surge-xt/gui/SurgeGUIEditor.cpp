@@ -293,16 +293,6 @@ class DroppedUserDataHandler
 };
 
 Surge::GUI::ModulationGrid *Surge::GUI::ModulationGrid::grid = nullptr;
-/*
- * See the comment in SurgeGUIUtils.cpp
- */
-namespace Surge
-{
-namespace GUI
-{
-extern void setIsStandalone(bool b);
-}
-} // namespace Surge
 
 SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 {
@@ -451,6 +441,7 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
 SurgeGUIEditor::~SurgeGUIEditor()
 {
+    juce::PopupMenu::dismissAllActiveMenus();
     juce::Desktop::getInstance().removeFocusChangeListener(this);
     synth->removeModulationAPIListener(this);
     synth->storage.clearOkCancelProvider();
@@ -459,6 +450,8 @@ SurgeGUIEditor::~SurgeGUIEditor()
     synth->storage.getPatch().dawExtraState.isPopulated = isPop;
     synth->storage.removeErrorListener(this);
 }
+
+void SurgeGUIEditor::forceLFODisplayRebuild() { lfoDisplay->repaint(); }
 
 void SurgeGUIEditor::idle()
 {
@@ -556,16 +549,24 @@ void SurgeGUIEditor::idle()
 
     if (errorItemCount)
     {
-        std::vector<std::pair<std::string, std::string>> cp;
+        decltype(errorItems) cp;
         {
             std::lock_guard<std::mutex> g(errorItemsMutex);
             cp = errorItems;
             errorItems.clear();
         }
 
-        for (const auto &p : cp)
+        for (const auto &[msg, title, code] : cp)
         {
-            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, p.second, p.first);
+            if (code == SurgeStorage::AUDIO_CONFIGURATION)
+            {
+                promptForOKCancelWithDontAskAgain(
+                    title, msg, Surge::Storage::DefaultKey::DontShowAudioErrorsAgain, []() {});
+            }
+            else
+            {
+                juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, title, msg);
+            }
         }
     }
 
@@ -633,7 +634,7 @@ void SurgeGUIEditor::idle()
 
             if (lfoDisplayRepaintCountdown == 0)
             {
-                lfoDisplay->repaint();
+                forceLFODisplayRebuild();
             }
         }
 
@@ -680,7 +681,7 @@ void SurgeGUIEditor::idle()
                 oss << "Loading patch " << synth->patchid_queue
                     << " has not occurred after 200 idle cycles. This means that the audio system"
                     << " is delayed while loading many patches in a row. The audio system has to be"
-                    << " running in order to load Surge patches. If the audio system is working,"
+                    << " running in order to load Surge XT patches. If the audio system is working,"
                        " you can probably ignore this message and continue once Surge XT catches "
                        "up.";
 
@@ -931,10 +932,11 @@ void SurgeGUIEditor::idle()
 
                     if (lfoDisplay)
                     {
-                        lfoDisplay->invalidateIfIdIsInRange(j);
+                        lfoDisplay->repaintIfIdIsInRange(j);
                     }
 
                     auto sp = getStorage()->getPatch().param_ptr[j];
+
                     if (sp)
                     {
                         if (sp->ctrlgroup == cg_FILTER)
@@ -942,6 +944,7 @@ void SurgeGUIEditor::idle()
                             // force repaint any filter overlays
                             auto fa = getOverlayIfOpenAs<Surge::Overlays::FilterAnalysis>(
                                 OverlayTags::FILTER_ANALYZER);
+
                             if (fa)
                             {
                                 fa->forceDataRefresh();
@@ -963,7 +966,7 @@ void SurgeGUIEditor::idle()
             {
                 lfoDisplay->setTimeSignature(synth->time_data.timeSigNumerator,
                                              synth->time_data.timeSigDenominator);
-                lfoDisplay->invalidateIfAnythingIsTemposynced();
+                lfoDisplay->repaintIfAnythingIsTemposynced();
             }
         }
 
@@ -1013,7 +1016,7 @@ void SurgeGUIEditor::idle()
 
                 if (lfoDisplay)
                 {
-                    lfoDisplay->invalidateIfIdIsInRange(j);
+                    lfoDisplay->repaintIfIdIsInRange(j);
                 }
             }
             else if ((j >= 0) && (j < n_total_params) && nonmod_param[j])
@@ -1096,8 +1099,8 @@ void SurgeGUIEditor::idle()
 
                 if (synth->storage.getPatch().param_ptr[j]->ctrltype == ct_scenemode)
                 {
-                    // This is gross hack for our reordering of scenemode. Basically take the
-                    // automation value and turn it into the UI value
+                    // This is gross hack for our reordering of scene mode
+                    // Basically take the automation value and turn it into the UI value
                     auto pval = Parameter::intUnscaledFromFloat(sv, n_scene_modes - 1);
 
                     if (pval == sm_dual)
@@ -1179,6 +1182,7 @@ void SurgeGUIEditor::idle()
 
     // Force the oscilloscope, if open, to re-render for nice smooth movement.
     auto scope = getOverlayIfOpenAs<Surge::Overlays::Oscilloscope>(OSCILLOSCOPE);
+
     if (scope)
     {
         scope->updateDrawing();
@@ -1514,6 +1518,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     // reset the lfo rate slider pointer
     lfoRateSlider = nullptr;
+    filterCutoffSlider[0] = nullptr;
+    filterCutoffSlider[1] = nullptr;
+    filterResonanceSlider[0] = nullptr;
+    filterResonanceSlider[1] = nullptr;
 
     auto moRect = positionForModOverview();
 
@@ -1968,6 +1976,23 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 auto comp = layoutComponentForSkin(skinCtrl, p->id + start_paramtags, i, p,
                                                    style | conn.payload->controlStyleFlags);
 
+                if (strcmp(p->ui_identifier, "filter.cutoff_1") == 0 && comp)
+                {
+                    filterCutoffSlider[0] = param[p->id];
+                }
+                if (strcmp(p->ui_identifier, "filter.cutoff_2") == 0 && comp)
+                {
+                    filterCutoffSlider[1] = param[p->id];
+                }
+                if (strcmp(p->ui_identifier, "filter.resonance_1") == 0 && comp)
+                {
+                    filterResonanceSlider[0] = param[p->id];
+                }
+                if (strcmp(p->ui_identifier, "filter.resonance_2") == 0 && comp)
+                {
+                    filterResonanceSlider[1] = param[p->id];
+                }
+
                 if (strcmp(p->ui_identifier, "lfo.rate") == 0 && comp)
                 {
                     lfoRateSlider = comp->asJuceComponent();
@@ -2269,7 +2294,8 @@ bool SurgeGUIEditor::open(void *parent)
         auto db = Surge::GUI::SkinDB::get();
 
         std::ostringstream oss;
-        oss << "Unable to load current skin! Reverting the skin to Surge Classic.\n\nSkin Error:\n"
+        oss << "Unable to load current skin! Reverting the skin to Surge XT Classic.\n\nSkin "
+               "Error:\n"
             << db->getAndResetErrorString();
 
         auto msg = std::string(oss.str());
@@ -2897,7 +2923,7 @@ void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf
     }
     else
     {
-        msg << "Surge chose the largest fitting zoom level of " << zf << "%.";
+        msg << "Surge XT chose the largest fitting zoom level of " << zf << "%.";
     }
     synth->storage.reportError(msg.str(), "Zoom Level Adjusted");
 #endif
@@ -2928,10 +2954,13 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("Mouse Behavior"), mouseMenu);
 
     auto patchDefMenu = makePatchDefaultsMenu(where);
-    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Patch Defaults"), patchDefMenu);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Patch Settings"), patchDefMenu);
 
     auto wfMenu = makeWorkflowMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("Workflow"), wfMenu);
+
+    auto accMenu = makeAccesibilityMenu(where);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Accessibility"), accMenu);
 
     settingsMenu.addSeparator();
 
@@ -2977,16 +3006,16 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
         juce::URL(fmt::format("{}skin-library", stringWebsite)).launchInDefaultBrowser();
     });
 
-    Surge::GUI::addMenuWithShortcut(settingsMenu, Surge::GUI::toOSCase("Surge Manual..."),
+    Surge::GUI::addMenuWithShortcut(settingsMenu, Surge::GUI::toOSCase("Surge XT Manual..."),
                                     showShortcutDescription("F1"),
                                     []() { juce::URL(stringManual).launchInDefaultBrowser(); });
 
-    settingsMenu.addItem(Surge::GUI::toOSCase("Surge Website..."),
+    settingsMenu.addItem(Surge::GUI::toOSCase("Surge XT Website..."),
                          []() { juce::URL(stringWebsite).launchInDefaultBrowser(); });
 
     settingsMenu.addSeparator();
 
-    Surge::GUI::addMenuWithShortcut(settingsMenu, "About Surge", showShortcutDescription("F12"),
+    Surge::GUI::addMenuWithShortcut(settingsMenu, "About Surge XT", showShortcutDescription("F12"),
                                     [this]() { this->showAboutScreen(); });
 
     settingsMenu.showMenuAsync(popupMenuOptions(where),
@@ -3917,8 +3946,8 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
     bool appendOGPatchBy = Surge::Storage::getUserDefaultValue(
         &(synth->storage), Surge::Storage::AppendOriginalPatchBy, true);
 
-    patchDefMenu.addItem(Surge::GUI::toOSCase("Append Original Author to Modified Patches"), true,
-                         appendOGPatchBy, [this, appendOGPatchBy]() {
+    patchDefMenu.addItem(Surge::GUI::toOSCase("Append Original Author Name to Modified Patches"),
+                         true, appendOGPatchBy, [this, appendOGPatchBy]() {
                              Surge::Storage::updateUserDefaultValue(
                                  &(this->synth->storage), Surge::Storage::AppendOriginalPatchBy,
                                  !appendOGPatchBy);
@@ -3965,6 +3994,12 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
                              });
 
     patchDefMenu.addSubMenu(Surge::GUI::toOSCase("Tuning on Patch Load"), tuningOnLoadMenu);
+
+    patchDefMenu.addSeparator();
+    patchDefMenu.addItem(Surge::GUI::toOSCase("Export Patch as Text (Non-Default Parameters Only)"),
+                         true, false, [this]() { showHTML(patchToHtml()); });
+    patchDefMenu.addItem(Surge::GUI::toOSCase("Export Patch as Text (All Parameters)"), true, false,
+                         [this]() { showHTML(patchToHtml(true)); });
 
     return patchDefMenu;
 }
@@ -4160,50 +4195,6 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     wfMenu.addSeparator();
 
-    bool doAccAnn = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCase("Send Additional Accessibility Announcements"), true,
-                   doAccAnn, [this, doAccAnn]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements,
-                           !doAccAnn);
-                   });
-
-#if WINDOWS
-    bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
-
-    wfMenu.addItem("Announce Patch Browser entries", true, doAccAnnPatch, [this, doAccAnnPatch]() {
-        Surge::Storage::updateUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
-            !doAccAnnPatch);
-    });
-#endif
-
-    bool doExpMen = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCase("Add Sub-Menus for Modulation Menu Items"), true, doExpMen,
-                   [this, doExpMen]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
-                           !doExpMen);
-                   });
-
-    bool focusModEditor = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom, false);
-
-    wfMenu.addItem(Surge::GUI::toOSCase("Focus Modulator Editor on \"") +
-                       Surge::GUI::toOSCase("Add Modulation From\" Actions"),
-                   true, focusModEditor, [this, focusModEditor]() {
-                       Surge::Storage::updateUserDefaultValue(
-                           &(this->synth->storage),
-                           Surge::Storage::FocusModEditorAfterAddModulationFrom, !focusModEditor);
-                   });
-
-    wfMenu.addSeparator();
-
     bool showVirtualKeyboard = getShowVirtualKeyboard();
 
     Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Show Virtual Keyboard"),
@@ -4217,6 +4208,91 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
                                     showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 
     return wfMenu;
+}
+
+juce::PopupMenu SurgeGUIEditor::makeAccesibilityMenu(const juce::Point<int> &rect)
+{
+    auto accMenu = juce::PopupMenu();
+
+    accMenu.addItem(Surge::GUI::toOSCase("Set All Recommended Accessibility Options"), true, false,
+                    [this]() { setRecommendedAccessibility(); });
+    accMenu.addSeparator();
+
+    bool doAccAnn = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements, false);
+
+    accMenu.addItem(Surge::GUI::toOSCase("Send Additional Accessibility Announcements"), true,
+                    doAccAnn, [this, doAccAnn]() {
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage), Surge::Storage::UseNarratorAnnouncements,
+                            !doAccAnn);
+                    });
+
+#if WINDOWS
+    bool doAccAnnPatch = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
+
+    accMenu.addItem(Surge::GUI::toOSCase("Announce Patch Browser Entries"), true, doAccAnnPatch,
+                    [this, doAccAnnPatch]() {
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage),
+                            Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead,
+                            !doAccAnnPatch);
+                    });
+#endif
+
+    bool doExpMen = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus, false);
+
+    accMenu.addItem(Surge::GUI::toOSCase("Add Sub-Menus for Modulation Menu Items"), true, doExpMen,
+                    [this, doExpMen]() {
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage), Surge::Storage::ExpandModMenusWithSubMenus,
+                            !doExpMen);
+                    });
+
+    bool focusModEditor = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom, false);
+
+    accMenu.addItem(Surge::GUI::toOSCase("Focus Modulator Editor on \"") +
+                        Surge::GUI::toOSCase("Add Modulation From\" Actions"),
+                    true, focusModEditor, [this, focusModEditor]() {
+                        Surge::Storage::updateUserDefaultValue(
+                            &(this->synth->storage),
+                            Surge::Storage::FocusModEditorAfterAddModulationFrom, !focusModEditor);
+                    });
+
+    return accMenu;
+}
+
+void SurgeGUIEditor::setRecommendedAccessibility()
+{
+    std::ostringstream oss;
+    oss << "Set Accessibility Options: ";
+
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::UseKeyboardShortcuts_Plugin, true);
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::UseKeyboardShortcuts_Standalone, true);
+    oss << "Keyboard shortcuts on; ";
+
+    Surge::Storage::updateUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::MenuAndEditKeybindingsFollowKeyboardFocus, true);
+    oss << "Menu Follows Keyboard; ";
+
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::UseNarratorAnnouncements, true);
+    Surge::Storage::updateUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::UseNarratorAnnouncementsForPatchTypeahead, true);
+    oss << "Narrator announcements on; ";
+
+    Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                           Surge::Storage::ExpandModMenusWithSubMenus, true);
+    Surge::Storage::updateUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::FocusModEditorAfterAddModulationFrom, true);
+    oss << "Expanded Modulation Menus and Modulation Focus.";
+
+    enqueueAccessibleAnnouncement(oss.str());
 }
 
 bool SurgeGUIEditor::getShowVirtualKeyboard()
@@ -4580,6 +4656,17 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         });
 
     midiSubMenu.addSeparator();
+    bool igMID = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::IgnoreMIDIProgramChange, false);
+
+    midiSubMenu.addItem("Ignore MIDI Program Change" + Surge::GUI::toOSCase(" Messages"), true,
+                        igMID, [this, igMID]() {
+                            Surge::Storage::updateUserDefaultValue(
+                                &(this->synth->storage), Surge::Storage::IgnoreMIDIProgramChange,
+                                !igMID);
+                        });
+
+    midiSubMenu.addSeparator();
 
     midiSubMenu.addItem(Surge::GUI::toOSCase("Save MIDI Mapping As..."), [this, where]() {
         this->scannedForMidiPresets = false; // force a rescan
@@ -4634,7 +4721,9 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         if (!gotOne)
         {
             gotOne = true;
+
             midiSubMenu.addSeparator();
+            midiSubMenu.addSectionHeader("USER MIDI MAPPINGS");
         }
 
         midiSubMenu.addItem(p.first,
@@ -4822,6 +4911,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     typeinParamEditor->setSkin(currentSkin, bitmapStore);
 
     bool ismod = p && ms > 0;
+    std::string lab = "";
 
     jassert(c);
 
@@ -4829,20 +4919,19 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     {
         if (!p->can_setvalue_from_string())
         {
+            synth->storage.reportError(
+                "This parameter does not support editing its value by text input.\n\n"
+                "Please report this finding to Surge Synth Team in order to fix the problem!",
+                "Error");
             return;
         }
-    }
 
-    if (p)
-    {
         typeinParamEditor->setTypeinMode(Surge::Overlays::TypeinParamEditor::Param);
     }
     else
     {
         typeinParamEditor->setTypeinMode(Surge::Overlays::TypeinParamEditor::Control);
     }
-
-    std::string lab = "";
 
     if (p)
     {
@@ -5147,7 +5236,7 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
     {
         std::ostringstream oss;
         oss << "Unable to load " << entry.root << entry.name
-            << " skin! Reverting the skin to Surge Classic.\n\nSkin Error:\n"
+            << " skin! Reverting the skin to Surge XT Classic.\n\nSkin Error:\n"
             << db->getAndResetErrorString();
 
         auto msg = std::string(oss.str());
@@ -5655,6 +5744,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hs->setIsSemitone(style & kSemitone);
         hs->setIsLightStyle(style & kWhite);
         hs->setIsMiniVertical(style & kMini);
+        hs->parameterType = (ctrltypes)p->ctrltype;
 
         hs->setBounds(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs, styleW, styleH);
         hs->setTag(tag);
@@ -6567,16 +6657,11 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
 
 void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
 {
-    int fxSlotOrder[n_fx_slots] = {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
-                                   fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
-                                   fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
-                                   fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
-
     for (int i = 0; i < n_fx_slots; i++)
     {
         if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
         {
-            synth->enqueueFXOff(fxSlotOrder[i]);
+            synth->enqueueFXOff(fxslot_order[i]);
         }
     }
 }
@@ -6584,17 +6669,28 @@ void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
 void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)
 {
     if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots)
+    {
         return;
+    }
 
     auto t = fxPresetName[target];
+
     fxPresetName[target] = fxPresetName[source];
-    if (m == SurgeSynthesizer::SWAP)
+
+    if (m == SurgeSynthesizer::FXReorderMode::SWAP)
+    {
         fxPresetName[source] = t;
-    if (m == SurgeSynthesizer::MOVE)
+    }
+
+    if (m == SurgeSynthesizer::FXReorderMode::MOVE ||
+        (source == target && m == SurgeSynthesizer::FXReorderMode::NONE))
+    {
         fxPresetName[source] = "";
+    }
 
     synth->reorderFx(source, target, m);
-    // the effect chooser caches the bitmask so reset it after a swap
+
+    // effectChooser caches the bitmask, so reset it after a swap
     effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
 }
 
@@ -6791,10 +6887,11 @@ void SurgeGUIEditor::hideMidiLearnOverlay()
     }
 }
 
-void SurgeGUIEditor::onSurgeError(const string &msg, const string &title)
+void SurgeGUIEditor::onSurgeError(const string &msg, const string &title,
+                                  const SurgeStorage::ErrorType &et)
 {
     std::lock_guard<std::mutex> g(errorItemsMutex);
-    errorItems.emplace_back(msg, title);
+    errorItems.emplace_back(msg, title, et);
     errorItemCount++;
 }
 
@@ -6813,6 +6910,7 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
                                                                  const std::string &title,
                                                                  const std::string &action)
 {
+    auto currT = c->getTitle().toStdString();
 #if MAC
     c->setDescription(title);
     c->setTitle(title);
@@ -6820,6 +6918,14 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
     c->setDescription(action);
     c->setTitle(title);
 #endif
+
+    if (currT != title)
+    {
+        if (auto h = c->getAccessibilityHandler())
+        {
+            h->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+        }
+    }
 }
 
 std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index, bool shortV)
@@ -7178,6 +7284,9 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case Surge::GUI::FAVORITE_PATCH:
                 setPatchAsFavorite(synth->storage.getPatch().name, !isPatchFavorite());
                 patchSelector->setIsFavorite(isPatchFavorite());
+                return true;
+            case Surge::GUI::INITIALIZE_PATCH:
+                patchSelector->loadInitPatch();
                 return true;
 
             case Surge::GUI::PREV_PATCH:

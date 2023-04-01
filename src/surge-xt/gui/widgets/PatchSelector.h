@@ -143,6 +143,7 @@ struct PatchSelector : public juce::Component,
     void paint(juce::Graphics &g) override;
 
     void loadPatch(int id);
+    void loadInitPatch();
     int sel_id = 0, enqueue_sel_id = 0;
 
     int getCurrentPatchId() const;

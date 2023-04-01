@@ -14,7 +14,7 @@
 
 using namespace Surge::Test;
 
-TEST_CASE("Retune Surge to .scl files", "[tun]")
+TEST_CASE("Retune Surge XT to .scl files", "[tun]")
 {
     auto surge = Surge::Headless::createSurge(44100);
     surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;

@@ -117,9 +117,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Widgets::MainFrame> frame;
 
     std::atomic<int> errorItemCount{0};
-    std::vector<std::pair<std::string, std::string>> errorItems;
+    std::vector<std::tuple<std::string, std::string, SurgeStorage::ErrorType>> errorItems;
     std::mutex errorItemsMutex;
-    void onSurgeError(const std::string &msg, const std::string &title) override;
+    void onSurgeError(const std::string &msg, const std::string &title,
+                      const SurgeStorage::ErrorType &type) override;
 
     static int start_paramtag_value;
 
@@ -127,6 +128,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int slowIdleCounter{0};
     bool queue_refresh;
     virtual void toggle_mod_editing();
+
+    void forceLFODisplayRebuild();
 
     static long applyParameterOffset(long index);
     static long unapplyParameterOffset(long index);
@@ -298,6 +301,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void enqueueFXChainClear(int fxchain);
     void swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m);
 
+    // clang-format off
+    static int constexpr fxslot_order[n_fx_slots] = 
+        {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
+         fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
+         fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
+         fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
+    // clang-format on
+
     /*
     ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
     */
@@ -336,6 +347,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
     std::string midiMappingToHtml();
+
+    std::string patchToHtml(bool includeDefaults = false);
 
     // These are unused right now
     enum SkinInspectorFlags
@@ -665,7 +678,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::Component *mpeStatus{nullptr}, *zoomStatus{nullptr}, *tuneStatus{nullptr},
         *mainMenu{nullptr}, *lfoMenuButton{nullptr}, *undoButton{nullptr}, *redoButton{nullptr},
         *lfoRateSlider{nullptr};
-
+    Surge::Widgets::ModulatableControlInterface *filterCutoffSlider[2]{nullptr, nullptr},
+        *filterResonanceSlider[2]{nullptr, nullptr};
     /*
      * This is the JUCE component management
      */
@@ -780,11 +794,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu makePatchDefaultsMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeValueDisplaysMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeWorkflowMenu(const juce::Point<int> &rect);
+    juce::PopupMenu makeAccesibilityMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeDataMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeMidiMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeDevMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeLfoMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
+
+    void setRecommendedAccessibility();
 
   public:
     void addHelpHeaderTo(const std::string &lab, const std::string &hu, juce::PopupMenu &m) const;

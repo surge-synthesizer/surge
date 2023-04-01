@@ -380,7 +380,7 @@ const Surge::Skin::Color Border("waveshaper.preview.border", 0xFFFFFF),
 
 namespace Overlay
 {
-const Surge::Skin::Color Background("editor.overlay.background", 0xCC000000);
+const Surge::Skin::Color Background("editor.overlay.background", 0xD9000000);
 }
 
 namespace PatchBrowser
