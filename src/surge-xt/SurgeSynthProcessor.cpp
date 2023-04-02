@@ -260,7 +260,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     processBlockPlayhead();
     processBlockMidiFromGUI();
-
+    processBlockOSC();
     auto mainOutput = getBusBuffer(buffer, false, 0);
     auto mainInput = getBusBuffer(buffer, true, 0);
     auto sceneAOutput = getBusBuffer(buffer, false, 1);
@@ -449,6 +449,15 @@ void SurgeSynthProcessor::processBlockMidiFromGUI()
         {
             surge->channelController(rec.ch, 64, rec.cval);
         }
+    }
+}
+
+void SurgeSynthProcessor::processBlockOSC()
+{
+    oscMsg om;
+    while (receivedOSC.pop(om))
+    {
+        std::cout << "SurgeSynthProcessor: Received OSC.";
     }
 }
 

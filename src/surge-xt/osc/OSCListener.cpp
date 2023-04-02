@@ -18,7 +18,10 @@
 using namespace Surge::OSC;
 
 OSCListener::OSCListener() = default;
-OSCListener::~OSCListener() = default;
+OSCListener::~OSCListener()
+{
+     if (listening) stopListening();
+}
 
 void OSCListener::connectToOSC(int port) {
      if (!connect(port)) {
@@ -37,15 +40,25 @@ void OSCListener::stopListening() {
 };
 
 void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
-     std::string addr = "Got OSC msg.: " + 
-          message.getAddressPattern().toString().toStdString();
-     
-     std::cout << "SurgeOSC: " << addr << " " << message[0].getFloat32() << std::endl;
+     std::string addr = message.getAddressPattern().toString().toStdString();
+     std::cout << "OSCListener: Got OSC msg.; address: " << addr << "  data: ";
+     for (juce::OSCArgument msg : message) {
+          std::string dataStr = "(none)";
+          juce::OSCType oscType = msg.getType();
+          switch (oscType) {
+               case 'f': dataStr = std::to_string( msg.getFloat32() ); break;
+               case 'i': dataStr = std::to_string( msg.getInt32() ); break;
+               case 's': dataStr = msg.getString().toStdString(); break;
+               default: break;
+          }  
+          std::cout << dataStr << "  ";
+     }
+     std::cout << std::endl;
 };
 
 void OSCListener::oscBundleReceived (const juce::OSCBundle &bundle) {
-     std::string msg = "Got OSC bundle.";
-     std::cout << "SurgeOSC: " << msg << std::endl;
+     std::string msg = "";
+     std::cout << "OSCListener: Got OSC bundle." << msg << std::endl;
      
      for (int i = 0; i < bundle.size(); ++i)
      {
@@ -56,5 +69,3 @@ void OSCListener::oscBundleReceived (const juce::OSCBundle &bundle) {
                oscBundleReceived (elem.getBundle());
      }
 }
-
-

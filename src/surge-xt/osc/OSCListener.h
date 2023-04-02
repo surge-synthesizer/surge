@@ -21,7 +21,6 @@ namespace Surge
 namespace OSC
 {
 
-
 class OSCListener
      : public juce::OSCReceiver,
               juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>

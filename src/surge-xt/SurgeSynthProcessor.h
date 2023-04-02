@@ -295,6 +295,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     void processBlockPlayhead();
     void processBlockMidiFromGUI();
+    void processBlockOSC();
     void processBlockPostFunction();
 
     void applyMidi(const juce::MidiMessageMetadata &);
@@ -327,6 +328,22 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
                       float velocity) override;
     void handleNoteOff(juce::MidiKeyboardState *source, int midiChannel, int midiNoteNumber,
                        float velocity) override;
+
+    //==============================================================================
+    // Open Sound Control
+    struct oscMsg
+    {
+        enum Type
+        {
+            SET_PARAMETER,
+            SET_TUNING
+        } type{SET_PARAMETER};
+        int id{0};
+        float val{0.0};
+        std::string str;
+
+    };
+    LockFreeStack<oscMsg, 4096> receivedOSC;
 
     //==============================================================================
     const juce::String getName() const override;
