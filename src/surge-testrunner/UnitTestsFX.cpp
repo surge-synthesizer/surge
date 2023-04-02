@@ -316,3 +316,53 @@ TEST_CASE("Waveshaper Pop", "[fx]")
         }
     }
 }
+
+TEST_CASE("High SampleRate Nimbus", "[fx]")
+{
+    for (auto base : {44100, 48000})
+    {
+        for (int m = 1; m <= 8; m *= 2)
+        {
+            DYNAMIC_SECTION("High Sample Rate " + std::to_string(base) + " * " + std::to_string(m))
+            {
+                auto surge = Surge::Headless::createSurge(base * m);
+                REQUIRE(surge);
+
+                for (int i = 0; i < 100; ++i)
+                    surge->process();
+
+                auto *pt = &(surge->storage.getPatch().fx[0].type);
+                auto awv = 1.f * fxt_nimbus / (pt->val_max.i - pt->val_min.i);
+
+                auto did = surge->idForParameter(pt);
+                surge->setParameter01(did, awv, false);
+                surge->process();
+
+                auto sp = [&](auto id, auto val) {
+                    auto *pawt = &(surge->storage.getPatch().fx[0].p[id]);
+                    auto did = surge->idForParameter(pawt);
+                    surge->setParameter01(did, val, false);
+                };
+                sp(2, 0.5f);  // position
+                sp(5, 0.75f); // density
+                sp(11, 1.f);  // mix
+
+                surge->playNote(0, 60, 127, 0);
+                auto maxAmp = -10.f;
+                for (int i = 0; i < 5000 * m; ++i)
+                {
+                    surge->process();
+
+                    for (int s = 0; s < BLOCK_SIZE; ++s)
+                        maxAmp = std::max(maxAmp, surge->output[0][s]);
+                }
+                REQUIRE(maxAmp > 0.1);
+                surge->releaseNote(0, 60, 0);
+                for (int i = 0; i < 500; ++i)
+                {
+                    surge->process();
+                }
+            }
+        }
+    }
+}
