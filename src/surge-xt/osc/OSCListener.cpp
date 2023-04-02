@@ -17,7 +17,8 @@
 
 using namespace Surge::OSC;
 
-OSCListener::OSCListener() = default;
+OSCListener::OSCListener() {}
+
 OSCListener::~OSCListener()
 {
      if (listening) stopListening();
@@ -37,7 +38,7 @@ void OSCListener::stopListening() {
      removeListener(this);
      listening = false;
      std::cout << "SurgeOSC: Stopped listening for OSC." << std::endl;
-};
+}
 
 void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
      std::string addr = message.getAddressPattern().toString().toStdString();
@@ -54,7 +55,7 @@ void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
           std::cout << dataStr << "  ";
      }
      std::cout << std::endl;
-};
+}
 
 void OSCListener::oscBundleReceived (const juce::OSCBundle &bundle) {
      std::string msg = "";

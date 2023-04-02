@@ -115,6 +115,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     midiKeyboardState.addListener(this);
 
+    oscListener.connectToOSC(53280);    // TODO: make port number settable
+
     SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }
 

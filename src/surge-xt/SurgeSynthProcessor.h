@@ -14,6 +14,8 @@
 #include "SurgeStorage.h"
 #include "util/LockFreeStack.h"
 
+#include "osc/OSCListener.h"
+
 #include "juce_audio_processors/juce_audio_processors.h"
 
 #if HAS_CLAP_JUCE_EXTENSIONS
@@ -344,6 +346,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     };
     LockFreeStack<oscMsg, 4096> receivedOSC;
+    Surge::OSC::OSCListener oscListener; 
+
 
     //==============================================================================
     const juce::String getName() const override;
