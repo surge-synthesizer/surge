@@ -15,6 +15,8 @@
 */
 
 #include "juce_osc/juce_osc.h"
+#include "SurgeSynthesizer.h"
+#include "SurgeStorage.h"
 
 namespace Surge
 {
@@ -31,7 +33,7 @@ public:
 
      bool listening = false;
 
-     void connectToOSC(int port);
+     void init(const std::unique_ptr<SurgeSynthesizer> &surge, int port);
      void stopListening();
 
      void oscMessageReceived (const juce::OSCMessage& message) override;

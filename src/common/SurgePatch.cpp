@@ -632,6 +632,10 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             Surge::Formula::createInitFormula(fs);
         }
 
+    // Build table of param_ptr -- storage name
+    for (auto *p : param_ptr)
+        param_ptr_by_storagename[p->get_storage_name()] = p;    
+
 #if 0
    // DEBUG CODE WHICH WILL DIE
    std::map<std::string, int> idToParam;
@@ -674,6 +678,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
    std::cout << hdr.str() << "\n" << body.str() << std::endl;
 #endif
 }
+
 
 void SurgePatch::init_default_values()
 {
@@ -1220,6 +1225,18 @@ unsigned int SurgePatch::save_patch(void **data)
     }
     return psize;
 }
+
+
+Parameter *SurgePatch::parameterFromStorageName(std::string stName)
+{
+    auto it = param_ptr_by_storagename.find(stName);
+    if (it != std::end(param_ptr_by_storagename)) {
+        return it->second;
+    } else {
+        return nullptr;
+    }
+}
+
 
 float convert_v11_reso_to_v12_2P(float reso)
 {

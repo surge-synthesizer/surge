@@ -14,6 +14,7 @@
 */
 
 #include "OSCListener.h"
+#include "Parameter.h"
 
 using namespace Surge::OSC;
 
@@ -24,13 +25,25 @@ OSCListener::~OSCListener()
      if (listening) stopListening();
 }
 
-void OSCListener::connectToOSC(int port) {
+void OSCListener::init(const std::unique_ptr<SurgeSynthesizer> & surge, int port) {
      if (!connect(port)) {
           std::cout << "Error: could not connect to UDP port " << std::to_string(port) << std::endl;
      } else {
           addListener(this);
           listening = true;
           std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
+
+          // TEST:
+          const auto *p = surge->storage.getPatch().parameterFromStorageName("volume");
+          std::cout << p->get_full_name() << std::endl;
+     
+          // Uncomment to print out all parameter storage names
+          /*
+          for (const auto *p : surge->storage.getPatch().param_ptr)
+          {
+               std::cout << p->get_storage_name() << " == " << p->get_full_name() << std::endl;
+          }
+          */
      }
 }
 
