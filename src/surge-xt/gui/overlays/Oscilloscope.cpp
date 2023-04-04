@@ -742,10 +742,10 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setRootWindow(parent_);
     amp_window_.setRootWindow(parent_);
 
-    // These are deactivated by default, since the default trigger type is "free".
-    trigger_speed_.setDeactivated(true);
-    trigger_level_.setDeactivated(true);
-    trigger_limit_.setDeactivated(true);
+    // These are not visible by default, since the default trigger type is "free".
+    trigger_speed_.setVisible(false);
+    trigger_level_.setVisible(false);
+    trigger_limit_.setVisible(false);
 
     addAndMakeVisible(trigger_speed_);
     addAndMakeVisible(trigger_level_);
@@ -772,26 +772,27 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
 
         if (params_.trigger_type == WaveformDisplay::kTriggerInternal)
         {
-            trigger_speed_.setDeactivated(false);
+            trigger_speed_.setVisible(true);
         }
         else
         {
-            trigger_speed_.setDeactivated(true);
+            trigger_speed_.setVisible(false);
         }
 
         if (params_.trigger_type == WaveformDisplay::kTriggerRising ||
             params_.trigger_type == WaveformDisplay::kTriggerFalling)
         {
 
-            trigger_level_.setDeactivated(false);
-            trigger_limit_.setDeactivated(false);
+            trigger_level_.setVisible(true);
+            trigger_limit_.setVisible(true);
         }
         else
         {
-            trigger_level_.setDeactivated(true);
-            trigger_limit_.setDeactivated(true);
+            trigger_level_.setVisible(false);
+            trigger_limit_.setVisible(false);
         }
     });
+
     // Explicitly inform the switch that the value has been updated, to take
     // our initial value into account and color the switch appropriately.
     trigger_type_.valueChanged(nullptr);
@@ -870,20 +871,20 @@ void Oscilloscope::WaveformParameters::resized()
     auto h = getHeight();
     auto w = getWidth();
     auto buttonWidth = 49;
+    int labelHeight = 12;
 
-    // The trigger mechanism.
-    trigger_type_.setBounds(12, 14, buttonWidth, 52);
-    // Stack the trigger parameters top-to-bottom.
-    trigger_speed_.setBounds(73, 0, 140, 26);
-    trigger_level_.setBounds(73, 25, 140, 26);
-    trigger_limit_.setBounds(73, 50, 140, 26);
-    // Window parameters to the right of them, slightly offset since there's only two.
-    time_window_.setBounds(210, 12, 140, 26);
-    amp_window_.setBounds(210, 37, 140, 26);
-    // Next over, the three boolean switches.
-    freeze_.setBounds(369, 14, buttonWidth, 14);
-    dc_kill_.setBounds(369, 33, buttonWidth, 14);
-    sync_draw_.setBounds(369, 52, buttonWidth, 14);
+    trigger_type_.setBounds(222, 14, buttonWidth, 52);
+
+    trigger_speed_.setBounds(283, 28, 140, 26);
+    trigger_level_.setBounds(283, 14, 140, 26);
+    trigger_limit_.setBounds(283, 42, 140, 26);
+
+    time_window_.setBounds(73, 14, 140, 26);
+    amp_window_.setBounds(73, 42, 140, 26);
+
+    dc_kill_.setBounds(12, 14, buttonWidth, 14);
+    freeze_.setBounds(12, 33, buttonWidth, 14);
+    sync_draw_.setBounds(12, 52, buttonWidth, 14);
 }
 
 Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s,
@@ -1006,12 +1007,11 @@ void Oscilloscope::SpectrumParameters::resized()
     auto w = getWidth();
     auto buttonWidth = 49;
 
-    // Stack the slider parameters top-to-bottom.
-    noise_floor_.setBounds(12, 0, 140, 26);
-    max_db_.setBounds(12, 25, 140, 26);
-    decay_rate_.setBounds(12, 50, 140, 26);
-    // Next over, the boolean switch.
-    freeze_.setBounds(369, 14, buttonWidth, 14);
+    noise_floor_.setBounds(73, 14, 140, 26);
+    max_db_.setBounds(73, 42, 140, 26);
+    decay_rate_.setBounds(214, 28, 140, 26);
+
+    freeze_.setBounds(12, 33, buttonWidth, 14);
 }
 
 void Oscilloscope::updateDrawing()
