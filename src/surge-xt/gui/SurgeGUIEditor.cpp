@@ -1899,6 +1899,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
+            vu[0]->setTag(tag_main_vu_meter);
+            vu[0]->addListener(this);
             vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
             vu[0]->setStorage(&(synth->storage));
 
@@ -4054,18 +4056,6 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
 
     dispDefMenu.addSeparator();
 
-    bool cpumeter = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                        Surge::Storage::ShowCPUUsage, false);
-
-    dispDefMenu.addItem(Surge::GUI::toOSCase("Show CPU Usage in VU Meter"), true, cpumeter,
-                        [this, cpumeter]() {
-                            Surge::Storage::updateUserDefaultValue(
-                                &(this->synth->storage), Surge::Storage::ShowCPUUsage, !cpumeter);
-                            this->frame->repaint();
-                        });
-
-    dispDefMenu.addSeparator();
-
     // Middle C submenu
     auto middleCSubMenu = juce::PopupMenu();
 
@@ -4093,6 +4083,15 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
     dispDefMenu.addSubMenu("Middle C", middleCSubMenu);
 
     return dispDefMenu;
+}
+
+void SurgeGUIEditor::makeScopeEntry(juce::PopupMenu &menu)
+{
+    bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
+
+    Surge::GUI::addMenuWithShortcut(menu, Surge::GUI::toOSCase("Oscilloscope..."),
+                                    showShortcutDescription("Alt + O", u8"\U00002325O"), true,
+                                    showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 }
 
 juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
@@ -4197,15 +4196,11 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
 
-    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Show Virtual Keyboard"),
+    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Virtual Keyboard"),
                                     showShortcutDescription("Alt + K", u8"\U00002325K"), true,
                                     showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
 
-    bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
-
-    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Open Oscilloscope"),
-                                    showShortcutDescription("Alt + O", u8"\U00002325O"), true,
-                                    showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
+    makeScopeEntry(wfMenu);
 
     return wfMenu;
 }

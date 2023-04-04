@@ -465,7 +465,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
     // In these cases just move along with success. RMB does nothing on these switches
     if (tag == tag_mp_jogwaveshape || tag == tag_mp_jogfx || tag == tag_mp_category ||
-        tag == tag_mp_patch || tag == tag_store || tag == tag_action_undo || tag == tag_action_redo)
+        tag == tag_mp_patch || tag == tag_store || tag == tag_action_undo ||
+        tag == tag_action_redo || tag == tag_main_vu_meter)
     {
         juce::PopupMenu contextMenu;
         std::string hu, txt;
@@ -497,6 +498,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             hu = helpURLForSpecial("save-dialog");
             txt = "Patch Save";
             break;
+        case tag_main_vu_meter:
+            hu = helpURLForSpecial("level-meter");
+            txt = "Level Meter";
+            break;
         default:
             break;
         }
@@ -508,6 +513,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         auto hment = tcomp->getTitle();
 
         contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
+
+        if (tag == tag_main_vu_meter)
+        {
+            contextMenu.addSeparator();
+
+            makeScopeEntry(contextMenu);
+
+            bool cpumeter = Surge::Storage::getUserDefaultValue(
+                &(synth->storage), Surge::Storage::ShowCPUUsage, false);
+
+            contextMenu.addItem(Surge::GUI::toOSCase("Show CPU Usage"), true, cpumeter,
+                                [this, cpumeter]() {
+                                    Surge::Storage::updateUserDefaultValue(
+                                        &(synth->storage), Surge::Storage::ShowCPUUsage, !cpumeter);
+                                    frame->repaint();
+                                });
+        }
 
 #ifdef DEBUG
         if (tag == tag_action_undo || tag == tag_action_redo)

@@ -27,10 +27,25 @@ VuMeter::VuMeter() : juce::Component(), WidgetBaseMixin<VuMeter>(this)
 {
     setAccessible(false);
     setWantsKeyboardFocus(false);
-    setInterceptsMouseClicks(false, false);
 }
 
 VuMeter::~VuMeter() = default;
+
+void VuMeter::mouseDown(const juce::MouseEvent &event)
+{
+    if (forwardedMainFrameMouseDowns(event))
+    {
+        return;
+    }
+
+    if (event.mods.isPopupMenu())
+    {
+        notifyControlModifierClicked(event.mods);
+        return;
+    }
+
+    mouseDownLongHold(event);
+}
 
 void VuMeter::paint(juce::Graphics &g)
 {
