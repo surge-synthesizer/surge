@@ -617,24 +617,24 @@ void Oscilloscope::resized()
     // |  (30px space right)  |
     // |                      |
     // |    x-scale (15px)    |
-    // |      bot params      |
+    // |    bottom params     |
     // ------------------------
+
     auto scopeRect = getScopeRect();
-    auto t = getTransform().inverted();
-    auto h = getHeight();
     auto w = getWidth();
-    t.transformPoint(w, h);
+    auto h = getHeight();
     auto rhs = scopeRect.getWidth();
+    auto buttonSize = 14;
 
     background_.updateBounds(getLocalBounds(), getScopeRect());
-    // Top buttons: in the first 15 pixels.
-    left_chan_button_.setBounds(8, 4, 14, 14);
-    right_chan_button_.setBounds(23, 4, 14, 14);
-    scope_mode_button_.setBounds(rhs - 97, 4, 105, 14);
-    // Spectrum/waveform display: appears in scopeRect.
+
+    left_chan_button_.setBounds(rhs - 21, 4, buttonSize, buttonSize);
+    right_chan_button_.setBounds(rhs - 5, 4, buttonSize, buttonSize);
+    scope_mode_button_.setBounds(8, 4, 105, buttonSize);
+
     spectrum_.setBounds(scopeRect);
     waveform_.setBounds(scopeRect);
-    // Bottom buttons: in the bottom paramsHeight pixels.
+
     spectrum_parameters_.setBounds(0, h - paramsHeight, w, h);
     waveform_parameters_.setBounds(0, h - paramsHeight, w, h);
 }
