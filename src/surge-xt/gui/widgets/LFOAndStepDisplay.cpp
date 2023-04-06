@@ -1517,7 +1517,33 @@ void LFOAndStepDisplay::setStepToDefault(const juce::MouseEvent &event)
         {
             auto bscg = BeginStepGuard(this);
 
-            ss->steps[i] = 0.f;
+            if (draggedStep == -1) // mouse down only case
+            {
+                ss->steps[i] = 0.f;
+            }
+            else // we are dragging
+            {
+                int startStep = draggedStep;
+
+                for (int i = 0; i < n_stepseqsteps; ++i)
+                {
+                    if (steprect[i].contains(event.mouseDownPosition))
+                    {
+                        startStep = i;
+                        break;
+                    }
+                }
+
+                if (startStep > draggedStep)
+                {
+                    std::swap(startStep, draggedStep);
+                }
+
+                for (int i = startStep; i <= draggedStep; i++)
+                {
+                    ss->steps[i] = 0.f;
+                }
+            }
 
             stepSeqDirty();
             repaint();
