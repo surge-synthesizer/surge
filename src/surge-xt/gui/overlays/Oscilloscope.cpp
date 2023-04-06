@@ -533,7 +533,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     setAccessible(true);
     setOpaque(true);
 
-    background_.updateBackgroundType(SPECTRUM);
+    background_.updateBackgroundType(WAVEFORM);
     auto onToggle = std::bind(std::mem_fn(&Oscilloscope::toggleChannel), this);
     left_chan_button_.setStorage(storage_);
     left_chan_button_.setToggleState(true);
@@ -556,7 +556,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     scope_mode_button_.setColumns(2);
     scope_mode_button_.setLabels({"Waveform", "Spectrum"});
     scope_mode_button_.setWantsKeyboardFocus(false);
-    scope_mode_button_.setValue(1.f);
+    scope_mode_button_.setValue(0.f);
     spectrum_parameters_.setOpaque(true);
     waveform_parameters_.setOpaque(true);
     addAndMakeVisible(background_);
@@ -601,6 +601,10 @@ void Oscilloscope::onSkinChanged()
     spectrum_parameters_.setSkin(skin, associatedBitmapStore);
     waveform_.setSkin(skin, associatedBitmapStore);
     waveform_parameters_.setSkin(skin, associatedBitmapStore);
+
+    // for some reason this is necessary, but just for these two!
+    left_chan_button_.repaint();
+    right_chan_button_.repaint();
 }
 
 void Oscilloscope::paint(juce::Graphics &g) {}
