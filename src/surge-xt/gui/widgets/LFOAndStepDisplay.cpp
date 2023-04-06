@@ -1496,10 +1496,29 @@ void LFOAndStepDisplay::setStepToDefault(const juce::MouseEvent &event)
 {
     for (int i = 0; i < n_stepseqsteps; ++i)
     {
-        if (steprect[i].contains(event.position))
+        draggedStep = -1;
+
+        if (event.mouseWasDraggedSinceMouseDown())
+        {
+            auto r = steprect[i];
+
+            float rx0 = r.getX();
+            float rx1 = r.getX() + r.getWidth();
+            float ry0 = r.getY();
+            float ry1 = r.getY() + r.getHeight();
+
+            if (event.position.x >= rx0 && event.position.x < rx1)
+            {
+                draggedStep = i;
+            }
+        }
+
+        if (draggedStep >= 0 || (event.mouseWasClicked() && steprect[i].contains(event.position)))
         {
             auto bscg = BeginStepGuard(this);
+
             ss->steps[i] = 0.f;
+
             stepSeqDirty();
             repaint();
         }
