@@ -437,16 +437,27 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
     auto lb = getLocalBounds().transformedBy(getTransform().inverted());
     auto dRect = lb.withTrimmedTop(15).reduced(4);
 
-    if (event.mods.isLeftButtonDown() && dRect.contains(event.position.toInt()))
+    float rx0 = dRect.getX();
+    float rx1 = dRect.getX() + dRect.getWidth() - 1;
+    float ry0 = dRect.getY();
+    float ry1 = dRect.getY() + dRect.getHeight() - 1;
+
+    juce::Point<float> mousePoint =
+        event.getPosition()
+            .transformedBy(
+                juce::AffineTransform().translated(dRect.getX(), dRect.getY()).inverted())
+            .toFloat();
+
+    mousePoint.setX(std::clamp(mousePoint.getX(), rx0, rx1));
+    mousePoint.setY(std::clamp(mousePoint.getY(), ry0, ry1));
+
+    if (event.mods.isLeftButtonDown() && dRect.contains(mousePoint.toInt()))
     {
         auto &ss = editor->getPatch().scene[editor->current_scene];
         auto &fs = ss.filterunit[whichFilter];
 
         auto width = dRect.getWidth();
         auto height = dRect.getHeight();
-
-        juce::Point<int> mousePoint = event.getPosition().transformedBy(
-            juce::AffineTransform().translated(dRect.getX(), dRect.getY()).inverted());
 
         auto xNorm = mousePoint.x / (float)width;
         auto freq = std::pow(GRAPH_MAX_FREQ / GRAPH_MIN_FREQ, xNorm) * GRAPH_MIN_FREQ;
