@@ -15,6 +15,11 @@
 
 #include "OSCListener.h"
 #include "Parameter.h"
+#include "SurgeSynthProcessor.h"
+#include <sstream>
+#include <vector>
+#include <string>
+
 
 using namespace Surge::OSC;
 
@@ -25,18 +30,16 @@ OSCListener::~OSCListener()
      if (listening) stopListening();
 }
 
-void OSCListener::init(const std::unique_ptr<SurgeSynthesizer> & surge, int port) {
+void OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> & surge, int port) {
      if (!connect(port)) {
           std::cout << "Error: could not connect to UDP port " << std::to_string(port) << std::endl;
      } else {
           addListener(this);
           listening = true;
+          surgePtr = surge.get();
           std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
+          sspPtr = ssp;
 
-          // TEST:
-          const auto *p = surge->storage.getPatch().parameterFromStorageName("volume");
-          std::cout << p->get_full_name() << std::endl;
-     
           // Uncomment to print out all parameter storage names
           /*
           for (const auto *p : surge->storage.getPatch().param_ptr)
@@ -55,11 +58,31 @@ void OSCListener::stopListening() {
 
 void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
      std::string addr = message.getAddressPattern().toString().toStdString();
+     if (addr.at(0) != '/') return;     // ignore malformed OSC
+     
+     // Tokenize the address
+     std::istringstream split(addr);
+     std::vector<std::string> tokens;
+     for (std::string each; std::getline(split, each, '/'); tokens.push_back(each)); // first token will be blank
+
+     // Process address tokens
+     if (tokens[1] == "param") {
+          std::string storage_addr = tokens[2];
+          auto *p = surgePtr->storage.getPatch().parameterFromStorageName(storage_addr);
+          if (p == NULL) return;        // Not a valid storage name
+          if (!message[0].isFloat32()) return;    // Not a valid data value
+
+          sspPtr->oscQueue.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
+
+          std::cout << "Parameter storage name:" << p->get_storage_name() << "  ";
+          std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
+     }
+
+     // DEBUG output
      std::cout << "OSCListener: Got OSC msg.; address: " << addr << "  data: ";
      for (juce::OSCArgument msg : message) {
           std::string dataStr = "(none)";
-          juce::OSCType oscType = msg.getType();
-          switch (oscType) {
+          switch (msg.getType()) {
                case 'f': dataStr = std::to_string( msg.getFloat32() ); break;
                case 'i': dataStr = std::to_string( msg.getInt32() ); break;
                case 's': dataStr = msg.getString().toStdString(); break;
@@ -68,6 +91,7 @@ void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
           std::cout << dataStr << "  ";
      }
      std::cout << std::endl;
+     // END DEBUG
 }
 
 void OSCListener::oscBundleReceived (const juce::OSCBundle &bundle) {

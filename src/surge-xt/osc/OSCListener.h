@@ -18,6 +18,8 @@
 #include "SurgeSynthesizer.h"
 #include "SurgeStorage.h"
 
+class SurgeSynthProcessor;
+
 namespace Surge
 {
 namespace OSC
@@ -31,13 +33,16 @@ public:
      OSCListener();
      ~OSCListener();
 
-     bool listening = false;
-
-     void init(const std::unique_ptr<SurgeSynthesizer> &surge, int port);
+     void init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge, int port);
      void stopListening();
 
      void oscMessageReceived (const juce::OSCMessage& message) override;
      void oscBundleReceived (const juce::OSCBundle &bundle) override;
+
+private:
+     bool listening = false;
+     SurgeSynthesizer *surgePtr;
+     SurgeSynthProcessor *sspPtr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OSCListener)
 };

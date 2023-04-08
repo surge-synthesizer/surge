@@ -337,17 +337,18 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     {
         enum Type
         {
-            SET_PARAMETER,
+            PARAMETER,
             SET_TUNING
-        } type{SET_PARAMETER};
-        int id{0};
+        } type{PARAMETER};
+        Parameter *param;
         float val{0.0};
         std::string str;
 
+        oscMsg() {}
+        oscMsg(Parameter *p, float v) : type(PARAMETER), param(p), val(v) {}
     };
-    LockFreeStack<oscMsg, 4096> receivedOSC;
+    LockFreeStack<oscMsg, 4096> oscQueue;
     Surge::OSC::OSCListener oscListener; 
-
 
     //==============================================================================
     const juce::String getName() const override;

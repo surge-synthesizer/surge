@@ -115,7 +115,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     midiKeyboardState.addListener(this);
 
-    oscListener.init(surge, 53280);    // TODO: make port number settable
+    oscListener.init(this, surge, 53280);    // TODO: make port number settable
 
     SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }
@@ -457,9 +457,12 @@ void SurgeSynthProcessor::processBlockMidiFromGUI()
 void SurgeSynthProcessor::processBlockOSC()
 {
     oscMsg om;
-    while (receivedOSC.pop(om))
+    while (oscQueue.pop(om))
     {
-        std::cout << "SurgeSynthProcessor: Received OSC.";
+        if (om.type == oscMsg::PARAMETER) {
+            om.param->set_value_f01(om.val);
+        }
+
     }
 }
 
