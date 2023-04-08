@@ -3125,23 +3125,36 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
             m.addItem(p.name, action);
         }
         bool haveD = false;
-        for (const auto &sc : presetCategories)
+        if (cat.path.empty())
         {
-            if (sc.parentPath == cat.path)
+            // This is a preset in the root
+        }
+        else
+        {
+            for (const auto &sc : presetCategories)
             {
-                if (!haveD)
-                    m.addSeparator();
-                haveD = true;
-                juce::PopupMenu subMenu;
-                recurseCat(subMenu, sc);
-                m.addSubMenu(sc.name, subMenu);
+                if (sc.parentPath == cat.path)
+                {
+                    if (!haveD)
+                        m.addSeparator();
+                    haveD = true;
+                    juce::PopupMenu subMenu;
+                    recurseCat(subMenu, sc);
+                    m.addSubMenu(sc.name, subMenu);
+                }
             }
         }
     };
 
     for (auto tlc : presetCategories)
     {
-        if (tlc.parentPath.empty())
+        if (tlc.path.empty())
+        {
+            // We have presets in the root! Don't recurse forever and put them in the root
+            recurseCat(lfoSubMenu, tlc);
+            lfoSubMenu.addSeparator();
+        }
+        else if (tlc.parentPath.empty())
         {
             juce::PopupMenu sm;
             recurseCat(sm, tlc);
