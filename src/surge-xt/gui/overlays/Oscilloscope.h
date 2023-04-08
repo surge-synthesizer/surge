@@ -284,7 +284,7 @@ class Oscilloscope : public OverlayComponent,
                                public Surge::GUI::IComponentTagValue::Listener
     {
       public:
-        SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
+        SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s, Oscilloscope *parent);
 
         std::optional<SpectrumDisplay::Parameters> getParamsIfDirty();
 
@@ -292,12 +292,23 @@ class Oscilloscope : public OverlayComponent,
         void paint(juce::Graphics &g) override;
         void resized() override;
         void valueChanged(GUI::IComponentTagValue *p) override{};
+        int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
+                                       const juce::ModifierKeys &button,
+                                       bool isDoubleClickEvent) override
+        {
+            if (parent_)
+            {
+                return parent_->controlModifierClicked(pControl, button, isDoubleClickEvent);
+            }
+
+            return 0;
+        }
 
       private:
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
-        juce::Component
-            *parent_; // Saved here so we can provide it to the children at construction time.
+        // Saved here so we can provide it to the children at construction time.
+        Oscilloscope *parent_;
         SpectrumDisplay::Parameters params_;
         bool params_changed_;
         std::mutex params_lock_;
@@ -313,7 +324,7 @@ class Oscilloscope : public OverlayComponent,
                                public Surge::GUI::IComponentTagValue::Listener
     {
       public:
-        WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
+        WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s, Oscilloscope *parent);
 
         std::optional<WaveformDisplay::Parameters> getParamsIfDirty();
 
@@ -321,12 +332,23 @@ class Oscilloscope : public OverlayComponent,
         void paint(juce::Graphics &g) override;
         void resized() override;
         void valueChanged(GUI::IComponentTagValue *p) override{};
+        int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
+                                       const juce::ModifierKeys &button,
+                                       bool isDoubleClickEvent) override
+        {
+            if (parent_)
+            {
+                return parent_->controlModifierClicked(pControl, button, isDoubleClickEvent);
+            }
+
+            return 0;
+        }
 
       private:
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
-        juce::Component
-            *parent_; // Saved here so we can provide it to the children at construction time.
+        // Saved here so we can provide it to the children at construction time.
+        Oscilloscope *parent_;
         WaveformDisplay::Parameters params_;
         bool params_changed_;
         std::mutex params_lock_;

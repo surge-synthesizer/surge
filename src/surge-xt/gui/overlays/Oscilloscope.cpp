@@ -566,6 +566,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     scope_mode_button_.setWantsKeyboardFocus(false);
     scope_mode_button_.setValue(0.f);
     scope_mode_button_.setTag(tag_scope_mode);
+    scope_mode_button_.setDraggable(true);
     scope_mode_button_.addListener(this);
     spectrum_parameters_.setOpaque(true);
     waveform_parameters_.setOpaque(true);
@@ -624,6 +625,11 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
                                              const juce::ModifierKeys &button,
                                              bool isDoubleClickEvent)
 {
+    if (isDoubleClickEvent)
+    {
+        return 0;
+    }
+
     int tag = pControl->getTag();
 
     // Basically all the menus are a list of options with values
@@ -638,19 +644,20 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
         options.push_back(std::make_pair("Spectrum", 1));
         break;
     case tag_input_l:
-        menuName = "Oscilloscope Left Input";
+        menuName = "Left Input";
         break;
     case tag_input_r:
-        menuName = "Oscilloscope Right Input";
+        menuName = "Right Input";
         break;
     case tag_wf_dc_block:
         menuName = "DC Block";
         break;
     case tag_wf_freeze:
-        menuName = "Freeze Waveform";
+    case tag_sp_freeze:
+        menuName = "Freeze";
         break;
     case tag_wf_sync:
-        menuName = "Sync";
+        menuName = "Sync Redraw";
         break;
     case tag_wf_time_scaling:
         menuName = "Time Scaling";
@@ -660,14 +667,10 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
         break;
     case tag_wf_trigger_mode:
         menuName = "Trigger Mode";
-        options.push_back(
-            std::make_pair("Free-running", WaveformDisplay::TriggerType::kTriggerFree));
-        options.push_back(
-            std::make_pair("Rising Edge", WaveformDisplay::TriggerType::kTriggerRising));
-        options.push_back(
-            std::make_pair("Falling Edge", WaveformDisplay::TriggerType::kTriggerFalling));
-        options.push_back(
-            std::make_pair("Internal Trigger", WaveformDisplay::TriggerType::kTriggerInternal));
+        options.push_back(std::make_pair("Freerun", 0.0));
+        options.push_back(std::make_pair("Rising Edge", 0.25));
+        options.push_back(std::make_pair("Falling Edge", 0.5));
+        options.push_back(std::make_pair("Internal Trigger", 1.0));
         break;
     case tag_wf_trigger_level:
         menuName = "Trigger Level";
@@ -676,16 +679,13 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
         menuName = "Retrigger Threshold";
         break;
     case tag_wf_int_trigger_freq:
-        menuName = "Internal Trigger Frequency";
-        break;
-    case tag_sp_freeze:
-        menuName = "Freeze Spectrum";
+        menuName = "Trigger Frequency";
         break;
     case tag_sp_min_level:
-        menuName = "Minimum Amplitude Level";
+        menuName = "Minimum Level";
         break;
     case tag_sp_max_level:
-        menuName = "Maximum Amplitude Level";
+        menuName = "Maximum Level";
         break;
     case tag_sp_decay_rate:
         menuName = "Spectrum Decay Rate";
@@ -710,7 +710,23 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
     {
         contextMenu.addSeparator();
 
-        // add menu entries for setting parameter values here
+        for (auto op : options)
+        {
+            auto val = op.second;
+
+            contextMenu.addItem(op.first, true, (val == pControl->getValue()),
+                                [val, pControl, this]() {
+                                    pControl->setValue(val);
+                                    valueChanged(pControl);
+
+                                    auto iv = pControl->asJuceComponent();
+
+                                    if (iv)
+                                    {
+                                        iv->repaint();
+                                    }
+                                });
+        }
     }
 
     contextMenu.showMenuAsync(editor_->popupMenuOptions(),
@@ -744,7 +760,7 @@ void Oscilloscope::resized()
 
     left_chan_button_.setBounds(rhs - 21, 4, buttonSize, buttonSize);
     right_chan_button_.setBounds(rhs - 5, 4, buttonSize, buttonSize);
-    scope_mode_button_.setBounds(8, 4, 105, buttonSize);
+    scope_mode_button_.setBounds(8, 4, 116, buttonSize);
 
     spectrum_.setBounds(scopeRect);
     waveform_.setBounds(scopeRect);
@@ -754,9 +770,9 @@ void Oscilloscope::resized()
 }
 
 Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s,
-                                                     juce::Component *parent)
+                                                     Oscilloscope *parent)
     : editor_(e), storage_(s), parent_(parent), freeze_("Freeze"), dc_kill_("DC Block"),
-      sync_draw_("Sync")
+      sync_draw_("Sync Redraw")
 {
     // Initialize parameters from the DAW state.
     auto *state = &s->getPatch().dawExtraState.editor.oscilloscopeOverlayState;
@@ -794,7 +810,7 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setQuantitizedDisplayValue(params_.time_window);
     amp_window_.setQuantitizedDisplayValue(params_.amp_window);
 
-    trigger_speed_.setLabel("Internal Trigger Freq");
+    trigger_speed_.setLabel("Trigger Frequency");
     trigger_level_.setLabel("Trigger Level");
     trigger_limit_.setLabel("Retrigger Threshold");
     time_window_.setLabel("Time Scaling");
@@ -824,17 +840,21 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setPrecision(2);
     amp_window_.setPrecision(2);
 
+    trigger_type_.setTag(tag_wf_trigger_mode);
     trigger_speed_.setTag(tag_wf_int_trigger_freq);
     trigger_level_.setTag(tag_wf_trigger_level);
     trigger_limit_.setTag(tag_wf_retrigger_threshold);
     time_window_.setTag(tag_wf_time_scaling);
     amp_window_.setTag(tag_wf_amp_scaling);
 
+    trigger_type_.addListener(this);
     trigger_speed_.addListener(this);
     trigger_level_.addListener(this);
     trigger_limit_.addListener(this);
     time_window_.addListener(this);
     amp_window_.addListener(this);
+
+    trigger_type_.setDraggable(true);
 
     auto updateParameter = [this](float &param, float &backer, float value) {
         std::lock_guard l(params_lock_);
@@ -868,7 +888,7 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setRootWindow(parent_);
     amp_window_.setRootWindow(parent_);
 
-    // These are not visible by default, since the default trigger type is "free".
+    // These are not visible by default, since the default trigger type is Freerun
     trigger_speed_.setVisible(false);
     trigger_level_.setVisible(false);
     trigger_limit_.setVisible(false);
@@ -879,10 +899,9 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     addAndMakeVisible(time_window_);
     addAndMakeVisible(amp_window_);
 
-    // The multiswitch.
     trigger_type_.setRows(4);
     trigger_type_.setColumns(1);
-    trigger_type_.setLabels({"Free", "Rising", "Falling", "Internal"});
+    trigger_type_.setLabels({"Freerun", "Rising Edge", "Falling Edge", "Internal Trigger"});
     trigger_type_.setIntegerValue(static_cast<int>(params_.trigger_type));
     trigger_type_.setWantsKeyboardFocus(false);
     trigger_type_.setOnUpdate([this, state](int value) {
@@ -1008,25 +1027,25 @@ void Oscilloscope::WaveformParameters::resized()
     auto t = getTransform().inverted();
     auto h = getHeight();
     auto w = getWidth();
-    auto buttonWidth = 49;
+    auto buttonWidth = 58;
     int labelHeight = 12;
 
-    trigger_type_.setBounds(222, 14, buttonWidth, 52);
+    trigger_type_.setBounds(227, 14, 68, 52);
 
-    trigger_speed_.setBounds(283, 28, 140, 26);
-    trigger_level_.setBounds(283, 14, 140, 26);
-    trigger_limit_.setBounds(283, 42, 140, 26);
+    trigger_speed_.setBounds(307, 28, 140, 26);
+    trigger_level_.setBounds(307, 14, 140, 26);
+    trigger_limit_.setBounds(307, 42, 140, 26);
 
-    time_window_.setBounds(73, 14, 140, 26);
-    amp_window_.setBounds(73, 42, 140, 26);
+    time_window_.setBounds(78, 14, 140, 26);
+    amp_window_.setBounds(78, 42, 140, 26);
 
-    dc_kill_.setBounds(12, 14, buttonWidth, 14);
-    freeze_.setBounds(12, 33, buttonWidth, 14);
-    sync_draw_.setBounds(12, 52, buttonWidth, 14);
+    dc_kill_.setBounds(8, 14, buttonWidth, 14);
+    freeze_.setBounds(8, 33, buttonWidth, 14);
+    sync_draw_.setBounds(8, 52, buttonWidth, 14);
 }
 
 Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s,
-                                                     juce::Component *parent)
+                                                     Oscilloscope *parent)
     : editor_(e), storage_(s), parent_(parent), freeze_("Freeze")
 {
     // Initialize parameters from the DAW state.
@@ -1153,13 +1172,13 @@ void Oscilloscope::SpectrumParameters::resized()
     auto t = getTransform().inverted();
     auto h = getHeight();
     auto w = getWidth();
-    auto buttonWidth = 49;
+    auto buttonWidth = 58;
 
-    noise_floor_.setBounds(73, 14, 140, 26);
-    max_db_.setBounds(73, 42, 140, 26);
-    decay_rate_.setBounds(214, 28, 140, 26);
+    noise_floor_.setBounds(78, 14, 140, 26);
+    max_db_.setBounds(78, 42, 140, 26);
+    decay_rate_.setBounds(219, 28, 140, 26);
 
-    freeze_.setBounds(12, 33, buttonWidth, 14);
+    freeze_.setBounds(8, 33, buttonWidth, 14);
 }
 
 void Oscilloscope::updateDrawing()
