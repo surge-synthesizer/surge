@@ -548,6 +548,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     left_chan_button_.setDescription("Enable input from left channel.");
     left_chan_button_.setWantsKeyboardFocus(false);
     left_chan_button_.setTag(tag_input_l);
+    left_chan_button_.addListener(this);
     right_chan_button_.setStorage(storage_);
     right_chan_button_.setToggleState(true);
     right_chan_button_.onToggle = onToggle;
@@ -557,6 +558,7 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     right_chan_button_.setDescription("Enable input from right channel.");
     right_chan_button_.setWantsKeyboardFocus(false);
     right_chan_button_.setTag(tag_input_r);
+    right_chan_button_.addListener(this);
     scope_mode_button_.setStorage(storage_);
     scope_mode_button_.setRows(1);
     scope_mode_button_.setColumns(2);
@@ -564,14 +566,16 @@ Oscilloscope::Oscilloscope(SurgeGUIEditor *e, SurgeStorage *s)
     scope_mode_button_.setWantsKeyboardFocus(false);
     scope_mode_button_.setValue(0.f);
     scope_mode_button_.setTag(tag_scope_mode);
+    scope_mode_button_.addListener(this);
     spectrum_parameters_.setOpaque(true);
     waveform_parameters_.setOpaque(true);
     addAndMakeVisible(background_);
     addAndMakeVisible(left_chan_button_);
     addAndMakeVisible(right_chan_button_);
     addAndMakeVisible(scope_mode_button_);
-    addAndMakeVisible(spectrum_);
-    addAndMakeVisible(spectrum_parameters_);
+
+    addChildComponent(spectrum_);
+    addChildComponent(spectrum_parameters_);
     addChildComponent(waveform_);
     addChildComponent(waveform_parameters_);
 
@@ -782,6 +786,13 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setTag(tag_wf_time_scaling);
     amp_window_.setTag(tag_wf_amp_scaling);
 
+    // TODO: why doesn't this work?
+    /*     trigger_speed_.addListener(parent_);
+        trigger_level_.addListener(parent_);
+        trigger_limit_.addListener(parent_);
+        time_window_.addListener(parent_);
+        amp_window_.addListener(parent_); */
+
     auto updateParameter = [this](float &param, float &backer, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
@@ -895,6 +906,10 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     freeze_.setTag(tag_wf_freeze);
     dc_kill_.setTag(tag_wf_dc_block);
     sync_draw_.setTag(tag_wf_sync);
+
+    /*     freeze_.addListener(this);
+        dc_kill_.addListener(this);
+        sync_draw_.addListener(this); */
 
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze), nullptr);
     dc_kill_.onToggle = std::bind(toggleParam, std::ref(params_.dc_kill), &state->dc_kill);
@@ -1017,6 +1032,10 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     max_db_.setTag(tag_sp_max_level);
     decay_rate_.setTag(tag_sp_decay_rate);
 
+    /*     noise_floor_.addListener(this);
+        max_db_.addListener(this);
+        decay_rate_.addListener(this); */
+
     auto updateParameter = [this](float &param, float &backer, float value) {
         std::lock_guard l(params_lock_);
         params_changed_ = true;
@@ -1048,6 +1067,7 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
 
     freeze_.setWantsKeyboardFocus(false);
     freeze_.setTag(tag_sp_freeze);
+    // freeze_.addListener(this);
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
 
     addAndMakeVisible(freeze_);
