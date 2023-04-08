@@ -639,8 +639,12 @@ void Oscilloscope::resized()
     spectrum_.setBounds(scopeRect);
     waveform_.setBounds(scopeRect);
 
-    spectrum_parameters_.setBounds(0, h - paramsHeight, w, h);
-    waveform_parameters_.setBounds(0, h - paramsHeight, w, h);
+    juce::Rectangle<int> r;
+    auto ph = juce::Rectangle<int>(0, paramsHeight).transformedBy(getTransform());
+    auto phh = ph.getHeight();
+    r = juce::Rectangle<int>(0, h - phh, w, h);
+    spectrum_parameters_.setBounds(r.transformedBy(getTransform().inverted()));
+    waveform_parameters_.setBounds(r.transformedBy(getTransform().inverted()));
 }
 
 Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s,
