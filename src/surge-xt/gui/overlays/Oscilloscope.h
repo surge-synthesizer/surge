@@ -279,7 +279,9 @@ class Oscilloscope : public OverlayComponent,
         WaveformDisplay::Parameters waveform_params_;
     };
 
-    class SpectrumParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    class SpectrumParameters : public juce::Component,
+                               public Surge::GUI::SkinConsumingComponent,
+                               public Surge::GUI::IComponentTagValue::Listener
     {
       public:
         SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
@@ -289,6 +291,7 @@ class Oscilloscope : public OverlayComponent,
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
         void resized() override;
+        void valueChanged(GUI::IComponentTagValue *p) override{};
 
       private:
         SurgeGUIEditor *editor_;
@@ -305,7 +308,9 @@ class Oscilloscope : public OverlayComponent,
         Surge::Widgets::SelfDrawToggleButton freeze_;
     };
 
-    class WaveformParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    class WaveformParameters : public juce::Component,
+                               public Surge::GUI::SkinConsumingComponent,
+                               public Surge::GUI::IComponentTagValue::Listener
     {
       public:
         WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
@@ -315,6 +320,7 @@ class Oscilloscope : public OverlayComponent,
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
         void resized() override;
+        void valueChanged(GUI::IComponentTagValue *p) override{};
 
       private:
         SurgeGUIEditor *editor_;

@@ -624,13 +624,10 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
                                              const juce::ModifierKeys &button,
                                              bool isDoubleClickEvent)
 {
-    printf("foo!\n");
     int tag = pControl->getTag();
 
     // Basically all the menus are a list of options with values
     std::vector<std::pair<std::string, float>> options;
-
-    bool isOnOff = false;
     std::string menuName = "";
 
     switch (tag)
@@ -642,35 +639,82 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
         break;
     case tag_input_l:
         menuName = "Oscilloscope Left Input";
-        isOnOff = true;
         break;
     case tag_input_r:
         menuName = "Oscilloscope Right Input";
-        isOnOff = true;
+        break;
+    case tag_wf_dc_block:
+        menuName = "DC Block";
+        break;
+    case tag_wf_freeze:
+        menuName = "Freeze Waveform";
+        break;
+    case tag_wf_sync:
+        menuName = "Sync";
+        break;
+    case tag_wf_time_scaling:
+        menuName = "Time Scaling";
+        break;
+    case tag_wf_amp_scaling:
+        menuName = "Amplitude Scaling";
+        break;
+    case tag_wf_trigger_mode:
+        menuName = "Trigger Mode";
+        options.push_back(
+            std::make_pair("Free-running", WaveformDisplay::TriggerType::kTriggerFree));
+        options.push_back(
+            std::make_pair("Rising Edge", WaveformDisplay::TriggerType::kTriggerRising));
+        options.push_back(
+            std::make_pair("Falling Edge", WaveformDisplay::TriggerType::kTriggerFalling));
+        options.push_back(
+            std::make_pair("Internal Trigger", WaveformDisplay::TriggerType::kTriggerInternal));
+        break;
+    case tag_wf_trigger_level:
+        menuName = "Trigger Level";
+        break;
+    case tag_wf_retrigger_threshold:
+        menuName = "Retrigger Threshold";
+        break;
+    case tag_wf_int_trigger_freq:
+        menuName = "Internal Trigger Frequency";
+        break;
+    case tag_sp_freeze:
+        menuName = "Freeze Spectrum";
+        break;
+    case tag_sp_min_level:
+        menuName = "Minimum Amplitude Level";
+        break;
+    case tag_sp_max_level:
+        menuName = "Maximum Amplitude Level";
+        break;
+    case tag_sp_decay_rate:
+        menuName = "Spectrum Decay Rate";
         break;
     default:
         break;
     }
 
-    if (!options.empty() || isOnOff)
+    auto contextMenu = juce::PopupMenu();
+
+    auto msurl = SurgeGUIEditor::helpURLForSpecial(storage_, "oscilloscope");
+    auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+    auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(menuName, hurl);
+
+    tcomp->setSkin(skin, associatedBitmapStore);
+
+    auto hment = tcomp->getTitle();
+
+    contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
+
+    if (!options.empty())
     {
-        auto contextMenu = juce::PopupMenu();
-
-        auto msurl = SurgeGUIEditor::helpURLForSpecial(storage_, "oscilloscope");
-        auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
-        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(menuName, hurl);
-
-        tcomp->setSkin(skin, associatedBitmapStore);
-
-        auto hment = tcomp->getTitle();
-
-        contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
-
         contextMenu.addSeparator();
 
-        contextMenu.showMenuAsync(editor_->popupMenuOptions(),
-                                  Surge::GUI::makeEndHoverCallback(pControl));
+        // add menu entries for setting parameter values here
     }
+
+    contextMenu.showMenuAsync(editor_->popupMenuOptions(),
+                              Surge::GUI::makeEndHoverCallback(pControl));
 
     return 1;
 }
@@ -786,12 +830,11 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     time_window_.setTag(tag_wf_time_scaling);
     amp_window_.setTag(tag_wf_amp_scaling);
 
-    // TODO: why doesn't this work?
-    /*     trigger_speed_.addListener(parent_);
-        trigger_level_.addListener(parent_);
-        trigger_limit_.addListener(parent_);
-        time_window_.addListener(parent_);
-        amp_window_.addListener(parent_); */
+    trigger_speed_.addListener(this);
+    trigger_level_.addListener(this);
+    trigger_limit_.addListener(this);
+    time_window_.addListener(this);
+    amp_window_.addListener(this);
 
     auto updateParameter = [this](float &param, float &backer, float value) {
         std::lock_guard l(params_lock_);
@@ -907,9 +950,9 @@ Oscilloscope::WaveformParameters::WaveformParameters(SurgeGUIEditor *e, SurgeSto
     dc_kill_.setTag(tag_wf_dc_block);
     sync_draw_.setTag(tag_wf_sync);
 
-    /*     freeze_.addListener(this);
-        dc_kill_.addListener(this);
-        sync_draw_.addListener(this); */
+    freeze_.addListener(this);
+    dc_kill_.addListener(this);
+    sync_draw_.addListener(this);
 
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze), nullptr);
     dc_kill_.onToggle = std::bind(toggleParam, std::ref(params_.dc_kill), &state->dc_kill);
@@ -1032,9 +1075,9 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
     max_db_.setTag(tag_sp_max_level);
     decay_rate_.setTag(tag_sp_decay_rate);
 
-    /*     noise_floor_.addListener(this);
-        max_db_.addListener(this);
-        decay_rate_.addListener(this); */
+    noise_floor_.addListener(this);
+    max_db_.addListener(this);
+    decay_rate_.addListener(this);
 
     auto updateParameter = [this](float &param, float &backer, float value) {
         std::lock_guard l(params_lock_);
@@ -1067,7 +1110,7 @@ Oscilloscope::SpectrumParameters::SpectrumParameters(SurgeGUIEditor *e, SurgeSto
 
     freeze_.setWantsKeyboardFocus(false);
     freeze_.setTag(tag_sp_freeze);
-    // freeze_.addListener(this);
+    freeze_.addListener(this);
     freeze_.onToggle = std::bind(toggleParam, std::ref(params_.freeze));
 
     addAndMakeVisible(freeze_);
