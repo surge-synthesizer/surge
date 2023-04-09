@@ -717,7 +717,14 @@ int32_t Oscilloscope::controlModifierClicked(Surge::GUI::IComponentTagValue *pCo
             contextMenu.addItem(op.first, true, (val == pControl->getValue()),
                                 [val, pControl, this]() {
                                     pControl->setValue(val);
-                                    valueChanged(pControl);
+
+                                    // The switch button is self-draw and has its own value change
+                                    // so we need to handle that eventuality here
+                                    auto sc = dynamic_cast<SwitchButton *>(pControl);
+                                    if (sc)
+                                        sc->valueChanged(pControl);
+                                    else
+                                        valueChanged(pControl);
 
                                     auto iv = pControl->asJuceComponent();
 
