@@ -2970,8 +2970,8 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     auto midiSubMenu = makeMidiMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("MIDI Settings"), midiSubMenu);
 
-    //auto oscSubMenu = makeOSCMenu(where);
-    //settingsMenu.addSubMenu(Surge::GUI::toOSCase("Open Sound Control"), oscSubMenu);
+    auto oscSubMenu = makeOSCMenu(where);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Open Sound Control"), oscSubMenu);
 
    auto tuningSubMenu = makeTuningMenu(where, false);
     settingsMenu.addSubMenu("Tuning", tuningSubMenu);
@@ -4733,6 +4733,31 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
     }
 
     return midiSubMenu;
+}
+
+juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
+{
+    auto oscSubMenu = juce::PopupMenu();
+    /*
+    bool alreadyListening = Surge::OSC::listening;
+    if (alreadyListening) {
+         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Listener"),
+            [this]() {
+                Surge::OSC::stopListening();
+            });
+   } else {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Listener"),
+            [this]() {
+                Surge::OSC::OSCListener sOSC(9001);
+            });
+    }
+    */
+    oscSubMenu.addItem(Surge::GUI::toOSCase("List all parameters"),
+            [this]() {
+                
+            });
+
+    return oscSubMenu;
 }
 
 void SurgeGUIEditor::reloadFromSkin()

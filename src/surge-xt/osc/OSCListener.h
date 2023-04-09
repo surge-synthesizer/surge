@@ -38,9 +38,9 @@ public:
 
      void oscMessageReceived (const juce::OSCMessage& message) override;
      void oscBundleReceived (const juce::OSCBundle &bundle) override;
+     bool listening = false;
 
 private:
-     bool listening = false;
      SurgeSynthesizer *surgePtr;
      SurgeSynthProcessor *sspPtr;
 

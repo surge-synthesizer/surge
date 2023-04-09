@@ -458,11 +458,11 @@ void SurgeSynthProcessor::processBlockOSC()
 {
     oscMsg om;
     while (oscQueue.pop(om))
-    {
+    { 
         if (om.type == oscMsg::PARAMETER) {
-            om.param->set_value_f01(om.val);
+            surge->setParameter01(surge->idForParameter(om.param), om.val, true);
+            surge->storage.getPatch().isDirty = true;
         }
-
     }
 }
 
