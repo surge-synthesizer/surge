@@ -3155,19 +3155,19 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     else
                         mod_editor = false;
                     queue_refresh = true;
-                    refresh_mod();
+                    needsModUpdate = true;
                     break;
                 case 1:
                     modsource = newsource;
                     modsource_index = newindex;
                     mod_editor = true;
-                    refresh_mod();
+                    needsModUpdate = true;
                     break;
                 case 2:
                     modsource = newsource;
                     modsource_index = newindex;
                     mod_editor = false;
-                    refresh_mod();
+                    needsModUpdate = true;
                     break;
                 };
             }
