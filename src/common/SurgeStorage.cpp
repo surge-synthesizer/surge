@@ -1085,8 +1085,7 @@ void SurgeStorage::perform_queued_wtloads()
             }
             else if (patch.scene[sc].osc[o].wt.queue_filename[0])
             {
-                if (!(patch.scene[sc].osc[o].type.val.i == ot_wavetable ||
-                      patch.scene[sc].osc[o].type.val.i == ot_window))
+                if (!(uses_wavetabledata(patch.scene[sc].osc[o].type.val.i)))
                 {
                     patch.scene[sc].osc[o].queue_type = ot_wavetable;
                 }
