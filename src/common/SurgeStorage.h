@@ -108,7 +108,15 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                                   oddsound_as_mts_main
 // clang-format on
 
-const int ff_revision = 21;
+const int ff_revision = 22;
+
+if (revision <= 21)
+    for (auto sc = 0; sc < n_scenes; ++sc)
+    {
+        scene[sc].mixer.ringmod_12.deform_type = 0;
+
+        scene[sc].mixer.ringmod_23.deform_type = 0;
+    }
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
