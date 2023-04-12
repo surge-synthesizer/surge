@@ -2105,8 +2105,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     {
         for (auto sc = 0; sc < n_scenes; ++sc)
         {
-            scene[sc].mixer.ringmod_12.deform_type = 0;
-            scene[sc].mixer.ringmod_23.deform_type = 0;
+            scene[sc].level_ring_12.deform_type = 0;
+            scene[sc].level_ring_23.deform_type = 0;
         }
     }
 
