@@ -37,14 +37,16 @@ inline void copy_block(float *src, float *dst, unsigned int nquads)
     std::memcpy((void *)dst, (const void *)src, (nquads << 2) * sizeof(float));
 }
 
-inline void mul_block(float *__restrict src1, float *src2, float *__restrict dst, unsigned int nquads)
+inline void mul_block(float *__restrict src1, float *src2, float *__restrict dst,
+                      unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = src1[i] * src2[i];
     }
 }
-inline void mul_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+inline void mul_block(float *__restrict src1, float scalar, float *__restrict dst,
+                      unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -52,14 +54,16 @@ inline void mul_block(float *__restrict src1, float scalar, float *__restrict ds
     }
 }
 
-inline void cxor_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+inline void cxor_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                       unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
     }
 }
-inline void cxor_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+inline void cxor_block(float *__restrict src1, float scalar, float *__restrict dst,
+                       unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -67,7 +71,8 @@ inline void cxor_block(float *__restrict src1, float scalar, float *__restrict d
     }
 }
 
-inline void cxor_f1_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+inline void cxor_f1_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                          unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -77,7 +82,8 @@ inline void cxor_f1_block(float *__restrict src1, float *__restrict src2, float 
         dst[i] = fmin(v1, v2);
     }
 }
-inline void cxor_f1_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+inline void cxor_f1_block(float *__restrict src1, float scalar, float *__restrict dst,
+                          unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -88,7 +94,8 @@ inline void cxor_f1_block(float *__restrict src1, float scalar, float *__restric
     }
 }
 
-inline void cxor_f2_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+inline void cxor_f2_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                          unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -98,7 +105,8 @@ inline void cxor_f2_block(float *__restrict src1, float *__restrict src2, float 
         dst[i] = fmin(src1[i], v2);
     }
 }
-inline void cxor_f2_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+inline void cxor_f2_block(float *__restrict src1, float scalar, float *__restrict dst,
+                          unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -109,7 +117,8 @@ inline void cxor_f2_block(float *__restrict src1, float scalar, float *__restric
     }
 }
 
-inline void cxor_st12_block(float *__restrict src1, float *__restrict src2, float *__restrict dst_l, float *__restrict dst_r, unsigned int nquads)
+inline void cxor_st12_block(float *__restrict src1, float *__restrict src2, float *__restrict dst_l,
+                            float *__restrict dst_r, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -120,7 +129,8 @@ inline void cxor_st12_block(float *__restrict src1, float *__restrict src2, floa
         dst_r[i] = fmin(src1[i], v2);
     }
 }
-inline void cxor_st12_block(float *__restrict src1, float scalar, float *__restrict dst_l, float *__restrict dst_r, unsigned int nquads)
+inline void cxor_st12_block(float *__restrict src1, float scalar, float *__restrict dst_l,
+                            float *__restrict dst_r, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -132,7 +142,8 @@ inline void cxor_st12_block(float *__restrict src1, float scalar, float *__restr
     }
 }
 
-inline void cxor_f3_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+inline void cxor_f3_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                          unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -142,7 +153,8 @@ inline void cxor_f3_block(float *__restrict src1, float *__restrict src2, float 
         dst[i] = fmin(v1, v2);
     }
 }
-inline void cxor_f3_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+inline void cxor_f3_block(float *__restrict src1, float scalar, float *__restrict dst,
+                          unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -153,7 +165,8 @@ inline void cxor_f3_block(float *__restrict src1, float scalar, float *__restric
     }
 }
 
-inline void cxor_f4_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+inline void cxor_f4_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                          unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -163,7 +176,8 @@ inline void cxor_f4_block(float *__restrict src1, float *__restrict src2, float 
         dst[i] = fmin(v1, v3);
     }
 }
-inline void cxor_f4_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+inline void cxor_f4_block(float *__restrict src1, float scalar, float *__restrict dst,
+                          unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -174,7 +188,8 @@ inline void cxor_f4_block(float *__restrict src1, float scalar, float *__restric
     }
 }
 
-inline void cxor_st34_block(float *__restrict src1, float *__restrict src2, float *__restrict dst_l, float *__restrict dst_r, unsigned int nquads)
+inline void cxor_st34_block(float *__restrict src1, float *__restrict src2, float *__restrict dst_l,
+                            float *__restrict dst_r, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -186,7 +201,8 @@ inline void cxor_st34_block(float *__restrict src1, float *__restrict src2, floa
         dst_r[i] = fmin(v1, v3);
     }
 }
-inline void cxor_st34_block(float *__restrict src1, float scalar, float *__restrict dst_l, float *__restrict dst_r, unsigned int nquads)
+inline void cxor_st34_block(float *__restrict src1, float scalar, float *__restrict dst_l,
+                            float *__restrict dst_r, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -199,7 +215,8 @@ inline void cxor_st34_block(float *__restrict src1, float scalar, float *__restr
     }
 }
 
-inline void add_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+inline void add_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                      unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -207,7 +224,8 @@ inline void add_block(float *__restrict src1, float *__restrict src2, float *__r
     }
 }
 
-inline void subtract_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+inline void subtract_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {

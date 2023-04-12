@@ -2367,14 +2367,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 synth->storage.getPatch().isDirty = true;
                                 frame->repaint();
                             });
-                        contextMenu.addItem(
-                            "CXOR", true, dt == CxorMode::CXOR, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                        contextMenu.addItem("CXOR", true, dt == CxorMode::CXOR, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = CxorMode::CXOR,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
+                            p->deform_type = CxorMode::CXOR,
+                            synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
                         contextMenu.addItem(
                             "CXOR func1", true, dt == CxorMode::CXOR_F1, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
