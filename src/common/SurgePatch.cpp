@@ -2101,6 +2101,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
+    if (revision <= 21)
+    {
+        for (auto sc = 0; sc < n_scenes; ++sc)
+        {
+            scene[sc].mixer.ringmod_12.deform_type = 0;
+            scene[sc].mixer.ringmod_23.deform_type = 0;
+        }
+    }
+
     // ensure that filter subtype is a valid value
     for (auto &sc : scene)
     {
