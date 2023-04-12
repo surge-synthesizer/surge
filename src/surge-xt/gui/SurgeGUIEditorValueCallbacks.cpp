@@ -2360,49 +2360,49 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             contextMenu, "COMBINATOR MODE");
 
                         contextMenu.addItem(
-                            "Ringmod (classic)", true, dt == CxorMode::RINGMOD, [this, p]() {
+                            "Ringmod (classic)", true, dt == RingModMode::rmm_ring, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = CxorMode::RINGMOD,
+                                p->deform_type = RingModMode::rmm_ring,
                                 synth->storage.getPatch().isDirty = true;
                                 frame->repaint();
                             });
-                        contextMenu.addItem("CXOR", true, dt == CxorMode::CXOR, [this, p]() {
+                        contextMenu.addItem("CXOR", true, dt == RingModMode::rmm_cxor, [this, p]() {
                             undoManager()->pushParameterChange(p->id, p, p->val);
 
-                            p->deform_type = CxorMode::CXOR,
+                            p->deform_type = RingModMode::rmm_cxor,
                             synth->storage.getPatch().isDirty = true;
                             frame->repaint();
                         });
                         contextMenu.addItem(
-                            "CXOR func1", true, dt == CxorMode::CXOR_F1, [this, p]() {
+                            "CXOR func1", true, dt == RingModMode::rmm_cxor_f1, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = CxorMode::CXOR_F1,
+                                p->deform_type = RingModMode::rmm_cxor_f1,
                                 synth->storage.getPatch().isDirty = true;
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR func2", true, dt == CxorMode::CXOR_F2, [this, p]() {
+                            "CXOR func2", true, dt == RingModMode::rmm_cxor_f2, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = CxorMode::CXOR_F2,
+                                p->deform_type = RingModMode::rmm_cxor_f2,
                                 synth->storage.getPatch().isDirty = true;
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR func3", true, dt == CxorMode::CXOR_F3, [this, p]() {
+                            "CXOR func3", true, dt == RingModMode::rmm_cxor_f3, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = CxorMode::CXOR_F3,
+                                p->deform_type = RingModMode::rmm_cxor_f3,
                                 synth->storage.getPatch().isDirty = true;
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR func4", true, dt == CxorMode::CXOR_F4, [this, p]() {
+                            "CXOR func4", true, dt == RingModMode::rmm_cxor_f4, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = CxorMode::CXOR_F4,
+                                p->deform_type = RingModMode::rmm_cxor_f4,
                                 synth->storage.getPatch().isDirty = true;
                                 frame->repaint();
                             });
