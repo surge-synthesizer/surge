@@ -1113,7 +1113,7 @@ class alignas(16) SurgeStorage
         AUDIO_CONFIGURATION = 2,
     };
     void reportError(const std::string &msg, const std::string &title,
-                     const ErrorType errorType = GENERAL_ERROR);
+                     const ErrorType errorType = GENERAL_ERROR, bool reportToStdout = true);
     struct ErrorListener
     {
         // This can be called from any thread, beware! But it is called only
