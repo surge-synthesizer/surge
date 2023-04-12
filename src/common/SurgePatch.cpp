@@ -241,7 +241,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                                ct_oscroute, Surge::Skin::Mixer::route_o3, sc_id,
                                                cg_MIX, 0, false));
         a->push_back(scene[sc].level_ring_12.assign(
-            p_id.next(), id_s++, "level_ring12", "Ring Modulation 1x2 Level", ct_amplitude,
+            p_id.next(), id_s++, "level_ring12", "Ring Modulation 1x2 Level", ct_amplitude_ringmod,
             Surge::Skin::Mixer::level_ring12, sc_id, cg_MIX, 0, true, sceasy));
         a->push_back(scene[sc].mute_ring_12.assign(
             p_id.next(), id_s++, "mute_ring12", "Ring Modulation 1x2 Mute", ct_bool_mute,
@@ -253,7 +253,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             p_id.next(), id_s++, "route_ring12", "Ring Modulation 1x2 Route", ct_oscroute,
             Surge::Skin::Mixer::route_ring12, sc_id, cg_MIX, 0, false));
         a->push_back(scene[sc].level_ring_23.assign(
-            p_id.next(), id_s++, "level_ring23", "Ring Modulation 2x3 Level", ct_amplitude,
+            p_id.next(), id_s++, "level_ring23", "Ring Modulation 2x3 Level", ct_amplitude_ringmod,
             Surge::Skin::Mixer::level_ring23, sc_id, cg_MIX, 0, true, sceasy));
         a->push_back(scene[sc].mute_ring_23.assign(
             p_id.next(), id_s++, "mute_ring23", "Ring Modulation 2x3 Mute", ct_bool_mute,

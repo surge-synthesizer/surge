@@ -992,13 +992,63 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     {
         if (is_wide)
         {
-            mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            mul_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+            switch (scene->level_ring_12.deform_type) {
+                case CxorMode::RINGMOD:
+                    mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    mul_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR:
+                    cxor_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F1:
+                    cxor_f1_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_f1_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F2:
+                    cxor_f2_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_f2_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F3:
+                    cxor_f3_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_f3_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F4:
+                    cxor_f4_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_f4_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                default:
+                    mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    mul_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+            }
             osclevels[le_ring12].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
         }
         else
         {
-            mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+            switch (scene->level_ring_12.deform_type) {
+                case CxorMode::RINGMOD:
+                    mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR:
+                    cxor_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F1:
+                    cxor_f1_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F2:
+                    cxor_f2_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F3:
+                    cxor_f3_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F4:
+                    cxor_f4_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                default:
+                    mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+            }
             osclevels[le_ring12].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
         }
 
@@ -1016,13 +1066,63 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     {
         if (is_wide)
         {
-            mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            mul_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+            switch (scene->level_ring_23.deform_type) {
+                case CxorMode::RINGMOD:
+                    mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    mul_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR:
+                    cxor_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F1:
+                    cxor_f1_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_f1_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F2:
+                    cxor_f2_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_f2_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F3:
+                    cxor_f3_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_f3_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F4:
+                    cxor_f4_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    cxor_f4_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+                default:
+                    mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    mul_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
+                    break;
+            }
             osclevels[le_ring23].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
         }
         else
         {
-            mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+            switch (scene->level_ring_23.deform_type) {
+                case CxorMode::RINGMOD:
+                    mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR:
+                    cxor_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F1:
+                    cxor_f1_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F2:
+                    cxor_f2_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F3:
+                    cxor_f3_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                case CxorMode::CXOR_F4:
+                    cxor_f4_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+                default:
+                    mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
+                    break;
+            }
             osclevels[le_ring23].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
         }
 

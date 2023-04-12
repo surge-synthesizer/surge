@@ -2350,6 +2350,64 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 });
                         }
                     }
+                    break;
+                    case ct_amplitude_ringmod:
+                    {
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            contextMenu, "COMBINATOR MODE");
+
+                        contextMenu.addItem(
+                            "Ringmod (classic)", true, dt == CxorMode::RINGMOD, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = CxorMode::RINGMOD,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR", true, dt == CxorMode::CXOR, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = CxorMode::CXOR,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR func1", true, dt == CxorMode::CXOR_F1, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = CxorMode::CXOR_F1,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR func2", true, dt == CxorMode::CXOR_F2, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = CxorMode::CXOR_F2,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR func3", true, dt == CxorMode::CXOR_F3, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = CxorMode::CXOR_F3,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR func4", true, dt == CxorMode::CXOR_F4, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = CxorMode::CXOR_F4,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                    }
                     default:
                     {
                         break;

@@ -15,7 +15,7 @@ void hardclip_block(float *x, unsigned int nquads);
 void hardclip_block8(float *x, unsigned int nquads);
 void softclip_block(float *in, unsigned int nquads);
 void tanh7_block(float *x, unsigned int nquads);
-inline void clear_block(float *in, unsigned int nquads)
+inline void clear_block(float *__restrict in, unsigned int nquads)
 {
     const __m128 zero = _mm_setzero_ps();
 
@@ -24,7 +24,7 @@ inline void clear_block(float *in, unsigned int nquads)
         _mm_store_ps((float *)&in[i], zero);
     }
 }
-inline void accumulate_block(float *src, float *dst, unsigned int nquads)
+inline void accumulate_block(float *__restrict src, float *__restrict dst, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -37,21 +37,169 @@ inline void copy_block(float *src, float *dst, unsigned int nquads)
     std::memcpy((void *)dst, (const void *)src, (nquads << 2) * sizeof(float));
 }
 
-inline void mul_block(float *src1, float *src2, float *dst, unsigned int nquads)
+inline void mul_block(float *__restrict src1, float *src2, float *__restrict dst, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = src1[i] * src2[i];
     }
 }
-inline void mul_block(float *src1, float scalar, float *dst, unsigned int nquads)
+inline void mul_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = src1[i] * scalar;
     }
 }
-inline void add_block(float *src1, float *src2, float *dst, unsigned int nquads)
+
+inline void cxor_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        dst[i] = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
+    }
+}
+inline void cxor_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        dst[i] = fmin(fmax(src1[i], scalar), -fmin(src1[i], scalar));
+    }
+}
+
+inline void cxor_f1_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto v1 = fmax(src1[i], src2[i]);
+        const auto cx = fmin(v1, -fmin(src1[i], src2[i]));
+        const auto v2 = -fmin(cx, v1);
+        dst[i] = fmin(v1, v2);
+    }
+}
+inline void cxor_f1_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto v1 = fmax(src1[i], scalar);
+        const auto cx = fmin(v1, -fmin(src1[i], scalar));
+        const auto v2 = -fmin(cx, v1);
+        dst[i] = fmin(v1, v2);
+    }
+}
+
+inline void cxor_f2_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto v1 = fmax(src1[i], src2[i]);
+        const auto cx = fmin(v1, -fmin(src1[i], src2[i]));
+        const auto v2 = -fmin(cx, v1);
+        dst[i] = fmin(src1[i], v2);
+    }
+}
+inline void cxor_f2_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto v1 = fmax(src1[i], scalar);
+        const auto cx = fmin(v1, -fmin(src1[i], scalar));
+        const auto v2 = -fmin(cx, v1);
+        dst[i] = fmin(src1[i], v2);
+    }
+}
+
+inline void cxor_st12_block(float *__restrict src1, float *__restrict src2, float *__restrict dst_l, float *__restrict dst_r, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto v1 = fmax(src1[i], src2[i]);
+        const auto cx = fmin(v1, -fmin(src1[i], src2[i]));
+        const auto v2 = -fmin(cx, v1);
+        dst_l[i] = fmin(v1, v2);
+        dst_r[i] = fmin(src1[i], v2);
+    }
+}
+inline void cxor_st12_block(float *__restrict src1, float scalar, float *__restrict dst_l, float *__restrict dst_r, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto v1 = fmax(src1[i], scalar);
+        const auto cx = fmin(v1, -fmin(src1[i], scalar));
+        const auto v2 = -fmin(cx, v1);
+        dst_l[i] = fmin(v1, v2);
+        dst_r[i] = fmin(src1[i], v2);
+    }
+}
+
+inline void cxor_f3_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto cx = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
+        const auto v1 = -fmin(cx, src2[i]);
+        const auto v2 = fmax(src1[i], -src2[i]);
+        dst[i] = fmin(v1, v2);
+    }
+}
+inline void cxor_f3_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto cx = fmin(fmax(src1[i], scalar), -fmin(src1[i], scalar));
+        const auto v1 = -fmin(cx, scalar);
+        const auto v2 = fmax(src1[i], -scalar);
+        dst[i] = fmin(v1, v2);
+    }
+}
+
+inline void cxor_f4_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto cx = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
+        const auto v1 = -fmin(cx, src2[i]);
+        const auto v3 = fmax(src1[i], -cx);
+        dst[i] = fmin(v1, v3);
+    }
+}
+inline void cxor_f4_block(float *__restrict src1, float scalar, float *__restrict dst, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto cx = fmin(fmax(src1[i], scalar), -fmin(src1[i], scalar));
+        const auto v1 = -fmin(cx, scalar);
+        const auto v3 = fmax(src1[i], -cx);
+        dst[i] = fmin(v1, v3);
+    }
+}
+
+inline void cxor_st34_block(float *__restrict src1, float *__restrict src2, float *__restrict dst_l, float *__restrict dst_r, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto cx = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
+        const auto v1 = -fmin(cx, src2[i]);
+        const auto v2 = fmax(src1[i], -src2[i]);
+        const auto v3 = fmax(src1[i], -cx);
+        dst_l[i] = fmin(v1, v2);
+        dst_r[i] = fmin(v1, v3);
+    }
+}
+inline void cxor_st34_block(float *__restrict src1, float scalar, float *__restrict dst_l, float *__restrict dst_r, unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        const auto cx = fmin(fmax(src1[i], scalar), -fmin(src1[i], scalar));
+        const auto v1 = -fmin(cx, scalar);
+        const auto v2 = fmax(src1[i], -scalar);
+        const auto v3 = fmax(src1[i], -cx);
+        dst_l[i] = fmin(v1, v2);
+        dst_r[i] = fmin(v1, v3);
+    }
+}
+
+inline void add_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -59,7 +207,7 @@ inline void add_block(float *src1, float *src2, float *dst, unsigned int nquads)
     }
 }
 
-inline void subtract_block(float *src1, float *src2, float *dst, unsigned int nquads)
+inline void subtract_block(float *__restrict src1, float *__restrict src2, float *__restrict dst, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
