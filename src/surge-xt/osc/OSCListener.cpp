@@ -39,14 +39,6 @@ void OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynt
           surgePtr = surge.get();
           std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
           sspPtr = ssp;
-
-          // Uncomment to print out all parameter storage names
-          /*
-          for (const auto *p : surge->storage.getPatch().param_ptr)
-          {
-               std::cout << p->get_storage_name() << " == " << p->get_full_name() << std::endl;
-          }
-          */
      }
 }
 

@@ -15,6 +15,8 @@
 
 #pragma once
 
+#define SURGE_HAS_OSC
+
 #include "globals.h"
 
 #include "SurgeGUICallbackInterfaces.h"
@@ -347,6 +349,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
     std::string midiMappingToHtml();
+    std::string parametersToHtml();
 
     std::string patchToHtml(bool includeDefaults = false);
 
@@ -800,7 +803,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu makeDevMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeLfoMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
-    juce::PopupMenu makeOSCMenu(const juce::Point<int> &where);
+
+    #ifdef SURGE_HAS_OSC
+    juce::PopupMenu makeOpSoCoMenu(const juce::Point<int> &where);
+    #endif
 
     void setRecommendedAccessibility();
 

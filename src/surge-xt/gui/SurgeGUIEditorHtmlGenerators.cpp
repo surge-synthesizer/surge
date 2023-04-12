@@ -411,6 +411,119 @@ th {
     return htmls.str();
 }
 
+std::string SurgeGUIEditor::parametersToHtml()
+{
+    std::ostringstream htmls;
+
+    htmls <<
+        R"HTML(
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+    <style>
+table {
+  border-collapse: collapse;
+}
+
+td {
+  border: 1px solid #CDCED4;
+  padding: 2pt 4px;
+}
+
+.center {
+  text-align: center;
+}
+
+th {
+  padding: 4pt;
+  color: #123463;
+  background: #CDCED4;
+  border: 1px solid #123463;
+}
+</style>
+  </head>
+  <body style="margin: 0pt; background: #CDCED4;">
+    <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
+      <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
+        Surge XT Parameters (addressable by OSC)
+      </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+
+     )HTML";
+     
+     /*
+                    for (const auto *p : synth->storage.getPatch().param_ptr)
+                {
+                    //TODO: convert to HTML display
+                    //std::cout << p->get_storage_name() << " == " << p->get_full_name() << std::endl;
+                }
+    */
+
+    /*
+    // TODO: if there are none print differently
+    bool foundOne = false;
+    int n = n_global_params + n_scene_params;
+    for (int i = 0; i < n; i++)
+    {
+        if (synth->storage.getPatch().param_ptr[i]->midictrl >= 0)
+        {
+            if (!foundOne)
+            {
+                foundOne = true;
+                htmls << "Individual parameter MIDI mappings<p>\n"
+                      << "<table><tr><th>CC#</th><th>Parameter</th></tr>\n";
+            }
+            htmls << "<tr><td class=\"center\">" << synth->storage.getPatch().param_ptr[i]->midictrl
+                  << "</td><td> " << synth->storage.getPatch().param_ptr[i]->get_full_name()
+                  << "</td></tr>\n";
+        }
+    }
+    if (foundOne)
+    {
+        htmls << "</table>\n";
+    }
+    else
+    {
+        htmls << "No parameter MIDI mappings present!";
+    }
+    */
+
+    htmls << R"HTML(
+
+      </div>
+    </div>
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+         Macro Assignments<p>
+         <table><tr><th>CC#</th><th>Macro</th><th>Custom Name</th></tr>
+     )HTML";
+
+     /*
+    for (int i = 0; i < n_customcontrollers; ++i)
+    {
+        std::string name = synth->storage.getPatch().CustomControllerLabel[i];
+        auto ccval = synth->storage.controllers[i];
+
+        htmls << "<tr><td class=\"center\">" << (ccval == -1 ? "N/A" : std::to_string(ccval))
+              << "</td><td class=\"center\">" << i + 1 << "</td><td>" << name << "</td></tr>"
+              << std::endl;
+    }
+    */
+
+    htmls << R"HTML(
+ <!--       </table>
+     </div>   --->
+   </div>
+  </body>
+</html>
+      )HTML";
+
+    return htmls.str();
+}
+
 std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
 {
     std::ostringstream htmls;
