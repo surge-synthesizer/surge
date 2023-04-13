@@ -522,14 +522,14 @@ template <typename T> struct XMLMenuAH : public juce::AccessibilityHandler
     };
 
     explicit XMLMenuAH(T *s)
-        : comp(s), juce::AccessibilityHandler(
-                       *s, juce::AccessibilityRole::button,
-                       juce::AccessibilityActions()
-                           .addAction(juce::AccessibilityActionType::showMenu,
-                                      [this]() { this->showMenu(); })
-                           .addAction(juce::AccessibilityActionType::press,
-                                      [this]() { this->showMenu(); }),
-                       AccessibilityHandler::Interfaces{std::make_unique<XMLMenuTextValue>(s)})
+        : comp(s),
+          juce::AccessibilityHandler(
+              *s, juce::AccessibilityRole::button,
+              juce::AccessibilityActions()
+                  .addAction(juce::AccessibilityActionType::showMenu,
+                             [this]() { this->showMenu(); })
+                  .addAction(juce::AccessibilityActionType::press, [this]() { this->showMenu(); }),
+              AccessibilityHandler::Interfaces{std::make_unique<XMLMenuTextValue>(s)})
     {
     }
     void showMenu() { comp->menu.showMenuAsync(juce::PopupMenu::Options()); }
@@ -742,14 +742,17 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
             });
     }
 
-    menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfx)), enableClear, false, [this]() {
-        loadSnapshot(fxt_off, nullptr, 0);
-        if (getControlListener())
-        {
-            getControlListener()->valueChanged(asControlValueInterface());
-        }
-        repaint();
-    });
+    menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfx)), enableClear, false,
+                 [this, cfxid, that = juce::Component::SafePointer(sge->effectChooser.get())]() {
+                     that->setEffectSlotDeactivation(cfxid, false);
+                     that->repaint();
+                     loadSnapshot(fxt_off, nullptr, 0);
+                     if (getControlListener())
+                     {
+                         getControlListener()->valueChanged(asControlValueInterface());
+                     }
+                     repaint();
+                 });
 
     if (sge)
     {

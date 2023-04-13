@@ -96,6 +96,7 @@ struct EffectChooser : public juce::Component,
     int getDeactivatedBitmask() const { return deactivatedBitmask; }
     int deactivatedBitmask{0};
     void toggleSelectedDeactivation();
+    void setEffectSlotDeactivation(int slotIdx, bool state);
 
     SurgeImage *bg{nullptr};
     void setBackgroundDrawable(SurgeImage *b) { bg = b; }
