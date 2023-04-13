@@ -155,6 +155,9 @@
               p4_deactivated="1" p5="-60" p5_deactivated="1" p6="0" p6_deactivated="1" p7="50.2131" p8="70"
               p8_deactivated="1" p9="0" p10="0" p11="0"/>
 </type>
+<type i="28" name="Input Blender">
+    <snapshot name="Init" p0="9" p1="0.000000" p2="0.000000"/>
+</type>
 </fx>
 <customctrl>
 <entry p="0" ctrl="41"/>
