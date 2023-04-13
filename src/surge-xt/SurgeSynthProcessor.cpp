@@ -14,6 +14,7 @@
 #include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "version.h"
 #include "sst/plugininfra/cpufeatures.h"
+#include "globals.h"
 
 /*
  * This is a bit odd but - this is an editor concept with the lifetime of the processor
@@ -115,7 +116,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     midiKeyboardState.addListener(this);
 
-    initOSC(53280);      // TODO: Connect this to CLI param; otherwise, done from default = start OSC
+    initOSC(DEFAULT_OSC_PORT);      // TODO: Connect this to CLI param; otherwise, done from default = start OSC
 
     SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }

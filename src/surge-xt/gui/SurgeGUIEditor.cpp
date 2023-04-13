@@ -4773,7 +4773,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
         oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC listener"),
             [this]() {
                 int defaultOSCPort = Surge::Storage::getUserDefaultValue(
-                        &(this->synth->storage), Surge::Storage::OSCPort, 53280);
+                        &(this->synth->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
                 std::cout << "default osc port: " << defaultOSCPort;
                 juceEditor->processor.initOSC(defaultOSCPort);
             });

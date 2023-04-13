@@ -80,3 +80,5 @@ const int N_OUTPUTS = 2;
 const int N_INPUTS = 2;
 
 const int DEFAULT_POLYLIMIT = 16;
+
+const int DEFAULT_OSC_PORT = 53280;
