@@ -6670,6 +6670,7 @@ void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
         if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
         {
             synth->enqueueFXOff(fxslot_order[i]);
+            effectChooser->setEffectSlotDeactivation(fxslot_order[i], false);
         }
     }
 }
