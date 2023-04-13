@@ -18,6 +18,13 @@
 class InputBlenderEffect : public Effect
 {
   public:
+    enum ibp_params{
+        ibp_channel = 0,
+        ibp_audio_level,
+        ibp_upstream_level,
+        ibp_num_params
+    };
+    void init_ctrltypes() override;
     ~InputBlenderEffect() override;
 };
 
