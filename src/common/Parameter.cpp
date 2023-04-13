@@ -385,6 +385,8 @@ bool Parameter::is_bipolar() const
     case ct_pitch4oct:
     case ct_modern_trimix:
     case ct_oscspread_bipolar:
+    case ct_input_blender_effect_audio_level:
+    case ct_input_blender_effect_upstream_level:
         res = true;
         break;
     case ct_lfoamplitude:
@@ -673,6 +675,8 @@ void Parameter::set_type(int ctrltype)
         val_max.f = 5;
         val_default.f = 1;
         break;
+    case ct_input_blender_effect_audio_level:
+    case ct_input_blender_effect_upstream_level:
     case ct_decibel:
     case ct_decibel_extendable:
     case ct_decibel_deactivatable:
@@ -4156,6 +4160,8 @@ bool Parameter::can_setvalue_from_string() const
     case ct_tape_microns:
     case ct_tape_speed:
     case ct_spring_decay:
+    case ct_input_blender_effect_audio_level:
+    case ct_input_blender_effect_upstream_level:
     {
         return true;
     }
