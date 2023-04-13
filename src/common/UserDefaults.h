@@ -76,6 +76,10 @@ enum DefaultKey
     SmoothingMode,
     MonoPedalMode,
 
+    // OSC (Open Sound Control)
+    StartOSC,
+    OSCPort,
+
     // these are persistent options sprinkled outside of the menu
     UseODDMTS,
     Use3DWavetableView,

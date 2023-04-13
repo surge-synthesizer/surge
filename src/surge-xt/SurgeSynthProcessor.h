@@ -385,6 +385,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     bool getPluginHasMainInput() const override { return false; }
 
+    bool initOSC(int port);
+    bool changeOSCPort(int newport);
+
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool isInputMain(int index) override { return false; }
     bool supportsDirectProcess() override { return true; }

@@ -115,7 +115,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     midiKeyboardState.addListener(this);
 
-    oscListener.init(this, surge, 53280);    // TODO: make port number settable
+    initOSC(53280);      // TODO: Connect this to CLI param; otherwise, done from default = start OSC
 
     SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }
@@ -183,6 +183,20 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
 }
 
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
+
+
+/* OSC (Open Sound Countrol) */
+bool SurgeSynthProcessor::initOSC(int port) {
+    return oscListener.init(this, surge, port);
+}
+
+bool SurgeSynthProcessor::changeOSCPort(int new_port) {
+    if (oscListener.listening) {
+        oscListener.disconnect();
+    }
+    return oscListener.init(this, surge, new_port);
+}
+
 
 //==============================================================================
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)

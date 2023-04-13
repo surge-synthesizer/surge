@@ -33,11 +33,13 @@ public:
      OSCListener();
      ~OSCListener();
 
-     void init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge, int port);
+     bool init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge, int port);
      void stopListening();
 
      void oscMessageReceived (const juce::OSCMessage& message) override;
      void oscBundleReceived (const juce::OSCBundle &bundle) override;
+
+     int portnum = 0;
      bool listening = false;
 
 private:

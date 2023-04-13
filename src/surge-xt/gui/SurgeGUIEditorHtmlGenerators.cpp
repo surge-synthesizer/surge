@@ -440,6 +440,10 @@ th {
   background: #CDCED4;
   border: 1px solid #123463;
 }
+
+span {
+    margin-left: 16px;
+}
 </style>
   </head>
   <body style="margin: 0pt; background: #CDCED4;">
@@ -450,73 +454,36 @@ th {
     </div>
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+        Construct OSC messages for Surge XT using the exact (case sensitive)
+        entry listed under 'Parameter' in the list below.</br>
+        The form of the message should be <b>/param/&ltparameter&gt value</b>,
+        where 'value' is eithar a floating point value between 0.0 
+        and 1.0., or an integer value.
+        <p>Examples: <span><b>/param/volume 0.63</b></span><span><b>/param/polylimit 12</b></span></p>
+      </div>
+    </div>
+
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
-
+        <table><tr><th>Parameter</th><th>Full Name</th></tr>
      )HTML";
-     
-     /*
-                    for (const auto *p : synth->storage.getPatch().param_ptr)
-                {
-                    //TODO: convert to HTML display
-                    //std::cout << p->get_storage_name() << " == " << p->get_full_name() << std::endl;
-                }
-    */
 
-    /*
-    // TODO: if there are none print differently
-    bool foundOne = false;
-    int n = n_global_params + n_scene_params;
-    for (int i = 0; i < n; i++)
+    for (const auto *p : synth->storage.getPatch().param_ptr)
     {
-        if (synth->storage.getPatch().param_ptr[i]->midictrl >= 0)
-        {
-            if (!foundOne)
-            {
-                foundOne = true;
-                htmls << "Individual parameter MIDI mappings<p>\n"
-                      << "<table><tr><th>CC#</th><th>Parameter</th></tr>\n";
-            }
-            htmls << "<tr><td class=\"center\">" << synth->storage.getPatch().param_ptr[i]->midictrl
-                  << "</td><td> " << synth->storage.getPatch().param_ptr[i]->get_full_name()
-                  << "</td></tr>\n";
-        }
+        htmls << "<tr><td class=\"\">" << p->get_storage_name()
+                << "</td><td> " << p->get_full_name()
+                << "</td></tr>\n";
     }
-    if (foundOne)
-    {
-        htmls << "</table>\n";
-    }
-    else
-    {
-        htmls << "No parameter MIDI mappings present!";
-    }
-    */
-
+    htmls << "</table>\n";
     htmls << R"HTML(
 
       </div>
     </div>
-    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
-         Macro Assignments<p>
-         <table><tr><th>CC#</th><th>Macro</th><th>Custom Name</th></tr>
      )HTML";
 
-     /*
-    for (int i = 0; i < n_customcontrollers; ++i)
-    {
-        std::string name = synth->storage.getPatch().CustomControllerLabel[i];
-        auto ccval = synth->storage.controllers[i];
-
-        htmls << "<tr><td class=\"center\">" << (ccval == -1 ? "N/A" : std::to_string(ccval))
-              << "</td><td class=\"center\">" << i + 1 << "</td><td>" << name << "</td></tr>"
-              << std::endl;
-    }
-    */
-
     htmls << R"HTML(
- <!--       </table>
-     </div>   --->
-   </div>
   </body>
 </html>
       )HTML";

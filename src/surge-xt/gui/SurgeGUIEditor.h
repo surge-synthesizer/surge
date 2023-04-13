@@ -805,7 +805,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
 
     #ifdef SURGE_HAS_OSC
-    juce::PopupMenu makeOpSoCoMenu(const juce::Point<int> &where);
+    juce::PopupMenu makeOSCMenu(const juce::Point<int> &where);
     #endif
 
     void setRecommendedAccessibility();

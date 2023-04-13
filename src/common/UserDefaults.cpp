@@ -312,6 +312,14 @@ std::string defaultKeyToString(DefaultKey k)
         r = "dontShowAudioErrorsAgain";
         break;
 
+    case OSCPort:
+        r = "OSCPort";
+        break;
+
+    case StartOSC:
+        r = "startOSC";
+        break;
+
     case nKeys:
         break;
     }
