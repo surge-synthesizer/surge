@@ -108,7 +108,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                                   oddsound_as_mts_main
 // clang-format on
 
-const int ff_revision = 21;
+const int ff_revision = 22;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -176,6 +176,16 @@ enum NoiseColorChannels
 {
     STEREO = 0,
     MONO = 1
+};
+
+enum RingModMode
+{
+    rmm_ring = 0,
+    rmm_cxor = 1,
+    rmm_cxor_f1 = 2,
+    rmm_cxor_f2 = 3,
+    rmm_cxor_f3 = 4,
+    rmm_cxor_f4 = 5
 };
 
 enum lfo_trigger_mode
