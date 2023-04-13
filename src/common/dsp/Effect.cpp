@@ -26,6 +26,7 @@
 #include "chowdsp/SpringReverbEffect.h"
 #include "chowdsp/TapeEffect.h"
 #include "DebugHelpers.h"
+#include "InputBlenderEffect.h"
 
 using namespace std;
 
@@ -89,6 +90,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new MSToolEffect(storage, fxdata, pd);
     case fxt_spring_reverb:
         return new chowdsp::SpringReverbEffect(storage, fxdata, pd);
+    case fxt_input_blender:
+        return new InputBlenderEffect(storage, fxdata, pd);
     default:
         return 0;
     };

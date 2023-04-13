@@ -337,6 +337,7 @@ enum fx_type
     fxt_waveshaper,
     fxt_mstool,
     fxt_spring_reverb,
+    fxt_input_blender,
 
     n_fx_types,
 };

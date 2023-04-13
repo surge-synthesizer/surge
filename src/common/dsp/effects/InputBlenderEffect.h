@@ -22,9 +22,13 @@ class InputBlenderEffect : public Effect
         ibp_channel = 0,
         ibp_audio_level,
         ibp_upstream_level,
+
         ibp_num_params
     };
-    void init_ctrltypes() override;
+    InputBlenderEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     ~InputBlenderEffect() override;
+    void init_ctrltypes() override;
+    void init_default_values() override;
+    void process(float *dataL, float *dataR) override;
 };
 
