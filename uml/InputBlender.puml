@@ -1,0 +1,48 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+title InputBlender
+
+
+class InputBlenderEffect extends Effect {
+    int ibp_channel
+    float ibp_audio_level
+    float ibp_upstream_level
+}
+
+
+class Control {
+    is_discrete_selection()
+}
+
+
+class ct_input_blender_effect_channel extends Control {
+    is_discrete_selection() = true
+    valtype = vt_int
+    val_min = 0
+    val_max = 3
+    val_default = 0
+
+}
+class ct_input_blender_effect_audio_level extends Control {
+    valtype = vt_float;
+    val_min = -80;
+    val_max = 0;
+    val_default = -80.0;
+    can_setvalue_from_string() = true
+}
+class ct_input_blender_effect_upstream_level extends Control {
+    valtype = vt_float;
+    val_min.f = -80;
+    val_max.f = 0;
+    val_default.f = 0;
+}
+
+
+enum ctrltypes {
+    ct_input_blender_effect_channel
+    ct_input_blender_effect_audio_level
+    ct_input_blender_effect_upstream_level
+}
+
+@enduml
