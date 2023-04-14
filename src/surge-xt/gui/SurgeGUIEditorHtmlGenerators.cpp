@@ -411,6 +411,33 @@ th {
     return htmls.str();
 }
 
+// for sorting parameters for display:
+struct oscParamInfo
+{
+    const Parameter *p;
+    const std::string full_name;
+    const int ctrlgroup;
+
+    oscParamInfo(const Parameter *pptr, const std::string pname, const int ctrl_grp)
+        : p(pptr), full_name(pname), ctrlgroup(ctrl_grp)
+    {
+    }
+};
+
+// Sort function for displaying parameters (below)
+bool compareParams(const oscParamInfo *opl, const oscParamInfo *opr)
+{
+    int lcg = opl->p->ctrlgroup;
+    int rcg = opr->p->ctrlgroup;
+    if (lcg == rcg)
+    {
+        std::string ls = opl->p->get_storage_name();
+        std::string rs = opr->p->get_storage_name();
+        return ls.compare(rs) < 0;
+    }
+    return lcg < rcg;
+};
+
 std::string SurgeGUIEditor::parametersToHtml()
 {
     std::ostringstream htmls;
@@ -481,49 +508,32 @@ span {
             </tr>
      )HTML";
 
-    struct OSCParamInfo
-    {
-        Parameter *p;
-        std::string full_name;
-        int control_group;
-    };
-
-    class PtrToLowerOrder
-    {
-      public:
-        bool operator()(const Parameter *p_left, const Parameter *p_right) const
-        {
-            std::string ls = ControlGroupDisplay[p_left->ctrlgroup];
-            std::string rs = ControlGroupDisplay[p_right->ctrlgroup];
-            int cmp = ls.compare(rs);
-            return cmp > 0;
-        }
-    };
-
-    /*
-    std::set<OSCParamInfo, PtrToLowerOrder> sorted;
+    std::vector<oscParamInfo *> sortvector;
     for (const auto *p : synth->storage.getPatch().param_ptr)
     {
-        sorted.insert(new)
-    }
-    */
+        sortvector.push_back(new oscParamInfo(p, p->get_full_name(), p->ctrlgroup));
+    };
 
-    for (const auto *p : synth->storage.getPatch().param_ptr)
+    // for (const auto *p : synth->storage.getPatch().param_ptr)
+    sort(sortvector.begin(), sortvector.end(), compareParams); // Simple sort by ctrlgroup name
+
+    for (auto itr : sortvector)
     {
+
         bool skip = false;
         std::string valueType;
 
-        if (p->ctrlgroup == cg_OSC || p->ctrlgroup == cg_FX)
+        if (itr->ctrlgroup == cg_OSC || itr->ctrlgroup == cg_FX)
         {
             valueType = "(contextual)";
         }
-        else if (p->ctrltype != ct_none)
+        else if (itr->p->ctrltype != ct_none)
         {
-            switch (p->valtype)
+            switch (itr->p->valtype)
             {
             case vt_int:
-                valueType = "integer (" + std::to_string(p->val_min.i) + " to " +
-                            std::to_string(p->val_max.i) + ")";
+                valueType = "integer (" + std::to_string(itr->p->val_min.i) + " to " +
+                            std::to_string(itr->p->val_max.i) + ")";
                 break;
 
             case vt_bool:
@@ -533,15 +543,6 @@ span {
             case vt_float:
             {
                 valueType = "float (0.0 to 1.0)";
-
-                /* These show the "real world" float min/maxs:
-                std::stringstream smin, smax;
-                smin << std::fixed << std::setprecision(1) << p->val_min.f;
-                std::string min = smin.str();
-                smax << std::fixed << std::setprecision(1) << p->val_max.f;
-                std::string max = smax.str();
-                valueType = "float (" + min + " to " + max + ")";
-                */
                 break;
             }
 
@@ -554,9 +555,10 @@ span {
 
         if (!skip)
         {
-            htmls << "<tr><td>" << p->get_storage_name() << "</td><td> " << p->get_full_name()
-                  << "</td><td class=\"center\"> " << ControlGroupDisplay[p->ctrlgroup]
-                  << "</td><td> " << valueType << "</td></tr>\n";
+            htmls << "<tr><td>" << itr->p->get_storage_name() << "</td><td> "
+                  << itr->p->get_full_name() << "</td><td class=\"center\"> "
+                  << ControlGroupDisplay[itr->p->ctrlgroup] << "</td><td> " << valueType
+                  << "</td></tr>\n";
         }
     }
     htmls << "</table>\n";
