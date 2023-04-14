@@ -385,8 +385,6 @@ bool Parameter::is_bipolar() const
     case ct_pitch4oct:
     case ct_modern_trimix:
     case ct_oscspread_bipolar:
-    case ct_input_blender_effect_audio_level:
-    case ct_input_blender_effect_upstream_level:
         res = true;
         break;
     case ct_lfoamplitude:
@@ -434,6 +432,7 @@ bool Parameter::is_discrete_selection() const
     case ct_alias_wave:
     case ct_wstype:
     case ct_mscodec:
+    case ct_input_blender_effect_channel:
         return true;
     default:
         break;
@@ -675,8 +674,24 @@ void Parameter::set_type(int ctrltype)
         val_max.f = 5;
         val_default.f = 1;
         break;
+    case ct_input_blender_effect_channel:
+        valtype = vt_int;
+        val_min.i = 0;
+        val_max.i = 3;
+        val_default.i = 0;
+        break;
     case ct_input_blender_effect_audio_level:
+        valtype = vt_float;
+        val_min.f = -80;
+        val_max.f = 0;
+        val_default.f = -80.0;
+        break;
     case ct_input_blender_effect_upstream_level:
+        valtype = vt_float;
+        val_min.f = -80;
+        val_max.f = 0;
+        val_default.f = 0;
+        break;
     case ct_decibel:
     case ct_decibel_extendable:
     case ct_decibel_deactivatable:
@@ -3856,6 +3871,23 @@ std::string Parameter::get_display(bool external, float ef) const
             }
         }
         break;
+        case ct_input_blender_effect_channel:
+            switch (i)
+            {
+            case 0:
+                txt = "Left";
+                break;
+            case 1:
+                txt = "Right";
+                break ;
+            case 2:
+                txt = "Stereo";
+                break;
+            case 3:
+                txt = "Auxiliary";
+                break;
+            }
+            break;
         default:
             txt = fmt::format("{:d}", i);
             break;
