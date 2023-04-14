@@ -15,8 +15,6 @@
 
 #pragma once
 
-#define SURGE_HAS_OSC
-
 #include "globals.h"
 
 #include "SurgeGUICallbackInterfaces.h"

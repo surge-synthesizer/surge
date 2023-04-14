@@ -15,6 +15,7 @@
 #include "version.h"
 #include "sst/plugininfra/cpufeatures.h"
 #include "globals.h"
+#include "UserDefaults.h"
 
 /*
  * This is a bit odd but - this is an editor concept with the lifetime of the processor
@@ -116,7 +117,17 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     midiKeyboardState.addListener(this);
 
-    initOSC(DEFAULT_OSC_PORT);      // TODO: Connect this to CLI param; otherwise, done from default = start OSC
+#ifdef SURGE_HAS_OSC
+    // OSC (Open Sound Control)
+    bool startOSCNow =
+        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSC, false);
+    if (startOSCNow)
+    {
+        int defaultOSCPort = Surge::Storage::getUserDefaultValue(
+            &(surge->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
+        initOSC(defaultOSCPort);
+    }
+#endif
 
     SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }
@@ -185,8 +196,7 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
 
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
 
-
-/* OSC (Open Sound Countrol) */
+/* OSC (Open Sound Control) */
 bool SurgeSynthProcessor::initOSC(int port) {
     return oscListener.init(this, surge, port);
 }

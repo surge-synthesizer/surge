@@ -313,7 +313,7 @@ std::string defaultKeyToString(DefaultKey k)
         break;
 
     case OSCPort:
-        r = "OSCPort";
+        r = "openSoundControlPort";
         break;
 
     case StartOSC:

@@ -458,23 +458,61 @@ span {
         Construct OSC messages for Surge XT using the exact (case sensitive)
         entry listed under 'Parameter' in the list below.</br>
         The form of the message should be <b>/param/&ltparameter&gt value</b>,
-        where 'value' is eithar a floating point value between 0.0 
-        and 1.0., or an integer value.
-        <p>Examples: <span><b>/param/volume 0.63</b></span><span><b>/param/polylimit 12</b></span></p>
+        where 'value' is either
+        <ul>
+            <li>a floating point value between 0.0 and 1.0</li>
+            <li>an integer value</li>
+            <li>0 or 1 (boolean)</li>
+            <li>contextual: either an in integer or a float, depending on the context</li>
+        </ul>
+        <p>Examples: <span><b>/param/volume 0.63</b></span>
+        <span><b>/param/polylimit 12</b></span><span><b>/param/a_mute_noise 0</b></span></p>
       </div>
     </div>
 
-
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
-        <table><tr><th>Parameter</th><th>Full Name</th></tr>
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>Full Name</th>
+                <th>Control Group</th>
+                <th>Value Type</th>
+            </tr>
      )HTML";
+
+    // ControlGroupDisplay
 
     for (const auto *p : synth->storage.getPatch().param_ptr)
     {
-        htmls << "<tr><td class=\"\">" << p->get_storage_name()
-                << "</td><td> " << p->get_full_name()
-                << "</td></tr>\n";
+        std::string valueType;
+        if (p->ctrlgroup == cg_OSC || p->ctrlgroup == cg_FX)
+        {
+            valueType = "(contextual)";
+        }
+        else
+        {
+            switch (p->valtype)
+            {
+            case vt_int:
+                valueType = "integer";
+                break;
+
+            case vt_bool:
+                valueType = "0 or 1";
+                break;
+
+            case vt_float:
+                valueType = "0.0 to 1.0";
+                break;
+
+            default:
+                break;
+            }
+        }
+        htmls << "<tr><td class=\"\">" << p->get_storage_name() << "</td><td> "
+              << p->get_full_name() << "</td><td> " << ControlGroupDisplay[p->ctrlgroup]
+              << "</td><td> " << valueType << "</td></tr>\n";
     }
     htmls << "</table>\n";
     htmls << R"HTML(

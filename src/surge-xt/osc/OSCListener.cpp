@@ -32,15 +32,19 @@ OSCListener::~OSCListener()
 
 bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> & surge, int port) {
      if (!connect(port)) {
-          std::cout << "Error: could not connect to UDP port " << std::to_string(port) << std::endl;
-          return false;
+#ifdef DEBUG
+         std::cout << "Error: could not connect to UDP port " << std::to_string(port) << std::endl;
+#endif
+         return false;
      } else {
           addListener(this);
           listening = true;
           portnum = port;
           surgePtr = surge.get();
-          std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
           sspPtr = ssp;
+#ifdef DEBUG
+          std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
+#endif
           return true;
      }
 }
@@ -48,7 +52,9 @@ bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynt
 void OSCListener::stopListening() {
      removeListener(this);
      listening = false;
+#ifdef DEBUG
      std::cout << "SurgeOSC: Stopped listening for OSC." << std::endl;
+#endif
 }
 
 void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
@@ -61,7 +67,8 @@ void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
      for (std::string each; std::getline(split, each, '/'); tokens.push_back(each)); // first token will be blank
 
      // Process address tokens
-     if (tokens[1] == "param") {        // e.g. /param/volume 0.5
+     if (tokens[1] == "param")
+     { // e.g. /param/volume 0.5
           std::string storage_addr = tokens[2];
           auto *p = surgePtr->storage.getPatch().parameterFromStorageName(storage_addr);
           if (p == NULL) return;        // Not a valid storage name
@@ -69,12 +76,13 @@ void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
 
           sspPtr->oscQueue.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
 
-          //std::cout << "Parameter storage name:" << p->get_storage_name() << "  ";
-          //std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
+#ifdef DEBUG
+          std::cout << "Parameter storage name:" << p->get_storage_name() << "  ";
+          std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
+#endif
      }
 
-     // DEBUG output
-     /*
+#ifdef DEBUG
      std::cout << "OSCListener: Got OSC msg.; address: " << addr << "  data: ";
      for (juce::OSCArgument msg : message) {
           std::string dataStr = "(none)";
@@ -87,14 +95,15 @@ void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
           std::cout << dataStr << "  ";
      }
      std::cout << std::endl;
-     */
-     // END DEBUG
+#endif
 }
 
 void OSCListener::oscBundleReceived (const juce::OSCBundle &bundle) {
      std::string msg = "";
+#ifdef DEBUG
      std::cout << "OSCListener: Got OSC bundle." << msg << std::endl;
-     
+#endif
+
      for (int i = 0; i < bundle.size(); ++i)
      {
           auto elem = bundle[i];
