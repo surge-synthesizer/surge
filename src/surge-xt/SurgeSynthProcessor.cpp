@@ -482,10 +482,15 @@ void SurgeSynthProcessor::processBlockMidiFromGUI()
 void SurgeSynthProcessor::processBlockOSC()
 {
     oscMsg om;
+
     while (oscQueue.pop(om))
-    { 
-        if (om.type == oscMsg::PARAMETER) {
-            surge->setParameter01(surge->idForParameter(om.param), om.val, true);
+    {
+        float pval = om.val;
+        if (om.type == oscMsg::PARAMETER)
+        {
+            if (om.param->valtype == vt_int)
+                pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
+            surge->setParameter01(surge->idForParameter(om.param), pval, true);
             surge->storage.getPatch().isDirty = true;
         }
     }

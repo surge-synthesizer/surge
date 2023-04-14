@@ -477,42 +477,87 @@ span {
                 <th>Parameter</th>
                 <th>Full Name</th>
                 <th>Control Group</th>
-                <th>Value Type</th>
+                <th>Appropriate Values</th>
             </tr>
      )HTML";
 
-    // ControlGroupDisplay
+    struct OSCParamInfo
+    {
+        Parameter *p;
+        std::string full_name;
+        int control_group;
+    };
+
+    class PtrToLowerOrder
+    {
+      public:
+        bool operator()(const Parameter *p_left, const Parameter *p_right) const
+        {
+            std::string ls = ControlGroupDisplay[p_left->ctrlgroup];
+            std::string rs = ControlGroupDisplay[p_right->ctrlgroup];
+            int cmp = ls.compare(rs);
+            return cmp > 0;
+        }
+    };
+
+    /*
+    std::set<OSCParamInfo, PtrToLowerOrder> sorted;
+    for (const auto *p : synth->storage.getPatch().param_ptr)
+    {
+        sorted.insert(new)
+    }
+    */
 
     for (const auto *p : synth->storage.getPatch().param_ptr)
     {
+        bool skip = false;
         std::string valueType;
+
         if (p->ctrlgroup == cg_OSC || p->ctrlgroup == cg_FX)
         {
             valueType = "(contextual)";
         }
-        else
+        else if (p->ctrltype != ct_none)
         {
             switch (p->valtype)
             {
             case vt_int:
-                valueType = "integer";
+                valueType = "integer (" + std::to_string(p->val_min.i) + " to " +
+                            std::to_string(p->val_max.i) + ")";
                 break;
 
             case vt_bool:
-                valueType = "0 or 1";
+                valueType = "boolean (0 or 1)";
                 break;
 
             case vt_float:
-                valueType = "0.0 to 1.0";
+            {
+                valueType = "float (0.0 to 1.0)";
+
+                /* These show the "real world" float min/maxs:
+                std::stringstream smin, smax;
+                smin << std::fixed << std::setprecision(1) << p->val_min.f;
+                std::string min = smin.str();
+                smax << std::fixed << std::setprecision(1) << p->val_max.f;
+                std::string max = smax.str();
+                valueType = "float (" + min + " to " + max + ")";
+                */
                 break;
+            }
 
             default:
                 break;
             }
         }
-        htmls << "<tr><td class=\"\">" << p->get_storage_name() << "</td><td> "
-              << p->get_full_name() << "</td><td> " << ControlGroupDisplay[p->ctrlgroup]
-              << "</td><td> " << valueType << "</td></tr>\n";
+        else
+            skip = true;
+
+        if (!skip)
+        {
+            htmls << "<tr><td>" << p->get_storage_name() << "</td><td> " << p->get_full_name()
+                  << "</td><td class=\"center\"> " << ControlGroupDisplay[p->ctrlgroup]
+                  << "</td><td> " << valueType << "</td></tr>\n";
+        }
     }
     htmls << "</table>\n";
     htmls << R"HTML(

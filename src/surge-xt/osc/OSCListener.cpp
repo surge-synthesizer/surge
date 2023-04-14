@@ -76,13 +76,13 @@ void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
 
           sspPtr->oscQueue.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
           std::cout << "Parameter storage name:" << p->get_storage_name() << "  ";
           std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
      }
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
      std::cout << "OSCListener: Got OSC msg.; address: " << addr << "  data: ";
      for (juce::OSCArgument msg : message) {
           std::string dataStr = "(none)";
