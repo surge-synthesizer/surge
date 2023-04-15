@@ -34,13 +34,13 @@ void SpringReverbEffect::process(float *dataL, float *dataR)
 {
     proc.setParams(
         {
-            clamp01(*f[spring_reverb_size]),
-            clamp01(*f[spring_reverb_decay]),
-            clamp01(*f[spring_reverb_reflections]),
-            clamp01(*f[spring_reverb_spin]),
-            clamp01(*f[spring_reverb_damping]),
-            clamp01(*f[spring_reverb_chaos]),
-            *f[spring_reverb_knock] > 0.5f,
+            clamp01(*pd_float[spring_reverb_size]),
+            clamp01(*pd_float[spring_reverb_decay]),
+            clamp01(*pd_float[spring_reverb_reflections]),
+            clamp01(*pd_float[spring_reverb_spin]),
+            clamp01(*pd_float[spring_reverb_damping]),
+            clamp01(*pd_float[spring_reverb_chaos]),
+            *pd_float[spring_reverb_knock] > 0.5f,
         },
         BLOCK_SIZE);
 
@@ -49,7 +49,7 @@ void SpringReverbEffect::process(float *dataL, float *dataR)
 
     proc.processBlock(L, R, BLOCK_SIZE);
 
-    mix.set_target_smoothed(clamp01(*f[spring_reverb_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[spring_reverb_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

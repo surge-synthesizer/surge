@@ -42,14 +42,14 @@ void FlangerEffect::process(float *dataL, float *dataR)
 {
     if (!haveProcessed)
     {
-        float v0 = *f[fl_voice_basepitch];
+        float v0 = *pd_float[fl_voice_basepitch];
         if (v0 > 0)
             haveProcessed = true;
         vzeropitch.startValue(v0);
     }
     // So here is a flanger with everything fixed
 
-    float rate = storage->envelope_rate_linear(-limit_range(*f[fl_rate], -8.f, 10.f)) *
+    float rate = storage->envelope_rate_linear(-limit_range(*pd_float[fl_rate], -8.f, 10.f)) *
                  (fxdata->p[fl_rate].temposync ? storage->temposyncratio : 1.f);
 
     for (int c = 0; c < 2; ++c)
@@ -61,11 +61,11 @@ void FlangerEffect::process(float *dataL, float *dataR)
 
     const float oneoverFreq0 = 1.0f / Tunings::MIDI_0_FREQ;
 
-    int mode = *pdata_ival[fl_mode];
-    int mwave = *pdata_ival[fl_wave];
-    float depth_val = limit_range(*f[fl_depth], 0.f, 2.f);
+    int mode = *pd_int[fl_mode];
+    int mwave = *pd_int[fl_wave];
+    float depth_val = limit_range(*pd_float[fl_depth], 0.f, 2.f);
 
-    float v0 = *f[fl_voice_basepitch];
+    float v0 = *pd_float[fl_voice_basepitch];
     vzeropitch.newValue(v0);
     vzeropitch.process();
     v0 = vzeropitch.v;
@@ -183,7 +183,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
             break;
             }
 
-            auto combspace = *f[fl_voice_spacing];
+            auto combspace = *pd_float[fl_voice_spacing];
             float pitch = v0 + combspace * i;
             float nv =
                 storage->samplerate * oneoverFreq0 * storage->note_to_pitch_inv((float)(pitch));
@@ -205,8 +205,8 @@ void FlangerEffect::process(float *dataL, float *dataR)
     float dApprox = rate * storage->samplerate / BLOCK_SIZE * averageDelayBase * depth_val;
 
     depth.newValue(depth_val);
-    mix.newValue(*f[fl_mix]);
-    voices.newValue(limit_range(*f[fl_voices], 1.f, 4.f));
+    mix.newValue(*pd_float[fl_mix]);
+    voices.newValue(limit_range(*pd_float[fl_voices], 1.f, 4.f));
     float feedbackScale = 0.4 * sqrt((limit_range(dApprox, 2.f, 60.f) + 30) / 100.0);
 
     // Feedback adjust based on mode
@@ -238,7 +238,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
         break;
     }
 
-    float fbv = *f[fl_feedback];
+    float fbv = *pd_float[fl_feedback];
     if (fbv > 0)
         ringout_value = storage->samplerate * 32.0;
     else
@@ -257,7 +257,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
         fbv = sqrt(fbv);
 
     feedback.newValue(feedbackScale * fbv);
-    fb_hf_damping.newValue(0.4 * *f[fl_damping]);
+    fb_hf_damping.newValue(0.4 * *pd_float[fl_damping]);
     float combs alignas(16)[2][BLOCK_SIZE];
 
     // Obviously when we implement stereo spread this will be different
@@ -294,7 +294,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
         }
         else
         {
-            float voices = limit_range(*f[fl_voices], 1.f, COMBS_PER_CHANNEL * 1.f);
+            float voices = limit_range(*pd_float[fl_voices], 1.f, COMBS_PER_CHANNEL * 1.f);
             vweights[c][0] = 1.0;
 
             for (int i = 0; i < voices && i < 4; ++i)
@@ -396,7 +396,7 @@ void FlangerEffect::process(float *dataL, float *dataR)
         voices.process();
     }
 
-    width.set_target_smoothed(storage->db_to_linear(*f[fl_width]) / 3);
+    width.set_target_smoothed(storage->db_to_linear(*pd_float[fl_width]) / 3);
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);

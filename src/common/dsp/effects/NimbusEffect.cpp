@@ -116,8 +116,8 @@ void NimbusEffect::process(float *dataL, float *dataR)
         int outpos = 0;
 
         processor->set_playback_mode(
-            (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pdata_ival[nmb_mode]));
-        processor->set_quality(*pdata_ival[nmb_quality]);
+            (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pd_int[nmb_mode]));
+        processor->set_quality(*pd_int[nmb_quality]);
 
         int consume_ptr = 0;
         while (frames_to_go + numStubs >= nimbusprocess_blocksize)
@@ -144,18 +144,18 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
             float den_val, tex_val;
 
-            den_val = (*f[nmb_density] + 1.f) * 0.5;
-            tex_val = (*f[nmb_texture] + 1.f) * 0.5;
+            den_val = (*pd_float[nmb_density] + 1.f) * 0.5;
+            tex_val = (*pd_float[nmb_texture] + 1.f) * 0.5;
 
-            parm->position = clamp01(*f[nmb_position]);
-            parm->size = clamp01(*f[nmb_size]);
+            parm->position = clamp01(*pd_float[nmb_position]);
+            parm->size = clamp01(*pd_float[nmb_size]);
             parm->density = clamp01(den_val);
             parm->texture = clamp01(tex_val);
-            parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
-            parm->stereo_spread = clamp01(*f[nmb_spread]);
-            parm->feedback = clamp01(*f[nmb_feedback]);
-            parm->freeze = *f[nmb_freeze] > 0.5;
-            parm->reverb = clamp01(*f[nmb_reverb]);
+            parm->pitch = limit_range(*pd_float[nmb_pitch], -48.f, 48.f);
+            parm->stereo_spread = clamp01(*pd_float[nmb_spread]);
+            parm->feedback = clamp01(*pd_float[nmb_feedback]);
+            parm->freeze = *pd_float[nmb_freeze] > 0.5;
+            parm->reverb = clamp01(*pd_float[nmb_reverb]);
             parm->dry_wet = 1.f;
 
             parm->trigger = false;     // this is an external granulating source. Skip it
@@ -228,7 +228,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
     }
     resampReadPtr = rp;
 
-    mix.set_target_smoothed(clamp01(*f[nmb_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[nmb_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

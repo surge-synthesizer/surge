@@ -54,10 +54,10 @@ void TapeEffect::process(float *dataL, float *dataR)
 
     if (!fxdata->p[tape_drive].deactivated)
     {
-        auto thd = clamp01(*f[tape_drive]);
-        auto ths = clamp01(*f[tape_saturation]);
-        auto thb = clamp01(*f[tape_bias]);
-        auto tht = clamp1bp(*f[tape_tone]);
+        auto thd = clamp01(*pd_float[tape_drive]);
+        auto ths = clamp01(*pd_float[tape_saturation]);
+        auto thb = clamp01(*pd_float[tape_bias]);
+        auto tht = clamp1bp(*pd_float[tape_tone]);
         const auto hysteresisMode = fxdata->p[tape_drive].deform_type;
 
         hysteresis.set_params(thd, ths, thb);
@@ -72,10 +72,10 @@ void TapeEffect::process(float *dataL, float *dataR)
 
     if (!fxdata->p[tape_speed].deactivated)
     {
-        auto tls = limit_range(*f[tape_speed], 1.0f, 30.0f);
-        auto tlsp = limit_range(*f[tape_spacing], 0.1f, 20.0f);
-        auto tlg = limit_range(*f[tape_gap], 1.0f, 50.0f);
-        auto tlt = limit_range(*f[tape_thickness], 0.1f, 50.0f);
+        auto tls = limit_range(*pd_float[tape_speed], 1.0f, 30.0f);
+        auto tlsp = limit_range(*pd_float[tape_spacing], 0.1f, 20.0f);
+        auto tlg = limit_range(*pd_float[tape_gap], 1.0f, 50.0f);
+        auto tlt = limit_range(*pd_float[tape_thickness], 0.1f, 50.0f);
 
         lossFilter.set_params(tls, tlsp, tlg, tlt);
         lossFilter.process(L, R);
@@ -83,9 +83,9 @@ void TapeEffect::process(float *dataL, float *dataR)
 
     if (!fxdata->p[tape_degrade_depth].deactivated)
     {
-        auto tdd = clamp01(*f[tape_degrade_depth]);
-        auto tda = clamp01(*f[tape_degrade_amount]);
-        auto tdv = clamp01(*f[tape_degrade_variance]);
+        auto tdd = clamp01(*pd_float[tape_degrade_depth]);
+        auto tda = clamp01(*pd_float[tape_degrade_amount]);
+        auto tdv = clamp01(*pd_float[tape_degrade_variance]);
         auto chew_freq = 0.9f - (tda * 0.8f);
         auto chew_depth = tdd * 0.15f;
 
@@ -96,7 +96,7 @@ void TapeEffect::process(float *dataL, float *dataR)
         degrade.process_block(L, R);
     }
 
-    mix.set_target_smoothed(clamp01(*f[tape_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[tape_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

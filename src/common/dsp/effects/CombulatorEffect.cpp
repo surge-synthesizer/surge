@@ -90,28 +90,28 @@ void CombulatorEffect::setvars(bool init)
     {
         if (i == 0)
         {
-            freq[i].newValue(*f[combulator_freq1]);
+            freq[i].newValue(*pd_float[combulator_freq1]);
         }
         else
         {
             if (fxdata->p[combulator_freq1 + i].extend_range)
             {
-                freq[i].newValue(*f[combulator_freq1 + i]);
+                freq[i].newValue(*pd_float[combulator_freq1 + i]);
             }
             else
             {
-                freq[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
+                freq[i].newValue(*pd_float[combulator_freq1] + *pd_float[combulator_freq1 + i]);
             }
         }
 
-        gain[i].newValue(amp_to_linear(limit_range(*f[combulator_gain1 + i], 0.f, 2.f)));
+        gain[i].newValue(amp_to_linear(limit_range(*pd_float[combulator_gain1 + i], 0.f, 2.f)));
     }
 
-    noisemix.newValue(clamp01(*f[combulator_noise_mix]));
-    feedback.newValue(*f[combulator_feedback]);
-    tone.newValue(clamp1bp(*f[combulator_tone]));
-    pan2.newValue(clamp1bp(*f[combulator_pan2]));
-    pan3.newValue(clamp1bp(*f[combulator_pan3]));
+    noisemix.newValue(clamp01(*pd_float[combulator_noise_mix]));
+    feedback.newValue(*pd_float[combulator_feedback]);
+    tone.newValue(clamp1bp(*pd_float[combulator_tone]));
+    pan2.newValue(clamp1bp(*pd_float[combulator_pan2]));
+    pan3.newValue(clamp1bp(*pd_float[combulator_pan3]));
 
     negone.set_target(-1.f);
 
@@ -375,7 +375,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         hp.process_block(L, R);
     }
 
-    auto cm = clamp01(*f[combulator_mix]);
+    auto cm = clamp01(*pd_float[combulator_mix]);
 
     mix.set_target_smoothed(cm);
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);

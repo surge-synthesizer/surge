@@ -43,23 +43,23 @@ void WaveShaperEffect::setvars(bool init)
         lpPost.suspend();
         hpPost.suspend();
 
-        hpPre.coeff_HP(hpPre.calc_omega(*f[ws_prelowcut] / 12.0), 0.707);
+        hpPre.coeff_HP(hpPre.calc_omega(*pd_float[ws_prelowcut] / 12.0), 0.707);
         hpPre.coeff_instantize();
 
-        lpPre.coeff_LP2B(lpPre.calc_omega(*f[ws_prehighcut] / 12.0), 0.707);
+        lpPre.coeff_LP2B(lpPre.calc_omega(*pd_float[ws_prehighcut] / 12.0), 0.707);
         lpPre.coeff_instantize();
 
-        hpPost.coeff_HP(hpPre.calc_omega(*f[ws_postlowcut] / 12.0), 0.707);
+        hpPost.coeff_HP(hpPre.calc_omega(*pd_float[ws_postlowcut] / 12.0), 0.707);
         hpPost.coeff_instantize();
 
-        lpPost.coeff_LP2B(lpPost.calc_omega(*f[ws_posthighcut] / 12.0), 0.707);
+        lpPost.coeff_LP2B(lpPost.calc_omega(*pd_float[ws_posthighcut] / 12.0), 0.707);
         lpPost.coeff_instantize();
 
         mix.instantize();
         boost.instantize();
 
-        drive.newValue(db_to_amp(*f[ws_drive]));
-        bias.newValue(clamp1bp(*f[ws_bias]));
+        drive.newValue(db_to_amp(*pd_float[ws_drive]));
+        bias.newValue(clamp1bp(*pd_float[ws_bias]));
 
         bias.instantize();
         drive.instantize();
@@ -70,8 +70,8 @@ void WaveShaperEffect::setvars(bool init)
 
 void WaveShaperEffect::process(float *dataL, float *dataR)
 {
-    mix.set_target_smoothed(clamp01(*f[ws_mix]));
-    boost.set_target_smoothed(db_to_amp(*f[ws_postboost]));
+    mix.set_target_smoothed(clamp01(*pd_float[ws_mix]));
+    boost.set_target_smoothed(db_to_amp(*pd_float[ws_postboost]));
 
     /*
      * OK so what's all this? Well the network of halfbands and so on
@@ -89,18 +89,18 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
      */
     const auto scalef = 3.f, oscalef = 1.f / 3.f, hbfComp = 2.f;
 
-    auto x = scalef * *f[ws_drive];
+    auto x = scalef * *pd_float[ws_drive];
     auto dnv = limit_range(powf(2.f, x / 18.f), 0.f, 8.f);
     drive.newValue(dnv);
-    bias.newValue(clamp1bp(*f[ws_bias]));
+    bias.newValue(clamp1bp(*pd_float[ws_bias]));
 
     float wetL alignas(16)[BLOCK_SIZE], wetR alignas(16)[BLOCK_SIZE];
     copy_block(dataL, wetL, BLOCK_SIZE_QUAD);
     copy_block(dataR, wetR, BLOCK_SIZE_QUAD);
 
     // Apply the filters
-    hpPre.coeff_HP(hpPre.calc_omega(*f[ws_prelowcut] / 12.0), 0.707);
-    lpPre.coeff_LP2B(lpPre.calc_omega(*f[ws_prehighcut] / 12.0), 0.707);
+    hpPre.coeff_HP(hpPre.calc_omega(*pd_float[ws_prelowcut] / 12.0), 0.707);
+    lpPre.coeff_LP2B(lpPre.calc_omega(*pd_float[ws_prehighcut] / 12.0), 0.707);
 
     if (!fxdata->p[ws_prehighcut].deactivated)
     {
@@ -112,7 +112,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
         hpPre.process_block(wetL, wetR);
     }
 
-    const auto newShape = static_cast<sst::waveshapers::WaveshaperType>(*pdata_ival[ws_shaper]);
+    const auto newShape = static_cast<sst::waveshapers::WaveshaperType>(*pd_int[ws_shaper]);
     if (newShape != lastShape)
     {
         lastShape = newShape;
@@ -166,8 +166,8 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
     copy_block(dataOS[1], wetR, BLOCK_SIZE_QUAD);
 
     // Apply the filters
-    hpPost.coeff_HP(hpPre.calc_omega(*f[ws_postlowcut] / 12.0), 0.707);
-    lpPost.coeff_LP2B(lpPre.calc_omega(*f[ws_posthighcut] / 12.0), 0.707);
+    hpPost.coeff_HP(hpPre.calc_omega(*pd_float[ws_postlowcut] / 12.0), 0.707);
+    lpPost.coeff_LP2B(lpPre.calc_omega(*pd_float[ws_posthighcut] / 12.0), 0.707);
 
     if (!fxdata->p[ws_posthighcut].deactivated)
     {

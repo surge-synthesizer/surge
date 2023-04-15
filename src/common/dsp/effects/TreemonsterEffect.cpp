@@ -39,10 +39,10 @@ void TreemonsterEffect::setvars(bool init)
         lp.suspend();
         hp.suspend();
 
-        hp.coeff_HP(hp.calc_omega(*f[tm_hp] / 12.0), 0.707);
+        hp.coeff_HP(hp.calc_omega(*pd_float[tm_hp] / 12.0), 0.707);
         hp.coeff_instantize();
 
-        lp.coeff_LP2B(lp.calc_omega(*f[tm_lp] / 12.0), 0.707);
+        lp.coeff_LP2B(lp.calc_omega(*pd_float[tm_lp] / 12.0), 0.707);
         lp.coeff_instantize();
 
         oscL.set_rate(0.f);
@@ -80,8 +80,9 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     float tbuf alignas(16)[2][BLOCK_SIZE];
     float envscaledSineWave alignas(16)[2][BLOCK_SIZE];
 
-    auto thres = storage->db_to_linear(limit_range(
-        *f[tm_threshold], fxdata->p[tm_threshold].val_min.f, fxdata->p[tm_threshold].val_max.f));
+    auto thres = storage->db_to_linear(limit_range(*pd_float[tm_threshold],
+                                                   fxdata->p[tm_threshold].val_min.f,
+                                                   fxdata->p[tm_threshold].val_max.f));
 
     // copy dry signal (dataL, dataR) to wet signal (L, R)
     copy_block(dataL, L, BLOCK_SIZE_QUAD);
@@ -95,13 +96,13 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     // apply filters to the pitch detection buffer
     if (!fxdata->p[tm_hp].deactivated)
     {
-        hp.coeff_HP(hp.calc_omega(*f[tm_hp] / 12.0), 0.707);
+        hp.coeff_HP(hp.calc_omega(*pd_float[tm_hp] / 12.0), 0.707);
         hp.process_block(tbuf[0], tbuf[1]);
     }
 
     if (!fxdata->p[tm_lp].deactivated)
     {
-        lp.coeff_LP2B(lp.calc_omega(*f[tm_lp] / 12.0), 0.707);
+        lp.coeff_LP2B(lp.calc_omega(*pd_float[tm_lp] / 12.0), 0.707);
         lp.process_block(tbuf[0], tbuf[1]);
     }
 
@@ -111,7 +112,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
      */
     constexpr float smallest_wavelength = 16.0;
 
-    float qs = clamp01(*f[tm_speed]);
+    float qs = clamp01(*pd_float[tm_speed]);
     qs *= qs * qs * qs;
     float speed = 0.9999 - qs * 0.0999 / 128;
     float numberOfSteps = BLOCK_SIZE * 48000 * storage->samplerate_inv;
@@ -139,7 +140,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
         }
     }
 
-    auto twoToPitch = powf(2.0, *f[tm_pitch] * (1 / 12.f));
+    auto twoToPitch = powf(2.0, *pd_float[tm_pitch] * (1 / 12.f));
     oscL.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[0])) * twoToPitch);
     oscR.set_rate((2.0 * M_PI / std::max(2.f, length_smooth[1])) * twoToPitch);
 
@@ -218,19 +219,19 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
     mul_block(R, dataR, tbuf[1], BLOCK_SIZE_QUAD);
 
     // mix pure pitch tracked sine with ring modulated signal
-    rm.set_target_smoothed(clamp01(*f[tm_ring_mix]));
+    rm.set_target_smoothed(clamp01(*pd_float[tm_ring_mix]));
     rm.fade_2_blocks_to(envscaledSineWave[0], tbuf[0], envscaledSineWave[1], tbuf[1], L, R,
                         BLOCK_SIZE_QUAD);
 
     // scale width
-    width.set_target_smoothed(clamp1bp(*f[tm_width]));
+    width.set_target_smoothed(clamp1bp(*pd_float[tm_width]));
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
     width.multiply_block(S, BLOCK_SIZE_QUAD);
     decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
 
     // main dry-wet mix
-    mix.set_target_smoothed(clamp01(*f[tm_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[tm_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

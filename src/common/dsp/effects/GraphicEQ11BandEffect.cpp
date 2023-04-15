@@ -89,17 +89,17 @@ void GraphicEQ11BandEffect::setvars(bool init)
     }
     else
     {
-        band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.5, *f[geq11_30]);
-        band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.5, *f[geq11_60]);
-        band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.5, *f[geq11_120]);
-        band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.5, *f[geq11_250]);
-        band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.5, *f[geq11_500]);
-        band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.5, *f[geq11_1k]);
-        band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.5, *f[geq11_2k]);
-        band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.5, *f[geq11_4k]);
-        band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.5, *f[geq11_8k]);
-        band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.5, *f[geq11_12k]);
-        band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.5, *f[geq11_16k]);
+        band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.5, *pd_float[geq11_30]);
+        band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.5, *pd_float[geq11_60]);
+        band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.5, *pd_float[geq11_120]);
+        band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.5, *pd_float[geq11_250]);
+        band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.5, *pd_float[geq11_500]);
+        band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.5, *pd_float[geq11_1k]);
+        band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.5, *pd_float[geq11_2k]);
+        band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.5, *pd_float[geq11_4k]);
+        band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.5, *pd_float[geq11_8k]);
+        band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.5, *pd_float[geq11_12k]);
+        band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.5, *pd_float[geq11_16k]);
     }
 }
 
@@ -132,7 +132,7 @@ void GraphicEQ11BandEffect::process(float *dataL, float *dataR)
     if (!fxdata->p[geq11_16k].deactivated)
         band11.process_block(dataL, dataR);
 
-    gain.set_target_smoothed(storage->db_to_linear(*f[geq11_gain]));
+    gain.set_target_smoothed(storage->db_to_linear(*pd_float[geq11_gain]));
     gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
