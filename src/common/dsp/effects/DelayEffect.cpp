@@ -40,7 +40,7 @@ void DelayEffect::setvars(bool init)
         inithadtempo = true;
     }
 
-    auto fbp = *f[dly_feedback];
+    auto fbp = *pd_float[dly_feedback];
     FBsign = false;
 
     if (fxdata->p[dly_feedback].extend_range)
@@ -54,12 +54,12 @@ void DelayEffect::setvars(bool init)
     }
 
     float fb = amp_to_linear(abs(fbp));
-    float cf = amp_to_linear(*f[dly_crossfeed]);
+    float cf = amp_to_linear(*pd_float[dly_crossfeed]);
 
     feedback.set_target_smoothed(fb);
     crossfeed.set_target_smoothed(cf);
 
-    float lforate = storage->envelope_rate_linear(-*f[dly_mod_rate]) *
+    float lforate = storage->envelope_rate_linear(-*pd_float[dly_mod_rate]) *
                     (fxdata->p[dly_mod_rate].temposync ? storage->temposyncratio : 1.f);
     lfophase += lforate;
 
@@ -70,7 +70,7 @@ void DelayEffect::setvars(bool init)
     }
 
     float lfo_increment =
-        (0.00000000001f + powf(2, *f[dly_mod_depth] * (1.f / 12.f)) - 1.f) * BLOCK_SIZE;
+        (0.00000000001f + powf(2, *pd_float[dly_mod_depth] * (1.f / 12.f)) - 1.f) * BLOCK_SIZE;
     // small bias to avoid denormals
 
     const float ca = 0.99f;
@@ -100,11 +100,11 @@ void DelayEffect::setvars(bool init)
         timeL.newValue(
             storage->samplerate *
                 ((fxdata->p[dly_time_left].temposync ? storage->temposyncratio_inv : 1.f) *
-                 storage->note_to_pitch_ignoring_tuning(12 * *f[dly_time_left])) +
+                 storage->note_to_pitch_ignoring_tuning(12 * *pd_float[dly_time_left])) +
             LFOval - FIRoffset);
         timeR.newValue(storage->samplerate *
                            ((fxdata->p[isLinked].temposync ? storage->temposyncratio_inv : 1.f) *
-                            storage->note_to_pitch_ignoring_tuning(12 * *f[isLinked])) -
+                            storage->note_to_pitch_ignoring_tuning(12 * *pd_float[isLinked])) -
                        LFOval - FIRoffset);
     }
 
@@ -122,12 +122,12 @@ void DelayEffect::setvars(bool init)
         ringout = 0;
     }
 
-    mix.set_target_smoothed(*f[dly_mix]);
-    width.set_target_smoothed(storage->db_to_linear(*f[dly_width]));
-    pan.set_target_smoothed(clamp1bp(*f[dly_input_channel]));
+    mix.set_target_smoothed(*pd_float[dly_mix]);
+    width.set_target_smoothed(storage->db_to_linear(*pd_float[dly_width]));
+    pan.set_target_smoothed(clamp1bp(*pd_float[dly_input_channel]));
 
-    lp.coeff_LP2B(lp.calc_omega(*f[dly_highcut] / 12.0), 0.707);
-    hp.coeff_HP(hp.calc_omega(*f[dly_lowcut] / 12.0), 0.707);
+    lp.coeff_LP2B(lp.calc_omega(*pd_float[dly_highcut] / 12.0), 0.707);
+    hp.coeff_HP(hp.calc_omega(*pd_float[dly_lowcut] / 12.0), 0.707);
 
     if (init)
     {

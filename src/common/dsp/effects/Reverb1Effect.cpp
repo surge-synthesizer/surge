@@ -145,11 +145,11 @@ void Reverb1Effect::loadpreset(int id)
     {
         // float r = storage->rand_01();
         // float rbp = storage->rand_pm1();
-        // float a = 256.f * (3000.f * (1.f + rbp * rbp * *f[rev1_variation]))*(1.f + 1.f *
-        // *f[rev1_roomsize]); delay_time[t] = (int)a;
-        delay_time[t] = (int)((float)(2.f * *f[rev1_roomsize]) * delay_time[t]);
+        // float a = 256.f * (3000.f * (1.f + rbp * rbp * *pd_float[rev1_variation]))*(1.f + 1.f *
+        // *pd_float[rev1_roomsize]); delay_time[t] = (int)a;
+        delay_time[t] = (int)((float)(2.f * *pd_float[rev1_roomsize]) * delay_time[t]);
     }
-    lastf[rev1_roomsize] = *f[rev1_roomsize];
+    lastf[rev1_roomsize] = *pd_float[rev1_roomsize];
     update_rtime();
 }
 
@@ -158,13 +158,13 @@ void Reverb1Effect::update_rtime()
     int max_dt = 0;
     for (int t = 0; t < rev_taps; t++)
     {
-        delay_fb[t] = powf(db60, delay_time[t] /
-                                     (256.f * storage->samplerate * powf(2.f, *f[rev1_decaytime])));
+        delay_fb[t] = powf(db60, delay_time[t] / (256.f * storage->samplerate *
+                                                  powf(2.f, *pd_float[rev1_decaytime])));
         max_dt = max(max_dt, delay_time[t]);
     }
-    lastf[rev1_decaytime] = *f[rev1_decaytime];
+    lastf[rev1_decaytime] = *pd_float[rev1_decaytime];
     float t = BLOCK_SIZE_INV *
-              ((float)(max_dt >> 8) + storage->samplerate * powf(2.f, *f[rev1_decaytime]) *
+              ((float)(max_dt >> 8) + storage->samplerate * powf(2.f, *pd_float[rev1_decaytime]) *
                                           2.f); // * 2.f is to get the db120 time
     ringout_time = (int)t;
 }
@@ -175,7 +175,7 @@ void Reverb1Effect::update_rsize()
 
     loadpreset(shape);
 
-    // lastf[rev1_variation] = *f[rev1_variation];
+    // lastf[rev1_variation] = *pd_float[rev1_variation];
     // update_rtime();
 }
 
@@ -183,32 +183,33 @@ void Reverb1Effect::process(float *dataL, float *dataR)
 {
     float wetL alignas(16)[BLOCK_SIZE], wetR alignas(16)[BLOCK_SIZE];
 
-    if (*(pdata_ival[rev1_shape]) != shape)
-        loadpreset(*(pdata_ival[rev1_shape]));
-    if ((b == 0) && (fabs(*f[rev1_roomsize] - lastf[rev1_roomsize]) > 0.001f))
+    if (*(pd_int[rev1_shape]) != shape)
+        loadpreset(*(pd_int[rev1_shape]));
+    if ((b == 0) && (fabs(*pd_float[rev1_roomsize] - lastf[rev1_roomsize]) > 0.001f))
         loadpreset(shape);
-    //	if(fabs(*f[rev1_variation] - lastf[rev1_variation]) > 0.001f) update_rsize();
-    if (fabs(*f[rev1_decaytime] - lastf[rev1_decaytime]) > 0.001f)
+    //	if(fabs(*pd_float[rev1_variation] - lastf[rev1_variation]) > 0.001f) update_rsize();
+    if (fabs(*pd_float[rev1_decaytime] - lastf[rev1_decaytime]) > 0.001f)
         update_rtime();
 
     // do more seldom
     if (b == 0)
     {
-        band1.coeff_peakEQ(band1.calc_omega(*f[rev1_freq1] * (1.f / 12.f)), 2, *f[rev1_gain1]);
-        locut.coeff_HP(locut.calc_omega(*f[rev1_lowcut] * (1.f / 12.f)), 0.5);
-        hicut.coeff_LP2B(hicut.calc_omega(*f[rev1_highcut] * (1.f / 12.f)), 0.5);
+        band1.coeff_peakEQ(band1.calc_omega(*pd_float[rev1_freq1] * (1.f / 12.f)), 2,
+                           *pd_float[rev1_gain1]);
+        locut.coeff_HP(locut.calc_omega(*pd_float[rev1_lowcut] * (1.f / 12.f)), 0.5);
+        hicut.coeff_LP2B(hicut.calc_omega(*pd_float[rev1_highcut] * (1.f / 12.f)), 0.5);
     }
     b = (b + 1) & 31;
 
-    mix.set_target_smoothed(*f[rev1_mix]);
-    width.set_target_smoothed(storage->db_to_linear(*f[rev1_width]));
+    mix.set_target_smoothed(*pd_float[rev1_mix]);
+    width.set_target_smoothed(storage->db_to_linear(*pd_float[rev1_width]));
 
     int pdtime = (int)(float)storage->samplerate *
-                 storage->note_to_pitch_ignoring_tuning(12 * *f[rev1_predelay]) *
+                 storage->note_to_pitch_ignoring_tuning(12 * *pd_float[rev1_predelay]) *
                  (fxdata->p[rev1_predelay].temposync ? storage->temposyncratio_inv : 1.f);
 
     const __m128 one4 = _mm_set1_ps(1.f);
-    float dv = *(f[rev1_damping]);
+    float dv = *(pd_float[rev1_damping]);
 
     dv = limit_range(dv, 0.01f, 0.99f); // this is a simple one-pole damper, w * y[n] + ( 1-w )
                                         // y[n-1] so to be stable has to stay in range
@@ -235,13 +236,13 @@ void Reverb1Effect::process(float *dataL, float *dataR)
             __m128 out_tap4 = _mm_load_ps(&out_tap[t]);
             out_tap4 = _mm_add_ps(_mm_mul_ps(out_tap4, damp4), _mm_mul_ps(new4, damp4m1));
             _mm_store_ps(&out_tap[t], out_tap4);
-            // out_tap[t] = *f[rev1_damping]*out_tap[t] + (1- *f[rev1_damping])*newa;
+            // out_tap[t] = *pd_float[rev1_damping]*out_tap[t] + (1- *pd_float[rev1_damping])*newa;
         }
 
         __m128 fb = _mm_add_ps(_mm_add_ps(_mm_load_ps(out_tap), _mm_load_ps(out_tap + 4)),
                                _mm_add_ps(_mm_load_ps(out_tap + 8), _mm_load_ps(out_tap + 12)));
         fb = sum_ps_to_ss(fb);
-        /*for(int t=0; t<rev_taps; t+=4)
+        /*pd_floator(int t=0; t<rev_taps; t+=4)
         {
                 fb += out_tap[t] + out_tap[t+1] + out_tap[t+2] + out_tap[t+3];
         }*/

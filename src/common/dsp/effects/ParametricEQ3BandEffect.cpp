@@ -62,12 +62,12 @@ void ParametricEQ3BandEffect::setvars(bool init)
     }
     else
     {
-        band1.coeff_peakEQ(band1.calc_omega(*f[eq3_freq1] * (1.f / 12.f)), *f[eq3_bw1],
-                           *f[eq3_gain1]);
-        band2.coeff_peakEQ(band2.calc_omega(*f[eq3_freq2] * (1.f / 12.f)), *f[eq3_bw2],
-                           *f[eq3_gain2]);
-        band3.coeff_peakEQ(band3.calc_omega(*f[eq3_freq3] * (1.f / 12.f)), *f[eq3_bw3],
-                           *f[eq3_gain3]);
+        band1.coeff_peakEQ(band1.calc_omega(*pd_float[eq3_freq1] * (1.f / 12.f)),
+                           *pd_float[eq3_bw1], *pd_float[eq3_gain1]);
+        band2.coeff_peakEQ(band2.calc_omega(*pd_float[eq3_freq2] * (1.f / 12.f)),
+                           *pd_float[eq3_bw2], *pd_float[eq3_gain2]);
+        band3.coeff_peakEQ(band3.calc_omega(*pd_float[eq3_freq3] * (1.f / 12.f)),
+                           *pd_float[eq3_bw3], *pd_float[eq3_gain3]);
     }
 }
 
@@ -87,10 +87,10 @@ void ParametricEQ3BandEffect::process(float *dataL, float *dataR)
     if (!fxdata->p[eq3_gain3].deactivated)
         band3.process_block(L, R);
 
-    gain.set_target_smoothed(storage->db_to_linear(*f[eq3_gain]));
+    gain.set_target_smoothed(storage->db_to_linear(*pd_float[eq3_gain]));
     gain.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
 
-    mix.set_target_smoothed(clamp1bp(*f[eq3_mix]));
+    mix.set_target_smoothed(clamp1bp(*pd_float[eq3_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

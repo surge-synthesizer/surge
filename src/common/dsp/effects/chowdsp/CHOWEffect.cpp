@@ -74,18 +74,18 @@ void CHOWEffect::process(float *dataL, float *dataR)
 
     makeup.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
-    mix.set_target_smoothed(clamp01(*f[chow_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[chow_mix]));
     mix.fade_2_blocks_to(L, dataL, R, dataR, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
 void CHOWEffect::set_params()
 {
-    auto thresh_clamped = limit_range(*f[chow_thresh], fxdata->p[chow_thresh].val_min.f,
+    auto thresh_clamped = limit_range(*pd_float[chow_thresh], fxdata->p[chow_thresh].val_min.f,
                                       fxdata->p[chow_thresh].val_max.f);
     const auto threshGain = storage->db_to_linear(thresh_clamped);
 
     // hand-tuned from several years ago...
-    const auto ratio = limit_range(*f[chow_ratio], fxdata->p[chow_ratio].val_min.f,
+    const auto ratio = limit_range(*pd_float[chow_ratio], fxdata->p[chow_ratio].val_min.f,
                                    fxdata->p[chow_ratio].val_max.f);
     auto makeup_gain =
         storage->db_to_linear((thresh_clamped / 12.f) * ((1.0f / ratio) - 1.0f) - 1.0f);

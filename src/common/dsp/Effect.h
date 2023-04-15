@@ -84,9 +84,9 @@ class alignas(16) Effect
     FxStorage *fxdata;
     pdata *pd;
     int ringout;
-    float *f[n_fx_params];
-    int *pdata_ival[n_fx_params]; // f is not a great choice for a member name, but 'i' would be
-                                  // worse!
+    float *pd_float[n_fx_params];
+    int *pd_int[n_fx_params]; // f is not a great choice for a member name, but 'i' would be
+                              // worse!
     bool hasInvalidated{false};
 };
 
