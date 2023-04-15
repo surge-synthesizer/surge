@@ -467,13 +467,27 @@ td {
 }
 
 div.heading {
-    margin: 10px 0px 2px 8px;
+    margin: 4px 0px 0px 8px;
     width: 100%;
+}
+
+h3 {
+    margin: 0 0 8px 0;
+}
+
+div.outer {
+    font-size: 12pt;
+    margin: 0 0 10pt 0;
+    font-family: Lato;
+    color: #123463;
+    display: flex;
+    flex-wrap: wrap;
 }
 
 div.tablewrap {
     width: 600px;
-    margin: 6px 8px 24px 4px;
+    margin: 0 8px 16px 8px;
+    flex-basis: 40%;
 }
 
 th {
@@ -513,8 +527,8 @@ span {
       </div>
     </div>
 
-    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-      <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
+      <div class="outer">
     )HTML";
 
     std::vector<oscParamInfo *> sortvector;
@@ -547,11 +561,11 @@ span {
 
         if (itr->p->ctrlgroup != currentCtrlGrp)
         {
-            currentCtrlGrp = itr->p->ctrlgroup;
-            if (itr->p->ctrlgroup != endCG)
+            if (currentCtrlGrp != endCG)
             {
                 htmls << "</table></div>";
             }
+            currentCtrlGrp = itr->p->ctrlgroup;
             htmls << "<div class=\"tablewrap\"><div class=\"heading\"><h3>"
                   << "Control Group: " << ControlGroupDisplay[itr->p->ctrlgroup] << "</h3></div>"
                   << R"HTML(
@@ -599,21 +613,18 @@ span {
         {
             htmls << "<tr><td>" << itr->storage_name << "</td><td> " << itr->p->get_full_name()
                   << "</td>"
-                  << "<td>" << valueType << "</td></tr>\n";
+                  << "<td>" << valueType << "</td></tr>";
         }
     }
-    htmls << "</table></div>\n";
-    htmls << R"HTML(
-
-      </div>
-    </div>
-     )HTML";
 
     htmls << R"HTML(
-  </body>
-</html>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
       )HTML";
-
     return htmls.str();
 }
 
