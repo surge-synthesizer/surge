@@ -4,6 +4,7 @@
 #include <set>
 #include "fmt/core.h"
 #include "sst/cpputils.h"
+#include "sst/plugininfra/strnatcmp.h"
 
 namespace Surge
 {
@@ -415,11 +416,13 @@ th {
 struct oscParamInfo
 {
     const Parameter *p;
+    const std::string storage_name;
     const std::string full_name;
     const int ctrlgroup;
 
-    oscParamInfo(const Parameter *pptr, const std::string pname, const int ctrl_grp)
-        : p(pptr), full_name(pname), ctrlgroup(ctrl_grp)
+    oscParamInfo(const Parameter *pptr, const std::string st_name, const std::string fname,
+                 const int ctrl_grp)
+        : p(pptr), storage_name(st_name), full_name(fname), ctrlgroup(ctrl_grp)
     {
     }
 };
@@ -431,9 +434,9 @@ bool compareParams(const oscParamInfo *opl, const oscParamInfo *opr)
     int rcg = opr->p->ctrlgroup;
     if (lcg == rcg)
     {
-        std::string ls = opl->p->get_storage_name();
-        std::string rs = opr->p->get_storage_name();
-        return ls.compare(rs) < 0;
+        std::string ls = opl->storage_name;
+        std::string rs = opr->storage_name;
+        return strnatcasecmp(ls.c_str(), rs.c_str()) < 0;
     }
     return lcg < rcg;
 };
@@ -450,6 +453,8 @@ std::string SurgeGUIEditor::parametersToHtml()
     <style>
 table {
   border-collapse: collapse;
+  width: 100%;
+
 }
 
 td {
@@ -459,6 +464,16 @@ td {
 
 .center {
   text-align: center;
+}
+
+div.heading {
+    margin: 10px 0px 2px 8px;
+    width: 100%;
+}
+
+div.tablewrap {
+    width: 600px;
+    margin: 6px 8px 24px 4px;
 }
 
 th {
@@ -492,6 +507,7 @@ span {
             <li>0 or 1 (boolean)</li>
             <li>contextual: either an in integer or a float, depending on the context</li>
         </ul>
+        Where a parameter is listed as beginning with '*' below, replace the '*' with either 'a' or 'b', depending on which scene you wish to address. E.g., 'a_drift' or 'b_drift'.
         <p>Examples: <span><b>/param/volume 0.63</b></span>
         <span><b>/param/polylimit 12</b></span><span><b>/param/a_mute_noise 0</b></span></p>
       </div>
@@ -499,29 +515,55 @@ span {
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
-        <table>
-            <tr>
-                <th>Parameter</th>
-                <th>Full Name</th>
-                <th>Control Group</th>
-                <th>Appropriate Values</th>
-            </tr>
-     )HTML";
+    )HTML";
 
     std::vector<oscParamInfo *> sortvector;
+    std::string st_str;
+    int currentCtrlGrp = endCG;
+
     for (const auto *p : synth->storage.getPatch().param_ptr)
     {
-        sortvector.push_back(new oscParamInfo(p, p->get_full_name(), p->ctrlgroup));
+        st_str = p->get_storage_name();
+        if (p->get_storage_name()[1] == '_')
+        {
+            if (p->get_storage_name()[0] == 'b')
+                continue; // 'b_...' entries not added to vector
+            else if (p->get_storage_name()[0] == 'a')
+            {
+                st_str[0] = '*';
+            }
+        }
+        sortvector.push_back(new oscParamInfo(p, st_str, p->get_full_name(), p->ctrlgroup));
     };
 
-    // for (const auto *p : synth->storage.getPatch().param_ptr)
-    sort(sortvector.begin(), sortvector.end(), compareParams); // Simple sort by ctrlgroup name
+    // Sort by control group number, storage name (natural sort)
+    sort(sortvector.begin(), sortvector.end(), compareParams);
 
+    // Generate HTML table of parameters
     for (auto itr : sortvector)
     {
-
         bool skip = false;
         std::string valueType;
+
+        if (itr->p->ctrlgroup != currentCtrlGrp)
+        {
+            currentCtrlGrp = itr->p->ctrlgroup;
+            if (itr->p->ctrlgroup != endCG)
+            {
+                htmls << "</table></div>";
+            }
+            htmls << "<div class=\"tablewrap\"><div class=\"heading\"><h3>"
+                  << "Control Group: " << ControlGroupDisplay[itr->p->ctrlgroup] << "</h3></div>"
+                  << R"HTML(
+                
+            <table style="border: 2px solid black;">
+                <tr>
+                    <th>Parameter</th>
+                    <th>Full Name</th>
+                    <th>Appropriate Values</th>
+                </tr>
+        )HTML";
+        }
 
         if (itr->ctrlgroup == cg_OSC || itr->ctrlgroup == cg_FX)
         {
@@ -555,13 +597,12 @@ span {
 
         if (!skip)
         {
-            htmls << "<tr><td>" << itr->p->get_storage_name() << "</td><td> "
-                  << itr->p->get_full_name() << "</td><td class=\"center\"> "
-                  << ControlGroupDisplay[itr->p->ctrlgroup] << "</td><td> " << valueType
-                  << "</td></tr>\n";
+            htmls << "<tr><td>" << itr->storage_name << "</td><td> " << itr->p->get_full_name()
+                  << "</td>"
+                  << "<td>" << valueType << "</td></tr>\n";
         }
     }
-    htmls << "</table>\n";
+    htmls << "</table></div>\n";
     htmls << R"HTML(
 
       </div>
