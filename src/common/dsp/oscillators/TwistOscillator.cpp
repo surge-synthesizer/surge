@@ -27,10 +27,6 @@
 
 #include "samplerate.h"
 
-#if SAMPLERATE_LANCZOS
-#include "LanczosResampler.h"
-#endif
-
 std::string twist_engine_name(int i)
 {
     switch (i)
@@ -277,7 +273,8 @@ TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscda
     : Oscillator(storage, oscdata, localcopy), charFilt(storage)
 {
 #if SAMPLERATE_LANCZOS
-    lancRes = std::make_unique<LanczosResampler>(48000, storage->dsamplerate_os);
+    lancRes = std::make_unique<sst::basic_blocks::dsp::LanczosResampler<BLOCK_SIZE>>(
+        48000, storage->dsamplerate_os);
     srcstate = nullptr;
 #else
     int error;

@@ -16,7 +16,6 @@
 #include "SSEComplex.h"
 #include <complex>
 
-#include "LanczosResampler.h"
 #include "sst/plugininfra/cpufeatures.h"
 
 using namespace Surge::Test;
@@ -904,47 +903,6 @@ TEST_CASE("SSE std::complex", "[dsp]")
             REQUIRE(powV.atIndex(i) == pow(q.atIndex(i), 2.1f));
     }
 }
-
-#if 0
-TEST_CASE("LanczosResampler", "[dsp]")
-{
-    SECTION("Can Interpolate Sine")
-    {
-        LanczosResampler lr(48000, 88100);
-
-        std::cout << lr.inputsRequiredToGenerateOutputs(64) << std::endl;
-        // plot 'lancos_raw.csv' using 1:2 with lines, 'lancos_samp.csv' using 1:2 with lines
-        std::ofstream raw("lancos_raw.csv"), samp("lancos_samp.csv");
-        int points = 2000;
-        double dp = 1.0 / 370;
-        float phase = 0;
-        for (auto i = 0; i < points; ++i)
-        {
-            auto obsS = std::sin(i * dp * 2.0 * M_PI);
-            auto obsR = phase * 2 - 1;
-            phase += dp;
-            if (phase > 1)
-                phase -= 1;
-            auto obs = i > 800 ? obsS : obsR;
-            lr.push(obs);
-
-            raw << i << ", " << obs << "\n";
-        }
-        std::cout << lr.inputsRequiredToGenerateOutputs(64) << std::endl;
-
-        float outBlock[64];
-        int q, gen;
-        while ((gen = lr.populateNext(outBlock, 64)) > 0)
-        {
-            for (int i = 0; i < gen; ++i)
-            {
-                samp << q * 48000.0 / 88100.0 << ", " << outBlock[i] << std::endl;
-                ++q;
-            }
-        }
-    }
-}
-#endif
 
 // When we return to #1514 this is a good starting point
 #if 0
