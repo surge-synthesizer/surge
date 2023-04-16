@@ -428,14 +428,14 @@ struct oscParamInfo
 };
 
 // Sort function for displaying parameters (below)
-bool compareParams(const oscParamInfo *opl, const oscParamInfo *opr)
+bool compareParams(const oscParamInfo opl, const oscParamInfo opr)
 {
-    int lcg = opl->p->ctrlgroup;
-    int rcg = opr->p->ctrlgroup;
+    int lcg = opl.p->ctrlgroup;
+    int rcg = opr.p->ctrlgroup;
     if (lcg == rcg)
     {
-        std::string ls = opl->storage_name;
-        std::string rs = opr->storage_name;
+        std::string ls = opl.storage_name;
+        std::string rs = opr.storage_name;
         return strnatcasecmp(ls.c_str(), rs.c_str()) < 0;
     }
     return lcg < rcg;
@@ -532,7 +532,7 @@ span {
       <div class="outer">
     )HTML";
 
-    std::vector<oscParamInfo *> sortvector;
+    std::vector<oscParamInfo> sortvector;
     std::string st_str;
     int currentCtrlGrp = endCG;
 
@@ -548,11 +548,11 @@ span {
                 st_str[0] = '*';
             }
         }
-        sortvector.push_back(new oscParamInfo(p, st_str, p->get_full_name(), p->ctrlgroup));
+        sortvector.push_back(oscParamInfo(p, st_str, p->get_full_name(), p->ctrlgroup));
     };
 
     // Sort by control group number, storage name (natural sort)
-    sort(sortvector.begin(), sortvector.end(), compareParams);
+    std::sort(sortvector.begin(), sortvector.end(), compareParams);
 
     // Generate HTML table of parameters
     for (auto itr : sortvector)
@@ -560,15 +560,15 @@ span {
         bool skip = false;
         std::string valueType;
 
-        if (itr->p->ctrlgroup != currentCtrlGrp)
+        if (itr.p->ctrlgroup != currentCtrlGrp)
         {
             if (currentCtrlGrp != endCG)
             {
                 htmls << "</table></div>";
             }
-            currentCtrlGrp = itr->p->ctrlgroup;
+            currentCtrlGrp = itr.p->ctrlgroup;
             htmls << "<div class=\"tablewrap\"><div class=\"heading\"><h3>"
-                  << "Control Group: " << ControlGroupDisplay[itr->p->ctrlgroup] << "</h3></div>"
+                  << "Control Group: " << ControlGroupDisplay[itr.p->ctrlgroup] << "</h3></div>"
                   << R"HTML(
                 
             <table style="border: 2px solid black;">
@@ -580,17 +580,17 @@ span {
         )HTML";
         }
 
-        if (itr->ctrlgroup == cg_OSC || itr->ctrlgroup == cg_FX)
+        if (itr.ctrlgroup == cg_OSC || itr.ctrlgroup == cg_FX)
         {
             valueType = "(contextual)";
         }
-        else if (itr->p->ctrltype != ct_none)
+        else if (itr.p->ctrltype != ct_none)
         {
-            switch (itr->p->valtype)
+            switch (itr.p->valtype)
             {
             case vt_int:
-                valueType = "integer (" + std::to_string(itr->p->val_min.i) + " to " +
-                            std::to_string(itr->p->val_max.i) + ")";
+                valueType = "integer (" + std::to_string(itr.p->val_min.i) + " to " +
+                            std::to_string(itr.p->val_max.i) + ")";
                 break;
 
             case vt_bool:
@@ -612,7 +612,7 @@ span {
 
         if (!skip)
         {
-            htmls << "<tr><td>" << itr->storage_name << "</td><td> " << itr->p->get_full_name()
+            htmls << "<tr><td>" << itr.storage_name << "</td><td> " << itr.p->get_full_name()
                   << "</td>"
                   << "<td class=\"center\">" << valueType << "</td></tr>";
         }

@@ -471,7 +471,7 @@ class Parameter
     std::string get_OSC_name();
     void setOSCName(const std::string &s);
     bool hasOSCName{false};
-    std::string oscName{};
+    std::string oscName;
 
     pdata val{}, val_default{}, val_min{}, val_max{};
 

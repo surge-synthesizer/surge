@@ -4794,21 +4794,23 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
          oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC listener"), [this]() {
              int defaultOSCPort = Surge::Storage::getUserDefaultValue(
                  &(this->synth->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
+#ifdef DEBUG
              std::cout << "default osc port: " << defaultOSCPort;
+#endif
              juceEditor->processor.initOSC(defaultOSCPort);
          });
-    }
+   }
 
-    oscSubMenu.addSeparator();
-    bool isChecked = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                         Surge::Storage::StartOSC, false);
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC at startup"), true, isChecked,
-                       [this, isChecked]() {
-                           Surge::Storage::updateUserDefaultValue(
-                               &(synth->storage), Surge::Storage::StartOSC, !isChecked);
-                       });
+   oscSubMenu.addSeparator();
+   bool isChecked = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                        Surge::Storage::StartOSC, false);
+   oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC at startup"), true, isChecked,
+                      [this, isChecked]() {
+                          Surge::Storage::updateUserDefaultValue(
+                              &(synth->storage), Surge::Storage::StartOSC, !isChecked);
+                      });
 
-    return oscSubMenu;
+   return oscSubMenu;
 }
 #endif
 

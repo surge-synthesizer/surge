@@ -1252,12 +1252,12 @@ Parameter *SurgePatch::parameterFromStorageName(std::string stName)
         return nullptr;
     }
 }
-Parameter *SurgePatch::parameterFromOSCName(std::string stName)
+Parameter *SurgePatch::parameterFromOSCName(std::string oscName)
 {
-    auto ot = param_ptr_by_oscname.find(stName);
+    auto ot = param_ptr_by_oscname.find(oscName);
     if (ot != std::end(param_ptr_by_oscname))
         return ot->second;
-    return parameterFromStorageName(stName);
+    return parameterFromStorageName(oscName);
 }
 
 float convert_v11_reso_to_v12_2P(float reso)

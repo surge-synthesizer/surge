@@ -14,7 +14,6 @@
 #include "SurgeStorage.h"
 #include "util/LockFreeStack.h"
 
-#include "stmlib/utils/ring_buffer.h"
 #include "osc/OSCListener.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
@@ -349,7 +348,6 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         oscMsg(Parameter *p, float v) : type(PARAMETER), param(p), val(v) {}
     };
 
-    // LockFreeStack<oscMsg, 4096> oscRingBuf;
     sst::cpputils::SimpleRingBuffer<oscMsg, 4096> oscRingBuf;
 
     Surge::OSC::OSCListener oscListener; 
