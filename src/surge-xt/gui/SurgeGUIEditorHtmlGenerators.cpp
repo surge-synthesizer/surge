@@ -415,20 +415,14 @@ th {
 // for sorting parameters for display:
 struct oscParamInfo
 {
-    const Parameter *p;
-    const std::string storage_name;
-    const std::string full_name;
-    const int ctrlgroup;
-
-    oscParamInfo(const Parameter *pptr, const std::string st_name, const std::string fname,
-                 const int ctrl_grp)
-        : p(pptr), storage_name(st_name), full_name(fname), ctrlgroup(ctrl_grp)
-    {
-    }
+    Parameter *p;
+    std::string storage_name;
+    std::string full_name;
+    int ctrlgroup;
 };
 
 // Sort function for displaying parameters (below)
-bool compareParams(const oscParamInfo opl, const oscParamInfo opr)
+bool compareParams(const oscParamInfo &opl, const oscParamInfo &opr)
 {
     int lcg = opl.p->ctrlgroup;
     int rcg = opr.p->ctrlgroup;
@@ -548,7 +542,7 @@ span {
                 st_str[0] = '*';
             }
         }
-        sortvector.push_back(oscParamInfo(p, st_str, p->get_full_name(), p->ctrlgroup));
+        sortvector.push_back(oscParamInfo{p, st_str, p->get_full_name(), p->ctrlgroup});
     };
 
     // Sort by control group number, storage name (natural sort)
