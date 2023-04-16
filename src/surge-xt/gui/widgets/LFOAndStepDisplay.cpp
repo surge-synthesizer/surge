@@ -1377,10 +1377,16 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
             }
         }
 
-        float dragX, dragY;
-        float dragW = (prec > 4 ? 60 : 40), dragH = (keyModMult ? 22 : 12);
+        g.setFont(skin->fontManager->lfoTypeFont);
+
+        std::string txt = fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, prec);
+
+        int sw = g.getCurrentFont().getStringWidth(txt);
 
         auto sr = steprect[draggedStep];
+
+        float dragX = sr.getRight(), dragY;
+        float dragW = 6 + sw, dragH = (keyModMult ? 22 : 12);
 
         // Draw to the right in the second half of the seq table
         if (draggedStep < n_stepseqsteps / 2)
@@ -1393,6 +1399,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
         }
 
         float yTop;
+
         if (lfodata->unipolar.val.b)
         {
             auto sv = std::max(ss->steps[draggedStep], 0.f);
@@ -1414,7 +1421,9 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
         }
 
         if (dragY < 2)
+        {
             dragY = 2;
+        }
 
         auto labelR = juce::Rectangle<float>(dragX, dragY, dragW, dragH);
 
@@ -1422,12 +1431,9 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
         labelR = labelR.reduced(1, 1);
         fillr(labelR, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Background));
 
-        labelR = labelR.withTrimmedLeft(1).withHeight(10);
-
-        std::string txt = fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, prec);
+        labelR = labelR.withTrimmedLeft(2).withHeight(10);
 
         g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
-        g.setFont(skin->fontManager->lfoTypeFont);
         g.drawText(txt, labelR, juce::Justification::centredLeft);
 
         if (keyModMult > 0)
