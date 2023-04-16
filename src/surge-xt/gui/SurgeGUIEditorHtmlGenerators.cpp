@@ -614,7 +614,7 @@ span {
         {
             htmls << "<tr><td>" << itr->storage_name << "</td><td> " << itr->p->get_full_name()
                   << "</td>"
-                  << "<td>" << valueType << "</td></tr>";
+                  << "<td class=\"center\">" << valueType << "</td></tr>";
         }
     }
 

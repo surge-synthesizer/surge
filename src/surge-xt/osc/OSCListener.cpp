@@ -80,7 +80,7 @@ void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
           }
           if (!message[0].isFloat32()) return;    // Not a valid data value
 
-          sspPtr->oscQueue.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
+          sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
 
 #ifdef DEBUG_VERBOSE
           std::cout << "Parameter OSC name:" << p->get_OSC_name() << "  ";
