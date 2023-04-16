@@ -912,14 +912,16 @@ class SurgePatch
     void load_patch(const void *data, int size, bool preset);
     unsigned int save_patch(void **data);
     Parameter * parameterFromStorageName(std::string stName);
+    Parameter *parameterFromOSCName(std::string stName);
 
     // data
     SurgeSceneStorage scene[n_scenes], morphscene;
     FxStorage fx[n_fx_slots];
     int scene_start[n_scenes], scene_size;
 
-    std::unordered_map<std::string, Parameter*> param_ptr_by_storagename;
-    
+    std::unordered_map<std::string, Parameter *> param_ptr_by_storagename;
+    std::unordered_map<std::string, Parameter *> param_ptr_by_oscname;
+
     // streaming name for splitpoint is splitkey (due to legacy)
     Parameter scene_active, scenemode, splitpoint;
     Parameter volume;

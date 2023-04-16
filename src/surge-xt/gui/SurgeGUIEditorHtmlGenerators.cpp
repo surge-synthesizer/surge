@@ -505,15 +505,15 @@ span {
   <body style="margin: 0pt; background: #CDCED4;">
     <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
       <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-        Surge XT Parameters (addressable by OSC)
+        Surge XT parameters addressable by OSC
       </div>
     </div>
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; font-family: Lato; color: #123463;">
         Construct OSC messages for Surge XT using the exact (case sensitive)
-        entry listed under 'Parameter' in the list below.</br>
-        The form of the message should be <b>/param/&ltparameter&gt value</b>,
+        entry listed in the 'Address' column in the tables below.</br>
+        The form of the message should be <b>/param/&ltaddress&gt value</b>,
         where 'value' is either
         <ul>
             <li>a floating point value between 0.0 and 1.0</li>
@@ -521,7 +521,8 @@ span {
             <li>0 or 1 (boolean)</li>
             <li>contextual: either an in integer or a float, depending on the context</li>
         </ul>
-        Where a parameter is listed as beginning with '*' below, replace the '*' with either 'a' or 'b', depending on which scene you wish to address. E.g., 'a_drift' or 'b_drift'.
+        Where an address is listed as beginning with <b>'*'</b>, replace the <b>'*'</b> with either <b>'a'</b> or <b>'b'</b>,
+        depending on which scene you wish to address. E.g., 'a_drift' or 'b_drift'.
         <p>Examples: <span><b>/param/volume 0.63</b></span>
         <span><b>/param/polylimit 12</b></span><span><b>/param/a_mute_noise 0</b></span></p>
       </div>
@@ -535,14 +536,14 @@ span {
     std::string st_str;
     int currentCtrlGrp = endCG;
 
-    for (const auto *p : synth->storage.getPatch().param_ptr)
+    for (auto *p : synth->storage.getPatch().param_ptr)
     {
-        st_str = p->get_storage_name();
-        if (p->get_storage_name()[1] == '_')
+        st_str = p->get_OSC_name();
+        if (st_str[1] == '_')
         {
-            if (p->get_storage_name()[0] == 'b')
+            if (st_str[0] == 'b')
                 continue; // 'b_...' entries not added to vector
-            else if (p->get_storage_name()[0] == 'a')
+            else if (st_str[0] == 'a')
             {
                 st_str[0] = '*';
             }
@@ -572,8 +573,8 @@ span {
                 
             <table style="border: 2px solid black;">
                 <tr>
-                    <th>Parameter</th>
-                    <th>Full Name</th>
+                    <th>Address</th>
+                    <th>Parameter Name</th>
                     <th>Appropriate Values</th>
                 </tr>
         )HTML";

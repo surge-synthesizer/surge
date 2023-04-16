@@ -634,7 +634,21 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
     // Build table of param_ptr -- storage name
     for (auto *p : param_ptr)
-        param_ptr_by_storagename[p->get_storage_name()] = p;    
+        param_ptr_by_storagename[p->get_storage_name()] = p;
+
+    /* ---- Set any OSC names here  ---- */
+    /* Example of how to set an OSC name:
+    parameterFromStorageName("scene_active")->setOSCName("active_scene");
+    */
+
+    // Build table of param_ptr -- osc name
+    for (auto *p : param_ptr)
+    {
+        if (p->hasOSCName)
+        {
+            param_ptr_by_oscname[p->get_OSC_name()] = p;
+        }
+    }
 
 #if 0
    // DEBUG CODE WHICH WILL DIE
@@ -1226,17 +1240,25 @@ unsigned int SurgePatch::save_patch(void **data)
     return psize;
 }
 
-
 Parameter *SurgePatch::parameterFromStorageName(std::string stName)
 {
     auto it = param_ptr_by_storagename.find(stName);
-    if (it != std::end(param_ptr_by_storagename)) {
+    if (it != std::end(param_ptr_by_storagename))
+    {
         return it->second;
-    } else {
+    }
+    else
+    {
         return nullptr;
     }
 }
-
+Parameter *SurgePatch::parameterFromOSCName(std::string stName)
+{
+    auto ot = param_ptr_by_oscname.find(stName);
+    if (ot != std::end(param_ptr_by_oscname))
+        return ot->second;
+    return parameterFromStorageName(stName);
+}
 
 float convert_v11_reso_to_v12_2P(float reso)
 {

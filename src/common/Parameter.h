@@ -466,6 +466,12 @@ class Parameter
     void create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup, int ctrlgroup_entry,
                          const char *lfoPrefixOverride = nullptr) const;
 
+    // Optional OSC name
+    std::string get_OSC_name();
+    void setOSCName(const std::string &s);
+    bool hasOSCName{false};
+    std::string oscName{};
+
     pdata val{}, val_default{}, val_min{}, val_max{};
 
     // You might be tempted to use a non-fixed-size member here, like a std::string, but

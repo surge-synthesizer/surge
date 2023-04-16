@@ -70,14 +70,21 @@ void OSCListener::oscMessageReceived (const juce::OSCMessage& message) {
      if (tokens[1] == "param")
      { // e.g. /param/volume 0.5
           std::string storage_addr = tokens[2];
-          auto *p = surgePtr->storage.getPatch().parameterFromStorageName(storage_addr);
-          if (p == NULL) return;        // Not a valid storage name
+          auto *p = surgePtr->storage.getPatch().parameterFromOSCName(storage_addr);
+          if (p == NULL)
+          {
+#ifdef DEBUG
+              std::cout << "No parameter with OSC or Storage name of " << storage_addr << std::endl;
+#endif
+              return; // Not a valid storage name
+          }
           if (!message[0].isFloat32()) return;    // Not a valid data value
 
           sspPtr->oscQueue.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
 
 #ifdef DEBUG_VERBOSE
-          std::cout << "Parameter storage name:" << p->get_storage_name() << "  ";
+          std::cout << "Parameter OSC name:" << p->get_OSC_name() << "  ";
+          std::cout << "Parameter Storage name:" << p->get_storage_name() << "  ";
           std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
      }
