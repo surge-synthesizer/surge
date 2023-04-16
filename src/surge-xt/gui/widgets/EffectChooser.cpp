@@ -254,6 +254,13 @@ void EffectChooser::toggleSelectedDeactivation()
     notifyValueChanged();
 }
 
+void EffectChooser::setEffectSlotDeactivation(int slotIdx, bool state)
+{
+    storage->getPatch().isDirty = true;
+    deactivatedBitmask ^= (-(int)state ^ deactivatedBitmask) & (1UL << slotIdx);
+    notifyValueChanged();
+}
+
 void EffectChooser::mouseDoubleClick(const juce::MouseEvent &event)
 {
     if (!event.mods.isPopupMenu() && !hasDragged && currentClicked >= 0)

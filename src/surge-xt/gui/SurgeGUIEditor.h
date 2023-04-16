@@ -802,9 +802,11 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu makeLfoMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
 
-    #ifdef SURGE_HAS_OSC
+#ifdef SURGE_HAS_OSC
     juce::PopupMenu makeOSCMenu(const juce::Point<int> &where);
-    #endif
+#endif
+
+    void makeScopeEntry(juce::PopupMenu &menu);
 
     void setRecommendedAccessibility();
 

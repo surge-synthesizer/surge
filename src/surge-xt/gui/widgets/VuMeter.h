@@ -26,7 +26,9 @@ namespace Surge
 {
 namespace Widgets
 {
-struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
+struct VuMeter : public juce::Component,
+                 public WidgetBaseMixin<VuMeter>,
+                 public LongHoldMixin<VuMeter>
 {
     VuMeter();
     ~VuMeter();
@@ -49,6 +51,8 @@ struct VuMeter : public juce::Component, public WidgetBaseMixin<VuMeter>
     void setType(Surge::ParamConfig::VUType t) { vu_type = t; };
 
     void paint(juce::Graphics &g) override;
+
+    void mouseDown(const juce::MouseEvent &event) override;
 
     bool isAudioActive{true};
     void setIsAudioActive(bool isIn)

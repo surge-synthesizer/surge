@@ -283,3 +283,8 @@ class alignas(16) SurgeVoice
     // MPE special cases
     bool mpeEnabled;
 };
+
+void all_ring_modes_block(float *__restrict src1_l, float *__restrict src2_l,
+                          float *__restrict src1_r, float *__restrict src2_r,
+                          float *__restrict dst_l, float *__restrict dst_r, bool is_wide, int mode,
+                          lipol_ps osclevels, unsigned int nquads);

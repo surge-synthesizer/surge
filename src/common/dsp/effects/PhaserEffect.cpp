@@ -59,7 +59,7 @@ void PhaserEffect::init()
 
 inline void PhaserEffect::init_stages()
 {
-    n_stages = *(pdata_ival[ph_stages]);
+    n_stages = *(pd_int[ph_stages]);
     n_bq_units = n_stages * 2;
 
     if (n_bq_units_initialised < n_bq_units)
@@ -86,27 +86,27 @@ void PhaserEffect::setvars()
 {
     init_stages();
 
-    double rate = storage->envelope_rate_linear(-*f[ph_mod_rate]) *
+    double rate = storage->envelope_rate_linear(-*pd_float[ph_mod_rate]) *
                   (fxdata->p[ph_mod_rate].temposync ? storage->temposyncratio : 1.f);
 
     rate *= (float)slowrate;
 
-    int mwave = *pdata_ival[ph_mod_wave];
-    float depth = limit_range(*f[ph_mod_depth], 0.f, 2.f);
+    int mwave = *pd_int[ph_mod_wave];
+    float depth = limit_range(*pd_float[ph_mod_depth], 0.f, 2.f);
 
     if (fxdata->p[ph_mod_rate].deactivated)
     {
         auto rmin = fxdata->p[ph_mod_rate].val_min.f;
         auto rmax = fxdata->p[ph_mod_rate].val_max.f;
-        auto phase = clamp01((*f[ph_mod_rate] - rmin) / (rmax - rmin));
+        auto phase = clamp01((*pd_float[ph_mod_rate] - rmin) / (rmax - rmin));
 
         modLFOL.pre_process(mwave, 0.f, depth, phase);
-        modLFOR.pre_process(mwave, 0.f, depth, phase + 0.5 * *f[ph_stereo]);
+        modLFOR.pre_process(mwave, 0.f, depth, phase + 0.5 * *pd_float[ph_stereo]);
     }
     else
     {
         modLFOL.pre_process(mwave, rate, depth, 0.f);
-        modLFOR.pre_process(mwave, rate, depth, 0.5 * *f[ph_stereo]);
+        modLFOR.pre_process(mwave, rate, depth, 0.5 * *pd_float[ph_stereo]);
     }
 
     // if stages is set to 1 to indicate we are in legacy mode, use legacy freqs and spans
@@ -115,12 +115,12 @@ void PhaserEffect::setvars()
         // 4 stages in original phaser mode
         for (int i = 0; i < 2; i++)
         {
-            double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + legacy_freq[i] +
+            double omega = biquad[2 * i]->calc_omega(2 * *pd_float[ph_center] + legacy_freq[i] +
                                                      legacy_span[i] * modLFOL.value());
-            biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
-            omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] + legacy_freq[i] +
+            biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *pd_float[ph_sharpness]);
+            omega = biquad[2 * i + 1]->calc_omega(2 * *pd_float[ph_center] + legacy_freq[i] +
                                                   legacy_span[i] * modLFOR.value());
-            biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
+            biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *pd_float[ph_sharpness]);
         }
     }
     else
@@ -128,18 +128,20 @@ void PhaserEffect::setvars()
         for (int i = 0; i < n_stages; i++)
         {
             double center = powf(2, (i + 1.0) * 2 / n_stages);
-            double omega = biquad[2 * i]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center +
-                                                     2.0 / (i + 1) * modLFOL.value());
-            biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
-            omega = biquad[2 * i + 1]->calc_omega(2 * *f[ph_center] + *f[ph_spread] * center +
+            double omega =
+                biquad[2 * i]->calc_omega(2 * *pd_float[ph_center] + *pd_float[ph_spread] * center +
+                                          2.0 / (i + 1) * modLFOL.value());
+            biquad[2 * i]->coeff_APF(omega, 1.0 + 0.8 * *pd_float[ph_sharpness]);
+            omega = biquad[2 * i + 1]->calc_omega(2 * *pd_float[ph_center] +
+                                                  *pd_float[ph_spread] * center +
                                                   (2.0 / (i + 1) * modLFOR.value()));
-            biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *f[ph_sharpness]);
+            biquad[2 * i + 1]->coeff_APF(omega, 1.0 + 0.8 * *pd_float[ph_sharpness]);
         }
     }
 
-    feedback.newValue(0.95f * *f[ph_feedback]);
-    tone.newValue(clamp1bp(*f[ph_tone]));
-    width.set_target_smoothed(storage->db_to_linear(*f[ph_width]));
+    feedback.newValue(0.95f * *pd_float[ph_feedback]);
+    tone.newValue(clamp1bp(*pd_float[ph_tone]));
+    width.set_target_smoothed(storage->db_to_linear(*pd_float[ph_width]));
 
     // lowpass range is from MIDI note 136 down to 57 (~21.1 kHz down to 220 Hz)
     // highpass range is from MIDI note 34 to 136(~61 Hz to ~21.1 kHz)
@@ -204,7 +206,7 @@ void PhaserEffect::process(float *dataL, float *dataR)
     width.multiply_block(S, BLOCK_SIZE_QUAD);
     decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
 
-    mix.set_target_smoothed(clamp01(*f[ph_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[ph_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
@@ -343,7 +345,7 @@ void PhaserEffect::handleStreamingMismatches(int streamingRevision,
 
 int PhaserEffect::get_ringout_decay()
 {
-    auto fb = *f[ph_feedback];
+    auto fb = *pd_float[ph_feedback];
 
     // The ringout is longer at higher feedback. This is just a heuristic based on
     // testing with the patch in #2663. Note that at feedback above 1 (from

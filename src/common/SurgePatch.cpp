@@ -241,7 +241,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                                                ct_oscroute, Surge::Skin::Mixer::route_o3, sc_id,
                                                cg_MIX, 0, false));
         a->push_back(scene[sc].level_ring_12.assign(
-            p_id.next(), id_s++, "level_ring12", "Ring Modulation 1x2 Level", ct_amplitude,
+            p_id.next(), id_s++, "level_ring12", "Ring Modulation 1x2 Level", ct_amplitude_ringmod,
             Surge::Skin::Mixer::level_ring12, sc_id, cg_MIX, 0, true, sceasy));
         a->push_back(scene[sc].mute_ring_12.assign(
             p_id.next(), id_s++, "mute_ring12", "Ring Modulation 1x2 Mute", ct_bool_mute,
@@ -253,7 +253,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             p_id.next(), id_s++, "route_ring12", "Ring Modulation 1x2 Route", ct_oscroute,
             Surge::Skin::Mixer::route_ring12, sc_id, cg_MIX, 0, false));
         a->push_back(scene[sc].level_ring_23.assign(
-            p_id.next(), id_s++, "level_ring23", "Ring Modulation 2x3 Level", ct_amplitude,
+            p_id.next(), id_s++, "level_ring23", "Ring Modulation 2x3 Level", ct_amplitude_ringmod,
             Surge::Skin::Mixer::level_ring23, sc_id, cg_MIX, 0, true, sceasy));
         a->push_back(scene[sc].mute_ring_23.assign(
             p_id.next(), id_s++, "mute_ring23", "Ring Modulation 2x3 Mute", ct_bool_mute,
@@ -2140,6 +2140,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
+    if (revision <= 21)
+    {
+        for (auto sc = 0; sc < n_scenes; ++sc)
+        {
+            scene[sc].level_ring_12.deform_type = 0;
+            scene[sc].level_ring_23.deform_type = 0;
+        }
+    }
+
     // ensure that filter subtype is a valid value
     for (auto &sc : scene)
     {
@@ -2756,6 +2765,26 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         {
                             tes->editMode = val;
                         }
+                    }
+                }
+                {
+                    auto oos = &(dawExtraState.editor.oscilloscopeOverlayState);
+                    auto node = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("oscilloscope_overlay"));
+
+                    if (node)
+                    {
+                        node->QueryIntAttribute("mode", &oos->mode);
+                        node->QueryFloatAttribute("trigger_speed", &oos->trigger_speed);
+                        node->QueryFloatAttribute("trigger_level", &oos->trigger_level);
+                        node->QueryFloatAttribute("time_window", &oos->time_window);
+                        node->QueryFloatAttribute("amp_window", &oos->amp_window);
+                        node->QueryIntAttribute("trigger_type", &oos->trigger_type);
+                        node->QueryBoolAttribute("dc_kill", &oos->dc_kill);
+                        node->QueryBoolAttribute("sync_draw", &oos->sync_draw);
+
+                        node->QueryFloatAttribute("noise_floor", &oos->noise_floor);
+                        node->QueryFloatAttribute("max_db", &oos->max_db);
+                        node->QueryFloatAttribute("decay_rate", &oos->decay_rate);
                     }
                 }
             } // end of editor populated block
@@ -3423,6 +3452,30 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             tunOl.SetAttribute("editMode", dawExtraState.editor.tuningOverlayState.editMode);
             eds.InsertEndChild(tunOl);
         }
+
+        // Add the oscilloscope settings
+        TiXmlElement scope("oscilloscope_overlay");
+        scope.SetAttribute("mode", dawExtraState.editor.oscilloscopeOverlayState.mode);
+        scope.SetDoubleAttribute("trigger_speed",
+                                 dawExtraState.editor.oscilloscopeOverlayState.trigger_speed);
+        scope.SetDoubleAttribute("trigger_level",
+                                 dawExtraState.editor.oscilloscopeOverlayState.trigger_level);
+        scope.SetDoubleAttribute("trigger_limit",
+                                 dawExtraState.editor.oscilloscopeOverlayState.trigger_limit);
+        scope.SetDoubleAttribute("time_window",
+                                 dawExtraState.editor.oscilloscopeOverlayState.time_window);
+        scope.SetDoubleAttribute("amp_window",
+                                 dawExtraState.editor.oscilloscopeOverlayState.amp_window);
+        scope.SetAttribute("trigger_type",
+                           dawExtraState.editor.oscilloscopeOverlayState.trigger_type);
+        scope.SetAttribute("dc_kill", dawExtraState.editor.oscilloscopeOverlayState.dc_kill);
+        scope.SetAttribute("sync_draw", dawExtraState.editor.oscilloscopeOverlayState.sync_draw);
+        scope.SetDoubleAttribute("noise_floor",
+                                 dawExtraState.editor.oscilloscopeOverlayState.noise_floor);
+        scope.SetDoubleAttribute("max_db", dawExtraState.editor.oscilloscopeOverlayState.max_db);
+        scope.SetDoubleAttribute("decay_rate",
+                                 dawExtraState.editor.oscilloscopeOverlayState.decay_rate);
+        eds.InsertEndChild(scope);
 
         dawExtraXML.InsertEndChild(eds);
 

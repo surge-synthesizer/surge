@@ -1899,6 +1899,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
+            vu[0]->setTag(tag_main_vu_meter);
+            vu[0]->addListener(this);
             vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
             vu[0]->setStorage(&(synth->storage));
 
@@ -3128,23 +3130,36 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
             m.addItem(p.name, action);
         }
         bool haveD = false;
-        for (const auto &sc : presetCategories)
+        if (cat.path.empty())
         {
-            if (sc.parentPath == cat.path)
+            // This is a preset in the root
+        }
+        else
+        {
+            for (const auto &sc : presetCategories)
             {
-                if (!haveD)
-                    m.addSeparator();
-                haveD = true;
-                juce::PopupMenu subMenu;
-                recurseCat(subMenu, sc);
-                m.addSubMenu(sc.name, subMenu);
+                if (sc.parentPath == cat.path)
+                {
+                    if (!haveD)
+                        m.addSeparator();
+                    haveD = true;
+                    juce::PopupMenu subMenu;
+                    recurseCat(subMenu, sc);
+                    m.addSubMenu(sc.name, subMenu);
+                }
             }
         }
     };
 
     for (auto tlc : presetCategories)
     {
-        if (tlc.parentPath.empty())
+        if (tlc.path.empty())
+        {
+            // We have presets in the root! Don't recurse forever and put them in the root
+            recurseCat(lfoSubMenu, tlc);
+            lfoSubMenu.addSeparator();
+        }
+        else if (tlc.parentPath.empty())
         {
             juce::PopupMenu sm;
             recurseCat(sm, tlc);
@@ -3564,7 +3579,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 #ifndef SURGE_SKIP_ODDSOUND_MTS
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::UseODDMTS, false);
-    std::string txt = "Use ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Client and Source Features");
+    std::string txt = "Use" + Surge::GUI::toOSCase(" MTS-ESP if available");
 
     tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
@@ -3586,7 +3601,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
     if (tsMode)
     {
-        std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Source");
+        std::string mtxt = "Act as" + Surge::GUI::toOSCase(" MTS-ESP Source");
 
         tuningSubMenu.addItem(mtxt, canMaster || getStorage()->oddsound_mts_active_as_main,
                               getStorage()->oddsound_mts_active_as_main, [this]() {
@@ -4059,18 +4074,6 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
 
     dispDefMenu.addSeparator();
 
-    bool cpumeter = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                        Surge::Storage::ShowCPUUsage, false);
-
-    dispDefMenu.addItem(Surge::GUI::toOSCase("Show CPU Usage in VU Meter"), true, cpumeter,
-                        [this, cpumeter]() {
-                            Surge::Storage::updateUserDefaultValue(
-                                &(this->synth->storage), Surge::Storage::ShowCPUUsage, !cpumeter);
-                            this->frame->repaint();
-                        });
-
-    dispDefMenu.addSeparator();
-
     // Middle C submenu
     auto middleCSubMenu = juce::PopupMenu();
 
@@ -4098,6 +4101,15 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
     dispDefMenu.addSubMenu("Middle C", middleCSubMenu);
 
     return dispDefMenu;
+}
+
+void SurgeGUIEditor::makeScopeEntry(juce::PopupMenu &menu)
+{
+    bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
+
+    Surge::GUI::addMenuWithShortcut(menu, Surge::GUI::toOSCase("Oscilloscope..."),
+                                    showShortcutDescription("Alt + O", u8"\U00002325O"), true,
+                                    showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 }
 
 juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
@@ -4202,15 +4214,11 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
 
-    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Show Virtual Keyboard"),
+    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Virtual Keyboard"),
                                     showShortcutDescription("Alt + K", u8"\U00002325K"), true,
                                     showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
 
-    bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
-
-    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Open Oscilloscope"),
-                                    showShortcutDescription("Alt + O", u8"\U00002325O"), true,
-                                    showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
+    makeScopeEntry(wfMenu);
 
     return wfMenu;
 }
@@ -6733,6 +6741,7 @@ void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
         if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
         {
             synth->enqueueFXOff(fxslot_order[i]);
+            effectChooser->setEffectSlotDeactivation(fxslot_order[i], false);
         }
     }
 }

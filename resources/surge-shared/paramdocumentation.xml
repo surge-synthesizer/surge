@@ -33,6 +33,8 @@
   <special id="waveshaper-analysis" help_url="#waveshaper"/>
   <special id="alias-shape" help_url="#shape"/>
   <special id="action-history" help_url="#action-history"/>
+  <special id="level-meter" help_url="#level-meter"/>
+  <special id="oscilloscope" help_url="#oscilloscope"/>
 
   <!-- Params for CG 0 -->
   <param id="filter.balance" help_url="#filter-controls"/>

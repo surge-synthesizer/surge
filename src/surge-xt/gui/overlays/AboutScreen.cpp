@@ -408,6 +408,12 @@ void AboutScreen::resized()
             "by Émilie Gillet, licensed under MIT license",
             600);
 
+        yp += lblvs;
+
+        addLabel("Oscilloscope code based on s(m)exoscope by Bram @ Smartelectronix, licensed "
+                 "under GNU GPL v3 license",
+                 600);
+
         auto img = associatedBitmapStore->getImage(IDB_ABOUT_LOGOS);
         auto idxes = {0, 4, 3, 6, 1, 2, 5};
 

@@ -70,11 +70,11 @@ void ResonatorEffect::setvars(bool init)
     {
         for (int i = 0; i < 3; ++i)
         {
-            cutoff[i].newValue(
-                fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]));
+            cutoff[i].newValue(fxdata->p[resonator_freq1 + i * 3].get_extended(
+                *pd_float[resonator_freq1 + i * 3]));
             resonance[i].newValue(
-                fxdata->p[resonator_res1 + i * 3].get_extended(*f[resonator_res1 + i * 3]));
-            bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
+                fxdata->p[resonator_res1 + i * 3].get_extended(*pd_float[resonator_res1 + i * 3]));
+            bandGain[i].newValue(amp_to_linear(*pd_float[resonator_gain1 + i * 3]));
         }
     }
 }
@@ -109,7 +109,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
      * and the frequency of the particular band.
      */
     using namespace sst::filters;
-    auto whichModel = *pdata_ival[resonator_mode];
+    auto whichModel = *pd_int[resonator_mode];
     FilterType type;
     FilterSubType subtype = st_Driven;
 
@@ -144,7 +144,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     for (int i = 0; i < 3; ++i)
     {
         auto boundcutoff = limit_range(
-            fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]),
+            fxdata->p[resonator_freq1 + i * 3].get_extended(*pd_float[resonator_freq1 + i * 3]),
             fxdata->p[resonator_freq1 + i * 3].val_min.f,
             fxdata->p[resonator_freq1 + i * 3].val_max.f);
 
@@ -152,18 +152,18 @@ void ResonatorEffect::process(float *dataL, float *dataR)
 
         if (fxdata->p[resonator_res1 + i * 3].extend_range)
         {
-            resval = *f[resonator_res1 + i * 3];
+            resval = *pd_float[resonator_res1 + i * 3];
         }
         else
         {
-            resval =
-                limit_range(*f[resonator_res1 + i * 3], fxdata->p[resonator_res1 + i * 3].val_min.f,
-                            fxdata->p[resonator_res1 + i * 3].val_max.f);
+            resval = limit_range(*pd_float[resonator_res1 + i * 3],
+                                 fxdata->p[resonator_res1 + i * 3].val_min.f,
+                                 fxdata->p[resonator_res1 + i * 3].val_max.f);
         }
 
         cutoff[i].newValue(boundcutoff);
         resonance[i].newValue(resval);
-        bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
+        bandGain[i].newValue(amp_to_linear(*pd_float[resonator_gain1 + i * 3]));
     }
 
     /*
@@ -273,10 +273,10 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
     copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
 
-    gain.set_target_smoothed(db_to_linear(*f[resonator_gain]));
+    gain.set_target_smoothed(db_to_linear(*pd_float[resonator_gain]));
     gain.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
 
-    mix.set_target_smoothed(clamp1bp(*f[resonator_mix]));
+    mix.set_target_smoothed(clamp1bp(*pd_float[resonator_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

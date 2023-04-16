@@ -56,9 +56,9 @@ void ConditionerEffect::init()
 
 void ConditionerEffect::setvars(bool init)
 {
-    band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *f[cond_bass]);
-    band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *f[cond_treble]);
-    hp.coeff_HP(hp.calc_omega(*f[cond_hpwidth] / 12.0), 0.4);
+    band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *pd_float[cond_bass]);
+    band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *pd_float[cond_treble]);
+    hp.coeff_HP(hp.calc_omega(*pd_float[cond_hpwidth] / 12.0), 0.4);
 
     if (init)
     {
@@ -67,8 +67,8 @@ void ConditionerEffect::setvars(bool init)
 
 void ConditionerEffect::process_only_control()
 {
-    float am = 1.0f + 0.9f * *f[cond_attack];
-    float rm = 1.0f + 0.9f * *f[cond_release];
+    float am = 1.0f + 0.9f * *pd_float[cond_attack];
+    float rm = 1.0f + 0.9f * *pd_float[cond_release];
     float attack = 0.001f * am * am;
     float release = 0.0001f * rm * rm;
 
@@ -93,8 +93,8 @@ void ConditionerEffect::process_only_control()
 
 void ConditionerEffect::process(float *dataL, float *dataR)
 {
-    float am = 1.0f + 0.9f * *f[cond_attack];
-    float rm = 1.0f + 0.9f * *f[cond_release];
+    float am = 1.0f + 0.9f * *pd_float[cond_attack];
+    float rm = 1.0f + 0.9f * *pd_float[cond_release];
     float attack = 0.001f * am * am;
     float release = 0.0001f * rm * rm;
 
@@ -116,13 +116,13 @@ void ConditionerEffect::process(float *dataL, float *dataR)
         band2.process_block(dataL, dataR);
     }
 
-    float pregain = storage->db_to_linear(-*f[cond_threshold]);
+    float pregain = storage->db_to_linear(-*pd_float[cond_threshold]);
 
-    ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *f[cond_balance]));
-    ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *f[cond_balance]));
+    ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *pd_float[cond_balance]));
+    ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *pd_float[cond_balance]));
 
-    width.set_target_smoothed(clamp1bp(*f[cond_width]));
-    postamp.set_target_smoothed(storage->db_to_linear(*f[cond_gain]));
+    width.set_target_smoothed(clamp1bp(*pd_float[cond_width]));
+    postamp.set_target_smoothed(storage->db_to_linear(*pd_float[cond_gain]));
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
     encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);

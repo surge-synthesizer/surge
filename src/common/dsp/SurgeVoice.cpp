@@ -830,6 +830,76 @@ void SurgeVoice::sampleRateReset()
         cm.setSampleRateAndBlockSize((float)storage->dsamplerate_os, BLOCK_SIZE_OS);
 }
 
+inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src2_l,
+                                 float *__restrict src1_r, float *__restrict src2_r,
+                                 float *__restrict dst_l, float *__restrict dst_r, bool is_wide,
+                                 int mode, lipol_ps osclevels, unsigned int nquads)
+{
+    if (is_wide)
+    {
+        switch (mode)
+        {
+        case RingModMode::rmm_ring:
+            mul_block(src1_l, src2_l, dst_l, nquads);
+            mul_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor:
+            cxor_block(src1_l, src2_l, dst_l, nquads);
+            cxor_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor_f1:
+            cxor_f1_block(src1_l, src2_l, dst_l, nquads);
+            cxor_f1_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor_f2:
+            cxor_f2_block(src1_l, src2_l, dst_l, nquads);
+            cxor_f2_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor_f3:
+            cxor_f3_block(src1_l, src2_l, dst_l, nquads);
+            cxor_f3_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor_f4:
+            cxor_f4_block(src1_l, src2_l, dst_l, nquads);
+            cxor_f4_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        default:
+            mul_block(src1_l, src2_l, dst_l, nquads);
+            mul_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        }
+        osclevels.multiply_2_blocks(dst_l, dst_r, nquads);
+    }
+    else
+    {
+        switch (mode)
+        {
+        case RingModMode::rmm_ring:
+            mul_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor:
+            cxor_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor_f1:
+            cxor_f1_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor_f2:
+            cxor_f2_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor_f3:
+            cxor_f3_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor_f4:
+            cxor_f4_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        default:
+            mul_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        }
+        osclevels.multiply_block(dst_l, nquads);
+    }
+}
+
 bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 {
     calc_ctrldata<0>(&Q, Qe);
@@ -990,17 +1060,9 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
     if (ring12)
     {
-        if (is_wide)
-        {
-            mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            mul_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
-            osclevels[le_ring12].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
-        }
-        else
-        {
-            mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            osclevels[le_ring12].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
-        }
+        all_ring_modes_block(osc[0]->output, osc[1]->output, osc[0]->outputR, osc[1]->outputR,
+                             tblock, tblockR, is_wide, scene->level_ring_12.deform_type,
+                             osclevels[le_ring12], BLOCK_SIZE_OS_QUAD);
 
         if (route[3] < 2)
         {
@@ -1014,17 +1076,9 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
     if (ring23)
     {
-        if (is_wide)
-        {
-            mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            mul_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
-            osclevels[le_ring23].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
-        }
-        else
-        {
-            mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            osclevels[le_ring23].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
-        }
+        all_ring_modes_block(osc[1]->output, osc[2]->output, osc[1]->outputR, osc[2]->outputR,
+                             tblock, tblockR, is_wide, scene->level_ring_23.deform_type,
+                             osclevels[le_ring23], BLOCK_SIZE_OS_QUAD);
 
         if (route[4] < 2)
         {

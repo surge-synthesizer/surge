@@ -64,6 +64,8 @@ class WaveformDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     struct Parameters
     {
+        // These default values are set as a defensive measure, but in general
+        // these are saved and restored (with defaults) from the DAW state.
         float trigger_speed = 0.5f;              // internal trigger speed, slider
         TriggerType trigger_type = kTriggerFree; // trigger type, selection
         float trigger_level = 0.5f;              // trigger level, slider
@@ -142,6 +144,9 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
     struct Parameters
     {
+        // These default values are set as a defensive measure, but in general
+        // these are saved and restored (with defaults) from the DAW state.
+
         float noise_floor = 0.f; // Noise floor level, bottom of the scope. Min -100. Slider.
         float max_db = 1.f;      // Maximum dB displayed. Slider. Maxes out at 0. Slider.
         float decay_rate = 1.f;  // Rate of decay of existing spectrum data. Slider.
@@ -189,6 +194,7 @@ class SpectrumDisplay : public juce::Component, public Surge::GUI::SkinConsuming
 
 class Oscilloscope : public OverlayComponent,
                      public Surge::GUI::SkinConsumingComponent,
+                     public Surge::GUI::IComponentTagValue::Listener,
                      public Surge::GUI::Hoverable
 {
   public:
@@ -201,7 +207,38 @@ class Oscilloscope : public OverlayComponent,
     void updateDrawing();
     void visibilityChanged() override;
 
+    void valueChanged(GUI::IComponentTagValue *p) override{};
+    int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
+                                   const juce::ModifierKeys &button,
+                                   bool isDoubleClickEvent) override;
+
   private:
+    enum ControlTags
+    {
+        tag_scope_mode = 567898765, // Just to push outside any ID range
+
+        tag_input_l,
+        tag_input_r,
+
+        tag_wf_dc_block,
+        tag_wf_freeze,
+        tag_wf_sync,
+
+        tag_wf_time_scaling,
+        tag_wf_amp_scaling,
+
+        tag_wf_trigger_mode,
+        tag_wf_trigger_level,
+        tag_wf_retrigger_threshold,
+        tag_wf_int_trigger_freq,
+
+        tag_sp_freeze,
+
+        tag_sp_min_level,
+        tag_sp_max_level,
+        tag_sp_decay_rate,
+    };
+
     enum ChannelSelect
     {
         LEFT = 1,
@@ -212,8 +249,8 @@ class Oscilloscope : public OverlayComponent,
 
     enum ScopeMode
     {
-        WAVEFORM = 1,
-        SPECTRUM = 2,
+        WAVEFORM = 0,
+        SPECTRUM = 1,
     };
 
     // Child component for handling the drawing of the background. Done as a separate child instead
@@ -242,22 +279,36 @@ class Oscilloscope : public OverlayComponent,
         WaveformDisplay::Parameters waveform_params_;
     };
 
-    class SpectrumParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    class SpectrumParameters : public juce::Component,
+                               public Surge::GUI::SkinConsumingComponent,
+                               public Surge::GUI::IComponentTagValue::Listener
     {
       public:
-        SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
+        SpectrumParameters(SurgeGUIEditor *e, SurgeStorage *s, Oscilloscope *parent);
 
         std::optional<SpectrumDisplay::Parameters> getParamsIfDirty();
 
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
         void resized() override;
+        void valueChanged(GUI::IComponentTagValue *p) override{};
+        int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
+                                       const juce::ModifierKeys &button,
+                                       bool isDoubleClickEvent) override
+        {
+            if (parent_)
+            {
+                return parent_->controlModifierClicked(pControl, button, isDoubleClickEvent);
+            }
+
+            return 0;
+        }
 
       private:
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
-        juce::Component
-            *parent_; // Saved here so we can provide it to the children at construction time.
+        // Saved here so we can provide it to the children at construction time.
+        Oscilloscope *parent_;
         SpectrumDisplay::Parameters params_;
         bool params_changed_;
         std::mutex params_lock_;
@@ -268,22 +319,36 @@ class Oscilloscope : public OverlayComponent,
         Surge::Widgets::SelfDrawToggleButton freeze_;
     };
 
-    class WaveformParameters : public juce::Component, public Surge::GUI::SkinConsumingComponent
+    class WaveformParameters : public juce::Component,
+                               public Surge::GUI::SkinConsumingComponent,
+                               public Surge::GUI::IComponentTagValue::Listener
     {
       public:
-        WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s, juce::Component *parent);
+        WaveformParameters(SurgeGUIEditor *e, SurgeStorage *s, Oscilloscope *parent);
 
         std::optional<WaveformDisplay::Parameters> getParamsIfDirty();
 
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
         void resized() override;
+        void valueChanged(GUI::IComponentTagValue *p) override{};
+        int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
+                                       const juce::ModifierKeys &button,
+                                       bool isDoubleClickEvent) override
+        {
+            if (parent_)
+            {
+                return parent_->controlModifierClicked(pControl, button, isDoubleClickEvent);
+            }
+
+            return 0;
+        }
 
       private:
         SurgeGUIEditor *editor_;
         SurgeStorage *storage_;
-        juce::Component
-            *parent_; // Saved here so we can provide it to the children at construction time.
+        // Saved here so we can provide it to the children at construction time.
+        Oscilloscope *parent_;
         WaveformDisplay::Parameters params_;
         bool params_changed_;
         std::mutex params_lock_;

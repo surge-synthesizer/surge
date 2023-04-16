@@ -53,8 +53,8 @@ void MSToolEffect::setvars(bool init)
 
     if (init)
     {
-        bandm.coeff_peakEQ(bandm.calc_omega(*f[mstl_freqm] * (1.f / 12.f)), 1, 1.f);
-        bands.coeff_peakEQ(bands.calc_omega(*f[mstl_freqs] * (1.f / 12.f)), 1, 1.f);
+        bandm.coeff_peakEQ(bandm.calc_omega(*pd_float[mstl_freqm] * (1.f / 12.f)), 1, 1.f);
+        bands.coeff_peakEQ(bands.calc_omega(*pd_float[mstl_freqs] * (1.f / 12.f)), 1, 1.f);
 
         hpm.coeff_instantize();
         bandm.coeff_instantize();
@@ -75,12 +75,14 @@ void MSToolEffect::setvars(bool init)
     }
     else
     {
-        hpm.coeff_HP(hpm.calc_omega(*f[mstl_hpm] / 12.0), 0.4);
-        bandm.coeff_peakEQ(bandm.calc_omega(*f[mstl_freqm] * (1.f / 12.f)), 1, *f[mstl_pqm]);
-        lpm.coeff_LP(lpm.calc_omega(*f[mstl_lpm] / 12.0), 0.4);
-        hps.coeff_HP(hps.calc_omega(*f[mstl_hps] / 12.0), 0.4);
-        bands.coeff_peakEQ(bands.calc_omega(*f[mstl_freqs] * (1.f / 12.f)), 1, *f[mstl_pqs]);
-        lps.coeff_LP(lps.calc_omega(*f[mstl_lps] / 12.0), 0.4);
+        hpm.coeff_HP(hpm.calc_omega(*pd_float[mstl_hpm] / 12.0), 0.4);
+        bandm.coeff_peakEQ(bandm.calc_omega(*pd_float[mstl_freqm] * (1.f / 12.f)), 1,
+                           *pd_float[mstl_pqm]);
+        lpm.coeff_LP(lpm.calc_omega(*pd_float[mstl_lpm] / 12.0), 0.4);
+        hps.coeff_HP(hps.calc_omega(*pd_float[mstl_hps] / 12.0), 0.4);
+        bands.coeff_peakEQ(bands.calc_omega(*pd_float[mstl_freqs] * (1.f / 12.f)), 1,
+                           *pd_float[mstl_pqs]);
+        lps.coeff_LP(lps.calc_omega(*pd_float[mstl_lps] / 12.0), 0.4);
     }
 }
 
@@ -88,14 +90,14 @@ void MSToolEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
 
-    ampM.set_target_smoothed(storage->db_to_linear(*f[mstl_mgain]));
-    ampS.set_target_smoothed(storage->db_to_linear(*f[mstl_sgain]));
-    postampL.set_target_smoothed(clamp1bp(1 - *f[mstl_outgain]));
-    postampR.set_target_smoothed(clamp1bp(1 + *f[mstl_outgain]));
+    ampM.set_target_smoothed(storage->db_to_linear(*pd_float[mstl_mgain]));
+    ampS.set_target_smoothed(storage->db_to_linear(*pd_float[mstl_sgain]));
+    postampL.set_target_smoothed(clamp1bp(1 - *pd_float[mstl_outgain]));
+    postampR.set_target_smoothed(clamp1bp(1 + *pd_float[mstl_outgain]));
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
 
-    int io = *(pdata_ival[mstl_matrix]); // (fxdata->p[mstl_matrix].val.i);
+    int io = *(pd_int[mstl_matrix]); // (fxdata->p[mstl_matrix].val.i);
     switch (io)
     {
     case 0:

@@ -53,10 +53,10 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
     }
     else
     {
-        feedback.set_target_smoothed(0.5f * amp_to_linear(*f[ch_feedback]));
-        float rate = storage->envelope_rate_linear(-*f[1]) *
+        feedback.set_target_smoothed(0.5f * amp_to_linear(*pd_float[ch_feedback]));
+        float rate = storage->envelope_rate_linear(-*pd_float[1]) *
                      (fxdata->p[ch_rate].temposync ? storage->temposyncratio : 1.f);
-        float tm = storage->note_to_pitch_ignoring_tuning(12 * *f[0]) *
+        float tm = storage->note_to_pitch_ignoring_tuning(12 * *pd_float[0]) *
                    (fxdata->p[ch_time].temposync ? storage->temposyncratio_inv : 1.f);
         for (int i = 0; i < v; i++)
         {
@@ -65,14 +65,14 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
             if (lfophase[i] > 1)
                 lfophase[i] -= 1;
 
-            float lfoout = (2.f * fabs(2.f * lfophase[i] - 1.f) - 1.f) * *f[ch_depth];
+            float lfoout = (2.f * fabs(2.f * lfophase[i] - 1.f) - 1.f) * *pd_float[ch_depth];
             time[i].newValue(storage->samplerate * tm * (1 + lfoout));
         }
 
-        hp.coeff_HP(hp.calc_omega(*f[ch_lowcut] * (1.f / 12.f)), 0.707);
-        lp.coeff_LP2B(lp.calc_omega(*f[ch_highcut] * (1.f / 12.f)), 0.707);
-        mix.set_target_smoothed(*f[ch_mix]);
-        width.set_target_smoothed(storage->db_to_linear(*f[ch_width]));
+        hp.coeff_HP(hp.calc_omega(*pd_float[ch_lowcut] * (1.f / 12.f)), 0.707);
+        lp.coeff_LP2B(lp.calc_omega(*pd_float[ch_highcut] * (1.f / 12.f)), 0.707);
+        mix.set_target_smoothed(*pd_float[ch_mix]);
+        width.set_target_smoothed(storage->db_to_linear(*pd_float[ch_width]));
     }
 }
 

@@ -105,8 +105,8 @@ Effect::Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     {
         for (int i = 0; i < n_fx_params; i++)
         {
-            f[i] = &pd[fxdata->p[i].id].f;
-            pdata_ival[i] = &pd[fxdata->p[i].id].i;
+            pd_float[i] = &pd[fxdata->p[i].id].f;
+            pd_int[i] = &pd[fxdata->p[i].id].i;
         }
     }
 }

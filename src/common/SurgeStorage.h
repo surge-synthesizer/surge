@@ -108,7 +108,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                                   oddsound_as_mts_main
 // clang-format on
 
-const int ff_revision = 21;
+const int ff_revision = 22;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -176,6 +176,16 @@ enum NoiseColorChannels
 {
     STEREO = 0,
     MONO = 1
+};
+
+enum RingModMode
+{
+    rmm_ring = 0,
+    rmm_cxor = 1,
+    rmm_cxor_f1 = 2,
+    rmm_cxor_f2 = 3,
+    rmm_cxor_f3 = 4,
+    rmm_cxor_f4 = 5
 };
 
 enum lfo_trigger_mode
@@ -846,6 +856,26 @@ struct DAWExtraStateStorage
             int filterInt{0};
         } modulationEditorState;
 
+        struct OscilloscopeOverlayState
+        {
+            int mode = 0; // 0 for waveform, 1 for spectrum.
+
+            // Waveform values.
+            float trigger_speed = 0.5f;
+            float trigger_level = 0.5f;
+            float trigger_limit = 0.5f;
+            float time_window = 0.5f;
+            float amp_window = 0.5f;
+            int trigger_type = 0;
+            bool dc_kill = false;
+            bool sync_draw = false;
+
+            // Spectrum values.
+            float noise_floor = 0.f;
+            float max_db = 1.f;
+            float decay_rate = 1.f;
+        } oscilloscopeOverlayState;
+
         struct TuningOverlayState
         {
             int editMode = 0;
@@ -1099,7 +1129,7 @@ class alignas(16) SurgeStorage
         AUDIO_CONFIGURATION = 2,
     };
     void reportError(const std::string &msg, const std::string &title,
-                     const ErrorType errorType = GENERAL_ERROR);
+                     const ErrorType errorType = GENERAL_ERROR, bool reportToStdout = true);
     struct ErrorListener
     {
         // This can be called from any thread, beware! But it is called only

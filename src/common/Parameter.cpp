@@ -340,6 +340,7 @@ bool Parameter::has_deformoptions() const
     case ct_tape_drive:
     case ct_dly_fb_clippingmodes:
     case ct_noise_color:
+    case ct_amplitude_ringmod:
         return true;
     default:
         break;
@@ -980,6 +981,7 @@ void Parameter::set_type(int ctrltype)
     case ct_amplitude:
     case ct_amplitude_clipper:
     case ct_lfoamplitude:
+    case ct_amplitude_ringmod:
         val_min.f = 0;
         val_max.f = 1;
         valtype = vt_float;
@@ -1511,6 +1513,7 @@ void Parameter::set_type(int ctrltype)
     case ct_amplitude:
     case ct_amplitude_clipper:
     case ct_sendlevel:
+    case ct_amplitude_ringmod:
         displayType = Decibel;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "dB");
         break;
@@ -1724,6 +1727,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_amplitude:
         case ct_amplitude_clipper:
         case ct_sendlevel:
+        case ct_amplitude_ringmod:
         {
             if (val.f != 0)
             {
@@ -4079,6 +4083,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_syncpitch:
     case ct_amplitude:
     case ct_amplitude_clipper:
+    case ct_amplitude_ringmod:
     case ct_decibel:
     case ct_decibel_narrow:
     case ct_decibel_narrow_deactivatable:

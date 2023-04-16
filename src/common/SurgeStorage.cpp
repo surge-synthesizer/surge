@@ -1085,8 +1085,7 @@ void SurgeStorage::perform_queued_wtloads()
             }
             else if (patch.scene[sc].osc[o].wt.queue_filename[0])
             {
-                if (!(patch.scene[sc].osc[o].type.val.i == ot_wavetable ||
-                      patch.scene[sc].osc[o].type.val.i == ot_window))
+                if (!(uses_wavetabledata(patch.scene[sc].osc[o].type.val.i)))
                 {
                     patch.scene[sc].osc[o].queue_type = ot_wavetable;
                 }
@@ -2581,9 +2580,12 @@ bool SurgeStorage::isStandardTuningAndHasNoToggle()
 void SurgeStorage::resetTuningToggle() { isToggledToCache = false; }
 
 void SurgeStorage::reportError(const std::string &msg, const std::string &title,
-                               const ErrorType errorType)
+                               const ErrorType errorType, bool reportToStdout)
 {
-    std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;
+    if (reportToStdout)
+    {
+        std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;
+    }
     if (errorListeners.empty())
     {
         std::lock_guard<std::mutex> g(preListenerErrorMutex);

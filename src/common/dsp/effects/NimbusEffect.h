@@ -79,7 +79,7 @@ class NimbusEffect : public Effect
 
     SRC_STATE_tag *surgeSR_to_euroSR, *euroSR_to_surgeSR;
 
-    static constexpr int raw_out_sz = BLOCK_SIZE_OS << 4; // power of 2 pls
+    static constexpr int raw_out_sz = BLOCK_SIZE_OS << 5; // power of 2 pls
     float resampled_output[raw_out_sz][2];                // at sr
     size_t resampReadPtr = 0, resampWritePtr = 1;         // see comment in init
 

@@ -1216,13 +1216,9 @@ bool OscillatorWaveformDisplay::isCustomEditAccessible() const
 
 bool OscillatorWaveformDisplay::supportsCustomEditor()
 {
-    if (oscdata->type.val.i == ot_alias &&
-        oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
-    {
-        return true;
-    }
-
-    if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
+    if ((oscdata->type.val.i == ot_alias &&
+         oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive) ||
+        uses_wavetabledata(oscdata->type.val.i))
     {
         return true;
     }
@@ -1257,18 +1253,16 @@ struct WaveTable3DEditor : public juce::Component,
         auto wtlockguard = std::lock_guard<std::mutex>(parent->storage->waveTableDataMutex);
         auto &wt = oscdata->wt;
         auto pos = -1.f;
-
         bool off = false;
-        switch (oscdata->type.val.i)
+
+        if (uses_wavetabledata(oscdata->type.val.i))
         {
-        case ot_wavetable:
-        case ot_window:
             pos = oscdata->p[0].val.f;
             off = oscdata->p[0].extend_range;
-            break;
-        default:
+        }
+        else
+        {
             pos = 0.f;
-            break;
         };
 
         auto tpos = pos * (wt.n_tables - off);
@@ -1898,7 +1892,7 @@ void OscillatorWaveformDisplay::showCustomEditor()
         customEditor = std::move(ed);
     }
 
-    if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
+    if (uses_wavetabledata(oscdata->type.val.i))
     {
         auto ed = std::make_unique<WaveTable3DEditor>(this, storage, oscdata, sge);
         ed->setSkin(skin, associatedBitmapStore);
@@ -1967,7 +1961,7 @@ void OscillatorWaveformDisplay::drawEditorBox(juce::Graphics &g, const std::stri
     int fontsize = 9;
     bool makeTransparent = false;
 
-    if (oscdata->type.val.i == ot_window || oscdata->type.val.i == ot_wavetable)
+    if (uses_wavetabledata(oscdata->type.val.i))
     {
         auto wtr = getLocalBounds().withTrimmedBottom(wtbheight).toFloat();
 

@@ -465,7 +465,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
     // In these cases just move along with success. RMB does nothing on these switches
     if (tag == tag_mp_jogwaveshape || tag == tag_mp_jogfx || tag == tag_mp_category ||
-        tag == tag_mp_patch || tag == tag_store || tag == tag_action_undo || tag == tag_action_redo)
+        tag == tag_mp_patch || tag == tag_store || tag == tag_action_undo ||
+        tag == tag_action_redo || tag == tag_main_vu_meter)
     {
         juce::PopupMenu contextMenu;
         std::string hu, txt;
@@ -497,6 +498,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             hu = helpURLForSpecial("save-dialog");
             txt = "Patch Save";
             break;
+        case tag_main_vu_meter:
+            hu = helpURLForSpecial("level-meter");
+            txt = "Level Meter";
+            break;
         default:
             break;
         }
@@ -508,6 +513,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
         auto hment = tcomp->getTitle();
 
         contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
+
+        if (tag == tag_main_vu_meter)
+        {
+            contextMenu.addSeparator();
+
+            makeScopeEntry(contextMenu);
+
+            bool cpumeter = Surge::Storage::getUserDefaultValue(
+                &(synth->storage), Surge::Storage::ShowCPUUsage, false);
+
+            contextMenu.addItem(Surge::GUI::toOSCase("Show CPU Usage"), true, cpumeter,
+                                [this, cpumeter]() {
+                                    Surge::Storage::updateUserDefaultValue(
+                                        &(synth->storage), Surge::Storage::ShowCPUUsage, !cpumeter);
+                                    frame->repaint();
+                                });
+        }
 
 #ifdef DEBUG
         if (tag == tag_action_undo || tag == tag_action_redo)
@@ -2328,6 +2350,63 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 });
                         }
                     }
+                    break;
+                    case ct_amplitude_ringmod:
+                    {
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            contextMenu, "COMBINATOR MODE");
+
+                        contextMenu.addItem(
+                            "Ringmod (classic)", true, dt == RingModMode::rmm_ring, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = RingModMode::rmm_ring,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem("CXOR", true, dt == RingModMode::rmm_cxor, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+
+                            p->deform_type = RingModMode::rmm_cxor,
+                            synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem(
+                            "CXOR func1", true, dt == RingModMode::rmm_cxor_f1, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = RingModMode::rmm_cxor_f1,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR func2", true, dt == RingModMode::rmm_cxor_f2, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = RingModMode::rmm_cxor_f2,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR func3", true, dt == RingModMode::rmm_cxor_f3, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = RingModMode::rmm_cxor_f3,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR func4", true, dt == RingModMode::rmm_cxor_f4, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = RingModMode::rmm_cxor_f4,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                    }
                     default:
                     {
                         break;
@@ -3155,19 +3234,19 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     else
                         mod_editor = false;
                     queue_refresh = true;
-                    refresh_mod();
+                    needsModUpdate = true;
                     break;
                 case 1:
                     modsource = newsource;
                     modsource_index = newindex;
                     mod_editor = true;
-                    refresh_mod();
+                    needsModUpdate = true;
                     break;
                 case 2:
                     modsource = newsource;
                     modsource_index = newindex;
                     mod_editor = false;
-                    refresh_mod();
+                    needsModUpdate = true;
                     break;
                 };
             }
