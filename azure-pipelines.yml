@@ -63,14 +63,6 @@ jobs:
           cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
           cmakeTarget: "code-quality-pipeline-checks"
           cmakeConfig: "Debug"
-        linux-clang-juce-lv2:
-          imageName: 'ubuntu-20.04'
-          isLinux: True
-          aptGetExtras: "clang"
-          needsLV2: True
-          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=$PWD/libs/JUCE-lv2"
-          cmakeTarget: "surge-xt_LV2"
-          cmakeConfig: "Debug"
         linux-juce-python-targets:
           imageName: 'ubuntu-22.04'
           isLinux: True
@@ -155,18 +147,6 @@ jobs:
         displayName: linux - run apt-get
 
       - bash: |
-          set -e
-          cd libs
-          sudo apt-get install -y lv2-dev
-          git clone --depth 1 --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
-          cd JUCE-lv2
-          git checkout lv2
-
-          cd ..
-        displayName: linux - grab LV2 JUCE
-        condition: variables.needsLV2
-
-      - bash: |
           sudo xcode-select -s /Applications/Xcode_13.4.1.app
         displayName: Select XCode 13.4.1
         condition: variables.isMac
@@ -180,15 +160,6 @@ jobs:
           set -e
           cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
         displayName: all - build with cmake
-        condition: not(variables.needsLV2)
-
-      - bash: |
-          set -e
-
-          export SURGE_DATA_HOME=`pwd`/resources/data
-          cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
-        displayName: all - build with cmake
-        condition: variables.needsLV2
 
 
         #- bash: |

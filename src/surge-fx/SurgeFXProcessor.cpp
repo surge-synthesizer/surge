@@ -13,6 +13,12 @@
 #include "DebugHelpers.h"
 #include "UserDefaults.h"
 
+#if LINUX
+// getCurrentPosition is deprecated in J7
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 //==============================================================================
 SurgefxAudioProcessor::SurgefxAudioProcessor()
     : AudioProcessor(BusesProperties()
