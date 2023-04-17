@@ -680,18 +680,6 @@ void Parameter::set_type(int ctrltype)
         val_max.i = 3;
         val_default.i = 0;
         break;
-    case ct_input_blender_effect_audio_level:
-        valtype = vt_float;
-        val_min.f = -80;
-        val_max.f = 0;
-        val_default.f = -80.0;
-        break;
-    case ct_input_blender_effect_upstream_level:
-        valtype = vt_float;
-        val_min.f = -80;
-        val_max.f = 0;
-        val_default.f = 0;
-        break;
     case ct_decibel:
     case ct_decibel_extendable:
     case ct_decibel_deactivatable:
@@ -4192,8 +4180,6 @@ bool Parameter::can_setvalue_from_string() const
     case ct_tape_microns:
     case ct_tape_speed:
     case ct_spring_decay:
-    case ct_input_blender_effect_audio_level:
-    case ct_input_blender_effect_upstream_level:
     {
         return true;
     }
