@@ -279,7 +279,6 @@ add_library(${PROJECT_NAME}
   dsp/oscillators/WindowOscillator.h
   dsp/utilities/DSPUtils.cpp
   dsp/utilities/DSPUtils.h
-  dsp/utilities/FastMath.h
   dsp/utilities/SSEComplex.h
   dsp/utilities/SSESincDelayLine.h
   dsp/vembertech/basic_dsp.cpp
