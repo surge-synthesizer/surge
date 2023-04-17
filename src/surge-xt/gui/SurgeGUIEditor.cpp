@@ -2972,7 +2972,7 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     auto midiSubMenu = makeMidiMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("MIDI Settings"), midiSubMenu);
 
-#ifdef SURGE_HAS_OSC
+#if SURGE_HAS_OSC
     auto oscSubMenu = makeOSCMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("Open Sound Control"), oscSubMenu);
 #endif
@@ -4746,7 +4746,7 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
     return midiSubMenu;
 }
 
-#ifdef SURGE_HAS_OSC
+#if SURGE_HAS_OSC
 
 void SurgeGUIEditor::initOSCError(int port)
 {

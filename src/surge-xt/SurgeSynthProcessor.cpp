@@ -117,7 +117,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     midiKeyboardState.addListener(this);
 
-#ifdef SURGE_HAS_OSC
+#if SURGE_HAS_OSC
     // OSC (Open Sound Control)
     bool startOSCNow =
         Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSC, false);
