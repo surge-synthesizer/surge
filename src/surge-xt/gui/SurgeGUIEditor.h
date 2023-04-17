@@ -254,6 +254,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int lastTSNum = 0, lastTSDen = 0;
     int lastOverlayRefresh = 0;
     void adjustSize(float &width, float &height) const;
+    void initOSCError(int port);
 
     struct patchdata
     {
@@ -347,6 +348,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
     std::string midiMappingToHtml();
+    std::string parametersToHtml();
 
     std::string patchToHtml(bool includeDefaults = false);
 
@@ -800,6 +802,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu makeDevMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeLfoMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
+
+#if SURGE_HAS_OSC
+    juce::PopupMenu makeOSCMenu(const juce::Point<int> &where);
+#endif
 
     void makeScopeEntry(juce::PopupMenu &menu);
 

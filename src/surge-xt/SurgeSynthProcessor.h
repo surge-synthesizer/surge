@@ -14,6 +14,8 @@
 #include "SurgeStorage.h"
 #include "util/LockFreeStack.h"
 
+#include "osc/OSCListener.h"
+
 #include "juce_audio_processors/juce_audio_processors.h"
 
 #if HAS_CLAP_JUCE_EXTENSIONS
@@ -295,6 +297,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     void processBlockPlayhead();
     void processBlockMidiFromGUI();
+    void processBlockOSC();
     void processBlockPostFunction();
 
     void applyMidi(const juce::MidiMessageMetadata &);
@@ -327,6 +330,27 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
                       float velocity) override;
     void handleNoteOff(juce::MidiKeyboardState *source, int midiChannel, int midiNoteNumber,
                        float velocity) override;
+
+    //==============================================================================
+    // Open Sound Control
+    struct oscMsg
+    {
+        enum Type
+        {
+            PARAMETER,
+            SET_TUNING
+        } type{PARAMETER};
+        Parameter *param;
+        float val{0.0};
+        std::string str;
+
+        oscMsg() {}
+        oscMsg(Parameter *p, float v) : type(PARAMETER), param(p), val(v) {}
+    };
+
+    sst::cpputils::SimpleRingBuffer<oscMsg, 4096> oscRingBuf;
+
+    Surge::OSC::OSCListener oscListener;
 
     //==============================================================================
     const juce::String getName() const override;
@@ -362,6 +386,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void reset() override;
 
     bool getPluginHasMainInput() const override { return false; }
+
+    bool initOSC(int port);
+    bool changeOSCPort(int newport);
 
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool isInputMain(int index) override { return false; }

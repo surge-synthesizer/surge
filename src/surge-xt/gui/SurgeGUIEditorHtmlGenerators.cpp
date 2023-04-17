@@ -4,6 +4,7 @@
 #include <set>
 #include "fmt/core.h"
 #include "sst/cpputils.h"
+#include "sst/plugininfra/strnatcmp.h"
 
 namespace Surge
 {
@@ -408,6 +409,217 @@ th {
 </html>
       )HTML";
 
+    return htmls.str();
+}
+
+// for sorting parameters for display:
+struct oscParamInfo
+{
+    Parameter *p;
+    std::string storage_name;
+    std::string full_name;
+    int ctrlgroup;
+};
+
+// Sort function for displaying parameters (below)
+bool compareParams(const oscParamInfo &opl, const oscParamInfo &opr)
+{
+    int lcg = opl.p->ctrlgroup;
+    int rcg = opr.p->ctrlgroup;
+    if (lcg == rcg)
+    {
+        std::string ls = opl.storage_name;
+        std::string rs = opr.storage_name;
+        return strnatcasecmp(ls.c_str(), rs.c_str()) < 0;
+    }
+    return lcg < rcg;
+};
+
+std::string SurgeGUIEditor::parametersToHtml()
+{
+    std::ostringstream htmls;
+
+    htmls <<
+        R"HTML(
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+    <style>
+table {
+  border-collapse: collapse;
+  width: 100%;
+
+}
+
+td {
+  border: 1px solid #CDCED4;
+  padding: 2pt 4px;
+}
+
+.center {
+  text-align: center;
+}
+
+div.heading {
+    margin: 4px 0px 0px 8px;
+    width: 100%;
+}
+
+h3 {
+    margin: 0 0 8px 0;
+}
+
+div.outer {
+    font-size: 12pt;
+    margin: 0 0 10pt 0;
+    font-family: Lato;
+    color: #123463;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+div.tablewrap {
+    width: 600px;
+    margin: 0 8px 16px 8px;
+    flex-basis: 40%;
+}
+
+th {
+  padding: 4pt;
+  color: #123463;
+  background: #CDCED4;
+  border: 1px solid #123463;
+}
+
+span {
+    margin-left: 16px;
+}
+</style>
+  </head>
+  <body style="margin: 0pt; background: #CDCED4;">
+    <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
+      <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
+        Surge XT parameters addressable by OSC
+      </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+        Construct OSC messages for Surge XT using the exact (case sensitive)
+        entry listed in the 'Address' column in the tables below.</br>
+        The form of the message should be <b>/param/&ltaddress&gt value</b>,
+        where 'value' is either
+        <ul>
+            <li>a floating point value between 0.0 and 1.0</li>
+            <li>an integer value</li>
+            <li>0 or 1 (boolean)</li>
+            <li>contextual: either an in integer or a float, depending on the context</li>
+        </ul>
+        Where an address is listed as beginning with <b>'*'</b>, replace the <b>'*'</b> with either <b>'a'</b> or <b>'b'</b>,
+        depending on which scene you wish to address. E.g., 'a_drift' or 'b_drift'.
+        <p>Examples: <span><b>/param/volume 0.63</b></span>
+        <span><b>/param/polylimit 12</b></span><span><b>/param/a_mute_noise 0</b></span></p>
+      </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
+      <div class="outer">
+    )HTML";
+
+    std::vector<oscParamInfo> sortvector;
+    std::string st_str;
+    int currentCtrlGrp = endCG;
+
+    for (auto *p : synth->storage.getPatch().param_ptr)
+    {
+        st_str = p->get_OSC_name();
+        if (st_str[1] == '_')
+        {
+            if (st_str[0] == 'b')
+                continue; // 'b_...' entries not added to vector
+            else if (st_str[0] == 'a')
+            {
+                st_str[0] = '*';
+            }
+        }
+        sortvector.push_back(oscParamInfo{p, st_str, p->get_full_name(), p->ctrlgroup});
+    };
+
+    // Sort by control group number, storage name (natural sort)
+    std::sort(sortvector.begin(), sortvector.end(), compareParams);
+
+    // Generate HTML table of parameters
+    for (auto itr : sortvector)
+    {
+        bool skip = false;
+        std::string valueType;
+
+        if (itr.p->ctrlgroup != currentCtrlGrp)
+        {
+            if (currentCtrlGrp != endCG)
+            {
+                htmls << "</table></div>";
+            }
+            currentCtrlGrp = itr.p->ctrlgroup;
+            htmls << "<div class=\"tablewrap\"><div class=\"heading\"><h3>"
+                  << "Control Group: " << ControlGroupDisplay[itr.p->ctrlgroup] << "</h3></div>"
+                  << R"HTML(
+                
+            <table style="border: 2px solid black;">
+                <tr>
+                    <th>Address</th>
+                    <th>Parameter Name</th>
+                    <th>Appropriate Values</th>
+                </tr>
+        )HTML";
+        }
+
+        if (itr.ctrlgroup == cg_OSC || itr.ctrlgroup == cg_FX)
+        {
+            valueType = "(contextual)";
+        }
+        else if (itr.p->ctrltype != ct_none)
+        {
+            switch (itr.p->valtype)
+            {
+            case vt_int:
+                valueType = "integer (" + std::to_string(itr.p->val_min.i) + " to " +
+                            std::to_string(itr.p->val_max.i) + ")";
+                break;
+
+            case vt_bool:
+                valueType = "boolean (0 or 1)";
+                break;
+
+            case vt_float:
+            {
+                valueType = "float (0.0 to 1.0)";
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+        else
+            skip = true;
+
+        if (!skip)
+        {
+            htmls << "<tr><td>" << itr.storage_name << "</td><td> " << itr.p->get_full_name()
+                  << "</td>"
+                  << "<td class=\"center\">" << valueType << "</td></tr>";
+        }
+    }
+
+    htmls << R"HTML(
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+      )HTML";
     return htmls.str();
 }
 

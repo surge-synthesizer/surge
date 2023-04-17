@@ -14,6 +14,8 @@
 #include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "version.h"
 #include "sst/plugininfra/cpufeatures.h"
+#include "globals.h"
+#include "UserDefaults.h"
 
 /*
  * This is a bit odd but - this is an editor concept with the lifetime of the processor
@@ -115,6 +117,25 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     midiKeyboardState.addListener(this);
 
+#if SURGE_HAS_OSC
+    // OSC (Open Sound Control)
+    bool startOSCNow =
+        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSC, false);
+    if (startOSCNow)
+    {
+        int defaultOSCPort = Surge::Storage::getUserDefaultValue(
+            &(surge->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
+        bool success = initOSC(defaultOSCPort);
+        if (!success)
+        {
+            std::ostringstream msg;
+            msg << "SurgeXT was unable to connect to port " << defaultOSCPort << ".\n"
+                << "It may be in use by another application.";
+            surge->storage.reportError(msg.str(), "OSC Initialization Error");
+        }
+    }
+#endif
+
     SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }
 
@@ -181,6 +202,18 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
 }
 
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
+
+/* OSC (Open Sound Control) */
+bool SurgeSynthProcessor::initOSC(int port) { return oscListener.init(this, surge, port); }
+
+bool SurgeSynthProcessor::changeOSCPort(int new_port)
+{
+    if (oscListener.listening)
+    {
+        oscListener.disconnect();
+    }
+    return oscListener.init(this, surge, new_port);
+}
 
 //==============================================================================
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
@@ -286,7 +319,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     processBlockPlayhead();
     processBlockMidiFromGUI();
-
+    processBlockOSC();
     auto mainOutput = getBusBuffer(buffer, false, 0);
     auto mainInput = getBusBuffer(buffer, true, 0);
     auto sceneAOutput = getBusBuffer(buffer, false, 1);
@@ -474,6 +507,22 @@ void SurgeSynthProcessor::processBlockMidiFromGUI()
         if (rec.type == midiR::SUSPEDAL)
         {
             surge->channelController(rec.ch, 64, rec.cval);
+        }
+    }
+}
+
+void SurgeSynthProcessor::processBlockOSC()
+{
+    auto messages = oscRingBuf.popall();
+    for (const auto &om : messages)
+    {
+        float pval = om.val;
+        if (om.type == oscMsg::PARAMETER)
+        {
+            if (om.param->valtype == vt_int)
+                pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
+            surge->setParameter01(surge->idForParameter(om.param), pval, true);
+            surge->storage.getPatch().isDirty = true;
         }
     }
 }

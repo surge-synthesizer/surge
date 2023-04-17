@@ -139,6 +139,10 @@ enum DefaultKey
 
     DontShowAudioErrorsAgain,
 
+    // OSC (Open Sound Control)
+    StartOSC,
+    OSCPort,
+
     nKeys
 };
 
