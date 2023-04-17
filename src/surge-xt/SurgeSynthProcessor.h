@@ -91,7 +91,8 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
 #else
               p->get_storage_name(),
 #endif
-              SurgeParamToJuceInfo::getParameterName(s, p), "")
+              SurgeParamToJuceInfo::getParameterName(s, p),
+              juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
@@ -179,7 +180,8 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
               std::string("macro_") + std::to_string(macroNum),
 #endif
 
-              std::string("M") + std::to_string(macroNum + 1), "")
+              std::string("M") + std::to_string(macroNum + 1),
+              juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }

@@ -17,7 +17,6 @@
 #include "globals.h"
 #include "UserDefaults.h"
 
-
 #if LINUX
 // getCurrentPosition is deprecated in J7
 #pragma GCC diagnostic push
