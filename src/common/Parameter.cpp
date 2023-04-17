@@ -264,6 +264,7 @@ bool Parameter::can_extend_range() const
     case ct_lfophaseshuffle:
     case ct_fmratio:
     case ct_reson_res_extendable:
+    case ct_freq_audible_fm3_extendable:
     case ct_freq_audible_with_tunability:
     case ct_freq_audible_very_low_minval:
     case ct_percent_oscdrift:
@@ -589,6 +590,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
+    case ct_freq_audible_fm3_extendable:
     case ct_freq_audible_with_tunability:
         valtype = vt_float;
         val_min.f = -60;   // 13.75 Hz
@@ -1387,6 +1389,7 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_audible_deactivatable:
     case ct_freq_audible_deactivatable_hp:
     case ct_freq_audible_deactivatable_lp:
+    case ct_freq_audible_fm3_extendable:
     case ct_freq_audible_with_tunability:
     case ct_freq_audible_very_low_minval:
     case ct_freq_reson_band1:
@@ -2029,6 +2032,11 @@ void Parameter::set_extend_range(bool er)
             displayInfo.customFeatures |= kAllowsTuningFractionTypein;
         }
         break;
+        case ct_freq_audible_fm3_extendable:
+        {
+            val_min.f = -60; // 13.75 Hz
+        }
+        break;
         case ct_freq_reson_band1:
         {
             // Why the heck are we modifying this here?
@@ -2083,6 +2091,11 @@ void Parameter::set_extend_range(bool er)
             displayInfo.customFeatures = ParamDisplayFeatures::kAllowsModulationsInNotesAndCents;
         }
         break;
+        case ct_freq_audible_fm3_extendable:
+        {
+            val_min.f = -117.3763; // 0.5 Hz
+        }
+        break;
         case ct_freq_reson_band1:
         case ct_freq_reson_band2:
         case ct_freq_reson_band3:
@@ -2090,6 +2103,7 @@ void Parameter::set_extend_range(bool er)
             val_min.f = -34.4936f; // 60 Hz
             val_max.f = 49.09578;  // 7500 Hz
         }
+        break;
         case ct_dly_fb_clippingmodes:
         case ct_lfophaseshuffle:
         {
@@ -2942,6 +2956,7 @@ float Parameter::quantize_modulation(float inputval) const
         case ct_freq_audible_deactivatable:
         case ct_freq_audible_deactivatable_hp:
         case ct_freq_audible_deactivatable_lp:
+        case ct_freq_audible_fm3_extendable:
         case ct_freq_audible_with_tunability:
         case ct_freq_audible_very_low_minval:
         case ct_freq_reson_band1:
@@ -3045,6 +3060,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
     case ct_freq_audible_deactivatable:
     case ct_freq_audible_deactivatable_hp:
     case ct_freq_audible_deactivatable_lp:
+    case ct_freq_audible_fm3_extendable:
     case ct_freq_audible_with_tunability:
     case ct_freq_audible_very_low_minval:
     case ct_freq_reson_band1:
@@ -4103,6 +4119,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_freq_audible_deactivatable:
     case ct_freq_audible_deactivatable_hp:
     case ct_freq_audible_deactivatable_lp:
+    case ct_freq_audible_fm3_extendable:
     case ct_freq_audible_with_tunability:
     case ct_freq_audible_very_low_minval:
     case ct_freq_reson_band1:
