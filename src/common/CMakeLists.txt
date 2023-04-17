@@ -31,11 +31,11 @@ else()
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=0)
 endif()
 
+surge_add_lib_subdirectory(sst/sst-basic-blocks)
 surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
 surge_add_lib_subdirectory(sst/sst-waveshapers)
-surge_add_lib_subdirectory(sst/sst-basic-blocks)
 
 set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
 set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")

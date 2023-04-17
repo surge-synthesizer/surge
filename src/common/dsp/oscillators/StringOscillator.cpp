@@ -14,7 +14,7 @@
 */
 
 #include "globals.h"
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 /*
  * String oscillator is a self-oscillating delay with various filters and
@@ -689,7 +689,8 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
 
             if (FM)
             {
-                v *= Surge::DSP::fastexp(limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
+                v *= sst::basic_blocks::dsp::fastexp(
+                    limit_range(fmdepth.v * master_osc[i] * 3, -6.f, 4.f));
             }
 
             v *= OS;

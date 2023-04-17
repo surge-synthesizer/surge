@@ -18,7 +18,7 @@
 #include <iostream>
 #include "DebugHelpers.h"
 #include "basic_dsp.h" // for limit_range
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 namespace Surge
 {

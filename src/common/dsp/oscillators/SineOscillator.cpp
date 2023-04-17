@@ -14,7 +14,7 @@
 */
 
 #include "SineOscillator.h"
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 #include <algorithm>
 
 /*
@@ -671,10 +671,10 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
             auto lv = _mm_load_ps(&lastvalue[u]);
             auto x = _mm_add_ps(_mm_add_ps(ph, lv), fmpds);
 
-            x = Surge::DSP::clampToPiRangeSSE(x);
+            x = sst::basic_blocks::dsp::clampToPiRangeSSE(x);
 
-            auto sxl = Surge::DSP::fastsinSSE(x);
-            auto cxl = Surge::DSP::fastcosSSE(x);
+            auto sxl = sst::basic_blocks::dsp::fastsinSSE(x);
+            auto cxl = sst::basic_blocks::dsp::fastcosSSE(x);
 
             auto out_local = valueFromSinAndCosForMode<mode>(sxl, cxl, std::min(n_unison - u, 4));
 
@@ -787,8 +787,9 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
 
             for (int u = 0; u < n_unison; u++)
             {
-                float out_local = singleValueFromSinAndCos<mode>(Surge::DSP::fastsin(phase[u]),
-                                                                 Surge::DSP::fastcos(phase[u]));
+                float out_local =
+                    singleValueFromSinAndCos<mode>(sst::basic_blocks::dsp::fastsin(phase[u]),
+                                                   sst::basic_blocks::dsp::fastcos(phase[u]));
 
                 outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
                 outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
@@ -799,7 +800,7 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
                     playingramp[u] = 1;
 
                 phase[u] += omega[u] + master_osc[k] * FMdepth.v;
-                phase[u] = Surge::DSP::clampToPiRange(phase[u]);
+                phase[u] = sst::basic_blocks::dsp::clampToPiRange(phase[u]);
             }
 
             FMdepth.process();

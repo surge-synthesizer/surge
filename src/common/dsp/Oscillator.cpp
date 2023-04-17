@@ -15,7 +15,7 @@
 
 #include "Oscillator.h"
 #include "DSPUtils.h"
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 #include <cmath>
 
 #include "AliasOscillator.h"

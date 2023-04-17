@@ -1,7 +1,7 @@
 #include <random>
 
 #include "SpringReverbProc.h"
-#include "utilities/FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 namespace
 {
@@ -111,7 +111,7 @@ void SpringReverbProc::processBlock(float *left, float *right, const int numSamp
     }
 
     auto doSpringInput = [=](int ch, float input, int n) -> float {
-        auto output = Surge::DSP::fasttanh(input - feedbackGain * delay.popSample(ch));
+        auto output = sst::basic_blocks::dsp::fasttanh(input - feedbackGain * delay.popSample(ch));
         return dcBlocker.processSample<StateVariableFilterType::Highpass>(ch, output) +
                shortShakeBuffer[n];
     };
