@@ -15,7 +15,7 @@
 
 #include "WaveShaperEffect.h"
 #include "DebugHelpers.h"
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 // http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
 

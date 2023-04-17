@@ -4,7 +4,7 @@
 #include <cmath>
 #include <memory>
 #include <type_traits>
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 #include "portable_intrinsics.h"
 
 namespace chowdsp

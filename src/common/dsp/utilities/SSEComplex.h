@@ -26,7 +26,7 @@
 #include "globals.h"
 #include <complex>
 #include <functional>
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 struct SSEComplex
 {
@@ -79,8 +79,9 @@ struct SSEComplex
 
     inline static SSEComplex fastExp(__m128 angle)
     {
-        angle = Surge::DSP::clampToPiRangeSSE(angle);
-        return {Surge::DSP::fastcosSSE(angle), Surge::DSP::fastsinSSE(angle)};
+        angle = sst::basic_blocks::dsp::clampToPiRangeSSE(angle);
+        return {sst::basic_blocks::dsp::fastcosSSE(angle),
+                sst::basic_blocks::dsp::fastsinSSE(angle)};
     }
 
     inline SSEComplex map(std::function<std::complex<float>(const std::complex<float> &)> f)

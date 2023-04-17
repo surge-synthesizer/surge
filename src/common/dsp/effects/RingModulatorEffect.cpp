@@ -2,7 +2,7 @@
 #include "Tunings.h"
 #include "SineOscillator.h"
 #include "DebugHelpers.h"
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 // http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
 
@@ -119,8 +119,9 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
         {
             // TODO efficiency of course
             auto vc = SineOscillator::valueFromSinAndCos(
-                Surge::DSP::fastsin(2.0 * M_PI * (phase[u] - 0.5)),
-                Surge::DSP::fastcos(2.0 * M_PI * (phase[u] - 0.5)), *pd_int[rm_carrier_shape]);
+                sst::basic_blocks::dsp::fastsin(2.0 * M_PI * (phase[u] - 0.5)),
+                sst::basic_blocks::dsp::fastcos(2.0 * M_PI * (phase[u] - 0.5)),
+                *pd_int[rm_carrier_shape]);
             phase[u] += dphase[u];
 
             if (phase[u] > 1)

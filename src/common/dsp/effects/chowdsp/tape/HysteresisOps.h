@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cmath>
-#include "FastMath.h"
+#include "globals.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 
 #define CHOWTAPE_HYSTERESIS_USE_SIMD 1
 

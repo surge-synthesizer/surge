@@ -9,7 +9,6 @@
 #include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
-#include "FastMath.h"
 
 using namespace Surge::Test;
 
