@@ -125,7 +125,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     {
         int defaultOSCPort = Surge::Storage::getUserDefaultValue(
             &(surge->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
-        initOSC(defaultOSCPort);
+        bool success = initOSC(defaultOSCPort);
     }
 #endif
 
