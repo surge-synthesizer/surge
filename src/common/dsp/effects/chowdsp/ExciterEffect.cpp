@@ -15,6 +15,10 @@
 
 #include "ExciterEffect.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 namespace
 {
 constexpr double low_freq = 500.0;
@@ -51,8 +55,8 @@ void ExciterEffect::process(float *dataL, float *dataR)
     set_params();
 
     // copy dry signal
-    copy_block(dataL, dryL, BLOCK_SIZE_QUAD);
-    copy_block(dataR, dryR, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, dryL);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, dryR);
 
     drive_gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
     os.upsample(dataL, dataR);
@@ -64,8 +68,8 @@ void ExciterEffect::process(float *dataL, float *dataR)
 
     // dry/wet process
     wet_gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
-    add_block(dataL, dryL, dataL, BLOCK_SIZE_QUAD);
-    add_block(dataR, dryR, dataR, BLOCK_SIZE_QUAD);
+    mech::add_block<BLOCK_SIZE>(dataL, dryL, dataL);
+    mech::add_block<BLOCK_SIZE>(dataR, dryR, dataR);
 }
 
 void ExciterEffect::set_params()

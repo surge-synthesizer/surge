@@ -17,6 +17,9 @@
 
 #include "DSPUtils.h"
 #include "SurgeStorage.h"
+#include "lipol.h"
+
+#include "sst/basic-blocks/dsp/MidSide.h"
 
 /*	base class			*/
 
@@ -79,6 +82,16 @@ class alignas(16) Effect
         return x;
     }
 
+    inline void applyWidth(float *__restrict L,
+                           float *__restrict R,
+                           lipol_ps &width)
+    {
+        namespace sdsp = sst::basic_blocks::dsp;
+        float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
+        sdsp::encodeMS<BLOCK_SIZE>(L, R, M, S);
+        width.multiply_block(S, BLOCK_SIZE_QUAD);
+        sdsp::decodeMS<BLOCK_SIZE>(M, S, L, R);
+    }
   protected:
     SurgeStorage *storage;
     FxStorage *fxdata;

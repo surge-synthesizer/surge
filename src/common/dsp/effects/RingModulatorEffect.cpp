@@ -3,6 +3,8 @@
 #include "SineOscillator.h"
 #include "DebugHelpers.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 // http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
 
@@ -160,8 +162,8 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
 
 #if OVERSAMPLE
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
-    copy_block(dataOS[0], wetL, BLOCK_SIZE_QUAD);
-    copy_block(dataOS[1], wetR, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[0], wetL);
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[1], wetR);
 #endif
 
     // Apply the filters

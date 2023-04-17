@@ -14,6 +14,7 @@
 
 #include "SSEComplex.h"
 #include <complex>
+#include "sst/basic-blocks/mechanics/simd-ops.h"
 
 #include "sst/plugininfra/cpufeatures.h"
 
@@ -638,7 +639,7 @@ TEST_CASE("SSE std::complex", "[dsp]")
             sum += qtr.atIndex(i).real();
 
         float sumSSE alignas(16)[4];
-        _mm_store1_ps(sumSSE, sum_ps_to_ss(qtr.real()));
+        _mm_store1_ps(sumSSE, sst::basic_blocks::mechanics::sum_ps_to_ss(qtr.real()));
         REQUIRE(sum == Approx(sumSSE[0]).margin(1e-5));
 
         float angles alignas(16)[4];

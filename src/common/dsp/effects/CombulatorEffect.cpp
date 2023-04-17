@@ -16,6 +16,7 @@
 #include "CombulatorEffect.h"
 #include "DebugHelpers.h"
 #include "fmt/core.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
 
 CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage),
@@ -366,8 +367,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     /* Downsample out */
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
 
-    copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
-    copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
+    sst::basic_blocks::mechanics::copy_from_to<BLOCK_SIZE>(dataOS[0], L);
+    sst::basic_blocks::mechanics::copy_from_to<BLOCK_SIZE>(dataOS[1], R);
 
     if (!fxdata->p[combulator_tone].deactivated)
     {

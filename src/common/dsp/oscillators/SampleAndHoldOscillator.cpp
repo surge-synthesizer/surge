@@ -16,6 +16,10 @@
 #include "SampleAndHoldOscillator.h"
 #include "DSPUtils.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 using namespace std;
 
 // const float integrator_hpf = 0.99999999f;
@@ -242,7 +246,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
     float rand11 = urng();
     float randt = rand11 * (1 - wfabs) - wf * last_level[voice];
 
-    randt = randt * rcp(1.0f - wfabs);
+    randt = randt * mech::rcp(1.0f - wfabs);
     randt = min(0.5f, max(-0.5f, randt));
 
     if (state[voice] == 0)
@@ -397,7 +401,7 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
             {
                 while (oscstate[l] < a)
                 {
-                    FMmul_inv = rcp(fmmul);
+                    FMmul_inv = mech::rcp(fmmul);
                     convolute(l, true, stereo);
                 }
 
@@ -454,10 +458,10 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
     }
     _mm_store_ss(&dc, mdc);
 
-    clear_block(&oscbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
+    mech::clear_block<BLOCK_SIZE_OS>(&oscbuffer[bufpos]);
     if (stereo)
-        clear_block(&oscbufferR[bufpos], BLOCK_SIZE_OS_QUAD);
-    clear_block(&dcbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
+        mech::clear_block<BLOCK_SIZE_OS>(&oscbufferR[bufpos]);
+    mech::clear_block<BLOCK_SIZE_OS>(&dcbuffer[bufpos]);
 
     bufpos = (bufpos + BLOCK_SIZE_OS) & (OB_LENGTH - 1);
 

@@ -1,6 +1,7 @@
 #include "FlangerEffect.h"
 #include "Tunings.h"
 #include <algorithm>
+#include "sst/basic-blocks/dsp/MidSide.h"
 
 FlangerEffect::FlangerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
@@ -399,9 +400,9 @@ void FlangerEffect::process(float *dataL, float *dataR)
     width.set_target_smoothed(storage->db_to_linear(*pd_float[fl_width]) / 3);
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
+    sst::basic_blocks::dsp::encodeMS<BLOCK_SIZE>(dataL, dataR, M, S);
     width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
+    sst::basic_blocks::dsp::decodeMS<BLOCK_SIZE>(M, S, dataL, dataR);
 }
 
 float FlangerEffect::InterpDelay::value(float delayBy)

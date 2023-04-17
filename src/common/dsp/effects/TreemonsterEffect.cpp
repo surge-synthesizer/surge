@@ -16,6 +16,10 @@
 #include "TreemonsterEffect.h"
 #include "DebugHelpers.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
+
 TreemonsterEffect::TreemonsterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), lp(storage), hp(storage)
 {
@@ -85,13 +89,13 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
                                                    fxdata->p[tm_threshold].val_max.f));
 
     // copy dry signal (dataL, dataR) to wet signal (L, R)
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
     // copy it to pitch detection buffer (tbuf) as well
     // in case filters are not activated
-    copy_block(dataL, tbuf[0], BLOCK_SIZE_QUAD);
-    copy_block(dataR, tbuf[1], BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, tbuf[0]);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, tbuf[1]);
 
     // apply filters to the pitch detection buffer
     if (!fxdata->p[tm_hp].deactivated)
@@ -215,8 +219,8 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
     // do dry signal * pitch tracked signal ringmod
     // store to pitch detection buffer
-    mul_block(L, dataL, tbuf[0], BLOCK_SIZE_QUAD);
-    mul_block(R, dataR, tbuf[1], BLOCK_SIZE_QUAD);
+    mech::mul_block<BLOCK_SIZE>(L, dataL, tbuf[0]);
+    mech::mul_block<BLOCK_SIZE>(R, dataR, tbuf[1]);
 
     // mix pure pitch tracked sine with ring modulated signal
     rm.set_target_smoothed(clamp01(*pd_float[tm_ring_mix]));
@@ -225,10 +229,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
     // scale width
     width.set_target_smoothed(clamp1bp(*pd_float[tm_width]));
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
+    applyWidth(L, R, width);
 
     // main dry-wet mix
     mix.set_target_smoothed(clamp01(*pd_float[tm_mix]));

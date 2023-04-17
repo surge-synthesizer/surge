@@ -17,6 +17,17 @@
 #include <vembertech/basic_dsp.h>
 #include "SurgeParamConfig.h"
 
+
+#include "globals.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
+#include "sst/basic-blocks/dsp/MidSide.h"
+
+namespace mech = sst::basic_blocks::mechanics;
+namespace sdsp = sst::basic_blocks::dsp;
+
+
 using namespace std;
 
 using namespace vt_dsp;
@@ -125,7 +136,7 @@ void ConditionerEffect::process(float *dataL, float *dataR)
     postamp.set_target_smoothed(storage->db_to_linear(*pd_float[cond_gain]));
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
+    sdsp::encodeMS<BLOCK_SIZE>(dataL, dataR, M, S);
 
     if (!fxdata->p[cond_hpwidth].deactivated)
     {
@@ -133,12 +144,12 @@ void ConditionerEffect::process(float *dataL, float *dataR)
     }
 
     width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
+    sdsp::decodeMS<BLOCK_SIZE>(M, S, dataL, dataR);
     ampL.multiply_block(dataL, BLOCK_SIZE_QUAD);
     ampR.multiply_block(dataR, BLOCK_SIZE_QUAD);
 
-    vu[0] = max(vu[0], get_absmax(dataL, BLOCK_SIZE_QUAD));
-    vu[1] = max(vu[1], get_absmax(dataR, BLOCK_SIZE_QUAD));
+    vu[0] = max(vu[0], mech::blockAbsMax<BLOCK_SIZE>(dataL));
+    vu[1] = max(vu[1], mech::blockAbsMax<BLOCK_SIZE>(dataR));
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
@@ -155,7 +166,7 @@ void ConditionerEffect::process(float *dataL, float *dataR)
         if (filtered_lamax > filtered_lamax2)
             filtered_lamax2 = filtered_lamax;
 
-        gain = rcp(filtered_lamax2);
+        gain = mech::rcp(filtered_lamax2);
 
         delayed[0][bufpos] = dataL[k];
         delayed[1][bufpos] = dataR[k];
@@ -181,8 +192,8 @@ void ConditionerEffect::process(float *dataL, float *dataR)
 
     vu[2] = gain;
 
-    vu[4] = max(vu[4], get_absmax(dataL, BLOCK_SIZE_QUAD));
-    vu[5] = max(vu[5], get_absmax(dataR, BLOCK_SIZE_QUAD));
+    vu[4] = max(vu[4], mech::blockAbsMax<BLOCK_SIZE>(dataL));
+    vu[5] = max(vu[5], mech::blockAbsMax<BLOCK_SIZE>(dataR));
 }
 
 Surge::ParamConfig::VUType ConditionerEffect::vu_type(int id)

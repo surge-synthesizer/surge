@@ -4,10 +4,7 @@
 const int max_wtable_size = 4096;
 const int max_subtables = 512;
 const int max_mipmap_levels = 16;
-// I don't know why your max wtable samples would be less than your max tables * your max sample
-// size. So lets fix that! This size is consistent with the check in WaveTable.cpp //
-// CheckRequiredWTSize with ts and tc at 1024 and 512
-const int max_wtable_samples = 2097152;
+
 
 #pragma pack(push, 1)
 struct wt_header

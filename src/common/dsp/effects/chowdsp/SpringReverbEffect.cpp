@@ -15,6 +15,10 @@
 
 #include "SpringReverbEffect.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
+
 namespace chowdsp
 {
 SpringReverbEffect::SpringReverbEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
@@ -44,8 +48,8 @@ void SpringReverbEffect::process(float *dataL, float *dataR)
         },
         BLOCK_SIZE);
 
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
     proc.processBlock(L, R, BLOCK_SIZE);
 

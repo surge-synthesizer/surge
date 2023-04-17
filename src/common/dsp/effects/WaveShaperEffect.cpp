@@ -17,6 +17,11 @@
 #include "DebugHelpers.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
+
 // http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
 
 WaveShaperEffect::WaveShaperEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
@@ -95,8 +100,8 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
     bias.newValue(clamp1bp(*pd_float[ws_bias]));
 
     float wetL alignas(16)[BLOCK_SIZE], wetR alignas(16)[BLOCK_SIZE];
-    copy_block(dataL, wetL, BLOCK_SIZE_QUAD);
-    copy_block(dataR, wetR, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, wetL);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, wetR);
 
     // Apply the filters
     hpPre.coeff_HP(hpPre.calc_omega(*pd_float[ws_prelowcut] / 12.0), 0.707);
@@ -162,8 +167,8 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
 
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
 
-    copy_block(dataOS[0], wetL, BLOCK_SIZE_QUAD);
-    copy_block(dataOS[1], wetR, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[0], wetL);
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[1], wetR);
 
     // Apply the filters
     hpPost.coeff_HP(hpPre.calc_omega(*pd_float[ws_postlowcut] / 12.0), 0.707);

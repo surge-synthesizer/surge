@@ -18,6 +18,7 @@
 #include <memory>
 #include <vembertech/basic_dsp.h>
 #include <sst/filters/HalfRateFilter.h>
+#include "sst/basic-blocks/mechanics/block-ops.h"
 
 namespace chowdsp
 {
@@ -84,8 +85,8 @@ class Oversampling
     /** Upsamples the audio in the input arrays, and stores the upsampled audio internally */
     inline void upsample(float *leftIn, float *rightIn) noexcept
     {
-        copy_block(leftIn, leftUp, block_size_quad);
-        copy_block(rightIn, rightUp, block_size_quad);
+        sst::basic_blocks::mechanics::copy_from_to<block_size>(leftIn, leftUp);
+        sst::basic_blocks::mechanics::copy_from_to<block_size>(rightIn, rightUp);
 
         for (size_t i = 0; i < OSFactor; ++i)
         {
@@ -104,8 +105,8 @@ class Oversampling
             hr_filts_down[i - 1]->process_block_D2(leftUp, rightUp, numSamples);
         }
 
-        copy_block(leftUp, leftOut, block_size_quad);
-        copy_block(rightUp, rightOut, block_size_quad);
+        sst::basic_blocks::mechanics::copy_from_to<block_size>(leftUp, leftOut);
+        sst::basic_blocks::mechanics::copy_from_to<block_size>(rightUp, rightOut);
     }
 
     /** Returns the size of the upsampled blocks */

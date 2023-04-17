@@ -1,4 +1,8 @@
 #include "LossFilter.h"
+#include "globals.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+
+namespace mech = sst::basic_blocks::mechanics;
 
 namespace chowdsp
 {
@@ -102,8 +106,8 @@ void LossFilter::process(float *dataL, float *dataR)
 
     if (fadeCount > 0)
     {
-        copy_block(dataL, fadeBufferL, BLOCK_SIZE_QUAD);
-        copy_block(dataR, fadeBufferR, BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(dataL, fadeBufferL);
+        mech::copy_from_to<BLOCK_SIZE>(dataR, fadeBufferR);
     }
     else
     {

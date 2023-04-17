@@ -23,6 +23,7 @@
 #include "UserDefaults.h"
 #include "filesystem/import.h"
 #include "Effect.h"
+#include "globals.h"
 
 #include <algorithm>
 #include <thread>
@@ -33,7 +34,12 @@
 
 #include "SurgeMemoryPools.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
+
 using namespace std;
+namespace mech = sst::basic_blocks::mechanics;
+namespace sdsp = sst::basic_blocks::dsp;
 
 using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed first try
 
@@ -4170,8 +4176,8 @@ void SurgeSynthesizer::process()
 
     if (halt_engine)
     {
-        clear_block(output[0], BLOCK_SIZE_QUAD);
-        clear_block(output[1], BLOCK_SIZE_QUAD);
+        mech::clear_block<BLOCK_SIZE>(output[0]);
+        mech::clear_block<BLOCK_SIZE>(output[1]);
         return;
     }
     else if (patchid_queue >= 0 || has_patchid_file)
@@ -4197,8 +4203,8 @@ void SurgeSynthesizer::process()
 
             patchLoadThread = std::make_unique<std::thread>(loadPatchInBackgroundThread, this);
 
-            clear_block(output[0], BLOCK_SIZE_QUAD);
-            clear_block(output[1], BLOCK_SIZE_QUAD);
+            mech::clear_block<BLOCK_SIZE>(output[0]);
+            mech::clear_block<BLOCK_SIZE>(output[1]);
             return;
         }
     }
@@ -4218,19 +4224,19 @@ void SurgeSynthesizer::process()
     // process inputs (upsample & halfrate)
     if (process_input)
     {
-        hardclip_block8(input[0], BLOCK_SIZE_QUAD);
-        hardclip_block8(input[1], BLOCK_SIZE_QUAD);
-        copy_block(input[0], storage.audio_in_nonOS[0], BLOCK_SIZE_QUAD);
-        copy_block(input[1], storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+        sdsp::hardclip_block8<BLOCK_SIZE>(input[0]);
+        sdsp::hardclip_block8<BLOCK_SIZE>(input[1]);
+        mech::copy_from_to<BLOCK_SIZE>(input[0], storage.audio_in_nonOS[0]);
+        mech::copy_from_to<BLOCK_SIZE>(input[1], storage.audio_in_nonOS[1]);
         halfbandIN.process_block_U2(input[0], input[1], storage.audio_in[0], storage.audio_in[1],
                                     BLOCK_SIZE_OS);
     }
     else
     {
-        clear_block(storage.audio_in[0], BLOCK_SIZE_OS_QUAD);
-        clear_block(storage.audio_in[1], BLOCK_SIZE_OS_QUAD);
-        clear_block(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
-        clear_block(storage.audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+        mech::clear_block<BLOCK_SIZE_OS>(storage.audio_in[0]);
+        mech::clear_block<BLOCK_SIZE_OS>(storage.audio_in[1]);
+        mech::clear_block<BLOCK_SIZE>(storage.audio_in_nonOS[1]);
+        mech::clear_block<BLOCK_SIZE>(storage.audio_in_nonOS[1]);
     }
 
     // TODO: FIX SCENE ASSUMPTION
@@ -4238,15 +4244,15 @@ void SurgeSynthesizer::process()
     bool play_scene[n_scenes];
 
     {
-        clear_block(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
-        clear_block(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
-        clear_block(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
-        clear_block(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+        mech::clear_block<BLOCK_SIZE_OS>(sceneout[0][0]);
+        mech::clear_block<BLOCK_SIZE_OS>(sceneout[0][1]);
+        mech::clear_block<BLOCK_SIZE_OS>(sceneout[1][0]);
+        mech::clear_block<BLOCK_SIZE_OS>(sceneout[1][1]);
 
         for (int i = 0; i < n_send_slots; ++i)
         {
-            clear_block(fxsendout[i][0], BLOCK_SIZE_QUAD);
-            clear_block(fxsendout[i][1], BLOCK_SIZE_QUAD);
+            mech::clear_block<BLOCK_SIZE>(fxsendout[i][0]);
+            mech::clear_block<BLOCK_SIZE>(fxsendout[i][1]);
         }
     }
 
@@ -4374,8 +4380,8 @@ void SurgeSynthesizer::process()
         if (s == 0 && storage.otherscene_clients > 0)
         {
             // Make available for scene B
-            copy_block(sceneout[0][0], storage.audio_otherscene[0], BLOCK_SIZE_OS_QUAD);
-            copy_block(sceneout[0][1], storage.audio_otherscene[1], BLOCK_SIZE_OS_QUAD);
+            mech::copy_from_to<BLOCK_SIZE_OS>(sceneout[0][0], storage.audio_otherscene[0]);
+            mech::copy_from_to<BLOCK_SIZE_OS>(sceneout[0][1], storage.audio_otherscene[1]);
         }
 
         iter = voices[s].begin();
@@ -4398,12 +4404,12 @@ void SurgeSynthesizer::process()
         switch (storage.sceneHardclipMode[0])
         {
         case SurgeStorage::HARDCLIP_TO_18DBFS:
-            hardclip_block8(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
-            hardclip_block8(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+            sdsp::hardclip_block8<BLOCK_SIZE_OS>(sceneout[0][0]);
+            sdsp::hardclip_block8<BLOCK_SIZE_OS>(sceneout[0][1]);
             break;
         case SurgeStorage::HARDCLIP_TO_0DBFS:
-            hardclip_block(sceneout[0][0], BLOCK_SIZE_OS_QUAD);
-            hardclip_block(sceneout[0][1], BLOCK_SIZE_OS_QUAD);
+            sdsp::hardclip_block<BLOCK_SIZE_OS>(sceneout[0][0]);
+            sdsp::hardclip_block<BLOCK_SIZE_OS>(sceneout[0][1]);
             break;
         case SurgeStorage::BYPASS_HARDCLIP:
             break;
@@ -4417,12 +4423,12 @@ void SurgeSynthesizer::process()
         switch (storage.sceneHardclipMode[1])
         {
         case SurgeStorage::HARDCLIP_TO_18DBFS:
-            hardclip_block8(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
-            hardclip_block8(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+            sdsp::hardclip_block8<BLOCK_SIZE_OS>(sceneout[1][0]);
+            sdsp::hardclip_block8<BLOCK_SIZE_OS>(sceneout[1][1]);
             break;
         case SurgeStorage::HARDCLIP_TO_0DBFS:
-            hardclip_block(sceneout[1][0], BLOCK_SIZE_OS_QUAD);
-            hardclip_block(sceneout[1][1], BLOCK_SIZE_OS_QUAD);
+            sdsp::hardclip_block<BLOCK_SIZE_OS>(sceneout[1][0]);
+            sdsp::hardclip_block<BLOCK_SIZE_OS>(sceneout[1][1]);
             break;
         case SurgeStorage::BYPASS_HARDCLIP:
             break;
@@ -4465,12 +4471,12 @@ void SurgeSynthesizer::process()
         switch (storage.sceneHardclipMode[cls])
         {
         case SurgeStorage::HARDCLIP_TO_18DBFS:
-            hardclip_block8(sceneout[cls][0], BLOCK_SIZE_QUAD);
-            hardclip_block8(sceneout[cls][1], BLOCK_SIZE_QUAD);
+            sdsp::hardclip_block8<BLOCK_SIZE>(sceneout[cls][0]);
+            sdsp::hardclip_block8<BLOCK_SIZE>(sceneout[cls][1]);
             break;
         case SurgeStorage::HARDCLIP_TO_0DBFS:
-            hardclip_block(sceneout[cls][0], BLOCK_SIZE_QUAD);
-            hardclip_block(sceneout[cls][1], BLOCK_SIZE_QUAD);
+            sdsp::hardclip_block<BLOCK_SIZE>(sceneout[cls][0]);
+            sdsp::hardclip_block<BLOCK_SIZE>(sceneout[cls][1]);
             break;
         default:
             break;
@@ -4510,12 +4516,12 @@ void SurgeSynthesizer::process()
         switch (storage.sceneHardclipMode[cls])
         {
         case SurgeStorage::HARDCLIP_TO_18DBFS:
-            hardclip_block8(sceneout[cls][0], BLOCK_SIZE_QUAD);
-            hardclip_block8(sceneout[cls][1], BLOCK_SIZE_QUAD);
+            sdsp::hardclip_block8<BLOCK_SIZE>(sceneout[cls][0]);
+            sdsp::hardclip_block8<BLOCK_SIZE>(sceneout[cls][1]);
             break;
         case SurgeStorage::HARDCLIP_TO_0DBFS:
-            hardclip_block(sceneout[cls][0], BLOCK_SIZE_QUAD);
-            hardclip_block(sceneout[cls][1], BLOCK_SIZE_QUAD);
+            sdsp::hardclip_block<BLOCK_SIZE>(sceneout[cls][0]);
+            sdsp::hardclip_block<BLOCK_SIZE>(sceneout[cls][1]);
             break;
         default:
             break;
@@ -4524,10 +4530,10 @@ void SurgeSynthesizer::process()
 
     // sum scenes
     // TODO: FIX SCENE ASSUMPTION
-    copy_block(sceneout[0][0], output[0], BLOCK_SIZE_QUAD);
-    copy_block(sceneout[0][1], output[1], BLOCK_SIZE_QUAD);
-    accumulate_block(sceneout[1][0], output[0], BLOCK_SIZE_QUAD);
-    accumulate_block(sceneout[1][1], output[1], BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(sceneout[0][0], output[0]);
+    mech::copy_from_to<BLOCK_SIZE>(sceneout[0][1], output[1]);
+    mech::accumulate_from_to<BLOCK_SIZE>(sceneout[1][0], output[0]);
+    mech::accumulate_from_to<BLOCK_SIZE>(sceneout[1][1], output[1]);
 
     bool sendused[4] = {false, false, false, false};
     // add send effects
@@ -4576,19 +4582,19 @@ void SurgeSynthesizer::process()
     float a = storage.vu_falloff;
     vu_peak[0] = min(2.f, a * vu_peak[0]);
     vu_peak[1] = min(2.f, a * vu_peak[1]);
-    vu_peak[0] = max(vu_peak[0], get_absmax(output[0], BLOCK_SIZE_QUAD));
-    vu_peak[1] = max(vu_peak[1], get_absmax(output[1], BLOCK_SIZE_QUAD));
+    vu_peak[0] = max(vu_peak[0], mech::blockAbsMax<BLOCK_SIZE>(output[0]));
+    vu_peak[1] = max(vu_peak[1], mech::blockAbsMax<BLOCK_SIZE>(output[1]));
 
     switch (storage.hardclipMode)
     {
     case SurgeStorage::HARDCLIP_TO_18DBFS:
-        hardclip_block8(output[0], BLOCK_SIZE_QUAD);
-        hardclip_block8(output[1], BLOCK_SIZE_QUAD);
+        sdsp::hardclip_block8<BLOCK_SIZE>(output[0]);
+        sdsp::hardclip_block8<BLOCK_SIZE>(output[1]);
         break;
 
     case SurgeStorage::HARDCLIP_TO_0DBFS:
-        hardclip_block(output[0], BLOCK_SIZE_QUAD);
-        hardclip_block(output[1], BLOCK_SIZE_QUAD);
+        sdsp::hardclip_block<BLOCK_SIZE>(output[0]);
+        sdsp::hardclip_block<BLOCK_SIZE>(output[1]);
         break;
     case SurgeStorage::BYPASS_HARDCLIP:
         break;

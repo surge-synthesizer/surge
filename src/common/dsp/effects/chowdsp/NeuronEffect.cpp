@@ -73,10 +73,7 @@ void NeuronEffect::process(float *dataL, float *dataR)
     // scale width
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
 
-    encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
-
+    applyWidth(dataL, dataR, width);
     outgain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
     modLFO.post_process();
 }
