@@ -5,7 +5,6 @@
 
 #include "HeadlessUtils.h"
 #include "catch2/catch2.hpp"
-#include "FastMath.h"
 #include "MSEGModulationHelper.h"
 
 struct msegObservation
