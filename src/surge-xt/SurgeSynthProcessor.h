@@ -84,15 +84,10 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
 {
     explicit SurgeParamToJuceParamAdapter(SurgeSynthesizer *s, Parameter *p)
         : s(s), p(p), range(0.f, 1.f, 0.001f),
-          SurgeBaseParam(
-#if SURGE_HAS_JUCE7
-              juce::ParameterID(p->get_storage_name(),
-                                1), // This "1" needs thought if we add params
-#else
-              p->get_storage_name(),
-#endif
-              SurgeParamToJuceInfo::getParameterName(s, p),
-              juce::AudioProcessorParameterWithIDAttributes())
+          SurgeBaseParam(juce::ParameterID(p->get_storage_name(),
+                                           1), // This "1" needs thought if we add params
+                         SurgeParamToJuceInfo::getParameterName(s, p),
+                         juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
@@ -173,15 +168,9 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
 {
     explicit SurgeMacroToJuceParamAdapter(SurgeSynthesizer *s, long macroNum)
         : s(s), macroNum(macroNum), range(0.f, 1.f, 0.001f),
-          SurgeBaseParam(
-#if SURGE_HAS_JUCE7
-              juce::ParameterID(std::string("macro_") + std::to_string(macroNum), 1),
-#else
-              std::string("macro_") + std::to_string(macroNum),
-#endif
-
-              std::string("M") + std::to_string(macroNum + 1),
-              juce::AudioProcessorParameterWithIDAttributes())
+          SurgeBaseParam(juce::ParameterID(std::string("macro_") + std::to_string(macroNum), 1),
+                         std::string("M") + std::to_string(macroNum + 1),
+                         juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
@@ -237,14 +226,10 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
 struct SurgeBypassParameter : public juce::RangedAudioParameter
 {
     explicit SurgeBypassParameter()
-        : value(0.f), range(0.f, 1.f, 0.01f), juce::RangedAudioParameter(
-#if SURGE_HAS_JUCE7
-                                                  juce::ParameterID("surgext-bypass", 1),
-#else
-                                                  "surgext_bypass",
-#endif
-
-                                                  "Bypass Surge XT", "")
+        : value(0.f),
+          range(0.f, 1.f, 0.01f), juce::RangedAudioParameter(
+                                      juce::ParameterID("surgext-bypass", 1), "Bypass Surge XT",
+                                      juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
