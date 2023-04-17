@@ -16,6 +16,7 @@
 /*
  * What's our samplerate strategy
  */
+#include "globals.h"
 #define SAMPLERATE_SRC 0
 #define SAMPLERATE_LANCZOS 1
 
@@ -26,7 +27,8 @@
 #include "OscillatorCommonFunctions.h"
 
 #if SAMPLERATE_LANCZOS
-#include "LanczosResampler.h"
+// #include "LanczosResampler.h"
+#include "sst/basic-blocks/dsp/LanczosResampler.h"
 #endif
 
 namespace plaits
@@ -93,7 +95,7 @@ class TwistOscillator : public Oscillator
     bool useCorrectLPGBlockSize{false}; // See #6760
 
 #if SAMPLERATE_LANCZOS
-    std::unique_ptr<LanczosResampler> lancRes;
+    std::unique_ptr<sst::basic_blocks::dsp::LanczosResampler<BLOCK_SIZE>> lancRes;
 #endif
 
     float carryover[BLOCK_SIZE_OS][2];

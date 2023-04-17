@@ -35,6 +35,7 @@ surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
 surge_add_lib_subdirectory(sst/sst-waveshapers)
+surge_add_lib_subdirectory(sst/sst-basic-blocks)
 
 set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
 set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
@@ -279,8 +280,6 @@ add_library(${PROJECT_NAME}
   dsp/utilities/DSPUtils.cpp
   dsp/utilities/DSPUtils.h
   dsp/utilities/FastMath.h
-  dsp/utilities/LanczosResampler.cpp
-  dsp/utilities/LanczosResampler.h
   dsp/utilities/SSEComplex.h
   dsp/utilities/SSESincDelayLine.h
   dsp/vembertech/basic_dsp.cpp
@@ -378,6 +377,7 @@ target_link_libraries(${PROJECT_NAME}
   sst-filters
   sst-filters-extras
   sst-waveshapers
+  sst-basic-blocks
 
   surge::oddsound-mts
   surge::sqlite
