@@ -17,6 +17,13 @@
 #include "globals.h"
 #include "UserDefaults.h"
 
+
+#if LINUX
+// getCurrentPosition is deprecated in J7
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 /*
  * This is a bit odd but - this is an editor concept with the lifetime of the processor
  */
