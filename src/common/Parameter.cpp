@@ -5101,7 +5101,7 @@ void Parameter::setOSCName(std::string s)
     hasOSCName = true;
 }
 
-std::string_view Parameter::get_OSC_name()
+std::string Parameter::get_OSC_name()
 {
     if (!hasOSCName)
         return get_storage_name();
