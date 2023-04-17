@@ -843,25 +843,45 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
             mul_block(src1_l, src2_l, dst_l, nquads);
             mul_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor:
-            cxor_block(src1_l, src2_l, dst_l, nquads);
-            cxor_block(src1_r, src2_r, dst_r, nquads);
+        case RingModMode::rmm_cxor43_0:
+            cxor43_0_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_0_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor_f1:
-            cxor_f1_block(src1_l, src2_l, dst_l, nquads);
-            cxor_f1_block(src1_r, src2_r, dst_r, nquads);
+        case RingModMode::rmm_cxor43_1:
+            cxor43_1_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_1_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor_f2:
-            cxor_f2_block(src1_l, src2_l, dst_l, nquads);
-            cxor_f2_block(src1_r, src2_r, dst_r, nquads);
+        case RingModMode::rmm_cxor43_2:
+            cxor43_2_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_2_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor_f3:
-            cxor_f3_block(src1_l, src2_l, dst_l, nquads);
-            cxor_f3_block(src1_r, src2_r, dst_r, nquads);
+        case RingModMode::rmm_cxor43_3:
+            cxor43_3_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_3_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor_f4:
-            cxor_f4_block(src1_l, src2_l, dst_l, nquads);
-            cxor_f4_block(src1_r, src2_r, dst_r, nquads);
+        case RingModMode::rmm_cxor43_4:
+            cxor43_4_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_4_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_0:
+            cxor93_0_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_0_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_1:
+            cxor93_1_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_1_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_2:
+            cxor93_2_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_2_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_3:
+            cxor93_3_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_3_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_4:
+            cxor93_4_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_4_block(src1_r, src2_r, dst_r, nquads);
             break;
         default:
             mul_block(src1_l, src2_l, dst_l, nquads);
@@ -877,20 +897,35 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
         case RingModMode::rmm_ring:
             mul_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor:
-            cxor_block(src1_l, src2_l, dst_l, nquads);
+        case RingModMode::rmm_cxor43_0:
+            cxor43_0_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor_f1:
-            cxor_f1_block(src1_l, src2_l, dst_l, nquads);
+        case RingModMode::rmm_cxor43_1:
+            cxor43_1_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor_f2:
-            cxor_f2_block(src1_l, src2_l, dst_l, nquads);
+        case RingModMode::rmm_cxor43_2:
+            cxor43_2_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor_f3:
-            cxor_f3_block(src1_l, src2_l, dst_l, nquads);
+        case RingModMode::rmm_cxor43_3:
+            cxor43_3_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor_f4:
-            cxor_f4_block(src1_l, src2_l, dst_l, nquads);
+        case RingModMode::rmm_cxor43_4:
+            cxor43_4_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_0:
+            cxor93_0_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_1:
+            cxor93_1_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_2:
+            cxor93_2_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_3:
+            cxor93_3_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_4:
+            cxor93_4_block(src1_l, src2_l, dst_l, nquads);
             break;
         default:
             mul_block(src1_l, src2_l, dst_l, nquads);

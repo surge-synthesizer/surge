@@ -54,164 +54,107 @@ inline void mul_block(float *__restrict src1, float scalar, float *__restrict ds
     }
 }
 
-inline void cxor_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-                       unsigned int nquads)
+inline void cxor43_0_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         dst[i] = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
     }
 }
-inline void cxor_block(float *__restrict src1, float scalar, float *__restrict dst,
-                       unsigned int nquads)
-{
-    for (auto i = 0U; i < nquads << 2; ++i)
-    {
-        dst[i] = fmin(fmax(src1[i], scalar), -fmin(src1[i], scalar));
-    }
-}
 
-inline void cxor_f1_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-                          unsigned int nquads)
+inline void cxor43_1_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         const auto v1 = fmax(src1[i], src2[i]);
         const auto cx = fmin(v1, -fmin(src1[i], src2[i]));
-        const auto v2 = -fmin(cx, v1);
-        dst[i] = fmin(v1, v2);
-    }
-}
-inline void cxor_f1_block(float *__restrict src1, float scalar, float *__restrict dst,
-                          unsigned int nquads)
-{
-    for (auto i = 0U; i < nquads << 2; ++i)
-    {
-        const auto v1 = fmax(src1[i], scalar);
-        const auto cx = fmin(v1, -fmin(src1[i], scalar));
-        const auto v2 = -fmin(cx, v1);
-        dst[i] = fmin(v1, v2);
+        dst[i] = fmin(v1, -fmin(cx, v1));
     }
 }
 
-inline void cxor_f2_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-                          unsigned int nquads)
+inline void cxor43_2_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         const auto v1 = fmax(src1[i], src2[i]);
         const auto cx = fmin(v1, -fmin(src1[i], src2[i]));
-        const auto v2 = -fmin(cx, v1);
-        dst[i] = fmin(src1[i], v2);
-    }
-}
-inline void cxor_f2_block(float *__restrict src1, float scalar, float *__restrict dst,
-                          unsigned int nquads)
-{
-    for (auto i = 0U; i < nquads << 2; ++i)
-    {
-        const auto v1 = fmax(src1[i], scalar);
-        const auto cx = fmin(v1, -fmin(src1[i], scalar));
-        const auto v2 = -fmin(cx, v1);
-        dst[i] = fmin(src1[i], v2);
+        dst[i] = fmin(src1[i], -fmin(cx, v1));
     }
 }
 
-inline void cxor_st12_block(float *__restrict src1, float *__restrict src2, float *__restrict dst_l,
-                            float *__restrict dst_r, unsigned int nquads)
-{
-    for (auto i = 0U; i < nquads << 2; ++i)
-    {
-        const auto v1 = fmax(src1[i], src2[i]);
-        const auto cx = fmin(v1, -fmin(src1[i], src2[i]));
-        const auto v2 = -fmin(cx, v1);
-        dst_l[i] = fmin(v1, v2);
-        dst_r[i] = fmin(src1[i], v2);
-    }
-}
-inline void cxor_st12_block(float *__restrict src1, float scalar, float *__restrict dst_l,
-                            float *__restrict dst_r, unsigned int nquads)
-{
-    for (auto i = 0U; i < nquads << 2; ++i)
-    {
-        const auto v1 = fmax(src1[i], scalar);
-        const auto cx = fmin(v1, -fmin(src1[i], scalar));
-        const auto v2 = -fmin(cx, v1);
-        dst_l[i] = fmin(v1, v2);
-        dst_r[i] = fmin(src1[i], v2);
-    }
-}
-
-inline void cxor_f3_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-                          unsigned int nquads)
+inline void cxor43_3_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         const auto cx = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
-        const auto v1 = -fmin(cx, src2[i]);
-        const auto v2 = fmax(src1[i], -src2[i]);
-        dst[i] = fmin(v1, v2);
-    }
-}
-inline void cxor_f3_block(float *__restrict src1, float scalar, float *__restrict dst,
-                          unsigned int nquads)
-{
-    for (auto i = 0U; i < nquads << 2; ++i)
-    {
-        const auto cx = fmin(fmax(src1[i], scalar), -fmin(src1[i], scalar));
-        const auto v1 = -fmin(cx, scalar);
-        const auto v2 = fmax(src1[i], -scalar);
-        dst[i] = fmin(v1, v2);
+        dst[i] = fmin(-fmin(cx, src2[i]), fmax(src1[i], -src2[i]));
     }
 }
 
-inline void cxor_f4_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-                          unsigned int nquads)
+inline void cxor43_4_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         const auto cx = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
-        const auto v1 = -fmin(cx, src2[i]);
-        const auto v3 = fmax(src1[i], -cx);
-        dst[i] = fmin(v1, v3);
-    }
-}
-inline void cxor_f4_block(float *__restrict src1, float scalar, float *__restrict dst,
-                          unsigned int nquads)
-{
-    for (auto i = 0U; i < nquads << 2; ++i)
-    {
-        const auto cx = fmin(fmax(src1[i], scalar), -fmin(src1[i], scalar));
-        const auto v1 = -fmin(cx, scalar);
-        const auto v3 = fmax(src1[i], -cx);
-        dst[i] = fmin(v1, v3);
+        dst[i] = fmin(-fmin(cx, src2[i]), fmax(src1[i], -cx));
     }
 }
 
-inline void cxor_st34_block(float *__restrict src1, float *__restrict src2, float *__restrict dst_l,
-                            float *__restrict dst_r, unsigned int nquads)
+inline void cxor93_0_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
-        const auto cx = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
-        const auto v1 = -fmin(cx, src2[i]);
-        const auto v2 = fmax(src1[i], -src2[i]);
-        const auto v3 = fmax(src1[i], -cx);
-        dst_l[i] = fmin(v1, v2);
-        dst_r[i] = fmin(v1, v3);
+        auto p = src1[i] + src2[i];
+        auto m = src1[i] - src2[i];
+        dst[i] = fmin(fmax(p, m), -fmin(p, m));
     }
 }
-inline void cxor_st34_block(float *__restrict src1, float scalar, float *__restrict dst_l,
-                            float *__restrict dst_r, unsigned int nquads)
+
+inline void cxor93_1_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
-        const auto cx = fmin(fmax(src1[i], scalar), -fmin(src1[i], scalar));
-        const auto v1 = -fmin(cx, scalar);
-        const auto v2 = fmax(src1[i], -scalar);
-        const auto v3 = fmax(src1[i], -cx);
-        dst_l[i] = fmin(v1, v2);
-        dst_r[i] = fmin(v1, v3);
+        dst[i] = src1[i] - fmin(fmax(src2[i], fmin(src1[i], 0)), fmax(src1[i], 0));
+    }
+}
+
+inline void cxor93_2_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        auto p = src2[i] + src1[i];
+        auto mf = src2[i] - src1[i];
+        dst[i] = fmin(src2[i], fmax(0, fmin(p, mf)));
+    }
+}
+
+inline void cxor93_3_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        auto p = src2[i] + src1[i];
+        auto mf = src2[i] - src1[i];
+        dst[i] = fmin(fmax(src2[i], p), fmax(0, fmin(p, mf)));
+    }
+}
+
+inline void cxor93_4_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
+                           unsigned int nquads)
+{
+    for (auto i = 0U; i < nquads << 2; ++i)
+    {
+        auto p = src2[i] + src1[i];
+        auto mf = src2[i] - src1[i];
+        dst[i] = fmax(fmin(fmax(-src1[i], src2[i]), mf), fmin(p, -p));
     }
 }
 

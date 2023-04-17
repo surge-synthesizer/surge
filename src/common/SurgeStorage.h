@@ -181,11 +181,16 @@ enum NoiseColorChannels
 enum RingModMode
 {
     rmm_ring = 0,
-    rmm_cxor = 1,
-    rmm_cxor_f1 = 2,
-    rmm_cxor_f2 = 3,
-    rmm_cxor_f3 = 4,
-    rmm_cxor_f4 = 5
+    rmm_cxor43_0 = 1,
+    rmm_cxor43_1 = 2,
+    rmm_cxor43_2 = 3,
+    rmm_cxor43_3 = 4,
+    rmm_cxor43_4 = 5,
+    rmm_cxor93_0 = 6,
+    rmm_cxor93_1 = 7,
+    rmm_cxor93_2 = 8,
+    rmm_cxor93_3 = 9,
+    rmm_cxor93_4 = 10
 };
 
 enum lfo_trigger_mode
