@@ -81,6 +81,7 @@ enum ctrltypes
     ct_freq_audible_deactivatable_lp,
     ct_freq_audible_with_tunability, // we abuse 'extended' to mean 'use SCL tuning'
     ct_freq_audible_very_low_minval,
+    ct_freq_audible_fm3_extendable,
     ct_freq_mod,
     ct_freq_hpf,
     ct_freq_shift,

@@ -174,7 +174,7 @@ void FM3Oscillator::init_ctrltypes()
     oscdata->p[fm3_m3amount].set_name("M3 Amount");
     oscdata->p[fm3_m3amount].set_type(ct_percent);
     oscdata->p[fm3_m3freq].set_name("M3 Frequency");
-    oscdata->p[fm3_m3freq].set_type(ct_freq_audible);
+    oscdata->p[fm3_m3freq].set_type(ct_freq_audible_fm3_extendable);
 
     oscdata->p[fm3_feedback].set_name("Feedback");
     oscdata->p[fm3_feedback].set_type(ct_osc_feedback_negative);
@@ -221,5 +221,10 @@ void FM3Oscillator::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 15)
     {
         oscdata->retrigger.val.b = true;
+    }
+
+    if (streamingRevision <= 21)
+    {
+        oscdata->p[fm3_m3freq].extend_range = false;
     }
 }

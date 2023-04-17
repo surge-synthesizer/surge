@@ -105,7 +105,8 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                             added Extend to Delay Feedback parameter (allows negative delay)
 // 19 -> 20 (XT 1.1 release)   added voice envelope mode, but super late so don't break 19
 // 20 -> 21 (XT 1.2 nightlies) added absolutable mode for Combulator Offset 1/2 (to match the behavior of Center parameter)
-//                                   oddsound_as_mts_main
+//                             added oddsound_as_mts_main
+// 21 -> 22 (XT 1.3 nighlies)  added new ring modulator modes in the mixer
 // clang-format on
 
 const int ff_revision = 22;
