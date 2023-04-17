@@ -25,29 +25,28 @@ namespace Surge
 namespace OSC
 {
 
-class OSCListener
-     : public juce::OSCReceiver,
-              juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
+class OSCListener : public juce::OSCReceiver,
+                    juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
 {
-public:
-     OSCListener();
-     ~OSCListener();
+  public:
+    OSCListener();
+    ~OSCListener();
 
-     bool init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge, int port);
-     void stopListening();
+    bool init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge, int port);
+    void stopListening();
 
-     void oscMessageReceived (const juce::OSCMessage& message) override;
-     void oscBundleReceived (const juce::OSCBundle &bundle) override;
+    void oscMessageReceived(const juce::OSCMessage &message) override;
+    void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
-     int portnum = 0;
-     bool listening = false;
+    int portnum = 0;
+    bool listening = false;
 
-private:
-     SurgeSynthesizer *surgePtr;
-     SurgeSynthProcessor *sspPtr;
+  private:
+    SurgeSynthesizer *surgePtr;
+    SurgeSynthProcessor *sspPtr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OSCListener)
 };
 
-}    // namespace OSC
-}    // namespace Surge
+} // namespace OSC
+} // namespace Surge

@@ -126,6 +126,13 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         int defaultOSCPort = Surge::Storage::getUserDefaultValue(
             &(surge->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
         bool success = initOSC(defaultOSCPort);
+        if (!success)
+        {
+            std::ostringstream msg;
+            msg << "SurgeXT was unable to connect to port " << defaultOSCPort << ".\n"
+                << "It may be in use by another application.";
+            surge->storage.reportError(msg.str(), "OSC Initialization Error");
+        }
     }
 #endif
 
@@ -197,17 +204,16 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 /* OSC (Open Sound Control) */
-bool SurgeSynthProcessor::initOSC(int port) {
-    return oscListener.init(this, surge, port);
-}
+bool SurgeSynthProcessor::initOSC(int port) { return oscListener.init(this, surge, port); }
 
-bool SurgeSynthProcessor::changeOSCPort(int new_port) {
-    if (oscListener.listening) {
+bool SurgeSynthProcessor::changeOSCPort(int new_port)
+{
+    if (oscListener.listening)
+    {
         oscListener.disconnect();
     }
     return oscListener.init(this, surge, new_port);
 }
-
 
 //==============================================================================
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)

@@ -5095,13 +5095,13 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
     return 0.0;
 }
 
-void Parameter::setOSCName(const std::string &s)
+void Parameter::setOSCName(std::string s)
 {
-    oscName = s;
+    oscName = std::move(s);
     hasOSCName = true;
 }
 
-std::string Parameter::get_OSC_name()
+std::string_view Parameter::get_OSC_name()
 {
     if (!hasOSCName)
         return get_storage_name();

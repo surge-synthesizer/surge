@@ -941,7 +941,7 @@ class SurgePatch
 
     void load_patch(const void *data, int size, bool preset);
     unsigned int save_patch(void **data);
-    Parameter * parameterFromStorageName(std::string stName);
+    Parameter *parameterFromStorageName(std::string stName);
     Parameter *parameterFromOSCName(std::string stName);
 
     // data

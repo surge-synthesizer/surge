@@ -693,7 +693,6 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 #endif
 }
 
-
 void SurgePatch::init_default_values()
 {
     // reset all parameters to their default value (could be zero, then zeroes never would have to

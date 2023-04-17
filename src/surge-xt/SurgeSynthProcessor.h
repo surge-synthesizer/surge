@@ -350,7 +350,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     sst::cpputils::SimpleRingBuffer<oscMsg, 4096> oscRingBuf;
 
-    Surge::OSC::OSCListener oscListener; 
+    Surge::OSC::OSCListener oscListener;
 
     //==============================================================================
     const juce::String getName() const override;
