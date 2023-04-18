@@ -2978,7 +2978,7 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
 
 #if SURGE_HAS_OSC
     auto oscSubMenu = makeOSCMenu(where);
-    settingsMenu.addSubMenu(Surge::GUI::toOSCase("Open Sound Control"), oscSubMenu);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCase("OSC Settings"), oscSubMenu);
 #endif
 
     auto tuningSubMenu = makeTuningMenu(where, false);
@@ -4755,7 +4755,7 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
 void SurgeGUIEditor::initOSCError(int port)
 {
     std::ostringstream msg;
-    msg << "SurgeXT was unable to connect to port " << port << ".\n"
+    msg << "Surge XT was unable to connect to OSC port " << port << ".\n"
         << "It may be in use by another application.";
     synth->storage.reportError(msg.str(), "OSC Initialization Error");
 };
@@ -4765,94 +4765,105 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
     auto oscSubMenu = juce::PopupMenu();
     int portnum = juceEditor->processor.oscListener.portnum;
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("List all parameters"),
-                       [this]() { showHTML(this->parametersToHtml()); });
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Port..."), [this, portnum]() {
+        const auto c{std::to_string(portnum)};
 
-    oscSubMenu.addSeparator();
-    oscSubMenu.addItem(
-        Surge::GUI::toOSCase("Change OSC port (" + std::to_string(portnum) + ")"),
-        [this, portnum]() {
-            const auto c{std::to_string(portnum)};
-            promptForMiniEdit(
-                c, "Enter a new value:", "OSC Port #", juce::Point<int>(10, 10),
-                [this](const std::string &c) {
-                    int newPort = 0;
-                    try
-                    {
-                        newPort = std::stoi(c);
-                    }
-                    catch (...)
-                    {
-                        std::ostringstream msg;
-                        msg << "Not a valid number. Please try again.";
-                        synth->storage.reportError(msg.str(), "Port Number Error");
-                        return;
-                    }
+        promptForMiniEdit(
+            c, "Enter a new value:", "OSC Port Number", juce::Point<int>(10, 10),
+            [this](const std::string &c) {
+                int newPort = Surge::Storage::getUserDefaultValue(
+                    &(synth->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
 
-                    if (newPort > 65535 || newPort < 1)
-                    {
-                        std::ostringstream msg;
-                        msg << "Number is out of range for a port number (1 - 65535).";
-                        synth->storage.reportError(msg.str(), "Port Number Error");
-                        return;
-                    }
+                try
+                {
+                    newPort = std::stoi(c);
+                }
+                catch (...)
+                {
+                    std::ostringstream msg;
+                    msg << "Entered value is not a number. Please try again.";
+                    synth->storage.reportError(msg.str(), "Input Error");
+                    return;
+                }
 
-                    bool success = juceEditor->processor.changeOSCPort(newPort);
-                    if (!success)
-                    {
-                        SurgeGUIEditor::initOSCError(newPort);
-                    }
-                    else
-                    {
-                        Surge::Storage::updateUserDefaultValue(&(synth->storage),
-                                                               Surge::Storage::OSCPort, newPort);
-                    }
-                },
-                mainMenu);
-        });
+                if (newPort > 65535 || newPort < 1)
+                {
+                    std::ostringstream msg;
+                    msg << "Port number must be between 1 and 65535!";
+                    synth->storage.reportError(msg.str(), "Port Number Out Of Range");
+                    return;
+                }
+
+                bool success = juceEditor->processor.changeOSCPort(newPort);
+
+                if (!success)
+                {
+                    SurgeGUIEditor::initOSCError(newPort);
+                }
+                else
+                {
+                    Surge::Storage::updateUserDefaultValue(&(synth->storage),
+                                                           Surge::Storage::OSCPort, newPort);
+                }
+            },
+            mainMenu);
+    });
 
     if (portnum != DEFAULT_OSC_PORT)
     {
         oscSubMenu.addItem(
-            Surge::GUI::toOSCase("Reset OSC port (to " + std::to_string(DEFAULT_OSC_PORT) + ")"),
+            Surge::GUI::toOSCase("Reset OSC Port to " + std::to_string(DEFAULT_OSC_PORT)),
             [this]() {
                 bool success = juceEditor->processor.changeOSCPort(DEFAULT_OSC_PORT);
+
                 if (!success)
+                {
                     SurgeGUIEditor::initOSCError(DEFAULT_OSC_PORT);
+                }
                 else
+                {
                     Surge::Storage::updateUserDefaultValue(
                         &(synth->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
+                }
             });
     }
 
+    oscSubMenu.addSeparator();
+
     bool alreadyListening = juceEditor->processor.oscListener.listening;
+
     if (alreadyListening)
     {
-        oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC listener"),
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Listener"),
                            [this]() { juceEditor->processor.oscListener.stopListening(); });
     }
     else
     {
-        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC listener"), [this]() {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Listener"), [this]() {
             int defaultOSCPort = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
-#ifdef DEBUG
-            std::cout << "default osc port: " << defaultOSCPort;
-#endif
             bool success = juceEditor->processor.initOSC(defaultOSCPort);
+
             if (!success)
+            {
                 SurgeGUIEditor::initOSCError(defaultOSCPort);
+            }
         });
     }
 
-    oscSubMenu.addSeparator();
     bool isChecked = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                          Surge::Storage::StartOSC, false);
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC at startup"), true, isChecked,
-                       [this, isChecked]() {
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Auto-Start OSC Listener Upon Instantiation"), true,
+                       isChecked, [this, isChecked]() {
                            Surge::Storage::updateUserDefaultValue(
                                &(synth->storage), Surge::Storage::StartOSC, !isChecked);
                        });
+
+    oscSubMenu.addSeparator();
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Show All OSC Parameters..."),
+                       [this]() { showHTML(this->parametersToHtml()); });
 
     return oscSubMenu;
 }
@@ -4861,13 +4872,15 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 void SurgeGUIEditor::reloadFromSkin()
 {
     if (!frame || !bitmapStore.get())
+    {
         return;
+    }
 
     juceEditor->surgeLF->setSkin(currentSkin, bitmapStore);
 
     float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
-    bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
 
+    bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
     paramInfowindow->setSkin(currentSkin, bitmapStore);
     patchSelectorComment->setSkin(currentSkin, bitmapStore);
 
@@ -4944,7 +4957,7 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
     auto devSubMenu = juce::PopupMenu();
 
 #if WINDOWS
-    Surge::GUI::addMenuWithShortcut(devSubMenu, "Show debug console...",
+    Surge::GUI::addMenuWithShortcut(devSubMenu, Surge::GUI::toOSCase("Show Debug Console..."),
                                     showShortcutDescription("Alt + D", u8"\U00002325D"),
                                     []() { Surge::Debug::toggleConsole(); });
 #endif
@@ -4955,7 +4968,7 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
         frame->repaint();
     });
 
-    devSubMenu.addItem(Surge::GUI::toOSCase("Dump Undo/Redo Stack To stdout"), true, false,
+    devSubMenu.addItem(Surge::GUI::toOSCase("Dump Undo/Redo Stack to stdout"), true, false,
                        [this]() { undoManager()->dumpStack(); });
 
 #ifdef INSTRUMENT_UI
@@ -5046,7 +5059,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
         {
             synth->storage.reportError(
                 "This parameter does not support editing its value by text input.\n\n"
-                "Please report this finding to Surge Synth Team in order to fix the problem!",
+                "Please report this to Surge Synth Team in order to fix the problem!",
                 "Error");
             return;
         }
