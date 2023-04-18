@@ -17,6 +17,11 @@
 #include "Parameter.h"
 #include "SurgeStorage.h"
 #include <vembertech/basic_dsp.h>
+#include "globals.h"
+#include "sst/basic-blocks/dsp/MidSide.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace sdsp = sst::basic_blocks::dsp;
+namespace mech = sst::basic_blocks::mechanics;
 
 MSToolEffect::MSToolEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), hpm(storage), hps(storage), lpm(storage), lps(storage),
@@ -101,14 +106,14 @@ void MSToolEffect::process(float *dataL, float *dataR)
     switch (io)
     {
     case 0:
-        encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
+        sdsp::encodeMS<BLOCK_SIZE>(dataL, dataR, M, S);
         break;
     case 1:
-        encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
+        sdsp::encodeMS<BLOCK_SIZE>(dataL, dataR, M, S);
         break;
     case 2:
-        copy_block(dataL, M, BLOCK_SIZE_QUAD);
-        copy_block(dataR, S, BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(dataL, M);
+        mech::copy_from_to<BLOCK_SIZE>(dataR, S);
         break;
     }
 
@@ -132,14 +137,14 @@ void MSToolEffect::process(float *dataL, float *dataR)
     switch (io)
     {
     case 0:
-        decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
+        sdsp::decodeMS<BLOCK_SIZE>(M, S, dataL, dataR);
         break;
     case 1:
-        copy_block(M, dataL, BLOCK_SIZE_QUAD);
-        copy_block(S, dataR, BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(M, dataL);
+        mech::copy_from_to<BLOCK_SIZE>(S, dataR);
         break;
     case 2:
-        decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
+        sdsp::decodeMS<BLOCK_SIZE>(M, S, dataL, dataR);
         break;
     }
 

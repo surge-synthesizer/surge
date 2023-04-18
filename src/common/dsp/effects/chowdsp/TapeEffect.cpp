@@ -16,6 +16,9 @@
 #include "TapeEffect.h"
 #include <vembertech/basic_dsp.h>
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 namespace chowdsp
 {
 
@@ -34,8 +37,8 @@ void TapeEffect::init()
     toneControl.prepare(storage->samplerate);
     lossFilter.prepare(storage->samplerate, BLOCK_SIZE);
 
-    clear_block(L, BLOCK_SIZE_QUAD);
-    clear_block(R, BLOCK_SIZE_QUAD);
+    mech::clear_block<BLOCK_SIZE>(L);
+    mech::clear_block<BLOCK_SIZE>(R);
 
     degrade.prepareToPlay((float)storage->samplerate, BLOCK_SIZE);
     chew.prepare((float)storage->samplerate, BLOCK_SIZE);
@@ -49,8 +52,8 @@ void TapeEffect::init()
 
 void TapeEffect::process(float *dataL, float *dataR)
 {
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
     if (!fxdata->p[tape_drive].deactivated)
     {

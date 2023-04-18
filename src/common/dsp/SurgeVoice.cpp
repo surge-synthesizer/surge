@@ -16,12 +16,19 @@
 #include "SurgeVoice.h"
 #include "DSPUtils.h"
 #include "QuadFilterChain.h"
+#include "globals.h"
 #include <cmath>
 #ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
 #endif
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
+#include "CXOR.h"
+
 using namespace std;
+namespace mech = sst::basic_blocks::mechanics;
+namespace sdsp = sst::basic_blocks::dsp;
 
 enum lag_entries
 {
@@ -840,8 +847,8 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
         switch (mode)
         {
         case RingModMode::rmm_ring:
-            mul_block(src1_l, src2_l, dst_l, nquads);
-            mul_block(src1_r, src2_r, dst_r, nquads);
+            mech::mul_block<BLOCK_SIZE_OS>(src1_l, src2_l, dst_l);
+            mech::mul_block<BLOCK_SIZE_OS>(src1_r, src2_r, dst_r);
             break;
         case RingModMode::rmm_cxor43_0:
             cxor43_0_block(src1_l, src2_l, dst_l, nquads);
@@ -883,10 +890,6 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
             cxor93_4_block(src1_l, src2_l, dst_l, nquads);
             cxor93_4_block(src1_r, src2_r, dst_r, nquads);
             break;
-        default:
-            mul_block(src1_l, src2_l, dst_l, nquads);
-            mul_block(src1_r, src2_r, dst_r, nquads);
-            break;
         }
         osclevels.multiply_2_blocks(dst_l, dst_r, nquads);
     }
@@ -895,7 +898,7 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
         switch (mode)
         {
         case RingModMode::rmm_ring:
-            mul_block(src1_l, src2_l, dst_l, nquads);
+            mech::mul_block<BLOCK_SIZE_OS>(src1_l, src2_l, dst_l);
             break;
         case RingModMode::rmm_cxor43_0:
             cxor43_0_block(src1_l, src2_l, dst_l, nquads);
@@ -927,9 +930,6 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
         case RingModMode::rmm_cxor93_4:
             cxor93_4_block(src1_l, src2_l, dst_l, nquads);
             break;
-        default:
-            mul_block(src1_l, src2_l, dst_l, nquads);
-            break;
         }
         osclevels.multiply_block(dst_l, nquads);
     }
@@ -948,8 +948,8 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     float drift = localcopy[scene->drift.param_id_in_scene].f;
 
     // clear output
-    clear_block(output[0], BLOCK_SIZE_OS_QUAD);
-    clear_block(output[1], BLOCK_SIZE_OS_QUAD);
+    mech::clear_block<BLOCK_SIZE_OS>(output[0]);
+    mech::clear_block<BLOCK_SIZE_OS>(output[1]);
 
     for (int i = 0; i < n_oscs; ++i)
     {
@@ -983,11 +983,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
             if (route[2] < 2)
             {
-                accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
             }
             if (route[2] > 0)
             {
-                accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
             }
         }
     }
@@ -1028,11 +1028,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
             if (route[1] < 2)
             {
-                accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
             }
             if (route[1] > 0)
             {
-                accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
             }
         }
     }
@@ -1041,7 +1041,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     {
         if (FMmode == fm_2and3to1)
         {
-            add_block(osc[1]->output, osc[2]->output, fmbuffer, BLOCK_SIZE_OS_QUAD);
+            mech::add_block<BLOCK_SIZE_OS>(osc[1]->output, osc[2]->output, fmbuffer);
             osc[0]->process_block(
                 noteShiftFromPitchParam(
                     (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
@@ -1084,11 +1084,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
             if (route[0] < 2)
             {
-                accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
             }
             if (route[0] > 0)
             {
-                accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
             }
         }
     }
@@ -1101,11 +1101,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
         if (route[3] < 2)
         {
-            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
         }
         if (route[3] > 0)
         {
-            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
         }
     }
 
@@ -1117,11 +1117,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
         if (route[4] < 2)
         {
-            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
         }
         if (route[4] > 0)
         {
-            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
         }
     }
 
@@ -1161,11 +1161,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
         if (route[5] < 2)
         {
-            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
         }
         if (route[5] > 0)
         {
-            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
         }
     }
 

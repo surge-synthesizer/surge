@@ -16,6 +16,10 @@
 #include "WavetableOscillator.h"
 #include "DSPUtils.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 using namespace std;
 
 const float hpf_cycle_loss = 0.99f;
@@ -467,7 +471,7 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
             {
                 while (oscstate[l] < a)
                 {
-                    FMmul_inv = rcp(fmmul);
+                    FMmul_inv = mech::rcp(fmmul);
                     convolute(l, true, stereo);
                 }
 
@@ -507,9 +511,9 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
         }
     }
 
-    clear_block(&oscbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
+    mech::clear_block<BLOCK_SIZE_OS>(&oscbuffer[bufpos]);
     if (stereo)
-        clear_block(&oscbufferR[bufpos], BLOCK_SIZE_OS_QUAD);
+        mech::clear_block<BLOCK_SIZE_OS>(&oscbufferR[bufpos]);
 
     bufpos = (bufpos + BLOCK_SIZE_OS) & (OB_LENGTH - 1);
 

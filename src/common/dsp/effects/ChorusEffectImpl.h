@@ -5,6 +5,11 @@
 #include "ChorusEffect.h"
 #include <algorithm>
 
+#include "globals.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
+
 using std::max;
 using std::min;
 
@@ -78,14 +83,17 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
 
 template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
 {
+    namespace mech = sst::basic_blocks::mechanics;
+    namespace sdsp = sst::basic_blocks::dsp;
+
     setvars(false);
 
     float tbufferL alignas(16)[BLOCK_SIZE];
     float tbufferR alignas(16)[BLOCK_SIZE];
     float fbblock alignas(16)[BLOCK_SIZE];
 
-    clear_block(tbufferL, BLOCK_SIZE_QUAD);
-    clear_block(tbufferR, BLOCK_SIZE_QUAD);
+    mech::clear_block<BLOCK_SIZE>(tbufferL);
+    mech::clear_block<BLOCK_SIZE>(tbufferR);
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
@@ -110,8 +118,8 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
             L = _mm_add_ps(L, _mm_mul_ps(vo, voicepanL4[j]));
             R = _mm_add_ps(R, _mm_mul_ps(vo, voicepanR4[j]));
         }
-        L = sum_ps_to_ss(L);
-        R = sum_ps_to_ss(R);
+        L = mech::sum_ps_to_ss(L);
+        R = mech::sum_ps_to_ss(R);
         _mm_store_ss(&tbufferL[k], L);
         _mm_store_ss(&tbufferR[k], R);
     }
@@ -126,11 +134,11 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
         hp.process_block(tbufferL, tbufferR);
     }
 
-    add_block(tbufferL, tbufferR, fbblock, BLOCK_SIZE_QUAD);
+    mech::add_block<BLOCK_SIZE>(tbufferL, tbufferR, fbblock);
     feedback.multiply_block(fbblock, BLOCK_SIZE_QUAD);
-    hardclip_block(fbblock, BLOCK_SIZE_QUAD);
-    accumulate_block(dataL, fbblock, BLOCK_SIZE_QUAD);
-    accumulate_block(dataR, fbblock, BLOCK_SIZE_QUAD);
+    sdsp::hardclip_block<BLOCK_SIZE>(fbblock);
+    mech::accumulate_from_to<BLOCK_SIZE>(dataL, fbblock);
+    mech::accumulate_from_to<BLOCK_SIZE>(dataR, fbblock);
 
     if (wpos + BLOCK_SIZE >= max_delay_length)
     {
@@ -141,7 +149,7 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
     }
     else
     {
-        copy_block(fbblock, &buffer[wpos], BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(fbblock, &buffer[wpos]);
     }
 
     if (wpos == 0)
@@ -150,10 +158,7 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
                 buffer[k]; // copy buffer so FIR-core doesn't have to wrap
 
     // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(tbufferL, tbufferR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, tbufferL, tbufferR, BLOCK_SIZE_QUAD);
+    applyWidth(tbufferL, tbufferR, width);
 
     mix.fade_2_blocks_to(dataL, tbufferL, dataR, tbufferR, dataL, dataR, BLOCK_SIZE_QUAD);
 

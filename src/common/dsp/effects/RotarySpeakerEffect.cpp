@@ -356,10 +356,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     }
 
     // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(wbL, wbR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, wbL, wbR, BLOCK_SIZE_QUAD);
+    applyWidth(wbL, wbR, width);
 
     mix.fade_2_blocks_to(dataL, wbL, dataR, wbR, dataL, dataR, BLOCK_SIZE_QUAD);
 

@@ -2,6 +2,9 @@
 #include "UserDefaults.h"
 #include "DebugHelpers.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 constexpr int subblock_factor = 3; // divide block by 2^this
 
 std::vector<AirWinBaseClass::Registration> AirWindowsEffect::fxreg;
@@ -251,8 +254,8 @@ void AirWindowsEffect::process(float *dataL, float *dataR)
         airwin->processReplacing(in, out, QBLOCK);
     }
 
-    copy_block(outL, dataL, BLOCK_SIZE_QUAD);
-    copy_block(outR, dataR, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(outL, dataL);
+    mech::copy_from_to<BLOCK_SIZE>(outR, dataR);
 }
 
 void AirWindowsEffect::setupSubFX(int sfx, bool useStreamedValues)

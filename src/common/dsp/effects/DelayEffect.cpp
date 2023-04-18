@@ -1,4 +1,10 @@
 #include "DelayEffect.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
+
+namespace mech = sst::basic_blocks::mechanics;
+namespace sdsp = sst::basic_blocks::dsp;
 
 using namespace std;
 
@@ -173,13 +179,13 @@ void DelayEffect::process(float *dataL, float *dataR)
                                      _mm_loadu_ps(&buffer[0][rpL + 4])));
         L = _mm_add_ps(L, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincL + 8]),
                                      _mm_loadu_ps(&buffer[0][rpL + 8])));
-        L = sum_ps_to_ss(L);
+        L = sst::basic_blocks::mechanics::sum_ps_to_ss(L);
         R = _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincR]), _mm_loadu_ps(&buffer[1][rpR]));
         R = _mm_add_ps(R, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincR + 4]),
                                      _mm_loadu_ps(&buffer[1][rpR + 4])));
         R = _mm_add_ps(R, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sincR + 8]),
                                      _mm_loadu_ps(&buffer[1][rpR + 8])));
-        R = sum_ps_to_ss(R);
+        R = sst::basic_blocks::mechanics::sum_ps_to_ss(R);
 
         _mm_store_ss(&tbufferL[k], L);
         _mm_store_ss(&tbufferR[k], R);
@@ -188,28 +194,28 @@ void DelayEffect::process(float *dataL, float *dataR)
     // negative feedback
     if (FBsign)
     {
-        mul_block(tbufferL, -1.f, tbufferL, BLOCK_SIZE_QUAD);
-        mul_block(tbufferR, -1.f, tbufferR, BLOCK_SIZE_QUAD);
+        mech::mul_block<BLOCK_SIZE>(tbufferL, -1.f, tbufferL);
+        mech::mul_block<BLOCK_SIZE>(tbufferR, -1.f, tbufferR);
     }
 
     // feedback path clipping modes
     switch (fxdata->p[dly_feedback].deform_type)
     {
     case dly_clipping_soft:
-        softclip_block(tbufferL, BLOCK_SIZE_QUAD);
-        softclip_block(tbufferR, BLOCK_SIZE_QUAD);
+        sdsp::softclip_block<BLOCK_SIZE>(tbufferL);
+        sdsp::softclip_block<BLOCK_SIZE>(tbufferR);
         break;
     case dly_clipping_tanh:
-        tanh7_block(tbufferL, BLOCK_SIZE_QUAD);
-        tanh7_block(tbufferR, BLOCK_SIZE_QUAD);
+        sdsp::tanh7_block<BLOCK_SIZE>(tbufferL);
+        sdsp::tanh7_block<BLOCK_SIZE>(tbufferR);
         break;
     case dly_clipping_hard:
-        hardclip_block(tbufferL, BLOCK_SIZE_QUAD);
-        hardclip_block(tbufferR, BLOCK_SIZE_QUAD);
+        sdsp::hardclip_block<BLOCK_SIZE>(tbufferL);
+        sdsp::hardclip_block<BLOCK_SIZE>(tbufferR);
         break;
     case dly_clipping_hard18:
-        hardclip_block8(tbufferL, BLOCK_SIZE_QUAD);
-        hardclip_block8(tbufferR, BLOCK_SIZE_QUAD);
+        sdsp::hardclip_block8<BLOCK_SIZE>(tbufferL);
+        sdsp::hardclip_block8<BLOCK_SIZE>(tbufferR);
         break;
     case dly_clipping_off:
     default:
@@ -241,8 +247,8 @@ void DelayEffect::process(float *dataL, float *dataR)
     }
     else
     {
-        copy_block(wbL, &buffer[0][wpos], BLOCK_SIZE_QUAD);
-        copy_block(wbR, &buffer[1][wpos], BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(wbL, &buffer[0][wpos]);
+        mech::copy_from_to<BLOCK_SIZE>(wbR, &buffer[1][wpos]);
     }
 
     if (wpos == 0)
@@ -256,10 +262,7 @@ void DelayEffect::process(float *dataL, float *dataR)
     }
 
     // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(tbufferL, tbufferR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, tbufferL, tbufferR, BLOCK_SIZE_QUAD);
+    applyWidth(tbufferL, tbufferR, width);
 
     mix.fade_2_blocks_to(dataL, tbufferL, dataR, tbufferR, dataL, dataR, BLOCK_SIZE_QUAD);
 

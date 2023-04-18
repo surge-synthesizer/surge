@@ -21,10 +21,10 @@
 
 #include <vembertech/lipol.h>
 
-const int revbits = 15;
-const int max_rev_dly = 1 << revbits;
-const int rev_tap_bits = 4;
-const int rev_taps = 1 << rev_tap_bits;
+constexpr int revbits = 15;
+constexpr int max_rev_dly = 1 << revbits;
+constexpr int rev_tap_bits = 4;
+constexpr int rev_taps = 1 << rev_tap_bits;
 
 class Reverb1Effect : public Effect
 {

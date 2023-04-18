@@ -22,7 +22,7 @@
 #define SURGE_SSESINCDELAYLINE_H
 
 #include "SurgeStorage.h"
-#include "basic_dsp.h" // for 'sum_ps_to_ss'
+#include "sst/basic-blocks/mechanics/simd-ops.h"
 
 template <int COMB_SIZE> // power of two
 struct SSESincDelayLine
@@ -67,7 +67,7 @@ struct SSESincDelayLine
         o = _mm_add_ps(o, _mm_mul_ps(a, b));
 
         float res;
-        _mm_store_ss(&res, sum_ps_to_ss(o));
+        _mm_store_ss(&res, sst::basic_blocks::mechanics::sum_ps_to_ss(o));
 
         return res;
     }

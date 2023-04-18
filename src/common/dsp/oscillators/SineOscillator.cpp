@@ -17,6 +17,10 @@
 #include "sst/basic-blocks/dsp/FastMath.h"
 #include <algorithm>
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 /*
  * Sine Oscillator Optimization Strategy
  *
@@ -289,12 +293,12 @@ template <> inline __m128 valueFromSinAndCosForMode<6>(__m128 svaluesse, __m128 
 
     auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
     auto s2fh = _mm_and_ps(s2x, _mm_cmpge_ps(svaluesse, mz));
-    return abs_ps(s2fh);
+    return mech::abs_ps(s2fh);
 }
 
 template <> inline __m128 valueFromSinAndCosForMode<7>(__m128 svaluesse, __m128 cvaluesse, int maxc)
 {
-    return abs_ps(valueFromSinAndCosForMode<5>(svaluesse, cvaluesse, maxc));
+    return mech::abs_ps(valueFromSinAndCosForMode<5>(svaluesse, cvaluesse, maxc));
 }
 
 template <> inline __m128 valueFromSinAndCosForMode<8>(__m128 svaluesse, __m128 cvaluesse, int maxc)
@@ -382,7 +386,7 @@ inline __m128 valueFromSinAndCosForMode<14>(__m128 svaluesse, __m128 cvaluesse, 
 
     auto c2x = _mm_sub_ps(m1, _mm_mul_ps(m2, _mm_mul_ps(svaluesse, svaluesse)));
     auto q23 = _mm_cmpge_ps(svaluesse, mz);
-    return _mm_and_ps(q23, abs_ps(c2x));
+    return _mm_and_ps(q23, mech::abs_ps(c2x));
 }
 
 template <>

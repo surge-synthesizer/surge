@@ -1,5 +1,12 @@
 #include "PhaserEffect.h"
 
+#include "globals.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/dsp/MidSide.h"
+
+namespace mech = sst::basic_blocks::mechanics;
+namespace sdsp = sst::basic_blocks::dsp;
+
 using namespace vt_dsp;
 
 float bend(float x, float b) { return (1.f + b) * x - b * x * x * x; }
@@ -41,8 +48,8 @@ void PhaserEffect::init()
         biquad[i]->suspend();
     }
 
-    clear_block(L, BLOCK_SIZE_QUAD);
-    clear_block(R, BLOCK_SIZE_QUAD);
+    mech::clear_block<BLOCK_SIZE>(L);
+    mech::clear_block<BLOCK_SIZE>(R);
 
     lp.suspend();
     hp.suspend();
@@ -200,11 +207,7 @@ void PhaserEffect::process(float *dataL, float *dataR)
         hp.process_block(L, R);
     }
 
-    // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
+    applyWidth(L, R, width);
 
     mix.set_target_smoothed(clamp01(*pd_float[ph_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);

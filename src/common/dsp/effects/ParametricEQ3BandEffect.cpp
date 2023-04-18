@@ -14,6 +14,7 @@
 */
 
 #include "ParametricEQ3BandEffect.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
 
 ParametricEQ3BandEffect::ParametricEQ3BandEffect(SurgeStorage *storage, FxStorage *fxdata,
                                                  pdata *pd)
@@ -77,8 +78,9 @@ void ParametricEQ3BandEffect::process(float *dataL, float *dataR)
         setvars(false);
     bi = (bi + 1) & slowrate_m1;
 
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    namespace mech = sst::basic_blocks::mechanics;
+    mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
     if (!fxdata->p[eq3_gain1].deactivated)
         band1.process_block(L, R);

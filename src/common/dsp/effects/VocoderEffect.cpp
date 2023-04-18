@@ -1,5 +1,8 @@
 #include "VocoderEffect.h"
 #include <algorithm>
+#include "globals.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 // Hz from http://www.sequencer.de/pix/moog/moog_vocoder_rack.jpg
 // const float vocoder_freq_moog[n_vocoder_bands] = {50, 158, 200, 252, 317, 400, 504, 635, 800,
@@ -171,13 +174,13 @@ void VocoderEffect::process(float *dataL, float *dataR)
 
     if (modulator_mode == vim_mono)
     {
-        add_block(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1], modulator_in,
-                  BLOCK_SIZE_QUAD);
+        mech::add_block<BLOCK_SIZE>(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1],
+                                    modulator_in);
     }
     else
     {
-        copy_block(storage->audio_in_nonOS[0], modulator_in, BLOCK_SIZE_QUAD);
-        copy_block(storage->audio_in_nonOS[1], modulator_inR, BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(storage->audio_in_nonOS[0], modulator_in);
+        mech::copy_from_to<BLOCK_SIZE>(storage->audio_in_nonOS[1], modulator_inR);
     }
 
     float Gain = *pd_float[voc_input_gain] + 24.f;

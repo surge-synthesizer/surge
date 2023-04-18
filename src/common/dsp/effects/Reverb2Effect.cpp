@@ -236,10 +236,7 @@ void Reverb2Effect::process(float *dataL, float *dataR)
     }
 
     // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(wetL, wetR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, wetL, wetR, BLOCK_SIZE_QUAD);
+    applyWidth(wetL, wetR, width);
 
     mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
 }

@@ -71,7 +71,6 @@ int GetWTIndex(int WaveIdx, int WaveSize, int NumWaves, int MipMap, int Padding 
         Index += Offset >> i;
         Index += Padding * NumWaves;
     }
-    assert((Index + WaveSize - 1) < max_wtable_samples);
     return Index;
 }
 

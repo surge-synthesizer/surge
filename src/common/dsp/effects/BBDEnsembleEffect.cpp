@@ -15,6 +15,9 @@
 
 #include "BBDEnsembleEffect.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 std::string ensemble_stage_name(int i)
 {
     switch (i)
@@ -166,8 +169,8 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
                                             float delayScale)
 {
     // copy input data ("dry") to processed output ("wet)
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
     const auto aa_cutoff = calculateFilterParamFrequency(*pd_float, storage);
     sincInputFilter.coeff_LP(2 * M_PI * aa_cutoff / storage->samplerate, 0.7071);
@@ -264,8 +267,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1,
                                   auto &delR2) {
         // copy input data ("dry") to processed output ("wet)
-        copy_block(dataL, L, BLOCK_SIZE_QUAD);
-        copy_block(dataR, R, BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+        mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
         // setting the filter frequency takes a while, so
         // let's only do it every 4 times
@@ -333,8 +336,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
                     modlfos[j][i].post_process();
         }
 
-        mul_block(L, storage->db_to_linear(-8.0f), L, BLOCK_SIZE_QUAD);
-        mul_block(R, storage->db_to_linear(-8.0f), R, BLOCK_SIZE_QUAD);
+        mech::mul_block<BLOCK_SIZE>(L, storage->db_to_linear(-8.0f), L);
+        mech::mul_block<BLOCK_SIZE>(R, storage->db_to_linear(-8.0f), R);
     };
 
     switch (bbd_stages)
@@ -365,10 +368,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     // scale width
     width.set_target_smoothed(clamp1bp(*pd_float[ens_width]));
 
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
+    applyWidth(L, R, width);
 
     mix.set_target_smoothed(clamp1bp(*pd_float[ens_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);

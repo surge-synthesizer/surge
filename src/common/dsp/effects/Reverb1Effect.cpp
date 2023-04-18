@@ -1,5 +1,9 @@
 #include "Reverb1Effect.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 using namespace std;
 
 const float db60 = powf(10.f, 0.05f * -60.f);
@@ -55,8 +59,8 @@ void Reverb1Effect::setvars(bool init) {}
 
 void Reverb1Effect::clear_buffers()
 {
-    clear_block(predelay, max_rev_dly >> 2);
-    clear_block(delay, (rev_taps * max_rev_dly) >> 2);
+    mech::clear_block<max_rev_dly>(predelay);
+    mech::clear_block<rev_taps * max_rev_dly>(delay);
 }
 
 void Reverb1Effect::loadpreset(int id)
@@ -241,7 +245,7 @@ void Reverb1Effect::process(float *dataL, float *dataR)
 
         __m128 fb = _mm_add_ps(_mm_add_ps(_mm_load_ps(out_tap), _mm_load_ps(out_tap + 4)),
                                _mm_add_ps(_mm_load_ps(out_tap + 8), _mm_load_ps(out_tap + 12)));
-        fb = sum_ps_to_ss(fb);
+        fb = mech::sum_ps_to_ss(fb);
         /*pd_floator(int t=0; t<rev_taps; t+=4)
         {
                 fb += out_tap[t] + out_tap[t+1] + out_tap[t+2] + out_tap[t+3];
@@ -268,8 +272,8 @@ void Reverb1Effect::process(float *dataL, float *dataR)
             L = _mm_add_ps(L, _mm_mul_ps(ot, _mm_load_ps(&delay_pan_L[t])));
             R = _mm_add_ps(R, _mm_mul_ps(ot, _mm_load_ps(&delay_pan_R[t])));
         }
-        L = sum_ps_to_ss(L);
-        R = sum_ps_to_ss(R);
+        L = mech::sum_ps_to_ss(L);
+        R = mech::sum_ps_to_ss(R);
         _mm_store_ss(&wetL[k], L);
         _mm_store_ss(&wetR[k], R);
     }
@@ -287,10 +291,7 @@ void Reverb1Effect::process(float *dataL, float *dataR)
     }
 
     // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(wetL, wetR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, wetL, wetR, BLOCK_SIZE_QUAD);
+    applyWidth(wetL, wetR, width);
 
     mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
 }

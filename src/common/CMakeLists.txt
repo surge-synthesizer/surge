@@ -281,7 +281,6 @@ add_library(${PROJECT_NAME}
   dsp/utilities/DSPUtils.h
   dsp/utilities/SSEComplex.h
   dsp/utilities/SSESincDelayLine.h
-  dsp/vembertech/basic_dsp.cpp
   dsp/vembertech/basic_dsp.h
   dsp/vembertech/lipol.cpp
   dsp/vembertech/lipol.h

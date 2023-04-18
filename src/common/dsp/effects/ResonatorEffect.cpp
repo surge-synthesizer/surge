@@ -15,6 +15,7 @@
 
 #include "ResonatorEffect.h"
 #include "DebugHelpers.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
 
 ResonatorEffect::ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true)
@@ -270,8 +271,9 @@ void ResonatorEffect::process(float *dataL, float *dataR)
 
     /* Downsample out */
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
-    copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
-    copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
+    namespace mech = sst::basic_blocks::mechanics;
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[0], L);
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[1], R);
 
     gain.set_target_smoothed(db_to_linear(*pd_float[resonator_gain]));
     gain.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);

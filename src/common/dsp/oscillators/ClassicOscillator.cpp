@@ -16,6 +16,10 @@
 #include "ClassicOscillator.h"
 #include "DSPUtils.h"
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
+
 /*
 **
 ** ## Overview
@@ -429,7 +433,7 @@ template <bool FM> void ClassicOscillator::convolute(int voice, bool stereo)
         t = storage->note_to_pitch_inv_tuningctr(detune + sync);
     }
 
-    float t_inv = rcp(t);
+    float t_inv = mech::rcp(t);
     float g = 0.0, gR = 0.0;
 
     /*
@@ -634,7 +638,7 @@ void ClassicOscillator::process_block(float pitch0, float drift, bool stereo, bo
             {
                 while (((l_sync.v > 0) && (syncstate[l] < a)) || (oscstate[l] < a))
                 {
-                    FMmul_inv = rcp(fmmul);
+                    FMmul_inv = mech::rcp(fmmul);
 
                     // The division races with the growth of the oscstate so that it never comes out
                     // of/gets out of the loop this becomes unsafe, don't fuck with the oscstate but
@@ -790,14 +794,14 @@ void ClassicOscillator::process_block(float pitch0, float drift, bool stereo, bo
     /*
     ** And clean up and advance our buffer pointer
     */
-    clear_block(&oscbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
+    mech::clear_block<BLOCK_SIZE_OS>(&oscbuffer[bufpos]);
 
     if (stereo)
     {
-        clear_block(&oscbufferR[bufpos], BLOCK_SIZE_OS_QUAD);
+        mech::clear_block<BLOCK_SIZE_OS>(&oscbufferR[bufpos]);
     }
 
-    clear_block(&dcbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
+    mech::clear_block<BLOCK_SIZE_OS>(&dcbuffer[bufpos]);
 
     bufpos = (bufpos + BLOCK_SIZE_OS) & (OB_LENGTH - 1);
 
