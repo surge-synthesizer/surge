@@ -13,7 +13,6 @@
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
-#include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "SurgeJUCELookAndFeel.h"
 #include "RuntimeFont.h"
 #include "AccessibleHelpers.h"
@@ -221,8 +220,6 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 60);
-
-    SurgeSynthEditorSpecificExtensions(this, sge.get());
 }
 
 SurgeSynthEditor::~SurgeSynthEditor()

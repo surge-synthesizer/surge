@@ -57,7 +57,6 @@ if(SURGE_BUILD_CLAP)
   clap_juce_extensions_plugin(TARGET surge-xt
     CLAP_ID "org.surge-synth-team.surge-xt"
     CLAP_FEATURES "instrument" "synthesizer" "hybrid" "free and open source")
-  target_sources(${PROJECT_NAME}_CLAP PRIVATE plugin_type_extensions/SurgeSynthClapExtensions.cpp)
 endif()
 
 if(JUCE_ASIO_SUPPORT)
@@ -192,10 +191,6 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PUBLIC
   $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
   )
-
-foreach(format ${SURGE_JUCE_FORMATS})
-  target_sources(${PROJECT_NAME}_${format} PRIVATE plugin_type_extensions/SurgeSynth${format}Extensions.cpp)
-endforeach()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-common

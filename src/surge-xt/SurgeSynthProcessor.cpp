@@ -11,7 +11,6 @@
 #include "SurgeSynthEditor.h"
 #include "SurgeSynthProcessor.h"
 #include "DebugHelpers.h"
-#include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "version.h"
 #include "sst/plugininfra/cpufeatures.h"
 #include "globals.h"
@@ -141,8 +140,6 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         }
     }
 #endif
-
-    SurgeSynthProcessorSpecificExtensions(this, surge.get());
 }
 
 SurgeSynthProcessor::~SurgeSynthProcessor() {}
