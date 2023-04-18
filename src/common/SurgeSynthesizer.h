@@ -75,6 +75,7 @@ class alignas(16) SurgeSynthesizer
     void chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid = -1);
     void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity,
                                   int32_t host_noteid = -1);
+    void resetPitchBend(int8_t channel);
     void pitchBend(char channel, int value);
     void polyAftertouch(char channel, int key, int value);
     void channelAftertouch(char channel, int value);

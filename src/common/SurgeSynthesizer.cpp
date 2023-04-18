@@ -1774,6 +1774,32 @@ void SurgeSynthesizer::updateHighLowKeys(int scene)
     }
 }
 
+// negative value will reset all channels, otherwise resets pitch bend on specified channel only
+void SurgeSynthesizer::resetPitchBend(int8_t channel)
+{
+    storage.pitch_bend = 0.f;
+    pitchbendMIDIVal = 0;
+    hasUpdatedMidiCC = true;
+
+    if (channel > -1)
+    {
+        channelState[channel].pitchBend = 0;
+    }
+    else
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            channelState[i].pitchBend = 0;
+        }
+    }
+
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        ((ControllerModulationSource *)storage.getPatch().scene[sc].modsources[ms_pitchbend])
+            ->set_target(storage.pitch_bend);
+    }
+}
+
 void SurgeSynthesizer::pitchBend(char channel, int value)
 {
     if (mpeEnabled && channel != 0)
@@ -1814,6 +1840,7 @@ void SurgeSynthesizer::pitchBend(char channel, int value)
         }
     }
 }
+
 void SurgeSynthesizer::channelAftertouch(char channel, int value)
 {
     float fval = (float)value / 127.f;
