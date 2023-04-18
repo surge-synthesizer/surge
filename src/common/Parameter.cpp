@@ -432,7 +432,7 @@ bool Parameter::is_discrete_selection() const
     case ct_alias_wave:
     case ct_wstype:
     case ct_mscodec:
-    case ct_input_blender_effect_channel:
+    case ct_input_channel:
         return true;
     default:
         break;
@@ -674,7 +674,7 @@ void Parameter::set_type(int ctrltype)
         val_max.f = 5;
         val_default.f = 1;
         break;
-    case ct_input_blender_effect_channel:
+    case ct_input_channel:
         valtype = vt_int;
         val_min.i = 0;
         val_max.i = 3;
@@ -3859,7 +3859,7 @@ std::string Parameter::get_display(bool external, float ef) const
             }
         }
         break;
-        case ct_input_blender_effect_channel:
+        case ct_input_channel:
             switch (i)
             {
             case 0:
@@ -3872,7 +3872,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 txt = "Stereo";
                 break;
             case 3:
-                txt = "Auxiliary";
+                txt = "Scene A";
                 break;
             }
             break;

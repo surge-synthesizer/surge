@@ -8,7 +8,7 @@ void InputBlenderEffect::init_ctrltypes()
     Effect::init_ctrltypes();
 
     fxdata->p[ibp_channel].set_name("Channel");
-    fxdata->p[ibp_channel].set_type(ct_input_blender_effect_channel); // TODO rename ct_input_blender_effect_channel
+    fxdata->p[ibp_channel].set_type( ct_input_channel);
 
     fxdata->p[ibp_audio_level].set_name("Audio Level");
     fxdata->p[ibp_audio_level].set_type(ct_decibel_attenuation);
