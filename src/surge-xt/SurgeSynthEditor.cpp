@@ -585,7 +585,6 @@ void SurgeSynthEditor::setPitchModSustainGUI(int pitch, int mod, int sus)
     auto pw = dynamic_cast<VKeyboardWheel *>(pitchwheel.get());
     if (pw)
     {
-        printf("%d\n", pitch);
         pw->value = pitch;
         pw->repaint();
     }
