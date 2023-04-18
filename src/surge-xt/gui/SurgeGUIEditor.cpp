@@ -2697,11 +2697,15 @@ long SurgeGUIEditor::unapplyParameterOffset(long id) { return id + start_paramta
 void SurgeGUIEditor::toggleMPE()
 {
     this->synth->mpeEnabled = !this->synth->mpeEnabled;
+
     if (statusMPE)
     {
+        this->synth->resetPitchBend(-1);
+
         statusMPE->setValue(this->synth->mpeEnabled ? 1 : 0);
         statusMPE->asJuceComponent()->repaint();
     }
+
     synth->refresh_editor = true;
 }
 
