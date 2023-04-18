@@ -156,7 +156,7 @@
               p8_deactivated="1" p9="0" p10="0" p11="0"/>
 </type>
 <type i="28" name="Input Blender">
-    <snapshot name="Init" p0="9" p1="-80.000000" p2="0.000000"/>
+    <snapshot name="Init" p0="0" p1="-80.000000" p2="0.000000"/>
 </type>
 </fx>
 <customctrl>
