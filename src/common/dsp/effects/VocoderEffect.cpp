@@ -174,7 +174,8 @@ void VocoderEffect::process(float *dataL, float *dataR)
 
     if (modulator_mode == vim_mono)
     {
-        mech::add_block<BLOCK_SIZE>(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1], modulator_in);
+        mech::add_block<BLOCK_SIZE>(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1],
+                                    modulator_in);
     }
     else
     {

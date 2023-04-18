@@ -18,7 +18,6 @@
 #include "sst/basic-blocks/mechanics/block-ops.h"
 namespace mech = sst::basic_blocks::mechanics;
 
-
 std::string ensemble_stage_name(int i)
 {
     switch (i)

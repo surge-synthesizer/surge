@@ -17,7 +17,6 @@
 #include <vembertech/basic_dsp.h>
 #include "SurgeParamConfig.h"
 
-
 #include "globals.h"
 #include "sst/basic-blocks/mechanics/block-ops.h"
 #include "sst/basic-blocks/mechanics/simd-ops.h"
@@ -26,7 +25,6 @@
 
 namespace mech = sst::basic_blocks::mechanics;
 namespace sdsp = sst::basic_blocks::dsp;
-
 
 using namespace std;
 

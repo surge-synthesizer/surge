@@ -2,7 +2,6 @@
 #include "UserDefaults.h"
 #include "DebugHelpers.h"
 
-
 #include "sst/basic-blocks/mechanics/block-ops.h"
 namespace mech = sst::basic_blocks::mechanics;
 

@@ -21,7 +21,6 @@
 #include "sst/basic-blocks/mechanics/simd-ops.h"
 namespace mech = sst::basic_blocks::mechanics;
 
-
 // http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
 
 WaveShaperEffect::WaveShaperEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)

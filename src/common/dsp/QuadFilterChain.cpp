@@ -13,7 +13,7 @@ namespace sdsp = sst::basic_blocks::dsp;
     d.OutR = _mm_add_ps(d.OutR, d.dOutR);                                                          \
     __m128 outL = _mm_mul_ps(x, d.OutL);                                                           \
     __m128 outR = _mm_mul_ps(x, d.OutR);                                                           \
-    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), mech::sum_ps_to_ss(outL)));                 \
+    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), mech::sum_ps_to_ss(outL)));           \
     _mm_store_ss(&OutR[k], _mm_add_ss(_mm_load_ss(&OutR[k]), mech::sum_ps_to_ss(outR)));
 
 #define MWriteOutputsDual(x, y)                                                                    \
@@ -23,7 +23,7 @@ namespace sdsp = sst::basic_blocks::dsp;
     d.Out2R = _mm_add_ps(d.Out2R, d.dOut2R);                                                       \
     __m128 outL = vMAdd(x, d.OutL, vMul(y, d.Out2L));                                              \
     __m128 outR = vMAdd(x, d.OutR, vMul(y, d.Out2R));                                              \
-    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), mech::sum_ps_to_ss(outL)));                 \
+    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), mech::sum_ps_to_ss(outL)));           \
     _mm_store_ss(&OutR[k], _mm_add_ss(_mm_load_ss(&OutR[k]), mech::sum_ps_to_ss(outR)));
 
 #if 0 // DEBUG

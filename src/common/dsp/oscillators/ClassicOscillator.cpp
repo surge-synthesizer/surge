@@ -16,11 +16,9 @@
 #include "ClassicOscillator.h"
 #include "DSPUtils.h"
 
-
 #include "sst/basic-blocks/mechanics/block-ops.h"
 #include "sst/basic-blocks/mechanics/simd-ops.h"
 namespace mech = sst::basic_blocks::mechanics;
-
 
 /*
 **

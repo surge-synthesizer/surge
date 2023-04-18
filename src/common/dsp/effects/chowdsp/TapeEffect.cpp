@@ -19,7 +19,6 @@
 #include "sst/basic-blocks/mechanics/block-ops.h"
 namespace mech = sst::basic_blocks::mechanics;
 
-
 namespace chowdsp
 {
 

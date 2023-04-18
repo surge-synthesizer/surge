@@ -5,7 +5,6 @@ const int max_wtable_size = 4096;
 const int max_subtables = 512;
 const int max_mipmap_levels = 16;
 
-
 #pragma pack(push, 1)
 struct wt_header
 {

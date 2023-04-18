@@ -5,7 +5,6 @@
 #ifndef SURGE_CXOR_H
 #define SURGE_CXOR_H
 
-
 inline void cxor43_0_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
                            unsigned int nquads)
 {

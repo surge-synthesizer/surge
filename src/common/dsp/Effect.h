@@ -82,9 +82,7 @@ class alignas(16) Effect
         return x;
     }
 
-    inline void applyWidth(float *__restrict L,
-                           float *__restrict R,
-                           lipol_ps &width)
+    inline void applyWidth(float *__restrict L, float *__restrict R, lipol_ps &width)
     {
         namespace sdsp = sst::basic_blocks::dsp;
         float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
@@ -92,6 +90,7 @@ class alignas(16) Effect
         width.multiply_block(S, BLOCK_SIZE_QUAD);
         sdsp::decodeMS<BLOCK_SIZE>(M, S, L, R);
     }
+
   protected:
     SurgeStorage *storage;
     FxStorage *fxdata;
