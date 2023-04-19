@@ -1,6 +1,7 @@
 #include "LossFilter.h"
 #include "globals.h"
 #include "sst/basic-blocks/mechanics/block-ops.h"
+#include "UnitConversions.h"
 
 namespace mech = sst::basic_blocks::mechanics;
 

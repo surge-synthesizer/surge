@@ -240,7 +240,6 @@ add_library(${PROJECT_NAME}
   dsp/effects/chowdsp/tape/ToneControl.cpp
   dsp/effects/chowdsp/tape/ToneControl.h
   dsp/filters/AllpassFilter.h
-  dsp/filters/BiquadFilter.cpp
   dsp/filters/BiquadFilter.h
   dsp/filters/VectorizedSVFilter.cpp
   dsp/filters/VectorizedSVFilter.h
