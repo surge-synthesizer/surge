@@ -1085,6 +1085,11 @@ struct GlobalData;
 }
 } // namespace Surge
 
+namespace sst::basic_blocks::tables
+{
+struct SurgeSincTableProvider;
+}
+
 class alignas(16) SurgeStorage
 {
   public:
@@ -1093,9 +1098,10 @@ class alignas(16) SurgeStorage
     // this will be a pointer to an aligned 2 x BLOCK_SIZE_OS array
     float audio_otherscene alignas(16)[2][BLOCK_SIZE_OS];
 
-    float sinctable alignas(16)[(FIRipol_M + 1) * FIRipol_N * 2];
-    float sinctable1X alignas(16)[(FIRipol_M + 1) * FIRipol_N];
-    short sinctableI16 alignas(16)[(FIRipol_M + 1) * FIRipolI16_N];
+    std::unique_ptr<sst::basic_blocks::tables::SurgeSincTableProvider> sincTableProvider;
+    float *sinctable, *sinctable1X;
+    int16_t *sinctableI16;
+
     float table_dB alignas(16)[512], table_envrate_lpf alignas(16)[512],
         table_envrate_linear alignas(16)[512], table_glide_exp alignas(16)[512],
         table_glide_log alignas(16)[512];

@@ -44,6 +44,7 @@
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"
 #include "SurgeMemoryPools.h"
+#include "sst/basic-blocks/tables/SincTableProvider.h"
 
 // FIXME probably remove this when we remove the hardcoded hack below
 #include "MSEGModulationHelper.h"
@@ -84,45 +85,14 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
     _patch.reset(new SurgePatch(this));
 
-    float cutoff = 0.455f;
-    float cutoff1X = 0.85f;
-    float cutoffI16 = 1.0f;
-    int j;
-    for (j = 0; j < FIRipol_M + 1; j++)
-    {
-        for (int i = 0; i < FIRipol_N; i++)
-        {
-            double t = -double(i) + double(FIRipol_N / 2.0) + double(j) / double(FIRipol_M) - 1.0;
-            double val = (float)(symmetric_blackman(t, FIRipol_N) * cutoff * sincf(cutoff * t));
-            double val1X =
-                (float)(symmetric_blackman(t, FIRipol_N) * cutoff1X * sincf(cutoff1X * t));
-            sinctable[j * FIRipol_N * 2 + i] = (float)val;
-            sinctable1X[j * FIRipol_N + i] = (float)val1X;
-        }
-    }
-    for (j = 0; j < FIRipol_M; j++)
-    {
-        for (int i = 0; i < FIRipol_N; i++)
-        {
-            sinctable[j * FIRipol_N * 2 + FIRipol_N + i] =
-                (float)((sinctable[(j + 1) * FIRipol_N * 2 + i] -
-                         sinctable[j * FIRipol_N * 2 + i]) /
-                        65536.0);
-        }
-    }
-
-    for (j = 0; j < FIRipol_M + 1; j++)
-    {
-        for (int i = 0; i < FIRipolI16_N; i++)
-        {
-            double t =
-                -double(i) + double(FIRipolI16_N / 2.0) + double(j) / double(FIRipol_M) - 1.0;
-            double val =
-                (float)(symmetric_blackman(t, FIRipolI16_N) * cutoffI16 * sincf(cutoffI16 * t));
-
-            sinctableI16[j * FIRipolI16_N + i] = (short)((float)val * 16384.f);
-        }
-    }
+    namespace tabl = sst::basic_blocks::tables;
+    sincTableProvider = std::make_unique<tabl::SurgeSincTableProvider>();
+    static_assert(tabl::SurgeSincTableProvider::FIRipol_M == FIRipol_M);
+    static_assert(tabl::SurgeSincTableProvider::FIRipol_N == FIRipol_N);
+    static_assert(tabl::SurgeSincTableProvider::FIRipolI16_N == FIRipolI16_N);
+    sinctable = sincTableProvider->sinctable;
+    sinctable1X = sincTableProvider->sinctable1X;
+    sinctableI16 = sincTableProvider->sinctableI16;
 
     for (int s = 0; s < n_scenes; s++)
         for (int m = 0; m < n_modsources; ++m)
