@@ -28,7 +28,7 @@ jobs:
           isWindows: True
           cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
           cmakeConfig: "Debug"
-          cmakeTarget: "surge-xt_Standalone" # just a subset for time
+          cmakeTarget: "surge-xt_CLAP" # just a subset for time
         macOS-x86:
           imageName: 'macos-latest'
           isMac: True

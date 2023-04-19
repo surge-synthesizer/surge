@@ -1099,9 +1099,11 @@ bool SurgeSynthProcessor::remoteControlsPageFill(
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgeSynthProcessor(); }
 
+#if 0
 void *JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *)
 {
     // ToDo: Implement preset discovery here
     // See #6930
     return nullptr;
 }
+#endif
