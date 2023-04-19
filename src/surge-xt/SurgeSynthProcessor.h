@@ -161,6 +161,7 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
     {
         s->applyParameterMonophonicModulation(p, value);
     }
+
 #endif
 };
 
@@ -393,6 +394,13 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         info->flags = CLAP_VOICE_INFO_SUPPORTS_OVERLAPPING_NOTES;
         return true;
     }
+    bool supportsRemoteControls() const noexcept override { return true; }
+    uint32_t remoteControlsPageCount() noexcept override;
+    bool
+    remoteControlsPageFill(uint32_t /*pageIndex*/, juce::String & /*sectionName*/,
+                           uint32_t & /*pageID*/, juce::String & /*pageName*/,
+                           std::array<juce::AudioProcessorParameter *, CLAP_REMOTE_CONTROLS_COUNT>
+                               & /*params*/) noexcept override;
 #endif
 
   private:

@@ -1020,6 +1020,81 @@ juce::AudioProcessorParameter *SurgeSynthProcessor::getBypassParameter() const
 
 void SurgeSynthProcessor::reset() { blockPos = 0; }
 
+uint32_t SurgeSynthProcessor::remoteControlsPageCount() noexcept
+{
+    return 5; // macros + scene a and b mixer and filters
+}
+
+bool SurgeSynthProcessor::remoteControlsPageFill(
+    uint32_t pageIndex, juce::String &sectionName, uint32_t &pageID, juce::String &pageName,
+    std::array<juce::AudioProcessorParameter *, CLAP_REMOTE_CONTROLS_COUNT> &params) noexcept
+{
+    if (pageIndex < 0 || pageIndex >= remoteControlsPageCount())
+        return false;
+
+    pageID = pageIndex + 2054;
+    for (auto &p : params)
+        p = nullptr;
+    switch (pageIndex)
+    {
+    case 0:
+    {
+        sectionName = "Global";
+        pageName = "Macros";
+        for (int i = 0; i < CLAP_REMOTE_CONTROLS_COUNT && i < macrosById.size(); ++i)
+            params[i] = macrosById[i];
+    }
+    break;
+    case 1:
+    case 3:
+    {
+        int scene = 0;
+        sectionName = "Scene A";
+        pageName = "Scene A Mixer";
+        if (pageIndex == 3)
+        {
+            sectionName = "Scene B";
+            pageName = "Scene B Mixer";
+            scene = 1;
+        }
+        auto &sc = surge->storage.getPatch().scene[scene];
+        params[0] = paramsByID[surge->idForParameter(&sc.level_o1)];
+        params[1] = paramsByID[surge->idForParameter(&sc.level_o2)];
+        params[2] = paramsByID[surge->idForParameter(&sc.level_o3)];
+        params[3] = nullptr;
+        params[4] = paramsByID[surge->idForParameter(&sc.level_noise)];
+        params[5] = paramsByID[surge->idForParameter(&sc.level_ring_12)];
+        params[6] = paramsByID[surge->idForParameter(&sc.level_ring_23)];
+        params[7] = paramsByID[surge->idForParameter(&sc.level_pfg)];
+    }
+    break;
+    case 2:
+    case 4:
+    {
+        int scene = 0;
+        sectionName = "Scene A";
+        pageName = "Scene A Filters";
+        if (pageIndex == 4)
+        {
+            scene = 1;
+            sectionName = "Scene B";
+            pageName = "Scene B Filters";
+        }
+        auto &sc = surge->storage.getPatch().scene[scene];
+        params[0] = paramsByID[surge->idForParameter(&sc.filterunit[0].cutoff)];
+        params[1] = paramsByID[surge->idForParameter(&sc.filterunit[0].resonance)];
+        params[2] = paramsByID[surge->idForParameter(&sc.filterunit[1].cutoff)];
+        params[3] = paramsByID[surge->idForParameter(&sc.filterunit[1].resonance)];
+        params[4] = paramsByID[surge->idForParameter(&sc.wsunit.drive)];
+        params[5] = nullptr;
+        params[6] = paramsByID[surge->idForParameter(&sc.filter_balance)];
+        params[7] = paramsByID[surge->idForParameter(&sc.feedback)];
+    }
+    break;
+    }
+    return true;
+}
+
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgeSynthProcessor(); }
