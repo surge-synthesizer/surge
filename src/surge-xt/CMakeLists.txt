@@ -56,7 +56,7 @@ juce_add_plugin(${PROJECT_NAME}
 if(SURGE_BUILD_CLAP)
   clap_juce_extensions_plugin(TARGET surge-xt
     CLAP_ID "org.surge-synth-team.surge-xt"
-    CLAP_SUPPORTS_CUSTOM_FACTORY 1
+    # CLAP_SUPPORTS_CUSTOM_FACTORY 1
     CLAP_FEATURES "instrument" "synthesizer" "hybrid" "free and open source")
 endif()
 
