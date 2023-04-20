@@ -93,7 +93,6 @@ template <class T, bool first_run_checks = true> class lag
 
 inline bool within_range(int lo, int value, int hi) { return ((value >= lo) && (value <= hi)); }
 
-
 template <class T, bool first_run_checks = true> class lipol
 {
   public:

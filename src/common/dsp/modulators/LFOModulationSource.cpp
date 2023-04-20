@@ -314,10 +314,14 @@ void LFOModulationSource::attackFrom(float start)
 
             if (lfo->deform.deform_type == type_2)
             {
-                wf_history[3] = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
-                wf_history[2] = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
-                wf_history[1] = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
-                wf_history[0] = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+                wf_history[3] =
+                    sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+                wf_history[2] =
+                    sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+                wf_history[1] =
+                    sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+                wf_history[0] =
+                    sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
 
                 iout = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
             }
@@ -400,9 +404,12 @@ void LFOModulationSource::attackFrom(float start)
             for (int i = 0; i < 3; ++i)
                 wf_history[3] =
                     sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
-            wf_history[2] = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
-            wf_history[1] = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
-            wf_history[0] = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+            wf_history[2] =
+                sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+            wf_history[1] =
+                sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
+            wf_history[0] =
+                sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, lid, urng) * phase;
 
             phase = 0.f;
         }
@@ -703,7 +710,8 @@ void LFOModulationSource::process_block()
                 wf_history[2] = wf_history[1];
                 wf_history[1] = wf_history[0];
 
-                wf_history[0] = sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
+                wf_history[0] =
+                    sdsp::correlated_noise_o2mk2_suppliedrng(target, noised1, 0.f, urng);
             }
             else
             {
@@ -967,8 +975,8 @@ void LFOModulationSource::process_block()
             if (df > 0.5f)
             {
                 float linear = (1.f - phase) * wf_history[2] + phase * wf_history[1];
-                float cubic =
-                    sdsp::cubic_ipol(wf_history[3], wf_history[2], wf_history[1], wf_history[0], phase);
+                float cubic = sdsp::cubic_ipol(wf_history[3], wf_history[2], wf_history[1],
+                                               wf_history[0], phase);
 
                 iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
             }
@@ -1084,7 +1092,8 @@ void LFOModulationSource::process_block()
                     linear = (1.f - ph) * wf_history[2] + ph * wf_history[1];
                 }
 
-                float qbs = sdsp::quad_bspline(wf_history[2], wf_history[1], wf_history[0], calcPhase);
+                float qbs =
+                    sdsp::quad_bspline(wf_history[2], wf_history[1], wf_history[0], calcPhase);
 
                 iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * qbs;
             }
@@ -1123,8 +1132,8 @@ void LFOModulationSource::process_block()
             if (df > 0.5f)
             {
                 float linear = (1.f - calcPhase) * wf_history[2] + calcPhase * wf_history[1];
-                float cubic = sdsp::cubic_ipol(wf_history[3], wf_history[2], wf_history[1], wf_history[0],
-                                         calcPhase);
+                float cubic = sdsp::cubic_ipol(wf_history[3], wf_history[2], wf_history[1],
+                                               wf_history[0], calcPhase);
 
                 iout = (2.f - 2.f * df) * linear + (2.f * df - 1.0f) * cubic;
             }

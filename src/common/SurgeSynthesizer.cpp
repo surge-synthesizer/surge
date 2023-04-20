@@ -2391,7 +2391,7 @@ void SurgeSynthesizer::allNotesOff()
 void SurgeSynthesizer::setSamplerate(float sr)
 {
     storage.setSamplerate(sr);
-    
+
     for (const auto &f : fx)
     {
         if (f)

@@ -1,0 +1,12 @@
+[
+{ include: ["<__config>", "private", "<utility>", "public"] },
+
+{ include: ["<__algorithm/max.h>", "private", "<algorithm>", "public"] },
+{ include: ["<__algorithm/min.h>", "private", "<algorithm>", "public"] },
+
+{ include: ["\"simde/x86/sse.h\"", "private", "\"globals.h\"", "public"] },
+{ include: ["<xmmintrin.h>", "private", "\"globals.h\"", "public"] },
+{ include: ["<immintrin.h>", "private", "\"globals.h\"", "public"] },
+{ include: ["<pmmintrin.h>", "private", "\"globals.h\"", "public"] },
+
+]
