@@ -30,5 +30,7 @@ class InputBlenderEffect : public Effect
     void init_ctrltypes() override;
     void init_default_values() override;
     void process(float *dataL, float *dataR) override;
+    const char *group_label(int id) override;
+    int group_label_ypos(int id) override;
 };
 
