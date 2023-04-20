@@ -20,6 +20,7 @@
 #include <vembertech/lipol.h>
 #include "BiquadFilter.h"
 #include "OscillatorCommonFunctions.h"
+#include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
 class SineOscillator : public Oscillator
 {
@@ -50,6 +51,7 @@ class SineOscillator : public Oscillator
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
 
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc sine[MAX_UNISON];
     double phase[MAX_UNISON];
     Surge::Oscillator::DriftLFO driftLFO[MAX_UNISON];

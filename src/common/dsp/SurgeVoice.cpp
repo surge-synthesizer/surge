@@ -24,6 +24,7 @@
 
 #include "sst/basic-blocks/mechanics/block-ops.h"
 #include "sst/basic-blocks/dsp/Clippers.h"
+#include "sst/basic-blocks/dsp/CorrelatedNoise.h"
 #include "CXOR.h"
 
 using namespace std;
@@ -1132,14 +1133,14 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
         for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
         {
             ((float *)tblock)[i] =
-                correlated_noise_o2mk2_storagerng(noisegenL[0], noisegenL[1], noisecol, storage);
+                sdsp::correlated_noise_o2mk2_supplied_value(noisegenL[0], noisegenL[1], noisecol, storage->rand_pm1());
             ((float *)tblock)[i + 1] = ((float *)tblock)[i];
             if (is_wide)
             {
                 if (is_stereo_noise)
                 {
-                    ((float *)tblockR)[i] = correlated_noise_o2mk2_storagerng(
-                        noisegenR[0], noisegenR[1], noisecol, storage);
+                    ((float *)tblockR)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
+                        noisegenR[0], noisegenR[1], noisecol, storage->rand_pm1());
                     ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
                 }
                 else

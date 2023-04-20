@@ -16,6 +16,7 @@
 #include "CombulatorEffect.h"
 #include "DebugHelpers.h"
 #include "fmt/core.h"
+#include "sst/basic-blocks/dsp/CorrelatedNoise.h"
 #include "sst/basic-blocks/mechanics/block-ops.h"
 
 CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
@@ -259,7 +260,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
             envV[c] = e;
             noise[c] =
                 noisemix.v * 3.f * envV[c] *
-                correlated_noise_o2mk2_storagerng(noiseGen[c][0], noiseGen[c][1], 0, storage);
+                sst::basic_blocks::dsp::correlated_noise_o2mk2_supplied_value(noiseGen[c][0], noiseGen[c][1], 0, storage->rand_pm1());
         }
 
         auto l128 = _mm_setzero_ps();

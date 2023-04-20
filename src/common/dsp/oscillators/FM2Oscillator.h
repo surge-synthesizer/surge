@@ -20,6 +20,7 @@
 #include <vembertech/lipol.h>
 #include "BiquadFilter.h"
 #include "OscillatorCommonFunctions.h"
+#include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
 class FM2Oscillator : public Oscillator
 {
@@ -44,6 +45,8 @@ class FM2Oscillator : public Oscillator
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
     double phase, lastoutput;
+
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc RM1, RM2;
     Surge::Oscillator::DriftLFO driftLFO;
     float fb_val;

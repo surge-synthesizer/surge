@@ -5,6 +5,7 @@
 #include "fmt/core.h"
 #include "sst/cpputils.h"
 #include "sst/plugininfra/strnatcmp.h"
+#include "UnitConversions.h"
 
 namespace Surge
 {

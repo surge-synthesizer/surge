@@ -62,8 +62,6 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
     fx_suspend_bitmask = 0;
 
-    demo_counter = 10;
-
     for (int i = 0; i < n_fx_slots; ++i)
         fx[i].reset(nullptr);
 
@@ -2393,8 +2391,7 @@ void SurgeSynthesizer::allNotesOff()
 void SurgeSynthesizer::setSamplerate(float sr)
 {
     storage.setSamplerate(sr);
-    sinus.set_rate(1000.0 * storage.dsamplerate_inv);
-
+    
     for (const auto &f : fx)
     {
         if (f)

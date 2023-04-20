@@ -21,6 +21,7 @@
 
 #include <vembertech/lipol.h>
 #include <sst/filters/HalfRateFilter.h>
+#include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
 class FrequencyShifterEffect : public Effect
 {
@@ -58,6 +59,8 @@ class FrequencyShifterEffect : public Effect
     float buffer[2][max_delay_length];
     int wpos;
     // CHalfBandFilter<6> frL,fiL,frR,fiR;
+
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc o1L, o2L, o1R, o2R;
     int ringout_time;
 };
