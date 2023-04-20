@@ -621,6 +621,9 @@ struct LFOStorage
 struct FxStorage
 {
     // Just a heads up: if you change this, please go look at fx_reorder in SurgeStorage too!
+    FxStorage(fxslot_positions slot) : fxslot(slot) {}
+    FxStorage() = delete;
+    fxslot_positions fxslot;
     Parameter type;
     Parameter return_level;
     Parameter p[n_fx_params];
@@ -937,7 +940,17 @@ class SurgePatch
 
     // data
     SurgeSceneStorage scene[n_scenes], morphscene;
-    FxStorage fx[n_fx_slots];
+
+    FxStorage fx[n_fx_slots]{
+        FxStorage(fxslot_ains1), FxStorage(fxslot_ains2),
+        FxStorage(fxslot_bins1), FxStorage(fxslot_bins2),
+        FxStorage(fxslot_send1), FxStorage(fxslot_send2),
+        FxStorage(fxslot_global1), FxStorage(fxslot_global2),
+        FxStorage(fxslot_ains3), FxStorage(fxslot_ains4),
+        FxStorage(fxslot_bins3), FxStorage(fxslot_bins4),
+        FxStorage(fxslot_send3), FxStorage(fxslot_send4),
+        FxStorage(fxslot_global3), FxStorage(fxslot_global4)
+    };
     int scene_start[n_scenes], scene_size;
     // streaming name for splitpoint is splitkey (due to legacy)
     Parameter scene_active, scenemode, splitpoint;

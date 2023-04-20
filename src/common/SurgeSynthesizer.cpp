@@ -4847,9 +4847,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
 
     std::lock_guard<std::recursive_mutex> lockModulation(storage.modRoutingMutex);
 
-    FxStorage so, to;
-    so = storage.getPatch().fx[source];
-    to = storage.getPatch().fx[target];
+    FxStorage so{storage.getPatch().fx[source]};
+    FxStorage to{storage.getPatch().fx[target]};
 
     fxmodsync[source].clear();
     fxmodsync[target].clear();

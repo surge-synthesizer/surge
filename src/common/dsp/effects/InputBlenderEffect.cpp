@@ -7,8 +7,26 @@ void InputBlenderEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
+    ctrltypes ctrltype = ct_none;
+    switch (fxdata->fxslot)
+    {
+    case fxslot_ains1:
+    case fxslot_ains2:
+    case fxslot_ains3:
+    case fxslot_ains4:
+        ctrltype = ct_input_channel_withB;
+        break;
+    case fxslot_bins1:
+    case fxslot_bins2:
+    case fxslot_bins3:
+    case fxslot_bins4:
+        ctrltype = ct_input_channel_withA;
+        break;
+    default:
+        ctrltype = ct_input_channel;
+    }
     fxdata->p[ibp_channel].set_name("Channel");
-    fxdata->p[ibp_channel].set_type( ct_input_channel);
+    fxdata->p[ibp_channel].set_type(ctrltype);
 
     fxdata->p[ibp_audio_level].set_name("Audio Level");
     fxdata->p[ibp_audio_level].set_type(ct_decibel_attenuation);
