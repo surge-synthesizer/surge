@@ -1,3 +1,5 @@
+# iwyu_tool.py -p cmake-build-debug src/common/dsp/filters -- -Xiwyu --mapping_file=/Users/paul/dev/music/surge/scripts/iwyu_mapping.imp
+# for instance
 [
 { include: ["<__config>", "private", "<utility>", "public"] },
 
