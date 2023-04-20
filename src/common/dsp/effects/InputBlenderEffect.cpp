@@ -29,19 +29,27 @@ void InputBlenderEffect::init_ctrltypes()
     fxdata->p[ibp_channel].set_type(ctrltype);
     fxdata->p[ibp_channel].posy_offset = 1;
 
-    fxdata->p[ibp_audio_level].set_name("Audio Level");
-    fxdata->p[ibp_audio_level].set_type(ct_decibel_attenuation);
-    fxdata->p[ibp_audio_level].posy_offset = 1;
+    fxdata->p[ibp_input_level].set_name("Input Level");
+    fxdata->p[ibp_input_level].set_type(ct_decibel_attenuation);
+    fxdata->p[ibp_input_level].posy_offset = 1;
+
+    fxdata->p[ibp_input_width].set_name("Input Width");
+    fxdata->p[ibp_input_width].set_type(ct_decibel_narrow);
+    fxdata->p[ibp_input_width].posy_offset = 1;
 
     fxdata->p[ibp_upstream_level].set_name("Upstream Level");
     fxdata->p[ibp_upstream_level].set_type(ct_decibel_attenuation);
     fxdata->p[ibp_upstream_level].posy_offset = 4;
+
+    fxdata->p[ibp_upstream_width].set_name("Upstream Width");
+    fxdata->p[ibp_upstream_width].set_type(ct_decibel_narrow);
+    fxdata->p[ibp_upstream_width].posy_offset = 4;
 }
 
 void InputBlenderEffect::init_default_values()
 {
     fxdata->p[ibp_channel].val.i = 0;
-    fxdata->p[ibp_audio_level].val.f = 0.0;
+    fxdata->p[ibp_input_level].val.f = 0.0;
     fxdata->p[ibp_upstream_level].val.f = 0.0;
 }
 const char *InputBlenderEffect::group_label(int id) {
@@ -63,9 +71,9 @@ int InputBlenderEffect::group_label_ypos(int id) {
     case 0:
             return 1;
     case 1:
-            return 8;
+            return 10;
     case 3:
-        return 15;
+        return 18;
     }
     return 0;
 }

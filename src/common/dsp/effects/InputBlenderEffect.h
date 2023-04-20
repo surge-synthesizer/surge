@@ -20,8 +20,10 @@ class InputBlenderEffect : public Effect
   public:
     enum ibp_params{
         ibp_channel = 0,
-        ibp_audio_level,
+        ibp_input_level,
+        ibp_input_width,
         ibp_upstream_level,
+        ibp_upstream_width,
 
         ibp_num_params
     };
