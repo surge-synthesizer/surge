@@ -2272,7 +2272,7 @@ void SurgeGUIEditor::close_editor()
     editor_open = false;
 
     resetComponentTracking();
-    setzero(param);
+    memset(param, 0, sizeof(param));
 }
 
 bool SurgeGUIEditor::open(void *parent)

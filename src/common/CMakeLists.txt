@@ -276,7 +276,6 @@ add_library(${PROJECT_NAME}
   dsp/oscillators/WavetableOscillator.h
   dsp/oscillators/WindowOscillator.cpp
   dsp/oscillators/WindowOscillator.h
-  dsp/utilities/DSPUtils.cpp
   dsp/utilities/DSPUtils.h
   dsp/utilities/SSEComplex.h
   dsp/utilities/SSESincDelayLine.h

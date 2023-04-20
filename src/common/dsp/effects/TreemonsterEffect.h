@@ -20,10 +20,13 @@
 #include "AllpassFilter.h"
 
 #include <vembertech/lipol.h>
+#include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
 class TreemonsterEffect : public Effect
 {
     lipol_ps rm alignas(16), width alignas(16), mix alignas(16);
+
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc oscL alignas(16), oscR alignas(16);
 
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];

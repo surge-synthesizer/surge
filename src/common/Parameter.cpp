@@ -29,6 +29,7 @@
 #include "StringOps.h"
 #include "Tunings.h"
 #include "fmt/core.h"
+#include "UnitConversions.h"
 
 Parameter::Parameter()
 {

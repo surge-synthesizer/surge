@@ -22,6 +22,7 @@
 #include <vembertech/lipol.h>
 
 #include "sst/waveshapers.h"
+#include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
 class RotarySpeakerEffect : public Effect
 {
@@ -68,6 +69,8 @@ class RotarySpeakerEffect : public Effect
     BiquadFilter xover, lowbass;
     // float
     // f_rotor_lp[2][n_filter_parameters],f_xover[n_filter_parameters],f_lowbass[n_filter_parameters];
+
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc lfo;
     quadr_osc lf_lfo;
     lipol<float> dL, dR, hornamp[2];
