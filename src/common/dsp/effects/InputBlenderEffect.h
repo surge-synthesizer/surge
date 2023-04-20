@@ -24,6 +24,8 @@ class InputBlenderEffect : public Effect
         ibp_input_width,
         ibp_upstream_level,
         ibp_upstream_width,
+        ibp_output_mix,
+        ibp_output_width,
 
         ibp_num_params
     };

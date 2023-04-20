@@ -34,7 +34,7 @@ void InputBlenderEffect::init_ctrltypes()
     fxdata->p[ibp_input_level].posy_offset = 1;
 
     fxdata->p[ibp_input_width].set_name("Input Width");
-    fxdata->p[ibp_input_width].set_type(ct_decibel_narrow);
+    fxdata->p[ibp_input_width].set_type(ct_percent_bipolar_stereo);
     fxdata->p[ibp_input_width].posy_offset = 1;
 
     fxdata->p[ibp_upstream_level].set_name("Upstream Level");
@@ -42,8 +42,17 @@ void InputBlenderEffect::init_ctrltypes()
     fxdata->p[ibp_upstream_level].posy_offset = 4;
 
     fxdata->p[ibp_upstream_width].set_name("Upstream Width");
-    fxdata->p[ibp_upstream_width].set_type(ct_decibel_narrow);
+    fxdata->p[ibp_upstream_width].set_type(ct_percent_bipolar_stereo);
     fxdata->p[ibp_upstream_width].posy_offset = 4;
+
+    fxdata->p[ibp_output_mix].set_name("Output Mix");
+    fxdata->p[ibp_output_mix].set_type(ct_percent_bipolar);
+    fxdata->p[ibp_output_mix].posy_offset = 7;
+
+    fxdata->p[ibp_output_width].set_name("Output Width");
+    fxdata->p[ibp_output_width].set_type(ct_percent_bipolar_stereo);
+    fxdata->p[ibp_output_width].posy_offset = 7;
+
 }
 
 void InputBlenderEffect::init_default_values()
@@ -73,7 +82,7 @@ int InputBlenderEffect::group_label_ypos(int id) {
     case 1:
             return 10;
     case 3:
-        return 18;
+        return 17;
     }
     return 0;
 }
