@@ -121,7 +121,6 @@
  * is fairly clear, though.
  */
 
-
 #include "globals.h"
 #include "sst/filters.h"
 #include "sst/waveshapers.h"
