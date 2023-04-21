@@ -50,6 +50,9 @@ bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynt
         portnum = port;
         surgePtr = surge.get();
         sspPtr = ssp;
+
+        surgePtr->storage.oscListenerRunning = true;
+
 #ifdef DEBUG
         std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
 #endif
@@ -61,6 +64,8 @@ void OSCListener::stopListening()
 {
     removeListener(this);
     listening = false;
+    surgePtr->storage.oscListenerRunning = false;
+
 #ifdef DEBUG
     std::cout << "SurgeOSC: Stopped listening for OSC." << std::endl;
 #endif
@@ -96,7 +101,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
 
 #ifdef DEBUG_VERBOSE
-        std::cout << "Parameter OSC name:" << p->get_OSC_name() << "  ";
+        std::cout << "Parameter OSC name:" << p->getOSCName() << "  ";
         std::cout << "Parameter Storage name:" << p->get_storage_name() << "  ";
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif

@@ -469,7 +469,7 @@ class Parameter
                          const char *lfoPrefixOverride = nullptr) const;
 
     // Optional OSC name
-    std::string get_OSC_name();
+    std::string getOSCName();
     void setOSCName(std::string s);
     bool hasOSCName{false};
     std::string oscName;

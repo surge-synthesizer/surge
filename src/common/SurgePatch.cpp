@@ -653,7 +653,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     {
         if (p->hasOSCName)
         {
-            param_ptr_by_oscname[p->get_OSC_name()] = p;
+            param_ptr_by_oscname[p->getOSCName()] = p;
         }
     }
 

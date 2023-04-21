@@ -2967,6 +2967,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     });
             }
 
+#if SURGE_HAS_OSC
+            if (synth->storage.oscListenerRunning)
+            {
+                contextMenu.addSeparator();
+
+                auto oscName = p->getOSCName();
+
+                auto i =
+                    juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))
+                        .setAction(
+                            [oscName]() { juce::SystemClipboard::copyTextToClipboard(oscName); })
+                        .setColour(currentSkin->getColor(Colors::PopupMenu::Text).withAlpha(0.75f));
+
+                contextMenu.addItem(i);
+            }
+#endif
+
             auto jpm = juceEditor->hostMenuFor(p);
 
             if (jpm.getNumItems() > 0)

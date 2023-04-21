@@ -15,6 +15,7 @@
 #include "sst/plugininfra/cpufeatures.h"
 #include "globals.h"
 #include "UserDefaults.h"
+#include "fmt/core.h"
 
 #if LINUX
 // getCurrentPosition is deprecated in J7
@@ -134,7 +135,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         if (!success)
         {
             std::ostringstream msg;
-            msg << "SurgeXT was unable to connect to port " << defaultOSCPort << ".\n"
+            msg << "Surge XT was unable to connect to port " << defaultOSCPort << ".\n"
                 << "It may be in use by another application.";
             surge->storage.reportError(msg.str(), "OSC Initialization Error");
         }
@@ -142,7 +143,12 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 #endif
 }
 
-SurgeSynthProcessor::~SurgeSynthProcessor() {}
+SurgeSynthProcessor::~SurgeSynthProcessor()
+{
+#if SURGE_HAS_OSC
+    oscListener.stopListening();
+#endif
+}
 
 //==============================================================================
 const juce::String SurgeSynthProcessor::getName() const { return JucePlugin_Name; }
@@ -207,15 +213,24 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 /* OSC (Open Sound Control) */
-bool SurgeSynthProcessor::initOSC(int port) { return oscListener.init(this, surge, port); }
+bool SurgeSynthProcessor::initOSC(int port)
+{
+    auto state = oscListener.init(this, surge, port);
+
+    surge->storage.oscListenerRunning = state;
+
+    return state;
+}
 
 bool SurgeSynthProcessor::changeOSCPort(int new_port)
 {
     if (oscListener.listening)
     {
+        surge->storage.oscListenerRunning = false;
         oscListener.disconnect();
     }
-    return oscListener.init(this, surge, new_port);
+
+    return initOSC(new_port);
 }
 
 //==============================================================================
@@ -266,10 +281,9 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         if (!warnedAboutBadConfig)
         {
             std::ostringstream msg;
-            msg << "SurgeXT was not configured with a stereo output. \n"
-                << "SurgeXT requires at least a main stereo output but the \n"
-                << "main bus has " << mb->getNumberOfChannels() << " channels "
-                << "and enablement state " << (mb->isEnabled() ? "True" : "False");
+            msg << "Surge XT was not configured to have stereo output, which is required.\n"
+                << "The main output bus has " << mb->getNumberOfChannels() << " channels\n"
+                << "and is " << (mb->isEnabled() ? "enabled" : "disabled") << ".";
             surge->storage.reportError(msg.str(), "Bus Configuration Error");
             warnedAboutBadConfig = true;
         }
@@ -281,11 +295,10 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         if (!warnedAboutBadConfig)
         {
             std::ostringstream msg;
-            msg << "SurgeXT did not receive a stereo processing buffer. \n"
-                << "SurgeXT requires at least a main stereo output but the \n"
-                << "provided buffer has " << buffer.getNumChannels() << " channels\n"
-                << "and is enabled. This seems to happen with bluetooth headsets\n"
-                << "in JUCE on macOS when you use the headset as an input and output.";
+            msg << "Surge XT did not receive a stereo processing buffer, which is required.\n"
+                << "The provided buffer has " << buffer.getNumChannels() << " channels.\n"
+                << "This can happen with certain Bluetooth headsets on macOS,\n"
+                << "when they are used as both an input and an output.";
             surge->storage.reportError(msg.str(), "Bus Configuration Error");
             warnedAboutBadConfig = true;
         }
@@ -351,10 +364,13 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     if (!inputIsLatent && (sc & ~(BLOCK_SIZE - 1)) != sc)
     {
         surge->storage.reportError(
-            "Audio Block is not a multiple of BLOCK_SIZE. This means if you use Audio Input"
-            " it will be delayed by BLOCK_SIZE. You can usually avoid this by having your DAW have"
-            " regular sized buffers.",
-            "Activating Latent Input", SurgeStorage::AUDIO_CONFIGURATION, false);
+            fmt::format("Incoming audio input block is not a multiple of {sz} samples.\n"
+                        "If audio input is used, it will be delayed by {sz} samples, in order to "
+                        "compensate.\n"
+                        "This can be avoided by setting the DAW to use fixed buffer sizes, if "
+                        "possible.",
+                        fmt::arg("sz", BLOCK_SIZE)),
+            "Audio Input Latency Activated", SurgeStorage::AUDIO_CONFIGURATION, false);
         inputIsLatent = true;
     }
 
