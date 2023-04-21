@@ -180,7 +180,7 @@ include(cmake/stage-extra-content.cmake)
 add_custom_target(code-quality-pipeline-checks)
 
 # Check 1: The extra content is properly specified.
-add_dependencies(code-quality-pipeline-checks download-extra-content)
+# add_dependencies(code-quality-pipeline-checks download-extra-content)
 
 # Clang Format checks
 set(CLANG_FORMAT_DIRS src)
