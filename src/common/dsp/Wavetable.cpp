@@ -2,8 +2,10 @@
 #include <assert.h>
 #include "DSPUtils.h"
 #include <vembertech/basic_dsp.h>
-#include <vembertech/vt_dsp_endian.h>
 #include "SurgeStorage.h"
+
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 #if WINDOWS
 #include <intrin.h>
@@ -155,9 +157,9 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
 {
     assert(wdata);
 
-    flags = vt_read_int16LE(wh.flags);
-    n_tables = vt_read_int16LE(wh.n_tables);
-    size = vt_read_int32LE(wh.n_samples);
+    flags = mech::endian_read_int16LE(wh.flags);
+    n_tables = mech::endian_read_int16LE(wh.n_tables);
+    size = mech::endian_read_int32LE(wh.n_samples);
 
     size_t req_size = RequiredWTSize(size, n_tables);
 
@@ -220,8 +222,8 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
     {
         for (int j = 0; j < wdata_tables; j++)
         {
-            vt_copyblock_W_LE(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
-                              &((short *)wdata)[this->size * j], this->size);
+            mech::endian_copyblock16LE(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
+                                       &((short *)wdata)[this->size * j], this->size);
             if (this->flags & wtf_int16_is_16)
             {
                 i16toi15_block(&this->TableI16WeakPointers[0][j][FIRoffsetI16],
@@ -235,8 +237,8 @@ bool Wavetable::BuildWT(void *wdata, wt_header &wh, bool AppendSilence)
     {
         for (int j = 0; j < wdata_tables; j++)
         {
-            vt_copyblock_DW_LE((int *)this->TableF32WeakPointers[0][j],
-                               &((int *)wdata)[this->size * j], this->size);
+            mech::endian_copyblock32LE((int32_t *)this->TableF32WeakPointers[0][j],
+                                       &((int32_t *)wdata)[this->size * j], this->size);
             float2i15_block(this->TableF32WeakPointers[0][j],
                             &this->TableI16WeakPointers[0][j][FIRoffsetI16], this->size);
         }

@@ -285,7 +285,6 @@ add_library(${PROJECT_NAME}
   dsp/vembertech/portable_intrinsics.h
   dsp/vembertech/shared.h
   dsp/vembertech/vt_dsp.h
-  dsp/vembertech/vt_dsp_endian.h
   globals.h
   resource.h
   version.cpp.in

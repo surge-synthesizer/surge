@@ -8,8 +8,6 @@
 
 #include "UnitTestUtilities.h"
 
-#include "SSESincDelayLine.h"
-
 #include "samplerate.h"
 
 #include "SSEComplex.h"
@@ -356,118 +354,6 @@ TEST_CASE("lipol_ps class", "[dsp]")
 
         prevtarget = target;
     }
-}
-
-TEST_CASE("Sinc Delay Line", "[dsp]")
-{
-    // This requires SurgeStorate to initialize its tables. Easiest way
-    // to do that is to just make a surge
-    auto surge = Surge::Headless::createSurge(44100);
-    SECTION("Test Constants")
-    {
-        float val = 1.324;
-        SSESincDelayLine<4096> dl4096(surge->storage.sinctable);
-
-        for (int i = 0; i < 10000; ++i)
-        {
-            dl4096.write(val);
-        }
-        for (int i = 0; i < 20000; ++i)
-        {
-            INFO("Iteration " << i);
-            float a = dl4096.read(174.3);
-            float b = dl4096.read(1732.4);
-            float c = dl4096.read(3987.2);
-            float d = dl4096.read(256.0);
-
-            REQUIRE(a == Approx(val).margin(1e-3));
-            REQUIRE(b == Approx(val).margin(1e-3));
-            REQUIRE(c == Approx(val).margin(1e-3));
-            REQUIRE(d == Approx(val).margin(1e-3));
-
-            dl4096.write(val);
-        }
-    }
-
-    SECTION("Test Ramp")
-    {
-        float val = 0;
-        float dRamp = 0.01;
-        SSESincDelayLine<4096> dl4096(surge->storage.sinctable);
-
-        for (int i = 0; i < 10000; ++i)
-        {
-            dl4096.write(val);
-            val += dRamp;
-        }
-        for (int i = 0; i < 20000; ++i)
-        {
-            INFO("Iteration " << i);
-            float a = dl4096.read(174.3);
-            float b = dl4096.read(1732.4);
-            float c = dl4096.read(3987.2);
-            float d = dl4096.read(256.0);
-
-            auto cval = val - dRamp;
-
-            REQUIRE(a == Approx(cval - 174.3 * dRamp).epsilon(1e-3));
-            REQUIRE(b == Approx(cval - 1732.4 * dRamp).epsilon(1e-3));
-            REQUIRE(c == Approx(cval - 3987.2 * dRamp).epsilon(1e-3));
-            REQUIRE(d == Approx(cval - 256.0 * dRamp).epsilon(1e-3));
-
-            float aL = dl4096.readLinear(174.3);
-            float bL = dl4096.readLinear(1732.4);
-            float cL = dl4096.readLinear(3987.2);
-            float dL = dl4096.readLinear(256.0);
-
-            REQUIRE(aL == Approx(cval - 174.3 * dRamp).epsilon(1e-3));
-            REQUIRE(bL == Approx(cval - 1732.4 * dRamp).epsilon(1e-3));
-            REQUIRE(cL == Approx(cval - 3987.2 * dRamp).epsilon(1e-3));
-            REQUIRE(dL == Approx(cval - 256.0 * dRamp).epsilon(1e-3));
-
-            dl4096.write(val);
-            val += dRamp;
-        }
-    }
-
-#if 0
-// This prints output I used for debugging
-    SECTION( "Generate Output" )
-    {
-        float dRamp = 0.01;
-        SSESincDelayLine<4096> dl4096;
-
-        float v = 0;
-        int nsamp = 500;
-        for( int i=0; i<nsamp; ++i )
-        {
-            dl4096.write(v);
-            v += dRamp;
-        }
-
-        for( int i=100; i<300; ++i )
-        {
-            auto bi = dl4096.buffer[i];
-            auto off = nsamp - i;
-            auto bsv = dl4096.read(off - 1);
-            auto bsl = dl4096.readLinear(off);
-
-            auto bsvh = dl4096.read(off - 1 - 0.5);
-            auto bslh = dl4096.readLinear(off - 0.0 );
-            std::cout << off << ", " << bi << ", " << bsv
-                      << ", " << bsl << ", " << bi -bsv << ", " << bi-bsl
-                      << ", " << bslh << ", " << bi - bslh << std::endl;
-
-            for( int q=0; q<111; ++q )
-            {
-                std::cout << " " << q << " "
-                          << ( dl4096.read(off - q * 0.1) - bi ) / dRamp
-                          << " " << ( dl4096.readLinear(off - q * 0.1) - bi ) / dRamp
-                          << std::endl;
-            }
-        }
-    }
-#endif
 }
 
 TEST_CASE("libsamplerate basics", "[dsp]")

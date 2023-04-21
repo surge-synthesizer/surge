@@ -42,8 +42,8 @@ class OSCListener : public juce::OSCReceiver,
     bool listening = false;
 
   private:
-    SurgeSynthesizer *surgePtr;
-    SurgeSynthProcessor *sspPtr;
+    SurgeSynthesizer *surgePtr{nullptr};
+    SurgeSynthProcessor *sspPtr{nullptr};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OSCListener)
 };

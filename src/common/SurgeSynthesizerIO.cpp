@@ -16,7 +16,6 @@
 #include "SurgeSynthesizer.h"
 #include "DSPUtils.h"
 #include <time.h>
-#include <vembertech/vt_dsp_endian.h>
 
 #include "filesystem/import.h"
 
@@ -24,6 +23,9 @@
 #include <fstream>
 #include <iterator>
 #include "SurgeMemoryPools.h"
+
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
 
@@ -225,13 +227,14 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     fxChunkSetCustom fxp;
     auto read = f.sgetn(reinterpret_cast<char *>(&fxp), sizeof(fxp));
     // FIXME - error if read != chunk size
-    if ((vt_read_int32BE(fxp.chunkMagic) != 'CcnK') || (vt_read_int32BE(fxp.fxMagic) != 'FPCh') ||
-        (vt_read_int32BE(fxp.fxID) != 'cjs3'))
+    if ((mech::endian_read_int32BE(fxp.chunkMagic) != 'CcnK') ||
+        (mech::endian_read_int32BE(fxp.fxMagic) != 'FPCh') ||
+        (mech::endian_read_int32BE(fxp.fxID) != 'cjs3'))
     {
         f.close();
-        auto cm = vt_read_int32BE(fxp.chunkMagic);
-        auto fm = vt_read_int32BE(fxp.fxMagic);
-        auto id = vt_read_int32BE(fxp.fxID);
+        auto cm = mech::endian_read_int32BE(fxp.chunkMagic);
+        auto fm = mech::endian_read_int32BE(fxp.fxMagic);
+        auto id = mech::endian_read_int32BE(fxp.fxID);
 
         std::ostringstream oss;
         oss << "Unable to load " << patchName << ".fxp!";
@@ -259,7 +262,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
         return false;
     }
 
-    int cs = vt_read_int32BE(fxp.chunkSize);
+    int cs = mech::endian_read_int32BE(fxp.chunkSize);
     std::unique_ptr<char[]> data{new char[cs]};
 
     if (f.sgetn(data.get(), cs) != cs)
@@ -609,18 +612,18 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename, bool refreshPatchList)
     }
 
     fxChunkSetCustom fxp;
-    fxp.chunkMagic = vt_write_int32BE('CcnK');
-    fxp.fxMagic = vt_write_int32BE('FPCh');
-    fxp.fxID = vt_write_int32BE('cjs3');
-    fxp.numPrograms = vt_write_int32BE(1);
-    fxp.version = vt_write_int32BE(1);
-    fxp.fxVersion = vt_write_int32BE(1);
+    fxp.chunkMagic = mech::endian_write_int32BE('CcnK');
+    fxp.fxMagic = mech::endian_write_int32BE('FPCh');
+    fxp.fxID = mech::endian_write_int32BE('cjs3');
+    fxp.numPrograms = mech::endian_write_int32BE(1);
+    fxp.version = mech::endian_write_int32BE(1);
+    fxp.fxVersion = mech::endian_write_int32BE(1);
     strncpy(fxp.prgName, storage.getPatch().name.c_str(), 28);
 
     void *data;
     unsigned int datasize = storage.getPatch().save_patch(&data);
 
-    fxp.chunkSize = vt_write_int32BE(datasize);
+    fxp.chunkSize = mech::endian_write_int32BE(datasize);
     fxp.byteSize = 0;
 
     f.write((char *)&fxp, sizeof(fxChunkSetCustom));

@@ -62,9 +62,14 @@ bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynt
 
 void OSCListener::stopListening()
 {
+    if (!listening)
+        return;
+
     removeListener(this);
     listening = false;
-    surgePtr->storage.oscListenerRunning = false;
+
+    if (surgePtr)
+        surgePtr->storage.oscListenerRunning = false;
 
 #ifdef DEBUG
     std::cout << "SurgeOSC: Stopped listening for OSC." << std::endl;
