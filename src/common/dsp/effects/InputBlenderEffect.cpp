@@ -61,9 +61,22 @@ void InputBlenderEffect::init_ctrltypes()
 
 void InputBlenderEffect::init_default_values()
 {
-    fxdata->p[ibp_audio_input_channel].val.i = 0;
-    fxdata->p[ibp_audio_input_level].val.f = 0.0;
-    fxdata->p[ibp_effect_input_level].val.f = 0.0;
+    fxdata->p[ibp_audio_input_channel].val.i = 3; // p0
+    fxdata->p[ibp_audio_input_pan].val.f = 0.0;   //p1
+    fxdata->p[ibp_audio_input_level].val.f = 0.0;  //p2
+
+
+    fxdata->p[ibp_effect_input_channel].val.i = 3; //p3
+    fxdata->p[ibp_effect_input_pan].val.f = 0.0;  //p4
+    fxdata->p[ibp_effect_input_level].val.f = 0.0; //p5
+
+
+    fxdata->p[ibp_scene_input_channel].val.i = 3; //p6
+    fxdata->p[ibp_scene_input_pan].val.f = 0.0; //p7
+    fxdata->p[ibp_scene_input_level].val.f = 0.0; //p8
+
+    fxdata->p[ibp_output_width].val.f = 0.0; //p9
+    fxdata->p[ibp_output_mix].val.f = 1.0;  //p10
 }
 const char *InputBlenderEffect::group_label(int id) {
     switch (id)

@@ -191,9 +191,6 @@ enum ctrltypes
     ct_mscodec,
     ct_percent_bipolar_pan, // bipolar with special text strings at -100%, +100% and 0%
     ct_spring_decay,
-    ct_input_channel_withA,
-    ct_input_channel_withB,
-    ct_input_channel,
 
     num_ctrltypes,
 };

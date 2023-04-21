@@ -432,9 +432,6 @@ bool Parameter::is_discrete_selection() const
     case ct_alias_wave:
     case ct_wstype:
     case ct_mscodec:
-    case ct_input_channel_withA:
-    case ct_input_channel_withB:
-    case ct_input_channel:
         return true;
     default:
         break;
@@ -675,19 +672,6 @@ void Parameter::set_type(int ctrltype)
         val_min.f = 0;
         val_max.f = 5;
         val_default.f = 1;
-        break;
-    case ct_input_channel_withA:
-    case ct_input_channel_withB:
-        valtype = vt_int;
-        val_min.i = 0;
-        val_max.i = 3;
-        val_default.i = 0;
-        break;
-    case ct_input_channel:
-        valtype = vt_int;
-        val_min.i = 0;
-        val_max.i = 2;
-        val_default.i = 0;
         break;
     case ct_decibel:
     case ct_decibel_extendable:
@@ -3868,54 +3852,6 @@ std::string Parameter::get_display(bool external, float ef) const
             }
         }
         break;
-        case ct_input_channel_withA:
-            switch (i)
-            {
-            case 0:
-                txt = "Left";
-                break;
-            case 1:
-                txt = "Right";
-                break ;
-            case 2:
-                txt = "Stereo";
-                break;
-            case 3:
-                txt = "Scene A";
-                break;
-            }
-            break;
-        case ct_input_channel_withB:
-            switch (i)
-            {
-            case 0:
-                txt = "Left";
-                break;
-            case 1:
-                txt = "Right";
-                break ;
-            case 2:
-                txt = "Stereo";
-                break;
-            case 3:
-                txt = "Scene B";
-                break;
-            }
-            break;
-        case ct_input_channel:
-            switch (i)
-            {
-            case 0:
-                    txt = "Left";
-                    break;
-            case 1:
-                    txt = "Right";
-                    break ;
-            case 2:
-                    txt = "Stereo";
-                    break;
-            }
-            break;
         default:
             txt = fmt::format("{:d}", i);
             break;
