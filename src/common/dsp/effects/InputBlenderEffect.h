@@ -18,14 +18,24 @@
 class InputBlenderEffect : public Effect
 {
   public:
+    enum effect_slot_type{
+        a_insert_slot, b_insert_slot, send_slot, global_slot
+    };
     enum ibp_params{
-        ibp_channel = 0,
-        ibp_input_level,
-        ibp_input_width,
-        ibp_upstream_level,
-        ibp_upstream_width,
-        ibp_output_mix,
+        ibp_audio_input_channel = 0,
+        ibp_audio_input_pan,
+        ibp_audio_input_level,
+
+        ibp_effect_input_channel,
+        ibp_effect_input_pan,
+        ibp_effect_input_level,
+
+        ibp_scene_input_channel,
+        ibp_scene_input_pan,
+        ibp_scene_input_level,
+
         ibp_output_width,
+        ibp_output_mix,
 
         ibp_num_params
     };
@@ -36,5 +46,7 @@ class InputBlenderEffect : public Effect
     void process(float *dataL, float *dataR) override;
     const char *group_label(int id) override;
     int group_label_ypos(int id) override;
+  private:
+    effect_slot_type getSlotType(fxslot_positions p);
 };
 
