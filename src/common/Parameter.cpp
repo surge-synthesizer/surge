@@ -29,6 +29,7 @@
 #include "StringOps.h"
 #include "Tunings.h"
 #include "fmt/core.h"
+#include "UnitConversions.h"
 
 Parameter::Parameter()
 {
@@ -5118,7 +5119,7 @@ void Parameter::setOSCName(std::string s)
     hasOSCName = true;
 }
 
-std::string Parameter::get_OSC_name()
+std::string Parameter::getOSCName()
 {
     if (!hasOSCName)
         return get_storage_name();

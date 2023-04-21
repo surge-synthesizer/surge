@@ -240,7 +240,6 @@ add_library(${PROJECT_NAME}
   dsp/effects/chowdsp/tape/ToneControl.cpp
   dsp/effects/chowdsp/tape/ToneControl.h
   dsp/filters/AllpassFilter.h
-  dsp/filters/BiquadFilter.cpp
   dsp/filters/BiquadFilter.h
   dsp/filters/VectorizedSVFilter.cpp
   dsp/filters/VectorizedSVFilter.h
@@ -277,7 +276,6 @@ add_library(${PROJECT_NAME}
   dsp/oscillators/WavetableOscillator.h
   dsp/oscillators/WindowOscillator.cpp
   dsp/oscillators/WindowOscillator.h
-  dsp/utilities/DSPUtils.cpp
   dsp/utilities/DSPUtils.h
   dsp/utilities/SSEComplex.h
   dsp/utilities/SSESincDelayLine.h

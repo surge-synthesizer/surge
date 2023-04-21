@@ -20,6 +20,7 @@
 #include "AllpassFilter.h"
 
 #include <vembertech/lipol.h>
+#include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
 class Reverb2Effect : public Effect
 {
@@ -148,6 +149,8 @@ class Reverb2Effect : public Effect
     lipol<float, true> _hf_damp_coefficent;
     lipol<float, true> _lf_damp_coefficent;
     lipol<float, true> _modulation;
+
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc _lfo;
     float last_decay_time = -1.0;
 };

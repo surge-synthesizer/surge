@@ -12,6 +12,7 @@
 #include "SurgeFXEditor.h"
 #include "DebugHelpers.h"
 #include "UserDefaults.h"
+#include <fmt/core.h>
 
 #if LINUX
 // getCurrentPosition is deprecated in J7

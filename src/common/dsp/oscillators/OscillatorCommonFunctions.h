@@ -35,6 +35,17 @@ struct DriftLFO
             d2 = 0.0005 * ((float)rand() / (float)(RAND_MAX));
     }
 
+    inline float drift_noise(float &lastval)
+    {
+        constexpr float filter = 0.00001f;
+        constexpr float m = 316.227766017f; // 1.f / sqrt(filter);
+        float rand11 = (((float)rand() / (float)RAND_MAX) * 2.f - 1.f);
+
+        lastval = lastval * (1.f - filter) + rand11 * filter;
+
+        return lastval * m;
+    }
+
     inline float next()
     {
         d = drift_noise(d2);

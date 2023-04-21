@@ -427,6 +427,24 @@ void OscillatorMenu::populate()
         hmen->setCentered(false);
 
         menu.addCustomItem(-1, std::move(hmen), nullptr, title);
+
+#if SURGE_HAS_OSC
+        if (storage->oscListenerRunning)
+        {
+            menu.addSeparator();
+
+            auto oscName = storage->getPatch().scene[sc].osc[osc].type.getOSCName();
+
+            auto i =
+                juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))
+                    .setEnabled(true)
+                    .setAction([oscName]() { juce::SystemClipboard::copyTextToClipboard(oscName); })
+                    .setColour(
+                        sge->currentSkin->getColor(Colors::PopupMenu::Text).withAlpha(0.75f));
+
+            menu.addItem(i);
+        }
+#endif
     }
 }
 
@@ -436,6 +454,8 @@ void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
     {
         return;
     }
+
+    populate();
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
@@ -704,9 +724,11 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     if (sge)
     {
         cfxid = sge->effectChooser->currentClicked;
+
         if (cfxid >= 0)
         {
             auto deactbm = sge->effectChooser->getDeactivatedBitmask();
+
             addDeact = true;
             isDeact = deactbm & (1 << cfxid);
             cfxtype = sge->effectChooser->fxTypes[cfxid];
@@ -823,6 +845,24 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
         hmen->setCentered(false);
 
         menu.addCustomItem(-1, std::move(hmen), nullptr, helpMenuScreeReaderText);
+
+#if SURGE_HAS_OSC
+        if (storage->oscListenerRunning)
+        {
+            menu.addSeparator();
+
+            auto oscName = storage->getPatch().fx[sge->current_fx].type.getOSCName();
+
+            auto i =
+                juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))
+                    .setEnabled(true)
+                    .setAction([oscName]() { juce::SystemClipboard::copyTextToClipboard(oscName); })
+                    .setColour(
+                        sge->currentSkin->getColor(Colors::PopupMenu::Text).withAlpha(0.75f));
+
+            menu.addItem(i);
+        }
+#endif
     }
 }
 

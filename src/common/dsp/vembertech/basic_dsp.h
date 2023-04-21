@@ -9,7 +9,9 @@ template <typename T> inline T limit_range(const T &x, const T &low, const T &hi
 }
 
 template <typename T> inline T limit01(const T &x) { return limit_range(x, (T)0, (T)1); }
+template <typename T> inline T clamp01(const T &x) { return limit_range(x, (T)0, (T)1); }
 template <typename T> inline T limitpm1(const T &x) { return limit_range(x, (T)-1, (T)1); }
+template <typename T> inline T clamp1bp(const T &x) { return limit_range(x, (T)-1, (T)1); }
 
 inline void float2i15_block(float *f, short *s, int n)
 {

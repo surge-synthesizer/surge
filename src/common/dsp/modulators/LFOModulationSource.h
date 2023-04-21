@@ -22,6 +22,7 @@
 #include "MSEGModulationHelper.h" // We need this for the MSEGEvalatorState member
 #include "FormulaModulationHelper.h"
 #include <functional>
+#include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
 enum LFOEG_state
 {
@@ -135,5 +136,6 @@ class LFOModulationSource : public ModulationSource
     std::default_random_engine gen;
     std::uniform_real_distribution<float> distro;
     std::function<float()> urng;
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc sinus;
 };

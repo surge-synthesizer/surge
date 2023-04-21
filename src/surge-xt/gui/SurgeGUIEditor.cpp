@@ -2272,7 +2272,7 @@ void SurgeGUIEditor::close_editor()
     editor_open = false;
 
     resetComponentTracking();
-    setzero(param);
+    memset(param, 0, sizeof(param));
 }
 
 bool SurgeGUIEditor::open(void *parent)
@@ -4830,9 +4830,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 
     oscSubMenu.addSeparator();
 
-    bool alreadyListening = juceEditor->processor.oscListener.listening;
-
-    if (alreadyListening)
+    if (synth->storage.oscListenerRunning)
     {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Listener"),
                            [this]() { juceEditor->processor.oscListener.stopListening(); });

@@ -27,9 +27,16 @@
 #include "UserDefaults.h"
 #include "version.h"
 #include "fmt/core.h"
+#include <locale>
+#include <fmt/format.h>
 
 using namespace std;
 using namespace Surge::ParamConfig;
+
+inline std::string float_to_clocalestr(float value)
+{
+    return fmt::format(std::locale::classic(), "{:L}", value);
+}
 
 SurgePatch::SurgePatch(SurgeStorage *storage)
 {
@@ -646,7 +653,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     {
         if (p->hasOSCName)
         {
-            param_ptr_by_oscname[p->get_OSC_name()] = p;
+            param_ptr_by_oscname[p->getOSCName()] = p;
         }
     }
 

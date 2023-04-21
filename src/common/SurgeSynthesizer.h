@@ -457,8 +457,6 @@ class alignas(16) SurgeSynthesizer
     std::list<HoldBufferItem> holdbuffer[n_scenes];
     void purgeHoldbuffer(int scene);
     void purgeDuplicateHeldVoicesInPolyMode(int scehe, int channel, int key);
-    quadr_osc sinus;
-    int demo_counter = 0;
 
     QuadFilterChainState *FBQ[n_scenes];
 

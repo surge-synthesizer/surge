@@ -5,6 +5,7 @@
 #include "fmt/core.h"
 #include "sst/cpputils.h"
 #include "sst/plugininfra/strnatcmp.h"
+#include "UnitConversions.h"
 
 namespace Surge
 {
@@ -559,7 +560,7 @@ span {
 
     for (auto *p : synth->storage.getPatch().param_ptr)
     {
-        st_str = p->get_OSC_name();
+        st_str = p->getOSCName();
         if (st_str[1] == '_')
         {
             if (st_str[0] == 'b')
