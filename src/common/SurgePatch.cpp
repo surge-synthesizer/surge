@@ -18,7 +18,6 @@
 #include "SurgeParamConfig.h"
 #include "Effect.h"
 #include <list>
-#include <vembertech/vt_dsp_endian.h>
 #include "MSEGModulationHelper.h"
 #include "FormulaModulationHelper.h"
 #include "DebugHelpers.h"
@@ -29,6 +28,9 @@
 #include "fmt/core.h"
 #include <locale>
 #include <fmt/format.h>
+
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
 using namespace Surge::ParamConfig;
@@ -1099,7 +1101,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
     assert(data);
     void *end = (char *)data + datasize;
     patch_header *ph = (patch_header *)data;
-    ph->xmlsize = vt_read_int32LE(ph->xmlsize);
+    ph->xmlsize = mech::endian_read_int32LE(ph->xmlsize);
 
     if (!memcmp(ph->tag, "sub3", 4))
     {
@@ -1111,7 +1113,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
         {
             for (int osc = 0; osc < n_oscs; osc++)
             {
-                ph->wtsize[sc][osc] = vt_read_int32LE(ph->wtsize[sc][osc]);
+                ph->wtsize[sc][osc] = mech::endian_read_int32LE(ph->wtsize[sc][osc]);
                 if (ph->wtsize[sc][osc])
                 {
                     wt_header *wth = (wt_header *)dr;
@@ -1180,7 +1182,7 @@ unsigned int SurgePatch::save_patch(void **data)
 
     memcpy(header.tag, "sub3", 4);
     size_t xmlsize = save_xml(&xmldata);
-    header.xmlsize = vt_write_int32LE(xmlsize);
+    header.xmlsize = mech::endian_write_int32LE(xmlsize);
     wt_header wth[n_scenes][n_oscs];
     for (int sc = 0; sc < n_scenes; sc++)
     {
@@ -1196,7 +1198,7 @@ unsigned int SurgePatch::save_patch(void **data)
                 unsigned int wtsize =
                     wth[sc][osc].n_samples * scene[sc].osc[osc].wt.n_tables * sizeof(short) +
                     sizeof(wt_header);
-                header.wtsize[sc][osc] = vt_write_int32LE(wtsize);
+                header.wtsize[sc][osc] = mech::endian_write_int32LE(wtsize);
                 psize += wtsize;
             }
             else
@@ -1221,21 +1223,21 @@ unsigned int SurgePatch::save_patch(void **data)
         {
             if (header.wtsize[sc][osc])
             {
-                size_t wtsize = vt_read_int32LE(header.wtsize[sc][osc]);
+                size_t wtsize = mech::endian_read_int32LE(header.wtsize[sc][osc]);
                 int n_tables = wth[sc][osc].n_tables;
                 int n_samples = wth[sc][osc].n_samples;
 
                 // do all endian swapping for the wavetables in one place (for ppc)
-                wth[sc][osc].n_samples = vt_write_int32LE(wth[sc][osc].n_samples);
-                wth[sc][osc].n_tables = vt_write_int16LE(wth[sc][osc].n_tables);
-                wth[sc][osc].flags = vt_write_int16LE(wth[sc][osc].flags | wtf_int16);
+                wth[sc][osc].n_samples = mech::endian_write_int32LE(wth[sc][osc].n_samples);
+                wth[sc][osc].n_tables = mech::endian_write_int16LE(wth[sc][osc].n_tables);
+                wth[sc][osc].flags = mech::endian_write_int16LE(wth[sc][osc].flags | wtf_int16);
 
                 memcpy(dw, &wth[sc][osc], sizeof(wt_header));
                 short *fp = (short *)(char *)(dw + sizeof(wt_header));
 
                 for (int j = 0; j < n_tables; j++)
                 {
-                    vt_copyblock_W_LE(
+                    mech::endian_copyblock16LE(
                         &fp[j * n_samples],
                         &scene[sc].osc[osc].wt.TableI16WeakPointers[0][j][FIRoffsetI16], n_samples);
                 }

@@ -146,7 +146,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 SurgeSynthProcessor::~SurgeSynthProcessor()
 {
 #if SURGE_HAS_OSC
-    oscListener.stopListening();
+    if (oscListener.listening)
+        oscListener.stopListening();
 #endif
 }
 

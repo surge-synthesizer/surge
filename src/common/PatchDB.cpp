@@ -19,9 +19,11 @@
 #include "SurgeStorage.h"
 #include <sstream>
 #include <iterator>
-#include "vt_dsp_endian.h"
 #include "DebugHelpers.h"
 #include <chrono>
+
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 #define TRACE_DB 0
 
@@ -848,15 +850,16 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
         uint8_t *d = contents.data();
         auto *fxp = (fxChunkSetCustom *)d;
-        if ((vt_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
-            (vt_read_int32BE(fxp->fxMagic) != 'FPCh') || (vt_read_int32BE(fxp->fxID) != 'cjs3'))
+        if ((mech::endian_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
+            (mech::endian_read_int32BE(fxp->fxMagic) != 'FPCh') ||
+            (mech::endian_read_int32BE(fxp->fxID) != 'cjs3'))
         {
             return;
         }
 
         auto phd = d + sizeof(fxChunkSetCustom);
         auto *ph = (patch_header *)phd;
-        auto xmlSz = vt_read_int32LE(ph->xmlsize);
+        auto xmlSz = mech::endian_read_int32LE(ph->xmlsize);
 
         if (!memcpy(ph->tag, "sub3", 4) || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
         {

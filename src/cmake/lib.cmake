@@ -4,10 +4,6 @@ file(MAKE_DIRECTORY ${SURGE_PRODUCT_DIR})
 
 add_custom_target(surge-xt-distribution)
 add_custom_target(surge-staged-assets)
-add_custom_command(TARGET surge-xt-distribution
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/resources/surge-xt/README.txt ${SURGE_PRODUCT_DIR}
-  )
 
 function(surge_juce_package target product_name)
   get_target_property(output_dir ${target} RUNTIME_OUTPUT_DIRECTORY)
