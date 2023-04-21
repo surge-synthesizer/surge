@@ -6,7 +6,6 @@ InputBlenderEffect::~InputBlenderEffect() {}
 void InputBlenderEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
-    effect_slot_type slot_type = getSlotType(fxdata->fxslot);
 
     // -----  Audio Input
     fxdata->p[ibp_audio_input_channel].set_name("Channel");
@@ -79,33 +78,27 @@ void InputBlenderEffect::init_default_values()
     fxdata->p[ibp_output_mix].val.f = 1.0;  //p10
 }
 const char *InputBlenderEffect::group_label(int id) {
-    switch (id)
-    {
-    case 0:
-        return "Audio Input";
-    case 1:
-        return "Effect Input";
-    case 3:
-        return "Scene Input";
-    case 4:
-        return "Output";
-    }
+    std::vector group_labels = {{"Audio Input", "Effect Input", "Scene Input", "Output"}};
+    effect_slot_type slot_type = getSlotType(fxdata->fxslot);
+    if (slot_type == a_insert_slot)
+        group_labels[2] = "Scene B Input";
+    else if (slot_type == b_insert_slot)
+        group_labels[2] = "Scene A Input";
+    else
+        group_labels.erase(group_labels.begin() + 2);
+    if (id>=0 && id < group_labels.size())
+        return group_labels[id];
     return 0;
 }
 
 
 int InputBlenderEffect::group_label_ypos(int id) {
-    switch (id)
-    {
-    case 0:
-        return 1;
-    case 1:
-        return 9;
-    case 3:
-        return 17;
-    case 4:
-        return 25;
-    }
+    std::vector ypos = {1, 9, 17, 25};
+    effect_slot_type slot_type = getSlotType(fxdata->fxslot);
+    if (slot_type != a_insert_slot && slot_type != b_insert_slot)
+        ypos.pop_back();
+    if (id>=0 && id < ypos.size())
+        return ypos[id];
     return 0;
 }
 void InputBlenderEffect::process(float *dataL, float *dataR)
