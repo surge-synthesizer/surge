@@ -20,7 +20,6 @@
 #include <cctype>
 #include <map>
 #include <queue>
-#include <vembertech/vt_dsp_endian.h>
 #include "UserDefaults.h"
 #if HAS_JUCE
 #include "SurgeSharedBinary.h"
@@ -50,6 +49,9 @@
 #include "MSEGModulationHelper.h"
 // FIXME
 #include "FormulaModulationHelper.h"
+
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
 
@@ -1187,13 +1189,15 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
 
     size_t ds;
 
-    if (vt_read_int16LE(wh.flags) & wtf_int16)
+    if (mech::endian_read_int16LE(wh.flags) & wtf_int16)
     {
-        ds = sizeof(short) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+        ds = sizeof(short) * mech::endian_read_int16LE(wh.n_tables) *
+             mech::endian_read_int32LE(wh.n_samples);
     }
     else
     {
-        ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+        ds = sizeof(float) * mech::endian_read_int16LE(wh.n_tables) *
+             mech::endian_read_int32LE(wh.n_samples);
     }
 
     const std::unique_ptr<char[]> data{new char[ds]};
@@ -1251,10 +1255,12 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
     }
 
     size_t ds;
-    if (vt_read_int16LE(wh.flags) & wtf_int16)
-        ds = sizeof(short) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+    if (mech::endian_read_int16LE(wh.flags) & wtf_int16)
+        ds = sizeof(short) * mech::endian_read_int16LE(wh.n_tables) *
+             mech::endian_read_int32LE(wh.n_samples);
     else
-        ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+        ds = sizeof(float) * mech::endian_read_int16LE(wh.n_tables) *
+             mech::endian_read_int32LE(wh.n_samples);
 
     if (dataSize < ds + sizeof(wt_header))
     {
