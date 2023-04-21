@@ -424,8 +424,10 @@ struct oscParamInfo
 // Sort function for displaying parameters (below)
 bool compareParams(const oscParamInfo &opl, const oscParamInfo &opr)
 {
-    int lcg = opl.p->ctrlgroup;
-    int rcg = opr.p->ctrlgroup;
+    int cgroup_order[10] = {0, 1, 2, 4, 3, 5, 6, 7, 8, 9};
+
+    int lcg = cgroup_order[opl.p->ctrlgroup];
+    int rcg = cgroup_order[opr.p->ctrlgroup];
     if (lcg == rcg)
     {
         std::string ls = opl.storage_name;
@@ -453,7 +455,7 @@ table {
 
 td {
   border: 1px solid #CDCED4;
-  padding: 2pt 4px;
+  padding: 2pt 8px;
 }
 
 .center {
@@ -474,14 +476,21 @@ div.outer {
     margin: 0 0 10pt 0;
     font-family: Lato;
     color: #123463;
-    display: flex;
-    flex-wrap: wrap;
+}
+
+div.frame {
+    max-width: 1300px;
 }
 
 div.tablewrap {
-    width: 600px;
+    width: 610px;
     margin: 0 8px 16px 8px;
-    flex-basis: 40%;
+    /* flex-basis: 40%; */
+    box-sizing: border-box;
+    display: block;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
 }
 
 th {
@@ -494,6 +503,24 @@ th {
 span {
     margin-left: 16px;
 }
+
+.cl{
+   clear: left;
+}
+.cr{
+   clear: right;
+}
+.fl{
+   float: left;
+}
+.fr{
+   float: right;
+}
+* {
+   -webkit-box-sizing: border-box;
+   -moz-box-sizing: border-box;
+}
+
 </style>
   </head>
   <body style="margin: 0pt; background: #CDCED4;">
@@ -523,7 +550,7 @@ span {
     </div>
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
-      <div class="outer">
+      <div class="outer"><div class="frame">
     )HTML";
 
     std::vector<oscParamInfo> sortvector;
@@ -549,6 +576,7 @@ span {
     std::sort(sortvector.begin(), sortvector.end(), compareParams);
 
     // Generate HTML table of parameters
+    int tabnum = 0;
     for (auto itr : sortvector)
     {
         bool skip = false;
@@ -561,8 +589,17 @@ span {
                 htmls << "</table></div>";
             }
             currentCtrlGrp = itr.p->ctrlgroup;
-            htmls << "<div class=\"tablewrap\"><div class=\"heading\"><h3>"
-                  << "Control Group: " << ControlGroupDisplay[itr.p->ctrlgroup] << "</h3></div>"
+            if (tabnum++ % 2 == 0) // Even number?
+            {
+                htmls << "<div class=\"tablewrap fl cl\">";
+            }
+            else
+            {
+                htmls << "<div class=\"tablewrap fr cr\">";
+            }
+
+            htmls << "<div class=\"heading\"><h3>Control Group: "
+                  << ControlGroupDisplay[itr.p->ctrlgroup] << "</h3></div>"
                   << R"HTML(
                 
             <table style="border: 2px solid black;">
@@ -615,6 +652,7 @@ span {
     htmls << R"HTML(
                         </table>
                     </div>
+                </div>
                 </div>
             </div>
         </body>
