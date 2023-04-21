@@ -1,20 +1,24 @@
 /*
-** Portable (using standard fread and so on) support for .wav files generating wavetables
-**
-** Two things which matter in addition to the fmt and data block
-**
-**  1. The 'smpl' block
-**  2. The 'clm ' block - indicates a serum file
-**  3. The 'cue ' block which apparently NI uses
-**
-** I read them in this order:
-**
-**  1. If there is a clm block that wins, we ignore the smpl and cue block, and you get your 2048 wt
-**  2. If there is a cue block and no clm, use the offsets if they are power of 2 and regular
-**  3. Else if there is no smpl block or you have a smpl block with a power of 2 sample length we
-**     interpret you as a wt
-**  4. otherwise as a one shot or - right now - an error
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #define WAV_STDOUT_INFO 0
 
