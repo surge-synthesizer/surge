@@ -12,22 +12,19 @@ pr:
 
 jobs:
   - job: BuildCodeQuality
-    strategy:
-        lin:
-          imageName: 'ubuntu-20.04'
-        pool:
-          vmImage: $(imageName)
+    pool:
+      vmImage: 'ubuntu-20.04'
 
-        steps:
-          - checkout: self
-            fetchDepth: 1
-            # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
+    steps:
+      - checkout: self
+        fetchDepth: 1
+        # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
 
-          - bash: |
-              git submodule update --init --recursive
-              cmake -Bignore/cq -DSURGE_SKIP_JUCE_FOR_RACK=TRUE -DCMAKE_BUILD_TYPE=Debug -DSURGE_SKIP_LUA=TRUE
-              cmake --build ignore/cq --target code-quality-pipeline-checks
-            displayName: Do Codequal
+      - bash: |
+          git submodule update --init --recursive
+          cmake -Bignore/cq -DSURGE_SKIP_JUCE_FOR_RACK=TRUE -DCMAKE_BUILD_TYPE=Debug -DSURGE_SKIP_LUA=TRUE
+          cmake --build ignore/cq --target code-quality-pipeline-checks
+        displayName: Do Codequal
 
 
   - job: BuildForPR
