@@ -34,27 +34,34 @@ void InputBlenderEffect::init_ctrltypes()
     fxdata->p[ibp_effect_input_level].posy_offset = 3;
 
     // -----  Scene Input
-    fxdata->p[ibp_scene_input_channel].set_name("Channel");
-    fxdata->p[ibp_scene_input_channel].set_type(ct_vocoder_modulator_mode);
-    fxdata->p[ibp_scene_input_channel].posy_offset = 5;
+    int next_posy_offset = -1;
+    effect_slot_type slot_type = getSlotType(fxdata->fxslot);
+    if (slot_type == a_insert_slot || slot_type == b_insert_slot)
+    {
+        fxdata->p[ibp_scene_input_channel].set_name("Channel");
+        fxdata->p[ibp_scene_input_channel].set_type(ct_vocoder_modulator_mode);
+        fxdata->p[ibp_scene_input_channel].posy_offset = 5;
 
-    fxdata->p[ibp_scene_input_pan].set_name("Pan");
-    fxdata->p[ibp_scene_input_pan].set_type(ct_percent_bipolar_stereo);
-    fxdata->p[ibp_scene_input_pan].posy_offset = 5;
+        fxdata->p[ibp_scene_input_pan].set_name("Pan");
+        fxdata->p[ibp_scene_input_pan].set_type(ct_percent_bipolar_stereo);
+        fxdata->p[ibp_scene_input_pan].posy_offset = 5;
 
-    fxdata->p[ibp_scene_input_level].set_name("Level");
-    fxdata->p[ibp_scene_input_level].set_type(ct_decibel_attenuation);
-    fxdata->p[ibp_scene_input_level].posy_offset = 5;
+        fxdata->p[ibp_scene_input_level].set_name("Level");
+        fxdata->p[ibp_scene_input_level].set_type(ct_decibel_attenuation);
+        fxdata->p[ibp_scene_input_level].posy_offset = 5;
+
+        next_posy_offset = 7;
+    }
 
     // -----  Output
 
     fxdata->p[ibp_output_width].set_name("Width");
     fxdata->p[ibp_output_width].set_type(ct_percent_bipolar_stereo);
-    fxdata->p[ibp_output_width].posy_offset = 7;
+    fxdata->p[ibp_output_width].posy_offset = next_posy_offset;
 
     fxdata->p[ibp_output_mix].set_name("Mix");
     fxdata->p[ibp_output_mix].set_type(ct_percent);
-    fxdata->p[ibp_output_mix].posy_offset = 7;
+    fxdata->p[ibp_output_mix].posy_offset = next_posy_offset;
 
 }
 
