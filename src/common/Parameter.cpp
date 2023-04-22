@@ -164,7 +164,7 @@ void Parameter::set_name(const char *n)
 }
 
 Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const char *name,
-                             const char *dispname, const std::string &altOSCname, int ctrltype,
+                             const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                              const Surge::Skin::Connector &c,
 
@@ -182,7 +182,7 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
 }
 
 Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const char *name,
-                             const char *dispname, const std::string &altOSCname, int ctrltype,
+                             const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                              std::string ui_identifier, int posx, int posy, int scene,
                              ControlGroup ctrlgroup, int ctrlgroup_entry, bool modulateable,
@@ -209,7 +209,8 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
     get_prefix(prefix, ctrlgroup, ctrlgroup_entry, scene);
     snprintf(name_storage, NAMECHARS, "%s%s", prefix, name);
 
-    this->oscName = "/param/" + (altOSCname.empty() ? this->name_storage : altOSCname);
+    this->oscName =
+        fmt::format("/param/{}", (altOSCname.empty() ? this->name_storage : altOSCname));
 
     posy_offset = 0;
     per_voice_processing = scene ? true : false;

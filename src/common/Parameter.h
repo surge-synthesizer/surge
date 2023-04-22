@@ -358,7 +358,7 @@ class Parameter
 
   private:
     Parameter *assign(ParameterIDCounter::promise_t id, int pid, const char *name,
-                      const char *dispname, const std::string &altOSCname, int ctrltype,
+                      const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                       std::string ui_identifier, int posx, int posy,
 
@@ -368,7 +368,7 @@ class Parameter
 
   public:
     Parameter *assign(ParameterIDCounter::promise_t id, int pid, const char *name,
-                      const char *dispname, const std::string &altOSCname, int ctrltype,
+                      const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                       const Surge::Skin::Connector &c,
 
