@@ -22,14 +22,17 @@
 
 #include "PatchDB.h"
 
-#include "sqlite3.h"
-#include "SurgeStorage.h"
 #include <sstream>
 #include <iterator>
-#include "DebugHelpers.h"
 #include <chrono>
+#include <functional>
+
+#include "sqlite3.h"
+#include "SurgeStorage.h"
+#include "DebugHelpers.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
+
 namespace mech = sst::basic_blocks::mechanics;
 
 #define TRACE_DB 0
@@ -99,7 +102,7 @@ struct Statement
     {
         auto rc = sqlite3_prepare_v2(h, statement.c_str(), -1, &s, nullptr);
         if (rc != SQLITE_OK)
-            throw Exception(h);
+            throw Exception(rc, "Unable to prepare statement [" + statement + "]");
         prepared = true;
     }
     ~Statement()
@@ -311,6 +314,17 @@ CREATE TABLE IF NOT EXISTS Favorites (
         std::string msg;
         EnQDebugMsg(const std::string &msg) : msg(msg) {}
         void go(WriterWorker &w) override { w.addDebug(msg); }
+    };
+
+    struct EnQLambda : public EnQAble
+    {
+        std::function<void()> op{nullptr};
+        EnQLambda(std::function<void()> iop) : op(iop) {}
+        void go(WriterWorker &w) override
+        {
+            if (op)
+                op();
+        }
     };
 
     struct EnQFavorite : public EnQAble
@@ -1159,6 +1173,11 @@ void PatchDB::addDebugMessage(const std::string &debug)
     worker->enqueueWorkItem(new WriterWorker::EnQDebugMsg(debug));
 }
 
+void PatchDB::doAfterCurrentQueueDrained(std::function<void()> op)
+{
+    worker->enqueueWorkItem(new WriterWorker::EnQLambda(op));
+}
+
 std::vector<std::pair<std::string, int>> PatchDB::readAllFeatures()
 {
 
@@ -1422,6 +1441,19 @@ int PatchDB::numberOfJobsOutstanding()
 {
     std::lock_guard<std::mutex> guard(worker->qLock);
     return worker->pathQ.size();
+}
+
+int PatchDB::waitForJobsOutstandingComplete(int maxWaitInMS)
+{
+    int maxIts = maxWaitInMS / 10;
+    int njo = 0;
+    while ((njo = numberOfJobsOutstanding()) > 0 && maxIts > 0)
+    {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(10ms);
+        maxIts--;
+    }
+    return numberOfJobsOutstanding();
 }
 
 std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser::Token> &t)
