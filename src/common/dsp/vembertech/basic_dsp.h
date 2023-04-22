@@ -24,6 +24,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <cassert>
 
 template <typename T> inline T limit_range(const T &x, const T &low, const T &high)
 {
