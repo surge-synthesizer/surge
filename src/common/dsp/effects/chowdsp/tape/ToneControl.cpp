@@ -19,7 +19,9 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+
 #include "ToneControl.h"
+#include "globals.h"
 
 namespace chowdsp
 {

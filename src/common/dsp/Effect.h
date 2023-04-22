@@ -28,12 +28,15 @@
 #include "lipol.h"
 
 #include "sst/basic-blocks/dsp/MidSide.h"
+#include "sst/basic-blocks/dsp/Lag.h"
 
 /*	base class			*/
 
 class alignas(16) Effect
 {
   public:
+    template <typename T, bool first = true> using lag = sst::basic_blocks::dsp::SurgeLag<T, first>;
+
     enum
     {
         KNumVuSlots = 24

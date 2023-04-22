@@ -25,6 +25,7 @@
 
 #include "SurgeStorage.h"
 #include "OscillatorCommonFunctions.h"
+#include "sst/basic-blocks/dsp/Lag.h"
 
 class alignas(16) Oscillator
 {
@@ -34,6 +35,8 @@ class alignas(16) Oscillator
     // aligned to 16 bytes.
     float output alignas(16)[BLOCK_SIZE_OS];
     float outputR alignas(16)[BLOCK_SIZE_OS];
+
+    template <typename T, bool first = true> using lag = sst::basic_blocks::dsp::SurgeLag<T, first>;
 
     Oscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
     virtual ~Oscillator();

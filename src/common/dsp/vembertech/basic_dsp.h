@@ -21,8 +21,9 @@
  */
 #ifndef SURGE_SRC_COMMON_DSP_VEMBERTECH_BASIC_DSP_H
 #define SURGE_SRC_COMMON_DSP_VEMBERTECH_BASIC_DSP_H
-#include "shared.h"
+
 #include <cstring>
+#include <algorithm>
 
 template <typename T> inline T limit_range(const T &x, const T &low, const T &high)
 {

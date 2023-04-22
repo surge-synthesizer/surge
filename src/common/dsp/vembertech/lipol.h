@@ -19,10 +19,11 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+
 #ifndef SURGE_SRC_COMMON_DSP_VEMBERTECH_LIPOL_H
 #define SURGE_SRC_COMMON_DSP_VEMBERTECH_LIPOL_H
-#include "vt_dsp.h"
-#include "shared.h"
+
+#include "globals.h"
 
 /*
 ** lipol_ps is a small utility class for generating small line segments
