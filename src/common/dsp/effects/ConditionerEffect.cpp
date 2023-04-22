@@ -35,8 +35,6 @@ namespace sdsp = sst::basic_blocks::dsp;
 
 using namespace std;
 
-using namespace vt_dsp;
-
 ConditionerEffect::ConditionerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), hp(storage)
 {

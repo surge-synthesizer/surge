@@ -19,11 +19,14 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+
 #include "lipol.h"
 #include "globals.h"
 
-const __m128 two = _mm_set1_ps(2.f);
-const __m128 four = _mm_set1_ps(4.f);
+const __m128 m128_one = _mm_set1_ps(1.f);
+const __m128 m128_zero = _mm_setzero_ps();
+const __m128 m128_two = _mm_set1_ps(2.f);
+const __m128 m128_four = _mm_set1_ps(4.f);
 
 lipol_ps::lipol_ps()
 {
@@ -46,7 +49,7 @@ void lipol_ps::multiply_block(float *src, unsigned int nquads)
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     unsigned int n = nquads << 2;
     for (unsigned int i = 0; (i < n); i += 8) // nquads must be multiple of 4
@@ -65,7 +68,7 @@ void lipol_ps::multiply_block_sat1(float *src, unsigned int nquads)
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     const __m128 satv = _mm_set1_ps(1.0f);
 
@@ -83,7 +86,7 @@ void lipol_ps::store_block(float *dst, unsigned int nquads)
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads << 2; i += 8) // nquads must be multiple of 4
     {
@@ -99,7 +102,7 @@ void lipol_ps::add_block(float *src, unsigned int nquads)
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {
@@ -115,7 +118,7 @@ void lipol_ps::subtract_block(float *src, unsigned int nquads)
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {
@@ -132,7 +135,7 @@ void lipol_ps::multiply_2_blocks(float *__restrict src1, float *__restrict src2,
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {
@@ -150,7 +153,7 @@ void lipol_ps::MAC_block_to(float *__restrict src, float *__restrict dst, unsign
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {
@@ -168,7 +171,7 @@ void lipol_ps::MAC_2_blocks_to(float *__restrict src1, float *__restrict src2,
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {
@@ -188,7 +191,7 @@ void lipol_ps::multiply_block_to(float *__restrict src, float *__restrict dst, u
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {
@@ -209,7 +212,7 @@ void lipol_ps::multiply_2_blocks_to(float *__restrict src1, float *__restrict sr
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {
@@ -249,7 +252,7 @@ void lipol_ps::fade_block_to(float *__restrict src1, float *__restrict src2, flo
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {
@@ -272,7 +275,7 @@ void lipol_ps::fade_2_blocks_to(float *__restrict src11, float *__restrict src12
     __m128 y1, y2, dy;
     initblock(y1, dy);
     y2 = _mm_add_ps(y1, dy);
-    dy = _mm_mul_ps(dy, two);
+    dy = _mm_mul_ps(dy, m128_two);
 
     for (unsigned int i = 0; i < nquads; i += 2) // nquads must be multiple of 4
     {

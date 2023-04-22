@@ -283,8 +283,6 @@ add_library(${PROJECT_NAME}
   dsp/vembertech/lipol.cpp
   dsp/vembertech/lipol.h
   dsp/vembertech/portable_intrinsics.h
-  dsp/vembertech/shared.h
-  dsp/vembertech/vt_dsp.h
   globals.h
   resource.h
   version.cpp.in

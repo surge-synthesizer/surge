@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include "../shared/SmoothedValue.h"
+#include "globals.h"
 
 namespace chowdsp
 {

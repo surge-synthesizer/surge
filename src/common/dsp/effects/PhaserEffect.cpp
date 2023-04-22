@@ -28,8 +28,6 @@
 namespace mech = sst::basic_blocks::mechanics;
 namespace sdsp = sst::basic_blocks::dsp;
 
-using namespace vt_dsp;
-
 float bend(float x, float b) { return (1.f + b) * x - b * x * x * x; }
 
 PhaserEffect::PhaserEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)

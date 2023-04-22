@@ -1049,6 +1049,8 @@ juce::AudioProcessorParameter *SurgeSynthProcessor::getBypassParameter() const
 
 void SurgeSynthProcessor::reset() { blockPos = 0; }
 
+#if HAS_CLAP_JUCE_EXTENSIONS
+
 uint32_t SurgeSynthProcessor::remoteControlsPageCount() noexcept
 {
     return 5; // macros + scene a and b mixer and filters
@@ -1123,6 +1125,7 @@ bool SurgeSynthProcessor::remoteControlsPageFill(
     }
     return true;
 }
+#endif
 
 //==============================================================================
 // This creates new instances of the plugin..
