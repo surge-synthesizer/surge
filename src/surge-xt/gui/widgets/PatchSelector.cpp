@@ -661,9 +661,21 @@ void PatchSelector::showClassicMenu(bool single_category)
                         psd->setEnclosingParentTitle("Rename Patch");
                         const auto priorPath = storage->patch_list[current_patch].path;
                         psd->onOK = [this, priorPath]() {
-                            fs::remove(priorPath);
-                            storage->refresh_patchlist();
-                            storage->initializePatchDb(true);
+                            /*
+                             * OK so the database doesn't like deleting files while it is indexing.
+                             * We should fix this (#6793) but for now put the delete action at the
+                             * end of the db processing thread. BUT that will run on the patchdb
+                             * thread so bounce it from here to there and then back here.
+                             */
+                            auto nextStep = [this, priorPath]() {
+                                auto doDelete = [this, priorPath]() {
+                                    fs::remove(priorPath);
+                                    storage->refresh_patchlist();
+                                    storage->initializePatchDb(true);
+                                };
+                                juce::MessageManager::getInstance()->callAsync(doDelete);
+                            };
+                            storage->patchDB->doAfterCurrentQueueDrained(nextStep);
                         };
                     });
             });

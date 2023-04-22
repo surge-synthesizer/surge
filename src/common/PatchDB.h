@@ -23,6 +23,7 @@
 #include "filesystem/import.h"
 #include <iostream>
 #include <vector>
+#include <functional>
 
 class SurgeStorage;
 
@@ -110,8 +111,18 @@ struct PatchDB
     void addDebugMessage(const std::string &debug);
     void setUserFavorite(const std::string &path, bool isIt);
     void erasePatchByID(int id);
+    void doAfterCurrentQueueDrained(std::function<void()> op);
 
+    /*
+     * Returns a moment-in-time snapshot of number of jobs in the processing queue
+     */
     int numberOfJobsOutstanding();
+    /*
+     * Waits for the processing queue to drain. Obviously don't call this from the processing
+     * queue. The max timeout in ms is the longest wait and at the end it returns the
+     * number of jobs outstanding.
+     */
+    int waitForJobsOutstandingComplete(int maxWaitInMS);
 
     // Query APIs
     std::vector<std::pair<std::string, int>> readAllFeatures();
