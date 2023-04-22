@@ -68,7 +68,7 @@ class WaveShaperEffect : public Effect
     sst::waveshapers::QuadWaveshaperState wss;
     sst::filters::HalfRate::HalfRateFilter halfbandOUT, halfbandIN;
     BiquadFilter lpPre, hpPre, lpPost, hpPost;
-    lipol_ps mix alignas(16), boost alignas(16);
+    lipol_ps_blocksz mix alignas(16), boost alignas(16);
     lag<float> drive, bias;
 };
 

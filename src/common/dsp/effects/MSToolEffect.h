@@ -29,7 +29,7 @@
 
 class MSToolEffect : public Effect
 {
-    lipol_ps ampM alignas(16), ampS alignas(16), width alignas(16), postampL alignas(16),
+    lipol_ps_blocksz ampM alignas(16), ampS alignas(16), width alignas(16), postampL alignas(16),
         postampR alignas(16);
 
   public:

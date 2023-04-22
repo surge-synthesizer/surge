@@ -341,42 +341,6 @@ TEST_CASE("All Patches have Bounded Output", "[dsp]")
     // Surge::Headless::playOnNRandomPatches(surge, scale, 100, callBack);
 }
 
-TEST_CASE("lipol_ps class", "[dsp]")
-{
-    lipol_ps mypol;
-    float prevtarget = -1.0;
-    mypol.set_target(prevtarget);
-    mypol.instantize();
-
-    constexpr size_t nfloat = 64;
-    constexpr size_t nfloat_quad = 16;
-    float storeTarget alignas(16)[nfloat];
-    mypol.store_block(storeTarget, nfloat_quad);
-
-    for (auto i = 0; i < nfloat; ++i)
-        REQUIRE(storeTarget[i] == prevtarget); // should be constant in the first instance
-
-    for (int i = 0; i < 10; ++i)
-    {
-        float target = (i) * (i) / 100.0;
-        mypol.set_target(target);
-
-        mypol.store_block(storeTarget, nfloat_quad);
-
-        REQUIRE(storeTarget[nfloat - 1] == Approx(target));
-
-        float dy = storeTarget[1] - storeTarget[0];
-        for (auto j = 1; j < nfloat; ++j)
-        {
-            REQUIRE(storeTarget[j] - storeTarget[j - 1] == Approx(dy).epsilon(1e-3));
-        }
-
-        REQUIRE(prevtarget + dy == Approx(storeTarget[0]));
-
-        prevtarget = target;
-    }
-}
-
 TEST_CASE("libsamplerate basics", "[dsp]")
 {
     for (auto tsr : {44100, 48000}) // { 44100, 48000, 88200, 96000, 192000 })

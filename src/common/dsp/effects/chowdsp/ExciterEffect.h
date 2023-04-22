@@ -81,7 +81,7 @@ class ExciterEffect : public Effect
     BiquadFilter toneFilter;
     LevelDetector levelDetector;
 
-    lipol_ps wet_gain alignas(16), drive_gain alignas(16);
+    lipol_ps_blocksz wet_gain alignas(16), drive_gain alignas(16);
     float dryL alignas(16)[BLOCK_SIZE], dryR alignas(16)[BLOCK_SIZE];
 };
 

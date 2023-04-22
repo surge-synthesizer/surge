@@ -31,8 +31,8 @@
 
 class DelayEffect : public Effect
 {
-    lipol_ps feedback alignas(16), crossfeed alignas(16), aligpan alignas(16), pan alignas(16),
-        mix alignas(16), width alignas(16);
+    lipol_ps_blocksz feedback alignas(16), crossfeed alignas(16), aligpan alignas(16),
+        pan alignas(16), mix alignas(16), width alignas(16);
     float buffer alignas(16)[2][max_delay_length + FIRipol_N];
 
   public:

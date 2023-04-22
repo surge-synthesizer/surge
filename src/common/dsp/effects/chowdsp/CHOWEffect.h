@@ -77,7 +77,7 @@ class CHOWEffect : public Effect
 
     bool cur_os = true;
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
-    lipol_ps makeup alignas(16), mix alignas(16);
+    lipol_ps_blocksz makeup alignas(16), mix alignas(16);
     Oversampling<2, BLOCK_SIZE> os;
     SmoothedValue<float, ValueSmoothingTypes::Multiplicative> thresh_smooth, ratio_smooth;
 };

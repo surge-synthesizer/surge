@@ -127,7 +127,7 @@ class FlangerEffect : public Effect
     float lfosandhtarget[2][COMBS_PER_CHANNEL];
     float vweights[2][COMBS_PER_CHANNEL];
 
-    lipol_ps width;
+    lipol_ps_blocksz width;
     bool haveProcessed = false;
 
     const static int LFO_TABLE_SIZE = 8192;

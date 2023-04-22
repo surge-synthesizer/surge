@@ -35,7 +35,7 @@
 
 class BBDEnsembleEffect : public Effect
 {
-    lipol_ps width alignas(16), mix alignas(16);
+    lipol_ps_blocksz width alignas(16), mix alignas(16);
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 
   public:

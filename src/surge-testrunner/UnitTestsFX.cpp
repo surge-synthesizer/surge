@@ -27,11 +27,44 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 
+#include "SurgeStorage.h"
 #include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
 
 using namespace Surge::Test;
+
+TEST_CASE("Every FX Can Create and Process", "[fx]")
+{
+    for (int i = fxt_off + 1; i < n_fx_types; ++i)
+    {
+        DYNAMIC_SECTION("FX Testing " << i << " " << fx_type_names[i])
+        {
+            auto surge = Surge::Headless::createSurge(44100);
+            REQUIRE(surge);
+
+            for (int i = 0; i < 100; ++i)
+                surge->process();
+            auto *pt = &(surge->storage.getPatch().fx[0].type);
+            auto awv = 1.f * i / (pt->val_max.i - pt->val_min.i);
+
+            auto did = surge->idForParameter(pt);
+            surge->setParameter01(did, awv, false);
+
+            surge->playNote(0, 60, 100, 0, -1);
+            for (int s = 0; s < 100; ++s)
+            {
+                surge->process();
+            }
+
+            surge->releaseNote(0, 60, 100);
+            for (int s = 0; s < 20; ++s)
+            {
+                surge->process();
+            }
+        }
+    }
+}
 
 TEST_CASE("Airwindows Loud", "[fx]")
 {
@@ -314,6 +347,7 @@ TEST_CASE("Waveshaper Pop", "[fx]")
         for (int b = 0; b < 2; ++b)
         {
             surge->process();
+#if 0
             // Print the last 32 samples
             for (int s = 0; s < BLOCK_SIZE; ++s)
             {
@@ -321,18 +355,20 @@ TEST_CASE("Waveshaper Pop", "[fx]")
                           << std::setprecision(7) << surge->output[0][s] << " " << std::setw(16)
                           << std::setprecision(7) << surge->output[1][s] << std::endl;
             }
+#endif
         }
         shaper->val.i = (int)sst::waveshapers::WaveshaperType::wst_cheby2;
         for (int b = 0; b < 3; ++b)
         {
             surge->process();
-
+#if 0
             for (int s = 0; s < BLOCK_SIZE; ++s)
             {
                 std::cout << "CHEBY2 " << b << " " << std::setw(4) << s << " " << std::setw(16)
                           << std::setprecision(7) << surge->output[0][s] << " " << std::setw(16)
                           << std::setprecision(7) << surge->output[1][s] << std::endl;
             }
+#endif
         }
     }
 }
