@@ -35,7 +35,7 @@ class FrequencyShifterEffect : public Effect
 {
   public:
     sst::filters::HalfRate::HalfRateFilter fr alignas(16), fi alignas(16);
-    lipol_ps mix alignas(16);
+    lipol_ps_blocksz mix alignas(16);
     FrequencyShifterEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~FrequencyShifterEffect();
     virtual const char *get_effectname() override { return "freqshift"; }

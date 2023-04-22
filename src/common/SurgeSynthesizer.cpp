@@ -185,6 +185,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
                 ms->set_samplerate(storage.samplerate, storage.samplerate_inv);
 
     amp.set_blocksize(BLOCK_SIZE);
+    amp_mute.set_blocksize(BLOCK_SIZE);
 
     for (int i = 0; i < n_send_slots; ++i)
     {

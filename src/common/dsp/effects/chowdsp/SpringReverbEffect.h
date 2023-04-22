@@ -80,7 +80,7 @@ class SpringReverbEffect : public Effect
   private:
     SpringReverbProc proc;
 
-    lipol_ps mix alignas(16), makeup alignas(16);
+    lipol_ps_blocksz mix alignas(16), makeup alignas(16);
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 };
 } // namespace chowdsp

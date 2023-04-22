@@ -31,7 +31,7 @@
 
 class CombulatorEffect : public Effect
 {
-    lipol_ps input alignas(16), mix alignas(16), negone alignas(16);
+    lipol_ps_blocksz input alignas(16), mix alignas(16), negone alignas(16);
 
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 

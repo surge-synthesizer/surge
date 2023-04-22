@@ -101,7 +101,7 @@ class Reverb2Effect : public Effect
         float a0;
     };
 
-    lipol_ps mix alignas(16), width alignas(16);
+    lipol_ps_blocksz mix alignas(16), width alignas(16);
 
   public:
     Reverb2Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);

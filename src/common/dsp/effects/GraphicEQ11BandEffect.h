@@ -31,8 +31,8 @@
 
 class GraphicEQ11BandEffect : public Effect
 {
-    lipol_ps gain alignas(16);
-    lipol_ps mix alignas(16);
+    lipol_ps_blocksz gain alignas(16);
+    lipol_ps_blocksz mix alignas(16);
 
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 

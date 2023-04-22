@@ -92,8 +92,8 @@ class VocoderEffect : public Effect
     VectorizedSVFilter mModulatorR alignas(16)[voc_vector_size];
     vFloat mEnvF alignas(16)[voc_vector_size];
     vFloat mEnvFR alignas(16)[voc_vector_size];
-    lipol_ps mGain alignas(16);
-    lipol_ps mGainR alignas(16);
+    lipol_ps_blocksz mGain alignas(16);
+    lipol_ps_blocksz mGainR alignas(16);
     int modulator_mode;
     float wet;
     int mBI; // block increment (to keep track of events not occurring every n blocks)

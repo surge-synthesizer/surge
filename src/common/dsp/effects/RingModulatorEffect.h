@@ -80,7 +80,7 @@ class RingModulatorEffect : public Effect
 
     sst::filters::HalfRate::HalfRateFilter halfbandOUT, halfbandIN;
     BiquadFilter lp, hp;
-    lipol_ps mix alignas(16);
+    lipol_ps_blocksz mix alignas(16);
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_RINGMODULATOREFFECT_H

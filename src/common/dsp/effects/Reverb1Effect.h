@@ -60,7 +60,7 @@ class Reverb1Effect : public Effect
     float out_tap alignas(16)[rev_taps];
     float predelay alignas(16)[max_rev_dly];
     int delay_time alignas(16)[rev_taps];
-    lipol_ps mix alignas(16), width alignas(16);
+    lipol_ps_blocksz mix alignas(16), width alignas(16);
 
   public:
     Reverb1Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);

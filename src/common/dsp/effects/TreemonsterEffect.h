@@ -32,7 +32,7 @@
 
 class TreemonsterEffect : public Effect
 {
-    lipol_ps rm alignas(16), width alignas(16), mix alignas(16);
+    lipol_ps_blocksz rm alignas(16), width alignas(16), mix alignas(16);
 
     using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc oscL alignas(16), oscR alignas(16);

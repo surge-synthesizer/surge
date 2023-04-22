@@ -35,7 +35,7 @@
 class DistortionEffect : public Effect
 {
     sst::filters::HalfRate::HalfRateFilter hr_a alignas(16), hr_b alignas(16);
-    lipol_ps drive alignas(16), outgain alignas(16);
+    lipol_ps_blocksz drive alignas(16), outgain alignas(16);
     sst::waveshapers::QuadWaveshaperState wsState alignas(16);
 
   public:

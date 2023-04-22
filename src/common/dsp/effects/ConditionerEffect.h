@@ -34,7 +34,7 @@ const int lookahead = 1 << 7;
 
 class ConditionerEffect : public Effect
 {
-    lipol_ps ampL alignas(16), ampR alignas(16), width alignas(16), postamp alignas(16);
+    lipol_ps_blocksz ampL alignas(16), ampR alignas(16), width alignas(16), postamp alignas(16);
 
   public:
     ConditionerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
