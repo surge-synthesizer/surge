@@ -11,7 +11,24 @@ pr:
   - xt-alpha
 
 jobs:
-  - job: Build
+  - job: BuildCodeQuality
+    pool:
+      vmImage: 'ubuntu-20.04'
+
+    steps:
+      - checkout: self
+        fetchDepth: 1
+        # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
+
+      - bash: |
+          git submodule update --init --recursive
+          cmake -Bignore/cq -DSURGE_SKIP_JUCE_FOR_RACK=TRUE -DCMAKE_BUILD_TYPE=Debug -DSURGE_SKIP_LUA=TRUE
+          cmake --build ignore/cq --target code-quality-pipeline-checks
+        displayName: Do Codequal
+
+
+  - job: BuildForPR
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     variables:
       defaultTargets: "surge-xt_Packaged surge-fx_Packaged"
     strategy:
@@ -56,13 +73,6 @@ jobs:
           cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
-        linux-codequality:
-          imageName: 'ubuntu-20.04'
-          isLinux: True
-          aptGetExtras: ""
-          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug"
-          cmakeTarget: "code-quality-pipeline-checks"
-          cmakeConfig: "Debug"
         linux-juce-python-targets:
           imageName: 'ubuntu-22.04'
           isLinux: True
@@ -204,8 +214,8 @@ jobs:
         displayName: macOS - run unit tests
 
   - job: NotifyReleases
-    dependsOn: Build
-    condition: succeeded()
+    dependsOn: BuildCodeQuality
+    condition: and(succeeded(), not(eq(variables['Build.Reason'], 'PullRequest')))
     pool:
       vmImage: 'ubuntu-20.04'
 

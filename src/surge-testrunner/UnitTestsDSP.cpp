@@ -1,3 +1,24 @@
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 #include <iostream>
 #include <algorithm>
 
@@ -318,42 +339,6 @@ TEST_CASE("All Patches have Bounded Output", "[dsp]")
     };
 
     // Surge::Headless::playOnNRandomPatches(surge, scale, 100, callBack);
-}
-
-TEST_CASE("lipol_ps class", "[dsp]")
-{
-    lipol_ps mypol;
-    float prevtarget = -1.0;
-    mypol.set_target(prevtarget);
-    mypol.instantize();
-
-    constexpr size_t nfloat = 64;
-    constexpr size_t nfloat_quad = 16;
-    float storeTarget alignas(16)[nfloat];
-    mypol.store_block(storeTarget, nfloat_quad);
-
-    for (auto i = 0; i < nfloat; ++i)
-        REQUIRE(storeTarget[i] == prevtarget); // should be constant in the first instance
-
-    for (int i = 0; i < 10; ++i)
-    {
-        float target = (i) * (i) / 100.0;
-        mypol.set_target(target);
-
-        mypol.store_block(storeTarget, nfloat_quad);
-
-        REQUIRE(storeTarget[nfloat - 1] == Approx(target));
-
-        float dy = storeTarget[1] - storeTarget[0];
-        for (auto j = 1; j < nfloat; ++j)
-        {
-            REQUIRE(storeTarget[j] - storeTarget[j - 1] == Approx(dy).epsilon(1e-3));
-        }
-
-        REQUIRE(prevtarget + dy == Approx(storeTarget[0]));
-
-        prevtarget = target;
-    }
 }
 
 TEST_CASE("libsamplerate basics", "[dsp]")

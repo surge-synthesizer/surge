@@ -1,16 +1,23 @@
 /*
- ** Surge Synthesizer is Free and Open Source Software
- **
- ** Surge is made available under the Gnu General Public License, v3.0
- ** https://www.gnu.org/licenses/gpl-3.0.en.html
- **
- ** Copyright 2004-2021 by various individuals as described by the Git transaction log
- **
- ** All source at: https://github.com/surge-synthesizer/surge.git
- **
- ** Surge was a commercial product from 2004-2018, with Copyright and ownership
- ** in that period held by Claes Johanson at Vember Audio. Claes made Surge
- ** open source in September 2018.
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
  */
 
 #include "SurgeGUIEditor.h"
@@ -63,6 +70,30 @@ std::string decodeControllerID(int id)
     };
 
     return out;
+}
+
+void addEnvTrigOptions(SurgeSynthesizer *synth, juce::PopupMenu &contextMenu, int current_scene)
+{
+    std::vector<std::string> labels = {"Reset to Zero", "Continue from Current Level"};
+    std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO, RESTART_FROM_LATEST};
+
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                    "ENVELOPE RETRIGGER BEHAVIOR");
+
+    for (int i = 0; i < 2; ++i)
+    {
+        bool isChecked =
+            (vals[i] == synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode);
+
+        contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true, isChecked, [&]() {
+            synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode = vals[i];
+
+            if (!isChecked)
+            {
+                synth->storage.getPatch().isDirty = true;
+            }
+        });
+    }
 }
 
 void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
@@ -1758,66 +1789,52 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                     });
                             }
                         }
-                        if (p->ctrltype == ct_polymode &&
-                            (p->val.i == pm_mono || p->val.i == pm_mono_st ||
-                             p->val.i == pm_mono_fp || p->val.i == pm_mono_st_fp))
+
+                        if (p->ctrltype == ct_polymode)
                         {
+                            if (p->val.i == pm_mono || p->val.i == pm_mono_st ||
+                                p->val.i == pm_mono_fp || p->val.i == pm_mono_st_fp)
                             {
-                                std::vector<std::string> labels = {"Last", "High", "Low", "Legacy"};
-                                std::vector<MonoVoicePriorityMode> vals = {
-                                    ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST,
-                                    NOTE_ON_LATEST_RETRIGGER_HIGHEST};
-
-                                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                                    contextMenu, "NOTE PRIORITY");
-
-                                for (int i = 0; i < 4; ++i)
                                 {
-                                    bool isChecked = (vals[i] == synth->storage.getPatch()
-                                                                     .scene[current_scene]
-                                                                     .monoVoicePriorityMode);
-                                    contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true,
-                                                        isChecked, [this, isChecked, vals, i]() {
-                                                            synth->storage.getPatch()
-                                                                .scene[current_scene]
-                                                                .monoVoicePriorityMode = vals[i];
-                                                            if (!isChecked)
-                                                                synth->storage.getPatch().isDirty =
-                                                                    true;
-                                                        });
+                                    std::vector<std::string> labels = {"Last", "High", "Low",
+                                                                       "Legacy"};
+                                    std::vector<MonoVoicePriorityMode> vals = {
+                                        ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST,
+                                        NOTE_ON_LATEST_RETRIGGER_HIGHEST};
+
+                                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                        contextMenu, "NOTE PRIORITY");
+
+                                    for (int i = 0; i < 4; ++i)
+                                    {
+                                        bool isChecked = (vals[i] == synth->storage.getPatch()
+                                                                         .scene[current_scene]
+                                                                         .monoVoicePriorityMode);
+                                        contextMenu.addItem(
+                                            Surge::GUI::toOSCase(labels[i]), true, isChecked,
+                                            [this, isChecked, vals, i]() {
+                                                synth->storage.getPatch()
+                                                    .scene[current_scene]
+                                                    .monoVoicePriorityMode = vals[i];
+                                                if (!isChecked)
+                                                    synth->storage.getPatch().isDirty = true;
+                                            });
+                                    }
                                 }
+
+                                addEnvTrigOptions(synth, contextMenu, current_scene);
+
+                                contextMenu.addSeparator();
+
+                                contextMenu.addSubMenu(
+                                    Surge::GUI::toOSCase("Sustain Pedal in Mono Mode"),
+                                    makeMonoModeOptionsMenu(menuRect, false));
                             }
 
+                            if (p->val.i == pm_latch)
                             {
-                                std::vector<std::string> labels = {"Reset to Zero",
-                                                                   "Continue from Current Level"};
-                                std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO,
-                                                                           RESTART_FROM_LATEST};
-
-                                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                                    contextMenu, "ENVELOPE RETRIGGER BEHAVIOR");
-
-                                for (int i = 0; i < 2; ++i)
-                                {
-                                    bool isChecked = (vals[i] == synth->storage.getPatch()
-                                                                     .scene[current_scene]
-                                                                     .monoVoiceEnvelopeMode);
-                                    contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true,
-                                                        isChecked, [this, isChecked, vals, i]() {
-                                                            synth->storage.getPatch()
-                                                                .scene[current_scene]
-                                                                .monoVoiceEnvelopeMode = vals[i];
-                                                            if (!isChecked)
-                                                                synth->storage.getPatch().isDirty =
-                                                                    true;
-                                                        });
-                                }
+                                addEnvTrigOptions(synth, contextMenu, current_scene);
                             }
-                            contextMenu.addSeparator();
-
-                            contextMenu.addSubMenu(
-                                Surge::GUI::toOSCase("Sustain Pedal in Mono Mode"),
-                                makeMonoModeOptionsMenu(menuRect, false));
                         }
                     }
 
@@ -3664,20 +3681,18 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_store:
     {
-        bool showTags = juce::ModifierKeys::currentModifiers.isShiftDown() ||
-                        juce::ModifierKeys::currentModifiers.isAltDown();
+        showOverlay(SurgeGUIEditor::SAVE_PATCH, [this](Surge::Overlays::OverlayComponent *co) {
+            auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
 
-        showOverlay(SurgeGUIEditor::SAVE_PATCH,
-                    [this, showTags](Surge::Overlays::OverlayComponent *co) {
-                        auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
+            if (!psd)
+            {
+                return;
+            }
 
-                        if (!psd)
-                        {
-                            return;
-                        }
-
-                        psd->setShowTagsField(showTags);
-                    });
+            psd->setShowTagsField(juce::ModifierKeys::currentModifiers.isAltDown());
+            psd->setShowFactoryOverwrite(juce::ModifierKeys::currentModifiers.isShiftDown() &&
+                                         juce::ModifierKeys::currentModifiers.isAltDown());
+        });
     }
     break;
 
