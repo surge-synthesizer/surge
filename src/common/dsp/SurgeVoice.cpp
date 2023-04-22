@@ -854,47 +854,47 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
     {
         switch (mode)
         {
-        case RingModMode::rmm_ring:
+        case rmm_ring:
             mech::mul_block<BLOCK_SIZE_OS>(src1_l, src2_l, dst_l);
             mech::mul_block<BLOCK_SIZE_OS>(src1_r, src2_r, dst_r);
             break;
-        case RingModMode::rmm_cxor43_0:
+        case rmm_cxor43_0:
             cxor43_0_block(src1_l, src2_l, dst_l, nquads);
             cxor43_0_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor43_1:
+        case rmm_cxor43_1:
             cxor43_1_block(src1_l, src2_l, dst_l, nquads);
             cxor43_1_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor43_2:
+        case rmm_cxor43_2:
             cxor43_2_block(src1_l, src2_l, dst_l, nquads);
             cxor43_2_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor43_3:
+        case rmm_cxor43_3:
             cxor43_3_block(src1_l, src2_l, dst_l, nquads);
             cxor43_3_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor43_4:
+        case rmm_cxor43_4:
             cxor43_4_block(src1_l, src2_l, dst_l, nquads);
             cxor43_4_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor93_0:
+        case rmm_cxor93_0:
             cxor93_0_block(src1_l, src2_l, dst_l, nquads);
             cxor93_0_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor93_1:
+        case rmm_cxor93_1:
             cxor93_1_block(src1_l, src2_l, dst_l, nquads);
             cxor93_1_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor93_2:
+        case rmm_cxor93_2:
             cxor93_2_block(src1_l, src2_l, dst_l, nquads);
             cxor93_2_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor93_3:
+        case rmm_cxor93_3:
             cxor93_3_block(src1_l, src2_l, dst_l, nquads);
             cxor93_3_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case RingModMode::rmm_cxor93_4:
+        case rmm_cxor93_4:
             cxor93_4_block(src1_l, src2_l, dst_l, nquads);
             cxor93_4_block(src1_r, src2_r, dst_r, nquads);
             break;
@@ -905,37 +905,37 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
     {
         switch (mode)
         {
-        case RingModMode::rmm_ring:
+        case rmm_ring:
             mech::mul_block<BLOCK_SIZE_OS>(src1_l, src2_l, dst_l);
             break;
-        case RingModMode::rmm_cxor43_0:
+        case rmm_cxor43_0:
             cxor43_0_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor43_1:
+        case rmm_cxor43_1:
             cxor43_1_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor43_2:
+        case rmm_cxor43_2:
             cxor43_2_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor43_3:
+        case rmm_cxor43_3:
             cxor43_3_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor43_4:
+        case rmm_cxor43_4:
             cxor43_4_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor93_0:
+        case rmm_cxor93_0:
             cxor93_0_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor93_1:
+        case rmm_cxor93_1:
             cxor93_1_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor93_2:
+        case rmm_cxor93_2:
             cxor93_2_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor93_3:
+        case rmm_cxor93_3:
             cxor93_3_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case RingModMode::rmm_cxor93_4:
+        case rmm_cxor93_4:
             cxor93_4_block(src1_l, src2_l, dst_l, nquads);
             break;
         }

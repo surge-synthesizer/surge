@@ -67,6 +67,8 @@ const int n_osc_params = 7;
 const int n_egs = 2;
 const int n_fx_params = 12;
 const int n_fx_slots = 16;
+const int n_fx_chains = 4;
+const int n_fx_per_chain = 4;
 const int n_send_slots = 4;
 const int FIRipol_M = 256;
 const int FIRipol_M_bits = 8;
@@ -190,16 +192,16 @@ enum NoiseColorChannels
 enum RingModMode
 {
     rmm_ring = 0,
-    rmm_cxor43_0 = 1,
-    rmm_cxor43_1 = 2,
-    rmm_cxor43_2 = 3,
-    rmm_cxor43_3 = 4,
-    rmm_cxor43_4 = 5,
-    rmm_cxor93_0 = 6,
-    rmm_cxor93_1 = 7,
-    rmm_cxor93_2 = 8,
-    rmm_cxor93_3 = 9,
-    rmm_cxor93_4 = 10
+    rmm_cxor43_0,
+    rmm_cxor43_1,
+    rmm_cxor43_2,
+    rmm_cxor43_3,
+    rmm_cxor43_4,
+    rmm_cxor93_0,
+    rmm_cxor93_1,
+    rmm_cxor93_2,
+    rmm_cxor93_3,
+    rmm_cxor93_4
 };
 
 enum lfo_trigger_mode
@@ -282,7 +284,7 @@ inline bool uses_wavetabledata(int i)
 
 enum fxslot_positions
 {
-    fxslot_ains1,
+    fxslot_ains1 = 0,
     fxslot_ains2,
     fxslot_bins1,
     fxslot_bins2,
@@ -298,6 +300,22 @@ enum fxslot_positions
     fxslot_send4,
     fxslot_global3,
     fxslot_global4
+};
+
+// clang-format off
+static int constexpr fxslot_order[n_fx_slots] = 
+    {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
+     fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
+     fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
+     fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
+// clang-format on
+
+enum fxchains
+{
+    fxc_scenea = 0,
+    fxc_sceneb,
+    fxc_send,
+    fxc_global,
 };
 
 const char fxslot_names[n_fx_slots][NAMECHARS] = {
@@ -329,6 +347,10 @@ const char fxslot_longnames[n_fx_slots][NAMECHARS] = {
 const char fxslot_shortnames[n_fx_slots][8] = {
     "FX A1", "FX A2", "FX B1", "FX B2", "FX S1", "FX S2", "FX G1", "FX G2",
     "FX A3", "FX A4", "FX B3", "FX B4", "FX S3", "FX S4", "FX G3", "FX G4",
+};
+const std::string fxslot_shortoscname[n_fx_slots] = {
+    "fx/a/1", "fx/a/2", "fx/b/1", "fx/b/2", "fx/send/1", "fx/send/2", "fx/global/1", "fx/global/2",
+    "fx/a/3", "fx/a/4", "fx/b/3", "fx/b/4", "fx/send/3", "fx/send/4", "fx/global/3", "fx/global/4",
 };
 
 enum fx_type
@@ -955,7 +977,6 @@ class SurgePatch
 
     void load_patch(const void *data, int size, bool preset);
     unsigned int save_patch(void **data);
-    Parameter *parameterFromStorageName(std::string stName);
     Parameter *parameterFromOSCName(std::string stName);
 
     // data
@@ -963,7 +984,6 @@ class SurgePatch
     FxStorage fx[n_fx_slots];
     int scene_start[n_scenes], scene_size;
 
-    std::unordered_map<std::string, Parameter *> param_ptr_by_storagename;
     std::unordered_map<std::string, Parameter *> param_ptr_by_oscname;
 
     // streaming name for splitpoint is splitkey (due to legacy)

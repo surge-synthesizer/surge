@@ -440,7 +440,7 @@ void OscillatorMenu::populate()
         {
             menu.addSeparator();
 
-            auto oscName = storage->getPatch().scene[sc].osc[osc].type.getOSCName();
+            auto oscName = storage->getPatch().scene[sc].osc[osc].type.get_osc_name();
 
             auto i =
                 juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))
@@ -858,7 +858,7 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
         {
             menu.addSeparator();
 
-            auto oscName = storage->getPatch().fx[sge->current_fx].type.getOSCName();
+            auto oscName = storage->getPatch().fx[sge->current_fx].type.get_osc_name();
 
             auto i =
                 juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))

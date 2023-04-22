@@ -2376,104 +2376,92 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
                             contextMenu, "COMBINATOR MODE");
 
+                        contextMenu.addItem("Ring Modulation", true, dt == rmm_ring, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+
+                            p->deform_type = rmm_ring, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
                         contextMenu.addItem(
-                            "Ringmod (classic)", true, dt == RingModMode::rmm_ring, [this, p]() {
+                            "CXOR: cx4,3-bc-ba-bc-ba (0)", true, dt == rmm_cxor43_0, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = RingModMode::rmm_ring,
+                                p->deform_type = rmm_cxor43_0,
                                 synth->storage.getPatch().isDirty = true;
                                 frame->repaint();
                             });
-                        contextMenu.addItem("CXOR: cx4,3-bc-ba-bc-ba (0)", true,
-                                            dt == RingModMode::rmm_cxor43_0, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                        contextMenu.addItem(
+                            "CXOR: cx4,3-bc-ba-ba-bc (1)", true, dt == rmm_cxor43_1, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor43_0,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx4,3-bc-ba-ba-bc (1)", true,
-                                            dt == RingModMode::rmm_cxor43_1, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                                p->deform_type = rmm_cxor43_1,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR: cx4,3-bc-ba-aa-bc (2)", true, dt == rmm_cxor43_2, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor43_1,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx4,3-bc-ba-aa-bc (2)", true,
-                                            dt == RingModMode::rmm_cxor43_2, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                                p->deform_type = rmm_cxor43_2,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR: cx4,3-bc-cc-ba-bc (3)", true, dt == rmm_cxor43_3, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor43_2,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx4,3-bc-cc-ba-bc (3)", true,
-                                            dt == RingModMode::rmm_cxor43_3, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                                p->deform_type = rmm_cxor43_3,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR: cx4,3-bc-bc-ba-bc (4)", true, dt == rmm_cxor43_4, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor43_3,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx4,3-bc-bc-ba-bc (4)", true,
-                                            dt == RingModMode::rmm_cxor43_4, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                                p->deform_type = rmm_cxor43_4,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR: cx9,3-cb-ab-cb-ab (0)", true, dt == rmm_cxor93_0, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor43_4,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx9,3-cb-ab-cb-ab (0)", true,
-                                            dt == RingModMode::rmm_cxor93_0, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                                p->deform_type = rmm_cxor93_0,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR: cx9,3-bb-cc-bb-aa (1)", true, dt == rmm_cxor93_1, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor93_0,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx9,3-bb-cc-bb-aa (1)", true,
-                                            dt == RingModMode::rmm_cxor93_1, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                                p->deform_type = rmm_cxor93_1,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR: cx9,3-cb-ba-aa-bb (2)", true, dt == rmm_cxor93_2, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor93_1,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx9,3-cb-ba-aa-bb (2)", true,
-                                            dt == RingModMode::rmm_cxor93_2, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                                p->deform_type = rmm_cxor93_2,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR: cx9,3-cb-bb-aa-bb (3)", true, dt == rmm_cxor93_3, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor93_2,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx9,3-cb-bb-aa-bb (3)", true,
-                                            dt == RingModMode::rmm_cxor93_3, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
+                                p->deform_type = rmm_cxor93_3,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "CXOR: cx9,3-cb-ab-ab-cc (4)", true, dt == rmm_cxor93_4, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                                p->deform_type = RingModMode::rmm_cxor93_3,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
-                        contextMenu.addItem("CXOR: cx9,3-cb-ab-ab-cc (4)", true,
-                                            dt == RingModMode::rmm_cxor93_4, [this, p]() {
-                                                undoManager()->pushParameterChange(p->id, p,
-                                                                                   p->val);
-
-                                                p->deform_type = RingModMode::rmm_cxor93_4,
-                                                synth->storage.getPatch().isDirty = true;
-                                                frame->repaint();
-                                            });
+                                p->deform_type = rmm_cxor93_4,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
                     }
                     default:
                     {
@@ -2989,7 +2977,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             {
                 contextMenu.addSeparator();
 
-                auto oscName = p->getOSCName();
+                auto oscName = p->get_osc_name();
 
                 auto i =
                     juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))
