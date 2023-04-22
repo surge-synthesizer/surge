@@ -442,6 +442,7 @@ bool Parameter::is_discrete_selection() const
     case ct_alias_wave:
     case ct_wstype:
     case ct_mscodec:
+    case ct_reverbshape:
         return true;
     default:
         break;

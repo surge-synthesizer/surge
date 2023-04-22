@@ -50,3 +50,6 @@
 [submodule "libs/sst/sst-basic-blocks"]
 	path = libs/sst/sst-basic-blocks
 	url = https://github.com/surge-synthesizer/sst-basic-blocks.git
+[submodule "libs/sst/sst-effects"]
+	path = libs/sst/sst-effects
+	url = https://github.com/surge-synthesizer/sst-effects
