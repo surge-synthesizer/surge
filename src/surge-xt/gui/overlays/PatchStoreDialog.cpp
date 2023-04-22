@@ -222,6 +222,8 @@ PatchStoreDialog::PatchStoreDialog()
 
 PatchStoreDialog::~PatchStoreDialog() = default;
 
+void PatchStoreDialog::setShowFactoryOverwrite(bool s) { okOverButton->setVisible(s); }
+
 void PatchStoreDialog::setStorage(SurgeStorage *s)
 {
     storage = s;
