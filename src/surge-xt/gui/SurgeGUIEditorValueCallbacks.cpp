@@ -3681,20 +3681,18 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_store:
     {
-        bool showTags = juce::ModifierKeys::currentModifiers.isShiftDown() ||
-                        juce::ModifierKeys::currentModifiers.isAltDown();
+        showOverlay(SurgeGUIEditor::SAVE_PATCH, [this](Surge::Overlays::OverlayComponent *co) {
+            auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
 
-        showOverlay(SurgeGUIEditor::SAVE_PATCH,
-                    [this, showTags](Surge::Overlays::OverlayComponent *co) {
-                        auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
+            if (!psd)
+            {
+                return;
+            }
 
-                        if (!psd)
-                        {
-                            return;
-                        }
-
-                        psd->setShowTagsField(showTags);
-                    });
+            psd->setShowTagsField(juce::ModifierKeys::currentModifiers.isAltDown());
+            psd->setShowFactoryOverwrite(juce::ModifierKeys::currentModifiers.isShiftDown() &&
+                                         juce::ModifierKeys::currentModifiers.isAltDown());
+        });
     }
     break;
 

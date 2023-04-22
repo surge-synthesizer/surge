@@ -77,6 +77,8 @@ struct PatchStoreDialog : public OverlayComponent,
         tagEd->setVisible(s);
     };
 
+    void setShowFactoryOverwrite(bool s);
+
     void setName(const std::string &n) { nameEd->setText(n, juce::dontSendNotification); }
     void setAuthor(const std::string &a) { authorEd->setText(a, juce::dontSendNotification); }
     void setLicense(const std::string &a) { licenseEd->setText(a, juce::dontSendNotification); }
