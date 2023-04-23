@@ -103,6 +103,11 @@ class alignas(16) SurgeVoice
     inline float noteShiftFromPitchParam(float note0 /* the key + octave */,
                                          int oscNum /* The osc for pitch diffs */)
     {
+        if (localcopy[scene->osc[oscNum].pitch.param_id_in_scene].f == 0)
+        {
+            return note0;
+        }
+
         if (scene->osc[oscNum].pitch.absolute)
         {
             // remember note_to_pitch is linear interpolation on storage->table_pitch from
