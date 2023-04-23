@@ -9,7 +9,7 @@ void InputBlenderEffect::init_ctrltypes()
 
     // -----  Audio Input
     fxdata->p[ibp_audio_input_channel].set_name("Channel");
-    fxdata->p[ibp_audio_input_channel].set_type(ct_vocoder_modulator_mode);
+    fxdata->p[ibp_audio_input_channel].set_type(ct_percent_bipolar_stereo);
     fxdata->p[ibp_audio_input_channel].posy_offset = 1;
 
     fxdata->p[ibp_audio_input_pan].set_name("Pan");
@@ -22,7 +22,7 @@ void InputBlenderEffect::init_ctrltypes()
 
     // -----  Effect Input
     fxdata->p[ibp_effect_input_channel].set_name("Channel");
-    fxdata->p[ibp_effect_input_channel].set_type(ct_vocoder_modulator_mode);
+    fxdata->p[ibp_effect_input_channel].set_type(ct_percent_bipolar_stereo);
     fxdata->p[ibp_effect_input_channel].posy_offset = 3;
 
     fxdata->p[ibp_effect_input_pan].set_name("Pan");
@@ -34,12 +34,11 @@ void InputBlenderEffect::init_ctrltypes()
     fxdata->p[ibp_effect_input_level].posy_offset = 3;
 
     // -----  Scene Input
-    int next_posy_offset = -1;
     effect_slot_type slot_type = getSlotType(fxdata->fxslot);
     if (slot_type == a_insert_slot || slot_type == b_insert_slot)
     {
         fxdata->p[ibp_scene_input_channel].set_name("Channel");
-        fxdata->p[ibp_scene_input_channel].set_type(ct_vocoder_modulator_mode);
+        fxdata->p[ibp_scene_input_channel].set_type(ct_percent_bipolar_stereo);
         fxdata->p[ibp_scene_input_channel].posy_offset = 5;
 
         fxdata->p[ibp_scene_input_pan].set_name("Pan");
@@ -50,18 +49,17 @@ void InputBlenderEffect::init_ctrltypes()
         fxdata->p[ibp_scene_input_level].set_type(ct_decibel_attenuation);
         fxdata->p[ibp_scene_input_level].posy_offset = 5;
 
-        next_posy_offset = 7;
     }
 
     // -----  Output
 
     fxdata->p[ibp_output_width].set_name("Width");
     fxdata->p[ibp_output_width].set_type(ct_percent_bipolar_stereo);
-    fxdata->p[ibp_output_width].posy_offset = next_posy_offset;
+    fxdata->p[ibp_output_width].posy_offset = 7;
 
     fxdata->p[ibp_output_mix].set_name("Mix");
     fxdata->p[ibp_output_mix].set_type(ct_percent);
-    fxdata->p[ibp_output_mix].posy_offset = next_posy_offset;
+    fxdata->p[ibp_output_mix].posy_offset = 7;
 
 }
 
@@ -103,7 +101,7 @@ int InputBlenderEffect::group_label_ypos(int id) {
     std::vector ypos = {1, 9, 17, 25};
     effect_slot_type slot_type = getSlotType(fxdata->fxslot);
     if (slot_type != a_insert_slot && slot_type != b_insert_slot)
-        ypos.pop_back();
+        ypos.erase(ypos.begin() + 2);
     if (id>=0 && id < ypos.size())
         return ypos[id];
     return 0;
