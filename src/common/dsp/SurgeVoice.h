@@ -108,7 +108,7 @@ class alignas(16) SurgeVoice
     ** But in absolute mode you need to find the virtual note which would
     ** map to that frequency shift.
     */
-   inline float noteShiftFromPitchParam(float note0 /* the key + octave */,
+    inline float noteShiftFromPitchParam(float note0 /* the key + octave */,
                                          int oscNum /* The osc for pitch diffs */)
     {
         if (localcopy[scene->osc[oscNum].pitch.param_id_in_scene].f == 0)
