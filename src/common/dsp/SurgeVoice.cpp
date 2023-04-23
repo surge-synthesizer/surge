@@ -602,20 +602,25 @@ void SurgeVoice::update_portamento()
     int quantStep = 12;
 
     if (!storage->isStandardTuning && storage->currentScale.count > 1)
+    {
         quantStep = storage->currentScale.count;
+    }
 
-    // portamento constant rate mode (multiply portamento time with every octave traversed (or scale
-    // length in case of microtuning)
+    // portamento constant rate mode (multiply portamento time with every octave traversed
+    // (or scale length in case of microtuning)
     if (scene->portamento.porta_constrate)
+    {
         const_rate_factor =
             (1.f /
              ((1.f / quantStep) * fabs(state.getPitch(storage) - state.portasrc_key) + 0.00001));
+    }
 
     state.portaphase +=
         storage->envelope_rate_linear(localcopy[scene->portamento.param_id_in_scene].f) *
         (scene->portamento.temposync ? storage->temposyncratio : 1.f) * const_rate_factor;
 
-    if (state.portaphase < 1)
+    if ((state.portaphase < 1) &&
+        (localcopy[scene->portamento.param_id_in_scene].f > scene->portamento.val_min.f))
     {
         // exponential or linear key traversal for the portamento
         float phase;
@@ -634,15 +639,23 @@ void SurgeVoice::update_portamento()
 
         state.pkey = (1.f - phase) * state.portasrc_key + (float)phase * state.getPitch(storage);
 
-        if (scene->portamento.porta_gliss) // quantize portamento to keys
+        // quantize portamento to keys
+        if (scene->portamento.porta_gliss)
+        {
             state.pkey = floor(state.pkey + 0.5);
+        }
 
         state.porta_doretrigger = false;
+
         if (scene->portamento.porta_retrigger)
+        {
             retriggerPortaIfKeyChanged();
+        }
     }
     else
+    {
         state.pkey = state.getPitch(storage);
+    }
 
     state.pkey += noteExpressions[PITCH];
 }
