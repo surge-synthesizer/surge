@@ -55,10 +55,10 @@ bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynt
         addListener(this);
         listening = true;
         portnum = port;
-        surgePtr = surge.get();
+        synth = surge.get();
         sspPtr = ssp;
 
-        surgePtr->storage.oscListenerRunning = true;
+        synth->storage.oscListenerRunning = true;
 
 #ifdef DEBUG
         std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
@@ -75,8 +75,8 @@ void OSCListener::stopListening()
     removeListener(this);
     listening = false;
 
-    if (surgePtr)
-        surgePtr->storage.oscListenerRunning = false;
+    if (synth)
+        synth->storage.oscListenerRunning = false;
 
 #ifdef DEBUG
     std::cout << "SurgeOSC: Stopped listening for OSC." << std::endl;
@@ -86,34 +86,27 @@ void OSCListener::stopListening()
 void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
-
-    // ignore malformed OSC
     if (addr.at(0) != '/')
-    {
+        // ignore malformed OSC
         return;
-    }
 
-    // Tokenize the address
     std::istringstream split(addr);
-    std::vector<std::string> tokens;
+    // Scan past first '/'
+    std::string throwaway;
+    std::getline(split, throwaway, '/');
 
-    // first token will be blank
-    for (std::string each; std::getline(split, each, '/'); tokens.push_back(each))
-        ;
+    std::string addressPrimary, addressSecondary;
+    std::getline(split, addressPrimary, '/');
 
-    // Process address tokens
-    // e.g. /param/volume 0.5
-    if (tokens[1] == "param")
+    if (addressPrimary == "param")
     {
-        std::string storage_addr = tokens[2];
-        auto *p = surgePtr->storage.getPatch().parameterFromOSCName(addr);
-
+        auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
         if (p == NULL)
         {
 #ifdef DEBUG
-            std::cout << "No parameter with OSC or Storage name of " << storage_addr << std::endl;
+            std::cout << "No parameter with OSC address of " << addr << std::endl;
 #endif
-            // Not a valid storage name
+            // Not a valid OSC or storage name
             return;
         }
 
@@ -129,6 +122,35 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
+    }
+    else if (addressPrimary == "tuning")
+    {
+        if (!message[0].isString())
+            // Not a valid data value
+            return;
+
+        std::getline(split, addressSecondary, '/');
+
+        if (addressSecondary == "scl")
+        {
+            auto scl_path = synth->storage.datapath / "tuning_library" / "SCL";
+            scl_path = Surge::Storage::getUserDefaultPath(&(synth->storage),
+                                                          Surge::Storage::LastSCLPath, scl_path);
+            scl_path /= message[0].getString().toStdString();
+            scl_path += ".scl";
+            synth->storage.loadTuningFromSCL(scl_path);
+            std::cout << "scl_path: " << scl_path << std::endl;
+        }
+        else if (addressSecondary == "kbm")
+        {
+            synth->storage.loadMappingFromKBM(message[0].getString().toStdString());
+        }
+        else if (addressSecondary == "path_to_scl")
+        {
+        }
+        else if (addressSecondary == "path_to_kbm")
+        {
+        }
     }
 
 #ifdef DEBUG_VERBOSE

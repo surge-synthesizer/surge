@@ -2269,6 +2269,36 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
     return true;
 }
 
+void SurgeStorage::loadTuningFromSCL(const fs::path &p)
+{
+    try
+    {
+        retuneToScale(Tunings::readSCLFile(p));
+    }
+    catch (Tunings::TuningError &e)
+    {
+        retuneTo12TETScaleC261Mapping();
+        reportError(e.what(), "SCL Error");
+    }
+    if (onTuningChanged)
+        onTuningChanged();
+}
+
+void SurgeStorage::loadMappingFromKBM(const fs::path &p)
+{
+    try
+    {
+        remapToKeyboard(Tunings::readKBMFile(p));
+    }
+    catch (Tunings::TuningError &e)
+    {
+        remapToConcertCKeyboard();
+        reportError(e.what(), "KBM Error");
+    }
+    if (onTuningChanged)
+        onTuningChanged();
+}
+
 void SurgeStorage::setTuningApplicationMode(const TuningApplicationMode m)
 {
     tuningApplicationMode = m;
