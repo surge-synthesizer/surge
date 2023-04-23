@@ -164,7 +164,7 @@ void Parameter::set_name(const char *n)
 }
 
 Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const char *name,
-                             const char *dispname, int ctrltype,
+                             const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                              const Surge::Skin::Connector &c,
 
@@ -172,14 +172,17 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
                              bool modulateable, int ctrlstyle, bool defaultDeactivation)
 {
     assert(c.payload);
-    auto r =
-        assign(idp, pid, name, dispname, ctrltype, c.payload->id, c.payload->posx, c.payload->posy,
-               scene, ctrlgroup, ctrlgroup_entry, modulateable, ctrlstyle, defaultDeactivation);
+    auto r = assign(idp, pid, name, dispname, altOSCname, ctrltype, c.payload->id, c.payload->posx,
+                    c.payload->posy, scene, ctrlgroup, ctrlgroup_entry, modulateable, ctrlstyle,
+                    defaultDeactivation);
+
     r->hasSkinConnector = true;
+
     return r;
 }
+
 Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const char *name,
-                             const char *dispname, int ctrltype,
+                             const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                              std::string ui_identifier, int posx, int posy, int scene,
                              ControlGroup ctrlgroup, int ctrlgroup_entry, bool modulateable,
@@ -196,27 +199,36 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
     this->scene = scene;
     this->ctrlstyle = ctrlstyle;
     this->storage = nullptr;
-    strxcpy(this->ui_identifier, ui_identifier.c_str(), NAMECHARS);
 
+    char prefix[TXT_SIZE + 1] = {};
+
+    strxcpy(this->ui_identifier, ui_identifier.c_str(), NAMECHARS);
     strxcpy(this->name, name, NAMECHARS);
     set_name(dispname);
-    char prefix[TXT_SIZE + 1] = {};
+
     get_prefix(prefix, ctrlgroup, ctrlgroup_entry, scene);
     snprintf(name_storage, NAMECHARS, "%s%s", prefix, name);
+
+    this->oscName =
+        fmt::format("/param/{}", (altOSCname.empty() ? this->name_storage : altOSCname));
+
     posy_offset = 0;
-    if (scene)
-        per_voice_processing = true;
-    else
-        per_voice_processing = false;
-    clear_flags();
-    this->deactivated = defaultDeactivation;
+    per_voice_processing = scene ? true : false;
     midictrl = -1;
 
+    clear_flags();
+
+    this->deactivated = defaultDeactivation;
+
     set_type(ctrltype);
+
     if (valtype == vt_float)
+    {
         val.f = val_default.f;
+    }
 
     bound_value();
+
     return this;
 }
 
@@ -5118,19 +5130,6 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
     valid = false;
 
     return 0.0;
-}
-
-void Parameter::setOSCName(std::string s)
-{
-    oscName = std::move(s);
-    hasOSCName = true;
-}
-
-std::string Parameter::getOSCName()
-{
-    if (!hasOSCName)
-        return get_storage_name();
-    return oscName;
 }
 
 std::atomic<bool> parameterNameUpdated(false);

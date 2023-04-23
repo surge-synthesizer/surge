@@ -86,41 +86,53 @@ void OSCListener::stopListening()
 void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
+
+    // ignore malformed OSC
     if (addr.at(0) != '/')
-        return; // ignore malformed OSC
+    {
+        return;
+    }
 
     // Tokenize the address
     std::istringstream split(addr);
     std::vector<std::string> tokens;
+
+    // first token will be blank
     for (std::string each; std::getline(split, each, '/'); tokens.push_back(each))
-        ; // first token will be blank
+        ;
 
     // Process address tokens
+    // e.g. /param/volume 0.5
     if (tokens[1] == "param")
-    { // e.g. /param/volume 0.5
+    {
         std::string storage_addr = tokens[2];
-        auto *p = surgePtr->storage.getPatch().parameterFromOSCName(storage_addr);
+        auto *p = surgePtr->storage.getPatch().parameterFromOSCName(addr);
+
         if (p == NULL)
         {
 #ifdef DEBUG
             std::cout << "No parameter with OSC or Storage name of " << storage_addr << std::endl;
 #endif
-            return; // Not a valid storage name
+            // Not a valid storage name
+            return;
         }
+
+        // Not a valid data value
         if (!message[0].isFloat32())
-            return; // Not a valid data value
+        {
+            return;
+        }
 
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
 
 #ifdef DEBUG_VERBOSE
-        std::cout << "Parameter OSC name:" << p->getOSCName() << "  ";
-        std::cout << "Parameter Storage name:" << p->get_storage_name() << "  ";
+        std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
     }
 
 #ifdef DEBUG_VERBOSE
-    std::cout << "OSCListener: Got OSC msg.; address: " << addr << "  data: ";
+    std::cout << "OSCListener: Got OSC msg; address: " << addr << "  data: ";
     for (juce::OSCArgument msg : message)
     {
         std::string dataStr = "(none)";
@@ -146,7 +158,8 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
 
 void OSCListener::oscBundleReceived(const juce::OSCBundle &bundle)
 {
-    std::string msg = "";
+    std::string msg;
+
 #ifdef DEBUG
     std::cout << "OSCListener: Got OSC bundle." << msg << std::endl;
 #endif

@@ -55,7 +55,7 @@ EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChoose
     {
         for (int i = 0; i < n_fx_slots; ++i)
         {
-            fxIndexToDisplayPosition[SurgeGUIEditor::fxslot_order[i]] = i;
+            fxIndexToDisplayPosition[fxslot_order[i]] = i;
         }
     }
     setRepaintsOnMouseActivity(true);
@@ -65,7 +65,7 @@ EffectChooser::EffectChooser() : juce::Component(), WidgetBaseMixin<EffectChoose
     for (int i = 0; i < n_fx_slots; ++i)
     {
         fxTypes[i] = fxt_off;
-        auto mapi = SurgeGUIEditor::fxslot_order[i];
+        auto mapi = fxslot_order[i];
         auto q =
             std::make_unique<OverlayAsAccessibleButton<EffectChooser>>(this, fxslot_names[mapi]);
         q->setBounds(getEffectRectangle(mapi));
@@ -185,7 +185,7 @@ void EffectChooser::resized()
     int i = 0;
     for (const auto &q : slotAccOverlays)
     {
-        q->setBounds(getEffectRectangle(SurgeGUIEditor::fxslot_order[i]));
+        q->setBounds(getEffectRectangle(fxslot_order[i]));
         i++;
     }
 }

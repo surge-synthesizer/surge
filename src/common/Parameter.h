@@ -358,7 +358,7 @@ class Parameter
 
   private:
     Parameter *assign(ParameterIDCounter::promise_t id, int pid, const char *name,
-                      const char *dispname, int ctrltype,
+                      const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                       std::string ui_identifier, int posx, int posy,
 
@@ -368,13 +368,14 @@ class Parameter
 
   public:
     Parameter *assign(ParameterIDCounter::promise_t id, int pid, const char *name,
-                      const char *dispname, int ctrltype,
+                      const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                       const Surge::Skin::Connector &c,
 
                       int scene = 0, ControlGroup ctrlgroup = cg_GLOBAL, int ctrlgroup_entry = 0,
                       bool modulateable = true, int ctrlstyle = cs_off,
                       bool defaultDeactivation = true);
+
     virtual ~Parameter();
 
     bool can_temposync() const;
@@ -476,11 +477,8 @@ class Parameter
     void create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup, int ctrlgroup_entry,
                          const char *lfoPrefixOverride = nullptr) const;
 
-    // Optional OSC name
-    std::string getOSCName();
-    void setOSCName(std::string s);
-    bool hasOSCName{false};
     std::string oscName;
+    std::string get_osc_name() { return oscName; }
 
     pdata val{}, val_default{}, val_min{}, val_max{};
 

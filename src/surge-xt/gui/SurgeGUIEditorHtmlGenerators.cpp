@@ -516,31 +516,43 @@ th {
 span {
     margin-left: 16px;
 }
+
+code {
+    color: #dc3918;
+    font-size: 16px;
+    padding: 1px 0px;
+}
 </style>
   </head>
   <body style="margin: 0pt; background: #CDCED4;">
     <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
       <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-        Surge XT parameters addressable by OSC
+        Surge XT Open Sound Control (OSC) Specification
       </div>
     </div>
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; font-family: Lato; color: #123463;">
-        Construct OSC messages for Surge XT using the exact (case sensitive)
-        entry listed in the 'Address' column in the tables below.</br>
-        The form of the message should be <b>/param/&ltaddress&gt value</b>,
-        where 'value' is either
+        Construct OSC messages using the exact (case sensitive)
+        entry listed in the <b>Address</b> column in the tables below.</br>
+        The form of the message should be <code>/&ltsection&gt/&ltaddress&gt &ltvalue&gt</code>,
+        where <code>section</code> can currently be either <code>tuning</code> or <code>param</code>, and <code>value</code> can be:
+
         <ul>
-            <li>a floating point value between 0.0 and 1.0</li>
+            <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>
             <li>an integer value</li>
-            <li>0 or 1 (boolean)</li>
-            <li>contextual: either an in integer or a float, depending on the context</li>
+            <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
+            <li>contextual: either an in integer or a float, depending on the context (loaded oscillator or effect type)</li>
         </ul>
-        Where an address is listed as beginning with <b>'*'</b>, replace the <b>'*'</b> with either <b>'a'</b> or <b>'b'</b>,
-        depending on which scene you wish to address. E.g., 'a_drift' or 'b_drift'.
-        <p>Examples: <span><b>/param/volume 0.63</b></span>
-        <span><b>/param/polylimit 12</b></span><span><b>/param/a_mute_noise 0</b></span></p>
+
+        Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
+        depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
+
+        <p>Examples:
+            <span><code>/param/mixer/osc1/level 0.63</code></span>
+            <span><code>/param/global/polyphony_limit 12</code></span>
+            <span><code>/param/a_mute_noise 0</code></span>
+        </p>
       </div>
     </div>
 
@@ -554,14 +566,16 @@ span {
 
     for (auto *p : synth->storage.getPatch().param_ptr)
     {
-        st_str = p->getOSCName();
-        if (st_str[1] == '_')
+        st_str = p->get_osc_name();
+
+        if (st_str[6] == '/' && st_str[8] == '/')
         {
-            if (st_str[0] == 'b')
+            if (st_str[7] == 'b')
                 continue; // 'b_...' entries not added to vector
-            else if (st_str[0] == 'a')
+
+            else if (st_str[7] == 'a')
             {
-                st_str[0] = '*';
+                st_str[7] = '*';
             }
         }
         sortvector.push_back(oscParamInfo{p, st_str, p->get_full_name(), p->ctrlgroup});
