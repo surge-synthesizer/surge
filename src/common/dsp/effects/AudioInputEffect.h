@@ -15,32 +15,33 @@
 #pragma once
 #include "Effect.h"
 
-class InputBlenderEffect : public Effect
+class AudioInputEffect : public Effect
 {
   public:
     enum effect_slot_type{
         a_insert_slot, b_insert_slot, send_slot, global_slot
     };
-    enum ibp_params{
-        ibp_audio_input_channel = 0,
-        ibp_audio_input_pan,
-        ibp_audio_input_level,
+    enum in_params
+    {
+        in_audio_input_channel = 0,
+        in_audio_input_pan,
+        in_audio_input_level,
 
-        ibp_effect_input_channel,
-        ibp_effect_input_pan,
-        ibp_effect_input_level,
+        in_effect_input_channel,
+        in_effect_input_pan,
+        in_effect_input_level,
 
-        ibp_scene_input_channel,
-        ibp_scene_input_pan,
-        ibp_scene_input_level,
+        in_scene_input_channel,
+        in_scene_input_pan,
+        in_scene_input_level,
 
-        ibp_output_width,
-        ibp_output_mix,
+        in_output_width,
+        in_output_mix,
 
-        ibp_num_params
+        in_num_params
     };
-    InputBlenderEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    ~InputBlenderEffect() override;
+    AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    ~AudioInputEffect() override;
     void init_ctrltypes() override;
     void init_default_values() override;
     void process(float *dataL, float *dataR) override;

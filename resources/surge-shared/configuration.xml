@@ -155,7 +155,7 @@
               p4_deactivated="1" p5="-60" p5_deactivated="1" p6="0" p6_deactivated="1" p7="50.2131" p8="70"
               p8_deactivated="1" p9="0" p10="0" p11="0"/>
 </type>
-<type i="28" name="Input Blender">
+<type i="28" name="Audio Input">
     <snapshot name="Init" p0="3" p1="0.0" p2="0.0" p3="3" p4="0.0" p5="0.0" p6="3" p7="0.0" p8="0.0" p9="0.0" p10="1.0"/>
 </type>
 </fx>

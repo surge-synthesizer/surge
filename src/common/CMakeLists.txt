@@ -238,8 +238,8 @@ add_library(${PROJECT_NAME}
   dsp/effects/chowdsp/tape/LossFilter.h
   dsp/effects/chowdsp/tape/ToneControl.cpp
   dsp/effects/chowdsp/tape/ToneControl.h
-  dsp/effects/InputBlenderEffect.cpp
-  dsp/effects/InputBlenderEffect.h
+  dsp/effects/AudioInputEffect.cpp
+  dsp/effects/AudioInputEffect.h
   dsp/filters/AllpassFilter.h
   dsp/filters/BiquadFilter.cpp
   dsp/filters/BiquadFilter.h
