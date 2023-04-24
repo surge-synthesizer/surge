@@ -2383,7 +2383,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             frame->repaint();
                         });
                         contextMenu.addItem(
-                            "CXOR: cx4,3-bc-ba-bc-ba (0)", true, dt == rmm_cxor43_0, [this, p]() {
+                            "CXOR (4,2-a-b-a-b)", true, dt == rmm_cxor43_0, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor43_0,
@@ -2391,7 +2391,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx4,3-bc-ba-ba-bc (1)", true, dt == rmm_cxor43_1, [this, p]() {
+                            "SILM 1 (4,3-cb-ab-ab-cb)", true, dt == rmm_cxor43_1, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor43_1,
@@ -2399,7 +2399,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx4,3-bc-ba-aa-bc (2)", true, dt == rmm_cxor43_2, [this, p]() {
+                            "SILM 2 (4,3-cb-aa-ab-cb)", true, dt == rmm_cxor43_2, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor43_2,
@@ -2407,7 +2407,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx4,3-bc-cc-ba-bc (3)", true, dt == rmm_cxor43_3, [this, p]() {
+                            "SILM 3 (4,3-cc-cb-ab-cb)", true, dt == rmm_cxor43_3, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor43_3,
@@ -2415,7 +2415,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx4,3-bc-bc-ba-bc (4)", true, dt == rmm_cxor43_4, [this, p]() {
+                            "SILM 4 (4,3-cb-cb-ab-cb)", true, dt == rmm_cxor43_4, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor43_4,
@@ -2423,7 +2423,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx9,3-cb-ab-cb-ab (0)", true, dt == rmm_cxor93_0, [this, p]() {
+                            "SILM 5 (9,3-ba-bc-ba-bc)", true, dt == rmm_cxor93_0, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor93_0,
@@ -2431,7 +2431,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx9,3-bb-cc-bb-aa (1)", true, dt == rmm_cxor93_1, [this, p]() {
+                            "SILM 6 (9,3-bc-cb-ba-ab)", true, dt == rmm_cxor93_1, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor93_1,
@@ -2439,7 +2439,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx9,3-cb-ba-aa-bb (2)", true, dt == rmm_cxor93_2, [this, p]() {
+                            "SILM 7 (9,3-bb-aa-ab-bc)", true, dt == rmm_cxor93_2, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor93_2,
@@ -2447,7 +2447,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx9,3-cb-bb-aa-bb (3)", true, dt == rmm_cxor93_3, [this, p]() {
+                            "SILM 8 (9,3-bb-ba-ab-bc)", true, dt == rmm_cxor93_3, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor93_3,
@@ -2455,7 +2455,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                         contextMenu.addItem(
-                            "CXOR: cx9,3-cb-ab-ab-cc (4)", true, dt == rmm_cxor93_4, [this, p]() {
+                            "SILM 9 (9,3-ba-ba-bc-cc)", true, dt == rmm_cxor93_4, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor93_4,
