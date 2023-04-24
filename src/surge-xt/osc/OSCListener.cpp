@@ -125,9 +125,13 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
     }
     else if (addressPrimary == "tuning")
     {
-        if (!message[0].isString())
-            // Not a valid data value
-            return;
+        std::string dataStr = "";
+        for (int i = 0; i < message.size(); i++)
+        {
+            dataStr += message[i].getString().toStdString();
+            if (i < message.size() - 1)
+                dataStr += " ";
+        }
 
         std::getline(split, addressSecondary, '/');
 
@@ -136,17 +140,26 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             auto scl_path = synth->storage.datapath / "tuning_library" / "SCL";
             scl_path = Surge::Storage::getUserDefaultPath(&(synth->storage),
                                                           Surge::Storage::LastSCLPath, scl_path);
-            scl_path /= message[0].getString().toStdString();
+            scl_path /= dataStr;
             scl_path += ".scl";
             synth->storage.loadTuningFromSCL(scl_path);
-            std::cout << "scl_path: " << scl_path << std::endl;
         }
         else if (addressSecondary == "kbm")
         {
-            synth->storage.loadMappingFromKBM(message[0].getString().toStdString());
+            auto kbm_path = synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
+            kbm_path = Surge::Storage::getUserDefaultPath(&(synth->storage),
+                                                          Surge::Storage::LastKBMPath, kbm_path);
+            kbm_path /= dataStr;
+            kbm_path += ".kbm";
+            synth->storage.loadMappingFromKBM(kbm_path);
         }
         else if (addressSecondary == "path_to_scl")
         {
+            /*
+            Surge::Storage::updateUserDefaultPath(&(synth->storage), );
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::LastSCLPath, "");
+            */
         }
         else if (addressSecondary == "path_to_kbm")
         {
