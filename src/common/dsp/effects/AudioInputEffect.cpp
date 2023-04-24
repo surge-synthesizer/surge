@@ -52,7 +52,6 @@ void AudioInputEffect::init_ctrltypes()
     }
 
     // -----  Output
-
     fxdata->p[in_output_width].set_name("Width");
     fxdata->p[in_output_width].set_type(ct_percent_bipolar_stereo);
     fxdata->p[in_output_width].posy_offset = 7;
@@ -65,17 +64,17 @@ void AudioInputEffect::init_ctrltypes()
 
 void AudioInputEffect::init_default_values()
 {
-    fxdata->p[in_audio_input_channel].val.i = 3; // p0
+    fxdata->p[in_audio_input_channel].val.i = 0; // p0
     fxdata->p[in_audio_input_pan].val.f = 0.0;   //p1
-    fxdata->p[in_audio_input_level].val.f = 0.0;  //p2
+    fxdata->p[in_audio_input_level].val.f = -48.0;  //p2
 
 
-    fxdata->p[in_effect_input_channel].val.i = 3; //p3
+    fxdata->p[in_effect_input_channel].val.i = 0; //p3
     fxdata->p[in_effect_input_pan].val.f = 0.0;  //p4
-    fxdata->p[in_effect_input_level].val.f = 0.0; //p5
+    fxdata->p[in_effect_input_level].val.f = 1.0; //p5
 
 
-    fxdata->p[in_scene_input_channel].val.i = 3; //p6
+    fxdata->p[in_scene_input_channel].val.i = 0; //p6
     fxdata->p[in_scene_input_pan].val.f = 0.0; //p7
     fxdata->p[in_scene_input_level].val.f = 0.0; //p8
 
