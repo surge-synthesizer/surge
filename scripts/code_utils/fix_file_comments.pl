@@ -41,6 +41,10 @@ sub findfiles
 EOH
 
     $f = $File::Find::name;
+    if ($f =~ m/omega.h$/)
+    {
+       return;
+    }
     if ($f =~ m/\.h$/ or $f =~ m/.cpp$/)
     {
         #To search the files inside the directories

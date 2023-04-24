@@ -1,9 +1,27 @@
-//
-// Created by Paul Walker on 4/22/23.
-//
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
-#ifndef SURGE_SURGESSTFXADAPTER_H
-#define SURGE_SURGESSTFXADAPTER_H
+#ifndef SURGE_SRC_COMMON_DSP_EFFECTS_SURGESSTFXADAPTER_H
+#define SURGE_SRC_COMMON_DSP_EFFECTS_SURGESSTFXADAPTER_H
 
 #include "Parameter.h"
 #include "SurgeStorage.h"
@@ -11,8 +29,60 @@
 #include "sst/basic-blocks/params/ParamMetadata.h"
 #include "sst/filters/BiquadFilter.h"
 
+/*
+ * This file provides the code we need to bridge the running in-memory
+ * configured Surge Effects to the context-independent implementation of
+ * those effects in sst-effects submodule. Our strategy is broadly
+ *
+ * 1. Port the DSP and the parameter metadata but
+ * 2. Don't port the parts of the API which are too tightly coupled, like the
+ *    Parameter.h type enum and
+ * 3. Don't port the parts of the API which are gross, like the group_ypos stuff
+ *
+ * We do this with the template strategy outlined more deeply in sst-effects. This
+ * file contains the two classes adapting Surge to that strategy.
+ *
+ * To port a new effect your steps are basically
+ *
+ * 1. Copy the code to a header in sst-effects and use the concrete names for
+ *    the interface which the regtests require. So now you have
+ *    sst::effects::Foo<COnfig>
+ * 2. Strip that code from surge and change FooEffect : Effect into
+ *    FooEffect : SurgeSSTFXBase<sst::effects::Foo<surge::sstfx::SurgeFXConfig>
+ *
+ * and voila.
+ */
 namespace surge::sstfx
 {
+
+/*
+ * The FXConfig template
+ *
+ * The sst-effects fx are all template classes which take a
+ * configuration adapter to adapt them to their host. Their host has to provide
+ * them three things
+ *
+ * 1. A "Global Storage" configuration. This is, in surge, SurgeStorage, and
+ *    provides things like samplerate, db to linear conversion, note to pitch.
+ * 2. An "Effect Storage" configuration. This can answer static questions about
+ *    the configuration of the effect, like is a parameter deactivated. This is
+ *    FXStorage in surge. And
+ * 3. A "ValueStorage *" which is optiona, but allows the host to present
+ *    different external storage for the values. In surge this is a `pdata *`.
+ *
+ * Finally we provide a base class which can inject into the inheritance
+ * heirarchy and use a CRTP static cast type pattern. In this case it is
+ * Effect.
+ *
+ * Given those, the FX are re-factored to query these objects with questions like
+ * `floatValue` or `noteToPitch` using an API which is outlined in
+ * sst-effects/include/sst/effects/EffectCore.h. The majority of the documentation
+ * is there.
+ *
+ * So basically this FXConfig provides an implementation of all the template query
+ * points you need to implement a refactored effect and work in surge.
+ *
+ */
 struct SurgeFXConfig
 {
     static constexpr uint16_t blockSize{BLOCK_SIZE};
@@ -62,6 +132,10 @@ struct SurgeFXConfig
     static inline float dbToLinear(GlobalStorage *s, float f) { return s->db_to_linear(f); }
 };
 
+/*
+ * The SurgeSSTFXBase is a template class which adapts the surge Effect virtyal
+ * methods to the sst-effects T<Config> concrete methods.
+ */
 template <typename T> struct SurgeSSTFXBase : T
 {
     SurgeSSTFXBase(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : T(storage, fxdata, pd) {}
