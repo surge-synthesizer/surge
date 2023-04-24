@@ -503,7 +503,13 @@ void SurgeVoice::switch_toggled()
                                oscbuffer[i]);
             if (osc[i])
             {
-                osc[i]->init(state.pitch, false, nzid);
+                // this matches the override in ::process_block
+                float ktrkroot = 60;
+                auto usep = noteShiftFromPitchParam(
+                    (scene->osc[i].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                        octaveSize * scene->osc[i].octave.val.i,
+                    0);
+                osc[i]->init(usep, false, nzid);
             }
             osctype[i] = scene->osc[i].type.val.i;
         }
@@ -952,6 +958,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     float *tblockR = is_wide ? tblock2 : tblock;
 
     // float ktrkroot = (float)scene->keytrack_root.val.i;
+    // this mysterious override is duplicated in the ->init calls
     float ktrkroot = 60;
     float drift = localcopy[scene->drift.param_id_in_scene].f;
 
@@ -1616,17 +1623,25 @@ void SurgeVoice::retriggerOSCWithIndependentAttacks()
     {
         if (osc[i])
         {
+            // This matches the override in ::process_block
+            float ktrkroot = 60;
+            auto usep = noteShiftFromPitchParam((scene->osc[i].keytrack.val.b
+                                                     ? state.getPitch(storage)
+                                                     : ktrkroot + state.scenepbpitch) +
+                                                    octaveSize * scene->osc[i].octave.val.i,
+                                                0);
+
             /*
              * This is awfully special case but it's the best solution
              */
             if (scene->osc[i].type.val.i == ot_string)
             {
-                osc[i]->init(state.getPitch(storage));
+                osc[i]->init(usep);
             }
             if (scene->osc[i].type.val.i == ot_twist &&
                 !scene->osc[i].p[n_osc_params - 2].deactivated)
             {
-                osc[i]->init(state.getPitch(storage));
+                osc[i]->init(usep);
             }
         }
     }
