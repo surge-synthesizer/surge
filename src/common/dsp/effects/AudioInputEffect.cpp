@@ -135,24 +135,16 @@ void AudioInputEffect::process(float *dataL, float *dataR)
 {
     //So... let's see what we have here...
     //We have 3 inputs, and 1 output
-    // input 1 is the audio input
-    // input 2 is the effect input, but only if we're in an insert slot
-    // input 3 is the scene input
-    // we only need to take left or right channel with. But how shall we interpret channel if it is a value between 0 and 1?
-    // 0.0 = left
-    // 0.5 = center
-    // 1.0 = right
-    // but what is 0.4? 0.4 is 40% of the way from left to center. So we need to take 40% of the left channel and 60% of the right channel
-    // output is the mix of all 3 inputs
 
-    float& audioInputChannel = fxdata->p[in_audio_input_channel].val.f;
+    // take effect input
+    float&effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
     float leftGain, rightGain;
 
-    if (audioInputChannel < 0) {
+    if (effectInputChannel < 0) {
             leftGain = 1.0f;
-            rightGain = 1.0f + audioInputChannel; // When audioInputChannel is -1, rightGain will be 0
+            rightGain = 1.0f + effectInputChannel; // When audioInputChannel is -1, rightGain will be 0
     } else {
-            leftGain = 1.0f - audioInputChannel; // When audioInputChannel is 1, leftGain will be 0
+            leftGain = 1.0f - effectInputChannel; // When audioInputChannel is 1, leftGain will be 0
             rightGain = 1.0f;
     }
     float* channelData[] = { dataL, dataR };
@@ -160,6 +152,9 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     buffer.applyGain(0, 0, buffer.getNumSamples(), leftGain);
     buffer.applyGain(1, 0, buffer.getNumSamples(), rightGain);
 
+    // now we need to apply panorama
+    float& effectInputPan = fxdata->p[in_effect_input_pan].val.f;
+    
 
 
 }
