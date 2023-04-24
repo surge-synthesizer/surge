@@ -155,14 +155,11 @@ void AudioInputEffect::process(float *dataL, float *dataR)
             leftGain = 1.0f - audioInputChannel; // When audioInputChannel is 1, leftGain will be 0
             rightGain = 1.0f;
     }
-//    float* channelData[] = { dataL, dataR };
-//    juce::AudioBuffer<float> buffer(channelData, 2, BLOCK_SIZE);
+    float* channelData[] = { dataL, dataR };
+    juce::AudioBuffer<float> buffer(channelData, 2, BLOCK_SIZE);
+    buffer.applyGain(0, 0, buffer.getNumSamples(), leftGain);
+    buffer.applyGain(1, 0, buffer.getNumSamples(), rightGain);
 
-    // Apply gains to the dataL and dataR arrays
-    for (int i = 0; i < BLOCK_SIZE; ++i) {
-            dataL[i] *= leftGain;
-            dataR[i] *= rightGain;
-    }
 
 
 }
