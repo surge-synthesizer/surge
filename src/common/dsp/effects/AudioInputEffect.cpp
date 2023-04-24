@@ -137,7 +137,7 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     //We have 3 inputs, and 1 output
 
     // take effect input
-    float&effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
+    float& effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
     float leftGain, rightGain;
 
     if (effectInputChannel < 0) {
@@ -170,5 +170,7 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     buffer.applyGain(1, 0, buffer.getNumSamples(), rightToRight);     // Apply rightToRight gain to the right channel
     buffer.addFrom(1, 0, tempBuffer, 0, 0, BLOCK_SIZE, 1.0f - leftToLeft);  // Add left channel to the right channel with (1 - leftToLeft) gain
 
-
+    float& effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
+    float effectInputLevelGain = juce::Decibels::decibelsToGain(effectInputLevelDb);
+    buffer.applyGain(effectInputLevelGain);
 }
