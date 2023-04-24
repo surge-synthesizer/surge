@@ -27,18 +27,21 @@
 #include "SurgeSSTFXAdapter.h"
 #include "sst/effects/Flanger.h"
 
-class FlangerEffect : public surge::sstfx::SurgeSSTFXBase<sst::effects::Flanger<surge::sstfx::SurgeFXConfig>>
+class FlangerEffect
+    : public surge::sstfx::SurgeSSTFXBase<sst::effects::Flanger<surge::sstfx::SurgeFXConfig>>
 {
   public:
     FlangerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-        : surge::sstfx::SurgeSSTFXBase<sst::effects::Flanger<surge::sstfx::SurgeFXConfig>>(storage, fxdata, pd) {}
+        : surge::sstfx::SurgeSSTFXBase<sst::effects::Flanger<surge::sstfx::SurgeFXConfig>>(
+              storage, fxdata, pd)
+    {
+    }
 
     virtual ~FlangerEffect() = default;
 
     virtual void init_ctrltypes() override;
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
-
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_FLANGEREFFECT_H

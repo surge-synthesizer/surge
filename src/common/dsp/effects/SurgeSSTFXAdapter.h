@@ -22,12 +22,12 @@ struct SurgeFXConfig
     using ValueStorage = pdata;
     using BiquadAdapter = sst::filters::Biquad::DefaultTuningAndDBAdapter<GlobalStorage>;
 
-    static inline float floatValueAt(const Effect * const e, const ValueStorage *const v, int idx)
+    static inline float floatValueAt(const Effect *const e, const ValueStorage *const v, int idx)
     {
         return *(e->pd_float[idx]);
     }
 
-    static inline int intValueAt(const Effect * const e, const ValueStorage *const v, int idx)
+    static inline int intValueAt(const Effect *const e, const ValueStorage *const v, int idx)
     {
         return *(e->pd_float[idx]);
     }
@@ -42,17 +42,17 @@ struct SurgeFXConfig
         return e->p[idx].temposync ? s->temposyncratio : 1;
     }
 
-    static inline bool isDeactivated(EffectStorage *e, int idx)
-    {
-        return e->p[idx].deactivated;
-    }
+    static inline bool isDeactivated(EffectStorage *e, int idx) { return e->p[idx].deactivated; }
 
     static inline float rand01(GlobalStorage *s) { return s->rand_01(); }
 
     static inline double sampleRate(GlobalStorage *s) { return s->samplerate; }
 
     static inline float noteToPitch(GlobalStorage *s, float p) { return s->note_to_pitch(p); }
-    static inline float noteToPitchIgnoringTuning(GlobalStorage *s, float p) { return s->note_to_pitch_ignoring_tuning(p); }
+    static inline float noteToPitchIgnoringTuning(GlobalStorage *s, float p)
+    {
+        return s->note_to_pitch_ignoring_tuning(p);
+    }
 
     static inline float noteToPitchInv(GlobalStorage *s, float p)
     {
@@ -62,39 +62,23 @@ struct SurgeFXConfig
     static inline float dbToLinear(GlobalStorage *s, float f) { return s->db_to_linear(f); }
 };
 
-template<typename T>
-struct SurgeSSTFXBase : T
+template <typename T> struct SurgeSSTFXBase : T
 {
-    SurgeSSTFXBase(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) :
-    T(storage, fxdata, pd) {}
+    SurgeSSTFXBase(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : T(storage, fxdata, pd) {}
 
-    void init() override
-    {
-        T::initialize();
-    }
+    void init() override { T::initialize(); }
 
-    void process(float *dataL, float *dataR) override
-    {
-        T::processBlock(dataL, dataR);
-    }
+    void process(float *dataL, float *dataR) override { T::processBlock(dataL, dataR); }
 
+    void suspend() override { T::suspendProcessing(); }
 
-    void suspend() override
-    {
-        T::suspendProcessing();
-    }
-
-    int get_ringout_decay() override
-    {
-        return T::getRingoutDecay();
-    }
+    int get_ringout_decay() override { return T::getRingoutDecay(); }
 
     const char *get_effectname() override { return T::effectName; }
 
-
     void init_default_values() override
     {
-        for (int i=0; i<T::numParams; ++i)
+        for (int i = 0; i < T::numParams; ++i)
         {
             auto pmd = T::paramAt(i);
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::FLOAT)
@@ -113,14 +97,14 @@ struct SurgeSSTFXBase : T
         // TODO
         // 1: Expand this and
         // 2: make it throw a logic_error for really miscofingured cases
-        for (int i=0; i<T::numParams; ++i)
+        for (int i = 0; i < T::numParams; ++i)
         {
             auto pmd = T::paramAt(i);
             this->fxdata->p[i].set_name(pmd.name.c_str());
-            auto check = [&](auto a, auto b, auto msg)
-            {
+            auto check = [&](auto a, auto b, auto msg) {
                 if (a != b)
-                    std::cout << "Unable to match " << pmd.name << " " << a << " " << b << " " << msg << std::endl;
+                    std::cout << "Unable to match " << pmd.name << " " << a << " " << b << " "
+                              << msg << std::endl;
             };
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::FLOAT)
             {
@@ -136,6 +120,6 @@ struct SurgeSSTFXBase : T
     }
 };
 
-}
+} // namespace surge::sstfx
 
 #endif // SURGE_SURGESSTFXADAPTER_H

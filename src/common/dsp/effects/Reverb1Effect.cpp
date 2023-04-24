@@ -28,7 +28,8 @@ namespace mech = sst::basic_blocks::mechanics;
 using namespace std;
 
 Reverb1Effect::Reverb1Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : surge::sstfx::SurgeSSTFXBase<sst::effects::Reverb1<surge::sstfx::SurgeFXConfig>>(storage, fxdata, pd)
+    : surge::sstfx::SurgeSSTFXBase<sst::effects::Reverb1<surge::sstfx::SurgeFXConfig>>(storage,
+                                                                                       fxdata, pd)
 {
 }
 

@@ -27,8 +27,8 @@
 #include "SurgeSSTFXAdapter.h"
 #include "sst/effects/Reverb1.h"
 
-
-class Reverb1Effect : public surge::sstfx::SurgeSSTFXBase<sst::effects::Reverb1<surge::sstfx::SurgeFXConfig>>
+class Reverb1Effect
+    : public surge::sstfx::SurgeSSTFXBase<sst::effects::Reverb1<surge::sstfx::SurgeFXConfig>>
 {
   public:
     Reverb1Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
@@ -42,8 +42,6 @@ class Reverb1Effect : public surge::sstfx::SurgeSSTFXBase<sst::effects::Reverb1<
     virtual int get_ringout_decay() override { return ringout_time; }
     virtual void handleStreamingMismatches(int streamingRevision,
                                            int currentSynthStreamingRevision) override;
-
-
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_REVERB1EFFECT_H
