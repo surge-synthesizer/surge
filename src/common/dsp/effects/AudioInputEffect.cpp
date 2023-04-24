@@ -138,6 +138,12 @@ void AudioInputEffect::process(float *dataL, float *dataR)
 
     // take effect input
     float& effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
+    float& effectInputPan = fxdata->p[in_effect_input_pan].val.f;
+    float& effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
+    float* channelData[] = { dataL, dataR };
+    juce::AudioBuffer<float> buffer(channelData, 2, BLOCK_SIZE);
+
+
     float leftGain, rightGain;
 
     if (effectInputChannel < 0) {
@@ -147,13 +153,10 @@ void AudioInputEffect::process(float *dataL, float *dataR)
             leftGain = 1.0f - effectInputChannel; // When audioInputChannel is 1, leftGain will be 0
             rightGain = 1.0f;
     }
-    float* channelData[] = { dataL, dataR };
-    juce::AudioBuffer<float> buffer(channelData, 2, BLOCK_SIZE);
     buffer.applyGain(0, 0, buffer.getNumSamples(), leftGain);
     buffer.applyGain(1, 0, buffer.getNumSamples(), rightGain);
 
-    // now we need to apply panorama
-    float& effectInputPan = fxdata->p[in_effect_input_pan].val.f;
+
     // Calculate the crossfade factors
     float leftToLeft = (effectInputPan < 0) ? 1.0f : 1.0f - effectInputPan; // Ranges from 1.0 (center) to 0.0 (fully right)
     float rightToRight = (effectInputPan > 0) ? 1.0f : 1.0f + effectInputPan; // Ranges from 1.0 (center) to 0.0 (fully left)
@@ -170,7 +173,7 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     buffer.applyGain(1, 0, buffer.getNumSamples(), rightToRight);     // Apply rightToRight gain to the right channel
     buffer.addFrom(1, 0, tempBuffer, 0, 0, BLOCK_SIZE, 1.0f - leftToLeft);  // Add left channel to the right channel with (1 - leftToLeft) gain
 
-    float& effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
+
     float effectInputLevelGain = juce::Decibels::decibelsToGain(effectInputLevelDb);
     buffer.applyGain(effectInputLevelGain);
 }
