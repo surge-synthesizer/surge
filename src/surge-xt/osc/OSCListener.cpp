@@ -83,6 +83,19 @@ void OSCListener::stopListening()
 #endif
 }
 
+// Concatenates OSC message data strings separated by spaces into one string (with spaces)
+std::string OSCListener::getWholeString(const juce::OSCMessage &om)
+{
+    std::string dataStr = "";
+    for (int i = 0; i < om.size(); i++)
+    {
+        dataStr += om[i].getString().toStdString();
+        if (i < (om.size() - 1))
+            dataStr += " ";
+    }
+    return dataStr;
+}
+
 void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
@@ -95,10 +108,10 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
     std::string throwaway;
     std::getline(split, throwaway, '/');
 
-    std::string addressPrimary, addressSecondary;
-    std::getline(split, addressPrimary, '/');
+    std::string address1, address2, address3;
+    std::getline(split, address1, '/');
 
-    if (addressPrimary == "param")
+    if (address1 == "param")
     {
         auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
         if (p == NULL)
@@ -106,13 +119,13 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
 #ifdef DEBUG
             std::cout << "No parameter with OSC address of " << addr << std::endl;
 #endif
-            // Not a valid OSC or storage name
+            // Not a valid OSC address
             return;
         }
 
-        // Not a valid data value
         if (!message[0].isFloat32())
         {
+            // Not a valid data value
             return;
         }
 
@@ -123,19 +136,31 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
     }
-    else if (addressPrimary == "tuning")
+    else if (address1 == "user_default")
     {
-        std::string dataStr = "";
-        for (int i = 0; i < message.size(); i++)
+        std::getline(split, address2, '/');
+        if (address2 == "path")
         {
-            dataStr += message[i].getString().toStdString();
-            if (i < message.size() - 1)
-                dataStr += " ";
+            std::string dataStr = getWholeString(message);
+            std::getline(split, address3, '/');
+            if (address3 == "scl")
+            {
+                Surge::Storage::updateUserDefaultPath(&(synth->storage),
+                                                      Surge::Storage::LastSCLPath, dataStr);
+            }
+            else if (address3 == "kbm")
+            {
+                Surge::Storage::updateUserDefaultPath(&(synth->storage),
+                                                      Surge::Storage::LastKBMPath, dataStr);
+            }
         }
+    }
+    else if (address1 == "tuning")
+    {
+        std::string dataStr = getWholeString(message);
+        std::getline(split, address2, '/');
 
-        std::getline(split, addressSecondary, '/');
-
-        if (addressSecondary == "scl")
+        if (address2 == "scl")
         {
             auto scl_path = synth->storage.datapath / "tuning_library" / "SCL";
             scl_path = Surge::Storage::getUserDefaultPath(&(synth->storage),
@@ -144,7 +169,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             scl_path += ".scl";
             synth->storage.loadTuningFromSCL(scl_path);
         }
-        else if (addressSecondary == "kbm")
+        else if (address2 == "kbm")
         {
             auto kbm_path = synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
             kbm_path = Surge::Storage::getUserDefaultPath(&(synth->storage),
@@ -153,42 +178,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             kbm_path += ".kbm";
             synth->storage.loadMappingFromKBM(kbm_path);
         }
-        else if (addressSecondary == "path_to_scl")
-        {
-            /*
-            Surge::Storage::updateUserDefaultPath(&(synth->storage), );
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::LastSCLPath, "");
-            */
-        }
-        else if (addressSecondary == "path_to_kbm")
-        {
-        }
     }
-
-#ifdef DEBUG_VERBOSE
-    std::cout << "OSCListener: Got OSC msg; address: " << addr << "  data: ";
-    for (juce::OSCArgument msg : message)
-    {
-        std::string dataStr = "(none)";
-        switch (msg.getType())
-        {
-        case 'f':
-            dataStr = std::to_string(msg.getFloat32());
-            break;
-        case 'i':
-            dataStr = std::to_string(msg.getInt32());
-            break;
-        case 's':
-            dataStr = msg.getString().toStdString();
-            break;
-        default:
-            break;
-        }
-        std::cout << dataStr << "  ";
-    }
-    std::cout << std::endl;
-#endif
 }
 
 void OSCListener::oscBundleReceived(const juce::OSCBundle &bundle)
