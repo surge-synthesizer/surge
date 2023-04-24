@@ -1,5 +1,6 @@
 
 #include "AudioInputEffect.h"
+#include "juce_audio_basics/juce_audio_basics.h"
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd) {}
 AudioInputEffect::~AudioInputEffect() {}
@@ -64,17 +65,17 @@ void AudioInputEffect::init_ctrltypes()
 
 void AudioInputEffect::init_default_values()
 {
-    fxdata->p[in_audio_input_channel].val.i = 0; // p0
+    fxdata->p[in_audio_input_channel].val.f = 0.0; // p0
     fxdata->p[in_audio_input_pan].val.f = 0.0;   //p1
     fxdata->p[in_audio_input_level].val.f = -48.0;  //p2
 
 
-    fxdata->p[in_effect_input_channel].val.i = 0; //p3
+    fxdata->p[in_effect_input_channel].val.f = 0.0; //p3
     fxdata->p[in_effect_input_pan].val.f = 0.0;  //p4
     fxdata->p[in_effect_input_level].val.f = 1.0; //p5
 
 
-    fxdata->p[in_scene_input_channel].val.i = 0; //p6
+    fxdata->p[in_scene_input_channel].val.f = 0.0; //p6
     fxdata->p[in_scene_input_pan].val.f = 0.0; //p7
     fxdata->p[in_scene_input_level].val.f = 0.0; //p8
 
@@ -105,10 +106,6 @@ int AudioInputEffect::group_label_ypos(int id) {
         return ypos[id];
     return 0;
 }
-void AudioInputEffect::process(float *dataL, float *dataR)
-{
-    Effect::process(dataL, dataR);
-}
 AudioInputEffect::effect_slot_type AudioInputEffect::getSlotType(fxslot_positions p)
 {
     switch (p)
@@ -131,4 +128,41 @@ AudioInputEffect::effect_slot_type AudioInputEffect::getSlotType(fxslot_position
         default:
             return AudioInputEffect::global_slot;
     }
+}
+
+
+void AudioInputEffect::process(float *dataL, float *dataR)
+{
+    //So... let's see what we have here...
+    //We have 3 inputs, and 1 output
+    // input 1 is the audio input
+    // input 2 is the effect input, but only if we're in an insert slot
+    // input 3 is the scene input
+    // we only need to take left or right channel with. But how shall we interpret channel if it is a value between 0 and 1?
+    // 0.0 = left
+    // 0.5 = center
+    // 1.0 = right
+    // but what is 0.4? 0.4 is 40% of the way from left to center. So we need to take 40% of the left channel and 60% of the right channel
+    // output is the mix of all 3 inputs
+
+    float& audioInputChannel = fxdata->p[in_audio_input_channel].val.f;
+    float leftGain, rightGain;
+
+    if (audioInputChannel < 0) {
+            leftGain = 1.0f;
+            rightGain = 1.0f + audioInputChannel; // When audioInputChannel is -1, rightGain will be 0
+    } else {
+            leftGain = 1.0f - audioInputChannel; // When audioInputChannel is 1, leftGain will be 0
+            rightGain = 1.0f;
+    }
+//    float* channelData[] = { dataL, dataR };
+//    juce::AudioBuffer<float> buffer(channelData, 2, BLOCK_SIZE);
+
+    // Apply gains to the dataL and dataR arrays
+    for (int i = 0; i < BLOCK_SIZE; ++i) {
+            dataL[i] *= leftGain;
+            dataR[i] *= rightGain;
+    }
+
+
 }
