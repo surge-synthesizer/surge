@@ -36,6 +36,7 @@ surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
 surge_add_lib_subdirectory(sst/sst-waveshapers)
+surge_add_lib_subdirectory(sst/sst-effects)
 
 set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
 set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
@@ -367,6 +368,7 @@ target_link_libraries(${PROJECT_NAME}
   sst-filters-extras
   sst-waveshapers
   sst-basic-blocks
+  sst-effects
 
   surge::oddsound-mts
   surge::sqlite

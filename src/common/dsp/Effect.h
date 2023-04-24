@@ -102,14 +102,14 @@ class alignas(16) Effect
         sdsp::decodeMS<BLOCK_SIZE>(M, S, L, R);
     }
 
+    float *pd_float[n_fx_params];
+    int *pd_int[n_fx_params];
+
   protected:
     SurgeStorage *storage;
     FxStorage *fxdata;
     pdata *pd;
     int ringout;
-    float *pd_float[n_fx_params];
-    int *pd_int[n_fx_params]; // f is not a great choice for a member name, but 'i' would be
-                              // worse!
     bool hasInvalidated{false};
 };
 
