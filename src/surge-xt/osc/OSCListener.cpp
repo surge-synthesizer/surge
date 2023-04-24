@@ -136,7 +136,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
     }
-    else if (address1 == "user_default")
+    else if (address1 == "settings")
     {
         std::getline(split, address2, '/');
         if (address2 == "path")
