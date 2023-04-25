@@ -163,8 +163,8 @@ void AudioInputEffect::process(float *dataL, float *dataR)
 
     // Create temporary buffers for the left and right channel data
     juce::AudioBuffer<float> tempBuffer(2, BLOCK_SIZE);
-    tempBuffer.copyFrom(0, 0, dataL, BLOCK_SIZE); // Copy left channel
-    tempBuffer.copyFrom(1, 0, dataR, BLOCK_SIZE); // Copy right channel
+    tempBuffer.copyFrom(0, 0, buffer, 0, 0, BLOCK_SIZE); // Copy left channel
+    tempBuffer.copyFrom(1, 0, buffer, 1, 0, BLOCK_SIZE); // Copy right channel
 
     // Apply crossfade by mixing the channels
     buffer.applyGain(0, 0, buffer.getNumSamples(), leftToLeft);      // Apply leftToLeft gain to the left channel
