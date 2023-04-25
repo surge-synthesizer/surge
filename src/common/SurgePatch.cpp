@@ -494,7 +494,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         // scene[sc].filterunit[0].type.val.i = 1;
         for (int e = 0; e < 2; e++) // 2 = we have two envelopes, filter and amplifier
         {
-            std::string et = (e == 1) ? "aeg" : "feg";
+            std::string et = (e == 1) ? "feg" : "aeg";
             std::string envs = fmt::format("{}.", et);
 
             /*
