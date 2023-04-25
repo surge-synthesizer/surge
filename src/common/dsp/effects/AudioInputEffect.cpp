@@ -136,13 +136,19 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     float& effectInputPan = fxdata->p[in_effect_input_pan].val.f;
     float& effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
     float* channelData[] = { dataL, dataR };
-    juce::AudioBuffer<float> buffer(channelData, 2, BLOCK_SIZE);
 
-    mixBuffers(buffer, effectInputPan, effectInputLevelDb, effectInputChannel);
+    juce::AudioBuffer<float> buffer(channelData, 2, BLOCK_SIZE);
+    juce::AudioBuffer<float> outputBuffer( 2, BLOCK_SIZE);
+
+    mixBuffers(buffer, outputBuffer, effectInputChannel, effectInputPan, effectInputLevelDb);
+
+    buffer.copyFrom(0, 0, outputBuffer, 0, 0, BLOCK_SIZE);
+    buffer.copyFrom(1, 0, outputBuffer, 1, 0, BLOCK_SIZE);
 }
 
-void AudioInputEffect::mixBuffers(juce::AudioBuffer<float> &outputBuffer, const float &pan,
-                                  const float &levelDb, const float &channel)
+void AudioInputEffect::mixBuffers(const juce::AudioBuffer<float> &inputBuffer,
+                                  juce::AudioBuffer<float> &outputBuffer, const float &channel,
+                                  const float &pan, const float &levelDb)
 {
     float leftGain, rightGain;
 
@@ -153,8 +159,8 @@ void AudioInputEffect::mixBuffers(juce::AudioBuffer<float> &outputBuffer, const 
             leftGain = 1.0f - channel;
             rightGain = 1.0f;
     }
-    outputBuffer.applyGain(0, 0, outputBuffer.getNumSamples(), leftGain);
-    outputBuffer.applyGain(1, 0, outputBuffer.getNumSamples(), rightGain);
+    outputBuffer.addFrom(0, 0, inputBuffer, 0, 0, BLOCK_SIZE, leftGain);
+    outputBuffer.addFrom(1, 0, inputBuffer, 1, 0, BLOCK_SIZE, rightGain);
 
     float leftToLeft = (pan < 0) ? 1.0f : 1.0f - pan;
     float rightToRight = (pan > 0) ? 1.0f : 1.0f + pan;
