@@ -14,7 +14,7 @@
 */
 #pragma once
 #include "Effect.h"
-
+#include "juce_audio_basics/juce_audio_basics.h"
 class AudioInputEffect : public Effect
 {
   public:
@@ -49,5 +49,7 @@ class AudioInputEffect : public Effect
     int group_label_ypos(int id) override;
   private:
     effect_slot_type getSlotType(fxslot_positions p);
+    void mixBuffers(juce::AudioBuffer<float> &buffer, float effectInputChannel,
+                    float effectInputPan, float effectInputLevelDb);
 };
 

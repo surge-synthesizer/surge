@@ -1,6 +1,6 @@
 
 #include "AudioInputEffect.h"
-#include "juce_audio_basics/juce_audio_basics.h"
+
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd) {}
 AudioInputEffect::~AudioInputEffect() {}
@@ -130,49 +130,43 @@ AudioInputEffect::effect_slot_type AudioInputEffect::getSlotType(fxslot_position
     }
 }
 
-
 void AudioInputEffect::process(float *dataL, float *dataR)
 {
-    //So... let's see what we have here...
-    //We have 3 inputs, and 1 output
-
-    // take effect input
     float& effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
     float& effectInputPan = fxdata->p[in_effect_input_pan].val.f;
     float& effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
     float* channelData[] = { dataL, dataR };
     juce::AudioBuffer<float> buffer(channelData, 2, BLOCK_SIZE);
 
+    mixBuffers(buffer, effectInputChannel, effectInputPan, effectInputLevelDb);
+}
 
+void AudioInputEffect::mixBuffers(juce::AudioBuffer<float>& buffer, float effectInputChannel, float effectInputPan, float effectInputLevelDb)
+{
     float leftGain, rightGain;
 
     if (effectInputChannel < 0) {
             leftGain = 1.0f;
-            rightGain = 1.0f + effectInputChannel; // When audioInputChannel is -1, rightGain will be 0
+            rightGain = 1.0f + effectInputChannel;
     } else {
-            leftGain = 1.0f - effectInputChannel; // When audioInputChannel is 1, leftGain will be 0
+            leftGain = 1.0f - effectInputChannel;
             rightGain = 1.0f;
     }
     buffer.applyGain(0, 0, buffer.getNumSamples(), leftGain);
     buffer.applyGain(1, 0, buffer.getNumSamples(), rightGain);
 
+    float leftToLeft = (effectInputPan < 0) ? 1.0f : 1.0f - effectInputPan;
+    float rightToRight = (effectInputPan > 0) ? 1.0f : 1.0f + effectInputPan;
 
-    // Calculate the crossfade factors
-    float leftToLeft = (effectInputPan < 0) ? 1.0f : 1.0f - effectInputPan; // Ranges from 1.0 (center) to 0.0 (fully right)
-    float rightToRight = (effectInputPan > 0) ? 1.0f : 1.0f + effectInputPan; // Ranges from 1.0 (center) to 0.0 (fully left)
-
-    // Create temporary buffers for the left and right channel data
     juce::AudioBuffer<float> tempBuffer(2, BLOCK_SIZE);
-    tempBuffer.copyFrom(0, 0, buffer, 0, 0, BLOCK_SIZE); // Copy left channel
-    tempBuffer.copyFrom(1, 0, buffer, 1, 0, BLOCK_SIZE); // Copy right channel
+    tempBuffer.copyFrom(0, 0, buffer, 0, 0, BLOCK_SIZE);
+    tempBuffer.copyFrom(1, 0, buffer, 1, 0, BLOCK_SIZE);
 
-    // Apply crossfade by mixing the channels
-    buffer.applyGain(0, 0, buffer.getNumSamples(), leftToLeft);      // Apply leftToLeft gain to the left channel
-    buffer.addFrom(0, 0, tempBuffer, 1, 0, BLOCK_SIZE, 1.0f - rightToRight); // Add right channel to the left channel with (1 - rightToRight) gain
+    buffer.applyGain(0, 0, buffer.getNumSamples(), leftToLeft);
+    buffer.addFrom(0, 0, tempBuffer, 1, 0, BLOCK_SIZE, 1.0f - rightToRight);
 
-    buffer.applyGain(1, 0, buffer.getNumSamples(), rightToRight);     // Apply rightToRight gain to the right channel
-    buffer.addFrom(1, 0, tempBuffer, 0, 0, BLOCK_SIZE, 1.0f - leftToLeft);  // Add left channel to the right channel with (1 - leftToLeft) gain
-
+    buffer.applyGain(1, 0, buffer.getNumSamples(), rightToRight);
+    buffer.addFrom(1, 0, tempBuffer, 0, 0, BLOCK_SIZE, 1.0f - leftToLeft);
 
     float effectInputLevelGain = juce::Decibels::decibelsToGain(effectInputLevelDb);
     buffer.applyGain(effectInputLevelGain);
