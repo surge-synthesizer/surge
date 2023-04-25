@@ -49,7 +49,7 @@ class AudioInputEffect : public Effect
     int group_label_ypos(int id) override;
   private:
     effect_slot_type getSlotType(fxslot_positions p);
-    void mixBuffers(juce::AudioBuffer<float> &inputBuffer, juce::AudioBuffer<float> &outputBuffer,
-                    const float &pan, const float &levelDb, const float &channel);
+    void mixBuffers(juce::AudioBuffer<float> &outputBuffer, const float &pan, const float &levelDb,
+                    const float &channel);
 };
 
