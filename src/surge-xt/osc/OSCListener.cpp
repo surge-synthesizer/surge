@@ -163,19 +163,25 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         if (address2 == "scl")
         {
             auto scl_path = synth->storage.datapath / "tuning_library" / "SCL";
-            scl_path = Surge::Storage::getUserDefaultPath(&(synth->storage),
-                                                          Surge::Storage::LastSCLPath, scl_path);
-            scl_path /= dataStr;
-            scl_path += ".scl";
+            if (scl_path.is_relative())
+            {
+                scl_path = Surge::Storage::getUserDefaultPath(
+                    &(synth->storage), Surge::Storage::LastSCLPath, scl_path);
+                scl_path /= dataStr;
+                scl_path += ".scl";
+            }
             synth->storage.loadTuningFromSCL(scl_path);
         }
         else if (address2 == "kbm")
         {
             auto kbm_path = synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
-            kbm_path = Surge::Storage::getUserDefaultPath(&(synth->storage),
-                                                          Surge::Storage::LastKBMPath, kbm_path);
-            kbm_path /= dataStr;
-            kbm_path += ".kbm";
+            if (kbm_path.is_relative())
+            {
+                kbm_path = Surge::Storage::getUserDefaultPath(
+                    &(synth->storage), Surge::Storage::LastKBMPath, kbm_path);
+                kbm_path /= dataStr;
+                kbm_path += ".kbm";
+            }
             synth->storage.loadMappingFromKBM(kbm_path);
         }
     }
