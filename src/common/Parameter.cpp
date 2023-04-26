@@ -32,6 +32,7 @@
 #include <cctype>
 #include <utility>
 #include <UserDefaults.h>
+#include <variant>
 #include "DebugHelpers.h"
 #include "StringOps.h"
 #include "Tunings.h"
@@ -556,6 +557,8 @@ void Parameter::set_type(int ctrltype)
     dynamicName = nullptr;
     dynamicBipolar = nullptr;
     dynamicDeactivation = nullptr;
+
+    basicBlocksParamMetaData = {};
 
     /*
     ** Note we now have two ctrltype switches. This one sets ranges
@@ -2312,6 +2315,41 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
     }
 
+    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    {
+        auto res = basicBlocksParamMetaData->modulationNaturalToString(val.f, modulationDepth,
+                                                                       isBipolar, detailedMode);
+        if (res.has_value())
+        {
+#if DEBUG_MOD_STRINGS
+            std::cout << "  value  : " << res->value << std::endl;
+            std::cout << "  summm  : " << res->summary << std::endl;
+            std::cout << "  change : " << res->changeUp << " | " << res->changeDown << std::endl;
+            std::cout << "  vUpDn  : " << res->valUp << " | " << res->valDown << std::endl;
+#endif
+            switch (displaymode)
+            {
+            case TypeIn:
+                strncpy(txt, res->value.c_str(), TXT_SIZE - 1);
+                return;
+            case Menu:
+                strncpy(txt, res->summary.c_str(), TXT_SIZE - 1);
+                return;
+            case InfoWindow:
+                iw->val = res->baseValue;
+                iw->valplus = res->valUp;
+                iw->valminus = res->valDown;
+                iw->dvalplus = res->changeUp;
+                iw->dvalminus = res->changeDown;
+                return;
+            }
+        }
+        else
+        {
+            std::cout << "Modulation formatting failed for [" << basicBlocksParamMetaData->name << "]" << std::endl;
+        }
+    }
+
     int dp = (detailedMode ? 6 : displayInfo.decimals);
 
     const char *lowersep = "<", *uppersep = ">";
@@ -2456,7 +2494,6 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             {
                 if (val.f <= val_min.f)
                     v = displayInfo.minLabelValue;
-                ;
                 if (val.f - modulationDepth <= val_min.f)
                     mn = displayInfo.minLabelValue;
                 if (val.f + modulationDepth <= val_min.f)
@@ -3071,6 +3108,18 @@ void Parameter::getSemitonesOrKeys(std::string &str) const
 
 void Parameter::get_display_alt(char *txt, bool external, float ef) const
 {
+    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    {
+        auto bbf = val.f;
+        if (external)
+            bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
+        auto tryFormat = basicBlocksParamMetaData->valueToAlternateString(bbf);
+        if (tryFormat.has_value())
+        {
+            strncpy(txt, tryFormat->c_str(), TXT_SIZE - 1);
+            return;
+        }
+    }
 
     txt[0] = 0;
     switch (ctrltype)
@@ -3200,12 +3249,11 @@ void Parameter::get_display(char *txt, bool external, float ef) const
 
 std::string Parameter::get_display(bool external, float ef) const
 {
-    std::string txt = "";
+    std::string txt{""};
 
     if (ctrltype == ct_none)
     {
-        txt = "-";
-        return txt;
+        return "-";
     }
 
     int i;
@@ -3218,6 +3266,20 @@ std::string Parameter::get_display(bool external, float ef) const
     {
         detailedMode =
             Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
+    }
+
+    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    {
+        auto bbf = val.f;
+        if (valtype == vt_int)
+            bbf = (float)val.i;
+        if (valtype == vt_bool)
+            bbf = val.b ? 1.f : 0.f;
+        if (external)
+            bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
+        auto tryFormat = basicBlocksParamMetaData->valueToString(bbf, detailedMode);
+        if (tryFormat.has_value())
+            return *tryFormat;
     }
 
     switch (valtype)
@@ -4274,6 +4336,34 @@ bool Parameter::set_value_from_string(const std::string &s, std::string &errMsg)
 bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis,
                                            std::string &errMsg)
 {
+    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    {
+        auto res = basicBlocksParamMetaData->valueFromString(s, errMsg);
+        if (res.has_value())
+        {
+            switch (valtype)
+            {
+            case vt_int:
+                val.i = (int)std::round(*res);
+                break;
+            case vt_float:
+                val.f = *res;
+                break;
+            case vt_bool:
+                val.b = (*res > 0.5);
+                break;
+            }
+            return true;
+        }
+        else if (!errMsg.empty())
+        {
+            return false;
+        }
+        else
+        {
+            std::cout << "Value from String failed" << std::endl;
+        }
+    }
     if (valtype == vt_int)
     {
         // default out of range value to test against later
@@ -4736,6 +4826,20 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
 float Parameter::calculate_modulation_value_from_string(const std::string &s, std::string &errMsg,
                                                         bool &valid)
 {
+    if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
+    {
+        auto res = basicBlocksParamMetaData->modulationNaturalFromString(s, val.f, errMsg);
+        if (res.has_value())
+        {
+            valid = true;
+            return (*res)/(basicBlocksParamMetaData->maxVal - basicBlocksParamMetaData->minVal);
+        }
+        else
+        {
+            valid = false;
+            return 0;
+        }
+    }
     errMsg = "Input is out of bounds!";
     valid = true;
 

@@ -30,6 +30,8 @@
 #include <atomic>
 #include "SkinModel.h"
 
+#include "sst/basic-blocks/params/ParamMetadata.h"
+
 union pdata
 {
     int i;
@@ -438,6 +440,8 @@ class Parameter
         IsLarger,
         Special,
     };
+
+    std::optional<sst::basic_blocks::params::ParamMetaData> basicBlocksParamMetaData;
 
     void get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
                                          ModulationDisplayMode mode,

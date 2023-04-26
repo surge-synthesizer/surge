@@ -109,21 +109,3 @@ void FlangerEffect::init_ctrltypes()
 
     configureControlsFromFXMetadata();
 }
-
-#if 0
-void FlangerEffect::init_default_values()
-{
-    fxdata->p[fl_rate].val.f = -2.f;
-    fxdata->p[fl_depth].val.f = 1.f;
-
-    fxdata->p[fl_voices].val.f = 4.f;
-    fxdata->p[fl_voice_basepitch].val.f = 60.f;
-    fxdata->p[fl_voice_spacing].val.f = 0.f;
-
-    fxdata->p[fl_feedback].val.f = 0.f;
-    fxdata->p[fl_damping].val.f = 0.1f;
-
-    fxdata->p[fl_width].val.f = 0.f;
-    fxdata->p[fl_mix].val.f = 0.8f;
-}
-#endif
