@@ -2,8 +2,14 @@
 #include "AudioInputEffect.h"
 
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd) {}
-AudioInputEffect::~AudioInputEffect() {}
+    : Effect(storage, fxdata, pd) {
+    if (storage)
+        storage->otherscene_clients++;
+}
+AudioInputEffect::~AudioInputEffect() {
+    if (storage)
+        storage->otherscene_clients--;
+}
 void AudioInputEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
@@ -150,7 +156,27 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     inputDataBuffer.copyFrom(1, 0, inputData[1], BLOCK_SIZE);
     applySlidersControls(inputDataBuffer, inputChannel, inputPan, inputLevelDb);
 
+    if (getSlotType(fxdata->fxslot) == a_insert_slot || getSlotType(fxdata->fxslot) == b_insert_slot)
+    {
+            // surge->sceneout[n_scenes][n_channels][BLOCK_SIZE]
+            // take a look at the data field we make for the alternate outputs
+            // yeah surge->sceneout[n_scenes][n_channels][BLOCK_SIZE]
+            // is the already downsampled scene output for A and B that should be populated before
+            // the FX re run but if its not just move the population in SurgeSythesizer::process
+        float& sceneInputChannel = fxdata->p[in_scene_input_channel].val.f;
+        float& sceneInputPan = fxdata->p[in_scene_input_pan].val.f;
+        float& sceneInputLevelDb = fxdata->p[in_scene_input_level].val.f;
 
+        float* sceneData[] = { storage->audio_otherscene[0], storage->audio_otherscene[1] };
+        std::cout << "sceneData max value: " << std::max_element(sceneData[0], sceneData[0] + BLOCK_SIZE) << std::endl;
+        juce::AudioBuffer<float> sceneDataBuffer( 2, BLOCK_SIZE);
+        sceneDataBuffer.copyFrom(0, 0, sceneData[0], BLOCK_SIZE);
+        sceneDataBuffer.copyFrom(1, 0, sceneData[1], BLOCK_SIZE);
+        applySlidersControls(sceneDataBuffer, sceneInputChannel, sceneInputPan, sceneInputLevelDb);
+        // mixing the scene audio input and the effect audio input
+        effectDataBuffer.addFrom(0, 0, sceneDataBuffer, 0, 0, BLOCK_SIZE);
+        effectDataBuffer.addFrom(1, 0, sceneDataBuffer, 1, 0, BLOCK_SIZE);
+    }
     // mixing the effect and audio input
     effectDataBuffer.addFrom(0, 0, inputDataBuffer, 0, 0, BLOCK_SIZE);
     effectDataBuffer.addFrom(1, 0, inputDataBuffer, 1, 0, BLOCK_SIZE);
