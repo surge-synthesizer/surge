@@ -168,7 +168,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     suspedal = std::move(sp);
 
     tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
-    tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(11));
+    tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(9));
     tempoTypein->setInputRestrictions(3, "0123456789");
     tempoTypein->setSelectAllWhenFocused(true);
     tempoTypein->onReturnKey = [this]() {
@@ -358,7 +358,7 @@ void SurgeSynthEditor::resized()
             tempoTypein->setText(
                 std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
             tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(9));
-            tempoTypein->setIndents(4, 3);
+            tempoTypein->setIndents(4, -1);
             tempoTypein->setJustification(juce::Justification::centred);
             tempoTypein->setTransform(xf);
             tempoTypein->setVisible(addTempo);
