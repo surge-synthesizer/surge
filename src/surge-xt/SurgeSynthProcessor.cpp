@@ -490,7 +490,7 @@ void SurgeSynthProcessor::processBlockPlayhead()
 {
     auto playhead = getPlayHead();
 
-    if (playhead)
+    if (playhead && !(wrapperType == wrapperType_Standalone))
     {
         juce::AudioPlayHead::CurrentPositionInfo cp;
         playhead->getCurrentPosition(cp);
