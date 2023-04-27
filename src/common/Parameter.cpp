@@ -2346,7 +2346,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         }
         else
         {
-            std::cout << "Modulation formatting failed for [" << basicBlocksParamMetaData->name << "]" << std::endl;
+            std::cout << "Modulation formatting failed for [" << basicBlocksParamMetaData->name
+                      << "]" << std::endl;
         }
     }
 
@@ -4832,7 +4833,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         if (res.has_value())
         {
             valid = true;
-            return (*res)/(basicBlocksParamMetaData->maxVal - basicBlocksParamMetaData->minVal);
+            return (*res) / (basicBlocksParamMetaData->maxVal - basicBlocksParamMetaData->minVal);
         }
         else
         {
