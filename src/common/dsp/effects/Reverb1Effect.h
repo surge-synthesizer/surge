@@ -34,6 +34,7 @@ class Reverb1Effect
     Reverb1Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~Reverb1Effect() = default;
 
+    // TODO: Make it so we can kill this override - deactivated state mostly
     virtual void init_default_values() override;
     virtual void init_ctrltypes() override;
 

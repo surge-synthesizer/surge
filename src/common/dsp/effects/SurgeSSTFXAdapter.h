@@ -157,11 +157,11 @@ template <typename T> struct SurgeSSTFXBase : T
             auto pmd = T::paramAt(i);
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::FLOAT)
             {
-                this->fxdata->p[i].val_default.f = pmd.defaultVal;
+                this->fxdata->p[i].val.f = pmd.defaultVal;
             }
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::INT)
             {
-                this->fxdata->p[i].val_default.i = (int)std::round(pmd.defaultVal);
+                this->fxdata->p[i].val.i = (int)std::round(pmd.defaultVal);
             }
         }
     }
@@ -175,6 +175,7 @@ template <typename T> struct SurgeSSTFXBase : T
         {
             auto pmd = T::paramAt(i);
             this->fxdata->p[i].set_name(pmd.name.c_str());
+            this->fxdata->p[i].basicBlocksParamMetaData = pmd;
             auto check = [&](auto a, auto b, auto msg) {
                 if (a != b)
                     std::cout << "Unable to match " << pmd.name << " " << a << " " << b << " "
@@ -190,6 +191,15 @@ template <typename T> struct SurgeSSTFXBase : T
                 check((int)pmd.minVal, this->fxdata->p[i].val_min.i, "Minimum Values");
                 check((int)pmd.maxVal, this->fxdata->p[i].val_max.i, "Maximum Values");
             }
+            if (!pmd.supportsStringConversion)
+            {
+                std::cout << "No support for string conversion on " << pmd.name << std::endl;
+            }
+            check(pmd.canTemposync, this->fxdata->p[i].can_temposync(), "Can Temposync");
+            check(pmd.canDeform, this->fxdata->p[i].has_deformoptions(), "Can Deform");
+            check(pmd.canAbsolute, this->fxdata->p[i].can_be_absolute(), "Can Be Absolute");
+            check(pmd.canExtend, this->fxdata->p[i].can_extend_range(), "Can Extend");
+            check(pmd.supportsStringConversion, true, "Supports string value");
         }
     }
 };
