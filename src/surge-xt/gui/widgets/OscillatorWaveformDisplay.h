@@ -71,7 +71,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
 
     bool isMuted{false};
 
-    SurgeGUIEditor *sge;
+    SurgeGUIEditor *sge{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
 
     void onOscillatorTypeChanged();

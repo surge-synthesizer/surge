@@ -228,6 +228,8 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     // add the bottom right corner resizer only for VST2
     setResizable(true, processor.wrapperType == juce::AudioProcessor::wrapperType_VST);
 
+    sge->audioLatencyNotified = processor.inputIsLatent;
+
     sge->open(nullptr);
 
     idleTimer = std::make_unique<IdleTimer>(this);

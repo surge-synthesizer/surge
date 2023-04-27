@@ -383,6 +383,15 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
     {
         drawEditorBox(g, customEditorActionLabel(customEditor == nullptr));
     }
+
+    if (sge && sge->audioLatencyNotified)
+    {
+        g.setColour(skin->getColor(Colors::Osc::Display::Wave));
+        g.setFont(skin->fontManager->getLatoAtSize(7));
+        auto lmsg = fmt::format("Input Delay: {} Samples", BLOCK_SIZE);
+        g.drawText(lmsg.c_str(), getLocalBounds().reduced(2, 2).translated(0, 10),
+                   juce::Justification::topLeft);
+    }
 }
 
 std::string OscillatorWaveformDisplay::getCurrentWavetableName()
