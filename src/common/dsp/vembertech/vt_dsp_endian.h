@@ -1,4 +1,6 @@
 #pragma once
+// for memcpy
+#include <cstring>
 
 #define vt_read_int32LE vt_write_int32LE
 #define vt_read_int32BE vt_write_int32BE
