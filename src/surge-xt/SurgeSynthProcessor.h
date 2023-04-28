@@ -395,8 +395,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     // For non-block-size uniform blocks we need to lag input
     float inputLatentBuffer alignas(16)[2][BLOCK_SIZE];
+
+  public:
     bool inputIsLatent{false};
 
+  private:
     // Have we warned about bad configurations
     bool warnedAboutBadConfig{false};
 

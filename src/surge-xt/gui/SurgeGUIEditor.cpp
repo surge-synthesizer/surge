@@ -558,10 +558,12 @@ void SurgeGUIEditor::idle()
 
         for (const auto &[msg, title, code] : cp)
         {
-            if (code == SurgeStorage::AUDIO_CONFIGURATION)
+            if (code == SurgeStorage::AUDIO_INPUT_LATENCY_WARNING)
             {
-                promptForOKCancelWithDontAskAgain(
-                    title, msg, Surge::Storage::DefaultKey::DontShowAudioErrorsAgain, []() {});
+                // promptForOKCancelWithDontAskAgain(
+                //     title, msg, Surge::Storage::DefaultKey::DontShowAudioErrorsAgain, []() {});
+                audioLatencyNotified = true;
+                frame->repaint();
             }
             else
             {

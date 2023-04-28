@@ -1110,7 +1110,7 @@ class alignas(16) SurgeStorage
     enum ErrorType
     {
         GENERAL_ERROR = 1,
-        AUDIO_CONFIGURATION = 2,
+        AUDIO_INPUT_LATENCY_WARNING = 2,
     };
     void reportError(const std::string &msg, const std::string &title,
                      const ErrorType errorType = GENERAL_ERROR, bool reportToStdout = true);

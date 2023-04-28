@@ -122,6 +122,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void onSurgeError(const std::string &msg, const std::string &title,
                       const SurgeStorage::ErrorType &type) override;
 
+    std::atomic<bool> audioLatencyNotified{false};
+
     static int start_paramtag_value;
 
     void idle();

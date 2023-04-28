@@ -315,10 +315,13 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     if (!inputIsLatent && (sc & ~(BLOCK_SIZE - 1)) != sc)
     {
         surge->storage.reportError(
-            "Audio Block is not a multiple of BLOCK_SIZE. This means if you use Audio Input"
-            " it will be delayed by BLOCK_SIZE. You can usually avoid this by having your DAW have"
-            " regular sized buffers.",
-            "Activating Latent Input", SurgeStorage::AUDIO_CONFIGURATION, false);
+            fmt::format("Incoming audio input block is not a multiple of {sz} samples.\n"
+                        "If audio input is used, it will be delayed by {sz} samples, in order to "
+                        "compensate.\n"
+                        "This can be avoided by setting the DAW to use fixed buffer sizes, if "
+                        "possible.",
+                        fmt::arg("sz", BLOCK_SIZE)),
+            "Audio Input Latency Activated", SurgeStorage::AUDIO_INPUT_LATENCY_WARNING, false);
         inputIsLatent = true;
     }
 
