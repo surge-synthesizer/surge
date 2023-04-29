@@ -38,6 +38,7 @@
 #include "Tunings.h"
 #include "fmt/core.h"
 #include "UnitConversions.h"
+#include "sst/basic-blocks/params/ParamMetadata.h"
 
 Parameter::Parameter()
 {
@@ -2317,8 +2318,14 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 
     if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
     {
+        auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
+                      .withHighPrecision(detailedMode)
+                      .withTemposync(can_temposync() && temposync)
+                      .withAbsolute(can_be_absolute() && absolute)
+                      .withExtended(can_extend_range() && extend_range);
+
         auto res = basicBlocksParamMetaData->modulationNaturalToString(val.f, modulationDepth,
-                                                                       isBipolar, detailedMode);
+                                                                       isBipolar, fs);
         if (res.has_value())
         {
 #if DEBUG_MOD_STRINGS
@@ -3278,7 +3285,14 @@ std::string Parameter::get_display(bool external, float ef) const
             bbf = val.b ? 1.f : 0.f;
         if (external)
             bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
-        auto tryFormat = basicBlocksParamMetaData->valueToString(bbf, detailedMode);
+
+        auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
+                      .withHighPrecision(detailedMode)
+                      .withTemposync(can_temposync() && temposync)
+                      .withAbsolute(can_be_absolute() && absolute)
+                      .withExtended(can_extend_range() && extend_range);
+
+        auto tryFormat = basicBlocksParamMetaData->valueToString(bbf, fs);
         if (tryFormat.has_value())
             return *tryFormat;
     }
