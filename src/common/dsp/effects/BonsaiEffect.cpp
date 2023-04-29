@@ -22,20 +22,22 @@
 #include "BonsaiEffect.h"
 #include "Tunings.h"
 #include <algorithm>
-#include "sst/basic-blocks/dsp/MidSide.h"
+// #include "sst/basic-blocks/dsp/MidSide.h"
 
 const char *BonsaiEffect::group_label(int id)
 {
     switch (id)
     {
     case 0:
-        return "Modulation";
+        return "Input";
     case 1:
-        return "Combs";
+        return "Bass Boost";
     case 2:
-        return "Feedback";
+        return "Tape(ish) Sat";
     case 3:
-        return "Output";
+        return "Noise";
+    case 4:
+        return "Misc";
     }
     return 0;
 }
@@ -46,11 +48,13 @@ int BonsaiEffect::group_label_ypos(int id)
     case 0:
         return 1;
     case 1:
-        return 9;
+        return 5;
     case 2:
-        return 17;
+        return 11;
     case 3:
-        return 23;
+        return 17;
+    case 4:
+        return 25;
     }
     return 0;
 }
@@ -59,53 +63,38 @@ void BonsaiEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
-    fxdata->p[fl_mode].set_name("Mode");
-    fxdata->p[fl_mode].set_type(ct_flangermode);
+    fxdata->p[b_gain_in].set_type(ct_decibel_narrow);
+    fxdata->p[b_gain_in].posy_offset = 1;
 
-    fxdata->p[fl_wave].set_name("Waveform");
-    fxdata->p[fl_wave].set_type(ct_fxlfowave);
+    fxdata->p[b_bass_boost].set_type(ct_bonsai_bass_boost);
+    fxdata->p[b_bass_boost].posy_offset = 3;
 
-    fxdata->p[fl_rate].set_name("Rate");
-    fxdata->p[fl_rate].set_type(ct_lforate);
+    fxdata->p[b_bass_distort].set_type(ct_bonsai_bass_distortion);
+    fxdata->p[b_bass_distort].posy_offset = 3;
 
-    fxdata->p[fl_depth].set_name("Depth");
-    fxdata->p[fl_depth].set_type(ct_percent);
+    fxdata->p[b_tape_dist_mode].set_type(ct_bonsai_sat_mode);
+    fxdata->p[b_tape_dist_mode].posy_offset = 5;
 
-    fxdata->p[fl_voices].set_name("Count");
-    fxdata->p[fl_voices].set_type(ct_flangervoices);
+    fxdata->p[b_tape_sat].set_type(ct_percent);
+    fxdata->p[b_tape_sat].posy_offset = 5;
 
-    fxdata->p[fl_voice_basepitch].set_name("Base Pitch");
-    fxdata->p[fl_voice_basepitch].set_type(ct_flangerpitch);
+    fxdata->p[b_noise_mode].set_type(ct_bonsai_noise_mode);
+    fxdata->p[b_noise_mode].posy_offset = 7;
 
-    fxdata->p[fl_voice_spacing].set_name("Spacing");
-    fxdata->p[fl_voice_spacing].set_type(ct_flangerspacing);
+    fxdata->p[b_noise_amount].set_type(ct_percent);
+    fxdata->p[b_noise_amount].posy_offset = 7;
 
-    fxdata->p[fl_feedback].set_name("Feedback");
-    fxdata->p[fl_feedback].set_type(ct_percent);
+    fxdata->p[b_noise_gain].set_type(ct_decibel_narrow);
+    fxdata->p[b_noise_gain].posy_offset = 7;
 
-    fxdata->p[fl_damping].set_name("HF Damping");
-    fxdata->p[fl_damping].set_type(ct_percent);
+    fxdata->p[b_dull].set_type(ct_percent);
+    fxdata->p[b_dull].posy_offset = 9;
 
-    fxdata->p[fl_width].set_name("Width");
-    fxdata->p[fl_width].set_type(ct_decibel_narrow);
+    fxdata->p[b_gain_out].set_type(ct_decibel_narrow);
+    fxdata->p[b_gain_out].posy_offset = 9;
 
-    fxdata->p[fl_mix].set_name("Mix");
-    fxdata->p[fl_mix].set_type(ct_percent_bipolar);
-
-    fxdata->p[fl_wave].posy_offset = -1;
-    fxdata->p[fl_rate].posy_offset = -1;
-    fxdata->p[fl_depth].posy_offset = -1;
-
-    fxdata->p[fl_voices].posy_offset = 1;
-    fxdata->p[fl_voice_basepitch].posy_offset = 1;
-    fxdata->p[fl_voice_spacing].posy_offset = 1;
-
-    fxdata->p[fl_feedback].posy_offset = 3;
-    fxdata->p[fl_damping].posy_offset = 3;
-
-    fxdata->p[fl_mode].posy_offset = 23;
-    fxdata->p[fl_width].posy_offset = 7;
-    fxdata->p[fl_mix].posy_offset = 7;
+    fxdata->p[b_mix].set_type(ct_percent);
+    fxdata->p[b_mix].posy_offset = 9;
 
     configureControlsFromFXMetadata();
 }

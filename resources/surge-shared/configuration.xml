@@ -73,6 +73,9 @@
     <snapshot name="Init" p0="-60" p0_deactivated="1" p1="70" p1_deactivated="1" p2="0" p3="0" p4="0" p5="-60" p6="70"
               p7="0" p8="1"/>
 </type>
+<type i="28" name="Bonsai">
+    <snapshot name="Init" p0="1" p1="0" p2="-2" p3="0.75" p4="3" p5="60" p6="12" p7="0.25" p8="0.2" p9="0" p10="1"/>
+</type>
 <sectionheader label="MANGLING"/>
 <type i="21" name="Combulator">
     <snapshot name="Init" p0="0" p1="-9" p2="0.25" p3="-0.25" p4="0.75" p5="0" p6="0.793701" p7="0.793701" p8="0.793701"

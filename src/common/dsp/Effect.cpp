@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "BBDEnsembleEffect.h"
+#include "BonsaiEffect.h"
 #include "ChorusEffectImpl.h"
 #include "CombulatorEffect.h"
 #include "ConditionerEffect.h"

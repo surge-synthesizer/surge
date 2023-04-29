@@ -363,6 +363,8 @@ bool Parameter::has_deformoptions() const
     case ct_dly_fb_clippingmodes:
     case ct_noise_color:
     case ct_amplitude_ringmod:
+    case ct_bonsai_bass_boost:
+    case ct_bonsai_bass_distortion:
         return true;
     default:
         break;
@@ -456,6 +458,8 @@ bool Parameter::is_discrete_selection() const
     case ct_wstype:
     case ct_mscodec:
     case ct_reverbshape:
+    case ct_bonsai_sat_mode:
+    case ct_bonsai_noise_mode:
         return true;
     default:
         break;
@@ -1290,6 +1294,34 @@ void Parameter::set_type(int ctrltype)
         val_min.f = 0.0f;
         val_max.f = 1.0f;
         val_default.f = 0.5f;
+        break;
+
+    case ct_bonsai_bass_boost:
+        valtype = vt_float;
+        val_min.f = 0.0f;
+        val_max.f = 1.0f;
+        val_default.f = 0.25f;
+        break;
+
+    case ct_bonsai_bass_distortion:
+        valtype = vt_float;
+        val_min.f = 0.0f;
+        val_max.f = 3.0f;
+        val_default.f = 1.0f;
+        break;
+
+    case ct_bonsai_sat_mode:
+        valtype = vt_int;
+        val_min.i = 0;
+        val_default.i = 1;
+        val_max.i = 4;
+        break;
+
+    case ct_bonsai_noise_mode:
+        valtype = vt_int;
+        val_min.i = 0;
+        val_default.i = 0;
+        val_max.i = 1;
         break;
 
     case ct_none:
