@@ -507,7 +507,6 @@ div.frame {
 div.tablewrap {
     width: 610px;
     margin: 0 8px 16px 8px;
-    /* flex-basis: 40%; */
     box-sizing: border-box;
     display: block;
     border: 1px solid #ccc;
@@ -523,7 +522,14 @@ th {
 }
 
 span {
-    margin-left: 16px;
+    margin: 2px; 20px;
+    padding: 1px 2px;
+    border: 1px solid #123463;
+    white-space:nowrap;
+}
+
+ul {
+    margin: 10px 0;
 }
 
 .cl{
@@ -559,16 +565,17 @@ code {
     </div>
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-      <div style="font-size: 12pt; font-family: Lato; color: #123463;">
+      <div style="line-height: 1.5; font-size: 12pt; font-family: Lato; color: #123463;">
         Construct OSC messages using the exact (case sensitive)
         entry listed in the <b>Address</b> column in the tables below.</br>
-        The form of the message should be <code>/&ltsection&gt/&ltaddress&gt &ltvalue&gt</code>,
-        where <code>section</code> can currently be either <code>tuning</code> or <code>param</code>, and <code>value</code> can be:
+        The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
+        where <code>address</code> can currently begin with either <code>tuning</code>, <code>settings</code>, or <code>param</code>,</br> and <code>value</code> can be:
 
         <ul>
             <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>
             <li>an integer value</li>
             <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
+            <li>a file path (absolute, or relative to the default path)
             <li>contextual: either an in integer or a float, depending on the context (loaded oscillator or effect type)</li>
         </ul>
 
@@ -576,9 +583,16 @@ code {
         depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
 
         <p>Examples:
-            <span><code>/param/mixer/osc1/level 0.63</code></span>
-            <span><code>/param/global/polyphony_limit 12</code></span>
-            <span><code>/param/a_mute_noise 0</code></span>
+            <div style="margin: -6px 0 2px 0; line-height: 1.75">
+                <span><code>/param/b/amp/gain 0.63</code></span>
+                <span><code>/param/global/polyphony_limit 12</code></span>
+                <span><code>/param/a/mixer/noise/mute 0</code></span>
+            </div>
+            <div style="margin: 4px 0 0 0; line-height: 1.75">
+                <span><code>/tuning/scl ptolemy</code></span>
+                <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy.scl</code></span>
+                <span><code>/settings/path/scl /Users/jane/scala_tunings</code></span>
+            </div>
         </p>
       </div>
     </div>
@@ -586,6 +600,55 @@ code {
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
       <div class="outer"><div class="frame">
     )HTML";
+
+    // Show tuning controls
+    htmls << R"HTML(
+        <div class="tablewrap fl cl">
+        <div class="heading"><h3>Tuning:</h3></div>
+            <table style="border: 2px solid black;">
+                <tr>
+                    <th>Address</th>
+                    <th>Description</th>
+                    <th>Appropriate Values</th>
+                </tr>
+                <tr>
+                    <td>/tuning/scl</td>
+                    <td> .scl tuning file</td>
+                    <td class="center">file path (absolute or relative)</td>
+                </tr>
+                <tr>
+                    <td>/tuning/kbm</td>
+                    <td>.kbm mapping file</td>
+                    <td class="center">file path (absolute or relative)</td>
+                </tr>
+            </table>
+            </div>
+        )HTML";
+
+    // Show settings
+    htmls << R"HTML(
+        <div class="tablewrap fr cr">
+        <div class="heading"><h3>Settings:</h3></div>
+            <table style="border: 2px solid black;">
+                <tr>
+                    <th>Address</th>
+                    <th>Description</th>
+                    <th>Appropriate Values</th>
+                </tr>
+                <tr>
+                    <td>/settings/path/scl</td>
+                    <td>.scl file default path</td>
+                    <td class="center">file path (absolute only)</td>
+                </tr>
+                <tr>
+                    <td>/settings/path/kbm</td>
+                    <td>.kbm file default path</td>
+                    <td class="center">file path (absolute only)</td>
+                </tr>
+
+            </table>
+            </div>
+        )HTML";
 
     std::vector<oscParamInfo> sortvector;
     std::string st_str;

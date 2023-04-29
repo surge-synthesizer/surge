@@ -4849,7 +4849,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 
     oscSubMenu.addSeparator();
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Show All OSC Parameters..."),
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Show All OSC Addresses..."),
                        [this]() { showHTML(this->parametersToHtml()); });
 
     return oscSubMenu;
