@@ -434,6 +434,7 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
     auto t = ol->getEnclosingParentTitle();
     auto r = ol->getEnclosingParentPosition();
     auto c = ol->getHasIndependentClose();
+    bool wantsInitialKeyboardFocus = ol->wantsInitialKeyboardFocus();
 
     std::function<void()> onClose = []() {};
     bool isModal = false;
@@ -503,7 +504,10 @@ void SurgeGUIEditor::showOverlay(OverlayTags olt,
         }
     }
 
-    getOverlayIfOpen(olt)->grabKeyboardFocus();
+    if (wantsInitialKeyboardFocus)
+    {
+        getOverlayIfOpen(olt)->grabKeyboardFocus();
+    }
 }
 
 void SurgeGUIEditor::closeOverlay(OverlayTags olt)

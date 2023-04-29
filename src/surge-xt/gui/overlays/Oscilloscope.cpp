@@ -1236,6 +1236,8 @@ void Oscilloscope::visibilityChanged()
     }
 }
 
+bool Oscilloscope::wantsInitialKeyboardFocus() { return false; }
+
 // Lock for member variables must be held by the caller.
 void Oscilloscope::calculateSpectrumData()
 {
