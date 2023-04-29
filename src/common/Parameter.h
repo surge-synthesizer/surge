@@ -203,6 +203,15 @@ enum ctrltypes
     ct_percent_bipolar_pan, // bipolar with special text strings at -100%, +100% and 0%
     ct_spring_decay,
     ct_amplitude_ringmod,
+    ct_bonsai_bassboost,
+    ct_bonsai_bassboost_distortion,
+    ct_bonsai_sat,
+    ct_bonsai_sat_mode,
+    ct_bonsai_noise,
+    ct_bonsai_noise_gain,
+    ct_bonsai_noise_mode,
+    ct_bonsai_dull,
+    ct_bonsai_mix,
 
     num_ctrltypes,
 };
