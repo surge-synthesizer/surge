@@ -2273,7 +2273,7 @@ void SurgeStorage::loadTuningFromSCL(const fs::path &p)
 {
     try
     {
-        retuneToScale(Tunings::readSCLFile(p));
+        retuneToScale(Tunings::readSCLFile({p.string()}));
     }
     catch (Tunings::TuningError &e)
     {
@@ -2288,7 +2288,7 @@ void SurgeStorage::loadMappingFromKBM(const fs::path &p)
 {
     try
     {
-        remapToKeyboard(Tunings::readKBMFile(p));
+        remapToKeyboard(Tunings::readKBMFile({p.string()}));
     }
     catch (Tunings::TuningError &e)
     {
