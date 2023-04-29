@@ -160,8 +160,8 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
                     {
                         dataStr = synth->storage.datapath / "tuning_library" / "SCL";
                     }
-                    Surge::Storage::updateUserDefaultPath(&(synth->storage),
-                                                          Surge::Storage::LastSCLPath, dataStr);
+                    Surge::Storage::updateUserDefaultPath(
+                        &(synth->storage), Surge::Storage::LastSCLPath, fs::path(dataStr));
                 }
                 else if (address3 == "kbm")
                 {
@@ -169,8 +169,8 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
                     {
                         dataStr = synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
                     }
-                    Surge::Storage::updateUserDefaultPath(&(synth->storage),
-                                                          Surge::Storage::LastKBMPath, dataStr);
+                    Surge::Storage::updateUserDefaultPath(
+                        &(synth->storage), Surge::Storage::LastKBMPath, fs::path(dataStr));
                 }
             }
         }
