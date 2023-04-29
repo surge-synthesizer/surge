@@ -153,24 +153,27 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             }
             else
             {
+                fs::path ppath = fs::path(dataStr);
                 std::getline(split, address3, '/');
                 if (address3 == "scl")
                 {
                     if (dataStr == "_reset")
                     {
-                        dataStr = synth->storage.datapath / "tuning_library" / "SCL";
+                        ppath = synth->storage.datapath;
+                        ppath /= "tuning_library/SCL";
                     }
-                    Surge::Storage::updateUserDefaultPath(
-                        &(synth->storage), Surge::Storage::LastSCLPath, fs::path(dataStr));
+                    Surge::Storage::updateUserDefaultPath(&(synth->storage),
+                                                          Surge::Storage::LastSCLPath, ppath);
                 }
                 else if (address3 == "kbm")
                 {
                     if (dataStr == "_reset")
                     {
-                        dataStr = synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
+                        ppath = synth->storage.datapath;
+                        ppath /= "tuning_library/KBM Concert Pitch";
                     }
-                    Surge::Storage::updateUserDefaultPath(
-                        &(synth->storage), Surge::Storage::LastKBMPath, fs::path(dataStr));
+                    Surge::Storage::updateUserDefaultPath(&(synth->storage),
+                                                          Surge::Storage::LastKBMPath, ppath);
                 }
             }
         }
