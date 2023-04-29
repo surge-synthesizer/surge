@@ -645,7 +645,9 @@ code {
                     <td>.kbm file default path</td>
                     <td class="center">file path (absolute only)</td>
                 </tr>
-
+                <tr>
+                    <td class="center" colspan="3">(use value = '_reset' to reset path to factory default)</td>
+                </tr>
             </table>
             </div>
         )HTML";

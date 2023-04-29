@@ -26,6 +26,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <sys/stat.h>
 
 namespace Surge
 {
@@ -142,47 +143,78 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         if (address2 == "path")
         {
             std::string dataStr = getWholeString(message);
-            std::getline(split, address3, '/');
-            if (address3 == "scl")
+            struct stat buffer;
+            if ((dataStr != "_reset") && (stat(dataStr.c_str(), &buffer) != 0))
             {
-                Surge::Storage::updateUserDefaultPath(&(synth->storage),
-                                                      Surge::Storage::LastSCLPath, dataStr);
+                std::ostringstream msg;
+                msg << "An OSC '/settings/path/...' message was received with a path which does "
+                       "not exist: the default path will not change.";
+                synth->storage.reportError(msg.str(), "Path does not exist.");
             }
-            else if (address3 == "kbm")
+            else
             {
-                Surge::Storage::updateUserDefaultPath(&(synth->storage),
-                                                      Surge::Storage::LastKBMPath, dataStr);
+                std::getline(split, address3, '/');
+                if (address3 == "scl")
+                {
+                    if (dataStr == "_reset")
+                    {
+                        dataStr = synth->storage.datapath / "tuning_library" / "SCL";
+                    }
+                    Surge::Storage::updateUserDefaultPath(&(synth->storage),
+                                                          Surge::Storage::LastSCLPath, dataStr);
+                }
+                else if (address3 == "kbm")
+                {
+                    if (dataStr == "_reset")
+                    {
+                        dataStr = synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
+                    }
+                    Surge::Storage::updateUserDefaultPath(&(synth->storage),
+                                                          Surge::Storage::LastKBMPath, dataStr);
+                }
             }
         }
     }
     else if (address1 == "tuning")
     {
-        std::string dataStr = getWholeString(message);
-        std::getline(split, address2, '/');
+        fs::path path = getWholeString(message);
+        fs::path def_path;
 
+        std::getline(split, address2, '/');
         if (address2 == "scl")
         {
-            auto scl_path = synth->storage.datapath / "tuning_library" / "SCL";
-            if (scl_path.is_relative())
+            if (path.is_relative())
             {
-                scl_path = Surge::Storage::getUserDefaultPath(
-                    &(synth->storage), Surge::Storage::LastSCLPath, scl_path);
-                scl_path /= dataStr;
-                scl_path += ".scl";
+                def_path = Surge::Storage::getUserDefaultPath(
+                    &(synth->storage), Surge::Storage::LastSCLPath,
+                    synth->storage.datapath / "tuning_library" / "SCL");
+                def_path /= path;
+                def_path += ".scl";
             }
-            synth->storage.loadTuningFromSCL(scl_path);
+            else
+            {
+                def_path = path;
+            }
+#ifdef DEBUG
+            std::cout << "scl_path: " << def_path << std::endl;
+#endif
+            synth->storage.loadTuningFromSCL(def_path);
         }
         else if (address2 == "kbm")
         {
-            auto kbm_path = synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
-            if (kbm_path.is_relative())
+            if (path.is_relative())
             {
-                kbm_path = Surge::Storage::getUserDefaultPath(
-                    &(synth->storage), Surge::Storage::LastKBMPath, kbm_path);
-                kbm_path /= dataStr;
-                kbm_path += ".kbm";
+                def_path = Surge::Storage::getUserDefaultPath(
+                    &(synth->storage), Surge::Storage::LastKBMPath,
+                    synth->storage.datapath / "tuning_library" / "KBM Concert Pitch");
+                def_path /= path;
+                def_path += ".kbm";
             }
-            synth->storage.loadMappingFromKBM(kbm_path);
+            else
+            {
+                def_path = path;
+            }
+            synth->storage.loadMappingFromKBM(def_path);
         }
     }
 }
