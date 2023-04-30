@@ -1079,6 +1079,17 @@ struct GlobalData;
 }
 } // namespace Surge
 
+struct ScenesOutputData{
+    float sceneOut alignas(16)[n_scenes][N_OUTPUTS][BLOCK_SIZE];
+    std::atomic<int>sceneClients[n_scenes];
+public:
+    void increaseNumberOfClients(int scene);
+    void decreaseNumberOfClients(int scene);
+    float (&getSceneOut(int scene, int channel))[BLOCK_SIZE];
+    int getNumberOfSceneClients(int scene) const;
+};
+
+
 class alignas(16) SurgeStorage
 {
   public:
@@ -1497,6 +1508,7 @@ class alignas(16) SurgeStorage
     float mpePitchBendRange = -1.0f;
 
     std::atomic<int> otherscene_clients;
+    ScenesOutputData scenesOutputData;
 
     std::unordered_map<int, std::string> helpURL_controlgroup;
     std::unordered_map<std::string, std::string> helpURL_paramidentifier;

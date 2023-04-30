@@ -2737,3 +2737,20 @@ string findReplaceSubstring(string &source, const string &from, const string &to
 
 } // namespace Storage
 } // namespace Surge
+void ScenesOutputData::increaseNumberOfClients(int scene)
+{
+    if (scene < n_scenes)
+        sceneClients[scene]++;
+}
+void ScenesOutputData::decreaseNumberOfClients(int scene)
+{
+    if (scene < n_scenes)
+        sceneClients[scene]--;
+}
+float (&ScenesOutputData::getSceneOut(int scene, int channel))[BLOCK_SIZE]
+{
+    return sceneOut[scene][channel];
+}
+int ScenesOutputData::getNumberOfSceneClients(int scene) const {
+    return sceneClients[scene].load();
+}

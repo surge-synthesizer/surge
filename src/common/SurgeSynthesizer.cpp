@@ -4485,6 +4485,18 @@ void SurgeSynthesizer::process()
         sc_state[i] = play_scene[i];
     }
 
+    for (int i=0; i<n_scenes; i++)
+    {
+        if (storage.scenesOutputData.getNumberOfSceneClients(i) > 0)
+        {
+            for (int channel=0; channel<N_OUTPUTS; channel++)
+            {
+                copy_block(sceneout[i][channel], storage.scenesOutputData.getSceneOut(i, channel),
+                           BLOCK_SIZE_QUAD);
+            }
+        }
+    }
+
     // apply insert effects
     if (fx_bypass != fxb_no_fx)
     {

@@ -3,12 +3,21 @@
 
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd) {
-    if (storage)
-        storage->otherscene_clients++;
+    effect_slot_type slotType = getSlotType(fxdata->fxslot);
+    //TODO: next step is taking care of cases when we move the effect to another slot
+    if (storage && (slotType== a_insert_slot || slotType == b_insert_slot))
+    {
+        int scene = slotType == a_insert_slot ? 0 : 1;
+        storage->scenesOutputData.increaseNumberOfClients(scene);
+    }
 }
 AudioInputEffect::~AudioInputEffect() {
-    if (storage)
-        storage->otherscene_clients--;
+    effect_slot_type slotType = getSlotType(fxdata->fxslot);
+    if (storage && (slotType== a_insert_slot || slotType == b_insert_slot))
+    {
+        int scene = slotType == a_insert_slot ? 0 : 1;
+        storage->scenesOutputData.decreaseNumberOfClients(scene);
+    }
 }
 void AudioInputEffect::init_ctrltypes()
 {
@@ -156,19 +165,25 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     inputDataBuffer.copyFrom(1, 0, inputData[1], BLOCK_SIZE);
     applySlidersControls(inputDataBuffer, inputChannel, inputPan, inputLevelDb);
 
-    if (getSlotType(fxdata->fxslot) == a_insert_slot || getSlotType(fxdata->fxslot) == b_insert_slot)
+    effect_slot_type slotType = getSlotType(fxdata->fxslot);
+    if (slotType == a_insert_slot || slotType == b_insert_slot)
     {
             // surge->sceneout[n_scenes][n_channels][BLOCK_SIZE]
             // take a look at the data field we make for the alternate outputs
             // yeah surge->sceneout[n_scenes][n_channels][BLOCK_SIZE]
             // is the already downsampled scene output for A and B that should be populated before
             // the FX re run but if its not just move the population in SurgeSythesizer::process
+
+
         float& sceneInputChannel = fxdata->p[in_scene_input_channel].val.f;
         float& sceneInputPan = fxdata->p[in_scene_input_pan].val.f;
         float& sceneInputLevelDb = fxdata->p[in_scene_input_level].val.f;
 
-        float* sceneData[] = { storage->audio_otherscene[0], storage->audio_otherscene[1] };
-        std::cout << "sceneData max value: " << std::max_element(sceneData[0], sceneData[0] + BLOCK_SIZE) << std::endl;
+        int otherScene = slotType == a_insert_slot ? 1 : 0;
+        float* sceneData[] = { 
+            storage->scenesOutputData.getSceneOut(otherScene, 0), 
+            storage->scenesOutputData.getSceneOut(otherScene, 1)
+        };
         juce::AudioBuffer<float> sceneDataBuffer( 2, BLOCK_SIZE);
         sceneDataBuffer.copyFrom(0, 0, sceneData[0], BLOCK_SIZE);
         sceneDataBuffer.copyFrom(1, 0, sceneData[1], BLOCK_SIZE);
