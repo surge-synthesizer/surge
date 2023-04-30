@@ -26,7 +26,6 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <sys/stat.h>
 
 namespace Surge
 {
@@ -143,7 +142,6 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         if (address2 == "path")
         {
             std::string dataStr = getWholeString(message);
-            struct stat buffer;
             if ((dataStr != "_reset") && (!fs::exists(dataStr)))
             {
                 std::ostringstream msg;
