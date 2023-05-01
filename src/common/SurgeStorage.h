@@ -620,7 +620,7 @@ struct LFOStorage
 
 struct FxStorage
 {
-    // Just a heads up: if you change this, please go look at fx_reorder in SurgeStorage too!
+    // Just a heads up: if you change this, please go look at reorderFx in SurgeSynthesizer too!
     FxStorage(fxslot_positions slot) : fxslot(slot) {}
     FxStorage() = delete;
     fxslot_positions fxslot;
