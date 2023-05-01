@@ -7,7 +7,7 @@ AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     //TODO: next step is taking care of cases when we move the effect to another slot
     if (storage && (slotType== a_insert_slot || slotType == b_insert_slot))
     {
-        int scene = slotType == a_insert_slot ? 0 : 1;
+        int scene = slotType == a_insert_slot ? 1 : 0;
         storage->scenesOutputData.increaseNumberOfClients(scene);
     }
 }
@@ -15,7 +15,7 @@ AudioInputEffect::~AudioInputEffect() {
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
     if (storage && (slotType== a_insert_slot || slotType == b_insert_slot))
     {
-        int scene = slotType == a_insert_slot ? 0 : 1;
+        int scene = slotType == a_insert_slot ? 1 : 0;
         storage->scenesOutputData.decreaseNumberOfClients(scene);
     }
 }
