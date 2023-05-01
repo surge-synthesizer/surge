@@ -384,7 +384,8 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         drawEditorBox(g, customEditorActionLabel(customEditor == nullptr));
     }
 
-    if (sge && sge->audioLatencyNotified)
+    // Display the latency message in audio input.
+    if (sge && sge->audioLatencyNotified && oscdata->type.val.i == ot_audioinput)
     {
         g.setColour(skin->getColor(Colors::Osc::Display::Wave));
         g.setFont(skin->fontManager->getLatoAtSize(7));
