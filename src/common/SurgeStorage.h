@@ -1340,6 +1340,10 @@ class alignas(16) SurgeStorage
     } hardclipMode = HARDCLIP_TO_18DBFS,
       sceneHardclipMode[n_scenes] = {HARDCLIP_TO_18DBFS, HARDCLIP_TO_18DBFS};
 
+    void loadTuningFromSCL(const fs::path &p);
+    void loadMappingFromKBM(const fs::path &p);
+    std::function<void()> onTuningChanged{nullptr};
+
     float note_to_pitch(float x);
     float note_to_pitch_inv(float x);
     float note_to_pitch_ignoring_tuning(float x);
