@@ -2754,3 +2754,34 @@ float (&ScenesOutputData::getSceneOut(int scene, int channel))[BLOCK_SIZE]
 int ScenesOutputData::getNumberOfSceneClients(int scene) const {
     return sceneClients[scene].load();
 }
+ScenesOutputData::ScenesOutputData() {
+    for(int i = 0; i < n_scenes; i++) {
+        for(int j = 0; j < N_OUTPUTS; j++) {
+            std::shared_ptr<float[BLOCK_SIZE]> block{new float[BLOCK_SIZE]{}};
+            sceneData[i][j] = block;
+        }
+    }
+}
+const std::shared_ptr<float[BLOCK_SIZE]> &ScenesOutputData::getSceneData(int scene,
+                                                                         int channel) const
+{
+    assert(scene < n_scenes && scene >= 0);
+    assert(channel < N_OUTPUTS && channel >= 0);
+    return sceneData[scene][channel];
+}
+bool ScenesOutputData::thereAreClients(int scene) const
+{
+    return std::any_of(
+        std::begin(sceneData[scene]),
+        std::end(sceneData[scene]),
+        [](const auto &channel) { return channel.use_count() > 1; }
+    );
+}
+void ScenesOutputData::provideSceneData(int scene, int channel, float *data)
+{
+    if (scene < n_scenes && scene >= 0 && channel < N_OUTPUTS && channel >= 0
+        && sceneData[scene][channel].use_count() > 1) // we don't provide data if there are no clients
+    {
+        copy_block(data, sceneData[scene][channel].get(), BLOCK_SIZE_QUAD);
+    }
+}

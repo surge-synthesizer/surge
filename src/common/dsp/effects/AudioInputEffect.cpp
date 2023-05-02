@@ -4,6 +4,7 @@
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd) {
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
+    //TODO: can we replace it with std::shared_ptr?
     if (storage && (slotType== a_insert_slot || slotType == b_insert_slot))
     {
         int scene = slotType == a_insert_slot ? 1 : 0;

@@ -366,3 +366,34 @@ TEST_CASE("High SampleRate Nimbus", "[fx]")
         }
     }
 }
+
+TEST_CASE("ScenesOutputData",  "[fx]") {
+    SECTION("Providing data")
+    {
+        ScenesOutputData scenesOutputData{};
+        REQUIRE(!scenesOutputData.thereAreClients(0));
+        REQUIRE(!scenesOutputData.thereAreClients(1));
+
+        {
+            auto clientDataLeft = scenesOutputData.getSceneData(0,0);
+            auto clientDataRight = scenesOutputData.getSceneData(0,1);
+            REQUIRE(clientDataLeft);
+            REQUIRE(clientDataRight);
+            REQUIRE(scenesOutputData.thereAreClients(0));
+            REQUIRE(!scenesOutputData.thereAreClients(1));
+
+            float data[32]{1.0f};
+            scenesOutputData.provideSceneData(0,0, data);
+            scenesOutputData.provideSceneData(0,1, data);
+            REQUIRE(scenesOutputData.getSceneData(0,0)[0] == 1.0f);
+            REQUIRE(scenesOutputData.getSceneData(0,1)[0] == 1.0f);
+
+            scenesOutputData.provideSceneData(1,0, data);
+            scenesOutputData.provideSceneData(1,1, data);
+            REQUIRE(scenesOutputData.getSceneData(1,0)[0] == 0.0f);
+            REQUIRE(scenesOutputData.getSceneData(1,1)[0] == 0.0f);
+        }
+        REQUIRE(!scenesOutputData.thereAreClients(0));
+        REQUIRE(!scenesOutputData.thereAreClients(1));
+    }
+}
