@@ -1080,18 +1080,12 @@ struct GlobalData;
 } // namespace Surge
 
 struct ScenesOutputData{
-    float sceneOut alignas(16)[n_scenes][N_OUTPUTS][BLOCK_SIZE];
-    std::atomic<int>sceneClients[n_scenes];
-    std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS];
+    std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr}, {nullptr, nullptr}};
 public:
-    void increaseNumberOfClients(int scene);
-    void decreaseNumberOfClients(int scene);
-    float (&getSceneOut(int scene, int channel))[BLOCK_SIZE];
     ScenesOutputData();
     const std::shared_ptr<float[BLOCK_SIZE]> &getSceneData(int scene, int channel) const;
-    bool thereAreClients(int scene) const;
     void provideSceneData(int scene, int channel, float *data);
-    int getNumberOfSceneClients(int scene) const;
+    bool thereAreClients(int scene) const;
 };
 
 

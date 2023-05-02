@@ -4,19 +4,11 @@
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd) {
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
-    //TODO: can we replace it with std::shared_ptr?
     if (storage && (slotType== a_insert_slot || slotType == b_insert_slot))
     {
         int scene = slotType == a_insert_slot ? 1 : 0;
-        storage->scenesOutputData.increaseNumberOfClients(scene);
-    }
-}
-AudioInputEffect::~AudioInputEffect() {
-    effect_slot_type slotType = getSlotType(fxdata->fxslot);
-    if (storage && (slotType== a_insert_slot || slotType == b_insert_slot))
-    {
-        int scene = slotType == a_insert_slot ? 1 : 0;
-        storage->scenesOutputData.decreaseNumberOfClients(scene);
+        for(int i = 0; i < N_OUTPUTS; i++)
+            sceneDataPtr[i] = storage->scenesOutputData.getSceneData(scene, i);
     }
 }
 void AudioInputEffect::init_ctrltypes()
@@ -180,9 +172,9 @@ void AudioInputEffect::process(float *dataL, float *dataR)
         float& sceneInputLevelDb = fxdata->p[in_scene_input_level].val.f;
 
         int otherScene = slotType == a_insert_slot ? 1 : 0;
-        float* sceneData[] = { 
-            storage->scenesOutputData.getSceneOut(otherScene, 0), 
-            storage->scenesOutputData.getSceneOut(otherScene, 1)
+        float* sceneData[] = {
+            sceneDataPtr[0].get(),
+            sceneDataPtr[1].get(),
         };
         juce::AudioBuffer<float> sceneDataBuffer( 2, BLOCK_SIZE);
         sceneDataBuffer.copyFrom(0, 0, sceneData[0], BLOCK_SIZE);
