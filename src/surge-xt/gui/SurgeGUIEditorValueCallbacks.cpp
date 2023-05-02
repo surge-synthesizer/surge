@@ -128,9 +128,8 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                 bool isEnabled = true;
 
                 // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
-                if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
-                    (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) || mc == 120 ||
-                    mc == 123)
+                if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 || mc == 74 ||
+                    (mc >= 98 && mc <= 101) || mc == 120 || mc == 123)
                 {
                     isEnabled = false;
                 }
