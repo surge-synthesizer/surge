@@ -1314,7 +1314,7 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_int;
         val_min.i = 0;
         val_default.i = 1;
-        val_max.i = 4;
+        val_max.i = 3;
         break;
 
     case ct_bonsai_noise_mode:
