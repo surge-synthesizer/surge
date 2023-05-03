@@ -64,16 +64,6 @@ TEST_CASE("Airwindows Loud", "[fx]")
 
 TEST_CASE("FX Move with Modulation", "[fx]")
 {
-    auto setFX = [](auto surge, auto slot, auto type) {
-        auto *pt = &(surge->storage.getPatch().fx[slot].type);
-        auto awv = 1.f * fxt_chorus4 / (pt->val_max.i - pt->val_min.i);
-
-        auto did = surge->idForParameter(pt);
-        surge->setParameter01(did, awv, false);
-
-        for (int i = 0; i < 10; ++i)
-            surge->process();
-    };
     auto step = [](auto surge) {
         for (int i = 0; i < 10; ++i)
             surge->process();
@@ -114,7 +104,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
@@ -133,8 +123,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
-        setFX(surge, 4, fxt_chorus4);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 4, fxt_chorus4);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[3].id, ms_slfo2, 0, 0, 0.2);
@@ -155,7 +145,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
@@ -174,8 +164,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
-        setFX(surge, 1, fxt_chorus4);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 1, fxt_chorus4);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
@@ -195,8 +185,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
-        setFX(surge, 1, fxt_chorus4);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 1, fxt_chorus4);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
@@ -216,8 +206,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
-        setFX(surge, 1, fxt_chorus4);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 1, fxt_chorus4);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
@@ -398,22 +388,29 @@ TEST_CASE("ScenesOutputData",  "[fx]") {
     }
 }
 
-TEST_CASE("OneAudioInputEffectInstance",  "[fx]") {
+TEST_CASE("AudioInputEffect",  "[fx]") {
     auto surge = Surge::Headless::createSurge(44100);
     REQUIRE(surge);
 
-    auto setFX = [](auto surge, auto slot, auto type) {
-        auto *pt = &(surge->storage.getPatch().fx[slot].type);
-        auto awv = 1.f * type / (pt->val_max.i - pt->val_min.i);
 
-        auto did = surge->idForParameter(pt);
-        surge->setParameter01(did, awv, false);
 
-        for (int i = 0; i < 10; ++i)
-            surge->process();
-    };
+    Surge::Test::setFX(surge, 0, fxt_input_blender);
+    SurgeStorage *surgeStorage = &surge->storage;
+    FxStorage *fxStorage = &surgeStorage->getPatch().fx[0];
+    REQUIRE(fxStorage->type.val.i == fxt_input_blender);
 
-    setFX(surge, 0, fxt_input_blender);
+    float leftInput[BLOCK_SIZE] {0.1f,0.1f,0.1f,0.1f,};
+    float rightInput[BLOCK_SIZE]{0.2f, 0.2f, 0.2f, 0.2f,};
 
+    SECTION("With default params the result should be unchanged")
+    {
+        surge->fx[0]->process(leftInput, rightInput);
+        for (int i = 0; i < 4; ++i)
+        {
+            REQUIRE(leftInput[i] == Approx(0.1f));
+            REQUIRE(rightInput[i] == Approx(0.2f));
+        }
+    }
+    surge->fx[0]->process(leftInput, rightInput);
 
 }

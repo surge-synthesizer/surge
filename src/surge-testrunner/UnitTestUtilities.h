@@ -37,6 +37,8 @@ void setupStorageRanges(Parameter *start, Parameter *endIncluding, int &storage_
 void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *buffer, int nS,
                          int nC, int startSample = -1, int endSample = -1);
 
+void setFX(std::shared_ptr<SurgeSynthesizer> surge, int slot, fx_type type);
+
 std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &patchName);
 std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &, float sr = 44100);
 std::shared_ptr<SurgeSynthesizer> surgeOnSine(float sr = 44100);
