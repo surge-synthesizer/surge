@@ -397,3 +397,23 @@ TEST_CASE("ScenesOutputData",  "[fx]") {
         REQUIRE(!scenesOutputData.thereAreClients(1));
     }
 }
+
+TEST_CASE("OneAudioInputEffectInstance",  "[fx]") {
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge);
+
+    auto setFX = [](auto surge, auto slot, auto type) {
+        auto *pt = &(surge->storage.getPatch().fx[slot].type);
+        auto awv = 1.f * type / (pt->val_max.i - pt->val_min.i);
+
+        auto did = surge->idForParameter(pt);
+        surge->setParameter01(did, awv, false);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+    };
+
+    setFX(surge, 0, fxt_input_blender);
+
+
+}
