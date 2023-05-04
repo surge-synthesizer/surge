@@ -393,6 +393,16 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
     auto surge = Surge::Headless::createSurge(44100);
     REQUIRE(surge);
 
+    auto testExpectedValues = [&surge](
+                                  float *leftInput, float *rightInput,
+                                  float *expectedLeftInput, float *expectedRightInput) {
+        surge->fx[0]->process(leftInput, rightInput);
+        for (int i = 0; i < 4; ++i)
+        {
+            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]));
+            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]));
+        }
+    };
 
 
     Surge::Test::setFX(surge, 0, fxt_input_blender);
@@ -408,12 +418,7 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
         float expectedLeftInput[BLOCK_SIZE] {0.4f, 0.2f, 0.4f, 0.2f};
         float expectedRightInput[BLOCK_SIZE] {0.2f, 0.4f, 0.2f, 0.4f};
 
-        surge->fx[0]->process(leftInput, rightInput);
-        for (int i = 0; i < 4; ++i)
-        {
-            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]));
-            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]));
-        }
+        testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
     }
 
     SECTION("Effect input accepts only left channel")
@@ -421,12 +426,16 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
         float expectedLeftInput[BLOCK_SIZE] {0.4f, 0.2f, 0.4f, 0.2f};
         float expectedRightInput[BLOCK_SIZE] {0.0f, 0.0f, 0.0f, 0.0f};
         fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = -1.0f;
-        surge->fx[0]->process(leftInput, rightInput);
-        for (int i = 0; i < 4; ++i)
-        {
-            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]));
-            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]));
-        }
+
+        testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+
+    }
+    SECTION("Effect input accepts 50% of left channel and 100% right"){
+        float expectedLeftInput[BLOCK_SIZE] {0.3f, 0.15f, 0.3f, 0.15f};
+        float expectedRightInput[BLOCK_SIZE] {0.2f, 0.4f, 0.2f, 0.4f};
+        fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.25f;
+
+        testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
     }
 
 }
