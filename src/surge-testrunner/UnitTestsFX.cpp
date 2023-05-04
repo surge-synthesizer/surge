@@ -437,5 +437,26 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
 
         testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
     }
+    SECTION("Effect input accepts 100% of left channel and 50% right"){
+        float expectedLeftInput[BLOCK_SIZE] {0.4f, 0.2f, 0.4f, 0.2f};
+        float expectedRightInput[BLOCK_SIZE] {0.1f, 0.2f, 0.1f, 0.2f};
+        fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = -0.50f;
+        fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+
+        testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+    }
+    SECTION("Effect input accepts 100% of left channel and 50% right with 50% input level"){
+        float expectedLeftInput[BLOCK_SIZE] {0.2f, 0.1f, 0.2f, 0.1f};
+        float expectedRightInput[BLOCK_SIZE] {0.05f, 0.1f, 0.05f, 0.1f};
+        fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = -0.50f;
+        fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = -5.995f;
+
+        surge->fx[0]->process(leftInput, rightInput);
+        for (int i = 0; i < 4; ++i)
+        {
+            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]).margin(0.001));
+            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
+        }
+    }
 
 }
