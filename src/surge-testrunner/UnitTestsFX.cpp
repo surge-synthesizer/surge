@@ -389,7 +389,7 @@ TEST_CASE("ScenesOutputData",  "[fx]") {
     }
 }
 
-TEST_CASE("AudioInputEffect",  "[fx]") {
+TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
     auto surge = Surge::Headless::createSurge(44100);
     REQUIRE(surge);
 
@@ -478,5 +478,13 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
             REQUIRE(rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
         }
     }
-
+    SECTION("Left channels moves to the right, the right channel is deleted"){
+        float expectedLeftInput[BLOCK_SIZE] {0.0f, 0.0f, 0.0f, 0.0f};
+        float expectedRightInput[BLOCK_SIZE] {0.4f,0.2f,0.4f,0.2f,};
+        fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = -1.0f;
+        fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+        fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 1.0f;
+        fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+        testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+    }
 }
