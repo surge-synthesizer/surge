@@ -10,6 +10,7 @@
 
 #include "UnitTestUtilities.h"
 #include "FastMath.h"
+#include "AudioInputEffect.h"
 
 using namespace Surge::Test;
 
@@ -399,18 +400,33 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
     FxStorage *fxStorage = &surgeStorage->getPatch().fx[0];
     REQUIRE(fxStorage->type.val.i == fxt_input_blender);
 
-    float leftInput[BLOCK_SIZE] {0.1f,0.1f,0.1f,0.1f,};
-    float rightInput[BLOCK_SIZE]{0.2f, 0.2f, 0.2f, 0.2f,};
+    float leftInput[BLOCK_SIZE] {0.4f,0.2f,0.4f,0.2f,};
+    float rightInput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f,};
 
     SECTION("With default params the result should be unchanged")
     {
+        float expectedLeftInput[BLOCK_SIZE] {0.4f, 0.2f, 0.4f, 0.2f};
+        float expectedRightInput[BLOCK_SIZE] {0.2f, 0.4f, 0.2f, 0.4f};
+
         surge->fx[0]->process(leftInput, rightInput);
         for (int i = 0; i < 4; ++i)
         {
-            REQUIRE(leftInput[i] == Approx(0.1f));
-            REQUIRE(rightInput[i] == Approx(0.2f));
+            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]));
+            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]));
         }
     }
-    surge->fx[0]->process(leftInput, rightInput);
+
+    SECTION("Effect input accepts only left channel")
+    {
+        float expectedLeftInput[BLOCK_SIZE] {0.4f, 0.2f, 0.4f, 0.2f};
+        float expectedRightInput[BLOCK_SIZE] {0.0f, 0.0f, 0.0f, 0.0f};
+        fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = -1.0f;
+        surge->fx[0]->process(leftInput, rightInput);
+        for (int i = 0; i < 4; ++i)
+        {
+            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]));
+            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]));
+        }
+    }
 
 }

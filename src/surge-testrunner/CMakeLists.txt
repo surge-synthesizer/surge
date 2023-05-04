@@ -35,4 +35,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-lua-src
   surge::catch2
   surge::surge-common
+  juce::juce_audio_basics
   )
