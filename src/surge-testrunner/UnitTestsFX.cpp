@@ -399,8 +399,8 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
         surge->fx[0]->process(leftInput, rightInput);
         for (int i = 0; i < 4; ++i)
         {
-            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]));
-            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]));
+            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]).margin(0.001));
+            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
         }
     };
 
@@ -417,7 +417,6 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
     {
         float expectedLeftInput[BLOCK_SIZE] {0.4f, 0.2f, 0.4f, 0.2f};
         float expectedRightInput[BLOCK_SIZE] {0.2f, 0.4f, 0.2f, 0.4f};
-
         testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
     }
 
@@ -426,7 +425,6 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
         float expectedLeftInput[BLOCK_SIZE] {0.4f, 0.2f, 0.4f, 0.2f};
         float expectedRightInput[BLOCK_SIZE] {0.0f, 0.0f, 0.0f, 0.0f};
         fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = -1.0f;
-
         testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
 
     }
@@ -442,7 +440,6 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
         float expectedRightInput[BLOCK_SIZE] {0.1f, 0.2f, 0.1f, 0.2f};
         fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = -0.50f;
         fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
-
         testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
     }
     SECTION("Effect input accepts 100% of left channel and 50% right with 50% input level"){
@@ -450,13 +447,23 @@ TEST_CASE("AudioInputEffect",  "[fx]") {
         float expectedRightInput[BLOCK_SIZE] {0.05f, 0.1f, 0.05f, 0.1f};
         fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = -0.50f;
         fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = -5.995f;
-
-        surge->fx[0]->process(leftInput, rightInput);
-        for (int i = 0; i < 4; ++i)
-        {
-            REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]).margin(0.001));
-            REQUIRE(rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
-        }
+        testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+    }
+    SECTION("All channels moves to the left"){
+        float expectedLeftInput[BLOCK_SIZE] {0.6f, 0.6f, 0.6f, 0.6f};
+        float expectedRightInput[BLOCK_SIZE] {0.0f, 0.0f, 0.0f, 0.0f};
+        fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.0f;
+        fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+        fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = -1.0f;
+        testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+    }
+    SECTION("All channels moves to the right"){
+        float expectedLeftInput[BLOCK_SIZE] {0.0f, 0.0f, 0.0f, 0.0f};
+        float expectedRightInput[BLOCK_SIZE] {0.6f, 0.6f, 0.6f, 0.6f};
+        fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.0f;
+        fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+        fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 1.0f;
+        testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
     }
 
 }
