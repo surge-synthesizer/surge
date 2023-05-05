@@ -82,17 +82,20 @@ void addEnvTrigOptions(SurgeSynthesizer *synth, juce::PopupMenu &contextMenu, in
 
     for (int i = 0; i < 2; ++i)
     {
+        auto value = vals[i];
         bool isChecked =
-            (vals[i] == synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode);
+            (value == synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode);
 
-        contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true, isChecked, [&]() {
-            synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode = vals[i];
+        contextMenu.addItem(
+            Surge::GUI::toOSCase(labels[i]), true, isChecked,
+            [synth, current_scene, value, isChecked]() {
+                synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode = value;
 
-            if (!isChecked)
-            {
-                synth->storage.getPatch().isDirty = true;
-            }
-        });
+                if (!isChecked)
+                {
+                    synth->storage.getPatch().isDirty = true;
+                }
+            });
     }
 }
 
