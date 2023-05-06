@@ -54,7 +54,7 @@ int BonsaiEffect::group_label_ypos(int id)
     case 3:
         return 17;
     case 4:
-        return 25;
+        return 23;
     }
     return 0;
 }
