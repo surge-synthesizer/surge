@@ -99,7 +99,7 @@ struct SurgeFXConfig
 
     static inline int intValueAt(const Effect *const e, const ValueStorage *const v, int idx)
     {
-        return *(e->pd_float[idx]);
+        return *(e->pd_int[idx]);
     }
 
     static inline float envelopeRateLinear(GlobalStorage *s, float f)
