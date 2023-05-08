@@ -32,6 +32,11 @@
 
 /*	base class			*/
 
+namespace surge::sstfx
+{
+struct SurgeFXConfig;
+}
+
 class alignas(16) Effect
 {
   public:
@@ -104,6 +109,8 @@ class alignas(16) Effect
 
     float *pd_float[n_fx_params];
     int *pd_int[n_fx_params];
+
+    friend class surge::sstfx::SurgeFXConfig;
 
   protected:
     SurgeStorage *storage;
