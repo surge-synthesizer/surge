@@ -411,6 +411,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
     REQUIRE(fxStorage->type.val.i == fxt_input_blender);
 
     struct InParamsGroup {
+        std::string testGroup;
         AudioInputEffect::in_params inputChannel;
         AudioInputEffect::in_params inputLevel;
         AudioInputEffect::in_params inputPan;
@@ -422,28 +423,29 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
         float sceneBLeftInput[BLOCK_SIZE];
         float sceneBRightInput[BLOCK_SIZE];
 
-
-
     };
     std::vector<InParamsGroup> inParamsGroups{
         InParamsGroup{
+            "Effect input",
             AudioInputEffect::in_effect_input_channel,
             AudioInputEffect::in_effect_input_level,
             AudioInputEffect::in_effect_input_pan,
                 {0.4f,0.2f,0.4f,0.2f,},
                 {0.2f, 0.4f, 0.2f, 0.4f,},
-                {},
-                {},
-                {},
-                {},
+                {}, {}, {}, {},
         },
 //        InParamsGroup{AudioInputEffect::in_audio_input_channel,
 //                      AudioInputEffect::in_audio_input_level,
 //                      AudioInputEffect::in_audio_input_pan},
-//        InParamsGroup{
-//            AudioInputEffect::in_scene_input_channel,
-//                AudioInputEffect::in_scene_input_level,
-//                AudioInputEffect::in_scene_input_pan},
+        InParamsGroup{
+            "Scene B input",
+            AudioInputEffect::in_scene_input_channel,
+                AudioInputEffect::in_scene_input_level,
+                AudioInputEffect::in_scene_input_pan,
+            {},{}, {}, {},
+            {0.4f,0.2f,0.4f,0.2f,},
+            {0.2f, 0.4f, 0.2f, 0.4f,},
+                }
     };
     for(InParamsGroup inParamsGroup: inParamsGroups)
     {
@@ -454,7 +456,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
         surgeStorage->scenesOutputData.provideSceneData(1,1, inParamsGroup.sceneBRightInput);
 
 
-        SECTION("With default params the result should be unchanged")
+        SECTION(inParamsGroup.testGroup + " with default params the result should be unchanged")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
             float expectedRightInput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f};
@@ -462,7 +464,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
                                 expectedLeftInput, expectedRightInput );
         }
 
-        SECTION("Effect input accepts only left channel")
+        SECTION(inParamsGroup.testGroup + " accepts only left channel")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
             float expectedRightInput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
@@ -470,7 +472,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
                                expectedLeftInput, expectedRightInput);
         }
-        SECTION("Effect input accepts 50% of left channel and 100% right")
+        SECTION(inParamsGroup.testGroup + " accepts 50% of left channel and 100% right")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.3f, 0.15f, 0.3f, 0.15f};
             float expectedRightInput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f};
@@ -479,7 +481,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
                                expectedLeftInput, expectedRightInput);
         }
-        SECTION("Effect input accepts 100% of left channel and 50% right")
+        SECTION(inParamsGroup.testGroup + " accepts 100% of left channel and 50% right")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
             float expectedRightInput[BLOCK_SIZE]{0.1f, 0.2f, 0.1f, 0.2f};
@@ -488,7 +490,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
                                expectedLeftInput, expectedRightInput);
         }
-        SECTION("Effect input accepts 100% of left channel and 50% right with 50% input level")
+        SECTION(inParamsGroup.testGroup + " accepts 100% of left channel and 50% right with 50% input level")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.2f, 0.1f, 0.2f, 0.1f};
             float expectedRightInput[BLOCK_SIZE]{0.05f, 0.1f, 0.05f, 0.1f};
@@ -497,7 +499,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
                                expectedLeftInput, expectedRightInput);
         }
-        SECTION("All channels moves to the left")
+        SECTION(inParamsGroup.testGroup + "'s channels move to the left")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.6f, 0.6f, 0.6f, 0.6f};
             float expectedRightInput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
@@ -507,7 +509,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
                                expectedLeftInput, expectedRightInput);
         }
-        SECTION("All channels moves to the right")
+        SECTION(inParamsGroup.testGroup + "'s channels move to the right")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
             float expectedRightInput[BLOCK_SIZE]{0.6f, 0.6f, 0.6f, 0.6f};
@@ -517,7 +519,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
                                expectedLeftInput, expectedRightInput);
         }
-        SECTION("Channels moves to the right by 50%")
+        SECTION(inParamsGroup.testGroup + "'s channels move to the right by 50%")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.2f, 0.1f, 0.2f, 0.1f};
             float expectedRightInput[BLOCK_SIZE]{0.4f, 0.5f, 0.4f, 0.5f};
@@ -531,7 +533,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
                 REQUIRE(inParamsGroup.rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
             }
         }
-        SECTION("Left channels moves to the right, the right channel is deleted")
+        SECTION(inParamsGroup.testGroup + "'s left channels move to the right, the right channel "
+                                          "is deleted")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
             float expectedRightInput[BLOCK_SIZE]{
