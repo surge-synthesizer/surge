@@ -160,18 +160,10 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
     if (slotType == a_insert_slot || slotType == b_insert_slot)
     {
-            // surge->sceneout[n_scenes][n_channels][BLOCK_SIZE]
-            // take a look at the data field we make for the alternate outputs
-            // yeah surge->sceneout[n_scenes][n_channels][BLOCK_SIZE]
-            // is the already downsampled scene output for A and B that should be populated before
-            // the FX re run but if its not just move the population in SurgeSythesizer::process
-
-
         float& sceneInputChannel = fxdata->p[in_scene_input_channel].val.f;
         float& sceneInputPan = fxdata->p[in_scene_input_pan].val.f;
         float& sceneInputLevelDb = fxdata->p[in_scene_input_level].val.f;
 
-        int otherScene = slotType == a_insert_slot ? 1 : 0;
         float* sceneData[] = {
             sceneDataPtr[0].get(),
             sceneDataPtr[1].get(),

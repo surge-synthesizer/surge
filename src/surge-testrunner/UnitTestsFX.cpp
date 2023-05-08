@@ -410,18 +410,33 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
     FxStorage *fxStorage = &surgeStorage->getPatch().fx[0];
     REQUIRE(fxStorage->type.val.i == fxt_input_blender);
 
-    float leftInput[BLOCK_SIZE] {0.4f,0.2f,0.4f,0.2f,};
-    float rightInput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f,};
-
     struct InParamsGroup {
         AudioInputEffect::in_params inputChannel;
         AudioInputEffect::in_params inputLevel;
         AudioInputEffect::in_params inputPan;
+        float leftInput[BLOCK_SIZE];
+        float rightInput[BLOCK_SIZE];
+
+        float sceneALeftInput[BLOCK_SIZE];
+        float sceneARightInput[BLOCK_SIZE];
+        float sceneBLeftInput[BLOCK_SIZE];
+        float sceneBRightInput[BLOCK_SIZE];
+
+
+
     };
     std::vector<InParamsGroup> inParamsGroups{
-        InParamsGroup{AudioInputEffect::in_effect_input_channel,
-                      AudioInputEffect::in_effect_input_level,
-                      AudioInputEffect::in_effect_input_pan},
+        InParamsGroup{
+            AudioInputEffect::in_effect_input_channel,
+            AudioInputEffect::in_effect_input_level,
+            AudioInputEffect::in_effect_input_pan,
+                {0.4f,0.2f,0.4f,0.2f,},
+                {0.2f, 0.4f, 0.2f, 0.4f,},
+                {},
+                {},
+                {},
+                {},
+        },
 //        InParamsGroup{AudioInputEffect::in_audio_input_channel,
 //                      AudioInputEffect::in_audio_input_level,
 //                      AudioInputEffect::in_audio_input_pan},
@@ -433,11 +448,18 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
     for(InParamsGroup inParamsGroup: inParamsGroups)
     {
 
+
+        // LEFT AND RIGHT SCENE INPUT
+        surgeStorage->scenesOutputData.provideSceneData(1,0, inParamsGroup.sceneBLeftInput);
+        surgeStorage->scenesOutputData.provideSceneData(1,1, inParamsGroup.sceneBRightInput);
+
+
         SECTION("With default params the result should be unchanged")
         {
             float expectedLeftInput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
             float expectedRightInput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f};
-            testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+            testExpectedValues( inParamsGroup.leftInput, inParamsGroup.rightInput,
+                                expectedLeftInput, expectedRightInput );
         }
 
         SECTION("Effect input accepts only left channel")
@@ -445,7 +467,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             float expectedLeftInput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
             float expectedRightInput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
             fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
-            testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+            testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
+                               expectedLeftInput, expectedRightInput);
         }
         SECTION("Effect input accepts 50% of left channel and 100% right")
         {
@@ -453,7 +476,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             float expectedRightInput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f};
             fxStorage->p[inParamsGroup.inputChannel].val.f = 0.25f;
 
-            testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+            testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
+                               expectedLeftInput, expectedRightInput);
         }
         SECTION("Effect input accepts 100% of left channel and 50% right")
         {
@@ -461,7 +485,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             float expectedRightInput[BLOCK_SIZE]{0.1f, 0.2f, 0.1f, 0.2f};
             fxStorage->p[inParamsGroup.inputChannel].val.f = -0.50f;
             fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
-            testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+            testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
+                               expectedLeftInput, expectedRightInput);
         }
         SECTION("Effect input accepts 100% of left channel and 50% right with 50% input level")
         {
@@ -469,7 +494,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             float expectedRightInput[BLOCK_SIZE]{0.05f, 0.1f, 0.05f, 0.1f};
             fxStorage->p[inParamsGroup.inputChannel].val.f = -0.50f;
             fxStorage->p[inParamsGroup.inputLevel].val.f = -5.995f;
-            testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+            testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
+                               expectedLeftInput, expectedRightInput);
         }
         SECTION("All channels moves to the left")
         {
@@ -478,7 +504,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
             fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
             fxStorage->p[inParamsGroup.inputPan].val.f = -1.0f;
-            testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+            testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
+                               expectedLeftInput, expectedRightInput);
         }
         SECTION("All channels moves to the right")
         {
@@ -487,7 +514,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
             fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
             fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
-            testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+            testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
+                               expectedLeftInput, expectedRightInput);
         }
         SECTION("Channels moves to the right by 50%")
         {
@@ -496,11 +524,11 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
             fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
             fxStorage->p[inParamsGroup.inputPan].val.f = 0.5f;
-            surge->fx[0]->process(leftInput, rightInput);
+            surge->fx[0]->process(inParamsGroup.leftInput, inParamsGroup.rightInput);
             for (int i = 0; i < 4; ++i)
             {
-                REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]).margin(0.001));
-                REQUIRE(rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
+                REQUIRE(inParamsGroup.leftInput[i] == Approx(expectedLeftInput[i]).margin(0.001));
+                REQUIRE(inParamsGroup.rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
             }
         }
         SECTION("Left channels moves to the right, the right channel is deleted")
@@ -515,7 +543,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]") {
             fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
             fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
             fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
-            testExpectedValues(leftInput, rightInput, expectedLeftInput, expectedRightInput);
+            testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
+                               expectedLeftInput, expectedRightInput);
         }
     }
 }
