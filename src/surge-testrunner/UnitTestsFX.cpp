@@ -446,18 +446,18 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
             {0.2f, 0.4f, 0.2f, 0.4f,},
             {}, {}, {}, {}
         },
-//        InParamsGroup
-//        {
-//            fxslot_ains1,
-//            "Audio input",
-//            AudioInputEffect::in_audio_input_channel,
-//            AudioInputEffect::in_audio_input_level,
-//            AudioInputEffect::in_audio_input_channel,
-//            {},{},
-//            {}, {}, {}, {},
-//            {0.4f,0.2f,0.4f,0.2f,},
-//            {0.2f, 0.4f, 0.2f, 0.4f,},
-//        }
+        InParamsGroup
+        {
+            fxslot_ains1,
+            "Audio input",
+            AudioInputEffect::in_audio_input_channel,
+            AudioInputEffect::in_audio_input_level,
+            AudioInputEffect::in_audio_input_pan,
+            {},{},
+            {}, {}, {}, {},
+            {0.4f,0.2f,0.4f,0.2f,},
+            {0.2f, 0.4f, 0.2f, 0.4f,},
+        }
     };
     for(InParamsGroup inParamsGroup: inParamsGroups)
     {
