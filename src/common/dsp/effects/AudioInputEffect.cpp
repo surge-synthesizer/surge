@@ -79,7 +79,7 @@ void AudioInputEffect::init_default_values()
 
     fxdata->p[in_effect_input_channel].val.f = 0.0; //p3
     fxdata->p[in_effect_input_pan].val.f = 0.0;  //p4
-    fxdata->p[in_effect_input_level].val.f = 1.0; //p5
+    fxdata->p[in_effect_input_level].val.f = 0.0; //p5
 
 
     fxdata->p[in_scene_input_channel].val.f = 0.0; //p6
