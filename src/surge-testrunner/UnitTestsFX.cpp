@@ -452,10 +452,10 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
             auto surge = Surge::Headless::createSurge(44100);
             REQUIRE(surge);
 
-            auto testExpectedValues = [&surge](
+            auto testExpectedValues = [&surge, &inParamsGroup](
                                           float *leftInput, float *rightInput,
                                           float *expectedLeftInput, float *expectedRightInput) {
-                surge->fx[0]->process(leftInput, rightInput);
+                surge->fx[inParamsGroup.slot]->process(leftInput, rightInput);
                 for (int i = 0; i < 4; ++i)
                 {
                     REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]).margin(0.001));
@@ -545,14 +545,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
                 fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
                 fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                 fxStorage->p[inParamsGroup.inputPan].val.f = 0.5f;
-                surge->fx[0]->process(inParamsGroup.leftInput, inParamsGroup.rightInput);
-                for (int i = 0; i < 4; ++i)
-                {
-                    REQUIRE(inParamsGroup.leftInput[i] ==
-                            Approx(expectedLeftInput[i]).margin(0.001));
-                    REQUIRE(inParamsGroup.rightInput[i] ==
-                            Approx(expectedRightInput[i]).margin(0.001));
-                }
+                testExpectedValues(inParamsGroup.leftInput, inParamsGroup.rightInput,
+                                   expectedLeftInput, expectedRightInput);
             }
             SECTION(inParamsGroup.testGroup +
                     "'s left channels move to the right, the right channel "
