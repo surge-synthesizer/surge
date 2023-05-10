@@ -445,7 +445,19 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
             {0.4f,0.2f,0.4f,0.2f,},
             {0.2f, 0.4f, 0.2f, 0.4f,},
             {}, {}, {}, {}
-        }
+        },
+//        InParamsGroup
+//        {
+//            fxslot_ains1,
+//            "Audio input",
+//            AudioInputEffect::in_audio_input_channel,
+//            AudioInputEffect::in_audio_input_level,
+//            AudioInputEffect::in_audio_input_channel,
+//            {},{},
+//            {}, {}, {}, {},
+//            {0.4f,0.2f,0.4f,0.2f,},
+//            {0.2f, 0.4f, 0.2f, 0.4f,},
+//        }
     };
     for(InParamsGroup inParamsGroup: inParamsGroups)
     {
@@ -486,6 +498,9 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
             {
                 float expectedLeftInput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
                 float expectedRightInput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f};
+                fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
+                fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+                fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
                 testExpectedValues(inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
                                    expectedLeftInput, expectedRightInput);
             }
@@ -495,6 +510,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
                 float expectedLeftInput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
                 float expectedRightInput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
                 fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
+                fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+                fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
                 testExpectedValues(inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
                                    expectedLeftInput, expectedRightInput);
             }
@@ -503,7 +520,8 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
                 float expectedLeftInput[BLOCK_SIZE]{0.3f, 0.15f, 0.3f, 0.15f};
                 float expectedRightInput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f};
                 fxStorage->p[inParamsGroup.inputChannel].val.f = 0.25f;
-
+                fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+                fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
                 testExpectedValues(inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
                                    expectedLeftInput, expectedRightInput);
             }
@@ -513,6 +531,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
                 float expectedRightInput[BLOCK_SIZE]{0.1f, 0.2f, 0.1f, 0.2f};
                 fxStorage->p[inParamsGroup.inputChannel].val.f = -0.50f;
                 fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+                fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
                 testExpectedValues(inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
                                    expectedLeftInput, expectedRightInput);
             }
@@ -523,6 +542,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
                 float expectedRightInput[BLOCK_SIZE]{0.05f, 0.1f, 0.05f, 0.1f};
                 fxStorage->p[inParamsGroup.inputChannel].val.f = -0.50f;
                 fxStorage->p[inParamsGroup.inputLevel].val.f = -5.995f;
+                fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
                 testExpectedValues(inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
                                    expectedLeftInput, expectedRightInput);
             }
@@ -561,12 +581,7 @@ TEST_CASE("AudioInputEffect: effect input",  "[fx]")
                     "is deleted")
             {
                 float expectedLeftInput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
-                float expectedRightInput[BLOCK_SIZE]{
-                    0.4f,
-                    0.2f,
-                    0.4f,
-                    0.2f,
-                };
+                float expectedRightInput[BLOCK_SIZE]{ 0.4f, 0.2f, 0.4f, 0.2f, };
                 fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
                 fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                 fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
