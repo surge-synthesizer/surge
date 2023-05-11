@@ -419,6 +419,9 @@ struct InParamsGroup {
     float audioLeftInput  alignas(16)[BLOCK_SIZE];
     float audioRightInput  alignas(16)[BLOCK_SIZE];
 
+    float expectedLeftInput[BLOCK_SIZE];
+    float expectedRightInput[BLOCK_SIZE];
+
     void fillWithData(SurgeStorage* surgeStorage) {
         surgeStorage->scenesOutputData.provideSceneData(0, 0, sceneALeftInput);
         surgeStorage->scenesOutputData.provideSceneData(0, 1, sceneARightInput);
@@ -489,7 +492,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
             {0.2f, 0.4f, 0.2f, 0.4f,},
         }
     };
-    for(InParamsGroup inParamsGroup: inParamsGroups)
+    for(InParamsGroup& inParamsGroup: inParamsGroups)
     {
         for (int slot: slots[inParamsGroup.slot])
         {
@@ -643,49 +646,87 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
          {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4}},
     };
 
-    auto surge = Surge::Headless::createSurge(44100);
-    REQUIRE(surge);
-
-    int slot = fxslot_ains1;
-
-    Surge::Test::setFX(surge, slot, fxt_input_blender);
-    SurgeStorage *surgeStorage = &surge->storage;
-    FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
-
-
-    fxStorage->p[AudioInputEffect::in_audio_input_channel].val.f = 0.0f;
-    fxStorage->p[AudioInputEffect::in_audio_input_level].val.f = 0.0f;
-    fxStorage->p[AudioInputEffect::in_audio_input_pan].val.f = 0.0f;
-
-    fxStorage->p[AudioInputEffect::in_scene_input_channel].val.f = 0.0f;
-    fxStorage->p[AudioInputEffect::in_scene_input_level].val.f = 0.0f;
-    fxStorage->p[AudioInputEffect::in_scene_input_pan].val.f = 0.0f;
-
-    fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.0f;
-    fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
-    fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 0.0f;
-
-    fxStorage->p[AudioInputEffect::in_output_width].val.f = 0.0f;
-    fxStorage->p[AudioInputEffect::in_output_mix].val.f = 0.0f;
-    REQUIRE(fxStorage->type.val.i == fxt_input_blender);
-
-    InParamsGroup inParamsGroup{
-        0, "",
-        AudioInputEffect::in_audio_input_channel,
-        AudioInputEffect::in_audio_input_level,
-        AudioInputEffect::in_audio_input_pan,
-        {0.1f, 0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f, 0.1f},
-        {0.1f, 0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f, 0.1f},
-        {0.1f, 0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f, 0.1f},
-        {0.1f, 0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f, 0.1f},
+    std::vector<InParamsGroup> inParamsGroups
+    {
+        {
+            AudioInputEffect::a_insert_slot,
+            "A Insert",
+            AudioInputEffect::in_audio_input_channel,
+            AudioInputEffect::in_audio_input_level,
+            AudioInputEffect::in_audio_input_pan,
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.2f, 0.2f, 0.2f, 0.2f},
+            {0.2f, 0.2f, 0.2f, 0.2f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.3f,0.3f,0.3f,0.3f},
+            {0.3f,0.3f,0.3f,0.3f}
+        },
+        {
+            AudioInputEffect::b_insert_slot,
+            "B Insert",
+            AudioInputEffect::in_audio_input_channel,
+            AudioInputEffect::in_audio_input_level,
+            AudioInputEffect::in_audio_input_pan,
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.2f, 0.2f, 0.2f, 0.2f},
+            {0.2f, 0.2f, 0.2f, 0.2f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.4f,0.4f,0.4f,0.4f},
+            {0.4f,0.4f,0.4f,0.4f}
+        }
     };
-    inParamsGroup.fillWithData(surgeStorage);
+    for(InParamsGroup& inParamsGroup: inParamsGroups)
+    {
+        SECTION(inParamsGroup.testGroup)
+        {
+            for (int slot : slots[inParamsGroup.slot])
+            {
 
-    float expectedLeftInput[BLOCK_SIZE]{0.3f, 0.3f, 0.3f, 0.3f};
-    float expectedRightInput[BLOCK_SIZE]{0.3f, 0.3f, 0.3f, 0.3f};
-    testExpectedValues(surge, slot,
-                       inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
-                       expectedLeftInput, expectedRightInput);
+                auto surge = Surge::Headless::createSurge(44100);
+                REQUIRE(surge);
+
+                Surge::Test::setFX(surge, slot, fxt_input_blender);
+                SurgeStorage *surgeStorage = &surge->storage;
+                FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
+
+                fxStorage->p[AudioInputEffect::in_audio_input_channel].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_audio_input_level].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_audio_input_pan].val.f = 0.0f;
+
+                fxStorage->p[AudioInputEffect::in_scene_input_channel].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_scene_input_level].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_scene_input_pan].val.f = 0.0f;
+
+                fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 0.0f;
+
+                fxStorage->p[AudioInputEffect::in_output_width].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_output_mix].val.f = 0.0f;
+                REQUIRE(fxStorage->type.val.i == fxt_input_blender);
+
+                SECTION(inParamsGroup.testGroup + ", slot " + std::to_string(slot))
+                {
+                    inParamsGroup.fillWithData(surgeStorage);
+
+                    testExpectedValues(
+                        surge, slot,
+                        inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
+                        inParamsGroup.expectedLeftInput, inParamsGroup.expectedRightInput
+                    );
+                };
+            }
+        }
+    }
+
 
 
 
