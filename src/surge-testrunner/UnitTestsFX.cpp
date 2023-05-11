@@ -400,30 +400,37 @@ void testExpectedValues(std::shared_ptr<SurgeSynthesizer>surge, int slot,
         REQUIRE(rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
     }
 }
+struct InParamsGroup {
+    int slot;
 
+    std::string testGroup;
+    AudioInputEffect::in_params inputChannel;
+    AudioInputEffect::in_params inputLevel;
+    AudioInputEffect::in_params inputPan;
+    float leftEffectInput  alignas(16)[BLOCK_SIZE];
+    float rightEffectInput  alignas(16)[BLOCK_SIZE];
+
+    float sceneALeftInput  alignas(16)[BLOCK_SIZE];
+    float sceneARightInput  alignas(16)[BLOCK_SIZE];
+
+    float sceneBLeftInput  alignas(16)[BLOCK_SIZE];
+    float sceneBRightInput  alignas(16)[BLOCK_SIZE];
+
+    float audioLeftInput  alignas(16)[BLOCK_SIZE];
+    float audioRightInput  alignas(16)[BLOCK_SIZE];
+
+    void fillWithData(SurgeStorage* surgeStorage) {
+        surgeStorage->scenesOutputData.provideSceneData(0, 0, sceneALeftInput);
+        surgeStorage->scenesOutputData.provideSceneData(0, 1, sceneARightInput);
+        surgeStorage->scenesOutputData.provideSceneData(1, 0, sceneBLeftInput);
+        surgeStorage->scenesOutputData.provideSceneData(1, 1, sceneBRightInput);
+        copy_block(audioLeftInput, surgeStorage->audio_in_nonOS[0], BLOCK_SIZE_QUAD);
+        copy_block(audioRightInput, surgeStorage->audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+    }
+};
 
 TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
 {
-
-    struct InParamsGroup {
-        int slot;
-
-        std::string testGroup;
-        AudioInputEffect::in_params inputChannel;
-        AudioInputEffect::in_params inputLevel;
-        AudioInputEffect::in_params inputPan;
-        float leftEffectInput  alignas(16)[BLOCK_SIZE];
-        float rightEffectInput  alignas(16)[BLOCK_SIZE];
-
-        float sceneALeftInput  alignas(16)[BLOCK_SIZE];
-        float sceneARightInput  alignas(16)[BLOCK_SIZE];
-
-        float sceneBLeftInput  alignas(16)[BLOCK_SIZE];
-        float sceneBRightInput  alignas(16)[BLOCK_SIZE];
-
-        float audioLeftInput  alignas(16)[BLOCK_SIZE];
-        float audioRightInput  alignas(16)[BLOCK_SIZE];
-    };
     std::map<int, std::vector<int>> slots {
         {AudioInputEffect::a_insert_slot,
                 {fxslot_ains1, fxslot_ains2, fxslot_ains3, fxslot_ains4}},
@@ -500,19 +507,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                 FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
                 REQUIRE(fxStorage->type.val.i == fxt_input_blender);
 
-                // LEFT AND RIGHT SCENE INPUT
-                surgeStorage->scenesOutputData.provideSceneData(0, 0,
-                                                                inParamsGroup.sceneALeftInput);
-                surgeStorage->scenesOutputData.provideSceneData(0, 1,
-                                                                inParamsGroup.sceneARightInput);
-                surgeStorage->scenesOutputData.provideSceneData(1, 0,
-                                                                inParamsGroup.sceneBLeftInput);
-                surgeStorage->scenesOutputData.provideSceneData(1, 1,
-                                                                inParamsGroup.sceneBRightInput);
-                copy_block(inParamsGroup.audioLeftInput, surgeStorage->audio_in_nonOS[0],
-                           BLOCK_SIZE_QUAD);
-                copy_block(inParamsGroup.audioRightInput, surgeStorage->audio_in_nonOS[1],
-                           BLOCK_SIZE_QUAD);
+                inParamsGroup.fillWithData(surgeStorage);
 
                 SECTION(inParamsGroup.testGroup +
                         " with default params the result should be unchanged")
@@ -634,37 +629,64 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
     }
 }
 
-//TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
-//{
-//
-//    auto surge = Surge::Headless::createSurge(44100);
-//    REQUIRE(surge);
-//
-//
-//
-//    Surge::Test::setFX(surge, slot, fxt_input_blender);
-//    SurgeStorage *surgeStorage = &surge->storage;
-//    FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
-//
-//
-//    fxStorage->p[AudioInputEffect::in_audio_input_channel].val.f = 0.0f;
-//    fxStorage->p[AudioInputEffect::in_audio_input_level].val.f = 0.0f;
-//    fxStorage->p[AudioInputEffect::in_audio_input_pan].val.f = 0.0f;
-//
-//    fxStorage->p[AudioInputEffect::in_scene_input_channel].val.f = 0.0f;
-//    fxStorage->p[AudioInputEffect::in_scene_input_level].val.f = 0.0f;
-//    fxStorage->p[AudioInputEffect::in_scene_input_pan].val.f = 0.0f;
-//
-//    fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.0f;
-//    fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
-//    fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 0.0f;
-//
-//    fxStorage->p[AudioInputEffect::in_output_width].val.f = 0.0f;
-//    fxStorage->p[AudioInputEffect::in_output_mix].val.f = 0.0f;
-//
-//
-//
-//
-//    REQUIRE(fxStorage->type.val.i == fxt_input_blender);
-//
-//}
+TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
+{
+
+    std::map<int, std::vector<int>> slots {
+        {AudioInputEffect::a_insert_slot,
+         {fxslot_ains1, fxslot_ains2, fxslot_ains3, fxslot_ains4}},
+        {AudioInputEffect::b_insert_slot,
+         {fxslot_bins1, fxslot_bins2, fxslot_bins3, fxslot_bins4}},
+        {AudioInputEffect::send_slot,
+         {fxslot_send1, fxslot_send2, fxslot_send3, fxslot_send4}},
+        {AudioInputEffect::global_slot,
+         {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4}},
+    };
+
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge);
+
+    int slot = fxslot_ains1;
+
+    Surge::Test::setFX(surge, slot, fxt_input_blender);
+    SurgeStorage *surgeStorage = &surge->storage;
+    FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
+
+
+    fxStorage->p[AudioInputEffect::in_audio_input_channel].val.f = 0.0f;
+    fxStorage->p[AudioInputEffect::in_audio_input_level].val.f = 0.0f;
+    fxStorage->p[AudioInputEffect::in_audio_input_pan].val.f = 0.0f;
+
+    fxStorage->p[AudioInputEffect::in_scene_input_channel].val.f = 0.0f;
+    fxStorage->p[AudioInputEffect::in_scene_input_level].val.f = 0.0f;
+    fxStorage->p[AudioInputEffect::in_scene_input_pan].val.f = 0.0f;
+
+    fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.0f;
+    fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+    fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 0.0f;
+
+    fxStorage->p[AudioInputEffect::in_output_width].val.f = 0.0f;
+    fxStorage->p[AudioInputEffect::in_output_mix].val.f = 0.0f;
+    REQUIRE(fxStorage->type.val.i == fxt_input_blender);
+
+    InParamsGroup inParamsGroup{
+        0, "",
+        AudioInputEffect::in_audio_input_channel,
+        AudioInputEffect::in_audio_input_level,
+        AudioInputEffect::in_audio_input_pan,
+        {0.1f, 0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f, 0.1f},
+        {0.1f, 0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f, 0.1f},
+        {0.1f, 0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f, 0.1f},
+        {0.1f, 0.1f, 0.1f, 0.1f}, {0.1f, 0.1f, 0.1f, 0.1f},
+    };
+    inParamsGroup.fillWithData(surgeStorage);
+
+    float expectedLeftInput[BLOCK_SIZE]{0.3f, 0.3f, 0.3f, 0.3f};
+    float expectedRightInput[BLOCK_SIZE]{0.3f, 0.3f, 0.3f, 0.3f};
+    testExpectedValues(surge, slot,
+                       inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
+                       expectedLeftInput, expectedRightInput);
+
+
+
+}
