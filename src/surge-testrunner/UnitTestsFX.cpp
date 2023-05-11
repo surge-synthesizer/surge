@@ -389,6 +389,19 @@ TEST_CASE("ScenesOutputData",  "[fx]") {
     }
 }
 
+void testExpectedValues(std::shared_ptr<SurgeSynthesizer>surge, int slot,
+                        float *leftInput, float *rightInput,
+                        float *expectedLeftInput, float *expectedRightInput)
+{
+    surge->fx[slot]->process(leftInput, rightInput);
+    for (int i = 0; i < 4; ++i)
+    {
+        REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]).margin(0.001));
+        REQUIRE(rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
+    }
+}
+
+
 TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
 {
 
@@ -480,16 +493,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                 auto surge = Surge::Headless::createSurge(44100);
                 REQUIRE(surge);
 
-                auto testExpectedValues = [&surge, &slot](float *leftInput, float *rightInput,
-                                                          float *expectedLeftInput,
-                                                          float *expectedRightInput) {
-                    surge->fx[slot]->process(leftInput, rightInput);
-                    for (int i = 0; i < 4; ++i)
-                    {
-                        REQUIRE(leftInput[i] == Approx(expectedLeftInput[i]).margin(0.001));
-                        REQUIRE(rightInput[i] == Approx(expectedRightInput[i]).margin(0.001));
-                    }
-                };
+
 
                 Surge::Test::setFX(surge, slot, fxt_input_blender);
                 SurgeStorage *surgeStorage = &surge->storage;
@@ -518,7 +522,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
+                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
                                        inParamsGroup.rightEffectInput, expectedLeftInput,
                                        expectedRightInput);
                 }
@@ -530,8 +534,10 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftInput,
+                    testExpectedValues(surge, slot,
+                                       inParamsGroup.leftEffectInput,
+                                       inParamsGroup.rightEffectInput,
+                                       expectedLeftInput,
                                        expectedRightInput);
                 }
                 SECTION(inParamsGroup.testGroup + " accepts 50% of left channel and 100% right")
@@ -541,8 +547,10 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = 0.25f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftInput,
+                    testExpectedValues(surge, slot,
+                                       inParamsGroup.leftEffectInput,
+                                       inParamsGroup.rightEffectInput,
+                                       expectedLeftInput,
                                        expectedRightInput);
                 }
                 SECTION(inParamsGroup.testGroup + " accepts 100% of left channel and 50% right")
@@ -552,8 +560,10 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = -0.50f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftInput,
+                    testExpectedValues(surge, slot,
+                                       inParamsGroup.leftEffectInput,
+                                       inParamsGroup.rightEffectInput,
+                                       expectedLeftInput,
                                        expectedRightInput);
                 }
                 SECTION(inParamsGroup.testGroup +
@@ -564,7 +574,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = -0.50f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = -5.995f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
+                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
                                        inParamsGroup.rightEffectInput, expectedLeftInput,
                                        expectedRightInput);
                 }
@@ -575,7 +585,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = -1.0f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
+                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
                                        inParamsGroup.rightEffectInput, expectedLeftInput,
                                        expectedRightInput);
                 }
@@ -586,7 +596,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
+                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
                                        inParamsGroup.rightEffectInput, expectedLeftInput,
                                        expectedRightInput);
                 }
@@ -597,7 +607,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = 0.5f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
+                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
                                        inParamsGroup.rightEffectInput, expectedLeftInput,
                                        expectedRightInput);
                 }
@@ -615,7 +625,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                     fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
                     fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
                     fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
-                    testExpectedValues(inParamsGroup.leftEffectInput,
+                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
                                        inParamsGroup.rightEffectInput, expectedLeftInput,
                                        expectedRightInput);
                 }
@@ -624,3 +634,37 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
     }
 }
 
+//TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
+//{
+//
+//    auto surge = Surge::Headless::createSurge(44100);
+//    REQUIRE(surge);
+//
+//
+//
+//    Surge::Test::setFX(surge, slot, fxt_input_blender);
+//    SurgeStorage *surgeStorage = &surge->storage;
+//    FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
+//
+//
+//    fxStorage->p[AudioInputEffect::in_audio_input_channel].val.f = 0.0f;
+//    fxStorage->p[AudioInputEffect::in_audio_input_level].val.f = 0.0f;
+//    fxStorage->p[AudioInputEffect::in_audio_input_pan].val.f = 0.0f;
+//
+//    fxStorage->p[AudioInputEffect::in_scene_input_channel].val.f = 0.0f;
+//    fxStorage->p[AudioInputEffect::in_scene_input_level].val.f = 0.0f;
+//    fxStorage->p[AudioInputEffect::in_scene_input_pan].val.f = 0.0f;
+//
+//    fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.0f;
+//    fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+//    fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 0.0f;
+//
+//    fxStorage->p[AudioInputEffect::in_output_width].val.f = 0.0f;
+//    fxStorage->p[AudioInputEffect::in_output_mix].val.f = 0.0f;
+//
+//
+//
+//
+//    REQUIRE(fxStorage->type.val.i == fxt_input_blender);
+//
+//}
