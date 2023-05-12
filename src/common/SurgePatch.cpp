@@ -555,79 +555,79 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             snprintf(label, LABEL_SIZE, "lfo%i_shape", l);
             a->push_back(scene[sc].lfo[l].shape.assign(
                 p_id.next(), id_s++, label, "Type",
-                fmt::format("{:c}/{}{}/type", 'a' + sc, lt, lid), ct_lfotype,
+                fmt::format("{:c}/{}/{}/type", 'a' + sc, lt, lid), ct_lfotype,
                 Surge::Skin::LFO::shape, sc_id, cg_LFO, ms_lfo1 + l));
 
             snprintf(label, LABEL_SIZE, "lfo%i_rate", l);
             a->push_back(scene[sc].lfo[l].rate.assign(
                 p_id.next(), id_s++, label, "Rate",
-                fmt::format("{:c}/{}{}/rate", 'a' + sc, lt, lid), ct_lforate_deactivatable,
+                fmt::format("{:c}/{}/{}/rate", 'a' + sc, lt, lid), ct_lforate_deactivatable,
                 Surge::Skin::LFO::rate, sc_id, cg_LFO, ms_lfo1 + l, true, sceasy, false));
 
             snprintf(label, LABEL_SIZE, "lfo%i_phase", l);
             a->push_back(scene[sc].lfo[l].start_phase.assign(
                 p_id.next(), id_s++, label, "Phase / Shuffle",
-                fmt::format("{:c}/{}{}/phase", 'a' + sc, lt, lid), ct_lfophaseshuffle,
+                fmt::format("{:c}/{}/{}/phase", 'a' + sc, lt, lid), ct_lfophaseshuffle,
                 Surge::Skin::LFO::phase, sc_id, cg_LFO, ms_lfo1 + l, true));
 
             snprintf(label, LABEL_SIZE, "lfo%i_magnitude", l);
             a->push_back(scene[sc].lfo[l].magnitude.assign(
                 p_id.next(), id_s++, label, "Amplitude",
-                fmt::format("{:c}/{}{}/amplitude", 'a' + sc, lt, lid), ct_lfoamplitude,
+                fmt::format("{:c}/{}/{}/amplitude", 'a' + sc, lt, lid), ct_lfoamplitude,
                 Surge::Skin::LFO::amplitude, sc_id, cg_LFO, ms_lfo1 + l, true, sceasy));
 
             snprintf(label, LABEL_SIZE, "lfo%i_deform", l);
             a->push_back(scene[sc].lfo[l].deform.assign(
                 p_id.next(), id_s++, label, "Deform",
-                fmt::format("{:c}/{}{}/deform", 'a' + sc, lt, lid), ct_lfodeform,
+                fmt::format("{:c}/{}/{}/deform", 'a' + sc, lt, lid), ct_lfodeform,
                 Surge::Skin::LFO::deform, sc_id, cg_LFO, ms_lfo1 + l, true));
 
             snprintf(label, LABEL_SIZE, "lfo%i_trigmode", l);
             a->push_back(scene[sc].lfo[l].trigmode.assign(
                 p_id.next(), id_s++, label, "Trigger Mode",
-                fmt::format("{:c}/{}{}/trigger_mode", 'a' + sc, lt, lid), ct_lfotrigmode,
+                fmt::format("{:c}/{}/{}/trigger_mode", 'a' + sc, lt, lid), ct_lfotrigmode,
                 Surge::Skin::LFO::trigger_mode, sc_id, cg_LFO, ms_lfo1 + l, false, kNoPopup));
 
             snprintf(label, LABEL_SIZE, "lfo%i_unipolar", l);
             a->push_back(scene[sc].lfo[l].unipolar.assign(
                 p_id.next(), id_s++, label, "Unipolar",
-                fmt::format("{:c}/{}{}/unipolar", 'a' + sc, lt, lid), ct_bool_unipolar,
+                fmt::format("{:c}/{}/{}/unipolar", 'a' + sc, lt, lid), ct_bool_unipolar,
                 Surge::Skin::LFO::unipolar, sc_id, cg_LFO, ms_lfo1 + l, false));
 
             snprintf(label, LABEL_SIZE, "lfo%i_delay", l);
             a->push_back(scene[sc].lfo[l].delay.assign(
                 p_id.next(), id_s++, label, "Delay",
-                fmt::format("{:c}/{}{}/eg/delay", 'a' + sc, lt, lid), ct_envtime_deactivatable,
+                fmt::format("{:c}/{}/{}/eg/delay", 'a' + sc, lt, lid), ct_envtime_deactivatable,
                 Surge::Skin::LFO::delay, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
             snprintf(label, LABEL_SIZE, "lfo%i_attack", l);
             a->push_back(scene[sc].lfo[l].attack.assign(
                 p_id.next(), id_s++, label, "Attack",
-                fmt::format("{:c}/{}{}/eg/attack", 'a' + sc, lt, lid), ct_envtime,
+                fmt::format("{:c}/{}/{}/eg/attack", 'a' + sc, lt, lid), ct_envtime,
                 Surge::Skin::LFO::attack, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
             snprintf(label, LABEL_SIZE, "lfo%i_hold", l);
             a->push_back(scene[sc].lfo[l].hold.assign(
                 p_id.next(), id_s++, label, "Hold",
-                fmt::format("{:c}/{}{}/eg/hold", 'a' + sc, lt, lid), ct_envtime,
+                fmt::format("{:c}/{}/{}/eg/hold", 'a' + sc, lt, lid), ct_envtime,
                 Surge::Skin::LFO::hold, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
             snprintf(label, LABEL_SIZE, "lfo%i_decay", l);
             a->push_back(scene[sc].lfo[l].decay.assign(
                 p_id.next(), id_s++, label, "Decay",
-                fmt::format("{:c}/{}{}/eg/decay", 'a' + sc, lt, lid), ct_envtime,
+                fmt::format("{:c}/{}/{}/eg/decay", 'a' + sc, lt, lid), ct_envtime,
                 Surge::Skin::LFO::decay, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
             snprintf(label, LABEL_SIZE, "lfo%i_sustain", l);
             a->push_back(scene[sc].lfo[l].sustain.assign(
                 p_id.next(), id_s++, label, "Sustain",
-                fmt::format("{:c}/{}{}/eg/sustain", 'a' + sc, lt, lid), ct_percent,
+                fmt::format("{:c}/{}/{}/eg/sustain", 'a' + sc, lt, lid), ct_percent,
                 Surge::Skin::LFO::sustain, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
             snprintf(label, LABEL_SIZE, "lfo%i_release", l);
             a->push_back(scene[sc].lfo[l].release.assign(
                 p_id.next(), id_s++, label, "Release",
-                fmt::format("{:c}/{}{}/eg/release", 'a' + sc, lt, lid), ct_envtime_lfodecay,
+                fmt::format("{:c}/{}/{}/eg/release", 'a' + sc, lt, lid), ct_envtime_lfodecay,
                 Surge::Skin::LFO::release, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
         }
     }

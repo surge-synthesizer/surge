@@ -27,6 +27,7 @@
 #include "RuntimeFont.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
+#include "StringOscillator.h"
 #include "AliasOscillator.h"
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
@@ -384,13 +385,24 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         drawEditorBox(g, customEditorActionLabel(customEditor == nullptr));
     }
 
+    // Display the latency message in audio input.
     if (sge && sge->audioLatencyNotified)
     {
-        g.setColour(skin->getColor(Colors::Osc::Display::Wave));
-        g.setFont(skin->fontManager->getLatoAtSize(7));
-        auto lmsg = fmt::format("Input Delay: {} Samples", BLOCK_SIZE);
-        g.drawText(lmsg.c_str(), getLocalBounds().reduced(2, 2).translated(0, 10),
-                   juce::Justification::topLeft);
+        auto osctype = oscdata->type.val.i;
+
+        if (osctype == ot_audioinput ||
+            (osctype == ot_string && oscdata->p[StringOscillator::str_exciter_mode].val.i ==
+                                         StringOscillator::constant_audioin) ||
+            (osctype == ot_alias &&
+             oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_audiobuffer))
+        {
+            auto lmsg = fmt::format("Input Delay: {} samples", BLOCK_SIZE);
+
+            g.setColour(skin->getColor(Colors::Osc::Display::Wave));
+            g.setFont(skin->fontManager->getLatoAtSize(7));
+            g.drawText(lmsg.c_str(), getLocalBounds().reduced(2, 2).translated(0, 10),
+                       juce::Justification::topLeft);
+        }
     }
 }
 

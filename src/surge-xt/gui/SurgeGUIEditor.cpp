@@ -2796,33 +2796,15 @@ void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where,
 
 void SurgeGUIEditor::scaleFileDropped(const string &fn)
 {
-    try
-    {
-        undoManager()->pushTuning(synth->storage.currentTuning);
-        this->synth->storage.retuneToScale(Tunings::readSCLFile(fn));
-        this->synth->refresh_editor = true;
-    }
-    catch (Tunings::TuningError &e)
-    {
-        synth->storage.retuneTo12TETScaleC261Mapping();
-        synth->storage.reportError(e.what(), "SCL Error");
-    }
+    undoManager()->pushTuning(synth->storage.currentTuning);
+    synth->storage.loadTuningFromSCL(fn);
     tuningChanged();
 }
 
 void SurgeGUIEditor::mappingFileDropped(const string &fn)
 {
-    try
-    {
-        undoManager()->pushTuning(synth->storage.currentTuning);
-        this->synth->storage.remapToKeyboard(Tunings::readKBMFile(fn));
-        this->synth->refresh_editor = true;
-    }
-    catch (Tunings::TuningError &e)
-    {
-        synth->storage.remapToConcertCKeyboard();
-        synth->storage.reportError(e.what(), "KBM Error");
-    }
+    undoManager()->pushTuning(synth->storage.currentTuning);
+    synth->storage.loadMappingFromKBM(fn);
     tuningChanged();
 }
 
@@ -4869,7 +4851,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 
     oscSubMenu.addSeparator();
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Show All OSC Parameters..."),
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Show All OSC Addresses..."),
                        [this]() { showHTML(this->parametersToHtml()); });
 
     return oscSubMenu;

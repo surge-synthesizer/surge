@@ -70,7 +70,18 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     fx_suspend_bitmask = 0;
 
     for (int i = 0; i < n_fx_slots; ++i)
+    {
         fx[i].reset(nullptr);
+    }
+
+    for (int i = 0; i < disallowedLearnCCs.size(); i++)
+    {
+        if (i == 0 || i == 6 || i == 32 || i == 38 || i == 64 || i == 74 || (i >= 98 && i <= 101) ||
+            i == 120 || i == 123)
+        {
+            disallowedLearnCCs[i] = true;
+        }
+    }
 
     srand((unsigned)time(nullptr));
     // TODO: FIX SCENE ASSUMPTION
@@ -122,6 +133,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         {
             scene.modsources[i] = 0;
         }
+
         scene.modsources[ms_modwheel] = new ControllerModulationSource(storage.smoothingMode);
         scene.modsources[ms_breath] = new ControllerModulationSource(storage.smoothingMode);
         scene.modsources[ms_expression] = new ControllerModulationSource(storage.smoothingMode);
@@ -143,7 +155,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
         for (int osc = 0; osc < n_oscs; osc++)
         {
-            // p 5 is unison detune
+            // p[5] is unison detune
             scene.osc[osc].p[5].val.f = 0.1f;
         }
 
@@ -151,8 +163,8 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         {
             scene.filterunit[i].type.set_user_data(&patch.patchFilterSelectorMapper);
         }
-        scene.wsunit.type.set_user_data(&patch.patchWaveshaperSelectorMapper);
 
+        scene.wsunit.type.set_user_data(&patch.patchWaveshaperSelectorMapper);
         scene.filterblock_configuration.val.i = fc_wide;
 
         for (int l = 0; l < n_lfos_scene; l++)
@@ -167,7 +179,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         }
 
         for (int k = 0; k < 128; ++k)
+        {
             midiKeyPressedForScene[sc][k] = 0;
+        }
     }
 
     for (int i = 0; i < n_customcontrollers; i++)
@@ -179,10 +193,17 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
             patch.scene[j].modsources[ms_ctrl1 + i] = patch.scene[0].modsources[ms_ctrl1 + i];
         }
     }
+
     for (int s = 0; s < n_scenes; ++s)
+    {
         for (auto ms : patch.scene[s].modsources)
+        {
             if (ms)
+            {
                 ms->set_samplerate(storage.samplerate, storage.samplerate_inv);
+            }
+        }
+    }
 
     amp.set_blocksize(BLOCK_SIZE);
     amp_mute.set_blocksize(BLOCK_SIZE);
@@ -250,6 +271,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     patchid_queue = -1;
     has_patchid_file = false;
     bool lookingForFactory = (storage.initPatchCategoryType == "Factory");
+
     for (auto p : storage.patch_list)
     {
         if (p.name == storage.initPatchName &&
@@ -259,10 +281,15 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
             patchid_queue = pid;
             break;
         }
+
         pid++;
     }
+
     if (patchid_queue >= 0)
+    {
         processAudioThreadOpsWhenAudioEngineUnavailable(true); // DANGER MODE IS ON
+    }
+
     patchid_queue = -1;
     has_patchid_file = false;
 }
@@ -2192,9 +2219,11 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
     int cc_encoded = cc;
 
-    if ((cc == 6) || (cc == 38)) // handle RPN/NRPNs (untested)
+    // handle RPN/NRPNs (untested)
+    if (cc == 6 || cc == 38)
     {
         int tv, cnum;
+
         if (channelState[channel].nrpn_last)
         {
             tv = (channelState[channel].nrpn_v[1] << 7) + channelState[channel].nrpn_v[0];
@@ -2223,26 +2252,36 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
     if (learn_param_from_cc >= 0)
     {
-        if (learn_param_from_cc < n_global_params)
+        if (!disallowedLearnCCs.test(cc))
         {
-            storage.getPatch().param_ptr[learn_param_from_cc]->midictrl = cc_encoded;
-        }
-        else
-        {
-            int a = learn_param_from_cc;
-            if (learn_param_from_cc >= (n_global_params + n_scene_params))
-                a -= n_scene_params;
+            if (learn_param_from_cc < n_global_params)
+            {
+                storage.getPatch().param_ptr[learn_param_from_cc]->midictrl = cc_encoded;
+            }
+            else
+            {
+                int a = learn_param_from_cc;
 
-            storage.getPatch().param_ptr[a]->midictrl = cc_encoded;
-            storage.getPatch().param_ptr[a + n_scene_params]->midictrl = cc_encoded;
+                if (learn_param_from_cc >= (n_global_params + n_scene_params))
+                {
+                    a -= n_scene_params;
+                }
+
+                storage.getPatch().param_ptr[a]->midictrl = cc_encoded;
+                storage.getPatch().param_ptr[a + n_scene_params]->midictrl = cc_encoded;
+            }
+
+            learn_param_from_cc = -1;
         }
-        learn_param_from_cc = -1;
     }
 
     if ((learn_macro_from_cc >= 0) && (learn_macro_from_cc < n_customcontrollers))
     {
-        storage.controllers[learn_macro_from_cc] = cc_encoded;
-        learn_macro_from_cc = -1;
+        if (!disallowedLearnCCs.test(cc))
+        {
+            storage.controllers[learn_macro_from_cc] = cc_encoded;
+            learn_macro_from_cc = -1;
+        }
     }
 
     for (int i = 0; i < n_global_params; i++)
@@ -2251,13 +2290,19 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         {
             this->setParameterSmoothed(i, fval);
             int j = 0;
+
             while (j < 7)
             {
                 if ((refresh_ctrl_queue[j] > -1) && (refresh_ctrl_queue[j] != i))
+                {
                     j++;
+                }
                 else
+                {
                     break;
+                }
             }
+
             refresh_ctrl_queue[j] = i;
             refresh_ctrl_queue_value[j] = fval;
         }
@@ -2271,13 +2316,19 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         {
             this->setParameterSmoothed(i, fval);
             int j = 0;
+
             while (j < 7)
             {
                 if ((refresh_ctrl_queue[j] > -1) && (refresh_ctrl_queue[j] != i))
+                {
                     j++;
+                }
                 else
+                {
                     break;
+                }
             }
+
             refresh_ctrl_queue[j] = i;
             refresh_ctrl_queue_value[j] = fval;
         }

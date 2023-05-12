@@ -35,6 +35,7 @@ struct QuadFilterChainState;
 #include <utility>
 #include <atomic>
 #include <cstdio>
+#include <bitset>
 
 struct timedata
 {
@@ -176,7 +177,7 @@ class alignas(16) SurgeSynthesizer
     /*
      * So when surge was pre-juce we contemplated writing our own ID remapping between
      * internal indices and DAW IDs so put an indirectin and class in place. JUCE obviates
-     * the need for that by using hash of stremaing name as an ID consistently throuhg its
+     * the need for that by using hash of stremaing name as an ID consistently through its
      * param mechanism. I could, in theory, have gone right back to int as my accessor class
      * but there's something compelilng about keeping that indirection I plumbed in just in case
      * i need it in the future. So the ID class is now just a simple wrapper on an int which is
@@ -422,6 +423,7 @@ class alignas(16) SurgeSynthesizer
     int mpeVoices = 0;
     int mpeGlobalPitchBendRange = 0;
 
+    std::bitset<128> disallowedLearnCCs{0};
     std::array<uint64_t, 128> midiKeyPressedForScene[n_scenes];
     uint64_t orderedMidiKey = 0;
     std::atomic<uint64_t> midiNoteEvents{0};

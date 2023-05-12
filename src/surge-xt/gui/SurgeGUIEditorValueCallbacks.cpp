@@ -82,17 +82,20 @@ void addEnvTrigOptions(SurgeSynthesizer *synth, juce::PopupMenu &contextMenu, in
 
     for (int i = 0; i < 2; ++i)
     {
+        auto value = vals[i];
         bool isChecked =
-            (vals[i] == synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode);
+            (value == synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode);
 
-        contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true, isChecked, [&]() {
-            synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode = vals[i];
+        contextMenu.addItem(
+            Surge::GUI::toOSCase(labels[i]), true, isChecked,
+            [synth, current_scene, value, isChecked]() {
+                synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode = value;
 
-            if (!isChecked)
-            {
-                synth->storage.getPatch().isDirty = true;
-            }
-        });
+                if (!isChecked)
+                {
+                    synth->storage.getPatch().isDirty = true;
+                }
+            });
     }
 }
 
@@ -128,9 +131,8 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                 bool isEnabled = true;
 
                 // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
-                if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
-                    (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) || mc == 120 ||
-                    mc == 123)
+                if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 || mc == 74 ||
+                    (mc >= 98 && mc <= 101) || mc == 120 || mc == 123)
                 {
                     isEnabled = false;
                 }
