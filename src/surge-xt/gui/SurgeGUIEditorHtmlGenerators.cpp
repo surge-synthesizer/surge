@@ -601,6 +601,25 @@ code {
       <div class="outer"><div class="frame">
     )HTML";
 
+    // Show patch selection
+    htmls << R"HTML(
+        <div class="tablewrap fl cl">
+        <div class="heading"><h3>Patches:</h3></div>
+            <table style="border: 2px solid black;">
+                <tr>
+                    <th>Address</th>
+                    <th>Description</th>
+                    <th>Appropriate Values</th>
+                </tr>
+                <tr>
+                    <td>/patch</td>
+                    <td>load patch</td>
+                    <td class="center">file path (absolute or relative)</td>
+                </tr>
+            </table>
+            </div>
+        )HTML";
+
     // Show tuning controls
     htmls << R"HTML(
         <div class="tablewrap fl cl">
@@ -644,6 +663,16 @@ code {
                     <td>/settings/path/kbm</td>
                     <td>.kbm file default path</td>
                     <td class="center">file path (absolute only)</td>
+                </tr>
+                <tr>
+                    <td>/settings/path/patch_group</td>
+                    <td>patch group</td>
+                    <td class="center"></td>
+                </tr>
+                <tr>
+                    <td>/settings/path/patch_category</td>
+                    <td>patch category</td>
+                    <td class="center"></td>
                 </tr>
                 <tr>
                     <td class="center" colspan="3">(use value = '_reset' to reset path to factory default)</td>

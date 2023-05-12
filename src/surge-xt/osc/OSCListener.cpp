@@ -136,6 +136,27 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
     }
+    else if (address1 == "patch")
+    {
+        /*
+        auto res = c.getResult();
+        auto rString = res.getFullPathName().toStdString();
+
+        {
+            std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
+            strncpy(synth->patchid_file, file.c_str(), FILENAME_MAX);
+            synth->has_patchid_file = true;
+        }
+        synth->processAudioThreadOpsWhenAudioEngineUnavailable();
+
+        auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+
+        if (dir != patchPath)
+        {
+            Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastPatchPath, dir);
+        }
+        */
+    }
     else if (address1 == "settings")
     {
         std::getline(split, address2, '/');

@@ -47,7 +47,6 @@
 #include "fmt/core.h"
 #include "SurgeJUCEHelpers.h"
 #include "AccessibleHelpers.h"
-#include "SurgeJUCEHelpers.h"
 
 /*
  * It is an arbitrary number that we set as an ID for patch menu items.
