@@ -74,7 +74,7 @@
               p7="0" p8="1"/>
 </type>
 <type i="28" name="Bonsai">
-    <snapshot name="Init" p0="1" p1="0" p2="-2" p3="0.75" p4="3" p5="60" p6="12" p7="0.25" p8="0.2" p9="0" p10="1"/>
+    <snapshot name="Init" p0="0" p1="-6" p2="1" p3="0" p4="0" p5="0.5" p6="0.5" p7="-6" p8="0.25" p9="0" p10="1"/>
 </type>
 <sectionheader label="MANGLING"/>
 <type i="21" name="Combulator">

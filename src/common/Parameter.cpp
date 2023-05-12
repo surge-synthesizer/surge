@@ -461,6 +461,7 @@ bool Parameter::is_discrete_selection() const
     case ct_wstype:
     case ct_mscodec:
     case ct_reverbshape:
+    case ct_bonsai_sat_filter:
     case ct_bonsai_sat_mode:
     case ct_bonsai_noise_mode:
         return true;
@@ -1311,6 +1312,13 @@ void Parameter::set_type(int ctrltype)
         val_min.f = 0.0f;
         val_max.f = 3.0f;
         val_default.f = 1.0f;
+        break;
+
+    case ct_bonsai_sat_filter:
+        valtype = vt_int;
+        val_min.i = 0;
+        val_default.i = 0;
+        val_max.i = 1;
         break;
 
     case ct_bonsai_sat_mode:

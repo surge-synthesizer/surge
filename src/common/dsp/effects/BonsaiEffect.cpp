@@ -52,9 +52,9 @@ int BonsaiEffect::group_label_ypos(int id)
     case 2:
         return 11;
     case 3:
-        return 17;
+        return 19;
     case 4:
-        return 23;
+        return 25;
     }
     return 0;
 }
@@ -71,6 +71,9 @@ void BonsaiEffect::init_ctrltypes()
 
     fxdata->p[b_bass_distort].set_type(ct_bonsai_bass_distortion);
     fxdata->p[b_bass_distort].posy_offset = 3;
+
+    fxdata->p[b_tape_bias_mode].set_type(ct_bonsai_sat_filter);
+    fxdata->p[b_tape_bias_mode].posy_offset = 5;
 
     fxdata->p[b_tape_dist_mode].set_type(ct_bonsai_sat_mode);
     fxdata->p[b_tape_dist_mode].posy_offset = 5;
