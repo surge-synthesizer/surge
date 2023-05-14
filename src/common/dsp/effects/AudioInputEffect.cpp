@@ -86,7 +86,7 @@ void AudioInputEffect::init_default_values()
     fxdata->p[in_scene_input_pan].val.f = 0.0; //p7
     fxdata->p[in_scene_input_level].val.f = 0.0; //p8
 
-    fxdata->p[in_output_width].val.f = 0.0; //p9
+    fxdata->p[in_output_width].val.f = 1.0; //p9
     fxdata->p[in_output_mix].val.f = 1.0;  //p10
 }
 const char *AudioInputEffect::group_label(int id) {
@@ -190,8 +190,27 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     float& outputWidth = fxdata->p[in_output_width].val.f;
     float& outputMix = fxdata->p[in_output_mix].val.f;
 
-    drySignalBuffer.copyFrom(0, 0, effectDataBuffer, 0, 0, BLOCK_SIZE);
-    drySignalBuffer.copyFrom(1, 0, effectDataBuffer, 1, 0, BLOCK_SIZE);
+
+    float* dryL = drySignalBuffer.getWritePointer(0);
+    float* dryR = drySignalBuffer.getWritePointer(1);
+    float* wetL = effectDataBuffer.getWritePointer(0);
+    float* wetR = effectDataBuffer.getWritePointer(1);
+
+    // Adjust width of wet signal
+    for (int i = 0; i < BLOCK_SIZE; ++i) {
+        float mid = 0.5f * (wetL[i] + wetR[i]); // Mid (mono) signal
+        float side = outputWidth * 0.5f * (wetL[i] - wetR[i]); // Sides (stereo) signal
+        wetL[i] = mid + side;
+        wetR[i] = mid - side;
+    }
+
+    // Mix dry and wet signal according to outputMix
+    for (int i = 0; i < BLOCK_SIZE; ++i) {
+        float wetMix = outputMix;
+        float dryMix = 1.0f - outputMix;
+        dryL[i] = dryMix * dryL[i] + wetMix * wetL[i];
+        dryR[i] = dryMix * dryR[i] + wetMix * wetR[i];
+    }
 
 }
 

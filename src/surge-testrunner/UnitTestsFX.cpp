@@ -509,6 +509,8 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                 SurgeStorage *surgeStorage = &surge->storage;
                 FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
                 REQUIRE(fxStorage->type.val.i == fxt_input_blender);
+                fxStorage->p[AudioInputEffect::in_output_width].val.f = 1.0f;
+                fxStorage->p[AudioInputEffect::in_output_mix].val.f = 1.0f;
 
                 inParamsGroup.fillWithData(surgeStorage);
 
@@ -717,7 +719,6 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.2f, 0.2f, 0.2f, 0.2f}
         }
     };
-    //TODO: test global level and pan
     //TODO: test combination of effects in the slots
     for(InParamsGroup& inParamsGroup: inParamsGroups)
     {
@@ -745,8 +746,8 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                 fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
                 fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 0.0f;
 
-                fxStorage->p[AudioInputEffect::in_output_width].val.f = 0.0f;
-                fxStorage->p[AudioInputEffect::in_output_mix].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_output_width].val.f = 1.0f;
+                fxStorage->p[AudioInputEffect::in_output_mix].val.f = 1.0f;
                 REQUIRE(fxStorage->type.val.i == fxt_input_blender);
 
                 SECTION(inParamsGroup.testGroup + ", slot " + std::to_string(slot))
@@ -762,8 +763,4 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             }
         }
     }
-
-
-
-
 }
