@@ -651,9 +651,9 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         {
             AudioInputEffect::a_insert_slot,
             "A Insert",
-            AudioInputEffect::in_audio_input_channel,
-            AudioInputEffect::in_audio_input_level,
-            AudioInputEffect::in_audio_input_pan,
+            AudioInputEffect::in_audio_input_channel, //ignore it
+            AudioInputEffect::in_audio_input_level,     //ignore it
+            AudioInputEffect::in_audio_input_pan,        //ignore it
             {0.1f, 0.1f, 0.1f, 0.1f},
             {0.1f, 0.1f, 0.1f, 0.1f},
             {0.2f, 0.2f, 0.2f, 0.2f},
@@ -662,15 +662,15 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.1f, 0.1f, 0.1f, 0.1f},
             {0.1f, 0.1f, 0.1f, 0.1f},
             {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.3f,0.3f,0.3f,0.3f},
+            {0.3f,0.3f,0.3f,0.3f}, ////we expect the sum of effect input, b-input and audio input
             {0.3f,0.3f,0.3f,0.3f}
         },
         {
             AudioInputEffect::b_insert_slot,
             "B Insert",
-            AudioInputEffect::in_audio_input_channel,
-            AudioInputEffect::in_audio_input_level,
-            AudioInputEffect::in_audio_input_pan,
+            AudioInputEffect::in_audio_input_channel, //ignore it
+            AudioInputEffect::in_audio_input_level,     //ignore it
+            AudioInputEffect::in_audio_input_pan,        //ignore it
             {0.1f, 0.1f, 0.1f, 0.1f},
             {0.1f, 0.1f, 0.1f, 0.1f},
             {0.2f, 0.2f, 0.2f, 0.2f},
@@ -679,10 +679,29 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.1f, 0.1f, 0.1f, 0.1f},
             {0.1f, 0.1f, 0.1f, 0.1f},
             {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.4f,0.4f,0.4f,0.4f},
+            {0.4f,0.4f,0.4f,0.4f}, //we expect the sum of effect input, a-input and audio input
             {0.4f,0.4f,0.4f,0.4f}
+        },
+        {
+             AudioInputEffect::send_slot,
+             "Send",
+             AudioInputEffect::in_audio_input_channel, //ignore it
+             AudioInputEffect::in_audio_input_level,     //ignore it
+             AudioInputEffect::in_audio_input_pan,        //ignore it
+             {0.1f, 0.1f, 0.1f, 0.1f},
+             {0.1f, 0.1f, 0.1f, 0.1f},
+             {0.2f, 0.2f, 0.2f, 0.2f},
+             {0.2f, 0.2f, 0.2f, 0.2f},
+             {0.1f, 0.1f, 0.1f, 0.1f},
+             {0.1f, 0.1f, 0.1f, 0.1f},
+             {0.1f, 0.1f, 0.1f, 0.1f},
+             {0.1f, 0.1f, 0.1f, 0.1f},
+             {0.2f, 0.2f, 0.2f, 0.2f}, // we only expect the sum of effect input and audio input
+             {0.2f, 0.2f, 0.2f, 0.2f}
         }
     };
+    //TODO: test send and global slots
+    //TODO: test global level and pan
     for(InParamsGroup& inParamsGroup: inParamsGroups)
     {
         SECTION(inParamsGroup.testGroup)
