@@ -698,10 +698,27 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
              {0.1f, 0.1f, 0.1f, 0.1f},
              {0.2f, 0.2f, 0.2f, 0.2f}, // we only expect the sum of effect input and audio input
              {0.2f, 0.2f, 0.2f, 0.2f}
+        },
+        {
+            AudioInputEffect::global_slot,
+            "Global",
+            AudioInputEffect::in_audio_input_channel, //ignore it
+            AudioInputEffect::in_audio_input_level,     //ignore it
+            AudioInputEffect::in_audio_input_pan,        //ignore it
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.2f, 0.2f, 0.2f, 0.2f},
+            {0.2f, 0.2f, 0.2f, 0.2f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.1f, 0.1f, 0.1f, 0.1f},
+            {0.2f, 0.2f, 0.2f, 0.2f}, // we only expect the sum of effect input and audio input
+            {0.2f, 0.2f, 0.2f, 0.2f}
         }
     };
-    //TODO: test send and global slots
     //TODO: test global level and pan
+    //TODO: test combination of effects in the slots
     for(InParamsGroup& inParamsGroup: inParamsGroups)
     {
         SECTION(inParamsGroup.testGroup)
