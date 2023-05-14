@@ -139,12 +139,19 @@ AudioInputEffect::effect_slot_type AudioInputEffect::getSlotType(fxslot_position
 
 void AudioInputEffect::process(float *dataL, float *dataR)
 {
+
+
+
     float& effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
     float& effectInputPan = fxdata->p[in_effect_input_pan].val.f;
     float& effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
     float* channelData[] = { dataL, dataR };
 
-    juce::AudioBuffer<float> effectDataBuffer(channelData, 2, BLOCK_SIZE);
+    juce::AudioBuffer<float> drySignalBuffer(channelData, 2, BLOCK_SIZE);
+
+    juce::AudioBuffer<float> effectDataBuffer( 2, BLOCK_SIZE);
+    effectDataBuffer.copyFrom(0, 0, channelData[0], BLOCK_SIZE);
+    effectDataBuffer.copyFrom(1, 0, channelData[1], BLOCK_SIZE);
     applySlidersControls(effectDataBuffer, effectInputChannel, effectInputPan, effectInputLevelDb);
 
 
@@ -179,6 +186,13 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     // mixing the effect and audio input
     effectDataBuffer.addFrom(0, 0, inputDataBuffer, 0, 0, BLOCK_SIZE);
     effectDataBuffer.addFrom(1, 0, inputDataBuffer, 1, 0, BLOCK_SIZE);
+
+    float& outputWidth = fxdata->p[in_output_width].val.f;
+    float& outputMix = fxdata->p[in_output_mix].val.f;
+
+    drySignalBuffer.copyFrom(0, 0, effectDataBuffer, 0, 0, BLOCK_SIZE);
+    drySignalBuffer.copyFrom(1, 0, effectDataBuffer, 1, 0, BLOCK_SIZE);
+
 }
 
 void AudioInputEffect::applySlidersControls(juce::AudioBuffer<float> &buffer, const float &channel,
