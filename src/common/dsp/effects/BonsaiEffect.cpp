@@ -63,7 +63,7 @@ void BonsaiEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
-    fxdata->p[b_gain_in].set_type(ct_decibel_narrow_extendable);
+    fxdata->p[b_gain_in].set_type(ct_decibel_narrow);
     fxdata->p[b_gain_in].posy_offset = 1;
 
     fxdata->p[b_bass_boost].set_type(ct_bonsai_bass_boost);
@@ -84,13 +84,13 @@ void BonsaiEffect::init_ctrltypes()
     fxdata->p[b_noise_sensitivity].set_type(ct_percent);
     fxdata->p[b_noise_sensitivity].posy_offset = 7;
 
-    fxdata->p[b_noise_gain].set_type(ct_decibel_narrow_extendable);
+    fxdata->p[b_noise_gain].set_type(ct_bonsai_noise_gain);
     fxdata->p[b_noise_gain].posy_offset = 7;
 
     fxdata->p[b_dull].set_type(ct_percent);
     fxdata->p[b_dull].posy_offset = 9;
 
-    fxdata->p[b_gain_out].set_type(ct_decibel_narrow_extendable);
+    fxdata->p[b_gain_out].set_type(ct_decibel_narrow);
     fxdata->p[b_gain_out].posy_offset = 9;
 
     fxdata->p[b_mix].set_type(ct_percent);

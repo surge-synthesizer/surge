@@ -294,6 +294,7 @@ bool Parameter::can_extend_range() const
     case ct_countedset_percent_extendable:
     case ct_dly_fb_clippingmodes:
     case ct_bonsai_bass_boost:
+    case ct_bonsai_noise_gain:
 
     // Extendable integers are really rare and special.
     // If you add one, you may want to chat with us on Discord!
@@ -413,6 +414,7 @@ bool Parameter::is_bipolar() const
     case ct_modern_trimix:
     case ct_oscspread_bipolar:
     case ct_bonsai_bass_boost:
+    case ct_bonsai_noise_gain:
         res = true;
         break;
     case ct_lfoamplitude:
@@ -1328,6 +1330,13 @@ void Parameter::set_type(int ctrltype)
         val_max.i = 3;
         break;
 
+    case ct_bonsai_noise_gain:
+        valtype = vt_float;
+        val_min.f = -24.0f;
+        val_max.f = 12.0f;
+        val_default.f = 0.f;
+        break;
+
     case ct_bonsai_noise_mode:
         valtype = vt_int;
         val_min.i = 0;
@@ -1541,6 +1550,7 @@ void Parameter::set_type(int ctrltype)
     case ct_decibel_narrow_deactivatable:
     case ct_decibel_extra_narrow_deactivatable:
     case ct_bonsai_bass_boost:
+    case ct_bonsai_noise_gain:
         displayType = LinearWithScale;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "dB");
         break;
@@ -1829,6 +1839,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_decibel_narrow_deactivatable:
         case ct_decibel_extra_narrow_deactivatable:
         case ct_bonsai_bass_boost:
+        case ct_bonsai_noise_gain:
         {
             val.f = floor(val.f);
             break;
@@ -2209,6 +2220,7 @@ float Parameter::get_extended(float f) const
         return 12.f * f;
     case ct_decibel_extendable:
     case ct_bonsai_bass_boost:
+    case ct_bonsai_noise_gain:
         return 3.f * f;
     case ct_decibel_narrow_extendable:
         return 5.f * f;
@@ -4324,6 +4336,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_spring_decay:
     case ct_bonsai_bass_boost:
     case ct_bonsai_bass_distortion:
+    case ct_bonsai_noise_gain:
     {
         return true;
     }
