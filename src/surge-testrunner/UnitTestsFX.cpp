@@ -670,53 +670,54 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         {
             AudioInputEffect::b_insert_slot,
             "B Insert",
-            AudioInputEffect::in_audio_input_channel, //ignore it
-            AudioInputEffect::in_audio_input_level,     //ignore it
-            AudioInputEffect::in_audio_input_pan,        //ignore it
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.2f, 0.2f, 0.2f, 0.2f},
-            {0.2f, 0.2f, 0.2f, 0.2f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.4f,0.4f,0.4f,0.4f}, //we expect the sum of effect input, a-input and audio input
-            {0.4f,0.4f,0.4f,0.4f}
+            AudioInputEffect::in_audio_input_channel, // ignore
+            AudioInputEffect::in_audio_input_level,   // ignore
+            AudioInputEffect::in_audio_input_pan,     // ignore
+            {0.1f, 0.1f, 0.1f, 0.1f},  // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},  // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},  // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
+            {0.4f, 0.4f, 0.4f, 0.4f},  // expectedLeftInput (sum of leftEffectInput, sceneALeftInput, and audioLeftInput)
+            {0.2f, 0.2f, 0.2f, 0.2f}  // expectedRightInput (sum of rightEffectInput, sceneARightInput, and audioRightInput)
         },
+
         {
-             AudioInputEffect::send_slot,
-             "Send",
-             AudioInputEffect::in_audio_input_channel, //ignore it
-             AudioInputEffect::in_audio_input_level,     //ignore it
-             AudioInputEffect::in_audio_input_pan,        //ignore it
-             {0.1f, 0.1f, 0.1f, 0.1f},
-             {0.1f, 0.1f, 0.1f, 0.1f},
-             {0.2f, 0.2f, 0.2f, 0.2f},
-             {0.2f, 0.2f, 0.2f, 0.2f},
-             {0.1f, 0.1f, 0.1f, 0.1f},
-             {0.1f, 0.1f, 0.1f, 0.1f},
-             {0.1f, 0.1f, 0.1f, 0.1f},
-             {0.1f, 0.1f, 0.1f, 0.1f},
-             {0.2f, 0.2f, 0.2f, 0.2f}, // we only expect the sum of effect input and audio input
-             {0.2f, 0.2f, 0.2f, 0.2f}
+            AudioInputEffect::send_slot,
+            "Send",
+            AudioInputEffect::in_audio_input_channel, // ignore
+            AudioInputEffect::in_audio_input_level,   // ignore
+            AudioInputEffect::in_audio_input_pan,     // ignore
+            {0.1f, 0.1f, 0.1f, 0.1f},  // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},  // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},  // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},  // expectedLeftInput (sum of leftEffectInput and audioLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f}  // expectedRightInput (sum of rightEffectInput and audioRightInput)
         },
         {
             AudioInputEffect::global_slot,
             "Global",
-            AudioInputEffect::in_audio_input_channel, //ignore it
-            AudioInputEffect::in_audio_input_level,     //ignore it
-            AudioInputEffect::in_audio_input_pan,        //ignore it
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.2f, 0.2f, 0.2f, 0.2f},
-            {0.2f, 0.2f, 0.2f, 0.2f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.1f, 0.1f, 0.1f, 0.1f},
-            {0.2f, 0.2f, 0.2f, 0.2f}, // we only expect the sum of effect input and audio input
-            {0.2f, 0.2f, 0.2f, 0.2f}
+            AudioInputEffect::in_audio_input_channel, // ignore
+            AudioInputEffect::in_audio_input_level,   // ignore
+            AudioInputEffect::in_audio_input_pan,     // ignore
+            {0.1f, 0.1f, 0.1f, 0.1f},  // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},  // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},  // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},  // expectedLeftInput (sum of leftEffectInput and audioLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f}  // expectedRightInput (sum of rightEffectInput and audioRightInput)
         }
     };
     //TODO: test combination of effects in the slots
