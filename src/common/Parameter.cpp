@@ -367,7 +367,6 @@ bool Parameter::has_deformoptions() const
     case ct_noise_color:
     case ct_amplitude_ringmod:
     case ct_bonsai_bass_boost:
-    case ct_bonsai_bass_distortion:
         return true;
     default:
         break;
