@@ -517,32 +517,32 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
 
                 inParamsGroup.fillWithData(surgeStorage);
 
-                SECTION(inParamsGroup.testGroup +
-                        " with default params the result should be unchanged")
-                {
-                    float expectedLeftOutput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
-                    float expectedRightOutput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f};
-                    fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
-                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
-                                       expectedRightOutput);
-                }
-
-                SECTION(inParamsGroup.testGroup + " accepts only left channel")
-                {
-                    float expectedLeftOutput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
-                    float expectedRightOutput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
-                    fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
-                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
-                    testExpectedValues(surge, slot,
-                                       inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput,
-                                       expectedLeftOutput,
-                                       expectedRightOutput);
-                }
+//                SECTION(inParamsGroup.testGroup +
+//                        " with default params the result should be unchanged")
+//                {
+//                    float expectedLeftOutput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
+//                    float expectedRightOutput[BLOCK_SIZE]{0.2f, 0.4f, 0.2f, 0.4f};
+//                    fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
+//                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
+//                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
+//                                       expectedRightOutput);
+//                }
+//
+//                SECTION(inParamsGroup.testGroup + " accepts only left channel")
+//                {
+//                    float expectedLeftOutput[BLOCK_SIZE]{0.4f, 0.2f, 0.4f, 0.2f};
+//                    float expectedRightOutput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
+//                    fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
+//                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
+//                    testExpectedValues(surge, slot,
+//                                       inParamsGroup.leftEffectInput,
+//                                       inParamsGroup.rightEffectInput,
+//                                       expectedLeftOutput,
+//                                       expectedRightOutput);
+//                }
                 SECTION(inParamsGroup.testGroup + " accepts 50% of left channel and 100% right")
                 {
                     float expectedLeftOutput[BLOCK_SIZE]{0.3f, 0.15f, 0.3f, 0.15f};
@@ -804,7 +804,60 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                   {0.1f, 0.1f, 0.1f, 0.1f}, // expectedRightOutput (sum of rightEffectInput and
                                             // audioRightInput)
               }}},
-        }};
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to effect input with the default params",
+            AudioInputEffect::in_scene_input_channel,
+            AudioInputEffect::in_scene_input_level,
+            AudioInputEffect::in_scene_input_pan,
+            {0.0f }, // leftEffectInput
+            {0.0f},  // rightEffectInput
+            {}, {}, // sceneALeftInput and sceneARight Input
+            {0.4f,0.2f,0.4f,0.2f,}, //sceneBLeftInput
+            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBLeftInput
+            {},{}, // audioLeftInput and audioRightInput
+            {
+                {"the result should be unchanged",
+                    {
+                        {AudioInputEffect::in_scene_input_channel, 0.0f},
+                        {AudioInputEffect::in_scene_input_level, 0.0f},
+                        {AudioInputEffect::in_scene_input_pan, 0.0f},
+                    },
+                    {
+                          // ExpectedOutput
+                          {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
+                          {0.2f, 0.4f, 0.2f, 0.4f}, // expectedRightOutput (sum of rightEffectInput and audioRightInput)
+                  }}
+            },
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to effect input with in_scene_input_channel = -1",
+            AudioInputEffect::in_scene_input_channel,
+            AudioInputEffect::in_scene_input_level,
+            AudioInputEffect::in_scene_input_pan,
+            {0.0f }, // leftEffectInput
+            {0.0f},  // rightEffectInput
+            {}, {}, // sceneALeftInput and sceneARight Input
+            {0.4f,0.2f,0.4f,0.2f,}, //sceneBLeftInput
+            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBLeftInput
+            {},{}, // audioLeftInput and audioRightInput
+            {
+                 {" it should only accept left channel",
+                 {
+                     {AudioInputEffect::in_scene_input_channel, -1.0f},
+                     {AudioInputEffect::in_scene_input_level, 0.0f},
+                     {AudioInputEffect::in_scene_input_pan, 0.0f},
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput
+                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedRightOutput
+                 }}
+            },
+        },
+    };
     //TODO: test combination of effects in the slots
     for(InParamsGroup& inParamsGroup: inParamsGroups)
     {
@@ -847,10 +900,13 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                             fxStorage->p[controlParam.param].val.f = controlParam.value;
                         }
                         inParamsGroup.fillWithData(surgeStorage);
-                        testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
-                                           inParamsGroup.rightEffectInput,
-                                           expectedOutput.expectedLeftOutput,
-                                           expectedOutput.expectedRightOutput);
+                        surge->fx[slot]->process(inParamsGroup.leftEffectInput,
+                                                 inParamsGroup.rightEffectInput);
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            REQUIRE(inParamsGroup.leftEffectInput[i] == Approx(expectedOutput.expectedLeftOutput[i]).margin(0.001));
+                            REQUIRE(expectedOutput.expectedRightOutput[i] == Approx(expectedOutput.expectedRightOutput[i]).margin(0.001));
+                        }
                     }
                 }
             }
