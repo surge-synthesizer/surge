@@ -697,6 +697,22 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                     }
                 },
                 {
+                    "Switching left and right",
+                    {
+                        {AudioInputEffect::in_output_mix, 1.0f},
+                        {AudioInputEffect::in_output_width, -1.0f}
+                    },
+                    {
+                        // ExpectedOutput
+                        {0.15f, 0.15f, 0.15f, 0.15f},     // expectedRightOutput (sum of
+                                                      // rightEffectInput,
+                                                      // sceneBRightInput, and audioRightInput)
+                        {0.3f, 0.3f, 0.3f, 0.3f},          // expectedLeftOutput (sum of
+                                                      // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+
+                    }
+                },
+                {
                     "Mono Output",
                     {
                         {AudioInputEffect::in_output_mix, 1.0f},
@@ -710,6 +726,32 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                                                       // rightEffectInput,
                                                       // sceneBRightInput, and audioRightInput)
                     }
+                },
+                {
+                    "Leaving only dry signal, with width = 1",
+                    {
+                        {AudioInputEffect::in_output_mix, 0.0f},
+                        {AudioInputEffect::in_output_width, 1.0f} // stereo
+                    },
+                    {
+                        // ExpectedOutput stays attached
+                        {0.1f, 0.1f, 0.1f, 0.1f},  //
+                        {0.05f, 0.05f, 0.05f, 0.05f},
+                    }
+
+                },
+                {
+                    "Leaving only dry signal, with width = 0",
+                    {
+                        {AudioInputEffect::in_output_mix, 0.0f},
+                        {AudioInputEffect::in_output_width, 0.0f} // stereo
+                    },
+                    {
+                        // ExpectedOutput stays attached
+                        {0.1f, 0.1f, 0.1f, 0.1f},  //
+                        {0.05f, 0.05f, 0.05f, 0.05f},
+                    }
+
                 },
             },
 
