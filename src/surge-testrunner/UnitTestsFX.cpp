@@ -400,6 +400,17 @@ void testExpectedValues(std::shared_ptr<SurgeSynthesizer>surge, int slot,
         REQUIRE(rightInput[i] == Approx(expectedRightOutput[i]).margin(0.001));
     }
 }
+
+struct ControlParam
+{
+    int param;
+    float value;
+};
+struct ExpectedOutput {
+    float expectedLeftOutput[BLOCK_SIZE];
+    float expectedRightOutput[BLOCK_SIZE];
+};
+
 struct InParamsGroup {
     int slot;
 
@@ -421,6 +432,8 @@ struct InParamsGroup {
 
     float expectedLeftOutput[BLOCK_SIZE];
     float expectedRightOutput[BLOCK_SIZE];
+
+    std::vector<std::pair<std::vector<ControlParam>, ExpectedOutput>> expectedOutput;
 
     void fillWithData(SurgeStorage* surgeStorage) {
         surgeStorage->scenesOutputData.provideSceneData(0, 0, sceneALeftInput);
@@ -665,7 +678,25 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.1f, 0.1f, 0.1f, 0.1f},  // audioLeftInput
             {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
             {0.3f, 0.3f, 0.3f, 0.3f},  // expectedLeftOutput (sum of leftEffectInput, sceneBLeftInput, and audioLeftInput)
-            {0.15f, 0.15f, 0.15f, 0.15f}  // expectedRightOutput (sum of rightEffectInput, sceneBRightInput, and audioRightInput)
+            {0.15f, 0.15f, 0.15f, 0.15f},  // expectedRightOutput (sum of rightEffectInput,
+                                                          // sceneBRightInput, and audioRightInput)
+            {
+                {
+                    {
+                        {AudioInputEffect::in_output_mix, 1.0f},
+                        {AudioInputEffect::in_output_width, 1.0f}
+                    },
+                    {
+                        // ExpectedOutput
+                        {0.3f, 0.3f, 0.3f, 0.3f},          // expectedLeftOutput (sum of
+                                                          // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+                        {0.15f, 0.15f, 0.15f, 0.15f},     // expectedRightOutput (sum of
+                                                          // rightEffectInput,
+                                                          // sceneBRightInput, and audioRightInput)
+                    }
+                }
+            },
+
         },
         {
             AudioInputEffect::b_insert_slot,
@@ -756,10 +787,28 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                     inParamsGroup.fillWithData(surgeStorage);
 
                     testExpectedValues(
-                        surge, slot,
-                        inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
+                        surge, slot, inParamsGroup.leftEffectInput, inParamsGroup.rightEffectInput,
                         inParamsGroup.expectedLeftOutput, inParamsGroup.expectedRightOutput);
                 };
+                int testCase = 0;
+                for (std::pair<std::vector<ControlParam>, ExpectedOutput>& pair :
+                     inParamsGroup.expectedOutput)
+                {
+                    SECTION(inParamsGroup.testGroup + ", slot " + std::to_string(slot) +
+                            ", test case " + std::to_string(testCase++))
+                    {
+                        auto [controlParams, expectedOutput] = pair;
+                        for (ControlParam& controlParam : controlParams)
+                        {
+                            fxStorage->p[controlParam.param].val.f = controlParam.value;
+                        }
+                        inParamsGroup.fillWithData(surgeStorage);
+                        testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
+                                           inParamsGroup.rightEffectInput,
+                                           expectedOutput.expectedLeftOutput,
+                                           expectedOutput.expectedRightOutput);
+                    }
+                }
             }
         }
     }
