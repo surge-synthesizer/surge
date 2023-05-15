@@ -569,69 +569,69 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
 //                                       expectedLeftOutput,
 //                                       expectedRightOutput);
 //                }
-                SECTION(inParamsGroup.testGroup +
-                        " accepts 100% of left channel and 50% right with 50% input level")
-                {
-                    float expectedLeftOutput[BLOCK_SIZE]{0.2f, 0.1f, 0.2f, 0.1f};
-                    float expectedRightOutput[BLOCK_SIZE]{0.05f, 0.1f, 0.05f, 0.1f};
-                    fxStorage->p[inParamsGroup.inputChannel].val.f = -0.50f;
-                    fxStorage->p[inParamsGroup.inputLevel].val.f = -5.995f;
-                    fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
-                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
-                                       expectedRightOutput);
-                }
-                SECTION(inParamsGroup.testGroup + "'s channels move to the left")
-                {
-                    float expectedLeftOutput[BLOCK_SIZE]{0.6f, 0.6f, 0.6f, 0.6f};
-                    float expectedRightOutput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
-                    fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputPan].val.f = -1.0f;
-                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
-                                       expectedRightOutput);
-                }
-                SECTION(inParamsGroup.testGroup + "'s channels move to the right")
-                {
-                    float expectedLeftOutput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
-                    float expectedRightOutput[BLOCK_SIZE]{0.6f, 0.6f, 0.6f, 0.6f};
-                    fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
-                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
-                                       expectedRightOutput);
-                }
-                SECTION(inParamsGroup.testGroup + "'s channels move to the right by 50%")
-                {
-                    float expectedLeftOutput[BLOCK_SIZE]{0.2f, 0.1f, 0.2f, 0.1f};
-                    float expectedRightOutput[BLOCK_SIZE]{0.4f, 0.5f, 0.4f, 0.5f};
-                    fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputPan].val.f = 0.5f;
-                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
-                                       expectedRightOutput);
-                }
-                SECTION(inParamsGroup.testGroup +
-                        "'s left channels move to the right, the right channel "
-                        "is deleted")
-                {
-                    float expectedLeftOutput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
-                    float expectedRightOutput[BLOCK_SIZE]{
-                        0.4f,
-                        0.2f,
-                        0.4f,
-                        0.2f,
-                    };
-                    fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
-                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
-                    fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
-                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
-                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
-                                       expectedRightOutput);
-                }
+//                SECTION(inParamsGroup.testGroup +
+//                        " accepts 100% of left channel and 50% right with 50% input level")
+//                {
+//                    float expectedLeftOutput[BLOCK_SIZE]{0.2f, 0.1f, 0.2f, 0.1f};
+//                    float expectedRightOutput[BLOCK_SIZE]{0.05f, 0.1f, 0.05f, 0.1f};
+//                    fxStorage->p[inParamsGroup.inputChannel].val.f = -0.50f;
+//                    fxStorage->p[inParamsGroup.inputLevel].val.f = -5.995f;
+//                    fxStorage->p[inParamsGroup.inputPan].val.f = 0.0f;
+//                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
+//                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
+//                                       expectedRightOutput);
+//                }
+//                SECTION(inParamsGroup.testGroup + "'s channels move to the left")
+//                {
+//                    float expectedLeftOutput[BLOCK_SIZE]{0.6f, 0.6f, 0.6f, 0.6f};
+//                    float expectedRightOutput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
+//                    fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputPan].val.f = -1.0f;
+//                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
+//                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
+//                                       expectedRightOutput);
+//                }
+//                SECTION(inParamsGroup.testGroup + "'s channels move to the right")
+//                {
+//                    float expectedLeftOutput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
+//                    float expectedRightOutput[BLOCK_SIZE]{0.6f, 0.6f, 0.6f, 0.6f};
+//                    fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
+//                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
+//                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
+//                                       expectedRightOutput);
+//                }
+//                SECTION(inParamsGroup.testGroup + "'s channels move to the right by 50%")
+//                {
+//                    float expectedLeftOutput[BLOCK_SIZE]{0.2f, 0.1f, 0.2f, 0.1f};
+//                    float expectedRightOutput[BLOCK_SIZE]{0.4f, 0.5f, 0.4f, 0.5f};
+//                    fxStorage->p[inParamsGroup.inputChannel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputPan].val.f = 0.5f;
+//                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
+//                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
+//                                       expectedRightOutput);
+//                }
+//                SECTION(inParamsGroup.testGroup +
+//                        "'s left channels move to the right, the right channel "
+//                        "is deleted")
+//                {
+//                    float expectedLeftOutput[BLOCK_SIZE]{0.0f, 0.0f, 0.0f, 0.0f};
+//                    float expectedRightOutput[BLOCK_SIZE]{
+//                        0.4f,
+//                        0.2f,
+//                        0.4f,
+//                        0.2f,
+//                    };
+//                    fxStorage->p[inParamsGroup.inputChannel].val.f = -1.0f;
+//                    fxStorage->p[inParamsGroup.inputLevel].val.f = 0.0f;
+//                    fxStorage->p[inParamsGroup.inputPan].val.f = 1.0f;
+//                    testExpectedValues(surge, slot, inParamsGroup.leftEffectInput,
+//                                       inParamsGroup.rightEffectInput, expectedLeftOutput,
+//                                       expectedRightOutput);
+//                }
             }
         }
     }
@@ -908,7 +908,138 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                      {0.1f, 0.2f, 0.1f, 0.2f}, // expectedRightOutput
                  }}
             },
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to effect input with in_scene_input_channel = -0.50 and input level = -5.995",
+            AudioInputEffect::in_scene_input_channel, //ignore
+            AudioInputEffect::in_scene_input_level,  //ignore
+            AudioInputEffect::in_scene_input_pan,   //ignore
+            {0.0f }, // leftEffectInput
+            {0.0f},  // rightEffectInput
+            {}, {}, // sceneALeftInput and sceneARight Input
+            {0.4f,0.2f,0.4f,0.2f,}, //sceneBLeftInput
+            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBLeftInput
+            {},{}, // audioLeftInput and audioRightInput
+            {
+                {" it should accept 100% of left channel and 50% right with 50% input level",
+                 {
+                     {AudioInputEffect::in_scene_input_channel, -0.50f},
+                     {AudioInputEffect::in_scene_input_level, -5.995f},
+                     {AudioInputEffect::in_scene_input_pan, 0.0f},
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.2f, 0.1f, 0.2f, 0.1f}, // expectedLeftOutput
+                     {0.05f, 0.1f, 0.05f, 0.1f}, // expectedRightOutput
+                 }}
+            },
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to effect input with in_scene_input_pan = -1.0",
+            AudioInputEffect::in_scene_input_channel, //ignore
+            AudioInputEffect::in_scene_input_level,  //ignore
+            AudioInputEffect::in_scene_input_pan,   //ignore
+            {0.0f }, // leftEffectInput
+            {0.0f},  // rightEffectInput
+            {}, {}, // sceneALeftInput and sceneARight Input
+            {0.4f,0.2f,0.4f,0.2f,}, //sceneBLeftInput
+            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBRightInput
+            {},{}, // audioLeftInput and audioRightInput
+            {
+                {" channels should move to the left",
+                 {
+                     {AudioInputEffect::in_scene_input_channel, 0.0f},
+                     {AudioInputEffect::in_scene_input_level, 0.0f},
+                     {AudioInputEffect::in_scene_input_pan, -1.0f},
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.6f, 0.6f, 0.6f, 0.6f}, // expectedLeftOutput
+                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedRightOutput
+                 }}
+            },
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to effect input with in_scene_input_pan = 1.0",
+            AudioInputEffect::in_scene_input_channel, //ignore
+            AudioInputEffect::in_scene_input_level,  //ignore
+            AudioInputEffect::in_scene_input_pan,   //ignore
+            {0.0f }, // leftEffectInput
+            {0.0f},  // rightEffectInput
+            {}, {}, // sceneALeftInput and sceneARight Input
+            {0.4f,0.2f,0.4f,0.2f,}, //sceneBLeftInput
+            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBRightInput
+            {},{}, // audioLeftInput and audioRightInput
+            {
+                {" channels should move to the right",
+                 {
+                     {AudioInputEffect::in_scene_input_channel, 0.0f},
+                     {AudioInputEffect::in_scene_input_level, 0.0f},
+                     {AudioInputEffect::in_scene_input_pan, 1.0f},
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedLeftOutput
+                     {0.6f, 0.6f, 0.6f, 0.6f}, // expectedRightOutput
+                 }}
+            },
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to effect input with in_scene_input_pan = 0.5",
+            AudioInputEffect::in_scene_input_channel, //ignore
+            AudioInputEffect::in_scene_input_level,  //ignore
+            AudioInputEffect::in_scene_input_pan,   //ignore
+            {0.0f }, // leftEffectInput
+            {0.0f},  // rightEffectInput
+            {}, {}, // sceneALeftInput and sceneARight Input
+            {0.4f,0.2f,0.4f,0.2f,}, //sceneBLeftInput
+            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBRightInput
+            {},{}, // audioLeftInput and audioRightInput
+            {
+                {" channels should move to the right by 50%",
+                 {
+                     {AudioInputEffect::in_scene_input_channel, 0.0f},
+                     {AudioInputEffect::in_scene_input_level, 0.0f},
+                     {AudioInputEffect::in_scene_input_pan, 0.5f},
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.2f, 0.1f, 0.2f, 0.1f}, // expectedLeftOutput
+                     {0.4f, 0.5f, 0.4f, 0.5f}, // expectedRightOutput
+                 }}
+            },
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to effect input with in_scene_input_channel = -1 and in_scene_input_pan = 1.0",
+            AudioInputEffect::in_scene_input_channel, //ignore
+            AudioInputEffect::in_scene_input_level,  //ignore
+            AudioInputEffect::in_scene_input_pan,   //ignore
+            {0.0f }, // leftEffectInput
+            {0.0f},  // rightEffectInput
+            {}, {}, // sceneALeftInput and sceneARight Input
+            {0.4f,0.2f,0.4f,0.2f,}, //sceneBLeftInput
+            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBRightInput
+            {},{}, // audioLeftInput and audioRightInput
+            {
+                {" left channels should move to the right and the right channel should be deleted",
+                 {
+                     {AudioInputEffect::in_scene_input_channel, -1.0f},
+                     {AudioInputEffect::in_scene_input_level, 0.0f},
+                     {AudioInputEffect::in_scene_input_pan, 1.0f},
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedLeftOutput
+                     {0.4f, 0.2f, 0.4f, 0.2f}, // expectedRightOutput
+                 }}
+            },
         }
+        //TODO: now add also sections for b_insert_slot and for audio input
 
     };
     //TODO: test combination of effects in the slots
