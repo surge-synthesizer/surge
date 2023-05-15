@@ -461,17 +461,7 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
                 {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4}},
     };
     std::vector<InParamsGroup> inParamsGroups {
-        InParamsGroup
-        {
-            AudioInputEffect::a_insert_slot,
-            "Effect input",
-            AudioInputEffect::in_effect_input_channel,
-            AudioInputEffect::in_effect_input_level,
-            AudioInputEffect::in_effect_input_pan,
-                {0.4f,0.2f,0.4f,0.2f,},
-                {0.2f, 0.4f, 0.2f, 0.4f,},
-                {}, {}, {}, {},{},{}
-        },
+
         InParamsGroup
         {
             AudioInputEffect::a_insert_slot,
@@ -664,93 +654,83 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
          {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4}},
     };
 
-    std::vector<InParamsGroup> inParamsGroups
-    {
+    std::vector<InParamsGroup> inParamsGroups{
         {
             AudioInputEffect::a_insert_slot,
             "A Insert",
             AudioInputEffect::in_audio_input_channel, // ignore
             AudioInputEffect::in_audio_input_level,   // ignore
             AudioInputEffect::in_audio_input_pan,     // ignore
-            {0.1f, 0.1f, 0.1f, 0.1f},  // leftEffectInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // rightEffectInput (half of leftEffectInput)
-            {0.2f, 0.2f, 0.2f, 0.2f},  // sceneALeftInput
-            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneARightInput (half of sceneALeftInput)
-            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneBLeftInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // sceneBRightInput (half of sceneBLeftInput)
-            {0.1f, 0.1f, 0.1f, 0.1f},  // audioLeftInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},                 // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // audioRightInput (half of audioLeftInput)
             {
-                {
-                    "Stereo Output",
-                    {
-                        {AudioInputEffect::in_output_mix, 1.0f},
-                        {AudioInputEffect::in_output_width, 1.0f}
-                    },
-                    {
-                        // ExpectedOutput
-                        {0.3f, 0.3f, 0.3f, 0.3f},          // expectedLeftOutput (sum of
-                                                          // leftEffectInput, sceneBLeftInput, and audioLeftInput)
-                        {0.15f, 0.15f, 0.15f, 0.15f},     // expectedRightOutput (sum of
-                                                          // rightEffectInput,
-                                                          // sceneBRightInput, and audioRightInput)
-                    }
-                },
-                {
-                    "Switching left and right",
-                    {
-                        {AudioInputEffect::in_output_mix, 1.0f},
-                        {AudioInputEffect::in_output_width, -1.0f}
-                    },
-                    {
-                        // ExpectedOutput
-                        {0.15f, 0.15f, 0.15f, 0.15f},     // expectedRightOutput (sum of
-                                                      // rightEffectInput,
-                                                      // sceneBRightInput, and audioRightInput)
-                        {0.3f, 0.3f, 0.3f, 0.3f},          // expectedLeftOutput (sum of
-                                                      // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+                {"Stereo Output",
+                 {{AudioInputEffect::in_output_mix, 1.0f},
+                  {AudioInputEffect::in_output_width, 1.0f}},
+                 {
+                     // ExpectedOutput
+                     {0.3f, 0.3f, 0.3f,
+                      0.3f}, // expectedLeftOutput (sum of
+                             // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+                     {0.15f, 0.15f, 0.15f, 0.15f}, // expectedRightOutput (sum of
+                                                   // rightEffectInput,
+                                                   // sceneBRightInput, and audioRightInput)
+                 }},
+                {"Switching left and right",
+                 {{AudioInputEffect::in_output_mix, 1.0f},
+                  {AudioInputEffect::in_output_width, -1.0f}},
+                 {
+                     // ExpectedOutput
+                     {0.15f, 0.15f, 0.15f, 0.15f}, // expectedRightOutput (sum of
+                                                   // rightEffectInput,
+                                                   // sceneBRightInput, and audioRightInput)
+                     {0.3f, 0.3f, 0.3f,
+                      0.3f}, // expectedLeftOutput (sum of
+                             // leftEffectInput, sceneBLeftInput, and audioLeftInput)
 
-                    }
-                },
-                {
-                    "Mono Output",
-                    {
-                        {AudioInputEffect::in_output_mix, 1.0f},
-                        {AudioInputEffect::in_output_width, 0.0f} // mono
-                    },
-                    {
-                        // ExpectedOutput
-                        {0.225f, 0.225f, 0.225f,0.225f},          // expectedLeftOutput (sum of
-                                                      // leftEffectInput, sceneBLeftInput, and audioLeftInput)
-                        {0.225f, 0.225f, 0.225f, 0.225f},     // expectedRightOutput (sum of
-                                                      // rightEffectInput,
-                                                      // sceneBRightInput, and audioRightInput)
-                    }
-                },
-                {
-                    "Leaving only dry signal, with width = 1",
-                    {
-                        {AudioInputEffect::in_output_mix, 0.0f},
-                        {AudioInputEffect::in_output_width, 1.0f} // stereo
-                    },
-                    {
-                        // ExpectedOutput stays attached
-                        {0.1f, 0.1f, 0.1f, 0.1f},  //
-                        {0.05f, 0.05f, 0.05f, 0.05f},
-                    }
+                 }},
+                {"Mono Output",
+                 {
+                     {AudioInputEffect::in_output_mix, 1.0f},
+                     {AudioInputEffect::in_output_width, 0.0f} // mono
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.225f, 0.225f, 0.225f,
+                      0.225f}, // expectedLeftOutput (sum of
+                               // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+                     {0.225f, 0.225f, 0.225f, 0.225f}, // expectedRightOutput (sum of
+                                                       // rightEffectInput,
+                                                       // sceneBRightInput, and audioRightInput)
+                 }},
+                {"Leaving only dry signal, with width = 1",
+                 {
+                     {AudioInputEffect::in_output_mix, 0.0f},
+                     {AudioInputEffect::in_output_width, 1.0f} // stereo
+                 },
+                 {
+                     // ExpectedOutput stays attached
+                     {0.1f, 0.1f, 0.1f, 0.1f}, //
+                     {0.05f, 0.05f, 0.05f, 0.05f},
+                 }
 
                 },
-                {
-                    "Leaving only dry signal, with width = 0",
-                    {
-                        {AudioInputEffect::in_output_mix, 0.0f},
-                        {AudioInputEffect::in_output_width, 0.0f} // stereo
-                    },
-                    {
-                        // ExpectedOutput stays attached
-                        {0.1f, 0.1f, 0.1f, 0.1f},  //
-                        {0.05f, 0.05f, 0.05f, 0.05f},
-                    }
+                {"Leaving only dry signal, with width = 0",
+                 {
+                     {AudioInputEffect::in_output_mix, 0.0f},
+                     {AudioInputEffect::in_output_width, 0.0f} // stereo
+                 },
+                 {
+                     // ExpectedOutput stays attached
+                     {0.1f, 0.1f, 0.1f, 0.1f}, //
+                     {0.05f, 0.05f, 0.05f, 0.05f},
+                 }
 
                 },
             },
@@ -762,29 +742,22 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             AudioInputEffect::in_audio_input_channel, // ignore
             AudioInputEffect::in_audio_input_level,   // ignore
             AudioInputEffect::in_audio_input_pan,     // ignore
-            {0.1f, 0.1f, 0.1f, 0.1f},  // leftEffectInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // rightEffectInput (half of leftEffectInput)
-            {0.2f, 0.2f, 0.2f, 0.2f},  // sceneALeftInput
-            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneARightInput (half of sceneALeftInput)
-            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneBLeftInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // sceneBRightInput (half of sceneBLeftInput)
-            {0.1f, 0.1f, 0.1f, 0.1f},  // audioLeftInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
-            {
-                {
-                    "Stereo Output",
-                    {
-                        {AudioInputEffect::in_output_mix, 1.0f},
-                        {AudioInputEffect::in_output_width, 1.0f}
-                    },
-                    {
-                        {0.4f, 0.4f, 0.4f, 0.4f},  // expectedLeftOutput (sum of leftEffectInput,
-                                                      //  sceneALeftInput, and audioLeftInput)
-                        {0.2f, 0.2f, 0.2f, 0.2f},  // expectedRightOutput (sum of rightEffectInput,
-                                                        // sceneARightInput, and audioRightInput)
-                    }
-                }
-            },
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},                 // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // audioRightInput (half of audioLeftInput)
+            {{"Stereo Output",
+              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+              {
+                  {0.4f, 0.4f, 0.4f, 0.4f}, // expectedLeftOutput (sum of leftEffectInput,
+                                            //  sceneALeftInput, and audioLeftInput)
+                  {0.2f, 0.2f, 0.2f, 0.2f}, // expectedRightOutput (sum of rightEffectInput,
+                                            // sceneARightInput, and audioRightInput)
+              }}},
         },
 
         {
@@ -793,29 +766,23 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             AudioInputEffect::in_audio_input_channel, // ignore
             AudioInputEffect::in_audio_input_level,   // ignore
             AudioInputEffect::in_audio_input_pan,     // ignore
-            {0.1f, 0.1f, 0.1f, 0.1f},  // leftEffectInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // rightEffectInput (half of leftEffectInput)
-            {0.2f, 0.2f, 0.2f, 0.2f},  // sceneALeftInput
-            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneARightInput (half of sceneALeftInput)
-            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneBLeftInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // sceneBRightInput (half of sceneBLeftInput)
-            {0.1f, 0.1f, 0.1f, 0.1f},  // audioLeftInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
-            {
-                {
-                    "Stereo Output",
-                    {
-                        {AudioInputEffect::in_output_mix, 1.0f},
-                        {AudioInputEffect::in_output_width, 1.0f}
-                    },
-                    {
-                        // ExpectedOutput
-                        {0.2f, 0.2f, 0.2f, 0.2f},  // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
-                        {0.1f, 0.1f, 0.1f, 0.1f},  // expectedRightOutput (sum of rightEffectInput and
-                                                  // audioRightInput)
-                    }
-                }
-            },
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},                 // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // audioRightInput (half of audioLeftInput)
+            {{"Stereo Output",
+              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+              {
+                  // ExpectedOutput
+                  {0.2f, 0.2f, 0.2f,
+                   0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
+                  {0.1f, 0.1f, 0.1f, 0.1f}, // expectedRightOutput (sum of rightEffectInput and
+                                            // audioRightInput)
+              }}},
         },
         {
             AudioInputEffect::global_slot,
@@ -823,31 +790,24 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             AudioInputEffect::in_audio_input_channel, // ignore
             AudioInputEffect::in_audio_input_level,   // ignore
             AudioInputEffect::in_audio_input_pan,     // ignore
-            {0.1f, 0.1f, 0.1f, 0.1f},  // leftEffectInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // rightEffectInput (half of leftEffectInput)
-            {0.2f, 0.2f, 0.2f, 0.2f},  // sceneALeftInput
-            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneARightInput (half of sceneALeftInput)
-            {0.1f, 0.1f, 0.1f, 0.1f},  // sceneBLeftInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // sceneBRightInput (half of sceneBLeftInput)
-            {0.1f, 0.1f, 0.1f, 0.1f},  // audioLeftInput
-            {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
-            {
-                {
-                    "Stereo Output",
-                    {
-                        {AudioInputEffect::in_output_mix, 1.0f},
-                        {AudioInputEffect::in_output_width, 1.0f}
-                    },
-                    {
-                        // ExpectedOutput
-                        {0.2f, 0.2f, 0.2f, 0.2f},  // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
-                        {0.1f, 0.1f, 0.1f, 0.1f},  // expectedRightOutput (sum of rightEffectInput and
-                                                   // audioRightInput)
-                    }
-                }
-            },
-        }
-    };
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},                 // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},                 // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f},             // audioRightInput (half of audioLeftInput)
+            {{"Stereo Output",
+              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+              {
+                  // ExpectedOutput
+                  {0.2f, 0.2f, 0.2f,
+                   0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
+                  {0.1f, 0.1f, 0.1f, 0.1f}, // expectedRightOutput (sum of rightEffectInput and
+                                            // audioRightInput)
+              }}},
+        }};
     //TODO: test combination of effects in the slots
     for(InParamsGroup& inParamsGroup: inParamsGroups)
     {
