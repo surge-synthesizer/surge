@@ -411,6 +411,12 @@ struct ExpectedOutput {
     float expectedRightOutput[BLOCK_SIZE];
 };
 
+struct SubTestCase {
+    std::string name;
+    std::vector<ControlParam> controlParams;
+    ExpectedOutput expectedOutput;
+};
+
 struct InParamsGroup {
     int slot;
 
@@ -430,7 +436,7 @@ struct InParamsGroup {
     float audioLeftInput  alignas(16)[BLOCK_SIZE];
     float audioRightInput  alignas(16)[BLOCK_SIZE];
 
-    std::vector<std::pair<std::vector<ControlParam>, ExpectedOutput>> expectedOutput;
+    std::vector<SubTestCase> expectedOutput;
 
     void fillWithData(SurgeStorage* surgeStorage) {
         surgeStorage->scenesOutputData.provideSceneData(0, 0, sceneALeftInput);
@@ -676,6 +682,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
             {
                 {
+                    "Stereo Output",
                     {
                         {AudioInputEffect::in_output_mix, 1.0f},
                         {AudioInputEffect::in_output_width, 1.0f}
@@ -688,7 +695,22 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                                                           // rightEffectInput,
                                                           // sceneBRightInput, and audioRightInput)
                     }
-                }
+                },
+                {
+                    "Mono Output",
+                    {
+                        {AudioInputEffect::in_output_mix, 1.0f},
+                        {AudioInputEffect::in_output_width, 0.0f} // mono
+                    },
+                    {
+                        // ExpectedOutput
+                        {0.225f, 0.225f, 0.225f,0.225f},          // expectedLeftOutput (sum of
+                                                      // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+                        {0.225f, 0.225f, 0.225f, 0.225f},     // expectedRightOutput (sum of
+                                                      // rightEffectInput,
+                                                      // sceneBRightInput, and audioRightInput)
+                    }
+                },
             },
 
         },
@@ -708,6 +730,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
             {
                 {
+                    "Stereo Output",
                     {
                         {AudioInputEffect::in_output_mix, 1.0f},
                         {AudioInputEffect::in_output_width, 1.0f}
@@ -738,6 +761,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
             {
                 {
+                    "Stereo Output",
                     {
                         {AudioInputEffect::in_output_mix, 1.0f},
                         {AudioInputEffect::in_output_width, 1.0f}
@@ -767,6 +791,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.05f, 0.05f, 0.05f, 0.05f},  // audioRightInput (half of audioLeftInput)
             {
                 {
+                    "Stereo Output",
                     {
                         {AudioInputEffect::in_output_mix, 1.0f},
                         {AudioInputEffect::in_output_width, 1.0f}
@@ -775,7 +800,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                         // ExpectedOutput
                         {0.2f, 0.2f, 0.2f, 0.2f},  // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
                         {0.1f, 0.1f, 0.1f, 0.1f},  // expectedRightOutput (sum of rightEffectInput and
-                                                  // audioRightInput)
+                                                   // audioRightInput)
                     }
                 }
             },
@@ -812,15 +837,13 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                 fxStorage->p[AudioInputEffect::in_output_mix].val.f = 1.0f;
                 REQUIRE(fxStorage->type.val.i == fxt_input_blender);
 
-                int testCase = 0;
-                for (std::pair<std::vector<ControlParam>, ExpectedOutput>& pair :
-                     inParamsGroup.expectedOutput)
+                for (SubTestCase& subTestCase : inParamsGroup.expectedOutput)
                 {
                     SECTION(inParamsGroup.testGroup + ", slot " + std::to_string(slot) +
-                            ", test case " + std::to_string(testCase++))
+                            ", " + subTestCase.name)
                     {
-                        auto [controlParams, expectedOutput] = pair;
-                        for (ControlParam& controlParam : controlParams)
+                        ExpectedOutput& expectedOutput = subTestCase.expectedOutput;
+                        for (ControlParam& controlParam : subTestCase.controlParams)
                         {
                             fxStorage->p[controlParam.param].val.f = controlParam.value;
                         }
