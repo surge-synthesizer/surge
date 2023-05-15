@@ -462,18 +462,16 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
     };
     std::vector<InParamsGroup> inParamsGroups {
 
-        InParamsGroup
         {
             AudioInputEffect::a_insert_slot,
             "Slot a-insert, Scene B input",
             AudioInputEffect::in_scene_input_channel,
-                AudioInputEffect::in_scene_input_level,
-                AudioInputEffect::in_scene_input_pan,
+            AudioInputEffect::in_scene_input_level,
+            AudioInputEffect::in_scene_input_pan,
             {},{}, {}, {},
             {0.4f,0.2f,0.4f,0.2f,},
             {0.2f, 0.4f, 0.2f, 0.4f,},{},{}
         },
-        InParamsGroup
         {
             AudioInputEffect::b_insert_slot,
             "On insert-B, Scene A input",
@@ -485,7 +483,6 @@ TEST_CASE("AudioInputEffect: channels panning",  "[fx]")
             {0.2f, 0.4f, 0.2f, 0.4f,},
             {}, {}, {}, {}
         },
-        InParamsGroup
         {
             AudioInputEffect::a_insert_slot,
             "Audio input",
