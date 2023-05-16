@@ -642,7 +642,8 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
          {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4}},
     };
 
-    std::vector<InParamsGroup> inParamsGroups{
+    std::vector<InParamsGroup> inParamsGroups
+    {
         {
             AudioInputEffect::a_insert_slot,
             "A Insert",
@@ -796,9 +797,14 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
                                             // audioRightInput)
               }}},
         },
+
+        //TODO: now add also sections for audio input and effect input
+
+    };
+    std::vector<InParamsGroup> panningTestCases = {
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with the default params",
+            "Applying Panning to an audio input with the default params",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -810,21 +816,21 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {},{}, // audioLeftInput and audioRightInput
             {
                 {"the result should be unchanged",
-                    {
-                        {AudioInputEffect::in_scene_input_channel, 0.0f},
-                        {AudioInputEffect::in_scene_input_level, 0.0f},
-                        {AudioInputEffect::in_scene_input_pan, 0.0f},
-                    },
-                    {
-                          // ExpectedOutput
-                          {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
-                          {0.2f, 0.4f, 0.2f, 0.4f}, // expectedRightOutput (sum of rightEffectInput and audioRightInput)
-                  }}
+                 {
+                     {AudioInputEffect::in_scene_input_channel, 0.0f},
+                     {AudioInputEffect::in_scene_input_level, 0.0f},
+                     {AudioInputEffect::in_scene_input_pan, 0.0f},
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
+                     {0.2f, 0.4f, 0.2f, 0.4f}, // expectedRightOutput (sum of rightEffectInput and audioRightInput)
+                 }}
             },
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = -1",
+            "Applying Panning to an audio input with in_scene_input_channel = -1",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -835,7 +841,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBLeftInput
             {},{}, // audioLeftInput and audioRightInput
             {
-                 {" it should only accept left channel",
+                {" it should only accept left channel",
                  {
                      {AudioInputEffect::in_scene_input_channel, -1.0f},
                      {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -850,7 +856,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = 0.25",
+            "Applying Panning to an audio input with in_scene_input_channel = 0.25",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -876,7 +882,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = -0.50",
+            "Applying Panning to an audio input with in_scene_input_channel = -0.50",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -902,7 +908,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = -0.50 and input level = -5.995",
+            "Applying Panning to an audio input with in_scene_input_channel = -0.50 and input level = -5.995",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -928,7 +934,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with in_scene_input_pan = -1.0",
+            "Applying Panning to an audio input with in_scene_input_pan = -1.0",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -954,7 +960,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with in_scene_input_pan = 1.0",
+            "Applying Panning to an audio input with in_scene_input_pan = 1.0",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -980,7 +986,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with in_scene_input_pan = 0.5",
+            "Applying Panning to an audio input with in_scene_input_pan = 0.5",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -1006,7 +1012,7 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = -1 and in_scene_input_pan = 1.0",
+            "Applying Panning to an audio input with in_scene_input_channel = -1 and in_scene_input_pan = 1.0",
             AudioInputEffect::in_scene_input_channel, //ignore
             AudioInputEffect::in_scene_input_level,  //ignore
             AudioInputEffect::in_scene_input_pan,   //ignore
@@ -1017,259 +1023,76 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
             {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneBRightInput
             {},{}, // audioLeftInput and audioRightInput
             {
-                {" left channels should move to the right and the right channel should be deleted",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, -1.0f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, 1.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedLeftOutput
-                     {0.4f, 0.2f, 0.4f, 0.2f}, // expectedRightOutput
-                 }}
+                {
+                    " left channels should move to the right and the right channel should be deleted",
+                    {
+                        {AudioInputEffect::in_scene_input_channel, -1.0f},
+                        {AudioInputEffect::in_scene_input_level, 0.0f},
+                        {AudioInputEffect::in_scene_input_pan, 1.0f},
+                    },
+                    {
+                        // ExpectedOutput
+                        {0.0f, 0.0f, 0.0f, 0.0f}, // expectedLeftOutput
+                        {0.4f, 0.2f, 0.4f, 0.2f}, // expectedRightOutput
+                    }
+                }
             },
         },
-
-
-        // ============slot b ==========
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with the default params, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneALeftInput
-            {}, {}, // sceneBLeftInput and sceneBRight Input
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {"the result should be unchanged",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, 0.0f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, 0.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
-                     {0.2f, 0.4f, 0.2f, 0.4f}, // expectedRightOutput (sum of rightEffectInput and audioRightInput)
-                 }}
-            },
-        },
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = -1, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneALeftInput
-            {}, {}, // sceneBLeftInput and sceneBRight Input
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {" it should only accept left channel",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, -1.0f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, 0.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput
-                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedRightOutput
-                 }}
-            },
-        },
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = 0.25, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneALeftInput
-            {}, {}, // sceneBLeftInput and sceneBRight Input
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {"accepts 50% of left channel and 100% right",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, 0.25f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, 0.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.3f, 0.15f, 0.3f, 0.15f}, // expectedLeftOutput
-                     {0.2f, 0.4f, 0.2f, 0.4f}, // expectedRightOutput
-                 }}
-            },
-        },
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = -0.50, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneALeftInput
-            {}, {}, // sceneBLeftInput and sceneBRight Input
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {" it should accept 100% of left channel and 50% right",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, -0.50f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, 0.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput
-                     {0.1f, 0.2f, 0.1f, 0.2f}, // expectedRightOutput
-                 }}
-            },
-        },
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = -0.50 and input level = -5.995, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneALeftInput
-            {}, {}, // sceneBLeftInput and sceneBRight Input
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {" it should accept 100% of left channel and 50% right with 50% input level, slot b",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, -0.50f},
-                     {AudioInputEffect::in_scene_input_level, -5.995f},
-                     {AudioInputEffect::in_scene_input_pan, 0.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.2f, 0.1f, 0.2f, 0.1f}, // expectedLeftOutput
-                     {0.05f, 0.1f, 0.05f, 0.1f}, // expectedRightOutput
-                 }}
-            },
-        },
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with in_scene_input_pan = -1.0, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneARightInput
-            {}, {}, // sceneBLeftInput and sceneBRight Input
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {" channels should move to the left",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, 0.0f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, -1.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.6f, 0.6f, 0.6f, 0.6f}, // expectedLeftOutput
-                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedRightOutput
-                 }}
-            },
-        },
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with in_scene_input_pan = 1.0, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneARightInput
-            {}, {}, // sceneBLeftInput and sceneBRight Input
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {" channels should move to the right",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, 0.0f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, 1.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedLeftOutput
-                     {0.6f, 0.6f, 0.6f, 0.6f}, // expectedRightOutput
-                 }}
-            },
-        },
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with in_scene_input_pan = 0.5, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneARightInput
-            {}, {}, // sceneBLeftInput and sceneBRight Input
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {" channels should move to the right by 50%",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, 0.0f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, 0.5f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.2f, 0.1f, 0.2f, 0.1f}, // expectedLeftOutput
-                     {0.4f, 0.5f, 0.4f, 0.5f}, // expectedRightOutput
-                 }}
-            },
-        },
-        {
-            AudioInputEffect::b_insert_slot,
-            "Applying Panning to effect input with in_scene_input_channel = -1 and in_scene_input_pan = 1.0, slot b",
-            AudioInputEffect::in_scene_input_channel, //ignore
-            AudioInputEffect::in_scene_input_level,  //ignore
-            AudioInputEffect::in_scene_input_pan,   //ignore
-            {0.0f }, // leftEffectInput
-            {0.0f},  // rightEffectInput
-            {0.4f,0.2f,0.4f,0.2f,}, //sceneALeftInput
-            {0.2f, 0.4f, 0.2f, 0.4f,}, //sceneARightInput
-            {}, {}, // sceneBLeftInput and sceneBRightInput
-            {},{}, // audioLeftInput and audioRightInput
-            {
-                {" left channels should move to the right and the right channel should be deleted",
-                 {
-                     {AudioInputEffect::in_scene_input_channel, -1.0f},
-                     {AudioInputEffect::in_scene_input_level, 0.0f},
-                     {AudioInputEffect::in_scene_input_pan, 1.0f},
-                 },
-                 {
-                     // ExpectedOutput
-                     {0.0f, 0.0f, 0.0f, 0.0f}, // expectedLeftOutput
-                     {0.4f, 0.2f, 0.4f, 0.2f}, // expectedRightOutput
-                 }}
-            },
-        }
-        //TODO: now add also sections for b_insert_slot and for audio input
 
     };
+    for (InParamsGroup& panningTestCase: panningTestCases){
+        /// ==================== Test with audio input from scene B ====================
+        std::string testGroup = panningTestCase.testGroup;
+        panningTestCase.testGroup = testGroup + " (audio input from scene B)";
+        inParamsGroups.push_back(panningTestCase);
+
+        /// ==================== Test with audio input from scene A ====================
+        panningTestCase.slot = AudioInputEffect::b_insert_slot;
+        copy_block(panningTestCase.sceneBLeftInput, panningTestCase.sceneALeftInput,
+                   BLOCK_SIZE_QUAD);
+        copy_block(panningTestCase.sceneBRightInput, panningTestCase.sceneARightInput,
+                   BLOCK_SIZE_QUAD);
+        panningTestCase.testGroup = testGroup + " (audio input from scene A)";
+        inParamsGroups.push_back(panningTestCase);
+
+        /// ==================== Test with audio input from a mic ====================
+        panningTestCase.testGroup = testGroup + " (audio input is from a mic)";
+        panningTestCase.slot = AudioInputEffect::a_insert_slot;
+        copy_block(panningTestCase.sceneBLeftInput, panningTestCase.audioLeftInput,
+                   BLOCK_SIZE_QUAD);
+        copy_block(panningTestCase.sceneBRightInput, panningTestCase.audioRightInput,
+                   BLOCK_SIZE_QUAD);
+        panningTestCase.expectedOutput[0].controlParams[0].param =
+            AudioInputEffect::in_audio_input_channel;
+        panningTestCase.expectedOutput[0].controlParams[1].param =
+            AudioInputEffect::in_audio_input_level;
+        panningTestCase.expectedOutput[0].controlParams[2].param =
+            AudioInputEffect::in_audio_input_pan;
+        float zeros[BLOCK_SIZE] {0.0f};
+        copy_block(zeros, panningTestCase.sceneALeftInput, BLOCK_SIZE_QUAD);
+        copy_block(zeros, panningTestCase.sceneARightInput, BLOCK_SIZE_QUAD);
+        copy_block(zeros, panningTestCase.sceneBLeftInput, BLOCK_SIZE_QUAD);
+        copy_block(zeros, panningTestCase.sceneBRightInput, BLOCK_SIZE_QUAD);
+        inParamsGroups.push_back(panningTestCase);
+
+        /// ==================== Test with audio effect input  ====================
+        panningTestCase.testGroup = testGroup + " (audio input is from an audio effect)";
+        panningTestCase.slot = AudioInputEffect::a_insert_slot;
+        copy_block(panningTestCase.audioLeftInput, panningTestCase.leftEffectInput,
+                   BLOCK_SIZE_QUAD);
+        copy_block(panningTestCase.audioRightInput, panningTestCase.rightEffectInput,
+                  BLOCK_SIZE_QUAD);
+        panningTestCase.expectedOutput[0].controlParams[0].param =
+            AudioInputEffect::in_effect_input_channel;
+        panningTestCase.expectedOutput[0].controlParams[1].param =
+            AudioInputEffect::in_effect_input_level;
+        panningTestCase.expectedOutput[0].controlParams[2].param =
+            AudioInputEffect::in_effect_input_pan;
+        copy_block(zeros, panningTestCase.audioLeftInput, BLOCK_SIZE_QUAD);
+        copy_block(zeros, panningTestCase.audioRightInput, BLOCK_SIZE_QUAD);
+        inParamsGroups.push_back(panningTestCase);
+    }
+
     //TODO: test combination of effects in the slots
     for(InParamsGroup& inParamsGroup: inParamsGroups)
     {
