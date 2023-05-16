@@ -871,7 +871,6 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         inParamsGroups.push_back(panningTestCase);
     }
 
-    //TODO: test combination of effects in the slots
     for(InParamsGroup& inParamsGroup: inParamsGroups)
     {
         SECTION(inParamsGroup.testGroup)
