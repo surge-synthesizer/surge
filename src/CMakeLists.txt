@@ -5,6 +5,9 @@ option(SURGE_BUILD_XT "Build Surge XT synth" ON)
 option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge Python bindings with pybind11" OFF)
 option(SURGE_COPY_TO_PRODUCTS "Copy built plugins to the products directory" ON)
 option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to system plugin area after build" OFF)
+
+# Currently the JUCE LV2 build crashes in our CI pipeline, so leave it for users to self build
+option(SURGE_BUILD_LV2 "Build Surge as an LV2" OFF)
 if (NOT SURGE_COMPILE_BLOCK_SIZE)
   set(SURGE_COMPILE_BLOCK_SIZE 32)
 endif()
@@ -95,17 +98,11 @@ if(DEFINED ENV{VST2SDK_DIR})
   add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/wd4828>)
 endif()
 
-if(JUCE_SUPPORTS_LV2)
+if(JUCE_SUPPORTS_LV2 AND SURGE_BUILD_LV2)
   list(APPEND SURGE_JUCE_FORMATS LV2)
   message(STATUS "Including JUCE LV2 support. You will need the LV2 fork of JUCE!")
   message(STATUS "Turning off deprecation warning to error, since JUCE LV2 uses deprecated APIs")
   add_compile_options(-Wno-error=deprecated-declarations)
-endif()
-
-if(EXISTS ${SURGE_JUCE_PATH}/modules/juce_audio_plugin_client/LV2/juce_LV2_Client.cpp)
-  message(STATUS "JUCE7 LV2 support present; activating LV2")
-  list(APPEND SURGE_JUCE_FORMATS LV2)
-  target_compile_definitions(surge-juce INTERFACE SURGE_HAS_JUCE7=1)
 endif()
 
 

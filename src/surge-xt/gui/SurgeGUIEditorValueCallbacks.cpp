@@ -1,16 +1,23 @@
 /*
- ** Surge Synthesizer is Free and Open Source Software
- **
- ** Surge is made available under the Gnu General Public License, v3.0
- ** https://www.gnu.org/licenses/gpl-3.0.en.html
- **
- ** Copyright 2004-2021 by various individuals as described by the Git transaction log
- **
- ** All source at: https://github.com/surge-synthesizer/surge.git
- **
- ** Surge was a commercial product from 2004-2018, with Copyright and ownership
- ** in that period held by Claes Johanson at Vember Audio. Claes made Surge
- ** open source in September 2018.
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
  */
 
 #include "SurgeGUIEditor.h"
@@ -65,6 +72,33 @@ std::string decodeControllerID(int id)
     return out;
 }
 
+void addEnvTrigOptions(SurgeSynthesizer *synth, juce::PopupMenu &contextMenu, int current_scene)
+{
+    std::vector<std::string> labels = {"Reset to Zero", "Continue from Current Level"};
+    std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO, RESTART_FROM_LATEST};
+
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                    "ENVELOPE RETRIGGER BEHAVIOR");
+
+    for (int i = 0; i < 2; ++i)
+    {
+        auto value = vals[i];
+        bool isChecked =
+            (value == synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode);
+
+        contextMenu.addItem(
+            Surge::GUI::toOSCase(labels[i]), true, isChecked,
+            [synth, current_scene, value, isChecked]() {
+                synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode = value;
+
+                if (!isChecked)
+                {
+                    synth->storage.getPatch().isDirty = true;
+                }
+            });
+    }
+}
+
 void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                                                 const LearnMode learn_mode, const int idx,
                                                 Surge::GUI::IComponentTagValue *control)
@@ -97,9 +131,8 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                 bool isEnabled = true;
 
                 // these CCs cannot be used for MIDI learn (see SurgeSynthesizer::channelController)
-                if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 ||
-                    (mc == 74 && synth->mpeEnabled) || (mc >= 98 && mc <= 101) || mc == 120 ||
-                    mc == 123)
+                if (mc == 0 || mc == 6 || mc == 32 || mc == 38 || mc == 64 || mc == 74 ||
+                    (mc >= 98 && mc <= 101) || mc == 120 || mc == 123)
                 {
                     isEnabled = false;
                 }
@@ -1758,66 +1791,52 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                     });
                             }
                         }
-                        if (p->ctrltype == ct_polymode &&
-                            (p->val.i == pm_mono || p->val.i == pm_mono_st ||
-                             p->val.i == pm_mono_fp || p->val.i == pm_mono_st_fp))
+
+                        if (p->ctrltype == ct_polymode)
                         {
+                            if (p->val.i == pm_mono || p->val.i == pm_mono_st ||
+                                p->val.i == pm_mono_fp || p->val.i == pm_mono_st_fp)
                             {
-                                std::vector<std::string> labels = {"Last", "High", "Low", "Legacy"};
-                                std::vector<MonoVoicePriorityMode> vals = {
-                                    ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST,
-                                    NOTE_ON_LATEST_RETRIGGER_HIGHEST};
-
-                                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                                    contextMenu, "NOTE PRIORITY");
-
-                                for (int i = 0; i < 4; ++i)
                                 {
-                                    bool isChecked = (vals[i] == synth->storage.getPatch()
-                                                                     .scene[current_scene]
-                                                                     .monoVoicePriorityMode);
-                                    contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true,
-                                                        isChecked, [this, isChecked, vals, i]() {
-                                                            synth->storage.getPatch()
-                                                                .scene[current_scene]
-                                                                .monoVoicePriorityMode = vals[i];
-                                                            if (!isChecked)
-                                                                synth->storage.getPatch().isDirty =
-                                                                    true;
-                                                        });
+                                    std::vector<std::string> labels = {"Last", "High", "Low",
+                                                                       "Legacy"};
+                                    std::vector<MonoVoicePriorityMode> vals = {
+                                        ALWAYS_LATEST, ALWAYS_HIGHEST, ALWAYS_LOWEST,
+                                        NOTE_ON_LATEST_RETRIGGER_HIGHEST};
+
+                                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                        contextMenu, "NOTE PRIORITY");
+
+                                    for (int i = 0; i < 4; ++i)
+                                    {
+                                        bool isChecked = (vals[i] == synth->storage.getPatch()
+                                                                         .scene[current_scene]
+                                                                         .monoVoicePriorityMode);
+                                        contextMenu.addItem(
+                                            Surge::GUI::toOSCase(labels[i]), true, isChecked,
+                                            [this, isChecked, vals, i]() {
+                                                synth->storage.getPatch()
+                                                    .scene[current_scene]
+                                                    .monoVoicePriorityMode = vals[i];
+                                                if (!isChecked)
+                                                    synth->storage.getPatch().isDirty = true;
+                                            });
+                                    }
                                 }
+
+                                addEnvTrigOptions(synth, contextMenu, current_scene);
+
+                                contextMenu.addSeparator();
+
+                                contextMenu.addSubMenu(
+                                    Surge::GUI::toOSCase("Sustain Pedal in Mono Mode"),
+                                    makeMonoModeOptionsMenu(menuRect, false));
                             }
 
+                            if (p->val.i == pm_latch)
                             {
-                                std::vector<std::string> labels = {"Reset to Zero",
-                                                                   "Continue from Current Level"};
-                                std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO,
-                                                                           RESTART_FROM_LATEST};
-
-                                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                                    contextMenu, "ENVELOPE RETRIGGER BEHAVIOR");
-
-                                for (int i = 0; i < 2; ++i)
-                                {
-                                    bool isChecked = (vals[i] == synth->storage.getPatch()
-                                                                     .scene[current_scene]
-                                                                     .monoVoiceEnvelopeMode);
-                                    contextMenu.addItem(Surge::GUI::toOSCase(labels[i]), true,
-                                                        isChecked, [this, isChecked, vals, i]() {
-                                                            synth->storage.getPatch()
-                                                                .scene[current_scene]
-                                                                .monoVoiceEnvelopeMode = vals[i];
-                                                            if (!isChecked)
-                                                                synth->storage.getPatch().isDirty =
-                                                                    true;
-                                                        });
-                                }
+                                addEnvTrigOptions(synth, contextMenu, current_scene);
                             }
-                            contextMenu.addSeparator();
-
-                            contextMenu.addSubMenu(
-                                Surge::GUI::toOSCase("Sustain Pedal in Mono Mode"),
-                                makeMonoModeOptionsMenu(menuRect, false));
                         }
                     }
 
@@ -2350,6 +2369,102 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 });
                         }
                     }
+                    break;
+                    case ct_amplitude_ringmod:
+                    {
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            contextMenu, "COMBINATOR MODE");
+
+                        contextMenu.addItem("Ring Modulation", true, dt == rmm_ring, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+
+                            p->deform_type = rmm_ring, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem(
+                            "CXOR (4,2-a-b-a-b)", true, dt == rmm_cxor43_0, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor43_0,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 1 (4,3-cb-ab-ab-cb)", true, dt == rmm_cxor43_1, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor43_1,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 2 (4,3-cb-aa-ab-cb)", true, dt == rmm_cxor43_2, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor43_2,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 3 (4,3-cc-cb-ab-cb)", true, dt == rmm_cxor43_3, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor43_3,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 4 (4,3-cb-cb-ab-cb)", true, dt == rmm_cxor43_4, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor43_4,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 5 (9,3-ba-bc-ba-bc)", true, dt == rmm_cxor93_0, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor93_0,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 6 (9,3-bc-cb-ba-ab)", true, dt == rmm_cxor93_1, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor93_1,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 7 (9,3-bb-aa-ab-bc)", true, dt == rmm_cxor93_2, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor93_2,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 8 (9,3-bb-ba-ab-bc)", true, dt == rmm_cxor93_3, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor93_3,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                        contextMenu.addItem(
+                            "SILM 9 (9,3-ba-ba-bc-cc)", true, dt == rmm_cxor93_4, [this, p]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                p->deform_type = rmm_cxor93_4,
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+                    }
                     default:
                     {
                         break;
@@ -2858,6 +2973,23 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                             synth->storage.getPatch().isDirty = true;
                                     });
             }
+
+#if SURGE_HAS_OSC
+            if (synth->storage.oscListenerRunning)
+            {
+                contextMenu.addSeparator();
+
+                auto oscName = p->get_osc_name();
+
+                auto i =
+                    juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))
+                        .setAction(
+                            [oscName]() { juce::SystemClipboard::copyTextToClipboard(oscName); })
+                        .setColour(currentSkin->getColor(Colors::PopupMenu::Text).withAlpha(0.75f));
+
+                contextMenu.addItem(i);
+            }
+#endif
 
             auto jpm = juceEditor->hostMenuFor(p);
 
@@ -3539,20 +3671,18 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     break;
     case tag_store:
     {
-        bool showTags = juce::ModifierKeys::currentModifiers.isShiftDown() ||
-                        juce::ModifierKeys::currentModifiers.isAltDown();
+        showOverlay(SurgeGUIEditor::SAVE_PATCH, [this](Surge::Overlays::OverlayComponent *co) {
+            auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
 
-        showOverlay(SurgeGUIEditor::SAVE_PATCH,
-                    [this, showTags](Surge::Overlays::OverlayComponent *co) {
-                        auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);
+            if (!psd)
+            {
+                return;
+            }
 
-                        if (!psd)
-                        {
-                            return;
-                        }
-
-                        psd->setShowTagsField(showTags);
-                    });
+            psd->setShowTagsField(juce::ModifierKeys::currentModifiers.isAltDown());
+            psd->setShowFactoryOverwrite(juce::ModifierKeys::currentModifiers.isShiftDown() &&
+                                         juce::ModifierKeys::currentModifiers.isAltDown());
+        });
     }
     break;
 

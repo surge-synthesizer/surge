@@ -1,17 +1,24 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "DSPUtils.h"
 #include "SurgeStorage.h"
@@ -20,7 +27,6 @@
 #include <cctype>
 #include <map>
 #include <queue>
-#include <vembertech/vt_dsp_endian.h>
 #include "UserDefaults.h"
 #if HAS_JUCE
 #include "SurgeSharedBinary.h"
@@ -44,11 +50,15 @@
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"
 #include "SurgeMemoryPools.h"
+#include "sst/basic-blocks/tables/SincTableProvider.h"
 
 // FIXME probably remove this when we remove the hardcoded hack below
 #include "MSEGModulationHelper.h"
 // FIXME
 #include "FormulaModulationHelper.h"
+
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
 
@@ -84,45 +94,14 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
     _patch.reset(new SurgePatch(this));
 
-    float cutoff = 0.455f;
-    float cutoff1X = 0.85f;
-    float cutoffI16 = 1.0f;
-    int j;
-    for (j = 0; j < FIRipol_M + 1; j++)
-    {
-        for (int i = 0; i < FIRipol_N; i++)
-        {
-            double t = -double(i) + double(FIRipol_N / 2.0) + double(j) / double(FIRipol_M) - 1.0;
-            double val = (float)(symmetric_blackman(t, FIRipol_N) * cutoff * sincf(cutoff * t));
-            double val1X =
-                (float)(symmetric_blackman(t, FIRipol_N) * cutoff1X * sincf(cutoff1X * t));
-            sinctable[j * FIRipol_N * 2 + i] = (float)val;
-            sinctable1X[j * FIRipol_N + i] = (float)val1X;
-        }
-    }
-    for (j = 0; j < FIRipol_M; j++)
-    {
-        for (int i = 0; i < FIRipol_N; i++)
-        {
-            sinctable[j * FIRipol_N * 2 + FIRipol_N + i] =
-                (float)((sinctable[(j + 1) * FIRipol_N * 2 + i] -
-                         sinctable[j * FIRipol_N * 2 + i]) /
-                        65536.0);
-        }
-    }
-
-    for (j = 0; j < FIRipol_M + 1; j++)
-    {
-        for (int i = 0; i < FIRipolI16_N; i++)
-        {
-            double t =
-                -double(i) + double(FIRipolI16_N / 2.0) + double(j) / double(FIRipol_M) - 1.0;
-            double val =
-                (float)(symmetric_blackman(t, FIRipolI16_N) * cutoffI16 * sincf(cutoffI16 * t));
-
-            sinctableI16[j * FIRipolI16_N + i] = (short)((float)val * 16384.f);
-        }
-    }
+    namespace tabl = sst::basic_blocks::tables;
+    sincTableProvider = std::make_unique<tabl::SurgeSincTableProvider>();
+    static_assert(tabl::SurgeSincTableProvider::FIRipol_M == FIRipol_M);
+    static_assert(tabl::SurgeSincTableProvider::FIRipol_N == FIRipol_N);
+    static_assert(tabl::SurgeSincTableProvider::FIRipolI16_N == FIRipolI16_N);
+    sinctable = sincTableProvider->sinctable;
+    sinctable1X = sincTableProvider->sinctable1X;
+    sinctableI16 = sincTableProvider->sinctableI16;
 
     for (int s = 0; s < n_scenes; s++)
         for (int m = 0; m < n_modsources; ++m)
@@ -1085,8 +1064,7 @@ void SurgeStorage::perform_queued_wtloads()
             }
             else if (patch.scene[sc].osc[o].wt.queue_filename[0])
             {
-                if (!(patch.scene[sc].osc[o].type.val.i == ot_wavetable ||
-                      patch.scene[sc].osc[o].type.val.i == ot_window))
+                if (!(uses_wavetabledata(patch.scene[sc].osc[o].type.val.i)))
                 {
                     patch.scene[sc].osc[o].queue_type = ot_wavetable;
                 }
@@ -1218,13 +1196,15 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
 
     size_t ds;
 
-    if (vt_read_int16LE(wh.flags) & wtf_int16)
+    if (mech::endian_read_int16LE(wh.flags) & wtf_int16)
     {
-        ds = sizeof(short) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+        ds = sizeof(short) * mech::endian_read_int16LE(wh.n_tables) *
+             mech::endian_read_int32LE(wh.n_samples);
     }
     else
     {
-        ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+        ds = sizeof(float) * mech::endian_read_int16LE(wh.n_tables) *
+             mech::endian_read_int32LE(wh.n_samples);
     }
 
     const std::unique_ptr<char[]> data{new char[ds]};
@@ -1282,10 +1262,12 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
     }
 
     size_t ds;
-    if (vt_read_int16LE(wh.flags) & wtf_int16)
-        ds = sizeof(short) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+    if (mech::endian_read_int16LE(wh.flags) & wtf_int16)
+        ds = sizeof(short) * mech::endian_read_int16LE(wh.n_tables) *
+             mech::endian_read_int32LE(wh.n_samples);
     else
-        ds = sizeof(float) * vt_read_int16LE(wh.n_tables) * vt_read_int32LE(wh.n_samples);
+        ds = sizeof(float) * mech::endian_read_int16LE(wh.n_tables) *
+             mech::endian_read_int32LE(wh.n_samples);
 
     if (dataSize < ds + sizeof(wt_header))
     {
@@ -2287,6 +2269,36 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
     return true;
 }
 
+void SurgeStorage::loadTuningFromSCL(const fs::path &p)
+{
+    try
+    {
+        retuneToScale(Tunings::readSCLFile(p.u8string()));
+    }
+    catch (Tunings::TuningError &e)
+    {
+        retuneTo12TETScaleC261Mapping();
+        reportError(e.what(), "SCL Error");
+    }
+    if (onTuningChanged)
+        onTuningChanged();
+}
+
+void SurgeStorage::loadMappingFromKBM(const fs::path &p)
+{
+    try
+    {
+        remapToKeyboard(Tunings::readKBMFile(p.u8string()));
+    }
+    catch (Tunings::TuningError &e)
+    {
+        remapToConcertCKeyboard();
+        reportError(e.what(), "KBM Error");
+    }
+    if (onTuningChanged)
+        onTuningChanged();
+}
+
 void SurgeStorage::setTuningApplicationMode(const TuningApplicationMode m)
 {
     tuningApplicationMode = m;
@@ -2581,9 +2593,12 @@ bool SurgeStorage::isStandardTuningAndHasNoToggle()
 void SurgeStorage::resetTuningToggle() { isToggledToCache = false; }
 
 void SurgeStorage::reportError(const std::string &msg, const std::string &title,
-                               const ErrorType errorType)
+                               const ErrorType errorType, bool reportToStdout)
 {
-    std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;
+    if (reportToStdout)
+    {
+        std::cout << "Surge Error [" << title << "]\n" << msg << std::endl;
+    }
     if (errorListeners.empty())
     {
         std::lock_guard<std::mutex> g(preListenerErrorMutex);

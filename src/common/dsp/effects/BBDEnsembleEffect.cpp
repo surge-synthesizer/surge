@@ -1,19 +1,29 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "BBDEnsembleEffect.h"
+
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 std::string ensemble_stage_name(int i)
 {
@@ -61,10 +71,10 @@ int ensemble_num_stages(int i)
 
 int ensemble_stage_count() { return 7; }
 
-float calculateFilterParamFrequency(float *f, SurgeStorage *storage)
+float calculateFilterParamFrequency(float *fval, SurgeStorage *storage)
 {
-    auto param_val = f[BBDEnsembleEffect::ens_input_filter];
-    auto clock_rate = f[BBDEnsembleEffect::ens_delay_clockrate];
+    auto param_val = fval[BBDEnsembleEffect::ens_input_filter];
+    auto clock_rate = fval[BBDEnsembleEffect::ens_delay_clockrate];
     auto freq = 2.0f * (float)M_PI * 400.0f * storage->note_to_pitch_ignoring_tuning(param_val);
     auto freq_adjust = freq * std::pow(clock_rate * 0.01f, 0.75f);
     return std::min(freq_adjust, 25000.0f);
@@ -158,7 +168,7 @@ float BBDEnsembleEffect::getFeedbackGain(bool bbd) const noexcept
     // normally we would just need the feedback to be less than 1
     // however here we're adding the output of 2 delay lines so
     // we need the feedback to be less than 0.5.
-    auto baseFeedbackParam = (bbd ? 0.2f : 1.0f) * *f[ens_delay_feedback];
+    auto baseFeedbackParam = (bbd ? 0.2f : 1.0f) * *pd_float[ens_delay_feedback];
     return 0.49f * std::pow(baseFeedbackParam, 0.5f);
 }
 
@@ -166,10 +176,10 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
                                             float delayScale)
 {
     // copy input data ("dry") to processed output ("wet)
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
-    const auto aa_cutoff = calculateFilterParamFrequency(*f, storage);
+    const auto aa_cutoff = calculateFilterParamFrequency(*pd_float, storage);
     sincInputFilter.coeff_LP(2 * M_PI * aa_cutoff / storage->samplerate, 0.7071);
     sincInputFilter.process_block(L, R);
 
@@ -177,7 +187,7 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
     float del2 = delayScale * delay2Ms * 0.001 * storage->samplerate;
     float del0 = delayCenterMs * 0.001 * storage->samplerate;
 
-    bbd_saturation_sse.setDrive(*f[ens_delay_sat]);
+    bbd_saturation_sse.setDrive(*pd_float[ens_delay_sat]);
     float fbGain = getFeedbackGain(false);
 
     for (int s = 0; s < BLOCK_SIZE; ++s)
@@ -237,22 +247,25 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
 
     // limit between 0.005 and 40 Hz with modulation
     double rate1 =
-        storage->envelope_rate_linear(-limit_range(*f[ens_lfo_freq1], -7.64386f, 5.322f));
+        storage->envelope_rate_linear(-limit_range(*pd_float[ens_lfo_freq1], -7.64386f, 5.322f));
     double rate2 =
-        storage->envelope_rate_linear(-limit_range(*f[ens_lfo_freq2], -7.64386f, 5.322f));
+        storage->envelope_rate_linear(-limit_range(*pd_float[ens_lfo_freq2], -7.64386f, 5.322f));
     float roff = 0;
     constexpr float onethird = 1.0 / 3.0;
 
     for (int i = 0; i < 3; ++i)
     {
-        modlfos[0][i].pre_process(Surge::ModControl::mod_sine, rate1, *f[ens_lfo_depth1], roff);
-        modlfos[1][i].pre_process(Surge::ModControl::mod_sine, rate2, *f[ens_lfo_depth2], roff);
+        modlfos[0][i].pre_process(Surge::ModControl::mod_sine, rate1, *pd_float[ens_lfo_depth1],
+                                  roff);
+        modlfos[1][i].pre_process(Surge::ModControl::mod_sine, rate2, *pd_float[ens_lfo_depth2],
+                                  roff);
 
         roff += onethird;
     }
 
-    auto bbd_stages = *pdata_ival[ens_delay_type];
-    const auto clock_rate = std::max(*f[ens_delay_clockrate], 1.0f); // make sure this is not zero!
+    auto bbd_stages = *pd_int[ens_delay_type];
+    const auto clock_rate =
+        std::max(*pd_float[ens_delay_clockrate], 1.0f); // make sure this is not zero!
     const auto numStages = ensemble_num_stages(bbd_stages);
     const auto delayCenterMs = (float)numStages / (2.0f * clock_rate);
     const auto delayScale =
@@ -261,21 +274,21 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1,
                                   auto &delR2) {
         // copy input data ("dry") to processed output ("wet)
-        copy_block(dataL, L, BLOCK_SIZE_QUAD);
-        copy_block(dataR, R, BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+        mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
         // setting the filter frequency takes a while, so
         // let's only do it every 4 times
         if (block_counter++ == 3)
         {
-            const auto aa_cutoff = calculateFilterParamFrequency(*f, storage);
+            const auto aa_cutoff = calculateFilterParamFrequency(*pd_float, storage);
             for (auto *del : {&delL1, &delL2, &delR1, &delR2})
                 del->setFilterFreq(aa_cutoff);
 
             block_counter = 0;
         }
 
-        bbd_saturation_sse.setDrive(*f[ens_delay_sat]);
+        bbd_saturation_sse.setDrive(*pd_float[ens_delay_sat]);
         float fbGain = getFeedbackGain(true);
 
         float del1 = delayScale * delay1Ms * 0.001;
@@ -330,8 +343,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
                     modlfos[j][i].post_process();
         }
 
-        mul_block(L, storage->db_to_linear(-8.0f), L, BLOCK_SIZE_QUAD);
-        mul_block(R, storage->db_to_linear(-8.0f), R, BLOCK_SIZE_QUAD);
+        mech::mul_block<BLOCK_SIZE>(L, storage->db_to_linear(-8.0f), L);
+        mech::mul_block<BLOCK_SIZE>(R, storage->db_to_linear(-8.0f), R);
     };
 
     switch (bbd_stages)
@@ -360,14 +373,11 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     }
 
     // scale width
-    width.set_target_smoothed(clamp1bp(*f[ens_width]));
+    width.set_target_smoothed(clamp1bp(*pd_float[ens_width]));
 
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(L, R, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, L, R, BLOCK_SIZE_QUAD);
+    applyWidth(L, R, width);
 
-    mix.set_target_smoothed(clamp1bp(*f[ens_mix]));
+    mix.set_target_smoothed(clamp1bp(*pd_float[ens_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

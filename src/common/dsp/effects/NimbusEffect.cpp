@@ -1,17 +1,24 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "NimbusEffect.h"
 #include "samplerate.h"
@@ -116,8 +123,8 @@ void NimbusEffect::process(float *dataL, float *dataR)
         int outpos = 0;
 
         processor->set_playback_mode(
-            (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pdata_ival[nmb_mode]));
-        processor->set_quality(*pdata_ival[nmb_quality]);
+            (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pd_int[nmb_mode]));
+        processor->set_quality(*pd_int[nmb_quality]);
 
         int consume_ptr = 0;
         while (frames_to_go + numStubs >= nimbusprocess_blocksize)
@@ -144,18 +151,18 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
             float den_val, tex_val;
 
-            den_val = (*f[nmb_density] + 1.f) * 0.5;
-            tex_val = (*f[nmb_texture] + 1.f) * 0.5;
+            den_val = (*pd_float[nmb_density] + 1.f) * 0.5;
+            tex_val = (*pd_float[nmb_texture] + 1.f) * 0.5;
 
-            parm->position = clamp01(*f[nmb_position]);
-            parm->size = clamp01(*f[nmb_size]);
+            parm->position = clamp01(*pd_float[nmb_position]);
+            parm->size = clamp01(*pd_float[nmb_size]);
             parm->density = clamp01(den_val);
             parm->texture = clamp01(tex_val);
-            parm->pitch = limit_range(*f[nmb_pitch], -48.f, 48.f);
-            parm->stereo_spread = clamp01(*f[nmb_spread]);
-            parm->feedback = clamp01(*f[nmb_feedback]);
-            parm->freeze = *f[nmb_freeze] > 0.5;
-            parm->reverb = clamp01(*f[nmb_reverb]);
+            parm->pitch = limit_range(*pd_float[nmb_pitch], -48.f, 48.f);
+            parm->stereo_spread = clamp01(*pd_float[nmb_spread]);
+            parm->feedback = clamp01(*pd_float[nmb_feedback]);
+            parm->freeze = *pd_float[nmb_freeze] > 0.5;
+            parm->reverb = clamp01(*pd_float[nmb_reverb]);
             parm->dry_wet = 1.f;
 
             parm->trigger = false;     // this is an external granulating source. Skip it
@@ -228,7 +235,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
     }
     resampReadPtr = rp;
 
-    mix.set_target_smoothed(clamp01(*f[nmb_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[nmb_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

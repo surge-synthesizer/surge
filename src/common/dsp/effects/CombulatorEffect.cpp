@@ -1,21 +1,30 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "CombulatorEffect.h"
 #include "DebugHelpers.h"
 #include "fmt/core.h"
+#include "sst/basic-blocks/dsp/CorrelatedNoise.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
 
 CombulatorEffect::CombulatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lp(storage),
@@ -90,28 +99,28 @@ void CombulatorEffect::setvars(bool init)
     {
         if (i == 0)
         {
-            freq[i].newValue(*f[combulator_freq1]);
+            freq[i].newValue(*pd_float[combulator_freq1]);
         }
         else
         {
             if (fxdata->p[combulator_freq1 + i].extend_range)
             {
-                freq[i].newValue(*f[combulator_freq1 + i]);
+                freq[i].newValue(*pd_float[combulator_freq1 + i]);
             }
             else
             {
-                freq[i].newValue(*f[combulator_freq1] + *f[combulator_freq1 + i]);
+                freq[i].newValue(*pd_float[combulator_freq1] + *pd_float[combulator_freq1 + i]);
             }
         }
 
-        gain[i].newValue(amp_to_linear(limit_range(*f[combulator_gain1 + i], 0.f, 2.f)));
+        gain[i].newValue(amp_to_linear(limit_range(*pd_float[combulator_gain1 + i], 0.f, 2.f)));
     }
 
-    noisemix.newValue(clamp01(*f[combulator_noise_mix]));
-    feedback.newValue(*f[combulator_feedback]);
-    tone.newValue(clamp1bp(*f[combulator_tone]));
-    pan2.newValue(clamp1bp(*f[combulator_pan2]));
-    pan3.newValue(clamp1bp(*f[combulator_pan3]));
+    noisemix.newValue(clamp01(*pd_float[combulator_noise_mix]));
+    feedback.newValue(*pd_float[combulator_feedback]);
+    tone.newValue(clamp1bp(*pd_float[combulator_tone]));
+    pan2.newValue(clamp1bp(*pd_float[combulator_pan2]));
+    pan3.newValue(clamp1bp(*pd_float[combulator_pan3]));
 
     negone.set_target(-1.f);
 
@@ -256,9 +265,9 @@ void CombulatorEffect::process(float *dataL, float *dataR)
             }
 
             envV[c] = e;
-            noise[c] =
-                noisemix.v * 3.f * envV[c] *
-                correlated_noise_o2mk2_storagerng(noiseGen[c][0], noiseGen[c][1], 0, storage);
+            noise[c] = noisemix.v * 3.f * envV[c] *
+                       sst::basic_blocks::dsp::correlated_noise_o2mk2_supplied_value(
+                           noiseGen[c][0], noiseGen[c][1], 0, storage->rand_pm1());
         }
 
         auto l128 = _mm_setzero_ps();
@@ -366,8 +375,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     /* Downsample out */
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
 
-    copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
-    copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
+    sst::basic_blocks::mechanics::copy_from_to<BLOCK_SIZE>(dataOS[0], L);
+    sst::basic_blocks::mechanics::copy_from_to<BLOCK_SIZE>(dataOS[1], R);
 
     if (!fxdata->p[combulator_tone].deactivated)
     {
@@ -375,7 +384,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
         hp.process_block(L, R);
     }
 
-    auto cm = clamp01(*f[combulator_mix]);
+    auto cm = clamp01(*pd_float[combulator_mix]);
 
     mix.set_target_smoothed(cm);
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);

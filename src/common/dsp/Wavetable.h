@@ -1,13 +1,31 @@
-#pragma once
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
+#ifndef SURGE_SRC_COMMON_DSP_WAVETABLE_H
+#define SURGE_SRC_COMMON_DSP_WAVETABLE_H
 #include <string>
 #include <StringOps.h>
 const int max_wtable_size = 4096;
 const int max_subtables = 512;
 const int max_mipmap_levels = 16;
-// I don't know why your max wtable samples would be less than your max tables * your max sample
-// size. So lets fix that! This size is consistent with the check in WaveTable.cpp //
-// CheckRequiredWTSize with ts and tc at 1024 and 512
-const int max_wtable_samples = 2097152;
 
 #pragma pack(push, 1)
 struct wt_header
@@ -60,3 +78,5 @@ enum wtflags
     wtf_int16 = 4,       // If this is set we have int16 in range 0-2^15
     wtf_int16_is_16 = 8, // and in this case, range 0-2^16 if with above
 };
+
+#endif // SURGE_SRC_COMMON_DSP_WAVETABLE_H

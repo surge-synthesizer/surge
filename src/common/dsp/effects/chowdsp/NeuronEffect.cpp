@@ -1,17 +1,24 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "NeuronEffect.h"
 
@@ -73,10 +80,7 @@ void NeuronEffect::process(float *dataL, float *dataR)
     // scale width
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
 
-    encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
-
+    applyWidth(dataL, dataR, width);
     outgain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
     modLFO.post_process();
 }
@@ -101,21 +105,21 @@ void NeuronEffect::process_internal(float *dataL, float *dataR, const int numSam
 
 void NeuronEffect::set_params()
 {
-    auto bf_clamped = clamp01(*f[neuron_bias_bf]);
-    auto wh_clamped = clamp01(*f[neuron_drive_wh]);
+    auto bf_clamped = clamp01(*pd_float[neuron_bias_bf]);
+    auto wh_clamped = clamp01(*pd_float[neuron_drive_wh]);
 
-    Wf.setTargetValue(clamp01(*f[neuron_squash_wf]) * 20.0f);
+    Wf.setTargetValue(clamp01(*pd_float[neuron_squash_wf]) * 20.0f);
     Wh.setTargetValue(storage->db_to_linear(wh_clamped));
-    Uf.setTargetValue(clamp01(*f[neuron_stab_uf]) * 5.0f);
-    Uh.setTargetValue(clamp01(*f[neuron_asym_uh]) * 0.9f);
+    Uf.setTargetValue(clamp01(*pd_float[neuron_stab_uf]) * 5.0f);
+    Uh.setTargetValue(clamp01(*pd_float[neuron_asym_uh]) * 0.9f);
     bf.setTargetValue(bf_clamped * 6.0f - 1.0f);
 
     // tune delay length
     auto freqHz1 = (2 * 3.14159265358979323846) * 440 *
-                   storage->note_to_pitch_ignoring_tuning(*f[neuron_comb_freq]);
-    auto freqHz2 =
-        (2 * 3.14159265358979323846) * 440 *
-        storage->note_to_pitch_ignoring_tuning(*f[neuron_comb_freq] + *f[neuron_comb_sep]);
+                   storage->note_to_pitch_ignoring_tuning(*pd_float[neuron_comb_freq]);
+    auto freqHz2 = (2 * 3.14159265358979323846) * 440 *
+                   storage->note_to_pitch_ignoring_tuning(*pd_float[neuron_comb_freq] +
+                                                          *pd_float[neuron_comb_sep]);
     auto delayTimeSec1 = 1.0f / (float)freqHz1;
     auto delayTimeSec2 = 1.0f / (float)freqHz2;
 
@@ -123,16 +127,17 @@ void NeuronEffect::set_params()
     delay2Smooth.setTargetValue(delayTimeSec2 * 0.5f * storage->samplerate * os.getOSRatio());
 
     // modulation settings
-    int mwave = *pdata_ival[neuron_lfo_wave];
-    float rate = storage->envelope_rate_linear(-limit_range(*f[neuron_lfo_rate], -8.f, 10.f)) *
-                 (fxdata->p[neuron_lfo_rate].temposync ? storage->temposyncratio : 1.f);
-    float depth_val = limit_range(*f[neuron_lfo_depth], 0.f, 2.f);
+    int mwave = *pd_int[neuron_lfo_wave];
+    float rate =
+        storage->envelope_rate_linear(-limit_range(*pd_float[neuron_lfo_rate], -8.f, 10.f)) *
+        (fxdata->p[neuron_lfo_rate].temposync ? storage->temposyncratio : 1.f);
+    float depth_val = limit_range(*pd_float[neuron_lfo_depth], 0.f, 2.f);
 
     if (fxdata->p[neuron_lfo_rate].deactivated)
     {
         auto rmin = fxdata->p[neuron_lfo_rate].val_min.f;
         auto rmax = fxdata->p[neuron_lfo_rate].val_max.f;
-        auto phase = clamp01((*f[neuron_lfo_rate] - rmin) / (rmax - rmin));
+        auto phase = clamp01((*pd_float[neuron_lfo_rate] - rmin) / (rmax - rmin));
 
         modLFO.pre_process(mwave, 0.f, depth_val, phase);
     }
@@ -150,8 +155,8 @@ void NeuronEffect::set_params()
 
     makeup.set_target_smoothed(makeupGain);
 
-    width.set_target_smoothed(storage->db_to_linear(*f[neuron_width]));
-    outgain.set_target_smoothed(storage->db_to_linear(*f[neuron_gain]));
+    width.set_target_smoothed(storage->db_to_linear(*pd_float[neuron_width]));
+    outgain.set_target_smoothed(storage->db_to_linear(*pd_float[neuron_gain]));
 }
 
 void NeuronEffect::suspend() { init(); }

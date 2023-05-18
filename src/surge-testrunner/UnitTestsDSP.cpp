@@ -1,3 +1,24 @@
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 #include <iostream>
 #include <algorithm>
 
@@ -7,16 +28,13 @@
 #include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
-#include "FastMath.h"
-
-#include "SSESincDelayLine.h"
 
 #include "samplerate.h"
 
 #include "SSEComplex.h"
 #include <complex>
+#include "sst/basic-blocks/mechanics/simd-ops.h"
 
-#include "LanczosResampler.h"
 #include "sst/plugininfra/cpufeatures.h"
 
 using namespace Surge::Test;
@@ -323,385 +341,6 @@ TEST_CASE("All Patches have Bounded Output", "[dsp]")
     // Surge::Headless::playOnNRandomPatches(surge, scale, 100, callBack);
 }
 
-TEST_CASE("lipol_ps class", "[dsp]")
-{
-    lipol_ps mypol;
-    float prevtarget = -1.0;
-    mypol.set_target(prevtarget);
-    mypol.instantize();
-
-    constexpr size_t nfloat = 64;
-    constexpr size_t nfloat_quad = 16;
-    float storeTarget alignas(16)[nfloat];
-    mypol.store_block(storeTarget, nfloat_quad);
-
-    for (auto i = 0; i < nfloat; ++i)
-        REQUIRE(storeTarget[i] == prevtarget); // should be constant in the first instance
-
-    for (int i = 0; i < 10; ++i)
-    {
-        float target = (i) * (i) / 100.0;
-        mypol.set_target(target);
-
-        mypol.store_block(storeTarget, nfloat_quad);
-
-        REQUIRE(storeTarget[nfloat - 1] == Approx(target));
-
-        float dy = storeTarget[1] - storeTarget[0];
-        for (auto j = 1; j < nfloat; ++j)
-        {
-            REQUIRE(storeTarget[j] - storeTarget[j - 1] == Approx(dy).epsilon(1e-3));
-        }
-
-        REQUIRE(prevtarget + dy == Approx(storeTarget[0]));
-
-        prevtarget = target;
-    }
-}
-
-TEST_CASE("Check FastMath Functions", "[dsp]")
-{
-    SECTION("Clamp to -PI,PI")
-    {
-        for (float f = -2132.7; f < 37424.3; f += 0.741)
-        {
-            float q = Surge::DSP::clampToPiRange(f);
-            INFO("Clamping " << f << " to " << q);
-            REQUIRE(q > -M_PI);
-            REQUIRE(q < M_PI);
-        }
-    }
-
-    SECTION("fastSin and fastCos in range -PI, PI")
-    {
-        float sds = 0, md = 0;
-        int nsamp = 100000;
-        for (int i = 0; i < nsamp; ++i)
-        {
-            float p = 2.f * M_PI * rand() / RAND_MAX - M_PI;
-            float cp = std::cos(p);
-            float sp = std::sin(p);
-            float fcp = Surge::DSP::fastcos(p);
-            float fsp = Surge::DSP::fastsin(p);
-
-            float cd = fabs(cp - fcp);
-            float sd = fabs(sp - fsp);
-            if (cd > md)
-                md = cd;
-            if (sd > md)
-                md = sd;
-            sds += cd * cd + sd * sd;
-        }
-        sds = sqrt(sds) / nsamp;
-        REQUIRE(md < 1e-4);
-        REQUIRE(sds < 1e-6);
-    }
-
-    SECTION("fastSin and fastCos in range -10*PI, 10*PI with clampRange")
-    {
-        float sds = 0, md = 0;
-        int nsamp = 100000;
-        for (int i = 0; i < nsamp; ++i)
-        {
-            float p = 2.f * M_PI * rand() / RAND_MAX - M_PI;
-            p *= 10;
-            p = Surge::DSP::clampToPiRange(p);
-            float cp = std::cos(p);
-            float sp = std::sin(p);
-            float fcp = Surge::DSP::fastcos(p);
-            float fsp = Surge::DSP::fastsin(p);
-
-            float cd = fabs(cp - fcp);
-            float sd = fabs(sp - fsp);
-            if (cd > md)
-                md = cd;
-            if (sd > md)
-                md = sd;
-            sds += cd * cd + sd * sd;
-        }
-        sds = sqrt(sds) / nsamp;
-        REQUIRE(md < 1e-4);
-        REQUIRE(sds < 1e-6);
-    }
-
-    SECTION("fastSin and fastCos in range -100*PI, 100*PI with clampRange")
-    {
-        float sds = 0, md = 0;
-        int nsamp = 100000;
-        for (int i = 0; i < nsamp; ++i)
-        {
-            float p = 2.f * M_PI * rand() / RAND_MAX - M_PI;
-            p *= 100;
-            p = Surge::DSP::clampToPiRange(p);
-            float cp = std::cos(p);
-            float sp = std::sin(p);
-            float fcp = Surge::DSP::fastcos(p);
-            float fsp = Surge::DSP::fastsin(p);
-
-            float cd = fabs(cp - fcp);
-            float sd = fabs(sp - fsp);
-            if (cd > md)
-                md = cd;
-            if (sd > md)
-                md = sd;
-            sds += cd * cd + sd * sd;
-        }
-        sds = sqrt(sds) / nsamp;
-        REQUIRE(md < 1e-4);
-        REQUIRE(sds < 1e-6);
-    }
-
-    SECTION("fastTanh and fastTanhSSE")
-    {
-        for (float x = -4.9; x < 4.9; x += 0.02)
-        {
-            INFO("Testing unclamped at " << x);
-            auto q = _mm_set_ps1(x);
-            auto r = Surge::DSP::fasttanhSSE(q);
-            auto rn = tanh(x);
-            auto rd = Surge::DSP::fasttanh(x);
-            union
-            {
-                __m128 v;
-                float a[4];
-            } U;
-            U.v = r;
-            REQUIRE(U.a[0] == Approx(rn).epsilon(1e-4));
-            REQUIRE(rd == Approx(rn).epsilon(1e-4));
-        }
-
-        for (float x = -10; x < 10; x += 0.02)
-        {
-            INFO("Testing clamped at " << x);
-            auto q = _mm_set_ps1(x);
-            auto r = Surge::DSP::fasttanhSSEclamped(q);
-            auto cn = tanh(x);
-            union
-            {
-                __m128 v;
-                float a[4];
-            } U;
-            U.v = r;
-            REQUIRE(U.a[0] == Approx(cn).epsilon(5e-4));
-        }
-    }
-
-    SECTION("fastTan")
-    {
-        // need to bump start point slightly, fasttan is only valid just after -PI/2
-        for (float x = -M_PI / 2.0 + 0.001; x < M_PI / 2.0; x += 0.02)
-        {
-            INFO("Testing fasttan at " << x);
-            auto rn = tanf(x);
-            auto rd = Surge::DSP::fasttan(x);
-            REQUIRE(rd == Approx(rn).epsilon(1e-4));
-        }
-    }
-
-    SECTION("fastexp and fastexpSSE")
-    {
-        for (float x = -3.9; x < 2.9; x += 0.02)
-        {
-            INFO("Testing fastexp at " << x);
-            auto q = _mm_set_ps1(x);
-            auto r = Surge::DSP::fastexpSSE(q);
-            auto rn = exp(x);
-            auto rd = Surge::DSP::fastexp(x);
-            union
-            {
-                __m128 v;
-                float a[4];
-            } U;
-            U.v = r;
-
-            if (x < 0)
-            {
-                REQUIRE(U.a[0] == Approx(rn).margin(1e-3));
-                REQUIRE(rd == Approx(rn).margin(1e-3));
-            }
-            else
-            {
-                REQUIRE(U.a[0] == Approx(rn).epsilon(1e-3));
-                REQUIRE(rd == Approx(rn).epsilon(1e-3));
-            }
-        }
-    }
-
-    SECTION("fastSine and fastSinSSE")
-    {
-        for (float x = -3.14; x < 3.14; x += 0.02)
-        {
-            INFO("Testing unclamped at " << x);
-            auto q = _mm_set_ps1(x);
-            auto r = Surge::DSP::fastsinSSE(q);
-            auto rn = sin(x);
-            auto rd = Surge::DSP::fastsin(x);
-            union
-            {
-                __m128 v;
-                float a[4];
-            } U;
-            U.v = r;
-            REQUIRE(U.a[0] == Approx(rn).margin(1e-4));
-            REQUIRE(rd == Approx(rn).margin(1e-4));
-            REQUIRE(U.a[0] == Approx(rd).margin(1e-6));
-        }
-    }
-
-    SECTION("fastCos and fastCosSSE")
-    {
-        for (float x = -3.14; x < 3.14; x += 0.02)
-        {
-            INFO("Testing unclamped at " << x);
-            auto q = _mm_set_ps1(x);
-            auto r = Surge::DSP::fastcosSSE(q);
-            auto rn = cos(x);
-            auto rd = Surge::DSP::fastcos(x);
-            union
-            {
-                __m128 v;
-                float a[4];
-            } U;
-            U.v = r;
-            REQUIRE(U.a[0] == Approx(rn).margin(1e-4));
-            REQUIRE(rd == Approx(rn).margin(1e-4));
-            REQUIRE(U.a[0] == Approx(rd).margin(1e-6));
-        }
-    }
-
-    SECTION("Clamp to -PI,PI SSE")
-    {
-        for (float f = -800.7; f < 816.4; f += 0.245)
-        {
-            auto fs = _mm_set_ps1(f);
-
-            auto q = Surge::DSP::clampToPiRangeSSE(fs);
-            union
-            {
-                __m128 v;
-                float a[4];
-            } U;
-            U.v = q;
-            for (int s = 0; s < 4; ++s)
-            {
-                REQUIRE(U.a[s] == Approx(Surge::DSP::clampToPiRange(f)).margin(1e-4));
-            }
-        }
-    }
-}
-
-TEST_CASE("Sinc Delay Line", "[dsp]")
-{
-    // This requires SurgeStorate to initialize its tables. Easiest way
-    // to do that is to just make a surge
-    auto surge = Surge::Headless::createSurge(44100);
-    SECTION("Test Constants")
-    {
-        float val = 1.324;
-        SSESincDelayLine<4096> dl4096(surge->storage.sinctable);
-
-        for (int i = 0; i < 10000; ++i)
-        {
-            dl4096.write(val);
-        }
-        for (int i = 0; i < 20000; ++i)
-        {
-            INFO("Iteration " << i);
-            float a = dl4096.read(174.3);
-            float b = dl4096.read(1732.4);
-            float c = dl4096.read(3987.2);
-            float d = dl4096.read(256.0);
-
-            REQUIRE(a == Approx(val).margin(1e-3));
-            REQUIRE(b == Approx(val).margin(1e-3));
-            REQUIRE(c == Approx(val).margin(1e-3));
-            REQUIRE(d == Approx(val).margin(1e-3));
-
-            dl4096.write(val);
-        }
-    }
-
-    SECTION("Test Ramp")
-    {
-        float val = 0;
-        float dRamp = 0.01;
-        SSESincDelayLine<4096> dl4096(surge->storage.sinctable);
-
-        for (int i = 0; i < 10000; ++i)
-        {
-            dl4096.write(val);
-            val += dRamp;
-        }
-        for (int i = 0; i < 20000; ++i)
-        {
-            INFO("Iteration " << i);
-            float a = dl4096.read(174.3);
-            float b = dl4096.read(1732.4);
-            float c = dl4096.read(3987.2);
-            float d = dl4096.read(256.0);
-
-            auto cval = val - dRamp;
-
-            REQUIRE(a == Approx(cval - 174.3 * dRamp).epsilon(1e-3));
-            REQUIRE(b == Approx(cval - 1732.4 * dRamp).epsilon(1e-3));
-            REQUIRE(c == Approx(cval - 3987.2 * dRamp).epsilon(1e-3));
-            REQUIRE(d == Approx(cval - 256.0 * dRamp).epsilon(1e-3));
-
-            float aL = dl4096.readLinear(174.3);
-            float bL = dl4096.readLinear(1732.4);
-            float cL = dl4096.readLinear(3987.2);
-            float dL = dl4096.readLinear(256.0);
-
-            REQUIRE(aL == Approx(cval - 174.3 * dRamp).epsilon(1e-3));
-            REQUIRE(bL == Approx(cval - 1732.4 * dRamp).epsilon(1e-3));
-            REQUIRE(cL == Approx(cval - 3987.2 * dRamp).epsilon(1e-3));
-            REQUIRE(dL == Approx(cval - 256.0 * dRamp).epsilon(1e-3));
-
-            dl4096.write(val);
-            val += dRamp;
-        }
-    }
-
-#if 0
-// This prints output I used for debugging
-    SECTION( "Generate Output" )
-    {
-        float dRamp = 0.01;
-        SSESincDelayLine<4096> dl4096;
-
-        float v = 0;
-        int nsamp = 500;
-        for( int i=0; i<nsamp; ++i )
-        {
-            dl4096.write(v);
-            v += dRamp;
-        }
-
-        for( int i=100; i<300; ++i )
-        {
-            auto bi = dl4096.buffer[i];
-            auto off = nsamp - i;
-            auto bsv = dl4096.read(off - 1);
-            auto bsl = dl4096.readLinear(off);
-
-            auto bsvh = dl4096.read(off - 1 - 0.5);
-            auto bslh = dl4096.readLinear(off - 0.0 );
-            std::cout << off << ", " << bi << ", " << bsv
-                      << ", " << bsl << ", " << bi -bsv << ", " << bi-bsl
-                      << ", " << bslh << ", " << bi - bslh << std::endl;
-
-            for( int q=0; q<111; ++q )
-            {
-                std::cout << " " << q << " "
-                          << ( dl4096.read(off - q * 0.1) - bi ) / dRamp
-                          << " " << ( dl4096.readLinear(off - q * 0.1) - bi ) / dRamp
-                          << std::endl;
-            }
-        }
-    }
-#endif
-}
-
 TEST_CASE("libsamplerate basics", "[dsp]")
 {
     for (auto tsr : {44100, 48000}) // { 44100, 48000, 88200, 96000, 192000 })
@@ -871,7 +510,7 @@ TEST_CASE("SSE std::complex", "[dsp]")
             sum += qtr.atIndex(i).real();
 
         float sumSSE alignas(16)[4];
-        _mm_store1_ps(sumSSE, sum_ps_to_ss(qtr.real()));
+        _mm_store1_ps(sumSSE, sst::basic_blocks::mechanics::sum_ps_to_ss(qtr.real()));
         REQUIRE(sum == Approx(sumSSE[0]).margin(1e-5));
 
         float angles alignas(16)[4];
@@ -904,47 +543,6 @@ TEST_CASE("SSE std::complex", "[dsp]")
             REQUIRE(powV.atIndex(i) == pow(q.atIndex(i), 2.1f));
     }
 }
-
-#if 0
-TEST_CASE("LanczosResampler", "[dsp]")
-{
-    SECTION("Can Interpolate Sine")
-    {
-        LanczosResampler lr(48000, 88100);
-
-        std::cout << lr.inputsRequiredToGenerateOutputs(64) << std::endl;
-        // plot 'lancos_raw.csv' using 1:2 with lines, 'lancos_samp.csv' using 1:2 with lines
-        std::ofstream raw("lancos_raw.csv"), samp("lancos_samp.csv");
-        int points = 2000;
-        double dp = 1.0 / 370;
-        float phase = 0;
-        for (auto i = 0; i < points; ++i)
-        {
-            auto obsS = std::sin(i * dp * 2.0 * M_PI);
-            auto obsR = phase * 2 - 1;
-            phase += dp;
-            if (phase > 1)
-                phase -= 1;
-            auto obs = i > 800 ? obsS : obsR;
-            lr.push(obs);
-
-            raw << i << ", " << obs << "\n";
-        }
-        std::cout << lr.inputsRequiredToGenerateOutputs(64) << std::endl;
-
-        float outBlock[64];
-        int q, gen;
-        while ((gen = lr.populateNext(outBlock, 64)) > 0)
-        {
-            for (int i = 0; i < gen; ++i)
-            {
-                samp << q * 48000.0 / 88100.0 << ", " << outBlock[i] << std::endl;
-                ++q;
-            }
-        }
-    }
-}
-#endif
 
 // When we return to #1514 this is a good starting point
 #if 0

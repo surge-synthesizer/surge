@@ -1,17 +1,24 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "MSEGEditor.h"
 #include "MSEGModulationHelper.h"
@@ -1087,9 +1094,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     virtual void paint(juce::Graphics &g) override
     {
-        // TimeThisBlock ttblock("msegcanvas" );
-
-        // ttblock.bump( "a0" );
         auto uni = lfodata->unipolar.val.b;
         auto vs = getLocalBounds();
 
@@ -1099,21 +1103,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         if (hotzones.empty())
             recalcHotZones(juce::Point<int>(vs.getX(), vs.getY()));
 
-        // ttblock.bump( "a1" );
         g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
-        // ttblock.bump( "a1-1");
         auto drawArea = getDrawArea();
-        // ttblock.bump( "a1-2");
         float maxt = drawDuration();
-        // ttblock.bump( "a1-3");
         auto valpx = valToPx();
-        // ttblock.bump( "a1-4");
         auto tpx = timeToPx();
-        // ttblock.bump( "a1-5");
         auto pxt = pxToTime();
-        // ttblock.bump( "a1-6");
 
-        // ttblock.bump( "a2" );
         /*
          * Now draw the loop region
          */
@@ -1153,7 +1149,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
         }
 
-        // ttblock.bump("a");
         Surge::MSEG::EvaluatorState es, esdf;
         // This is different from the number in LFOMS::assign in draw mode on purpose
         es.seed(8675309);
@@ -1273,8 +1268,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             drawnLast = up > ms->totalDuration;
         }
 
-        // ttblock.bump("b");
-
         int uniLimit = uni ? -1 : 0;
         addP(fillpath, pathLastX, valpx(uniLimit));
         addP(fillpath, uniLimit, valpx(uniLimit));
@@ -1306,18 +1299,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             g.fillPath(fillpath, tfpath);
         }
 
-        // ttblock.bump("c");
-
         // draw vertical grid
         auto primaryGridColor = skin->getColor(Colors::MSEGEditor::Grid::Primary);
         auto secondaryHGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal);
         auto secondaryVGridColor = skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical);
 
-        // ttblock.bump("c1");
-
         updateHTicks();
-
-        // ttblock.bump("c2");
 
         for (auto hp : hTicks)
         {
@@ -1347,11 +1334,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
         }
 
-        // ttblock.bump("c3");
-
         updateVTicks();
-
-        // ttblock.bump("c4");
 
         for (auto vp : vTicks)
         {
@@ -1419,8 +1402,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
         }
 
-        // ttblock.bump("d");
-
         // draw hover loop markers
         for (const auto &h : hotzones)
         {
@@ -1465,8 +1446,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             }
         }
 
-        // ttblock.bump("e");
-
         drawAxis(g);
 
         // draw segment curve
@@ -1494,12 +1473,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 int sz = 13;
                 int offx = 0, offy = 0;
+                bool showValue = false;
 
                 if (h.active)
+                {
                     offy = 1;
+                    showValue = true;
+                }
 
                 if (h.dragging)
+                {
                     offy = 2;
+                    showValue = true;
+                }
 
                 if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
                     offx = 1;
@@ -1507,26 +1493,97 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 if (lassoSelector && lassoSelector->contains(h.associatedSegment))
                     offy = 2;
 
+                auto r = h.rect;
+
+                if (h.useDrawRect)
+                {
+                    r = h.drawRect;
+                }
+
+                int cx = r.getCentreX();
+
                 if (handleDrawable)
                 {
-                    auto r = h.rect;
-
-                    if (h.useDrawRect)
-                        r = h.drawRect;
-
-                    int cx = r.getCentreX();
-
                     if (cx >= drawArea.getX() && cx <= drawArea.getRight())
                     {
                         juce::Graphics::ScopedSaveState gs(g);
                         auto movet = juce::AffineTransform().translated(r.getTopLeft());
+
                         g.addTransform(movet);
-                        // g.reduceClipRegion(r.toNearestInt());
                         g.reduceClipRegion(juce::Rectangle<int>(0, 0, sz, sz));
+
                         auto at = juce::AffineTransform().translated(-offx * sz, -offy * sz);
 
                         handleDrawable->draw(g, 1.0, at);
                     }
+                }
+
+                if (showValue)
+                {
+                    auto fillr = [&g](juce::Rectangle<float> r, juce::Colour c) {
+                        g.setColour(c);
+                        g.fillRect(r);
+                    };
+
+                    int prec = 2;
+
+                    if (storage)
+                    {
+                        if (Surge::Storage::getUserDefaultValue(
+                                storage, Surge::Storage::HighPrecisionReadouts, 0))
+                        {
+                            prec = 6;
+                        }
+                    }
+
+                    g.setFont(skin->fontManager->lfoTypeFont);
+
+                    float val = h.associatedSegment >= ms->n_activeSegments - 1
+                                    ? ms->segments[h.associatedSegment].v0
+                                    : ms->segments[h.associatedSegment].nv1;
+
+                    std::string txt = fmt::format("X: {:.{}f}", pxt(cx), prec),
+                                txt2 = fmt::format("Y: {:.{}f}", val, prec);
+
+                    int sw1 = g.getCurrentFont().getStringWidth(txt),
+                        sw2 = g.getCurrentFont().getStringWidth(txt2);
+
+                    float dragX = r.getRight(), dragY = r.getBottom();
+                    float dragW = 6 + std::max(sw1, sw2), dragH = 22;
+
+                    // reposition the display if we've reached right or bottom edge of drawArea
+                    if (dragX + dragW > drawArea.getRight())
+                    {
+                        dragX -= int(dragX + dragW) % drawArea.getRight();
+                    }
+
+                    if (dragY + dragH > drawArea.getBottom())
+                    {
+                        dragY -= int(dragY + dragH) % drawArea.getBottom();
+                    }
+
+                    auto readout = juce::Rectangle<float>(dragX, dragY, dragW, dragH);
+
+                    // if the readout intersects with a node rect, shift it up
+                    // (this only happens in bottom right corner)
+                    if (readout.intersectRectangles(dragX, dragY, dragW, dragH, r.getX(), r.getY(),
+                                                    r.getWidth(), r.getHeight()))
+                    {
+                        readout.translate(-(r.getHeight() / 2), -(r.getHeight() / 2));
+                    }
+
+                    fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Border));
+                    readout = readout.reduced(1, 1);
+                    fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Background));
+
+                    readout = readout.withTrimmedLeft(2).withHeight(10);
+
+                    g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
+                    g.drawText(txt, readout, juce::Justification::centredLeft);
+
+                    readout = readout.translated(0, 10);
+
+                    g.drawText(txt2, readout, juce::Justification::centredLeft);
                 }
             }
         }

@@ -1,19 +1,27 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
-#pragma once
+#ifndef SURGE_SRC_COMMON_PARAMETER_H
+#define SURGE_SRC_COMMON_PARAMETER_H
 #include "globals.h"
 #include <string>
 #include <memory>
@@ -21,6 +29,8 @@
 #include <functional>
 #include <atomic>
 #include "SkinModel.h"
+
+#include "sst/basic-blocks/params/ParamMetadata.h"
 
 union pdata
 {
@@ -81,6 +91,7 @@ enum ctrltypes
     ct_freq_audible_deactivatable_lp,
     ct_freq_audible_with_tunability, // we abuse 'extended' to mean 'use SCL tuning'
     ct_freq_audible_very_low_minval,
+    ct_freq_audible_fm3_extendable,
     ct_freq_mod,
     ct_freq_hpf,
     ct_freq_shift,
@@ -191,6 +202,7 @@ enum ctrltypes
     ct_mscodec,
     ct_percent_bipolar_pan, // bipolar with special text strings at -100%, +100% and 0%
     ct_spring_decay,
+    ct_amplitude_ringmod,
 
     num_ctrltypes,
 };
@@ -348,7 +360,7 @@ class Parameter
 
   private:
     Parameter *assign(ParameterIDCounter::promise_t id, int pid, const char *name,
-                      const char *dispname, int ctrltype,
+                      const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                       std::string ui_identifier, int posx, int posy,
 
@@ -358,13 +370,14 @@ class Parameter
 
   public:
     Parameter *assign(ParameterIDCounter::promise_t id, int pid, const char *name,
-                      const char *dispname, int ctrltype,
+                      const char *dispname, const std::string_view altOSCname, int ctrltype,
 
                       const Surge::Skin::Connector &c,
 
                       int scene = 0, ControlGroup ctrlgroup = cg_GLOBAL, int ctrlgroup_entry = 0,
                       bool modulateable = true, int ctrlstyle = cs_off,
                       bool defaultDeactivation = true);
+
     virtual ~Parameter();
 
     bool can_temposync() const;
@@ -428,6 +441,8 @@ class Parameter
         Special,
     };
 
+    std::optional<sst::basic_blocks::params::ParamMetaData> basicBlocksParamMetaData;
+
     void get_display_of_modulation_depth(char *txt, float modulationDepth, bool isBipolar,
                                          ModulationDisplayMode mode,
                                          ModulationDisplayInfoWindowStrings *iw = nullptr) const;
@@ -465,6 +480,9 @@ class Parameter
 
     void create_fullname(const char *dn, char *fn, ControlGroup ctrlgroup, int ctrlgroup_entry,
                          const char *lfoPrefixOverride = nullptr) const;
+
+    std::string oscName;
+    std::string get_osc_name() { return oscName; }
 
     pdata val{}, val_default{}, val_min{}, val_max{};
 
@@ -596,3 +614,5 @@ class Parameter
 // I don't make this a member since param needs to be copyable with memcpy.
 // TODO: Don't need to worry about that anymore.
 extern std::atomic<bool> parameterNameUpdated;
+
+#endif // SURGE_SRC_COMMON_PARAMETER_H

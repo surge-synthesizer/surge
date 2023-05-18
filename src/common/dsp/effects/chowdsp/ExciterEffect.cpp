@@ -1,19 +1,30 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "ExciterEffect.h"
+
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 namespace
 {
@@ -51,8 +62,8 @@ void ExciterEffect::process(float *dataL, float *dataR)
     set_params();
 
     // copy dry signal
-    copy_block(dataL, dryL, BLOCK_SIZE_QUAD);
-    copy_block(dataR, dryR, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, dryL);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, dryR);
 
     drive_gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
     os.upsample(dataL, dataR);
@@ -64,27 +75,27 @@ void ExciterEffect::process(float *dataL, float *dataR)
 
     // dry/wet process
     wet_gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
-    add_block(dataL, dryL, dataL, BLOCK_SIZE_QUAD);
-    add_block(dataR, dryR, dataR, BLOCK_SIZE_QUAD);
+    mech::add_block<BLOCK_SIZE>(dataL, dryL, dataL);
+    mech::add_block<BLOCK_SIZE>(dataR, dryR, dataR);
 }
 
 void ExciterEffect::set_params()
 {
     // "Tone" param
-    auto cutoff = low_freq * std::pow(high_freq / low_freq, clamp01(*f[exciter_tone]));
+    auto cutoff = low_freq * std::pow(high_freq / low_freq, clamp01(*pd_float[exciter_tone]));
     cutoff = limit_range(cutoff, 10.0, storage->samplerate * 0.48);
     auto omega_factor = storage->samplerate_inv * 2.0 * M_PI / (double)os.getOSRatio();
     toneFilter.coeff_HP(cutoff * omega_factor, q_val);
 
     // "Drive" param
-    auto drive_makeup = std::pow(0.2f, 1.f - clamp01(*f[exciter_tone]));
-    auto drive = 8.f * std::pow(clamp01(*f[exciter_drive]), 1.5f) * drive_makeup;
+    auto drive_makeup = std::pow(0.2f, 1.f - clamp01(*pd_float[exciter_tone]));
+    auto drive = 8.f * std::pow(clamp01(*pd_float[exciter_drive]), 1.5f) * drive_makeup;
     drive_gain.set_target_smoothed(drive);
 
     // attack/release params
-    auto attack_ms = std::pow(2.0f, fxdata->p[exciter_att].displayInfo.b * *f[exciter_att]);
+    auto attack_ms = std::pow(2.0f, fxdata->p[exciter_att].displayInfo.b * *pd_float[exciter_att]);
     auto release_ms =
-        10.0f * std::pow(2.0f, fxdata->p[exciter_rel].displayInfo.b * *f[exciter_rel]);
+        10.0f * std::pow(2.0f, fxdata->p[exciter_rel].displayInfo.b * *pd_float[exciter_rel]);
 
     attack_ms = limit_range(attack_ms, 2.5f, 40.0f);
     release_ms = limit_range(release_ms, 25.0f, 400.0f);
@@ -93,7 +104,7 @@ void ExciterEffect::set_params()
     levelDetector.set_release_time(release_ms);
 
     // "Mix" param
-    wet_gain.set_target_smoothed(clamp01(*f[exciter_mix]));
+    wet_gain.set_target_smoothed(clamp01(*pd_float[exciter_mix]));
 }
 
 void ExciterEffect::suspend() { init(); }

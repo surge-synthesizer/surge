@@ -1,20 +1,28 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "ResonatorEffect.h"
 #include "DebugHelpers.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
 
 ResonatorEffect::ResonatorEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true)
@@ -70,11 +78,11 @@ void ResonatorEffect::setvars(bool init)
     {
         for (int i = 0; i < 3; ++i)
         {
-            cutoff[i].newValue(
-                fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]));
+            cutoff[i].newValue(fxdata->p[resonator_freq1 + i * 3].get_extended(
+                *pd_float[resonator_freq1 + i * 3]));
             resonance[i].newValue(
-                fxdata->p[resonator_res1 + i * 3].get_extended(*f[resonator_res1 + i * 3]));
-            bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
+                fxdata->p[resonator_res1 + i * 3].get_extended(*pd_float[resonator_res1 + i * 3]));
+            bandGain[i].newValue(amp_to_linear(*pd_float[resonator_gain1 + i * 3]));
         }
     }
 }
@@ -109,7 +117,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
      * and the frequency of the particular band.
      */
     using namespace sst::filters;
-    auto whichModel = *pdata_ival[resonator_mode];
+    auto whichModel = *pd_int[resonator_mode];
     FilterType type;
     FilterSubType subtype = st_Driven;
 
@@ -144,7 +152,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     for (int i = 0; i < 3; ++i)
     {
         auto boundcutoff = limit_range(
-            fxdata->p[resonator_freq1 + i * 3].get_extended(*f[resonator_freq1 + i * 3]),
+            fxdata->p[resonator_freq1 + i * 3].get_extended(*pd_float[resonator_freq1 + i * 3]),
             fxdata->p[resonator_freq1 + i * 3].val_min.f,
             fxdata->p[resonator_freq1 + i * 3].val_max.f);
 
@@ -152,18 +160,18 @@ void ResonatorEffect::process(float *dataL, float *dataR)
 
         if (fxdata->p[resonator_res1 + i * 3].extend_range)
         {
-            resval = *f[resonator_res1 + i * 3];
+            resval = *pd_float[resonator_res1 + i * 3];
         }
         else
         {
-            resval =
-                limit_range(*f[resonator_res1 + i * 3], fxdata->p[resonator_res1 + i * 3].val_min.f,
-                            fxdata->p[resonator_res1 + i * 3].val_max.f);
+            resval = limit_range(*pd_float[resonator_res1 + i * 3],
+                                 fxdata->p[resonator_res1 + i * 3].val_min.f,
+                                 fxdata->p[resonator_res1 + i * 3].val_max.f);
         }
 
         cutoff[i].newValue(boundcutoff);
         resonance[i].newValue(resval);
-        bandGain[i].newValue(amp_to_linear(*f[resonator_gain1 + i * 3]));
+        bandGain[i].newValue(amp_to_linear(*pd_float[resonator_gain1 + i * 3]));
     }
 
     /*
@@ -270,13 +278,14 @@ void ResonatorEffect::process(float *dataL, float *dataR)
 
     /* Downsample out */
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
-    copy_block(dataOS[0], L, BLOCK_SIZE_QUAD);
-    copy_block(dataOS[1], R, BLOCK_SIZE_QUAD);
+    namespace mech = sst::basic_blocks::mechanics;
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[0], L);
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[1], R);
 
-    gain.set_target_smoothed(db_to_linear(*f[resonator_gain]));
+    gain.set_target_smoothed(db_to_linear(*pd_float[resonator_gain]));
     gain.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
 
-    mix.set_target_smoothed(clamp1bp(*f[resonator_mix]));
+    mix.set_target_smoothed(clamp1bp(*pd_float[resonator_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

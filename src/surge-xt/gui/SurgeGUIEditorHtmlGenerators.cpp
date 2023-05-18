@@ -1,9 +1,32 @@
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 #include "SurgeGUIEditor.h"
 #include "UserDefaults.h"
 #include <algorithm>
 #include <set>
 #include "fmt/core.h"
 #include "sst/cpputils.h"
+#include "sst/plugininfra/strnatcmp.h"
+#include "UnitConversions.h"
 
 namespace Surge
 {
@@ -408,6 +431,333 @@ th {
 </html>
       )HTML";
 
+    return htmls.str();
+}
+
+// for sorting parameters for display:
+struct oscParamInfo
+{
+    Parameter *p;
+    std::string storage_name;
+    std::string full_name;
+    int ctrlgroup;
+};
+
+// Sort function for displaying parameters (below)
+bool compareParams(const oscParamInfo &opl, const oscParamInfo &opr)
+{
+    int cgroup_order[10] = {0, 1, 2, 4, 3, 5, 6, 7, 8, 9};
+
+    int lcg = cgroup_order[opl.p->ctrlgroup];
+    int rcg = cgroup_order[opr.p->ctrlgroup];
+    if (lcg == rcg)
+    {
+        std::string ls = opl.storage_name;
+        std::string rs = opr.storage_name;
+        return strnatcasecmp(ls.c_str(), rs.c_str()) < 0;
+    }
+    return lcg < rcg;
+};
+
+std::string SurgeGUIEditor::parametersToHtml()
+{
+    std::ostringstream htmls;
+
+    htmls <<
+        R"HTML(
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+    <style>
+table {
+  border-collapse: collapse;
+  width: 100%;
+
+}
+
+td {
+  border: 1px solid #CDCED4;
+  padding: 2pt 8px;
+}
+
+.center {
+  text-align: center;
+}
+
+div.heading {
+    margin: 4px 0px 0px 8px;
+    width: 100%;
+}
+
+h3 {
+    margin: 0 0 8px 0;
+}
+
+div.outer {
+    font-size: 12pt;
+    margin: 0 0 10pt 0;
+    font-family: Lato;
+    color: #123463;
+}
+
+div.frame {
+    max-width: 1300px;
+}
+
+div.tablewrap {
+    width: 610px;
+    margin: 0 8px 16px 8px;
+    box-sizing: border-box;
+    display: block;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+th {
+  padding: 4pt;
+  color: #123463;
+  background: #CDCED4;
+  border: 1px solid #123463;
+}
+
+span {
+    margin: 2px; 20px;
+    padding: 1px 2px;
+    border: 1px solid #123463;
+    white-space:nowrap;
+}
+
+ul {
+    margin: 10px 0;
+}
+
+.cl{
+   clear: left;
+}
+.cr{
+   clear: right;
+}
+.fl{
+   float: left;
+}
+.fr{
+   float: right;
+}
+* {
+   -webkit-box-sizing: border-box;
+   -moz-box-sizing: border-box;
+}
+
+
+code {
+    color: #dc3918;
+    font-size: 16px;
+    padding: 1px 0px;
+}
+</style>
+  </head>
+  <body style="margin: 0pt; background: #CDCED4;">
+    <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
+      <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
+        Surge XT Open Sound Control (OSC) Specification
+      </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
+      <div style="line-height: 1.5; font-size: 12pt; font-family: Lato; color: #123463;">
+        Construct OSC messages using the exact (case sensitive)
+        entry listed in the <b>Address</b> column in the tables below.</br>
+        The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
+        where <code>address</code> can currently begin with either <code>tuning</code>, <code>settings</code>, or <code>param</code>,</br> and <code>value</code> can be:
+
+        <ul>
+            <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>
+            <li>an integer value</li>
+            <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
+            <li>a file path (absolute, or relative to the default path)
+            <li>contextual: either an in integer or a float, depending on the context (loaded oscillator or effect type)</li>
+        </ul>
+
+        Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
+        depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
+
+        <p>Examples:
+            <div style="margin: -6px 0 2px 0; line-height: 1.75">
+                <span><code>/param/b/amp/gain 0.63</code></span>
+                <span><code>/param/global/polyphony_limit 12</code></span>
+                <span><code>/param/a/mixer/noise/mute 0</code></span>
+            </div>
+            <div style="margin: 4px 0 0 0; line-height: 1.75">
+                <span><code>/tuning/scl ptolemy</code></span>
+                <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy.scl</code></span>
+                <span><code>/settings/path/scl /Users/jane/scala_tunings</code></span>
+            </div>
+        </p>
+      </div>
+    </div>
+
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
+      <div class="outer"><div class="frame">
+    )HTML";
+
+    // Show tuning controls
+    htmls << R"HTML(
+        <div class="tablewrap fl cl">
+        <div class="heading"><h3>Tuning:</h3></div>
+            <table style="border: 2px solid black;">
+                <tr>
+                    <th>Address</th>
+                    <th>Description</th>
+                    <th>Appropriate Values</th>
+                </tr>
+                <tr>
+                    <td>/tuning/scl</td>
+                    <td> .scl tuning file</td>
+                    <td class="center">file path (absolute or relative)</td>
+                </tr>
+                <tr>
+                    <td>/tuning/kbm</td>
+                    <td>.kbm mapping file</td>
+                    <td class="center">file path (absolute or relative)</td>
+                </tr>
+            </table>
+            </div>
+        )HTML";
+
+    // Show settings
+    htmls << R"HTML(
+        <div class="tablewrap fr cr">
+        <div class="heading"><h3>Settings:</h3></div>
+            <table style="border: 2px solid black;">
+                <tr>
+                    <th>Address</th>
+                    <th>Description</th>
+                    <th>Appropriate Values</th>
+                </tr>
+                <tr>
+                    <td>/settings/path/scl</td>
+                    <td>.scl file default path</td>
+                    <td class="center">file path (absolute only)</td>
+                </tr>
+                <tr>
+                    <td>/settings/path/kbm</td>
+                    <td>.kbm file default path</td>
+                    <td class="center">file path (absolute only)</td>
+                </tr>
+                <tr>
+                    <td class="center" colspan="3">(use value = '_reset' to reset path to factory default)</td>
+                </tr>
+            </table>
+            </div>
+        )HTML";
+
+    std::vector<oscParamInfo> sortvector;
+    std::string st_str;
+    int currentCtrlGrp = endCG;
+
+    for (auto *p : synth->storage.getPatch().param_ptr)
+    {
+        st_str = p->get_osc_name();
+
+        if (st_str[6] == '/' && st_str[8] == '/')
+        {
+            if (st_str[7] == 'b')
+                continue; // 'b_...' entries not added to vector
+
+            else if (st_str[7] == 'a')
+            {
+                st_str[7] = '*';
+            }
+        }
+        sortvector.push_back(oscParamInfo{p, st_str, p->get_full_name(), p->ctrlgroup});
+    };
+
+    // Sort by control group number, storage name (natural sort)
+    std::sort(sortvector.begin(), sortvector.end(), compareParams);
+
+    // Generate HTML table of parameters
+    int tabnum = 0;
+    for (auto itr : sortvector)
+    {
+        bool skip = false;
+        std::string valueType;
+
+        if (itr.p->ctrlgroup != currentCtrlGrp)
+        {
+            if (currentCtrlGrp != endCG)
+            {
+                htmls << "</table></div>";
+            }
+            currentCtrlGrp = itr.p->ctrlgroup;
+            if (tabnum++ % 2 == 0) // Even number?
+            {
+                htmls << "<div class=\"tablewrap fl cl\">";
+            }
+            else
+            {
+                htmls << "<div class=\"tablewrap fr cr\">";
+            }
+
+            htmls << "<div class=\"heading\"><h3>Control Group: "
+                  << ControlGroupDisplay[itr.p->ctrlgroup] << "</h3></div>"
+                  << R"HTML(
+                
+            <table style="border: 2px solid black;">
+                <tr>
+                    <th>Address</th>
+                    <th>Parameter Name</th>
+                    <th>Appropriate Values</th>
+                </tr>
+        )HTML";
+        }
+
+        if (itr.ctrlgroup == cg_OSC || itr.ctrlgroup == cg_FX)
+        {
+            valueType = "(contextual)";
+        }
+        else if (itr.p->ctrltype != ct_none)
+        {
+            switch (itr.p->valtype)
+            {
+            case vt_int:
+                valueType = "integer (" + std::to_string(itr.p->val_min.i) + " to " +
+                            std::to_string(itr.p->val_max.i) + ")";
+                break;
+
+            case vt_bool:
+                valueType = "boolean (0 or 1)";
+                break;
+
+            case vt_float:
+            {
+                valueType = "float (0.0 to 1.0)";
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+        else
+            skip = true;
+
+        if (!skip)
+        {
+            htmls << "<tr><td>" << itr.storage_name << "</td><td> " << itr.p->get_full_name()
+                  << "</td>"
+                  << "<td class=\"center\">" << valueType << "</td></tr>";
+        }
+    }
+
+    htmls << R"HTML(
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+      )HTML";
     return htmls.str();
 }
 

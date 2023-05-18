@@ -1,17 +1,24 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "LFOAndStepDisplay.h"
 #include "SurgeImageStore.h"
@@ -1377,10 +1384,16 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
             }
         }
 
-        float dragX, dragY;
-        float dragW = (prec > 4 ? 60 : 40), dragH = (keyModMult ? 22 : 12);
+        g.setFont(skin->fontManager->lfoTypeFont);
+
+        std::string txt = fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, prec);
+
+        int sw = g.getCurrentFont().getStringWidth(txt);
 
         auto sr = steprect[draggedStep];
+
+        float dragX = sr.getRight(), dragY;
+        float dragW = 6 + sw, dragH = (keyModMult ? 22 : 12);
 
         // Draw to the right in the second half of the seq table
         if (draggedStep < n_stepseqsteps / 2)
@@ -1393,6 +1406,7 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
         }
 
         float yTop;
+
         if (lfodata->unipolar.val.b)
         {
             auto sv = std::max(ss->steps[draggedStep], 0.f);
@@ -1414,7 +1428,9 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
         }
 
         if (dragY < 2)
+        {
             dragY = 2;
+        }
 
         auto labelR = juce::Rectangle<float>(dragX, dragY, dragW, dragH);
 
@@ -1422,12 +1438,9 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
         labelR = labelR.reduced(1, 1);
         fillr(labelR, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Background));
 
-        labelR = labelR.withTrimmedLeft(1).withHeight(10);
-
-        std::string txt = fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, prec);
+        labelR = labelR.withTrimmedLeft(2).withHeight(10);
 
         g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
-        g.setFont(skin->fontManager->lfoTypeFont);
         g.drawText(txt, labelR, juce::Justification::centredLeft);
 
         if (keyModMult > 0)

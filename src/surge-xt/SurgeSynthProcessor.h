@@ -1,18 +1,33 @@
 /*
-  ==============================================================================
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
-#pragma once
+#ifndef SURGE_SRC_SURGE_XT_SURGESYNTHPROCESSOR_H
+#define SURGE_SRC_SURGE_XT_SURGESYNTHPROCESSOR_H
 
 #include "SurgeSynthesizer.h"
 #include "SurgeStorage.h"
 #include "util/LockFreeStack.h"
+
+#include "osc/OSCListener.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
 
@@ -82,14 +97,10 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
 {
     explicit SurgeParamToJuceParamAdapter(SurgeSynthesizer *s, Parameter *p)
         : s(s), p(p), range(0.f, 1.f, 0.001f),
-          SurgeBaseParam(
-#if SURGE_HAS_JUCE7
-              juce::ParameterID(p->get_storage_name(),
-                                1), // This "1" needs thought if we add params
-#else
-              p->get_storage_name(),
-#endif
-              SurgeParamToJuceInfo::getParameterName(s, p), "")
+          SurgeBaseParam(juce::ParameterID(p->get_storage_name(),
+                                           1), // This "1" needs thought if we add params
+                         SurgeParamToJuceInfo::getParameterName(s, p),
+                         juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
@@ -163,6 +174,7 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
     {
         s->applyParameterMonophonicModulation(p, value);
     }
+
 #endif
 };
 
@@ -170,14 +182,9 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
 {
     explicit SurgeMacroToJuceParamAdapter(SurgeSynthesizer *s, long macroNum)
         : s(s), macroNum(macroNum), range(0.f, 1.f, 0.001f),
-          SurgeBaseParam(
-#if SURGE_HAS_JUCE7
-              juce::ParameterID(std::string("macro_") + std::to_string(macroNum), 1),
-#else
-              std::string("macro_") + std::to_string(macroNum),
-#endif
-
-              std::string("M") + std::to_string(macroNum + 1), "")
+          SurgeBaseParam(juce::ParameterID(std::string("macro_") + std::to_string(macroNum), 1),
+                         std::string("M") + std::to_string(macroNum + 1),
+                         juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
@@ -233,14 +240,10 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
 struct SurgeBypassParameter : public juce::RangedAudioParameter
 {
     explicit SurgeBypassParameter()
-        : value(0.f), range(0.f, 1.f, 0.01f), juce::RangedAudioParameter(
-#if SURGE_HAS_JUCE7
-                                                  juce::ParameterID("surgext-bypass", 1),
-#else
-                                                  "surgext_bypass",
-#endif
-
-                                                  "Bypass Surge XT", "")
+        : value(0.f),
+          range(0.f, 1.f, 0.01f), juce::RangedAudioParameter(
+                                      juce::ParameterID("surgext-bypass", 1), "Bypass Surge XT",
+                                      juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
@@ -295,6 +298,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     void processBlockPlayhead();
     void processBlockMidiFromGUI();
+    void processBlockOSC();
     void processBlockPostFunction();
 
     void applyMidi(const juce::MidiMessageMetadata &);
@@ -327,6 +331,27 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
                       float velocity) override;
     void handleNoteOff(juce::MidiKeyboardState *source, int midiChannel, int midiNoteNumber,
                        float velocity) override;
+
+    //==============================================================================
+    // Open Sound Control
+    struct oscMsg
+    {
+        enum Type
+        {
+            PARAMETER,
+            SET_TUNING
+        } type{PARAMETER};
+        Parameter *param;
+        float val{0.0};
+        std::string str;
+
+        oscMsg() {}
+        oscMsg(Parameter *p, float v) : type(PARAMETER), param(p), val(v) {}
+    };
+
+    sst::cpputils::SimpleRingBuffer<oscMsg, 4096> oscRingBuf;
+
+    Surge::OSC::OSCListener oscListener;
 
     //==============================================================================
     const juce::String getName() const override;
@@ -363,6 +388,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     bool getPluginHasMainInput() const override { return false; }
 
+    bool initOSC(int port);
+    bool changeOSCPort(int newport);
+
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool isInputMain(int index) override { return false; }
     bool supportsDirectProcess() override { return true; }
@@ -379,6 +407,13 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         info->flags = CLAP_VOICE_INFO_SUPPORTS_OVERLAPPING_NOTES;
         return true;
     }
+    bool supportsRemoteControls() const noexcept override { return true; }
+    uint32_t remoteControlsPageCount() noexcept override;
+    bool
+    remoteControlsPageFill(uint32_t /*pageIndex*/, juce::String & /*sectionName*/,
+                           uint32_t & /*pageID*/, juce::String & /*pageName*/,
+                           std::array<juce::AudioProcessorParameter *, CLAP_REMOTE_CONTROLS_COUNT>
+                               & /*params*/) noexcept override;
 #endif
 
   private:
@@ -395,8 +430,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     // For non-block-size uniform blocks we need to lag input
     float inputLatentBuffer alignas(16)[2][BLOCK_SIZE];
+
+  public:
     bool inputIsLatent{false};
 
+  private:
     // Have we warned about bad configurations
     bool warnedAboutBadConfig{false};
 
@@ -406,3 +444,5 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
   private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthProcessor)
 };
+
+#endif // SURGE_SRC_SURGE_XT_SURGESYNTHPROCESSOR_H

@@ -22,8 +22,8 @@
  * NOTE: code has been modified significantly by Jatin Chowdhury
  */
 
-#ifndef OMEGA_H_INCLUDED
-#define OMEGA_H_INCLUDED
+#ifndef SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_SHARED_OMEGA_H
+#define SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_SHARED_OMEGA_H
 
 #include <algorithm>
 
