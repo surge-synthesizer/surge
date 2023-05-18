@@ -458,6 +458,11 @@ void SurgefxAudioProcessorEditor::makeMenu()
             auto t = -1;
             c->QueryIntAttribute("i", &t);
             men.fxtype = t;
+            if (t == 28) // skip the "Audio In" effect
+            {
+                c = c->NextSiblingElement();
+                continue;
+            }
         }
         else
         {
