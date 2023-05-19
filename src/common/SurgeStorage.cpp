@@ -2781,6 +2781,6 @@ void ScenesOutputData::provideSceneData(int scene, int channel, float *data)
     if (scene < n_scenes && scene >= 0 && channel < N_OUTPUTS && channel >= 0
         && sceneData[scene][channel].use_count() > 1) // we don't provide data if there are no clients
     {
-        copy_block(data, sceneData[scene][channel].get(), BLOCK_SIZE_QUAD);
+        memcpy(sceneData[scene][channel].get(), data, BLOCK_SIZE);
     }
 }
