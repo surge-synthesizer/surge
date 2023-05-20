@@ -1,17 +1,24 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "XMLConfiguredMenus.h"
 #include "SurgeStorage.h"
@@ -427,6 +434,24 @@ void OscillatorMenu::populate()
         hmen->setCentered(false);
 
         menu.addCustomItem(-1, std::move(hmen), nullptr, title);
+
+#if SURGE_HAS_OSC
+        if (storage->oscListenerRunning)
+        {
+            menu.addSeparator();
+
+            auto oscName = storage->getPatch().scene[sc].osc[osc].type.get_osc_name();
+
+            auto i =
+                juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))
+                    .setEnabled(true)
+                    .setAction([oscName]() { juce::SystemClipboard::copyTextToClipboard(oscName); })
+                    .setColour(
+                        sge->currentSkin->getColor(Colors::PopupMenu::Text).withAlpha(0.75f));
+
+            menu.addItem(i);
+        }
+#endif
     }
 }
 
@@ -436,6 +461,8 @@ void OscillatorMenu::mouseDown(const juce::MouseEvent &event)
     {
         return;
     }
+
+    populate();
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
 
@@ -530,6 +557,7 @@ template <typename T> struct XMLMenuAH : public juce::AccessibilityHandler
                            .addAction(juce::AccessibilityActionType::press,
                                       [this]() { this->showMenu(); }),
                        AccessibilityHandler::Interfaces{std::make_unique<XMLMenuTextValue>(s)})
+
     {
     }
     void showMenu() { comp->menu.showMenuAsync(juce::PopupMenu::Options()); }
@@ -703,9 +731,11 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     if (sge)
     {
         cfxid = sge->effectChooser->currentClicked;
+
         if (cfxid >= 0)
         {
             auto deactbm = sge->effectChooser->getDeactivatedBitmask();
+
             addDeact = true;
             isDeact = deactbm & (1 << cfxid);
             cfxtype = sge->effectChooser->fxTypes[cfxid];
@@ -742,14 +772,17 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
             });
     }
 
-    menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfx)), enableClear, false, [this]() {
-        loadSnapshot(fxt_off, nullptr, 0);
-        if (getControlListener())
-        {
-            getControlListener()->valueChanged(asControlValueInterface());
-        }
-        repaint();
-    });
+    menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfx)), enableClear, false,
+                 [this, cfxid, that = juce::Component::SafePointer(sge->effectChooser.get())]() {
+                     that->setEffectSlotDeactivation(cfxid, false);
+                     that->repaint();
+                     loadSnapshot(fxt_off, nullptr, 0);
+                     if (getControlListener())
+                     {
+                         getControlListener()->valueChanged(asControlValueInterface());
+                     }
+                     repaint();
+                 });
 
     if (sge)
     {
@@ -819,6 +852,24 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
         hmen->setCentered(false);
 
         menu.addCustomItem(-1, std::move(hmen), nullptr, helpMenuScreeReaderText);
+
+#if SURGE_HAS_OSC
+        if (storage->oscListenerRunning)
+        {
+            menu.addSeparator();
+
+            auto oscName = storage->getPatch().fx[sge->current_fx].type.get_osc_name();
+
+            auto i =
+                juce::PopupMenu::Item(fmt::format("OSC: {}", oscName))
+                    .setEnabled(true)
+                    .setAction([oscName]() { juce::SystemClipboard::copyTextToClipboard(oscName); })
+                    .setColour(
+                        sge->currentSkin->getColor(Colors::PopupMenu::Text).withAlpha(0.75f));
+
+            menu.addItem(i);
+        }
+#endif
     }
 }
 

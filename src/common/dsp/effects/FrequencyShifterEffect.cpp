@@ -1,3 +1,24 @@
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 #include "FrequencyShifterEffect.h"
 
 using namespace std;
@@ -33,7 +54,7 @@ void FrequencyShifterEffect::setvars(bool init)
         inithadtempo = true;
     }
 
-    feedback.newValue(amp_to_linear(*f[freq_feedback]));
+    feedback.newValue(amp_to_linear(*pd_float[freq_feedback]));
 
     if (init)
         time.newValue((fxdata->p[freq_delay].temposync ? storage->temposyncratio_inv : 1.f) *
@@ -43,17 +64,17 @@ void FrequencyShifterEffect::setvars(bool init)
     else
         time.newValue((fxdata->p[freq_delay].temposync ? storage->temposyncratio_inv : 1.f) *
                           storage->samplerate *
-                          storage->note_to_pitch_ignoring_tuning(12 * *f[freq_delay]) -
+                          storage->note_to_pitch_ignoring_tuning(12 * *pd_float[freq_delay]) -
                       FIRoffset);
-    mix.set_target_smoothed(*f[freq_mix]);
+    mix.set_target_smoothed(*pd_float[freq_mix]);
 
-    double shift = *f[freq_shift] * (fxdata->p[freq_shift].extend_range ? 1000.0 : 10.0);
+    double shift = *pd_float[freq_shift] * (fxdata->p[freq_shift].extend_range ? 1000.0 : 10.0);
     double omega = shift * M_PI * 2.0 * storage->dsamplerate_inv;
     o1L.set_rate(M_PI * 0.5 - min(0.0, omega));
     o2L.set_rate(M_PI * 0.5 + max(0.0, omega));
 
     // phase lock oscillators
-    if (*f[freq_rmult] == 1.f)
+    if (*pd_float[freq_rmult] == 1.f)
     {
         const double a = 0.01;
         o1R.r = a * o1L.r + (1 - a) * o1R.r;
@@ -62,7 +83,7 @@ void FrequencyShifterEffect::setvars(bool init)
         o2R.i = a * o2L.i + (1 - a) * o2R.i;
     }
     else
-        omega *= *f[freq_rmult];
+        omega *= *pd_float[freq_rmult];
 
     o1R.set_rate(M_PI * 0.5 - min(0.0, omega));
     o2R.set_rate(M_PI * 0.5 + max(0.0, omega));

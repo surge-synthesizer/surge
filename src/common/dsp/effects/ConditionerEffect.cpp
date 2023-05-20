@@ -1,25 +1,39 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "ConditionerEffect.h"
 #include <vembertech/basic_dsp.h>
 #include "SurgeParamConfig.h"
 
-using namespace std;
+#include "globals.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
+#include "sst/basic-blocks/dsp/MidSide.h"
 
-using namespace vt_dsp;
+namespace mech = sst::basic_blocks::mechanics;
+namespace sdsp = sst::basic_blocks::dsp;
+
+using namespace std;
 
 ConditionerEffect::ConditionerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), band1(storage), band2(storage), hp(storage)
@@ -56,9 +70,9 @@ void ConditionerEffect::init()
 
 void ConditionerEffect::setvars(bool init)
 {
-    band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *f[cond_bass]);
-    band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *f[cond_treble]);
-    hp.coeff_HP(hp.calc_omega(*f[cond_hpwidth] / 12.0), 0.4);
+    band1.coeff_peakEQ(band1.calc_omega(-2.5), 2, *pd_float[cond_bass]);
+    band2.coeff_peakEQ(band2.calc_omega(4.75), 2, *pd_float[cond_treble]);
+    hp.coeff_HP(hp.calc_omega(*pd_float[cond_hpwidth] / 12.0), 0.4);
 
     if (init)
     {
@@ -67,8 +81,8 @@ void ConditionerEffect::setvars(bool init)
 
 void ConditionerEffect::process_only_control()
 {
-    float am = 1.0f + 0.9f * *f[cond_attack];
-    float rm = 1.0f + 0.9f * *f[cond_release];
+    float am = 1.0f + 0.9f * *pd_float[cond_attack];
+    float rm = 1.0f + 0.9f * *pd_float[cond_release];
     float attack = 0.001f * am * am;
     float release = 0.0001f * rm * rm;
 
@@ -93,8 +107,8 @@ void ConditionerEffect::process_only_control()
 
 void ConditionerEffect::process(float *dataL, float *dataR)
 {
-    float am = 1.0f + 0.9f * *f[cond_attack];
-    float rm = 1.0f + 0.9f * *f[cond_release];
+    float am = 1.0f + 0.9f * *pd_float[cond_attack];
+    float rm = 1.0f + 0.9f * *pd_float[cond_release];
     float attack = 0.001f * am * am;
     float release = 0.0001f * rm * rm;
 
@@ -116,16 +130,16 @@ void ConditionerEffect::process(float *dataL, float *dataR)
         band2.process_block(dataL, dataR);
     }
 
-    float pregain = storage->db_to_linear(-*f[cond_threshold]);
+    float pregain = storage->db_to_linear(-*pd_float[cond_threshold]);
 
-    ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *f[cond_balance]));
-    ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *f[cond_balance]));
+    ampL.set_target_smoothed(pregain * 0.5f * clamp1bp(1 - *pd_float[cond_balance]));
+    ampR.set_target_smoothed(pregain * 0.5f * clamp1bp(1 + *pd_float[cond_balance]));
 
-    width.set_target_smoothed(clamp1bp(*f[cond_width]));
-    postamp.set_target_smoothed(storage->db_to_linear(*f[cond_gain]));
+    width.set_target_smoothed(clamp1bp(*pd_float[cond_width]));
+    postamp.set_target_smoothed(storage->db_to_linear(*pd_float[cond_gain]));
 
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(dataL, dataR, M, S, BLOCK_SIZE_QUAD);
+    sdsp::encodeMS<BLOCK_SIZE>(dataL, dataR, M, S);
 
     if (!fxdata->p[cond_hpwidth].deactivated)
     {
@@ -133,12 +147,12 @@ void ConditionerEffect::process(float *dataL, float *dataR)
     }
 
     width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, dataL, dataR, BLOCK_SIZE_QUAD);
+    sdsp::decodeMS<BLOCK_SIZE>(M, S, dataL, dataR);
     ampL.multiply_block(dataL, BLOCK_SIZE_QUAD);
     ampR.multiply_block(dataR, BLOCK_SIZE_QUAD);
 
-    vu[0] = max(vu[0], get_absmax(dataL, BLOCK_SIZE_QUAD));
-    vu[1] = max(vu[1], get_absmax(dataR, BLOCK_SIZE_QUAD));
+    vu[0] = max(vu[0], mech::blockAbsMax<BLOCK_SIZE>(dataL));
+    vu[1] = max(vu[1], mech::blockAbsMax<BLOCK_SIZE>(dataR));
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
@@ -155,7 +169,7 @@ void ConditionerEffect::process(float *dataL, float *dataR)
         if (filtered_lamax > filtered_lamax2)
             filtered_lamax2 = filtered_lamax;
 
-        gain = rcp(filtered_lamax2);
+        gain = mech::rcp(filtered_lamax2);
 
         delayed[0][bufpos] = dataL[k];
         delayed[1][bufpos] = dataR[k];
@@ -181,8 +195,8 @@ void ConditionerEffect::process(float *dataL, float *dataR)
 
     vu[2] = gain;
 
-    vu[4] = max(vu[4], get_absmax(dataL, BLOCK_SIZE_QUAD));
-    vu[5] = max(vu[5], get_absmax(dataR, BLOCK_SIZE_QUAD));
+    vu[4] = max(vu[4], mech::blockAbsMax<BLOCK_SIZE>(dataL));
+    vu[5] = max(vu[5], mech::blockAbsMax<BLOCK_SIZE>(dataR));
 }
 
 Surge::ParamConfig::VUType ConditionerEffect::vu_type(int id)

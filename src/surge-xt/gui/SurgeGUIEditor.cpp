@@ -1,17 +1,24 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "SurgeGUIEditor.h"
 #include "resource.h"
@@ -558,10 +565,12 @@ void SurgeGUIEditor::idle()
 
         for (const auto &[msg, title, code] : cp)
         {
-            if (code == SurgeStorage::AUDIO_CONFIGURATION)
+            if (code == SurgeStorage::AUDIO_INPUT_LATENCY_WARNING)
             {
-                promptForOKCancelWithDontAskAgain(
-                    title, msg, Surge::Storage::DefaultKey::DontShowAudioErrorsAgain, []() {});
+                // promptForOKCancelWithDontAskAgain(
+                //     title, msg, Surge::Storage::DefaultKey::DontShowAudioErrorsAgain, []() {});
+                audioLatencyNotified = true;
+                frame->repaint();
             }
             else
             {
@@ -1899,6 +1908,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             vu[0]->setBounds(skinCtrl->getRect());
             vu[0]->setSkin(currentSkin, bitmapStore);
+            vu[0]->setTag(tag_main_vu_meter);
+            vu[0]->addListener(this);
             vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
             vu[0]->setStorage(&(synth->storage));
 
@@ -2270,7 +2281,7 @@ void SurgeGUIEditor::close_editor()
     editor_open = false;
 
     resetComponentTracking();
-    setzero(param);
+    memset(param, 0, sizeof(param));
 }
 
 bool SurgeGUIEditor::open(void *parent)
@@ -2695,11 +2706,15 @@ long SurgeGUIEditor::unapplyParameterOffset(long id) { return id + start_paramta
 void SurgeGUIEditor::toggleMPE()
 {
     this->synth->mpeEnabled = !this->synth->mpeEnabled;
+
     if (statusMPE)
     {
+        this->synth->resetPitchBend(-1);
+
         statusMPE->setValue(this->synth->mpeEnabled ? 1 : 0);
         statusMPE->asJuceComponent()->repaint();
     }
+
     synth->refresh_editor = true;
 }
 
@@ -2781,33 +2796,15 @@ void SurgeGUIEditor::showTuningMenu(const juce::Point<int> &where,
 
 void SurgeGUIEditor::scaleFileDropped(const string &fn)
 {
-    try
-    {
-        undoManager()->pushTuning(synth->storage.currentTuning);
-        this->synth->storage.retuneToScale(Tunings::readSCLFile(fn));
-        this->synth->refresh_editor = true;
-    }
-    catch (Tunings::TuningError &e)
-    {
-        synth->storage.retuneTo12TETScaleC261Mapping();
-        synth->storage.reportError(e.what(), "SCL Error");
-    }
+    undoManager()->pushTuning(synth->storage.currentTuning);
+    synth->storage.loadTuningFromSCL(fn);
     tuningChanged();
 }
 
 void SurgeGUIEditor::mappingFileDropped(const string &fn)
 {
-    try
-    {
-        undoManager()->pushTuning(synth->storage.currentTuning);
-        this->synth->storage.remapToKeyboard(Tunings::readKBMFile(fn));
-        this->synth->refresh_editor = true;
-    }
-    catch (Tunings::TuningError &e)
-    {
-        synth->storage.remapToConcertCKeyboard();
-        synth->storage.reportError(e.what(), "KBM Error");
-    }
+    undoManager()->pushTuning(synth->storage.currentTuning);
+    synth->storage.loadMappingFromKBM(fn);
     tuningChanged();
 }
 
@@ -2970,6 +2967,11 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     auto midiSubMenu = makeMidiMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("MIDI Settings"), midiSubMenu);
 
+#if SURGE_HAS_OSC
+    auto oscSubMenu = makeOSCMenu(where);
+    settingsMenu.addSubMenu(Surge::GUI::toOSCase("OSC Settings"), oscSubMenu);
+#endif
+
     auto tuningSubMenu = makeTuningMenu(where, false);
     settingsMenu.addSubMenu("Tuning", tuningSubMenu);
 
@@ -3123,23 +3125,36 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
             m.addItem(p.name, action);
         }
         bool haveD = false;
-        for (const auto &sc : presetCategories)
+        if (cat.path.empty())
         {
-            if (sc.parentPath == cat.path)
+            // This is a preset in the root
+        }
+        else
+        {
+            for (const auto &sc : presetCategories)
             {
-                if (!haveD)
-                    m.addSeparator();
-                haveD = true;
-                juce::PopupMenu subMenu;
-                recurseCat(subMenu, sc);
-                m.addSubMenu(sc.name, subMenu);
+                if (sc.parentPath == cat.path)
+                {
+                    if (!haveD)
+                        m.addSeparator();
+                    haveD = true;
+                    juce::PopupMenu subMenu;
+                    recurseCat(subMenu, sc);
+                    m.addSubMenu(sc.name, subMenu);
+                }
             }
         }
     };
 
     for (auto tlc : presetCategories)
     {
-        if (tlc.parentPath.empty())
+        if (tlc.path.empty())
+        {
+            // We have presets in the root! Don't recurse forever and put them in the root
+            recurseCat(lfoSubMenu, tlc);
+            lfoSubMenu.addSeparator();
+        }
+        else if (tlc.parentPath.empty())
         {
             juce::PopupMenu sm;
             recurseCat(sm, tlc);
@@ -3559,7 +3574,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 #ifndef SURGE_SKIP_ODDSOUND_MTS
     bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                       Surge::Storage::UseODDMTS, false);
-    std::string txt = "Use ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Client and Source Features");
+    std::string txt = "Use" + Surge::GUI::toOSCase(" MTS-ESP if available");
 
     tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
         Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
@@ -3581,7 +3596,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
     if (tsMode)
     {
-        std::string mtxt = "Act as ODDSound" + Surge::GUI::toOSCase(" MTS-ESP Source");
+        std::string mtxt = "Act as" + Surge::GUI::toOSCase(" MTS-ESP Source");
 
         tuningSubMenu.addItem(mtxt, canMaster || getStorage()->oddsound_mts_active_as_main,
                               getStorage()->oddsound_mts_active_as_main, [this]() {
@@ -4054,18 +4069,6 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
 
     dispDefMenu.addSeparator();
 
-    bool cpumeter = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                        Surge::Storage::ShowCPUUsage, false);
-
-    dispDefMenu.addItem(Surge::GUI::toOSCase("Show CPU Usage in VU Meter"), true, cpumeter,
-                        [this, cpumeter]() {
-                            Surge::Storage::updateUserDefaultValue(
-                                &(this->synth->storage), Surge::Storage::ShowCPUUsage, !cpumeter);
-                            this->frame->repaint();
-                        });
-
-    dispDefMenu.addSeparator();
-
     // Middle C submenu
     auto middleCSubMenu = juce::PopupMenu();
 
@@ -4093,6 +4096,15 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
     dispDefMenu.addSubMenu("Middle C", middleCSubMenu);
 
     return dispDefMenu;
+}
+
+void SurgeGUIEditor::makeScopeEntry(juce::PopupMenu &menu)
+{
+    bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
+
+    Surge::GUI::addMenuWithShortcut(menu, Surge::GUI::toOSCase("Oscilloscope..."),
+                                    showShortcutDescription("Alt + O", u8"\U00002325O"), true,
+                                    showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 }
 
 juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
@@ -4197,15 +4209,11 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
 
-    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Show Virtual Keyboard"),
+    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Virtual Keyboard"),
                                     showShortcutDescription("Alt + K", u8"\U00002325K"), true,
                                     showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
 
-    bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
-
-    Surge::GUI::addMenuWithShortcut(wfMenu, Surge::GUI::toOSCase("Open Oscilloscope"),
-                                    showShortcutDescription("Alt + O", u8"\U00002325O"), true,
-                                    showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
+    makeScopeEntry(wfMenu);
 
     return wfMenu;
 }
@@ -4733,16 +4741,135 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
     return midiSubMenu;
 }
 
+#if SURGE_HAS_OSC
+
+void SurgeGUIEditor::initOSCError(int port)
+{
+    std::ostringstream msg;
+    msg << "Surge XT was unable to connect to OSC port " << port << ".\n"
+        << "It may be in use by another application.";
+    synth->storage.reportError(msg.str(), "OSC Initialization Error");
+};
+
+juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
+{
+    auto oscSubMenu = juce::PopupMenu();
+    int portnum = juceEditor->processor.oscListener.portnum;
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Port..."), [this, portnum]() {
+        const auto c{std::to_string(portnum)};
+
+        promptForMiniEdit(
+            c, "Enter a new value:", "OSC Port Number", juce::Point<int>(10, 10),
+            [this](const std::string &c) {
+                int newPort = Surge::Storage::getUserDefaultValue(
+                    &(synth->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
+
+                try
+                {
+                    newPort = std::stoi(c);
+                }
+                catch (...)
+                {
+                    std::ostringstream msg;
+                    msg << "Entered value is not a number. Please try again.";
+                    synth->storage.reportError(msg.str(), "Input Error");
+                    return;
+                }
+
+                if (newPort > 65535 || newPort < 1)
+                {
+                    std::ostringstream msg;
+                    msg << "Port number must be between 1 and 65535!";
+                    synth->storage.reportError(msg.str(), "Port Number Out Of Range");
+                    return;
+                }
+
+                bool success = juceEditor->processor.changeOSCPort(newPort);
+
+                if (!success)
+                {
+                    SurgeGUIEditor::initOSCError(newPort);
+                }
+                else
+                {
+                    Surge::Storage::updateUserDefaultValue(&(synth->storage),
+                                                           Surge::Storage::OSCPort, newPort);
+                }
+            },
+            mainMenu);
+    });
+
+    if (portnum != DEFAULT_OSC_PORT)
+    {
+        oscSubMenu.addItem(
+            Surge::GUI::toOSCase("Reset OSC Port to " + std::to_string(DEFAULT_OSC_PORT)),
+            [this]() {
+                bool success = juceEditor->processor.changeOSCPort(DEFAULT_OSC_PORT);
+
+                if (!success)
+                {
+                    SurgeGUIEditor::initOSCError(DEFAULT_OSC_PORT);
+                }
+                else
+                {
+                    Surge::Storage::updateUserDefaultValue(
+                        &(synth->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
+                }
+            });
+    }
+
+    oscSubMenu.addSeparator();
+
+    if (synth->storage.oscListenerRunning)
+    {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Listener"),
+                           [this]() { juceEditor->processor.oscListener.stopListening(); });
+    }
+    else
+    {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Listener"), [this]() {
+            int defaultOSCPort = Surge::Storage::getUserDefaultValue(
+                &(this->synth->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
+            bool success = juceEditor->processor.initOSC(defaultOSCPort);
+
+            if (!success)
+            {
+                SurgeGUIEditor::initOSCError(defaultOSCPort);
+            }
+        });
+    }
+
+    bool isChecked = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                         Surge::Storage::StartOSC, false);
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Auto-Start OSC Listener Upon Instantiation"), true,
+                       isChecked, [this, isChecked]() {
+                           Surge::Storage::updateUserDefaultValue(
+                               &(synth->storage), Surge::Storage::StartOSC, !isChecked);
+                       });
+
+    oscSubMenu.addSeparator();
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Show All OSC Addresses..."),
+                       [this]() { showHTML(this->parametersToHtml()); });
+
+    return oscSubMenu;
+}
+#endif
+
 void SurgeGUIEditor::reloadFromSkin()
 {
     if (!frame || !bitmapStore.get())
+    {
         return;
+    }
 
     juceEditor->surgeLF->setSkin(currentSkin, bitmapStore);
 
     float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
-    bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
 
+    bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
     paramInfowindow->setSkin(currentSkin, bitmapStore);
     patchSelectorComment->setSkin(currentSkin, bitmapStore);
 
@@ -4819,7 +4946,7 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
     auto devSubMenu = juce::PopupMenu();
 
 #if WINDOWS
-    Surge::GUI::addMenuWithShortcut(devSubMenu, "Show debug console...",
+    Surge::GUI::addMenuWithShortcut(devSubMenu, Surge::GUI::toOSCase("Show Debug Console..."),
                                     showShortcutDescription("Alt + D", u8"\U00002325D"),
                                     []() { Surge::Debug::toggleConsole(); });
 #endif
@@ -4830,7 +4957,7 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
         frame->repaint();
     });
 
-    devSubMenu.addItem(Surge::GUI::toOSCase("Dump Undo/Redo Stack To stdout"), true, false,
+    devSubMenu.addItem(Surge::GUI::toOSCase("Dump Undo/Redo Stack to stdout"), true, false,
                        [this]() { undoManager()->dumpStack(); });
 
 #ifdef INSTRUMENT_UI
@@ -4921,7 +5048,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
         {
             synth->storage.reportError(
                 "This parameter does not support editing its value by text input.\n\n"
-                "Please report this finding to Surge Synth Team in order to fix the problem!",
+                "Please report this to Surge Synth Team in order to fix the problem!",
                 "Error");
             return;
         }
@@ -6662,6 +6789,7 @@ void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
         if (fxchain == -1 || (fxchain >= 0 && (i >= (fxchain * 4) && i < ((fxchain + 1) * 4))))
         {
             synth->enqueueFXOff(fxslot_order[i]);
+            effectChooser->setEffectSlotDeactivation(fxslot_order[i], false);
         }
     }
 }

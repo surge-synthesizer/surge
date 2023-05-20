@@ -1,21 +1,32 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "SineOscillator.h"
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
 #include <algorithm>
+
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 /*
  * Sine Oscillator Optimization Strategy
@@ -289,12 +300,12 @@ template <> inline __m128 valueFromSinAndCosForMode<6>(__m128 svaluesse, __m128 
 
     auto s2x = _mm_mul_ps(m2, _mm_mul_ps(svaluesse, cvaluesse));
     auto s2fh = _mm_and_ps(s2x, _mm_cmpge_ps(svaluesse, mz));
-    return abs_ps(s2fh);
+    return mech::abs_ps(s2fh);
 }
 
 template <> inline __m128 valueFromSinAndCosForMode<7>(__m128 svaluesse, __m128 cvaluesse, int maxc)
 {
-    return abs_ps(valueFromSinAndCosForMode<5>(svaluesse, cvaluesse, maxc));
+    return mech::abs_ps(valueFromSinAndCosForMode<5>(svaluesse, cvaluesse, maxc));
 }
 
 template <> inline __m128 valueFromSinAndCosForMode<8>(__m128 svaluesse, __m128 cvaluesse, int maxc)
@@ -382,7 +393,7 @@ inline __m128 valueFromSinAndCosForMode<14>(__m128 svaluesse, __m128 cvaluesse, 
 
     auto c2x = _mm_sub_ps(m1, _mm_mul_ps(m2, _mm_mul_ps(svaluesse, svaluesse)));
     auto q23 = _mm_cmpge_ps(svaluesse, mz);
-    return _mm_and_ps(q23, abs_ps(c2x));
+    return _mm_and_ps(q23, mech::abs_ps(c2x));
 }
 
 template <>
@@ -671,10 +682,10 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
             auto lv = _mm_load_ps(&lastvalue[u]);
             auto x = _mm_add_ps(_mm_add_ps(ph, lv), fmpds);
 
-            x = Surge::DSP::clampToPiRangeSSE(x);
+            x = sst::basic_blocks::dsp::clampToPiRangeSSE(x);
 
-            auto sxl = Surge::DSP::fastsinSSE(x);
-            auto cxl = Surge::DSP::fastcosSSE(x);
+            auto sxl = sst::basic_blocks::dsp::fastsinSSE(x);
+            auto cxl = sst::basic_blocks::dsp::fastcosSSE(x);
 
             auto out_local = valueFromSinAndCosForMode<mode>(sxl, cxl, std::min(n_unison - u, 4));
 
@@ -787,8 +798,9 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
 
             for (int u = 0; u < n_unison; u++)
             {
-                float out_local = singleValueFromSinAndCos<mode>(Surge::DSP::fastsin(phase[u]),
-                                                                 Surge::DSP::fastcos(phase[u]));
+                float out_local =
+                    singleValueFromSinAndCos<mode>(sst::basic_blocks::dsp::fastsin(phase[u]),
+                                                   sst::basic_blocks::dsp::fastcos(phase[u]));
 
                 outL += (panL[u] * out_local) * out_attenuation * playingramp[u];
                 outR += (panR[u] * out_local) * out_attenuation * playingramp[u];
@@ -799,7 +811,7 @@ void SineOscillator::process_block_legacy(float pitch, float drift, bool stereo,
                     playingramp[u] = 1;
 
                 phase[u] += omega[u] + master_osc[k] * FMdepth.v;
-                phase[u] = Surge::DSP::clampToPiRange(phase[u]);
+                phase[u] = sst::basic_blocks::dsp::clampToPiRange(phase[u]);
             }
 
             FMdepth.process();

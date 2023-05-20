@@ -1,19 +1,30 @@
 /*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin editor.
-
-  ==============================================================================
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "SurgeSynthEditor.h"
 #include "SurgeSynthProcessor.h"
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 #include "SurgeGUIEditor.h"
-#include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "SurgeJUCELookAndFeel.h"
 #include "RuntimeFont.h"
 #include "AccessibleHelpers.h"
@@ -168,7 +179,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     suspedal = std::move(sp);
 
     tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
-    tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(11));
+    tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(9));
     tempoTypein->setInputRestrictions(3, "0123456789");
     tempoTypein->setSelectAllWhenFocused(true);
     tempoTypein->onReturnKey = [this]() {
@@ -217,12 +228,12 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     // add the bottom right corner resizer only for VST2
     setResizable(true, processor.wrapperType == juce::AudioProcessor::wrapperType_VST);
 
+    sge->audioLatencyNotified = processor.inputIsLatent;
+
     sge->open(nullptr);
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 60);
-
-    SurgeSynthEditorSpecificExtensions(this, sge.get());
 }
 
 SurgeSynthEditor::~SurgeSynthEditor()
@@ -358,7 +369,7 @@ void SurgeSynthEditor::resized()
             tempoTypein->setText(
                 std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
             tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(9));
-            tempoTypein->setIndents(4, 3);
+            tempoTypein->setIndents(4, -1);
             tempoTypein->setJustification(juce::Justification::centred);
             tempoTypein->setTransform(xf);
             tempoTypein->setVisible(addTempo);

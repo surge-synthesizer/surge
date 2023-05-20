@@ -1,3 +1,24 @@
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 #include "Reverb2Effect.h"
 
 const float db60 = powf(10.f, 0.05f * -60.f);
@@ -141,8 +162,8 @@ void Reverb2Effect::update_rtime()
 {
     auto ts = fxdata->p[rev2_predelay].temposync ? storage->temposyncratio_inv : 1.f;
     // * 2.f is to get the dB120 time
-    auto pdlyt = std::max(0.1f, powf(2.f, *f[rev2_predelay]) * ts) * 2.f;
-    auto dcyt = std::max(1.0f, powf(2.f, *f[rev2_decay_time])) * 2.f;
+    auto pdlyt = std::max(0.1f, powf(2.f, *pd_float[rev2_predelay]) * ts) * 2.f;
+    auto dcyt = std::max(1.0f, powf(2.f, *pd_float[rev2_decay_time])) * 2.f;
     float t = BLOCK_SIZE_INV * (storage->samplerate * (dcyt + pdlyt));
 
     ringout_time = (int)t;
@@ -150,33 +171,33 @@ void Reverb2Effect::update_rtime()
 
 void Reverb2Effect::process(float *dataL, float *dataR)
 {
-    float scale = powf(2.f, 1.f * *f[rev2_room_size]);
+    float scale = powf(2.f, 1.f * *pd_float[rev2_room_size]);
     calc_size(scale);
 
-    if (fabs(*f[rev2_decay_time] - last_decay_time) > 0.001f)
+    if (fabs(*pd_float[rev2_decay_time] - last_decay_time) > 0.001f)
         update_rtime();
 
-    last_decay_time = *f[rev2_decay_time];
+    last_decay_time = *pd_float[rev2_decay_time];
 
     float wetL alignas(16)[BLOCK_SIZE], wetR alignas(16)[BLOCK_SIZE];
 
     float loop_time_s = 0.5508 * scale;
-    float decay = powf(db60, loop_time_s / (4.f * (powf(2.f, *f[rev2_decay_time]))));
+    float decay = powf(db60, loop_time_s / (4.f * (powf(2.f, *pd_float[rev2_decay_time]))));
 
     _decay_multiply.newValue(decay);
-    _diffusion.newValue(0.7f * *f[rev2_diffusion]);
-    _buildup.newValue(0.7f * *f[rev2_buildup]);
-    _hf_damp_coefficent.newValue(0.8 * *f[rev2_hf_damping]);
-    _lf_damp_coefficent.newValue(0.2 * *f[rev2_lf_damping]);
-    _modulation.newValue(*f[rev2_modulation] * storage->samplerate * 0.001f * 5.f);
+    _diffusion.newValue(0.7f * *pd_float[rev2_diffusion]);
+    _buildup.newValue(0.7f * *pd_float[rev2_buildup]);
+    _hf_damp_coefficent.newValue(0.8 * *pd_float[rev2_hf_damping]);
+    _lf_damp_coefficent.newValue(0.2 * *pd_float[rev2_lf_damping]);
+    _modulation.newValue(*pd_float[rev2_modulation] * storage->samplerate * 0.001f * 5.f);
 
-    width.set_target_smoothed(storage->db_to_linear(*f[rev2_width]));
-    mix.set_target_smoothed(*f[rev2_mix]);
+    width.set_target_smoothed(storage->db_to_linear(*pd_float[rev2_width]));
+    mix.set_target_smoothed(*pd_float[rev2_mix]);
 
     _lfo.set_rate(2.0 * M_PI * powf(2, -2.f) * storage->dsamplerate_inv);
 
     int pdt =
-        limit_range((int)(storage->samplerate * pow(2.f, *f[rev2_predelay]) *
+        limit_range((int)(storage->samplerate * pow(2.f, *pd_float[rev2_predelay]) *
                           (fxdata->p[rev2_predelay].temposync ? storage->temposyncratio_inv : 1.f)),
                     1, PREDELAY_BUFFER_SIZE_LIMIT - 1);
 
@@ -236,10 +257,7 @@ void Reverb2Effect::process(float *dataL, float *dataR)
     }
 
     // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(wetL, wetR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, wetL, wetR, BLOCK_SIZE_QUAD);
+    applyWidth(wetL, wetR, width);
 
     mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
 }

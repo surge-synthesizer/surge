@@ -1,0 +1,14 @@
+# iwyu_tool.py -p cmake-build-debug src/common/dsp/filters -- -Xiwyu --mapping_file=/Users/paul/dev/music/surge/scripts/iwyu_mapping.imp
+# for instance
+[
+{ include: ["<__config>", "private", "<utility>", "public"] },
+
+{ include: ["<__algorithm/max.h>", "private", "<algorithm>", "public"] },
+{ include: ["<__algorithm/min.h>", "private", "<algorithm>", "public"] },
+
+{ include: ["\"simde/x86/sse.h\"", "private", "\"globals.h\"", "public"] },
+{ include: ["<xmmintrin.h>", "private", "\"globals.h\"", "public"] },
+{ include: ["<immintrin.h>", "private", "\"globals.h\"", "public"] },
+{ include: ["<pmmintrin.h>", "private", "\"globals.h\"", "public"] },
+
+]

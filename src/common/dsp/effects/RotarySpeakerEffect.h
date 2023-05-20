@@ -1,19 +1,27 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
-#pragma once
+#ifndef SURGE_SRC_COMMON_DSP_EFFECTS_ROTARYSPEAKEREFFECT_H
+#define SURGE_SRC_COMMON_DSP_EFFECTS_ROTARYSPEAKEREFFECT_H
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
@@ -22,11 +30,12 @@
 #include <vembertech/lipol.h>
 
 #include "sst/waveshapers.h"
+#include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
 class RotarySpeakerEffect : public Effect
 {
   public:
-    lipol_ps width alignas(16), mix alignas(16);
+    lipol_ps_blocksz width alignas(16), mix alignas(16);
     sst::waveshapers::QuadWaveshaperState wsState alignas(16);
 
     RotarySpeakerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
@@ -68,9 +77,13 @@ class RotarySpeakerEffect : public Effect
     BiquadFilter xover, lowbass;
     // float
     // f_rotor_lp[2][n_filter_parameters],f_xover[n_filter_parameters],f_lowbass[n_filter_parameters];
+
+    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
     quadr_osc lfo;
     quadr_osc lf_lfo;
     lipol<float> dL, dR, hornamp[2];
     lag<float, true> drive;
     bool first_run;
 };
+
+#endif // SURGE_SRC_COMMON_DSP_EFFECTS_ROTARYSPEAKEREFFECT_H

@@ -1,9 +1,35 @@
-// This is a .h on purpose. C++ template stuff.
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
-#pragma once
+#ifndef SURGE_SRC_COMMON_DSP_EFFECTS_CHORUSEFFECTIMPL_H
+#define SURGE_SRC_COMMON_DSP_EFFECTS_CHORUSEFFECTIMPL_H
 
 #include "ChorusEffect.h"
 #include <algorithm>
+
+#include "globals.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
 
 using std::max;
 using std::min;
@@ -53,10 +79,10 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
     }
     else
     {
-        feedback.set_target_smoothed(0.5f * amp_to_linear(*f[ch_feedback]));
-        float rate = storage->envelope_rate_linear(-*f[1]) *
+        feedback.set_target_smoothed(0.5f * amp_to_linear(*pd_float[ch_feedback]));
+        float rate = storage->envelope_rate_linear(-*pd_float[1]) *
                      (fxdata->p[ch_rate].temposync ? storage->temposyncratio : 1.f);
-        float tm = storage->note_to_pitch_ignoring_tuning(12 * *f[0]) *
+        float tm = storage->note_to_pitch_ignoring_tuning(12 * *pd_float[0]) *
                    (fxdata->p[ch_time].temposync ? storage->temposyncratio_inv : 1.f);
         for (int i = 0; i < v; i++)
         {
@@ -65,27 +91,30 @@ template <int v> void ChorusEffect<v>::setvars(bool init)
             if (lfophase[i] > 1)
                 lfophase[i] -= 1;
 
-            float lfoout = (2.f * fabs(2.f * lfophase[i] - 1.f) - 1.f) * *f[ch_depth];
+            float lfoout = (2.f * fabs(2.f * lfophase[i] - 1.f) - 1.f) * *pd_float[ch_depth];
             time[i].newValue(storage->samplerate * tm * (1 + lfoout));
         }
 
-        hp.coeff_HP(hp.calc_omega(*f[ch_lowcut] * (1.f / 12.f)), 0.707);
-        lp.coeff_LP2B(lp.calc_omega(*f[ch_highcut] * (1.f / 12.f)), 0.707);
-        mix.set_target_smoothed(*f[ch_mix]);
-        width.set_target_smoothed(storage->db_to_linear(*f[ch_width]));
+        hp.coeff_HP(hp.calc_omega(*pd_float[ch_lowcut] * (1.f / 12.f)), 0.707);
+        lp.coeff_LP2B(lp.calc_omega(*pd_float[ch_highcut] * (1.f / 12.f)), 0.707);
+        mix.set_target_smoothed(*pd_float[ch_mix]);
+        width.set_target_smoothed(storage->db_to_linear(*pd_float[ch_width]));
     }
 }
 
 template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
 {
+    namespace mech = sst::basic_blocks::mechanics;
+    namespace sdsp = sst::basic_blocks::dsp;
+
     setvars(false);
 
     float tbufferL alignas(16)[BLOCK_SIZE];
     float tbufferR alignas(16)[BLOCK_SIZE];
     float fbblock alignas(16)[BLOCK_SIZE];
 
-    clear_block(tbufferL, BLOCK_SIZE_QUAD);
-    clear_block(tbufferR, BLOCK_SIZE_QUAD);
+    mech::clear_block<BLOCK_SIZE>(tbufferL);
+    mech::clear_block<BLOCK_SIZE>(tbufferR);
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
@@ -110,8 +139,8 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
             L = _mm_add_ps(L, _mm_mul_ps(vo, voicepanL4[j]));
             R = _mm_add_ps(R, _mm_mul_ps(vo, voicepanR4[j]));
         }
-        L = sum_ps_to_ss(L);
-        R = sum_ps_to_ss(R);
+        L = mech::sum_ps_to_ss(L);
+        R = mech::sum_ps_to_ss(R);
         _mm_store_ss(&tbufferL[k], L);
         _mm_store_ss(&tbufferR[k], R);
     }
@@ -126,11 +155,11 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
         hp.process_block(tbufferL, tbufferR);
     }
 
-    add_block(tbufferL, tbufferR, fbblock, BLOCK_SIZE_QUAD);
+    mech::add_block<BLOCK_SIZE>(tbufferL, tbufferR, fbblock);
     feedback.multiply_block(fbblock, BLOCK_SIZE_QUAD);
-    hardclip_block(fbblock, BLOCK_SIZE_QUAD);
-    accumulate_block(dataL, fbblock, BLOCK_SIZE_QUAD);
-    accumulate_block(dataR, fbblock, BLOCK_SIZE_QUAD);
+    sdsp::hardclip_block<BLOCK_SIZE>(fbblock);
+    mech::accumulate_from_to<BLOCK_SIZE>(dataL, fbblock);
+    mech::accumulate_from_to<BLOCK_SIZE>(dataR, fbblock);
 
     if (wpos + BLOCK_SIZE >= max_delay_length)
     {
@@ -141,7 +170,7 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
     }
     else
     {
-        copy_block(fbblock, &buffer[wpos], BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(fbblock, &buffer[wpos]);
     }
 
     if (wpos == 0)
@@ -150,10 +179,7 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
                 buffer[k]; // copy buffer so FIR-core doesn't have to wrap
 
     // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(tbufferL, tbufferR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, tbufferL, tbufferR, BLOCK_SIZE_QUAD);
+    applyWidth(tbufferL, tbufferR, width);
 
     mix.fade_2_blocks_to(dataL, tbufferL, dataR, tbufferR, dataL, dataR, BLOCK_SIZE_QUAD);
 
@@ -257,3 +283,5 @@ void ChorusEffect<v>::handleStreamingMismatches(int streamingRevision,
         fxdata->p[ch_highcut].deactivated = false;
     }
 }
+
+#endif // SURGE_SRC_COMMON_DSP_EFFECTS_CHORUSEFFECTIMPL_H

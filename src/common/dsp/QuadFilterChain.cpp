@@ -1,15 +1,41 @@
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 #include "QuadFilterChain.h"
 #include "SurgeStorage.h"
 #include <vembertech/basic_dsp.h>
 #include <vembertech/portable_intrinsics.h>
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
+
+namespace mech = sst::basic_blocks::mechanics;
+namespace sdsp = sst::basic_blocks::dsp;
 
 #define MWriteOutputs(x)                                                                           \
     d.OutL = _mm_add_ps(d.OutL, d.dOutL);                                                          \
     d.OutR = _mm_add_ps(d.OutR, d.dOutR);                                                          \
     __m128 outL = _mm_mul_ps(x, d.OutL);                                                           \
     __m128 outR = _mm_mul_ps(x, d.OutR);                                                           \
-    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), sum_ps_to_ss(outL)));                 \
-    _mm_store_ss(&OutR[k], _mm_add_ss(_mm_load_ss(&OutR[k]), sum_ps_to_ss(outR)));
+    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), mech::sum_ps_to_ss(outL)));           \
+    _mm_store_ss(&OutR[k], _mm_add_ss(_mm_load_ss(&OutR[k]), mech::sum_ps_to_ss(outR)));
 
 #define MWriteOutputsDual(x, y)                                                                    \
     d.OutL = _mm_add_ps(d.OutL, d.dOutL);                                                          \
@@ -18,8 +44,8 @@
     d.Out2R = _mm_add_ps(d.Out2R, d.dOut2R);                                                       \
     __m128 outL = vMAdd(x, d.OutL, vMul(y, d.Out2L));                                              \
     __m128 outR = vMAdd(x, d.OutR, vMul(y, d.Out2R));                                              \
-    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), sum_ps_to_ss(outL)));                 \
-    _mm_store_ss(&OutR[k], _mm_add_ss(_mm_load_ss(&OutR[k]), sum_ps_to_ss(outR)));
+    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), mech::sum_ps_to_ss(outL)));           \
+    _mm_store_ss(&OutR[k], _mm_add_ss(_mm_load_ss(&OutR[k]), mech::sum_ps_to_ss(outR)));
 
 #if 0 // DEBUG
 #define AssertReasonableAudioFloat(x) assert(x<32.f && x> - 32.f);
@@ -77,7 +103,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
         {
             d.FB = _mm_add_ps(d.FB, d.dFB);
             __m128 input = vMul(d.FB, d.FBlineL);
-            input = vAdd(d.DL[k], softclip_ps(input));
+            input = vAdd(d.DL[k], sdsp::softclip_ps(input));
             __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
             __m128 x = input, y = d.DR[k];
 
@@ -117,7 +143,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
         {
             d.FB = _mm_add_ps(d.FB, d.dFB);
             __m128 input = vMul(d.FB, d.FBlineL);
-            input = vAdd(d.DL[k], softclip_ps(input));
+            input = vAdd(d.DL[k], sdsp::softclip_ps(input));
             __m128 x = input, y = d.DR[k];
             __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
 
@@ -158,7 +184,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
         {
             d.FB = _mm_add_ps(d.FB, d.dFB);
             __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
-            fb = softclip_ps(fb);
+            fb = sdsp::softclip_ps(fb);
             __m128 x = _mm_add_ps(d.DL[k], fb);
             __m128 y = _mm_add_ps(d.DR[k], fb);
             __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
@@ -191,7 +217,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
         {
             d.FB = _mm_add_ps(d.FB, d.dFB);
             __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
-            fb = softclip_ps(fb);
+            fb = sdsp::softclip_ps(fb);
             __m128 x = _mm_add_ps(d.DL[k], fb);
             __m128 y = _mm_add_ps(d.DR[k], fb);
             __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
@@ -224,7 +250,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
         {
             d.FB = _mm_add_ps(d.FB, d.dFB);
             __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
-            fb = softclip_ps(fb);
+            fb = sdsp::softclip_ps(fb);
             __m128 x = _mm_add_ps(d.DL[k], fb);
             __m128 y = _mm_add_ps(d.DR[k], fb);
             __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
@@ -260,7 +286,7 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
         {
             d.FB = _mm_add_ps(d.FB, d.dFB);
             __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
-            fb = softclip_ps(fb);
+            fb = sdsp::softclip_ps(fb);
             __m128 x = _mm_add_ps(d.DL[k], fb);
             __m128 y = _mm_add_ps(d.DR[k], fb);
             __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
@@ -298,8 +324,8 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
             d.FB = _mm_add_ps(d.FB, d.dFB);
             __m128 fbL = _mm_mul_ps(d.FB, d.FBlineL);
             __m128 fbR = _mm_mul_ps(d.FB, d.FBlineR);
-            __m128 xin = _mm_add_ps(d.DL[k], softclip_ps(fbL));
-            __m128 yin = _mm_add_ps(d.DR[k], softclip_ps(fbR));
+            __m128 xin = _mm_add_ps(d.DL[k], sdsp::softclip_ps(fbL));
+            __m128 yin = _mm_add_ps(d.DR[k], sdsp::softclip_ps(fbR));
             __m128 x = xin;
             __m128 y = yin;
 

@@ -1,20 +1,30 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "TapeEffect.h"
 #include <vembertech/basic_dsp.h>
+
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 namespace chowdsp
 {
@@ -34,8 +44,8 @@ void TapeEffect::init()
     toneControl.prepare(storage->samplerate);
     lossFilter.prepare(storage->samplerate, BLOCK_SIZE);
 
-    clear_block(L, BLOCK_SIZE_QUAD);
-    clear_block(R, BLOCK_SIZE_QUAD);
+    mech::clear_block<BLOCK_SIZE>(L);
+    mech::clear_block<BLOCK_SIZE>(R);
 
     degrade.prepareToPlay((float)storage->samplerate, BLOCK_SIZE);
     chew.prepare((float)storage->samplerate, BLOCK_SIZE);
@@ -49,15 +59,15 @@ void TapeEffect::init()
 
 void TapeEffect::process(float *dataL, float *dataR)
 {
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
     if (!fxdata->p[tape_drive].deactivated)
     {
-        auto thd = clamp01(*f[tape_drive]);
-        auto ths = clamp01(*f[tape_saturation]);
-        auto thb = clamp01(*f[tape_bias]);
-        auto tht = clamp1bp(*f[tape_tone]);
+        auto thd = clamp01(*pd_float[tape_drive]);
+        auto ths = clamp01(*pd_float[tape_saturation]);
+        auto thb = clamp01(*pd_float[tape_bias]);
+        auto tht = clamp1bp(*pd_float[tape_tone]);
         const auto hysteresisMode = fxdata->p[tape_drive].deform_type;
 
         hysteresis.set_params(thd, ths, thb);
@@ -72,10 +82,10 @@ void TapeEffect::process(float *dataL, float *dataR)
 
     if (!fxdata->p[tape_speed].deactivated)
     {
-        auto tls = limit_range(*f[tape_speed], 1.0f, 30.0f);
-        auto tlsp = limit_range(*f[tape_spacing], 0.1f, 20.0f);
-        auto tlg = limit_range(*f[tape_gap], 1.0f, 50.0f);
-        auto tlt = limit_range(*f[tape_thickness], 0.1f, 50.0f);
+        auto tls = limit_range(*pd_float[tape_speed], 1.0f, 30.0f);
+        auto tlsp = limit_range(*pd_float[tape_spacing], 0.1f, 20.0f);
+        auto tlg = limit_range(*pd_float[tape_gap], 1.0f, 50.0f);
+        auto tlt = limit_range(*pd_float[tape_thickness], 0.1f, 50.0f);
 
         lossFilter.set_params(tls, tlsp, tlg, tlt);
         lossFilter.process(L, R);
@@ -83,9 +93,9 @@ void TapeEffect::process(float *dataL, float *dataR)
 
     if (!fxdata->p[tape_degrade_depth].deactivated)
     {
-        auto tdd = clamp01(*f[tape_degrade_depth]);
-        auto tda = clamp01(*f[tape_degrade_amount]);
-        auto tdv = clamp01(*f[tape_degrade_variance]);
+        auto tdd = clamp01(*pd_float[tape_degrade_depth]);
+        auto tda = clamp01(*pd_float[tape_degrade_amount]);
+        auto tdv = clamp01(*pd_float[tape_degrade_variance]);
         auto chew_freq = 0.9f - (tda * 0.8f);
         auto chew_depth = tdd * 0.15f;
 
@@ -96,7 +106,7 @@ void TapeEffect::process(float *dataL, float *dataR)
         degrade.process_block(L, R);
     }
 
-    mix.set_target_smoothed(clamp01(*f[tape_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[tape_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

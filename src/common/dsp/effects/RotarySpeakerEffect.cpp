@@ -1,3 +1,24 @@
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 #include "RotarySpeakerEffect.h"
 
 using namespace std;
@@ -28,9 +49,9 @@ void RotarySpeakerEffect::init()
 
 void RotarySpeakerEffect::setvars(bool init)
 {
-    drive.newValue(*f[rot_drive]);
-    width.set_target_smoothed(storage->db_to_linear(*f[rot_width]));
-    mix.set_target_smoothed(*f[rot_mix]);
+    drive.newValue(*pd_float[rot_drive]);
+    width.set_target_smoothed(storage->db_to_linear(*pd_float[rot_width]));
+    mix.set_target_smoothed(*pd_float[rot_mix]);
 
     if (init)
     {
@@ -132,12 +153,12 @@ void RotarySpeakerEffect::init_ctrltypes()
 
 void RotarySpeakerEffect::process_only_control()
 {
-    float frate =
-        *f[rot_horn_rate] * (fxdata->p[rot_horn_rate].temposync ? storage->temposyncratio : 1.f);
+    float frate = *pd_float[rot_horn_rate] *
+                  (fxdata->p[rot_horn_rate].temposync ? storage->temposyncratio : 1.f);
 
     lfo.set_rate(2 * M_PI * powf(2, frate) * storage->dsamplerate_inv * BLOCK_SIZE);
-    lf_lfo.set_rate(*f[rot_rotor_rate] * 2 * M_PI * powf(2, frate) * storage->dsamplerate_inv *
-                    BLOCK_SIZE);
+    lf_lfo.set_rate(*pd_float[rot_rotor_rate] * 2 * M_PI * powf(2, frate) *
+                    storage->dsamplerate_inv * BLOCK_SIZE);
 
     lfo.process();
     lf_lfo.process();
@@ -147,8 +168,8 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
 {
     setvars(false);
 
-    float frate =
-        *f[rot_horn_rate] * (fxdata->p[rot_horn_rate].temposync ? storage->temposyncratio : 1.f);
+    float frate = *pd_float[rot_horn_rate] *
+                  (fxdata->p[rot_horn_rate].temposync ? storage->temposyncratio : 1.f);
 
     /*
      ** lf_lfo.process drives the sub-frequency and processes inside the iteration over samples>
@@ -157,7 +178,8 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
      ** hence the lack of BLOCK_SIZE here
      */
     lfo.set_rate(2 * M_PI * powf(2, frate) * storage->dsamplerate_inv * BLOCK_SIZE);
-    lf_lfo.set_rate(*f[rot_rotor_rate] * 2 * M_PI * powf(2, frate) * storage->dsamplerate_inv);
+    lf_lfo.set_rate(*pd_float[rot_rotor_rate] * 2 * M_PI * powf(2, frate) *
+                    storage->dsamplerate_inv);
 
     float precalc0 = (-2 - (float)lfo.i);
     float precalc1 = (-1 - (float)lfo.r);
@@ -165,7 +187,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     float lenL = sqrt(precalc0 * precalc0 + precalc1 * precalc1);
     float lenR = sqrt(precalc0 * precalc0 + precalc2 * precalc2);
 
-    float delay = storage->samplerate * 0.0018f * *f[rot_doppler];
+    float delay = storage->samplerate * 0.0018f * *pd_float[rot_doppler];
 
     dL.newValue(delay * lenL);
     dR.newValue(delay * lenR);
@@ -173,7 +195,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     float dotp_L = (precalc1 * (float)lfo.r + precalc0 * (float)lfo.i) / lenL;
     float dotp_R = (precalc2 * (float)lfo.r + precalc0 * (float)lfo.i) / lenR;
 
-    float a = *f[rot_tremolo] * 0.6f;
+    float a = *pd_float[rot_tremolo] * 0.6f;
 
     hornamp[0].newValue((1.f - a) + a * dotp_L);
     hornamp[1].newValue((1.f - a) + a * dotp_R);
@@ -190,9 +212,9 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
 
     int k;
 
-    drive.newValue(*f[rot_drive]);
+    drive.newValue(*pd_float[rot_drive]);
 
-    int wsi = *pdata_ival[rot_waveshape];
+    int wsi = *pd_int[rot_waveshape];
 
     if (wsi < 0 || wsi >= n_fxws)
     {
@@ -355,10 +377,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     }
 
     // scale width
-    float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
-    encodeMS(wbL, wbR, M, S, BLOCK_SIZE_QUAD);
-    width.multiply_block(S, BLOCK_SIZE_QUAD);
-    decodeMS(M, S, wbL, wbR, BLOCK_SIZE_QUAD);
+    applyWidth(wbL, wbR, width);
 
     mix.fade_2_blocks_to(dataL, wbL, dataR, wbR, dataL, dataR, BLOCK_SIZE_QUAD);
 

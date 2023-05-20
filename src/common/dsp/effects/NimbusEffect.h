@@ -1,20 +1,27 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
-#ifndef SURGE_NIMBUSEFFECT_H
-#define SURGE_NIMBUSEFFECT_H
+#ifndef SURGE_SRC_COMMON_DSP_EFFECTS_NIMBUSEFFECT_H
+#define SURGE_SRC_COMMON_DSP_EFFECTS_NIMBUSEFFECT_H
 
 #include "Effect.h"
 
@@ -51,7 +58,7 @@ class NimbusEffect : public Effect
         nmb_num_params,
     };
 
-    lipol_ps mix alignas(16);
+    lipol_ps_blocksz mix alignas(16);
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 
   public:
@@ -79,7 +86,7 @@ class NimbusEffect : public Effect
 
     SRC_STATE_tag *surgeSR_to_euroSR, *euroSR_to_surgeSR;
 
-    static constexpr int raw_out_sz = BLOCK_SIZE_OS << 4; // power of 2 pls
+    static constexpr int raw_out_sz = BLOCK_SIZE_OS << 5; // power of 2 pls
     float resampled_output[raw_out_sz][2];                // at sr
     size_t resampReadPtr = 0, resampWritePtr = 1;         // see comment in init
 

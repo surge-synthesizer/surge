@@ -1,5 +1,29 @@
+/*
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 #include "VocoderEffect.h"
 #include <algorithm>
+#include "globals.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 // Hz from http://www.sequencer.de/pix/moog/moog_vocoder_rack.jpg
 // const float vocoder_freq_moog[n_vocoder_bands] = {50, 158, 200, 252, 317, 400, 504, 635, 800,
@@ -51,20 +75,20 @@ void VocoderEffect::init() { setvars(true); }
 
 void VocoderEffect::setvars(bool init)
 {
-    modulator_mode = *f[voc_mod_input];
-    wet = *f[voc_mix];
+    modulator_mode = *pd_float[voc_mod_input];
+    wet = *pd_float[voc_mix];
     float Freq[4], FreqM[4];
 
-    const float Q = 20.f * (1.f + 0.5f * *f[voc_q]);
+    const float Q = 20.f * (1.f + 0.5f * *pd_float[voc_q]);
     const float Spread = 0.4f / Q;
 
-    active_bands = *pdata_ival[voc_num_bands];
+    active_bands = *pd_int[voc_num_bands];
     // FIXME - adjust the UI to be chunks of 4
     active_bands = active_bands - (active_bands % 4);
 
     // We need to clamp these in reasonable ranges
-    float flo = limit_range(*f[voc_minfreq], -36.f, 36.f);
-    float fhi = limit_range(*f[voc_maxfreq], 0.f, 60.f);
+    float flo = limit_range(*pd_float[voc_minfreq], -36.f, 36.f);
+    float fhi = limit_range(*pd_float[voc_maxfreq], 0.f, 60.f);
 
     if (flo > fhi)
     {
@@ -83,8 +107,8 @@ void VocoderEffect::setvars(bool init)
     float mdhz = dhz;
     bool sepMod = false;
 
-    float mC = *f[voc_mod_center];
-    float mX = *f[voc_mod_range];
+    float mC = *pd_float[voc_mod_center];
+    float mX = *pd_float[voc_mod_range];
 
     if (mC != 0 || mX != 0)
     {
@@ -161,9 +185,9 @@ void VocoderEffect::process(float *dataL, float *dataR)
     {
         setvars(false);
     }
-    modulator_mode = *(pdata_ival[voc_mod_input]); // fxdata->p[voc_mod_input].val.i;
-    wet = *f[voc_mix];
-    float EnvFRate = 0.001f * powf(2.f, 4.f * *f[voc_envfollow]);
+    modulator_mode = *(pd_int[voc_mod_input]); // fxdata->p[voc_mod_input].val.i;
+    wet = *pd_float[voc_mix];
+    float EnvFRate = 0.001f * powf(2.f, 4.f * *pd_float[voc_envfollow]);
 
     // the left channel variables are used for mono when stereo is disabled
     float modulator_in alignas(16)[BLOCK_SIZE];
@@ -171,16 +195,16 @@ void VocoderEffect::process(float *dataL, float *dataR)
 
     if (modulator_mode == vim_mono)
     {
-        add_block(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1], modulator_in,
-                  BLOCK_SIZE_QUAD);
+        mech::add_block<BLOCK_SIZE>(storage->audio_in_nonOS[0], storage->audio_in_nonOS[1],
+                                    modulator_in);
     }
     else
     {
-        copy_block(storage->audio_in_nonOS[0], modulator_in, BLOCK_SIZE_QUAD);
-        copy_block(storage->audio_in_nonOS[1], modulator_inR, BLOCK_SIZE_QUAD);
+        mech::copy_from_to<BLOCK_SIZE>(storage->audio_in_nonOS[0], modulator_in);
+        mech::copy_from_to<BLOCK_SIZE>(storage->audio_in_nonOS[1], modulator_inR);
     }
 
-    float Gain = *f[voc_input_gain] + 24.f;
+    float Gain = *pd_float[voc_input_gain] + 24.f;
     mGain.set_target_smoothed(storage->db_to_linear(Gain));
     mGain.multiply_block(modulator_in, BLOCK_SIZE_QUAD);
 
@@ -190,7 +214,7 @@ void VocoderEffect::process(float *dataL, float *dataR)
     vFloat Rate = vLoad1(EnvFRate);
     vFloat Ratem1 = vLoad1(1.f - EnvFRate);
 
-    float Gate = storage->db_to_linear(*f[voc_input_gate] + Gain);
+    float Gate = storage->db_to_linear(*pd_float[voc_input_gate] + Gain);
     vFloat GateLevel = vLoad1(Gate * Gate);
 
     const vFloat MaxLevel = vLoad1(6.f);
@@ -204,7 +228,7 @@ void VocoderEffect::process(float *dataL, float *dataR)
        a = min(4.f, get_squaremax(modulator_tbuf, BLOCK_SIZE_QUAD));
        mUnvoicedLevel = mUnvoicedLevel * (1.f - EnvFRate) + a * EnvFRate;
 
-       float Ratio = db_to_linear(*f[voc_unvoiced_threshold]);
+       float Ratio = db_to_linear(*pd_float[voc_unvoiced_threshold]);
 
        if (mUnvoicedLevel > (mVoicedLevel * Ratio))
          // mix carrier with noise

@@ -1,20 +1,31 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "SampleAndHoldOscillator.h"
 #include "DSPUtils.h"
+
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
 
@@ -242,7 +253,7 @@ void SampleAndHoldOscillator::convolute(int voice, bool FM, bool stereo)
     float rand11 = urng();
     float randt = rand11 * (1 - wfabs) - wf * last_level[voice];
 
-    randt = randt * rcp(1.0f - wfabs);
+    randt = randt * mech::rcp(1.0f - wfabs);
     randt = min(0.5f, max(-0.5f, randt));
 
     if (state[voice] == 0)
@@ -397,7 +408,7 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
             {
                 while (oscstate[l] < a)
                 {
-                    FMmul_inv = rcp(fmmul);
+                    FMmul_inv = mech::rcp(fmmul);
                     convolute(l, true, stereo);
                 }
 
@@ -454,10 +465,10 @@ void SampleAndHoldOscillator::process_block(float pitch0, float drift, bool ster
     }
     _mm_store_ss(&dc, mdc);
 
-    clear_block(&oscbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
+    mech::clear_block<BLOCK_SIZE_OS>(&oscbuffer[bufpos]);
     if (stereo)
-        clear_block(&oscbufferR[bufpos], BLOCK_SIZE_OS_QUAD);
-    clear_block(&dcbuffer[bufpos], BLOCK_SIZE_OS_QUAD);
+        mech::clear_block<BLOCK_SIZE_OS>(&oscbufferR[bufpos]);
+    mech::clear_block<BLOCK_SIZE_OS>(&dcbuffer[bufpos]);
 
     bufpos = (bufpos + BLOCK_SIZE_OS) & (OB_LENGTH - 1);
 

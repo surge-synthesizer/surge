@@ -1,27 +1,42 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "SurgeVoice.h"
 #include "DSPUtils.h"
 #include "QuadFilterChain.h"
+#include "globals.h"
 #include <cmath>
 #ifndef SURGE_SKIP_ODDSOUND_MTS
 #include "libMTSClient.h"
 #endif
 
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/dsp/Clippers.h"
+#include "sst/basic-blocks/dsp/CorrelatedNoise.h"
+#include "CXOR.h"
+
 using namespace std;
+namespace mech = sst::basic_blocks::mechanics;
+namespace sdsp = sst::basic_blocks::dsp;
 
 enum lag_entries
 {
@@ -488,7 +503,13 @@ void SurgeVoice::switch_toggled()
                                oscbuffer[i]);
             if (osc[i])
             {
-                osc[i]->init(state.pitch, false, nzid);
+                // this matches the override in ::process_block
+                float ktrkroot = 60;
+                auto usep = noteShiftFromPitchParam(
+                    (scene->osc[i].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
+                        octaveSize * scene->osc[i].octave.val.i,
+                    0);
+                osc[i]->init(usep, false, nzid);
             }
             osctype[i] = scene->osc[i].type.val.i;
         }
@@ -602,20 +623,25 @@ void SurgeVoice::update_portamento()
     int quantStep = 12;
 
     if (!storage->isStandardTuning && storage->currentScale.count > 1)
+    {
         quantStep = storage->currentScale.count;
+    }
 
-    // portamento constant rate mode (multiply portamento time with every octave traversed (or scale
-    // length in case of microtuning)
+    // portamento constant rate mode (multiply portamento time with every octave traversed
+    // (or scale length in case of microtuning)
     if (scene->portamento.porta_constrate)
+    {
         const_rate_factor =
             (1.f /
              ((1.f / quantStep) * fabs(state.getPitch(storage) - state.portasrc_key) + 0.00001));
+    }
 
     state.portaphase +=
         storage->envelope_rate_linear(localcopy[scene->portamento.param_id_in_scene].f) *
         (scene->portamento.temposync ? storage->temposyncratio : 1.f) * const_rate_factor;
 
-    if (state.portaphase < 1)
+    if ((state.portaphase < 1) &&
+        (localcopy[scene->portamento.param_id_in_scene].f > scene->portamento.val_min.f))
     {
         // exponential or linear key traversal for the portamento
         float phase;
@@ -634,15 +660,23 @@ void SurgeVoice::update_portamento()
 
         state.pkey = (1.f - phase) * state.portasrc_key + (float)phase * state.getPitch(storage);
 
-        if (scene->portamento.porta_gliss) // quantize portamento to keys
+        // quantize portamento to keys
+        if (scene->portamento.porta_gliss)
+        {
             state.pkey = floor(state.pkey + 0.5);
+        }
 
         state.porta_doretrigger = false;
+
         if (scene->portamento.porta_retrigger)
+        {
             retriggerPortaIfKeyChanged();
+        }
     }
     else
+    {
         state.pkey = state.getPitch(storage);
+    }
 
     state.pkey += noteExpressions[PITCH];
 }
@@ -830,6 +864,104 @@ void SurgeVoice::sampleRateReset()
         cm.setSampleRateAndBlockSize((float)storage->dsamplerate_os, BLOCK_SIZE_OS);
 }
 
+inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src2_l,
+                                 float *__restrict src1_r, float *__restrict src2_r,
+                                 float *__restrict dst_l, float *__restrict dst_r, bool is_wide,
+                                 int mode, lipol_ps osclevels, unsigned int nquads)
+{
+    if (is_wide)
+    {
+        switch (mode)
+        {
+        case RingModMode::rmm_ring:
+            mech::mul_block<BLOCK_SIZE_OS>(src1_l, src2_l, dst_l);
+            mech::mul_block<BLOCK_SIZE_OS>(src1_r, src2_r, dst_r);
+            break;
+        case RingModMode::rmm_cxor43_0:
+            cxor43_0_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_0_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor43_1:
+            cxor43_1_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_1_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor43_2:
+            cxor43_2_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_2_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor43_3:
+            cxor43_3_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_3_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor43_4:
+            cxor43_4_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_4_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_0:
+            cxor93_0_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_0_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_1:
+            cxor93_1_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_1_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_2:
+            cxor93_2_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_2_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_3:
+            cxor93_3_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_3_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case RingModMode::rmm_cxor93_4:
+            cxor93_4_block(src1_l, src2_l, dst_l, nquads);
+            cxor93_4_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        }
+        osclevels.multiply_2_blocks(dst_l, dst_r, nquads);
+    }
+    else
+    {
+        switch (mode)
+        {
+        case RingModMode::rmm_ring:
+            mech::mul_block<BLOCK_SIZE_OS>(src1_l, src2_l, dst_l);
+            break;
+        case RingModMode::rmm_cxor43_0:
+            cxor43_0_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor43_1:
+            cxor43_1_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor43_2:
+            cxor43_2_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor43_3:
+            cxor43_3_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor43_4:
+            cxor43_4_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_0:
+            cxor93_0_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_1:
+            cxor93_1_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_2:
+            cxor93_2_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_3:
+            cxor93_3_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case RingModMode::rmm_cxor93_4:
+            cxor93_4_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        }
+        osclevels.multiply_block(dst_l, nquads);
+    }
+}
+
 bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 {
     calc_ctrldata<0>(&Q, Qe);
@@ -839,12 +971,13 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     float *tblockR = is_wide ? tblock2 : tblock;
 
     // float ktrkroot = (float)scene->keytrack_root.val.i;
+    // this mysterious override is duplicated in the ->init calls
     float ktrkroot = 60;
     float drift = localcopy[scene->drift.param_id_in_scene].f;
 
     // clear output
-    clear_block(output[0], BLOCK_SIZE_OS_QUAD);
-    clear_block(output[1], BLOCK_SIZE_OS_QUAD);
+    mech::clear_block<BLOCK_SIZE_OS>(output[0]);
+    mech::clear_block<BLOCK_SIZE_OS>(output[1]);
 
     for (int i = 0; i < n_oscs; ++i)
     {
@@ -878,11 +1011,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
             if (route[2] < 2)
             {
-                accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
             }
             if (route[2] > 0)
             {
-                accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
             }
         }
     }
@@ -923,11 +1056,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
             if (route[1] < 2)
             {
-                accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
             }
             if (route[1] > 0)
             {
-                accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
             }
         }
     }
@@ -936,7 +1069,7 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
     {
         if (FMmode == fm_2and3to1)
         {
-            add_block(osc[1]->output, osc[2]->output, fmbuffer, BLOCK_SIZE_OS_QUAD);
+            mech::add_block<BLOCK_SIZE_OS>(osc[1]->output, osc[2]->output, fmbuffer);
             osc[0]->process_block(
                 noteShiftFromPitchParam(
                     (scene->osc[0].keytrack.val.b ? state.pitch : ktrkroot + state.scenepbpitch) +
@@ -979,60 +1112,44 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
             if (route[0] < 2)
             {
-                accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
             }
             if (route[0] > 0)
             {
-                accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+                mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
             }
         }
     }
 
     if (ring12)
     {
-        if (is_wide)
-        {
-            mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            mul_block(osc[0]->outputR, osc[1]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
-            osclevels[le_ring12].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
-        }
-        else
-        {
-            mul_block(osc[0]->output, osc[1]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            osclevels[le_ring12].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
-        }
+        all_ring_modes_block(osc[0]->output, osc[1]->output, osc[0]->outputR, osc[1]->outputR,
+                             tblock, tblockR, is_wide, scene->level_ring_12.deform_type,
+                             osclevels[le_ring12], BLOCK_SIZE_OS_QUAD);
 
         if (route[3] < 2)
         {
-            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
         }
         if (route[3] > 0)
         {
-            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
         }
     }
 
     if (ring23)
     {
-        if (is_wide)
-        {
-            mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            mul_block(osc[1]->outputR, osc[2]->outputR, tblockR, BLOCK_SIZE_OS_QUAD);
-            osclevels[le_ring23].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
-        }
-        else
-        {
-            mul_block(osc[1]->output, osc[2]->output, tblock, BLOCK_SIZE_OS_QUAD);
-            osclevels[le_ring23].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
-        }
+        all_ring_modes_block(osc[1]->output, osc[2]->output, osc[1]->outputR, osc[2]->outputR,
+                             tblock, tblockR, is_wide, scene->level_ring_23.deform_type,
+                             osclevels[le_ring23], BLOCK_SIZE_OS_QUAD);
 
         if (route[4] < 2)
         {
-            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
         }
         if (route[4] > 0)
         {
-            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
         }
     }
 
@@ -1042,15 +1159,15 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
         auto is_stereo_noise = scene->noise_colour.deform_type == NoiseColorChannels::STEREO;
         for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
         {
-            ((float *)tblock)[i] =
-                correlated_noise_o2mk2_storagerng(noisegenL[0], noisegenL[1], noisecol, storage);
+            ((float *)tblock)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
+                noisegenL[0], noisegenL[1], noisecol, storage->rand_pm1());
             ((float *)tblock)[i + 1] = ((float *)tblock)[i];
             if (is_wide)
             {
                 if (is_stereo_noise)
                 {
-                    ((float *)tblockR)[i] = correlated_noise_o2mk2_storagerng(
-                        noisegenR[0], noisegenR[1], noisecol, storage);
+                    ((float *)tblockR)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
+                        noisegenR[0], noisegenR[1], noisecol, storage->rand_pm1());
                     ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
                 }
                 else
@@ -1072,11 +1189,11 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
         if (route[5] < 2)
         {
-            accumulate_block(tblock, output[0], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblock, output[0]);
         }
         if (route[5] > 0)
         {
-            accumulate_block(tblockR, output[1], BLOCK_SIZE_OS_QUAD);
+            mech::accumulate_from_to<BLOCK_SIZE_OS>(tblockR, output[1]);
         }
     }
 
@@ -1519,17 +1636,25 @@ void SurgeVoice::retriggerOSCWithIndependentAttacks()
     {
         if (osc[i])
         {
+            // This matches the override in ::process_block
+            float ktrkroot = 60;
+            auto usep = noteShiftFromPitchParam((scene->osc[i].keytrack.val.b
+                                                     ? state.getPitch(storage)
+                                                     : ktrkroot + state.scenepbpitch) +
+                                                    octaveSize * scene->osc[i].octave.val.i,
+                                                0);
+
             /*
              * This is awfully special case but it's the best solution
              */
             if (scene->osc[i].type.val.i == ot_string)
             {
-                osc[i]->init(state.getPitch(storage));
+                osc[i]->init(usep);
             }
             if (scene->osc[i].type.val.i == ot_twist &&
                 !scene->osc[i].p[n_osc_params - 2].deactivated)
             {
-                osc[i]->init(state.getPitch(storage));
+                osc[i]->init(usep);
             }
         }
     }

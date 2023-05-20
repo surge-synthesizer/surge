@@ -1,19 +1,27 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
-#pragma once
+#ifndef SURGE_SRC_COMMON_SURGESYNTHESIZER_H
+#define SURGE_SRC_COMMON_SURGESYNTHESIZER_H
 #include "SurgeStorage.h"
 #include "SurgeVoice.h"
 #include "Effect.h"
@@ -27,6 +35,7 @@ struct QuadFilterChainState;
 #include <utility>
 #include <atomic>
 #include <cstdio>
+#include <bitset>
 
 struct timedata
 {
@@ -75,6 +84,7 @@ class alignas(16) SurgeSynthesizer
     void chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid = -1);
     void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity,
                                   int32_t host_noteid = -1);
+    void resetPitchBend(int8_t channel);
     void pitchBend(char channel, int value);
     void polyAftertouch(char channel, int key, int value);
     void channelAftertouch(char channel, int value);
@@ -167,7 +177,7 @@ class alignas(16) SurgeSynthesizer
     /*
      * So when surge was pre-juce we contemplated writing our own ID remapping between
      * internal indices and DAW IDs so put an indirectin and class in place. JUCE obviates
-     * the need for that by using hash of stremaing name as an ID consistently throuhg its
+     * the need for that by using hash of stremaing name as an ID consistently through its
      * param mechanism. I could, in theory, have gone right back to int as my accessor class
      * but there's something compelilng about keeping that indirection I plumbed in just in case
      * i need it in the future. So the ID class is now just a simple wrapper on an int which is
@@ -413,6 +423,7 @@ class alignas(16) SurgeSynthesizer
     int mpeVoices = 0;
     int mpeGlobalPitchBendRange = 0;
 
+    std::bitset<128> disallowedLearnCCs{0};
     std::array<uint64_t, 128> midiKeyPressedForScene[n_scenes];
     uint64_t orderedMidiKey = 0;
     std::atomic<uint64_t> midiNoteEvents{0};
@@ -456,8 +467,6 @@ class alignas(16) SurgeSynthesizer
     std::list<HoldBufferItem> holdbuffer[n_scenes];
     void purgeHoldbuffer(int scene);
     void purgeDuplicateHeldVoicesInPolyMode(int scehe, int channel, int key);
-    quadr_osc sinus;
-    int demo_counter = 0;
 
     QuadFilterChainState *FBQ[n_scenes];
 
@@ -497,3 +506,4 @@ template <> struct hash<SurgeSynthesizer::ID>
 };
 
 } // namespace std
+#endif // SURGE_SRC_COMMON_SURGESYNTHESIZER_H

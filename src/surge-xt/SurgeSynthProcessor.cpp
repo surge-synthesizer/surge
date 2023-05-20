@@ -1,19 +1,39 @@
 /*
-  ==============================================================================
-
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "SurgeSynthEditor.h"
 #include "SurgeSynthProcessor.h"
 #include "DebugHelpers.h"
-#include "plugin_type_extensions/SurgeSynthFlavorExtensions.h"
 #include "version.h"
 #include "sst/plugininfra/cpufeatures.h"
+#include "globals.h"
+#include "UserDefaults.h"
+#include "fmt/core.h"
+
+#if LINUX
+// getCurrentPosition is deprecated in J7
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 /*
  * This is a bit odd but - this is an editor concept with the lifetime of the processor
@@ -115,10 +135,33 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     midiKeyboardState.addListener(this);
 
-    SurgeSynthProcessorSpecificExtensions(this, surge.get());
+#if SURGE_HAS_OSC
+    // OSC (Open Sound Control)
+    bool startOSCNow =
+        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSC, false);
+    if (startOSCNow)
+    {
+        int defaultOSCPort = Surge::Storage::getUserDefaultValue(
+            &(surge->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
+        bool success = initOSC(defaultOSCPort);
+        if (!success)
+        {
+            std::ostringstream msg;
+            msg << "Surge XT was unable to connect to port " << defaultOSCPort << ".\n"
+                << "It may be in use by another application.";
+            surge->storage.reportError(msg.str(), "OSC Initialization Error");
+        }
+    }
+#endif
 }
 
-SurgeSynthProcessor::~SurgeSynthProcessor() {}
+SurgeSynthProcessor::~SurgeSynthProcessor()
+{
+#if SURGE_HAS_OSC
+    if (oscListener.listening)
+        oscListener.stopListening();
+#endif
+}
 
 //==============================================================================
 const juce::String SurgeSynthProcessor::getName() const { return JucePlugin_Name; }
@@ -182,6 +225,27 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
 
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
 
+/* OSC (Open Sound Control) */
+bool SurgeSynthProcessor::initOSC(int port)
+{
+    auto state = oscListener.init(this, surge, port);
+
+    surge->storage.oscListenerRunning = state;
+
+    return state;
+}
+
+bool SurgeSynthProcessor::changeOSCPort(int new_port)
+{
+    if (oscListener.listening)
+    {
+        surge->storage.oscListenerRunning = false;
+        oscListener.disconnect();
+    }
+
+    return initOSC(new_port);
+}
+
 //==============================================================================
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
@@ -230,10 +294,9 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         if (!warnedAboutBadConfig)
         {
             std::ostringstream msg;
-            msg << "SurgeXT was not configured with a stereo output. \n"
-                << "SurgeXT requires at least a main stereo output but the \n"
-                << "main bus has " << mb->getNumberOfChannels() << " channels "
-                << "and enablement state " << (mb->isEnabled() ? "True" : "False");
+            msg << "Surge XT was not configured to have stereo output, which is required.\n"
+                << "The main output bus has " << mb->getNumberOfChannels() << " channels\n"
+                << "and is " << (mb->isEnabled() ? "enabled" : "disabled") << ".";
             surge->storage.reportError(msg.str(), "Bus Configuration Error");
             warnedAboutBadConfig = true;
         }
@@ -245,11 +308,10 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         if (!warnedAboutBadConfig)
         {
             std::ostringstream msg;
-            msg << "SurgeXT did not receive a stereo processing buffer. \n"
-                << "SurgeXT requires at least a main stereo output but the \n"
-                << "provided buffer has " << buffer.getNumChannels() << " channels\n"
-                << "and is enabled. This seems to happen with bluetooth headsets\n"
-                << "in JUCE on macOS when you use the headset as an input and output.";
+            msg << "Surge XT did not receive a stereo processing buffer, which is required.\n"
+                << "The provided buffer has " << buffer.getNumChannels() << " channels.\n"
+                << "This can happen with certain Bluetooth headsets on macOS,\n"
+                << "when they are used as both an input and an output.";
             surge->storage.reportError(msg.str(), "Bus Configuration Error");
             warnedAboutBadConfig = true;
         }
@@ -286,7 +348,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     processBlockPlayhead();
     processBlockMidiFromGUI();
-
+    processBlockOSC();
     auto mainOutput = getBusBuffer(buffer, false, 0);
     auto mainInput = getBusBuffer(buffer, true, 0);
     auto sceneAOutput = getBusBuffer(buffer, false, 1);
@@ -315,10 +377,13 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     if (!inputIsLatent && (sc & ~(BLOCK_SIZE - 1)) != sc)
     {
         surge->storage.reportError(
-            "Audio Block is not a multiple of BLOCK_SIZE. This means if you use Audio Input"
-            " it will be delayed by BLOCK_SIZE. You can usually avoid this by having your DAW have"
-            " regular sized buffers.",
-            "Activating Latent Input", SurgeStorage::AUDIO_CONFIGURATION);
+            fmt::format("Incoming audio input block is not a multiple of {sz} samples.\n"
+                        "If audio input is used, it will be delayed by {sz} samples, in order to "
+                        "compensate.\n"
+                        "This can be avoided by setting the DAW to use fixed buffer sizes, if "
+                        "possible.",
+                        fmt::arg("sz", BLOCK_SIZE)),
+            "Audio Input Latency Activated", SurgeStorage::AUDIO_INPUT_LATENCY_WARNING, false);
         inputIsLatent = true;
     }
 
@@ -425,7 +490,7 @@ void SurgeSynthProcessor::processBlockPlayhead()
 {
     auto playhead = getPlayHead();
 
-    if (playhead)
+    if (playhead && !(wrapperType == wrapperType_Standalone))
     {
         juce::AudioPlayHead::CurrentPositionInfo cp;
         playhead->getCurrentPosition(cp);
@@ -474,6 +539,22 @@ void SurgeSynthProcessor::processBlockMidiFromGUI()
         if (rec.type == midiR::SUSPEDAL)
         {
             surge->channelController(rec.ch, 64, rec.cval);
+        }
+    }
+}
+
+void SurgeSynthProcessor::processBlockOSC()
+{
+    auto messages = oscRingBuf.popall();
+    for (const auto &om : messages)
+    {
+        float pval = om.val;
+        if (om.type == oscMsg::PARAMETER)
+        {
+            if (om.param->valtype == vt_int)
+                pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
+            surge->setParameter01(surge->idForParameter(om.param), pval, true);
+            surge->storage.getPatch().isDirty = true;
         }
     }
 }
@@ -968,6 +1049,93 @@ juce::AudioProcessorParameter *SurgeSynthProcessor::getBypassParameter() const
 
 void SurgeSynthProcessor::reset() { blockPos = 0; }
 
+#if HAS_CLAP_JUCE_EXTENSIONS
+
+uint32_t SurgeSynthProcessor::remoteControlsPageCount() noexcept
+{
+    return 5; // macros + scene a and b mixer and filters
+}
+
+bool SurgeSynthProcessor::remoteControlsPageFill(
+    uint32_t pageIndex, juce::String &sectionName, uint32_t &pageID, juce::String &pageName,
+    std::array<juce::AudioProcessorParameter *, CLAP_REMOTE_CONTROLS_COUNT> &params) noexcept
+{
+    if (pageIndex < 0 || pageIndex >= remoteControlsPageCount())
+        return false;
+
+    pageID = pageIndex + 2054;
+    for (auto &p : params)
+        p = nullptr;
+    switch (pageIndex)
+    {
+    case 0:
+    {
+        sectionName = "Global";
+        pageName = "Macros";
+        for (int i = 0; i < CLAP_REMOTE_CONTROLS_COUNT && i < macrosById.size(); ++i)
+            params[i] = macrosById[i];
+    }
+    break;
+    case 1:
+    case 3:
+    {
+        int scene = 0;
+        sectionName = "Scene A";
+        pageName = "Scene A Mixer";
+        if (pageIndex == 3)
+        {
+            sectionName = "Scene B";
+            pageName = "Scene B Mixer";
+            scene = 1;
+        }
+        auto &sc = surge->storage.getPatch().scene[scene];
+        params[0] = paramsByID[surge->idForParameter(&sc.level_o1)];
+        params[1] = paramsByID[surge->idForParameter(&sc.level_o2)];
+        params[2] = paramsByID[surge->idForParameter(&sc.level_o3)];
+        params[3] = nullptr;
+        params[4] = paramsByID[surge->idForParameter(&sc.level_noise)];
+        params[5] = paramsByID[surge->idForParameter(&sc.level_ring_12)];
+        params[6] = paramsByID[surge->idForParameter(&sc.level_ring_23)];
+        params[7] = paramsByID[surge->idForParameter(&sc.level_pfg)];
+    }
+    break;
+    case 2:
+    case 4:
+    {
+        int scene = 0;
+        sectionName = "Scene A";
+        pageName = "Scene A Filters";
+        if (pageIndex == 4)
+        {
+            scene = 1;
+            sectionName = "Scene B";
+            pageName = "Scene B Filters";
+        }
+        auto &sc = surge->storage.getPatch().scene[scene];
+        params[0] = paramsByID[surge->idForParameter(&sc.filterunit[0].cutoff)];
+        params[1] = paramsByID[surge->idForParameter(&sc.filterunit[0].resonance)];
+        params[2] = paramsByID[surge->idForParameter(&sc.filterunit[1].cutoff)];
+        params[3] = paramsByID[surge->idForParameter(&sc.filterunit[1].resonance)];
+        params[4] = paramsByID[surge->idForParameter(&sc.wsunit.drive)];
+        params[5] = nullptr;
+        params[6] = paramsByID[surge->idForParameter(&sc.filter_balance)];
+        params[7] = paramsByID[surge->idForParameter(&sc.feedback)];
+    }
+    break;
+    }
+    return true;
+}
+#endif
+
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgeSynthProcessor(); }
+
+#if 0
+void *JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *)
+{
+    // ToDo: Implement preset discovery here
+    // See #6930
+    return nullptr;
+}
+#endif

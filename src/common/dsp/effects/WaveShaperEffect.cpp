@@ -1,21 +1,32 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2021 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "WaveShaperEffect.h"
 #include "DebugHelpers.h"
-#include "FastMath.h"
+#include "sst/basic-blocks/dsp/FastMath.h"
+
+#include "sst/basic-blocks/mechanics/block-ops.h"
+#include "sst/basic-blocks/mechanics/simd-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 // http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
 
@@ -43,23 +54,23 @@ void WaveShaperEffect::setvars(bool init)
         lpPost.suspend();
         hpPost.suspend();
 
-        hpPre.coeff_HP(hpPre.calc_omega(*f[ws_prelowcut] / 12.0), 0.707);
+        hpPre.coeff_HP(hpPre.calc_omega(*pd_float[ws_prelowcut] / 12.0), 0.707);
         hpPre.coeff_instantize();
 
-        lpPre.coeff_LP2B(lpPre.calc_omega(*f[ws_prehighcut] / 12.0), 0.707);
+        lpPre.coeff_LP2B(lpPre.calc_omega(*pd_float[ws_prehighcut] / 12.0), 0.707);
         lpPre.coeff_instantize();
 
-        hpPost.coeff_HP(hpPre.calc_omega(*f[ws_postlowcut] / 12.0), 0.707);
+        hpPost.coeff_HP(hpPre.calc_omega(*pd_float[ws_postlowcut] / 12.0), 0.707);
         hpPost.coeff_instantize();
 
-        lpPost.coeff_LP2B(lpPost.calc_omega(*f[ws_posthighcut] / 12.0), 0.707);
+        lpPost.coeff_LP2B(lpPost.calc_omega(*pd_float[ws_posthighcut] / 12.0), 0.707);
         lpPost.coeff_instantize();
 
         mix.instantize();
         boost.instantize();
 
-        drive.newValue(db_to_amp(*f[ws_drive]));
-        bias.newValue(clamp1bp(*f[ws_bias]));
+        drive.newValue(db_to_amp(*pd_float[ws_drive]));
+        bias.newValue(clamp1bp(*pd_float[ws_bias]));
 
         bias.instantize();
         drive.instantize();
@@ -70,8 +81,8 @@ void WaveShaperEffect::setvars(bool init)
 
 void WaveShaperEffect::process(float *dataL, float *dataR)
 {
-    mix.set_target_smoothed(clamp01(*f[ws_mix]));
-    boost.set_target_smoothed(db_to_amp(*f[ws_postboost]));
+    mix.set_target_smoothed(clamp01(*pd_float[ws_mix]));
+    boost.set_target_smoothed(db_to_amp(*pd_float[ws_postboost]));
 
     /*
      * OK so what's all this? Well the network of halfbands and so on
@@ -89,18 +100,18 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
      */
     const auto scalef = 3.f, oscalef = 1.f / 3.f, hbfComp = 2.f;
 
-    auto x = scalef * *f[ws_drive];
+    auto x = scalef * *pd_float[ws_drive];
     auto dnv = limit_range(powf(2.f, x / 18.f), 0.f, 8.f);
     drive.newValue(dnv);
-    bias.newValue(clamp1bp(*f[ws_bias]));
+    bias.newValue(clamp1bp(*pd_float[ws_bias]));
 
     float wetL alignas(16)[BLOCK_SIZE], wetR alignas(16)[BLOCK_SIZE];
-    copy_block(dataL, wetL, BLOCK_SIZE_QUAD);
-    copy_block(dataR, wetR, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, wetL);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, wetR);
 
     // Apply the filters
-    hpPre.coeff_HP(hpPre.calc_omega(*f[ws_prelowcut] / 12.0), 0.707);
-    lpPre.coeff_LP2B(lpPre.calc_omega(*f[ws_prehighcut] / 12.0), 0.707);
+    hpPre.coeff_HP(hpPre.calc_omega(*pd_float[ws_prelowcut] / 12.0), 0.707);
+    lpPre.coeff_LP2B(lpPre.calc_omega(*pd_float[ws_prehighcut] / 12.0), 0.707);
 
     if (!fxdata->p[ws_prehighcut].deactivated)
     {
@@ -112,7 +123,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
         hpPre.process_block(wetL, wetR);
     }
 
-    const auto newShape = static_cast<sst::waveshapers::WaveshaperType>(*pdata_ival[ws_shaper]);
+    const auto newShape = static_cast<sst::waveshapers::WaveshaperType>(*pd_int[ws_shaper]);
     if (newShape != lastShape)
     {
         lastShape = newShape;
@@ -162,12 +173,12 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
 
     halfbandOUT.process_block_D2(dataOS[0], dataOS[1], BLOCK_SIZE_OS);
 
-    copy_block(dataOS[0], wetL, BLOCK_SIZE_QUAD);
-    copy_block(dataOS[1], wetR, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[0], wetL);
+    mech::copy_from_to<BLOCK_SIZE>(dataOS[1], wetR);
 
     // Apply the filters
-    hpPost.coeff_HP(hpPre.calc_omega(*f[ws_postlowcut] / 12.0), 0.707);
-    lpPost.coeff_LP2B(lpPre.calc_omega(*f[ws_posthighcut] / 12.0), 0.707);
+    hpPost.coeff_HP(hpPre.calc_omega(*pd_float[ws_postlowcut] / 12.0), 0.707);
+    lpPost.coeff_LP2B(lpPre.calc_omega(*pd_float[ws_posthighcut] / 12.0), 0.707);
 
     if (!fxdata->p[ws_posthighcut].deactivated)
     {

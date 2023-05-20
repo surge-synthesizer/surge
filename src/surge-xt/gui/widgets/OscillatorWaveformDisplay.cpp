@@ -1,16 +1,23 @@
 /*
- ** Surge Synthesizer is Free and Open Source Software
- **
- ** Surge is made available under the Gnu General Public License, v3.0
- ** https://www.gnu.org/licenses/gpl-3.0.en.html
- **
- ** Copyright 2004-2021 by various individuals as described by the Git transaction log
- **
- ** All source at: https://github.com/surge-synthesizer/surge.git
- **
- ** Surge was a commercial product from 2004-2018, with Copyright and ownership
- ** in that period held by Claes Johanson at Vember Audio. Claes made Surge
- ** open source in September 2018.
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
  */
 
 #include "OscillatorWaveformDisplay.h"
@@ -20,6 +27,7 @@
 #include "RuntimeFont.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
+#include "StringOscillator.h"
 #include "AliasOscillator.h"
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
@@ -375,6 +383,26 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
     if (supportsCustomEditor())
     {
         drawEditorBox(g, customEditorActionLabel(customEditor == nullptr));
+    }
+
+    // Display the latency message in audio input.
+    if (sge && sge->audioLatencyNotified)
+    {
+        auto osctype = oscdata->type.val.i;
+
+        if (osctype == ot_audioinput ||
+            (osctype == ot_string && oscdata->p[StringOscillator::str_exciter_mode].val.i ==
+                                         StringOscillator::constant_audioin) ||
+            (osctype == ot_alias &&
+             oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_audiobuffer))
+        {
+            auto lmsg = fmt::format("Input Delay: {} samples", BLOCK_SIZE);
+
+            g.setColour(skin->getColor(Colors::Osc::Display::Wave));
+            g.setFont(skin->fontManager->getLatoAtSize(7));
+            g.drawText(lmsg.c_str(), getLocalBounds().reduced(2, 2).translated(0, 10),
+                       juce::Justification::topLeft);
+        }
     }
 }
 
@@ -1216,13 +1244,9 @@ bool OscillatorWaveformDisplay::isCustomEditAccessible() const
 
 bool OscillatorWaveformDisplay::supportsCustomEditor()
 {
-    if (oscdata->type.val.i == ot_alias &&
-        oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
-    {
-        return true;
-    }
-
-    if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
+    if ((oscdata->type.val.i == ot_alias &&
+         oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive) ||
+        uses_wavetabledata(oscdata->type.val.i))
     {
         return true;
     }
@@ -1257,18 +1281,16 @@ struct WaveTable3DEditor : public juce::Component,
         auto wtlockguard = std::lock_guard<std::mutex>(parent->storage->waveTableDataMutex);
         auto &wt = oscdata->wt;
         auto pos = -1.f;
-
         bool off = false;
-        switch (oscdata->type.val.i)
+
+        if (uses_wavetabledata(oscdata->type.val.i))
         {
-        case ot_wavetable:
-        case ot_window:
             pos = oscdata->p[0].val.f;
             off = oscdata->p[0].extend_range;
-            break;
-        default:
+        }
+        else
+        {
             pos = 0.f;
-            break;
         };
 
         auto tpos = pos * (wt.n_tables - off);
@@ -1898,7 +1920,7 @@ void OscillatorWaveformDisplay::showCustomEditor()
         customEditor = std::move(ed);
     }
 
-    if (oscdata->type.val.i == ot_wavetable || oscdata->type.val.i == ot_window)
+    if (uses_wavetabledata(oscdata->type.val.i))
     {
         auto ed = std::make_unique<WaveTable3DEditor>(this, storage, oscdata, sge);
         ed->setSkin(skin, associatedBitmapStore);
@@ -1967,7 +1989,7 @@ void OscillatorWaveformDisplay::drawEditorBox(juce::Graphics &g, const std::stri
     int fontsize = 9;
     bool makeTransparent = false;
 
-    if (oscdata->type.val.i == ot_window || oscdata->type.val.i == ot_wavetable)
+    if (uses_wavetabledata(oscdata->type.val.i))
     {
         auto wtr = getLocalBounds().withTrimmedBottom(wtbheight).toFloat();
 

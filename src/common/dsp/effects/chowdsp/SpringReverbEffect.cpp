@@ -1,19 +1,29 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "SpringReverbEffect.h"
+
+#include "sst/basic-blocks/mechanics/block-ops.h"
+namespace mech = sst::basic_blocks::mechanics;
 
 namespace chowdsp
 {
@@ -34,22 +44,22 @@ void SpringReverbEffect::process(float *dataL, float *dataR)
 {
     proc.setParams(
         {
-            clamp01(*f[spring_reverb_size]),
-            clamp01(*f[spring_reverb_decay]),
-            clamp01(*f[spring_reverb_reflections]),
-            clamp01(*f[spring_reverb_spin]),
-            clamp01(*f[spring_reverb_damping]),
-            clamp01(*f[spring_reverb_chaos]),
-            *f[spring_reverb_knock] > 0.5f,
+            clamp01(*pd_float[spring_reverb_size]),
+            clamp01(*pd_float[spring_reverb_decay]),
+            clamp01(*pd_float[spring_reverb_reflections]),
+            clamp01(*pd_float[spring_reverb_spin]),
+            clamp01(*pd_float[spring_reverb_damping]),
+            clamp01(*pd_float[spring_reverb_chaos]),
+            *pd_float[spring_reverb_knock] > 0.5f,
         },
         BLOCK_SIZE);
 
-    copy_block(dataL, L, BLOCK_SIZE_QUAD);
-    copy_block(dataR, R, BLOCK_SIZE_QUAD);
+    mech::copy_from_to<BLOCK_SIZE>(dataL, L);
+    mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
     proc.processBlock(L, R, BLOCK_SIZE);
 
-    mix.set_target_smoothed(clamp01(*f[spring_reverb_mix]));
+    mix.set_target_smoothed(clamp01(*pd_float[spring_reverb_mix]));
     mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
 }
 

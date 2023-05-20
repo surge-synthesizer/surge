@@ -1,19 +1,27 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
-#pragma once
+#ifndef SURGE_SRC_SURGE_XT_GUI_SURGEGUIEDITOR_H
+#define SURGE_SRC_SURGE_XT_GUI_SURGEGUIEDITOR_H
 
 #include "globals.h"
 
@@ -121,6 +129,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::mutex errorItemsMutex;
     void onSurgeError(const std::string &msg, const std::string &title,
                       const SurgeStorage::ErrorType &type) override;
+
+    std::atomic<bool> audioLatencyNotified{false};
 
     static int start_paramtag_value;
 
@@ -254,6 +264,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int lastTSNum = 0, lastTSDen = 0;
     int lastOverlayRefresh = 0;
     void adjustSize(float &width, float &height) const;
+    void initOSCError(int port);
 
     struct patchdata
     {
@@ -301,14 +312,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void enqueueFXChainClear(int fxchain);
     void swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m);
 
-    // clang-format off
-    static int constexpr fxslot_order[n_fx_slots] = 
-        {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
-         fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
-         fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
-         fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4};
-    // clang-format on
-
     /*
     ** Callbacks from the Status Panel. If this gets to be too many perhaps make these an interface?
     */
@@ -347,6 +350,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
     std::string midiMappingToHtml();
+    std::string parametersToHtml();
 
     std::string patchToHtml(bool includeDefaults = false);
 
@@ -801,6 +805,12 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     juce::PopupMenu makeLfoMenu(const juce::Point<int> &rect);
     juce::PopupMenu makeMonoModeOptionsMenu(const juce::Point<int> &rect, bool updateDefaults);
 
+#if SURGE_HAS_OSC
+    juce::PopupMenu makeOSCMenu(const juce::Point<int> &where);
+#endif
+
+    void makeScopeEntry(juce::PopupMenu &menu);
+
     void setRecommendedAccessibility();
 
   public:
@@ -1017,3 +1027,5 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                                            "Control 126 Mono Mode Off",
                                            "Control 127 Mono Mode On"};
 };
+
+#endif // SURGE_SRC_SURGE_XT_GUI_SURGEGUIEDITOR_H

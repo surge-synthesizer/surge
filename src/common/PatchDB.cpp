@@ -1,27 +1,39 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "PatchDB.h"
 
-#include "sqlite3.h"
-#include "SurgeStorage.h"
 #include <sstream>
 #include <iterator>
-#include "vt_dsp_endian.h"
-#include "DebugHelpers.h"
 #include <chrono>
+#include <functional>
+
+#include "sqlite3.h"
+#include "SurgeStorage.h"
+#include "DebugHelpers.h"
+
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+
+namespace mech = sst::basic_blocks::mechanics;
 
 #define TRACE_DB 0
 
@@ -90,7 +102,7 @@ struct Statement
     {
         auto rc = sqlite3_prepare_v2(h, statement.c_str(), -1, &s, nullptr);
         if (rc != SQLITE_OK)
-            throw Exception(h);
+            throw Exception(rc, "Unable to prepare statement [" + statement + "]");
         prepared = true;
     }
     ~Statement()
@@ -302,6 +314,17 @@ CREATE TABLE IF NOT EXISTS Favorites (
         std::string msg;
         EnQDebugMsg(const std::string &msg) : msg(msg) {}
         void go(WriterWorker &w) override { w.addDebug(msg); }
+    };
+
+    struct EnQLambda : public EnQAble
+    {
+        std::function<void()> op{nullptr};
+        EnQLambda(std::function<void()> iop) : op(iop) {}
+        void go(WriterWorker &w) override
+        {
+            if (op)
+                op();
+        }
     };
 
     struct EnQFavorite : public EnQAble
@@ -848,15 +871,16 @@ CREATE TABLE IF NOT EXISTS Favorites (
 
         uint8_t *d = contents.data();
         auto *fxp = (fxChunkSetCustom *)d;
-        if ((vt_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
-            (vt_read_int32BE(fxp->fxMagic) != 'FPCh') || (vt_read_int32BE(fxp->fxID) != 'cjs3'))
+        if ((mech::endian_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
+            (mech::endian_read_int32BE(fxp->fxMagic) != 'FPCh') ||
+            (mech::endian_read_int32BE(fxp->fxID) != 'cjs3'))
         {
             return;
         }
 
         auto phd = d + sizeof(fxChunkSetCustom);
         auto *ph = (patch_header *)phd;
-        auto xmlSz = vt_read_int32LE(ph->xmlsize);
+        auto xmlSz = mech::endian_read_int32LE(ph->xmlsize);
 
         if (!memcpy(ph->tag, "sub3", 4) || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
         {
@@ -1149,6 +1173,11 @@ void PatchDB::addDebugMessage(const std::string &debug)
     worker->enqueueWorkItem(new WriterWorker::EnQDebugMsg(debug));
 }
 
+void PatchDB::doAfterCurrentQueueDrained(std::function<void()> op)
+{
+    worker->enqueueWorkItem(new WriterWorker::EnQLambda(op));
+}
+
 std::vector<std::pair<std::string, int>> PatchDB::readAllFeatures()
 {
 
@@ -1412,6 +1441,19 @@ int PatchDB::numberOfJobsOutstanding()
 {
     std::lock_guard<std::mutex> guard(worker->qLock);
     return worker->pathQ.size();
+}
+
+int PatchDB::waitForJobsOutstandingComplete(int maxWaitInMS)
+{
+    int maxIts = maxWaitInMS / 10;
+    int njo = 0;
+    while ((njo = numberOfJobsOutstanding()) > 0 && maxIts > 0)
+    {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(10ms);
+        maxIts--;
+    }
+    return numberOfJobsOutstanding();
 }
 
 std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser::Token> &t)

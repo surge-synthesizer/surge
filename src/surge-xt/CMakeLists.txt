@@ -56,8 +56,8 @@ juce_add_plugin(${PROJECT_NAME}
 if(SURGE_BUILD_CLAP)
   clap_juce_extensions_plugin(TARGET surge-xt
     CLAP_ID "org.surge-synth-team.surge-xt"
+    # CLAP_SUPPORTS_CUSTOM_FACTORY 1
     CLAP_FEATURES "instrument" "synthesizer" "hybrid" "free and open source")
-  target_sources(${PROJECT_NAME}_CLAP PRIVATE plugin_type_extensions/SurgeSynthClapExtensions.cpp)
 endif()
 
 if(JUCE_ASIO_SUPPORT)
@@ -166,6 +166,9 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/WidgetBaseMixin.h
   gui/widgets/XMLConfiguredMenus.cpp
   gui/widgets/XMLConfiguredMenus.h
+
+  osc/OSCListener.cpp
+  osc/OSCListener.h
   )
 
 if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
@@ -190,10 +193,6 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
   $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
   )
 
-foreach(format ${SURGE_JUCE_FORMATS})
-  target_sources(${PROJECT_NAME}_${format} PRIVATE plugin_type_extensions/SurgeSynth${format}Extensions.cpp)
-endforeach()
-
 target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-common
   surge-platform
@@ -202,6 +201,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   juce::juce_audio_utils
   juce::juce_audio_processors
   juce::juce_audio_plugin_client
+  juce::juce_osc
   surge-xt-binary
   sst-filters-extras
   )
@@ -209,6 +209,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME}
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/gui
+  ${CMAKE_CURRENT_SOURCE_DIR}/osc
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 

@@ -1,17 +1,24 @@
 /*
-** Surge Synthesizer is Free and Open Source Software
-**
-** Surge is made available under the Gnu General Public License, v3.0
-** https://www.gnu.org/licenses/gpl-3.0.en.html
-**
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
-**
-** All source at: https://github.com/surge-synthesizer/surge.git
-**
-** Surge was a commercial product from 2004-2018, with Copyright and ownership
-** in that period held by Claes Johanson at Vember Audio. Claes made Surge
-** open source in September 2018.
-*/
+ * Surge XT - a free and open source hybrid synthesizer,
+ * built by Surge Synth Team
+ *
+ * Learn more at https://surge-synthesizer.github.io/
+ *
+ * Copyright 2018-2023, various authors, as described in the GitHub
+ * transaction log.
+ *
+ * Surge XT is released under the GNU General Public Licence v3
+ * or later (GPL-3.0-or-later). The license is found in the "LICENSE"
+ * file in the root of this repository, or at
+ * https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Surge was a commercial product from 2004-2018, copyright and ownership
+ * held by Claes Johanson at Vember Audio during that period.
+ * Claes made Surge open source in September 2018.
+ *
+ * All source for Surge XT is available at
+ * https://github.com/surge-synthesizer/surge
+ */
 
 #include "GraphicEQ11BandEffect.h"
 
@@ -89,17 +96,17 @@ void GraphicEQ11BandEffect::setvars(bool init)
     }
     else
     {
-        band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.5, *f[geq11_30]);
-        band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.5, *f[geq11_60]);
-        band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.5, *f[geq11_120]);
-        band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.5, *f[geq11_250]);
-        band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.5, *f[geq11_500]);
-        band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.5, *f[geq11_1k]);
-        band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.5, *f[geq11_2k]);
-        band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.5, *f[geq11_4k]);
-        band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.5, *f[geq11_8k]);
-        band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.5, *f[geq11_12k]);
-        band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.5, *f[geq11_16k]);
+        band1.coeff_peakEQ(band1.calc_omega_from_Hz(30.f), 0.5, *pd_float[geq11_30]);
+        band2.coeff_peakEQ(band2.calc_omega_from_Hz(60.f), 0.5, *pd_float[geq11_60]);
+        band3.coeff_peakEQ(band3.calc_omega_from_Hz(120.f), 0.5, *pd_float[geq11_120]);
+        band4.coeff_peakEQ(band4.calc_omega_from_Hz(250.f), 0.5, *pd_float[geq11_250]);
+        band5.coeff_peakEQ(band5.calc_omega_from_Hz(500.f), 0.5, *pd_float[geq11_500]);
+        band6.coeff_peakEQ(band6.calc_omega_from_Hz(1000.f), 0.5, *pd_float[geq11_1k]);
+        band7.coeff_peakEQ(band7.calc_omega_from_Hz(2000.f), 0.5, *pd_float[geq11_2k]);
+        band8.coeff_peakEQ(band8.calc_omega_from_Hz(4000.f), 0.5, *pd_float[geq11_4k]);
+        band9.coeff_peakEQ(band9.calc_omega_from_Hz(8000.f), 0.5, *pd_float[geq11_8k]);
+        band10.coeff_peakEQ(band10.calc_omega_from_Hz(12000.f), 0.5, *pd_float[geq11_12k]);
+        band11.coeff_peakEQ(band11.calc_omega_from_Hz(16000.f), 0.5, *pd_float[geq11_16k]);
     }
 }
 
@@ -132,7 +139,7 @@ void GraphicEQ11BandEffect::process(float *dataL, float *dataR)
     if (!fxdata->p[geq11_16k].deactivated)
         band11.process_block(dataL, dataR);
 
-    gain.set_target_smoothed(storage->db_to_linear(*f[geq11_gain]));
+    gain.set_target_smoothed(storage->db_to_linear(*pd_float[geq11_gain]));
     gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 }
 
