@@ -489,6 +489,10 @@ div.heading {
     width: 100%;
 }
 
+h2 {
+    text-align: center;
+}
+
 h3 {
     margin: 0 0 8px 0;
 }
@@ -502,6 +506,8 @@ div.outer {
 
 div.frame {
     max-width: 1300px;
+    border: 1px solid #aaa;
+    overflow: hidden;
 }
 
 div.tablewrap {
@@ -564,122 +570,164 @@ code {
       </div>
     </div>
 
-    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
-      <div style="line-height: 1.5; font-size: 12pt; font-family: Lato; color: #123463;">
-        Construct OSC messages using the exact (case sensitive)
-        entry listed in the <b>Address</b> column in the tables below.</br>
-        The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
-        where <code>address</code> can currently begin with either <code>tuning</code>, <code>settings</code>, or <code>param</code>,</br> and <code>value</code> can be:
-
-        <ul>
-            <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>
-            <li>an integer value</li>
-            <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
-            <li>a file path (absolute, or relative to the default path)
-            <li>contextual: either an in integer or a float, depending on the context (loaded oscillator or effect type)</li>
-        </ul>
-
-        Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
-        depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
-
-        <p>Examples:
-            <div style="margin: -6px 0 2px 0; line-height: 1.75">
-                <span><code>/param/b/amp/gain 0.63</code></span>
-                <span><code>/param/global/polyphony_limit 12</code></span>
-                <span><code>/param/a/mixer/noise/mute 0</code></span>
+    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
+              <div class="outer">
+        <div class="frame">
+            <h2>OSC Output</h2>
+            <!-- Show patch change output -->
+            <div class="tablewrap fl cl">
+                <div class="heading"><h3>Patch Change:</h3></div>
+                <table style="border: 2px solid black;">
+                    <tr>
+                        <th>Address</th>
+                        <th>Description</th>
+                        <th>Sent Values</th>
+                    </tr>
+                    <tr>
+                        <td>/patch</td>
+                        <td>new patch</td>
+                        <td class="center">file path (absolute)</td>
+                    </tr>
+                </table>
             </div>
-            <div style="margin: 4px 0 0 0; line-height: 1.75">
-                <span><code>/tuning/scl ptolemy</code></span>
-                <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy.scl</code></span>
-                <span><code>/settings/path/scl /Users/jane/scala_tunings</code></span>
+            <!-- Show tuning change output -->
+            <div class="tablewrap fr cr">
+                <div class="heading"><h3>Tuning Change:</h3></div>
+                <table style="border: 2px solid black;">
+                    <tr>
+                        <th>Address</th>
+                        <th>Description</th>
+                        <th>Sent Values</th>
+                    </tr>
+                    <tr>
+                        <td>/tuning/scl</td>
+                        <td>new scl tuning</td>
+                        <td class="center">file path (absolute)</td>
+                    </tr>
+                    <tr>
+                        <td>/tuning/kbm</td>
+                        <td>new kbm mapping</td>
+                        <td class="center">file path (absolute)</td>
+                    </tr>
+                </table>
             </div>
-        </p>
-      </div>
+        </div>
     </div>
 
-    <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
-      <div class="outer"><div class="frame">
+    <div class="outer">
+        <div class="frame">
+            <h2>OSC Input</h2>
+            <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
+            <div style="font-size: 12pt; font-family: Lato;">
+                Construct OSC messages using the exact (case sensitive)
+                entry listed in the <b>Address</b> column in the tables below.</br>
+                The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
+                where <code>address</code> can currently begin with either <code>tuning</code>,
+                <code>settings</code>, or <code>param</code>, and <code>value</code> can be:
+
+                <ul>
+                    <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>
+                    <li>an integer value</li>
+                    <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
+                    <li>a file path (absolute, or relative to the default path)
+                    <li>contextual: either an in integer or a float, depending on the context (loaded oscillator or effect type)</li>
+                </ul>
+
+                Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
+                depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
+
+                <p>Examples:
+                    <div style="margin: -6px 0 2px 0; line-height: 1.75">
+                        <span><code>/param/b/amp/gain 0.63</code></span>
+                        <span><code>/param/global/polyphony_limit 12</code></span>
+                        <span><code>/param/a/mixer/noise/mute 0</code></span>
+                    </div>
+                    <div style="margin: 4px 0 0 0; line-height: 1.75">
+                        <span><code>/tuning/scl ptolemy</code></span>
+                        <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy.scl</code></span>
+                        <span><code>/settings/path/scl /Users/jane/scala_tunings</code></span>
+                    </div>
+                </p>
+            </div>
+            </div>
+
+            <!-- Show patch selection -->
+            <div class="tablewrap fl cl">
+                <div class="heading"><h3>Patches:</h3></div>
+                <table style="border: 2px solid black;">
+                    <tr>
+                        <th>Address</th>
+                        <th>Description</th>
+                        <th>Appropriate Values</th>
+                    </tr>
+                    <tr>
+                        <td>/patch</td>
+                        <td>load patch</td>
+                        <td class="center">file path (absolute or relative)</td>
+                    </tr>
+                    <tr>
+                        <td>/patch/path</td>
+                        <td>patch path</td>
+                        <td class="center">absolute path</td>
+                    </tr>
+                    <tr>
+                        <td>/patch/incr</td>
+                        <td>increment patch</td>
+                        <td class="center">(none)</td>
+                    </tr>
+                    <tr>
+                        <td>/patch/decr</td>
+                        <td>decrement patch</td>
+                        <td class="center">(none)</td>
+                    </tr>
+                    <tr>
+                        <td>/patch/incr_category</td>
+                        <td>increment category</td>
+                        <td class="center">(none)</td>
+                    </tr>
+                    <tr>
+                        <td>/patch/decr_category</td>
+                        <td>decrement category</td>
+                        <td class="center">(none)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Show tuning controls -->
+            <div class="tablewrap fr cr">
+                <div class="heading"><h3>Tuning:</h3></div>
+                <table style="border: 2px solid black;">
+                    <tr>
+                        <th>Address</th>
+                        <th>Description</th>
+                        <th>Appropriate Values</th>
+                    </tr>
+                    <tr>
+                        <td>/tuning/scl</td>
+                        <td> .scl tuning file</td>
+                        <td class="center">file path (absolute or relative)*</td>
+                    </tr>
+                    <tr>
+                        <td>/tuning/kbm</td>
+                        <td>.kbm mapping file</td>
+                        <td class="center">file path (absolute or relative)*</td>
+                    </tr>
+                        <tr>
+                        <td>/tuning/path/scl</td>
+                        <td>.scl file default path</td>
+                        <td class="center">file path (absolute only)</td>
+                    </tr>
+                    <tr>
+                        <td>/tuning/path/kbm</td>
+                        <td>.kbm file default path</td>
+                        <td class="center">file path (absolute only)</td>
+                    </tr>
+                        <tr>
+                        <td class="center" colspan="3">*use value = '_reset' to reset path to factory default</td>
+                    </tr>
+                </table>
+            </div>
     )HTML";
-
-    // Show patch selection
-    htmls << R"HTML(
-        <div class="tablewrap fl cl">
-        <div class="heading"><h3>Patches:</h3></div>
-            <table style="border: 2px solid black;">
-                <tr>
-                    <th>Address</th>
-                    <th>Description</th>
-                    <th>Appropriate Values</th>
-                </tr>
-                <tr>
-                    <td>/patch</td>
-                    <td>load patch</td>
-                    <td class="center">file path (absolute or relative)</td>
-                </tr>
-            </table>
-            </div>
-        )HTML";
-
-    // Show tuning controls
-    htmls << R"HTML(
-        <div class="tablewrap fl cl">
-        <div class="heading"><h3>Tuning:</h3></div>
-            <table style="border: 2px solid black;">
-                <tr>
-                    <th>Address</th>
-                    <th>Description</th>
-                    <th>Appropriate Values</th>
-                </tr>
-                <tr>
-                    <td>/tuning/scl</td>
-                    <td> .scl tuning file</td>
-                    <td class="center">file path (absolute or relative)</td>
-                </tr>
-                <tr>
-                    <td>/tuning/kbm</td>
-                    <td>.kbm mapping file</td>
-                    <td class="center">file path (absolute or relative)</td>
-                </tr>
-            </table>
-            </div>
-        )HTML";
-
-    // Show settings
-    htmls << R"HTML(
-        <div class="tablewrap fr cr">
-        <div class="heading"><h3>Settings:</h3></div>
-            <table style="border: 2px solid black;">
-                <tr>
-                    <th>Address</th>
-                    <th>Description</th>
-                    <th>Appropriate Values</th>
-                </tr>
-                <tr>
-                    <td>/settings/path/scl</td>
-                    <td>.scl file default path</td>
-                    <td class="center">file path (absolute only)</td>
-                </tr>
-                <tr>
-                    <td>/settings/path/kbm</td>
-                    <td>.kbm file default path</td>
-                    <td class="center">file path (absolute only)</td>
-                </tr>
-                <tr>
-                    <td>/settings/path/patch_group</td>
-                    <td>patch group</td>
-                    <td class="center"></td>
-                </tr>
-                <tr>
-                    <td>/settings/path/patch_category</td>
-                    <td>patch category</td>
-                    <td class="center"></td>
-                </tr>
-                <tr>
-                    <td class="center" colspan="3">(use value = '_reset' to reset path to factory default)</td>
-                </tr>
-            </table>
-            </div>
-        )HTML";
 
     std::vector<oscParamInfo> sortvector;
     std::string st_str;

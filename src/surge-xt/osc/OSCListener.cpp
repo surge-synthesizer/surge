@@ -43,21 +43,13 @@ OSCListener::~OSCListener()
 bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge,
                        int port)
 {
-    if (!connect(port))
-    {
-#ifdef DEBUG
-        std::cout << "Error: could not connect to UDP port " << std::to_string(port) << std::endl;
-#endif
-        return false;
-    }
-    else
+    synth = surge.get();
+    if (connect(port))
     {
         addListener(this);
         listening = true;
         portnum = port;
-        synth = surge.get();
         sspPtr = ssp;
-
         synth->storage.oscListenerRunning = true;
 
 #ifdef DEBUG
@@ -65,6 +57,7 @@ bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynt
 #endif
         return true;
     }
+    return false;
 }
 
 void OSCListener::stopListening()

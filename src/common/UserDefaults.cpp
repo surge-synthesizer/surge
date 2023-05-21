@@ -333,12 +333,20 @@ std::string defaultKeyToString(DefaultKey k)
         r = "dontShowAudioErrorsAgain";
         break;
 
-    case OSCPort:
-        r = "openSoundControlPort";
+    case OSCPortIn:
+        r = "openSoundControlPortIn";
         break;
 
-    case StartOSC:
-        r = "startOSC";
+    case OSCPortOut:
+        r = "openSoundControlPortOut";
+        break;
+
+    case StartOSCIn:
+        r = "startOSCIn";
+        break;
+
+    case StartOSCOut:
+        r = "startOSCOut";
         break;
 
     case nKeys:

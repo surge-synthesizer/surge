@@ -137,17 +137,18 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 #if SURGE_HAS_OSC
     // OSC (Open Sound Control)
-    bool startOSCNow =
-        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSC, false);
-    if (startOSCNow)
+    bool startOSCInNow =
+        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCIn, false);
+    if (startOSCInNow)
     {
-        int defaultOSCPort = Surge::Storage::getUserDefaultValue(
-            &(surge->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
-        bool success = initOSC(defaultOSCPort);
+        int defaultOSCPortIn = Surge::Storage::getUserDefaultValue(
+            &(surge->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
+        bool success = initOSC(defaultOSCPortIn);
         if (!success)
         {
             std::ostringstream msg;
-            msg << "Surge XT was unable to connect to port " << defaultOSCPort << ".\n"
+            msg << "Surge XT was unable to connect to UDP port " << defaultOSCPortIn
+                << " for OSC input.\n"
                 << "It may be in use by another application.";
             surge->storage.reportError(msg.str(), "OSC Initialization Error");
         }
