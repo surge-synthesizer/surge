@@ -835,15 +835,16 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
         if (!jv) // unlikely
             jv = findParameterByParameterId(pevt->param_id);
         auto jp = static_cast<SurgeBaseParam *>(jv->processorParam);
-        if (pevt->note_id >= 0)
-        {
-            jassert(jp->supportsPolyphonicModulation());
-            jp->applyPolyphonicModulation(pevt->note_id, pevt->key, pevt->channel, pevt->amount);
-        }
-        else
+        if ((pevt->note_id == -1 && pevt->channel == -1 && pevt->key == -1) ||
+            !jp->supportsPolyphonicModulation())
         {
             jassert(jp->supportsMonophonicModulation());
             jp->applyMonophonicModulation(pevt->amount);
+        }
+        else
+        {
+            jassert(jp->supportsPolyphonicModulation());
+            jp->applyPolyphonicModulation(pevt->note_id, pevt->key, pevt->channel, pevt->amount);
         }
     }
     break;
