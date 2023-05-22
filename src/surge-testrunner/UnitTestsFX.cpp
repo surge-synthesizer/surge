@@ -31,7 +31,6 @@
 #include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
-#include "FastMath.h"
 #include "AudioInputEffect.h"
 
 using namespace Surge::Test;
@@ -497,12 +496,12 @@ struct InParamsGroup {
         surgeStorage->scenesOutputData.provideSceneData(0, 1, sceneARightInput);
         surgeStorage->scenesOutputData.provideSceneData(1, 0, sceneBLeftInput);
         surgeStorage->scenesOutputData.provideSceneData(1, 1, sceneBRightInput);
-        copy_block(audioLeftInput, surgeStorage->audio_in_nonOS[0], BLOCK_SIZE_QUAD);
-        copy_block(audioRightInput, surgeStorage->audio_in_nonOS[1], BLOCK_SIZE_QUAD);
+        memcpy(surgeStorage->audio_in_nonOS[0], audioLeftInput, BLOCK_SIZE);
+        memcpy(surgeStorage->audio_in_nonOS[1], audioRightInput, BLOCK_SIZE);
     }
 };
 
-TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
+TEST_CASE("AudioInputEffect",  "[fx]")
 {
 
     std::map<int, std::vector<int>> slots {
@@ -883,20 +882,16 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
 
         /// ==================== Test with audio input from scene A ====================
         panningTestCase.slot = AudioInputEffect::b_insert_slot;
-        copy_block(panningTestCase.sceneBLeftInput, panningTestCase.sceneALeftInput,
-                   BLOCK_SIZE_QUAD);
-        copy_block(panningTestCase.sceneBRightInput, panningTestCase.sceneARightInput,
-                   BLOCK_SIZE_QUAD);
+        memcpy(panningTestCase.sceneALeftInput,panningTestCase.sceneBLeftInput, BLOCK_SIZE);
+        memcpy(panningTestCase.sceneARightInput,panningTestCase.sceneBRightInput, BLOCK_SIZE);
         panningTestCase.testGroup = testGroup + " (audio input from scene A)";
         inParamsGroups.push_back(panningTestCase);
 
         /// ==================== Test with audio input from a mic ====================
         panningTestCase.testGroup = testGroup + " (audio input is from a mic)";
         panningTestCase.slot = AudioInputEffect::a_insert_slot;
-        copy_block(panningTestCase.sceneBLeftInput, panningTestCase.audioLeftInput,
-                   BLOCK_SIZE_QUAD);
-        copy_block(panningTestCase.sceneBRightInput, panningTestCase.audioRightInput,
-                   BLOCK_SIZE_QUAD);
+        memcpy(panningTestCase.audioLeftInput, panningTestCase.sceneBLeftInput, BLOCK_SIZE);
+        memcpy(panningTestCase.audioRightInput, panningTestCase.sceneBRightInput, BLOCK_SIZE);
         panningTestCase.expectedOutput[0].controlParams[0].param =
             AudioInputEffect::in_audio_input_channel;
         panningTestCase.expectedOutput[0].controlParams[1].param =
@@ -904,27 +899,26 @@ TEST_CASE("AudioInputEffect: mixing inputs",  "[fx]")
         panningTestCase.expectedOutput[0].controlParams[2].param =
             AudioInputEffect::in_audio_input_pan;
         float zeros[BLOCK_SIZE] {0.0f};
-        copy_block(zeros, panningTestCase.sceneALeftInput, BLOCK_SIZE_QUAD);
-        copy_block(zeros, panningTestCase.sceneARightInput, BLOCK_SIZE_QUAD);
-        copy_block(zeros, panningTestCase.sceneBLeftInput, BLOCK_SIZE_QUAD);
-        copy_block(zeros, panningTestCase.sceneBRightInput, BLOCK_SIZE_QUAD);
+        memcpy(panningTestCase.sceneALeftInput, zeros, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.sceneARightInput, zeros, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.sceneBLeftInput, zeros, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.sceneBRightInput, zeros, BLOCK_SIZE * sizeof(float));
         inParamsGroups.push_back(panningTestCase);
 
         /// ==================== Test with audio effect input  ====================
         panningTestCase.testGroup = testGroup + " (audio input is from an audio effect)";
         panningTestCase.slot = AudioInputEffect::a_insert_slot;
-        copy_block(panningTestCase.audioLeftInput, panningTestCase.leftEffectInput,
-                   BLOCK_SIZE_QUAD);
-        copy_block(panningTestCase.audioRightInput, panningTestCase.rightEffectInput,
-                  BLOCK_SIZE_QUAD);
+        memcpy(panningTestCase.leftEffectInput, panningTestCase.audioLeftInput, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.rightEffectInput, panningTestCase.audioRightInput, BLOCK_SIZE * sizeof(float));
         panningTestCase.expectedOutput[0].controlParams[0].param =
             AudioInputEffect::in_effect_input_channel;
         panningTestCase.expectedOutput[0].controlParams[1].param =
             AudioInputEffect::in_effect_input_level;
         panningTestCase.expectedOutput[0].controlParams[2].param =
             AudioInputEffect::in_effect_input_pan;
-        copy_block(zeros, panningTestCase.audioLeftInput, BLOCK_SIZE_QUAD);
-        copy_block(zeros, panningTestCase.audioRightInput, BLOCK_SIZE_QUAD);
+        memcpy(panningTestCase.audioLeftInput, zeros, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.audioRightInput, zeros, BLOCK_SIZE * sizeof(float));
+
         inParamsGroups.push_back(panningTestCase);
     }
 
