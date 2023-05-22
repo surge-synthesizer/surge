@@ -2,12 +2,13 @@
 #include "AudioInputEffect.h"
 
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd) {
+    : Effect(storage, fxdata, pd)
+{
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
-    if (storage && (slotType== a_insert_slot || slotType == b_insert_slot))
+    if (storage && (slotType == a_insert_slot || slotType == b_insert_slot))
     {
         int scene = slotType == a_insert_slot ? 1 : 0;
-        for(int i = 0; i < N_OUTPUTS; i++)
+        for (int i = 0; i < N_OUTPUTS; i++)
             sceneDataPtr[i] = storage->scenesOutputData.getSceneData(scene, i);
     }
 }
@@ -56,7 +57,6 @@ void AudioInputEffect::init_ctrltypes()
         fxdata->p[in_scene_input_level].set_name("Level");
         fxdata->p[in_scene_input_level].set_type(ct_decibel_attenuation);
         fxdata->p[in_scene_input_level].posy_offset = 5;
-
     }
 
     // -----  Output
@@ -67,29 +67,27 @@ void AudioInputEffect::init_ctrltypes()
     fxdata->p[in_output_mix].set_name("Mix");
     fxdata->p[in_output_mix].set_type(ct_percent);
     fxdata->p[in_output_mix].posy_offset = 7;
-
 }
 
 void AudioInputEffect::init_default_values()
 {
     fxdata->p[in_audio_input_channel].val.f = 0.0; // p0
-    fxdata->p[in_audio_input_pan].val.f = 0.0;   //p1
-    fxdata->p[in_audio_input_level].val.f = -48.0;  //p2
+    fxdata->p[in_audio_input_pan].val.f = 0.0;     // p1
+    fxdata->p[in_audio_input_level].val.f = -48.0; // p2
 
+    fxdata->p[in_effect_input_channel].val.f = 0.0; // p3
+    fxdata->p[in_effect_input_pan].val.f = 0.0;     // p4
+    fxdata->p[in_effect_input_level].val.f = 0.0;   // p5
 
-    fxdata->p[in_effect_input_channel].val.f = 0.0; //p3
-    fxdata->p[in_effect_input_pan].val.f = 0.0;  //p4
-    fxdata->p[in_effect_input_level].val.f = 0.0; //p5
+    fxdata->p[in_scene_input_channel].val.f = 0.0; // p6
+    fxdata->p[in_scene_input_pan].val.f = 0.0;     // p7
+    fxdata->p[in_scene_input_level].val.f = 0.0;   // p8
 
-
-    fxdata->p[in_scene_input_channel].val.f = 0.0; //p6
-    fxdata->p[in_scene_input_pan].val.f = 0.0; //p7
-    fxdata->p[in_scene_input_level].val.f = 0.0; //p8
-
-    fxdata->p[in_output_width].val.f = 1.0; //p9
-    fxdata->p[in_output_mix].val.f = 1.0;  //p10
+    fxdata->p[in_output_width].val.f = 1.0; // p9
+    fxdata->p[in_output_mix].val.f = 1.0;   // p10
 }
-const char *AudioInputEffect::group_label(int id) {
+const char *AudioInputEffect::group_label(int id)
+{
     std::vector group_labels = {{"Audio Input", "Effect Input", "Scene Input", "Output"}};
     effect_slot_type slot_type = getSlotType(fxdata->fxslot);
     if (slot_type == a_insert_slot)
@@ -98,18 +96,18 @@ const char *AudioInputEffect::group_label(int id) {
         group_labels[2] = "Scene A Input";
     else
         group_labels.erase(group_labels.begin() + 2);
-    if (id>=0 && id < group_labels.size())
+    if (id >= 0 && id < group_labels.size())
         return group_labels[id];
     return 0;
 }
 
-
-int AudioInputEffect::group_label_ypos(int id) {
+int AudioInputEffect::group_label_ypos(int id)
+{
     std::vector ypos = {1, 9, 17, 25};
     effect_slot_type slot_type = getSlotType(fxdata->fxslot);
     if (slot_type != a_insert_slot && slot_type != b_insert_slot)
         ypos.erase(ypos.begin() + 2);
-    if (id>=0 && id < ypos.size())
+    if (id >= 0 && id < ypos.size())
         return ypos[id];
     return 0;
 }
@@ -117,49 +115,46 @@ AudioInputEffect::effect_slot_type AudioInputEffect::getSlotType(fxslot_position
 {
     switch (p)
     {
-        case fxslot_ains1:
-        case fxslot_ains2:
-        case fxslot_ains3:
-        case fxslot_ains4:
-            return AudioInputEffect::a_insert_slot;
-        case fxslot_bins1:
-        case fxslot_bins2:
-        case fxslot_bins3:
-        case fxslot_bins4:
-            return AudioInputEffect::b_insert_slot;
-        case fxslot_send1:
-        case fxslot_send2:
-        case fxslot_send3:
-        case fxslot_send4:
-            return AudioInputEffect::send_slot;
-        default:
-            return AudioInputEffect::global_slot;
+    case fxslot_ains1:
+    case fxslot_ains2:
+    case fxslot_ains3:
+    case fxslot_ains4:
+        return AudioInputEffect::a_insert_slot;
+    case fxslot_bins1:
+    case fxslot_bins2:
+    case fxslot_bins3:
+    case fxslot_bins4:
+        return AudioInputEffect::b_insert_slot;
+    case fxslot_send1:
+    case fxslot_send2:
+    case fxslot_send3:
+    case fxslot_send4:
+        return AudioInputEffect::send_slot;
+    default:
+        return AudioInputEffect::global_slot;
     }
 }
 
 void AudioInputEffect::process(float *dataL, float *dataR)
 {
 
-
-
-    float& effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
-    float& effectInputPan = fxdata->p[in_effect_input_pan].val.f;
-    float& effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
-    float* channelData[] = { dataL, dataR };
+    float &effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
+    float &effectInputPan = fxdata->p[in_effect_input_pan].val.f;
+    float &effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
+    float *channelData[] = {dataL, dataR};
 
     juce::AudioBuffer<float> drySignalBuffer(channelData, 2, BLOCK_SIZE);
 
-    juce::AudioBuffer<float> effectDataBuffer( 2, BLOCK_SIZE);
+    juce::AudioBuffer<float> effectDataBuffer(2, BLOCK_SIZE);
     effectDataBuffer.copyFrom(0, 0, channelData[0], BLOCK_SIZE);
     effectDataBuffer.copyFrom(1, 0, channelData[1], BLOCK_SIZE);
     applySlidersControls(effectDataBuffer, effectInputChannel, effectInputPan, effectInputLevelDb);
 
-
-    float& inputChannel = fxdata->p[in_audio_input_channel].val.f;
-    float& inputPan = fxdata->p[in_audio_input_pan].val.f;
-    float& inputLevelDb = fxdata->p[in_audio_input_level].val.f;
-    float* inputData[] = { storage->audio_in_nonOS[0], storage->audio_in_nonOS[1] };
-    juce::AudioBuffer<float> inputDataBuffer( 2, BLOCK_SIZE);
+    float &inputChannel = fxdata->p[in_audio_input_channel].val.f;
+    float &inputPan = fxdata->p[in_audio_input_pan].val.f;
+    float &inputLevelDb = fxdata->p[in_audio_input_level].val.f;
+    float *inputData[] = {storage->audio_in_nonOS[0], storage->audio_in_nonOS[1]};
+    juce::AudioBuffer<float> inputDataBuffer(2, BLOCK_SIZE);
     inputDataBuffer.copyFrom(0, 0, inputData[0], BLOCK_SIZE);
     inputDataBuffer.copyFrom(1, 0, inputData[1], BLOCK_SIZE);
     applySlidersControls(inputDataBuffer, inputChannel, inputPan, inputLevelDb);
@@ -167,15 +162,15 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
     if (slotType == a_insert_slot || slotType == b_insert_slot)
     {
-        float& sceneInputChannel = fxdata->p[in_scene_input_channel].val.f;
-        float& sceneInputPan = fxdata->p[in_scene_input_pan].val.f;
-        float& sceneInputLevelDb = fxdata->p[in_scene_input_level].val.f;
+        float &sceneInputChannel = fxdata->p[in_scene_input_channel].val.f;
+        float &sceneInputPan = fxdata->p[in_scene_input_pan].val.f;
+        float &sceneInputLevelDb = fxdata->p[in_scene_input_level].val.f;
 
-        float* sceneData[] = {
+        float *sceneData[] = {
             sceneDataPtr[0].get(),
             sceneDataPtr[1].get(),
         };
-        juce::AudioBuffer<float> sceneDataBuffer( 2, BLOCK_SIZE);
+        juce::AudioBuffer<float> sceneDataBuffer(2, BLOCK_SIZE);
         sceneDataBuffer.copyFrom(0, 0, sceneData[0], BLOCK_SIZE);
         sceneDataBuffer.copyFrom(1, 0, sceneData[1], BLOCK_SIZE);
         applySlidersControls(sceneDataBuffer, sceneInputChannel, sceneInputPan, sceneInputLevelDb);
@@ -187,31 +182,31 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     effectDataBuffer.addFrom(0, 0, inputDataBuffer, 0, 0, BLOCK_SIZE);
     effectDataBuffer.addFrom(1, 0, inputDataBuffer, 1, 0, BLOCK_SIZE);
 
-    float& outputWidth = fxdata->p[in_output_width].val.f;
-    float& outputMix = fxdata->p[in_output_mix].val.f;
+    float &outputWidth = fxdata->p[in_output_width].val.f;
+    float &outputMix = fxdata->p[in_output_mix].val.f;
 
-
-    float* dryL = drySignalBuffer.getWritePointer(0);
-    float* dryR = drySignalBuffer.getWritePointer(1);
-    float* wetL = effectDataBuffer.getWritePointer(0);
-    float* wetR = effectDataBuffer.getWritePointer(1);
+    float *dryL = drySignalBuffer.getWritePointer(0);
+    float *dryR = drySignalBuffer.getWritePointer(1);
+    float *wetL = effectDataBuffer.getWritePointer(0);
+    float *wetR = effectDataBuffer.getWritePointer(1);
 
     // Adjust width of wet signal
-    for (int i = 0; i < BLOCK_SIZE; ++i) {
-        float mid = 0.5f * (wetL[i] + wetR[i]); // Mid (mono) signal
+    for (int i = 0; i < BLOCK_SIZE; ++i)
+    {
+        float mid = 0.5f * (wetL[i] + wetR[i]);                // Mid (mono) signal
         float side = outputWidth * 0.5f * (wetL[i] - wetR[i]); // Sides (stereo) signal
         wetL[i] = mid + side;
         wetR[i] = mid - side;
     }
 
     // Mix dry and wet signal according to outputMix
-    for (int i = 0; i < BLOCK_SIZE; ++i) {
+    for (int i = 0; i < BLOCK_SIZE; ++i)
+    {
         float wetMix = outputMix;
         float dryMix = 1.0f - outputMix;
         dryL[i] = dryMix * dryL[i] + wetMix * wetL[i];
         dryR[i] = dryMix * dryR[i] + wetMix * wetR[i];
     }
-
 }
 
 void AudioInputEffect::applySlidersControls(juce::AudioBuffer<float> &buffer, const float &channel,
@@ -219,16 +214,18 @@ void AudioInputEffect::applySlidersControls(juce::AudioBuffer<float> &buffer, co
 {
     float leftGain, rightGain;
 
-    if (channel < 0) {
-            leftGain = 1.0f;
-            rightGain = 1.0f + channel;
-    } else {
-            leftGain = 1.0f - channel;
-            rightGain = 1.0f;
+    if (channel < 0)
+    {
+        leftGain = 1.0f;
+        rightGain = 1.0f + channel;
+    }
+    else
+    {
+        leftGain = 1.0f - channel;
+        rightGain = 1.0f;
     }
     buffer.applyGain(0, 0, buffer.getNumSamples(), leftGain);
     buffer.applyGain(1, 0, buffer.getNumSamples(), rightGain);
-
 
     juce::AudioBuffer<float> tempBuffer(2, BLOCK_SIZE);
     tempBuffer.copyFrom(0, 0, buffer, 0, 0, BLOCK_SIZE);

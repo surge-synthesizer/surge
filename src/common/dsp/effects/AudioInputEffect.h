@@ -4,7 +4,7 @@
 ** Surge is made available under the Gnu General Public License, v3.0
 ** https://www.gnu.org/licenses/gpl-3.0.en.html
 **
-** Copyright 2004-2020 by various individuals as described by the Git transaction log
+** Copyright 2004-2023 by various individuals as described by the Git transaction log
 **
 ** All source at: https://github.com/surge-synthesizer/surge.git
 **
@@ -18,8 +18,12 @@
 class AudioInputEffect : public Effect
 {
   public:
-    enum effect_slot_type{
-        a_insert_slot, b_insert_slot, send_slot, global_slot
+    enum effect_slot_type
+    {
+        a_insert_slot,
+        b_insert_slot,
+        send_slot,
+        global_slot
     };
     enum in_params
     {
@@ -47,10 +51,10 @@ class AudioInputEffect : public Effect
     void process(float *dataL, float *dataR) override;
     const char *group_label(int id) override;
     int group_label_ypos(int id) override;
+
   private:
-    std::shared_ptr<float[BLOCK_SIZE]>sceneDataPtr[N_OUTPUTS]{nullptr, nullptr};
+    std::shared_ptr<float[BLOCK_SIZE]> sceneDataPtr[N_OUTPUTS]{nullptr, nullptr};
     effect_slot_type getSlotType(fxslot_positions p);
     void applySlidersControls(juce::AudioBuffer<float> &buffer, const float &channel,
                               const float &pan, const float &levelDb);
 };
-
