@@ -999,10 +999,8 @@ TEST_CASE("AudioInputEffect", "[fx]")
         /// ==================== Test with audio effect input  ====================
         panningTestCase.testGroup = testGroup + " (audio input is from an audio effect)";
         panningTestCase.slot = AudioInputEffect::a_insert_slot;
-        memcpy(panningTestCase.leftEffectInput, panningTestCase.audioLeftInput,
-               BLOCK_SIZE BLOCK_SIZE);
-        memcpy(panningTestCase.rightEffectInput, panningTestCase.audioRightInput,
-               BLOCK_SIZE BLOCK_SIZE);
+        memcpy(panningTestCase.leftEffectInput, panningTestCase.audioLeftInput, BLOCK_SIZE);
+        memcpy(panningTestCase.rightEffectInput, panningTestCase.audioRightInput, BLOCK_SIZE);
         panningTestCase.expectedOutput[0].controlParams[0].param =
             AudioInputEffect::in_effect_input_channel;
         panningTestCase.expectedOutput[0].controlParams[1].param =
