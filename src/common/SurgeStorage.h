@@ -419,17 +419,16 @@ const char fx_type_names[n_fx_types][32] = {"Off",
                                             "Audio Input"};
 
 const char fx_type_shortnames[n_fx_types][16] = {
-    "Off",         "Delay",      "Reverb 1",      "Phaser",       "Rotary",     "Distortion",
-    "EQ",          "Freq Shift", "Conditioner",   "Chorus",       "Vocoder",    "Reverb 2",
-    "Flanger",     "Ring Mod",   "Airwindows",    "Neuron",       "Graphic EQ", "Resonator",
-    "CHOW",        "Exciter",    "Ensemble",      "Combulator",   "Nimbus",     "Tape",
+    "Off",         "Delay",      "Reverb 1",      "Phaser",        "Rotary",     "Distortion",
+    "EQ",          "Freq Shift", "Conditioner",   "Chorus",        "Vocoder",    "Reverb 2",
+    "Flanger",     "Ring Mod",   "Airwindows",    "Neuron",        "Graphic EQ", "Resonator",
+    "CHOW",        "Exciter",    "Ensemble",      "Combulator",    "Nimbus",     "Tape",
     "Treemonster", "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Audio In"};
 
-const char fx_type_acronyms[n_fx_types][8] = {"OFF", "DLY", "RV1",  "PH",  "ROT", "DIST", "EQ",
-                                              "FRQ", "DYN", "CH",   "VOC", "RV2", "FL",   "RM",
-                                              "AW",  "NEU", "GEQ",  "RES", "CHW", "XCT",  "ENS",
-                                              "CMB", "NIM", "TAPE", "TM",  "WS",  "M-S",  "SRV",
-                                              "IN"};
+const char fx_type_acronyms[n_fx_types][8] = {
+    "OFF", "DLY", "RV1", "PH",   "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",
+    "VOC", "RV2", "FL",  "RM",   "AW",  "NEU",  "GEQ", "RES", "CHW", "XCT",
+    "ENS", "CMB", "NIM", "TAPE", "TM",  "WS",   "M-S", "SRV", "IN"};
 
 enum fx_bypass
 {
@@ -989,15 +988,12 @@ class SurgePatch
     SurgeSceneStorage scene[n_scenes], morphscene;
 
     FxStorage fx[n_fx_slots]{
-        FxStorage(fxslot_ains1), FxStorage(fxslot_ains2),
-        FxStorage(fxslot_bins1), FxStorage(fxslot_bins2),
-        FxStorage(fxslot_send1), FxStorage(fxslot_send2),
-        FxStorage(fxslot_global1), FxStorage(fxslot_global2),
-        FxStorage(fxslot_ains3), FxStorage(fxslot_ains4),
-        FxStorage(fxslot_bins3), FxStorage(fxslot_bins4),
-        FxStorage(fxslot_send3), FxStorage(fxslot_send4),
-        FxStorage(fxslot_global3), FxStorage(fxslot_global4)
-    };
+        FxStorage(fxslot_ains1),   FxStorage(fxslot_ains2),   FxStorage(fxslot_bins1),
+        FxStorage(fxslot_bins2),   FxStorage(fxslot_send1),   FxStorage(fxslot_send2),
+        FxStorage(fxslot_global1), FxStorage(fxslot_global2), FxStorage(fxslot_ains3),
+        FxStorage(fxslot_ains4),   FxStorage(fxslot_bins3),   FxStorage(fxslot_bins4),
+        FxStorage(fxslot_send3),   FxStorage(fxslot_send4),   FxStorage(fxslot_global3),
+        FxStorage(fxslot_global4)};
     int scene_start[n_scenes], scene_size;
 
     std::unordered_map<std::string, Parameter *> param_ptr_by_oscname;
@@ -1134,15 +1130,17 @@ namespace sst::basic_blocks::tables
 struct SurgeSincTableProvider;
 }
 
-struct ScenesOutputData{
-    std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr}, {nullptr, nullptr}};
-public:
+struct ScenesOutputData
+{
+    std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr},
+                                                                      {nullptr, nullptr}};
+
+  public:
     ScenesOutputData();
     const std::shared_ptr<float[BLOCK_SIZE]> &getSceneData(int scene, int channel) const;
     void provideSceneData(int scene, int channel, float *data);
     bool thereAreClients(int scene) const;
 };
-
 
 class alignas(16) SurgeStorage
 {
