@@ -30,8 +30,8 @@ namespace sdsp = sst::basic_blocks::dsp;
 using namespace std;
 
 DelayEffect::DelayEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : surge::sstfx::SurgeSSTFXBase<sst::effects::Delay<surge::sstfx::SurgeFXConfig>>(storage,
-                                                                                     fxdata, pd)
+    : surge::sstfx::SurgeSSTFXBase<sst::effects::delay::Delay<surge::sstfx::SurgeFXConfig>>(
+          storage, fxdata, pd)
 {
     mix.set_blocksize(BLOCK_SIZE);
     pan.set_blocksize(BLOCK_SIZE);

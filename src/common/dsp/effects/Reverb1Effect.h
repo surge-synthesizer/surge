@@ -27,8 +27,8 @@
 #include "SurgeSSTFXAdapter.h"
 #include "sst/effects/Reverb1.h"
 
-class Reverb1Effect
-    : public surge::sstfx::SurgeSSTFXBase<sst::effects::Reverb1<surge::sstfx::SurgeFXConfig>>
+class Reverb1Effect : public surge::sstfx::SurgeSSTFXBase<
+                          sst::effects::reverb1::Reverb1<surge::sstfx::SurgeFXConfig>>
 {
   public:
     Reverb1Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
