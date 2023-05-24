@@ -116,7 +116,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 19 -> 20 (XT 1.1 release)   added voice envelope mode, but super late so don't break 19
 // 20 -> 21 (XT 1.2 nightlies) added absolutable mode for Combulator Offset 1/2 (to match the behavior of Center parameter)
 //                             added oddsound_as_mts_main
-// 21 -> 22 (XT 1.3 nighlies)  added new ring modulator modes in the mixer
+// 21 -> 22 (XT 1.3 nighlies)  added new ring modulator modes in the mixer, add bonsai distortion effect
 // clang-format on
 
 const int ff_revision = 22;
@@ -383,6 +383,7 @@ enum fx_type
     fxt_waveshaper,
     fxt_mstool,
     fxt_spring_reverb,
+    fxt_bonsai,
     fxt_input_blender,
 
     n_fx_types,
@@ -416,6 +417,7 @@ const char fx_type_names[n_fx_types][32] = {"Off",
                                             "Waveshaper",
                                             "Mid-Side Tool",
                                             "Spring Reverb",
+                                            "Bonsai",
                                             "Audio Input"};
 
 const char fx_type_shortnames[n_fx_types][16] = {
@@ -423,12 +425,12 @@ const char fx_type_shortnames[n_fx_types][16] = {
     "EQ",          "Freq Shift", "Conditioner",   "Chorus",        "Vocoder",    "Reverb 2",
     "Flanger",     "Ring Mod",   "Airwindows",    "Neuron",        "Graphic EQ", "Resonator",
     "CHOW",        "Exciter",    "Ensemble",      "Combulator",    "Nimbus",     "Tape",
-    "Treemonster", "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Audio In"};
+    "Treemonster", "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Bonsai", "Audio In"};
 
 const char fx_type_acronyms[n_fx_types][8] = {
     "OFF", "DLY", "RV1", "PH",   "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",
     "VOC", "RV2", "FL",  "RM",   "AW",  "NEU",  "GEQ", "RES", "CHW", "XCT",
-    "ENS", "CMB", "NIM", "TAPE", "TM",  "WS",   "M-S", "SRV", "IN"};
+    "ENS", "CMB", "NIM", "TAPE", "TM",  "WS",   "M-S", "SRV", "BON", "IN"};
 
 enum fx_bypass
 {

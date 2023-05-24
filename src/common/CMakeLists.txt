@@ -148,6 +148,8 @@ add_library(${PROJECT_NAME}
   dsp/WavetableScriptEvaluator.h
   dsp/effects/BBDEnsembleEffect.cpp
   dsp/effects/BBDEnsembleEffect.h
+  dsp/effects/BonsaiEffect.cpp
+  dsp/effects/BonsaiEffect.h
   dsp/effects/ChorusEffect.h
   dsp/effects/ChorusEffectImpl.h
   dsp/effects/CombulatorEffect.cpp
