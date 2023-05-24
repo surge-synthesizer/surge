@@ -28,11 +28,11 @@
 #include "sst/effects/Bonsai.h"
 
 class BonsaiEffect
-    : public surge::sstfx::SurgeSSTFXBase<sst::effects::Bonsai<surge::sstfx::SurgeFXConfig>>
+    : public surge::sstfx::SurgeSSTFXBase<sst::effects::bonsai::Bonsai<surge::sstfx::SurgeFXConfig>>
 {
   public:
     BonsaiEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-        : surge::sstfx::SurgeSSTFXBase<sst::effects::Bonsai<surge::sstfx::SurgeFXConfig>>(
+        : surge::sstfx::SurgeSSTFXBase<sst::effects::bonsai::Bonsai<surge::sstfx::SurgeFXConfig>>(
               storage, fxdata, pd)
     {
     }
