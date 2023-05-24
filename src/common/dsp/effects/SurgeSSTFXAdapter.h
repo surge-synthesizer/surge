@@ -212,7 +212,8 @@ template <typename T> struct SurgeSSTFXBase : T
             this->fxdata->p[i].basicBlocksParamMetaData = pmd;
             auto check = [&, i](auto a, auto b, auto msg) {
                 if (a != b)
-                    std::cout << "Metadata Mismatch (" << msg << "): param[" << i << "]='" << pmd.name << "'; paramValue=" << a << " expected=" << b
+                    std::cout << "Metadata Mismatch (" << msg << "): param[" << i << "]='"
+                              << pmd.name << "'; paramValue=" << a << " expected=" << b
                               << std::endl;
             };
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::FLOAT)
