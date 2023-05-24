@@ -1,0 +1,17 @@
+<single-fx streaming_version="22">
+  <snapshot name="Excessive Bass"
+     type="28"
+     p0="0"
+     p1="12.345"
+     p1_deform_type="0"
+     p2="2.09601"
+     p3="0"
+     p4="2"
+     p5="0.426306"
+     p6="0.488318"
+     p7="-11.4364"
+     p8="0.111401"
+     p9="0"
+     p10="1"
+  />
+</single-fx>

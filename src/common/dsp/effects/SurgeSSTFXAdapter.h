@@ -46,7 +46,7 @@
  *
  * 1. Copy the code to a header in sst-effects and use the concrete names for
  *    the interface which the regtests require. So now you have
- *    sst::effects::Foo<COnfig>
+ *    sst::effects::Foo<Config>
  * 2. Strip that code from surge and change FooEffect : Effect into
  *    FooEffect : SurgeSSTFXBase<sst::effects::Foo<surge::sstfx::SurgeFXConfig>
  *
