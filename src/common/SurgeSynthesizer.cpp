@@ -51,11 +51,9 @@ namespace sdsp = sst::basic_blocks::dsp;
 using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed first try
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
-    : storage(suppliedDataPath), hpA{&storage, &storage, &storage, &storage}, hpB{&storage,
-                                                                                  &storage,
-                                                                                  &storage,
-                                                                                  &storage},
-      _parent(parent), halfbandA(6, true), halfbandB(6, true), halfbandIN(6, true)
+    : storage(suppliedDataPath), hpA{&storage, &storage, &storage, &storage},
+      hpB{&storage, &storage, &storage, &storage}, _parent(parent), halfbandA(6, true),
+      halfbandB(6, true), halfbandIN(6, true)
 {
     switch_toggled_queued = false;
     audio_processing_active = false;
@@ -4574,8 +4572,8 @@ void SurgeSynthesizer::process()
         sc_state[i] = play_scene[i];
     }
 
-    for (int i=0; i<n_scenes; i++)
-        for (int channel=0; channel<N_OUTPUTS; channel++)
+    for (int i = 0; i < n_scenes; i++)
+        for (int channel = 0; channel < N_OUTPUTS; channel++)
             storage.scenesOutputData.provideSceneData(i, channel, sceneout[i][channel]);
 
     // apply insert effects
