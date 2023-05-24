@@ -210,10 +210,11 @@ template <typename T> struct SurgeSSTFXBase : T
             }
             this->fxdata->p[i].set_name(pmd.name.c_str());
             this->fxdata->p[i].basicBlocksParamMetaData = pmd;
-            auto check = [&](auto a, auto b, auto msg) {
+            auto check = [&, i](auto a, auto b, auto msg) {
                 if (a != b)
-                    std::cout << "Unable to match " << pmd.name << " " << a << " " << b << " "
-                              << msg << std::endl;
+                    std::cout << "Metadata Mismatch (" << msg << "): param[" << i << "]='"
+                              << pmd.name << "'; paramValue=" << a << " expected=" << b
+                              << std::endl;
             };
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::FLOAT)
             {
@@ -224,10 +225,6 @@ template <typename T> struct SurgeSSTFXBase : T
             {
                 check((int)pmd.minVal, this->fxdata->p[i].val_min.i, "Minimum Values");
                 check((int)pmd.maxVal, this->fxdata->p[i].val_max.i, "Maximum Values");
-            }
-            if (!pmd.supportsStringConversion)
-            {
-                std::cout << "No support for string conversion on " << pmd.name << std::endl;
             }
             check(pmd.canTemposync, this->fxdata->p[i].can_temposync(), "Can Temposync");
             check(pmd.canDeform, this->fxdata->p[i].has_deformoptions(), "Can Deform");
