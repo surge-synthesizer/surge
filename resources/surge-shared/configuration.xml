@@ -147,7 +147,7 @@
     <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000"/>
 </type>
 <type i="28" name="Audio Input">
-    <snapshot name="Init" p0="0" p1="0.0" p2="-48.0" p3="0" p4="0.0" p5="0.0" p6="0" p7="0.0" p8="-48.0" p9="1.0" p10="1.0"/>
+    <snapshot name="Init" p0="0" p1="0.0" p2="-96.0" p3="0" p4="0.0" p5="0.0" p6="0" p7="0.0" p8="-96.0" p9="1.0" p10="1.0"/>
 </type>
 <type i="8" name="Conditioner">
     <snapshot name="Init" p0="0.000000" p1="0.000000" p2="1.000000" p3="0.000000" p4="-6" p5="0.000000"

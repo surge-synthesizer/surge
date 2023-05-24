@@ -26,7 +26,7 @@ void AudioInputEffect::init_ctrltypes()
     fxdata->p[in_audio_input_pan].posy_offset = 1;
 
     fxdata->p[in_audio_input_level].set_name("Level");
-    fxdata->p[in_audio_input_level].set_type(ct_decibel_attenuation);
+    fxdata->p[in_audio_input_level].set_type(ct_decibel_attenuation_large);
     fxdata->p[in_audio_input_level].posy_offset = 1;
 
     // -----  Effect Input
@@ -39,7 +39,7 @@ void AudioInputEffect::init_ctrltypes()
     fxdata->p[in_effect_input_pan].posy_offset = 3;
 
     fxdata->p[in_effect_input_level].set_name("Level");
-    fxdata->p[in_effect_input_level].set_type(ct_decibel_attenuation);
+    fxdata->p[in_effect_input_level].set_type(ct_decibel_attenuation_large);
     fxdata->p[in_effect_input_level].posy_offset = 3;
 
     // -----  Scene Input
@@ -55,7 +55,7 @@ void AudioInputEffect::init_ctrltypes()
         fxdata->p[in_scene_input_pan].posy_offset = 5;
 
         fxdata->p[in_scene_input_level].set_name("Level");
-        fxdata->p[in_scene_input_level].set_type(ct_decibel_attenuation);
+        fxdata->p[in_scene_input_level].set_type(ct_decibel_attenuation_large);
         fxdata->p[in_scene_input_level].posy_offset = 5;
     }
 
@@ -73,7 +73,7 @@ void AudioInputEffect::init_default_values()
 {
     fxdata->p[in_audio_input_channel].val.f = 0.0; // p0
     fxdata->p[in_audio_input_pan].val.f = 0.0;     // p1
-    fxdata->p[in_audio_input_level].val.f = -48.0; // p2
+    fxdata->p[in_audio_input_level].val.f = -96.0; // p2
 
     fxdata->p[in_effect_input_channel].val.f = 0.0; // p3
     fxdata->p[in_effect_input_pan].val.f = 0.0;     // p4
@@ -81,7 +81,7 @@ void AudioInputEffect::init_default_values()
 
     fxdata->p[in_scene_input_channel].val.f = 0.0; // p6
     fxdata->p[in_scene_input_pan].val.f = 0.0;     // p7
-    fxdata->p[in_scene_input_level].val.f = -48.0;   // p8
+    fxdata->p[in_scene_input_level].val.f = -96.0;   // p8
 
     fxdata->p[in_output_width].val.f = 1.0; // p9
     fxdata->p[in_output_mix].val.f = 1.0;   // p10
