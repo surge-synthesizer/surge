@@ -2465,6 +2465,29 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 frame->repaint();
                             });
                     }
+                    case ct_bonsai_bass_boost:
+                    {
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                        "ROUTING");
+
+                        contextMenu.addItem("Stereo", true, dt == 0, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+
+                            p->deform_type = 0, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Mono", true, dt == 1, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+
+                            p->deform_type = 1, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addSeparator();
+                    }
+                    break;
                     default:
                     {
                         break;

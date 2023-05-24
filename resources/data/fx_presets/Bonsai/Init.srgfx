@@ -1,0 +1,17 @@
+<single-fx streaming_version="22">
+  <snapshot name="Init"
+     type="28"
+     p0="0"
+     p1="-6"
+     p1_deform_type="0"
+     p2="1"
+     p3="0"
+     p4="0"
+     p5="0.5"
+     p6="0.5"
+     p7="-6"
+     p8="0.25"
+     p9="0"
+     p10="1"
+  />
+</single-fx>
