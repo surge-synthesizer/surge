@@ -1132,18 +1132,6 @@ namespace sst::basic_blocks::tables
 struct SurgeSincTableProvider;
 }
 
-struct ScenesOutputData
-{
-    std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr},
-                                                                      {nullptr, nullptr}};
-
-  public:
-    ScenesOutputData();
-    const std::shared_ptr<float[BLOCK_SIZE]> &getSceneData(int scene, int channel) const;
-    void provideSceneData(int scene, int channel, float *data);
-    bool thereAreClients(int scene) const;
-};
-
 class alignas(16) SurgeStorage
 {
   public:
@@ -1569,6 +1557,19 @@ class alignas(16) SurgeStorage
     float mpePitchBendRange = -1.0f;
 
     std::atomic<int> otherscene_clients;
+
+    struct ScenesOutputData
+    {
+        std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr},
+                                                                          {nullptr, nullptr}};
+
+      public:
+        ScenesOutputData();
+        const std::shared_ptr<float[BLOCK_SIZE]> &getSceneData(int scene, int channel) const;
+        void provideSceneData(int scene, int channel, float *data);
+        bool thereAreClients(int scene) const;
+    };
+
     ScenesOutputData scenesOutputData;
 
     std::unordered_map<int, std::string> helpURL_controlgroup;

@@ -418,7 +418,7 @@ TEST_CASE("ScenesOutputData", "[fx]")
 {
     SECTION("Providing data")
     {
-        ScenesOutputData scenesOutputData{};
+        SurgeStorage::ScenesOutputData scenesOutputData{};
         REQUIRE(!scenesOutputData.thereAreClients(0));
         REQUIRE(!scenesOutputData.thereAreClients(1));
 

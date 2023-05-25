@@ -2753,7 +2753,7 @@ string findReplaceSubstring(string &source, const string &from, const string &to
 } // namespace Storage
 } // namespace Surge
 
-ScenesOutputData::ScenesOutputData()
+SurgeStorage::ScenesOutputData::ScenesOutputData()
 {
     for (int i = 0; i < n_scenes; i++)
     {
@@ -2764,19 +2764,19 @@ ScenesOutputData::ScenesOutputData()
         }
     }
 }
-const std::shared_ptr<float[BLOCK_SIZE]> &ScenesOutputData::getSceneData(int scene,
+const std::shared_ptr<float[BLOCK_SIZE]> &SurgeStorage::ScenesOutputData::getSceneData(int scene,
                                                                          int channel) const
 {
     assert(scene < n_scenes && scene >= 0);
     assert(channel < N_OUTPUTS && channel >= 0);
     return sceneData[scene][channel];
 }
-bool ScenesOutputData::thereAreClients(int scene) const
+bool SurgeStorage::ScenesOutputData::thereAreClients(int scene) const
 {
     return std::any_of(std::begin(sceneData[scene]), std::end(sceneData[scene]),
                        [](const auto &channel) { return channel.use_count() > 1; });
 }
-void ScenesOutputData::provideSceneData(int scene, int channel, float *data)
+void SurgeStorage::ScenesOutputData::provideSceneData(int scene, int channel, float *data)
 {
     if (scene < n_scenes && scene >= 0 && channel < N_OUTPUTS && channel >= 0 &&
         sceneData[scene][channel].use_count() > 1) // we don't provide data if there are no clients
