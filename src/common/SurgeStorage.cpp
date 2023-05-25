@@ -2764,8 +2764,8 @@ SurgeStorage::ScenesOutputData::ScenesOutputData()
         }
     }
 }
-const std::shared_ptr<float[BLOCK_SIZE]> &SurgeStorage::ScenesOutputData::getSceneData(int scene,
-                                                                         int channel) const
+const std::shared_ptr<float[BLOCK_SIZE]> &
+SurgeStorage::ScenesOutputData::getSceneData(int scene, int channel) const
 {
     assert(scene < n_scenes && scene >= 0);
     assert(channel < N_OUTPUTS && channel >= 0);
