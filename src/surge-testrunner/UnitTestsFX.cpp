@@ -457,25 +457,25 @@ void testExpectedValues(std::shared_ptr<SurgeSynthesizer> surge, int slot, float
     }
 }
 //
-//struct ControlParam
+// struct ControlParam
 //{
 //    int param;
 //    float value;
 //};
-//struct ExpectedOutput
+// struct ExpectedOutput
 //{
 //    float expectedLeftOutput[BLOCK_SIZE];
 //    float expectedRightOutput[BLOCK_SIZE];
 //};
 //
-//struct SubTestCase
+// struct SubTestCase
 //{
 //    std::string name;
 //    std::vector<ControlParam> controlParams;
 //    ExpectedOutput expectedOutput;
 //};
 //
-//struct InParamsGroup
+// struct InParamsGroup
 //{
 //    int slot;
 //
@@ -505,14 +505,14 @@ void testExpectedValues(std::shared_ptr<SurgeSynthesizer> surge, int slot, float
 //    }
 //};
 //
-//TEST_CASE("AudioInputEffect", "[fx]")
+// TEST_CASE("AudioInputEffect", "[fx]")
 //{
 //
 //    std::map<int, std::vector<int>> slots{
-//        {AudioInputEffect::a_insert_slot, {fxslot_ains1, fxslot_ains2, fxslot_ains3, fxslot_ains4}},
-//        {AudioInputEffect::b_insert_slot, {fxslot_bins1, fxslot_bins2, fxslot_bins3, fxslot_bins4}},
-//        {AudioInputEffect::send_slot, {fxslot_send1, fxslot_send2, fxslot_send3, fxslot_send4}},
-//        {AudioInputEffect::global_slot,
+//        {AudioInputEffect::a_insert_slot, {fxslot_ains1, fxslot_ains2, fxslot_ains3,
+//        fxslot_ains4}}, {AudioInputEffect::b_insert_slot, {fxslot_bins1, fxslot_bins2,
+//        fxslot_bins3, fxslot_bins4}}, {AudioInputEffect::send_slot, {fxslot_send1, fxslot_send2,
+//        fxslot_send3, fxslot_send4}}, {AudioInputEffect::global_slot,
 //         {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4}},
 //    };
 //
@@ -607,7 +607,8 @@ void testExpectedValues(std::shared_ptr<SurgeSynthesizer> surge, int slot, float
 //            {0.1f, 0.1f, 0.1f, 0.1f},     // audioLeftInput
 //            {0.05f, 0.05f, 0.05f, 0.05f}, // audioRightInput (half of audioLeftInput)
 //            {{"Stereo Output",
-//              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+//              {{AudioInputEffect::in_output_mix, 1.0f},
+//              {AudioInputEffect::in_output_width, 1.0f}},
 //              {
 //                  {0.4f, 0.4f, 0.4f, 0.4f}, // expectedLeftOutput (sum of leftEffectInput,
 //                                            //  sceneALeftInput, and audioLeftInput)
@@ -628,7 +629,8 @@ void testExpectedValues(std::shared_ptr<SurgeSynthesizer> surge, int slot, float
 //            {0.1f, 0.1f, 0.1f, 0.1f},     // audioLeftInput
 //            {0.05f, 0.05f, 0.05f, 0.05f}, // audioRightInput (half of audioLeftInput)
 //            {{"Stereo Output",
-//              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+//              {{AudioInputEffect::in_output_mix, 1.0f},
+//              {AudioInputEffect::in_output_width, 1.0f}},
 //              {
 //                  // ExpectedOutput
 //                  {0.2f, 0.2f, 0.2f,
@@ -649,7 +651,8 @@ void testExpectedValues(std::shared_ptr<SurgeSynthesizer> surge, int slot, float
 //            {0.1f, 0.1f, 0.1f, 0.1f},     // audioLeftInput
 //            {0.05f, 0.05f, 0.05f, 0.05f}, // audioRightInput (half of audioLeftInput)
 //            {{"Stereo Output",
-//              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+//              {{AudioInputEffect::in_output_mix, 1.0f},
+//              {AudioInputEffect::in_output_width, 1.0f}},
 //              {
 //                  // ExpectedOutput
 //                  {0.2f, 0.2f, 0.2f,
