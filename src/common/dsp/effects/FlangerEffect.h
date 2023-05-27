@@ -27,12 +27,12 @@
 #include "SurgeSSTFXAdapter.h"
 #include "sst/effects/Flanger.h"
 
-class FlangerEffect
-    : public surge::sstfx::SurgeSSTFXBase<sst::effects::Flanger<surge::sstfx::SurgeFXConfig>>
+class FlangerEffect : public surge::sstfx::SurgeSSTFXBase<
+                          sst::effects::flanger::Flanger<surge::sstfx::SurgeFXConfig>>
 {
   public:
     FlangerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-        : surge::sstfx::SurgeSSTFXBase<sst::effects::Flanger<surge::sstfx::SurgeFXConfig>>(
+        : surge::sstfx::SurgeSSTFXBase<sst::effects::flanger::Flanger<surge::sstfx::SurgeFXConfig>>(
               storage, fxdata, pd)
     {
     }

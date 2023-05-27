@@ -24,6 +24,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 /*
  * For a discussion of why this is in src/common rather than src/common/gui

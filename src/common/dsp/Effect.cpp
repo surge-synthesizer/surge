@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "BBDEnsembleEffect.h"
+#include "BonsaiEffect.h"
 #include "ChorusEffectImpl.h"
 #include "CombulatorEffect.h"
 #include "ConditionerEffect.h"
@@ -110,6 +111,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new MSToolEffect(storage, fxdata, pd);
     case fxt_spring_reverb:
         return new chowdsp::SpringReverbEffect(storage, fxdata, pd);
+    case fxt_bonsai:
+        return new BonsaiEffect(storage, fxdata, pd);
     default:
         return 0;
     };

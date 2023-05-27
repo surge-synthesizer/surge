@@ -20,32 +20,28 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#ifndef SURGE_SRC_COMMON_DSP_EFFECTS_DELAYEFFECT_H
-#define SURGE_SRC_COMMON_DSP_EFFECTS_DELAYEFFECT_H
+#ifndef SURGE_SRC_COMMON_DSP_EFFECTS_BONSAIEFFECT_H
+#define SURGE_SRC_COMMON_DSP_EFFECTS_BONSAIEFFECT_H
+
 #include "Effect.h"
-#include "BiquadFilter.h"
-#include "DSPUtils.h"
-#include "AllpassFilter.h"
-
-#include <vembertech/lipol.h>
-
 #include "SurgeSSTFXAdapter.h"
-#include "sst/effects/Delay.h"
+#include "sst/effects/Bonsai.h"
 
-class DelayEffect
-    : public surge::sstfx::SurgeSSTFXBase<sst::effects::delay::Delay<surge::sstfx::SurgeFXConfig>>
+class BonsaiEffect
+    : public surge::sstfx::SurgeSSTFXBase<sst::effects::bonsai::Bonsai<surge::sstfx::SurgeFXConfig>>
 {
-
   public:
-    DelayEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    virtual ~DelayEffect();
+    BonsaiEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+        : surge::sstfx::SurgeSSTFXBase<sst::effects::bonsai::Bonsai<surge::sstfx::SurgeFXConfig>>(
+              storage, fxdata, pd)
+    {
+    }
+
+    virtual ~BonsaiEffect() = default;
+
     virtual void init_ctrltypes() override;
-    virtual void init_default_values() override;
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
-
-    virtual void handleStreamingMismatches(int streamingRevision,
-                                           int currentSynthStreamingRevision) override;
 };
 
-#endif // SURGE_SRC_COMMON_DSP_EFFECTS_DELAYEFFECT_H
+#endif // SURGE_SRC_COMMON_DSP_EFFECTS_BONSAIEFFECT_H

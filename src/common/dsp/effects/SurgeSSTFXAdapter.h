@@ -46,7 +46,7 @@
  *
  * 1. Copy the code to a header in sst-effects and use the concrete names for
  *    the interface which the regtests require. So now you have
- *    sst::effects::Foo<COnfig>
+ *    sst::effects::Foo<Config>
  * 2. Strip that code from surge and change FooEffect : Effect into
  *    FooEffect : SurgeSSTFXBase<sst::effects::Foo<surge::sstfx::SurgeFXConfig>
  *
@@ -97,9 +97,17 @@ struct SurgeFXConfig
         return *(e->pd_float[idx]);
     }
 
+    static inline float floatValueExtendedAt(const Effect *const e, const ValueStorage *const v,
+                                             int idx)
+    {
+        if (e->fxdata->p[idx].extend_range)
+            return e->fxdata->p[idx].get_extended(*(e->pd_float[idx]));
+        return *(e->pd_float[idx]);
+    }
+
     static inline int intValueAt(const Effect *const e, const ValueStorage *const v, int idx)
     {
-        return *(e->pd_float[idx]);
+        return *(e->pd_int[idx]);
     }
 
     static inline float envelopeRateLinear(GlobalStorage *s, float f)
@@ -107,12 +115,20 @@ struct SurgeFXConfig
         return s->envelope_rate_linear(f);
     }
 
+    static inline bool temposyncInitialized(GlobalStorage *s) { return s->temposyncratio_inv != 0; }
     static inline float temposyncRatio(GlobalStorage *s, EffectStorage *e, int idx)
     {
         return e->p[idx].temposync ? s->temposyncratio : 1;
     }
 
+    static inline float temposyncRatioInv(GlobalStorage *s, EffectStorage *e, int idx)
+    {
+        return e->p[idx].temposync ? s->temposyncratio_inv : 1;
+    }
+
     static inline bool isDeactivated(EffectStorage *e, int idx) { return e->p[idx].deactivated; }
+    static inline bool isExtended(EffectStorage *e, int idx) { return e->p[idx].extend_range; }
+    static inline int deformType(EffectStorage *e, int idx) { return e->p[idx].deform_type; }
 
     static inline float rand01(GlobalStorage *s) { return s->rand_01(); }
 
@@ -140,7 +156,16 @@ template <typename T> struct SurgeSSTFXBase : T
 {
     SurgeSSTFXBase(SurgeStorage *storage, FxStorage *fxdata, pdata *pd) : T(storage, fxdata, pd) {}
 
-    void init() override { T::initialize(); }
+    void init() override
+    {
+        // the values are not copied to the modulation array in all cases at init.
+        // Make sure they are here.
+        for (int j = 0; j < n_fx_params; j++)
+        {
+            *T::pd_float[j] = T::fxdata->p[j].val.f;
+        }
+        T::initialize();
+    }
 
     void process(float *dataL, float *dataR) override { T::processBlock(dataL, dataR); }
 
@@ -174,12 +199,22 @@ template <typename T> struct SurgeSSTFXBase : T
         for (int i = 0; i < T::numParams; ++i)
         {
             auto pmd = T::paramAt(i);
+
+            if (this->fxdata->p[i].ctrltype == ct_none &&
+                pmd.type == sst::basic_blocks::params::ParamMetaData::NONE)
+                continue;
+
+            if (pmd.name.empty())
+            {
+                std::cout << "\n\n----- " << i << " " << this->fxdata->p[i].get_name() << std::endl;
+            }
             this->fxdata->p[i].set_name(pmd.name.c_str());
             this->fxdata->p[i].basicBlocksParamMetaData = pmd;
-            auto check = [&](auto a, auto b, auto msg) {
+            auto check = [&, i](auto a, auto b, auto msg) {
                 if (a != b)
-                    std::cout << "Unable to match " << pmd.name << " " << a << " " << b << " "
-                              << msg << std::endl;
+                    std::cout << "Metadata Mismatch (" << msg << "): param[" << i << "]='"
+                              << pmd.name << "'; paramValue=" << a << " expected=" << b
+                              << std::endl;
             };
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::FLOAT)
             {
@@ -191,14 +226,11 @@ template <typename T> struct SurgeSSTFXBase : T
                 check((int)pmd.minVal, this->fxdata->p[i].val_min.i, "Minimum Values");
                 check((int)pmd.maxVal, this->fxdata->p[i].val_max.i, "Maximum Values");
             }
-            if (!pmd.supportsStringConversion)
-            {
-                std::cout << "No support for string conversion on " << pmd.name << std::endl;
-            }
             check(pmd.canTemposync, this->fxdata->p[i].can_temposync(), "Can Temposync");
             check(pmd.canDeform, this->fxdata->p[i].has_deformoptions(), "Can Deform");
             check(pmd.canAbsolute, this->fxdata->p[i].can_be_absolute(), "Can Be Absolute");
             check(pmd.canExtend, this->fxdata->p[i].can_extend_range(), "Can Extend");
+            check(pmd.canDeactivate, this->fxdata->p[i].can_deactivate(), "Can Deactivate");
             check(pmd.supportsStringConversion, true, "Supports string value");
         }
     }
