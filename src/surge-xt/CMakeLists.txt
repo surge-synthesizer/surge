@@ -169,6 +169,8 @@ target_sources(${PROJECT_NAME} PRIVATE
 
   osc/OSCListener.cpp
   osc/OSCListener.h
+  osc/OSCSender.cpp
+  osc/OSCSender.h
   )
 
 if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)

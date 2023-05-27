@@ -1255,6 +1255,7 @@ class alignas(16) SurgeStorage
     float cpu_falloff;
 
     bool oscListenerRunning{false};
+    bool oscSending{false};
 
     bool getOverrideDataHome(std::string &value);
     void createUserDirectory();

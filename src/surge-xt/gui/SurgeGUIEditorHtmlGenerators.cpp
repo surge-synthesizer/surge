@@ -502,6 +502,8 @@ div.outer {
     margin: 0 0 10pt 0;
     font-family: Lato;
     color: #123463;
+    display: flex;
+    justify-content: center;
 }
 
 div.frame {

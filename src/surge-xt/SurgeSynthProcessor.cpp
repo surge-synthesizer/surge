@@ -141,16 +141,32 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCIn, false);
     if (startOSCInNow)
     {
-        int defaultOSCPortIn = Surge::Storage::getUserDefaultValue(
+        int defaultOSCInPort = Surge::Storage::getUserDefaultValue(
             &(surge->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
-        bool success = initOSC(defaultOSCPortIn);
+        bool success = initOSCIn(defaultOSCInPort);
         if (!success)
         {
             std::ostringstream msg;
-            msg << "Surge XT was unable to connect to UDP port " << defaultOSCPortIn
+            msg << "Surge XT was unable to connect to UDP port " << defaultOSCInPort
                 << " for OSC input.\n"
                 << "It may be in use by another application.";
-            surge->storage.reportError(msg.str(), "OSC Initialization Error");
+            surge->storage.reportError(msg.str(), "OSC Input Initialization Error");
+        }
+    }
+    bool startOSCOutNow =
+        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCOut, false);
+    if (startOSCOutNow)
+    {
+        int defaultOSCOutPort = Surge::Storage::getUserDefaultValue(
+            &(surge->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
+        bool success = initOSCOut(defaultOSCOutPort);
+        if (!success)
+        {
+            std::ostringstream msg;
+            msg << "Surge XT was unable to connect to UDP port " << defaultOSCOutPort
+                << " for OSC output.\n"
+                << "It may be in use by another application.";
+            surge->storage.reportError(msg.str(), "OSC Output Initialization Error");
         }
     }
 #endif
@@ -227,16 +243,15 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 /* OSC (Open Sound Control) */
-bool SurgeSynthProcessor::initOSC(int port)
+bool SurgeSynthProcessor::initOSCIn(int port)
 {
     auto state = oscListener.init(this, surge, port);
-
     surge->storage.oscListenerRunning = state;
 
     return state;
 }
 
-bool SurgeSynthProcessor::changeOSCPort(int new_port)
+bool SurgeSynthProcessor::changeOSCInPort(int new_port)
 {
     if (oscListener.listening)
     {
@@ -244,7 +259,26 @@ bool SurgeSynthProcessor::changeOSCPort(int new_port)
         oscListener.disconnect();
     }
 
-    return initOSC(new_port);
+    return initOSCIn(new_port);
+}
+
+bool SurgeSynthProcessor::initOSCOut(int port)
+{
+    auto state = oscSender.init(port);
+    surge->storage.oscSending = state;
+
+    return state;
+}
+
+bool SurgeSynthProcessor::changeOSCOutPort(int new_port)
+{
+    if (oscSender.sendingOSC)
+    {
+        surge->storage.oscSending = false;
+        oscSender.disconnect();
+    }
+
+    return initOSCOut(new_port);
 }
 
 //==============================================================================

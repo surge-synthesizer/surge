@@ -28,6 +28,7 @@
 #include "util/LockFreeStack.h"
 
 #include "osc/OSCListener.h"
+#include "osc/OSCSender.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
 
@@ -352,6 +353,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     sst::cpputils::SimpleRingBuffer<oscMsg, 4096> oscRingBuf;
 
     Surge::OSC::OSCListener oscListener;
+    Surge::OSC::OSCSender oscSender;
 
     //==============================================================================
     const juce::String getName() const override;
@@ -388,8 +390,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     bool getPluginHasMainInput() const override { return false; }
 
-    bool initOSC(int port);
-    bool changeOSCPort(int newport);
+    bool initOSCIn(int port);
+    bool initOSCOut(int port);
+    bool changeOSCInPort(int newport);
+    bool changeOSCOutPort(int newport);
 
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool isInputMain(int index) override { return false; }

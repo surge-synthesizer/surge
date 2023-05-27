@@ -4786,7 +4786,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                     return;
                 }
 
-                bool success = juceEditor->processor.changeOSCPort(newPort);
+                bool success = juceEditor->processor.changeOSCInPort(newPort);
                 if (!success)
                 {
                     SurgeGUIEditor::initOSCError(newPort);
@@ -4828,7 +4828,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                     return;
                 }
 
-                bool success = juceEditor->processor.changeOSCPort(newPort);
+                bool success = juceEditor->processor.changeOSCInPort(newPort);
                 if (!success)
                 {
                     SurgeGUIEditor::initOSCError(newPort);
@@ -4847,7 +4847,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
         oscSubMenu.addItem(
             Surge::GUI::toOSCase("Reset OSC Input Port to " + std::to_string(DEFAULT_OSC_PORT_IN)),
             [this]() {
-                bool success = juceEditor->processor.changeOSCPort(DEFAULT_OSC_PORT_IN);
+                bool success = juceEditor->processor.changeOSCInPort(DEFAULT_OSC_PORT_IN);
 
                 if (!success)
                 {
@@ -4868,7 +4868,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                            [this]() {
                                /*
                                bool success =
-                               juceEditor->processor.changeOSCPort(DEFAULT_OSC_PORT_OUT);
+                               juceEditor->processor.changeOSCInPort(DEFAULT_OSC_PORT_OUT);
 
                                if (!success)
                                {
@@ -4896,7 +4896,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
         oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Listener"), [this]() {
             int defaultOSCPortIn = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
-            bool success = juceEditor->processor.initOSC(defaultOSCPortIn);
+            bool success = juceEditor->processor.initOSCIn(defaultOSCPortIn);
 
             if (!success)
             {
@@ -4916,17 +4916,17 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 
     oscSubMenu.addSeparator();
 
-    if (synth->storage.oscListenerRunning) // TODO: fix this!
+    if (synth->storage.oscSending)
     {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Output"),
-                           [this]() { juceEditor->processor.oscListener.stopListening(); });
+                           [this]() { juceEditor->processor.oscSender.stopSending(); });
     }
     else
     {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Output"), [this]() {
             int defaultOSCPortOut = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
-            // bool success = juceEditor->processor.initOSC(defaultOSCPortOut);
+            bool success = juceEditor->processor.initOSCOut(defaultOSCPortOut);
 
             // if (!success)
             //{
