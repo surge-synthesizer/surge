@@ -4866,9 +4866,8 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
         oscSubMenu.addItem(Surge::GUI::toOSCase("Reset OSC Output Port to " +
                                                 std::to_string(DEFAULT_OSC_PORT_OUT)),
                            [this]() {
-                               /*
                                bool success =
-                               juceEditor->processor.changeOSCInPort(DEFAULT_OSC_PORT_OUT);
+                                   juceEditor->processor.changeOSCOutPort(DEFAULT_OSC_PORT_OUT);
 
                                if (!success)
                                {
@@ -4880,7 +4879,6 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                                        &(synth->storage), Surge::Storage::OSCPortOut,
                                DEFAULT_OSC_PORT_OUT);
                                }
-                               */
                            });
     }
 
