@@ -264,7 +264,7 @@ bool SurgeSynthProcessor::changeOSCInPort(int new_port)
 
 bool SurgeSynthProcessor::initOSCOut(int port)
 {
-    auto state = oscSender.init(port);
+    auto state = oscSender.init(surge, port);
     surge->storage.oscSending = state;
 
     return state;

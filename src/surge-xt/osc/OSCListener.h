@@ -60,7 +60,7 @@ class OSCListener : public juce::OSCReceiver,
     void oscMessageReceived(const juce::OSCMessage &message) override;
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
-    int portnum = 0;
+    int portnum = DEFAULT_OSC_PORT_IN;
     bool listening = false;
 
   private:

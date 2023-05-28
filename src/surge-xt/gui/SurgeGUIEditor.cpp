@@ -4755,134 +4755,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 {
     auto oscSubMenu = juce::PopupMenu();
     int iportnum = juceEditor->processor.oscListener.portnum;
-    int oportnum = 0;
-
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Input Port..."), [this, iportnum]() {
-        const auto c{std::to_string(iportnum)};
-
-        promptForMiniEdit(
-            c, "Enter a new value:", "OSC Input Port Number", juce::Point<int>(10, 10),
-            [this](const std::string &c) {
-                int newPort = Surge::Storage::getUserDefaultValue(
-                    &(synth->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
-
-                try
-                {
-                    newPort = std::stoi(c);
-                }
-                catch (...)
-                {
-                    std::ostringstream msg;
-                    msg << "Entered value is not a number. Please try again.";
-                    synth->storage.reportError(msg.str(), "Input Error");
-                    return;
-                }
-
-                if (newPort > 65535 || newPort < 1)
-                {
-                    std::ostringstream msg;
-                    msg << "Port number must be between 1 and 65535!";
-                    synth->storage.reportError(msg.str(), "Port Number Out Of Range");
-                    return;
-                }
-
-                bool success = juceEditor->processor.changeOSCInPort(newPort);
-                if (!success)
-                {
-                    SurgeGUIEditor::initOSCError(newPort);
-                }
-                else
-                {
-                    Surge::Storage::updateUserDefaultValue(&(synth->storage),
-                                                           Surge::Storage::OSCPortIn, newPort);
-                }
-            },
-            mainMenu);
-    });
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Output Port..."), [this, oportnum]() {
-        const auto c{std::to_string(oportnum)};
-
-        promptForMiniEdit(
-            c, "Enter a new value:", "OSC Output Port Number", juce::Point<int>(10, 10),
-            [this](const std::string &c) {
-                int newPort = Surge::Storage::getUserDefaultValue(
-                    &(synth->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_OUT);
-
-                try
-                {
-                    newPort = std::stoi(c);
-                }
-                catch (...)
-                {
-                    std::ostringstream msg;
-                    msg << "Entered value is not a number. Please try again.";
-                    synth->storage.reportError(msg.str(), "Input Error");
-                    return;
-                }
-
-                if (newPort > 65535 || newPort < 1)
-                {
-                    std::ostringstream msg;
-                    msg << "Port number must be between 1 and 65535!";
-                    synth->storage.reportError(msg.str(), "Port Number Out Of Range");
-                    return;
-                }
-
-                bool success = juceEditor->processor.changeOSCInPort(newPort);
-                if (!success)
-                {
-                    SurgeGUIEditor::initOSCError(newPort);
-                }
-                else
-                {
-                    Surge::Storage::updateUserDefaultValue(&(synth->storage),
-                                                           Surge::Storage::OSCPortOut, newPort);
-                }
-            },
-            mainMenu);
-    });
-
-    if (iportnum != DEFAULT_OSC_PORT_IN)
-    {
-        oscSubMenu.addItem(
-            Surge::GUI::toOSCase("Reset OSC Input Port to " + std::to_string(DEFAULT_OSC_PORT_IN)),
-            [this]() {
-                bool success = juceEditor->processor.changeOSCInPort(DEFAULT_OSC_PORT_IN);
-
-                if (!success)
-                {
-                    SurgeGUIEditor::initOSCError(DEFAULT_OSC_PORT_IN);
-                }
-                else
-                {
-                    Surge::Storage::updateUserDefaultValue(
-                        &(synth->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
-                }
-            });
-    }
-
-    if (oportnum != DEFAULT_OSC_PORT_OUT)
-    {
-        oscSubMenu.addItem(Surge::GUI::toOSCase("Reset OSC Output Port to " +
-                                                std::to_string(DEFAULT_OSC_PORT_OUT)),
-                           [this]() {
-                               bool success =
-                                   juceEditor->processor.changeOSCOutPort(DEFAULT_OSC_PORT_OUT);
-
-                               if (!success)
-                               {
-                                   SurgeGUIEditor::initOSCError(DEFAULT_OSC_PORT_OUT);
-                               }
-                               else
-                               {
-                                   Surge::Storage::updateUserDefaultValue(
-                                       &(synth->storage), Surge::Storage::OSCPortOut,
-                               DEFAULT_OSC_PORT_OUT);
-                               }
-                           });
-    }
-
-    oscSubMenu.addSeparator();
+    int oportnum = juceEditor->processor.oscSender.portnum;
 
     if (synth->storage.oscListenerRunning)
     {
@@ -4941,6 +4814,135 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                            Surge::Storage::updateUserDefaultValue(
                                &(synth->storage), Surge::Storage::StartOSCOut, !outIsChecked);
                        });
+
+    oscSubMenu.addSeparator();
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Input Port..."), [this, iportnum]() {
+        const auto c{std::to_string(iportnum)};
+
+        promptForMiniEdit(
+            c, "Enter a new value:", "OSC Input Port Number", juce::Point<int>(10, 10),
+            [this](const std::string &c) {
+                int newPort = Surge::Storage::getUserDefaultValue(
+                    &(synth->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
+
+                try
+                {
+                    newPort = std::stoi(c);
+                }
+                catch (...)
+                {
+                    std::ostringstream msg;
+                    msg << "Entered value is not a number. Please try again.";
+                    synth->storage.reportError(msg.str(), "Input Error");
+                    return;
+                }
+
+                if (newPort > 65535 || newPort < 1)
+                {
+                    std::ostringstream msg;
+                    msg << "Port number must be between 1 and 65535!";
+                    synth->storage.reportError(msg.str(), "Port Number Out Of Range");
+                    return;
+                }
+
+                bool success = juceEditor->processor.changeOSCInPort(newPort);
+                if (!success)
+                {
+                    SurgeGUIEditor::initOSCError(newPort);
+                }
+                else
+                {
+                    Surge::Storage::updateUserDefaultValue(&(synth->storage),
+                                                           Surge::Storage::OSCPortIn, newPort);
+                }
+            },
+            mainMenu);
+    });
+
+    if (iportnum != DEFAULT_OSC_PORT_IN)
+    {
+        oscSubMenu.addItem(
+            Surge::GUI::toOSCase("Reset OSC Input Port to " + std::to_string(DEFAULT_OSC_PORT_IN)),
+            [this]() {
+                bool success = juceEditor->processor.changeOSCInPort(DEFAULT_OSC_PORT_IN);
+
+                if (!success)
+                {
+                    SurgeGUIEditor::initOSCError(DEFAULT_OSC_PORT_IN);
+                }
+                else
+                {
+                    Surge::Storage::updateUserDefaultValue(
+                        &(synth->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
+                }
+            });
+    }
+
+    oscSubMenu.addSeparator();
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Output Port..."), [this, oportnum]() {
+        const auto c{std::to_string(oportnum)};
+
+        promptForMiniEdit(
+            c, "Enter a new value:", "OSC Output Port Number", juce::Point<int>(10, 10),
+            [this](const std::string &c) {
+                int newPort = Surge::Storage::getUserDefaultValue(
+                    &(synth->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
+
+                try
+                {
+                    newPort = std::stoi(c);
+                }
+                catch (...)
+                {
+                    std::ostringstream msg;
+                    msg << "Entered value is not a number. Please try again.";
+                    synth->storage.reportError(msg.str(), "Input Error");
+                    return;
+                }
+
+                if (newPort > 65535 || newPort < 1)
+                {
+                    std::ostringstream msg;
+                    msg << "Port number must be between 1 and 65535!";
+                    synth->storage.reportError(msg.str(), "Port Number Out Of Range");
+                    return;
+                }
+
+                bool success = juceEditor->processor.changeOSCOutPort(newPort);
+                if (!success)
+                {
+                    SurgeGUIEditor::initOSCError(newPort);
+                }
+                else
+                {
+                    Surge::Storage::updateUserDefaultValue(&(synth->storage),
+                                                           Surge::Storage::OSCPortOut, newPort);
+                }
+            },
+            mainMenu);
+    });
+
+    if (oportnum != DEFAULT_OSC_PORT_OUT)
+    {
+        oscSubMenu.addItem(
+            Surge::GUI::toOSCase("Reset OSC Output Port to " +
+                                 std::to_string(DEFAULT_OSC_PORT_OUT)),
+            [this]() {
+                bool success = juceEditor->processor.changeOSCOutPort(DEFAULT_OSC_PORT_OUT);
+
+                if (!success)
+                {
+                    SurgeGUIEditor::initOSCError(DEFAULT_OSC_PORT_OUT);
+                }
+                else
+                {
+                    Surge::Storage::updateUserDefaultValue(
+                        &(synth->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
+                }
+            });
+    }
 
     oscSubMenu.addSeparator();
 

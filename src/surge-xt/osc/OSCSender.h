@@ -37,6 +37,7 @@
 */
 
 #include "juce_osc/juce_osc.h"
+#include "SurgeSynthesizer.h"
 
 namespace Surge
 {
@@ -49,17 +50,18 @@ class OSCSender : public juce::OSCSender
     OSCSender();
     ~OSCSender();
 
-    bool init(int port);
+    bool init(const std::unique_ptr<SurgeSynthesizer> &surge, int port);
     void stopSending();
 
     // void oscMessageReceived(const juce::OSCMessage &message) override;
     // void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
-    int portnum = 0;
+    int portnum = DEFAULT_OSC_PORT_OUT;
     bool sendingOSC = false;
 
   private:
     juce::OSCSender juceOSCSender;
+    SurgeSynthesizer *synth{nullptr};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OSCSender)
 };
