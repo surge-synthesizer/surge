@@ -43,6 +43,7 @@
 
 #include "overlays/AboutScreen.h"
 #include "overlays/MiniEdit.h"
+#include "overlays/Alert.h"
 #include "overlays/MSEGEditor.h"
 #include "overlays/LuaEditors.h"
 #include "overlays/ModulationEditor.h"
@@ -5516,6 +5517,22 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->toFront(true);
     miniEdit->setFocusReturnTarget(returnFocusTo);
     miniEdit->grabFocus();
+}
+
+
+void SurgeGUIEditor::alertWindow(const std::string &title, const std::string &prompt,
+                                std::function<void()> onOk)
+{
+    alert = std::make_unique<Surge::Overlays::Alert>();
+    alert->setSkin(currentSkin, bitmapStore);
+    alert->setDescription(title);
+    alert->setWindowTitle(title);
+    addAndMakeVisibleWithTracking(frame.get(), *alert);
+    alert->setLabel(prompt);
+    alert->onOk = std::move(onOk);
+    alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
+    alert->setVisible(true);
+    alert->toFront(true);
 }
 
 bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSourceButton *msb,
