@@ -1378,14 +1378,14 @@ class PatchSelectorAH : public juce::AccessibilityHandler
 {
   public:
     explicit PatchSelectorAH(PatchSelector *sel)
-        : selector(sel),
-          juce::AccessibilityHandler(*sel, juce::AccessibilityRole::label,
-                                     juce::AccessibilityActions()
-                                         .addAction(juce::AccessibilityActionType::press,
-                                                    [sel] { sel->showClassicMenu(); })
-                                         .addAction(juce::AccessibilityActionType::showMenu,
-                                                    [sel] { sel->showClassicMenu(); }),
-                                     {std::make_unique<PatchSelectorValueInterface>(sel)})
+        : selector(sel), juce::AccessibilityHandler(
+                             *sel, juce::AccessibilityRole::label,
+                             juce::AccessibilityActions()
+                                 .addAction(juce::AccessibilityActionType::press,
+                                            [sel] { sel->showClassicMenu(); })
+                                 .addAction(juce::AccessibilityActionType::showMenu,
+                                            [sel] { sel->showClassicMenu(); }),
+                             {std::make_unique<PatchSelectorValueInterface>(sel)})
     {
     }
 
