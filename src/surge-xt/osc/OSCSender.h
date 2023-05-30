@@ -51,6 +51,7 @@ class OSCSender : public juce::OSCSender
     ~OSCSender();
 
     bool init(const std::unique_ptr<SurgeSynthesizer> &surge, int port);
+    void send(std::string addr, std::string msg);
     void stopSending();
 
     // void oscMessageReceived(const juce::OSCMessage &message) override;

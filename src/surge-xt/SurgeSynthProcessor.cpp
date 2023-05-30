@@ -167,6 +167,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
                 << " for OSC output.\n"
                 << "It may be in use by another application.";
             surge->storage.reportError(msg.str(), "OSC Output Initialization Error");
+            return;
         }
     }
 #endif

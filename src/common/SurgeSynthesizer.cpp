@@ -4270,6 +4270,7 @@ void SurgeSynthesizer::process()
 
         if (masterfade < 0.0001f)
         {
+            std::cout << "patchid: " << patch_loaded << std::endl;
             std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
             // spawn patch-loading thread
             allNotesOff();
