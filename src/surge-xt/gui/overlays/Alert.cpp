@@ -48,7 +48,7 @@ Alert::~Alert() {}
 
 juce::Rectangle<int> Alert::getDisplayRegion()
 {
-    return juce::Rectangle<int>(0, 0, 360, 90).withCentre(getBounds().getCentre());
+    return juce::Rectangle<int>(0, 0, 360, 95).withCentre(getBounds().getCentre());
 }
 
 void Alert::paint(juce::Graphics &g)
@@ -89,8 +89,7 @@ void Alert::paint(juce::Graphics &g)
     g.fillRect(bodyRect);
     g.setColour(skin->getColor(Colors::Dialog::Label::Text));
     g.setFont(skin->fontManager->getLatoAtSize(9));
-    g.drawFittedText(label, bodyRect.withTrimmedLeft(2).withTrimmedRight(2),
-                     juce::Justification::centredTop, 4);
+    g.drawFittedText(label, bodyRect.reduced(6), juce::Justification::centredTop, 4);
 
     g.setColour(skin->getColor(Colors::Dialog::Border));
     g.drawRect(fullRect.expanded(1), 2);

@@ -702,17 +702,27 @@ void PatchSelector::showClassicMenu(bool single_category)
             });
 
             contextMenu.addItem(Surge::GUI::toOSCase("Delete Patch"), [this, sge]() {
-
-                auto onOk = [this] () {
-                    fs::remove(storage->patch_list[current_patch].path);
-                    storage->refresh_patchlist();
-                    storage->initializePatchDb(true);
+                auto onOk = [this]() {
+                    try
+                    {
+                        fs::remove(storage->patch_list[current_patch].path);
+                        storage->refresh_patchlist();
+                        storage->initializePatchDb(true);
+                    }
+                    catch (const fs::filesystem_error &e)
+                    {
+                        std::ostringstream oss;
+                        oss << "Experienced filesystem error while deleting patch " << e.what();
+                        storage->reportError(oss.str(), "Filesystem Error");
+                    }
                     isUser = false;
                 };
 
-                sge->alertWindow("Delete Patch", std::string("Do you really want to delete\n") +
-                        storage->patch_list[current_patch].path.u8string() +
-                        "?\n\nThis cannot be undone!", onOk);
+                sge->alertOKCancel("Delete Patch",
+                                   std::string("Do you really want to delete\n") +
+                                       storage->patch_list[current_patch].path.u8string() +
+                                       "?\nThis cannot be undone!",
+                                   onOk);
             });
         }
 
@@ -1368,14 +1378,14 @@ class PatchSelectorAH : public juce::AccessibilityHandler
 {
   public:
     explicit PatchSelectorAH(PatchSelector *sel)
-        : selector(sel), juce::AccessibilityHandler(
-                             *sel, juce::AccessibilityRole::label,
-                             juce::AccessibilityActions()
-                                 .addAction(juce::AccessibilityActionType::press,
-                                            [sel] { sel->showClassicMenu(); })
-                                 .addAction(juce::AccessibilityActionType::showMenu,
-                                            [sel] { sel->showClassicMenu(); }),
-                             {std::make_unique<PatchSelectorValueInterface>(sel)})
+        : selector(sel),
+          juce::AccessibilityHandler(*sel, juce::AccessibilityRole::label,
+                                     juce::AccessibilityActions()
+                                         .addAction(juce::AccessibilityActionType::press,
+                                                    [sel] { sel->showClassicMenu(); })
+                                         .addAction(juce::AccessibilityActionType::showMenu,
+                                                    [sel] { sel->showClassicMenu(); }),
+                                     {std::make_unique<PatchSelectorValueInterface>(sel)})
     {
     }
 

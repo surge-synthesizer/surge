@@ -5519,9 +5519,8 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->grabFocus();
 }
 
-
-void SurgeGUIEditor::alertWindow(const std::string &title, const std::string &prompt,
-                                std::function<void()> onOk)
+void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
+                                   std::function<void()> onOk)
 {
     alert = std::make_unique<Surge::Overlays::Alert>();
     alert->setSkin(currentSkin, bitmapStore);
