@@ -33,7 +33,7 @@
 #include "sst/effects/Delay.h"
 
 class DelayEffect
-    : public surge::sstfx::SurgeSSTFXBase<sst::effects::Delay<surge::sstfx::SurgeFXConfig>>
+    : public surge::sstfx::SurgeSSTFXBase<sst::effects::delay::Delay<surge::sstfx::SurgeFXConfig>>
 {
 
   public:

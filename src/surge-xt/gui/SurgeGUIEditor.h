@@ -85,6 +85,7 @@ namespace Overlays
 struct AboutScreen;
 struct TypeinParamEditor;
 struct MiniEdit;
+struct Alert;
 
 struct OverlayWrapper;
 struct PatchStoreDialog;
@@ -827,6 +828,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool getUseKeyboardShortcuts();
     void setUseKeyboardShortcuts(bool b);
     void toggleUseKeyboardShortcuts();
+    void alertOKCancel(const std::string &title, const std::string &prompt,
+                       std::function<void()> onOk);
+
+    std::unique_ptr<Surge::Overlays::Alert> alert;
 
     std::unique_ptr<juce::AlertWindow> okcWithToggleAlertWindow;
     std::unique_ptr<juce::ToggleButton> okcWithToggleToggleButton;
