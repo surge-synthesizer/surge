@@ -37,3 +37,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   surge::surge-common
   juce::juce_audio_basics
   )
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    )
