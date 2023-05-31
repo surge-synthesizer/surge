@@ -54,6 +54,6 @@ class AudioInputEffect : public Effect
   private:
     std::shared_ptr<float[BLOCK_SIZE]> sceneDataPtr[N_OUTPUTS]{nullptr, nullptr};
     effect_slot_type getSlotType(fxslot_positions p);
-    void applySlidersControls(float *buffer[], const float &channel,
-                              const float &pan, const float &levelDb);
+    void applySlidersControls(float *buffer[], const float &channel, const float &pan,
+                              const float &levelDb);
 };

@@ -143,13 +143,11 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     float &effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
     float *drySignal[] = {dataL, dataR};
 
-
     float effectDataBuffer[2][BLOCK_SIZE];
     std::memcpy(effectDataBuffer[0], dataL, BLOCK_SIZE * sizeof(float));
     std::memcpy(effectDataBuffer[1], dataR, BLOCK_SIZE * sizeof(float));
-    float *effectDataBuffers[]  {effectDataBuffer[0], effectDataBuffer[1]};
+    float *effectDataBuffers[]{effectDataBuffer[0], effectDataBuffer[1]};
     applySlidersControls(effectDataBuffers, effectInputChannel, effectInputPan, effectInputLevelDb);
-
 
     float &inputChannel = fxdata->p[in_audio_input_channel].val.f;
     float &inputPan = fxdata->p[in_audio_input_pan].val.f;
@@ -162,7 +160,6 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     float *inputDataBuffers[] = {inputDataBuffer[0], inputDataBuffer[1]};
 
     applySlidersControls(inputDataBuffers, inputChannel, inputPan, inputLevelDb);
-
 
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
     if (slotType == a_insert_slot || slotType == b_insert_slot)
@@ -178,25 +175,21 @@ void AudioInputEffect::process(float *dataL, float *dataR)
         float sceneDataBuffer[2][BLOCK_SIZE];
         std::memcpy(sceneDataBuffer[0], sceneData[0], BLOCK_SIZE * sizeof(float));
         std::memcpy(sceneDataBuffer[1], sceneData[1], BLOCK_SIZE * sizeof(float));
-        float *sceneDataBuffers[]  {
-            sceneDataBuffer[0],
-            sceneDataBuffer[1]
-        };
+        float *sceneDataBuffers[]{sceneDataBuffer[0], sceneDataBuffer[1]};
         applySlidersControls(sceneDataBuffers, sceneInputChannel, sceneInputPan, sceneInputLevelDb);
         // mixing the scene audio input and the effect audio input
-        for(int i = 0; i < BLOCK_SIZE; ++i)
+        for (int i = 0; i < BLOCK_SIZE; ++i)
         {
             effectDataBuffer[0][i] += sceneDataBuffer[0][i];
             effectDataBuffer[1][i] += sceneDataBuffer[1][i];
         }
     }
     // mixing the effect and audio input
-    for(int i = 0; i < BLOCK_SIZE; ++i)
+    for (int i = 0; i < BLOCK_SIZE; ++i)
     {
         effectDataBuffer[0][i] += inputDataBuffer[0][i];
         effectDataBuffer[1][i] += inputDataBuffer[1][i];
     }
-
 
     float &outputWidth = fxdata->p[in_output_width].val.f;
     float &outputMix = fxdata->p[in_output_mix].val.f;
@@ -225,8 +218,8 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     }
 }
 
-void AudioInputEffect::applySlidersControls(float *buffer[], const float &channel,
-                                            const float &pan, const float &levelDb)
+void AudioInputEffect::applySlidersControls(float *buffer[], const float &channel, const float &pan,
+                                            const float &levelDb)
 {
     float leftGain, rightGain;
 
@@ -241,7 +234,7 @@ void AudioInputEffect::applySlidersControls(float *buffer[], const float &channe
         rightGain = 1.0f;
     }
 
-    for(int i = 0; i < BLOCK_SIZE; ++i)
+    for (int i = 0; i < BLOCK_SIZE; ++i)
     {
         buffer[0][i] *= leftGain;
         buffer[1][i] *= rightGain;
@@ -251,18 +244,17 @@ void AudioInputEffect::applySlidersControls(float *buffer[], const float &channe
     std::memcpy(tempBuffer[0], buffer[0], BLOCK_SIZE * sizeof(float));
     std::memcpy(tempBuffer[1], buffer[1], BLOCK_SIZE * sizeof(float));
 
-
     float leftToLeft = (pan < 0) ? 1.0f : 1.0f - pan;
     float rightToRight = (pan > 0) ? 1.0f : 1.0f + pan;
 
-    for(int i = 0; i < BLOCK_SIZE; ++i)
+    for (int i = 0; i < BLOCK_SIZE; ++i)
     {
         buffer[0][i] = buffer[0][i] * leftToLeft + tempBuffer[1][i] * (1.0f - rightToRight);
         buffer[1][i] = buffer[1][i] * rightToRight + tempBuffer[0][i] * (1.0f - leftToLeft);
     }
 
     float effectInputLevelGain = std::pow(10.0f, levelDb / 20.0f);
-    for(int i = 0; i < BLOCK_SIZE; ++i)
+    for (int i = 0; i < BLOCK_SIZE; ++i)
     {
         buffer[0][i] *= effectInputLevelGain;
         buffer[1][i] *= effectInputLevelGain;
