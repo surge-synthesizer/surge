@@ -14,7 +14,6 @@
 */
 #pragma once
 #include "Effect.h"
-#include "juce_audio_basics/juce_audio_basics.h"
 class AudioInputEffect : public Effect
 {
   public:

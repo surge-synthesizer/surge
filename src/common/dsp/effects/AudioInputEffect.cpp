@@ -141,31 +141,28 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     float &effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
     float &effectInputPan = fxdata->p[in_effect_input_pan].val.f;
     float &effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
-    float *channelData[] = {dataL, dataR};
+    float *drySignal[] = {dataL, dataR};
 
-    juce::AudioBuffer<float> drySignalBuffer(channelData, 2, BLOCK_SIZE);
 
-    juce::AudioBuffer<float> effectDataBuffer(2, BLOCK_SIZE);
-    effectDataBuffer.copyFrom(0, 0, channelData[0], BLOCK_SIZE);
-    effectDataBuffer.copyFrom(1, 0, channelData[1], BLOCK_SIZE);
-    float *effectDataBuffers[]  {
-        effectDataBuffer.getWritePointer(0),
-        effectDataBuffer.getWritePointer(1)
-    };
+    float effectDataBuffer[2][BLOCK_SIZE];
+    std::memcpy(effectDataBuffer[0], dataL, BLOCK_SIZE * sizeof(float));
+    std::memcpy(effectDataBuffer[1], dataR, BLOCK_SIZE * sizeof(float));
+    float *effectDataBuffers[]  {effectDataBuffer[0], effectDataBuffer[1]};
     applySlidersControls(effectDataBuffers, effectInputChannel, effectInputPan, effectInputLevelDb);
+
 
     float &inputChannel = fxdata->p[in_audio_input_channel].val.f;
     float &inputPan = fxdata->p[in_audio_input_pan].val.f;
     float &inputLevelDb = fxdata->p[in_audio_input_level].val.f;
     float *inputData[] = {storage->audio_in_nonOS[0], storage->audio_in_nonOS[1]};
-    juce::AudioBuffer<float> inputDataBuffer(2, BLOCK_SIZE);
-    inputDataBuffer.copyFrom(0, 0, inputData[0], BLOCK_SIZE);
-    inputDataBuffer.copyFrom(1, 0, inputData[1], BLOCK_SIZE);
-    float *inputDataBuffers[]  {
-        inputDataBuffer.getWritePointer(0),
-        inputDataBuffer.getWritePointer(1)
-    };
+    float inputDataBuffer[2][BLOCK_SIZE];
+
+    std::memcpy(inputDataBuffer[0], inputData[0], BLOCK_SIZE * sizeof(float));
+    std::memcpy(inputDataBuffer[1], inputData[1], BLOCK_SIZE * sizeof(float));
+    float *inputDataBuffers[] = {inputDataBuffer[0], inputDataBuffer[1]};
+
     applySlidersControls(inputDataBuffers, inputChannel, inputPan, inputLevelDb);
+
 
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
     if (slotType == a_insert_slot || slotType == b_insert_slot)
@@ -178,30 +175,36 @@ void AudioInputEffect::process(float *dataL, float *dataR)
             sceneDataPtr[0].get(),
             sceneDataPtr[1].get(),
         };
-        juce::AudioBuffer<float> sceneDataBuffer(2, BLOCK_SIZE);
-        sceneDataBuffer.copyFrom(0, 0, sceneData[0], BLOCK_SIZE);
-        sceneDataBuffer.copyFrom(1, 0, sceneData[1], BLOCK_SIZE);
+        float sceneDataBuffer[2][BLOCK_SIZE];
+        std::memcpy(sceneDataBuffer[0], sceneData[0], BLOCK_SIZE * sizeof(float));
+        std::memcpy(sceneDataBuffer[1], sceneData[1], BLOCK_SIZE * sizeof(float));
         float *sceneDataBuffers[]  {
-            sceneDataBuffer.getWritePointer(0),
-            sceneDataBuffer.getWritePointer(1)
+            sceneDataBuffer[0],
+            sceneDataBuffer[1]
         };
-        applySlidersControls(sceneDataBuffers, sceneInputChannel, sceneInputPan,
-sceneInputLevelDb);
+        applySlidersControls(sceneDataBuffers, sceneInputChannel, sceneInputPan, sceneInputLevelDb);
         // mixing the scene audio input and the effect audio input
-        effectDataBuffer.addFrom(0, 0, sceneDataBuffer, 0, 0, BLOCK_SIZE);
-        effectDataBuffer.addFrom(1, 0, sceneDataBuffer, 1, 0, BLOCK_SIZE);
+        for(int i = 0; i < BLOCK_SIZE; ++i)
+        {
+            effectDataBuffer[0][i] += sceneDataBuffer[0][i];
+            effectDataBuffer[1][i] += sceneDataBuffer[1][i];
+        }
     }
     // mixing the effect and audio input
-    effectDataBuffer.addFrom(0, 0, inputDataBuffer, 0, 0, BLOCK_SIZE);
-    effectDataBuffer.addFrom(1, 0, inputDataBuffer, 1, 0, BLOCK_SIZE);
+    for(int i = 0; i < BLOCK_SIZE; ++i)
+    {
+        effectDataBuffer[0][i] += inputDataBuffer[0][i];
+        effectDataBuffer[1][i] += inputDataBuffer[1][i];
+    }
+
 
     float &outputWidth = fxdata->p[in_output_width].val.f;
     float &outputMix = fxdata->p[in_output_mix].val.f;
 
-    float *dryL = drySignalBuffer.getWritePointer(0);
-    float *dryR = drySignalBuffer.getWritePointer(1);
-    float *wetL = effectDataBuffer.getWritePointer(0);
-    float *wetR = effectDataBuffer.getWritePointer(1);
+    float *dryL = drySignal[0];
+    float *dryR = drySignal[1];
+    float *wetL = effectDataBuffer[0];
+    float *wetR = effectDataBuffer[1];
 
     // Adjust width of wet signal
     for (int i = 0; i < BLOCK_SIZE; ++i)
@@ -222,7 +225,7 @@ sceneInputLevelDb);
     }
 }
 
-void AudioInputEffect::applySlidersControls(float *buffer[2], const float &channel,
+void AudioInputEffect::applySlidersControls(float *buffer[], const float &channel,
                                             const float &pan, const float &levelDb)
 {
     float leftGain, rightGain;
