@@ -62,7 +62,7 @@ void Alert::paint(juce::Graphics &g)
     g.fillAll(skin->getColor(Colors::Overlay::Background));
 
     auto fullRect = getDisplayRegion();
-
+    auto dialogCenter = fullRect.getWidth() / 2;
     auto tbRect = fullRect.withHeight(18);
 
     g.setColour(skin->getColor(Colors::Dialog::Titlebar::Background));
@@ -93,11 +93,21 @@ void Alert::paint(juce::Graphics &g)
 
     g.setColour(skin->getColor(Colors::Dialog::Border));
     g.drawRect(fullRect.expanded(1), 2);
+}
 
-    auto buttonRowRect = fullRect.withHeight(17).translated(0, 72);
+void Alert::resized()
+{
+    auto margin = 2, btnHeight = 17, btnWidth = 50;
 
-    okButton->setBounds(buttonRowRect.withWidth(50).translated(80, 0));
-    cancelButton->setBounds(buttonRowRect.withWidth(50).translated(230, 0));
+    auto fullRect = getDisplayRegion();
+    auto dialogCenter = fullRect.getWidth() / 2;
+
+    auto buttonRow = fullRect.withHeight(btnHeight).translated(0, 70);
+    auto okRect = buttonRow.withTrimmedLeft(dialogCenter - btnWidth - margin).withWidth(btnWidth);
+    auto canRect = buttonRow.withTrimmedLeft(dialogCenter + margin).withWidth(btnWidth);
+
+    okButton->setBounds(okRect);
+    cancelButton->setBounds(canRect);
 }
 
 void Alert::onSkinChanged()

@@ -325,10 +325,12 @@ void PatchStoreDialog::resized()
     auto h = 25;
     auto commH = getHeight() - (6 + showTagsField) * h + 8;
     auto xSplit = 70;
+    auto buttonHeight = 17;
     auto buttonWidth = 50;
     auto margin = 4;
     auto margin2 = 2;
     auto r = getLocalBounds().withHeight(h);
+    auto dialogCenter = getLocalBounds().getWidth() / 2;
     auto ce = r.withTrimmedLeft(xSplit)
                   .withTrimmedRight(margin2 * 3)
                   .reduced(margin)
@@ -364,15 +366,18 @@ void PatchStoreDialog::resized()
     commentEd->setBounds(q);
     ce = ce.translated(0, commH);
 
-    auto be = ce.withWidth(buttonWidth).withRightX(ce.getRight()).translated(0, margin2 * 3);
-    cancelButton->setBounds(be);
-    be = be.translated(-buttonWidth - margin, 0);
+    auto buttonRow = getLocalBounds().withHeight(buttonHeight).withY(ce.getY() + (margin2 * 3));
+
+    auto be =
+        buttonRow.withTrimmedLeft(dialogCenter - buttonWidth - margin2).withWidth(buttonWidth);
     okButton->setBounds(be);
+    be = buttonRow.withTrimmedLeft(dialogCenter + margin2).withWidth(buttonWidth);
+    cancelButton->setBounds(be);
 
     if (okOverButton->isVisible())
     {
-        be = be.translated(-buttonWidth - (margin * 2), 0);
-        okOverButton->setBounds(be.withLeft(be.getX() - buttonWidth));
+        be = ce.withWidth(buttonWidth * 2).withRightX(ce.getRight()).translated(0, margin2 * 3);
+        okOverButton->setBounds(be);
     }
 
     auto cl = r.withRight(xSplit).reduced(2).translated(0, margin2 * 3);
