@@ -20,6 +20,9 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#ifndef SURGE_SRC_SURGE_XT_GUI_OVERLAYS_OVERLAYUTILS_H
+#define SURGE_SRC_SURGE_XT_GUI_OVERLAYS_OVERLAYUTILS_H
+
 #include "SkinSupport.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -35,3 +38,5 @@ void paintOverlayWindow(juce::Graphics &g, std::shared_ptr<GUI::Skin> skin,
 
 }
 } // namespace Surge
+
+#endif
