@@ -1114,6 +1114,18 @@ namespace Surge
 {
 namespace Storage
 {
+struct ScenesOutputData
+{
+    std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr},
+                                                                      {nullptr, nullptr}};
+
+  public:
+    ScenesOutputData();
+    const std::shared_ptr<float[BLOCK_SIZE]> &getSceneData(int scene, int channel) const;
+    void provideSceneData(int scene, int channel, float *data);
+    bool thereAreClients(int scene) const;
+};
+
 struct FxUserPreset;
 struct ModulatorPreset;
 } // namespace Storage
@@ -1558,19 +1570,7 @@ class alignas(16) SurgeStorage
 
     std::atomic<int> otherscene_clients;
 
-    struct ScenesOutputData
-    {
-        std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr},
-                                                                          {nullptr, nullptr}};
-
-      public:
-        ScenesOutputData();
-        const std::shared_ptr<float[BLOCK_SIZE]> &getSceneData(int scene, int channel) const;
-        void provideSceneData(int scene, int channel, float *data);
-        bool thereAreClients(int scene) const;
-    };
-
-    ScenesOutputData scenesOutputData;
+    Surge::Storage::ScenesOutputData scenesOutputData;
 
     std::unordered_map<int, std::string> helpURL_controlgroup;
     std::unordered_map<std::string, std::string> helpURL_paramidentifier;
