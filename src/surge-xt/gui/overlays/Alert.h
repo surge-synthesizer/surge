@@ -53,6 +53,7 @@ struct Alert : public juce::Component,
     void setLabel(const std::string &t) { label = t; }
     std::function<void()> onOk;
     void paint(juce::Graphics &g) override;
+    void resized() override;
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
     juce::Rectangle<int> getDisplayRegion();
