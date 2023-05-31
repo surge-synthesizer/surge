@@ -384,7 +384,7 @@ enum fx_type
     fxt_mstool,
     fxt_spring_reverb,
     fxt_bonsai,
-    fxt_input_blender,
+    fxt_audio_input,
 
     n_fx_types,
 };

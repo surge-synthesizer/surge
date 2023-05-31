@@ -1029,7 +1029,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
                 auto surge = Surge::Headless::createSurge(44100);
                 REQUIRE(surge);
 
-                Surge::Test::setFX(surge, slot, fxt_input_blender);
+                Surge::Test::setFX(surge, slot, fxt_audio_input);
                 SurgeStorage *surgeStorage = &surge->storage;
                 FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
 
@@ -1047,7 +1047,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
 
                 fxStorage->p[AudioInputEffect::in_output_width].val.f = 1.0f;
                 fxStorage->p[AudioInputEffect::in_output_mix].val.f = 1.0f;
-                REQUIRE(fxStorage->type.val.i == fxt_input_blender);
+                REQUIRE(fxStorage->type.val.i == fxt_audio_input);
 
                 for (SubTestCase &subTestCase : inParamsGroup.expectedOutput)
                 {
