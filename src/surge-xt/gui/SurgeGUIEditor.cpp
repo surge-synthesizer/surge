@@ -6674,23 +6674,19 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
         std::ostringstream oss;
         oss << "Would you like to install the skin from\n"
             << fname << "\ninto Surge XT user folder?";
-        auto cb = juce::ModalCallbackFunction::create([this, fPath](int okcs) {
-            if (okcs)
+        auto cb = [this, fPath]() {
+            auto db = Surge::GUI::SkinDB::get();
+            auto me = db->installSkinFromPathToUserDirectory(&(this->synth->storage), fPath);
+            if (me.has_value())
             {
-                auto db = Surge::GUI::SkinDB::get();
-                auto me = db->installSkinFromPathToUserDirectory(&(this->synth->storage), fPath);
-                if (me.has_value())
-                {
-                    this->setupSkinFromEntry(*me);
-                }
-                else
-                {
-                    std::cout << "Could not find the skin after loading!" << std::endl;
-                }
+                this->setupSkinFromEntry(*me);
             }
-        });
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, "Install Skin", oss.str(),
-                                           "Yes", "No", nullptr, cb);
+            else
+            {
+                std::cout << "Could not find the skin after loading!" << std::endl;
+            }
+        };
+        alertOKCancel("Install Skin", oss.str(), cb);
     }
     else if (fExt == ".zip")
     {
@@ -6751,49 +6747,45 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
 
         oss << " from\n" << fname << "\ninto Surge XT user folder?";
 
-        auto cb = juce::ModalCallbackFunction::create([this, zipHandler](int okcs) {
-            if (okcs)
+        auto cb = [this, zipHandler]() {
+            auto storage = &this->synth->storage;
+
+            if (!zipHandler->extractEntries(storage))
             {
-                auto storage = &this->synth->storage;
-
-                if (!zipHandler->extractEntries(storage))
-                {
-                    return;
-                }
-
-                auto entries = zipHandler->getEntries();
-
-                if (entries.fxPresets.size() > 0)
-                {
-                    storage->fxUserPreset->doPresetRescan(storage, true);
-                    this->queueRebuildUI();
-                }
-
-                if (entries.modulatorSettings.size() > 0)
-                {
-                    storage->modulatorPreset->forcePresetRescan();
-                }
-
-                if (entries.patches.size() > 0)
-                {
-                    storage->refresh_patchlist();
-                }
-
-                if (entries.skins.size() > 0)
-                {
-                    auto db = Surge::GUI::SkinDB::get();
-                    db->rescanForSkins(storage);
-                }
-
-                if (entries.wavetables.size() > 0)
-                {
-                    storage->refresh_wtlist();
-                }
+                return;
             }
-        });
 
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, "Install from ZIP archive",
-                                           oss.str(), "Yes", "No", nullptr, cb);
+            auto entries = zipHandler->getEntries();
+
+            if (entries.fxPresets.size() > 0)
+            {
+                storage->fxUserPreset->doPresetRescan(storage, true);
+                this->queueRebuildUI();
+            }
+
+            if (entries.modulatorSettings.size() > 0)
+            {
+                storage->modulatorPreset->forcePresetRescan();
+            }
+
+            if (entries.patches.size() > 0)
+            {
+                storage->refresh_patchlist();
+            }
+
+            if (entries.skins.size() > 0)
+            {
+                auto db = Surge::GUI::SkinDB::get();
+                db->rescanForSkins(storage);
+            }
+
+            if (entries.wavetables.size() > 0)
+            {
+                storage->refresh_wtlist();
+            }
+        };
+
+        alertOKCancel("Install from ZIP archive", oss.str(), cb);
     }
     return true;
 }

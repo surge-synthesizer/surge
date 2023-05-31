@@ -25,6 +25,7 @@
 #include "SurgeImageStore.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
+#include "OverlayUtils.h"
 
 namespace Surge
 {
@@ -53,46 +54,12 @@ juce::Rectangle<int> Alert::getDisplayRegion()
 
 void Alert::paint(juce::Graphics &g)
 {
-    if (!skin || !associatedBitmapStore)
-    {
-        g.fillAll(juce::Colours::red);
-        return;
-    }
-
-    g.fillAll(skin->getColor(Colors::Overlay::Background));
-
     auto fullRect = getDisplayRegion();
-    auto dialogCenter = fullRect.getWidth() / 2;
-    auto tbRect = fullRect.withHeight(18);
-
-    g.setColour(skin->getColor(Colors::Dialog::Titlebar::Background));
-    g.fillRect(tbRect);
-    g.setColour(skin->getColor(Colors::Dialog::Titlebar::Text));
-    g.setFont(skin->fontManager->getLatoAtSize(10, juce::Font::bold));
-    g.drawText(title, tbRect, juce::Justification::centred);
-
-    auto icon = associatedBitmapStore->getImage(IDB_SURGE_ICON);
-
-    if (icon)
-    {
-        const auto iconSize = 14;
-#if MAC
-        icon->drawAt(g, fullRect.getRight() - iconSize + 2, fullRect.getY() + 1, 1);
-#else
-        icon->drawAt(g, fullRect.getX() + 2, fullRect.getY() + 1, 1);
-#endif
-    }
-
-    auto bodyRect = fullRect.withTrimmedTop(18);
-
-    g.setColour(skin->getColor(Colors::Dialog::Background));
-    g.fillRect(bodyRect);
+    paintOverlayWindow(g, skin, associatedBitmapStore, fullRect, title);
     g.setColour(skin->getColor(Colors::Dialog::Label::Text));
     g.setFont(skin->fontManager->getLatoAtSize(9));
-    g.drawFittedText(label, bodyRect.reduced(6), juce::Justification::centredTop, 4);
-
-    g.setColour(skin->getColor(Colors::Dialog::Border));
-    g.drawRect(fullRect.expanded(1), 2);
+    g.drawFittedText(label, fullRect.withTrimmedTop(18).reduced(6), juce::Justification::centredTop,
+                     4);
 }
 
 void Alert::resized()
