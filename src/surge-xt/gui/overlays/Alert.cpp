@@ -33,14 +33,11 @@ namespace Overlays
 {
 Alert::Alert()
 {
-
     okButton = std::make_unique<Surge::Widgets::SurgeTextButton>("alertOk");
-    okButton->setButtonText("OK");
     okButton->addListener(this);
     addAndMakeVisible(*okButton);
 
     cancelButton = std::make_unique<Surge::Widgets::SurgeTextButton>("alertCancel");
-    cancelButton->setButtonText("Cancel");
     cancelButton->addListener(this);
     addAndMakeVisible(*cancelButton);
 }

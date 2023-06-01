@@ -5520,7 +5520,7 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
 }
 
 void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
-                                   std::function<void()> onOk)
+                                   std::function<void()> onOk, AlertButtonStyle buttonStyle)
 {
     alert = std::make_unique<Surge::Overlays::Alert>();
     alert->setSkin(currentSkin, bitmapStore);
@@ -5528,6 +5528,14 @@ void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &
     alert->setWindowTitle(title);
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(prompt);
+    if (buttonStyle == AlertButtonStyle::YES_NO)
+    {
+        alert->setButtonText("Yes", "No");
+    }
+    else
+    {
+        alert->setButtonText("OK", "Cancel");
+    }
     alert->onOk = std::move(onOk);
     alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
     alert->setVisible(true);
@@ -6686,7 +6694,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
                 std::cout << "Could not find the skin after loading!" << std::endl;
             }
         };
-        alertOKCancel("Install Skin", oss.str(), cb);
+        alertOKCancel("Install Skin", oss.str(), cb, AlertButtonStyle::YES_NO);
     }
     else if (fExt == ".zip")
     {
@@ -6785,7 +6793,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
             }
         };
 
-        alertOKCancel("Install from ZIP archive", oss.str(), cb);
+        alertOKCancel("Install from ZIP archive", oss.str(), cb, AlertButtonStyle::YES_NO);
     }
     return true;
 }
