@@ -700,22 +700,28 @@ void PatchSelector::showClassicMenu(bool single_category)
                     });
             });
 
-            contextMenu.addItem(Surge::GUI::toOSCase("Delete Patch"), [this]() {
-                auto cb = juce::ModalCallbackFunction::create([this](int okcs) {
-                    if (okcs)
+            contextMenu.addItem(Surge::GUI::toOSCase("Delete Patch"), [this, sge]() {
+                auto onOk = [this]() {
+                    try
                     {
                         fs::remove(storage->patch_list[current_patch].path);
                         storage->refresh_patchlist();
                         storage->initializePatchDb(true);
                     }
-                });
+                    catch (const fs::filesystem_error &e)
+                    {
+                        std::ostringstream oss;
+                        oss << "Experienced filesystem error while deleting patch " << e.what();
+                        storage->reportError(oss.str(), "Filesystem Error");
+                    }
+                    isUser = false;
+                };
 
-                juce::AlertWindow::showOkCancelBox(
-                    juce::AlertWindow::NoIcon, "Delete Patch",
-                    std::string("Do you really want to delete\n") +
-                        storage->patch_list[current_patch].path.u8string() +
-                        "?\n\nThis cannot be undone!",
-                    "Yes", "No", nullptr, cb);
+                sge->alertOKCancel("Delete Patch",
+                                   std::string("Do you really want to delete\n") +
+                                       storage->patch_list[current_patch].path.u8string() +
+                                       "?\nThis cannot be undone!",
+                                   onOk);
             });
         }
 

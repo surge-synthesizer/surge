@@ -43,6 +43,7 @@
 
 #include "overlays/AboutScreen.h"
 #include "overlays/MiniEdit.h"
+#include "overlays/Alert.h"
 #include "overlays/MSEGEditor.h"
 #include "overlays/LuaEditors.h"
 #include "overlays/ModulationEditor.h"
@@ -5617,6 +5618,29 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->grabFocus();
 }
 
+void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
+                                   std::function<void()> onOk, AlertButtonStyle buttonStyle)
+{
+    alert = std::make_unique<Surge::Overlays::Alert>();
+    alert->setSkin(currentSkin, bitmapStore);
+    alert->setDescription(title);
+    alert->setWindowTitle(title);
+    addAndMakeVisibleWithTracking(frame.get(), *alert);
+    alert->setLabel(prompt);
+    if (buttonStyle == AlertButtonStyle::YES_NO)
+    {
+        alert->setButtonText("Yes", "No");
+    }
+    else
+    {
+        alert->setButtonText("OK", "Cancel");
+    }
+    alert->onOk = std::move(onOk);
+    alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
+    alert->setVisible(true);
+    alert->toFront(true);
+}
+
 bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSourceButton *msb,
                                                 const juce::Point<int> &pt)
 {
@@ -6757,23 +6781,19 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
         std::ostringstream oss;
         oss << "Would you like to install the skin from\n"
             << fname << "\ninto Surge XT user folder?";
-        auto cb = juce::ModalCallbackFunction::create([this, fPath](int okcs) {
-            if (okcs)
+        auto cb = [this, fPath]() {
+            auto db = Surge::GUI::SkinDB::get();
+            auto me = db->installSkinFromPathToUserDirectory(&(this->synth->storage), fPath);
+            if (me.has_value())
             {
-                auto db = Surge::GUI::SkinDB::get();
-                auto me = db->installSkinFromPathToUserDirectory(&(this->synth->storage), fPath);
-                if (me.has_value())
-                {
-                    this->setupSkinFromEntry(*me);
-                }
-                else
-                {
-                    std::cout << "Could not find the skin after loading!" << std::endl;
-                }
+                this->setupSkinFromEntry(*me);
             }
-        });
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, "Install Skin", oss.str(),
-                                           "Yes", "No", nullptr, cb);
+            else
+            {
+                std::cout << "Could not find the skin after loading!" << std::endl;
+            }
+        };
+        alertOKCancel("Install Skin", oss.str(), cb, AlertButtonStyle::YES_NO);
     }
     else if (fExt == ".zip")
     {
@@ -6834,49 +6854,45 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
 
         oss << " from\n" << fname << "\ninto Surge XT user folder?";
 
-        auto cb = juce::ModalCallbackFunction::create([this, zipHandler](int okcs) {
-            if (okcs)
+        auto cb = [this, zipHandler]() {
+            auto storage = &this->synth->storage;
+
+            if (!zipHandler->extractEntries(storage))
             {
-                auto storage = &this->synth->storage;
-
-                if (!zipHandler->extractEntries(storage))
-                {
-                    return;
-                }
-
-                auto entries = zipHandler->getEntries();
-
-                if (entries.fxPresets.size() > 0)
-                {
-                    storage->fxUserPreset->doPresetRescan(storage, true);
-                    this->queueRebuildUI();
-                }
-
-                if (entries.modulatorSettings.size() > 0)
-                {
-                    storage->modulatorPreset->forcePresetRescan();
-                }
-
-                if (entries.patches.size() > 0)
-                {
-                    storage->refresh_patchlist();
-                }
-
-                if (entries.skins.size() > 0)
-                {
-                    auto db = Surge::GUI::SkinDB::get();
-                    db->rescanForSkins(storage);
-                }
-
-                if (entries.wavetables.size() > 0)
-                {
-                    storage->refresh_wtlist();
-                }
+                return;
             }
-        });
 
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, "Install from ZIP archive",
-                                           oss.str(), "Yes", "No", nullptr, cb);
+            auto entries = zipHandler->getEntries();
+
+            if (entries.fxPresets.size() > 0)
+            {
+                storage->fxUserPreset->doPresetRescan(storage, true);
+                this->queueRebuildUI();
+            }
+
+            if (entries.modulatorSettings.size() > 0)
+            {
+                storage->modulatorPreset->forcePresetRescan();
+            }
+
+            if (entries.patches.size() > 0)
+            {
+                storage->refresh_patchlist();
+            }
+
+            if (entries.skins.size() > 0)
+            {
+                auto db = Surge::GUI::SkinDB::get();
+                db->rescanForSkins(storage);
+            }
+
+            if (entries.wavetables.size() > 0)
+            {
+                storage->refresh_wtlist();
+            }
+        };
+
+        alertOKCancel("Install from ZIP archive", oss.str(), cb, AlertButtonStyle::YES_NO);
     }
     return true;
 }

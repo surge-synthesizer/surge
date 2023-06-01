@@ -111,6 +111,10 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/MSEGEditor.h
   gui/overlays/MiniEdit.cpp
   gui/overlays/MiniEdit.h
+  gui/overlays/Alert.cpp
+  gui/overlays/Alert.h
+  gui/overlays/OverlayUtils.h
+  gui/overlays/OverlayUtils.cpp
   gui/overlays/ModulationEditor.cpp
   gui/overlays/ModulationEditor.h
   gui/overlays/Oscilloscope.cpp
