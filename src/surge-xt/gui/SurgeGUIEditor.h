@@ -828,8 +828,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool getUseKeyboardShortcuts();
     void setUseKeyboardShortcuts(bool b);
     void toggleUseKeyboardShortcuts();
+
+    enum AlertButtonStyle
+    {
+        OK_CANCEL,
+        YES_NO
+    };
     void alertOKCancel(const std::string &title, const std::string &prompt,
-                       std::function<void()> onOk);
+                       std::function<void()> onOk, AlertButtonStyle buttonStyle = OK_CANCEL);
 
     std::unique_ptr<Surge::Overlays::Alert> alert;
 

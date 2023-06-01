@@ -20,16 +20,11 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "SkinSupport.h"
-
+#include "widgets/SurgeTextButton.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
 namespace Surge
 {
-
-namespace Widgets
-{
-struct SurgeTextButton;
-}
 
 namespace Overlays
 {
@@ -51,6 +46,11 @@ struct Alert : public juce::Component,
         setTitle(title);
     }
     void setLabel(const std::string &t) { label = t; }
+    void setButtonText(const juce::String &okText, const juce::String &cancelText)
+    {
+        okButton->setButtonText(okText);
+        cancelButton->setButtonText(cancelText);
+    }
     std::function<void()> onOk;
     void paint(juce::Graphics &g) override;
     void resized() override;
