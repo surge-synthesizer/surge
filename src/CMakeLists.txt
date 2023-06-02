@@ -98,11 +98,9 @@ if(DEFINED ENV{VST2SDK_DIR})
   add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/wd4828>)
 endif()
 
-if(JUCE_SUPPORTS_LV2 AND SURGE_BUILD_LV2)
+if(SURGE_BUILD_LV2)
   list(APPEND SURGE_JUCE_FORMATS LV2)
-  message(STATUS "Including JUCE LV2 support. You will need the LV2 fork of JUCE!")
-  message(STATUS "Turning off deprecation warning to error, since JUCE LV2 uses deprecated APIs")
-  add_compile_options(-Wno-error=deprecated-declarations)
+  message(STATUS "Including JUCE7 LV2 support.")
 endif()
 
 
