@@ -193,11 +193,13 @@ To build a fat binary on a Mac, simply add the following CMake argument to your 
 ### Building for Raspberry Pi
 
 SurgeXT builds natively on a RaspberryPI on 64 bit operating systems. Install your compiler
-toolchain and run the standard cmake commands.
+toolchain and run the standard cmake commands. SurgeXT will *not* build on 32 bit raspberry pi
+systems, giving an error in the Spring Reverb and elsewhere in DSP code. If you would like to work
+on fixing this, see the comment in CMakeLists.txt or drop on our discord or github.
 
-As of June 2023, though, the gcc in some raspbian distributions has a bug which generates a
+As of June 2023, though, the gcc in some distributions has an apparent bug which generates a
 specious warning which we promote to an error. We found Surge compiles cleanly with
-`gcc (Debian 10.2.1-6) 10.2.1 20210110` but not with `gcc version 10.2.1 20210110 (Raspbian 10.2.1-6+rpi1)`.
+`gcc (Debian 10.2.1-6) 10.2.1 20210110` but not with others.
 Surge also compiles with clang 11. The error in question takes the form
 
 ```
