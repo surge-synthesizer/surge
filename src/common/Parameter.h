@@ -204,11 +204,9 @@ enum ctrltypes
     ct_spring_decay,
     ct_amplitude_ringmod,
     ct_bonsai_bass_boost,
-    ct_bonsai_bass_distortion,
     ct_bonsai_sat_filter,
     ct_bonsai_sat_mode,
     ct_bonsai_noise_mode,
-    ct_bonsai_noise_gain,
 
     num_ctrltypes,
 };
