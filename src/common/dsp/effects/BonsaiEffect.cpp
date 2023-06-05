@@ -33,11 +33,11 @@ const char *BonsaiEffect::group_label(int id)
     case 1:
         return "Bass Boost";
     case 2:
-        return "Tape(ish) Sat";
+        return "Saturation";
     case 3:
         return "Noise";
     case 4:
-        return "Misc";
+        return "Output";
     }
     return 0;
 }
@@ -69,7 +69,7 @@ void BonsaiEffect::init_ctrltypes()
     fxdata->p[b_bass_boost].set_type(ct_bonsai_bass_boost);
     fxdata->p[b_bass_boost].posy_offset = 3;
 
-    fxdata->p[b_bass_distort].set_type(ct_bonsai_bass_distortion);
+    fxdata->p[b_bass_distort].set_type(ct_percent);
     fxdata->p[b_bass_distort].posy_offset = 3;
 
     fxdata->p[b_tape_bias_mode].set_type(ct_bonsai_sat_filter);
@@ -84,7 +84,7 @@ void BonsaiEffect::init_ctrltypes()
     fxdata->p[b_noise_sensitivity].set_type(ct_percent);
     fxdata->p[b_noise_sensitivity].posy_offset = 7;
 
-    fxdata->p[b_noise_gain].set_type(ct_bonsai_noise_gain);
+    fxdata->p[b_noise_gain].set_type(ct_decibel_narrow);
     fxdata->p[b_noise_gain].posy_offset = 7;
 
     fxdata->p[b_dull].set_type(ct_percent);

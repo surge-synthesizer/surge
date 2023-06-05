@@ -294,7 +294,6 @@ bool Parameter::can_extend_range() const
     case ct_countedset_percent_extendable:
     case ct_dly_fb_clippingmodes:
     case ct_bonsai_bass_boost:
-    case ct_bonsai_noise_gain:
 
     // Extendable integers are really rare and special.
     // If you add one, you may want to chat with us on Discord!
@@ -413,7 +412,6 @@ bool Parameter::is_bipolar() const
     case ct_modern_trimix:
     case ct_oscspread_bipolar:
     case ct_bonsai_bass_boost:
-    case ct_bonsai_noise_gain:
         res = true;
         break;
     case ct_lfoamplitude:
@@ -1308,13 +1306,6 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 0.f;
         break;
 
-    case ct_bonsai_bass_distortion:
-        valtype = vt_float;
-        val_min.f = 0.0f;
-        val_max.f = 3.0f;
-        val_default.f = 1.0f;
-        break;
-
     case ct_bonsai_sat_filter:
         valtype = vt_int;
         val_min.i = 0;
@@ -1327,13 +1318,6 @@ void Parameter::set_type(int ctrltype)
         val_min.i = 0;
         val_default.i = 1;
         val_max.i = 3;
-        break;
-
-    case ct_bonsai_noise_gain:
-        valtype = vt_float;
-        val_min.f = -24.0f;
-        val_max.f = 12.0f;
-        val_default.f = 0.f;
         break;
 
     case ct_bonsai_noise_mode:
@@ -1549,8 +1533,8 @@ void Parameter::set_type(int ctrltype)
     case ct_decibel_narrow_deactivatable:
     case ct_decibel_extra_narrow_deactivatable:
     case ct_bonsai_bass_boost:
-    case ct_bonsai_noise_gain:
         displayType = LinearWithScale;
+        displayInfo.extendFactor = 3;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "dB");
         break;
 
@@ -1746,7 +1730,6 @@ void Parameter::bound_value(bool force_integer)
         case ct_reson_res_extendable:
         case ct_modern_trimix:
         case ct_tape_drive:
-        case ct_bonsai_bass_distortion:
         {
             val.f = floor(val.f * 100) / 100.0;
             break;
@@ -1838,7 +1821,6 @@ void Parameter::bound_value(bool force_integer)
         case ct_decibel_narrow_deactivatable:
         case ct_decibel_extra_narrow_deactivatable:
         case ct_bonsai_bass_boost:
-        case ct_bonsai_noise_gain:
         {
             val.f = floor(val.f);
             break;
@@ -2219,7 +2201,6 @@ float Parameter::get_extended(float f) const
         return 12.f * f;
     case ct_decibel_extendable:
     case ct_bonsai_bass_boost:
-    case ct_bonsai_noise_gain:
         return 3.f * f;
     case ct_decibel_narrow_extendable:
         return 5.f * f;
@@ -4334,8 +4315,6 @@ bool Parameter::can_setvalue_from_string() const
     case ct_tape_speed:
     case ct_spring_decay:
     case ct_bonsai_bass_boost:
-    case ct_bonsai_bass_distortion:
-    case ct_bonsai_noise_gain:
     {
         return true;
     }
