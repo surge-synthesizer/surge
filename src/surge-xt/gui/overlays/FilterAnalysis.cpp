@@ -484,10 +484,14 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
         editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->setValue(f);
         editor->filterCutoffSlider[whichFilter]->setQuantitizedDisplayValue(f);
         editor->filterCutoffSlider[whichFilter]->asJuceComponent()->repaint();
+        editor->valueChanged(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
 
         editor->filterResonanceSlider[whichFilter]->asControlValueInterface()->setValue(resonance);
         editor->filterResonanceSlider[whichFilter]->setQuantitizedDisplayValue(resonance);
         editor->filterResonanceSlider[whichFilter]->asJuceComponent()->repaint();
+        editor->valueChanged(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
+
+
 
         repushData();
     }
@@ -508,6 +512,9 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
     {
         isPressed = true;
         hideCursor(where.toInt());
+        editor->controlBeginEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
+        editor->controlBeginEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
+
         mouseDrag(event);
     }
 }
@@ -530,6 +537,9 @@ void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
     {
         showCursorAt(hotzone.getCentre().translated(dRect.getX(), dRect.getY()).toInt());
     }
+    editor->controlEndEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
+    editor->controlEndEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
+
 
     guaranteeCursorShown();
 }
