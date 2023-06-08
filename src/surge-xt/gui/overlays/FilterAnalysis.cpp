@@ -512,8 +512,8 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
     {
         isPressed = true;
         hideCursor(where.toInt());
-        editor->controlBeginEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
-        editor->controlBeginEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
+//        editor->controlBeginEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
+//        editor->controlBeginEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
 
         mouseDrag(event);
     }
@@ -537,8 +537,8 @@ void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
     {
         showCursorAt(hotzone.getCentre().translated(dRect.getX(), dRect.getY()).toInt());
     }
-    editor->controlEndEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
-    editor->controlEndEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
+//    editor->controlEndEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
+//    editor->controlEndEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
 
 
     guaranteeCursorShown();
