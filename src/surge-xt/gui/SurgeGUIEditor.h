@@ -178,6 +178,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     bool debugFocus{false};
     void globalFocusChanged(juce::Component *fc) override;
 
+  protected:
     virtual void setParameter(long index, float value);
     // listener class
     void valueChanged(Surge::GUI::IComponentTagValue *control) override;
@@ -187,7 +188,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                                    bool isDoubleClickEvent) override;
     void controlBeginEdit(Surge::GUI::IComponentTagValue *control) override;
     void controlEndEdit(Surge::GUI::IComponentTagValue *control) override;
-  protected:
 
     enum LearnMode
     {
