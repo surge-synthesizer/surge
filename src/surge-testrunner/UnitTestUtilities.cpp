@@ -272,6 +272,16 @@ void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *
         << std::endl;
 #endif
 }
+void setFX(std::shared_ptr<SurgeSynthesizer> surge, int slot, fx_type type)
+{
+    auto *pt = &(surge->storage.getPatch().fx[slot].type);
+    auto awv = 1.f * type / (pt->val_max.i - pt->val_min.i);
 
+    auto did = surge->idForParameter(pt);
+    surge->setParameter01(did, awv, false);
+
+    for (int i = 0; i < 10; ++i)
+        surge->process();
+}
 } // namespace Test
 } // namespace Surge

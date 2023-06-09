@@ -4574,6 +4574,10 @@ void SurgeSynthesizer::process()
         sc_state[i] = play_scene[i];
     }
 
+    for (int i = 0; i < n_scenes; i++)
+        for (int channel = 0; channel < N_OUTPUTS; channel++)
+            storage.scenesOutputData.provideSceneData(i, channel, sceneout[i][channel]);
+
     // apply insert effects
     if (fx_bypass != fxb_no_fx)
     {
@@ -4936,9 +4940,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
 
     std::lock_guard<std::recursive_mutex> lockModulation(storage.modRoutingMutex);
 
-    FxStorage so, to;
-    so = storage.getPatch().fx[source];
-    to = storage.getPatch().fx[target];
+    FxStorage so{storage.getPatch().fx[source]};
+    FxStorage to{storage.getPatch().fx[target]};
 
     fxmodsync[source].clear();
     fxmodsync[target].clear();
