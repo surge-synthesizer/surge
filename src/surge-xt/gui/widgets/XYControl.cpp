@@ -1,3 +1,5 @@
+
+
 /*
 * Surge XT - a free and open source hybrid synthesizer,
 * built by Surge Synth Team
@@ -19,5 +21,15 @@
 * All source for Surge XT is available at
 * https://github.com/surge-synthesizer/surge
 */
-
 #include "XYControl.h"
+
+namespace Surge
+{
+namespace Widgets
+{
+
+XYControl::XYControl(): WidgetBaseMixin<XYControl>(this) {}
+XYControl::~XYControl() {}
+
+} // namespace Widgets
+} // namespace Surge

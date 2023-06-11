@@ -22,8 +22,25 @@
 
 #ifndef SURGE_SRC_SURGE_XT_GUI_WIDGETS_XYCONTROL_H
 #define SURGE_SRC_SURGE_XT_GUI_WIDGETS_XYCONTROL_H
+#include "WidgetBaseMixin.h"
+#include "SurgeJUCEHelpers.h"
 
-class XYControl
+#include "juce_gui_basics/juce_gui_basics.h"
+namespace Surge
 {
+namespace Widgets
+{
+class XYControl:  public juce::Component,
+                  public WidgetBaseMixin<XYControl>
+{
+  private:
+    SurgeStorage *storage{nullptr};
+  public:
+    XYControl();
+    ~XYControl();
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(XYControl);
 };
+} // namespace Widgets
+} // namespace Surge
 #endif // SURGE_SRC_SURGE_XT_GUI_WIDGETS_XYCONTROL_H
