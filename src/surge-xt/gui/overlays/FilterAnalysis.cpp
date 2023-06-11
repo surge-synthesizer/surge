@@ -27,6 +27,7 @@
 #include "sst/filters/FilterPlotter.h"
 #include <thread>
 #include "Tunings.h"
+#include "SurgeGUIEditorTags.h"
 
 static constexpr auto GRAPH_MIN_FREQ = 13.57f;
 static constexpr auto GRAPH_MAX_FREQ = 25087.f;
@@ -127,7 +128,8 @@ struct FilterAnalysisEvaluator
     bool hasWork{false}, continueWaiting{true};
 };
 
-FilterAnalysis::FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s) : editor(e), storage(s)
+FilterAnalysis::FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s, SurgeSynthesizer *synth)
+    : editor(e), storage(s), synth(synth)
 {
     evaluator = std::make_unique<FilterAnalysisEvaluator>(this);
     f1Button = std::make_unique<Surge::Widgets::SelfDrawToggleButton>("Filter 1");
@@ -484,16 +486,24 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
         editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->setValue(f);
         editor->filterCutoffSlider[whichFilter]->setQuantitizedDisplayValue(f);
         editor->filterCutoffSlider[whichFilter]->asJuceComponent()->repaint();
-//        editor->valueChanged(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
 
         editor->filterResonanceSlider[whichFilter]->asControlValueInterface()->setValue(resonance);
         editor->filterResonanceSlider[whichFilter]->setQuantitizedDisplayValue(resonance);
         editor->filterResonanceSlider[whichFilter]->asJuceComponent()->repaint();
-//        editor->valueChanged(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
-
-
 
         repushData();
+
+        long tag = editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->getTag();
+        int ptag = tag - start_paramtags;
+        SurgeSynthesizer::ID ptagid;
+        synth->fromSynthSideId(ptag, ptagid);
+        synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
+
+        tag = editor->filterResonanceSlider[whichFilter]->asControlValueInterface()->getTag();
+        ptag = tag - start_paramtags;
+        synth->fromSynthSideId(ptag, ptagid);
+        synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
+
     }
 }
 
@@ -512,8 +522,8 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
     {
         isPressed = true;
         hideCursor(where.toInt());
-//        editor->controlBeginEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
-//        editor->controlBeginEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
+        //        editor->controlBeginEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
+        //        editor->controlBeginEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
 
         mouseDrag(event);
     }
@@ -537,9 +547,8 @@ void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
     {
         showCursorAt(hotzone.getCentre().translated(dRect.getX(), dRect.getY()).toInt());
     }
-//    editor->controlEndEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
-//    editor->controlEndEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
-
+    //    editor->controlEndEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
+    //    editor->controlEndEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
 
     guaranteeCursorShown();
 }

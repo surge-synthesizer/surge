@@ -346,7 +346,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
     case FILTER_ANALYZER:
     {
-        auto fa = std::make_unique<Surge::Overlays::FilterAnalysis>(this, &(this->synth->storage));
+        auto fa = std::make_unique<Surge::Overlays::FilterAnalysis>(this, &(this->synth->storage),
+                                                                    this->synth);
 
         locationGet(fa.get(),
                     Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW,

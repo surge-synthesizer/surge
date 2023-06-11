@@ -43,7 +43,9 @@ struct FilterAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCompon
 {
     SurgeGUIEditor *editor{nullptr};
     SurgeStorage *storage{nullptr};
-    FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s);
+    SurgeSynthesizer *synth{nullptr};
+
+    FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s, SurgeSynthesizer *synth);
     ~FilterAnalysis();
     void mouseDrag(const juce::MouseEvent &event) override;
     void mouseDown(const juce::MouseEvent &event) override;

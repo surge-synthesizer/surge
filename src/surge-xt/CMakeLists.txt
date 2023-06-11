@@ -170,8 +170,6 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/WidgetBaseMixin.h
   gui/widgets/XMLConfiguredMenus.cpp
   gui/widgets/XMLConfiguredMenus.h
-  gui/widgets/XYControl.cpp
-  gui/widgets/XYControl.h
 
   osc/OSCListener.cpp
   osc/OSCListener.h
