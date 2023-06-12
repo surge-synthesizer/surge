@@ -443,8 +443,7 @@ void FilterAnalysis::resized()
 
 void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 {
-    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(15).reduced(4);
+    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
 
     float rx0 = dRect.getX();
     float rx1 = dRect.getX() + dRect.getWidth() - 1;
