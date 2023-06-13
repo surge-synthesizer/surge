@@ -502,7 +502,6 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
         ptag = tag - start_paramtags;
         synth->fromSynthSideId(ptag, ptagid);
         synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
-
     }
 }
 
@@ -512,17 +511,33 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 // just by clicking anywhere in the graph, no mouse movement required
 void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 {
-    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(18).reduced(4);
+    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
     auto where = event.position;
     const bool withinHotzone = hotzone.contains(where.translated(-dRect.getX(), -dRect.getY()));
 
     if (dRect.contains(where.toInt()))
     {
+
         isPressed = true;
         hideCursor(where.toInt());
-        //        editor->controlBeginEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
-        //        editor->controlBeginEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
+        editor->filterCutoffSlider[whichFilter]->asControlValueInterface();
+
+        long cutoffTag =
+            editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->getTag();
+        int cutoffPTag = cutoffTag - start_paramtags;
+
+        long resTag =
+            editor->filterResonanceSlider[whichFilter]->asControlValueInterface()->getTag();
+        int resPTag = resTag - start_paramtags;
+
+        auto &ss = editor->getPatch().scene[editor->current_scene];
+        auto &fs = ss.filterunit[whichFilter];
+        auto &pfg = ss.level_pfg;
+
+        editor->undoManager()->pushFilterAnalysisMovement(
+            cutoffPTag, &fs.cutoff,
+            resPTag, &fs.resonance
+        );
 
         mouseDrag(event);
     }
@@ -530,10 +545,7 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 
 void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
 {
-    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(18).reduced(4);
-    const bool withinHotzone =
-        hotzone.contains(event.position.translated(-dRect.getX(), -dRect.getY()));
+    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
 
     setMouseCursor(juce::MouseCursor::NormalCursor);
 
@@ -546,16 +558,13 @@ void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
     {
         showCursorAt(hotzone.getCentre().translated(dRect.getX(), dRect.getY()).toInt());
     }
-    //    editor->controlEndEdit(editor->filterCutoffSlider[whichFilter]->asControlValueInterface());
-    //    editor->controlEndEdit(editor->filterResonanceSlider[whichFilter]->asControlValueInterface());
 
     guaranteeCursorShown();
 }
 
 void FilterAnalysis::mouseMove(const juce::MouseEvent &event)
 {
-    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(18).reduced(4);
+    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
     bool reset = false;
     const bool withinHotzone =
         hotzone.contains(event.position.translated(-dRect.getX(), -dRect.getY()));
