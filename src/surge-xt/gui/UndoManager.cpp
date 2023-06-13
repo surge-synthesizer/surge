@@ -789,7 +789,9 @@ struct UndoManagerImpl
     {
         auto r = UndoFilterAnalysisMovement();
         r.cutoff = UndoParam();
+        r.cutoff.paramId = cutoffParamId;
         r.resonance = UndoParam();
+        r.resonance.paramId = resonanceParamId;
         populateUndoParamFromP( cutoff_p, cutoff_p->val, r.cutoff);
         populateUndoParamFromP( resonance_p, resonance_p->val, r.resonance);
 
