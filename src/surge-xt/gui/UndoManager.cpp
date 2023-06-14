@@ -175,7 +175,8 @@ struct UndoManagerImpl
         size_t dataSz{0};
         fs::path path{};
     };
-    struct UndoFilterAnalysisMovement{
+    struct UndoFilterAnalysisMovement
+    {
         UndoParam cutoff, resonance;
     };
     // If you add a new type here add it both to aboutTheSameThing, toString, and
@@ -792,8 +793,8 @@ struct UndoManagerImpl
         r.cutoff.paramId = cutoffParamId;
         r.resonance = UndoParam();
         r.resonance.paramId = resonanceParamId;
-        populateUndoParamFromP( cutoff_p, cutoff_p->val, r.cutoff);
-        populateUndoParamFromP( resonance_p, resonance_p->val, r.resonance);
+        populateUndoParamFromP(cutoff_p, cutoff_p->val, r.cutoff);
+        populateUndoParamFromP(resonance_p, resonance_p->val, r.resonance);
 
         if (to == UndoManager::UNDO)
             pushUndo(r);
@@ -1087,6 +1088,19 @@ struct UndoManagerImpl
             editor->enqueueAccessibleAnnouncement(ann);
             return true;
         }
+        if (auto p = std::get_if<UndoFilterAnalysisMovement>(&q))
+        {
+            pushFilterAnalysisMovement(
+                p->cutoff.paramId, synth->storage.getPatch().param_ptr[p->cutoff.paramId],
+                p->resonance.paramId, synth->storage.getPatch().param_ptr[p->resonance.paramId],
+                opposite);
+            auto g = SelfPushGuard(this);
+            restoreParamToEditor(&p->cutoff);
+            restoreParamToEditor(&p->resonance);
+            auto ann = fmt::format("{} Parameter Value, {}", verb, "Filter Analysis Movement");
+            editor->enqueueAccessibleAnnouncement(ann);
+            return true;
+        }
 
         return false;
     }
@@ -1218,8 +1232,7 @@ void UndoManager::pushFilterAnalysisMovement(int cutoffParamId, const Parameter 
                                              int resonanceParamId, const Parameter *resonance_p,
                                              UndoManager::Target to)
 {
-    impl->pushFilterAnalysisMovement(cutoffParamId, cutoff_p, resonanceParamId,
-                                     resonance_p, to);
+    impl->pushFilterAnalysisMovement(cutoffParamId, cutoff_p, resonanceParamId, resonance_p, to);
 }
 } // namespace GUI
 
