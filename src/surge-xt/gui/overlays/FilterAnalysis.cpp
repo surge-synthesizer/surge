@@ -534,10 +534,8 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
         auto &fs = ss.filterunit[whichFilter];
         auto &pfg = ss.level_pfg;
 
-        editor->undoManager()->pushFilterAnalysisMovement(
-            cutoffPTag, &fs.cutoff,
-            resPTag, &fs.resonance
-        );
+        editor->undoManager()->pushFilterAnalysisMovement(cutoffPTag, &fs.cutoff, resPTag,
+                                                          &fs.resonance);
 
         mouseDrag(event);
     }
