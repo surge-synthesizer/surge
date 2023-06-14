@@ -835,7 +835,13 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         YES_NO
     };
     void alertOKCancel(const std::string &title, const std::string &prompt,
-                       std::function<void()> onOk, AlertButtonStyle buttonStyle = OK_CANCEL);
+                       std::function<void()> onOk, std::function<void()> onCancel = nullptr,
+                       AlertButtonStyle buttonStyle = OK_CANCEL);
+    void alertYesNo(const std::string &title, const std::string &prompt, std::function<void()> onOk,
+                    std::function<void()> onCancel = nullptr)
+    {
+        alertOKCancel(title, prompt, onOk, onCancel, YES_NO);
+    }
 
     std::unique_ptr<Surge::Overlays::Alert> alert;
 

@@ -773,25 +773,22 @@ void FormulaModulatorEditor::escapeKeyPressed()
 {
     if (controlArea->applyS->isEnabled())
     {
-        auto cb = juce::ModalCallbackFunction::create([this](int okcs) {
-            if (okcs)
+        auto cb = [this]() {
+            auto c = getParentComponent();
+            while (c)
             {
-                auto c = getParentComponent();
-                while (c)
+                if (auto olw = dynamic_cast<OverlayWrapper *>(c))
                 {
-                    if (auto olw = dynamic_cast<OverlayWrapper *>(c))
-                    {
-                        olw->onClose();
-                        return;
-                    }
+                    olw->onClose();
+                    return;
                 }
             }
-        });
+        };
 
-        juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, "Close Formula Editor",
-                                           "Do you really want to close the formula editor? Any "
-                                           "changes that were not applied will be lost!",
-                                           "Yes", "No", nullptr, cb);
+        editor->alertYesNo("Close Formula Editor",
+                           "Do you really want to close the formula editor? Any "
+                           "changes that were not applied will be lost!",
+                           nullptr, cb);
     }
     else
     {

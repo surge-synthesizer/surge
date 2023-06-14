@@ -308,16 +308,13 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
     assert(n_paramslots >= n_total_params);
     synth->storage.addErrorListener(this);
-    synth->storage.okCancelProvider = [](const std::string &msg, const std::string &title,
-                                         SurgeStorage::OkCancel def,
-                                         std::function<void(SurgeStorage::OkCancel)> callback) {
+    synth->storage.okCancelProvider = [this](const std::string &msg, const std::string &title,
+                                             SurgeStorage::OkCancel def,
+                                             std::function<void(SurgeStorage::OkCancel)> callback) {
         // TODO: think about threading one day probably
-        auto cb = juce::ModalCallbackFunction::create([callback](int isOk) {
-            auto r = isOk ? SurgeStorage::OK : SurgeStorage::CANCEL;
-            callback(r);
-        });
-        auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, title, msg, "Yes",
-                                                      "No", nullptr, cb);
+        alertYesNo(
+            title, msg, [callback]() { callback(SurgeStorage::OkCancel::OK); },
+            [callback]() { callback(SurgeStorage::OkCancel::CANCEL); });
     };
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeGUIEditor::SurgeGUIEditor");
@@ -5520,7 +5517,8 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
 }
 
 void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
-                                   std::function<void()> onOk, AlertButtonStyle buttonStyle)
+                                   std::function<void()> onOk, std::function<void()> onCancel,
+                                   AlertButtonStyle buttonStyle)
 {
     alert = std::make_unique<Surge::Overlays::Alert>();
     alert->setSkin(currentSkin, bitmapStore);
@@ -5537,6 +5535,7 @@ void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &
         alert->setButtonText("OK", "Cancel");
     }
     alert->onOk = std::move(onOk);
+    alert->onCancel = std::move(onCancel);
     alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
     alert->setVisible(true);
     alert->toFront(true);
@@ -6694,7 +6693,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
                 std::cout << "Could not find the skin after loading!" << std::endl;
             }
         };
-        alertOKCancel("Install Skin", oss.str(), cb, AlertButtonStyle::YES_NO);
+        alertYesNo("Install Skin", oss.str(), cb);
     }
     else if (fExt == ".zip")
     {
@@ -6793,7 +6792,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
             }
         };
 
-        alertOKCancel("Install from ZIP archive", oss.str(), cb, AlertButtonStyle::YES_NO);
+        alertYesNo("Install from ZIP archive", oss.str(), cb);
     }
     return true;
 }
