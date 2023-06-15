@@ -163,15 +163,14 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         if (success)
         {
             // Add listener for patch changes
-            surge->addPatchLoadedListener([this](auto &s) { this->patch_load_to_OSC(s); });
-            /*
-            surge->addPatchLoadedListener([wed = juce::Component::SafePointer(this)]() {
-                juce::MessageManager::getInstance()->callAsync([wed]() {
-                    if (wed)
-                        wed->patch_load_to_OSC(s);
+            // surge->addPatchLoadedListener([this](auto &s) { this->patch_load_to_OSC(s); });
+
+            surge->addPatchLoadedListener([ssp = this](auto &s) {
+                juce::MessageManager::getInstance()->callAsync([ssp, &s]() {
+                    if (ssp)
+                        ssp->patch_load_to_OSC(s);
                 });
             });
-            */
         }
         else
         {
@@ -285,16 +284,7 @@ bool SurgeSynthProcessor::initOSCOut(int port)
     return state;
 }
 
-bool SurgeSynthProcessor::changeOSCOutPort(int new_port)
-{
-    if (oscSender.sendingOSC)
-    {
-        surge->storage.oscSending = false;
-        oscSender.disconnect();
-    }
-
-    return initOSCOut(new_port);
-}
+bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port); }
 
 // Called as 'patch loaded' listener:
 void SurgeSynthProcessor::patch_load_to_OSC(std::string &patchstr)
