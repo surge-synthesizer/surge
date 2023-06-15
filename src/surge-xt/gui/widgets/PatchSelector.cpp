@@ -654,6 +654,7 @@ void PatchSelector::showClassicMenu(bool single_category)
                     auto res = c.getResult();
                     auto rString = res.getFullPathName().toStdString();
 
+                    std::cout << "queuePatchFileLoad: " << rString << std::endl;
                     sge->queuePatchFileLoad(rString);
 
                     auto dir =

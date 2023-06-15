@@ -36,6 +36,7 @@ struct QuadFilterChainState;
 #include <atomic>
 #include <cstdio>
 #include <bitset>
+#include <vector>
 
 struct timedata
 {
@@ -384,6 +385,22 @@ class alignas(16) SurgeSynthesizer
     void updateUsedState();
     void prepareModsourceDoProcess(int scenemask);
     unsigned int saveRaw(void **data);
+
+    // ----  'patch loaded' listener(s) ----
+    // Note: this supports multiple listeners, but listeners cannot be unregistered,
+    //  nor are multiple registrations of the same listener prevented.
+    // If either of those cases are required, the collection should probably be converted
+    //  from a vector to an unordered_map using some sort of unique key devised for each listener.
+    // Since listeners can't be unregistered, they *must* have a lifetime longer than the synth
+    // object, else a patch change could call a listener that no longer exists and (kaboom).
+    //
+    // Please also note that listeners should do their work on separate threads from their caller,
+    //  since it is on the audio thread.
+    std::vector<std::function<void(std::string &)>> patchLoadedListeners;
+    void addPatchLoadedListener(std::function<void(std::string &)> const &l)
+    {
+        patchLoadedListeners.push_back(l);
+    }
 
     // synth -> editor variables
     bool refresh_editor, patch_loaded;

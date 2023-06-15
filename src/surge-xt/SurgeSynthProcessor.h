@@ -395,6 +395,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool changeOSCInPort(int newport);
     bool changeOSCOutPort(int newport);
 
+    void patch_load_to_OSC(std::string &patchstr);
+
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool isInputMain(int index) override { return false; }
     bool supportsDirectProcess() override { return true; }

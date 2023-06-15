@@ -160,7 +160,20 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         int defaultOSCOutPort = Surge::Storage::getUserDefaultValue(
             &(surge->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
         bool success = initOSCOut(defaultOSCOutPort);
-        if (!success)
+        if (success)
+        {
+            // Add listener for patch changes
+            surge->addPatchLoadedListener([this](auto &s) { this->patch_load_to_OSC(s); });
+            /*
+            surge->addPatchLoadedListener([wed = juce::Component::SafePointer(this)]() {
+                juce::MessageManager::getInstance()->callAsync([wed]() {
+                    if (wed)
+                        wed->patch_load_to_OSC(s);
+                });
+            });
+            */
+        }
+        else
         {
             std::ostringstream msg;
             msg << "Surge XT was unable to connect to UDP port " << defaultOSCOutPort
@@ -170,6 +183,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
             return;
         }
     }
+
 #endif
 }
 
@@ -280,6 +294,12 @@ bool SurgeSynthProcessor::changeOSCOutPort(int new_port)
     }
 
     return initOSCOut(new_port);
+}
+
+// Called as 'patch loaded' listener:
+void SurgeSynthProcessor::patch_load_to_OSC(std::string &patchstr)
+{
+    std::cout << "Patch loaded: " << patchstr << std::endl;
 }
 
 //==============================================================================
