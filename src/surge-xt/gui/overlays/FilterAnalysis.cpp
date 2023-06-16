@@ -27,6 +27,7 @@
 #include "sst/filters/FilterPlotter.h"
 #include <thread>
 #include "Tunings.h"
+#include "SurgeGUIEditorTags.h"
 
 static constexpr auto GRAPH_MIN_FREQ = 13.57f;
 static constexpr auto GRAPH_MAX_FREQ = 25087.f;
@@ -127,7 +128,8 @@ struct FilterAnalysisEvaluator
     bool hasWork{false}, continueWaiting{true};
 };
 
-FilterAnalysis::FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s) : editor(e), storage(s)
+FilterAnalysis::FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s, SurgeSynthesizer *synth)
+    : editor(e), storage(s), synth(synth)
 {
     evaluator = std::make_unique<FilterAnalysisEvaluator>(this);
     f1Button = std::make_unique<Surge::Widgets::SelfDrawToggleButton>("Filter 1");
@@ -441,8 +443,7 @@ void FilterAnalysis::resized()
 
 void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 {
-    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(15).reduced(4);
+    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
 
     float rx0 = dRect.getX();
     float rx1 = dRect.getX() + dRect.getWidth() - 1;
@@ -490,6 +491,17 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
         editor->filterResonanceSlider[whichFilter]->asJuceComponent()->repaint();
 
         repushData();
+
+        long tag = editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->getTag();
+        int ptag = tag - start_paramtags;
+        SurgeSynthesizer::ID ptagid;
+        synth->fromSynthSideId(ptag, ptagid);
+        synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
+
+        tag = editor->filterResonanceSlider[whichFilter]->asControlValueInterface()->getTag();
+        ptag = tag - start_paramtags;
+        synth->fromSynthSideId(ptag, ptagid);
+        synth->sendParameterAutomation(ptagid, synth->getParameter01(ptagid));
     }
 }
 
@@ -499,25 +511,39 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 // just by clicking anywhere in the graph, no mouse movement required
 void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 {
-    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(18).reduced(4);
+    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
     auto where = event.position;
     const bool withinHotzone = hotzone.contains(where.translated(-dRect.getX(), -dRect.getY()));
 
     if (dRect.contains(where.toInt()))
     {
+
         isPressed = true;
         hideCursor(where.toInt());
+        editor->filterCutoffSlider[whichFilter]->asControlValueInterface();
+
+        long cutoffTag =
+            editor->filterCutoffSlider[whichFilter]->asControlValueInterface()->getTag();
+        int cutoffPTag = cutoffTag - start_paramtags;
+
+        long resTag =
+            editor->filterResonanceSlider[whichFilter]->asControlValueInterface()->getTag();
+        int resPTag = resTag - start_paramtags;
+
+        auto &ss = editor->getPatch().scene[editor->current_scene];
+        auto &fs = ss.filterunit[whichFilter];
+        auto &pfg = ss.level_pfg;
+
+        editor->undoManager()->pushFilterAnalysisMovement(cutoffPTag, &fs.cutoff, resPTag,
+                                                          &fs.resonance);
+
         mouseDrag(event);
     }
 }
 
 void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
 {
-    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(18).reduced(4);
-    const bool withinHotzone =
-        hotzone.contains(event.position.translated(-dRect.getX(), -dRect.getY()));
+    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
 
     setMouseCursor(juce::MouseCursor::NormalCursor);
 
@@ -536,8 +562,7 @@ void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
 
 void FilterAnalysis::mouseMove(const juce::MouseEvent &event)
 {
-    auto lb = getLocalBounds().transformedBy(getTransform().inverted());
-    auto dRect = lb.withTrimmedTop(18).reduced(4);
+    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
     bool reset = false;
     const bool withinHotzone =
         hotzone.contains(event.position.translated(-dRect.getX(), -dRect.getY()));

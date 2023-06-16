@@ -1014,6 +1014,38 @@ void SurgeGUIEditor::idle()
                     param[j]->asControlValueInterface()->setValue(synth->getParameter01(jid));
                     param[j]->setQuantitizedDisplayValue(synth->getParameter01(jid));
                     param[j]->asJuceComponent()->repaint();
+
+                    { // force repaint any filter overlays when the host changes filter params
+                        bool refreshFilterAnalyser =
+                            param[j]->asControlValueInterface()->getTag() ==
+                                filterCutoffSlider[0]->asControlValueInterface()->getTag() ||
+                            param[j]->asControlValueInterface()->getTag() ==
+                                filterResonanceSlider[0]->asControlValueInterface()->getTag() ||
+                            param[j]->asControlValueInterface()->getTag() ==
+                                filterCutoffSlider[1]->asControlValueInterface()->getTag() ||
+                            param[j]->asControlValueInterface()->getTag() ==
+                                filterResonanceSlider[1]->asControlValueInterface()->getTag();
+
+                        if (refreshFilterAnalyser)
+                        {
+                            auto sp = getStorage()->getPatch().param_ptr[j];
+
+                            if (sp)
+                            {
+                                if (sp->ctrlgroup == cg_FILTER)
+                                {
+                                    // force repaint any filter overlays
+                                    auto fa = getOverlayIfOpenAs<Surge::Overlays::FilterAnalysis>(
+                                        OverlayTags::FILTER_ANALYZER);
+
+                                    if (fa)
+                                    {
+                                        fa->forceDataRefresh();
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (oscWaveform)

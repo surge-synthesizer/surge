@@ -180,9 +180,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   protected:
     virtual void setParameter(long index, float value);
-
     // listener class
     void valueChanged(Surge::GUI::IComponentTagValue *control) override;
+
     int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *control,
                                    const juce::ModifierKeys &button,
                                    bool isDoubleClickEvent) override;

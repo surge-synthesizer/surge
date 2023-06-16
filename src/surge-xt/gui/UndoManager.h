@@ -73,6 +73,10 @@ struct UndoManager
 
     void pushPatch(); // args TK
 
+    void pushFilterAnalysisMovement(int cutoffParamId, const Parameter *cutoff_p,
+                                    int resonanceParamId, const Parameter *resonance_p,
+                                    Target to = UNDO);
+
     bool undo();
     bool redo();
 
