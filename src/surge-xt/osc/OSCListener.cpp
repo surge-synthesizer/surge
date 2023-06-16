@@ -131,7 +131,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
     }
     else if (address1 == "patch")
     {
-        std::string dataStr = getWholeString(message);
+        std::string dataStr = getWholeString(message) + ".fxp";
         {
             std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
             strncpy(synth->patchid_file, dataStr.c_str(), FILENAME_MAX);

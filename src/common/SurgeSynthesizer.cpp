@@ -3945,11 +3945,15 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     {
         Patch p = synth->storage.patch_list[synth->patchid];
         pathstr = path_to_string(p.path);
+        // Trim extension
+        pathstr = pathstr.substr(0, pathstr.find_last_of("."));
         for (auto &it : synth->patchLoadedListeners)
             (it.second)(pathstr);
     }
     if (had_patchid_file)
     {
+        // Trim extension
+        pathstr = pathstr.substr(0, pathstr.find_last_of("."));
         for (auto &it : synth->patchLoadedListeners)
             (it.second)(pathstr);
     }

@@ -273,6 +273,8 @@ bool SurgeSynthProcessor::initOSCOut(int port)
     if (state)
     {
         // Add listener for patch changes, to send new path to OSC output
+        // Listener will run on the juce::MessageManager thread so as to
+        // not tie up the patch loading thread.
         surge->addPatchLoadedListener("OSC_OUT", [ssp = this](auto s) {
             juce::MessageManager::getInstance()->callAsync([ssp, s]() {
                 if (ssp)
@@ -292,7 +294,7 @@ void SurgeSynthProcessor::stopOSCOut()
 
 bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port); }
 
-// Called as 'patch loaded' listener:
+// Called as 'patch loaded' listener; runs on the juce::MessageManager thread
 void SurgeSynthProcessor::patch_load_to_OSC(std::string fullPathStr)
 {
     if (surge->storage.oscSending && !fullPathStr.empty())

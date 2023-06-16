@@ -387,12 +387,12 @@ class alignas(16) SurgeSynthesizer
     unsigned int saveRaw(void **data);
 
     // ----  'patch loaded' listener(s) ----
-    // Listeners are notified whenever a patch changes, with the path of the new patch
+    // Listeners are notified whenever a patch changes, with the path of the new patch.
     // Listeners should run on their own thread; for example, the OSC patchLoadedListener
     // runs on a juce::MessageManager thread.
-    // (See SurgeSynthProcessor::initOSCOut() and stopOSCOUt())
-    // Be sure to delete the listener in the desctructor of the class that orignally called
-    // 'addPatchLoadListener()'
+    // (See SurgeSynthProcessor::initOSCOut() and SurgeSynthProcessor::stopOSCOUt() for example).
+    //
+    // Be sure to delete any added listeners in the desctructor of the class that added them.
     std::unordered_map<std::string, std::function<void(std::string)>> patchLoadedListeners;
     void addPatchLoadedListener(std::string key, std::function<void(std::string)> const &l)
     {
