@@ -52,6 +52,7 @@ struct Alert : public juce::Component,
         cancelButton->setButtonText(cancelText);
     }
     std::function<void()> onOk;
+    std::function<void()> onCancel;
     void paint(juce::Graphics &g) override;
     void resized() override;
     void onSkinChanged() override;

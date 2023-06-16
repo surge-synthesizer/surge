@@ -88,6 +88,10 @@ void Alert::buttonClicked(juce::Button *button)
     {
         onOk();
     }
+    else if (button == cancelButton.get() && onCancel)
+    {
+        onCancel();
+    }
     setVisible(false);
 }
 } // namespace Overlays
