@@ -153,7 +153,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             if ((dataStr != "_reset") && (!fs::exists(dataStr)))
             {
                 std::ostringstream msg;
-                msg << "An OSC '.../path/...' message was received with a path which "
+                msg << "An OSC 'tuning/path/...' message was received with a path which "
                        "does not exist: the default path will not change.";
                 synth->storage.reportError(msg.str(), "Path does not exist.");
                 return;

@@ -387,20 +387,18 @@ class alignas(16) SurgeSynthesizer
     unsigned int saveRaw(void **data);
 
     // ----  'patch loaded' listener(s) ----
-    // Note: this supports multiple listeners, but listeners cannot be unregistered,
-    //  nor are multiple registrations of the same listener prevented.
-    // If either of those cases are required, the collection should probably be converted
-    //  from a vector to an unordered_map using some sort of unique key devised for each listener.
-    // Since listeners can't be unregistered, they *must* have a lifetime longer than the synth
-    // object, else a patch change could call a listener that no longer exists and (kaboom).
-    //
-    // Please also note that listeners should do their work on separate threads from their caller,
-    //  since it is on the audio thread.
-    std::vector<std::function<void(std::string &)>> patchLoadedListeners;
-    void addPatchLoadedListener(std::function<void(std::string &)> const &l)
+    // Listeners are notified whenever a patch changes, with the path of the new patch
+    // Listeners should run on their own thread; for example, the OSC patchLoadedListener
+    // runs on a juce::MessageManager thread.
+    // (See SurgeSynthProcessor::initOSCOut() and stopOSCOUt())
+    // Be sure to delete the listener in the desctructor of the class that orignally called
+    // 'addPatchLoadListener()'
+    std::unordered_map<std::string, std::function<void(std::string)>> patchLoadedListeners;
+    void addPatchLoadedListener(std::string key, std::function<void(std::string)> const &l)
     {
-        patchLoadedListeners.push_back(l);
+        patchLoadedListeners.insert({key, l});
     }
+    void deletePatchLoadedListener(std::string key) { patchLoadedListeners.erase(key); }
 
     // synth -> editor variables
     bool refresh_editor, patch_loaded;

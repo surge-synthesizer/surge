@@ -156,23 +156,12 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     bool startOSCOutNow =
         Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCOut, false);
     if (startOSCOutNow)
+    // TODO: is this only working if OSC is enabled to auto-start? FIX IF SO!
     {
         int defaultOSCOutPort = Surge::Storage::getUserDefaultValue(
             &(surge->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
         bool success = initOSCOut(defaultOSCOutPort);
-        if (success)
-        {
-            // Add listener for patch changes
-            // surge->addPatchLoadedListener([this](auto &s) { this->patch_load_to_OSC(s); });
-
-            surge->addPatchLoadedListener([ssp = this](auto &s) {
-                juce::MessageManager::getInstance()->callAsync([ssp, &s]() {
-                    if (ssp)
-                        ssp->patch_load_to_OSC(s);
-                });
-            });
-        }
-        else
+        if (!success)
         {
             std::ostringstream msg;
             msg << "Surge XT was unable to connect to UDP port " << defaultOSCOutPort
@@ -188,10 +177,11 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 SurgeSynthProcessor::~SurgeSynthProcessor()
 {
-#if SURGE_HAS_OSC
     if (oscListener.listening)
+    {
         oscListener.stopListening();
-#endif
+    }
+    stopOSCOut(); // This also deletes the patch change -> OSC out listener
 }
 
 //==============================================================================
@@ -280,19 +270,38 @@ bool SurgeSynthProcessor::initOSCOut(int port)
 {
     auto state = oscSender.init(surge, port);
     surge->storage.oscSending = state;
+    if (state)
+    {
+        // Add listener for patch changes, to send new path to OSC output
+        surge->addPatchLoadedListener("OSC_OUT", [ssp = this](auto s) {
+            juce::MessageManager::getInstance()->callAsync([ssp, s]() {
+                if (ssp)
+                    ssp->patch_load_to_OSC(s);
+            });
+        });
+    }
 
     return state;
+}
+
+void SurgeSynthProcessor::stopOSCOut()
+{
+    surge->deletePatchLoadedListener("OSC_OUT");
+    oscSender.stopSending();
 }
 
 bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port); }
 
 // Called as 'patch loaded' listener:
-void SurgeSynthProcessor::patch_load_to_OSC(std::string &patchstr)
+void SurgeSynthProcessor::patch_load_to_OSC(std::string fullPathStr)
 {
-    std::cout << "Patch loaded: " << patchstr << std::endl;
+    if (surge->storage.oscSending && !fullPathStr.empty())
+    {
+        oscSender.send("/patch", fullPathStr);
+    }
 }
-
 //==============================================================================
+
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
     surge->setSamplerate(sr);

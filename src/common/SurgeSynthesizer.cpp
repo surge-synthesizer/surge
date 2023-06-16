@@ -3940,18 +3940,18 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     synth->patchChanged = true;
     synth->halt_engine = false;
 
-    // Notify the patch load listener(s)
+    // Notify the 'patch loaded' listener(s)
     if (patchid >= 0)
     {
         Patch p = synth->storage.patch_list[synth->patchid];
         pathstr = path_to_string(p.path);
-        for (auto &listener : synth->patchLoadedListeners)
-            (listener)(pathstr);
+        for (auto &it : synth->patchLoadedListeners)
+            (it.second)(pathstr);
     }
     if (had_patchid_file)
     {
-        for (auto &listener : synth->patchLoadedListeners)
-            (listener)(pathstr);
+        for (auto &it : synth->patchLoadedListeners)
+            (it.second)(pathstr);
     }
 
     // Now we want to null out the patchLoadThread since everything is done

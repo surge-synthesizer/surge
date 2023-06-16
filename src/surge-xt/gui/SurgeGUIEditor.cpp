@@ -4791,7 +4791,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
     if (synth->storage.oscSending)
     {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Output"),
-                           [this]() { juceEditor->processor.oscSender.stopSending(); });
+                           [this]() { juceEditor->processor.stopOSCOut(); });
     }
     else
     {

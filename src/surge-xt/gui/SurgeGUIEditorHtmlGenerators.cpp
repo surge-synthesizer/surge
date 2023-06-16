@@ -692,6 +692,11 @@ code {
                         <td>decrement category</td>
                         <td class="center">(none)</td>
                     </tr>
+                    <tr>
+                        <td>/patch/random</td>
+                        <td>choose random patch</td>
+                        <td class="center">(none)</td>
+                    </tr>
                 </table>
             </div>
 
