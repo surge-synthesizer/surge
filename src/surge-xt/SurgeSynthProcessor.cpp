@@ -606,7 +606,7 @@ void SurgeSynthProcessor::processBlockOSC()
     for (const auto &om : messages)
     {
         float pval = om.val;
-        if (om.type == oscMsg::PARAMETER)
+        if (om.type == oscParamMsg::PARAMETER) // currently the only type
         {
             if (om.param->valtype == vt_int)
                 pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);

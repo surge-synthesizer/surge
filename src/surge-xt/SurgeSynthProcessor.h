@@ -335,25 +335,32 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     //==============================================================================
     // Open Sound Control
-    struct oscMsg
+    struct oscParamMsg
     {
         enum Type
         {
-            PARAMETER,
-            SET_TUNING
+            PARAMETER // the only type that uses these messages, for now
         } type{PARAMETER};
         Parameter *param;
         float val{0.0};
         std::string str;
 
-        oscMsg() {}
-        oscMsg(Parameter *p, float v) : type(PARAMETER), param(p), val(v) {}
+        oscParamMsg() {}
+        oscParamMsg(Parameter *p, float v) : type(PARAMETER), param(p), val(v) {}
     };
 
-    sst::cpputils::SimpleRingBuffer<oscMsg, 4096> oscRingBuf;
+    sst::cpputils::SimpleRingBuffer<oscParamMsg, 4096> oscRingBuf;
 
     Surge::OSC::OSCListener oscListener;
     Surge::OSC::OSCSender oscSender;
+
+    bool initOSCIn(int port);
+    bool initOSCOut(int port);
+    bool changeOSCInPort(int newport);
+    bool changeOSCOutPort(int newport);
+    void stopOSCOut();
+
+    void patch_load_to_OSC(std::string patchstr);
 
     //==============================================================================
     const juce::String getName() const override;
@@ -389,14 +396,6 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void reset() override;
 
     bool getPluginHasMainInput() const override { return false; }
-
-    bool initOSCIn(int port);
-    bool initOSCOut(int port);
-    bool changeOSCInPort(int newport);
-    bool changeOSCOutPort(int newport);
-    void stopOSCOut();
-
-    void patch_load_to_OSC(std::string patchstr);
 
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool isInputMain(int index) override { return false; }

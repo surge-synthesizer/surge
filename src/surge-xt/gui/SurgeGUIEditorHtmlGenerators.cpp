@@ -588,28 +588,7 @@ code {
                     <tr>
                         <td>/patch</td>
                         <td>new patch</td>
-                        <td class="center">file path (absolute)</td>
-                    </tr>
-                </table>
-            </div>
-            <!-- Show tuning change output -->
-            <div class="tablewrap fr cr">
-                <div class="heading"><h3>Tuning Change:</h3></div>
-                <table style="border: 2px solid black;">
-                    <tr>
-                        <th>Address</th>
-                        <th>Description</th>
-                        <th>Sent Values</th>
-                    </tr>
-                    <tr>
-                        <td>/tuning/scl</td>
-                        <td>new scl tuning</td>
-                        <td class="center">file path (absolute)</td>
-                    </tr>
-                    <tr>
-                        <td>/tuning/kbm</td>
-                        <td>new kbm mapping</td>
-                        <td class="center">file path (absolute)</td>
+                        <td class="center">file path (absolute, no extension)</td>
                     </tr>
                 </table>
             </div>
@@ -665,12 +644,7 @@ code {
                     <tr>
                         <td>/patch</td>
                         <td>load patch</td>
-                        <td class="center">file path (absolute or relative)</td>
-                    </tr>
-                    <tr>
-                        <td>/patch/path</td>
-                        <td>patch path</td>
-                        <td class="center">absolute path</td>
+                        <td class="center">file path (absolute, no extension)</td>
                     </tr>
                     <tr>
                         <td>/patch/incr</td>

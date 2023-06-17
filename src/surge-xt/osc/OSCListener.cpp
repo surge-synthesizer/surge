@@ -122,7 +122,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscParamMsg(p, message[0].getFloat32()));
 
 #ifdef DEBUG_VERBOSE
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
@@ -131,13 +131,37 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
     }
     else if (address1 == "patch")
     {
-        std::string dataStr = getWholeString(message) + ".fxp";
+        std::getline(split, address2, '/');
+        if (address2 == "")
         {
-            std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
-            strncpy(synth->patchid_file, dataStr.c_str(), FILENAME_MAX);
-            synth->has_patchid_file = true;
+            std::string dataStr = getWholeString(message) + ".fxp";
+            {
+                std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
+                strncpy(synth->patchid_file, dataStr.c_str(), FILENAME_MAX);
+                synth->has_patchid_file = true;
+            }
+            synth->processAudioThreadOpsWhenAudioEngineUnavailable();
         }
-        synth->processAudioThreadOpsWhenAudioEngineUnavailable();
+        else if (address2 == "random")
+        {
+            synth->selectRandomPatch();
+        }
+        else if (address2 == "incr")
+        {
+            synth->jogPatch(true);
+        }
+        else if (address2 == "decr")
+        {
+            synth->jogPatch(false);
+        }
+        else if (address2 == "incr_category")
+        {
+            synth->jogCategory(true);
+        }
+        else if (address2 == "decr_category")
+        {
+            synth->jogCategory(false);
+        }
     }
 
     else if (address1 == "tuning")
