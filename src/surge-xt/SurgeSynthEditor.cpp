@@ -154,6 +154,10 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     // this makes VKB always receive keyboard input (except when we focus on any typeins, of course)
     keyboard->setWantsKeyboardFocus(false);
 
+    auto vkbLayout = Surge::Storage::getUserDefaultValue(
+        &(this->processor.surge->storage), Surge::Storage::VirtualKeyboardLayout, "QWERTY");
+    setVKBLayout(vkbLayout);
+
     auto w = std::make_unique<VKeyboardWheel>();
     w->snapBack = true;
     w->unipolar = false;
@@ -247,6 +251,25 @@ SurgeSynthEditor::~SurgeSynthEditor()
     }
 
     sge.reset(nullptr);
+}
+
+void SurgeSynthEditor::setVKBLayout(const std::string layout)
+{
+    auto searchTerm = [&layout](const auto &x) { return x.first == layout; };
+    auto search = std::find_if(vkbLayouts.begin(), vkbLayouts.end(), searchTerm);
+
+    if (search != vkbLayouts.end())
+    {
+        keyboard->clearKeyMappings();
+
+        unsigned int n = 0;
+
+        for (auto i : search->second)
+        {
+            keyboard->setKeyPressForNote((juce::KeyPress)i, n);
+            n++;
+        }
+    }
 }
 
 void SurgeSynthEditor::handleAsyncUpdate() {}

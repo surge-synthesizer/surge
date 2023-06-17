@@ -46,6 +46,8 @@ struct KeyBindingsOverlay : public OverlayComponent, public Surge::GUI::SkinCons
     ~KeyBindingsOverlay();
 
     void resetAllToDefault();
+    void createVKBLayoutMenu();
+    void changeVKBLayout(const std::string layout);
 
     void paint(juce::Graphics &g) override;
     void resized() override;
@@ -56,7 +58,7 @@ struct KeyBindingsOverlay : public OverlayComponent, public Surge::GUI::SkinCons
     int learnAction{0};
     bool keyPressed(const juce::KeyPress &key) override;
 
-    std::unique_ptr<Surge::Widgets::SelfDrawButton> okS, cancelS, resetAll;
+    std::unique_ptr<Surge::Widgets::SelfDrawButton> okS, cancelS, resetAll, vkbLayout;
     std::unique_ptr<KeyBindingsListBoxModel> bindingListBoxModel;
     std::unique_ptr<juce::ListBox> bindingList;
 };

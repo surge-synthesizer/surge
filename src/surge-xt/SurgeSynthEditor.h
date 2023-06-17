@@ -28,6 +28,8 @@
 
 #include "juce_audio_utils/juce_audio_utils.h"
 
+#include <forward_list>
+
 class SurgeGUIEditor;
 class SurgeJUCELookAndFeel;
 
@@ -77,6 +79,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     bool keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent) override;
     bool keyStateChanged(bool isKeyDown, juce::Component *originatingComponent) override;
 
+    void setVKBLayout(const std::string layout);
+
     void reapplySurgeComponentColours();
 
     struct IdleTimer : juce::Timer
@@ -106,6 +110,19 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     juce::PopupMenu hostMenuForMacro(int macro);
 
     friend class SurgeGUIEditor;
+
+    // clang-format off
+    std::forward_list<std::pair<std::string, std::vector<int>>> vkbLayouts =
+    {
+        {"QWERTY",          {'a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 186, 219, 222, 221}},
+        {"QWERTZ (DE)",     {'a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 192, 186, 222, 187, 191}},
+        {"QWERTZ (Slavic)", {'a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 186, 219, 222, 221, 220}},
+        {"AZERTY",          {'q', 'z', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 'm'}},
+        {"Dvorak",          {'a', ',', 'o', '.', 'e', 'u', 'y', 'i', 'f', 'd', 'g', 'h', 't', 'r', 'n', 'l', 's', 191, 189, 187}},
+        {"Colemak",         {'a', 'w', 'r', 'f', 's', 't', 'g', 'd', 'j', 'h', 'l', 'n', 'e', 'y', 'i', 186, 'o', 219, 222, 221}},
+        {"Workman",         {'a', 'd', 's', 'r', 'h', 't', 'b', 'g', 'j', 'y', 'f', 'n', 'e', 'p', 'o', 186, 'i', 219, 222, 221}}
+    };
+    // clang-format on
 
   private:
     // This reference is provided as a quick way for your editor to

@@ -18,16 +18,17 @@ Link to milestone: https://github.com/surge-synthesizer/surge/milestone/xx
 
 ## Executing the install
 
-- [ ] Update the releases-xt/azure-pipelines so we don't get a tag conflict when the release happens even 
+- [ ] Update the releases-xt/azure-pipelines so we don't get a tag conflict when the release happens even
       if it is just a bump commit
 - [ ] Create git markers in the surge repo
-  - [ ] Unlock your GPG key in case,running `gpg --output x.sig --sign CMakeLists.txt` 
+  - [ ] Unlock your GPG key in case,running `gpg --output x.sig --sign CMakeLists.txt`
   - [ ] Create a branch named `git checkout -b release-xt/x.y.z`
-  - [ ] Sign a tag with `git tag -s release_xt_x.y.z -m "Create signed tag"`, 
-  - [ ] Push both the branch and tag to upstream `git push --atomic upstream-write release-xt/x.y.z releas_xt_x.y.z` 
+  - [ ] Sign a tag with `git tag -s release_xt_x.y.z -m "Create signed tag"`,
+  - [ ] Push both the branch and tag to upstream `git push --atomic upstream-write release-xt/x.y.z releas_xt_x.y.z`
 
 ## Post Install
 
 - [ ] Update and announce
-   - [ ] Update homebrew [doc](https://github.com/surge-synthesizer/surge/tree/master/doc) 
+   - [ ] Update homebrew [doc](https://github.com/surge-synthesizer/surge/tree/master/doc)
+   - [ ] Update [Winget manifest](https://github.com/microsoft/winget-pkgs) (`wingetcreate update --submit --urls https://github.com/surge-synthesizer/releases-xt/releases/download/x.y.z/surge-xt-win64-x.y.z-setup.exe --version x.y.z SurgeSynthTeam.SurgeXT`)
    - [ ] Post to KvR thread, Facebook, Discord, etc.
