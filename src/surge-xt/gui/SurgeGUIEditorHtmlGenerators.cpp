@@ -587,8 +587,8 @@ code {
                     </tr>
                     <tr>
                         <td>/patch</td>
-                        <td>new patch</td>
-                        <td class="center">file path (absolute, no extension)</td>
+                        <td>patch changed</td>
+                        <td class="center">new file path (absolute, no extension)</td>
                     </tr>
                 </table>
             </div>
