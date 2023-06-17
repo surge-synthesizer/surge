@@ -154,6 +154,10 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     // this makes VKB always receive keyboard input (except when we focus on any typeins, of course)
     keyboard->setWantsKeyboardFocus(false);
 
+    auto vkbLayout = Surge::Storage::getUserDefaultValue(
+        &(this->processor.surge->storage), Surge::Storage::VirtualKeyboardLayout, "QWERTY");
+    setVKBLayout(vkbLayout);
+
     auto w = std::make_unique<VKeyboardWheel>();
     w->snapBack = true;
     w->unipolar = false;
@@ -247,6 +251,115 @@ SurgeSynthEditor::~SurgeSynthEditor()
     }
 
     sge.reset(nullptr);
+}
+
+void SurgeSynthEditor::setVKBLayout(const std::string layout)
+{
+    keyboard->clearKeyMappings();
+
+    if (layout == "QWERTY")
+    {
+        keyboard->setKeyPressForNote(juce::KeyPress('a'), 0);
+        keyboard->setKeyPressForNote(juce::KeyPress('w'), 1);
+        keyboard->setKeyPressForNote(juce::KeyPress('s'), 2);
+        keyboard->setKeyPressForNote(juce::KeyPress('e'), 3);
+        keyboard->setKeyPressForNote(juce::KeyPress('d'), 4);
+        keyboard->setKeyPressForNote(juce::KeyPress('f'), 5);
+        keyboard->setKeyPressForNote(juce::KeyPress('t'), 6);
+        keyboard->setKeyPressForNote(juce::KeyPress('g'), 7);
+        keyboard->setKeyPressForNote(juce::KeyPress('y'), 8);
+        keyboard->setKeyPressForNote(juce::KeyPress('h'), 9);
+        keyboard->setKeyPressForNote(juce::KeyPress('u'), 10);
+        keyboard->setKeyPressForNote(juce::KeyPress('j'), 11);
+        keyboard->setKeyPressForNote(juce::KeyPress('k'), 12);
+        keyboard->setKeyPressForNote(juce::KeyPress('o'), 13);
+        keyboard->setKeyPressForNote(juce::KeyPress('l'), 14);
+        keyboard->setKeyPressForNote(juce::KeyPress('p'), 15);
+        keyboard->setKeyPressForNote(juce::KeyPress(';'), 16);
+        keyboard->setKeyPressForNote(juce::KeyPress('['), 17);
+        keyboard->setKeyPressForNote(juce::KeyPress('\''), 18);
+    }
+    else if (layout == "QWERTZ")
+    {
+        keyboard->setKeyPressForNote(juce::KeyPress('a'), 0);
+        keyboard->setKeyPressForNote(juce::KeyPress('w'), 1);
+        keyboard->setKeyPressForNote(juce::KeyPress('s'), 2);
+        keyboard->setKeyPressForNote(juce::KeyPress('e'), 3);
+        keyboard->setKeyPressForNote(juce::KeyPress('d'), 4);
+        keyboard->setKeyPressForNote(juce::KeyPress('f'), 5);
+        keyboard->setKeyPressForNote(juce::KeyPress('t'), 6);
+        keyboard->setKeyPressForNote(juce::KeyPress('g'), 7);
+        keyboard->setKeyPressForNote(juce::KeyPress('z'), 8);
+        keyboard->setKeyPressForNote(juce::KeyPress('h'), 9);
+        keyboard->setKeyPressForNote(juce::KeyPress('u'), 10);
+        keyboard->setKeyPressForNote(juce::KeyPress('j'), 11);
+        keyboard->setKeyPressForNote(juce::KeyPress('k'), 12);
+        keyboard->setKeyPressForNote(juce::KeyPress('o'), 13);
+        keyboard->setKeyPressForNote(juce::KeyPress('l'), 14);
+        keyboard->setKeyPressForNote(juce::KeyPress('p'), 15);
+    }
+    else if (layout == "AZERTY")
+    {
+        keyboard->setKeyPressForNote(juce::KeyPress('q'), 0);
+        keyboard->setKeyPressForNote(juce::KeyPress('z'), 1);
+        keyboard->setKeyPressForNote(juce::KeyPress('s'), 2);
+        keyboard->setKeyPressForNote(juce::KeyPress('e'), 3);
+        keyboard->setKeyPressForNote(juce::KeyPress('d'), 4);
+        keyboard->setKeyPressForNote(juce::KeyPress('f'), 5);
+        keyboard->setKeyPressForNote(juce::KeyPress('t'), 6);
+        keyboard->setKeyPressForNote(juce::KeyPress('g'), 7);
+        keyboard->setKeyPressForNote(juce::KeyPress('y'), 8);
+        keyboard->setKeyPressForNote(juce::KeyPress('h'), 9);
+        keyboard->setKeyPressForNote(juce::KeyPress('u'), 10);
+        keyboard->setKeyPressForNote(juce::KeyPress('j'), 11);
+        keyboard->setKeyPressForNote(juce::KeyPress('k'), 12);
+        keyboard->setKeyPressForNote(juce::KeyPress('o'), 13);
+        keyboard->setKeyPressForNote(juce::KeyPress('l'), 14);
+        keyboard->setKeyPressForNote(juce::KeyPress('p'), 15);
+        keyboard->setKeyPressForNote(juce::KeyPress('m'), 16);
+    }
+    else if (layout == "Dvorak")
+    {
+        keyboard->setKeyPressForNote(juce::KeyPress('a'), 0);
+        keyboard->setKeyPressForNote(juce::KeyPress(','), 1);
+        keyboard->setKeyPressForNote(juce::KeyPress('o'), 2);
+        keyboard->setKeyPressForNote(juce::KeyPress('.'), 3);
+        keyboard->setKeyPressForNote(juce::KeyPress('e'), 4);
+        keyboard->setKeyPressForNote(juce::KeyPress('u'), 5);
+        keyboard->setKeyPressForNote(juce::KeyPress('y'), 6);
+        keyboard->setKeyPressForNote(juce::KeyPress('i'), 7);
+        keyboard->setKeyPressForNote(juce::KeyPress('f'), 8);
+        keyboard->setKeyPressForNote(juce::KeyPress('d'), 9);
+        keyboard->setKeyPressForNote(juce::KeyPress('g'), 10);
+        keyboard->setKeyPressForNote(juce::KeyPress('h'), 11);
+        keyboard->setKeyPressForNote(juce::KeyPress('t'), 12);
+        keyboard->setKeyPressForNote(juce::KeyPress('r'), 13);
+        keyboard->setKeyPressForNote(juce::KeyPress('n'), 14);
+        keyboard->setKeyPressForNote(juce::KeyPress('l'), 15);
+        keyboard->setKeyPressForNote(juce::KeyPress('s'), 16);
+    }
+    else if (layout == "Colemak")
+    {
+        keyboard->setKeyPressForNote(juce::KeyPress('a'), 0);
+        keyboard->setKeyPressForNote(juce::KeyPress('w'), 1);
+        keyboard->setKeyPressForNote(juce::KeyPress('r'), 2);
+        keyboard->setKeyPressForNote(juce::KeyPress('f'), 3);
+        keyboard->setKeyPressForNote(juce::KeyPress('s'), 4);
+        keyboard->setKeyPressForNote(juce::KeyPress('t'), 5);
+        keyboard->setKeyPressForNote(juce::KeyPress('g'), 6);
+        keyboard->setKeyPressForNote(juce::KeyPress('d'), 7);
+        keyboard->setKeyPressForNote(juce::KeyPress('j'), 8);
+        keyboard->setKeyPressForNote(juce::KeyPress('h'), 9);
+        keyboard->setKeyPressForNote(juce::KeyPress('l'), 10);
+        keyboard->setKeyPressForNote(juce::KeyPress('n'), 11);
+        keyboard->setKeyPressForNote(juce::KeyPress('e'), 12);
+        keyboard->setKeyPressForNote(juce::KeyPress('y'), 13);
+        keyboard->setKeyPressForNote(juce::KeyPress('i'), 14);
+        keyboard->setKeyPressForNote(juce::KeyPress(';'), 15);
+        keyboard->setKeyPressForNote(juce::KeyPress('o'), 16);
+        keyboard->setKeyPressForNote(juce::KeyPress('['), 17);
+        keyboard->setKeyPressForNote(juce::KeyPress('\''), 18);
+    }
 }
 
 void SurgeSynthEditor::handleAsyncUpdate() {}

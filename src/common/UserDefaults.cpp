@@ -139,6 +139,9 @@ std::string defaultKeyToString(DefaultKey k)
     case ShowVirtualKeyboard_Standalone:
         r = "showVirtualKeyboardStandalone";
         break;
+    case VirtualKeyboardLayout:
+        r = "virtualKeyboardLayout";
+        break;
     case InitialPatchName:
         r = "initialPatchName";
         break;

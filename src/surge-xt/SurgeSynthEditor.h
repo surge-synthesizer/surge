@@ -77,6 +77,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     bool keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent) override;
     bool keyStateChanged(bool isKeyDown, juce::Component *originatingComponent) override;
 
+    void setVKBLayout(const std::string layout);
+
     void reapplySurgeComponentColours();
 
     struct IdleTimer : juce::Timer
