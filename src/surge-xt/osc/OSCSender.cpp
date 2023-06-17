@@ -58,8 +58,13 @@ bool OSCSender::init(const std::unique_ptr<SurgeSynthesizer> &surge, int port)
 void OSCSender::send(std::string addr, std::string msg)
 {
     if (sendingOSC)
-        if (!juceOSCSender.send(juce::OSCMessage(juce::String(addr), juce::String(msg))))
-            std::cout << "Error: could not send OSC message.";
+    {
+        // Runs on the juce messenger thread
+        juce::MessageManager::getInstance()->callAsync([this, msg, addr]() {
+            if (!this->juceOSCSender.send(juce::OSCMessage(juce::String(addr), juce::String(msg))))
+                std::cout << "Error: could not send OSC message.";
+        });
+    }
 }
 
 void OSCSender::stopSending()
