@@ -366,11 +366,10 @@ void KeyBindingsOverlay::createVKBLayoutMenu()
     std::string curVKBLayout = Surge::Storage::getUserDefaultValue(
         storage, Surge::Storage::VirtualKeyboardLayout, "QWERTY");
 
-    std::vector<std::string>(layouts){"QWERTY", "QWERTZ", "AZERTY", "Dvorak", "Colemak"};
-
-    for (std::string item : layouts)
+    for (auto item : editor->juceEditor->vkbLayouts)
     {
-        menu.addItem(item, true, (curVKBLayout == item), [this, item]() { changeVKBLayout(item); });
+        menu.addItem(item.first, true, (curVKBLayout == item.first),
+                     [this, item]() { changeVKBLayout(item.first); });
     }
 
     menu.showMenuAsync(editor->popupMenuOptions());
@@ -423,7 +422,7 @@ void KeyBindingsOverlay::resized()
     okS->setBounds(okRect);
     cancelS->setBounds(canRect);
     resetAll->setBounds(canRect.translated(175, 0).withWidth(58));
-    vkbLayout->setBounds(okRect.translated(-183, 0).withWidth(100));
+    vkbLayout->setBounds(okRect.translated(-183, 0).withWidth(128));
 
     bindingList->setBounds(l);
 }
