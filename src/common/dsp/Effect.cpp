@@ -48,6 +48,7 @@
 #include "chowdsp/SpringReverbEffect.h"
 #include "chowdsp/TapeEffect.h"
 #include "DebugHelpers.h"
+#include "AudioInputEffect.h"
 
 using namespace std;
 
@@ -113,6 +114,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new chowdsp::SpringReverbEffect(storage, fxdata, pd);
     case fxt_bonsai:
         return new BonsaiEffect(storage, fxdata, pd);
+    case fxt_audio_input:
+        return new AudioInputEffect(storage, fxdata, pd);
     default:
         return 0;
     };

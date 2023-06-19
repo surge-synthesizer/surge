@@ -303,7 +303,7 @@ enum fxslot_positions
 };
 
 // clang-format off
-static int constexpr fxslot_order[n_fx_slots] = 
+static int constexpr fxslot_order[n_fx_slots] =
     {fxslot_ains1,   fxslot_ains2,   fxslot_ains3,   fxslot_ains4,
      fxslot_bins1,   fxslot_bins2,   fxslot_bins3,   fxslot_bins4,
      fxslot_send1,   fxslot_send2,   fxslot_send3,   fxslot_send4,
@@ -384,6 +384,7 @@ enum fx_type
     fxt_mstool,
     fxt_spring_reverb,
     fxt_bonsai,
+    fxt_audio_input,
 
     n_fx_types,
 };
@@ -416,19 +417,20 @@ const char fx_type_names[n_fx_types][32] = {"Off",
                                             "Waveshaper",
                                             "Mid-Side Tool",
                                             "Spring Reverb",
-                                            "Bonsai"};
+                                            "Bonsai",
+                                            "Audio Input"};
 
 const char fx_type_shortnames[n_fx_types][16] = {
     "Off",         "Delay",      "Reverb 1",      "Phaser",        "Rotary",     "Distortion",
     "EQ",          "Freq Shift", "Conditioner",   "Chorus",        "Vocoder",    "Reverb 2",
     "Flanger",     "Ring Mod",   "Airwindows",    "Neuron",        "Graphic EQ", "Resonator",
     "CHOW",        "Exciter",    "Ensemble",      "Combulator",    "Nimbus",     "Tape",
-    "Treemonster", "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Bonsai"};
+    "Treemonster", "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Bonsai",     "Audio In"};
 
 const char fx_type_acronyms[n_fx_types][8] = {
     "OFF", "DLY", "RV1", "PH",   "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",
     "VOC", "RV2", "FL",  "RM",   "AW",  "NEU",  "GEQ", "RES", "CHW", "XCT",
-    "ENS", "CMB", "NIM", "TAPE", "TM",  "WS",   "M-S", "SRV", "BON"};
+    "ENS", "CMB", "NIM", "TAPE", "TM",  "WS",   "M-S", "SRV", "BON", "IN"};
 
 enum fx_bypass
 {
@@ -665,10 +667,21 @@ struct LFOStorage
 
 struct FxStorage
 {
-    // Just a heads up: if you change this, please go look at fx_reorder in SurgeStorage too!
+    // Just a heads up: if you change this, please go look at reorderFx in SurgeSynthesizer too!
+    FxStorage(fxslot_positions slot) : fxslot(slot) {}
+    FxStorage() = delete;
+
+    // Note that some clients assume that &(FxStorage) == &(FxStorage->type) and the
+    // param range is from &FXStorage -> &FXStorage->p[end]. This used to be true but
+    // is too limiting an assumption. We are fixing those clients now (rack still
+    // left to do) but if you add members please add them to the *end* of the param stack
+    // until we get em all
     Parameter type;
     Parameter return_level;
     Parameter p[n_fx_params];
+
+    // like this one!
+    fxslot_positions fxslot;
 };
 
 struct SurgeSceneStorage
@@ -983,7 +996,14 @@ class SurgePatch
 
     // data
     SurgeSceneStorage scene[n_scenes], morphscene;
-    FxStorage fx[n_fx_slots];
+
+    FxStorage fx[n_fx_slots]{
+        FxStorage(fxslot_ains1),   FxStorage(fxslot_ains2),   FxStorage(fxslot_bins1),
+        FxStorage(fxslot_bins2),   FxStorage(fxslot_send1),   FxStorage(fxslot_send2),
+        FxStorage(fxslot_global1), FxStorage(fxslot_global2), FxStorage(fxslot_ains3),
+        FxStorage(fxslot_ains4),   FxStorage(fxslot_bins3),   FxStorage(fxslot_bins4),
+        FxStorage(fxslot_send3),   FxStorage(fxslot_send4),   FxStorage(fxslot_global3),
+        FxStorage(fxslot_global4)};
     int scene_start[n_scenes], scene_size;
 
     std::unordered_map<std::string, Parameter *> param_ptr_by_oscname;
@@ -1102,6 +1122,18 @@ namespace Surge
 {
 namespace Storage
 {
+struct ScenesOutputData
+{
+    std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr},
+                                                                      {nullptr, nullptr}};
+
+  public:
+    ScenesOutputData();
+    const std::shared_ptr<float[BLOCK_SIZE]> &getSceneData(int scene, int channel) const;
+    void provideSceneData(int scene, int channel, float *data);
+    bool thereAreClients(int scene) const;
+};
+
 struct FxUserPreset;
 struct ModulatorPreset;
 } // namespace Storage
@@ -1546,6 +1578,8 @@ class alignas(16) SurgeStorage
     float mpePitchBendRange = -1.0f;
 
     std::atomic<int> otherscene_clients;
+
+    Surge::Storage::ScenesOutputData scenesOutputData;
 
     std::unordered_map<int, std::string> helpURL_controlgroup;
     std::unordered_map<std::string, std::string> helpURL_paramidentifier;

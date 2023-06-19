@@ -1,55 +1,55 @@
-[submodule "libs/tuning-library"]
-	path = libs/tuning-library
-	url = https://github.com/surge-synthesizer/tuning-library
-[submodule "libs/simde"]
-	path = libs/simde
-	url = https://github.com/simd-everywhere/simde
-[submodule "libs/pybind11"]
-	path = libs/pybind11
-	url = https://github.com/pybind/pybind11
+[submodule "libs/clap-juce-extensions"]
+	path = libs/clap-juce-extensions
+	url = https://github.com/free-audio/clap-juce-extensions
 [submodule "libs/eurorack/eurorack"]
 	path = libs/eurorack/eurorack
 	url = https://github.com/surge-synthesizer/eurorack.git
-[submodule "libs/oddsound-mts/MTS-ESP"]
-	path = libs/oddsound-mts/MTS-ESP
-	url = https://github.com/ODDSound/MTS-ESP
-[submodule "libs/libsamplerate"]
-	path = libs/libsamplerate
-	url = https://github.com/libsndfile/libsamplerate.git
-[submodule "libs/JUCE"]
-	path = libs/JUCE
-	url = https://github.com/surge-synthesizer/JUCE
-[submodule "libs/LuaJitLib/LuaJIT"]
-	path = libs/LuaJitLib/LuaJIT
-	url = https://github.com/LuaJIT/LuaJIT.git
 [submodule "libs/fmt"]
 	path = libs/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "libs/JUCE"]
+	path = libs/JUCE
+	url = https://github.com/surge-synthesizer/JUCE
+[submodule "libs/libsamplerate"]
+	path = libs/libsamplerate
+	url = https://github.com/libsndfile/libsamplerate.git
+[submodule "libs/LuaJitLib/LuaJIT"]
+	path = libs/LuaJitLib/LuaJIT
+	url = https://github.com/LuaJIT/LuaJIT.git
+[submodule "libs/simde"]
+	path = libs/simde
+	url = https://github.com/simd-everywhere/simde
+[submodule "libs/tuning-library"]
+	path = libs/tuning-library
+	url = https://github.com/surge-synthesizer/tuning-library
+[submodule "libs/oddsound-mts/MTS-ESP"]
+	path = libs/oddsound-mts/MTS-ESP
+	url = https://github.com/ODDSound/MTS-ESP
 [submodule "libs/PEGTL"]
 	path = libs/PEGTL
 	url = https://github.com/taocpp/PEGTL.git
 	branch = 2.x
-[submodule "libs/sst/sst-plugininfra"]
-	path = libs/sst/sst-plugininfra
-	url = https://github.com/surge-synthesizer/sst-plugininfra
-[submodule "libs/sst/sst-cpputils"]
-	path = libs/sst/sst-cpputils
-	url = https://github.com/surge-synthesizer/sst-cpputils
-[submodule "libs/clap-juce-extensions"]
-	path = libs/clap-juce-extensions
-	url = https://github.com/free-audio/clap-juce-extensions
-[submodule "libs/sst/sst-filters"]
-	path = libs/sst/sst-filters
-	url = https://github.com/surge-synthesizer/sst-filters
-[submodule "libs/sst/sst-waveshapers"]
-	path = libs/sst/sst-waveshapers
-	url = https://github.com/surge-synthesizer/sst-waveshapers
 [submodule "libs/pffft"]
 	path = libs/pffft
 	url = https://github.com/surge-synthesizer/pffft.git
+[submodule "libs/pybind11"]
+	path = libs/pybind11
+	url = https://github.com/pybind/pybind11
 [submodule "libs/sst/sst-basic-blocks"]
 	path = libs/sst/sst-basic-blocks
 	url = https://github.com/surge-synthesizer/sst-basic-blocks.git
+[submodule "libs/sst/sst-cpputils"]
+	path = libs/sst/sst-cpputils
+	url = https://github.com/surge-synthesizer/sst-cpputils
 [submodule "libs/sst/sst-effects"]
 	path = libs/sst/sst-effects
 	url = https://github.com/surge-synthesizer/sst-effects
+[submodule "libs/sst/sst-filters"]
+	path = libs/sst/sst-filters
+	url = https://github.com/surge-synthesizer/sst-filters
+[submodule "libs/sst/sst-plugininfra"]
+	path = libs/sst/sst-plugininfra
+	url = https://github.com/surge-synthesizer/sst-plugininfra
+[submodule "libs/sst/sst-waveshapers"]
+	path = libs/sst/sst-waveshapers
+	url = https://github.com/surge-synthesizer/sst-waveshapers

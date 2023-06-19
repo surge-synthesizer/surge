@@ -180,9 +180,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   protected:
     virtual void setParameter(long index, float value);
-
     // listener class
     void valueChanged(Surge::GUI::IComponentTagValue *control) override;
+
     int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *control,
                                    const juce::ModifierKeys &button,
                                    bool isDoubleClickEvent) override;
@@ -835,7 +835,13 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         YES_NO
     };
     void alertOKCancel(const std::string &title, const std::string &prompt,
-                       std::function<void()> onOk, AlertButtonStyle buttonStyle = OK_CANCEL);
+                       std::function<void()> onOk, std::function<void()> onCancel = nullptr,
+                       AlertButtonStyle buttonStyle = OK_CANCEL);
+    void alertYesNo(const std::string &title, const std::string &prompt, std::function<void()> onOk,
+                    std::function<void()> onCancel = nullptr)
+    {
+        alertOKCancel(title, prompt, onOk, onCancel, YES_NO);
+    }
 
     std::unique_ptr<Surge::Overlays::Alert> alert;
 

@@ -4,11 +4,6 @@
 [from our website](https://surge-synthesizer.github.io). Surge Synth Team makes regular releases for all supported
 platforms.**
 
-**Over 2021, after the successful release of Surge 1.9, the Surge Synth team undertook an effort to rebuild Surge in JUCE
-and add a variety of features. This project resulted in the new version of Surge, called 'Surge XT'. The head of this
-repo contains the current version of Surge XT. If you are looking to compile a stable production version of Surge, we
-tag each release, so if you want to compile Surge 1.9, please check out the `release_1.9.0` tag.**
-
 CI: [![CI Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.surge?branchName=main)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=2&branchName=main)
 Release: [![Release Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=1&branchName=master)
 Release-XT: [![Release-XT Build Status](https://dev.azure.com/surge-synthesizer/surge/_apis/build/status/surge-synthesizer.releases-xt?branchName=master)](https://dev.azure.com/surge-synthesizer/surge/_build/latest?definitionId=13&branchName=master)
@@ -128,27 +123,9 @@ cmake -Bbuild -DBUILD_USING_MY_ASIO_LICENSE=True
 
 ## Building an LV2
 
-On Linux, using a community fork of JUCE, you can build an LV2. Here's how! We assume you have checked out Surge and can
-build.
-
-First, clone https://github.com/lv2-porting-project/JUCE/tree/lv2 on branch lv2, to some directory of your choosing:
-
-```
-sudo apt-get install -y lv2-dev
-cd /some/location
-git clone --branch lv2 https://github.com/lv2-porting-project/JUCE JUCE-lv2
-```
-
-Then run a fresh CMake to (1) point to that JUCE fork and (2) activate LV2:
-
-```
-cmake -Bbuild_lv2 -DCMAKE_BUILD_TYPE=Release -DJUCE_SUPPORTS_LV2=True -DSURGE_JUCE_PATH=/some/location/JUCE-lv2/
-cmake --build build_lv2 --config Release --target surge-xt_LV2 --parallel 4
-cmake --build build_lv2 --config Release --target surge-fx_LV2 --parallel 4
-```
-
-You will then have LV2s in `build_lv2/src/surge-xt/surge-xt_artefacts/Release/LV2`
-and  `build_lv2/src/surge-xt/surge-fx_artefacts/Release/LV2` respectively.
+The Surge XT 1.3 family moves to JUCE 7 which includes support for LV2 builds. For a variety of reasons
+we don't build LV2 either by default or in our CI pipeline. You can activate the LV2 build in your
+environment by adding `-DSURGE_BUILD_LV2=TRUE` on your initial CMake.
 
 ## Building an Installer
 
@@ -215,13 +192,36 @@ To build a fat binary on a Mac, simply add the following CMake argument to your 
 
 ### Building for Raspberry Pi
 
-To build for a Raspberry Pi, you want to add the `LINUX_ON_ARM` CMake variable when you first run CMake. Otherwise, the
-commands are unchanged. So, on a Pi, you can do:
+SurgeXT builds natively on a RaspberryPI on 64 bit operating systems. Install your compiler
+toolchain and run the standard cmake commands. SurgeXT will *not* build on 32 bit raspberry pi
+systems, giving an error in the Spring Reverb and elsewhere in DSP code. If you would like to work
+on fixing this, see the comment in CMakeLists.txt or drop on our discord or github.
+
+As of June 2023, though, the gcc in some distributions has an apparent bug which generates a
+specious warning which we promote to an error. We found Surge compiles cleanly with
+`gcc (Debian 10.2.1-6) 10.2.1 20210110` but not with others.
+Surge also compiles with clang 11. The error in question takes the form
 
 ```
-cmake -Bbuild -DLINUX_ON_ARM=True
-cmake --build build --config Release --target surge-staged-assets
+/home/pi/Documents/github/surge/libs/sst/sst-filters/include/sst/filters/QuadFilterUnit_Impl.h:539:26: error: requested alignment 16 is larger than 8 [-Werror=attributes]
+     int DTi alignas(16)[4], SEi alignas(16)[4];
 ```
+
+If you get that error and are working on PI your options are
+
+1. Change to a gcc version which doesn't mis-tag that as an error
+2. Use clang rather than gcc as detailed below
+3. Figure out how to supress that error in cmake just for gcc on pi; send us a pull request.
+
+To build with clang
+
+```bash
+sudo apt install clang
+cmake -Bignore/s13clang -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+cmake --build ignore/s13clang --target surge-xt_Standalone --parallel 3
+```
+
+worked recently.
 
 ### Cross-compiling for aarch64
 
@@ -247,6 +247,11 @@ Surge cross-compiles to macOS Intel from Linux and BSD.
 cmake -DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-apple-darwin20.4-clang.cmake -DCMAKE_FIND_ROOT_PATH=<path_to_osxcross_sdk> -Bbuild
 cmake --build build
 ```
+
+### Building older versions
+
+Each version of Surge from 1.6 beta 6 or so has a branch in this repository. Just check it out and
+read the associated README.
 
 # Setting up for Your OS
 

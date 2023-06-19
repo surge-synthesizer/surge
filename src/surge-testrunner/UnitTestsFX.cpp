@@ -31,6 +31,7 @@
 #include "catch2/catch2.hpp"
 
 #include "UnitTestUtilities.h"
+#include "AudioInputEffect.h"
 
 using namespace Surge::Test;
 
@@ -117,16 +118,6 @@ TEST_CASE("Airwindows Loud", "[fx]")
 
 TEST_CASE("FX Move with Modulation", "[fx]")
 {
-    auto setFX = [](auto surge, auto slot, auto type) {
-        auto *pt = &(surge->storage.getPatch().fx[slot].type);
-        auto awv = 1.f * fxt_chorus4 / (pt->val_max.i - pt->val_min.i);
-
-        auto did = surge->idForParameter(pt);
-        surge->setParameter01(did, awv, false);
-
-        for (int i = 0; i < 10; ++i)
-            surge->process();
-    };
     auto step = [](auto surge) {
         for (int i = 0; i < 10; ++i)
             surge->process();
@@ -167,7 +158,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
@@ -186,8 +177,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
-        setFX(surge, 4, fxt_chorus4);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 4, fxt_chorus4);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[3].id, ms_slfo2, 0, 0, 0.2);
@@ -208,7 +199,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         REQUIRE(surge->storage.getPatch().modulation_global.size() == 1);
@@ -227,8 +218,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
-        setFX(surge, 1, fxt_chorus4);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 1, fxt_chorus4);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
@@ -248,8 +239,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
-        setFX(surge, 1, fxt_chorus4);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 1, fxt_chorus4);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
@@ -269,8 +260,8 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(surge);
 
         step(surge);
-        setFX(surge, 0, fxt_combulator);
-        setFX(surge, 1, fxt_chorus4);
+        Surge::Test::setFX(surge, 0, fxt_combulator);
+        Surge::Test::setFX(surge, 1, fxt_chorus4);
 
         surge->setModDepth01(surge->storage.getPatch().fx[0].p[2].id, ms_slfo1, 0, 0, 0.1);
         surge->setModDepth01(surge->storage.getPatch().fx[1].p[3].id, ms_slfo2, 0, 0, 0.1);
@@ -417,6 +408,668 @@ TEST_CASE("High SampleRate Nimbus", "[fx]")
                 for (int i = 0; i < 500; ++i)
                 {
                     surge->process();
+                }
+            }
+        }
+    }
+}
+
+TEST_CASE("ScenesOutputData", "[fx]")
+{
+    SECTION("Providing data")
+    {
+        Surge::Storage::ScenesOutputData scenesOutputData{};
+        REQUIRE(!scenesOutputData.thereAreClients(0));
+        REQUIRE(!scenesOutputData.thereAreClients(1));
+
+        {
+            auto clientDataLeft = scenesOutputData.getSceneData(0, 0);
+            auto clientDataRight = scenesOutputData.getSceneData(0, 1);
+            REQUIRE(clientDataLeft);
+            REQUIRE(clientDataRight);
+            REQUIRE(scenesOutputData.thereAreClients(0));
+            REQUIRE(!scenesOutputData.thereAreClients(1));
+
+            float data[32]{1.0f};
+            scenesOutputData.provideSceneData(0, 0, data);
+            scenesOutputData.provideSceneData(0, 1, data);
+            REQUIRE(scenesOutputData.getSceneData(0, 0)[0] == 1.0f);
+            REQUIRE(scenesOutputData.getSceneData(0, 1)[0] == 1.0f);
+
+            scenesOutputData.provideSceneData(1, 0, data);
+            scenesOutputData.provideSceneData(1, 1, data);
+            REQUIRE(scenesOutputData.getSceneData(1, 0)[0] == 0.0f);
+            REQUIRE(scenesOutputData.getSceneData(1, 1)[0] == 0.0f);
+        }
+        REQUIRE(!scenesOutputData.thereAreClients(0));
+        REQUIRE(!scenesOutputData.thereAreClients(1));
+    }
+}
+
+void testExpectedValues(std::shared_ptr<SurgeSynthesizer> surge, int slot, float *leftInput,
+                        float *rightInput, float *expectedLeftOutput, float *expectedRightOutput)
+{
+    surge->fx[slot]->process(leftInput, rightInput);
+    for (int i = 0; i < 4; ++i)
+    {
+        REQUIRE(leftInput[i] == Approx(expectedLeftOutput[i]).margin(0.001));
+        REQUIRE(rightInput[i] == Approx(expectedRightOutput[i]).margin(0.001));
+    }
+}
+
+struct ControlParam
+{
+    int param;
+    float value;
+};
+struct ExpectedOutput
+{
+    float expectedLeftOutput[BLOCK_SIZE];
+    float expectedRightOutput[BLOCK_SIZE];
+};
+
+struct SubTestCase
+{
+    std::string name;
+    std::vector<ControlParam> controlParams;
+    ExpectedOutput expectedOutput;
+};
+
+struct InParamsGroup
+{
+    int slot;
+
+    std::string testGroup;
+    float leftEffectInput alignas(16)[BLOCK_SIZE];
+    float rightEffectInput alignas(16)[BLOCK_SIZE];
+
+    float sceneALeftInput alignas(16)[BLOCK_SIZE];
+    float sceneARightInput alignas(16)[BLOCK_SIZE];
+
+    float sceneBLeftInput alignas(16)[BLOCK_SIZE];
+    float sceneBRightInput alignas(16)[BLOCK_SIZE];
+
+    float audioLeftInput alignas(16)[BLOCK_SIZE];
+    float audioRightInput alignas(16)[BLOCK_SIZE];
+
+    std::vector<SubTestCase> expectedOutput;
+
+    void fillWithData(SurgeStorage *surgeStorage)
+    {
+        surgeStorage->scenesOutputData.provideSceneData(0, 0, sceneALeftInput);
+        surgeStorage->scenesOutputData.provideSceneData(0, 1, sceneARightInput);
+        surgeStorage->scenesOutputData.provideSceneData(1, 0, sceneBLeftInput);
+        surgeStorage->scenesOutputData.provideSceneData(1, 1, sceneBRightInput);
+        memcpy(surgeStorage->audio_in_nonOS[0], audioLeftInput, BLOCK_SIZE * sizeof(float));
+        memcpy(surgeStorage->audio_in_nonOS[1], audioRightInput, BLOCK_SIZE * sizeof(float));
+    }
+};
+
+TEST_CASE("AudioInputEffect", "[fx]")
+{
+
+    std::map<int, std::vector<int>> slots{
+        {AudioInputEffect::a_insert_slot, {fxslot_ains1, fxslot_ains2, fxslot_ains3, fxslot_ains4}},
+        {AudioInputEffect::b_insert_slot, {fxslot_bins1, fxslot_bins2, fxslot_bins3, fxslot_bins4}},
+        {AudioInputEffect::send_slot, {fxslot_send1, fxslot_send2, fxslot_send3, fxslot_send4}},
+        {AudioInputEffect::global_slot,
+         {fxslot_global1, fxslot_global2, fxslot_global3, fxslot_global4}},
+    };
+
+    std::vector<InParamsGroup> inParamsGroups{
+        {
+            AudioInputEffect::a_insert_slot,
+            "A Insert",
+            {0.1f, 0.1f, 0.1f, 0.1f},     // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},     // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},     // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},     // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},     // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // audioRightInput (half of audioLeftInput)
+            {
+                {"Stereo Output",
+                 {{AudioInputEffect::in_output_mix, 1.0f},
+                  {AudioInputEffect::in_output_width, 1.0f}},
+                 {
+                     // ExpectedOutput
+                     {0.3f, 0.3f, 0.3f,
+                      0.3f}, // expectedLeftOutput (sum of
+                             // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+                     {0.15f, 0.15f, 0.15f, 0.15f}, // expectedRightOutput (sum of
+                                                   // rightEffectInput,
+                                                   // sceneBRightInput, and audioRightInput)
+                 }},
+                {"Switching left and right",
+                 {{AudioInputEffect::in_output_mix, 1.0f},
+                  {AudioInputEffect::in_output_width, -1.0f}},
+                 {
+                     // ExpectedOutput
+                     {0.15f, 0.15f, 0.15f, 0.15f}, // expectedRightOutput (sum of
+                                                   // rightEffectInput,
+                                                   // sceneBRightInput, and audioRightInput)
+                     {0.3f, 0.3f, 0.3f,
+                      0.3f}, // expectedLeftOutput (sum of
+                             // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+
+                 }},
+                {"Mono Output",
+                 {
+                     {AudioInputEffect::in_output_mix, 1.0f},
+                     {AudioInputEffect::in_output_width, 0.0f} // mono
+                 },
+                 {
+                     // ExpectedOutput
+                     {0.225f, 0.225f, 0.225f,
+                      0.225f}, // expectedLeftOutput (sum of
+                               // leftEffectInput, sceneBLeftInput, and audioLeftInput)
+                     {0.225f, 0.225f, 0.225f, 0.225f}, // expectedRightOutput (sum of
+                                                       // rightEffectInput,
+                                                       // sceneBRightInput, and audioRightInput)
+                 }},
+                {"Leaving only dry signal, with width = 1",
+                 {
+                     {AudioInputEffect::in_output_mix, 0.0f},
+                     {AudioInputEffect::in_output_width, 1.0f} // stereo
+                 },
+                 {
+                     // ExpectedOutput stays attached
+                     {0.1f, 0.1f, 0.1f, 0.1f}, //
+                     {0.05f, 0.05f, 0.05f, 0.05f},
+                 }
+
+                },
+                {"Leaving only dry signal, with width = 0",
+                 {
+                     {AudioInputEffect::in_output_mix, 0.0f},
+                     {AudioInputEffect::in_output_width, 0.0f} // stereo
+                 },
+                 {
+                     // ExpectedOutput stays attached
+                     {0.1f, 0.1f, 0.1f, 0.1f}, //
+                     {0.05f, 0.05f, 0.05f, 0.05f},
+                 }
+
+                },
+            },
+
+        },
+        {
+            AudioInputEffect::b_insert_slot,
+            "B Insert",
+            {0.1f, 0.1f, 0.1f, 0.1f},     // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},     // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},     // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},     // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},     // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // audioRightInput (half of audioLeftInput)
+            {{"Stereo Output",
+              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+              {
+                  {0.4f, 0.4f, 0.4f, 0.4f}, // expectedLeftOutput (sum of leftEffectInput,
+                                            //  sceneALeftInput, and audioLeftInput)
+                  {0.2f, 0.2f, 0.2f, 0.2f}, // expectedRightOutput (sum of rightEffectInput,
+                                            // sceneARightInput, and audioRightInput)
+              }}},
+        },
+
+        {
+            AudioInputEffect::send_slot,
+            "Send",
+            {0.1f, 0.1f, 0.1f, 0.1f},     // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},     // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},     // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},     // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},     // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // audioRightInput (half of audioLeftInput)
+            {{"Stereo Output",
+              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+              {
+                  // ExpectedOutput
+                  {0.2f, 0.2f, 0.2f,
+                   0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
+                  {0.1f, 0.1f, 0.1f, 0.1f}, // expectedRightOutput (sum of rightEffectInput and
+                                            // audioRightInput)
+              }}},
+        },
+        {
+            AudioInputEffect::global_slot,
+            "Global",
+            {0.1f, 0.1f, 0.1f, 0.1f},     // leftEffectInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // rightEffectInput (half of leftEffectInput)
+            {0.2f, 0.2f, 0.2f, 0.2f},     // sceneALeftInput
+            {0.1f, 0.1f, 0.1f, 0.1f},     // sceneARightInput (half of sceneALeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},     // sceneBLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // sceneBRightInput (half of sceneBLeftInput)
+            {0.1f, 0.1f, 0.1f, 0.1f},     // audioLeftInput
+            {0.05f, 0.05f, 0.05f, 0.05f}, // audioRightInput (half of audioLeftInput)
+            {{"Stereo Output",
+              {{AudioInputEffect::in_output_mix, 1.0f}, {AudioInputEffect::in_output_width, 1.0f}},
+              {
+                  // ExpectedOutput
+                  {0.2f, 0.2f, 0.2f,
+                   0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
+                  {0.1f, 0.1f, 0.1f, 0.1f}, // expectedRightOutput (sum of rightEffectInput and
+                                            // audioRightInput)
+              }}},
+        },
+
+    };
+    std::vector<InParamsGroup> panningTestCases = {
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with the default params",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARight Input
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBLeftInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{"the result should be unchanged",
+              {
+                  {AudioInputEffect::in_scene_input_channel, 0.0f},
+                  {AudioInputEffect::in_scene_input_level, 0.0f},
+                  {AudioInputEffect::in_scene_input_pan, 0.0f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.4f, 0.2f, 0.4f,
+                   0.2f}, // expectedLeftOutput (sum of leftEffectInput and audioLeftInput)
+                  {0.2f, 0.4f, 0.2f,
+                   0.4f}, // expectedRightOutput (sum of rightEffectInput and audioRightInput)
+              }}},
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with in_scene_input_channel = -1",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARight Input
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBLeftInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{" it should only accept left channel",
+              {
+                  {AudioInputEffect::in_scene_input_channel, -1.0f},
+                  {AudioInputEffect::in_scene_input_level, 0.0f},
+                  {AudioInputEffect::in_scene_input_pan, 0.0f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput
+                  {0.0f, 0.0f, 0.0f, 0.0f}, // expectedRightOutput
+              }}},
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with in_scene_input_channel = 0.25",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARight Input
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBLeftInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{"accepts 50% of left channel and 100% right",
+              {
+                  {AudioInputEffect::in_scene_input_channel, 0.25f},
+                  {AudioInputEffect::in_scene_input_level, 0.0f},
+                  {AudioInputEffect::in_scene_input_pan, 0.0f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.3f, 0.15f, 0.3f, 0.15f}, // expectedLeftOutput
+                  {0.2f, 0.4f, 0.2f, 0.4f},   // expectedRightOutput
+              }}},
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with in_scene_input_channel = -0.50",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARight Input
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBLeftInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{" it should accept 100% of left channel and 50% right",
+              {
+                  {AudioInputEffect::in_scene_input_channel, -0.50f},
+                  {AudioInputEffect::in_scene_input_level, 0.0f},
+                  {AudioInputEffect::in_scene_input_pan, 0.0f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.4f, 0.2f, 0.4f, 0.2f}, // expectedLeftOutput
+                  {0.1f, 0.2f, 0.1f, 0.2f}, // expectedRightOutput
+              }}},
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with in_scene_input_channel = -0.50 and input "
+            "level = -5.995",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARight Input
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBLeftInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{" it should accept 100% of left channel and 50% right with 50% input level",
+              {
+                  {AudioInputEffect::in_scene_input_channel, -0.50f},
+                  {AudioInputEffect::in_scene_input_level, -5.995f},
+                  {AudioInputEffect::in_scene_input_pan, 0.0f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.2f, 0.1f, 0.2f, 0.1f},   // expectedLeftOutput
+                  {0.05f, 0.1f, 0.05f, 0.1f}, // expectedRightOutput
+              }}},
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with in_scene_input_pan = -1.0",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARight Input
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBRightInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{" channels should move to the left",
+              {
+                  {AudioInputEffect::in_scene_input_channel, 0.0f},
+                  {AudioInputEffect::in_scene_input_level, 0.0f},
+                  {AudioInputEffect::in_scene_input_pan, -1.0f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.6f, 0.6f, 0.6f, 0.6f}, // expectedLeftOutput
+                  {0.0f, 0.0f, 0.0f, 0.0f}, // expectedRightOutput
+              }}},
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with in_scene_input_pan = 1.0",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARight Input
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBRightInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{" channels should move to the right",
+              {
+                  {AudioInputEffect::in_scene_input_channel, 0.0f},
+                  {AudioInputEffect::in_scene_input_level, 0.0f},
+                  {AudioInputEffect::in_scene_input_pan, 1.0f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.0f, 0.0f, 0.0f, 0.0f}, // expectedLeftOutput
+                  {0.6f, 0.6f, 0.6f, 0.6f}, // expectedRightOutput
+              }}},
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with in_scene_input_pan = 0.5",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARight Input
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBRightInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{" channels should move to the right by 50%",
+              {
+                  {AudioInputEffect::in_scene_input_channel, 0.0f},
+                  {AudioInputEffect::in_scene_input_level, 0.0f},
+                  {AudioInputEffect::in_scene_input_pan, 0.5f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.2f, 0.1f, 0.2f, 0.1f}, // expectedLeftOutput
+                  {0.4f, 0.5f, 0.4f, 0.5f}, // expectedRightOutput
+              }}},
+        },
+        {
+            AudioInputEffect::a_insert_slot,
+            "Applying Panning to an audio input with in_scene_input_channel = -1 and "
+            "in_scene_input_pan = 1.0",
+            {0.0f}, // leftEffectInput
+            {0.0f}, // rightEffectInput
+            {},
+            {}, // sceneALeftInput and sceneARightInput
+            {
+                0.4f,
+                0.2f,
+                0.4f,
+                0.2f,
+            }, // sceneBLeftInput
+            {
+                0.2f,
+                0.4f,
+                0.2f,
+                0.4f,
+            }, // sceneBRightInput
+            {},
+            {}, // audioLeftInput and audioRightInput
+            {{" left channels should move to the right and the right channel should be deleted",
+              {
+                  {AudioInputEffect::in_scene_input_channel, -1.0f},
+                  {AudioInputEffect::in_scene_input_level, 0.0f},
+                  {AudioInputEffect::in_scene_input_pan, 1.0f},
+              },
+              {
+                  // ExpectedOutput
+                  {0.0f, 0.0f, 0.0f, 0.0f}, // expectedLeftOutput
+                  {0.4f, 0.2f, 0.4f, 0.2f}, // expectedRightOutput
+              }}},
+        },
+
+    };
+    for (InParamsGroup &panningTestCase : panningTestCases)
+    {
+        /// ==================== Test with audio input from scene B ====================
+        std::string testGroup = panningTestCase.testGroup;
+        panningTestCase.testGroup = testGroup + " (audio input from scene B)";
+        inParamsGroups.push_back(panningTestCase);
+
+        /// ==================== Test with audio input from scene A ====================
+        panningTestCase.slot = AudioInputEffect::b_insert_slot;
+        memcpy(panningTestCase.sceneALeftInput, panningTestCase.sceneBLeftInput,
+               BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.sceneARightInput, panningTestCase.sceneBRightInput,
+               BLOCK_SIZE * sizeof(float));
+        panningTestCase.testGroup = testGroup + " (audio input from scene A)";
+        inParamsGroups.push_back(panningTestCase);
+
+        /// ==================== Test with audio input from a mic ====================
+        panningTestCase.testGroup = testGroup + " (audio input is from a mic)";
+        panningTestCase.slot = AudioInputEffect::a_insert_slot;
+        memcpy(panningTestCase.audioLeftInput, panningTestCase.sceneBLeftInput,
+               BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.audioRightInput, panningTestCase.sceneBRightInput,
+               BLOCK_SIZE * sizeof(float));
+        panningTestCase.expectedOutput[0].controlParams[0].param =
+            AudioInputEffect::in_audio_input_channel;
+        panningTestCase.expectedOutput[0].controlParams[1].param =
+            AudioInputEffect::in_audio_input_level;
+        panningTestCase.expectedOutput[0].controlParams[2].param =
+            AudioInputEffect::in_audio_input_pan;
+        float zeros[BLOCK_SIZE]{0.0f};
+        memcpy(panningTestCase.sceneALeftInput, zeros, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.sceneARightInput, zeros, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.sceneBLeftInput, zeros, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.sceneBRightInput, zeros, BLOCK_SIZE * sizeof(float));
+        inParamsGroups.push_back(panningTestCase);
+
+        /// ==================== Test with audio effect input  ====================
+        panningTestCase.testGroup = testGroup + " (audio input is from an audio effect)";
+        panningTestCase.slot = AudioInputEffect::a_insert_slot;
+        memcpy(panningTestCase.leftEffectInput, panningTestCase.audioLeftInput,
+               BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.rightEffectInput, panningTestCase.audioRightInput,
+               BLOCK_SIZE * sizeof(float));
+        panningTestCase.expectedOutput[0].controlParams[0].param =
+            AudioInputEffect::in_effect_input_channel;
+        panningTestCase.expectedOutput[0].controlParams[1].param =
+            AudioInputEffect::in_effect_input_level;
+        panningTestCase.expectedOutput[0].controlParams[2].param =
+            AudioInputEffect::in_effect_input_pan;
+        memcpy(panningTestCase.audioLeftInput, zeros, BLOCK_SIZE * sizeof(float));
+        memcpy(panningTestCase.audioRightInput, zeros, BLOCK_SIZE * sizeof(float));
+
+        inParamsGroups.push_back(panningTestCase);
+    }
+
+    for (InParamsGroup &inParamsGroup : inParamsGroups)
+    {
+        SECTION(inParamsGroup.testGroup)
+        {
+            for (int slot : slots[inParamsGroup.slot])
+            {
+
+                auto surge = Surge::Headless::createSurge(44100);
+                REQUIRE(surge);
+
+                Surge::Test::setFX(surge, slot, fxt_audio_input);
+                SurgeStorage *surgeStorage = &surge->storage;
+                FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
+
+                fxStorage->p[AudioInputEffect::in_audio_input_channel].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_audio_input_level].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_audio_input_pan].val.f = 0.0f;
+
+                fxStorage->p[AudioInputEffect::in_scene_input_channel].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_scene_input_level].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_scene_input_pan].val.f = 0.0f;
+
+                fxStorage->p[AudioInputEffect::in_effect_input_channel].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_effect_input_level].val.f = 0.0f;
+                fxStorage->p[AudioInputEffect::in_effect_input_pan].val.f = 0.0f;
+
+                fxStorage->p[AudioInputEffect::in_output_width].val.f = 1.0f;
+                fxStorage->p[AudioInputEffect::in_output_mix].val.f = 1.0f;
+                REQUIRE(fxStorage->type.val.i == fxt_audio_input);
+
+                for (SubTestCase &subTestCase : inParamsGroup.expectedOutput)
+                {
+                    SECTION(inParamsGroup.testGroup + ", slot " + std::to_string(slot) + ", " +
+                            subTestCase.name)
+                    {
+                        ExpectedOutput &expectedOutput = subTestCase.expectedOutput;
+                        for (ControlParam &controlParam : subTestCase.controlParams)
+                        {
+                            fxStorage->p[controlParam.param].val.f = controlParam.value;
+                        }
+                        inParamsGroup.fillWithData(surgeStorage);
+                        surge->fx[slot]->process(inParamsGroup.leftEffectInput,
+                                                 inParamsGroup.rightEffectInput);
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            REQUIRE(inParamsGroup.leftEffectInput[i] ==
+                                    Approx(expectedOutput.expectedLeftOutput[i]).margin(0.001));
+                            REQUIRE(expectedOutput.expectedRightOutput[i] ==
+                                    Approx(expectedOutput.expectedRightOutput[i]).margin(0.001));
+                        }
+                    }
                 }
             }
         }

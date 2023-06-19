@@ -308,16 +308,13 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
 
     assert(n_paramslots >= n_total_params);
     synth->storage.addErrorListener(this);
-    synth->storage.okCancelProvider = [](const std::string &msg, const std::string &title,
-                                         SurgeStorage::OkCancel def,
-                                         std::function<void(SurgeStorage::OkCancel)> callback) {
+    synth->storage.okCancelProvider = [this](const std::string &msg, const std::string &title,
+                                             SurgeStorage::OkCancel def,
+                                             std::function<void(SurgeStorage::OkCancel)> callback) {
         // TODO: think about threading one day probably
-        auto cb = juce::ModalCallbackFunction::create([callback](int isOk) {
-            auto r = isOk ? SurgeStorage::OK : SurgeStorage::CANCEL;
-            callback(r);
-        });
-        auto res = juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon, title, msg, "Yes",
-                                                      "No", nullptr, cb);
+        alertYesNo(
+            title, msg, [callback]() { callback(SurgeStorage::OkCancel::OK); },
+            [callback]() { callback(SurgeStorage::OkCancel::CANCEL); });
     };
 #ifdef INSTRUMENT_UI
     Surge::Debug::record("SurgeGUIEditor::SurgeGUIEditor");
@@ -568,8 +565,6 @@ void SurgeGUIEditor::idle()
         {
             if (code == SurgeStorage::AUDIO_INPUT_LATENCY_WARNING)
             {
-                // promptForOKCancelWithDontAskAgain(
-                //     title, msg, Surge::Storage::DefaultKey::DontShowAudioErrorsAgain, []() {});
                 audioLatencyNotified = true;
                 frame->repaint();
             }
@@ -1017,6 +1012,38 @@ void SurgeGUIEditor::idle()
                     param[j]->asControlValueInterface()->setValue(synth->getParameter01(jid));
                     param[j]->setQuantitizedDisplayValue(synth->getParameter01(jid));
                     param[j]->asJuceComponent()->repaint();
+
+                    { // force repaint any filter overlays when the host changes filter params
+                        bool refreshFilterAnalyser =
+                            param[j]->asControlValueInterface()->getTag() ==
+                                filterCutoffSlider[0]->asControlValueInterface()->getTag() ||
+                            param[j]->asControlValueInterface()->getTag() ==
+                                filterResonanceSlider[0]->asControlValueInterface()->getTag() ||
+                            param[j]->asControlValueInterface()->getTag() ==
+                                filterCutoffSlider[1]->asControlValueInterface()->getTag() ||
+                            param[j]->asControlValueInterface()->getTag() ==
+                                filterResonanceSlider[1]->asControlValueInterface()->getTag();
+
+                        if (refreshFilterAnalyser)
+                        {
+                            auto sp = getStorage()->getPatch().param_ptr[j];
+
+                            if (sp)
+                            {
+                                if (sp->ctrlgroup == cg_FILTER)
+                                {
+                                    // force repaint any filter overlays
+                                    auto fa = getOverlayIfOpenAs<Surge::Overlays::FilterAnalysis>(
+                                        OverlayTags::FILTER_ANALYZER);
+
+                                    if (fa)
+                                    {
+                                        fa->forceDataRefresh();
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (oscWaveform)
@@ -1190,7 +1217,7 @@ void SurgeGUIEditor::idle()
         oscWaveform->repaintBasedOnOscMuteState();
     }
 
-    // Force the oscilloscope, if open, to re-render for nice smooth movement.
+    // force the oscilloscope, if open, to re-render for nice smooth movement.
     auto scope = getOverlayIfOpenAs<Surge::Overlays::Oscilloscope>(OSCILLOSCOPE);
 
     if (scope)
@@ -1594,8 +1621,18 @@ void SurgeGUIEditor::openOrRecreateEditor()
                     }
 
                     effectLabels[i]->setBounds(vr);
-                    effectLabels[i]->setLabel(label);
                     effectLabels[i]->setSkin(currentSkin, bitmapStore);
+
+                    if (i == 0 &&
+                        synth->storage.getPatch().fx[current_fx].type.val.i == fxt_vocoder)
+                    {
+                        effectLabels[i]->setLabel(
+                            fmt::format("Input delayed {} samples", BLOCK_SIZE));
+                    }
+                    else
+                    {
+                        effectLabels[i]->setLabel(label);
+                    }
 
                     addAndMakeVisibleWithTracking(frame.get(), *effectLabels[i]);
                 }
@@ -5619,7 +5656,8 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
 }
 
 void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
-                                   std::function<void()> onOk, AlertButtonStyle buttonStyle)
+                                   std::function<void()> onOk, std::function<void()> onCancel,
+                                   AlertButtonStyle buttonStyle)
 {
     alert = std::make_unique<Surge::Overlays::Alert>();
     alert->setSkin(currentSkin, bitmapStore);
@@ -5636,6 +5674,7 @@ void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &
         alert->setButtonText("OK", "Cancel");
     }
     alert->onOk = std::move(onOk);
+    alert->onCancel = std::move(onCancel);
     alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
     alert->setVisible(true);
     alert->toFront(true);
@@ -6793,7 +6832,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
                 std::cout << "Could not find the skin after loading!" << std::endl;
             }
         };
-        alertOKCancel("Install Skin", oss.str(), cb, AlertButtonStyle::YES_NO);
+        alertYesNo("Install Skin", oss.str(), cb);
     }
     else if (fExt == ".zip")
     {
@@ -6892,7 +6931,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
             }
         };
 
-        alertOKCancel("Install from ZIP archive", oss.str(), cb, AlertButtonStyle::YES_NO);
+        alertYesNo("Install from ZIP archive", oss.str(), cb);
     }
     return true;
 }

@@ -454,8 +454,14 @@ class alignas(16) SurgeSynthesizer
     // TODO: FIX SCENE ASSUMPTION (use std::array)
     std::array<BiquadFilter, n_hpBQ> hpA, hpB;
 
-    bool fx_reload[n_fx_slots];   // if true, reload new effect parameters from fxsync
-    FxStorage fxsync[n_fx_slots]; // used for synchronisation of parameter init
+    bool fx_reload[n_fx_slots]; // if true, reload new effect parameters from fxsync
+    FxStorage fxsync[n_fx_slots]{
+        FxStorage(fxslot_ains1),   FxStorage(fxslot_ains2),   FxStorage(fxslot_bins1),
+        FxStorage(fxslot_bins2),   FxStorage(fxslot_send1),   FxStorage(fxslot_send2),
+        FxStorage(fxslot_global1), FxStorage(fxslot_global2), FxStorage(fxslot_ains3),
+        FxStorage(fxslot_ains4),   FxStorage(fxslot_bins3),   FxStorage(fxslot_bins4),
+        FxStorage(fxslot_send3),   FxStorage(fxslot_send4),   FxStorage(fxslot_global3),
+        FxStorage(fxslot_global4)}; // used for synchronisation of parameter init
     bool fx_reload_mod[n_fx_slots];
 
     struct FXModSyncItem

@@ -47,7 +47,7 @@ void MultiSwitch::paint(juce::Graphics &g)
     auto y = -valueToOff(value) * heightOfOneImage;
     auto t = juce::AffineTransform().translated(0, y);
 
-    float activationOpacity = isDeactivated ? 0.5 : 1.0;
+    float activationOpacity = isDeactivated ? 0.25 : 1.0;
 
     g.reduceClipRegion(getLocalBounds());
 
@@ -549,6 +549,8 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 
     auto uph = skin->getColor(clr::UnpressedHighlight);
     bool royalMode = false;
+    const bool isEn = isEnabled() && !isDeactivated;
+    const float alpha = isEn ? 1.f : 0.35f;
 
     if (uph.getAlpha() > 0)
     {
@@ -560,18 +562,18 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 
     if (royalMode)
     {
-        g.setColour(skin->getColor(clr::UnpressedHighlight));
+        g.setColour(skin->getColor(clr::UnpressedHighlight).withMultipliedAlpha(alpha));
         g.fillRoundedRectangle(b.toFloat(), corner);
-        g.setColour(skin->getColor(clr::Background));
+        g.setColour(skin->getColor(clr::Background).withMultipliedAlpha(alpha));
         g.fillRoundedRectangle(b.toFloat().reduced(0, 1), corner);
     }
     else
     {
-        g.setColour(skin->getColor(clr::Background));
+        g.setColour(skin->getColor(clr::Background).withMultipliedAlpha(alpha));
         g.fillRoundedRectangle(b.toFloat(), corner);
     }
 
-    g.setColour(skin->getColor(clr::Border));
+    g.setColour(skin->getColor(clr::Border).withMultipliedAlpha(alpha));
     g.drawRoundedRectangle(b.toFloat(), corner, 1);
 
     auto cw = 1.f * (getWidth() - 2) / columns;
@@ -596,9 +598,8 @@ void MultiSwitchSelfDraw::paint(juce::Graphics &g)
 
             auto isOn = isCellOn(r, c);
             auto isHo = isHovered && hoverSelection == idx;
-            auto isEn = isEnabled() && !isDeactivated;
 
-            auto fg = skin->getColor(clr::Text);
+            auto fg = isEn ? skin->getColor(clr::Text) : skin->getColor(clr::DeactivatedText);
 
             if (!isEn)
             {

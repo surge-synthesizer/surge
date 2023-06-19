@@ -90,6 +90,7 @@ enum DefaultKey
     FocusModEditorAfterAddModulationFrom,
     ShowVirtualKeyboard_Plugin,
     ShowVirtualKeyboard_Standalone,
+    VirtualKeyboardLayout,
 
     MPEPitchBendRange,
     PitchSmoothingMode,
