@@ -70,8 +70,12 @@ juce::Rectangle<int> MiniEdit::getDisplayRegion()
 void MiniEdit::paint(juce::Graphics &g)
 {
     auto fullRect = getDisplayRegion();
-    paintOverlayWindow(g, skin, associatedBitmapStore, fullRect, title);
     auto labelRect = fullRect.withTrimmedTop(18).withHeight(20).reduced(6, 0);
+
+    paintOverlayWindow(g, skin, associatedBitmapStore, fullRect, title);
+
+    g.setColour(skin->getColor(Colors::Dialog::Label::Text));
+    g.setFont(skin->fontManager->getLatoAtSize(9));
     g.drawText(label, labelRect, juce::Justification::centredLeft);
 }
 
