@@ -156,7 +156,6 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     bool startOSCOutNow =
         Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCOut, false);
     if (startOSCOutNow)
-    // TODO: is this only working if OSC is enabled to auto-start? FIX IF SO!
     {
         int defaultOSCOutPort = Surge::Storage::getUserDefaultValue(
             &(surge->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);

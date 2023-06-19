@@ -37,7 +37,7 @@ OSCSender::~OSCSender() { juceOSCSender.disconnect(); }
 bool OSCSender::init(const std::unique_ptr<SurgeSynthesizer> &surge, int port)
 {
     synth = surge.get();
-    // specify here where to send OSC messages to: host URL and UDP port number
+    // Send OSC messages to localhost:UDP port number:
     if (!juceOSCSender.connect("127.0.0.1", port))
     {
 #ifdef DEBUG

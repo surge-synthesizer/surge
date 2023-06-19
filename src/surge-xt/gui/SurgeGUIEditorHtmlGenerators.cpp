@@ -603,8 +603,8 @@ code {
                 Construct OSC messages using the exact (case sensitive)
                 entry listed in the <b>Address</b> column in the tables below.</br>
                 The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
-                where <code>address</code> can currently begin with either <code>tuning</code>,
-                <code>settings</code>, or <code>param</code>, and <code>value</code> can be:
+                where <code>address</code> can currently begin with either <code>tuning</code>
+                or <code>param</code>, and <code>value</code> can be:
 
                 <ul>
                     <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>
@@ -625,8 +625,8 @@ code {
                     </div>
                     <div style="margin: 4px 0 0 0; line-height: 1.75">
                         <span><code>/tuning/scl ptolemy</code></span>
-                        <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy.scl</code></span>
-                        <span><code>/settings/path/scl /Users/jane/scala_tunings</code></span>
+                        <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
+                        <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                     </div>
                 </p>
             </div>
@@ -703,8 +703,8 @@ code {
                         <td>.kbm file default path</td>
                         <td class="center">file path (absolute only)</td>
                     </tr>
-                        <tr>
-                        <td class="center" colspan="3">*use value = '_reset' to reset path to factory default</td>
+                    <tr>
+                        <td class="center" colspan="3">* no extension; use value = '_reset' to reset path to factory default</td>
                     </tr>
                 </table>
             </div>

@@ -221,6 +221,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             else
             {
                 def_path = path;
+                def_path += ".scl";
             }
 #ifdef DEBUG
             std::cout << "scl_path: " << def_path << std::endl;
@@ -241,6 +242,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             else
             {
                 def_path = path;
+                def_path += ".kbm";
             }
             synth->storage.loadMappingFromKBM(def_path);
         }
