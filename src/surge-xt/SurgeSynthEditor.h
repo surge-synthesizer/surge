@@ -115,7 +115,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     std::forward_list<std::pair<std::string, std::vector<int>>> vkbLayouts =
     {
         {"QWERTY",          {'a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 186, 219, 222, 221}},
-        {"QWERTZ (DE)",     {'a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 192, 186, 222, 187, 191}},
+        {"QWERTZ (German)", {'a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 192, 186, 222, 187, 191}},
         {"QWERTZ (Slavic)", {'a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'z', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 186, 219, 222, 221, 220}},
         {"AZERTY",          {'q', 'z', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 'm'}},
         {"Dvorak",          {'a', ',', 'o', '.', 'e', 'u', 'y', 'i', 'f', 'd', 'g', 'h', 't', 'r', 'n', 'l', 's', 191, 189, 187}},

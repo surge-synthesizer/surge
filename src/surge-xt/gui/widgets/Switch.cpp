@@ -48,7 +48,7 @@ void Switch::paint(juce::Graphics &g)
         y = -getIntegerValue() * getLocalBounds().getHeight();
     }
 
-    float activationOpacity = isDeactivated ? 0.5 : 1.0;
+    float activationOpacity = isDeactivated ? 0.35 : 1.0;
     auto t = juce::AffineTransform().translated(0, y);
 
     g.reduceClipRegion(getLocalBounds());
