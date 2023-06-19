@@ -33,8 +33,6 @@ namespace Surge
 namespace Overlays
 {
 
-#define HAS_TAGS_FIELD 0
-
 struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataProvider
 {
     PatchStoreDialogCategoryProvider() {}
