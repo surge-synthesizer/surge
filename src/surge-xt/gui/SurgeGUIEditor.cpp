@@ -565,8 +565,6 @@ void SurgeGUIEditor::idle()
         {
             if (code == SurgeStorage::AUDIO_INPUT_LATENCY_WARNING)
             {
-                // promptForOKCancelWithDontAskAgain(
-                //     title, msg, Surge::Storage::DefaultKey::DontShowAudioErrorsAgain, []() {});
                 audioLatencyNotified = true;
                 frame->repaint();
             }
@@ -1219,7 +1217,7 @@ void SurgeGUIEditor::idle()
         oscWaveform->repaintBasedOnOscMuteState();
     }
 
-    // Force the oscilloscope, if open, to re-render for nice smooth movement.
+    // force the oscilloscope, if open, to re-render for nice smooth movement.
     auto scope = getOverlayIfOpenAs<Surge::Overlays::Oscilloscope>(OSCILLOSCOPE);
 
     if (scope)
@@ -1623,8 +1621,18 @@ void SurgeGUIEditor::openOrRecreateEditor()
                     }
 
                     effectLabels[i]->setBounds(vr);
-                    effectLabels[i]->setLabel(label);
                     effectLabels[i]->setSkin(currentSkin, bitmapStore);
+
+                    if (i == 0 &&
+                        synth->storage.getPatch().fx[current_fx].type.val.i == fxt_vocoder)
+                    {
+                        effectLabels[i]->setLabel(
+                            fmt::format("Input delayed {} samples", BLOCK_SIZE));
+                    }
+                    else
+                    {
+                        effectLabels[i]->setLabel(label);
+                    }
 
                     addAndMakeVisibleWithTracking(frame.get(), *effectLabels[i]);
                 }
