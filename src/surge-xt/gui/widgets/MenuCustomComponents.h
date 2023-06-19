@@ -135,9 +135,12 @@ struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
         CLEAR,
         MUTE
     };
-    ModMenuCustomComponent(const std::string &source, const std::string &amount,
-                           std::function<void(OpType)> callback);
+
+    ModMenuCustomComponent(SurgeStorage *storage, const std::string &source,
+                           const std::string &amount, std::function<void(OpType)> callback,
+                           bool isTarget = false, bool isApplyToAll = false);
     ~ModMenuCustomComponent() noexcept;
+
     void getIdealSize(int &idealWidth, int &idealHeight) override;
     void paint(juce::Graphics &g) override;
     void resized() override;
@@ -150,11 +153,13 @@ struct ModMenuCustomComponent : juce::PopupMenu::CustomComponent, Surge::GUI::Sk
     void mouseUp(const juce::MouseEvent &e) override;
     bool keyPressed(const juce::KeyPress &k) override;
 
-    std::unique_ptr<juce::PopupMenu> createAccessibleSubMenu(SurgeStorage *s);
+    std::unique_ptr<juce::PopupMenu> createAccessibleSubMenu();
 
     std::unique_ptr<TinyLittleIconButton> clear, mute, edit;
     std::string source, amount;
     std::function<void(OpType)> callback;
+    bool isTarget{false};
+    bool isMenuExpanded{false};
 
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
@@ -169,9 +174,14 @@ struct ModMenuForAllComponent : ModMenuCustomComponent
         MUTE,
         UNMUTE
     };
-    ModMenuForAllComponent(std::function<void(AllAction)> callback);
+
+    ModMenuForAllComponent(SurgeStorage *storage, std::function<void(AllAction)> callback,
+                           bool isTarget = false);
+
     std::function<void(AllAction)> allCB;
     void mouseUp(const juce::MouseEvent &e) override {}
+
+    std::unique_ptr<juce::PopupMenu> createAccessibleSubMenu();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ModMenuForAllComponent);
 };

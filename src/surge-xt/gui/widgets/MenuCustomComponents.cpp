@@ -24,6 +24,7 @@
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 #include "UserDefaults.h"
+#include <fmt/format.h>
 #include <StringOps.h>
 
 namespace Surge
@@ -282,36 +283,61 @@ std::unique_ptr<juce::AccessibilityHandler> MenuCenteredBoldLabel::createAccessi
     return std::make_unique<MenuCenteredBoldLabelAH>(*this);
 }
 
-ModMenuCustomComponent::ModMenuCustomComponent(const std::string &s, const std::string &a,
-                                               std::function<void(OpType)> cb)
-    : juce::PopupMenu::CustomComponent(false), source(s), amount(a), callback(std::move(cb))
+ModMenuCustomComponent::ModMenuCustomComponent(SurgeStorage *storage, const std::string &s,
+                                               const std::string &a, std::function<void(OpType)> cb,
+                                               bool tgt, bool isApplyToAll)
+    : juce::PopupMenu::CustomComponent(false), source(s), amount(a), callback(std::move(cb)),
+      isTarget(tgt)
 {
-    auto tb = std::make_unique<TinyLittleIconButton>(1, [this]() {
+    isMenuExpanded = Surge::Storage::getUserDefaultValue(
+        storage, Surge::Storage::ExpandModMenusWithSubMenus, false);
+
+    auto tbc = std::make_unique<TinyLittleIconButton>(1, [this]() {
         callback(CLEAR);
         triggerMenuItem();
     });
-    addAndMakeVisible(*tb);
-    clear = std::move(tb);
-    clear->accLabel = "Clear " + s;
+    addAndMakeVisible(*tbc);
+    clear = std::move(tbc);
+    clear->accLabel = isApplyToAll ? Surge::GUI::toOSCase("Clear All Modulations") : ("Clear " + s);
 
-    tb = std::make_unique<TinyLittleIconButton>(2, [this]() {
+    auto tbm = std::make_unique<TinyLittleIconButton>(2, [this]() {
         callback(MUTE);
         triggerMenuItem();
     });
-    addAndMakeVisible(*tb);
-    mute = std::move(tb);
-    mute->accLabel = "Mute " + s;
+    addAndMakeVisible(*tbm);
+    mute = std::move(tbm);
+    mute->accLabel = isApplyToAll ? Surge::GUI::toOSCase("Unmute All Modulations") : ("Mute " + s);
 
-    tb = std::make_unique<TinyLittleIconButton>(0, [this]() {
+    auto tbe = std::make_unique<TinyLittleIconButton>(0, [this]() {
         callback(EDIT);
         triggerMenuItem();
     });
-    addAndMakeVisible(*tb);
-    edit = std::move(tb);
-    edit->accLabel = "Edit " + s;
+    addAndMakeVisible(*tbe);
+    edit = std::move(tbe);
+    edit->accLabel = isApplyToAll ? Surge::GUI::toOSCase("Mute All Modulations") : ("Edit " + s);
+
+    if (isMenuExpanded)
+    {
+        clear->setEnabled(false);
+        clear->setVisible(false);
+        mute->setEnabled(false);
+        mute->setVisible(false);
+        edit->setEnabled(false);
+        edit->setVisible(false);
+    }
+
+    if (isApplyToAll)
+    {
+        setTitle(fmt::format("Apply to all modulations"));
+    }
+    else
+    {
+        std::string toFrom = isTarget ? "To" : "From";
+
+        setTitle(fmt::format("{} {} by {}", toFrom, source, amount));
+    }
 
     setAccessible(true);
-    setTitle(std::string("From ") + source + " by " + amount);
     setDescription(getTitle());
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 }
@@ -321,8 +347,9 @@ ModMenuCustomComponent::~ModMenuCustomComponent() noexcept = default;
 void ModMenuCustomComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
     auto menuText = source + " " + amount;
-    getLookAndFeel().getIdealPopupMenuItemSize(menuText, false, 20, idealWidth, idealHeight);
     auto h = idealHeight - 2 * mg;
+
+    getLookAndFeel().getIdealPopupMenuItemSize(menuText, false, 20, idealWidth, idealHeight);
     idealWidth += 3 * mg + 3 * (mg + h) + xp;
 }
 void ModMenuCustomComponent::paint(juce::Graphics &g)
@@ -330,6 +357,7 @@ void ModMenuCustomComponent::paint(juce::Graphics &g)
     if (isItemHighlighted())
     {
         auto r = getLocalBounds().reduced(1);
+
         g.setColour(findColour(juce::PopupMenu::highlightedBackgroundColourId));
         g.fillRect(r);
 
@@ -339,28 +367,32 @@ void ModMenuCustomComponent::paint(juce::Graphics &g)
     {
         g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
     }
+
     auto h = getHeight() - 2 * mg;
-    auto r = getLocalBounds().withTrimmedLeft(xp + 3 * mg + 3 * (h + mg) + mg).withTrimmedRight(4);
+    auto tl = isMenuExpanded ? (xp + 3 * mg) : (xp + 3 * mg + 3 * (h + mg) + mg);
+    auto r = getLocalBounds().withTrimmedLeft(tl).withTrimmedRight(4);
     auto ft = getLookAndFeel().getPopupMenuFont();
+
     ft = ft.withHeight(ft.getHeight() - 1);
     g.setFont(ft);
     g.drawText(source, r, juce::Justification::centredLeft);
     g.drawText(amount, r, juce::Justification::centredRight);
 }
 
-std::unique_ptr<juce::PopupMenu> ModMenuCustomComponent::createAccessibleSubMenu(SurgeStorage *s)
+std::unique_ptr<juce::PopupMenu> ModMenuCustomComponent::createAccessibleSubMenu()
 {
-    bool doExpMen =
-        Surge::Storage::getUserDefaultValue(s, Surge::Storage::ExpandModMenusWithSubMenus, false);
-
-    if (!doExpMen)
+    if (!isMenuExpanded)
+    {
         return nullptr;
+    }
 
     auto res = std::make_unique<juce::PopupMenu>();
     auto fn = callback;
+
     res->addItem(edit->accLabel, [fn]() { fn(EDIT); });
     res->addItem(mute->accLabel, [fn]() { fn(MUTE); });
     res->addItem(clear->accLabel, [fn]() { fn(CLEAR); });
+
     return std::move(res);
 }
 
@@ -381,6 +413,7 @@ void ModMenuCustomComponent::setIsMuted(bool b)
 void ModMenuCustomComponent::resized()
 {
     auto h = getHeight() - 2 * mg;
+
     clear->setBounds(xp + mg + 0 * (h + mg), mg, h, h);
     clear->toFront(false);
     mute->setBounds(xp + mg + 1 * (h + mg), mg, h, h);
@@ -401,8 +434,10 @@ bool ModMenuCustomComponent::keyPressed(const juce::KeyPress &k)
     {
         callback(EDIT);
         triggerMenuItem();
+
         return true;
     }
+
     return false;
 }
 
@@ -445,24 +480,44 @@ std::unique_ptr<juce::AccessibilityHandler> ModMenuCustomComponent::createAccess
 }
 
 // bit of a hack - the menus mean something different so do a cb on a cb
-ModMenuForAllComponent::ModMenuForAllComponent(std::function<void(AllAction)> cb)
-    : allCB(cb),
-      ModMenuCustomComponent(Surge::GUI::toOSCase("Apply to All"), "", [this](OpType op) {
-          switch (op)
-          {
-          case ModMenuCustomComponent::CLEAR:
-              allCB(CLEAR);
-              break;
-          case ModMenuCustomComponent::MUTE:
-              allCB(UNMUTE);
-              break;
-          case ModMenuCustomComponent::EDIT:
-              allCB(MUTE);
-              break;
-          }
-      })
+ModMenuForAllComponent::ModMenuForAllComponent(SurgeStorage *storage,
+                                               std::function<void(AllAction)> cb, bool isTarget)
+    : allCB(cb), ModMenuCustomComponent(
+                     storage, Surge::GUI::toOSCase("Apply to All"), "",
+                     [this](OpType op) {
+                         switch (op)
+                         {
+                         case ModMenuCustomComponent::CLEAR:
+                             allCB(CLEAR);
+                             break;
+                         case ModMenuCustomComponent::MUTE:
+                             allCB(UNMUTE);
+                             break;
+                         case ModMenuCustomComponent::EDIT:
+                             allCB(MUTE);
+                             break;
+                         }
+                     },
+                     isTarget, true)
 {
     edit->offset = 3;
+}
+
+std::unique_ptr<juce::PopupMenu> ModMenuForAllComponent::createAccessibleSubMenu()
+{
+    if (!isMenuExpanded)
+    {
+        return nullptr;
+    }
+
+    auto res = std::make_unique<juce::PopupMenu>();
+    auto fn = allCB;
+
+    res->addItem(edit->accLabel, [fn]() { fn(MUTE); });
+    res->addItem(mute->accLabel, [fn]() { fn(UNMUTE); });
+    res->addItem(clear->accLabel, [fn]() { fn(CLEAR); });
+
+    return std::move(res);
 }
 
 } // namespace Widgets

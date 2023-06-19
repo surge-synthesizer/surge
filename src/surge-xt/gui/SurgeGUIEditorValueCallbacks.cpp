@@ -923,7 +923,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 contextMenu.addSeparator();
 
                                 Surge::Widgets::MenuCenteredBoldLabel::addToMenu(contextMenu,
-                                                                                 "TARGETS");
+                                                                                 "MODULATIONS");
                             }
 
                             parameter->get_display_of_modulation_depth(
@@ -1060,12 +1060,12 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 }
                             };
                             auto modMenu = std::make_unique<Surge::Widgets::ModMenuCustomComponent>(
-                                targetName, modtxt, cb);
+                                &synth->storage, targetName, modtxt, cb, true);
                             modMenu->setSkin(currentSkin, bitmapStore);
                             modMenu->setIsMuted(synth->isModulationMuted(
                                 parameter->id, (modsources)thisms, use_scene, modidx));
                             auto mmt = modMenu->getTitle();
-                            auto pm = modMenu->createAccessibleSubMenu(&synth->storage);
+                            auto pm = modMenu->createAccessibleSubMenu();
                             contextMenu.addCustomItem(-1, std::move(modMenu),
                                                       pm.get() ? std::move(pm) : nullptr, mmt);
                             first_destination = false;
@@ -1078,80 +1078,83 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 {
                     auto use_scene = 0;
                     bool allScenes = true;
+
                     if (this->synth->isModulatorDistinctPerScene(thisms))
                     {
                         allScenes = false;
                         use_scene = current_scene;
                     }
-                    auto allThree = std::make_unique<Surge::Widgets::ModMenuForAllComponent>(
-                        [this, thisms, use_scene, allScenes, n_total_md,
-                         control](Surge::Widgets::ModMenuForAllComponent::AllAction action) {
-                            switch (action)
+
+                    auto cb = [this, thisms, use_scene, allScenes, n_total_md,
+                               control](Surge::Widgets::ModMenuForAllComponent::AllAction action) {
+                        switch (action)
+                        {
+                        case Surge::Widgets::ModMenuForAllComponent::CLEAR:
+                        {
+                            for (int md = 0; md < n_total_md; md++)
                             {
-                            case Surge::Widgets::ModMenuForAllComponent::CLEAR:
-                            {
-                                for (int md = 0; md < n_total_md; md++)
-                                {
-                                    int scene = synth->storage.getPatch().param_ptr[md]->scene;
-                                    if (scene == 0 || allScenes || scene == current_scene + 1)
-                                        for (auto idx : synth->getModulationIndicesBetween(
-                                                 md, thisms, use_scene))
-                                        {
-                                            pushModulationToUndoRedo(md, (modsources)thisms,
-                                                                     use_scene, idx,
-                                                                     Surge::GUI::UndoManager::UNDO);
-
-                                            synth->clearModulation(md, thisms, use_scene, idx);
-                                        }
-                                }
-
-                                refresh_mod();
-
-                                // Also blank out the name and rebuild the UI
-                                if (within_range(ms_ctrl1, thisms,
-                                                 ms_ctrl1 + n_customcontrollers - 1))
-                                {
-                                    int ccid = thisms - ms_ctrl1;
-
-                                    synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
-                                    synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
-                                    auto msb =
-                                        dynamic_cast<Surge::Widgets::ModulationSourceButton *>(
-                                            control);
-                                    if (msb)
-                                        msb->setCurrentModLabel(
-                                            synth->storage.getPatch().CustomControllerLabel[ccid]);
-                                }
-                                if (control->asJuceComponent())
-                                    control->asJuceComponent()->repaint();
-                                synth->updateDisplay();
-                            }
-                            break;
-                            case Surge::Widgets::ModMenuForAllComponent::UNMUTE:
-                            case Surge::Widgets::ModMenuForAllComponent::MUTE:
-                            {
-                                bool state =
-                                    (action == Surge::Widgets::ModMenuForAllComponent::MUTE);
-                                for (int md = 0; md < n_total_md; ++md)
-                                {
-                                    for (int sc = 0; sc < n_scenes; ++sc)
+                                int scene = synth->storage.getPatch().param_ptr[md]->scene;
+                                if (scene == 0 || allScenes || scene == current_scene + 1)
+                                    for (auto idx :
+                                         synth->getModulationIndicesBetween(md, thisms, use_scene))
                                     {
-                                        auto indices = synth->getModulationIndicesBetween(
-                                            md, (modsources)thisms, sc);
-                                        for (auto idx : indices)
-                                            synth->muteModulation(md, (modsources)thisms, sc, idx,
-                                                                  state);
+                                        pushModulationToUndoRedo(md, (modsources)thisms, use_scene,
+                                                                 idx,
+                                                                 Surge::GUI::UndoManager::UNDO);
+
+                                        synth->clearModulation(md, thisms, use_scene, idx);
                                     }
+                            }
+
+                            refresh_mod();
+
+                            // Also blank out the name and rebuild the UI
+                            if (within_range(ms_ctrl1, thisms, ms_ctrl1 + n_customcontrollers - 1))
+                            {
+                                int ccid = thisms - ms_ctrl1;
+
+                                synth->storage.getPatch().CustomControllerLabel[ccid][0] = '-';
+                                synth->storage.getPatch().CustomControllerLabel[ccid][1] = 0;
+                                auto msb =
+                                    dynamic_cast<Surge::Widgets::ModulationSourceButton *>(control);
+                                if (msb)
+                                    msb->setCurrentModLabel(
+                                        synth->storage.getPatch().CustomControllerLabel[ccid]);
+                            }
+                            if (control->asJuceComponent())
+                                control->asJuceComponent()->repaint();
+                            synth->updateDisplay();
+                        }
+                        break;
+                        case Surge::Widgets::ModMenuForAllComponent::UNMUTE:
+                        case Surge::Widgets::ModMenuForAllComponent::MUTE:
+                        {
+                            bool state = (action == Surge::Widgets::ModMenuForAllComponent::MUTE);
+                            for (int md = 0; md < n_total_md; ++md)
+                            {
+                                for (int sc = 0; sc < n_scenes; ++sc)
+                                {
+                                    auto indices = synth->getModulationIndicesBetween(
+                                        md, (modsources)thisms, sc);
+                                    for (auto idx : indices)
+                                        synth->muteModulation(md, (modsources)thisms, sc, idx,
+                                                              state);
                                 }
                             }
-                            break;
-                            }
-                            refresh_mod();
-                            synth->refresh_editor = true;
-                        });
+                        }
+                        break;
+                        }
+                        refresh_mod();
+                        synth->refresh_editor = true;
+                    };
+
+                    auto allThree = std::make_unique<Surge::Widgets::ModMenuForAllComponent>(
+                        &synth->storage, cb, true);
                     allThree->setSkin(currentSkin, bitmapStore);
                     auto at = allThree->getTitle();
-                    contextMenu.addCustomItem(-1, std::move(allThree), nullptr, at);
+                    auto pm = allThree->createAccessibleSubMenu();
+                    contextMenu.addCustomItem(-1, std::move(allThree),
+                                              pm.get() ? std::move(pm) : nullptr, at);
                 }
             }
             int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, n_scenes - 1);
@@ -2684,7 +2687,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                                     auto comp =
                                         std::make_unique<Surge::Widgets::ModMenuCustomComponent>(
-                                            srctxt, modtxt,
+                                            &synth->storage, srctxt, modtxt,
                                             [this, ptag, p, sc, bvf, ms, modidx](
                                                 Surge::Widgets::ModMenuCustomComponent::OpType ot) {
                                                 switch (ot)
@@ -2728,7 +2731,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     comp->setSkin(currentSkin, bitmapStore);
                                     comp->setIsMuted(
                                         synth->isModulationMuted(ptag, (modsources)ms, sc, modidx));
-                                    auto pm = comp->createAccessibleSubMenu(&synth->storage);
+                                    auto pm = comp->createAccessibleSubMenu();
                                     contextMenu.addCustomItem(-1, std::move(comp),
                                                               pm.get() ? std::move(pm) : nullptr,
                                                               comptitle);
@@ -2739,57 +2742,59 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                     if (n_ms > 1)
                     {
-                        auto allThree = std::make_unique<Surge::Widgets::ModMenuForAllComponent>(
-                            [this, ptag](Surge::Widgets::ModMenuForAllComponent::AllAction action) {
-                                switch (action)
+                        auto cb = [this,
+                                   ptag](Surge::Widgets::ModMenuForAllComponent::AllAction action) {
+                            switch (action)
+                            {
+                            case Surge::Widgets::ModMenuForAllComponent::CLEAR:
+                            {
+                                for (int ms = 1; ms < n_modsources; ms++)
                                 {
-                                case Surge::Widgets::ModMenuForAllComponent::CLEAR:
-                                {
-                                    for (int ms = 1; ms < n_modsources; ms++)
+                                    for (int sc = 0; sc < n_scenes; ++sc)
                                     {
-                                        for (int sc = 0; sc < n_scenes; ++sc)
+                                        auto indices = synth->getModulationIndicesBetween(
+                                            ptag, (modsources)ms, sc);
+                                        for (auto idx : indices)
                                         {
-                                            auto indices = synth->getModulationIndicesBetween(
-                                                ptag, (modsources)ms, sc);
-                                            for (auto idx : indices)
-                                            {
-                                                pushModulationToUndoRedo(
-                                                    ptag, (modsources)ms, sc, idx,
-                                                    Surge::GUI::UndoManager::UNDO);
+                                            pushModulationToUndoRedo(ptag, (modsources)ms, sc, idx,
+                                                                     Surge::GUI::UndoManager::UNDO);
 
-                                                synth->clearModulation(ptag, (modsources)ms, sc,
-                                                                       idx, false);
-                                            }
+                                            synth->clearModulation(ptag, (modsources)ms, sc, idx,
+                                                                   false);
                                         }
                                     }
                                 }
-                                break;
-                                case Surge::Widgets::ModMenuForAllComponent::UNMUTE:
-                                case Surge::Widgets::ModMenuForAllComponent::MUTE:
+                            }
+                            break;
+                            case Surge::Widgets::ModMenuForAllComponent::UNMUTE:
+                            case Surge::Widgets::ModMenuForAllComponent::MUTE:
+                            {
+                                bool state =
+                                    (action == Surge::Widgets::ModMenuForAllComponent::MUTE);
+                                for (int ms = 1; ms < n_modsources; ms++)
                                 {
-                                    bool state =
-                                        (action == Surge::Widgets::ModMenuForAllComponent::MUTE);
-                                    for (int ms = 1; ms < n_modsources; ms++)
+                                    for (int sc = 0; sc < n_scenes; ++sc)
                                     {
-                                        for (int sc = 0; sc < n_scenes; ++sc)
-                                        {
-                                            auto indices = synth->getModulationIndicesBetween(
-                                                ptag, (modsources)ms, sc);
-                                            for (auto idx : indices)
-                                                synth->muteModulation(ptag, (modsources)ms, sc, idx,
-                                                                      state);
-                                        }
+                                        auto indices = synth->getModulationIndicesBetween(
+                                            ptag, (modsources)ms, sc);
+                                        for (auto idx : indices)
+                                            synth->muteModulation(ptag, (modsources)ms, sc, idx,
+                                                                  state);
                                     }
                                 }
-                                break;
-                                }
-                                refresh_mod();
-                                synth->refresh_editor = true;
-                            });
+                            }
+                            break;
+                            }
+                            refresh_mod();
+                            synth->refresh_editor = true;
+                        };
+                        auto allThree = std::make_unique<Surge::Widgets::ModMenuForAllComponent>(
+                            &synth->storage, cb);
                         allThree->setSkin(currentSkin, bitmapStore);
                         auto comptitle = allThree->getTitle();
-
-                        contextMenu.addCustomItem(-1, std::move(allThree), nullptr, comptitle);
+                        auto pm = allThree->createAccessibleSubMenu();
+                        contextMenu.addCustomItem(-1, std::move(allThree),
+                                                  pm.get() ? std::move(pm) : nullptr, comptitle);
                     }
                 }
 
