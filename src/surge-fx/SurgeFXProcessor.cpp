@@ -54,7 +54,7 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     audio_thread_surge_effect.reset();
     resetFxType(effectNum, false);
     fxstorage->return_level.id = -1;
-    setupStorageRanges((Parameter *)fxstorage, &(fxstorage->p[n_fx_params - 1]));
+    setupStorageRanges(&(fxstorage->type), &(fxstorage->p[n_fx_params - 1]));
 
     for (int i = 0; i < n_fx_params; ++i)
     {

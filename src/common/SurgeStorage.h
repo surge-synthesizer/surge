@@ -670,10 +670,18 @@ struct FxStorage
     // Just a heads up: if you change this, please go look at reorderFx in SurgeSynthesizer too!
     FxStorage(fxslot_positions slot) : fxslot(slot) {}
     FxStorage() = delete;
-    fxslot_positions fxslot;
+
+    // Note that some clients assume that &(FxStorage) == &(FxStorage->type) and the
+    // param range is from &FXStorage -> &FXStorage->p[end]. This used to be true but
+    // is too limiting an assumption. We are fixing those clients now (rack still
+    // left to do) but if you add members please add them to the *end* of the param stack
+    // until we get em all
     Parameter type;
     Parameter return_level;
     Parameter p[n_fx_params];
+
+    // like this one!
+    fxslot_positions fxslot;
 };
 
 struct SurgeSceneStorage
