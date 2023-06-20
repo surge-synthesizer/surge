@@ -347,11 +347,11 @@ ModMenuCustomComponent::~ModMenuCustomComponent() noexcept = default;
 void ModMenuCustomComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
     auto menuText = source + " " + amount;
-    auto h = idealHeight - 2 * mg;
-
     getLookAndFeel().getIdealPopupMenuItemSize(menuText, false, 20, idealWidth, idealHeight);
+    auto h = idealHeight - 2 * mg;
     idealWidth += 3 * mg + 3 * (mg + h) + xp;
 }
+
 void ModMenuCustomComponent::paint(juce::Graphics &g)
 {
     if (isItemHighlighted())
