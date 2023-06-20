@@ -3945,12 +3945,12 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     {
         Patch p = synth->storage.patch_list[synth->patchid];
         for (auto &it : synth->patchLoadedListeners)
-            (it.second)(p.path.replace_extension(string_to_path("")));
+            (it.second)(p.path.replace_extension());
     }
     if (had_patchid_file)
     {
         for (auto &it : synth->patchLoadedListeners)
-            (it.second)(ppath.replace_extension(string_to_path("")));
+            (it.second)(ppath.replace_extension());
     }
 
     // Now we want to null out the patchLoadThread since everything is done
