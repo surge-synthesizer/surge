@@ -79,6 +79,9 @@ class alignas(16) SurgeSynthesizer
     };
     SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath = "");
     virtual ~SurgeSynthesizer();
+
+    // Also see setNoteExpression() which allows you to control all note parameters polyphonically
+    // with the user-provided host_noteid parameter.
     void playNote(char channel, char key, char velocity, char detune, int32_t host_noteid = -1);
     void releaseNote(char channel, char key, char velocity, int32_t host_noteid = -1);
     void chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid = -1);
@@ -265,6 +268,28 @@ class alignas(16) SurgeSynthesizer
     float getMacroParameterTarget01(long macroNum) const;
     void applyMacroMonophonicModulation(long macroNum, float val);
 
+    // This is a method that, along with playNote(), allows for polyphonic control of the
+    // synthesizer.
+    //
+    // A "note expression" controls some aspect of a synthesizer voice. It can control the volume,
+    // pan, pitch (-120 to 120 key tuning), timbre (MPE timbre parameter 0..1) and pressure (channel
+    // AT or poly AT, depending on MPE mode, from 0..1).
+    //
+    // By specifying an arbitrary note_id, you can control any of the above parameters. This is
+    // entirely polyphonic, based on the given note_id. Alternatively, you can provide the other
+    // parameters (key and channel) to modify the ongoing note expression. Setting any of these
+    // parameters to -1 will skip them in the search (so, for example, you can search only by
+    // channel+key, or only by note_id).
+    //
+    // For example, to play a note at an arbitrary hz frequency "f" for a given strike velocity
+    // "velocity", you could do the following:
+    //   float k = 12.f*log2(f/440.f) + 69.f;  // Convert into standard 12TET
+    //   int mk = int(std::floor(k));          // The "key" value in 12TET.
+    //   float off = k - mk;                   // And the leftover hz outside of the standard key.
+    //   int note_id = <pick something arbitrary>;
+    //   playNote(0, mk, velocity, 0, note_id);
+    //   setNoteExpression(SurgeVoice::PITCH, note_id, mk, -1, off);
+    // Then, later, call releaseNote() as appropriate.
     void setNoteExpression(SurgeVoice::NoteExpressionType net, int32_t note_id, int16_t key,
                            int16_t channel, float value);
 
