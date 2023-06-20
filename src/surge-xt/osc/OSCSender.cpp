@@ -79,14 +79,5 @@ void OSCSender::stopSending()
 #endif
 }
 
-/*
-    {
-        // create and send an OSC message with an address and a float value:
-        if (!juceOSCSender.send("/juce/rotaryknob", (float)rotaryKnob.getValue()))
-            showConnectionErrorMessage("Error: could not send OSC message.");
-    };
-
-*/
-
 } // namespace OSC
 } // namespace Surge
