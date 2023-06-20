@@ -299,6 +299,8 @@ KeyBindingsOverlay::KeyBindingsOverlay(SurgeStorage *st, SurgeGUIEditor *ed)
     };
 
     okS->setStorage(storage);
+    okS->setAccessible(true);
+    okS->setTitle("OK");
     addAndMakeVisible(*okS);
 
     cancelS = std::make_unique<Surge::Widgets::SelfDrawButton>("Cancel");
@@ -310,23 +312,31 @@ KeyBindingsOverlay::KeyBindingsOverlay(SurgeStorage *st, SurgeGUIEditor *ed)
     };
 
     cancelS->setStorage(storage);
+    cancelS->setAccessible(true);
+    cancelS->setTitle("Cancel");
     addAndMakeVisible(*cancelS);
 
     resetAll = std::make_unique<Surge::Widgets::SelfDrawButton>("Reset All");
+
+    resetAll->onClick = [this]() { this->resetAllToDefault(); };
+
     resetAll->setSkin(editor->currentSkin);
     resetAll->setStorage(storage);
     resetAll->setAccessible(true);
-    resetAll->onClick = [this]() { this->resetAllToDefault(); };
+    resetAll->setTitle("Reset all shortcuts to default");
     addAndMakeVisible(*resetAll);
 
     std::string curVKBLayout = Surge::Storage::getUserDefaultValue(
         storage, Surge::Storage::VirtualKeyboardLayout, "QWERTY");
 
     vkbLayout = std::make_unique<Surge::Widgets::SelfDrawButton>("VKB Layout: " + curVKBLayout);
+
+    vkbLayout->onClick = [this]() { this->createVKBLayoutMenu(); };
+
     vkbLayout->setSkin(editor->currentSkin);
     vkbLayout->setStorage(storage);
     vkbLayout->setAccessible(true);
-    vkbLayout->onClick = [this]() { this->createVKBLayoutMenu(); };
+    vkbLayout->setTitle("Select virtual keyboard layout");
     addAndMakeVisible(*vkbLayout);
 
     bindingListBoxModel = std::make_unique<KeyBindingsListBoxModel>(this, editor);
