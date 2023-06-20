@@ -1022,8 +1022,8 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
         return;
     }
 
-    sge->fileChooser = std::make_unique<juce::FileChooser>("Select Wavetable to Load",
-                                                           juce::File(path_to_string(wtPath)));
+    sge->fileChooser = std::make_unique<juce::FileChooser>(
+        "Select Wavetable to Load", juce::File(path_to_string(wtPath)), "*.wav, *.wt");
     sge->fileChooser->launchAsync(
         juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
         [this, wtPath](const juce::FileChooser &c) {
