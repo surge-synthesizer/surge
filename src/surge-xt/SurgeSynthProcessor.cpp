@@ -290,11 +290,12 @@ void SurgeSynthProcessor::stopOSCOut()
 bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port); }
 
 // Called as 'patch loaded' listener; runs on the juce::MessageManager thread
-void SurgeSynthProcessor::patch_load_to_OSC(std::string fullPathStr)
+void SurgeSynthProcessor::patch_load_to_OSC(fs::path fullPath)
 {
-    if (surge->storage.oscSending && !fullPathStr.empty())
+    std::string pathStr = path_to_string(fullPath);
+    if (surge->storage.oscSending && !pathStr.empty())
     {
-        oscSender.send("/patch", fullPathStr);
+        oscSender.send("/patch", pathStr);
     }
 }
 //==============================================================================

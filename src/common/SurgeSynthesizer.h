@@ -393,7 +393,7 @@ class alignas(16) SurgeSynthesizer
     //
     // Be sure to delete any added listeners in the desctructor of the class that added them.
     std::unordered_map<std::string, std::function<void(std::string)>> patchLoadedListeners;
-    void addPatchLoadedListener(std::string key, std::function<void(std::string)> const &l)
+    void addPatchLoadedListener(std::string key, std::function<void(const fs::path &)> const &l)
     {
         patchLoadedListeners.insert({key, l});
     }

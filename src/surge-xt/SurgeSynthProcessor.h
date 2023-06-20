@@ -360,7 +360,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool changeOSCOutPort(int newport);
     void stopOSCOut();
 
-    void patch_load_to_OSC(std::string patchstr);
+    void patch_load_to_OSC(fs::path);
 
     //==============================================================================
     const juce::String getName() const override;
