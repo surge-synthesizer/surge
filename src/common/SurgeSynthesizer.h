@@ -392,7 +392,7 @@ class alignas(16) SurgeSynthesizer
     // patchLoadedListener calls OSCSender::send(), which runs on a juce::MessageManager thread.
     //
     // Be sure to delete any added listeners in the desctructor of the class that added them.
-    std::unordered_map<std::string, std::function<void(std::string)>> patchLoadedListeners;
+    std::unordered_map<std::string, std::function<void(const fs::path &)>> patchLoadedListeners;
     void addPatchLoadedListener(std::string key, std::function<void(const fs::path &)> const &l)
     {
         patchLoadedListeners.insert({key, l});
