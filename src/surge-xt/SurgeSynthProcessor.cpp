@@ -137,30 +137,50 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 #if SURGE_HAS_OSC
     // OSC (Open Sound Control)
-    bool startOSCNow =
-        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSC, false);
-    if (startOSCNow)
+    bool startOSCInNow =
+        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCIn, false);
+    if (startOSCInNow)
     {
-        int defaultOSCPort = Surge::Storage::getUserDefaultValue(
-            &(surge->storage), Surge::Storage::OSCPort, DEFAULT_OSC_PORT);
-        bool success = initOSC(defaultOSCPort);
+        int defaultOSCInPort = Surge::Storage::getUserDefaultValue(
+            &(surge->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
+        bool success = initOSCIn(defaultOSCInPort);
         if (!success)
         {
             std::ostringstream msg;
-            msg << "Surge XT was unable to connect to port " << defaultOSCPort << ".\n"
+            msg << "Surge XT was unable to connect to UDP port " << defaultOSCInPort
+                << " for OSC input.\n"
                 << "It may be in use by another application.";
-            surge->storage.reportError(msg.str(), "OSC Initialization Error");
+            surge->storage.reportError(msg.str(), "OSC Input Initialization Error");
         }
     }
+    bool startOSCOutNow =
+        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCOut, false);
+    if (startOSCOutNow)
+    {
+        int defaultOSCOutPort = Surge::Storage::getUserDefaultValue(
+            &(surge->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
+        bool success = initOSCOut(defaultOSCOutPort);
+        if (!success)
+        {
+            std::ostringstream msg;
+            msg << "Surge XT was unable to connect to UDP port " << defaultOSCOutPort
+                << " for OSC output.\n"
+                << "It may be in use by another application.";
+            surge->storage.reportError(msg.str(), "OSC Output Initialization Error");
+            return;
+        }
+    }
+
 #endif
 }
 
 SurgeSynthProcessor::~SurgeSynthProcessor()
 {
-#if SURGE_HAS_OSC
     if (oscListener.listening)
+    {
         oscListener.stopListening();
-#endif
+    }
+    stopOSCOut(); // This also deletes the patch change -> OSC out listener
 }
 
 //==============================================================================
@@ -226,16 +246,15 @@ const juce::String SurgeSynthProcessor::getProgramName(int index)
 void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newName) {}
 
 /* OSC (Open Sound Control) */
-bool SurgeSynthProcessor::initOSC(int port)
+bool SurgeSynthProcessor::initOSCIn(int port)
 {
     auto state = oscListener.init(this, surge, port);
-
     surge->storage.oscListenerRunning = state;
 
     return state;
 }
 
-bool SurgeSynthProcessor::changeOSCPort(int new_port)
+bool SurgeSynthProcessor::changeOSCInPort(int new_port)
 {
     if (oscListener.listening)
     {
@@ -243,10 +262,44 @@ bool SurgeSynthProcessor::changeOSCPort(int new_port)
         oscListener.disconnect();
     }
 
-    return initOSC(new_port);
+    return initOSCIn(new_port);
 }
 
+bool SurgeSynthProcessor::initOSCOut(int port)
+{
+    auto state = oscSender.init(surge, port);
+    surge->storage.oscSending = state;
+    if (state)
+    {
+        // Add listener for patch changes, to send new path to OSC output
+        // This will run on the juce::MessageManager thread so as to
+        // not tie up the patch loading thread.
+        surge->addPatchLoadedListener("OSC_OUT",
+                                      [ssp = this](auto s) { ssp->patch_load_to_OSC(s); });
+    }
+
+    return state;
+}
+
+void SurgeSynthProcessor::stopOSCOut()
+{
+    surge->deletePatchLoadedListener("OSC_OUT");
+    oscSender.stopSending();
+}
+
+bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port); }
+
+// Called as 'patch loaded' listener; runs on the juce::MessageManager thread
+void SurgeSynthProcessor::patch_load_to_OSC(fs::path fullPath)
+{
+    std::string pathStr = path_to_string(fullPath);
+    if (surge->storage.oscSending && !pathStr.empty())
+    {
+        oscSender.send("/patch", pathStr);
+    }
+}
 //==============================================================================
+
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
     surge->setSamplerate(sr);
@@ -549,7 +602,7 @@ void SurgeSynthProcessor::processBlockOSC()
     for (const auto &om : messages)
     {
         float pval = om.val;
-        if (om.type == oscMsg::PARAMETER)
+        if (om.type == oscParamMsg::PARAMETER) // currently the only type
         {
             if (om.param->valtype == vt_int)
                 pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);

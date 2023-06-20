@@ -19,8 +19,8 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
-#ifndef SURGE_SRC_SURGE_XT_OSC_OSCLISTENER_H
-#define SURGE_SRC_SURGE_XT_OSC_OSCLISTENER_H
+#ifndef SURGE_SRC_SURGE_XT_OSC_OSCSENDER_H
+#define SURGE_SRC_SURGE_XT_OSC_OSCSENDER_H
 /*
 ** Surge Synthesizer is Free and Open Source Software
 **
@@ -38,39 +38,32 @@
 
 #include "juce_osc/juce_osc.h"
 #include "SurgeSynthesizer.h"
-#include "SurgeStorage.h"
-
-class SurgeSynthProcessor;
 
 namespace Surge
 {
 namespace OSC
 {
 
-class OSCListener : public juce::OSCReceiver,
-                    juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
+class OSCSender
 {
   public:
-    OSCListener();
-    ~OSCListener();
+    OSCSender();
+    ~OSCSender();
 
-    bool init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge, int port);
-    void stopListening();
+    bool init(const std::unique_ptr<SurgeSynthesizer> &surge, int port);
+    void send(std::string addr, std::string msg);
+    void stopSending();
 
-    void oscMessageReceived(const juce::OSCMessage &message) override;
-    void oscBundleReceived(const juce::OSCBundle &bundle) override;
-
-    int portnum = DEFAULT_OSC_PORT_IN;
-    bool listening = false;
+    int portnum = DEFAULT_OSC_PORT_OUT;
+    bool sendingOSC = false;
 
   private:
+    juce::OSCSender juceOSCSender;
     SurgeSynthesizer *synth{nullptr};
-    SurgeSynthProcessor *sspPtr{nullptr};
-    std::string getWholeString(const juce::OSCMessage &message);
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OSCListener)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OSCSender)
 };
 
 } // namespace OSC
 } // namespace Surge
-#endif // SURGE_SRC_SURGE_XT_OSC_OSCLISTENER_H
+#endif // SURGE_SRC_SURGE_XT_OSC_OSCSENDER_H

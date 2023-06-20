@@ -3895,20 +3895,24 @@ bool SurgeSynthesizer::stringToNormalizedValue(const ID &index, std::string s, f
 
 void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
 {
+    fs::path ppath;
+    int patchid = -1;
+    bool had_patchid_file = false;
+
     SurgeSynthesizer *synth = (SurgeSynthesizer *)sy;
     std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
     if (synth->patchid_queue >= 0)
     {
-        int patchid = synth->patchid_queue;
+        patchid = synth->patchid_queue;
         synth->patchid_queue = -1;
         synth->allNotesOff();
         synth->loadPatch(patchid);
     }
     if (synth->has_patchid_file)
     {
-        auto p(string_to_path(synth->patchid_file));
-        auto s = path_to_string(p.stem());
+        ppath = string_to_path(synth->patchid_file);
         synth->has_patchid_file = false;
+        had_patchid_file = true;
         synth->allNotesOff();
 
         int ptid = -1, ct = 0;
@@ -3927,13 +3931,27 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
         }
         else
         {
-            synth->loadPatchByPath(synth->patchid_file, -1, s.c_str());
+            synth->loadPatchByPath(synth->patchid_file, -1, path_to_string(ppath).c_str());
         }
     }
 
     synth->storage.getPatch().isDirty = false;
     synth->patchChanged = true;
     synth->halt_engine = false;
+
+    // Notify the 'patch loaded' listener(s)
+    // Note that this is not an if/else for good reason: both cases may occur simultaneously
+    if (patchid >= 0)
+    {
+        Patch p = synth->storage.patch_list[synth->patchid];
+        for (auto &it : synth->patchLoadedListeners)
+            (it.second)(p.path.replace_extension());
+    }
+    if (had_patchid_file)
+    {
+        for (auto &it : synth->patchLoadedListeners)
+            (it.second)(ppath.replace_extension());
+    }
 
     // Now we want to null out the patchLoadThread since everything is done
     auto myThread = std::move(synth->patchLoadThread);

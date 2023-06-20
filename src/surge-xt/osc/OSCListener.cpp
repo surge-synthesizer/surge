@@ -43,21 +43,13 @@ OSCListener::~OSCListener()
 bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge,
                        int port)
 {
-    if (!connect(port))
-    {
-#ifdef DEBUG
-        std::cout << "Error: could not connect to UDP port " << std::to_string(port) << std::endl;
-#endif
-        return false;
-    }
-    else
+    synth = surge.get();
+    if (connect(port))
     {
         addListener(this);
         listening = true;
         portnum = port;
-        synth = surge.get();
         sspPtr = ssp;
-
         synth->storage.oscListenerRunning = true;
 
 #ifdef DEBUG
@@ -65,6 +57,7 @@ bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynt
 #endif
         return true;
     }
+    return false;
 }
 
 void OSCListener::stopListening()
@@ -129,61 +122,93 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscMsg(p, message[0].getFloat32()));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscParamMsg(p, message[0].getFloat32()));
 
 #ifdef DEBUG_VERBOSE
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
     }
-    else if (address1 == "settings")
+    else if (address1 == "patch")
     {
         std::getline(split, address2, '/');
-        if (address2 == "path")
+        if (address2 == "")
         {
-            std::string dataStr = getWholeString(message);
-            if ((dataStr != "_reset") && (!fs::exists(dataStr)))
+            std::string dataStr = getWholeString(message) + ".fxp";
             {
-                std::ostringstream msg;
-                msg << "An OSC '/settings/path/...' message was received with a path which "
-                       "does "
-                       "not exist: the default path will not change.";
-                synth->storage.reportError(msg.str(), "Path does not exist.");
+                std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
+                strncpy(synth->patchid_file, dataStr.c_str(), FILENAME_MAX);
+                synth->has_patchid_file = true;
             }
-            else
-            {
-                fs::path ppath = fs::path(dataStr);
-                std::getline(split, address3, '/');
-                if (address3 == "scl")
-                {
-                    if (dataStr == "_reset")
-                    {
-                        ppath = synth->storage.datapath;
-                        ppath /= "tuning_library/SCL";
-                    }
-                    Surge::Storage::updateUserDefaultPath(&(synth->storage),
-                                                          Surge::Storage::LastSCLPath, ppath);
-                }
-                else if (address3 == "kbm")
-                {
-                    if (dataStr == "_reset")
-                    {
-                        ppath = synth->storage.datapath;
-                        ppath /= "tuning_library/KBM Concert Pitch";
-                    }
-                    Surge::Storage::updateUserDefaultPath(&(synth->storage),
-                                                          Surge::Storage::LastKBMPath, ppath);
-                }
-            }
+            synth->processAudioThreadOpsWhenAudioEngineUnavailable();
+        }
+        else if (address2 == "random")
+        {
+            synth->selectRandomPatch();
+        }
+        else if (address2 == "incr")
+        {
+            synth->jogPatch(true);
+        }
+        else if (address2 == "decr")
+        {
+            synth->jogPatch(false);
+        }
+        else if (address2 == "incr_category")
+        {
+            synth->jogCategory(true);
+        }
+        else if (address2 == "decr_category")
+        {
+            synth->jogCategory(false);
         }
     }
+
     else if (address1 == "tuning")
     {
         fs::path path = getWholeString(message);
         fs::path def_path;
 
         std::getline(split, address2, '/');
-        if (address2 == "scl")
+        // Tuning files path control
+        if (address2 == "path")
+        {
+            std::string dataStr = getWholeString(message);
+            if ((dataStr != "_reset") && (!fs::exists(dataStr)))
+            {
+                std::ostringstream msg;
+                msg << "An OSC 'tuning/path/...' message was received with a path which "
+                       "does not exist: the default path will not change.";
+                synth->storage.reportError(msg.str(), "Path does not exist.");
+                return;
+            }
+
+            fs::path ppath = fs::path(dataStr);
+            std::getline(split, address3, '/');
+
+            if (address3 == "scl")
+            {
+                if (dataStr == "_reset")
+                {
+                    ppath = synth->storage.datapath;
+                    ppath /= "tuning_library/SCL";
+                }
+                Surge::Storage::updateUserDefaultPath(&(synth->storage),
+                                                      Surge::Storage::LastSCLPath, ppath);
+            }
+            else if (address3 == "kbm")
+            {
+                if (dataStr == "_reset")
+                {
+                    ppath = synth->storage.datapath;
+                    ppath /= "tuning_library/KBM Concert Pitch";
+                }
+                Surge::Storage::updateUserDefaultPath(&(synth->storage),
+                                                      Surge::Storage::LastKBMPath, ppath);
+            }
+        }
+        // Tuning file selection
+        else if (address2 == "scl")
         {
             if (path.is_relative())
             {
@@ -196,12 +221,14 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             else
             {
                 def_path = path;
+                def_path += ".scl";
             }
 #ifdef DEBUG
             std::cout << "scl_path: " << def_path << std::endl;
 #endif
             synth->storage.loadTuningFromSCL(def_path);
         }
+        // KBM mapping file selection
         else if (address2 == "kbm")
         {
             if (path.is_relative())
@@ -215,6 +242,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             else
             {
                 def_path = path;
+                def_path += ".kbm";
             }
             synth->storage.loadMappingFromKBM(def_path);
         }

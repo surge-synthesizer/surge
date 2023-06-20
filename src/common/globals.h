@@ -93,5 +93,6 @@ const int N_INPUTS = 2;
 
 const int DEFAULT_POLYLIMIT = 16;
 
-const int DEFAULT_OSC_PORT = 53280;
+const int DEFAULT_OSC_PORT_IN = 53280;
+const int DEFAULT_OSC_PORT_OUT = 53281;
 #endif // SURGE_SRC_COMMON_GLOBALS_H

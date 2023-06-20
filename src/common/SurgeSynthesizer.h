@@ -36,6 +36,7 @@ struct QuadFilterChainState;
 #include <atomic>
 #include <cstdio>
 #include <bitset>
+#include <vector>
 
 struct timedata
 {
@@ -409,6 +410,19 @@ class alignas(16) SurgeSynthesizer
     void updateUsedState();
     void prepareModsourceDoProcess(int scenemask);
     unsigned int saveRaw(void **data);
+
+    // ----  'patch loaded' listener(s) ----
+    // Listeners are notified whenever a patch changes, with the path of the new patch.
+    // Listeners should do any significant work on their own thread; for example, the OSC
+    // patchLoadedListener calls OSCSender::send(), which runs on a juce::MessageManager thread.
+    //
+    // Be sure to delete any added listeners in the desctructor of the class that added them.
+    std::unordered_map<std::string, std::function<void(const fs::path &)>> patchLoadedListeners;
+    void addPatchLoadedListener(std::string key, std::function<void(const fs::path &)> const &l)
+    {
+        patchLoadedListeners.insert({key, l});
+    }
+    void deletePatchLoadedListener(std::string key) { patchLoadedListeners.erase(key); }
 
     // synth -> editor variables
     bool refresh_editor, patch_loaded;
