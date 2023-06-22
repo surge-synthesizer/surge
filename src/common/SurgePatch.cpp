@@ -100,6 +100,8 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
     splitpoint.val.i = 60;
     volume.val.f = 0;
 
+#define LABEL_SIZE 32
+
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
         param_ptr.push_back(this->fx[fx].type.assign(
@@ -109,13 +111,11 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         {
             auto conn = Surge::Skin::Connector::connectorByID("fx.param_" + std::to_string(p + 1));
 
-#define LABEL_SIZE 32
-            char label[LABEL_SIZE];
-            snprintf(label, LABEL_SIZE, "p%i", p);
-            char dawlabel[LABEL_SIZE];
-            snprintf(dawlabel, LABEL_SIZE, "Param %i", p + 1);
+            std::string label = fmt::format("p{:i}", p);
+            std::string dawlabel = fmt::format("Param {:i}", p + 1);
+
             param_ptr.push_back(this->fx[fx].p[p].assign(
-                p_id.next(), 0, label, dawlabel,
+                p_id.next(), 0, label.c_str(), dawlabel.c_str(),
                 fmt::format("{}/param{}", fxslot_shortoscname[fx], p + 1), ct_none, conn, 0, cg_FX,
                 fx, true, kHorizontal | kHide | ((fx == 0) ? kEasy : 0)));
         }
@@ -176,10 +176,10 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
             for (int i = 0; i < n_osc_params; i++)
             {
-                char label[LABEL_SIZE];
-                snprintf(label, LABEL_SIZE, "param%i", i);
+                std::string label = fmt::format("param{:i}", i);
+
                 a->push_back(scene[sc].osc[osc].p[i].assign(
-                    p_id.next(), id_s++, label, "-",
+                    p_id.next(), id_s++, label.c_str(), "-",
                     fmt::format("{:c}/osc/{}/param{}", 'a' + sc, osc + 1, i + 1), ct_none,
                     Surge::Skin::Connector::connectorByID("osc.param_" + std::to_string(i + 1)),
                     sc_id, cg_OSC, osc, true, ((i < 6) ? sceasy : 0)));
@@ -548,85 +548,98 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
         for (int l = 0; l < n_lfos; l++)
         {
-            char label[LABEL_SIZE];
             const int lid = (l % n_lfos_voice) + 1;
             std::string lt = (l < n_lfos_voice) ? "vlfo" : "slfo";
+            std::string label;
 
-            snprintf(label, LABEL_SIZE, "lfo%i_shape", l);
+            label = fmt::format("lfo{:i}_shape", l);
+
             a->push_back(scene[sc].lfo[l].shape.assign(
-                p_id.next(), id_s++, label, "Type",
+                p_id.next(), id_s++, label.c_str(), "Type",
                 fmt::format("{:c}/{}/{}/type", 'a' + sc, lt, lid), ct_lfotype,
                 Surge::Skin::LFO::shape, sc_id, cg_LFO, ms_lfo1 + l));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_rate", l);
+            label = fmt::format("lfo{:i}_rate", l);
+
             a->push_back(scene[sc].lfo[l].rate.assign(
-                p_id.next(), id_s++, label, "Rate",
+                p_id.next(), id_s++, label.c_str(), "Rate",
                 fmt::format("{:c}/{}/{}/rate", 'a' + sc, lt, lid), ct_lforate_deactivatable,
                 Surge::Skin::LFO::rate, sc_id, cg_LFO, ms_lfo1 + l, true, sceasy, false));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_phase", l);
+            label = fmt::format("lfo{:i}_phase", l);
+
             a->push_back(scene[sc].lfo[l].start_phase.assign(
-                p_id.next(), id_s++, label, "Phase / Shuffle",
+                p_id.next(), id_s++, label.c_str(), "Phase / Shuffle",
                 fmt::format("{:c}/{}/{}/phase", 'a' + sc, lt, lid), ct_lfophaseshuffle,
                 Surge::Skin::LFO::phase, sc_id, cg_LFO, ms_lfo1 + l, true));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_magnitude", l);
+            label = fmt::format("lfo{:i}_magnitude", l);
+
             a->push_back(scene[sc].lfo[l].magnitude.assign(
-                p_id.next(), id_s++, label, "Amplitude",
+                p_id.next(), id_s++, label.c_str(), "Amplitude",
                 fmt::format("{:c}/{}/{}/amplitude", 'a' + sc, lt, lid), ct_lfoamplitude,
                 Surge::Skin::LFO::amplitude, sc_id, cg_LFO, ms_lfo1 + l, true, sceasy));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_deform", l);
+            label = fmt::format("lfo{:i}_deform", l);
+
             a->push_back(scene[sc].lfo[l].deform.assign(
-                p_id.next(), id_s++, label, "Deform",
+                p_id.next(), id_s++, label.c_str(), "Deform",
                 fmt::format("{:c}/{}/{}/deform", 'a' + sc, lt, lid), ct_lfodeform,
                 Surge::Skin::LFO::deform, sc_id, cg_LFO, ms_lfo1 + l, true));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_trigmode", l);
+            label = fmt::format("lfo{:i}_trigmode", l);
+
             a->push_back(scene[sc].lfo[l].trigmode.assign(
-                p_id.next(), id_s++, label, "Trigger Mode",
+                p_id.next(), id_s++, label.c_str(), "Trigger Mode",
                 fmt::format("{:c}/{}/{}/trigger_mode", 'a' + sc, lt, lid), ct_lfotrigmode,
                 Surge::Skin::LFO::trigger_mode, sc_id, cg_LFO, ms_lfo1 + l, false, kNoPopup));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_unipolar", l);
+            label = fmt::format("lfo{:i}_unipolar", l);
+
             a->push_back(scene[sc].lfo[l].unipolar.assign(
-                p_id.next(), id_s++, label, "Unipolar",
+                p_id.next(), id_s++, label.c_str(), "Unipolar",
                 fmt::format("{:c}/{}/{}/unipolar", 'a' + sc, lt, lid), ct_bool_unipolar,
                 Surge::Skin::LFO::unipolar, sc_id, cg_LFO, ms_lfo1 + l, false));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_delay", l);
+            label = fmt::format("lfo{:i}_delay", l);
+
             a->push_back(scene[sc].lfo[l].delay.assign(
-                p_id.next(), id_s++, label, "Delay",
+                p_id.next(), id_s++, label.c_str(), "Delay",
                 fmt::format("{:c}/{}/{}/eg/delay", 'a' + sc, lt, lid), ct_envtime_deactivatable,
                 Surge::Skin::LFO::delay, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_attack", l);
+            label = fmt::format("lfo{:i}_attack", l);
+
             a->push_back(scene[sc].lfo[l].attack.assign(
-                p_id.next(), id_s++, label, "Attack",
+                p_id.next(), id_s++, label.c_str(), "Attack",
                 fmt::format("{:c}/{}/{}/eg/attack", 'a' + sc, lt, lid), ct_envtime,
                 Surge::Skin::LFO::attack, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_hold", l);
+            label = fmt::format("lfo{:i}_hold", l);
+
             a->push_back(scene[sc].lfo[l].hold.assign(
-                p_id.next(), id_s++, label, "Hold",
+                p_id.next(), id_s++, label.c_str(), "Hold",
                 fmt::format("{:c}/{}/{}/eg/hold", 'a' + sc, lt, lid), ct_envtime,
                 Surge::Skin::LFO::hold, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_decay", l);
+            label = fmt::format("lfo{:i}_decay", l);
+
             a->push_back(scene[sc].lfo[l].decay.assign(
-                p_id.next(), id_s++, label, "Decay",
+                p_id.next(), id_s++, label.c_str(), "Decay",
                 fmt::format("{:c}/{}/{}/eg/decay", 'a' + sc, lt, lid), ct_envtime,
                 Surge::Skin::LFO::decay, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_sustain", l);
+            label = fmt::format("lfo{:i}_sustain", l);
+
             a->push_back(scene[sc].lfo[l].sustain.assign(
-                p_id.next(), id_s++, label, "Sustain",
+                p_id.next(), id_s++, label.c_str(), "Sustain",
                 fmt::format("{:c}/{}/{}/eg/sustain", 'a' + sc, lt, lid), ct_percent,
                 Surge::Skin::LFO::sustain, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
 
-            snprintf(label, LABEL_SIZE, "lfo%i_release", l);
+            label = fmt::format("lfo{:i}_release", l);
+
             a->push_back(scene[sc].lfo[l].release.assign(
-                p_id.next(), id_s++, label, "Release",
+                p_id.next(), id_s++, label.c_str(), "Release",
                 fmt::format("{:c}/{}/{}/eg/release", 'a' + sc, lt, lid), ct_envtime_lfodecay,
                 Surge::Skin::LFO::release, sc_id, cg_LFO, ms_lfo1 + l, true, kMini));
         }
@@ -701,6 +714,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
             {
                 snprintf(res, TXT_SIZE, "Phase/Shuffle");
             }
+
             return res;
         }
     } lfoPhaseName;
