@@ -40,6 +40,7 @@ struct Alert : public juce::Component,
     std::string title, label;
     std::unique_ptr<Surge::Widgets::SurgeTextButton> okButton;
     std::unique_ptr<Surge::Widgets::SurgeTextButton> cancelButton;
+    std::unique_ptr<juce::ToggleButton> toggleButton;
     void setWindowTitle(const std::string &t)
     {
         title = t;
@@ -51,8 +52,11 @@ struct Alert : public juce::Component,
         okButton->setButtonText(okText);
         cancelButton->setButtonText(cancelText);
     }
+    void addToggleButtonAndSetText(const std::string &t);
     std::function<void()> onOk;
     std::function<void()> onCancel;
+    std::function<void(bool)> onOkForToggleState;
+    std::function<void(bool)> onCancelForToggleState;
     void paint(juce::Graphics &g) override;
     void resized() override;
     void onSkinChanged() override;

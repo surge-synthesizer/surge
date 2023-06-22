@@ -845,10 +845,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::unique_ptr<Surge::Overlays::Alert> alert;
 
-    std::unique_ptr<juce::AlertWindow> okcWithToggleAlertWindow;
-    std::unique_ptr<juce::ToggleButton> okcWithToggleToggleButton;
-    std::function<void()> okcWithToggleCallback;
-
     enum AskAgainStates
     {
         DUNNO = 1,
