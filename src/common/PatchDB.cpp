@@ -60,7 +60,8 @@ struct Exception : public std::runtime_error
 
     const char *what() const noexcept override
     {
-        std::string msg = fmt::format("SQL Error[{:d}]: {:s}", rc, std::runtime_error::what());
+        static std::string msg =
+            fmt::format("SQL Error[{:d}]: {:s}", rc, std::runtime_error::what());
         return msg.c_str();
     }
 
@@ -78,7 +79,7 @@ struct LockedException : public Exception
 
     const char *what() const noexcept override
     {
-        std::string msg =
+        static std::string msg =
             fmt::format("SQL Locked Error[{:d}]: {:s}", rc, std::runtime_error::what());
         return msg.c_str();
     }
