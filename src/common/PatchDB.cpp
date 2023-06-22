@@ -27,8 +27,6 @@
 #include <chrono>
 #include <functional>
 
-#include <fmt/format.h>
-
 #include "sqlite3.h"
 #include "SurgeStorage.h"
 #include "DebugHelpers.h"
@@ -52,19 +50,16 @@ struct Exception : public std::runtime_error
     {
         Surge::Debug::stackTraceToStdout();
     }
-
     Exception(int rc, const std::string &msg) : std::runtime_error(msg), rc(rc)
     {
         Surge::Debug::stackTraceToStdout();
     }
-
     const char *what() const noexcept override
     {
-        static std::string msg =
-            fmt::format("SQL Error[{:d}]: {:s}", rc, std::runtime_error::what());
-        return msg.c_str();
+        static char msg[1024];
+        snprintf(msg, 1024, "SQL Error[%d]: %s", rc, std::runtime_error::what());
+        return msg;
     }
-
     int rc;
 };
 
@@ -74,16 +69,13 @@ struct LockedException : public Exception
     {
         // Surge::Debug::stackTraceToStdout();
     }
-
     LockedException(int rc, const std::string &msg) : Exception(rc, msg) {}
-
     const char *what() const noexcept override
     {
-        static std::string msg =
-            fmt::format("SQL Locked Error[{:d}]: {:s}", rc, std::runtime_error::what());
-        return msg.c_str();
+        static char msg[1024];
+        snprintf(msg, 1024, "SQL Locked Error[%d]: %s", rc, std::runtime_error::what());
+        return msg;
     }
-
     int rc;
 };
 
