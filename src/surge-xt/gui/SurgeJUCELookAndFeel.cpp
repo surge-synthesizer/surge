@@ -132,6 +132,10 @@ void SurgeJUCELookAndFeel::onSkinChanged()
               skin->getColor(Colors::VirtualKeyboard::OctaveJog::Background));
     setColour(MidiKeyboardComponent::upDownButtonArrowColourId,
               skin->getColor(Colors::VirtualKeyboard::OctaveJog::Arrow));
+
+    setColour(ToggleButton::textColourId, skin->getColor(Colors::Dialog::Label::Text));
+    setColour(ToggleButton::tickColourId, skin->getColor(Colors::Dialog::Checkbox::Tick));
+    setColour(ToggleButton::tickDisabledColourId, skin->getColor(Colors::Dialog::Checkbox::Border));
 }
 
 void SurgeJUCELookAndFeel::drawLabel(Graphics &graphics, Label &label)
@@ -473,4 +477,26 @@ void SurgeJUCELookAndFeel::drawPopupMenuSectionHeaderWithOptions(Graphics &graph
                                                                  const PopupMenu::Options &options)
 {
     LookAndFeel_V2::drawPopupMenuSectionHeaderWithOptions(graphics, area, sectionName, options);
+}
+
+void SurgeJUCELookAndFeel::drawToggleButton(Graphics &g, ToggleButton &button,
+                                            bool shouldDrawButtonAsHighlighted,
+                                            bool shouldDrawButtonAsDown)
+{
+    auto tickWidth = jmin(15.0f, (float)button.getHeight() * 0.75f) * 1.2f;
+
+    drawTickBox(g, button, 2.0f, ((float)button.getHeight() - tickWidth) * 0.5f, tickWidth,
+                tickWidth, button.getToggleState(), button.isEnabled(),
+                shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+
+    g.setColour(button.findColour(ToggleButton::textColourId));
+    g.setFont(skin->fontManager->getLatoAtSize(9));
+
+    if (!button.isEnabled())
+        g.setOpacity(0.5f);
+
+    g.drawFittedText(
+        button.getButtonText(),
+        button.getLocalBounds().withTrimmedLeft(roundToInt(tickWidth) + 10).withTrimmedRight(2),
+        Justification::centredLeft, 10);
 }

@@ -3660,23 +3660,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     {
         if (MTS_HasIPC())
         {
-            tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, []() {
-                auto cb = juce::ModalCallbackFunction::create([](int okcs) {
-                    if (okcs)
-                    {
-                        MTS_Reinitialize();
-                    }
-                });
-
+            tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, [this]() {
                 std::string msg =
                     "Reinitializing MTS will disconnect all clients, including "
                     "this one, and will generally require you to restart your DAW session, "
                     "but it will clear up after particularly nasty crashes or IPC issues. "
                     "Are you sure you want to do this?";
-
-                juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon,
-                                                   "Reinitialize MTS-ESP", msg, "Yes", "No",
-                                                   nullptr, cb);
+                alertYesNo("Reinitialize MTS-ESP", msg, MTS_Reinitialize);
             });
         }
     }
@@ -8313,13 +8303,6 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     const ::std::string &title, const std::string &msg, Surge::Storage::DefaultKey dontAskAgainKey,
     std::function<void()> okCallback, std::string ynMessage, AskAgainStates askAgainDef)
 {
-    if (okcWithToggleAlertWindow)
-    {
-        // This is not re-entrant, sorry
-        jassertfalse;
-        return false;
-    }
-
     auto bypassed =
         Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, askAgainDef);
 
@@ -8334,52 +8317,30 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
         return true;
     }
 
-    auto &lf = frame->getLookAndFeel();
-
-    okcWithToggleCallback = std::move(okCallback);
-    okcWithToggleAlertWindow.reset(lf.createAlertWindow(title, msg, "OK", "Cancel", "",
-                                                        juce::AlertWindow::NoIcon, 2, nullptr));
-
-    auto cb = std::make_unique<juce::ToggleButton>(ynMessage);
-
-    cb->setName("");
-    cb->centreWithSize(400, 20);
-    cb->setColour(juce::ToggleButton::textColourId,
-                  currentSkin->getColor(Colors::Dialog::Label::Text));
-    cb->setColour(juce::ToggleButton::tickColourId,
-                  currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
-    cb->setColour(juce::ToggleButton::tickDisabledColourId,
-                  currentSkin->getColor(Colors::Dialog::Checkbox::Border));
-
-    okcWithToggleAlertWindow->addCustomComponent(cb.get());
-    okcWithToggleToggleButton = std::move(cb);
-    okcWithToggleAlertWindow->setAlwaysOnTop(true);
-    okcWithToggleAlertWindow->enterModalState(
-        true, juce::ModalCallbackFunction::create([this, dontAskAgainKey](int isOK) {
-            if (okcWithToggleToggleButton->getToggleState())
-            {
-                if (isOK == 1)
-                {
-                    Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey,
-                                                           ALWAYS);
-                }
-                else
-                {
-                    Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey,
-                                                           NEVER);
-                }
-            }
-
-            if (isOK == 1)
-            {
-                okcWithToggleCallback();
-            }
-
-            okcWithToggleAlertWindow.reset(nullptr);
-            okcWithToggleToggleButton.reset(nullptr);
-        }),
-        false);
-
+    alert = std::make_unique<Surge::Overlays::Alert>();
+    alert->setSkin(currentSkin, bitmapStore);
+    alert->setDescription(title);
+    alert->setWindowTitle(title);
+    addAndMakeVisibleWithTracking(frame.get(), *alert);
+    alert->setLabel(msg);
+    alert->addToggleButtonAndSetText(ynMessage);
+    alert->setButtonText("OK", "Cancel");
+    alert->onOkForToggleState = [this, dontAskAgainKey, okCallback](bool dontAskAgain) {
+        if (dontAskAgain)
+        {
+            Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey, ALWAYS);
+        }
+        okCallback();
+    };
+    alert->onCancelForToggleState = [this, dontAskAgainKey](bool dontAskAgain) {
+        if (dontAskAgain)
+        {
+            Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey, NEVER);
+        }
+    };
+    alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
+    alert->setVisible(true);
+    alert->toFront(true);
     return false;
 }
 

@@ -44,15 +44,27 @@ Alert::Alert()
 
 Alert::~Alert() {}
 
+void Alert::addToggleButtonAndSetText(const std::string &t)
+{
+    toggleButton = std::make_unique<juce::ToggleButton>(t);
+    addAndMakeVisible(*toggleButton);
+}
+
 juce::Rectangle<int> Alert::getDisplayRegion()
 {
+    if (toggleButton)
+    {
+        return juce::Rectangle<int>(0, 0, 360, 111).withCentre(getBounds().getCentre());
+    }
     return juce::Rectangle<int>(0, 0, 360, 95).withCentre(getBounds().getCentre());
 }
 
 void Alert::paint(juce::Graphics &g)
 {
     auto fullRect = getDisplayRegion();
+
     paintOverlayWindow(g, skin, associatedBitmapStore, fullRect, title);
+
     g.setColour(skin->getColor(Colors::Dialog::Label::Text));
     g.setFont(skin->fontManager->getLatoAtSize(9));
     g.drawFittedText(label, fullRect.withTrimmedTop(18).reduced(6), juce::Justification::centredTop,
@@ -61,17 +73,22 @@ void Alert::paint(juce::Graphics &g)
 
 void Alert::resized()
 {
-    auto margin = 2, btnHeight = 17, btnWidth = 50;
+    auto margin = 2, btnHeight = 17, btnWidth = 50, buttonVertTranslate = toggleButton ? 86 : 70;
 
     auto fullRect = getDisplayRegion();
     auto dialogCenter = fullRect.getWidth() / 2;
 
-    auto buttonRow = fullRect.withHeight(btnHeight).translated(0, 70);
+    auto buttonRow = fullRect.withHeight(btnHeight).translated(0, buttonVertTranslate);
     auto okRect = buttonRow.withTrimmedLeft(dialogCenter - btnWidth - margin).withWidth(btnWidth);
     auto canRect = buttonRow.withTrimmedLeft(dialogCenter + margin).withWidth(btnWidth);
 
     okButton->setBounds(okRect);
     cancelButton->setBounds(canRect);
+
+    if (toggleButton)
+    {
+        toggleButton->setBounds(fullRect.withHeight(16).translated(10, 70));
+    }
 }
 
 void Alert::onSkinChanged()
@@ -84,14 +101,29 @@ void Alert::onSkinChanged()
 
 void Alert::buttonClicked(juce::Button *button)
 {
-    if (button == okButton.get())
+    if (!toggleButton)
     {
-        onOk();
+        if (button == okButton.get())
+        {
+            onOk();
+        }
+        else if (button == cancelButton.get() && onCancel)
+        {
+            onCancel();
+        }
     }
-    else if (button == cancelButton.get() && onCancel)
+    else
     {
-        onCancel();
+        if (button == okButton.get())
+        {
+            onOkForToggleState(toggleButton->getToggleState());
+        }
+        else if (button == cancelButton.get() && onCancelForToggleState)
+        {
+            onCancelForToggleState(toggleButton->getToggleState());
+        }
     }
+
     setVisible(false);
 }
 } // namespace Overlays
