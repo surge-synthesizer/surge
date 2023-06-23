@@ -77,13 +77,22 @@ void Alert::resized()
 
     auto fullRect = getDisplayRegion();
     auto dialogCenter = fullRect.getWidth() / 2;
-
     auto buttonRow = fullRect.withHeight(btnHeight).translated(0, buttonVertTranslate);
-    auto okRect = buttonRow.withTrimmedLeft(dialogCenter - btnWidth - margin).withWidth(btnWidth);
-    auto canRect = buttonRow.withTrimmedLeft(dialogCenter + margin).withWidth(btnWidth);
 
-    okButton->setBounds(okRect);
-    cancelButton->setBounds(canRect);
+    if (style == AlertButtonStyle::OK)
+    {
+        auto okRect = buttonRow.withTrimmedLeft(dialogCenter - btnWidth / 2).withWidth(btnWidth);
+        okButton->setBounds(okRect);
+    }
+    else
+    {
+        auto okRect =
+            buttonRow.withTrimmedLeft(dialogCenter - btnWidth - margin).withWidth(btnWidth);
+        auto canRect = buttonRow.withTrimmedLeft(dialogCenter + margin).withWidth(btnWidth);
+
+        okButton->setBounds(okRect);
+        cancelButton->setBounds(canRect);
+    }
 
     if (toggleButton)
     {
@@ -99,11 +108,36 @@ void Alert::onSkinChanged()
     repaint();
 }
 
+void Alert::setButtonStyle(AlertButtonStyle s)
+{
+    style = s;
+    switch (style)
+    {
+    case AlertButtonStyle::OK_CANCEL:
+    {
+        okButton->setButtonText("OK");
+        cancelButton->setButtonText("Cancel");
+        break;
+    }
+    case AlertButtonStyle::YES_NO:
+    {
+        okButton->setButtonText("Yes");
+        cancelButton->setButtonText("No");
+        break;
+    }
+    case AlertButtonStyle::OK:
+    {
+        okButton->setButtonText("OK");
+        break;
+    }
+    }
+}
+
 void Alert::buttonClicked(juce::Button *button)
 {
     if (!toggleButton)
     {
-        if (button == okButton.get())
+        if (button == okButton.get() && onOk)
         {
             onOk();
         }
@@ -114,7 +148,7 @@ void Alert::buttonClicked(juce::Button *button)
     }
     else
     {
-        if (button == okButton.get())
+        if (button == okButton.get() && onOkForToggleState)
         {
             onOkForToggleState(toggleButton->getToggleState());
         }

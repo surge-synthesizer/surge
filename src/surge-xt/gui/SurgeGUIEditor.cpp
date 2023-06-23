@@ -570,7 +570,7 @@ void SurgeGUIEditor::idle()
             }
             else
             {
-                juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, title, msg);
+                messageBox(title, msg);
             }
         }
     }
@@ -5645,9 +5645,9 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->grabFocus();
 }
 
-void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
-                                   std::function<void()> onOk, std::function<void()> onCancel,
-                                   AlertButtonStyle buttonStyle)
+void SurgeGUIEditor::alertBox(const std::string &title, const std::string &prompt,
+                              std::function<void()> onOk, std::function<void()> onCancel,
+                              Surge::Overlays::AlertButtonStyle buttonStyle)
 {
     alert = std::make_unique<Surge::Overlays::Alert>();
     alert->setSkin(currentSkin, bitmapStore);
@@ -5655,19 +5655,28 @@ void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &
     alert->setWindowTitle(title);
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(prompt);
-    if (buttonStyle == AlertButtonStyle::YES_NO)
-    {
-        alert->setButtonText("Yes", "No");
-    }
-    else
-    {
-        alert->setButtonText("OK", "Cancel");
-    }
+    alert->setButtonStyle(buttonStyle);
     alert->onOk = std::move(onOk);
     alert->onCancel = std::move(onCancel);
     alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
     alert->setVisible(true);
     alert->toFront(true);
+}
+
+void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
+                                   std::function<void()> onOk, std::function<void()> onCancel)
+{
+    alertBox(title, prompt, onOk, onCancel, Surge::Overlays::AlertButtonStyle::OK_CANCEL);
+}
+
+void SurgeGUIEditor::alertYesNo(const std::string &title, const std::string &prompt,
+                                std::function<void()> onOk, std::function<void()> onCancel)
+{
+    alertBox(title, prompt, onOk, onCancel, Surge::Overlays::AlertButtonStyle::YES_NO);
+}
+void SurgeGUIEditor::messageBox(const std::string &title, const std::string &prompt)
+{
+    alertBox(title, prompt, nullptr, nullptr, Surge::Overlays::AlertButtonStyle::OK);
 }
 
 bool SurgeGUIEditor::modSourceButtonDraggedOver(Surge::Widgets::ModulationSourceButton *msb,
@@ -8324,7 +8333,7 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(msg);
     alert->addToggleButtonAndSetText(ynMessage);
-    alert->setButtonText("OK", "Cancel");
+    alert->setButtonStyle(Surge::Overlays::AlertButtonStyle::OK_CANCEL);
     alert->onOkForToggleState = [this, dontAskAgainKey, okCallback](bool dontAskAgain) {
         if (dontAskAgain)
         {

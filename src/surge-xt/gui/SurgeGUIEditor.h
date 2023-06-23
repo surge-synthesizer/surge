@@ -86,7 +86,7 @@ struct AboutScreen;
 struct TypeinParamEditor;
 struct MiniEdit;
 struct Alert;
-
+enum AlertButtonStyle;
 struct OverlayWrapper;
 struct PatchStoreDialog;
 } // namespace Overlays
@@ -829,19 +829,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setUseKeyboardShortcuts(bool b);
     void toggleUseKeyboardShortcuts();
 
-    enum AlertButtonStyle
-    {
-        OK_CANCEL,
-        YES_NO
-    };
+    void alertBox(const std::string &title, const std::string &prompt, std::function<void()> onOk,
+                  std::function<void()> onCancel, Surge::Overlays::AlertButtonStyle buttonStyle);
+
     void alertOKCancel(const std::string &title, const std::string &prompt,
-                       std::function<void()> onOk, std::function<void()> onCancel = nullptr,
-                       AlertButtonStyle buttonStyle = OK_CANCEL);
+                       std::function<void()> onOk, std::function<void()> onCancel = nullptr);
     void alertYesNo(const std::string &title, const std::string &prompt, std::function<void()> onOk,
-                    std::function<void()> onCancel = nullptr)
-    {
-        alertOKCancel(title, prompt, onOk, onCancel, YES_NO);
-    }
+                    std::function<void()> onCancel = nullptr);
+    void messageBox(const std::string &title, const std::string &prompt);
 
     std::unique_ptr<Surge::Overlays::Alert> alert;
 

@@ -29,6 +29,13 @@ namespace Surge
 namespace Overlays
 {
 
+enum AlertButtonStyle
+{
+    OK_CANCEL,
+    YES_NO,
+    OK
+};
+
 struct Alert : public juce::Component,
                public Surge::GUI::SkinConsumingComponent,
                public juce::Button::Listener
@@ -41,17 +48,14 @@ struct Alert : public juce::Component,
     std::unique_ptr<Surge::Widgets::SurgeTextButton> okButton;
     std::unique_ptr<Surge::Widgets::SurgeTextButton> cancelButton;
     std::unique_ptr<juce::ToggleButton> toggleButton;
+    AlertButtonStyle style;
     void setWindowTitle(const std::string &t)
     {
         title = t;
         setTitle(title);
     }
     void setLabel(const std::string &t) { label = t; }
-    void setButtonText(const juce::String &okText, const juce::String &cancelText)
-    {
-        okButton->setButtonText(okText);
-        cancelButton->setButtonText(cancelText);
-    }
+    void setButtonStyle(AlertButtonStyle s);
     void addToggleButtonAndSetText(const std::string &t);
     std::function<void()> onOk;
     std::function<void()> onCancel;

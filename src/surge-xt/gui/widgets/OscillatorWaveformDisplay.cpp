@@ -653,9 +653,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
         if (!fn.empty())
         {
-            std::string message = "Wavetable was successfully exported to\n" + fn + "!";
-            juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, "Wavetable Export",
-                                                   message);
+            sge->messageBox("Wavetable Export",
+                            "Wavetable was successfully exported to\n" + fn + "!");
         }
     };
 
