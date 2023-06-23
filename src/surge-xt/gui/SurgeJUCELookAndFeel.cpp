@@ -132,6 +132,10 @@ void SurgeJUCELookAndFeel::onSkinChanged()
               skin->getColor(Colors::VirtualKeyboard::OctaveJog::Background));
     setColour(MidiKeyboardComponent::upDownButtonArrowColourId,
               skin->getColor(Colors::VirtualKeyboard::OctaveJog::Arrow));
+
+    setColour(ToggleButton::textColourId, skin->getColor(Colors::Dialog::Label::Text));
+    setColour(ToggleButton::tickColourId, skin->getColor(Colors::Dialog::Checkbox::Tick));
+    setColour(ToggleButton::tickDisabledColourId, skin->getColor(Colors::Dialog::Checkbox::Border));
 }
 
 void SurgeJUCELookAndFeel::drawLabel(Graphics &graphics, Label &label)

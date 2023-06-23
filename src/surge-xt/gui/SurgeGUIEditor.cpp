@@ -3660,23 +3660,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     {
         if (MTS_HasIPC())
         {
-            tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, []() {
-                auto cb = juce::ModalCallbackFunction::create([](int okcs) {
-                    if (okcs)
-                    {
-                        MTS_Reinitialize();
-                    }
-                });
-
+            tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, [this]() {
                 std::string msg =
                     "Reinitializing MTS will disconnect all clients, including "
                     "this one, and will generally require you to restart your DAW session, "
                     "but it will clear up after particularly nasty crashes or IPC issues. "
                     "Are you sure you want to do this?";
-
-                juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon,
-                                                   "Reinitialize MTS-ESP", msg, "Yes", "No",
-                                                   nullptr, cb);
+                alertYesNo("Reinitialize MTS-ESP", msg, MTS_Reinitialize);
             });
         }
     }

@@ -69,13 +69,6 @@ void Alert::paint(juce::Graphics &g)
     g.setFont(skin->fontManager->getLatoAtSize(9));
     g.drawFittedText(label, fullRect.withTrimmedTop(18).reduced(6), juce::Justification::centredTop,
                      4);
-
-    toggleButton->setColour(juce::ToggleButton::textColourId,
-                            skin->getColor(Colors::Dialog::Label::Text));
-    toggleButton->setColour(juce::ToggleButton::tickColourId,
-                            skin->getColor(Colors::Dialog::Checkbox::Tick));
-    toggleButton->setColour(juce::ToggleButton::tickDisabledColourId,
-                            skin->getColor(Colors::Dialog::Checkbox::Border));
 }
 
 void Alert::resized()
