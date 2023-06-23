@@ -79,7 +79,7 @@ void Alert::resized()
     auto dialogCenter = fullRect.getWidth() / 2;
     auto buttonRow = fullRect.withHeight(btnHeight).translated(0, buttonVertTranslate);
 
-    if (style == AlertButtonStyle::OK)
+    if (singleButton)
     {
         auto okRect = buttonRow.withTrimmedLeft(dialogCenter - btnWidth / 2).withWidth(btnWidth);
         okButton->setBounds(okRect);
@@ -106,31 +106,6 @@ void Alert::onSkinChanged()
     cancelButton->setSkin(skin, associatedBitmapStore);
 
     repaint();
-}
-
-void Alert::setButtonStyle(AlertButtonStyle s)
-{
-    style = s;
-    switch (style)
-    {
-    case AlertButtonStyle::OK_CANCEL:
-    {
-        okButton->setButtonText("OK");
-        cancelButton->setButtonText("Cancel");
-        break;
-    }
-    case AlertButtonStyle::YES_NO:
-    {
-        okButton->setButtonText("Yes");
-        cancelButton->setButtonText("No");
-        break;
-    }
-    case AlertButtonStyle::OK:
-    {
-        okButton->setButtonText("OK");
-        break;
-    }
-    }
 }
 
 void Alert::buttonClicked(juce::Button *button)
