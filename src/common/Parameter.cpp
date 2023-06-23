@@ -2386,6 +2386,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 iw->valminus = res->valDown;
                 iw->dvalplus = res->changeUp;
                 iw->dvalminus = res->changeDown;
+
+                strncpy(txt, res->singleLineModulationSummary.c_str(), TXT_SIZE - 1);
                 return;
             }
         }
