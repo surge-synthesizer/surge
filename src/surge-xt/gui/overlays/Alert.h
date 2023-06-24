@@ -41,16 +41,22 @@ struct Alert : public juce::Component,
     std::unique_ptr<Surge::Widgets::SurgeTextButton> okButton;
     std::unique_ptr<Surge::Widgets::SurgeTextButton> cancelButton;
     std::unique_ptr<juce::ToggleButton> toggleButton;
+    bool singleButton = false;
     void setWindowTitle(const std::string &t)
     {
         title = t;
         setTitle(title);
     }
     void setLabel(const std::string &t) { label = t; }
-    void setButtonText(const juce::String &okText, const juce::String &cancelText)
+    void setSingleButtonText(const std::string ok)
     {
-        okButton->setButtonText(okText);
-        cancelButton->setButtonText(cancelText);
+        okButton->setButtonText(ok);
+        singleButton = true;
+    }
+    void setOkCancelButtonTexts(const std::string &ok, const std::string &cancel)
+    {
+        okButton->setButtonText(ok);
+        cancelButton->setButtonText(cancel);
     }
     void addToggleButtonAndSetText(const std::string &t);
     std::function<void()> onOk;

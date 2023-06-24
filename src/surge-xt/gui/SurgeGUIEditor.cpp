@@ -570,7 +570,7 @@ void SurgeGUIEditor::idle()
             }
             else
             {
-                juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, title, msg);
+                messageBox(title, msg);
             }
         }
     }
@@ -5645,9 +5645,9 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->grabFocus();
 }
 
-void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
-                                   std::function<void()> onOk, std::function<void()> onCancel,
-                                   AlertButtonStyle buttonStyle)
+void SurgeGUIEditor::alertBox(const std::string &title, const std::string &prompt,
+                              std::function<void()> onOk, std::function<void()> onCancel,
+                              AlertButtonStyle buttonStyle)
 {
     alert = std::make_unique<Surge::Overlays::Alert>();
     alert->setSkin(currentSkin, bitmapStore);
@@ -5655,14 +5655,26 @@ void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &
     alert->setWindowTitle(title);
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(prompt);
-    if (buttonStyle == AlertButtonStyle::YES_NO)
+
+    switch (buttonStyle)
     {
-        alert->setButtonText("Yes", "No");
-    }
-    else
+    case AlertButtonStyle::OK_CANCEL:
     {
-        alert->setButtonText("OK", "Cancel");
+        alert->setOkCancelButtonTexts("OK", "Cancel");
+        break;
     }
+    case AlertButtonStyle::YES_NO:
+    {
+        alert->setOkCancelButtonTexts("Yes", "No");
+        break;
+    }
+    case AlertButtonStyle::OK:
+    {
+        alert->setSingleButtonText("OK");
+        break;
+    }
+    }
+
     alert->onOk = std::move(onOk);
     alert->onCancel = std::move(onCancel);
     alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
@@ -8324,7 +8336,7 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(msg);
     alert->addToggleButtonAndSetText(ynMessage);
-    alert->setButtonText("OK", "Cancel");
+    alert->setOkCancelButtonTexts("OK", "Cancel");
     alert->onOkForToggleState = [this, dontAskAgainKey, okCallback](bool dontAskAgain) {
         if (dontAskAgain)
         {
