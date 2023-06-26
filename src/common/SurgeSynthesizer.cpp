@@ -2241,35 +2241,12 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         // int cmode = channelState[channel].nrpn_last;
     }
 
-    for (int i = 0; i < n_customcontrollers; i++)
-    {
-        if (storage.controllers[i] == cc_encoded)
-        {
-            ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + i])
-                ->set_target01(0, fval);
-        }
-    }
-
     if (learn_param_from_cc >= 0)
     {
         if (!disallowedLearnCCs.test(cc))
         {
-            if (learn_param_from_cc < n_global_params)
-            {
-                storage.getPatch().param_ptr[learn_param_from_cc]->midictrl = cc_encoded;
-            }
-            else
-            {
-                int a = learn_param_from_cc;
-
-                if (learn_param_from_cc >= (n_global_params + n_scene_params))
-                {
-                    a -= n_scene_params;
-                }
-
-                storage.getPatch().param_ptr[a]->midictrl = cc_encoded;
-                storage.getPatch().param_ptr[a + n_scene_params]->midictrl = cc_encoded;
-            }
+            storage.getPatch().param_ptr[learn_param_from_cc]->midictrl = cc_encoded;
+            storage.getPatch().param_ptr[learn_param_from_cc]->midichan = channel;
 
             learn_param_from_cc = -1;
         }
@@ -2280,39 +2257,27 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         if (!disallowedLearnCCs.test(cc))
         {
             storage.controllers[learn_macro_from_cc] = cc_encoded;
+            storage.controllers_chan[learn_macro_from_cc] = channel;
+
             learn_macro_from_cc = -1;
         }
     }
 
-    for (int i = 0; i < n_global_params; i++)
+    for (int i = 0; i < n_customcontrollers; i++)
     {
-        if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded)
+        if (storage.controllers[i] == cc_encoded &&
+            (storage.controllers_chan[i] == channel || storage.controllers_chan[i] == -1))
         {
-            this->setParameterSmoothed(i, fval);
-            int j = 0;
-
-            while (j < 7)
-            {
-                if ((refresh_ctrl_queue[j] > -1) && (refresh_ctrl_queue[j] != i))
-                {
-                    j++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            refresh_ctrl_queue[j] = i;
-            refresh_ctrl_queue_value[j] = fval;
+            ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + i])
+                ->set_target01(0, fval);
         }
     }
 
-    int a = n_global_params + storage.getPatch().scene_active.val.i * n_scene_params;
-
-    for (int i = a; i < (a + n_scene_params); i++)
+    for (int i = 0; i < (n_global_params + (n_scene_params * n_scenes)); i++)
     {
-        if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded)
+        if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded &&
+            (storage.getPatch().param_ptr[i]->midichan == channel ||
+             storage.getPatch().param_ptr[i]->midichan == -1))
         {
             this->setParameterSmoothed(i, fval);
             int j = 0;

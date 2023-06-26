@@ -205,7 +205,7 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
 
         // select channel for MIDI learn submenu
         auto chanSub = juce::PopupMenu();
-        auto chanSubName = fmt::format("{}: {}", Surge::GUI::toOSCase("Assign to MIDI Channel"),
+        auto chanSubName = fmt::format("{}: {}", Surge::GUI::toOSCase("Use MIDI Channel"),
                                        learnChan == -1 ? "Omni" : std::to_string(learnChan + 1));
 
         chanSub.addItem("Omni", true, (learnChan == -1), [this]() {
