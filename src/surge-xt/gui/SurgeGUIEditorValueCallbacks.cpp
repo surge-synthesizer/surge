@@ -205,7 +205,7 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
 
         // select channel for MIDI learn submenu
         auto chanSub = juce::PopupMenu();
-        auto chanSubName = fmt::format("Use MIDI Channel: {}",
+        auto chanSubName = fmt::format("{}: {}", Surge::GUI::toOSCase("Assign to MIDI Channel"),
                                        learnChan == -1 ? "Omni" : std::to_string(learnChan + 1));
 
         chanSub.addItem("Omni", true, (learnChan == -1), [this]() {
@@ -223,7 +223,9 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                             });
         }
 
-        midiSub.addSubMenu(Surge::GUI::toOSCase(chanSubName), chanSub);
+        midiSub.addSeparator();
+
+        midiSub.addSubMenu(chanSubName, chanSub);
 
         parentMenu.addSubMenu(Surge::GUI::toOSCase("Assign to MIDI CC"), midiSub);
     }
@@ -311,18 +313,19 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
     {
         if (synth->storage.controllers[idx] >= 0)
         {
-            std::string txt = fmt::format("Clear Learned MIDI ({} ",
-                                          decodeControllerID(synth->storage.controllers[idx]));
+            const int ch = synth->storage.controllers_chan[idx];
+            std::string chtxt = ch == -1 ? "Omni" : fmt::format("Channel {:d}", ch + 1);
+            std::string txt =
+                fmt::format("{} ({}, {})", Surge::GUI::toOSCase("Clear Learned MIDI"),
+                            decodeControllerID(synth->storage.controllers[idx]), chtxt);
 
-            parentMenu.addItem(
-                Surge::GUI::toOSCase(txt) + midicc_names[synth->storage.controllers[idx]] + ")",
-                [this, idx]() {
-                    synth->storage.controllers[idx] = -1;
-                    synth->storage.controllers_chan[idx] = -1;
+            parentMenu.addItem(txt, [this, idx]() {
+                synth->storage.controllers[idx] = -1;
+                synth->storage.controllers_chan[idx] = -1;
 
-                    synth->storage.getPatch().dawExtraState.customcontrol_map[idx] = -1;
-                    synth->storage.getPatch().dawExtraState.customcontrol_chan_map[idx] = -1;
-                });
+                synth->storage.getPatch().dawExtraState.customcontrol_map[idx] = -1;
+                synth->storage.getPatch().dawExtraState.customcontrol_chan_map[idx] = -1;
+            });
         }
 
         break;
@@ -331,28 +334,29 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
     {
         if (p->midictrl >= 0)
         {
-            std::string txt =
-                fmt::format("Clear Learned MIDI ({} ", decodeControllerID(p->midictrl));
+            const int ch = p->midichan;
+            std::string chtxt = ch == -1 ? "Omni" : fmt::format("Channel {:d}", ch + 1);
+            std::string txt = fmt::format("{} ({}, {})", Surge::GUI::toOSCase("Clear Learned MIDI"),
+                                          decodeControllerID(p->midictrl), chtxt);
 
-            parentMenu.addItem(
-                Surge::GUI::toOSCase(txt) + midicc_names[p->midictrl] + ")", [this, p, ptag]() {
-                    if (ptag < n_global_params)
-                    {
-                        p->midictrl = -1;
-                        p->midichan = -1;
+            parentMenu.addItem(txt, [this, p, ptag]() {
+                if (ptag < n_global_params)
+                {
+                    p->midictrl = -1;
+                    p->midichan = -1;
 
-                        synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
-                        synth->storage.getPatch().dawExtraState.midichan_map[ptag] = -1;
-                    }
-                    else
-                    {
-                        synth->storage.getPatch().param_ptr[ptag]->midictrl = -1;
-                        synth->storage.getPatch().param_ptr[ptag]->midichan = -1;
+                    synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
+                    synth->storage.getPatch().dawExtraState.midichan_map[ptag] = -1;
+                }
+                else
+                {
+                    synth->storage.getPatch().param_ptr[ptag]->midictrl = -1;
+                    synth->storage.getPatch().param_ptr[ptag]->midichan = -1;
 
-                        synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
-                        synth->storage.getPatch().dawExtraState.midichan_map[ptag] = -1;
-                    }
-                });
+                    synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
+                    synth->storage.getPatch().dawExtraState.midichan_map[ptag] = -1;
+                }
+            });
         }
 
         break;

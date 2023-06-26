@@ -1409,7 +1409,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         char *temp = (char *)malloc(datasize + 1);
         memcpy(temp, data, datasize);
         *(temp + datasize) = 0;
-        // std::cout << "XML DOC is " << temp << std::endl;
         doc.Parse(temp, nullptr, TIXML_ENCODING_LEGACY);
         free(temp);
     }
@@ -3104,10 +3103,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
                     ch = TINYXML_SAFE_TO_ELEMENT(ch->NextSibling("ch"));
                 }
-            }
-            else
-            {
-                dawExtraState.customcontrol_chan_map.clear();
             }
         }
     }

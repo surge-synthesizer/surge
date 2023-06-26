@@ -1993,7 +1993,7 @@ void SurgeStorage::load_midi_controllers()
                 getPatch().param_ptr[id]->midichan = -1;
 
                 // care for old MIDI config files - duplicate scene A assignment to scene B
-                if (id >= n_global_params)
+                if (id >= n_global_params && id < (n_global_params + n_scene_params))
                 {
                     getPatch().param_ptr[id + n_scene_params]->midictrl = ctrl;
                 }
@@ -2030,9 +2030,9 @@ void SurgeStorage::load_midi_controllers()
                 controllers_chan[id] = -1;
             }
         }
-    }
 
-    entry = TINYXML_SAFE_TO_ELEMENT(entry->NextSibling("entry"));
+        entry = TINYXML_SAFE_TO_ELEMENT(entry->NextSibling("entry"));
+    }
 }
 
 SurgeStorage::~SurgeStorage()
@@ -2397,7 +2397,7 @@ void SurgeStorage::loadMidiMappingByName(std::string name)
     auto doc = userMidiMappingsXMLByName[name];
     auto sm = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("surge-midi"));
 
-    // We can do revision stuff here later if we need to
+    // we can do revision stuff here later if we need to
     if (!sm)
     {
         // Invalid XML Document. Show an error?
@@ -2421,32 +2421,60 @@ void SurgeStorage::loadMidiMappingByName(std::string name)
 
         while (map)
         {
-            int i, c;
-            if (map->QueryIntAttribute("p", &i) == TIXML_SUCCESS &&
-                map->QueryIntAttribute("cc", &c) == TIXML_SUCCESS)
+            int i, c, ch;
+
+            if (map->QueryIntAttribute("p", &i) == TIXML_SUCCESS)
             {
-                getPatch().param_ptr[i]->midictrl = c;
-                if (i >= n_global_params)
+                if (map->QueryIntAttribute("cc", &c) == TIXML_SUCCESS)
                 {
-                    getPatch().param_ptr[i + n_scene_params]->midictrl = c;
+                    getPatch().param_ptr[i]->midictrl = c;
+                }
+
+                if (map->QueryIntAttribute("chan", &ch) == TIXML_SUCCESS)
+                {
+                    getPatch().param_ptr[i]->midichan = ch;
+                }
+                else
+                {
+                    // care for old MIDI config files - duplicate scene A assignment to scene B
+                    if (i >= n_global_params && i < (n_global_params + n_scene_params))
+                    {
+                        getPatch().param_ptr[i + n_scene_params]->midictrl = c;
+                    }
                 }
             }
+
             map = map->NextSiblingElement("map");
         }
     }
 
     auto cc = TINYXML_SAFE_TO_ELEMENT(sm->FirstChild("customctrl"));
+
     if (cc)
     {
         auto ctrl = cc->FirstChildElement("ctrl");
+
         while (ctrl)
         {
-            int i, cc;
-            if (ctrl->QueryIntAttribute("i", &i) == TIXML_SUCCESS &&
-                ctrl->QueryIntAttribute("cc", &cc) == TIXML_SUCCESS)
+            int i, cc, ch;
+
+            if (ctrl->QueryIntAttribute("i", &i) == TIXML_SUCCESS)
             {
-                controllers[i] = cc;
+                if (ctrl->QueryIntAttribute("cc", &cc) == TIXML_SUCCESS)
+                {
+                    controllers[i] = cc;
+                }
+
+                if (ctrl->QueryIntAttribute("chan", &ch) == TIXML_SUCCESS)
+                {
+                    controllers_chan[i] = ch;
+                }
+                else
+                {
+                    controllers_chan[i] = -1;
+                }
             }
+
             ctrl = ctrl->NextSiblingElement("ctrl");
         }
     }
@@ -2461,10 +2489,10 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
 
     // Build the XML here
 
-    // only store midictrl's for scene A (scene A -> scene B will be duplicated on load)
-    int n = n_global_params + n_scene_params;
+    int n = n_global_params + (n_scene_params * n_scenes);
 
     TiXmlElement mc("midictrl");
+
     for (int i = 0; i < n; i++)
     {
         if (getPatch().param_ptr[i]->midictrl >= 0)
@@ -2472,19 +2500,24 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
             TiXmlElement p("map");
             p.SetAttribute("p", i);
             p.SetAttribute("cc", getPatch().param_ptr[i]->midictrl);
+            p.SetAttribute("chan", getPatch().param_ptr[i]->midichan);
             mc.InsertEndChild(p);
         }
     }
+
     sm.InsertEndChild(mc);
 
     TiXmlElement cc("customctrl");
+
     for (int i = 0; i < n_customcontrollers; ++i)
     {
         TiXmlElement p("ctrl");
         p.SetAttribute("i", i);
         p.SetAttribute("cc", controllers[i]);
+        p.SetAttribute("chan", controllers_chan[i]);
         cc.InsertEndChild(p);
     }
+
     sm.InsertEndChild(cc);
 
     doc.InsertEndChild(sm);
