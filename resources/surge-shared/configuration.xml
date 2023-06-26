@@ -163,13 +163,13 @@
 </type>
 </fx>
 <customctrl>
-<entry p="0" ctrl="41"/>
-<entry p="1" ctrl="42"/>
-<entry p="2" ctrl="43"/>
-<entry p="3" ctrl="44"/>
-<entry p="4" ctrl="45"/>
-<entry p="5" ctrl="46"/>
-<entry p="6" ctrl="47"/>
-<entry p="7" ctrl="48"/>
+<entry p="0" ctrl="41" chan="-1"/>
+<entry p="1" ctrl="42" chan="-1"/>
+<entry p="2" ctrl="43" chan="-1"/>
+<entry p="3" ctrl="44" chan="-1"/>
+<entry p="4" ctrl="45" chan="-1"/>
+<entry p="5" ctrl="46" chan="-1"/>
+<entry p="6" ctrl="47" chan="-1"/>
+<entry p="7" ctrl="48" chan="-1"/>
 </customctrl>
 <midictrl/>
