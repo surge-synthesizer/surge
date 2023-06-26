@@ -4704,6 +4704,28 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
 
     midiSubMenu.addSeparator();
 
+    auto chanSubMenu = juce::PopupMenu();
+
+    auto learnChan = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::MenuBasedMIDILearnChannel, -1);
+
+    chanSubMenu.addItem("Omni", true, (learnChan == -1), [this]() {
+        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                               Surge::Storage::MenuBasedMIDILearnChannel, -1);
+    });
+
+    for (int ch = 0; ch < 16; ch++)
+    {
+        chanSubMenu.addItem(
+            fmt::format("Channel {}", ch + 1), true, (learnChan == ch), [this, ch]() {
+                Surge::Storage::updateUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::MenuBasedMIDILearnChannel, ch);
+            });
+    }
+
+    midiSubMenu.addSubMenu(Surge::GUI::toOSCase("Default Channel For Menu-Based MIDI Learn"),
+                           chanSubMenu);
+
     midiSubMenu.addItem(Surge::GUI::toOSCase("Save MIDI Mapping As..."), [this, where]() {
         this->scannedForMidiPresets = false; // force a rescan
 

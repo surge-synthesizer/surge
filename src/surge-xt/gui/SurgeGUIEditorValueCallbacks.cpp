@@ -119,9 +119,19 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
         // construct submenus for explicit controller mapping
         auto midiSub = juce::PopupMenu();
 
-        // which MIDI channel to use for MIDI learn via menu (-1 = omni)?
-        int learnChan = Surge::Storage::getUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::LastChannelUsedForMenuMIDILearn, -1);
+        // which MIDI channel to use for MIDI learn via menu
+        int learnChan = (learn_mode == macro_cc) ? synth->storage.controllers_chan[idx]
+                        : (ptag < n_global_params)
+                            ? p->midichan
+                            : synth->storage.getPatch().param_ptr[ptag]->midichan;
+
+        // -1 means Omni but it's also the default value, so just double-check
+        // if the user setting matches or if it's different, then use that
+        if (learnChan == -1)
+        {
+            learnChan = Surge::Storage::getUserDefaultValue(
+                &(this->synth->storage), Surge::Storage::MenuBasedMIDILearnChannel, -1);
+        }
 
         for (int subs = 0; subs < 7; ++subs)
         {
@@ -205,21 +215,28 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
 
         // select channel for MIDI learn submenu
         auto chanSub = juce::PopupMenu();
-        auto chanSubName = fmt::format("{}: {}", Surge::GUI::toOSCase("Use MIDI Channel"),
+        auto chanSubName = fmt::format("{}: {}", Surge::GUI::toOSCase("MIDI Channel"),
                                        learnChan == -1 ? "Omni" : std::to_string(learnChan + 1));
 
-        chanSub.addItem("Omni", true, (learnChan == -1), [this]() {
-            Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::LastChannelUsedForMenuMIDILearn, -1);
+        chanSub.addItem("Omni", true, (learnChan == -1), [this, learn_mode, p, ptag, idx]() {
+            if (learn_mode == macro_cc)
+                this->synth->storage.controllers_chan[idx] = -1;
+            else if (ptag < n_global_params)
+                p->midichan = -1;
+            else
+                this->synth->storage.getPatch().param_ptr[ptag]->midichan = -1;
         });
 
         for (int ch = 0; ch < 16; ch++)
         {
             chanSub.addItem(fmt::format("Channel {}", ch + 1), true, (learnChan == ch),
-                            [this, ch]() {
-                                Surge::Storage::updateUserDefaultValue(
-                                    &(this->synth->storage),
-                                    Surge::Storage::LastChannelUsedForMenuMIDILearn, ch);
+                            [this, learn_mode, p, ptag, idx, ch]() {
+                                if (learn_mode == macro_cc)
+                                    this->synth->storage.controllers_chan[idx] = ch;
+                                else if (ptag < n_global_params)
+                                    p->midichan = ch;
+                                else
+                                    this->synth->storage.getPatch().param_ptr[ptag]->midichan = ch;
                             });
         }
 
