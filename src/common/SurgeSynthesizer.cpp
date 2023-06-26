@@ -4704,7 +4704,7 @@ SurgeSynthesizer::PluginLayer *SurgeSynthesizer::getParent()
 
 void SurgeSynthesizer::populateDawExtraState()
 {
-    auto des = storage.getPatch().dawExtraState;
+    auto &des = storage.getPatch().dawExtraState;
 
     des.isPopulated = true;
     des.mpeEnabled = mpeEnabled;
@@ -4756,7 +4756,7 @@ void SurgeSynthesizer::populateDawExtraState()
 
 void SurgeSynthesizer::loadFromDawExtraState()
 {
-    auto des = storage.getPatch().dawExtraState;
+    auto &des = storage.getPatch().dawExtraState;
 
     if (!des.isPopulated)
     {
