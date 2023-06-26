@@ -217,6 +217,7 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
     posy_offset = 0;
     per_voice_processing = scene ? true : false;
     midictrl = -1;
+    midichan = -1;
 
     clear_flags();
 

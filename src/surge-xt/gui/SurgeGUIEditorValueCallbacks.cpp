@@ -119,6 +119,10 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
         // construct submenus for explicit controller mapping
         auto midiSub = juce::PopupMenu();
 
+        // which MIDI channel to use for MIDI learn via menu (-1 = omni)?
+        int learnChan = Surge::Storage::getUserDefaultValue(
+            &(this->synth->storage), Surge::Storage::LastChannelUsedForMenuMIDILearn, -1);
+
         for (int subs = 0; subs < 7; ++subs)
         {
             auto currentSub = juce::PopupMenu();
@@ -156,8 +160,10 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                         isSubChecked = true;
                     }
 
-                    currentSub.addItem(name, isEnabled, isChecked,
-                                       [this, idx, mc]() { synth->storage.controllers[idx] = mc; });
+                    currentSub.addItem(name, isEnabled, isChecked, [this, idx, mc, learnChan]() {
+                        synth->storage.controllers[idx] = mc;
+                        synth->storage.controllers_chan[idx] = learnChan;
+                    });
                     break;
                 }
                 case param_cc:
@@ -170,24 +176,19 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                         isSubChecked = true;
                     }
 
-                    currentSub.addItem(name, isEnabled, isChecked, [this, p, ptag, mc]() {
-                        if (ptag < n_global_params)
-                        {
-                            p->midictrl = mc;
-                        }
-                        else
-                        {
-                            int a = ptag;
-
-                            if (ptag >= (n_global_params + n_scene_params))
+                    currentSub.addItem(
+                        name, isEnabled, isChecked, [this, p, ptag, mc, learnChan]() {
+                            if (ptag < n_global_params)
                             {
-                                a -= ptag;
+                                p->midictrl = mc;
+                                p->midichan = learnChan;
                             }
-
-                            synth->storage.getPatch().param_ptr[a]->midictrl = mc;
-                            synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = mc;
-                        }
-                    });
+                            else
+                            {
+                                synth->storage.getPatch().param_ptr[ptag]->midictrl = mc;
+                                synth->storage.getPatch().param_ptr[ptag]->midichan = learnChan;
+                            }
+                        });
 
                     break;
                 }
@@ -201,6 +202,28 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
 
             midiSub.addSubMenu(name, currentSub, true, nullptr, isSubChecked);
         }
+
+        // select channel for MIDI learn submenu
+        auto chanSub = juce::PopupMenu();
+        auto chanSubName = fmt::format("Use MIDI Channel: {}",
+                                       learnChan == -1 ? "Omni" : std::to_string(learnChan + 1));
+
+        chanSub.addItem("Omni", true, (learnChan == -1), [this]() {
+            Surge::Storage::updateUserDefaultValue(
+                &(this->synth->storage), Surge::Storage::LastChannelUsedForMenuMIDILearn, -1);
+        });
+
+        for (int ch = 0; ch < 16; ch++)
+        {
+            chanSub.addItem(fmt::format("Channel {}", ch + 1), true, (learnChan == ch),
+                            [this, ch]() {
+                                Surge::Storage::updateUserDefaultValue(
+                                    &(this->synth->storage),
+                                    Surge::Storage::LastChannelUsedForMenuMIDILearn, ch);
+                            });
+        }
+
+        midiSub.addSubMenu(Surge::GUI::toOSCase(chanSubName), chanSub);
 
         parentMenu.addSubMenu(Surge::GUI::toOSCase("Assign to MIDI CC"), midiSub);
     }
@@ -295,7 +318,10 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                 Surge::GUI::toOSCase(txt) + midicc_names[synth->storage.controllers[idx]] + ")",
                 [this, idx]() {
                     synth->storage.controllers[idx] = -1;
+                    synth->storage.controllers_chan[idx] = -1;
+
                     synth->storage.getPatch().dawExtraState.customcontrol_map[idx] = -1;
+                    synth->storage.getPatch().dawExtraState.customcontrol_chan_map[idx] = -1;
                 });
         }
 
@@ -313,22 +339,18 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                     if (ptag < n_global_params)
                     {
                         p->midictrl = -1;
+                        p->midichan = -1;
+
                         synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
+                        synth->storage.getPatch().dawExtraState.midichan_map[ptag] = -1;
                     }
                     else
                     {
-                        int a = ptag;
+                        synth->storage.getPatch().param_ptr[ptag]->midictrl = -1;
+                        synth->storage.getPatch().param_ptr[ptag]->midichan = -1;
 
-                        if (ptag >= (n_global_params + n_scene_params))
-                        {
-                            a -= n_scene_params;
-                        }
-
-                        synth->storage.getPatch().param_ptr[a]->midictrl = -1;
-                        synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
-                        synth->storage.getPatch().dawExtraState.midictrl_map[a] = -1;
-                        synth->storage.getPatch().dawExtraState.midictrl_map[a + n_scene_params] =
-                            -1;
+                        synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
+                        synth->storage.getPatch().dawExtraState.midichan_map[ptag] = -1;
                     }
                 });
         }

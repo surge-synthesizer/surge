@@ -946,7 +946,9 @@ struct DAWExtraStateStorage
     bool mapChannelToOctave = false;
 
     std::map<int, int> midictrl_map;      // param -> midictrl
-    std::map<int, int> customcontrol_map; // custom controller number -> midicontrol
+    std::map<int, int> midichan_map;      // param -> midichan
+    std::map<int, int> customcontrol_map; // custom controller number -> midictrl
+    std::map<int, int> customcontrol_chan_map; // custom controller number -> midichan
 
     int monoPedalMode = 0;
     int oddsoundRetuneMode = 0;
@@ -1283,6 +1285,7 @@ class alignas(16) SurgeStorage
     void write_midi_controllers_to_user_default();
     void save_snapshots();
     int controllers[n_customcontrollers];
+    int controllers_chan[n_customcontrollers];
     float poly_aftertouch[2][16][128]; // TODO: FIX SCENE ASSUMPTION
     float modsource_vu[n_modsources];
     void setSamplerate(float sr);

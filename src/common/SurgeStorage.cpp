@@ -159,6 +159,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     for (int i = 0; i < n_customcontrollers; i++)
     {
         controllers[i] = 41 + i;
+        controllers_chan[i] = -1;
     }
 
     for (int i = 0; i < n_modsources; i++)
@@ -1879,8 +1880,8 @@ void SurgeStorage::write_midi_controllers_to_user_default()
     TiXmlElement root("midiconfig");
     TiXmlElement mc("midictrl");
 
-    int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
-                                              // B will be duplicated on load)
+    int n = n_global_params + (n_scene_params * n_scenes);
+
     for (int i = 0; i < n; i++)
     {
         if (getPatch().param_ptr[i]->midictrl >= 0)
@@ -1888,9 +1889,11 @@ void SurgeStorage::write_midi_controllers_to_user_default()
             TiXmlElement mc_e("entry");
             mc_e.SetAttribute("p", i);
             mc_e.SetAttribute("ctrl", getPatch().param_ptr[i]->midictrl);
+            mc_e.SetAttribute("chan", getPatch().param_ptr[i]->midichan);
             mc.InsertEndChild(mc_e);
         }
     }
+
     root.InsertEndChild(mc);
 
     TiXmlElement cc("customctrl");
@@ -1900,8 +1903,10 @@ void SurgeStorage::write_midi_controllers_to_user_default()
         TiXmlElement cc_e("entry");
         cc_e.SetAttribute("p", i);
         cc_e.SetAttribute("ctrl", controllers[i]);
+        cc_e.SetAttribute("chan", controllers_chan[i]);
         cc.InsertEndChild(cc_e);
     }
+
     root.InsertEndChild(cc);
     doc.InsertEndChild(root);
 
@@ -1915,7 +1920,6 @@ void SurgeStorage::write_midi_controllers_to_user_default()
     {
         // Oh well.
     }
-    // save_snapshots();
 }
 
 void SurgeStorage::setSamplerate(float sr)
@@ -1944,6 +1948,7 @@ void SurgeStorage::load_midi_controllers()
     auto mcp = userDataPath / "SurgeMIDIDefaults.xml";
     TiXmlDocument mcd;
     TiXmlElement *midiRoot = nullptr;
+
     if (mcd.LoadFile(mcp))
     {
         midiRoot = mcd.FirstChildElement("midiconfig");
@@ -1953,9 +1958,13 @@ void SurgeStorage::load_midi_controllers()
         if (midiRoot)
         {
             auto q = TINYXML_SAFE_TO_ELEMENT(midiRoot->FirstChild(n));
+
             if (q)
+            {
                 return q;
+            }
         }
+
         return getSnapshotSection(n);
     };
 
@@ -1963,16 +1972,34 @@ void SurgeStorage::load_midi_controllers()
     assert(mc);
 
     TiXmlElement *entry = TINYXML_SAFE_TO_ELEMENT(mc->FirstChild("entry"));
+
     while (entry)
     {
-        int id, ctrl;
-        if ((entry->QueryIntAttribute("p", &id) == TIXML_SUCCESS) &&
-            (entry->QueryIntAttribute("ctrl", &ctrl) == TIXML_SUCCESS))
+        int id, ctrl, chan;
+
+        if (entry->QueryIntAttribute("p", &id) == TIXML_SUCCESS)
         {
-            getPatch().param_ptr[id]->midictrl = ctrl;
-            if (id >= n_global_params)
-                getPatch().param_ptr[id + n_scene_params]->midictrl = ctrl;
+            if (entry->QueryIntAttribute("ctrl", &ctrl) == TIXML_SUCCESS)
+            {
+                getPatch().param_ptr[id]->midictrl = ctrl;
+            }
+
+            if (entry->QueryIntAttribute("chan", &chan) == TIXML_SUCCESS)
+            {
+                getPatch().param_ptr[id]->midichan = chan;
+            }
+            else
+            {
+                getPatch().param_ptr[id]->midichan = -1;
+
+                // care for old MIDI config files - duplicate scene A assignment to scene B
+                if (id >= n_global_params)
+                {
+                    getPatch().param_ptr[id + n_scene_params]->midictrl = ctrl;
+                }
+            }
         }
+
         entry = TINYXML_SAFE_TO_ELEMENT(entry->NextSibling("entry"));
     }
 
@@ -1980,17 +2007,32 @@ void SurgeStorage::load_midi_controllers()
     assert(cc);
 
     entry = TINYXML_SAFE_TO_ELEMENT(cc->FirstChild("entry"));
+
     while (entry)
     {
-        int id, ctrl;
-        if ((entry->QueryIntAttribute("p", &id) == TIXML_SUCCESS) &&
-            (entry->QueryIntAttribute("ctrl", &ctrl) == TIXML_SUCCESS) &&
-            (id < n_customcontrollers))
+        int id, ctrl, chan;
+
+        if (entry->QueryIntAttribute("p", &id) == TIXML_SUCCESS)
         {
-            controllers[id] = ctrl;
+            if (entry->QueryIntAttribute("ctrl", &ctrl) == TIXML_SUCCESS &&
+                id < n_customcontrollers)
+            {
+                controllers[id] = ctrl;
+            }
+
+            if (entry->QueryIntAttribute("chan", &chan) == TIXML_SUCCESS &&
+                id < n_customcontrollers)
+            {
+                controllers_chan[id] = chan;
+            }
+            else
+            {
+                controllers_chan[id] = -1;
+            }
         }
-        entry = TINYXML_SAFE_TO_ELEMENT(entry->NextSibling("entry"));
     }
+
+    entry = TINYXML_SAFE_TO_ELEMENT(entry->NextSibling("entry"));
 }
 
 SurgeStorage::~SurgeStorage()

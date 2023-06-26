@@ -4718,24 +4718,24 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
     });
 
     midiSubMenu.addItem(Surge::GUI::toOSCase("Clear Current MIDI Mapping"), [this]() {
-        int n = n_global_params + n_scene_params;
+        int n = n_global_params + (n_scene_params * n_scenes);
 
         for (int i = 0; i < n; i++)
         {
             this->synth->storage.getPatch().param_ptr[i]->midictrl = -1;
-            this->synth->storage.getPatch().dawExtraState.midictrl_map[i] = -1;
+            this->synth->storage.getPatch().param_ptr[i]->midichan = -1;
 
-            if (i > n_global_params)
-            {
-                this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
-                this->synth->storage.getPatch().dawExtraState.midictrl_map[i + n_scene_params] = -1;
-            }
+            this->synth->storage.getPatch().dawExtraState.midictrl_map[i] = -1;
+            this->synth->storage.getPatch().dawExtraState.midichan_map[i] = -1;
         }
 
         for (int i = 0; i < n_customcontrollers; i++)
         {
             this->synth->storage.controllers[i] = -1;
+            this->synth->storage.controllers_chan[i] = -1;
+
             this->synth->storage.getPatch().dawExtraState.customcontrol_map[i] = -1;
+            this->synth->storage.getPatch().dawExtraState.customcontrol_chan_map[i] = -1;
         }
     });
 
@@ -8093,28 +8093,35 @@ void SurgeGUIEditor::populateDawExtraState(SurgeSynthesizer *synth)
         des->editor.modsource_editor[i] = modsource_editor[i];
 
         des->editor.msegStateIsPopulated = true;
+
         for (int lf = 0; lf < n_lfos; ++lf)
         {
             des->editor.msegEditState[i][lf].timeEditMode = msegEditState[i][lf].timeEditMode;
         }
     }
+
     des->editor.isMSEGOpen = isAnyOverlayPresent(MSEG_EDITOR);
 
     des->editor.activeOverlays.clear();
+
     for (const auto &ol : juceOverlays)
     {
         auto olw = getOverlayWrapperIfOpen(ol.first);
+
         if (olw)
         {
             DAWExtraStateStorage::EditorState::OverlayState os;
+
             os.whichOverlay = ol.first;
             os.isTornOut = olw->isTornOut();
             os.tearOutPosition = std::make_pair(-1, -1);
+
             if (olw->isTornOut())
             {
                 auto ps = olw->currentTearOutLocation();
                 os.tearOutPosition = std::make_pair(ps.x, ps.y);
             }
+
             des->editor.activeOverlays.push_back(os);
         }
     }
@@ -8133,11 +8140,16 @@ void SurgeGUIEditor::clearNoProcessingOverlay()
 void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
 {
     auto des = &(synth->storage.getPatch().dawExtraState);
+
     if (des->isPopulated)
     {
         auto sz = des->editor.instanceZoomFactor;
+
         if (sz > 0)
+        {
             setZoomFactor(sz);
+        }
+
         current_scene = des->editor.current_scene;
         current_fx = des->editor.current_fx;
         modsource = des->editor.modsource;
@@ -8148,6 +8160,7 @@ void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
         {
             current_osc[i] = des->editor.current_osc[i];
             modsource_editor[i] = des->editor.modsource_editor[i];
+
             if (des->editor.msegStateIsPopulated)
             {
                 for (int lf = 0; lf < n_lfos; ++lf)
@@ -8157,6 +8170,7 @@ void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
                 }
             }
         }
+
         // This is mostly legacy treatment but I'm leaving it in for now
         if (des->editor.isMSEGOpen)
         {
@@ -8164,6 +8178,7 @@ void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
         }
 
         overlaysForNextIdle.clear();
+
         if (!des->editor.activeOverlays.empty())
         {
             showMSEGEditorOnNextIdleOrOpen = false;
