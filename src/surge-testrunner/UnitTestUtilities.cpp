@@ -224,7 +224,7 @@ std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp, float 
 {
     auto surge = Surge::Headless::createSurge(sr);
 
-    auto defaultPath = surge->storage.dataPath;
+    auto defaultPath = surge->storage.datapath;
     try
     {
         if (!fs::exists(defaultPath / fs::path{"patches_factory"}))
@@ -243,6 +243,7 @@ std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp, float 
     auto templatePath =
         defaultPath / fs::path{"patches_factory"} / fs::path{"Templates"} / fs::path{otp + ".fxp"};
 
+    REQUIRE(fs::exists(templatePath));
     surge->loadPatchByPath(path_to_string(templatePath).c_str(), -1, "Test");
 
     return surge;
