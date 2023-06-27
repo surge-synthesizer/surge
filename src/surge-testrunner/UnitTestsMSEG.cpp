@@ -159,7 +159,7 @@ TEST_CASE("Basic MSEG Evaluation", "[mseg]")
     }
 }
 
-TEST_CASE("Unlocked Endpoitns", "[mseg]")
+TEST_CASE("Unlocked Endpoints", "[mseg]")
 {
     SECTION("Simple Square Default Locks")
     {
@@ -192,7 +192,7 @@ TEST_CASE("Unlocked Endpoitns", "[mseg]")
         }
     }
 
-    SECTION("Free Endpoint is a Square")
+    SECTION("Free Endpoint Is a Square")
     {
         MSEGStorage ms;
         ms.n_activeSegments = 3;
@@ -225,9 +225,9 @@ TEST_CASE("Unlocked Endpoitns", "[mseg]")
     }
 }
 
-TEST_CASE("Deform per Segment", "[mseg]")
+TEST_CASE("Deform Per Segment", "[mseg]")
 {
-    SECTION("Triangle with Deform")
+    SECTION("Triangle With Deform")
     {
         MSEGStorage ms;
         ms.n_activeSegments = 2;
@@ -275,7 +275,7 @@ TEST_CASE("Deform per Segment", "[mseg]")
     }
 }
 
-TEST_CASE("OneShot vs Loop", "[mseg]")
+TEST_CASE("Oneshot vs Loop", "[mseg]")
 {
     SECTION("Triangle Loop")
     {
@@ -325,7 +325,7 @@ TEST_CASE("OneShot vs Loop", "[mseg]")
 
 TEST_CASE("Loop Test Cases", "[mseg]")
 {
-    SECTION("Non-Gated Loop over a Ramp Pair")
+    SECTION("Non-Gated Loop Over a Ramp Pair")
     {
         // This is an attack up from -1 over 0.5, then a ramp in 0,1and we loop over the end
         MSEGStorage ms;
@@ -373,7 +373,7 @@ TEST_CASE("Loop Test Cases", "[mseg]")
         }
     }
 
-    SECTION("Gated Loop over a Ramp")
+    SECTION("Gated Loop Over a Ramp")
     {
         // This is an attack up from -1 over 0.5, then a ramp in 0,1and we loop over the end
         MSEGStorage ms;
@@ -456,7 +456,7 @@ TEST_CASE("Loop Test Cases", "[mseg]")
     }
 }
 
-TEST_CASE("Zero size loops", "[mseg]")
+TEST_CASE("Zero Size Loops", "[mseg]")
 {
     SECTION("Zero Size Non Gated")
     {
@@ -546,7 +546,7 @@ TEST_CASE("Zero size loops", "[mseg]")
  * Tests to add
  * - loop point 0 (start = end + 1)
  * - loop start at 0
- * - maniulation routines
+ * - manipulation routines
  *    - insert
  *    - delete
  *    - split

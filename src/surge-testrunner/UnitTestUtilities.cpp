@@ -268,7 +268,7 @@ void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *
     system(cmd.c_str());
 #else
     std::cout
-        << "makePlotPNGFromData is only on mac for now (since @baconpaul just uses it to debug)"
+        << "makePlotPNGFromData is only on Mac for now (since @baconpaul just uses it to debug)"
         << std::endl;
 #endif
 }
