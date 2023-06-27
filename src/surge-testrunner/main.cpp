@@ -36,11 +36,12 @@
  */
 int main(int argc, char **argv)
 {
-    std::cout << "# surge-xt-headless: " << Surge::Build::FullVersionStr
-              << " built: " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime << "\n";
-
     if (argc > 2 && strcmp(argv[1], "--non-test") == 0)
     {
+        std::cout << "# surge-xt-headless: " << Surge::Build::FullVersionStr
+                  << " built: " << Surge::Build::BuildDate << " " << Surge::Build::BuildTime
+                  << "\n";
+
         std::cout << "# Running in non-test mode : " << argv[2] << std::endl;
         if (strcmp(argv[2], "--initialize-pdb") == 0)
         {

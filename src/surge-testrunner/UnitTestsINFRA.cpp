@@ -28,7 +28,7 @@
 
 #include "sst/plugininfra/strnatcmp.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 inline size_t align_diff(const void *ptr, std::uintptr_t alignment) noexcept
 {
@@ -36,6 +36,24 @@ inline size_t align_diff(const void *ptr, std::uintptr_t alignment) noexcept
     return (iptr % alignment);
 }
 
+TEST_CASE("Test Setup is Correct", "[infra]")
+{
+    SECTION("No Patches, no WT")
+    {
+        auto surge = Surge::Headless::createSurge(44100, false);
+        REQUIRE(surge);
+        REQUIRE(surge->storage.patch_list.empty());
+        REQUIRE(surge->storage.wt_list.empty());
+    }
+
+    SECTION("Patches, WT")
+    {
+        auto surge = Surge::Headless::createSurge(44100, true);
+        REQUIRE(surge);
+        REQUIRE(!surge->storage.patch_list.empty());
+        REQUIRE(!surge->storage.wt_list.empty());
+    }
+}
 TEST_CASE("Biquad Aligned", "[infra]")
 {
     SECTION("Is it aligned?")

@@ -25,8 +25,10 @@
 #include <algorithm>
 
 #include "HeadlessUtils.h"
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 #include "MSEGModulationHelper.h"
+
+using namespace Catch;
 
 struct msegObservation
 {
@@ -148,7 +150,7 @@ TEST_CASE("Basic MSEG Evaluation", "[mseg]")
         for (auto c : runIt)
         {
             auto dbphase = (int)(2 * c.phase) % 3;
-            INFO("phase is " << c.phase << " " << dbphase)
+            INFO("phase is " << c.phase << " " << dbphase);
             if (dbphase == 0)
                 REQUIRE(c.v == 1);
             if (dbphase == 1 || dbphase == 2)
@@ -307,7 +309,7 @@ TEST_CASE("OneShot vs Loop", "[mseg]")
         {
             if (c.phase < 1)
             {
-                INFO("At " << c.fPhase << " Value is " << c.v << " " << c.phase)
+                INFO("At " << c.fPhase << " Value is " << c.v << " " << c.phase);
                 if (c.fPhase < 0.5)
                     REQUIRE(c.v == Approx(2 * c.fPhase / 0.5 - 1));
                 if (c.fPhase > 0.5)

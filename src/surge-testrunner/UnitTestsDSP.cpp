@@ -25,7 +25,7 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 
@@ -418,6 +418,7 @@ TEST_CASE("Every Oscillator Plays", "[dsp]")
         DYNAMIC_SECTION("Oscillator type " << osc_type_names[i])
         {
             auto surge = Surge::Headless::createSurge(44100, true);
+            REQUIRE(surge->storage.wt_list.size() > 0);
 
             for (int q = 0; q < BLOCK_SIZE; q++)
             {

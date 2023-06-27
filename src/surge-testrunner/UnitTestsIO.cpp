@@ -27,7 +27,7 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 #include <chrono>
@@ -348,9 +348,12 @@ TEST_CASE("Stream WaveTable Names", "[io]")
     {
         auto surge = Surge::Headless::createSurge(44100, true);
         REQUIRE(surge);
+        REQUIRE(surge->storage.wt_list.size() > 0);
 
         auto patch = &(surge->storage.getPatch());
         patch->scene[0].osc[0].type.val.i = ot_wavetable;
+        for (int i = 0; i < 2; ++i)
+            surge->process();
 
         for (int i = 0; i < 40; ++i)
         {
@@ -381,6 +384,8 @@ TEST_CASE("Stream WaveTable Names", "[io]")
         };
 
         auto surgeS = Surge::Headless::createSurge(44100, true);
+        REQUIRE(surgeS->storage.wt_list.size() > 0);
+
         auto surgeD = Surge::Headless::createSurge(44100, true);
         REQUIRE(surgeD);
 
@@ -400,6 +405,8 @@ TEST_CASE("Stream WaveTable Names", "[io]")
                     if (isWT)
                     {
                         patch->scene[s].osc[o].type.val.i = ot_wavetable;
+                        for (int i = 0; i < 2; ++i)
+                            surgeS->process();
                         int wti = rand() % surgeS->storage.wt_list.size();
                         surgeS->storage.load_wt(wti, &patch->scene[s].osc[o].wt,
                                                 &patch->scene[s].osc[o]);
@@ -566,7 +573,7 @@ TEST_CASE("Patch Version Builder", "[io]")
             {
                 for (int fu = 0; fu < n_filterunits_per_scene; ++fu)
                 {
-                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu)
+                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu);
                     REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].type.val.i == ft);
                     REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i == st);
                 }
@@ -674,7 +681,7 @@ TEST_CASE("Patch Version Builder", "[io]")
             {
                 for (int fu = 0; fu < n_filterunits_per_scene; ++fu)
                 {
-                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu)
+                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu);
                     REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].type.val.i == ft);
                     REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i == st);
                 }

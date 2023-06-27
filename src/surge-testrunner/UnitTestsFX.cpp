@@ -28,7 +28,7 @@
 #include "Player.h"
 
 #include "SurgeStorage.h"
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 #include "AudioInputEffect.h"

@@ -25,7 +25,7 @@
 #include <algorithm>
 
 #include "HeadlessUtils.h"
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 TEST_CASE("Note ID in Poly Mode Basics", "[noteid]")
 {
