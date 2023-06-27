@@ -37,6 +37,7 @@ jobs:
           imageName: 'macos-latest'
           isMac: True
           isMacUnitTest: True
+          isUnitTest: True
           cmakeArguments: "-GXcode"
           cmakeTarget: "surge-testrunner"
           cmakeConfig: "Release"
@@ -70,6 +71,7 @@ jobs:
           imageName: 'windows-2019'
           isWindows: True
           isWindowsUnitTest: True
+          isUnitTest: True
           cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
@@ -83,6 +85,7 @@ jobs:
           imageName: 'ubuntu-20.04'
           isLinux: True
           isLinuxUnitTest: True
+          isUnitTest: True
           cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
@@ -182,30 +185,12 @@ jobs:
       - bash: |
           set -e
 
+          export SURGE_DATA_HOME=`pwd`/resources/data
           cd build/src/surge-testrunner
           ctest -j 4 || ctest --rerun-failed --output-on-failure
 
-        condition: variables.isWindowsUnitTest
-        displayName: windows - run unit tests
-
-
-      - bash: |
-          set -e
-
-          cd build/src/surge-testrunner
-          ctest --version
-          ctest -j 4 || ctest --rerun-failed --output-on-failure
-        condition: variables.isLinuxUnitTest
-        displayName: linux - run unit test
-
-      - bash: |
-          set -e
-
-          cd build/src/surge-testrunner
-          ctest -j 4 || ctest --rerun-failed --output-on-failure
-
-        condition: variables.isMacUnitTest
-        displayName: macOS - run unit tests
+        condition: variables.isUnitTest
+        displayName: all - run unit tests
 
   - job: NotifyReleases
     dependsOn: BuildCodeQuality

@@ -352,7 +352,7 @@ TEST_CASE("Stream WaveTable Names", "[io]")
 
         auto patch = &(surge->storage.getPatch());
         patch->scene[0].osc[0].type.val.i = ot_wavetable;
-        for (int i=0; i<2; ++i)
+        for (int i = 0; i < 2; ++i)
             surge->process();
 
         for (int i = 0; i < 40; ++i)
@@ -405,7 +405,7 @@ TEST_CASE("Stream WaveTable Names", "[io]")
                     if (isWT)
                     {
                         patch->scene[s].osc[o].type.val.i = ot_wavetable;
-                        for (int i=0; i<2; ++i)
+                        for (int i = 0; i < 2; ++i)
                             surgeS->process();
                         int wti = rand() % surgeS->storage.wt_list.size();
                         surgeS->storage.load_wt(wti, &patch->scene[s].osc[o].wt,
