@@ -3104,6 +3104,10 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     ch = TINYXML_SAFE_TO_ELEMENT(ch->NextSibling("ch"));
                 }
             }
+            else
+            {
+                dawExtraState.customcontrol_chan_map.clear();
+            }
         }
     }
 
