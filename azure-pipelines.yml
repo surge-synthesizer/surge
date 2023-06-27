@@ -38,7 +38,7 @@ jobs:
           isMac: True
           isMacUnitTest: True
           isUnitTest: True
-          cmakeArguments: "-GXcode"
+          cmakeArguments: "-GNinja"
           cmakeTarget: "surge-testrunner"
           cmakeConfig: "Release"
         windows-x86-32bit:
@@ -51,14 +51,14 @@ jobs:
           imageName: 'macos-latest'
           isMac: True
           isMacFat: True
-          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
         macOS-arm:
           imageName: 'macos-latest'
           isMac: True
           isMacFat: True
-          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
         windows-x64:
@@ -160,6 +160,7 @@ jobs:
         displayName: linux - run apt-get
 
       - bash: |
+          sudo brew install ninja
           sudo xcode-select -s /Applications/Xcode_13.4.1.app
         displayName: Select XCode 13.4.1
         condition: variables.isMac
@@ -174,17 +175,13 @@ jobs:
           cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
         displayName: all - build with cmake
 
-
-        #- bash: |
-      #    set -e
-      #    echo "Surge.component"
-      #    lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
-      #  displayName: mac - lipo the AU
-      #  condition: variables.isMacFat
-
       - bash: |
           set -e
 
+          # We have a WORKING_DIRECTORY in ctest but this
+          # seems to not make it to our subordinate processes
+          # so just set up the environment to reach the
+          # data dirs
           export SURGE_DATA_HOME=`pwd`/resources/data
           cd build/src/surge-testrunner
           ctest -j 4 || ctest --rerun-failed --output-on-failure
