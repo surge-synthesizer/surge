@@ -1,5 +1,4 @@
 # vi:set sw=2 et:
-option(SURGE_BUILD_TESTRUNNER "Build Surge unit test runner" ON)
 option(SURGE_BUILD_FX "Build Surge FX bank" ON)
 option(SURGE_BUILD_XT "Build Surge XT synth" ON)
 option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge Python bindings with pybind11" OFF)

@@ -45,4 +45,3 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 
 message(STATUS "Using CatchDiscoverTests on ${PROJECT_NAME}" )
 catch_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${SURGE_SOURCE_DIR})
-enable_testing()

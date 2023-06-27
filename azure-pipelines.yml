@@ -178,12 +178,7 @@ jobs:
       - bash: |
           set -e
 
-          # We have a WORKING_DIRECTORY in ctest but this
-          # seems to not make it to our subordinate processes
-          # so just set up the environment to reach the
-          # data dirs
-          export SURGE_DATA_HOME=`pwd`/resources/data
-          cd build/src/surge-testrunner
+          cd build
           ctest -j 4 || ctest --rerun-failed --output-on-failure
 
         condition: variables.isUnitTest

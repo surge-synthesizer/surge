@@ -34,8 +34,24 @@ std::shared_ptr<SurgeSynthesizer> createSurge(int sr, bool loadAllPatches)
 {
     if (parent.get() == nullptr)
         parent.reset(new HeadlessPluginLayerProxy());
+
+    std::string defaultPath = "";
+    if (loadAllPatches)
+    {
+        try
+        {
+            auto pt = fs::path{"resources/data/patches_factory"};
+            if (fs::exists(pt) && fs::is_directory(pt))
+            {
+                defaultPath = "resources/data";
+            }
+        }
+        catch (const fs::filesystem_error &)
+        {
+        }
+    }
     auto surge = std::shared_ptr<SurgeSynthesizer>(new SurgeSynthesizer(
-        parent.get(), loadAllPatches ? "" : SurgeStorage::skipPatchLoadDataPathSentinel));
+        parent.get(), loadAllPatches ? defaultPath : SurgeStorage::skipPatchLoadDataPathSentinel));
     surge->setSamplerate(sr);
     surge->time_data.tempo = 120;
     surge->time_data.ppqPos = 0;
