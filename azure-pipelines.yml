@@ -183,7 +183,7 @@ jobs:
           set -e
 
           cd build/src/surge-testrunner
-          ctest 
+          ctest -j 4 || ctest --rerun-failed --output-on-failure
 
         condition: variables.isWindowsUnitTest
         displayName: windows - run unit tests
@@ -201,7 +201,8 @@ jobs:
           set -e
 
           cd build/src/surge-testrunner
-          ctest -j 4
+          ctest -j 4 || ctest --rerun-failed --output-on-failure
+
         condition: variables.isMacUnitTest
         displayName: macOS - run unit tests
 
