@@ -380,22 +380,39 @@ th {
      )HTML";
     // TODO: if there are none print differently
     bool foundOne = false;
-    int n = n_global_params + n_scene_params;
+    const int n = n_global_params + (n_scene_params * 2);
+    std::string sc = "";
+
     for (int i = 0; i < n; i++)
     {
-        if (synth->storage.getPatch().param_ptr[i]->midictrl >= 0)
+        auto p = synth->storage.getPatch().param_ptr[i];
+
+        if (p->midictrl >= 0)
         {
             if (!foundOne)
             {
                 foundOne = true;
                 htmls << "Individual parameter MIDI mappings<p>\n"
-                      << "<table><tr><th>CC#</th><th>Parameter</th></tr>\n";
+                      << "<table><tr><th>CC#</th><th>Channel</th><th>Parameter</th></tr>\n";
             }
-            htmls << "<tr><td class=\"center\">" << synth->storage.getPatch().param_ptr[i]->midictrl
-                  << "</td><td> " << synth->storage.getPatch().param_ptr[i]->get_full_name()
-                  << "</td></tr>\n";
+
+            if (i >= n_global_params && i < (n_global_params + n_scene_params))
+            {
+                sc = "Scene A ";
+            }
+            else if (i >= (n_global_params + n_scene_params))
+            {
+                sc = "Scene B ";
+            }
+
+            const int ch = p->midichan;
+            auto chtxt = (ch == -1) ? "Omni" : std::to_string(ch + 1);
+
+            htmls << "<tr><td class=\"center\">" << p->midictrl << "</td><td class=\"center\"> "
+                  << chtxt << "</td><td> " << sc << p->get_full_name() << "</td></tr>\n";
         }
     }
+
     if (foundOne)
     {
         htmls << "</table>\n";
@@ -412,16 +429,18 @@ th {
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff;">
       <div style="font-size: 12pt; margin-bottom: 10pt; font-family: Lato; color: #123463;">
          Macro Assignments<p>
-         <table><tr><th>CC#</th><th>Macro</th><th>Custom Name</th></tr>
+         <table><tr><th>CC#</th><th>Channel</th><th>Macro</th><th>Custom Name</th></tr>
      )HTML";
     for (int i = 0; i < n_customcontrollers; ++i)
     {
-        std::string name = synth->storage.getPatch().CustomControllerLabel[i];
-        auto ccval = synth->storage.controllers[i];
+        std::string ccname = synth->storage.getPatch().CustomControllerLabel[i];
+        const int ccval = synth->storage.controllers[i];
+        const int ch = synth->storage.controllers_chan[i];
+        auto chtxt = (ch == -1) ? "Omni" : std::to_string(ch + 1);
 
         htmls << "<tr><td class=\"center\">" << (ccval == -1 ? "N/A" : std::to_string(ccval))
-              << "</td><td class=\"center\">" << i + 1 << "</td><td>" << name << "</td></tr>"
-              << std::endl;
+              << "</td><td class=\"center\">" << chtxt << "</td><td class=\"center\">" << i + 1
+              << "</td><td>" << ccname << "</td></tr>" << std::endl;
     }
     htmls << R"HTML(
          </table>

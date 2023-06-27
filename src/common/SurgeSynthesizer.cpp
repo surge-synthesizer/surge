@@ -2241,35 +2241,12 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         // int cmode = channelState[channel].nrpn_last;
     }
 
-    for (int i = 0; i < n_customcontrollers; i++)
-    {
-        if (storage.controllers[i] == cc_encoded)
-        {
-            ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + i])
-                ->set_target01(0, fval);
-        }
-    }
-
     if (learn_param_from_cc >= 0)
     {
         if (!disallowedLearnCCs.test(cc))
         {
-            if (learn_param_from_cc < n_global_params)
-            {
-                storage.getPatch().param_ptr[learn_param_from_cc]->midictrl = cc_encoded;
-            }
-            else
-            {
-                int a = learn_param_from_cc;
-
-                if (learn_param_from_cc >= (n_global_params + n_scene_params))
-                {
-                    a -= n_scene_params;
-                }
-
-                storage.getPatch().param_ptr[a]->midictrl = cc_encoded;
-                storage.getPatch().param_ptr[a + n_scene_params]->midictrl = cc_encoded;
-            }
+            storage.getPatch().param_ptr[learn_param_from_cc]->midictrl = cc_encoded;
+            storage.getPatch().param_ptr[learn_param_from_cc]->midichan = channel;
 
             learn_param_from_cc = -1;
         }
@@ -2280,39 +2257,27 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         if (!disallowedLearnCCs.test(cc))
         {
             storage.controllers[learn_macro_from_cc] = cc_encoded;
+            storage.controllers_chan[learn_macro_from_cc] = channel;
+
             learn_macro_from_cc = -1;
         }
     }
 
-    for (int i = 0; i < n_global_params; i++)
+    for (int i = 0; i < n_customcontrollers; i++)
     {
-        if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded)
+        if (storage.controllers[i] == cc_encoded &&
+            (storage.controllers_chan[i] == channel || storage.controllers_chan[i] == -1))
         {
-            this->setParameterSmoothed(i, fval);
-            int j = 0;
-
-            while (j < 7)
-            {
-                if ((refresh_ctrl_queue[j] > -1) && (refresh_ctrl_queue[j] != i))
-                {
-                    j++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            refresh_ctrl_queue[j] = i;
-            refresh_ctrl_queue_value[j] = fval;
+            ((ControllerModulationSource *)storage.getPatch().scene[0].modsources[ms_ctrl1 + i])
+                ->set_target01(0, fval);
         }
     }
 
-    int a = n_global_params + storage.getPatch().scene_active.val.i * n_scene_params;
-
-    for (int i = a; i < (a + n_scene_params); i++)
+    for (int i = 0; i < (n_global_params + (n_scene_params * n_scenes)); i++)
     {
-        if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded)
+        if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded &&
+            (storage.getPatch().param_ptr[i]->midichan == channel ||
+             storage.getPatch().param_ptr[i]->midichan == -1))
         {
             this->setParameterSmoothed(i, fval);
             int j = 0;
@@ -4739,68 +4704,82 @@ SurgeSynthesizer::PluginLayer *SurgeSynthesizer::getParent()
 
 void SurgeSynthesizer::populateDawExtraState()
 {
-    storage.getPatch().dawExtraState.isPopulated = true;
-    storage.getPatch().dawExtraState.mpeEnabled = mpeEnabled;
-    storage.getPatch().dawExtraState.mpePitchBendRange = storage.mpePitchBendRange;
-    storage.getPatch().dawExtraState.isDirty = storage.getPatch().isDirty;
+    auto &des = storage.getPatch().dawExtraState;
 
-    storage.getPatch().dawExtraState.hasScale = !storage.isStandardScale;
-    if (!storage.isStandardScale)
-        storage.getPatch().dawExtraState.scaleContents = storage.currentScale.rawText;
-    else
-        storage.getPatch().dawExtraState.scaleContents = "";
+    des.isPopulated = true;
+    des.mpeEnabled = mpeEnabled;
+    des.mpePitchBendRange = storage.mpePitchBendRange;
+    des.isDirty = storage.getPatch().isDirty;
 
-    storage.getPatch().dawExtraState.hasMapping = !storage.isStandardMapping;
+    des.hasScale = !storage.isStandardScale;
+    des.scaleContents = (!storage.isStandardScale) ? storage.currentScale.rawText : "";
+
+    des.hasMapping = !storage.isStandardMapping;
+
     if (!storage.isStandardMapping)
     {
-        storage.getPatch().dawExtraState.mappingContents = storage.currentMapping.rawText;
-        storage.getPatch().dawExtraState.mappingName = storage.currentMapping.name;
+        des.mappingContents = storage.currentMapping.rawText;
+        des.mappingName = storage.currentMapping.name;
     }
     else
     {
-        storage.getPatch().dawExtraState.mappingContents = "";
-        storage.getPatch().dawExtraState.mappingName = "";
+        des.mappingContents = "";
+        des.mappingName = "";
     }
-    storage.getPatch().dawExtraState.mapChannelToOctave = storage.mapChannelToOctave;
 
-    int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
-                                              // B will be duplicated on load)
+    des.mapChannelToOctave = storage.mapChannelToOctave;
+
+    int n = n_global_params + (n_scene_params * n_scenes);
+
     for (int i = 0; i < n; i++)
     {
         if (storage.getPatch().param_ptr[i]->midictrl >= 0)
         {
-            storage.getPatch().dawExtraState.midictrl_map[i] =
-                storage.getPatch().param_ptr[i]->midictrl;
+            des.midictrl_map[i] = storage.getPatch().param_ptr[i]->midictrl;
+        }
+
+        if (storage.getPatch().param_ptr[i]->midichan >= -1)
+        {
+            des.midichan_map[i] = storage.getPatch().param_ptr[i]->midichan;
         }
     }
 
     for (int i = 0; i < n_customcontrollers; ++i)
     {
-        storage.getPatch().dawExtraState.customcontrol_map[i] = storage.controllers[i];
+        des.customcontrol_map[i] = storage.controllers[i];
+        des.customcontrol_chan_map[i] = storage.controllers_chan[i];
     }
 
-    storage.getPatch().dawExtraState.monoPedalMode = storage.monoPedalMode;
-    storage.getPatch().dawExtraState.oddsoundRetuneMode = storage.oddsoundRetuneMode;
+    des.monoPedalMode = storage.monoPedalMode;
+    des.oddsoundRetuneMode = storage.oddsoundRetuneMode;
 }
 
 void SurgeSynthesizer::loadFromDawExtraState()
 {
-    if (!storage.getPatch().dawExtraState.isPopulated)
+    auto &des = storage.getPatch().dawExtraState;
+
+    if (!des.isPopulated)
+    {
         return;
-    mpeEnabled = storage.getPatch().dawExtraState.mpeEnabled;
-    if (storage.getPatch().dawExtraState.mpePitchBendRange > 0)
-        storage.mpePitchBendRange = storage.getPatch().dawExtraState.mpePitchBendRange;
-    storage.getPatch().isDirty = storage.getPatch().dawExtraState.isDirty;
+    }
 
-    storage.monoPedalMode = (MonoPedalMode)storage.getPatch().dawExtraState.monoPedalMode;
-    storage.oddsoundRetuneMode =
-        (SurgeStorage::OddsoundRetuneMode)storage.getPatch().dawExtraState.oddsoundRetuneMode;
+    mpeEnabled = des.mpeEnabled;
 
-    if (storage.getPatch().dawExtraState.hasScale)
+    if (des.mpePitchBendRange > 0)
+    {
+        storage.mpePitchBendRange = des.mpePitchBendRange;
+    }
+
+    storage.getPatch().isDirty = des.isDirty;
+
+    storage.monoPedalMode = (MonoPedalMode)des.monoPedalMode;
+    storage.oddsoundRetuneMode = (SurgeStorage::OddsoundRetuneMode)des.oddsoundRetuneMode;
+
+    if (des.hasScale)
     {
         try
         {
-            auto sc = Tunings::parseSCLData(storage.getPatch().dawExtraState.scaleContents);
+            auto sc = Tunings::parseSCLData(des.scaleContents);
             storage.retuneToScale(sc);
         }
         catch (Tunings::TuningError &e)
@@ -4814,14 +4793,15 @@ void SurgeSynthesizer::loadFromDawExtraState()
         storage.retuneTo12TETScale();
     }
 
-    if (storage.getPatch().dawExtraState.hasMapping)
+    if (des.hasMapping)
     {
         try
         {
-            auto kb = Tunings::parseKBMData(storage.getPatch().dawExtraState.mappingContents);
-            if (storage.getPatch().dawExtraState.mappingName.size() > 1)
+            auto kb = Tunings::parseKBMData(des.mappingContents);
+
+            if (des.mappingName.size() > 1)
             {
-                kb.name = storage.getPatch().dawExtraState.mappingName;
+                kb.name = des.mappingName;
             }
             else
             {
@@ -4840,30 +4820,43 @@ void SurgeSynthesizer::loadFromDawExtraState()
         storage.remapToConcertCKeyboard();
     }
 
-    storage.mapChannelToOctave = storage.getPatch().dawExtraState.mapChannelToOctave;
+    storage.mapChannelToOctave = des.mapChannelToOctave;
 
-    int n = n_global_params + n_scene_params; // only store midictrl's for scene A (scene A -> scene
-                                              // B will be duplicated on load)
+    int n = n_global_params + (n_scene_params * n_scenes);
+    int nOld = n_global_params + n_scene_params;
+
     for (int i = 0; i < n; i++)
     {
-        if (storage.getPatch().dawExtraState.midictrl_map.find(i) !=
-            storage.getPatch().dawExtraState.midictrl_map.end())
+        if (des.midictrl_map.find(i) != des.midictrl_map.end())
         {
-            storage.getPatch().param_ptr[i]->midictrl =
-                storage.getPatch().dawExtraState.midictrl_map[i];
-            if (i >= n_global_params)
+            storage.getPatch().param_ptr[i]->midictrl = des.midictrl_map[i];
+
+            // if we're loading old DAW extra state, midichan_map should be empty
+            // in this case, duplicate scene A assignments to scene B to retain old behavior
+            // this gets fixed up in populateDawExtraState() and when DAW project is resaved
+            if (i >= n_global_params && i < nOld && des.midichan_map.empty())
             {
-                storage.getPatch().param_ptr[i + n_scene_params]->midictrl =
-                    storage.getPatch().dawExtraState.midictrl_map[i];
+                storage.getPatch().param_ptr[i + n_scene_params]->midictrl = des.midictrl_map[i];
             }
+        }
+
+        if (des.midichan_map.find(i) != des.midichan_map.end())
+        {
+            storage.getPatch().param_ptr[i]->midichan = des.midichan_map[i];
         }
     }
 
     for (int i = 0; i < n_customcontrollers; ++i)
     {
-        if (storage.getPatch().dawExtraState.customcontrol_map.find(i) !=
-            storage.getPatch().dawExtraState.customcontrol_map.end())
-            storage.controllers[i] = storage.getPatch().dawExtraState.customcontrol_map[i];
+        if (des.customcontrol_map.find(i) != des.customcontrol_map.end())
+        {
+            storage.controllers[i] = des.customcontrol_map[i];
+        }
+
+        if (des.customcontrol_chan_map.find(i) != des.customcontrol_chan_map.end())
+        {
+            storage.controllers_chan[i] = des.customcontrol_chan_map[i];
+        }
     }
 }
 

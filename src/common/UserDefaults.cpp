@@ -60,6 +60,9 @@ std::string defaultKeyToString(DefaultKey k)
     case UseCh2Ch3ToPlayScenesIndividually:
         r = "useCh2Ch3ToPlayScenesIndividually";
         break;
+    case MenuBasedMIDILearnChannel:
+        r = "menuBasedMIDILearnChannel";
+        break;
     case RestoreMSEGSnapFromPatch:
         r = "restoreMSEGSnapFromPatch";
         break;
