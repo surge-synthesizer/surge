@@ -178,7 +178,7 @@ jobs:
       - bash: |
           set -e
 
-          cd build/src/surge-testrunner
+          cd build
           ctest -j 4 || ctest --rerun-failed --output-on-failure
 
         condition: variables.isUnitTest

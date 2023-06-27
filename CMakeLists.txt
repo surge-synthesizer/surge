@@ -186,6 +186,13 @@ source_group("Surge XT Juce" REGULAR_EXPRESSION "src/surge-xt/")
 source_group("Surge FX Juce" REGULAR_EXPRESSION "src/surge-fx/")
 # }}}
 
+
+option(SURGE_BUILD_TESTRUNNER "Build Surge unit test runner" ON)
+if (${SURGE_BUILD_TESTRUNNER})
+  message(STATUS "Enabling tests; compile with SURGE_BUILD_TESTRUNNER=OFF to skip")
+  enable_testing()
+endif()
+
 add_subdirectory(resources)
 add_subdirectory(src)
 
