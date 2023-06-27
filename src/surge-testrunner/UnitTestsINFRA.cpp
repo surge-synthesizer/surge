@@ -40,7 +40,6 @@ TEST_CASE("Biquad Aligned", "[infra]")
 {
     SECTION("Is it aligned?")
     {
-        REQUIRE(false);
         std::vector<BiquadFilter *> pointers;
         for (int i = 0; i < 5000; ++i)
         {
