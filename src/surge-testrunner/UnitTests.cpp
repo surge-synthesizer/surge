@@ -39,9 +39,9 @@ int runAllTests(int argc, char **argv)
             std::cout << "Can't find file '" << tfn << "'.\n"
                       << "\n"
                       << "This means several tests will fail. Currently the\n"
-                      << "test runner assumes you run with CWD as root of the\n"
-                      << "surge repo so that the above local reference loads.\n\n"
-                      << "To fix this, run the test runner from Surge XT or \n"
+                      << "surge-testrunner assumes you run with CWD as root of the\n"
+                      << "Surge XT repo, so that the above local reference loads.\n\n"
+                      << "To fix this, run surge-testrunner from Surge XT or \n"
                       << "set the variable SURGE_TEST_WITH_FILE_ERRORS and tests\n"
                       << "will continue." << std::endl;
 

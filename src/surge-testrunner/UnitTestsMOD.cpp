@@ -223,7 +223,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
         }
     };
 
-    SECTION("Test the Digital Envelope")
+    SECTION("Test Digital Envelope")
     {
         for (int as = 0; as < 3; ++as)
             for (int ds = 0; ds < 3; ++ds)
@@ -244,7 +244,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
                 }
     }
 
-    SECTION("Quadrtic Digital hits Zero")
+    SECTION("Digital Envelope With Quadratic Slope Hits Zero")
     {
         auto res = runAdsr(0.1, 0.1, 0.0, 0.1, 0, 1, 0, false, 0.4, 0.5);
         for (auto p : res)
@@ -256,7 +256,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
         }
     }
 
-    SECTION("Test the Analog Envelope")
+    SECTION("Test Analog Envelope")
     {
         // OK so we can't check the same thing here since the turns aren't as tight in analog mode
         // Also the analog ADSR sustains at half the given sustain.
@@ -330,7 +330,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
     }
 
     // This is just a rudiemntary little test of this in digital mode
-    SECTION("Test Digital Sus Push")
+    SECTION("Test Digital Envelope Sustain Push")
     {
         auto testSusPush = [&](float s1, float s2) {
             auto digPush = runAdsr(0.05, 0.05, s1, 0.1, 0, 0, 0, false, 0.5, s2, 0.25, s2);
@@ -446,7 +446,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
         return res;
     };
 
-    SECTION("Clone the Analog")
+    SECTION("Port The Analog Envelope To Non-SIMD")
     {
         auto compareSrgRepl = [&](float a, float d, float s, float r) {
             auto t = a + d + 0.5 + r * 3;
@@ -478,14 +478,14 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
         }
     }
 
-    SECTION("Test Analog Sus Push")
+    SECTION("Test Analog Envelope Sustain Push")
     {
         auto testSusPush = [&](float s1, float s2) {
             auto aSurgePush = runAdsr(0.05, 0.05, s1, 0.1, 0, 0, 0, true, 0.5, s2, 0.25, s2);
             auto aDupPush = analogClone(0.05, 0.05, s1, 0.1, 0.5, 0.7, 0.25, s2);
 
             int obs = 0;
-            INFO("Analog Dup passes sus push");
+            INFO("Non-SIMD Analog Envelope Passes Sustain Push");
             for (auto s : aDupPush)
             {
                 if (s.first > 0.2 && obs == 0)
@@ -501,7 +501,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
             }
 
             obs = 0;
-            INFO("Analog SSE passes sus push");
+            INFO("SSE Analog Envelope Passes Sustain Push");
             for (auto s : aSurgePush)
             {
                 if (s.first > 0.2 && obs == 0)
@@ -527,7 +527,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
     }
 }
 
-TEST_CASE("Non-MPE pitch bend", "[mod]")
+TEST_CASE("Non-MPE Pitch Bend", "[mod]")
 {
     SECTION("Simple Bend Distances")
     {
@@ -589,7 +589,7 @@ TEST_CASE("Non-MPE pitch bend", "[mod]")
     }
 }
 
-TEST_CASE("Extended pitch bend", "[mod]")
+TEST_CASE("Extended Pitch Bend", "[mod]")
 {
     SECTION("Simple Bend Distances Up")
     {
@@ -612,7 +612,7 @@ TEST_CASE("Extended pitch bend", "[mod]")
         REQUIRE(f58 == Approx(f60bendDn).margin(0.3));
     }
 
-    SECTION("Simple Bend Distances Dn")
+    SECTION("Simple Bend Distances Down")
     {
         auto surge = surgeOnSine();
         surge->mpeEnabled = false;
@@ -633,7 +633,7 @@ TEST_CASE("Extended pitch bend", "[mod]")
         REQUIRE(f60bendDn == Approx(f60 * pow(2, (-2.5f / 12.f))).margin(0.3));
     }
 
-    SECTION("Pitch By Ratios")
+    SECTION("Pitch By Ratio")
     {
         auto surge = surgeOnSine();
         std::string errMsg;
@@ -657,7 +657,7 @@ TEST_CASE("Extended pitch bend", "[mod]")
     }
 }
 
-TEST_CASE("Pitch Bend and Tuning", "[mod][tun]")
+TEST_CASE("Pitch Bend And Tuning", "[mod][tun]")
 {
     std::vector<std::string> testScales = {"resources/test-data/scl/12-intune.scl",
                                            "resources/test-data/scl/zeus22.scl",
@@ -719,9 +719,9 @@ TEST_CASE("Pitch Bend and Tuning", "[mod][tun]")
     }
 }
 
-TEST_CASE("MPE pitch bend", "[mod]")
+TEST_CASE("MPE Pitch Bend", "[mod]")
 {
-    SECTION("Channel 0 bends should be a correct global bend")
+    SECTION("Channel 0 Bend Should Be a Global Bend")
     { // note that this test actually checks if channel 0 bends behave like non-MPE bends
         auto surge = surgeOnSine();
         surge->mpeEnabled = true;
@@ -744,7 +744,7 @@ TEST_CASE("MPE pitch bend", "[mod]")
         REQUIRE(f58 == Approx(f60bendDn).margin(0.3));
     }
 
-    SECTION("Channel n bends should be a correct note bend")
+    SECTION("Channel n Bend Should Be a Correct Note Bend")
     {
         auto surge = surgeOnSine();
         surge->mpeEnabled = true;
@@ -797,7 +797,7 @@ TEST_CASE("MPE pitch bend", "[mod]")
     }
 }
 
-TEST_CASE("LfoTempoSync Latch Drift", "[mod]")
+TEST_CASE("LFO Tempo Sync Drift in Latch Mode", "[mod]")
 {
     SECTION("Latch Drift")
     {
@@ -841,7 +841,7 @@ TEST_CASE("LfoTempoSync Latch Drift", "[mod]")
     }
 }
 
-TEST_CASE("CModulationSources", "[mod]")
+TEST_CASE("MIDI Controller Smoothing", "[mod]")
 {
     SECTION("Legacy Mode")
     {
@@ -865,7 +865,7 @@ TEST_CASE("CModulationSources", "[mod]")
         }
     }
 
-    SECTION("Fast Exp Mode gets there")
+    SECTION("Fast Exponential Mode Gets There")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -889,7 +889,7 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(a.get_output(0) == t);
     }
 
-    SECTION("Slow Exp Mode gets there eventually")
+    SECTION("Slow Exponential Mode Gets There Eventually")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -910,7 +910,7 @@ TEST_CASE("CModulationSources", "[mod]")
         REQUIRE(idx < 1000);
     }
 
-    SECTION("Go as a Line")
+    SECTION("Go As a Line")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -930,7 +930,7 @@ TEST_CASE("CModulationSources", "[mod]")
         }
     }
 
-    SECTION("Direct is Direct")
+    SECTION("Direct Is Direct")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -950,7 +950,7 @@ TEST_CASE("CModulationSources", "[mod]")
 
 TEST_CASE("Keytrack Morph", "[mod]")
 {
-    INFO("See issue 3046");
+    INFO("See issue #3046");
     SECTION("Run High Key")
     {
         auto surge = Surge::Headless::createSurge(44100);
@@ -973,7 +973,7 @@ TEST_CASE("Keytrack Morph", "[mod]")
     }
 }
 
-TEST_CASE("Keytrack in Play Modes", "[mod]")
+TEST_CASE("Keytrack In Play Modes", "[mod]")
 {
     /*
      * See issue 2892. In mono mode keytrack needs to follow held keys not just soloe playing voice
@@ -1036,7 +1036,7 @@ TEST_CASE("Keytrack in Play Modes", "[mod]")
                             0) == latest);
                 return true;
             };
-            DYNAMIC_SECTION("Keytrack Test mode=" << m << " mpe=" << mp)
+            DYNAMIC_SECTION("Keytrack Test Mode: " << m << " MPE: " << mp)
             {
                 {
                     auto surge = cs();
@@ -1073,7 +1073,7 @@ TEST_CASE("Keytrack in Play Modes", "[mod]")
     }
 }
 
-TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
+TEST_CASE("High/Low/Latest Note Modulators In All Modes", "[mod]")
 {
     // See issue #3597
     auto setup = [](MonoVoicePriorityMode priomode, play_mode polymode) {
@@ -1122,8 +1122,8 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
             for (auto priomode :
                  {NOTE_ON_LATEST_RETRIGGER_HIGHEST, ALWAYS_LOWEST, ALWAYS_HIGHEST, ALWAYS_LATEST})
             {
-                DYNAMIC_SECTION("Play Up Test " << lab[priomode] << " mpe=" << mpemode
-                                                << " poly=" << polymode)
+                DYNAMIC_SECTION("Play Up Test " << lab[priomode] << " MPE: " << mpemode
+                                                << " Play Mode: " << polymode)
                 {
                     // From the issue: Steps to reproduce the behavior:
                     auto surge = setup(priomode, polymode);
@@ -1144,8 +1144,8 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
                         ch++;
                     rcmp(surge, ch, 72, 127, 60, 72, 72);
                 }
-                DYNAMIC_SECTION("Play Down Test " << lab[priomode] << " mpe=" << mpemode
-                                                  << " polymode=" << polymode)
+                DYNAMIC_SECTION("Play Down Test " << lab[priomode] << " MPE: " << mpemode
+                                                  << " Play Mode: " << polymode)
                 {
                     auto surge = setup(priomode, polymode);
                     surge->mpeEnabled = mpemode;
@@ -1166,8 +1166,8 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
                     rcmp(surge, ch, 48, 127, 48, 60, 48);
                 }
 
-                DYNAMIC_SECTION("Play V Test " << lab[priomode] << " mpe=" << mpemode
-                                               << " polymode=" << polymode)
+                DYNAMIC_SECTION("Play V Test " << lab[priomode] << " MPE: " << mpemode
+                                               << " Play Mode: " << polymode)
                 {
                     // From the issue: Steps to reproduce the behavior:
                     auto surge = setup(priomode, polymode);
@@ -1189,8 +1189,8 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
                     rcmp(surge, ch, 66, 127, 60, 72, 66);
                 }
 
-                DYNAMIC_SECTION("Releases one " << lab[priomode] << " mpe=" << mpemode
-                                                << " polymode=" << polymode)
+                DYNAMIC_SECTION("Releases One " << lab[priomode] << " MPE: " << mpemode
+                                                << " Play Mode: " << polymode)
                 {
                     // From the issue: Steps to reproduce the behavior:
                     auto surge = setup(priomode, polymode);
@@ -1216,8 +1216,8 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
                     rcmp(surge, ch, 72, 0, 60, 66, 66);
                 }
 
-                DYNAMIC_SECTION("Releases one " << lab[priomode] << " mpe=" << mpemode
-                                                << " polymode=" << polymode)
+                DYNAMIC_SECTION("Releases One " << lab[priomode] << " MPE: " << mpemode
+                                                << " Play Mode: " << polymode)
                 {
                     // From the issue: Steps to reproduce the behavior:
                     auto surge = setup(priomode, polymode);
@@ -1256,7 +1256,7 @@ TEST_CASE("High Low Latest Note Modulator in All Modes", "[mod]")
             }
 }
 
-TEST_CASE("High Low Latest with splits", "[mod]")
+TEST_CASE("High/Low/Latest Keytrack With Key Splits", "[mod]")
 {
     auto setup = [](MonoVoicePriorityMode priomode, play_mode polymode) {
         auto surge = Surge::Headless::createSurge(44100);
@@ -1307,7 +1307,8 @@ TEST_CASE("High Low Latest with splits", "[mod]")
             for (auto priomode :
                  {NOTE_ON_LATEST_RETRIGGER_HIGHEST, ALWAYS_LOWEST, ALWAYS_HIGHEST, ALWAYS_LATEST})
             {
-                DYNAMIC_SECTION("DUAL " << priomode << " mpe=" << mpemode << " poly=" << polymode)
+                DYNAMIC_SECTION("DUAL " << priomode << " MPE: " << mpemode
+                                        << " Play Mode: " << polymode)
 
                 {
                     auto surge = setup(priomode, polymode);
@@ -1336,8 +1337,8 @@ TEST_CASE("High Low Latest with splits", "[mod]")
                     compval(surge, 1, 60, 70, 65);
                 }
 
-                DYNAMIC_SECTION("KeySplit " << priomode << " mpe=" << mpemode
-                                            << " poly=" << polymode)
+                DYNAMIC_SECTION("Key Split " << priomode << " MPE: " << mpemode
+                                             << " Play Mode: " << polymode)
 
                 {
                     auto surge = setup(priomode, polymode);
@@ -1373,8 +1374,8 @@ TEST_CASE("High Low Latest with splits", "[mod]")
                     compval(surge, 1, 70, 90, 70);
                 }
 
-                DYNAMIC_SECTION("ChSplit " << priomode << " mpe=" << mpemode
-                                           << " poly=" << polymode)
+                DYNAMIC_SECTION("Channel Split " << priomode << " MPE: " << mpemode
+                                                 << " Play Mode: " << polymode)
 
                 {
                     auto surge = setup(priomode, polymode);
@@ -1407,11 +1408,11 @@ TEST_CASE("High Low Latest with splits", "[mod]")
             }
 }
 
-TEST_CASE("ModLFO is well behaved", "[mod]")
+TEST_CASE("Mod LFO Is Well Behaved", "[mod]")
 {
     for (int m = Surge::ModControl::mod_sine; m <= Surge::ModControl::mod_square; ++m)
     {
-        DYNAMIC_SECTION("Mod Control Boundsd for type " << m)
+        DYNAMIC_SECTION("Mod Control Bounded For Type " << m)
         {
             for (int tries = 0; tries < 500; ++tries)
             {

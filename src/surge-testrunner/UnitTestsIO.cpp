@@ -39,7 +39,7 @@
 using namespace Surge::Test;
 using namespace std::chrono_literals;
 
-TEST_CASE("We can read a collection of wavetables", "[io]")
+TEST_CASE("We Can Read Wwavetables", "[io]")
 {
     /*
     ** ToDo:
@@ -79,7 +79,7 @@ TEST_CASE("We can read a collection of wavetables", "[io]")
     }
 }
 
-TEST_CASE("All .wt and .wav factory assets load", "[io]")
+TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);
     REQUIRE(surge.get());
@@ -95,7 +95,7 @@ TEST_CASE("All .wt and .wav factory assets load", "[io]")
     }
 }
 
-TEST_CASE("All Patches are Loadable", "[io]")
+TEST_CASE("All Patches Are Loadable", "[io]")
 {
     auto surge = Surge::Headless::createSurge(44100, true);
     REQUIRE(surge.get());
@@ -114,7 +114,7 @@ TEST_CASE("All Patches are Loadable", "[io]")
     }
 }
 
-TEST_CASE("DAW Streaming and Unstreaming", "[io][mpe][tun]")
+TEST_CASE("DAW Streaming And Unstreaming", "[io][mpe][tun]")
 {
     // The basic plan of attack is, in a section, set up two surges,
     // stream onto data on the first and off of data on the second
@@ -224,7 +224,7 @@ TEST_CASE("DAW Streaming and Unstreaming", "[io][mpe][tun]")
         REQUIRE(surgeSrc->storage.currentScale.rawText == surgeDest->storage.currentScale.rawText);
     }
 
-    SECTION("Save and Restore KBM")
+    SECTION("Save And Restore KBM")
     {
         auto surgeSrc = Surge::Headless::createSurge(44100);
         auto surgeDest = Surge::Headless::createSurge(44100);
@@ -256,7 +256,7 @@ TEST_CASE("DAW Streaming and Unstreaming", "[io][mpe][tun]")
         REQUIRE(surgeDest->storage.isStandardMapping);
     }
 
-    SECTION("Save and Restore Param Midi Controls - Simple")
+    SECTION("Save And Restore Parameter MIDI Learn - Simple")
     {
         auto surgeSrc = Surge::Headless::createSurge(44100);
         auto surgeDest = Surge::Headless::createSurge(44100);
@@ -271,7 +271,7 @@ TEST_CASE("DAW Streaming and Unstreaming", "[io][mpe][tun]")
         REQUIRE(surgeDest->storage.getPatch().param_ptr[118]->midictrl == 57);
     }
 
-    SECTION("Save and Restore Param Midi Controls - Empty")
+    SECTION("Save And Restore Parameter MIDI Learn - Empty")
     {
         auto surgeSrc = Surge::Headless::createSurge(44100);
         auto surgeDest = Surge::Headless::createSurge(44100);
@@ -285,7 +285,7 @@ TEST_CASE("DAW Streaming and Unstreaming", "[io][mpe][tun]")
         }
     }
 
-    SECTION("Save and Restore Param Midi Controls - Multi")
+    SECTION("Save And Restore Parameter MIDI Learn - Multiple")
     {
         auto surgeSrc = Surge::Headless::createSurge(44100);
         auto surgeDest = Surge::Headless::createSurge(44100);
@@ -310,7 +310,7 @@ TEST_CASE("DAW Streaming and Unstreaming", "[io][mpe][tun]")
         REQUIRE(surgeDest->storage.getPatch().param_ptr[172]->midictrl == 82);
     }
 
-    SECTION("Save and Restore Custom Controllers")
+    SECTION("Save And Restore MIDI Learn For Macros")
     {
         auto surgeSrc = Surge::Headless::createSurge(44100);
         auto surgeDest = Surge::Headless::createSurge(44100);
@@ -333,9 +333,9 @@ TEST_CASE("DAW Streaming and Unstreaming", "[io][mpe][tun]")
     }
 }
 
-TEST_CASE("Stream WaveTable Names", "[io]")
+TEST_CASE("Stream Wavetable Names", "[io]")
 {
-    SECTION("Name Restored for Old Patch")
+    SECTION("Name Restored For Old Patch")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -344,7 +344,7 @@ TEST_CASE("Stream WaveTable Names", "[io]")
                 "(Patch Wavetable)");
     }
 
-    SECTION("Name Set when Loading Factory")
+    SECTION("Name Set When Loading a Factory Patch")
     {
         auto surge = Surge::Headless::createSurge(44100, true);
         REQUIRE(surge);
@@ -445,7 +445,7 @@ TEST_CASE("Stream WaveTable Names", "[io]")
     }
 }
 
-TEST_CASE("Load Patches with Embedded KBM", "[io]")
+TEST_CASE("Load Patches With Embedded KBM", "[io]")
 {
     std::vector<std::string> patches = {};
     SECTION("Check Restore")
@@ -695,7 +695,7 @@ TEST_CASE("Patch Version Builder", "[io]")
     }
 }
 
-TEST_CASE("MonoVoicePriority Streams", "[io]")
+TEST_CASE("Mono Voice Priority Streams", "[io]")
 {
     auto fromto = [](std::shared_ptr<SurgeSynthesizer> src,
                      std::shared_ptr<SurgeSynthesizer> dest) {
@@ -704,7 +704,8 @@ TEST_CASE("MonoVoicePriority Streams", "[io]")
 
         dest->loadRaw(d, sz, false);
     };
-    SECTION("MVP Streams Properly")
+
+    SECTION("Mono Voice Priority Streams Properly")
     {
         int mvp = ALWAYS_LOWEST;
         for (int i = 0; i < 20; ++i)

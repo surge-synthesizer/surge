@@ -73,9 +73,9 @@ TEST_CASE("Channel Split Routes on Channel", "[midi]")
     }
 }
 
-TEST_CASE("Duplicate Note Channel Management Issue 3084", "[midi]")
+TEST_CASE("Duplicate Note Channel Management (Issue #3084)", "[midi]")
 {
-    SECTION("MPE Notes quickly off")
+    SECTION("MPE Notes Quickly Off")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -120,7 +120,7 @@ TEST_CASE("Duplicate Note Channel Management Issue 3084", "[midi]")
         }
     }
 
-    SECTION("MPE Notes absent process")
+    SECTION("MPE Notes Absent Process")
     {
         // Basically the same test just without a call to process between key modifications
         auto surge = Surge::Headless::createSurge(44100);
@@ -165,7 +165,7 @@ TEST_CASE("Duplicate Note Channel Management Issue 3084", "[midi]")
     }
 }
 
-TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
+TEST_CASE("Sustain Pedal And Mono", "[midi]") // #1459
 {
     auto playingNoteCount = [](std::shared_ptr<SurgeSynthesizer> surge) {
         int ct = 0;
@@ -234,7 +234,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
         }
     }
 
-    SECTION("Release to Highest by Default")
+    SECTION("Release To Highest By Default")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -289,7 +289,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
         int susp = 64;
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Single Note On and Off");
+            INFO("Single Note On And Off");
             surge->playNote(0, 60, 120, 0);
             step(surge);
             surge->releaseNote(0, 60, 0);
@@ -299,7 +299,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Single Pedal Before Note On and Off");
+            INFO("Single Pedal Before Note On And Off");
             surge->channelController(0, 64, 127);
             step(surge);
             surge->playNote(0, 60, 120, 0);
@@ -329,7 +329,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Note Release with note held. This is the one Evil wants changed.");
+            INFO("Note Release With Note Held. This is the one Evil wants changed.");
             surge->playNote(0, 48, 127, 0);
             step(surge);
             surge->channelController(0, 64, 127);
@@ -349,7 +349,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Under-Note Release with note held. This is the one Evil wants changed.");
+            INFO("Under Note Release With Note Held. This is the one Evil wants changed.");
             surge->playNote(0, 48, 127, 0);
             step(surge);
             surge->channelController(0, 64, 127);
@@ -369,7 +369,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Under-Note Release with pedan on.");
+            INFO("Under Note Release With Pedal On.");
             surge->playNote(0, 48, 127, 0);
             step(surge);
             surge->channelController(0, 64, 127);
@@ -405,7 +405,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
         int susp = 64;
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Single Note On and Off");
+            INFO("Single Note On And Off");
             surge->playNote(0, 60, 120, 0);
             step(surge);
             surge->releaseNote(0, 60, 0);
@@ -415,7 +415,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Single Pedal Before Note On and Off");
+            INFO("Single Pedal Before Note On And Off");
             surge->channelController(0, 64, 127);
             step(surge);
             surge->playNote(0, 60, 120, 0);
@@ -445,7 +445,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Note Release with note held. This is the one Evil wants changed.");
+            INFO("Note Release With Note Held. This is the one Evil wants changed.");
             surge->playNote(0, 48, 127, 0);
             step(surge);
             surge->channelController(0, 64, 127);
@@ -465,7 +465,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Under-Note Release with note held. This is the one Evil wants changed.");
+            INFO("Under Note Release With Note Held. This is the one Evil wants changed.");
             surge->playNote(0, 48, 127, 0);
             step(surge);
             surge->channelController(0, 64, 127);
@@ -485,7 +485,7 @@ TEST_CASE("Sustain Pedal and Mono", "[midi]") // #1459
 
         testInSurge([&](auto surge) {
             // Case one - no pedal play and release
-            INFO("Under-Note Release with pedan on.");
+            INFO("Under Note Release With Pedal On.");
             surge->playNote(0, 48, 127, 0);
             step(surge);
             surge->channelController(0, 64, 127);
@@ -606,7 +606,7 @@ TEST_CASE("Mono Voice Priority Modes", "[midi]")
     {
         for (auto m : modes)
         {
-            DYNAMIC_SECTION("Legacy in PlayMode " << m << " " << (mp ? "mpe" : "non-mpe"))
+            DYNAMIC_SECTION("Legacy in Play Mode " << m << " " << (mp ? "mpe" : "non-mpe"))
             {
                 {
                     TestCase c("No Notes", m, mp, NOTE_ON_LATEST_RETRIGGER_HIGHEST);
@@ -683,7 +683,7 @@ TEST_CASE("Mono Voice Priority Modes", "[midi]")
                 }
             }
 
-            DYNAMIC_SECTION("Latest in PlayMode " << m << " " << (mp ? "mpe" : "non-mpe"))
+            DYNAMIC_SECTION("Latest in Play Mode " << m << " " << (mp ? "mpe" : "non-mpe"))
             {
                 {
                     TestCase c("No Notes", m, mp, ALWAYS_LATEST);
@@ -759,7 +759,7 @@ TEST_CASE("Mono Voice Priority Modes", "[midi]")
                 }
             }
 
-            DYNAMIC_SECTION("Highest in PlayMode " << m << " " << (mp ? "mpe" : "non-mpe"))
+            DYNAMIC_SECTION("Highest in Play Mode " << m << " " << (mp ? "mpe" : "non-mpe"))
             {
                 {
                     TestCase c("No Notes", m, mp, ALWAYS_HIGHEST);
@@ -788,7 +788,7 @@ TEST_CASE("Mono Voice Priority Modes", "[midi]")
                 }
 
                 {
-                    TestCase c("Release to Highest", m, mp, ALWAYS_HIGHEST);
+                    TestCase c("Release To Highest", m, mp, ALWAYS_HIGHEST);
                     c.on(60);
                     c.on(61);
                     c.on(62);
@@ -797,7 +797,7 @@ TEST_CASE("Mono Voice Priority Modes", "[midi]")
                 }
 
                 {
-                    TestCase c("Release to Highest Two", m, mp, ALWAYS_HIGHEST);
+                    TestCase c("Release To Highest Two", m, mp, ALWAYS_HIGHEST);
                     c.on(61);
                     c.on(60);
                     c.on(62);
@@ -815,7 +815,7 @@ TEST_CASE("Mono Voice Priority Modes", "[midi]")
                     confirmResult(c, 60);
                 }
             }
-            DYNAMIC_SECTION("Lowest in PlayMode " << m << " " << (mp ? "mpe" : "non-mpe"))
+            DYNAMIC_SECTION("Lowest in Play Mode " << m << " " << (mp ? "mpe" : "non-mpe"))
             {
                 {
                     TestCase c("No Notes", m, mp, ALWAYS_LOWEST);
@@ -844,7 +844,7 @@ TEST_CASE("Mono Voice Priority Modes", "[midi]")
                 }
 
                 {
-                    TestCase c("Release to Lowest", m, mp, ALWAYS_LOWEST);
+                    TestCase c("Release To Lowest", m, mp, ALWAYS_LOWEST);
                     c.on(60);
                     c.on(59);
                     c.on(58);
@@ -853,7 +853,7 @@ TEST_CASE("Mono Voice Priority Modes", "[midi]")
                 }
 
                 {
-                    TestCase c("Release to Lowest Two", m, mp, ALWAYS_LOWEST);
+                    TestCase c("Release To Lowest Two", m, mp, ALWAYS_LOWEST);
                     c.on(60);
                     c.on(61);
                     c.on(59);
@@ -944,7 +944,7 @@ TEST_CASE("MPE Mono Recoup in Split Mode", "[midi]")
     auto modes = {pm_mono, pm_mono_st, pm_mono_fp, pm_mono_st_fp};
     for (auto m : modes)
     {
-        DYNAMIC_SECTION("Single Note ChSplit Mono mode=" << m)
+        DYNAMIC_SECTION("Single Note Channel Split, Mono Mode: " << m)
         {
             /*
              * Set up a surge in channel split mode and send MPE data
@@ -993,7 +993,7 @@ TEST_CASE("MPE Mono Recoup in Split Mode", "[midi]")
             REQUIRE(playingNoteCount(surge, 1) == 0);
         }
 
-        DYNAMIC_SECTION("Two Note ChSplit Mono mode=" << m)
+        DYNAMIC_SECTION("Two Note Channel Split, Mono Mode: " << m)
         {
             /*
              * Set up a surge in channel split mode and send MPE data
@@ -1043,7 +1043,7 @@ TEST_CASE("MPE Mono Recoup in Split Mode", "[midi]")
             REQUIRE(playingNoteCount(surge, 1) == 0);
         }
 
-        DYNAMIC_SECTION("Split Works @ Highest mode=" << m)
+        DYNAMIC_SECTION("Split Works at Highest Mode: " << m)
         {
             int splitChannel = 8;
             auto surge = Surge::Headless::createSurge(44100);
@@ -1119,7 +1119,7 @@ TEST_CASE("MPE Mono Recoup in Split Mode", "[midi]")
         }
     }
 
-    SECTION("Ch Split Occurs Coherently in Poly")
+    SECTION("Channel Split Occurs Coherently in Poly Mode")
     {
         int splitChannel = 8;
         auto surge = Surge::Headless::createSurge(44100);
@@ -1133,7 +1133,7 @@ TEST_CASE("MPE Mono Recoup in Split Mode", "[midi]")
         REQUIRE(surge);
         for (int i = 1; i < 16; ++i)
         {
-            INFO("Plaing note " << 50 + i << " on channel " << i);
+            INFO("Playing note " << 50 + i << " on channel " << i);
             surge->playNote(i, 50 + i, 127, 0);
             if (i <= splitChannel)
             {
@@ -1165,7 +1165,7 @@ TEST_CASE("MPE Mono Recoup in Split Mode", "[midi]")
     }
 }
 
-TEST_CASE("Priority Modes with Keysplit", "[midi]")
+TEST_CASE("Mono Note Priority Modes With Key Split", "[midi]")
 {
     // These tests could be more complete
     auto playingNoteCount = [](std::shared_ptr<SurgeSynthesizer> surge, int sc) {
@@ -1245,7 +1245,7 @@ TEST_CASE("Priority Modes with Keysplit", "[midi]")
                 surge->mpeEnabled = mp;
                 return surge;
             };
-            DYNAMIC_SECTION("KeySplit Highest mode=" << m << " mpe=" << mp)
+            DYNAMIC_SECTION("Key Split Highest Mode: " << m << " MPE: " << mp)
             {
                 {
                     auto surge = setupSurge(ALWAYS_HIGHEST);
@@ -1292,7 +1292,7 @@ TEST_CASE("Priority Modes with Keysplit", "[midi]")
                 }
             }
 
-            DYNAMIC_SECTION("KeySplit Lowest mode=" << m << " mpe=" << mp)
+            DYNAMIC_SECTION("Key Split Lowest Mode: " << m << " MPE: " << mp)
             {
                 {
                     auto surge = setupSurge(ALWAYS_LOWEST);
@@ -1339,7 +1339,7 @@ TEST_CASE("Priority Modes with Keysplit", "[midi]")
                 }
             }
 
-            DYNAMIC_SECTION("KeySplit Latesr mode=" << m << " mpe=" << mp)
+            DYNAMIC_SECTION("Key Split Latest Mode: " << m << " MPE: " << mp)
             {
                 {
                     auto surge = setupSurge(ALWAYS_LATEST);
@@ -1393,7 +1393,7 @@ TEST_CASE("Voice Stealing", "[midi]")
 {
     for (auto pc : {4, 16, 32, 50, 61, 64})
     {
-        DYNAMIC_SECTION("PolyCount " << pc)
+        DYNAMIC_SECTION("Voice Count " << pc)
         {
             auto surge = surgeOnSine();
             surge->storage.getPatch().polylimit.val.i = pc;
@@ -1594,7 +1594,7 @@ TEST_CASE("MIDI Learn", "[midi]")
 
 TEST_CASE("Poly Chords Blow Through Limit", "[midi]")
 {
-    INFO("See Issue 6221");
+    INFO("See Issue #6221");
     SECTION("Stagger Note On")
     {
         auto surge = Surge::Headless::createSurge(44100);

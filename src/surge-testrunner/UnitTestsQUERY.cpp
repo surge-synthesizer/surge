@@ -37,7 +37,7 @@ TEST_CASE("Simple Query Parse", "[query]")
         REQUIRE(t->content == "init");
         REQUIRE(t->children.empty());
     }
-    SECTION("Two Literals are an And")
+    SECTION("Two Literals Are an AND")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("init sine");
         REQUIRE(t->type == Surge::PatchStorage::PatchDBQueryParser::AND);
@@ -47,7 +47,7 @@ TEST_CASE("Simple Query Parse", "[query]")
         REQUIRE(t->children[0]->content == "init");
         REQUIRE(t->children[1]->content == "sine");
     }
-    SECTION("Multi Spaces between Literals are an And")
+    SECTION("Multi Spaces Between Literals Are an AND")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("init    sine");
         REQUIRE(t->type == Surge::PatchStorage::PatchDBQueryParser::AND);
@@ -57,7 +57,7 @@ TEST_CASE("Simple Query Parse", "[query]")
         REQUIRE(t->children[0]->content == "init");
         REQUIRE(t->children[1]->content == "sine");
     }
-    SECTION("OR explicit")
+    SECTION("OR Explicit")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("init OR sine");
         REQUIRE(t->type == Surge::PatchStorage::PatchDBQueryParser::OR);
@@ -85,7 +85,7 @@ TEST_CASE("Simple Query Parse", "[query]")
         REQUIRE(t->children[1]->content == "dx7");
     }
 
-    SECTION("Parens")
+    SECTION("Parentheses Pt 1")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("(init sine) OR dx7");
         REQUIRE(t->type == Surge::PatchStorage::PatchDBQueryParser::OR);
@@ -100,7 +100,7 @@ TEST_CASE("Simple Query Parse", "[query]")
         REQUIRE(t->children[1]->content == "dx7");
     }
 
-    SECTION("Parens2")
+    SECTION("Parentheses Pt 2")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("dx7 OR (init sine)");
         REQUIRE(t->children[0]->type == Surge::PatchStorage::PatchDBQueryParser::LITERAL);
@@ -116,7 +116,7 @@ TEST_CASE("Simple Query Parse", "[query]")
         REQUIRE(t->children[1]->children[1]->content == "sine");
     }
 
-    SECTION("Parens Ctd")
+    SECTION("Parenthese Pt 3")
     {
         auto t =
             Surge::PatchStorage::PatchDBQueryParser::parseQuery("(esq1 OR (init sine)) AND dx7");
@@ -152,7 +152,7 @@ TEST_CASE("Simple Query Parse", "[query]")
 
 TEST_CASE("SQL Generation", "[query]")
 {
-    SECTION("Simplest of all")
+    SECTION("Simplest of All")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("init");
         auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);

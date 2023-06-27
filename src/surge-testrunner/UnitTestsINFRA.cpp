@@ -36,9 +36,9 @@ inline size_t align_diff(const void *ptr, std::uintptr_t alignment) noexcept
     return (iptr % alignment);
 }
 
-TEST_CASE("Test Setup is Correct", "[infra]")
+TEST_CASE("Test Setup Is Correct", "[infra]")
 {
-    SECTION("No Patches, no WT")
+    SECTION("No Patches, No Wavetables")
     {
         auto surge = Surge::Headless::createSurge(44100, false);
         REQUIRE(surge);
@@ -46,7 +46,7 @@ TEST_CASE("Test Setup is Correct", "[infra]")
         REQUIRE(surge->storage.wt_list.empty());
     }
 
-    SECTION("Patches, WT")
+    SECTION("Patches, Wavetables")
     {
         auto surge = Surge::Headless::createSurge(44100, true);
         REQUIRE(surge);
@@ -54,9 +54,9 @@ TEST_CASE("Test Setup is Correct", "[infra]")
         REQUIRE(!surge->storage.wt_list.empty());
     }
 }
-TEST_CASE("Biquad Aligned", "[infra]")
+TEST_CASE("Biquad Is SIMD Aligned", "[infra]")
 {
-    SECTION("Is it aligned?")
+    SECTION("Is It Aligned?")
     {
         std::vector<BiquadFilter *> pointers;
         for (int i = 0; i < 5000; ++i)
@@ -77,9 +77,9 @@ TEST_CASE("Biquad Aligned", "[infra]")
     }
 }
 
-TEST_CASE("QFU is Aligned", "[infra]")
+TEST_CASE("QuadFilterUnit Is SIMD Aligned", "[infra]")
 {
-    SECTION("Single QFU")
+    SECTION("Single QuadFilterUnit")
     {
         std::vector<sst::filters::QuadFilterUnitState *> pointers;
         for (int i = 0; i < 5000; ++i)
@@ -99,7 +99,7 @@ TEST_CASE("QFU is Aligned", "[infra]")
                 delete d;
     }
 
-    SECTION("QFU Array")
+    SECTION("Array of QuadFilterUnits")
     {
         int nqfus = 5;
         std::vector<sst::filters::QuadFilterUnitState *> pointers;
@@ -158,7 +158,7 @@ TEST_CASE("Memory Pool Works", "[infra]")
         REQUIRE(CountAlloc<1>::ct == 0);
     }
 
-    SECTION("ReSize up")
+    SECTION("Resize Up")
     {
         {
             auto pool = std::make_unique<Surge::Memory::MemoryPool<CountAlloc<2>, 32, 4, 500>>();
@@ -168,7 +168,7 @@ TEST_CASE("Memory Pool Works", "[infra]")
         REQUIRE(CountAlloc<2>::ct == 0);
     }
 
-    SECTION("ReSize up and ReAlloc down")
+    SECTION("Resize Up, Reallocate Down")
     {
         {
             auto pool = std::make_unique<Surge::Memory::MemoryPool<CountAlloc<3>, 32, 4, 500>>();
@@ -182,16 +182,16 @@ TEST_CASE("Memory Pool Works", "[infra]")
     }
 }
 
-TEST_CASE("strnatcmp with spaces", "[infra]")
+TEST_CASE("strnatcmp With Spaces", "[infra]")
 {
-    SECTION("Basic Compare")
+    SECTION("Basic Comparison")
     {
         REQUIRE(strnatcmp("foo", "bar") == 1);
         REQUIRE(strnatcmp("bar", "foo") == -1);
         REQUIRE(strnatcmp("bar", "bar") == 0);
     }
 
-    SECTION("Number Compare")
+    SECTION("Numbers Comparison")
     {
         REQUIRE(strnatcmp("1 foo", "2 foo") == -1);
         REQUIRE(strnatcmp("1 foo", "11 foo") == -1);
@@ -231,5 +231,6 @@ TEST_CASE("strnatcmp with spaces", "[infra]")
         REQUIRE(strnatcmp("Spa Day", "SpaDay") == -1);
         REQUIRE(strnatcmp("SpaDay", "Spa Day") == 1);
     }
+
     SECTION("Doubled Spaces") { REQUIRE(strnatcmp("Spa  Day", "Spa Day") == 0); }
 }
