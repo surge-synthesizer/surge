@@ -193,6 +193,7 @@ jobs:
           set -e
 
           cd build/src/surge-testrunner
+          ctest --version
           ctest -j 4 || ctest --rerun-failed --output-on-failure
         condition: variables.isLinuxUnitTest
         displayName: linux - run unit test
