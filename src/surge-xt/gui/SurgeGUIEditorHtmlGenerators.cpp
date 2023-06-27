@@ -532,7 +532,6 @@ div.frame {
 }
 
 div.tablewrap {
-    width: 610px;
     margin: 0 8px 16px 8px;
     box-sizing: border-box;
     display: block;
@@ -587,7 +586,7 @@ code {
   <body style="margin: 0pt; background: #CDCED4;">
     <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
       <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-        Surge XT Open Sound Control (OSC) Specification
+        Surge XT OSC Specification
       </div>
     </div>
 
@@ -597,7 +596,7 @@ code {
             <h2>OSC Output</h2>
             <!-- Show patch change output -->
             <div class="tablewrap fl cl">
-                <div class="heading"><h3>Patch Change:</h3></div>
+                <div class="heading"><h3>Patch:</h3></div>
                 <table style="border: 2px solid black;">
                     <tr>
                         <th>Address</th>
@@ -606,8 +605,8 @@ code {
                     </tr>
                     <tr>
                         <td>/patch</td>
-                        <td>patch changed</td>
-                        <td class="center">new file path (absolute, no extension)</td>
+                        <td>patch was changed</td>
+                        <td class="center">absolute file path of the new patch, without extension</td>
                     </tr>
                 </table>
             </div>
@@ -638,14 +637,14 @@ code {
 
                 <p>Examples:
                     <div style="margin: -6px 0 2px 0; line-height: 1.75">
-                        <span><code>/param/b/amp/gain 0.63</code></span>
-                        <span><code>/param/global/polyphony_limit 12</code></span>
-                        <span><code>/param/a/mixer/noise/mute 0</code></span>
-                    </div>
-                    <div style="margin: 4px 0 0 0; line-height: 1.75">
-                        <span><code>/tuning/scl ptolemy</code></span>
-                        <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
-                        <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
+                        <p>
+                            <code>/param/b/amp/gain 0.63</code></br>
+                            <code>/param/global/polyphony_limit 12</code></br>
+                            <code>/param/a/mixer/noise/mute 0</code></br>
+                            <code>/tuning/scyl ptolemy</code></br>
+                            <code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></br>
+                            <code>/tuning/path/scl /Users/jane/scala_tunings</code>
+                        </p>
                     </div>
                 </p>
             </div>
