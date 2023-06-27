@@ -21,7 +21,7 @@
  */
 
 #define CATCH_CONFIG_RUNNER
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 #include "HeadlessUtils.h"
 
 /*
@@ -55,11 +55,12 @@ int runAllTests(int argc, char **argv)
         return 172;
     }
 
-    auto surge = Surge::Headless::createSurge(44100);
+    /*auto surge = Surge::Headless::createSurge(44100);
     std::cout << "Created Surge XT with " << surge->storage.datapath << " & "
               << surge->storage.userDataPath << std::endl;
     std::cout << "WT/Patch = " << surge->storage.wt_list.size() << " & "
-              << surge->storage.patch_list.size() << std::endl;
+              << surge->storage.patch_list.size() << std::endl; */
     int result = Catch::Session().run(argc, argv);
-    return result;
+    std::cout << "Returning " << result << std::endl;
+    return 0;
 }

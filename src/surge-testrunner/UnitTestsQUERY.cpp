@@ -26,7 +26,7 @@
 
 #include "PatchDB.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 TEST_CASE("Simple Query Parse", "[query]")
 {

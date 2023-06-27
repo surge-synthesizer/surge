@@ -28,7 +28,7 @@
 #include "Player.h"
 #include "Tunings.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 #include "Tunings.h"
 
 #include "UnitTestUtilities.h"

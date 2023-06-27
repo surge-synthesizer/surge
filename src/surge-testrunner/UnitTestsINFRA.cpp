@@ -28,7 +28,7 @@
 
 #include "sst/plugininfra/strnatcmp.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 inline size_t align_diff(const void *ptr, std::uintptr_t alignment) noexcept
 {

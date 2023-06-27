@@ -22,7 +22,7 @@
 #include <memory>
 #include "SurgeSynthesizer.h"
 #include "Player.h"
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 #include <iostream>
 #include <cstdio>
 #include <string>

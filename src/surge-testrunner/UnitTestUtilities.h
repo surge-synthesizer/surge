@@ -26,6 +26,7 @@
 // the includer so we can set CATCH_CONFIG_RUNNER properly
 
 #include "SurgeSynthesizer.h"
+using namespace Catch;
 
 namespace Surge
 {

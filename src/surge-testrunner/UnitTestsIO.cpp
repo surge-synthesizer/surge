@@ -27,7 +27,7 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 #include <chrono>
@@ -566,7 +566,7 @@ TEST_CASE("Patch Version Builder", "[io]")
             {
                 for (int fu = 0; fu < n_filterunits_per_scene; ++fu)
                 {
-                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu)
+                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu);
                     REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].type.val.i == ft);
                     REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i == st);
                 }
@@ -674,7 +674,7 @@ TEST_CASE("Patch Version Builder", "[io]")
             {
                 for (int fu = 0; fu < n_filterunits_per_scene; ++fu)
                 {
-                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu)
+                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu);
                     REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].type.val.i == ft);
                     REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i == st);
                 }
