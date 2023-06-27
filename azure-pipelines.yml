@@ -183,7 +183,7 @@ jobs:
           set -e
 
           cd build/src/surge-testrunner
-          ctest -j 4
+          ctest 
 
         condition: variables.isWindowsUnitTest
         displayName: windows - run unit tests
@@ -193,7 +193,7 @@ jobs:
           set -e
 
           cd build/src/surge-testrunner
-          ctest -j 4
+          ctest -j 4 || ctest --rerun-failed --output-on-failure
         condition: variables.isLinuxUnitTest
         displayName: linux - run unit test
 

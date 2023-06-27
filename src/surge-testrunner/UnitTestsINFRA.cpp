@@ -56,6 +56,8 @@ TEST_CASE("Biquad Aligned", "[infra]")
         if (pointers.empty())
             for (auto *d : pointers)
                 delete d;
+
+        REQUIRE(1 == 2);
     }
 }
 
@@ -100,6 +102,8 @@ TEST_CASE("QFU is Aligned", "[infra]")
             }
             delete[] f;
         }
+
+        REQUIRE( 1 == 2);
     }
 }
 
