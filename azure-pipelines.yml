@@ -160,7 +160,7 @@ jobs:
         displayName: linux - run apt-get
 
       - bash: |
-          sudo brew install ninja
+          brew install ninja
           sudo xcode-select -s /Applications/Xcode_13.4.1.app
         displayName: Select XCode 13.4.1
         condition: variables.isMac
