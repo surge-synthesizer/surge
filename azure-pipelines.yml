@@ -182,12 +182,8 @@ jobs:
       - bash: |
           set -e
 
-          mkdir -p "${LOCALAPPDATA}/Surge XT/"
-          cd resources/data && tar cf - . | ( cd "${LOCALAPPDATA}/Surge XT" && tar xf - ) && cd ../..
-
-          ls -l "${LOCALAPPDATA}/Surge XT/"
-
-          build/src/surge-testrunner/Release/surge-testrunner.exe
+          cd build/src/surge-testrunner
+          ctest -j 4
 
         condition: variables.isWindowsUnitTest
         displayName: windows - run unit tests
@@ -196,20 +192,16 @@ jobs:
       - bash: |
           set -e
 
-          export PATH=$AGENT_TEMPDIRECTORY:$PATH
-
-          export SURGE_DATA_HOME=`pwd`/resources/data
-          ./build/src/surge-testrunner/surge-testrunner
+          cd build/src/surge-testrunner
+          ctest -j 4
         condition: variables.isLinuxUnitTest
         displayName: linux - run unit test
 
       - bash: |
           set -e
 
-          export PATH=$AGENT_TEMPDIRECTORY:$PATH
-
-          export SURGE_DATA_HOME=`pwd`/resources/data
-          ./build/src/surge-testrunner/Release/surge-testrunner
+          cd build/src/surge-testrunner
+          ctest -j 4
         condition: variables.isMacUnitTest
         displayName: macOS - run unit tests
 
