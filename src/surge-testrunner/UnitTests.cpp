@@ -61,6 +61,5 @@ int runAllTests(int argc, char **argv)
     std::cout << "WT/Patch = " << surge->storage.wt_list.size() << " & "
               << surge->storage.patch_list.size() << std::endl; */
     int result = Catch::Session().run(argc, argv);
-    std::cout << "Returning " << result << std::endl;
-    return 0;
+    return result;
 }
