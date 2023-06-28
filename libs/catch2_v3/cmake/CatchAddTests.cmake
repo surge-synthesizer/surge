@@ -128,7 +128,7 @@ function(catch_discover_tests_impl)
     # Note that the \ escaping must happen FIRST! Do not change the order.
     set(test_name "${test}")
 
-    # Surge Cabnge: Strip off the leading tag from the argument
+    # Surge Change: Strip off the leading tag from the argument
     string(FIND ${test_name} " | " subpos)
     # message(STATUS "${test_name} ${subpos}")
     if (${subpos} GREATER 0)
@@ -137,7 +137,7 @@ function(catch_discover_tests_impl)
     endif()
     set(test_name ${ntn})
     # message(STATUS "${test_name}")
-    #end surge change
+    # end Surge Change
 
     foreach(char \\ , [ ])
       string(REPLACE ${char} "\\${char}" test_name "${test_name}")
