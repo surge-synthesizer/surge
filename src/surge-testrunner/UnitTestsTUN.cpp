@@ -1052,7 +1052,7 @@ TEST_CASE("HPF Ignores Tuning Properly", "[tun][dsp]")
     }
 }
 
-TEST_CASE("Ignoring Tuning Tables Are Correct", "[dsp][tun]")
+TEST_CASE("Ignoring Tuning Tables Are Correct", "[tun][dsp]")
 {
     INFO("Testing condition reported in #1545");
     // This is a simple test which just guarantees monotonicity of the filter and

@@ -39,7 +39,7 @@
 using namespace Surge::Test;
 using namespace std::chrono_literals;
 
-TEST_CASE("We Can Read Wwavetables", "[io]")
+TEST_CASE("We Can Read Wavetables", "[io]")
 {
     /*
     ** ToDo:

@@ -33,7 +33,7 @@
 
 using namespace Surge::Test;
 
-TEST_CASE("Param String Inversion", "[parm]")
+TEST_CASE("Param String Inversion", "[param]")
 {
     SECTION("Inverting")
     {
