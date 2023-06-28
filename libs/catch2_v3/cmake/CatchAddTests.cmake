@@ -127,6 +127,18 @@ function(catch_discover_tests_impl)
     # Escape characters in test case names that would be parsed by Catch2
     # Note that the \ escaping must happen FIRST! Do not change the order.
     set(test_name "${test}")
+
+    # Surge Cabnge: Strip off the leading tag from the argument
+    string(FIND ${test_name} " | " subpos)
+    # message(STATUS "${test_name} ${subpos}")
+    if (${subpos} GREATER 0)
+      math(EXPR startpos "${subpos} + 3")
+      string(SUBSTRING ${test_name} ${startpos} -1 ntn)
+    endif()
+    set(test_name ${ntn})
+    # message(STATUS "${test_name}")
+    #end surge change
+
     foreach(char \\ , [ ])
       string(REPLACE ${char} "\\${char}" test_name "${test_name}")
     endforeach(char)
