@@ -8971,7 +8971,12 @@ namespace Catch {
                 if (startsWith(testCaseInfo.name, '#')) {
                     out << '"' << testCaseInfo.name << '"';
                 } else {
-                    out << testCaseInfo.name;
+                    // Surge Change: Put first tag up front
+                    if (testCaseInfo.tags.empty())
+                        out << testCaseInfo.name;
+                    else
+                        out << testCaseInfo.tags[0].original << " | " << testCaseInfo.name;
+                    // end Surge Change
                 }
 
                 out << '\n';

@@ -791,7 +791,7 @@ TEST_CASE("Non-Monotonic Tunings", "[tun]")
     }
 }
 
-TEST_CASE("Mapping Below And Outside of Count")
+TEST_CASE("Mapping Below And Outside of Count", "[tun]")
 {
     SECTION("A Bit Below")
     {
