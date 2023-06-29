@@ -4390,6 +4390,10 @@ void SurgeGUIEditor::setUseKeyboardShortcuts(bool b)
     }
 
     Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
+
+    // If binding changes means VKB and Accessible keys conflict we
+    // need to remask so just reset the layout to current on toggle.
+    juceEditor->setVKBLayout(juceEditor->currentVKBLayout);
 }
 
 void SurgeGUIEditor::toggleUseKeyboardShortcuts()
