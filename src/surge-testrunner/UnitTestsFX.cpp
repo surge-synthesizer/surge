@@ -1019,20 +1019,18 @@ TEST_CASE("Audio Input Effect", "[fx]")
         inParamsGroups.push_back(panningTestCase);
     }
 
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge);
+    SurgeStorage *surgeStorage = &surge->storage;
+
     for (InParamsGroup &inParamsGroup : inParamsGroups)
     {
         SECTION(inParamsGroup.testGroup)
         {
             for (int slot : slots[inParamsGroup.slot])
             {
-
-                auto surge = Surge::Headless::createSurge(44100);
-                REQUIRE(surge);
-
                 Surge::Test::setFX(surge, slot, fxt_audio_input);
-                SurgeStorage *surgeStorage = &surge->storage;
                 FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
-
                 fxStorage->p[AudioInputEffect::in_audio_input_channel].val.f = 0.0f;
                 fxStorage->p[AudioInputEffect::in_audio_input_level].val.f = 0.0f;
                 fxStorage->p[AudioInputEffect::in_audio_input_pan].val.f = 0.0f;
