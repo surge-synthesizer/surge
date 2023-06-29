@@ -257,6 +257,7 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
 {
     auto searchTerm = [&layout](const auto &x) { return x.first == layout; };
     auto search = std::find_if(vkbLayouts.begin(), vkbLayouts.end(), searchTerm);
+    currentVKBLayout = layout;
 
     if (search != vkbLayouts.end())
     {
@@ -266,6 +267,19 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
 
         for (auto i : search->second)
         {
+            // Don't vind accesible action keys to the keyboard
+            if (Surge::GUI::allowKeyboardEdits(&processor.surge->storage))
+            {
+                // Don't know why we have high bit set on the keys? Do both to be sure
+                auto b1 = Surge::Widgets::isAccessibleKey((juce::KeyPress)i);
+                auto b2 =
+                    (i > 128) ? Surge::Widgets::isAccessibleKey((juce::KeyPress)(i - 128)) : false;
+
+                if (b1 || b2)
+                {
+                    continue;
+                }
+            }
             keyboard->setKeyPressForNote((juce::KeyPress)i, n);
             n++;
         }
