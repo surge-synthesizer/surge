@@ -4944,7 +4944,8 @@ void SurgeSynthesizer::changeModulatorSmoothing(Modulator::SmoothingMode m)
 
 void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
 {
-    if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots)
+    if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots ||
+        source == target)
     {
         return;
     }
