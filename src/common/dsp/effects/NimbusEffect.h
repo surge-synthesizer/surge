@@ -37,6 +37,7 @@ struct SRC_STATE_tag;
 
 class NimbusEffect : public Effect
 {
+  public:
     enum nmb_params
     {
         nmb_mode,
@@ -58,6 +59,7 @@ class NimbusEffect : public Effect
         nmb_num_params,
     };
 
+  private:
     lipol_ps_blocksz mix alignas(16);
     float L alignas(16)[BLOCK_SIZE], R alignas(16)[BLOCK_SIZE];
 
