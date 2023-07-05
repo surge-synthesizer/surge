@@ -2414,87 +2414,44 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     frame->repaint();
                                 });
                         }
+
+                        break;
                     }
-                    break;
                     case ct_amplitude_ringmod:
                     {
                         contextMenu.addSeparator();
+
                         auto dt = p->deform_type;
+                        auto addEntry = [this, &contextMenu, dt, p](CombinatorMode cxm) {
+                            contextMenu.addItem(
+                                combinator_mode_names[cxm], true, dt == cxm, [this, p, cxm]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                    p->deform_type = cxm, synth->storage.getPatch().isDirty = true;
+                                    frame->repaint();
+                                });
+                        };
 
                         Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
                             contextMenu, "COMBINATOR MODE");
 
-                        contextMenu.addItem("Ring Modulation", true, dt == rmm_ring, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
+                        addEntry(cxm_ring);
+                        addEntry(cxm_cxor43_0);
 
-                            p->deform_type = rmm_ring, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem(
-                            "Continuous XOR", true, dt == rmm_cxor43_0, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor43_0,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
                         contextMenu.addItem(-1, "Scale-Invariant Linear Modulation:", false, false);
-                        contextMenu.addItem("Type 1", true, dt == rmm_cxor43_1, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                            p->deform_type = rmm_cxor43_1, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem("Type 2", true, dt == rmm_cxor43_2, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
+                        addEntry(cxm_cxor43_1);
+                        addEntry(cxm_cxor43_2);
+                        addEntry(cxm_cxor43_3);
+                        addEntry(cxm_cxor43_4);
+                        addEntry(cxm_cxor93_0);
+                        addEntry(cxm_cxor93_1);
+                        addEntry(cxm_cxor93_2);
+                        addEntry(cxm_cxor93_3);
+                        addEntry(cxm_cxor93_4);
 
-                            p->deform_type = rmm_cxor43_2, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem("Type 3", true, dt == rmm_cxor43_3, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = rmm_cxor43_3, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem("Type 4", true, dt == rmm_cxor43_4, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = rmm_cxor43_4, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem("Type 5", true, dt == rmm_cxor93_0, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = rmm_cxor93_0, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem("Type 6", true, dt == rmm_cxor93_1, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = rmm_cxor93_1, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem("Type 7", true, dt == rmm_cxor93_2, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = rmm_cxor93_2, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem("Type 8", true, dt == rmm_cxor93_3, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = rmm_cxor93_3, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem("Type 9", true, dt == rmm_cxor93_4, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = rmm_cxor93_4, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
+                        break;
                     }
-                    break;
                     case ct_bonsai_bass_boost:
                     {
                         contextMenu.addSeparator();
@@ -2516,8 +2473,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             frame->repaint();
                         });
                         contextMenu.addSeparator();
+
+                        break;
                     }
-                    break;
                     default:
                     {
                         break;
