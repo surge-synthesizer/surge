@@ -189,19 +189,26 @@ enum NoiseColorChannels
     MONO = 1
 };
 
-enum RingModMode
+enum CombinatorMode
 {
-    rmm_ring = 0,
-    rmm_cxor43_0,
-    rmm_cxor43_1,
-    rmm_cxor43_2,
-    rmm_cxor43_3,
-    rmm_cxor43_4,
-    rmm_cxor93_0,
-    rmm_cxor93_1,
-    rmm_cxor93_2,
-    rmm_cxor93_3,
-    rmm_cxor93_4
+    cxm_ring = 0,
+    cxm_cxor43_0,
+    cxm_cxor43_1,
+    cxm_cxor43_2,
+    cxm_cxor43_3,
+    cxm_cxor43_4,
+    cxm_cxor93_0,
+    cxm_cxor93_1,
+    cxm_cxor93_2,
+    cxm_cxor93_3,
+    cxm_cxor93_4,
+
+    n_cxm_modes,
+};
+
+const char combinator_mode_names[n_cxm_modes][20] = {
+    "Ring Modulation", "Continuous XOR", "Type 1", "Type 2", "Type 3", "Type 4",
+    "Type 5",          "Type 6",         "Type 7", "Type 8", "Type 9",
 };
 
 enum lfo_trigger_mode
