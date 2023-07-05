@@ -2431,86 +2431,70 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             frame->repaint();
                         });
                         contextMenu.addItem(
-                            "CXOR (4,2-a-b-a-b)", true, dt == rmm_cxor43_0, [this, p]() {
+                            "Continuous XOR", true, dt == rmm_cxor43_0, [this, p]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
 
                                 p->deform_type = rmm_cxor43_0,
                                 synth->storage.getPatch().isDirty = true;
                                 frame->repaint();
                             });
-                        contextMenu.addItem(
-                            "SILM 1 (4,3-cb-ab-ab-cb)", true, dt == rmm_cxor43_1, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                        contextMenu.addItem(-1, "Scale-Invariant Linear Modulation:", false, false);
+                        contextMenu.addItem("Type 1", true, dt == rmm_cxor43_1, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor43_1,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 2 (4,3-cb-aa-ab-cb)", true, dt == rmm_cxor43_2, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = rmm_cxor43_1, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Type 2", true, dt == rmm_cxor43_2, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor43_2,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 3 (4,3-cc-cb-ab-cb)", true, dt == rmm_cxor43_3, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = rmm_cxor43_2, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Type 3", true, dt == rmm_cxor43_3, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor43_3,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 4 (4,3-cb-cb-ab-cb)", true, dt == rmm_cxor43_4, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = rmm_cxor43_3, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Type 4", true, dt == rmm_cxor43_4, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor43_4,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 5 (9,3-ba-bc-ba-bc)", true, dt == rmm_cxor93_0, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = rmm_cxor43_4, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Type 5", true, dt == rmm_cxor93_0, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor93_0,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 6 (9,3-bc-cb-ba-ab)", true, dt == rmm_cxor93_1, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = rmm_cxor93_0, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Type 6", true, dt == rmm_cxor93_1, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor93_1,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 7 (9,3-bb-aa-ab-bc)", true, dt == rmm_cxor93_2, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = rmm_cxor93_1, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Type 7", true, dt == rmm_cxor93_2, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor93_2,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 8 (9,3-bb-ba-ab-bc)", true, dt == rmm_cxor93_3, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = rmm_cxor93_2, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Type 8", true, dt == rmm_cxor93_3, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor93_3,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 9 (9,3-ba-ba-bc-cc)", true, dt == rmm_cxor93_4, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = rmm_cxor93_3, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Type 9", true, dt == rmm_cxor93_4, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
 
-                                p->deform_type = rmm_cxor93_4,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
+                            p->deform_type = rmm_cxor93_4, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
                     }
+                    break;
                     case ct_bonsai_bass_boost:
                     {
                         contextMenu.addSeparator();
@@ -2519,16 +2503,16 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
                                                                                         "ROUTING");
 
-                        contextMenu.addItem("Stereo", true, dt == 0, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = 0, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
                         contextMenu.addItem("Mono", true, dt == 1, [this, p]() {
                             undoManager()->pushParameterChange(p->id, p, p->val);
 
                             p->deform_type = 1, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Stereo", true, dt == 0, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+
+                            p->deform_type = 0, synth->storage.getPatch().isDirty = true;
                             frame->repaint();
                         });
                         contextMenu.addSeparator();
