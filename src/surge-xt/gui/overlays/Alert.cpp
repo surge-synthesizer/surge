@@ -31,13 +31,43 @@ namespace Surge
 {
 namespace Overlays
 {
+struct MultiLineSkinLabel : juce::Label, public Surge::GUI::SkinConsumingComponent
+{
+    MultiLineSkinLabel() : juce::Label()
+    {
+        setWantsKeyboardFocus(true);
+        setAccessible(true);
+    }
+    void paint(juce::Graphics &g) override
+    {
+        if (!skin)
+            return;
+
+        g.setColour(skin->getColor(Colors::Dialog::Label::Text));
+        g.setFont(skin->fontManager->getLatoAtSize(9));
+        g.drawFittedText(getText(), getLocalBounds(), juce::Justification::centredTop, 4);
+    }
+
+    void onSkinChanged() override { repaint(); }
+};
+
 Alert::Alert()
 {
+    setAccessible(true);
+    setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
+    setWantsKeyboardFocus(true);
+
+    labelComponent = std::make_unique<MultiLineSkinLabel>();
+    labelComponent->setTitle("Message");
+    addAndMakeVisible(*labelComponent);
+
     okButton = std::make_unique<Surge::Widgets::SurgeTextButton>("alertOk");
+    okButton->setAccessible(true);
     okButton->addListener(this);
     addAndMakeVisible(*okButton);
 
     cancelButton = std::make_unique<Surge::Widgets::SurgeTextButton>("alertCancel");
+    cancelButton->setAccessible(true);
     cancelButton->addListener(this);
     addAndMakeVisible(*cancelButton);
 }
@@ -64,11 +94,6 @@ void Alert::paint(juce::Graphics &g)
     auto fullRect = getDisplayRegion();
 
     paintOverlayWindow(g, skin, associatedBitmapStore, fullRect, title);
-
-    g.setColour(skin->getColor(Colors::Dialog::Label::Text));
-    g.setFont(skin->fontManager->getLatoAtSize(9));
-    g.drawFittedText(label, fullRect.withTrimmedTop(18).reduced(6), juce::Justification::centredTop,
-                     4);
 }
 
 void Alert::resized()
@@ -78,6 +103,8 @@ void Alert::resized()
     auto fullRect = getDisplayRegion();
     auto dialogCenter = fullRect.getWidth() / 2;
     auto buttonRow = fullRect.withHeight(btnHeight).translated(0, buttonVertTranslate);
+
+    labelComponent->setBounds(fullRect.withTrimmedTop(18).withTrimmedBottom(btnHeight).reduced(6));
 
     if (singleButton)
     {
@@ -104,6 +131,7 @@ void Alert::onSkinChanged()
 {
     okButton->setSkin(skin, associatedBitmapStore);
     cancelButton->setSkin(skin, associatedBitmapStore);
+    labelComponent->setSkin(skin, associatedBitmapStore);
 
     repaint();
 }
@@ -134,6 +162,23 @@ void Alert::buttonClicked(juce::Button *button)
     }
 
     setVisible(false);
+}
+
+void Alert::visibilityChanged()
+{
+    if (isVisible())
+        grabKeyboardFocus();
+}
+
+void Alert::setWindowTitle(const std::string &t)
+{
+    title = t;
+    setTitle(title);
+}
+void Alert::setLabel(const std::string &t)
+{
+    label = t;
+    labelComponent->setText(label, juce::NotificationType::dontSendNotification);
 }
 } // namespace Overlays
 } // namespace Surge

@@ -28,6 +28,7 @@ namespace Surge
 
 namespace Overlays
 {
+struct MultiLineSkinLabel;
 
 struct Alert : public juce::Component,
                public Surge::GUI::SkinConsumingComponent,
@@ -42,12 +43,8 @@ struct Alert : public juce::Component,
     std::unique_ptr<Surge::Widgets::SurgeTextButton> cancelButton;
     std::unique_ptr<juce::ToggleButton> toggleButton;
     bool singleButton = false;
-    void setWindowTitle(const std::string &t)
-    {
-        title = t;
-        setTitle(title);
-    }
-    void setLabel(const std::string &t) { label = t; }
+    void setWindowTitle(const std::string &t);
+    void setLabel(const std::string &t);
     void setSingleButtonText(const std::string ok)
     {
         okButton->setButtonText(ok);
@@ -68,6 +65,10 @@ struct Alert : public juce::Component,
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
     juce::Rectangle<int> getDisplayRegion();
+
+    std::unique_ptr<MultiLineSkinLabel> labelComponent;
+
+    void visibilityChanged() override;
 };
 
 } // namespace Overlays
