@@ -27,8 +27,7 @@
 #include "SurgeStorage.h"
 #include "util/LockFreeStack.h"
 
-#include "osc/OSCListener.h"
-#include "osc/OSCSender.h"
+#include "osc/OpenSoundControl.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
 
@@ -351,16 +350,16 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     sst::cpputils::SimpleRingBuffer<oscParamMsg, 4096> oscRingBuf;
 
-    Surge::OSC::OSCListener oscListener;
-    Surge::OSC::OSCSender oscSender;
+    Surge::OSC::OpenSoundControl oscHandler;
 
     bool initOSCIn(int port);
-    bool initOSCOut(int port);
+    bool initOSCOut(int port, bool sendParams);
     bool changeOSCInPort(int newport);
     bool changeOSCOutPort(int newport);
     void stopOSCOut();
 
-    void patch_load_to_OSC(fs::path);
+    void patch_load_to_OSC(fs::path newpath);
+    void param_change_to_OSC(fs::path oscaddr, float val);
 
     //==============================================================================
     const juce::String getName() const override;

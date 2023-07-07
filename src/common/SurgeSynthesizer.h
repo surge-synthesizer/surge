@@ -424,6 +424,17 @@ class alignas(16) SurgeSynthesizer
     }
     void deletePatchLoadedListener(std::string key) { patchLoadedListeners.erase(key); }
 
+    // --- 'param change' listener(s) ----
+    // (same caveats as 'patch loaded' listener, above)
+    std::unordered_map<std::string, std::function<void(const std::string &, float)>>
+        paramChangeListeners;
+    void addParamChangeListener(std::string key,
+                                std::function<void(const std::string &, float)> const &l)
+    {
+        paramChangeListeners.insert({key, l});
+    }
+    void deleteParamChangeListener(std::string key) { paramChangeListeners.erase(key); }
+
     // synth -> editor variables
     bool refresh_editor, patch_loaded;
     int learn_param_from_cc, learn_macro_from_cc, learn_param_from_note;

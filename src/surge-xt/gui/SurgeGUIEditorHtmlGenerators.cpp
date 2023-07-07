@@ -603,8 +603,8 @@ code {
                 Construct OSC messages using the exact (case sensitive)
                 entry listed in the <b>Address</b> column in the tables below.</br>
                 The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
-                where <code>address</code> can currently begin with either <code>tuning</code>
-                or <code>param</code>, and <code>value</code> can be:
+                where <code>address</code> can currently begin with either <code>tuning</code>,
+                <code>patch</code> or <code>param</code>, and <code>value</code> can be:
 
                 <ul>
                     <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>

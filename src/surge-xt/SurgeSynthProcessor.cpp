@@ -137,6 +137,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 #if SURGE_HAS_OSC
     // OSC (Open Sound Control)
+
     bool startOSCInNow =
         Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCIn, false);
     if (startOSCInNow)
@@ -159,7 +160,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     {
         int defaultOSCOutPort = Surge::Storage::getUserDefaultValue(
             &(surge->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
-        bool success = initOSCOut(defaultOSCOutPort);
+        bool success = initOSCOut(defaultOSCOutPort,
+                                  false); // PKS TODO: change 'false' to default for 'sendParams'
         if (!success)
         {
             std::ostringstream msg;
@@ -176,9 +178,9 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 SurgeSynthProcessor::~SurgeSynthProcessor()
 {
-    if (oscListener.listening)
+    if (oscHandler.listening)
     {
-        oscListener.stopListening();
+        oscHandler.stopListening();
     }
     stopOSCOut(); // This also deletes the patch change -> OSC out listener
 }
@@ -248,7 +250,7 @@ void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newNa
 /* OSC (Open Sound Control) */
 bool SurgeSynthProcessor::initOSCIn(int port)
 {
-    auto state = oscListener.init(this, surge, port);
+    auto state = oscHandler.initOSCIn(port);
     surge->storage.oscListenerRunning = state;
 
     return state;
@@ -256,18 +258,18 @@ bool SurgeSynthProcessor::initOSCIn(int port)
 
 bool SurgeSynthProcessor::changeOSCInPort(int new_port)
 {
-    if (oscListener.listening)
+    if (oscHandler.listening)
     {
         surge->storage.oscListenerRunning = false;
-        oscListener.disconnect();
+        oscHandler.stopListening();
     }
 
     return initOSCIn(new_port);
 }
 
-bool SurgeSynthProcessor::initOSCOut(int port)
+bool SurgeSynthProcessor::initOSCOut(int port, bool sendParams)
 {
-    auto state = oscSender.init(surge, port);
+    auto state = oscHandler.initOSCOut(port);
     surge->storage.oscSending = state;
     if (state)
     {
@@ -277,6 +279,11 @@ bool SurgeSynthProcessor::initOSCOut(int port)
         surge->addPatchLoadedListener("OSC_OUT",
                                       [ssp = this](auto s) { ssp->patch_load_to_OSC(s); });
     }
+    if (sendParams)
+    {
+        surge->addParamChangeListener(
+            "OSC_OUT", [ssp = this](auto s, auto f) { ssp->param_change_to_OSC(s, f); });
+    }
 
     return state;
 }
@@ -284,10 +291,11 @@ bool SurgeSynthProcessor::initOSCOut(int port)
 void SurgeSynthProcessor::stopOSCOut()
 {
     surge->deletePatchLoadedListener("OSC_OUT");
-    oscSender.stopSending();
+    surge->deleteParamChangeListener("OSC_OUT");
+    oscHandler.stopSending();
 }
 
-bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port); }
+bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port, false); }
 
 // Called as 'patch loaded' listener; runs on the juce::MessageManager thread
 void SurgeSynthProcessor::patch_load_to_OSC(fs::path fullPath)
@@ -295,8 +303,19 @@ void SurgeSynthProcessor::patch_load_to_OSC(fs::path fullPath)
     std::string pathStr = path_to_string(fullPath);
     if (surge->storage.oscSending && !pathStr.empty())
     {
-        oscSender.send("/patch", pathStr);
+        oscHandler.send("/patch", pathStr);
     }
+}
+
+// Called as 'param changed' listener; runs on the juce::MessageManager thread
+void SurgeSynthProcessor::param_change_to_OSC(fs::path oscaddr, float val)
+{
+    /*
+    if (surge->storage.oscSending && !pathStr.empty())
+    {
+        oscSender.send("/param", pathStr);
+    }
+    */
 }
 //==============================================================================
 

@@ -171,10 +171,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/XMLConfiguredMenus.cpp
   gui/widgets/XMLConfiguredMenus.h
 
-  osc/OSCListener.cpp
-  osc/OSCListener.h
-  osc/OSCSender.cpp
-  osc/OSCSender.h
+  osc/OpenSoundControl.cpp
+  osc/OpenSoundControl.h
   )
 
 if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)

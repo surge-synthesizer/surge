@@ -482,6 +482,9 @@ void SurgeSynthEditor::endParameterEdit(Parameter *p)
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
     par->inEditGesture = false;
     par->endChangeGesture();
+
+    // PKS TODO: Notify any listeners of parameter change
+    std::cout << "endParameterEdit" << p->oscName << std::endl;
 }
 
 void SurgeSynthEditor::beginMacroEdit(long macroNum)
