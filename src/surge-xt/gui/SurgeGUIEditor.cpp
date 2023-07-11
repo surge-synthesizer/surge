@@ -7592,7 +7592,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 patchSelector->setIsFavorite(isPatchFavorite());
                 return true;
             case Surge::GUI::INITIALIZE_PATCH:
+                undoManager()->pushPatch();
                 patchSelector->loadInitPatch();
+                return true;
+            case Surge::GUI::RANDOM_PATCH:
+                undoManager()->pushPatch();
+                synth->selectRandomPatch();
                 return true;
 
             case Surge::GUI::PREV_PATCH:
