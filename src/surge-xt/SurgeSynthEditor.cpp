@@ -483,8 +483,8 @@ void SurgeSynthEditor::endParameterEdit(Parameter *p)
     par->inEditGesture = false;
     par->endChangeGesture();
 
-    // PKS TODO: Notify any listeners of parameter change
-    std::cout << "endParameterEdit" << p->oscName << std::endl;
+    // std::cout << "endParameterEdit" << p->oscName << std::endl;
+    processor.paramChangeToListeners(p);
 }
 
 void SurgeSynthEditor::beginMacroEdit(long macroNum)

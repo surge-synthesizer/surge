@@ -353,14 +353,30 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     Surge::OSC::OpenSoundControl oscHandler;
 
     bool initOSCIn(int port);
-    bool initOSCOut(int port, bool sendParams);
+    bool initOSCOut(int port);
     bool changeOSCInPort(int newport);
     bool changeOSCOutPort(int newport);
     void stopOSCOut();
 
     void patch_load_to_OSC(fs::path newpath);
-    void param_change_to_OSC(fs::path oscaddr, float val);
+    void param_change_to_OSC(std::string paramPath, std::string valStr);
+    void paramChangeToListeners(Parameter *p);
 
+    // --- 'param change' listener(s) ----
+    // Listeners are notified whenever a parameter finishes changing, along with the new value.
+    // Listeners should do any significant work on their own thread; for example, the OSC
+    // paramChangeListener calls OSCSender::send(), which runs on a juce::MessageManager thread.
+    //
+    // Be sure to delete any added listeners in the destructor of the class that added them.
+    std::unordered_map<std::string, std::function<void(const std::string &, const std::string &)>>
+        paramChangeListeners;
+    void
+    addParamChangeListener(std::string key,
+                           std::function<void(const std::string &, const std::string &)> const &l)
+    {
+        paramChangeListeners.insert({key, l});
+    }
+    void deleteParamChangeListener(std::string key) { paramChangeListeners.erase(key); }
     //==============================================================================
     const juce::String getName() const override;
 

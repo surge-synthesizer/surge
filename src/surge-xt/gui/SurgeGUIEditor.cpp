@@ -4835,13 +4835,12 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
         oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Output"), [this]() {
             int defaultOSCPortOut = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
-            // PKS TODO: change 'false' to default value for sending params
-            bool success = juceEditor->processor.initOSCOut(defaultOSCPortOut, false);
+            bool success = juceEditor->processor.initOSCOut(defaultOSCPortOut);
 
-            // if (!success)
-            //{
-            //     SurgeGUIEditor::initOSCError(defaultOSCPortOut);
-            // }
+            if (!success)
+            {
+                SurgeGUIEditor::initOSCError(defaultOSCPortOut);
+            }
         });
     }
 

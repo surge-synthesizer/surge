@@ -2780,12 +2780,6 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
         };
     }
 
-    /* PKS TODO: Notify parameter change listener(s) (OSC out only, for now) */
-    auto p = storage.getPatch().param_ptr[index];
-    std::cout << p->oscName << ":" << value << std::endl;
-    // for (auto &it : synth->paramChangeListeners)
-    //     (it.second)("param and new value here");
-
     if (external && !need_refresh)
     {
         bool got = false;

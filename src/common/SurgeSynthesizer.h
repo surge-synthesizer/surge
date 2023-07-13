@@ -411,12 +411,13 @@ class alignas(16) SurgeSynthesizer
     void prepareModsourceDoProcess(int scenemask);
     unsigned int saveRaw(void **data);
 
-    // ----  'patch loaded' listener(s) ----
+    //==============================================================================
+    // --- 'patch loaded' listener(s) ----
     // Listeners are notified whenever a patch changes, with the path of the new patch.
     // Listeners should do any significant work on their own thread; for example, the OSC
     // patchLoadedListener calls OSCSender::send(), which runs on a juce::MessageManager thread.
     //
-    // Be sure to delete any added listeners in the desctructor of the class that added them.
+    // Be sure to delete any added listeners in the destructor of the class that added them.
     std::unordered_map<std::string, std::function<void(const fs::path &)>> patchLoadedListeners;
     void addPatchLoadedListener(std::string key, std::function<void(const fs::path &)> const &l)
     {
@@ -424,17 +425,7 @@ class alignas(16) SurgeSynthesizer
     }
     void deletePatchLoadedListener(std::string key) { patchLoadedListeners.erase(key); }
 
-    // --- 'param change' listener(s) ----
-    // (same caveats as 'patch loaded' listener, above)
-    std::unordered_map<std::string, std::function<void(const std::string &, float)>>
-        paramChangeListeners;
-    void addParamChangeListener(std::string key,
-                                std::function<void(const std::string &, float)> const &l)
-    {
-        paramChangeListeners.insert({key, l});
-    }
-    void deleteParamChangeListener(std::string key) { paramChangeListeners.erase(key); }
-
+    //==============================================================================
     // synth -> editor variables
     bool refresh_editor, patch_loaded;
     int learn_param_from_cc, learn_macro_from_cc, learn_param_from_note;

@@ -19,8 +19,8 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
-#ifndef SURGE_SRC_SURGE_XT_OSC_OSCSENDER_H
-#define SURGE_SRC_SURGE_XT_OSC_OSCSENDER_H
+#ifndef SURGE_SRC_SURGE_XT_OSC_OSCLISTENER_H
+#define SURGE_SRC_SURGE_XT_OSC_OSCLISTENER_H
 /*
 ** Surge Synthesizer is Free and Open Source Software
 **
@@ -38,32 +38,48 @@
 
 #include "juce_osc/juce_osc.h"
 #include "SurgeSynthesizer.h"
+#include "SurgeStorage.h"
+
+class SurgeSynthProcessor;
 
 namespace Surge
 {
 namespace OSC
 {
 
-class OSCSender
+class OpenSoundControl : public juce::OSCReceiver,
+                         juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
 {
   public:
-    OSCSender();
-    ~OSCSender();
+    OpenSoundControl();
+    ~OpenSoundControl();
 
-    bool init(const std::unique_ptr<SurgeSynthesizer> &surge, int port);
-    void send(std::string addr, std::string msg);
-    void stopSending();
+    void initOSC(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge);
+    bool initOSCIn(int port);
+    bool initOSCOut(int port);
+    void stopListening();
 
-    int portnum = DEFAULT_OSC_PORT_OUT;
+    int iportnum = DEFAULT_OSC_PORT_IN;
+    int oportnum = DEFAULT_OSC_PORT_OUT;
+    bool listening = false;
     bool sendingOSC = false;
 
-  private:
-    juce::OSCSender juceOSCSender;
-    SurgeSynthesizer *synth{nullptr};
+    void oscMessageReceived(const juce::OSCMessage &message) override;
+    void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OSCSender)
+    void send(std::string addr, std::string msg);
+    void sendAllParams();
+    void stopSending();
+
+  private:
+    SurgeSynthesizer *synth{nullptr};
+    SurgeSynthProcessor *sspPtr{nullptr};
+    std::string getWholeString(const juce::OSCMessage &message);
+    juce::OSCSender juceOSCSender;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OpenSoundControl)
 };
 
 } // namespace OSC
 } // namespace Surge
-#endif // SURGE_SRC_SURGE_XT_OSC_OSCSENDER_H
+#endif // SURGE_SRC_SURGE_XT_OSC_OSCLISTENER_H
