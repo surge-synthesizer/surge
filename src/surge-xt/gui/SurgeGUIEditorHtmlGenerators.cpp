@@ -557,6 +557,10 @@ ul {
    -moz-box-sizing: border-box;
 }
 
+td.nw {
+    white-space: nowrap;
+}
+
 
 code {
     color: #dc3918;
@@ -612,9 +616,9 @@ code {
                             <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                         </div>
                     </p>
-                    <p>
-                        All OSC messages described below work in <b>both</b> directions, unless marked with "<b>†</b>". In this case, only
-                        the incoming OSC message is supported, and none is echoed to OSC out.
+                    <p style="margin-top: 28px; margin-bottom: 0px;">
+                        All OSC messages described below work in <b>both</b> directions, unless marked with "<b>†</b>". For these, only
+                        the incoming OSC message is supported; there is no corresponding OSC out message.
                     </p>
                 </div>
             </div>
@@ -628,33 +632,40 @@ code {
                             <th>Appropriate Values</th>
                         </tr>
                         <tr>
-                            <td>/patch/load</td>
-                            <td>load patch</td>
+                            <td class="nw">/patch/load</td>
+                            <td class="nw">load patch</td>
                             <td>file path (absolute, no extension)</td>
                         </tr>
                         <tr>
-                            <td><b></b>/patch/incr</td>
-                            <td>increment patch</td>
+                            <td class="nw">/patch/save</td>
+                            <td class="nw">save patch</td>
+                            <td><b>† </b>none: overwrites current patch OR
+                                file path (absolute, no extension, overwrites if file exists)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="nw">/patch/incr</td>
+                            <td class="nw">increment patch</td>
                             <td><b>† </b>(none)</td>
                         </tr>
                         <tr>
-                            <td><b></b>/patch/decr</td>
-                            <td>decrement patch</td>
+                            <td class="nw">/patch/decr</td>
+                            <td class="nw">decrement patch</td>
                             <td><b>† </b>(none)</td>
                         </tr>
                         <tr>
-                            <td><b></b>/patch/incr_category</td>
-                            <td>increment category</td>
+                            <td class="nw">/patch/incr_category</td>
+                            <td class="nw">increment category</td>
                             <td><b>† </b>(none)</td>
                         </tr>
                         <tr>
-                            <td><b></b>/patch/decr_category</td>
-                            <td>decrement category</td>
+                            <td class="nw">/patch/decr_category</td>
+                            <td class="nw">decrement category</td>
                             <td><b>† </b>(none)</td>
                         </tr>
                         <tr>
-                            <td><b></b>/patch/random</td>
-                            <td>choose random patch</td>
+                            <td class="nw">/patch/random</td>
+                            <td class="nw">choose random patch</td>
                             <td><b>† </b>(none)</td>
                         </tr>
                     </table>
@@ -697,7 +708,7 @@ code {
                 <div style="clear: both;"></div>
 
                 <div class="tablewrap cr cl" style="margin: 0 auto;">
-                    <div class="heading"><h3>Parameters Query:</h3></div>
+                    <div class="heading"><h3>All Parameters Query:</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
                             <th>Address</th>
@@ -706,7 +717,7 @@ code {
                         </tr>
                         <tr>
                             <td>/send_all_params</td>
-                            <td>Request all parameters</td>
+                            <td>request all parameters</td>
                             <td><b>† </b>none</td>
                         </tr>
                         <tr>

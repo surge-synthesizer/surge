@@ -153,6 +153,18 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             std::cout << "Patch:" << dataStr << std::endl;
 #endif
         }
+        else if (address2 == "save")
+        {
+            std::string dataStr = getWholeString(message);
+            if (dataStr.empty())
+                synth->savePatch(false, true);
+            else
+            {
+                dataStr += ".fxp";
+                fs::path ppath = fs::path(dataStr);
+                synth->savePatchToPath(ppath);
+            }
+        }
         else if (address2 == "random")
         {
             synth->selectRandomPatch();
