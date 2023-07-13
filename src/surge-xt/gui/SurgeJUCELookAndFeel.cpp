@@ -352,6 +352,13 @@ juce::Font SurgeJUCELookAndFeel::getPopupMenuFont()
     return skin->fontManager->getLatoAtSize(15);
     // return juce::LookAndFeel_V4::getPopupMenuFont();
 }
+
+juce::Font SurgeJUCELookAndFeel::getPopupMenuBoldFont()
+{
+    // return juce::Font("Comic Sans MS", 15, juce::Font::plain);
+    return skin->fontManager->getLatoAtSize(15, juce::Font::bold);
+}
+
 // overridden here just to make the shortcut text same size as normal menu entry text
 void SurgeJUCELookAndFeel::drawPopupMenuItem(Graphics &g, const Rectangle<int> &area,
                                              const bool isSeparator, const bool isActive,
