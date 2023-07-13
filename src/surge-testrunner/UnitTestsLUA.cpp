@@ -27,7 +27,7 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 
@@ -39,15 +39,15 @@
 
 #include "lua/LuaSources.h"
 
-TEST_CASE("LUA Hello World", "[lua]")
+TEST_CASE("Lua Hello World", "[lua]")
 {
-    SECTION("HW")
+    SECTION("Hello World")
     {
         lua_State *L = lua_open();
         REQUIRE(L);
         luaL_openlibs(L);
 
-        const char lua_script[] = "print('Hello World from LUAJIT!')";
+        const char lua_script[] = "print('Hello World from LuaJIT!')";
         int load_stat = luaL_loadbuffer(L, lua_script, strlen(lua_script), lua_script);
         lua_pcall(L, 0, 0, 0);
 
@@ -55,7 +55,7 @@ TEST_CASE("LUA Hello World", "[lua]")
     }
 }
 
-TEST_CASE("LUA Sample Operations", "[lua]")
+TEST_CASE("Lua Sample Operations", "[lua]")
 {
     SECTION("Math")
     {
@@ -89,7 +89,7 @@ TEST_CASE("LUA Sample Operations", "[lua]")
         lua_close(L);
     }
 
-    SECTION("Sample Mod FUnction")
+    SECTION("Sample Mod Function")
     {
         std::string fn = R"FN(
 function modfunc(phase)
@@ -151,7 +151,7 @@ end
 
 TEST_CASE("Surge Prelude", "[lua]")
 {
-    SECTION("Test the Prelude")
+    SECTION("Test The Prelude")
     {
         lua_State *L = lua_open();
         REQUIRE(L);
@@ -167,8 +167,8 @@ TEST_CASE("Surge Prelude", "[lua]")
         auto pcall = lua_pcall(L, 0, 1, 0);
         if (pcall != 0)
         {
-            std::cout << "LUA Error[" << pcall << "] " << lua_tostring(L, -1) << std::endl;
-            INFO("LUA Error " << pcall << " " << lua_tostring(L, -1));
+            std::cout << "Lua Error[" << pcall << "] " << lua_tostring(L, -1) << std::endl;
+            INFO("Lua Error " << pcall << " " << lua_tostring(L, -1));
         }
 
         REQUIRE(lua_isnumber(L, -1));
@@ -178,9 +178,9 @@ TEST_CASE("Surge Prelude", "[lua]")
     }
 }
 
-TEST_CASE("LUA Table API", "[lua]")
+TEST_CASE("Lua Table API", "[lua]")
 {
-    SECTION("Push and get Element")
+    SECTION("Push And Get Element")
     {
         lua_State *L = lua_open();
         REQUIRE(L);
@@ -259,7 +259,7 @@ end
         REQUIRE(lua_gettop(L) == 0);
         lua_close(L);
     }
-    SECTION("Isnt a Function")
+    SECTION("Isn't a Function")
     {
         auto fn = R"FN(
 shazbot = 13
@@ -278,7 +278,7 @@ shazbot = 13
         lua_close(L);
     }
 
-    SECTION("Isnt Found")
+    SECTION("Isn't Found")
     {
         auto fn = R"FN(
 function double(x)
@@ -299,7 +299,7 @@ end
         lua_close(L);
     }
 
-    SECTION("Doesnt Parse")
+    SECTION("Doesn't Parse")
     {
         auto fn = R"FN(
 function double(x)
@@ -324,7 +324,7 @@ end
         lua_close(L);
     }
 
-    SECTION("Doesnt Evaluate")
+    SECTION("Doesn't Evaluate")
     {
         auto fn = R"FN(
 -- A bit of a contrived case but that's OK
@@ -481,7 +481,7 @@ end)FN");
         }
     }
 
-    SECTION("Saw Modulator")
+    SECTION("Sawtooth Modulator")
     {
         SurgeStorage storage;
         FormulaModulatorStorage fs;
@@ -498,7 +498,7 @@ end)FN");
         }
     }
 
-    SECTION("Sin Modulator")
+    SECTION("Sine Modulator")
     {
         SurgeStorage storage;
         FormulaModulatorStorage fs;
@@ -659,9 +659,9 @@ end)FN");
         REQUIRE(outOfBounds > 0);
     }
 }
-TEST_CASE("WavetableScript", "[formula]")
+TEST_CASE("Wavetable Script", "[formula]")
 {
-    SECTION("Just the Sins")
+    SECTION("Just The Sines")
     {
         const std::string s = R"FN(
 function generate(config)
@@ -689,7 +689,7 @@ end
 
 TEST_CASE("Simple Used Formula Modulator", "[formula]")
 {
-    SECTION("Run Formula on Voice and Scene")
+    SECTION("Run Formula on Voice And Scene")
     {
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
@@ -728,9 +728,9 @@ end)FN");
     }
 }
 
-TEST_CASE("Voice Features and Flags", "[formula]")
+TEST_CASE("Voice Features And Flags", "[formula]")
 {
-    SECTION("IsVoice is set correctly")
+    SECTION("is_voice Is Set Correctly")
     {
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
@@ -776,7 +776,7 @@ end)FN");
         REQUIRE(!sval); // a change - we don't even set is_voice if not voice subscribed
     }
 
-    SECTION("Gate and Channel")
+    SECTION("Gate And Channel")
     {
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
@@ -857,9 +857,9 @@ TEST_CASE("Macros Are Available", "[formula]")
     REQUIRE(1);
 }
 
-TEST_CASE("Nan Clampsr", "[formula]")
+TEST_CASE("NaN Clamper", "[formula]")
 {
-    SECTION("Nan Formula")
+    SECTION("NaN Formula")
     {
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
@@ -893,7 +893,7 @@ end)FN");
         REQUIRE(!lms->formulastate.isFinite);
     }
 
-    SECTION("Not Nan Formula")
+    SECTION("Not A NaN Formula")
     {
         auto surge = Surge::Test::surgeOnSine();
         surge->storage.getPatch().scene[0].lfo[0].shape.val.i = lt_formula;
@@ -930,7 +930,7 @@ end)FN");
 TEST_CASE("Two Surge XTs", "[formula]")
 {
     // this attempts but fails to reproduce 5753 but i left it here anyway
-    SECTION("Two Surge XTs on Tutorial 3")
+    SECTION("Two Surge XTs, Tutorial 3")
     {
         auto s1 = Surge::Test::surgeOnSine();
         auto s2 = Surge::Test::surgeOnSine();

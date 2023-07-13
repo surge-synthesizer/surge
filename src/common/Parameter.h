@@ -507,6 +507,7 @@ class Parameter
     int ctrlgroup_entry = 0;
     int ctrlstyle = cs_off;
     int midictrl{};
+    int midichan{};
     int param_id_in_scene{};
     bool affect_other_parameters{};
     float moverate{};

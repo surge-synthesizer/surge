@@ -27,13 +27,13 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 
 using namespace Surge::Test;
 
-TEST_CASE("Param String Inversion", "[parm]")
+TEST_CASE("Param String Inversion", "[param]")
 {
     SECTION("Inverting")
     {

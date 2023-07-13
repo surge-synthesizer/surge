@@ -28,6 +28,7 @@ namespace Surge
 
 namespace Overlays
 {
+struct MultiLineSkinLabel;
 
 struct Alert : public juce::Component,
                public Surge::GUI::SkinConsumingComponent,
@@ -40,24 +41,34 @@ struct Alert : public juce::Component,
     std::string title, label;
     std::unique_ptr<Surge::Widgets::SurgeTextButton> okButton;
     std::unique_ptr<Surge::Widgets::SurgeTextButton> cancelButton;
-    void setWindowTitle(const std::string &t)
+    std::unique_ptr<juce::ToggleButton> toggleButton;
+    bool singleButton = false;
+    void setWindowTitle(const std::string &t);
+    void setLabel(const std::string &t);
+    void setSingleButtonText(const std::string ok)
     {
-        title = t;
-        setTitle(title);
+        okButton->setButtonText(ok);
+        singleButton = true;
     }
-    void setLabel(const std::string &t) { label = t; }
-    void setButtonText(const juce::String &okText, const juce::String &cancelText)
+    void setOkCancelButtonTexts(const std::string &ok, const std::string &cancel)
     {
-        okButton->setButtonText(okText);
-        cancelButton->setButtonText(cancelText);
+        okButton->setButtonText(ok);
+        cancelButton->setButtonText(cancel);
     }
+    void addToggleButtonAndSetText(const std::string &t);
     std::function<void()> onOk;
     std::function<void()> onCancel;
+    std::function<void(bool)> onOkForToggleState;
+    std::function<void(bool)> onCancelForToggleState;
     void paint(juce::Graphics &g) override;
     void resized() override;
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
     juce::Rectangle<int> getDisplayRegion();
+
+    std::unique_ptr<MultiLineSkinLabel> labelComponent;
+
+    void visibilityChanged() override;
 };
 
 } // namespace Overlays

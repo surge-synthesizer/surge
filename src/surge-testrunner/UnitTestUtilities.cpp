@@ -22,7 +22,7 @@
 #include <memory>
 #include "SurgeSynthesizer.h"
 #include "Player.h"
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 #include <iostream>
 #include <cstdio>
 #include <string>
@@ -201,7 +201,7 @@ void setupStorageRanges(Parameter *start, Parameter *endIncluding, int &storage_
 */
 std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &otp)
 {
-    auto surge = Surge::Headless::createSurge(44100);
+    auto surge = Surge::Headless::createSurge(44100, true);
 
     bool foundInitSine = false;
     for (int i = 0; i < surge->storage.patch_list.size(); ++i)
@@ -224,9 +224,26 @@ std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp, float 
 {
     auto surge = Surge::Headless::createSurge(sr);
 
-    auto templatePath = surge->storage.datapath / fs::path{"patches_factory"} /
-                        fs::path{"Templates"} / fs::path{otp + ".fxp"};
+    auto defaultPath = surge->storage.datapath;
+    try
+    {
+        if (!fs::exists(defaultPath / fs::path{"patches_factory"}))
+        {
+            auto pt = fs::path{"resources/data/patches_factory"};
+            if (fs::exists(pt) && fs::is_directory(pt))
+            {
+                defaultPath = fs::path{"resources/data"};
+            }
+        }
+    }
+    catch (const fs::filesystem_error &)
+    {
+    }
 
+    auto templatePath =
+        defaultPath / fs::path{"patches_factory"} / fs::path{"Templates"} / fs::path{otp + ".fxp"};
+
+    REQUIRE(fs::exists(templatePath));
     surge->loadPatchByPath(path_to_string(templatePath).c_str(), -1, "Test");
 
     return surge;
@@ -268,7 +285,7 @@ void makePlotPNGFromData(std::string pngFileName, std::string plotTitle, float *
     system(cmd.c_str());
 #else
     std::cout
-        << "makePlotPNGFromData is only on mac for now (since @baconpaul just uses it to debug)"
+        << "makePlotPNGFromData is only on Mac for now (since @baconpaul just uses it to debug)"
         << std::endl;
 #endif
 }

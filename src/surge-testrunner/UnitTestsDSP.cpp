@@ -25,7 +25,7 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 
@@ -39,7 +39,7 @@
 
 using namespace Surge::Test;
 
-TEST_CASE("Simple Single Oscillator is Constant", "[dsp]")
+TEST_CASE("Simple Single Oscillator is Constant", "[osc]")
 {
     auto surge = Surge::Headless::createSurge(44100);
     REQUIRE(surge);
@@ -152,14 +152,14 @@ TEST_CASE("Unison Absolute and Relative", "[osc]")
         assertAbsolute("resources/test-data/patches/Classic-Uni2-Absolute.fxp");
     }
 
-    SECTION("SH Oscillator")
+    SECTION("S&H Noise Oscillator")
     {
         assertRelative("resources/test-data/patches/SH-Uni2-Relative.fxp");
         assertAbsolute("resources/test-data/patches/SH-Uni2-Absolute.fxp");
     }
 }
 
-TEST_CASE("Unison at Sample Rates", "[osc]")
+TEST_CASE("Unison at Different Sample Rates", "[osc]")
 {
     auto assertRelative = [](const std::shared_ptr<SurgeSynthesizer> &surge, const char *pn) {
         REQUIRE(surge->loadPatchByPath(pn, -1, "Test"));
@@ -282,7 +282,7 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
 
         for (auto sr : srs)
         {
-            INFO("SH Oscillator test at " << sr);
+            INFO("S&H Noise Oscillator test at " << sr);
             auto surge = Surge::Headless::createSurge(sr, true);
 
             assertRelative(surge, "resources/test-data/patches/SH-Uni2-Relative.fxp");
@@ -292,7 +292,7 @@ TEST_CASE("Unison at Sample Rates", "[osc]")
     }
 }
 
-TEST_CASE("All Patches have Bounded Output", "[dsp]")
+TEST_CASE("All Patches Have Bounded Output", "[dsp]")
 {
     auto surge = Surge::Headless::createSurge(44100);
     REQUIRE(surge.get());
@@ -341,7 +341,7 @@ TEST_CASE("All Patches have Bounded Output", "[dsp]")
     // Surge::Headless::playOnNRandomPatches(surge, scale, 100, callBack);
 }
 
-TEST_CASE("libsamplerate basics", "[dsp]")
+TEST_CASE("libsamplerate Basics", "[dsp]")
 {
     for (auto tsr : {44100, 48000}) // { 44100, 48000, 88200, 96000, 192000 })
     {
@@ -418,6 +418,7 @@ TEST_CASE("Every Oscillator Plays", "[dsp]")
         DYNAMIC_SECTION("Oscillator type " << osc_type_names[i])
         {
             auto surge = Surge::Headless::createSurge(44100, true);
+            REQUIRE(surge->storage.wt_list.size() > 0);
 
             for (int q = 0; q < BLOCK_SIZE; q++)
             {
@@ -480,7 +481,7 @@ TEST_CASE("Untuned is 2^x", "[dsp]")
 
 TEST_CASE("SSE std::complex", "[dsp]")
 {
-    SECTION("Can make a complex on m128")
+    SECTION("Can Make std::complex on m128")
     {
         auto a = SSEComplex();
         // The atIndex operation is expensive. Stay vectorized as long as possible.
@@ -533,7 +534,7 @@ TEST_CASE("SSE std::complex", "[dsp]")
         REQUIRE(c2.real() == Approx(-sqrt(2.0) / 2).margin(1e-5));
         REQUIRE(c2.imag() == Approx(sqrt(2.0) / 2).margin(1e-5));
 
-        // At this extrema we are a touch less acrrucate
+        // At this extrema we are a touch less accurate
         auto c3 = c.atIndex(3);
         REQUIRE(c3.real() == Approx(-1).margin(1e-4));
         REQUIRE(c3.imag() == Approx(0).margin(1e-4));
@@ -546,7 +547,7 @@ TEST_CASE("SSE std::complex", "[dsp]")
 
 // When we return to #1514 this is a good starting point
 #if 0
-TEST_CASE( "NaN Patch from Issue 1514", "[dsp]" )
+TEST_CASE( "NaN Patch From Issue #1514", "[dsp]" )
 {
    auto surge = Surge::Headless::createSurge(44100);
    REQUIRE( surge );
@@ -583,9 +584,9 @@ TEST_CASE( "NaN Patch from Issue 1514", "[dsp]" )
 }
 #endif
 
-TEST_CASE("BasicDSP", "[dsp]")
+TEST_CASE("Basic DSP", "[dsp]")
 {
-    SECTION("limit range ")
+    SECTION("limit_range()")
     {
         REQUIRE(limit_range(0.1, 0.2, 0.5) == 0.2);
         REQUIRE(limit_range(0.2, 0.2, 0.5) == 0.2);
@@ -610,9 +611,9 @@ TEST_CASE("BasicDSP", "[dsp]")
     }
 }
 
-TEST_CASE("Wavehaper LUT", "[dsp]")
+TEST_CASE("Wavehaper Lookup Table", "[dsp]")
 {
-    SECTION("ASYM_SSE2")
+    SECTION("ASYM SSE2")
     {
         // need to do this to init tables only
         auto surge = Surge::Headless::createSurge(44100);
@@ -655,7 +656,7 @@ TEST_CASE("Wavehaper LUT", "[dsp]")
     }
 }
 
-TEST_CASE("Dont Fear The Reaper", "[dsp]")
+TEST_CASE("Don't Fear The Reaper", "[dsp]")
 {
     // Reaper added cool per-plugin oversampling. Will we do OK with that?
     for (auto base : {44100, 48000})

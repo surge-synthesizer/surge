@@ -37,7 +37,8 @@ jobs:
           imageName: 'macos-latest'
           isMac: True
           isMacUnitTest: True
-          cmakeArguments: "-GXcode"
+          isUnitTest: True
+          cmakeArguments: "-GNinja"
           cmakeTarget: "surge-testrunner"
           cmakeConfig: "Release"
         windows-x86-32bit:
@@ -50,14 +51,14 @@ jobs:
           imageName: 'macos-latest'
           isMac: True
           isMacFat: True
-          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
         macOS-arm:
           imageName: 'macos-latest'
           isMac: True
           isMacFat: True
-          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
+          cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
         windows-x64:
@@ -70,6 +71,7 @@ jobs:
           imageName: 'windows-2019'
           isWindows: True
           isWindowsUnitTest: True
+          isUnitTest: True
           cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
@@ -83,6 +85,7 @@ jobs:
           imageName: 'ubuntu-20.04'
           isLinux: True
           isLinuxUnitTest: True
+          isUnitTest: True
           cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
@@ -157,6 +160,7 @@ jobs:
         displayName: linux - run apt-get
 
       - bash: |
+          brew install ninja
           sudo xcode-select -s /Applications/Xcode_13.4.1.app
         displayName: Select XCode 13.4.1
         condition: variables.isMac
@@ -171,47 +175,14 @@ jobs:
           cmake --build build --config $(cmakeConfig) --target $(cmakeTarget) --parallel 8
         displayName: all - build with cmake
 
-
-        #- bash: |
-      #    set -e
-      #    echo "Surge.component"
-      #    lipo -archs build/surge_products/Surge.component/Contents/MacOS/Surge
-      #  displayName: mac - lipo the AU
-      #  condition: variables.isMacFat
-
       - bash: |
           set -e
 
-          mkdir -p "${LOCALAPPDATA}/Surge XT/"
-          cd resources/data && tar cf - . | ( cd "${LOCALAPPDATA}/Surge XT" && tar xf - ) && cd ../..
+          cd build
+          ctest -j 4 || ctest --rerun-failed --output-on-failure
 
-          ls -l "${LOCALAPPDATA}/Surge XT/"
-
-          build/src/surge-testrunner/Release/surge-testrunner.exe
-
-        condition: variables.isWindowsUnitTest
-        displayName: windows - run unit tests
-
-
-      - bash: |
-          set -e
-
-          export PATH=$AGENT_TEMPDIRECTORY:$PATH
-
-          export SURGE_DATA_HOME=`pwd`/resources/data
-          ./build/src/surge-testrunner/surge-testrunner
-        condition: variables.isLinuxUnitTest
-        displayName: linux - run unit test
-
-      - bash: |
-          set -e
-
-          export PATH=$AGENT_TEMPDIRECTORY:$PATH
-
-          export SURGE_DATA_HOME=`pwd`/resources/data
-          ./build/src/surge-testrunner/Release/surge-testrunner
-        condition: variables.isMacUnitTest
-        displayName: macOS - run unit tests
+        condition: variables.isUnitTest
+        displayName: all - run unit tests
 
   - job: NotifyReleases
     dependsOn: BuildCodeQuality

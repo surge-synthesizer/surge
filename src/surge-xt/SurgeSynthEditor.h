@@ -123,6 +123,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
         {"Workman",         {'a', 'd', 's', 'r', 'h', 't', 'b', 'g', 'j', 'y', 'f', 'n', 'e', 'p', 'o', 186, 'i', 219, 222, 221}}
     };
     // clang-format on
+    std::string currentVKBLayout;
 
   private:
     // This reference is provided as a quick way for your editor to

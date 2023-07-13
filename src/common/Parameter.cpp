@@ -217,6 +217,7 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
     posy_offset = 0;
     per_voice_processing = scene ? true : false;
     midictrl = -1;
+    midichan = -1;
 
     clear_flags();
 
@@ -2386,6 +2387,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 iw->valminus = res->valDown;
                 iw->dvalplus = res->changeUp;
                 iw->dvalminus = res->changeDown;
+
+                strncpy(txt, res->singleLineModulationSummary.c_str(), TXT_SIZE - 1);
                 return;
             }
         }

@@ -95,6 +95,7 @@ enum DefaultKey
     MPEPitchBendRange,
     PitchSmoothingMode,
     UseCh2Ch3ToPlayScenesIndividually,
+    MenuBasedMIDILearnChannel,
 
     SmoothingMode,
     MonoPedalMode,

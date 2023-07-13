@@ -27,7 +27,7 @@
 #include "HeadlessUtils.h"
 #include "Player.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 
@@ -45,7 +45,7 @@ TEST_CASE("Run Every Filter", "[flt]")
             REQUIRE(surge);
             for (int fs = 0; fs < nst; ++fs)
             {
-                INFO("SUBTYPE IS " << fs);
+                INFO("Subtype is " << fs);
                 surge->storage.getPatch().scene[0].filterunit[0].type.val.i = fn;
                 surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i = fs;
 
@@ -72,7 +72,7 @@ TEST_CASE("Run Every Waveshaper", "[flt]")
 {
     for (int wt = 0; wt < (int)sst::waveshapers::WaveshaperType::n_ws_types; wt++)
     {
-        DYNAMIC_SECTION("Test WaveShaper " << sst::waveshapers::wst_names[wt])
+        DYNAMIC_SECTION("Test Waveshaper " << sst::waveshapers::wst_names[wt])
         {
             auto surge = Surge::Headless::createSurge(44100);
             REQUIRE(surge);

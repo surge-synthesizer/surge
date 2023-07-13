@@ -119,6 +119,20 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
         // construct submenus for explicit controller mapping
         auto midiSub = juce::PopupMenu();
 
+        // which MIDI channel to use for MIDI learn via menu
+        int learnChan = (learn_mode == macro_cc) ? synth->storage.controllers_chan[idx]
+                        : (ptag < n_global_params)
+                            ? p->midichan
+                            : synth->storage.getPatch().param_ptr[ptag]->midichan;
+
+        // -1 means Omni but it's also the default value, so just double-check
+        // if the user setting matches or if it's different, then use that
+        if (learnChan == -1)
+        {
+            learnChan = Surge::Storage::getUserDefaultValue(
+                &(this->synth->storage), Surge::Storage::MenuBasedMIDILearnChannel, -1);
+        }
+
         for (int subs = 0; subs < 7; ++subs)
         {
             auto currentSub = juce::PopupMenu();
@@ -156,8 +170,10 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                         isSubChecked = true;
                     }
 
-                    currentSub.addItem(name, isEnabled, isChecked,
-                                       [this, idx, mc]() { synth->storage.controllers[idx] = mc; });
+                    currentSub.addItem(name, isEnabled, isChecked, [this, idx, mc, learnChan]() {
+                        synth->storage.controllers[idx] = mc;
+                        synth->storage.controllers_chan[idx] = learnChan;
+                    });
                     break;
                 }
                 case param_cc:
@@ -170,24 +186,19 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
                         isSubChecked = true;
                     }
 
-                    currentSub.addItem(name, isEnabled, isChecked, [this, p, ptag, mc]() {
-                        if (ptag < n_global_params)
-                        {
-                            p->midictrl = mc;
-                        }
-                        else
-                        {
-                            int a = ptag;
-
-                            if (ptag >= (n_global_params + n_scene_params))
+                    currentSub.addItem(
+                        name, isEnabled, isChecked, [this, p, ptag, mc, learnChan]() {
+                            if (ptag < n_global_params)
                             {
-                                a -= ptag;
+                                p->midictrl = mc;
+                                p->midichan = learnChan;
                             }
-
-                            synth->storage.getPatch().param_ptr[a]->midictrl = mc;
-                            synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = mc;
-                        }
-                    });
+                            else
+                            {
+                                synth->storage.getPatch().param_ptr[ptag]->midictrl = mc;
+                                synth->storage.getPatch().param_ptr[ptag]->midichan = learnChan;
+                            }
+                        });
 
                     break;
                 }
@@ -201,6 +212,37 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
 
             midiSub.addSubMenu(name, currentSub, true, nullptr, isSubChecked);
         }
+
+        // select channel for MIDI learn submenu
+        auto chanSub = juce::PopupMenu();
+        auto chanSubName = fmt::format("{}: {}", Surge::GUI::toOSCase("MIDI Channel"),
+                                       learnChan == -1 ? "Omni" : std::to_string(learnChan + 1));
+
+        chanSub.addItem("Omni", true, (learnChan == -1), [this, learn_mode, p, ptag, idx]() {
+            if (learn_mode == macro_cc)
+                this->synth->storage.controllers_chan[idx] = -1;
+            else if (ptag < n_global_params)
+                p->midichan = -1;
+            else
+                this->synth->storage.getPatch().param_ptr[ptag]->midichan = -1;
+        });
+
+        for (int ch = 0; ch < 16; ch++)
+        {
+            chanSub.addItem(fmt::format("Channel {}", ch + 1), true, (learnChan == ch),
+                            [this, learn_mode, p, ptag, idx, ch]() {
+                                if (learn_mode == macro_cc)
+                                    this->synth->storage.controllers_chan[idx] = ch;
+                                else if (ptag < n_global_params)
+                                    p->midichan = ch;
+                                else
+                                    this->synth->storage.getPatch().param_ptr[ptag]->midichan = ch;
+                            });
+        }
+
+        midiSub.addSeparator();
+
+        midiSub.addSubMenu(chanSubName, chanSub);
 
         parentMenu.addSubMenu(Surge::GUI::toOSCase("Assign to MIDI CC"), midiSub);
     }
@@ -288,15 +330,19 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
     {
         if (synth->storage.controllers[idx] >= 0)
         {
-            std::string txt = fmt::format("Clear Learned MIDI ({} ",
-                                          decodeControllerID(synth->storage.controllers[idx]));
+            const int ch = synth->storage.controllers_chan[idx];
+            std::string chtxt = ch == -1 ? "Omni" : fmt::format("Channel {:d}", ch + 1);
+            std::string txt =
+                fmt::format("{} ({}, {})", Surge::GUI::toOSCase("Clear Learned MIDI"),
+                            decodeControllerID(synth->storage.controllers[idx]), chtxt);
 
-            parentMenu.addItem(
-                Surge::GUI::toOSCase(txt) + midicc_names[synth->storage.controllers[idx]] + ")",
-                [this, idx]() {
-                    synth->storage.controllers[idx] = -1;
-                    synth->storage.getPatch().dawExtraState.customcontrol_map[idx] = -1;
-                });
+            parentMenu.addItem(txt, [this, idx]() {
+                synth->storage.controllers[idx] = -1;
+                synth->storage.controllers_chan[idx] = -1;
+
+                synth->storage.getPatch().dawExtraState.customcontrol_map[idx] = -1;
+                synth->storage.getPatch().dawExtraState.customcontrol_chan_map[idx] = -1;
+            });
         }
 
         break;
@@ -305,32 +351,29 @@ void SurgeGUIEditor::createMIDILearnMenuEntries(juce::PopupMenu &parentMenu,
     {
         if (p->midictrl >= 0)
         {
-            std::string txt =
-                fmt::format("Clear Learned MIDI ({} ", decodeControllerID(p->midictrl));
+            const int ch = p->midichan;
+            std::string chtxt = ch == -1 ? "Omni" : fmt::format("Channel {:d}", ch + 1);
+            std::string txt = fmt::format("{} ({}, {})", Surge::GUI::toOSCase("Clear Learned MIDI"),
+                                          decodeControllerID(p->midictrl), chtxt);
 
-            parentMenu.addItem(
-                Surge::GUI::toOSCase(txt) + midicc_names[p->midictrl] + ")", [this, p, ptag]() {
-                    if (ptag < n_global_params)
-                    {
-                        p->midictrl = -1;
-                        synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
-                    }
-                    else
-                    {
-                        int a = ptag;
+            parentMenu.addItem(txt, [this, p, ptag]() {
+                if (ptag < n_global_params)
+                {
+                    p->midictrl = -1;
+                    p->midichan = -1;
 
-                        if (ptag >= (n_global_params + n_scene_params))
-                        {
-                            a -= n_scene_params;
-                        }
+                    synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
+                    synth->storage.getPatch().dawExtraState.midichan_map[ptag] = -1;
+                }
+                else
+                {
+                    synth->storage.getPatch().param_ptr[ptag]->midictrl = -1;
+                    synth->storage.getPatch().param_ptr[ptag]->midichan = -1;
 
-                        synth->storage.getPatch().param_ptr[a]->midictrl = -1;
-                        synth->storage.getPatch().param_ptr[a + n_scene_params]->midictrl = -1;
-                        synth->storage.getPatch().dawExtraState.midictrl_map[a] = -1;
-                        synth->storage.getPatch().dawExtraState.midictrl_map[a + n_scene_params] =
-                            -1;
-                    }
-                });
+                    synth->storage.getPatch().dawExtraState.midictrl_map[ptag] = -1;
+                    synth->storage.getPatch().dawExtraState.midichan_map[ptag] = -1;
+                }
+            });
         }
 
         break;
@@ -2371,102 +2414,43 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     frame->repaint();
                                 });
                         }
+
+                        break;
                     }
-                    break;
                     case ct_amplitude_ringmod:
                     {
                         contextMenu.addSeparator();
+
                         auto dt = p->deform_type;
+                        auto addEntry = [this, &contextMenu, dt, p](CombinatorMode cxm) {
+                            contextMenu.addItem(
+                                combinator_mode_names[cxm], true, dt == cxm, [this, p, cxm]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+
+                                    p->deform_type = cxm, synth->storage.getPatch().isDirty = true;
+                                    frame->repaint();
+                                });
+                        };
 
                         Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
                             contextMenu, "COMBINATOR MODE");
 
-                        contextMenu.addItem("Ring Modulation", true, dt == rmm_ring, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
+                        addEntry(cxm_ring);
+                        addEntry(cxm_cxor43_0);
 
-                            p->deform_type = rmm_ring, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
-                        contextMenu.addItem(
-                            "CXOR (4,2-a-b-a-b)", true, dt == rmm_cxor43_0, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                        contextMenu.addItem(-1, "Scale-Invariant Linear Modulation:", false, false);
 
-                                p->deform_type = rmm_cxor43_0,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 1 (4,3-cb-ab-ab-cb)", true, dt == rmm_cxor43_1, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
+                        addEntry(cxm_cxor43_1);
+                        addEntry(cxm_cxor43_2);
+                        addEntry(cxm_cxor43_3);
+                        addEntry(cxm_cxor43_4);
+                        addEntry(cxm_cxor93_0);
+                        addEntry(cxm_cxor93_1);
+                        addEntry(cxm_cxor93_2);
+                        addEntry(cxm_cxor93_3);
+                        addEntry(cxm_cxor93_4);
 
-                                p->deform_type = rmm_cxor43_1,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 2 (4,3-cb-aa-ab-cb)", true, dt == rmm_cxor43_2, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor43_2,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 3 (4,3-cc-cb-ab-cb)", true, dt == rmm_cxor43_3, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor43_3,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 4 (4,3-cb-cb-ab-cb)", true, dt == rmm_cxor43_4, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor43_4,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 5 (9,3-ba-bc-ba-bc)", true, dt == rmm_cxor93_0, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor93_0,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 6 (9,3-bc-cb-ba-ab)", true, dt == rmm_cxor93_1, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor93_1,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 7 (9,3-bb-aa-ab-bc)", true, dt == rmm_cxor93_2, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor93_2,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 8 (9,3-bb-ba-ab-bc)", true, dt == rmm_cxor93_3, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor93_3,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
-                        contextMenu.addItem(
-                            "SILM 9 (9,3-ba-ba-bc-cc)", true, dt == rmm_cxor93_4, [this, p]() {
-                                undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = rmm_cxor93_4,
-                                synth->storage.getPatch().isDirty = true;
-                                frame->repaint();
-                            });
+                        break;
                     }
                     case ct_bonsai_bass_boost:
                     {
@@ -2476,21 +2460,22 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
                                                                                         "ROUTING");
 
-                        contextMenu.addItem("Stereo", true, dt == 0, [this, p]() {
-                            undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = 0, synth->storage.getPatch().isDirty = true;
-                            frame->repaint();
-                        });
                         contextMenu.addItem("Mono", true, dt == 1, [this, p]() {
                             undoManager()->pushParameterChange(p->id, p, p->val);
 
                             p->deform_type = 1, synth->storage.getPatch().isDirty = true;
                             frame->repaint();
                         });
+                        contextMenu.addItem("Stereo", true, dt == 0, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+
+                            p->deform_type = 0, synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
                         contextMenu.addSeparator();
+
+                        break;
                     }
-                    break;
                     default:
                     {
                         break;

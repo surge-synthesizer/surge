@@ -25,7 +25,7 @@
 #include <algorithm>
 
 #include "HeadlessUtils.h"
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 TEST_CASE("Note ID in Poly Mode Basics", "[noteid]")
 {
@@ -111,7 +111,7 @@ TEST_CASE("Note ID in Poly Mode Basics", "[noteid]")
         REQUIRE(surge->endedHostNoteOriginalKey[0] == 60);
     }
 
-    SECTION("Dual Mode, Differeing Sustaing")
+    SECTION("Dual Mode, Differing Sustain")
     {
         auto surge = Surge::Headless::createSurge(48000);
         surge->storage.getPatch().scenemode.val.i = sm_dual;
@@ -216,7 +216,7 @@ TEST_CASE("Note ID in Poly Mode Basics", "[noteid]")
     }
 }
 
-TEST_CASE("Sustain Pedal in Poly Mode", "[noteid]")
+TEST_CASE("Sustain Pedal In Poly Mode", "[noteid]")
 {
     SECTION("Distinct Notes")
     {
@@ -321,7 +321,7 @@ TEST_CASE("Sustain Pedal in Poly Mode", "[noteid]")
 
 TEST_CASE("Overlapping Notes", "[noteid]")
 {
-    SECTION("5 notes overlap; no id on release")
+    SECTION("5 Notes Overlap; No ID on Release")
     {
         auto surge = Surge::Headless::createSurge(48000);
         surge->process();
@@ -373,7 +373,7 @@ TEST_CASE("Overlapping Notes", "[noteid]")
         }
     }
 
-    SECTION("5 notes overlap; release with id")
+    SECTION("5 Notes Overlap; Release With ID")
     {
         auto surge = Surge::Headless::createSurge(48000);
         surge->process();
@@ -441,7 +441,7 @@ TEST_CASE("Mono Modes", "[noteid]")
          * [ voice stack empty]
          */
 
-        DYNAMIC_SECTION("One note hammer on off in mode " << play_mode_names[mode])
+        DYNAMIC_SECTION("One Note Hammer On Off in Mode " << play_mode_names[mode])
         {
             auto surge = Surge::Headless::createSurge(48000);
             REQUIRE(surge);
@@ -571,7 +571,7 @@ TEST_CASE("Mono Modes", "[noteid]")
             REQUIRE(sawOne);
         }
 
-        DYNAMIC_SECTION("Three Note hammer on off in mode " << play_mode_names[mode])
+        DYNAMIC_SECTION("Three Note Hammer On Off in Mode " << play_mode_names[mode])
         {
             auto surge = Surge::Headless::createSurge(48000);
             REQUIRE(surge);
@@ -772,11 +772,11 @@ TEST_CASE("Mono Modes", "[noteid]")
     }
 }
 
-TEST_CASE("Note ID 0 is Valid", "[noteid]")
+TEST_CASE("Note ID 0 Is Valid", "[noteid]")
 {
     for (auto nid : {0, 1, 77, std::numeric_limits<int32_t>::max() - 1})
     {
-        DYNAMIC_SECTION("NoteID " << nid << " is a Valid Note")
+        DYNAMIC_SECTION("Note ID " << nid << " Is a Valid Note")
         {
             int unid = 0;
             auto surge = Surge::Headless::createSurge(48000);

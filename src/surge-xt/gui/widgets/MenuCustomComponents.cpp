@@ -24,6 +24,7 @@
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 #include "UserDefaults.h"
+#include "SurgeJUCELookAndFeel.h"
 #include <fmt/format.h>
 #include <StringOps.h>
 
@@ -89,7 +90,11 @@ void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 
     if (isBoldened)
     {
-        font = getLookAndFeel().getPopupMenuFont().boldened();
+        auto sjlf = dynamic_cast<SurgeJUCELookAndFeel *>(&getLookAndFeel());
+        if (sjlf)
+            font = sjlf->getPopupMenuBoldFont();
+        else
+            font = getLookAndFeel().getPopupMenuFont().boldened();
     }
 
     idealHeight =
@@ -129,7 +134,11 @@ void MenuTitleHelpComponent::paint(juce::Graphics &g)
 
     if (isBoldened)
     {
-        g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
+        auto sjlf = dynamic_cast<SurgeJUCELookAndFeel *>(&getLookAndFeel());
+        if (sjlf)
+            g.setFont(sjlf->getPopupMenuBoldFont());
+        else
+            g.setFont(getLookAndFeel().getPopupMenuFont().boldened());
     }
 
     if (isItemHighlighted())
@@ -236,7 +245,11 @@ void MenuCenteredBoldLabel::paint(juce::Graphics &g)
     auto r = getLocalBounds();
     auto ft = getLookAndFeel().getPopupMenuFont();
 
-    ft = ft.withHeight(ft.getHeight() - 1).boldened();
+    auto sjlf = dynamic_cast<SurgeJUCELookAndFeel *>(&getLookAndFeel());
+    if (sjlf)
+        ft = sjlf->getPopupMenuBoldFont().withHeight(ft.getHeight() - 1);
+    else
+        ft = ft.withHeight(ft.getHeight() - 1).boldened();
 
     g.setFont(ft);
     g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));

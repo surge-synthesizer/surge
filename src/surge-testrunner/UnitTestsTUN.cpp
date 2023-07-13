@@ -28,14 +28,14 @@
 #include "Player.h"
 #include "Tunings.h"
 
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 #include "Tunings.h"
 
 #include "UnitTestUtilities.h"
 
 using namespace Surge::Test;
 
-TEST_CASE("Retune Surge XT to .scl files", "[tun]")
+TEST_CASE("Retune Surge XT to Scala Files", "[tun]")
 {
     auto surge = Surge::Headless::createSurge(44100);
     surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -70,7 +70,7 @@ TEST_CASE("Retune Surge XT to .scl files", "[tun]")
                 surge->storage.scaleConstantPitch() / 2);
     }
 
-    SECTION("6 exact")
+    SECTION("6 Exact")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
@@ -89,7 +89,7 @@ TEST_CASE("Notes at Appropriate Frequencies", "[tun]")
     auto surge = surgeOnSine();
     REQUIRE(surge.get());
 
-    SECTION("Untuned - so regular tuning")
+    SECTION("Untuned - Standard Tuning")
     {
         auto f60 = frequencyForNote(surge, 60);
         auto f72 = frequencyForNote(surge, 72);
@@ -100,7 +100,7 @@ TEST_CASE("Notes at Appropriate Frequencies", "[tun]")
         REQUIRE(f69 == Approx(440.0).margin(.1));
     }
 
-    SECTION("Straight tuning scl file")
+    SECTION("Straight Tuning via Scala File")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/12-intune.scl");
         surge->storage.retuneToScale(s);
@@ -135,7 +135,7 @@ TEST_CASE("Notes at Appropriate Frequencies", "[tun]")
         REQUIRE(fHalf == Approx(261.63 / 2).margin(.1));
     }
 
-    SECTION("6 exact")
+    SECTION("6 Exact")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
@@ -183,7 +183,7 @@ TEST_CASE("KBM File Parsing", "[tun]")
             REQUIRE(k.keys[i] == i);
     }
 
-    SECTION("Parse 7 to 12 mapping File")
+    SECTION("Parse 7 to 12 Mapping File")
     {
         auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-a442-7-to-12.kbm");
         REQUIRE(k.name == "resources/test-data/scl/mapping-a442-7-to-12.kbm");
@@ -208,7 +208,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
     auto surge = surgeOnSine();
     REQUIRE(surge.get());
 
-    SECTION("Marvel 12 mapped and unmapped")
+    SECTION("Marvel 12 Mapped And Unmapped")
     {
         float unmapped[3];
 
@@ -238,7 +238,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
     }
 
     // and back and then back again
-    SECTION("Can Map and ReMap consistently")
+    SECTION("Can Map and Remap Consistently")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/marvel12.scl");
         auto k440 = Tunings::readKBMFile("resources/test-data/scl/mapping-a440-constant.kbm");
@@ -279,7 +279,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
         }
     }
 
-    SECTION("Scale Ratio is Unch")
+    SECTION("Scale Ratio is Unchanged")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/marvel12.scl");
         auto k440 = Tunings::readKBMFile("resources/test-data/scl/mapping-a440-constant.kbm");
@@ -303,7 +303,7 @@ TEST_CASE("KBM File Remaps Center", "[tun]")
     }
 }
 
-TEST_CASE("Non-uniform keyboard mapping", "[tun]")
+TEST_CASE("Non-Uniform Keyboard Mapping", "[tun]")
 {
     auto surge = surgeOnSine();
     REQUIRE(surge.get());
@@ -368,7 +368,7 @@ TEST_CASE("Non-uniform keyboard mapping", "[tun]")
         REQUIRE(frequencyForNote(surge, 71) == Approx(frequencies[6]).margin(0.1));
     }
 
-    SECTION("7 Note Scale with Tuning Centers")
+    SECTION("7 Note Scale With Tuning Centers")
     {
         auto k261 = Tunings::readKBMFile("resources/test-data/scl/mapping-whitekeys-c261.kbm");
         auto k440 = Tunings::readKBMFile("resources/test-data/scl/mapping-whitekeys-a440.kbm");
@@ -431,7 +431,7 @@ TEST_CASE("Zero Size Maps", "[tun]")
         REQUIRE(f69std / f60std == Approx(f69map / f60map).margin(0.001));
     }
 
-    SECTION("Note 69 with Tuning")
+    SECTION("Note 69 With Tuning")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/marvel12.scl");
         surge->storage.retuneToScale(s);
@@ -451,7 +451,7 @@ TEST_CASE("Zero Size Maps", "[tun]")
     }
 }
 
-TEST_CASE("An Octave is an Octave", "[tun]")
+TEST_CASE("An Octave Is an Octave", "[tun]")
 {
     auto surge = surgeOnSine();
     REQUIRE(surge.get());
@@ -484,7 +484,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
         REQUIRE(f60 == Approx(f60p1 / 2).margin(0.1));
     }
 
-    SECTION("Tuned to 12 OSC octave")
+    SECTION("Tuned to 12 OSC Octave")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/12-intune.scl");
         surge->storage.retuneToScale(s);
@@ -518,7 +518,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
         REQUIRE(f60 == Approx(f60p1 / 2).margin(0.1));
     }
 
-    SECTION("22 note scale OSC Octave")
+    SECTION("22 Note Scale OSC Octave")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/zeus22.scl");
         surge->storage.retuneToScale(s);
@@ -536,7 +536,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
         REQUIRE(f60 == Approx(f60p1 / 2).margin(0.1));
     }
 
-    SECTION("22 note scale Scene Octave")
+    SECTION("22 Note Scale Scene Octave")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/zeus22.scl");
         surge->storage.retuneToScale(s);
@@ -554,7 +554,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
         REQUIRE(f60 == Approx(f60p1 / 2).margin(0.1));
     }
 
-    SECTION("6 note scale OSC Octave")
+    SECTION("6 Note Scale OSC Octave")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
@@ -572,7 +572,7 @@ TEST_CASE("An Octave is an Octave", "[tun]")
         REQUIRE(f60 == Approx(f60p1 / 2).margin(0.1));
     }
 
-    SECTION("6 note scale Scene Octave")
+    SECTION("6 Note Scale Scene Octave")
     {
         Tunings::Scale s = Tunings::readSCLFile("resources/test-data/scl/6-exact.scl");
         surge->storage.retuneToScale(s);
@@ -791,9 +791,9 @@ TEST_CASE("Non-Monotonic Tunings", "[tun]")
     }
 }
 
-TEST_CASE("Mapping below and outside of count")
+TEST_CASE("Mapping Below And Outside of Count", "[tun]")
 {
-    SECTION("A bit below")
+    SECTION("A Bit Below")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -810,7 +810,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("Twelve below")
+    SECTION("12 Below")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -827,7 +827,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot below")
+    SECTION("A Lot Below")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -844,7 +844,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("Twelve above")
+    SECTION("12 Above")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -861,7 +861,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot above")
+    SECTION("A Lot Above")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -878,7 +878,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A bit below with 6ns")
+    SECTION("A Bit Below With 6 Note Scale")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -898,7 +898,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot below with 6ns")
+    SECTION("A Lot Below With 6 Note Scale")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -918,7 +918,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot above with 6ns")
+    SECTION("A Lot Above With 6 Note Scale")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -938,7 +938,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot below with ED3-17")
+    SECTION("A Lot Below With ED3-17")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -958,7 +958,7 @@ TEST_CASE("Mapping below and outside of count")
         }
     }
 
-    SECTION("A lot above with ED3-17")
+    SECTION("A Lot Above With ED3-17")
     {
         auto surge = Surge::Headless::createSurge(44100);
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
@@ -1025,7 +1025,7 @@ TEST_CASE("HPF Ignores Tuning Properly", "[tun][dsp]")
         }
     }
 
-    SECTION("Frequency vs HPF 31 note scale")
+    SECTION("Frequency vs HPF 31 Note Scale")
     {
         auto surge = surgeOnSine();
         REQUIRE(surge.get());
@@ -1052,7 +1052,7 @@ TEST_CASE("HPF Ignores Tuning Properly", "[tun][dsp]")
     }
 }
 
-TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
+TEST_CASE("Ignoring Tuning Tables Are Correct", "[tun][dsp]")
 {
     INFO("Testing condition reported in #1545");
     // This is a simple test which just guarantees monotonicity of the filter and
@@ -1106,12 +1106,12 @@ TEST_CASE("Ignoring Tuning Tables are Correct", "[dsp][tun]")
     }
 }
 
-TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
+TEST_CASE("Modulation Tuning Mode And KBM", "[tun]")
 {
     for (auto m = 0; m < 2; ++m)
     {
         auto mode = m ? SurgeStorage::RETUNE_MIDI_ONLY : SurgeStorage::RETUNE_ALL;
-        auto moden = m ? "Retune Midi ONly" : "Retune All";
+        auto moden = m ? "Retune MIDI Only" : "Retune All";
         DYNAMIC_SECTION("Modulation Tuning and KBM with " << moden)
         {
             auto surge = surgeOnSine();
@@ -1146,7 +1146,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
                     Approx(64.f / 12));
         }
 
-        DYNAMIC_SECTION("SAW Modulation Tuning and KBM with " << moden)
+        DYNAMIC_SECTION("Saw Modulation Tuning And KBM With " << moden)
         {
             auto surge = surgeOnSaw();
             REQUIRE(surge.get());
@@ -1180,7 +1180,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
                     Approx(64.f / 12));
         }
 
-        DYNAMIC_SECTION("Pitch Bend Distance 12 in mode sin " << moden)
+        DYNAMIC_SECTION("Pitch Bend Distance 12 in Sine " << moden)
         {
             auto surge = surgeOnSine();
             surge->mpeEnabled = false;
@@ -1214,7 +1214,7 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
             }
         }
 
-        DYNAMIC_SECTION("Pitch Bend Distance 12 in mode saw " << moden)
+        DYNAMIC_SECTION("Pitch Bend Distance 12 in Mode Saw " << moden)
         {
             auto surge = surgeOnSaw();
             surge->mpeEnabled = false;
@@ -1250,9 +1250,9 @@ TEST_CASE("Modulation Tuning Mode and KBM", "[tun]")
     }
 }
 
-TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
+TEST_CASE("Note To Pitch Invalid Ranges", "[tun]")
 {
-    SECTION("N2P ignoring Span -1000 to 1000")
+    SECTION("Note To Pitch Ignoring Span -1000 to 1000")
     {
         auto surge = Surge::Headless::createSurge(44100);
         float rl = surge->storage.note_to_pitch_ignoring_tuning(-256);
@@ -1267,7 +1267,7 @@ TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
         }
     }
 
-    SECTION("N2PI ignoring Span -1000 to 1000")
+    SECTION("N2PI Ignoring Span -1000 to 1000")
     {
         auto surge = Surge::Headless::createSurge(44100);
         float rl = surge->storage.note_to_pitch_inv_ignoring_tuning(-256);
@@ -1282,7 +1282,7 @@ TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
         }
     }
 
-    SECTION("N2O Span -1000 to 1000")
+    SECTION("N2P Span -1000 to 1000")
     {
         auto surge = Surge::Headless::createSurge(44100);
         float sl, cl, su, cu;
@@ -1328,7 +1328,7 @@ TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
         }
     }
 
-    SECTION("N2P mod tuned Span -1000 to 1000")
+    SECTION("N2P Mod Tuned Span -1000 to 1000")
     {
         auto surge = Surge::Headless::createSurge(44100);
 
@@ -1350,7 +1350,7 @@ TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
         }
     }
 
-    SECTION("N2PI mod tuned Span -1000 to 1000")
+    SECTION("N2PI Mod Tuned Span -1000 to 1000")
     {
         auto surge = Surge::Headless::createSurge(44100);
 
@@ -1373,7 +1373,7 @@ TEST_CASE("NoteToPitch Invalid Ranges", "[tun]")
     }
 }
 
-TEST_CASE("Octave Per Channel and Porta", "[tun]")
+TEST_CASE("Octave Per Channel And Porta", "[tun]")
 {
     namespace hs = Surge::Headless;
 
@@ -1636,7 +1636,7 @@ TEST_CASE("Portamento With Repeated Notes", "[tun]")
         }
     }
 
-    SECTION("Porta in OPC")
+    SECTION("Portamento in Octave Per Channel Mode")
     {
         auto surge = surgeOnSine();
         surge->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);

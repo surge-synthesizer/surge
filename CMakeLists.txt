@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.11 CACHE STRING "Minimum macOS version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE STRING "Minimum macOS version")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -185,6 +185,13 @@ source_group("Headless" REGULAR_EXPRESSION "src/surge-testrunner/")
 source_group("Surge XT Juce" REGULAR_EXPRESSION "src/surge-xt/")
 source_group("Surge FX Juce" REGULAR_EXPRESSION "src/surge-fx/")
 # }}}
+
+
+option(SURGE_BUILD_TESTRUNNER "Build Surge unit test runner" ON)
+if (${SURGE_BUILD_TESTRUNNER})
+  message(STATUS "Enabling tests; compile with SURGE_BUILD_TESTRUNNER=OFF to skip")
+  enable_testing()
+endif()
 
 add_subdirectory(resources)
 add_subdirectory(src)

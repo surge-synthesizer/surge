@@ -1409,7 +1409,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         char *temp = (char *)malloc(datasize + 1);
         memcpy(temp, data, datasize);
         *(temp + datasize) = 0;
-        // std::cout << "XML DOC is " << temp << std::endl;
         doc.Parse(temp, nullptr, TIXML_ENCODING_LEGACY);
         free(temp);
     }
@@ -3042,6 +3041,30 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 }
             }
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("midichan_map"));
+
+            if (p)
+            {
+                auto ch = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("ch"));
+
+                while (ch)
+                {
+                    int p, v;
+
+                    if (ch->QueryIntAttribute("p", &p) == TIXML_SUCCESS &&
+                        ch->QueryIntAttribute("v", &v) == TIXML_SUCCESS)
+                    {
+                        dawExtraState.midichan_map[p] = v;
+                    }
+
+                    ch = TINYXML_SAFE_TO_ELEMENT(ch->NextSibling("ch"));
+                }
+            }
+            else
+            {
+                dawExtraState.midichan_map.clear();
+            }
+
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("customcontrol_map"));
 
             if (p)
@@ -3060,6 +3083,30 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
                     c = TINYXML_SAFE_TO_ELEMENT(c->NextSibling("c"));
                 }
+            }
+
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("customcontrol_chan_map"));
+
+            if (p)
+            {
+                auto ch = TINYXML_SAFE_TO_ELEMENT(p->FirstChild("ch"));
+
+                while (ch)
+                {
+                    int p, v;
+
+                    if (ch->QueryIntAttribute("p", &p) == TIXML_SUCCESS &&
+                        ch->QueryIntAttribute("v", &v) == TIXML_SUCCESS)
+                    {
+                        dawExtraState.customcontrol_chan_map[p] = v;
+                    }
+
+                    ch = TINYXML_SAFE_TO_ELEMENT(ch->NextSibling("ch"));
+                }
+            }
+            else
+            {
+                dawExtraState.customcontrol_chan_map.clear();
             }
         }
     }
@@ -3658,7 +3705,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         dawExtraXML.InsertEndChild(mcto);
 
         /*
-        ** Add the midi controls
+        ** Add the MIDI learned controls
         */
         TiXmlElement mcm("midictrl_map");
         for (auto &p : dawExtraState.midictrl_map)
@@ -3670,6 +3717,16 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         }
         dawExtraXML.InsertEndChild(mcm);
 
+        TiXmlElement mchm("midichan_map");
+        for (auto &p : dawExtraState.midichan_map)
+        {
+            TiXmlElement ch("ch");
+            ch.SetAttribute("p", p.first);
+            ch.SetAttribute("v", p.second);
+            mchm.InsertEndChild(ch);
+        }
+        dawExtraXML.InsertEndChild(mchm);
+
         TiXmlElement ccm("customcontrol_map");
         for (auto &p : dawExtraState.customcontrol_map)
         {
@@ -3679,6 +3736,16 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             ccm.InsertEndChild(c);
         }
         dawExtraXML.InsertEndChild(ccm);
+
+        TiXmlElement cchm("customcontrol_chan_map");
+        for (auto &p : dawExtraState.customcontrol_chan_map)
+        {
+            TiXmlElement ch("ch");
+            ch.SetAttribute("p", p.first);
+            ch.SetAttribute("v", p.second);
+            cchm.InsertEndChild(ch);
+        }
+        dawExtraXML.InsertEndChild(cchm);
     }
     patch.InsertEndChild(dawExtraXML);
 

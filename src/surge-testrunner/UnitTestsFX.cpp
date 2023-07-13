@@ -28,14 +28,14 @@
 #include "Player.h"
 
 #include "SurgeStorage.h"
-#include "catch2/catch2.hpp"
+#include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
 #include "AudioInputEffect.h"
 
 using namespace Surge::Test;
 
-TEST_CASE("Every FX Can Create and Process", "[fx]")
+TEST_CASE("Every FX Is Created And Processes", "[fx]")
 {
     for (int i = fxt_off + 1; i < n_fx_types; ++i)
     {
@@ -92,7 +92,7 @@ TEST_CASE("Airwindows Loud", "[fx]")
 
             float soo = 0.f;
 
-            INFO("Swapping aiwrindow attempt " << i);
+            INFO("Swapping Airwindows attempt " << i);
             for (int s = 0; s < 100; ++s)
             {
                 surge->process();
@@ -116,7 +116,7 @@ TEST_CASE("Airwindows Loud", "[fx]")
     }
 }
 
-TEST_CASE("FX Move with Modulation", "[fx]")
+TEST_CASE("Move FX With Assigned Modulation", "[fx]")
 {
     auto step = [](auto surge) {
         for (int i = 0; i < 10; ++i)
@@ -152,7 +152,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         return true;
     };
 
-    SECTION("Setup a Modulated Combulator and Move It")
+    SECTION("Setup Combulator With Modulation And Move It")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -171,7 +171,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         confirmDestinations(surge, {{1, 2}});
     }
 
-    SECTION("Setup a Modulated Combulator With Two Mods and another Move It")
+    SECTION("Setup Combulator With Modulation And Another FX Then Move It")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -193,7 +193,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(confirmDestinations(surge, {{1, 2}, {1, 3}, {4, 3}}));
     }
 
-    SECTION("Setup a Modulated Combulator and Copy It")
+    SECTION("Setup Combulator With Modulation And Copy It")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -212,7 +212,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         REQUIRE(confirmDestinations(surge, {{0, 2}, {1, 2}}));
     }
 
-    SECTION("Move over a modulated FX")
+    SECTION("Move Over a Modulated FX")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -233,7 +233,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         confirmDestinations(surge, {{1, 2}});
     }
 
-    SECTION("Copy over a modulated FX")
+    SECTION("Copy Over a Modulated FX")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -254,7 +254,7 @@ TEST_CASE("FX Move with Modulation", "[fx]")
         confirmDestinations(surge, {{0, 2}, {1, 2}});
     }
 
-    SECTION("Swap Two modulated FX")
+    SECTION("Swap Two Modulated FX")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -276,9 +276,9 @@ TEST_CASE("FX Move with Modulation", "[fx]")
     }
 }
 
-TEST_CASE("High Samplerate Reverb2", "[fx]")
+TEST_CASE("Reverb 2 at High Sample Rate", "[fx]")
 {
-    SECTION("Make Reverb2")
+    SECTION("Make Reverb 2")
     {
         auto surge = Surge::Headless::createSurge(48000 * 32);
         REQUIRE(surge);
@@ -310,9 +310,9 @@ TEST_CASE("High Samplerate Reverb2", "[fx]")
     }
 }
 
-TEST_CASE("Waveshaper Pop", "[fx]")
+TEST_CASE("Waveshaper Pops", "[fx]")
 {
-    SECTION("Print the Pop")
+    SECTION("Print The Pop")
     {
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
@@ -364,7 +364,7 @@ TEST_CASE("Waveshaper Pop", "[fx]")
     }
 }
 
-TEST_CASE("High SampleRate Nimbus", "[fx]")
+TEST_CASE("Nimbus at High Sample Rate", "[fx]")
 {
     for (auto base : {44100, 48000})
     {
@@ -414,7 +414,7 @@ TEST_CASE("High SampleRate Nimbus", "[fx]")
     }
 }
 
-TEST_CASE("ScenesOutputData", "[fx]")
+TEST_CASE("Scenes Output Data", "[fx]")
 {
     SECTION("Providing data")
     {
@@ -505,7 +505,7 @@ struct InParamsGroup
     }
 };
 
-TEST_CASE("AudioInputEffect", "[fx]")
+TEST_CASE("Audio Input Effect", "[fx]")
 {
 
     std::map<int, std::vector<int>> slots{
@@ -541,7 +541,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
                                                    // rightEffectInput,
                                                    // sceneBRightInput, and audioRightInput)
                  }},
-                {"Switching left and right",
+                {"Switching Left And Right",
                  {{AudioInputEffect::in_output_mix, 1.0f},
                   {AudioInputEffect::in_output_width, -1.0f}},
                  {
@@ -568,7 +568,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
                                                        // rightEffectInput,
                                                        // sceneBRightInput, and audioRightInput)
                  }},
-                {"Leaving only dry signal, with width = 1",
+                {"Only Dry Signal, Width = 1",
                  {
                      {AudioInputEffect::in_output_mix, 0.0f},
                      {AudioInputEffect::in_output_width, 1.0f} // stereo
@@ -580,7 +580,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
                  }
 
                 },
-                {"Leaving only dry signal, with width = 0",
+                {"Only Dry Signal, Width = 0",
                  {
                      {AudioInputEffect::in_output_mix, 0.0f},
                      {AudioInputEffect::in_output_width, 0.0f} // stereo
@@ -663,7 +663,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
     std::vector<InParamsGroup> panningTestCases = {
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with the default params",
+            "Apply Pan to Audio Input, Default Params",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
             {},
@@ -682,7 +682,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBLeftInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{"the result should be unchanged",
+            {{"Result Should Be Unchanged",
               {
                   {AudioInputEffect::in_scene_input_channel, 0.0f},
                   {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -698,7 +698,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with in_scene_input_channel = -1",
+            "Apply Pan to Audio Input, in_scene_input_channel = -1",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
             {},
@@ -717,7 +717,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBLeftInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{" it should only accept left channel",
+            {{"Only Left Channel Should Be Accepted",
               {
                   {AudioInputEffect::in_scene_input_channel, -1.0f},
                   {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -731,7 +731,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with in_scene_input_channel = 0.25",
+            "Apply Pan to Audio Input, in_scene_input_channel = 0.25",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
             {},
@@ -750,7 +750,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBLeftInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{"accepts 50% of left channel and 100% right",
+            {{"Accepts 50% Left Channel, 100% Right Channel",
               {
                   {AudioInputEffect::in_scene_input_channel, 0.25f},
                   {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -764,7 +764,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with in_scene_input_channel = -0.50",
+            "Apply Pan to Audio Input, in_scene_input_channel = -0.50",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
             {},
@@ -783,7 +783,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBLeftInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{" it should accept 100% of left channel and 50% right",
+            {{"Accepts 100% Left Channel, 50% Right Channel",
               {
                   {AudioInputEffect::in_scene_input_channel, -0.50f},
                   {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -797,8 +797,8 @@ TEST_CASE("AudioInputEffect", "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with in_scene_input_channel = -0.50 and input "
-            "level = -5.995",
+            "Apply Pan to Audio Input, in_scene_input_channel = -0.50, Input "
+            "Level = -5.995",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
             {},
@@ -817,7 +817,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBLeftInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{" it should accept 100% of left channel and 50% right with 50% input level",
+            {{"Accepts 100% Left Channel, 50% Right Channel, 50% Input Level",
               {
                   {AudioInputEffect::in_scene_input_channel, -0.50f},
                   {AudioInputEffect::in_scene_input_level, -5.995f},
@@ -831,7 +831,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with in_scene_input_pan = -1.0",
+            "Apply Pan to Audio Input, in_scene_input_pan = -1.0",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
             {},
@@ -850,7 +850,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBRightInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{" channels should move to the left",
+            {{"Channels Should Move to Left",
               {
                   {AudioInputEffect::in_scene_input_channel, 0.0f},
                   {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -864,7 +864,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with in_scene_input_pan = 1.0",
+            "Apply Pan to Audio Input, in_scene_input_pan = 1.0",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
             {},
@@ -883,7 +883,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBRightInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{" channels should move to the right",
+            {{"Channels Should Move to Right",
               {
                   {AudioInputEffect::in_scene_input_channel, 0.0f},
                   {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -897,7 +897,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with in_scene_input_pan = 0.5",
+            "Apply Pan to Audio Input, in_scene_input_pan = 0.5",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
             {},
@@ -916,7 +916,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBRightInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{" channels should move to the right by 50%",
+            {{"Channels Should Move to 50% Right",
               {
                   {AudioInputEffect::in_scene_input_channel, 0.0f},
                   {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -930,7 +930,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
         },
         {
             AudioInputEffect::a_insert_slot,
-            "Applying Panning to an audio input with in_scene_input_channel = -1 and "
+            "Apply Pan to Audio Input, in_scene_input_channel = -1, "
             "in_scene_input_pan = 1.0",
             {0.0f}, // leftEffectInput
             {0.0f}, // rightEffectInput
@@ -950,7 +950,7 @@ TEST_CASE("AudioInputEffect", "[fx]")
             }, // sceneBRightInput
             {},
             {}, // audioLeftInput and audioRightInput
-            {{" left channels should move to the right and the right channel should be deleted",
+            {{"Left Channels Should Move to Right, Right Channel Should Be Deleted",
               {
                   {AudioInputEffect::in_scene_input_channel, -1.0f},
                   {AudioInputEffect::in_scene_input_level, 0.0f},
@@ -1019,20 +1019,18 @@ TEST_CASE("AudioInputEffect", "[fx]")
         inParamsGroups.push_back(panningTestCase);
     }
 
+    auto surge = Surge::Headless::createSurge(44100);
+    REQUIRE(surge);
+    SurgeStorage *surgeStorage = &surge->storage;
+
     for (InParamsGroup &inParamsGroup : inParamsGroups)
     {
         SECTION(inParamsGroup.testGroup)
         {
             for (int slot : slots[inParamsGroup.slot])
             {
-
-                auto surge = Surge::Headless::createSurge(44100);
-                REQUIRE(surge);
-
                 Surge::Test::setFX(surge, slot, fxt_audio_input);
-                SurgeStorage *surgeStorage = &surge->storage;
                 FxStorage *fxStorage = &surgeStorage->getPatch().fx[slot];
-
                 fxStorage->p[AudioInputEffect::in_audio_input_channel].val.f = 0.0f;
                 fxStorage->p[AudioInputEffect::in_audio_input_level].val.f = 0.0f;
                 fxStorage->p[AudioInputEffect::in_audio_input_pan].val.f = 0.0f;
