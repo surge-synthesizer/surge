@@ -570,7 +570,7 @@ void SurgeGUIEditor::idle()
             }
             else
             {
-                juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::NoIcon, title, msg);
+                messageBox(title, msg);
             }
         }
     }
@@ -3660,23 +3660,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     {
         if (MTS_HasIPC())
         {
-            tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, []() {
-                auto cb = juce::ModalCallbackFunction::create([](int okcs) {
-                    if (okcs)
-                    {
-                        MTS_Reinitialize();
-                    }
-                });
-
+            tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, [this]() {
                 std::string msg =
                     "Reinitializing MTS will disconnect all clients, including "
                     "this one, and will generally require you to restart your DAW session, "
                     "but it will clear up after particularly nasty crashes or IPC issues. "
                     "Are you sure you want to do this?";
-
-                juce::AlertWindow::showOkCancelBox(juce::AlertWindow::NoIcon,
-                                                   "Reinitialize MTS-ESP", msg, "Yes", "No",
-                                                   nullptr, cb);
+                alertYesNo("Reinitialize MTS-ESP", msg, MTS_Reinitialize);
             });
         }
     }
@@ -4400,6 +4390,10 @@ void SurgeGUIEditor::setUseKeyboardShortcuts(bool b)
     }
 
     Surge::Storage::updateUserDefaultValue(&(this->synth->storage), key, b);
+
+    // If binding changes means VKB and Accessible keys conflict we
+    // need to remask so just reset the layout to current on toggle.
+    juceEditor->setVKBLayout(juceEditor->currentVKBLayout);
 }
 
 void SurgeGUIEditor::toggleUseKeyboardShortcuts()
@@ -4714,6 +4708,28 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
 
     midiSubMenu.addSeparator();
 
+    auto chanSubMenu = juce::PopupMenu();
+
+    auto learnChan = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::MenuBasedMIDILearnChannel, -1);
+
+    chanSubMenu.addItem("Omni", true, (learnChan == -1), [this]() {
+        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                               Surge::Storage::MenuBasedMIDILearnChannel, -1);
+    });
+
+    for (int ch = 0; ch < 16; ch++)
+    {
+        chanSubMenu.addItem(
+            fmt::format("Channel {}", ch + 1), true, (learnChan == ch), [this, ch]() {
+                Surge::Storage::updateUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::MenuBasedMIDILearnChannel, ch);
+            });
+    }
+
+    midiSubMenu.addSubMenu(Surge::GUI::toOSCase("Default Channel For Menu-Based MIDI Learn"),
+                           chanSubMenu);
+
     midiSubMenu.addItem(Surge::GUI::toOSCase("Save MIDI Mapping As..."), [this, where]() {
         this->scannedForMidiPresets = false; // force a rescan
 
@@ -4728,24 +4744,24 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
     });
 
     midiSubMenu.addItem(Surge::GUI::toOSCase("Clear Current MIDI Mapping"), [this]() {
-        int n = n_global_params + n_scene_params;
+        int n = n_global_params + (n_scene_params * n_scenes);
 
         for (int i = 0; i < n; i++)
         {
             this->synth->storage.getPatch().param_ptr[i]->midictrl = -1;
-            this->synth->storage.getPatch().dawExtraState.midictrl_map[i] = -1;
+            this->synth->storage.getPatch().param_ptr[i]->midichan = -1;
 
-            if (i > n_global_params)
-            {
-                this->synth->storage.getPatch().param_ptr[i + n_scene_params]->midictrl = -1;
-                this->synth->storage.getPatch().dawExtraState.midictrl_map[i + n_scene_params] = -1;
-            }
+            this->synth->storage.getPatch().dawExtraState.midictrl_map[i] = -1;
+            this->synth->storage.getPatch().dawExtraState.midichan_map[i] = -1;
         }
 
         for (int i = 0; i < n_customcontrollers; i++)
         {
             this->synth->storage.controllers[i] = -1;
+            this->synth->storage.controllers_chan[i] = -1;
+
             this->synth->storage.getPatch().dawExtraState.customcontrol_map[i] = -1;
+            this->synth->storage.getPatch().dawExtraState.customcontrol_chan_map[i] = -1;
         }
     });
 
@@ -4792,17 +4808,17 @@ void SurgeGUIEditor::initOSCError(int port)
 juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 {
     auto oscSubMenu = juce::PopupMenu();
-    int iportnum = juceEditor->processor.oscHandler.iportnum;
-    int oportnum = juceEditor->processor.oscHandler.oportnum;
+    int iportnum = juceEditor->processor.oscListener.portnum;
+    int oportnum = juceEditor->processor.oscSender.portnum;
 
     if (synth->storage.oscListenerRunning)
     {
-        oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Listener"),
-                           [this]() { juceEditor->processor.oscHandler.stopListening(); });
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Input"),
+                           [this]() { juceEditor->processor.oscListener.stopListening(); });
     }
     else
     {
-        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Listener"), [this]() {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Input"), [this]() {
             int defaultOSCPortIn = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
             bool success = juceEditor->processor.initOSCIn(defaultOSCPortIn);
@@ -4817,7 +4833,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
     bool isChecked = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
                                                          Surge::Storage::StartOSCIn, false);
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Auto-Start OSC Listener Upon Instantiation"), true,
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Auto-Start OSC Input Upon Instantiation"), true,
                        isChecked, [this, isChecked]() {
                            Surge::Storage::updateUserDefaultValue(
                                &(synth->storage), Surge::Storage::StartOSCIn, !isChecked);
@@ -4836,11 +4852,6 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
             int defaultOSCPortOut = Surge::Storage::getUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
             bool success = juceEditor->processor.initOSCOut(defaultOSCPortOut);
-
-            if (!success)
-            {
-                SurgeGUIEditor::initOSCError(defaultOSCPortOut);
-            }
         });
     }
 
@@ -4919,8 +4930,6 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
             });
     }
 
-    oscSubMenu.addSeparator();
-
     oscSubMenu.addItem(
         Surge::GUI::toOSCase("Change OSC Output Port (" + std::to_string(oportnum) + ")..."),
         [this, oportnum]() {
@@ -4988,7 +4997,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 
     oscSubMenu.addSeparator();
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Show Surge XT OSC Specification..."),
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."),
                        [this]() { showHTML(this->parametersToHtml()); });
 
     return oscSubMenu;
@@ -5655,9 +5664,9 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
     miniEdit->grabFocus();
 }
 
-void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &prompt,
-                                   std::function<void()> onOk, std::function<void()> onCancel,
-                                   AlertButtonStyle buttonStyle)
+void SurgeGUIEditor::alertBox(const std::string &title, const std::string &prompt,
+                              std::function<void()> onOk, std::function<void()> onCancel,
+                              AlertButtonStyle buttonStyle)
 {
     alert = std::make_unique<Surge::Overlays::Alert>();
     alert->setSkin(currentSkin, bitmapStore);
@@ -5665,14 +5674,26 @@ void SurgeGUIEditor::alertOKCancel(const std::string &title, const std::string &
     alert->setWindowTitle(title);
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(prompt);
-    if (buttonStyle == AlertButtonStyle::YES_NO)
+
+    switch (buttonStyle)
     {
-        alert->setButtonText("Yes", "No");
-    }
-    else
+    case AlertButtonStyle::OK_CANCEL:
     {
-        alert->setButtonText("OK", "Cancel");
+        alert->setOkCancelButtonTexts("OK", "Cancel");
+        break;
     }
+    case AlertButtonStyle::YES_NO:
+    {
+        alert->setOkCancelButtonTexts("Yes", "No");
+        break;
+    }
+    case AlertButtonStyle::OK:
+    {
+        alert->setSingleButtonText("OK");
+        break;
+    }
+    }
+
     alert->onOk = std::move(onOk);
     alert->onCancel = std::move(onCancel);
     alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
@@ -6950,10 +6971,13 @@ void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
 
 void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)
 {
-    if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots)
+    if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots ||
+        source == target)
     {
         return;
     }
+
+    undoManager()->pushPatch();
 
     auto t = fxPresetName[target];
 
@@ -7568,7 +7592,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 patchSelector->setIsFavorite(isPatchFavorite());
                 return true;
             case Surge::GUI::INITIALIZE_PATCH:
+                undoManager()->pushPatch();
                 patchSelector->loadInitPatch();
+                return true;
+            case Surge::GUI::RANDOM_PATCH:
+                undoManager()->pushPatch();
+                synth->selectRandomPatch();
                 return true;
 
             case Surge::GUI::PREV_PATCH:
@@ -8091,28 +8120,35 @@ void SurgeGUIEditor::populateDawExtraState(SurgeSynthesizer *synth)
         des->editor.modsource_editor[i] = modsource_editor[i];
 
         des->editor.msegStateIsPopulated = true;
+
         for (int lf = 0; lf < n_lfos; ++lf)
         {
             des->editor.msegEditState[i][lf].timeEditMode = msegEditState[i][lf].timeEditMode;
         }
     }
+
     des->editor.isMSEGOpen = isAnyOverlayPresent(MSEG_EDITOR);
 
     des->editor.activeOverlays.clear();
+
     for (const auto &ol : juceOverlays)
     {
         auto olw = getOverlayWrapperIfOpen(ol.first);
+
         if (olw)
         {
             DAWExtraStateStorage::EditorState::OverlayState os;
+
             os.whichOverlay = ol.first;
             os.isTornOut = olw->isTornOut();
             os.tearOutPosition = std::make_pair(-1, -1);
+
             if (olw->isTornOut())
             {
                 auto ps = olw->currentTearOutLocation();
                 os.tearOutPosition = std::make_pair(ps.x, ps.y);
             }
+
             des->editor.activeOverlays.push_back(os);
         }
     }
@@ -8131,11 +8167,16 @@ void SurgeGUIEditor::clearNoProcessingOverlay()
 void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
 {
     auto des = &(synth->storage.getPatch().dawExtraState);
+
     if (des->isPopulated)
     {
         auto sz = des->editor.instanceZoomFactor;
+
         if (sz > 0)
+        {
             setZoomFactor(sz);
+        }
+
         current_scene = des->editor.current_scene;
         current_fx = des->editor.current_fx;
         modsource = des->editor.modsource;
@@ -8146,6 +8187,7 @@ void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
         {
             current_osc[i] = des->editor.current_osc[i];
             modsource_editor[i] = des->editor.modsource_editor[i];
+
             if (des->editor.msegStateIsPopulated)
             {
                 for (int lf = 0; lf < n_lfos; ++lf)
@@ -8155,6 +8197,7 @@ void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
                 }
             }
         }
+
         // This is mostly legacy treatment but I'm leaving it in for now
         if (des->editor.isMSEGOpen)
         {
@@ -8162,6 +8205,7 @@ void SurgeGUIEditor::loadFromDAWExtraState(SurgeSynthesizer *synth)
         }
 
         overlaysForNextIdle.clear();
+
         if (!des->editor.activeOverlays.empty())
         {
             showMSEGEditorOnNextIdleOrOpen = false;
@@ -8313,13 +8357,6 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     const ::std::string &title, const std::string &msg, Surge::Storage::DefaultKey dontAskAgainKey,
     std::function<void()> okCallback, std::string ynMessage, AskAgainStates askAgainDef)
 {
-    if (okcWithToggleAlertWindow)
-    {
-        // This is not re-entrant, sorry
-        jassertfalse;
-        return false;
-    }
-
     auto bypassed =
         Surge::Storage::getUserDefaultValue(&(synth->storage), dontAskAgainKey, askAgainDef);
 
@@ -8334,52 +8371,30 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
         return true;
     }
 
-    auto &lf = frame->getLookAndFeel();
-
-    okcWithToggleCallback = std::move(okCallback);
-    okcWithToggleAlertWindow.reset(lf.createAlertWindow(title, msg, "OK", "Cancel", "",
-                                                        juce::AlertWindow::NoIcon, 2, nullptr));
-
-    auto cb = std::make_unique<juce::ToggleButton>(ynMessage);
-
-    cb->setName("");
-    cb->centreWithSize(400, 20);
-    cb->setColour(juce::ToggleButton::textColourId,
-                  currentSkin->getColor(Colors::Dialog::Label::Text));
-    cb->setColour(juce::ToggleButton::tickColourId,
-                  currentSkin->getColor(Colors::Dialog::Checkbox::Tick));
-    cb->setColour(juce::ToggleButton::tickDisabledColourId,
-                  currentSkin->getColor(Colors::Dialog::Checkbox::Border));
-
-    okcWithToggleAlertWindow->addCustomComponent(cb.get());
-    okcWithToggleToggleButton = std::move(cb);
-    okcWithToggleAlertWindow->setAlwaysOnTop(true);
-    okcWithToggleAlertWindow->enterModalState(
-        true, juce::ModalCallbackFunction::create([this, dontAskAgainKey](int isOK) {
-            if (okcWithToggleToggleButton->getToggleState())
-            {
-                if (isOK == 1)
-                {
-                    Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey,
-                                                           ALWAYS);
-                }
-                else
-                {
-                    Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey,
-                                                           NEVER);
-                }
-            }
-
-            if (isOK == 1)
-            {
-                okcWithToggleCallback();
-            }
-
-            okcWithToggleAlertWindow.reset(nullptr);
-            okcWithToggleToggleButton.reset(nullptr);
-        }),
-        false);
-
+    alert = std::make_unique<Surge::Overlays::Alert>();
+    alert->setSkin(currentSkin, bitmapStore);
+    alert->setDescription(title);
+    alert->setWindowTitle(title);
+    addAndMakeVisibleWithTracking(frame.get(), *alert);
+    alert->setLabel(msg);
+    alert->addToggleButtonAndSetText(ynMessage);
+    alert->setOkCancelButtonTexts("OK", "Cancel");
+    alert->onOkForToggleState = [this, dontAskAgainKey, okCallback](bool dontAskAgain) {
+        if (dontAskAgain)
+        {
+            Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey, ALWAYS);
+        }
+        okCallback();
+    };
+    alert->onCancelForToggleState = [this, dontAskAgainKey](bool dontAskAgain) {
+        if (dontAskAgain)
+        {
+            Surge::Storage::updateUserDefaultValue(&(synth->storage), dontAskAgainKey, NEVER);
+        }
+    };
+    alert->setBounds(0, 0, getWindowSizeX(), getWindowSizeY());
+    alert->setVisible(true);
+    alert->toFront(true);
     return false;
 }
 
