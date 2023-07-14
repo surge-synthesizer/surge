@@ -155,15 +155,18 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
         else if (address2 == "save")
         {
-            std::string dataStr = getWholeString(message);
-            if (dataStr.empty())
-                synth->savePatch(false, true);
-            else
-            {
-                dataStr += ".fxp";
-                fs::path ppath = fs::path(dataStr);
-                synth->savePatchToPath(ppath);
-            }
+            // Run this on the juce messenger thread
+            juce::MessageManager::getInstance()->callAsync([this, message]() {
+                std::string dataStr = getWholeString(message);
+                if (dataStr.empty())
+                    synth->savePatch(false, true);
+                else
+                {
+                    dataStr += ".fxp";
+                    fs::path ppath = fs::path(dataStr);
+                    synth->savePatchToPath(ppath);
+                }
+            });
         }
         else if (address2 == "random")
         {
