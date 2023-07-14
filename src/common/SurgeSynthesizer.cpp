@@ -2744,6 +2744,7 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
             break;
         };
     }
+
     if (external && !need_refresh)
     {
         bool got = false;

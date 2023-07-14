@@ -4808,13 +4808,13 @@ void SurgeGUIEditor::initOSCError(int port)
 juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 {
     auto oscSubMenu = juce::PopupMenu();
-    int iportnum = juceEditor->processor.oscListener.portnum;
-    int oportnum = juceEditor->processor.oscSender.portnum;
+    int iportnum = juceEditor->processor.oscHandler.iportnum;
+    int oportnum = juceEditor->processor.oscHandler.oportnum;
 
     if (synth->storage.oscListenerRunning)
     {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Input"),
-                           [this]() { juceEditor->processor.oscListener.stopListening(); });
+                           [this]() { juceEditor->processor.oscHandler.stopListening(); });
     }
     else
     {

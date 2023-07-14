@@ -27,8 +27,7 @@
 #include "SurgeStorage.h"
 #include "util/LockFreeStack.h"
 
-#include "osc/OSCListener.h"
-#include "osc/OSCSender.h"
+#include "osc/OpenSoundControl.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
 
@@ -351,8 +350,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     sst::cpputils::SimpleRingBuffer<oscParamMsg, 4096> oscRingBuf;
 
-    Surge::OSC::OSCListener oscListener;
-    Surge::OSC::OSCSender oscSender;
+    Surge::OSC::OpenSoundControl oscHandler;
 
     bool initOSCIn(int port);
     bool initOSCOut(int port);
@@ -360,8 +358,25 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool changeOSCOutPort(int newport);
     void stopOSCOut();
 
-    void patch_load_to_OSC(fs::path);
+    void patch_load_to_OSC(fs::path newpath);
+    void param_change_to_OSC(std::string paramPath, std::string valStr);
+    void paramChangeToListeners(Parameter *p);
 
+    // --- 'param change' listener(s) ----
+    // Listeners are notified whenever a parameter finishes changing, along with the new value.
+    // Listeners should do any significant work on their own thread; for example, the OSC
+    // paramChangeListener calls OSCSender::send(), which runs on a juce::MessageManager thread.
+    //
+    // Be sure to delete any added listeners in the destructor of the class that added them.
+    std::unordered_map<std::string, std::function<void(const std::string &, const std::string &)>>
+        paramChangeListeners;
+    void
+    addParamChangeListener(std::string key,
+                           std::function<void(const std::string &, const std::string &)> const &l)
+    {
+        paramChangeListeners.insert({key, l});
+    }
+    void deleteParamChangeListener(std::string key) { paramChangeListeners.erase(key); }
     //==============================================================================
     const juce::String getName() const override;
 

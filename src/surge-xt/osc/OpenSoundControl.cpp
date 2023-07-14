@@ -20,7 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#include "OSCListener.h"
+#include "OpenSoundControl.h"
 #include "Parameter.h"
 #include "SurgeSynthProcessor.h"
 #include <sstream>
@@ -32,24 +32,31 @@ namespace Surge
 namespace OSC
 {
 
-OSCListener::OSCListener() {}
+OpenSoundControl::OpenSoundControl() {}
 
-OSCListener::~OSCListener()
+OpenSoundControl::~OpenSoundControl()
 {
     if (listening)
         stopListening();
 }
 
-bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge,
-                       int port)
+void OpenSoundControl::initOSC(SurgeSynthProcessor *ssp,
+                               const std::unique_ptr<SurgeSynthesizer> &surge)
 {
+    // Init. pointers to synth and synth processor
     synth = surge.get();
+    sspPtr = ssp;
+}
+
+/* ----- OSC Receiver  ----- */
+
+bool OpenSoundControl::initOSCIn(int port)
+{
     if (connect(port))
     {
         addListener(this);
         listening = true;
-        portnum = port;
-        sspPtr = ssp;
+        iportnum = port;
         synth->storage.oscListenerRunning = true;
 
 #ifdef DEBUG
@@ -60,7 +67,7 @@ bool OSCListener::init(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynt
     return false;
 }
 
-void OSCListener::stopListening()
+void OpenSoundControl::stopListening()
 {
     if (!listening)
         return;
@@ -77,7 +84,7 @@ void OSCListener::stopListening()
 }
 
 // Concatenates OSC message data strings separated by spaces into one string (with spaces)
-std::string OSCListener::getWholeString(const juce::OSCMessage &om)
+std::string OpenSoundControl::getWholeString(const juce::OSCMessage &om)
 {
     std::string dataStr = "";
     for (int i = 0; i < om.size(); i++)
@@ -89,7 +96,7 @@ std::string OSCListener::getWholeString(const juce::OSCMessage &om)
     return dataStr;
 }
 
-void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
+void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
     if (addr.at(0) != '/')
@@ -119,6 +126,9 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
         if (!message[0].isFloat32())
         {
             // Not a valid data value
+#ifdef DEBUG
+            std::cout << "Invalid data type (not float)." << std::endl;
+#endif
             return;
         }
 
@@ -132,7 +142,7 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
     else if (address1 == "patch")
     {
         std::getline(split, address2, '/');
-        if (address2 == "")
+        if (address2 == "load")
         {
             std::string dataStr = getWholeString(message) + ".fxp";
             {
@@ -141,6 +151,24 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
                 synth->has_patchid_file = true;
             }
             synth->processAudioThreadOpsWhenAudioEngineUnavailable();
+#ifdef DEBUG
+            std::cout << "Patch:" << dataStr << std::endl;
+#endif
+        }
+        else if (address2 == "save")
+        {
+            // Run this on the juce messenger thread
+            juce::MessageManager::getInstance()->callAsync([this, message]() {
+                std::string dataStr = getWholeString(message);
+                if (dataStr.empty())
+                    synth->savePatch(false, true);
+                else
+                {
+                    dataStr += ".fxp";
+                    fs::path ppath = fs::path(dataStr);
+                    synth->savePatchToPath(ppath);
+                }
+            });
         }
         else if (address2 == "random")
         {
@@ -247,9 +275,13 @@ void OSCListener::oscMessageReceived(const juce::OSCMessage &message)
             synth->storage.loadMappingFromKBM(def_path);
         }
     }
+    else if (address1 == "send_all_parameters")
+    {
+        OpenSoundControl::sendAllParams();
+    }
 }
 
-void OSCListener::oscBundleReceived(const juce::OSCBundle &bundle)
+void OpenSoundControl::oscBundleReceived(const juce::OSCBundle &bundle)
 {
     std::string msg;
 
@@ -264,6 +296,92 @@ void OSCListener::oscBundleReceived(const juce::OSCBundle &bundle)
             oscMessageReceived(elem.getMessage());
         else if (elem.isBundle())
             oscBundleReceived(elem.getBundle());
+    }
+}
+
+/* ----- OSC Sending  ----- */
+
+bool OpenSoundControl::initOSCOut(int port)
+{
+    // Send OSC messages to localhost:UDP port number:
+    if (!juceOSCSender.connect("127.0.0.1", port))
+    {
+#ifdef DEBUG
+        std::cout << "Surge OSCSender: failed to connect to UDP port " << port << "." << std::endl;
+#endif
+        return false;
+    }
+    sendingOSC = true;
+    oportnum = port;
+    synth->storage.oscSending = true;
+
+#ifdef DEBUG
+    std::cout << "SurgeOSC: Sending OSC on port " << port << "." << std::endl;
+#endif
+    return true;
+}
+
+void OpenSoundControl::stopSending()
+{
+    if (!sendingOSC)
+        return;
+
+    sendingOSC = false;
+    synth->storage.oscSending = false;
+#ifdef DEBUG
+    std::cout << "SurgeOSC: Stopped sending OSC." << std::endl;
+#endif
+}
+
+void OpenSoundControl::send(std::string addr, std::string msg)
+{
+    if (sendingOSC)
+    {
+        // Runs on the juce messenger thread
+        juce::MessageManager::getInstance()->callAsync([this, msg, addr]() {
+            if (!this->juceOSCSender.send(juce::OSCMessage(juce::String(addr), juce::String(msg))))
+                std::cout << "Error: could not send OSC message.";
+        });
+    }
+}
+
+// Loop through all params, send them to OSC Out
+void OpenSoundControl::sendAllParams()
+{
+    if (sendingOSC)
+    {
+        // Runs on the juce messenger thread
+        juce::MessageManager::getInstance()->callAsync([this]() {
+            // auto timer = new Surge::Debug::TimeBlock("ParameterDump");
+            std::string valStr;
+            int n = synth->storage.getPatch().param_ptr.size();
+            for (int i = 0; i < n; i++)
+            {
+                Parameter p = *synth->storage.getPatch().param_ptr[i];
+                switch (p.valtype)
+                {
+                case vt_int:
+                    valStr = std::to_string(p.val.i);
+                    break;
+
+                case vt_bool:
+                    valStr = std::to_string(p.val.b);
+                    break;
+
+                case vt_float:
+                    valStr = std::to_string(p.val.f);
+                    break;
+
+                default:
+                    break;
+                }
+
+                if (!this->juceOSCSender.send(
+                        juce::OSCMessage(juce::String(p.oscName), juce::String(valStr))))
+                    std::cout << "Error: could not send OSC message.";
+            }
+            // delete timer;    // This prints the elapsed time
+        });
     }
 }
 
