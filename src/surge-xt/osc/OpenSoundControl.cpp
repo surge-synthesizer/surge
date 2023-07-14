@@ -126,7 +126,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (!message[0].isFloat32())
         {
             // Not a valid data value
+#ifdef DEBUG
             std::cout << "Invalid data type (not float)." << std::endl;
+#endif
             return;
         }
 
