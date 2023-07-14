@@ -532,6 +532,7 @@ div.frame {
 }
 
 div.tablewrap {
+    width: 610px;
     margin: 0 8px 16px 8px;
     box-sizing: border-box;
     display: block;
@@ -590,43 +591,26 @@ code {
   <body style="margin: 0pt; background: #CDCED4;">
     <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
       <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-        Surge XT OSC Specification
+        Surge XT Open Sound Control (OSC) Specification
       </div>
     </div>
 
     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
-              <div class="outer">
-        <div class="frame">
-            <h2>OSC Output</h2>
-            <!-- Show patch change output -->
-            <div class="tablewrap fl cl">
-                <div class="heading"><h3>Patch:</h3></div>
-                <table style="border: 2px solid black;">
-                    <tr>
-                        <th>Address</th>
-                        <th>Description</th>
-                        <th>Sent Values</th>
-                    </tr>
-                    <tr>
-                        <td>/patch</td>
-                        <td>patch was changed</td>
-                        <td class="center">absolute file path of the new patch, without extension</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="outer">
-        <div class="frame">
-            <h2>OSC Input</h2>
-            <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
-            <div style="font-size: 12pt; font-family: Lato;">
-                Construct OSC messages using the exact (case sensitive)
-                entry listed in the <b>Address</b> column in the tables below.</br>
-                The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
-                where <code>address</code> can currently begin with either <code>tuning</code>
-                or <code>param</code>, and <code>value</code> can be:
+        <div class="outer">
+            <div class="frame">
+                <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
+                <div style="font-size: 12pt; font-family: Lato;">
+                    <p>
+                    Surge XT supports external OSC control of all parameters, including patch and tuning changes. Where appropriate and feasible, all
+                    Surge parameters/changes are reported to OSC out, either when they occur, or in the special case of <b>/send_all_parameters</b>
+                    (see below), on request.
+                    </p>
+                    <p>
+                        OSC messages are constructed using the exact (case sensitive)
+                        entry listed in the <b>Address</b> column in the tables below.</br>
+                        The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
+                        where <code>address</code> can currently begin with either <code>tuning</code>,
+                        <code>patch</code> or <code>param</code>, and <code>value</code> can be:
 
                         <ul>
                             <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>
@@ -636,22 +620,26 @@ code {
                             <li>contextual: either an in integer or a float, depending on the context (loaded oscillator or effect type)</li>
                         </ul>
 
-                Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
-                depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
-
-                <p>Examples:
-                    <div style="margin: -6px 0 2px 0; line-height: 1.75">
-                        <p>
-                            <code>/param/b/amp/gain 0.63</code></br>
-                            <code>/param/global/polyphony_limit 12</code></br>
-                            <code>/param/a/mixer/noise/mute 0</code></br>
-                            <code>/tuning/scyl ptolemy</code></br>
-                            <code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></br>
-                            <code>/tuning/path/scl /Users/jane/scala_tunings</code>
-                        </p>
-                    </div>
-                </p>
-            </div>
+                        Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
+                        depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
+                    <p>
+                    <p>Examples:
+                        <div style="margin: -6px 0 2px 0; line-height: 1.75">
+                            <span><code>/param/b/amp/gain 0.63</code></span>
+                            <span><code>/param/global/polyphony_limit 12</code></span>
+                            <span><code>/param/a/mixer/noise/mute 0</code></span>
+                        </div>
+                        <div style="margin: 4px 0 0 0; line-height: 1.75">
+                            <span><code>/tuning/scl ptolemy</code></span>
+                            <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
+                            <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
+                        </div>
+                    </p>
+                    <p style="margin-top: 28px; margin-bottom: 0px;">
+                        All OSC messages described below work in <b>both</b> directions, unless marked with "<b>†</b>". For these, only
+                        the incoming OSC message is supported; there is no corresponding OSC out message.
+                    </p>
+                </div>
             </div>
 
             <div class="tablewrap fl cl">
