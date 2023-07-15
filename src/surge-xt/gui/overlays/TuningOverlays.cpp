@@ -1648,12 +1648,11 @@ struct SCLKBMDisplay : public juce::Component,
         edoGo->setHeightOfOneImage(13);
         edoGo->setSkin(skin, associatedBitmapStore);
         edoGo->onClick = [this]() {
-            // FIXME locale
             auto txt = evenDivOf->getText();
 
             try
             {
-                if (txt.contains("."))
+                if (txt.contains(".") || txt.contains(","))
                 {
                     auto spanct = std::atof(evenDivOf->getText().toRawUTF8());
                     auto num = std::atoi(evenDivInto->getText().toRawUTF8());
@@ -1710,7 +1709,6 @@ struct SCLKBMDisplay : public juce::Component,
         kbmGo->setHeightOfOneImage(13);
         kbmGo->setSkin(skin, associatedBitmapStore);
         kbmGo->onClick = [this]() {
-            // FIXME locale
             auto start = std::atoi(kbmStart->getText().toRawUTF8());
             auto constant = std::atoi(kbmConstant->getText().toRawUTF8());
             auto freq = std::atof(kbmFreq->getText().toRawUTF8());

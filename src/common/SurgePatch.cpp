@@ -35,17 +35,13 @@
 #include "fmt/core.h"
 #include <locale>
 #include <fmt/format.h>
+#include "UnitConversions.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
 using namespace Surge::ParamConfig;
-
-inline std::string float_to_clocalestr(float value)
-{
-    return fmt::format(std::locale::classic(), "{:L}", value);
-}
 
 SurgePatch::SurgePatch(SurgeStorage *storage)
 {
