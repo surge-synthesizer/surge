@@ -27,7 +27,7 @@
 #include "sst/plugininfra/cpufeatures.h"
 #include "globals.h"
 #include "UserDefaults.h"
-#include "fmt/core.h"
+#include "UnitConversions.h"
 
 #if LINUX
 // getCurrentPosition is deprecated in J7
@@ -330,7 +330,7 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p)
             break;
 
         case vt_float:
-            valStr = std::to_string(p->val.f);
+            valStr = float_to_clocalestr(p->val.f);
             break;
 
         default:
