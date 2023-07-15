@@ -370,7 +370,7 @@ void OpenSoundControl::sendAllParams()
                     break;
 
                 case vt_float:
-                    valStr = float_to_clocalestr(p->val.f);
+                    valStr = float_to_clocalestr(p.val.f);
                     break;
 
                 default:
