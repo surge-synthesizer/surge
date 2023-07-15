@@ -613,7 +613,7 @@ code {
                         <code>patch</code> or <code>param</code>, and <code>value</code> can be:
 
                         <ul>
-                            <li>a floating point value between <b>0.0</b> and <b>1.0</b></li>
+                            <li>a floating point value between <b>0.0</b> and <b>1.0</b> (note: use '.' as the decimal mark, never ',').</li>
                             <li>an integer value</li>
                             <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
                             <li>a file path (absolute, or relative to the default path)
