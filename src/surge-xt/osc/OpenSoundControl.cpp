@@ -26,6 +26,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include "UnitConversions.h"
 
 namespace Surge
 {
@@ -369,7 +370,7 @@ void OpenSoundControl::sendAllParams()
                     break;
 
                 case vt_float:
-                    valStr = std::to_string(p.val.f);
+                    valStr = float_to_clocalestr(p.val.f);
                     break;
 
                 default:
