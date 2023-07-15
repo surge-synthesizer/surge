@@ -41,7 +41,7 @@ jobs:
           cmakeArguments: "-GNinja"
           cmakeTarget: "surge-testrunner"
           cmakeConfig: "Release"
-        windows-x86-32bit:
+        windows-x86-32bit-msvc:
           imageName: 'windows-2019'
           isWindows: True
           cmakeArguments: "-A Win32 -DCMAKE_BUILD_TYPE=Debug"
@@ -61,24 +61,24 @@ jobs:
           cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
-        windows-x64:
-          imageName: 'windows-2019'
-          isWindows: True
-          cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Debug"
-          cmakeConfig: "Debug"
-          cmakeTarget: $(defaultTargets)
+        #windows-x64-msvc:
+        #  imageName: 'windows-2019'
+        #  isWindows: True
+        #  cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Debug"
+        #  cmakeConfig: "Debug"
+        #  cmakeTarget: $(defaultTargets)
         windows-x64-clang:
           imageName: 'windows-2022'
           isWindows: True
           cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug"
           cmakeConfig: "Debug"
           cmakeTarget: $(defaultTargets)
-        windows-unittest:
-          imageName: 'windows-2019'
+        windows-unittest-clang:
+          imageName: 'windows-2022'
           isWindows: True
           isWindowsUnitTest: True
           isUnitTest: True
-          cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
+          cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
         linux-juce-python-targets:
