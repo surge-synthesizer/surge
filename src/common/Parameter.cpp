@@ -2027,6 +2027,9 @@ char *Parameter::get_storage_value(char *str) const
         snprintf(str, TXT_SIZE, "%i", val.b ? 1 : 0);
         break;
     case vt_float:
+        // While I could have moved this to the float_to_clocalestr in UnitConversions
+        // when I cleaned up #7095, this is often used hard to test and not incorrect
+        // so I'm going to consciously leave it.
         std::stringstream sst;
         sst.imbue(std::locale::classic());
         sst << std::fixed;

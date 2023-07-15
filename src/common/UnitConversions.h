@@ -23,9 +23,10 @@
 #define SURGE_SRC_COMMON_UNITCONVERSIONS_H
 #include <stdio.h>
 #include <algorithm>
-#include <clocale>
+#include <locale>
 #include <cstring>
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 static float env_phasemulti = 1000 / 44100.f;
 static float lfo_range = 1000;
@@ -54,36 +55,12 @@ inline std::string get_notename(int i_value, int i_offset)
 }
 
 /*
-** Locales are kinda units aren't they? Anyway thanks to @falktx for this
-** handy little guard class, as shown in issue #1900
-*/
-namespace Surge
+ * Turn a float into a string, but do it in an internatliazation independent
+ * way appropriate for streaming into XML and the like
+ */
+inline std::string float_to_clocalestr(float value)
 {
-class ScopedLocale
-{
-  public:
-    ScopedLocale() noexcept
-#if WINDOWS
-        : locale(::_strdup(::setlocale(LC_NUMERIC, nullptr)))
-#else
-        : locale(::strdup(::setlocale(LC_NUMERIC, nullptr)))
-#endif
-    {
-        ::setlocale(LC_NUMERIC, "C");
-    }
-
-    ~ScopedLocale() noexcept
-    {
-        if (locale != nullptr)
-        {
-            ::setlocale(LC_NUMERIC, locale);
-            ::free(locale);
-        }
-    }
-
-  private:
-    char *const locale;
-};
-} // namespace Surge
+    return fmt::format(std::locale::classic(), "{:L}", value);
+}
 
 #endif // SURGE_SRC_COMMON_UNITCONVERSIONS_H
