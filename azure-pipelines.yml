@@ -68,7 +68,7 @@ jobs:
           cmakeConfig: "Debug"
           cmakeTarget: $(defaultTargets)
         windows-x64-clang:
-          imageName: 'windows-2019'
+          imageName: 'windows-2022'
           isWindows: True
           cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug"
           cmakeConfig: "Debug"
