@@ -302,6 +302,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void processBlockPostFunction();
 
     void applyMidi(const juce::MidiMessageMetadata &);
+    void applyMidi(const juce::MidiMessage &);
     bool supportsMPE() const override { return true; }
 
     //==============================================================================
