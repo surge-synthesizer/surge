@@ -3831,6 +3831,48 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
                 },
                 zoomStatus);
         });
+
+        if (Surge::GUI::getIsStandalone())
+        {
+            juce::Component *comp = frame.get();
+            while (comp)
+            {
+                auto *cdw = dynamic_cast<juce::ResizableWindow *>(comp);
+                if (cdw)
+                {
+                    zoomSubMenu.addSeparator();
+                    if (cdw->isFullScreen())
+                    {
+                        zoomSubMenu.addItem("Exit Full Screen",
+                                            [this, w = juce::Component::SafePointer(cdw)]() {
+                                                if (w)
+                                                {
+                                                    std::cout << __FILE__ << ":" << __LINE__
+                                                              << " Exit Full Screen" << std::endl;
+                                                    w->setFullScreen(false);
+                                                }
+                                            });
+                    }
+                    else
+                    {
+                        zoomSubMenu.addItem("Enter Full Screen",
+                                            [w = juce::Component::SafePointer(cdw)]() {
+                                                if (w)
+                                                {
+                                                    std::cout << __FILE__ << ":" << __LINE__
+                                                              << " Enter Full Screen" << std::endl;
+                                                    w->setFullScreen(true);
+                                                }
+                                            });
+                    }
+                    comp = nullptr;
+                }
+                else
+                {
+                    comp = comp->getParentComponent();
+                }
+            }
+        }
     }
 
     return zoomSubMenu;
