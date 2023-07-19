@@ -4452,6 +4452,7 @@ void SurgeSynthesizer::process()
         }
 
         iter = voices[s].begin();
+
         while (iter != voices[s].end())
         {
             SurgeVoice *v = *iter;
@@ -4459,7 +4460,15 @@ void SurgeSynthesizer::process()
             v->GetQFB(); // save filter state in voices after quad processing is done
             iter++;
         }
+
         storage.modRoutingMutex.lock();
+
+        // mute scene
+        if (storage.getPatch().scene[s].volume.deactivated)
+        {
+            mech::clear_block<BLOCK_SIZE_OS>(sceneout[s][0]);
+            mech::clear_block<BLOCK_SIZE_OS>(sceneout[s][1]);
+        }
     }
 
     storage.modRoutingMutex.unlock();
