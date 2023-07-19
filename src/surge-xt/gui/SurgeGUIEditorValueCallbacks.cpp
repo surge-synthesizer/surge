@@ -947,6 +947,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     }
 
                     bool isGlobal = md < n_global_params;
+                    // TODO: FIX SCENE ASSUMPTION
                     bool isActiveScene = parameter->scene - 1 == activeScene;
 
                     if ((isGlobal || isActiveScene || allScenes) &&
@@ -2591,14 +2592,21 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                     bool isChecked = q->deactivated;
 
-                    if (q->ctrltype == ct_envtime_linkable_delay)
+                    switch (q->ctrltype)
                     {
+                    case ct_envtime_linkable_delay:
                         txt = Surge::GUI::toOSCase("Link to Left Channel");
-                    }
-                    else
+                        break;
+                    case ct_amplitude_clipper:
+                        txt = Surge::GUI::toOSCase(
+                            fmt::format("Mute Scene {:c}", 'A' + (p->scene - 1)));
+                        break;
+                    default:
                     {
                         isChecked = !isChecked;
                         txt = Surge::GUI::toOSCase("Enabled");
+                    }
+                    break;
                     }
 
                     contextMenu.addSeparator();

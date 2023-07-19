@@ -116,7 +116,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 19 -> 20 (XT 1.1 release)   added voice envelope mode, but super late so don't break 19
 // 20 -> 21 (XT 1.2 nightlies) added absolutable mode for Combulator Offset 1/2 (to match the behavior of Center parameter)
 //                             added oddsound_as_mts_main
-// 21 -> 22 (XT 1.3 nighlies)  added new ring modulator modes in the mixer, add bonsai distortion effect, changed MIDI mapping behavior
+// 21 -> 22 (XT 1.3 nighlies)  added new ring modulator modes in the mixer, add bonsai distortion effect, changed MIDI mapping behavior, deactivatable scenes
 // clang-format on
 
 const int ff_revision = 22;

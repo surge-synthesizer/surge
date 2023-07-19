@@ -2255,6 +2255,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             scene[sc].level_ring_12.deform_type = 0;
             scene[sc].level_ring_23.deform_type = 0;
+            scene[sc].volume.deactivated = false;
         }
     }
 
