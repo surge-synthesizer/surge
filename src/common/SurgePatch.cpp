@@ -872,6 +872,7 @@ void SurgePatch::init_default_values()
         }
 
         scene[sc].volume.val.f = 0.890899f;
+        scene[sc].volume.deactivated = false;
         scene[sc].width.val.f = 1.f; // width
 
         scene[sc].mute_o2.val.b = true;
