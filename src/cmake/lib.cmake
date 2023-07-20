@@ -15,10 +15,7 @@ function(surge_juce_package target product_name)
   if(TARGET ${target}_CLAP)
     add_dependencies(${pkg_target} ${target}_CLAP)
   endif()
-  if(TARGET ${target}_CLI)
-    add_dependencies(${pkg_target} ${target}_CLI)
-  endif()
-  foreach(format AU LV2 Standalone VST VST3 CLAP CLI)
+  foreach(format AU LV2 Standalone VST VST3 CLAP)
     if(NOT SURGE_COPY_TO_PRODUCTS)
       # Add the copy rule to the pkg_target
       if(TARGET ${target}_${format})
@@ -43,6 +40,38 @@ function(surge_juce_package target product_name)
       endif()
     endif()
   endforeach()
+
+  if(TARGET ${target}-cli)
+    message(STATUS "Adding ${target}-cli to ${pkg_target}")
+    add_dependencies(${pkg_target} ${target}-cli)
+
+    # Add the copy rule to the pkg_target in all cases
+    get_target_property(cli_dir ${target}-cli RUNTIME_OUTPUT_DIRECTORY)
+
+    if (WIN32)
+      set(dotexe ".exe")
+    else()
+      set(dotexe "")
+    endif()
+
+    add_custom_command(
+            TARGET ${pkg_target}
+            POST_BUILD
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND echo "${target}: Relocating ${target}-cli executable"
+            COMMAND ${CMAKE_COMMAND} -E copy ${cli_dir}/${target}-cli${dotexe} ${SURGE_PRODUCT_DIR}/
+    )
+
+    if (TARGET ${target}_Standalone)
+      if (APPLE)
+        add_dependencies(${PROJECT_NAME}_Standalone ${PROJECT_NAME}-cli)
+        get_property(cliname TARGET ${PROJECT_NAME}-cli PROPERTY RUNTIME_OUTPUT_DIRECTORY)
+        set(cliexe ${cliname}/${PROJECT_NAME}-cli)
+        message(STATUS "macOS Standalone includes ${cliexe}")
+      endif()
+    endif()
+
+  endif()
 
   add_dependencies(surge-staged-assets ${pkg_target})
   add_dependencies(surge-xt-distribution ${pkg_target})
