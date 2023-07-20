@@ -1,4 +1,4 @@
-project(surge-xt-CLI VERSION ${CMAKE_PROJECT_VERSION})
+project(surge-xt-cli VERSION ${CMAKE_PROJECT_VERSION})
 
 add_subdirectory(../../../libs/CLI11 CLI11)
 
