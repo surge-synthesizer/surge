@@ -62,15 +62,6 @@ function(surge_juce_package target product_name)
             COMMAND ${CMAKE_COMMAND} -E copy ${cli_dir}/${target}-cli${dotexe} ${SURGE_PRODUCT_DIR}/
     )
 
-    if (TARGET ${target}_Standalone)
-      if (APPLE)
-        add_dependencies(${PROJECT_NAME}_Standalone ${PROJECT_NAME}-cli)
-        get_property(cliname TARGET ${PROJECT_NAME}-cli PROPERTY RUNTIME_OUTPUT_DIRECTORY)
-        set(cliexe ${cliname}/${PROJECT_NAME}-cli)
-        message(STATUS "macOS Standalone includes ${cliexe}")
-      endif()
-    endif()
-
   endif()
 
   add_dependencies(surge-staged-assets ${pkg_target})
