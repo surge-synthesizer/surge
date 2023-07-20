@@ -338,6 +338,28 @@ void SurgeSynthEditor::reapplySurgeComponentColours()
 
 void SurgeSynthEditor::resized()
 {
+    if (Surge::GUI::getIsStandalone())
+    {
+        juce::Component *comp = this;
+        while (comp)
+        {
+            auto *cdw = dynamic_cast<juce::ResizableWindow *>(comp);
+            if (cdw)
+            {
+                if (cdw->isFullScreen())
+                {
+                    std::cout << __FILE__ << ":" << __LINE__ << " Deal with Full Screen zoom"
+                              << std::endl;
+                }
+                comp = nullptr;
+            }
+            else
+            {
+                comp = comp->getParentComponent();
+            }
+        }
+    }
+
     drawExtendedControls = sge->getShowVirtualKeyboard();
 
     auto w = getWidth();
