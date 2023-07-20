@@ -1684,6 +1684,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             }
             else
             {
+                /*
+                 * This code runs when there is no deactivated streaming. This can happen
+                 * in, say, nightlies when we toggle can_deactivate half way through the
+                 * dev cycle so half the patches have it true and half false. But there is
+                 * no good default so just maintain this nasty list.
+                 */
                 if (param_ptr[i]->can_deactivate())
                 {
                     auto cg = param_ptr[i]->ctrlgroup;
@@ -1693,7 +1699,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     if ((cg == cg_LFO) || // this is the LFO rate and env special case
                         (cg == cg_GLOBAL &&
                          ct == ct_freq_hpf) || // this is the global highpass special case
-                        (ct == ct_filtertype || ct == ct_wstype) // filter bypass
+                        (ct == ct_filtertype || ct == ct_wstype) || // filter bypass
+                        (ct == ct_amplitude_clipper)                // scene volume
                     )
                     {
                         param_ptr[i]->deactivated = false;
