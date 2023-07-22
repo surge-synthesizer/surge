@@ -112,7 +112,39 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string address1, address2, address3;
     std::getline(split, address1, '/');
 
-    if (address1 == "param")
+    if (address1 == "fqnote")
+    // Play a note at the given frequency and velocity
+    {
+        if (!message[0].isFloat32())
+        {
+#ifdef DEBUG
+            std::cout << "Invalid data type for frequency (must be a float)." << std::endl;
+#endif
+            return;
+        }
+
+        if (!message[1].isFloat32())
+        {
+#ifdef DEBUG
+            std::cout << "Invalid data type for amplitude (must be a float between 0.0 and 1.0)."
+                      << std::endl;
+#endif
+            return;
+        }
+        float32_t frequency = message[0].getFloat32();
+        int velocity = (int)std::round(message[1].getFloat32() * 127);
+        if (velocity < 0 || velocity > 127)
+            return;
+        // Make a noteID from frequency
+        int32_t noteID = (unsigned &)frequency;
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(frequency, velocity, noteID));
+    }
+
+    else if (address1 == "nt")
+    {
+    }
+
+    else if (address1 == "param")
     {
         auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
         if (p == NULL)
@@ -133,13 +165,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscParamMsg(p, message[0].getFloat32()));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, message[0].getFloat32()));
 
 #ifdef DEBUG_VERBOSE
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
     }
+
     else if (address1 == "patch")
     {
         std::getline(split, address2, '/');
@@ -152,9 +185,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 synth->has_patchid_file = true;
             }
             synth->processAudioThreadOpsWhenAudioEngineUnavailable();
-#ifdef DEBUG
+            // #ifdef DEBUG
             std::cout << "Patch:" << dataStr << std::endl;
-#endif
+            // #endif
         }
         else if (address2 == "save")
         {
@@ -252,9 +285,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 def_path = path;
                 def_path += ".scl";
             }
-#ifdef DEBUG
-            std::cout << "scl_path: " << def_path << std::endl;
-#endif
             synth->storage.loadTuningFromSCL(def_path);
         }
         // KBM mapping file selection
@@ -276,6 +306,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             synth->storage.loadMappingFromKBM(def_path);
         }
     }
+
     else if (address1 == "send_all_parameters")
     {
         OpenSoundControl::sendAllParams();

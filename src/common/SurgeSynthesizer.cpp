@@ -512,6 +512,18 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     }
 }
 
+// This supports an OSC message that specifies pitch by frequency (rather than by MIDI note number)
+int32_t SurgeSynthesizer::playNoteByFrequency(float freq, char velocity, int32_t id)
+{
+    auto k = 12 * log2(freq / 440) + 69;
+    auto mk = (int)std::floor(k);
+    auto off = k - mk;
+    playNote(0, mk, velocity, 0, id);
+    // and now to fix the tuning
+    this->setNoteExpression(SurgeVoice::PITCH, id, mk, 0, off); // since PITCH is in semitones
+    return k;
+}
+
 void SurgeSynthesizer::softkillVoice(int s)
 {
     list<SurgeVoice *>::iterator iter, max_playing, max_released;

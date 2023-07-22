@@ -334,21 +334,30 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     //==============================================================================
     // Open Sound Control
-    struct oscParamMsg
+    struct oscToAudio
     {
         enum Type
         {
-            PARAMETER // the only type that uses these messages, for now
+            NOTE,
+            FREQNOTE,
+            PARAMETER
         } type{PARAMETER};
         Parameter *param;
-        float val{0.0};
+        float fval{0.0};
+        char cval;
+        int32_t noteid;
         std::string str;
 
-        oscParamMsg() {}
-        oscParamMsg(Parameter *p, float v) : type(PARAMETER), param(p), val(v) {}
+        oscToAudio() {}
+        oscToAudio(Parameter *p, float f) : type(PARAMETER), param(p), fval(f) {}
+        oscToAudio(float freq, char velocity, int32_t nid)
+            : type(FREQNOTE), fval(freq), cval(velocity), noteid(nid)
+        {
+        }
     };
+    LockFreeStack<oscToAudio, 4096> oscInput;
 
-    sst::cpputils::SimpleRingBuffer<oscParamMsg, 4096> oscRingBuf;
+    sst::cpputils::SimpleRingBuffer<oscToAudio, 8192> oscRingBuf;
 
     Surge::OSC::OpenSoundControl oscHandler;
 
