@@ -961,6 +961,8 @@ struct DAWExtraStateStorage
     int oddsoundRetuneMode = 0;
 
     bool isDirty{false};
+
+    bool disconnectFromOddSoundMTS{false};
 };
 
 struct PatchTuningStorage
