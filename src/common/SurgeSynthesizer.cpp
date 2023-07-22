@@ -4197,12 +4197,26 @@ void SurgeSynthesizer::processControl()
         storage.oddsound_mts_on_check = (storage.oddsound_mts_on_check + 1) & (1024 - 1);
         if (storage.oddsound_mts_on_check == 0)
         {
-            bool prior = storage.oddsound_mts_active_as_client;
-            storage.setOddsoundMTSActiveTo(MTS_HasMaster(storage.oddsound_mts_client));
-
-            if (prior != storage.oddsound_mts_active_as_client)
+            if (storage.getPatch().dawExtraState.disconnectFromOddSoundMTS)
             {
-                refresh_editor = true;
+                if (storage.oddsound_mts_active_as_client)
+                {
+                    auto q = storage.oddsound_mts_client;
+                    storage.oddsound_mts_active_as_client = false;
+                    storage.oddsound_mts_client = nullptr;
+                    MTS_DeregisterClient(q);
+                    refresh_editor = true;
+                }
+            }
+            else
+            {
+                bool prior = storage.oddsound_mts_active_as_client;
+                storage.setOddsoundMTSActiveTo(MTS_HasMaster(storage.oddsound_mts_client));
+
+                if (prior != storage.oddsound_mts_active_as_client)
+                {
+                    refresh_editor = true;
+                }
             }
         }
     }
