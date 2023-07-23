@@ -76,6 +76,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     SurgeSynthProcessor *sspPtr{nullptr};
     std::string getWholeString(const juce::OSCMessage &message);
     juce::OSCSender juceOSCSender;
+    void sendError(std::string errorMsg);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OpenSoundControl)
 };
