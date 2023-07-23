@@ -95,4 +95,6 @@ const int DEFAULT_POLYLIMIT = 16;
 
 const int DEFAULT_OSC_PORT_IN = 53280;
 const int DEFAULT_OSC_PORT_OUT = 53281;
+const float MIDI_MIN_FREQ = 8.1758;
+const float MIDI_MAX_FREQ = 12543.85;
 #endif // SURGE_SRC_COMMON_GLOBALS_H

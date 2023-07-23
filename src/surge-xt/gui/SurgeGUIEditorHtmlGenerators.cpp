@@ -601,9 +601,9 @@ code {
                 <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
                 <div style="font-size: 12pt; font-family: Lato;">
                     <p>
-                    Surge XT supports external OSC control of all parameters, including patch and tuning changes. Where appropriate and feasible, all
+                    Surge XT supports external OSC control of most parameters, including patch and tuning changes. Where appropriate and feasible, all
                     Surge parameters/changes are reported to OSC out, either when they occur, or in the special case of <b>/send_all_parameters</b>
-                    (see below), on request.
+                    (see below), on request. Notes may also be triggered via OSC, either directly by frequency, or in a mode compatible with MIDI notes.
                     </p>
                     <p>
                         OSC messages are constructed using the exact (case sensitive)
@@ -625,6 +625,10 @@ code {
                     <p>
                     <p>Examples:
                         <div style="margin: -6px 0 2px 0; line-height: 1.75">
+                            <span><code>/mnote 68 120</code></span>
+                            <span><code>/fnote 440.0 0.9</code></span>
+                        </div>
+                        <div style="margin: 4px 0 0px 0; line-height: 1.75">
                             <span><code>/param/b/amp/gain 0.63</code></span>
                             <span><code>/param/global/polyphony_limit 12</code></span>
                             <span><code>/param/a/mixer/noise/mute 0</code></span>
@@ -691,6 +695,40 @@ code {
                 </div>
 
                 <div class="tablewrap fr cr">
+                    <div class="heading"><h3>Notes:</h3></div>
+                    <table style="border: 2px solid black;">
+                        <tr>
+                            <th>Address</th>
+                            <th>Description</th>
+                            <th>Appropriate Values</th>
+                        </tr>
+                        <tr>
+                            <td>/mnote</td>
+                            <td>MIDI-style note</td>
+                            <td><b>† </b>note number, velocity (integers 0-127)*</td>
+                        </tr> 
+                        <tr>
+                            <td>/fnote</td>
+                            <td>Frequency note</td>
+                            <td><b>† </b>frequency (float), amp (float 0.0 - 1.0)*</td>
+                        </tr>
+                        <tr>
+                            <td>/mnote/rel</td>
+                            <td>MIDI-style note release</td>
+                            <td><b>† </b>note number, release velocity (integers 0-127)*</td>
+                        </tr> 
+                        <tr>
+                            <td>/fnote/rel</td>
+                            <td>Frequency note release</td>
+                            <td><b>† </b>frequency (float), release velocity (int 0-127)*</td>
+                        </tr>
+                        <tr>
+                            <td class="center" colspan="3">* zero velocity or amplitude releases note</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="tablewrap fr cr">
                     <div class="heading"><h3>Tuning:</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
@@ -708,7 +746,7 @@ code {
                             <td>.kbm mapping file</td>
                             <td><b>† </b>file path (absolute or relative)*</td>
                         </tr>
-                            <tr>
+                        <tr>
                             <td>/tuning/path/scl</td>
                             <td>.scl file default path</td>
                             <td><b>† </b>file path (absolute only)</td>

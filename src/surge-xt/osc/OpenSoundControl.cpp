@@ -112,7 +112,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string address1, address2, address3;
     std::getline(split, address1, '/');
 
-    if (address1 == "fqnote")
+    if (address1 == "fnote")
     // Play a note at the given frequency and velocity
     {
         if (!message[0].isFloat32())
@@ -131,7 +131,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 #endif
             return;
         }
+
         float32_t frequency = message[0].getFloat32();
+        // ensure freq. is in MIDI note range
+        if (frequency < MIDI_MIN_FREQ || frequency > MIDI_MAX_FREQ)
+            return;
         int velocity = (int)std::round(message[1].getFloat32() * 127);
         if (velocity < 0 || velocity > 127)
             return;
@@ -140,8 +144,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(frequency, velocity, noteID));
     }
 
-    else if (address1 == "nt")
+    else if (address1 == "mnote")
+    // OSC equivalent of MIDI note
     {
+        if (!message[0].isInt32() || !message[1].isInt32())
+        {
+#ifdef DEBUG
+            std::cout << "Invalid data type for OSC MIDI-style note and/or velocity." << std::endl;
+#endif
+            return;
+        }
+        char note = message[0].getInt32();
+        char vel = message[1].getInt32();
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(note, vel));
     }
 
     else if (address1 == "param")
@@ -185,9 +200,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 synth->has_patchid_file = true;
             }
             synth->processAudioThreadOpsWhenAudioEngineUnavailable();
-            // #ifdef DEBUG
+#ifdef DEBUG
             std::cout << "Patch:" << dataStr << std::endl;
-            // #endif
+#endif
         }
         else if (address2 == "save")
         {

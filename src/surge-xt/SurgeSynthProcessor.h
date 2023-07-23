@@ -338,26 +338,27 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     {
         enum Type
         {
-            NOTE,
+            MNOTE,
             FREQNOTE,
             PARAMETER
         } type{PARAMETER};
         Parameter *param;
         float fval{0.0};
-        char cval;
+        char mnote, vel;
         int32_t noteid;
         std::string str;
 
         oscToAudio() {}
         oscToAudio(Parameter *p, float f) : type(PARAMETER), param(p), fval(f) {}
         oscToAudio(float freq, char velocity, int32_t nid)
-            : type(FREQNOTE), fval(freq), cval(velocity), noteid(nid)
+            : type(FREQNOTE), fval(freq), vel(velocity), noteid(nid)
         {
         }
+        oscToAudio(char note, char velocity) : type(MNOTE), mnote(note), vel(velocity) {}
     };
     LockFreeStack<oscToAudio, 4096> oscInput;
 
-    sst::cpputils::SimpleRingBuffer<oscToAudio, 8192> oscRingBuf;
+    sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
 
     Surge::OSC::OpenSoundControl oscHandler;
 
