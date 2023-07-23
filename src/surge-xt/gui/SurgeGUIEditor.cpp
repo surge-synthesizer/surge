@@ -3674,25 +3674,23 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     if (tsMode && !this->synth->storage.oddsound_mts_client &&
         !getStorage()->oddsound_mts_active_as_main)
     {
-        tuningSubMenu.addItem(
-            Surge::GUI::toOSCase("Reconnect Instance as MTS-ESP Client"), [this]() {
-                this->synth->storage.initialize_oddsound();
-                this->synth->refresh_editor = true;
-                this->synth->storage.getPatch().dawExtraState.disconnectFromOddSoundMTS = false;
-            });
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Connect Instance to MTS-ESP"), [this]() {
+            this->synth->storage.initialize_oddsound();
+            this->synth->refresh_editor = true;
+            this->synth->storage.getPatch().dawExtraState.disconnectFromOddSoundMTS = false;
+        });
     }
 
     if (this->synth->storage.oddsound_mts_active_as_client &&
         this->synth->storage.oddsound_mts_client)
     {
-        tuningSubMenu.addItem(
-            Surge::GUI::toOSCase("Disconnect Instance as MTS-ESP Client"), [this]() {
-                auto q = this->synth->storage.oddsound_mts_client;
-                this->synth->storage.oddsound_mts_active_as_client = false;
-                this->synth->storage.oddsound_mts_client = nullptr;
-                this->synth->storage.getPatch().dawExtraState.disconnectFromOddSoundMTS = true;
-                MTS_DeregisterClient(q);
-            });
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Disconnect Instance from MTS-ESP"), [this]() {
+            auto q = this->synth->storage.oddsound_mts_client;
+            this->synth->storage.oddsound_mts_active_as_client = false;
+            this->synth->storage.oddsound_mts_client = nullptr;
+            this->synth->storage.getPatch().dawExtraState.disconnectFromOddSoundMTS = true;
+            MTS_DeregisterClient(q);
+        });
 
         tuningSubMenu.addSeparator();
 
