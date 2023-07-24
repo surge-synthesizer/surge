@@ -657,20 +657,20 @@ void SurgeSynthProcessor::processBlockOSC()
         }
 
         case oscToAudio::MNOTE:
-            if (om.vel == 0)
-                surge->releaseNote(0, om.mnote, 0, om.mnote);
-            else
+            if (om.on)
                 surge->playNote(0, om.mnote, om.vel, 0, om.mnote);
+            else
+                surge->releaseNote(0, om.mnote, om.vel, om.mnote);
             break;
 
         case oscToAudio::FREQNOTE:
-            if (om.vel == 0)
+            if (om.on)
+                surge->playNoteByFrequency(om.fval, om.vel, om.noteid);
+            else
             {
                 auto k = 12 * log2(om.fval / 440) + 69;
-                surge->releaseNote(0, k, 0, om.noteid);
+                surge->releaseNote(0, k, om.vel, om.noteid);
             }
-            else
-                surge->playNoteByFrequency(om.fval, om.vel, om.noteid);
             break;
 
         default:

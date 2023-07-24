@@ -345,16 +345,19 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         Parameter *param;
         float fval{0.0};
         char mnote, vel;
+        bool on{false};
         int32_t noteid;
-        std::string str;
 
         oscToAudio() {}
         oscToAudio(Parameter *p, float f) : type(PARAMETER), param(p), fval(f) {}
-        oscToAudio(float freq, char velocity, int32_t nid)
-            : type(FREQNOTE), fval(freq), vel(velocity), noteid(nid)
+        oscToAudio(float freq, char velocity, bool noteon, int32_t nid)
+            : type(FREQNOTE), fval(freq), vel(velocity), on(noteon), noteid(nid)
         {
         }
-        oscToAudio(char note, char velocity) : type(MNOTE), mnote(note), vel(velocity) {}
+        oscToAudio(char note, char velocity, bool noteon, int32_t nid)
+            : type(MNOTE), mnote(note), vel(velocity), on(noteon), noteid(nid)
+        {
+        }
     };
     LockFreeStack<oscToAudio, 4096> oscInput;
 

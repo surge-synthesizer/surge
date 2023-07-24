@@ -549,7 +549,7 @@ th {
 }
 
 span {
-    margin: 2px; 20px;
+    margin: 2px 10px;
     padding: 1px 2px;
     border: 1px solid #123463;
     white-space:nowrap;
@@ -601,7 +601,7 @@ code {
                 <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
                 <div style="font-size: 12pt; font-family: Lato;">
                     <p>
-                    Surge XT supports external OSC control of most parameters, including patch and tuning changes. Where appropriate and feasible, all
+                    Surge XT supports external OSC control of most parameters, including patch and tuning changes. Where appropriate and feasible,
                     Surge parameters/changes are reported to OSC out, either when they occur, or in the special case of <b>/send_all_parameters</b>
                     (see below), on request. Notes may also be triggered via OSC, either by frequency or by MIDI note number.
                     </p>
@@ -625,22 +625,32 @@ code {
                     <p style="border: 1px solid black; padding: 4px;" >
                         <b>*Important note: all numeric values must be sent over OSC as floating point numbers</b>
                         (even if they are listed as integer or boolean type --
-                        the 'appropriate values' describe how the data is used by Surge XT, not how messages are to be formatted for OSC).
+                        the 'appropriate values' describe how the data is used by Surge XT,
+                        not how messages are to be formatted for OSC).
                     </p>
                     <p>Examples:
                         <div style="margin: -6px 0 2px 0; line-height: 1.75">
                             <span><code>/mnote 68 120</code></span>
                             <span><code>/fnote 440.0 120</code></span>
+                            <span><code>/mnote 68 0</code></span>
+                            <span><code>/fnote 440.0 0</code></span>
+                            <span><code>/mnote/rel 68 45</code></span>
+                            <span><code>/fnote/rel 440.0 45</code></span>
                         </div>
-                        <div style="margin: 4px 0 0px 0; line-height: 1.75">
-                            <span><code>/param/b/amp/gain 0.63</code></span>
-                            <span><code>/param/global/polyphony_limit 12</code></span>
-                            <span><code>/param/a/mixer/noise/mute 0</code></span>
+                        <div style="margin: 4px 0 0 0; line-height: 1.75">
+                            <span><code>/patch/load /Library/Application Support/Surge XT/patches_factory/Plucks/Clean</code></span>
+                            <span><code>/patch/save</code></span>
+                            <span><code>/patch/incr</code></span>
                         </div>
                         <div style="margin: 4px 0 0 0; line-height: 1.75">
                             <span><code>/tuning/scl ptolemy</code></span>
                             <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                             <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
+                        </div>
+                        <div style="margin: 4px 0 0 0; line-height: 1.75">
+                            <span><code>/param/b/amp/gain 0.63</code></span>
+                            <span><code>/param/global/polyphony_limit 12</code></span>
+                            <span><code>/param/a/mixer/noise/mute 0</code></span>
                         </div>
                     </p>
                     <p style="margin-top: 28px;">
@@ -653,7 +663,7 @@ code {
                 </div>
             </div>
 
-            <div class="tablewrap fl cl">
+            <div class="tablewrap fr cr">
                 <div class="heading"><h3>Patches:</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
@@ -701,7 +711,7 @@ code {
                     </table>
                 </div>
 
-                <div class="tablewrap fr cr">
+                <div class="tablewrap fl cl">
                     <div class="heading"><h3>Notes:</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
@@ -736,7 +746,7 @@ code {
                     </table>
                 </div>
 
-                <div class="tablewrap fr cr">
+                <div class="tablewrap fl cl">
                     <div class="heading"><h3>Tuning:</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>

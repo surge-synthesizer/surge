@@ -117,6 +117,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     if (address1 == "fnote")
     // Play a note at the given frequency and velocity
     {
+        std::getline(split, address2, '/'); // check for '/rel'
+
         if (!message[0].isFloat32())
         {
             sendError("Invalid data type for frequency (must be a float).");
@@ -130,37 +132,61 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         float32_t frequency = message[0].getFloat32();
+        int velocity = static_cast<int>(message[1].getFloat32());
+
         // ensure freq. is in MIDI note range
         if (frequency < MIDI_MIN_FREQ || frequency > MIDI_MAX_FREQ)
         {
-            sendError("Frequency is out of range. (" + std::to_string(MIDI_MIN_FREQ) + " - " +
-                      std::to_string(MIDI_MAX_FREQ) + ").");
+            sendError("Frequency '" + std::to_string(frequency) + "' is out of range. (" +
+                      std::to_string(MIDI_MIN_FREQ) + " - " + std::to_string(MIDI_MAX_FREQ) + ").");
             return;
         }
-        int velocity = message[1].getFloat32();
+        // check velocity range
         if (velocity < 0 || velocity > 127)
         {
-            sendError("Velocity is out of range (0-127).");
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
             return;
         }
-        // Make a noteID from frequency
+        bool noteon = (address2 != "rel") && (velocity != 0);
+
+        // Make a noteID from frequency, and send packet to audio thread
         int32_t noteID = (unsigned &)frequency;
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(frequency, velocity, noteID));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+            frequency, static_cast<char>(velocity), noteon, noteID));
     }
 
     else if (address1 == "mnote")
     // OSC equivalent of MIDI note
     {
+        std::getline(split, address2, '/'); // check for '/rel'
+
         if (!message[0].isFloat32() || !message[1].isFloat32())
         {
             sendError("Invalid data type for OSC MIDI-style note and/or velocity (must be a "
                       "float between 0 - 127).");
             return;
         }
-        // PKS TODO: bounds check these:
-        char note = message[0].getFloat32();
-        char vel = message[1].getFloat32();
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(note, vel));
+        int note = static_cast<int>(message[0].getFloat32());
+        int velocity = static_cast<int>(message[1].getFloat32());
+
+        // check note and velocity ranges
+        if (note < 0 || note > 127)
+        {
+            sendError("Note '" + std::to_string(note) + "' is out of range (0-127).");
+            return;
+        }
+        if (velocity < 0 || velocity > 127)
+        {
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
+            return;
+        }
+
+        bool noteon = (address2 != "rel") && (velocity != 0);
+
+        // Send packet to audio thread
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(static_cast<char>(note),
+                                                                static_cast<char>(velocity), noteon,
+                                                                static_cast<int32_t>(note)));
     }
 
     else if (address1 == "param")
