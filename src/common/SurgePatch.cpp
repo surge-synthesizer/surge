@@ -872,6 +872,7 @@ void SurgePatch::init_default_values()
         }
 
         scene[sc].volume.val.f = 0.890899f;
+        scene[sc].volume.deactivated = false;
         scene[sc].width.val.f = 1.f; // width
 
         scene[sc].mute_o2.val.b = true;
@@ -1683,6 +1684,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             }
             else
             {
+                /*
+                 * This code runs when there is no deactivated streaming. This can happen
+                 * in, say, nightlies when we toggle can_deactivate half way through the
+                 * dev cycle so half the patches have it true and half false. But there is
+                 * no good default so just maintain this nasty list.
+                 */
                 if (param_ptr[i]->can_deactivate())
                 {
                     auto cg = param_ptr[i]->ctrlgroup;
@@ -1692,7 +1699,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                     if ((cg == cg_LFO) || // this is the LFO rate and env special case
                         (cg == cg_GLOBAL &&
                          ct == ct_freq_hpf) || // this is the global highpass special case
-                        (ct == ct_filtertype || ct == ct_wstype) // filter bypass
+                        (ct == ct_filtertype || ct == ct_wstype) || // filter bypass
+                        (ct == ct_amplitude_clipper)                // scene volume
                     )
                     {
                         param_ptr[i]->deactivated = false;
@@ -2255,6 +2263,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             scene[sc].level_ring_12.deform_type = 0;
             scene[sc].level_ring_23.deform_type = 0;
+            scene[sc].volume.deactivated = false;
         }
     }
 
@@ -2911,6 +2920,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
             {
                 dawExtraState.isDirty = ival;
+            }
+
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("disconnectFromOddSoundMTS"));
+            dawExtraState.disconnectFromOddSoundMTS = false;
+
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+            {
+                dawExtraState.disconnectFromOddSoundMTS = ival;
             }
 
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpePitchBendRange"));
@@ -3647,6 +3664,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement isDi("isDirty");
         isDi.SetAttribute("v", dawExtraState.isDirty ? 1 : 0);
         dawExtraXML.InsertEndChild(isDi);
+
+        TiXmlElement odS("disconnectFromOddSoundMTS");
+        odS.SetAttribute("v", dawExtraState.disconnectFromOddSoundMTS ? 1 : 0);
+        dawExtraXML.InsertEndChild(odS);
 
         TiXmlElement mpm("monoPedalMode");
         mpm.SetAttribute("v", dawExtraState.monoPedalMode);

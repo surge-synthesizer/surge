@@ -433,13 +433,13 @@ TEST_CASE("Scenes Output Data", "[fx]")
             float data[32]{1.0f};
             scenesOutputData.provideSceneData(0, 0, data);
             scenesOutputData.provideSceneData(0, 1, data);
-            REQUIRE(scenesOutputData.getSceneData(0, 0)[0] == 1.0f);
-            REQUIRE(scenesOutputData.getSceneData(0, 1)[0] == 1.0f);
+            REQUIRE(scenesOutputData.getSceneData(0, 0).get()[0] == 1.0f);
+            REQUIRE(scenesOutputData.getSceneData(0, 1).get()[0] == 1.0f);
 
             scenesOutputData.provideSceneData(1, 0, data);
             scenesOutputData.provideSceneData(1, 1, data);
-            REQUIRE(scenesOutputData.getSceneData(1, 0)[0] == 0.0f);
-            REQUIRE(scenesOutputData.getSceneData(1, 1)[0] == 0.0f);
+            REQUIRE(scenesOutputData.getSceneData(1, 0).get()[0] == 0.0f);
+            REQUIRE(scenesOutputData.getSceneData(1, 1).get()[0] == 0.0f);
         }
         REQUIRE(!scenesOutputData.thereAreClients(0));
         REQUIRE(!scenesOutputData.thereAreClients(1));

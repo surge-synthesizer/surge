@@ -1019,8 +1019,12 @@ void SurgeSynthProcessor::process_clap_event(const clap_event_header_t *evt)
 
 void SurgeSynthProcessor::applyMidi(const juce::MidiMessageMetadata &it)
 {
-    auto m = it.getMessage();
+    applyMidi(it.getMessage());
+}
+void SurgeSynthProcessor::applyMidi(const juce::MidiMessage &m)
+{
     const int ch = m.getChannel() - 1;
+
     juce::ScopedValueSetter<bool> midiAdd(isAddingFromMidi, true);
     midiKeyboardState.processNextMidiEvent(m);
 

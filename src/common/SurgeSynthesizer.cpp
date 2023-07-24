@@ -4211,12 +4211,26 @@ void SurgeSynthesizer::processControl()
         storage.oddsound_mts_on_check = (storage.oddsound_mts_on_check + 1) & (1024 - 1);
         if (storage.oddsound_mts_on_check == 0)
         {
-            bool prior = storage.oddsound_mts_active_as_client;
-            storage.setOddsoundMTSActiveTo(MTS_HasMaster(storage.oddsound_mts_client));
-
-            if (prior != storage.oddsound_mts_active_as_client)
+            if (storage.getPatch().dawExtraState.disconnectFromOddSoundMTS)
             {
-                refresh_editor = true;
+                if (storage.oddsound_mts_active_as_client)
+                {
+                    auto q = storage.oddsound_mts_client;
+                    storage.oddsound_mts_active_as_client = false;
+                    storage.oddsound_mts_client = nullptr;
+                    MTS_DeregisterClient(q);
+                    refresh_editor = true;
+                }
+            }
+            else
+            {
+                bool prior = storage.oddsound_mts_active_as_client;
+                storage.setOddsoundMTSActiveTo(MTS_HasMaster(storage.oddsound_mts_client));
+
+                if (prior != storage.oddsound_mts_active_as_client)
+                {
+                    refresh_editor = true;
+                }
             }
         }
     }
@@ -4466,6 +4480,7 @@ void SurgeSynthesizer::process()
         }
 
         iter = voices[s].begin();
+
         while (iter != voices[s].end())
         {
             SurgeVoice *v = *iter;
@@ -4473,7 +4488,15 @@ void SurgeSynthesizer::process()
             v->GetQFB(); // save filter state in voices after quad processing is done
             iter++;
         }
+
         storage.modRoutingMutex.lock();
+
+        // mute scene
+        if (storage.getPatch().scene[s].volume.deactivated)
+        {
+            mech::clear_block<BLOCK_SIZE_OS>(sceneout[s][0]);
+            mech::clear_block<BLOCK_SIZE_OS>(sceneout[s][1]);
+        }
     }
 
     storage.modRoutingMutex.unlock();

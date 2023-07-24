@@ -211,10 +211,28 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   )
 
 target_include_directories(${PROJECT_NAME}
-  PRIVATE
+  PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/gui
   ${CMAKE_CURRENT_SOURCE_DIR}/osc
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
+
+add_subdirectory(cli)
+
+if (APPLE)
+  add_dependencies(${PROJECT_NAME}_Standalone ${PROJECT_NAME}-cli)
+  get_property(cliname TARGET ${PROJECT_NAME}-cli PROPERTY RUNTIME_OUTPUT_DIRECTORY)
+  get_property(saname TARGET ${PROJECT_NAME}_Standalone PROPERTY RUNTIME_OUTPUT_DIRECTORY)
+  set(cliexe ${cliname}/${PROJECT_NAME}-cli)
+  message(STATUS "macOS Standalone includes CLI")
+
+  add_custom_command(
+          TARGET ${PROJECT_NAME}_Standalone
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          COMMAND echo "Relocating cli executable into Standalone"
+          COMMAND ${CMAKE_COMMAND} -E copy "${cliexe}" "${saname}/Surge XT.app/Contents/MacOS"
+  )
+endif()
 
 surge_juce_package(${PROJECT_NAME} "Surge XT")

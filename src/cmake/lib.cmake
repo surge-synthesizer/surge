@@ -41,6 +41,29 @@ function(surge_juce_package target product_name)
     endif()
   endforeach()
 
+  if(TARGET ${target}-cli)
+    message(STATUS "Adding ${target}-cli to ${pkg_target}")
+    add_dependencies(${pkg_target} ${target}-cli)
+
+    # Add the copy rule to the pkg_target in all cases
+    get_target_property(cli_dir ${target}-cli RUNTIME_OUTPUT_DIRECTORY)
+
+    if (WIN32)
+      set(dotexe ".exe")
+    else()
+      set(dotexe "")
+    endif()
+
+    add_custom_command(
+            TARGET ${pkg_target}
+            POST_BUILD
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND echo "${target}: Relocating ${target}-cli executable"
+            COMMAND ${CMAKE_COMMAND} -E copy ${cli_dir}/${target}-cli${dotexe} ${SURGE_PRODUCT_DIR}/
+    )
+
+  endif()
+
   add_dependencies(surge-staged-assets ${pkg_target})
   add_dependencies(surge-xt-distribution ${pkg_target})
 

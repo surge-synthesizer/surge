@@ -69,6 +69,16 @@ struct Alert : public juce::Component,
     std::unique_ptr<MultiLineSkinLabel> labelComponent;
 
     void visibilityChanged() override;
+
+    /*
+     * Alerts should use default focus order not the wonky tag first and
+     * then description and so on order for the main frame (which is laying out controls
+     * in a differently structured way).
+     */
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override
+    {
+        return std::make_unique<juce::KeyboardFocusTraverser>();
+    }
 };
 
 } // namespace Overlays
