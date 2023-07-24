@@ -132,7 +132,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        float32_t frequency = message[0].getFloat32();
+        float frequency = message[0].getFloat32();
         int velocity = static_cast<int>(message[1].getFloat32());
 
         // ensure freq. is in MIDI note range
