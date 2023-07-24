@@ -2831,13 +2831,14 @@ Surge::Storage::ScenesOutputData::ScenesOutputData()
     {
         for (int j = 0; j < N_OUTPUTS; j++)
         {
-            std::shared_ptr<float[BLOCK_SIZE]> block{new float[BLOCK_SIZE]{}};
+            std::shared_ptr<float> block(new float[BLOCK_SIZE], [](float *p) { delete[] p; });
+            memset(block.get(), 0, BLOCK_SIZE * sizeof(float));
             sceneData[i][j] = block;
         }
     }
 }
-const std::shared_ptr<float[BLOCK_SIZE]> &
-Surge::Storage::ScenesOutputData::getSceneData(int scene, int channel) const
+const std::shared_ptr<float> &Surge::Storage::ScenesOutputData::getSceneData(int scene,
+                                                                             int channel) const
 {
     assert(scene < n_scenes && scene >= 0);
     assert(channel < N_OUTPUTS && channel >= 0);

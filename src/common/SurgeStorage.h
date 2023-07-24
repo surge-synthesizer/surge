@@ -1135,12 +1135,11 @@ namespace Storage
 {
 struct ScenesOutputData
 {
-    std::shared_ptr<float[BLOCK_SIZE]> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr},
-                                                                      {nullptr, nullptr}};
+    std::shared_ptr<float> sceneData[n_scenes][N_OUTPUTS]{{nullptr, nullptr}, {nullptr, nullptr}};
 
   public:
     ScenesOutputData();
-    const std::shared_ptr<float[BLOCK_SIZE]> &getSceneData(int scene, int channel) const;
+    const std::shared_ptr<float> &getSceneData(int scene, int channel) const;
     void provideSceneData(int scene, int channel, float *data);
     bool thereAreClients(int scene) const;
 };
