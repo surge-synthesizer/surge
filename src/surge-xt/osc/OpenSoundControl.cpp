@@ -27,6 +27,7 @@
 #include <vector>
 #include <string>
 #include "UnitConversions.h"
+#include "Tunings.h"
 
 namespace Surge
 {
@@ -135,10 +136,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         int velocity = static_cast<int>(message[1].getFloat32());
 
         // ensure freq. is in MIDI note range
-        if (frequency < MIDI_MIN_FREQ || frequency > MIDI_MAX_FREQ)
+        if (frequency < Tunings::MIDI_0_FREQ || frequency > (Tunings::MIDI_0_FREQ * (1 << 7)))
         {
             sendError("Frequency '" + std::to_string(frequency) + "' is out of range. (" +
-                      std::to_string(MIDI_MIN_FREQ) + " - " + std::to_string(MIDI_MAX_FREQ) + ").");
+                      std::to_string(Tunings::MIDI_0_FREQ) + " - " +
+                      std::to_string(Tunings::MIDI_0_FREQ * (1 << 7)) + ").");
             return;
         }
         // check velocity range
@@ -412,7 +414,10 @@ void OpenSoundControl::send(std::string addr, std::string msg)
 
 void OpenSoundControl::sendError(std::string errorMsg)
 {
-    OpenSoundControl::send("/error", errorMsg);
+    if (sendingOSC)
+        OpenSoundControl::send("/error", errorMsg);
+    else
+        std::cout << "OSC Error: " << errorMsg << std::endl;
 }
 
 // Loop through all params, send them to OSC Out
