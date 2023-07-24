@@ -52,7 +52,7 @@ class AudioInputEffect : public Effect
     int group_label_ypos(int id) override;
 
   private:
-    std::shared_ptr<float[BLOCK_SIZE]> sceneDataPtr[N_OUTPUTS]{nullptr, nullptr};
+    std::shared_ptr<float> sceneDataPtr[N_OUTPUTS]{nullptr, nullptr};
     effect_slot_type getSlotType(fxslot_positions p);
     void applySlidersControls(float *buffer[], const float &channel, const float &pan,
                               const float &levelDb);
