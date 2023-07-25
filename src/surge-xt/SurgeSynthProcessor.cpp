@@ -644,13 +644,37 @@ void SurgeSynthProcessor::processBlockOSC()
     auto messages = oscRingBuf.popall();
     for (const auto &om : messages)
     {
-        float pval = om.val;
-        if (om.type == oscParamMsg::PARAMETER) // currently the only type
+        switch (om.type)
         {
+        case oscToAudio::PARAMETER:
+        {
+            float pval = om.fval;
             if (om.param->valtype == vt_int)
                 pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
             surge->setParameter01(surge->idForParameter(om.param), pval, true);
             surge->storage.getPatch().isDirty = true;
+            break;
+        }
+
+        case oscToAudio::MNOTE:
+            if (om.on)
+                surge->playNote(0, om.mnote, om.vel, 0, om.mnote);
+            else
+                surge->releaseNote(0, om.mnote, om.vel, om.mnote);
+            break;
+
+        case oscToAudio::FREQNOTE:
+            if (om.on)
+                surge->playNoteByFrequency(om.fval, om.vel, om.noteid);
+            else
+            {
+                auto k = 12 * log2(om.fval / 440) + 69;
+                surge->releaseNote(0, k, om.vel, om.noteid);
+            }
+            break;
+
+        default:
+            break;
         }
     }
 }

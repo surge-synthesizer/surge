@@ -27,6 +27,7 @@
 #include <vector>
 #include <string>
 #include "UnitConversions.h"
+#include "Tunings.h"
 
 namespace Surge
 {
@@ -101,8 +102,10 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
     if (addr.at(0) != '/')
-        // ignore malformed OSC
+    {
+        sendError("Badly-formed OSC message.");
         return;
+    }
 
     std::istringstream split(addr);
     // Scan past first '/'
@@ -112,14 +115,89 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string address1, address2, address3;
     std::getline(split, address1, '/');
 
-    if (address1 == "param")
+    if (address1 == "fnote")
+    // Play a note at the given frequency and velocity
+    {
+        std::getline(split, address2, '/'); // check for '/rel'
+
+        if (!message[0].isFloat32())
+        {
+            sendError("Invalid data type for frequency (must be a float).");
+            return;
+        }
+
+        if (!message[1].isFloat32())
+        {
+            sendError("Invalid data type for velocity (must be an float between 0 - 127).");
+            return;
+        }
+
+        float frequency = message[0].getFloat32();
+        int velocity = static_cast<int>(message[1].getFloat32());
+        constexpr float MAX_MIDI_FREQ = 12543.854;
+
+        // ensure freq. is in MIDI note range
+        if (frequency < Tunings::MIDI_0_FREQ || frequency > MAX_MIDI_FREQ)
+        {
+            sendError("Frequency '" + std::to_string(frequency) + "' is out of range. (" +
+                      std::to_string(Tunings::MIDI_0_FREQ) + " - " + std::to_string(MAX_MIDI_FREQ) +
+                      ").");
+            return;
+        }
+        // check velocity range
+        if (velocity < 0 || velocity > 127)
+        {
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
+            return;
+        }
+        bool noteon = (address2 != "rel") && (velocity != 0);
+
+        // Make a noteID from frequency, and send packet to audio thread
+        int32_t noteID = (unsigned &)frequency;
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+            frequency, static_cast<char>(velocity), noteon, noteID));
+    }
+
+    else if (address1 == "mnote")
+    // OSC equivalent of MIDI note
+    {
+        std::getline(split, address2, '/'); // check for '/rel'
+
+        if (!message[0].isFloat32() || !message[1].isFloat32())
+        {
+            sendError("Invalid data type for OSC MIDI-style note and/or velocity (must be a "
+                      "float between 0 - 127).");
+            return;
+        }
+        int note = static_cast<int>(message[0].getFloat32());
+        int velocity = static_cast<int>(message[1].getFloat32());
+
+        // check note and velocity ranges
+        if (note < 0 || note > 127)
+        {
+            sendError("Note '" + std::to_string(note) + "' is out of range (0-127).");
+            return;
+        }
+        if (velocity < 0 || velocity > 127)
+        {
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
+            return;
+        }
+
+        bool noteon = (address2 != "rel") && (velocity != 0);
+
+        // Send packet to audio thread
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(static_cast<char>(note),
+                                                                static_cast<char>(velocity), noteon,
+                                                                static_cast<int32_t>(note)));
+    }
+
+    else if (address1 == "param")
     {
         auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
         if (p == NULL)
         {
-#ifdef DEBUG
-            std::cout << "No parameter with OSC address of " << addr << std::endl;
-#endif
+            sendError("No parameter with OSC address of " + addr);
             // Not a valid OSC address
             return;
         }
@@ -127,19 +205,18 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (!message[0].isFloat32())
         {
             // Not a valid data value
-#ifdef DEBUG
-            std::cout << "Invalid data type (not float)." << std::endl;
-#endif
+            sendError("Invalid param data type (not float).");
             return;
         }
 
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscParamMsg(p, message[0].getFloat32()));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, message[0].getFloat32()));
 
 #ifdef DEBUG_VERBOSE
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
         std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
 #endif
     }
+
     else if (address1 == "patch")
     {
         std::getline(split, address2, '/');
@@ -152,9 +229,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 synth->has_patchid_file = true;
             }
             synth->processAudioThreadOpsWhenAudioEngineUnavailable();
-#ifdef DEBUG
-            std::cout << "Patch:" << dataStr << std::endl;
-#endif
         }
         else if (address2 == "save")
         {
@@ -205,10 +279,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             std::string dataStr = getWholeString(message);
             if ((dataStr != "_reset") && (!fs::exists(dataStr)))
             {
-                std::ostringstream msg;
-                msg << "An OSC 'tuning/path/...' message was received with a path which "
-                       "does not exist: the default path will not change.";
-                synth->storage.reportError(msg.str(), "Path does not exist.");
+                sendError("An OSC 'tuning/path/...' message was received with a path which does "
+                          "not exist: the default path will not change.");
                 return;
             }
 
@@ -252,9 +324,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 def_path = path;
                 def_path += ".scl";
             }
-#ifdef DEBUG
-            std::cout << "scl_path: " << def_path << std::endl;
-#endif
             synth->storage.loadTuningFromSCL(def_path);
         }
         // KBM mapping file selection
@@ -276,6 +345,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             synth->storage.loadMappingFromKBM(def_path);
         }
     }
+
     else if (address1 == "send_all_parameters")
     {
         OpenSoundControl::sendAllParams();
@@ -307,9 +377,6 @@ bool OpenSoundControl::initOSCOut(int port)
     // Send OSC messages to localhost:UDP port number:
     if (!juceOSCSender.connect("127.0.0.1", port))
     {
-#ifdef DEBUG
-        std::cout << "Surge OSCSender: failed to connect to UDP port " << port << "." << std::endl;
-#endif
         return false;
     }
     sendingOSC = true;
@@ -344,6 +411,14 @@ void OpenSoundControl::send(std::string addr, std::string msg)
                 std::cout << "Error: could not send OSC message.";
         });
     }
+}
+
+void OpenSoundControl::sendError(std::string errorMsg)
+{
+    if (sendingOSC)
+        OpenSoundControl::send("/error", errorMsg);
+    else
+        std::cout << "OSC Error: " << errorMsg << std::endl;
 }
 
 // Loop through all params, send them to OSC Out

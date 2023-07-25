@@ -549,7 +549,7 @@ th {
 }
 
 span {
-    margin: 2px; 20px;
+    margin: 2px 10px;
     padding: 1px 2px;
     border: 1px solid #123463;
     white-space:nowrap;
@@ -601,16 +601,15 @@ code {
                 <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
                 <div style="font-size: 12pt; font-family: Lato;">
                     <p>
-                    Surge XT supports external OSC control of all parameters, including patch and tuning changes. Where appropriate and feasible, all
+                    Surge XT supports external OSC control of most parameters, including patch and tuning changes. Where appropriate and feasible,
                     Surge parameters/changes are reported to OSC out, either when they occur, or in the special case of <b>/send_all_parameters</b>
-                    (see below), on request.
+                    (see below), on request. Notes may also be triggered via OSC, either by frequency or by MIDI note number.
                     </p>
                     <p>
                         OSC messages are constructed using the exact (case sensitive)
                         entry listed in the <b>Address</b> column in the tables below.</br>
                         The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
-                        where <code>address</code> can currently begin with either <code>tuning</code>,
-                        <code>patch</code> or <code>param</code>, and <code>value</code> can be:
+                        where <code>address</code> is one of the ones listed below, and <code>value</code> can be*:
 
                         <ul>
                             <li>a floating point value between <b>0.0</b> and <b>1.0</b> (note: use '.' as the decimal mark, never ',').</li>
@@ -623,26 +622,48 @@ code {
                         Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
                         depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
                     <p>
+                    <p style="border: 1px solid black; padding: 4px;" >
+                        <b>*Important note: all numeric values must be sent over OSC as floating point numbers</b>
+                        (even if they are listed as integer or boolean type --
+                        the 'appropriate values' describe how the data is used by Surge XT,
+                        not how messages are to be formatted for OSC).
+                    </p>
                     <p>Examples:
                         <div style="margin: -6px 0 2px 0; line-height: 1.75">
-                            <span><code>/param/b/amp/gain 0.63</code></span>
-                            <span><code>/param/global/polyphony_limit 12</code></span>
-                            <span><code>/param/a/mixer/noise/mute 0</code></span>
+                            <span><code>/mnote 68 120</code></span>
+                            <span><code>/fnote 440.0 120</code></span>
+                            <span><code>/mnote 68 0</code></span>
+                            <span><code>/fnote 440.0 0</code></span>
+                            <span><code>/mnote/rel 68 45</code></span>
+                            <span><code>/fnote/rel 440.0 45</code></span>
+                        </div>
+                        <div style="margin: 4px 0 0 0; line-height: 1.75">
+                            <span><code>/patch/load /Library/Application Support/Surge XT/patches_factory/Plucks/Clean</code></span>
+                            <span><code>/patch/save</code></span>
+                            <span><code>/patch/incr</code></span>
                         </div>
                         <div style="margin: 4px 0 0 0; line-height: 1.75">
                             <span><code>/tuning/scl ptolemy</code></span>
                             <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                             <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                         </div>
+                        <div style="margin: 4px 0 0 0; line-height: 1.75">
+                            <span><code>/param/b/amp/gain 0.63</code></span>
+                            <span><code>/param/global/polyphony_limit 12</code></span>
+                            <span><code>/param/a/mixer/noise/mute 0</code></span>
+                        </div>
                     </p>
-                    <p style="margin-top: 28px; margin-bottom: 0px;">
+                    <p style="margin-top: 28px;">
                         All OSC messages described below work in <b>both</b> directions, unless marked with "<b>†</b>". For these, only
                         the incoming OSC message is supported; there is no corresponding OSC out message.
+                    </p>
+                    <p style="margin-bottom: 0px;">
+                        Errors are reported (when feasible) to "/error". Monitor that address to see them.
                     </p>
                 </div>
             </div>
 
-            <div class="tablewrap fl cl">
+            <div class="tablewrap fr cr">
                 <div class="heading"><h3>Patches:</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
@@ -690,7 +711,42 @@ code {
                     </table>
                 </div>
 
-                <div class="tablewrap fr cr">
+                <div class="tablewrap fl cl">
+                    <div class="heading"><h3>Notes:</h3></div>
+                    <table style="border: 2px solid black;">
+                        <tr>
+                            <th>Address</th>
+                            <th>Description</th>
+                            <th>Appropriate Values</th>
+                        </tr>
+                        <tr>
+                            <td>/mnote</td>
+                            <td>MIDI note</td>
+                            <td><b>† </b>note number, velocity (integers 0-127)*</td>
+                        </tr> 
+                        <tr>
+                            <td>/fnote ‡</td>
+                            <td>frequency note</td>
+                            <td><b>† </b>frequency (float), velocity (integer 0-127)*</td>
+                        </tr>
+                        <tr>
+                            <td>/mnote/rel</td>
+                            <td>MIDI note release</td>
+                            <td><b>† </b>note number, release velocity (integers 0-127)</td>
+                        </tr> 
+                        <tr>
+                            <td>/fnote/rel</td>
+                            <td>frequency note release</td>
+                            <td><b>† </b>frequency (float), release velocity (integer 0-127)</td>
+                        </tr>
+                        <tr>
+                            <td class="center" colspan="3">* velocity 0 releases note; use the .../rel messages to release notes with velocity<br>
+                            ‡ When using '/fnote', Surge XT <em>must</em> be set to standard tuning for proper results.</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="tablewrap fl cl">
                     <div class="heading"><h3>Tuning:</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
@@ -708,7 +764,7 @@ code {
                             <td>.kbm mapping file</td>
                             <td><b>† </b>file path (absolute or relative)*</td>
                         </tr>
-                            <tr>
+                        <tr>
                             <td>/tuning/path/scl</td>
                             <td>.scl file default path</td>
                             <td><b>† </b>file path (absolute only)</td>

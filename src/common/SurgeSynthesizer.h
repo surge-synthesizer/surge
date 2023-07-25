@@ -84,6 +84,7 @@ class alignas(16) SurgeSynthesizer
     // Also see setNoteExpression() which allows you to control all note parameters polyphonically
     // with the user-provided host_noteid parameter.
     void playNote(char channel, char key, char velocity, char detune, int32_t host_noteid = -1);
+    void playNoteByFrequency(float freq, char velocity, int32_t id);
     void releaseNote(char channel, char key, char velocity, int32_t host_noteid = -1);
     void chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid = -1);
     void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity,
