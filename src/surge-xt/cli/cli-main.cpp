@@ -126,6 +126,8 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
                                      int numSamples,
                                      const juce::AudioIODeviceCallbackContext &context) override
     {
+        proc->processBlockOSC();
+
         for (int i = 0; i < numSamples; ++i)
         {
             if (pos >= BLOCK_SIZE)
