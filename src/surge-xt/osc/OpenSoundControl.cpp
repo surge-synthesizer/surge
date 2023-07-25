@@ -134,7 +134,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         float frequency = message[0].getFloat32();
         int velocity = static_cast<int>(message[1].getFloat32());
-        constexpr float MAX_MIDI_FREQ = 1625.49867722; // 2^(128/12)
+        constexpr float MAX_MIDI_FREQ = 12543.854;
 
         // ensure freq. is in MIDI note range
         if (frequency < Tunings::MIDI_0_FREQ || frequency > MAX_MIDI_FREQ)
