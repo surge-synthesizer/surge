@@ -139,12 +139,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (message.size() == 3)
         // note id supplied
         {
-            if (!message[0].isFloat32())
+            if (!message[2].isFloat32())
             {
                 sendNotFloatError("fnote", "noteID");
                 return;
             }
-            noteID = message[3].getFloat32();
+            noteID = static_cast<int>(message[2].getFloat32());
         }
 
         float frequency = message[0].getFloat32();
@@ -170,6 +170,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // Make a noteID from frequency if not supplied
         if (noteID == 0)
             noteID = int(frequency * 10000);
+
         // queue packet to audio thread
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
             frequency, static_cast<char>(velocity), noteon, noteID));
@@ -198,12 +199,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (message.size() == 3)
         // note id supplied
         {
-            if (!message[0].isFloat32())
+            if (!message[2].isFloat32())
             {
                 sendNotFloatError("mnote", "noteID");
                 return;
             }
-            noteID = message[3].getFloat32();
+            noteID = message[2].getFloat32();
         }
 
         int note = static_cast<int>(message[0].getFloat32());
