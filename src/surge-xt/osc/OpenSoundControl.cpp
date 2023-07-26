@@ -249,7 +249,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (!message[0].isFloat32())
         {
             // Not a valid data value
-            sendError("Invalid param data type (not float).");
+            sendNotFloatError("param", "");
             return;
         }
 
