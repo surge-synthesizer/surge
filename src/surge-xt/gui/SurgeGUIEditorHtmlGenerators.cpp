@@ -683,7 +683,7 @@ code {
                          <tr>
                               <td><b>† </b>/mnote</td>
                               <td>MIDI-style note</td>
-                              <td>note number (0-127)</td>
+                              <td>note number (0 - 127)</td>
                               <td>velocity (0 - 127)*</td>
                               <td>noteID (optional, 0 - maxint)§
                          </tr>
@@ -697,7 +697,7 @@ code {
                          <tr>
                               <td><b>† </b>/mnote/rel</td>
                               <td>MIDI-style note release</td>
-                              <td>note number (0-127)</td>
+                              <td>note number (0 - 127)</td>
                               <td>release velocity (0 - 127)</td>
                               <td>noteID (optional, 0 - maxint)§
                          </tr>

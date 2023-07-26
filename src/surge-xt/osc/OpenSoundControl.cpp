@@ -98,6 +98,29 @@ std::string OpenSoundControl::getWholeString(const juce::OSCMessage &om)
     return dataStr;
 }
 
+int OpenSoundControl::getNoteID(const juce::OSCMessage &om)
+{
+    // note id supplied by sender
+    {
+        if (!om[2].isFloat32())
+        {
+            sendNotFloatError("fnote", "noteID");
+            return -1;
+        }
+        float msg2 = om[2].getFloat32();
+        if (msg2 < 0. || msg2 > std::numeric_limits<int>::max())
+        {
+            sendError("NoteID must be between 0 and " +
+                      std::to_string(std::numeric_limits<int>::max()));
+            return -1;
+        }
+        else
+        {
+            return (static_cast<int>(msg2));
+        }
+    }
+}
+
 void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
@@ -137,14 +160,10 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
         if (message.size() == 3)
-        // note id supplied
         {
-            if (!message[2].isFloat32())
-            {
-                sendNotFloatError("fnote", "noteID");
+            noteID = getNoteID(message);
+            if (noteID == -1)
                 return;
-            }
-            noteID = static_cast<int>(message[2].getFloat32());
         }
 
         float frequency = message[0].getFloat32();
@@ -197,14 +216,10 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         if (message.size() == 3)
-        // note id supplied
         {
-            if (!message[2].isFloat32())
-            {
-                sendNotFloatError("mnote", "noteID");
+            noteID = getNoteID(message);
+            if (noteID == -1)
                 return;
-            }
-            noteID = message[2].getFloat32();
         }
 
         int note = static_cast<int>(message[0].getFloat32());
