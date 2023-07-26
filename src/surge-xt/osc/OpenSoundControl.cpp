@@ -118,18 +118,33 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     if (address1 == "fnote")
     // Play a note at the given frequency and velocity
     {
+        int32_t noteID = 0;
         std::getline(split, address2, '/'); // check for '/rel'
 
-        if (!message[0].isFloat32())
+        if (message.size() < 2 || message.size() > 3)
         {
-            sendError("Invalid data type for frequency (must be a float).");
+            sendDataCountError("fnote", "2 or 3");
             return;
         }
-
+        if (!message[0].isFloat32())
+        {
+            sendNotFloatError("fnote", "frequency");
+            return;
+        }
         if (!message[1].isFloat32())
         {
-            sendError("Invalid data type for velocity (must be an float between 0 - 127).");
+            sendNotFloatError("fnote", "velocity");
             return;
+        }
+        if (message.size() == 3)
+        // note id supplied
+        {
+            if (!message[2].isFloat32())
+            {
+                sendNotFloatError("fnote", "noteID");
+                return;
+            }
+            noteID = static_cast<int>(message[2].getFloat32());
         }
 
         float frequency = message[0].getFloat32();
@@ -152,8 +167,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
         bool noteon = (address2 != "rel") && (velocity != 0);
 
-        // Make a noteID from frequency, and send packet to audio thread
-        int32_t noteID = (unsigned &)frequency;
+        // Make a noteID from frequency if not supplied
+        if (noteID == 0)
+            noteID = int(frequency * 10000);
+
+        // queue packet to audio thread
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
             frequency, static_cast<char>(velocity), noteon, noteID));
     }
@@ -161,6 +179,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     else if (address1 == "mnote")
     // OSC equivalent of MIDI note
     {
+        int32_t noteID = 0;
+
+        if (message.size() < 2 || message.size() > 3)
+        {
+            sendDataCountError("mnote", "2 or 3");
+            return;
+        }
+
         std::getline(split, address2, '/'); // check for '/rel'
 
         if (!message[0].isFloat32() || !message[1].isFloat32())
@@ -169,6 +195,18 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                       "float between 0 - 127).");
             return;
         }
+
+        if (message.size() == 3)
+        // note id supplied
+        {
+            if (!message[2].isFloat32())
+            {
+                sendNotFloatError("mnote", "noteID");
+                return;
+            }
+            noteID = message[2].getFloat32();
+        }
+
         int note = static_cast<int>(message[0].getFloat32());
         int velocity = static_cast<int>(message[1].getFloat32());
 
@@ -185,15 +223,22 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         bool noteon = (address2 != "rel") && (velocity != 0);
+        if (noteID == 0)
+            noteID = int(note);
 
         // Send packet to audio thread
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(static_cast<char>(note),
-                                                                static_cast<char>(velocity), noteon,
-                                                                static_cast<int32_t>(note)));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+            static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
     }
 
     else if (address1 == "param")
     {
+        if (message.size() != 1)
+        {
+            sendDataCountError("param", "1");
+            return;
+        }
+
         auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
         if (p == NULL)
         {
@@ -205,7 +250,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (!message[0].isFloat32())
         {
             // Not a valid data value
-            sendError("Invalid param data type (not float).");
+            sendNotFloatError("param", "");
             return;
         }
 
@@ -219,6 +264,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
     else if (address1 == "patch")
     {
+        if (message.size() != 1)
+        {
+            sendDataCountError("patch", "1");
+            return;
+        }
+
         std::getline(split, address2, '/');
         if (address2 == "load")
         {
@@ -269,6 +320,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
     else if (address1 == "tuning")
     {
+        if (message.size() != 1)
+        {
+            sendDataCountError("tuning", "1");
+            return;
+        }
+
         fs::path path = getWholeString(message);
         fs::path def_path;
 
@@ -419,6 +476,19 @@ void OpenSoundControl::sendError(std::string errorMsg)
         OpenSoundControl::send("/error", errorMsg);
     else
         std::cout << "OSC Error: " << errorMsg << std::endl;
+}
+
+void OpenSoundControl::sendNotFloatError(std::string addr, std::string msg)
+{
+    OpenSoundControl::sendError(
+        "/" + addr + " data value '" + msg +
+        "' is not expressed as a float. All data must be sent as OSC floats.");
+}
+
+void OpenSoundControl::sendDataCountError(std::string addr, std::string count)
+{
+    OpenSoundControl::sendError("Wrong number of data items supplied for /" + addr + "; expected " +
+                                count + ".");
 }
 
 // Loop through all params, send them to OSC Out
