@@ -735,36 +735,36 @@ code {
                               <td>file path (absolute, no extension)</td>
                          </tr>
                          <tr>
-                              <td class="nw">/patch/save</td>
+                              <td class="nw"><b>† </b>/patch/save</td>
                               <td class="nw">save patch</td>
-                              <td><b>† </b>none: overwrites current patch OR
+                              <td>none: overwrites current patch OR
                                    file path (absolute, no extension, overwrites if file exists)
                               </td>
                          </tr>
                          <tr>
-                              <td class="nw">/patch/incr</td>
+                              <td class="nw"><b>† </b>/patch/incr</td>
                               <td class="nw">increment patch</td>
-                              <td><b>† </b>(none)</td>
+                              <td>(none)</td>
                          </tr>
                          <tr>
-                              <td class="nw">/patch/decr</td>
+                              <td class="nw"><b>† </b>/patch/decr</td>
                               <td class="nw">decrement patch</td>
-                              <td><b>† </b>(none)</td>
+                              <td>(none)</td>
                          </tr>
                          <tr>
-                              <td class="nw">/patch/incr_category</td>
+                              <td class="nw"><b>† </b>/patch/incr_category</td>
                               <td class="nw">increment category</td>
-                              <td><b>† </b>(none)</td>
+                              <td>(none)</td>
                          </tr>
                          <tr>
-                              <td class="nw">/patch/decr_category</td>
+                              <td class="nw"><b>† </b>/patch/decr_category</td>
                               <td class="nw">decrement category</td>
-                              <td><b>† </b>(none)</td>
+                              <td>(none)</td>
                          </tr>
                          <tr>
-                              <td class="nw">/patch/random</td>
+                              <td class="nw"><b>† </b>/patch/random</td>
                               <td class="nw">choose random patch</td>
-                              <td><b>† </b>(none)</td>
+                              <td>(none)</td>
                          </tr>
                     </table>
                </div>
@@ -780,24 +780,24 @@ code {
                               <th>Appropriate Values</th>
                          </tr>
                          <tr>
-                              <td>/tuning/scl</td>
+                              <td><b>† </b>/tuning/scl</td>
                               <td> .scl tuning file</td>
-                              <td><b>† </b>file path (absolute or relative)*</td>
+                              <td>file path (absolute or relative)*</td>
                          </tr>
                          <tr>
-                              <td>/tuning/kbm</td>
+                              <td><b>† </b>/tuning/kbm</td>
                               <td>.kbm mapping file</td>
-                              <td><b>† </b>file path (absolute or relative)*</td>
+                              <td>file path (absolute or relative)*</td>
                          </tr>
                          <tr>
-                              <td>/tuning/path/scl</td>
+                              <td><b>† </b>/tuning/path/scl</td>
                               <td>.scl file default path</td>
-                              <td><b>† </b>file path (absolute only)</td>
+                              <td>file path (absolute only)</td>
                          </tr>
                          <tr>
-                              <td>/tuning/path/kbm</td>
+                              <td><b>† </b>/tuning/path/kbm</td>
                               <td>.kbm file default path</td>
-                              <td><b>† </b>file path (absolute only)</td>
+                              <td>file path (absolute only)</td>
                          </tr>
                          <tr>
                               <td class="center" colspan="3">* no extension; use value = '_reset' to reset path to
