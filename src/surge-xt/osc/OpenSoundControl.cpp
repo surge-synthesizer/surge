@@ -165,6 +165,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             if (noteID == -1)
                 return;
         }
+        if (message.size() == 3)
+        // note id supplied
+        {
+            if (!message[2].isFloat32())
+            {
+                sendNotFloatError("fnote", "noteID");
+                return;
+            }
+            noteID = static_cast<int>(message[2].getFloat32());
+        }
 
         float frequency = message[0].getFloat32();
         int velocity = static_cast<int>(message[1].getFloat32());

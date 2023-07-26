@@ -581,6 +581,11 @@ p.tight {
     margin-bottom: 5px;
 }
 
+p.tight {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
 td.nw {
     white-space: nowrap;
 }
