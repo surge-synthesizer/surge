@@ -576,6 +576,11 @@ ul {
    -moz-box-sizing: border-box;
 }
 
+p.tight {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
 td.nw {
     white-space: nowrap;
 }
@@ -671,33 +676,45 @@ code {
                          <tr>
                               <th>Address</th>
                               <th>Description</th>
-                              <th>Appropriate Values</th>
+                              <th>Arg. 1</th>
+                              <th>Arg. 2</th>
+                              <th>Arg. 3</th>
                          </tr>
                          <tr>
-                              <td>/mnote</td>
+                              <td><b>† </b>/mnote</td>
                               <td>MIDI note</td>
-                              <td><b>† </b>note number, velocity (integers 0-127)*</td>
+                              <td>note number (0-127)</td>
+                              <td>velocity (0 - 127)*</td>
+                              <td>noteID (optional, 0 - maxint)§
                          </tr>
                          <tr>
-                              <td>/fnote ‡</td>
+                              <td><b>† </b>/fnote ‡</td>
                               <td>frequency note</td>
-                              <td><b>† </b>frequency (float), velocity (integer 0-127)*</td>
+                              <td>frequency (8.176 - 12543.853)</td>
+                              <td>velocity (0 - 127)*</td>
+                              <td>noteID (optional, 0 - maxint)§
                          </tr>
                          <tr>
-                              <td>/mnote/rel</td>
+                              <td><b>† </b>/mnote/rel</td>
                               <td>MIDI note release</td>
-                              <td><b>† </b>note number, release velocity (integers 0-127)</td>
+                              <td>note number (0-127)</td>
+                              <td>release velocity (0 - 127)</td>
+                              <td>noteID (optional, 0 - maxint)§
                          </tr>
                          <tr>
-                              <td>/fnote/rel</td>
+                              <td><b>† </b>/fnote/rel</td>
                               <td>frequency note release</td>
-                              <td><b>† </b>frequency (float), release velocity (integer 0-127)</td>
+                              <td>frequency (8.176 - 12543.853)</td>
+                              <td>release velocity (0 - 127)</td>
+                              <td>noteID (optional, 0 - maxint)§
                          </tr>
                          <tr>
-                              <td class="center" colspan="3">* velocity 0 releases note; use the .../rel messages to
-                                   release notes with velocity<br>
-                                   ‡ When using '/fnote', Surge XT <em>must</em> be set to standard tuning for proper
-                                   results.</td>
+                            <td colspan="5">
+                                <p class="tight">* Velocity of 0 releases note; use the '.../rel' messages to release notes with velocity.</p>
+                                <p class="tight">‡ When using '/fnote', Surge XT <em>must</em> be set to standard tuning for proper results. </p>
+                                <p class="tight">§ NoteID can be supplied for more control over the lifecycle of notes (and for future note modulation).
+                                   If it is not supplied, one will be derived from the note or frequency.</p>
+                            </td>
                          </tr>
                     </table>
                </div>
