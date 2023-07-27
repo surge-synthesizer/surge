@@ -289,12 +289,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
     else if (address1 == "patch")
     {
-        if (message.size() != 1)
-        {
-            sendDataCountError("patch", "1");
-            return;
-        }
-
         std::getline(split, address2, '/');
         if (address2 == "load")
         {
@@ -345,12 +339,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
     else if (address1 == "tuning")
     {
-        if (message.size() != 1)
-        {
-            sendDataCountError("tuning", "1");
-            return;
-        }
-
         fs::path path = getWholeString(message);
         fs::path def_path;
 
