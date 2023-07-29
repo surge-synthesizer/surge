@@ -168,7 +168,7 @@ void FrequencyShifterEffect::process(float *dataL, float *dataR)
                                                         (R[k] * feedback.v));
     }
 
-    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
 
     wpos += BLOCK_SIZE;
     wpos = wpos & (max_delay_length - 1);

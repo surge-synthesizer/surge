@@ -100,7 +100,7 @@ void ParametricEQ3BandEffect::process(float *dataL, float *dataR)
     gain.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
 
     mix.set_target_smoothed(clamp1bp(*pd_float[eq3_mix]));
-    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
 }
 
 void ParametricEQ3BandEffect::suspend() { init(); }

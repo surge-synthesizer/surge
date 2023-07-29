@@ -387,7 +387,7 @@ void CombulatorEffect::process(float *dataL, float *dataR)
     auto cm = clamp01(*pd_float[combulator_mix]);
 
     mix.set_target_smoothed(cm);
-    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
 }
 
 void CombulatorEffect::suspend() { init(); }

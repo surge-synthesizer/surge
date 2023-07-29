@@ -259,7 +259,7 @@ void Reverb2Effect::process(float *dataL, float *dataR)
     // scale width
     applyWidth(wetL, wetR, width);
 
-    mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, wetL, dataR, wetR, BLOCK_SIZE_QUAD);
 }
 
 void Reverb2Effect::suspend() { init(); }

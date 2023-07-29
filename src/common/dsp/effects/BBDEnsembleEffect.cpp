@@ -343,8 +343,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
                     modlfos[j][i].post_process();
         }
 
-        mech::mul_block<BLOCK_SIZE>(L, storage->db_to_linear(-8.0f), L);
-        mech::mul_block<BLOCK_SIZE>(R, storage->db_to_linear(-8.0f), R);
+        mech::mul_block<BLOCK_SIZE>(L, storage->db_to_linear(-8.0f));
+        mech::mul_block<BLOCK_SIZE>(R, storage->db_to_linear(-8.0f));
     };
 
     switch (bbd_stages)
@@ -378,7 +378,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     applyWidth(L, R, width);
 
     mix.set_target_smoothed(clamp1bp(*pd_float[ens_mix]));
-    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
 }
 
 void BBDEnsembleEffect::suspend() { init(); }

@@ -181,7 +181,7 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
     // scale width
     applyWidth(tbufferL, tbufferR, width);
 
-    mix.fade_2_blocks_to(dataL, tbufferL, dataR, tbufferR, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, tbufferL, dataR, tbufferR, BLOCK_SIZE_QUAD);
 
     wpos += BLOCK_SIZE;
     wpos = wpos & (max_delay_length - 1);
