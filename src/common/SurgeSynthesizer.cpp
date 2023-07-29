@@ -409,7 +409,7 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
 }
 
 void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detune,
-                                int32_t host_noteid)
+                                int32_t host_noteid, int32_t forceScene)
 {
     if (halt_engine)
     {
@@ -464,6 +464,10 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     // MIDI Channel 3 plays B
 
     int channelmask = calculateChannelMask(channel, key);
+    if (forceScene == 0)
+        channelmask = 1;
+    if (forceScene == 1)
+        channelmask = 2;
 
     // TODO: FIX SCENE ASSUMPTION
     if (channelmask & 1)
@@ -4092,9 +4096,9 @@ void SurgeSynthesizer::processControl()
     // introduce int mods, we need to make sure the scenedata and so on is set up before
     // we latch
     if (playA && (storage.getPatch().scene[0].polymode.val.i == pm_latch) && voices[0].empty())
-        playNote(1, 60, 100, 0);
+        playNote(1, 60, 100, 0, -1, 0);
     if (playB && (storage.getPatch().scene[1].polymode.val.i == pm_latch) && voices[1].empty())
-        playNote(2, 60, 100, 0);
+        playNote(2, 60, 100, 0, -1, 1);
 
     for (int s = 0; s < n_scenes; s++)
     {
