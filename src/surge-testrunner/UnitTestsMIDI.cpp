@@ -1677,3 +1677,49 @@ TEST_CASE("Mono Modes Across Channels", "[midi]")
         }
     }
 }
+
+TEST_CASE("Latch in Dual MPE", "[midi]")
+{
+    for (auto u23 : {false, true})
+    {
+        for (auto me : {false, true})
+        {
+            DYNAMIC_SECTION("Latch " << (me ? "With" : "Without")
+                                     << " MPE use23=" << (u23 ? "true" : "false"))
+            {
+                auto surge = surgeOnSine();
+                surge->storage.userDefaultsProvider->addOverride(
+                    Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, u23);
+                surge->mpeEnabled = me;
+                surge->storage.getPatch().scenemode.val.i = sm_dual;
+
+                REQUIRE(surge->voices[0].empty());
+                REQUIRE(surge->voices[1].empty());
+
+                for (int i = 0; i < 10; ++i)
+                    surge->process();
+
+                REQUIRE(surge->voices[0].empty());
+                REQUIRE(surge->voices[1].empty());
+
+                auto &p = surge->storage.getPatch().scene[0].polymode;
+                auto id = surge->idForParameter(&p);
+
+                surge->setParameter01(
+                    id, Parameter::intScaledToFloat(pm_latch, p.val_max.i, p.val_min.i));
+                surge->process();
+
+                REQUIRE(surge->voices[0].size() == 1);
+                REQUIRE(surge->voices[1].size() == 0);
+
+                surge->setParameter01(
+                    id, Parameter::intScaledToFloat(pm_poly, p.val_max.i, p.val_min.i));
+                for (int i = 0; i < 100; ++i)
+                    surge->process();
+
+                REQUIRE(surge->voices[0].empty());
+                REQUIRE(surge->voices[1].empty());
+            }
+        }
+    }
+}
