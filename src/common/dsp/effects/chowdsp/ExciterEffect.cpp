@@ -75,8 +75,8 @@ void ExciterEffect::process(float *dataL, float *dataR)
 
     // dry/wet process
     wet_gain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
-    mech::add_block<BLOCK_SIZE>(dataL, dryL, dataL);
-    mech::add_block<BLOCK_SIZE>(dataR, dryR, dataR);
+    mech::add_block<BLOCK_SIZE>(dataL, dryL);
+    mech::add_block<BLOCK_SIZE>(dataR, dryR);
 }
 
 void ExciterEffect::set_params()

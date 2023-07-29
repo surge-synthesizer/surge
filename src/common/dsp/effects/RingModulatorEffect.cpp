@@ -201,7 +201,7 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
         hp.process_block(wetL, wetR);
     }
 
-    mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, wetL, dataR, wetR, BLOCK_SIZE_QUAD);
 }
 
 void RingModulatorEffect::suspend() { init(); }

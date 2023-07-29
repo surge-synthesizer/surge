@@ -379,7 +379,7 @@ void RotarySpeakerEffect::process(float *dataL, float *dataR)
     // scale width
     applyWidth(wbL, wbR, width);
 
-    mix.fade_2_blocks_to(dataL, wbL, dataR, wbR, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, wbL, dataR, wbR, BLOCK_SIZE_QUAD);
 
     wpos += BLOCK_SIZE;
     wpos = wpos & (max_delay_length - 1);

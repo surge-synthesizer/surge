@@ -107,7 +107,7 @@ void TapeEffect::process(float *dataL, float *dataR)
     }
 
     mix.set_target_smoothed(clamp01(*pd_float[tape_mix]));
-    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
 }
 
 void TapeEffect::suspend() {}

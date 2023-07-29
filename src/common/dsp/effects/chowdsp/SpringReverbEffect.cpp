@@ -60,7 +60,7 @@ void SpringReverbEffect::process(float *dataL, float *dataR)
     proc.processBlock(L, R, BLOCK_SIZE);
 
     mix.set_target_smoothed(clamp01(*pd_float[spring_reverb_mix]));
-    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
 }
 
 void SpringReverbEffect::suspend() { init(); }
