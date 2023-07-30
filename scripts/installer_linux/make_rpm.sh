@@ -122,6 +122,7 @@ cp -r "${INDIR}/Surge XT Effects.clap" %{buildroot}%{_libdir}/clap/
 
 # install executable files as executable
 install -m 0755 "${INDIR}/Surge XT" %{buildroot}/%{_bindir}
+install -m 0755 "${INDIR}/surge-xt-cli" %{buildroot}/%{_bindir}
 install -m 0755 "${INDIR}/Surge XT Effects" %{buildroot}/%{_bindir}
 
 # set permissions on shared libraries
@@ -130,6 +131,7 @@ find %{buildroot}%{_libdir}/vst3/ -type f -iname "*.so" -exec chmod 0644 {} +
 
 %files
 "%{_bindir}/Surge XT"
+"%{_bindir}/surge-xt-cli"
 "%{_bindir}/Surge XT Effects"
 "%{_libdir}/vst3/Surge XT.vst3"
 "%{_libdir}/vst3/Surge XT Effects.vst3"
