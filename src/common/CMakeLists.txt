@@ -317,6 +317,7 @@ elseif(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE execinfo)
   endif()
   target_link_libraries(${PROJECT_NAME} PUBLIC surge::simde)
+  target_compile_options(${PROJECT_NAME} PUBLIC $<$<CXX_COMPILER_ID:GNU>:-Werror=restrict>)
 elseif(WIN32)
   target_compile_definitions(${PROJECT_NAME} PUBLIC
     WINDOWS=1

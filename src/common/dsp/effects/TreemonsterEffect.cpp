@@ -239,7 +239,7 @@ void TreemonsterEffect::process(float *dataL, float *dataR)
 
     // main dry-wet mix
     mix.set_target_smoothed(clamp01(*pd_float[tm_mix]));
-    mix.fade_2_blocks_to(dataL, L, dataR, R, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
 }
 
 void TreemonsterEffect::suspend() { init(); }

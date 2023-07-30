@@ -191,7 +191,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
     }
 
     boost.multiply_2_blocks(wetL, wetR, BLOCK_SIZE_QUAD);
-    mix.fade_2_blocks_to(dataL, wetL, dataR, wetR, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, wetL, dataR, wetR, BLOCK_SIZE_QUAD);
 }
 
 void WaveShaperEffect::suspend() { init(); }

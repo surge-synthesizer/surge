@@ -82,7 +82,7 @@ void CHOWEffect::process(float *dataL, float *dataR)
     makeup.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
     mix.set_target_smoothed(clamp01(*pd_float[chow_mix]));
-    mix.fade_2_blocks_to(L, dataL, R, dataR, dataL, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(L, dataL, R, dataR, BLOCK_SIZE_QUAD);
 }
 
 void CHOWEffect::set_params()

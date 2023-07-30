@@ -82,8 +82,11 @@ class alignas(16) SurgeSynthesizer
     virtual ~SurgeSynthesizer();
 
     // Also see setNoteExpression() which allows you to control all note parameters polyphonically
-    // with the user-provided host_noteid parameter.
-    void playNote(char channel, char key, char velocity, char detune, int32_t host_noteid = -1);
+    // with the user-provided host_noteid parameter. forceScene means to ignore any channel
+    // related shenanigans and force you onto scene 0, 1, 2 etc... which is useful mostly
+    // for latch mode working in MPE and ignore 23 mode
+    void playNote(char channel, char key, char velocity, char detune, int32_t host_noteid = -1,
+                  int32_t forceScene = -1);
     void playNoteByFrequency(float freq, char velocity, int32_t id);
     void releaseNote(char channel, char key, char velocity, int32_t host_noteid = -1);
     void chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid = -1);
