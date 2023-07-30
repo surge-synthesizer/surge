@@ -549,7 +549,7 @@ th {
 }
 
 span {
-    margin: 2px 10px;
+    margin: 2px 8px;
     padding: 1px 2px;
     border: 1px solid #123463;
     white-space:nowrap;
@@ -574,11 +574,6 @@ ul {
 * {
    -webkit-box-sizing: border-box;
    -moz-box-sizing: border-box;
-}
-
-p.tight {
-    margin-top: 5px;
-    margin-bottom: 5px;
 }
 
 p.tight {
@@ -638,31 +633,6 @@ code {
                             the 'appropriate values' describe how the data is used by Surge XT,
                             not how messages are to be formatted for OSC).
                         </p>
-                        <p>Examples:
-                            <div style="margin: -6px 0 2px 0; line-height: 1.75">
-                                <span><code>/mnote 68 120</code></span>
-                                <span><code>/fnote 440.0 120</code></span>
-                                <span><code>/mnote 68 0</code></span>
-                                <span><code>/fnote 440.0 0</code></span>
-                                <span><code>/mnote/rel 68 45</code></span>
-                                <span><code>/fnote/rel 440.0 45</code></span>
-                            </div>
-                            <div style="margin: 4px 0 0 0; line-height: 1.75">
-                                <span><code>/patch/load /Library/Application Support/Surge XT/patches_factory/Plucks/Clean</code></span>
-                                <span><code>/patch/save</code></span>
-                                <span><code>/patch/incr</code></span>
-                            </div>
-                            <div style="margin: 4px 0 0 0; line-height: 1.75">
-                                <span><code>/tuning/scl ptolemy</code></span>
-                                <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
-                                <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
-                            </div>
-                            <div style="margin: 4px 0 0 0; line-height: 1.75">
-                                <span><code>/param/b/amp/gain 0.63</code></span>
-                                <span><code>/param/global/polyphony_limit 12</code></span>
-                                <span><code>/param/a/mixer/noise/mute 0</code></span>
-                            </div>
-                        </p>
                         <p style="margin-top: 28px;">
                             All OSC messages described below work in <b>both</b> directions, unless marked with "<b>†</b>". For these, only
                             the incoming OSC message is supported; there is no corresponding OSC out message.
@@ -670,10 +640,16 @@ code {
                         <p style="margin-bottom: 0px;">
                             Errors are reported (when feasible) to "/error". Monitor that address to see them.
                         </p>
-                    </div>
+                        <div style="margin: 16px 0 8px 0";>
+                            <span style="margin-left: 0">
+                                <code>Examples are given in red.
+                                </code>
+                            </span>
+                        </div>
+                   </div>
                 </div>
 
-                <div class="tablewrap" style="width: 1000px; margin: 8px auto;">
+                <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
                     <div class="heading">
                          <h3>Notes:</h3>
                     </div>
@@ -722,7 +698,15 @@ code {
                             </td>
                          </tr>
                     </table>
-               </div>
+                </div>
+                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                    <span><code>/mnote 68 120</code></span>
+                    <span><code>/fnote 440.0 120</code></span>
+                    <span><code>/mnote 68 0</code></span>
+                    <span><code>/fnote 440.0 0</code></span>
+                    <span><code>/mnote/rel 68 45</code></span>
+                    <span><code>/fnote/rel 440.0 45</code></span>
+                </div>
 
                <div class="tablewrap fl cl">
                     <div class="heading">
@@ -813,6 +797,16 @@ code {
 
                 <div style="clear: both;"></div>
 
+                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                    <span><code>/patch/load /Library/Application Support/Surge XT/patches_factory/Plucks/Clean</code></span>
+                    <span><code>/patch/save</code></span>
+                    <span><code>/patch/incr</code></span>
+                </div>
+                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                    <span><code>/tuning/scl ptolemy</code></span>
+                    <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
+                    <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
+                </div>
                 <div class="tablewrap cr cl" style="margin: 0 auto;">
                     <div class="heading"><h3>All Parameters Query:</h3></div>
                     <table style="border: 2px solid black;">
@@ -822,15 +816,22 @@ code {
                             <th>Appropriate Values</th>
                         </tr>
                         <tr>
-                            <td>/send_all_params</td>
+                            <td><b>† </b>/send_all_params</td>
                             <td>request all parameters</td>
-                            <td><b>† </b>none</td>
+                            <td>none</td>
                         </tr>
                         <tr>
                             <td class="center" colspan="3">Initiates a dump of all parameters listed below.</td>
                         </tr>
                     </table>
                 </div>
+
+                <div style="width: 860px; margin: 16px auto 8px; line-height: 1.75">
+                    <span><code>/param/b/amp/gain 0.63</code></span>
+                    <span><code>/param/global/polyphony_limit 12</code></span>
+                    <span><code>/param/a/mixer/noise/mute 0</code></span>
+                </div>
+
     )HTML";
 
     std::vector<oscParamInfo> sortvector;
