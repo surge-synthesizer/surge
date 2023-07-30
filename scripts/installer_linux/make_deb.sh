@@ -80,6 +80,7 @@ cp -r ${SOURCEDIR}/scripts/installer_linux/assets/* ${PACKAGE_NAME}/usr/share
 cp -r "${INDIR}/Surge XT.vst3" ${PACKAGE_NAME}/usr/lib/vst3/
 cp -r "${INDIR}/Surge XT Effects.vst3" ${PACKAGE_NAME}/usr/lib/vst3/
 cp -r "${INDIR}/Surge XT" ${PACKAGE_NAME}/usr/bin/
+cp -r "${INDIR}/surge-xt-cli" ${PACKAGE_NAME}/usr/bin/
 cp -r "${INDIR}/Surge XT Effects" ${PACKAGE_NAME}/usr/bin/
 
 # set permissions on shared libraries
@@ -101,6 +102,7 @@ fi
 
 echo "----- LIBRARY CONTENTS (except resource) -----"
 find ${PACKAGE_NAME}/usr/lib -print
+find ${PACKAGE_NAME}/usr/bin -print
 
 # build deb package
 dpkg-deb --verbose --build ${PACKAGE_NAME} ${TARGET_DIR}/${PACKAGE_NAME}-linux-x64-${VERSION}.deb
