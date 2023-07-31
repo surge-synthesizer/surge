@@ -67,11 +67,11 @@ namespace surge::sstfx
  * 2. An "Effect Storage" configuration. This can answer static questions about
  *    the configuration of the effect, like is a parameter deactivated. This is
  *    FXStorage in surge. And
- * 3. A "ValueStorage *" which is optiona, but allows the host to present
+ * 3. A "ValueStorage *" which is optional, but allows the host to present
  *    different external storage for the values. In surge this is a `pdata *`.
  *
  * Finally we provide a base class which can inject into the inheritance
- * heirarchy and use a CRTP static cast type pattern. In this case it is
+ * hierarchy and use a CRTP static cast type pattern. In this case it is
  * Effect.
  *
  * Given those, the FX are re-factored to query these objects with questions like

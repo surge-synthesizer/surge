@@ -267,7 +267,7 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
 
         for (auto i : search->second)
         {
-            // Don't vind accesible action keys to the keyboard
+            // Don't bind accessible action keys to the keyboard
             if (Surge::GUI::allowKeyboardEdits(&processor.surge->storage))
             {
                 // Don't know why we have high bit set on the keys? Do both to be sure

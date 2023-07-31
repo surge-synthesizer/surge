@@ -116,7 +116,7 @@ TEST_CASE("Simple Query Parse", "[query]")
         REQUIRE(t->children[1]->children[1]->content == "sine");
     }
 
-    SECTION("Parenthese Pt 3")
+    SECTION("Parentheses Pt 3")
     {
         auto t =
             Surge::PatchStorage::PatchDBQueryParser::parseQuery("(esq1 OR (init sine)) AND dx7");

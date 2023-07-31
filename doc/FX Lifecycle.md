@@ -67,7 +67,7 @@ Spawn Effect  id=6
        values and types but does not leave the synth with the effect setup
     * raise a `valueChanged` so `SurgeGUIEditor` sets `load_fx_needed` to true. 
     * If `audio_processing_active` is false it also sets up the effect from the UI thread via the
-      call to `synth->processAudioThreadOpsWhenAudioEngineUnavailable()`, but we will ignroe that case in this document
+      call to `synth->processAudioThreadOpsWhenAudioEngineUnavailable()`, but we will ignore that case in this document
       from hereon out
 * `SurgeSynthesizer`
     * In the next `process()` and call to `processControl`, `load_fx_needed` will be true

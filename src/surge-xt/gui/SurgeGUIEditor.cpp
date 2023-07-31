@@ -5622,7 +5622,7 @@ std::string SurgeGUIEditor::getDisplayForTag(long tag, bool external, float f)
 
         if (p->ctrltype == ct_scenemode)
         {
-            // TODO FIXME - break straming order for XT2!
+            // TODO FIXME - break streaming order for XT2!
             // Ahh that decision in 1.6 to not change streaming order continues to be painful
             auto iv = Parameter::intUnscaledFromFloat(f, p->val_max.i, p->val_min.i);
 

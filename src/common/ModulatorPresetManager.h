@@ -40,7 +40,7 @@ struct ModulatorPreset
     void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int lfo);
 
     /*
-     * Given a compelted path, load the preset into our storage
+     * Given a completed path, load the preset into our storage
      */
     void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lfo);
 
