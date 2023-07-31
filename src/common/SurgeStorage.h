@@ -1548,7 +1548,7 @@ class alignas(16) SurgeStorage
 
     void connect_as_oddsound_main();
     void disconnect_as_oddsound_main();
-    uint64_t lastSentTuningUpdate{0}; // since tuning udpate starts at 2
+    uint64_t lastSentTuningUpdate{0}; // since tuning update starts at 2
     void send_tuning_update();
 #endif
     MTSClient *oddsound_mts_client = nullptr;

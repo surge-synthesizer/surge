@@ -419,7 +419,7 @@ void ModMenuCustomComponent::setIsMuted(bool b)
     else
     {
         mute->accLabel = "Mute " + source;
-        mute->offset = 2; // use the 2rd (speaker) icon
+        mute->offset = 2; // use the 2nd (speaker) icon
     }
 }
 

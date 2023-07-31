@@ -211,7 +211,7 @@ If you get that error and are working on PI your options are
 
 1. Change to a gcc version which doesn't mis-tag that as an error
 2. Use clang rather than gcc as detailed below
-3. Figure out how to supress that error in cmake just for gcc on pi; send us a pull request.
+3. Figure out how to suppress that error in cmake just for gcc on pi; send us a pull request.
 
 To build with clang
 

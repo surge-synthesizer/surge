@@ -1336,7 +1336,7 @@ void LFOModulationSource::process_block()
 
         if (envRetrigMode == FROM_LAST && lfo->deform.deform_type != type_3)
         {
-            // Now appy the one pole
+            // Now apply the one pole
             float alpha = onepoleFactor;
             output_multi[0] = (1.0 - alpha) * output_multi[0] + alpha * onepoleState[0];
             output_multi[1] = (1.0 - alpha) * output_multi[1] + alpha * onepoleState[1];

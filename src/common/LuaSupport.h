@@ -22,7 +22,7 @@
 
 /*
  * This header provides a set of LUA support functions which are used
- * in the various places we deply lua (formula modulator, waveform
+ * in the various places we deploy lua (formula modulator, waveform
  * generator, int he future mod mappers etc...)
  */
 

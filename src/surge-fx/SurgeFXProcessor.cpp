@@ -474,7 +474,7 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
                     if (type == vt_int && xmlState->hasAttribute(nm))
                     {
                         // Unstream the int as an int. Bools and FLoats are
-                        // fine since they will 01 consisntently and properly but
+                        // fine since they will 01 consistently and properly but
                         // this means things like add an airwindow and we survive
                         // going forward
                         int ival = xmlState->getIntAttribute(nm, 0);
