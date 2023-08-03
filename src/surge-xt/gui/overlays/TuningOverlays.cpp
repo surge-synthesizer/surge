@@ -30,6 +30,7 @@
 #include "fmt/core.h"
 #include <chrono>
 #include "juce_gui_extra/juce_gui_extra.h"
+#include "UnitConversions.h"
 
 namespace Surge
 {
@@ -1046,6 +1047,18 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                            juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::ROTATION;
 
+        intervalPainter->setSizeFromTuning();
+        repaint();
+    }
+
+    void setTrueKeyboardMode()
+    {
+        whatLabel->setText("True Keyboard Display", juce::NotificationType::dontSendNotification);
+        explLabel->setText("Play Keys, we will show you an interval",
+                           juce::NotificationType::dontSendNotification);
+        intervalPainter->mode = IntervalMatrix::IntervalPainter::TRUE_KEYS;
+
+        intervalPainter->setSizeFromTuning();
         repaint();
     }
 
@@ -1056,6 +1069,8 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             "Given any two notes in the loaded scale, show the interval in cents between them",
             juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::INTERV;
+
+        intervalPainter->setSizeFromTuning();
         repaint();
     }
 
@@ -1068,6 +1083,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                            juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::DIST;
 
+        intervalPainter->setSizeFromTuning();
         repaint();
     }
 
@@ -1100,25 +1116,132 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         {
             INTERV,
             DIST,
-            ROTATION
+            ROTATION,
+            TRUE_KEYS
         } mode{INTERV};
         IntervalPainter(IntervalMatrix *m) : matrix(m) {}
 
         static constexpr int cellH{14}, cellW{35};
         void setSizeFromTuning()
         {
-            auto ic = matrix->tuning.scale.count + 2;
-            auto nh = ic * cellH;
-            auto nw = ic * cellW;
+            if (mode == TRUE_KEYS)
+            {
+                setSize(matrix->viewport->getBounds().getWidth() - 4,
+                        matrix->viewport->getBounds().getHeight() - 4);
+            }
+            else
+            {
+                auto ic = matrix->tuning.scale.count + 2;
+                auto nh = ic * cellH;
+                auto nw = ic * cellW;
 
-            setSize(nw, nh);
+                setSize(nw, nh);
+            }
         }
 
+        void paintTrueKeys(juce::Graphics &g)
+        {
+            namespace clr = Colors::TuningOverlay::Interval;
+            g.fillAll(skin->getColor(clr::Background));
+
+            auto &bs = matrix->bitset;
+
+            int numNotes{0};
+            for (int i = 0; i < bs.size(); ++i)
+                numNotes += bs[i];
+
+            g.setFont(skin->fontManager->getLatoAtSize(9));
+
+            if (numNotes == 0)
+            {
+                g.setColour(skin->getColor(clr::HeatmapZero));
+                g.drawText("Play notes for display", getLocalBounds().withTrimmedTop(15).reduced(2),
+                           juce::Justification::topLeft);
+                return;
+            }
+
+            int oct_offset = 1;
+            if (matrix->overlay->storage)
+                oct_offset = Surge::Storage::getUserDefaultValue(matrix->overlay->storage,
+                                                                 Surge::Storage::MiddleC, 1);
+
+            auto bx = getLocalBounds().withTrimmedTop(15).reduced(2);
+            auto xpos = bx.getX();
+            auto ypos = bx.getY();
+
+            auto colWidth = 45;
+            auto rowHeight = 20;
+
+            {
+                int hpos = xpos + 2 * colWidth;
+                for (int i = 0; i < bs.size(); ++i)
+                {
+                    if (bs[i])
+                    {
+                        g.setColour(skin->getColor(clr::HeatmapZero));
+                        g.drawText(get_notename(i, oct_offset), hpos, ypos, colWidth, rowHeight,
+                                   juce::Justification::centred);
+                        hpos += colWidth;
+                    }
+                }
+            }
+
+            ypos += rowHeight;
+
+            for (int i = 0; i < bs.size(); ++i)
+            {
+                if (bs[i])
+                {
+                    auto hpos = xpos;
+                    g.setColour(skin->getColor(clr::HeatmapZero));
+                    g.drawText(get_notename(i, oct_offset), hpos, ypos, colWidth, rowHeight,
+                               juce::Justification::centredLeft);
+                    hpos += colWidth;
+                    g.drawText(fmt::format("{:.2f}Hz", matrix->tuning.frequencyForMidiNote(i)),
+                               hpos, ypos, colWidth, rowHeight, juce::Justification::centredLeft);
+                    hpos += colWidth;
+
+                    auto pitch0 = matrix->tuning.logScaledFrequencyForMidiNote(i);
+
+                    for (int j = 0; j < bs.size(); ++j)
+                    {
+                        if (bs[j])
+                        {
+                            auto bx = juce::Rectangle<int>(hpos, ypos, colWidth, rowHeight);
+                            if (i != j)
+                            {
+                                g.setColour(skin->getColor(clr::HeatmapZero));
+                                g.fillRect(bx);
+                                g.setColour(juce::Colours::darkgrey);
+                                g.drawRect(bx, 1);
+                                g.setColour(skin->getColor(clr::IntervalText));
+                                auto pitch = matrix->tuning.logScaledFrequencyForMidiNote(j);
+                                g.drawText(fmt::format("{:.2f}", 1200 * (pitch0 - pitch)), bx,
+                                           juce::Justification::centred);
+                            }
+                            else
+                            {
+                                g.setColour(juce::Colours::darkgrey);
+                                g.fillRect(bx);
+                            }
+                            hpos += colWidth;
+                        }
+                    }
+
+                    ypos += rowHeight;
+                }
+            }
+        }
         void paint(juce::Graphics &g) override
         {
             if (!skin)
                 return;
 
+            if (mode == TRUE_KEYS)
+            {
+                paintTrueKeys(g);
+                return;
+            }
             namespace clr = Colors::TuningOverlay::Interval;
             g.fillAll(skin->getColor(clr::Background));
             auto ic = matrix->tuning.scale.count;
@@ -2051,7 +2174,7 @@ struct TuningControlArea : public juce::Component,
 
         {
             int marginPos = xpos + margin;
-            int btnWidth = 210;
+            int btnWidth = 240;
             int ypos = 1 + labelHeight + margin;
 
             selectL = newL("Edit Mode");
@@ -2063,18 +2186,19 @@ struct TuningControlArea : public juce::Component,
 
             selectS->setBounds(btnrect);
             selectS->setStorage(overlay->storage);
-            selectS->setLabels({"Scala", "Radial", "Interval", "To Equal", "Rotation"});
+            selectS->setLabels(
+                {"Scala", "Radial", "Interval", "To Equal", "Rotation", "True Keys"});
             selectS->addListener(this);
             selectS->setDraggable(true);
             selectS->setTag(tag_select_tab);
             selectS->setHeightOfOneImage(buttonHeight);
             selectS->setRows(1);
-            selectS->setColumns(5);
+            selectS->setColumns(6);
             selectS->setDraggable(true);
             selectS->setSkin(skin, associatedBitmapStore);
             selectS->setValue(
                 overlay->storage->getPatch().dawExtraState.editor.tuningOverlayState.editMode /
-                4.f);
+                5.f);
             addAndMakeVisible(*selectS);
             xpos += btnWidth + 10;
         }
@@ -2141,7 +2265,7 @@ struct TuningControlArea : public juce::Component,
         {
         case tag_select_tab:
         {
-            int m = c->getValue() * 4;
+            int m = c->getValue() * 5;
             overlay->showEditor(m);
             selectS->repaint();
         }
@@ -2334,6 +2458,10 @@ void TuningOverlay::showEditor(int which)
     if (which == 4)
     {
         intervalMatrix->setRotationMode();
+    }
+    if (which == 5)
+    {
+        intervalMatrix->setTrueKeyboardMode();
     }
 
     if (storage)
