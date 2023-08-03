@@ -1054,7 +1054,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
     void setTrueKeyboardMode()
     {
         whatLabel->setText("True Keyboard Display", juce::NotificationType::dontSendNotification);
-        explLabel->setText("Play Keys, we will show you an interval",
+        explLabel->setText("Show intervals between any played keys in realtime",
                            juce::NotificationType::dontSendNotification);
         intervalPainter->mode = IntervalMatrix::IntervalPainter::TRUE_KEYS;
 
@@ -1155,8 +1155,6 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             if (numNotes == 0)
             {
                 g.setColour(skin->getColor(clr::HeatmapZero));
-                g.drawText("Play notes for display", getLocalBounds().withTrimmedTop(15).reduced(2),
-                           juce::Justification::topLeft);
                 return;
             }
 
@@ -2174,7 +2172,7 @@ struct TuningControlArea : public juce::Component,
 
         {
             int marginPos = xpos + margin;
-            int btnWidth = 240;
+            int btnWidth = 280;
             int ypos = 1 + labelHeight + margin;
 
             selectL = newL("Edit Mode");
