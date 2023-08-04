@@ -253,7 +253,7 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
     {
         return std::make_unique<RBAH>(this, under);
     }
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButton<T>);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButton);
 };
 
 template <typename T>
@@ -313,7 +313,7 @@ struct OverlayAsAccessibleButtonWithValue : public OverlayAsAccessibleButton<T>
     {
         return std::make_unique<RBAHV>(this, OverlayAsAccessibleButton<T>::under);
     }
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButtonWithValue<T>);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleButtonWithValue);
 };
 
 template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
@@ -395,7 +395,7 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     {
         return std::make_unique<RBAH>(this, under);
     }
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleSlider<T>);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleSlider);
 };
 
 struct OverlayAsAccessibleContainer : public juce::Component
