@@ -3257,7 +3257,7 @@ void MSEGControlRegion::rebuild()
         // canvas is nullptr in rebuild call in constructor, use state in this case
         if (canvas)
         {
-            movementMode->setValue(canvas->timeEditMode / 2.f);
+            movementMode->setValue(float(canvas->timeEditMode) / 2.f);
         }
         else
         {

@@ -1520,7 +1520,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto ff = currentSkin->getFont(Fonts::Widgets::ModButtonFont);
 
             gui_modsrc[ms]->setFont(ff);
-            gui_modsrc[ms]->setTag(tag_mod_source0 + ms);
+            gui_modsrc[ms]->setTag(tag_mod_source0 + int(ms));
             gui_modsrc[ms]->addListener(this);
             gui_modsrc[ms]->setSkin(currentSkin, bitmapStore);
             gui_modsrc[ms]->setStorage(&(synth->storage));
@@ -2493,8 +2493,8 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
         }
         juceEditor->beginParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
-    else if (tag_mod_source0 + ms_ctrl1 <= tag &&
-             tag_mod_source0 + ms_ctrl1 + n_customcontrollers > tag)
+    else if (tag_mod_source0 + int(ms_ctrl1) <= tag &&
+             tag_mod_source0 + int(ms_ctrl1) + int(n_customcontrollers) > tag)
     {
         juceEditor->beginMacroEdit(tag - tag_mod_source0 - ms_ctrl1);
     }
@@ -2514,8 +2514,8 @@ void SurgeGUIEditor::controlEndEdit(Surge::GUI::IComponentTagValue *control)
     {
         juceEditor->endParameterEdit(synth->storage.getPatch().param_ptr[ptag]);
     }
-    else if (tag_mod_source0 + ms_ctrl1 <= tag &&
-             tag_mod_source0 + ms_ctrl1 + n_customcontrollers > tag)
+    else if (tag_mod_source0 + int(ms_ctrl1) <= tag &&
+             tag_mod_source0 + int(ms_ctrl1) + int(n_customcontrollers) > tag)
     {
         juceEditor->endMacroEdit(tag - tag_mod_source0 - ms_ctrl1);
     }
