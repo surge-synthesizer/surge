@@ -84,7 +84,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=undefined>
 
     # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
-    -fno-char8_t
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-char8_t>
   )
 
   add_link_options(
@@ -174,7 +174,7 @@ if(MSVC)
     # Set source and executable charsets to UTF-8
     $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
     # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
-    /Zc:char8_t-
+    $<$<COMPILE_LANGUAGE:CXX>:/Zc:char8_t->
   )
 endif()
 # }}}
