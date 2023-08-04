@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include <sstream>
 #include "FxPresetAndClipboardManager.h"
 #include "StringOps.h"
 #include "Effect.h"
@@ -194,35 +195,36 @@ bool FxUserPreset::readFromXMLSnapshot(Preset &preset, TiXmlElement *s)
     for (int i = 0; i < n_fx_params; ++i)
     {
         double fl;
-        std::string p = "p";
-        std::string tmp; // Workaround for a g++12 bug
+        std::string p;
 
-        tmp = p + std::to_string(i);
+        // Workaround for a g++12 bug that doesn't like operator+ with
+        // temporary string values.
+        std::ostringstream tmp;
+        tmp << "p";
+        tmp << i;
+        p = tmp.str();
+
         if (s->QueryDoubleAttribute(p.c_str(), &fl) == TIXML_SUCCESS)
         {
             preset.p[i] = fl;
         }
 
-        tmp = p + std::to_string(i) + "_tempsync";
-        if (s->QueryDoubleAttribute(tmp.c_str(), &fl) == TIXML_SUCCESS && fl != 0)
+        if (s->QueryDoubleAttribute((p + "_temposync").c_str(), &fl) == TIXML_SUCCESS && fl != 0)
         {
             preset.ts[i] = true;
         }
 
-        tmp = p + std::to_string(i) + "_extend_range";
-        if (s->QueryDoubleAttribute(tmp.c_str(), &fl) == TIXML_SUCCESS && fl != 0)
+        if (s->QueryDoubleAttribute((p + "_extend_range").c_str(), &fl) == TIXML_SUCCESS && fl != 0)
         {
             preset.er[i] = true;
         }
 
-        tmp = p + std::to_string(i) + "_deactivated";
-        if (s->QueryDoubleAttribute(tmp.c_str(), &fl) == TIXML_SUCCESS && fl != 0)
+        if (s->QueryDoubleAttribute((p + "_deactivated").c_str(), &fl) == TIXML_SUCCESS && fl != 0)
         {
             preset.da[i] = true;
         }
 
-        tmp = p + std::to_string(i) + "_deform_type";
-        if (s->QueryDoubleAttribute(tmp.c_str(), &fl) == TIXML_SUCCESS)
+        if (s->QueryDoubleAttribute((p + "_deform_type").c_str(), &fl) == TIXML_SUCCESS)
         {
             preset.dt[i] = (int)fl;
         }
