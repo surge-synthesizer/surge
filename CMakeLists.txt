@@ -57,7 +57,7 @@ endif()
 
 # Global compiler/linker settings {{{
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND UNIX AND NOT APPLE AND NOT SURGE_SKIP_PIE_CHANGE)
   message(STATUS "Setting -no-pie on EXE flags; use SURGE_SKIP_PIE_CHANGE=TRUE to avoid" )
@@ -82,6 +82,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     # BP note: If you want to turn on llvm/gcc sanitize undo this and the link options below
     $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=address>
     $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=undefined>
+
+    # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
+    -fno-char8_t
   )
 
   add_link_options(
@@ -170,6 +173,8 @@ if(MSVC)
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
     # Set source and executable charsets to UTF-8
     $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
+    # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
+    /Zc:char8_t-
   )
 endif()
 # }}}
