@@ -195,35 +195,34 @@ bool FxUserPreset::readFromXMLSnapshot(Preset &preset, TiXmlElement *s)
     {
         double fl;
         std::string p = "p";
+        std::string tmp; // Workaround for a g++12 bug
 
-        if (s->QueryDoubleAttribute((p + std::to_string(i)).c_str(), &fl) == TIXML_SUCCESS)
+        tmp = p + std::to_string(i);
+        if (s->QueryDoubleAttribute(p.c_str(), &fl) == TIXML_SUCCESS)
         {
             preset.p[i] = fl;
         }
 
-        if (s->QueryDoubleAttribute((p + std::to_string(i) + "_temposync").c_str(), &fl) ==
-                TIXML_SUCCESS &&
-            fl != 0)
+        tmp = p + std::to_string(i) + "_tempsync";
+        if (s->QueryDoubleAttribute(tmp.c_str(), &fl) == TIXML_SUCCESS && fl != 0)
         {
             preset.ts[i] = true;
         }
 
-        if (s->QueryDoubleAttribute((p + std::to_string(i) + "_extend_range").c_str(), &fl) ==
-                TIXML_SUCCESS &&
-            fl != 0)
+        tmp = p + std::to_string(i) + "_extend_range";
+        if (s->QueryDoubleAttribute(tmp.c_str(), &fl) == TIXML_SUCCESS && fl != 0)
         {
             preset.er[i] = true;
         }
 
-        if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deactivated").c_str(), &fl) ==
-                TIXML_SUCCESS &&
-            fl != 0)
+        tmp = p + std::to_string(i) + "_deactivated";
+        if (s->QueryDoubleAttribute(tmp.c_str(), &fl) == TIXML_SUCCESS && fl != 0)
         {
             preset.da[i] = true;
         }
 
-        if (s->QueryDoubleAttribute((p + std::to_string(i) + "_deform_type").c_str(), &fl) ==
-            TIXML_SUCCESS)
+        tmp = p + std::to_string(i) + "_deform_type";
+        if (s->QueryDoubleAttribute(tmp.c_str(), &fl) == TIXML_SUCCESS)
         {
             preset.dt[i] = (int)fl;
         }
