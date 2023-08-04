@@ -175,6 +175,8 @@ if(MSVC)
     $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
     # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
     $<$<COMPILE_LANGUAGE:CXX>:/Zc:char8_t->
+    # amke msvc define __cplulsplus properly
+    $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>
   )
 endif()
 # }}}

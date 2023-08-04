@@ -92,7 +92,7 @@ jobs:
           isLinux: True
           isLinuxUnitTest: True
           isUnitTest: True
-          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
+          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-11 -DCMAKE_C_COMPILER=gcc-11"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
 
