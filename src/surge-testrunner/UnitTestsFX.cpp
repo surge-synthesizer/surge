@@ -78,7 +78,7 @@ TEST_CASE("Airwindows Loud", "[fx]")
             surge->process();
 
         auto *pt = &(surge->storage.getPatch().fx[0].type);
-        auto awv = 1.f * fxt_airwindows / (pt->val_max.i - pt->val_min.i);
+        auto awv = 1.f * float(fxt_airwindows) / (pt->val_max.i - pt->val_min.i);
 
         auto did = surge->idForParameter(pt);
         surge->setParameter01(did, awv, false);
@@ -287,7 +287,7 @@ TEST_CASE("Reverb 2 at High Sample Rate", "[fx]")
             surge->process();
 
         auto *pt = &(surge->storage.getPatch().fx[0].type);
-        auto awv = 1.f * fxt_reverb2 / (pt->val_max.i - pt->val_min.i);
+        auto awv = 1.f * float(fxt_reverb2) / (pt->val_max.i - pt->val_min.i);
 
         auto did = surge->idForParameter(pt);
         surge->setParameter01(did, awv, false);
@@ -321,7 +321,7 @@ TEST_CASE("Waveshaper Pops", "[fx]")
             surge->process();
 
         auto *pt = &(surge->storage.getPatch().fx[0].type);
-        auto awv = 1.f * fxt_waveshaper / (pt->val_max.i - pt->val_min.i);
+        auto awv = 1.f * float(fxt_waveshaper) / (pt->val_max.i - pt->val_min.i);
 
         auto did = surge->idForParameter(pt);
         surge->setParameter01(did, awv, false);
@@ -379,7 +379,7 @@ TEST_CASE("Nimbus at High Sample Rate", "[fx]")
                     surge->process();
 
                 auto *pt = &(surge->storage.getPatch().fx[0].type);
-                auto awv = 1.f * fxt_nimbus / (pt->val_max.i - pt->val_min.i);
+                auto awv = 1.f * float(fxt_nimbus) / (pt->val_max.i - pt->val_min.i);
 
                 auto did = surge->idForParameter(pt);
                 surge->setParameter01(did, awv, false);

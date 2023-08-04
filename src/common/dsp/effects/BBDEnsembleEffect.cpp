@@ -114,7 +114,7 @@ void BBDEnsembleEffect::init()
     setvars(true);
     block_counter = 0;
 
-    auto init_bbds = [=](auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
+    auto init_bbds = [this](auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
         for (auto *del : {&delL1, &delL2, &delR1, &delR2})
         {
             del->prepare(storage->samplerate);
@@ -271,8 +271,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     const auto delayScale =
         0.95f * delayCenterMs / (delay1Ms + delay2Ms); // make sure total delay is always positive
 
-    auto process_bbd_delays = [=](float *dataL, float *dataR, auto &delL1, auto &delL2, auto &delR1,
-                                  auto &delR2) {
+    auto process_bbd_delays = [=, this](float *dataL, float *dataR, auto &delL1, auto &delL2,
+                                        auto &delR1, auto &delR2) {
         // copy input data ("dry") to processed output ("wet)
         mech::copy_from_to<BLOCK_SIZE>(dataL, L);
         mech::copy_from_to<BLOCK_SIZE>(dataR, R);

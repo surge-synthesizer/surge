@@ -51,7 +51,7 @@ template <int v> class ChorusEffect : public Effect
         ch_num_params,
     };
 
-    ChorusEffect<v>(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    ChorusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~ChorusEffect();
     virtual const char *get_effectname() override { return "chorus"; }
     virtual void init() override;

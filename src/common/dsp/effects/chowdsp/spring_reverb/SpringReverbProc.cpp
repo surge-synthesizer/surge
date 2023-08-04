@@ -68,7 +68,7 @@ void SpringReverbProc::prepare(float sampleRate, int samplesPerBlock)
 
 void SpringReverbProc::setParams(const Params &params, int numSamples)
 {
-    auto msToSamples = [=](float ms) { return (ms / 1000.0f) * fs; };
+    auto msToSamples = [this](float ms) { return (ms / 1000.0f) * fs; };
 
     if (params.shake && shakeCounter < 0) // start shaking
     {
@@ -131,7 +131,7 @@ void SpringReverbProc::processBlock(float *left, float *right, const int numSamp
         shakeCounter = std::max(shakeCounter - numSamples, 0);
     }
 
-    auto doSpringInput = [=](int ch, float input, int n) -> float {
+    auto doSpringInput = [this](int ch, float input, int n) -> float {
         auto output = sst::basic_blocks::dsp::fasttanh(input - feedbackGain * delay.popSample(ch));
         return dcBlocker.processSample<StateVariableFilterType::Highpass>(ch, output) +
                shortShakeBuffer[n];
