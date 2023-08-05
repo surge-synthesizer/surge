@@ -143,6 +143,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
       -Wformat-truncation=0 # squelch warning about snprintf truncating strings (see PR #3977)
       -Wno-free-nonheap-object # https://github.com/surge-synthesizer/surge/issues/4251
       -Wno-return-local-addr # squelch sqlite3 error: function may return address of local variable
+      -Wno-error=restrict # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
     )
   endif()
 endif()
