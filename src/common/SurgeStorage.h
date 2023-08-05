@@ -42,6 +42,7 @@
 #include <unordered_map>
 #include <map>
 #include <utility>
+#include <type_traits>
 #include <random>
 #include <chrono>
 
@@ -49,6 +50,19 @@
 #include "PatchDB.h"
 #include <unordered_set>
 #include "UserDefaults.h"
+
+/*
+ * C++20 introduces u8string and makes char8_t and char non-interchangable for
+ * thigns like strings and couts. This is sort of a half-completed effort which
+ * raises much consternation. We move to 20 but use the compiler flags
+ * in gcc, clang, and msvc to make sure we turn off this behaviour, which
+ * matters the most for us in fs::path->u8string(), which we check here.
+ *
+ * If you hit this assert, you have not turned on -fno-char8 or what not, probably
+ * because you override our compiler flags. Don't do that!
+ */
+static_assert(std::is_same<std::string, decltype(std::declval<fs::path>().u8string())>::value,
+              "Please enable u8 string macros");
 
 #if WINDOWS
 #define PATH_SEPARATOR '\\'

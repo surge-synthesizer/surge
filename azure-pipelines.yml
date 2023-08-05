@@ -88,11 +88,11 @@ jobs:
           cmakeTarget: "surge-xt_Packaged surge-fx_Packaged surgepy"
           cmakeConfig: "Debug"
         linux-unittest:
-          imageName: 'ubuntu-20.04'
+          imageName: 'ubuntu-latest'
           isLinux: True
           isLinuxUnitTest: True
           isUnitTest: True
-          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release"
+          cmakeArguments: "-DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-12 -DCMAKE_C_COMPILER=gcc-12"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
 
