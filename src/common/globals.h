@@ -28,13 +28,8 @@
 #include <assert.h>
 #include <algorithm>
 
-/*
- * While we roll 20 across the properties, put this check here to make
- * sure we update various other parent and consuming builds appropriately.
- */
-static_assert((0 <=> 0) == 0, "Surge requires C++20; please update your build.");
 // if you hit this on msvc and pass the above, you probably need /Zc:__cplusplus
-static_assert(__cplusplus >= 202002L, "Surge requires C++20; please update your build");
+static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your build");
 
 #if MAC
 

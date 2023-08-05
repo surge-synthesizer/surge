@@ -52,14 +52,8 @@
 #include "UserDefaults.h"
 
 /*
- * C++20 introduces u8string and makes char8_t and char non-interchangable for
- * thigns like strings and couts. This is sort of a half-completed effort which
- * raises much consternation. We move to 20 but use the compiler flags
- * in gcc, clang, and msvc to make sure we turn off this behaviour, which
- * matters the most for us in fs::path->u8string(), which we check here.
- *
- * If you hit this assert, you have not turned on -fno-char8 or what not, probably
- * because you override our compiler flags. Don't do that!
+ * Porting to c++20 and hit this a year or two from now? Check out the fix
+ * we put in in 680e3e916a112f81847033347595616c8af76d99 to understand the bug
  */
 static_assert(std::is_same<std::string, decltype(std::declval<fs::path>().u8string())>::value,
               "Please enable u8 string macros");
