@@ -52,15 +52,21 @@ class FM2Oscillator : public Oscillator
     virtual ~FM2Oscillator();
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
-    double phase, lastoutput;
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
+
+    template <int mode, bool stereo, bool FM>
+    void process_block_internal(float pitch, float drift, float FMdepth);
+
+    double phase, oldout1, oldout2;
 
     using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
+
     quadr_osc RM1, RM2;
     Surge::Oscillator::DriftLFO driftLFO;
     float fb_val;
+    int fb_mode;
     lag<double> FMdepth, RelModDepth1, RelModDepth2, FeedbackDepth, PhaseOffset;
-    virtual void handleStreamingMismatches(int streamingRevision,
-                                           int currentSynthStreamingRevision) override;
 };
 
 #endif // SURGE_SRC_COMMON_DSP_OSCILLATORS_FM2OSCILLATOR_H
