@@ -52,12 +52,18 @@ class FM3Oscillator : public Oscillator
     virtual ~FM3Oscillator();
     virtual void init_ctrltypes() override;
     virtual void init_default_values() override;
-    double phase, lastoutput;
+
+    template <int mode, bool stereo, bool FM>
+    void process_block_internal(float pitch, float drift, float FMdepth);
+
+    double phase, oldout1, oldout2;
 
     using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
+
     quadr_osc RM1, RM2, AM;
     Surge::Oscillator::DriftLFO driftLFO;
     float fb_val;
+    int fb_mode;
     lag<double> FMdepth, AbsModDepth, RelModDepth1, RelModDepth2, FeedbackDepth;
     virtual void handleStreamingMismatches(int streamingRevision,
                                            int currentSynthStreamingRevision) override;

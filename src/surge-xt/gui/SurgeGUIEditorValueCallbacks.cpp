@@ -2477,6 +2477,30 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         break;
                     }
+                    case ct_osc_feedback_negative:
+                    {
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            contextMenu, "FEEDBACK TYPE");
+
+                        contextMenu.addItem("Surge", true, dt == 0, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = 0;
+                            synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addItem("Vintage FM", true, dt == 1, [this, p]() {
+                            undoManager()->pushParameterChange(p->id, p, p->val);
+                            p->deform_type = 1;
+                            synth->storage.getPatch().isDirty = true;
+                            frame->repaint();
+                        });
+                        contextMenu.addSeparator();
+
+                        break;
+                    }
                     default:
                     {
                         break;
