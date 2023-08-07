@@ -198,13 +198,14 @@ const char modsource_names[n_modsources][32] = {
     "Latest Key",
 };
 
+// these names are used for streaming (TODO XT2) and OSC interface - don't change them!
 const char modsource_names_tag[n_modsources][32] = {
-    "off",    "vel",    "keytrack",    "poly_at",    "chan_at",     "pbend",      "mwheel",
-    "macro1", "macro2", "macro3",      "macro4",     "macro5",      "macro6",     "macro7",
-    "macro8", "amp_eg", "filter_eg",   "lfo1",       "lfo2",        "lfo3",       "lfo4",
-    "lfo5",   "lfo6",   "slfo1",       "slfo2",      "slfo3",       "slfo4",      "slfo5",
-    "slfo6",  "timbre", "release_vel", "random",     "random_uni",  "alt",        "alt_uni",
-    "breath", "expr",   "sustain",     "lowest_key", "highest_key", "latest_key",
+    "off",     "vel",     "keytrk",  "pat",        "at",          "pb",         "mw",
+    "macro_1", "macro_2", "macro_3", "macro_4",    "macro_5",     "macro_6",    "macro_7",
+    "macro_8", "aeg",     "feg",     "vlfo_1",     "vlfo_2",      "vlfo_3",     "vlfo_4",
+    "vlfo_5",  "vlfo_6",  "slfo_1",  "slfo_2",     "slfo_3",      "slfo_4",     "slfo_5",
+    "slfo_6",  "timbre",  "rel_vel", "rand_bi",    "rand_uni",    "alt_bi",     "alt_uni",
+    "breath",  "expr",    "sus",     "lowest_key", "highest_key", "latest_key",
 };
 
 inline bool isScenelevel(modsources ms)
