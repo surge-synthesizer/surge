@@ -305,6 +305,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setZoomFactor(float zf);
     void setZoomFactor(float zf, bool resizeWindow);
     void resizeWindow(float zf);
+    void moveTopLeftTo(float tx, float ty);
     bool doesZoomFitToScreen(float zf,
                              float &correctedZf); // returns true if it fits; false if not; sets
                                                   // correctedZF to right size in either case

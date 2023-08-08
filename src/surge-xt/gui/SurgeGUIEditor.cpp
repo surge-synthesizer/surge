@@ -2895,6 +2895,27 @@ bool SurgeGUIEditor::doesZoomFitToScreen(float zf, float &correctedZf)
     }
 }
 
+void SurgeGUIEditor::moveTopLeftTo(float tx, float ty)
+{
+    /* This pushes every item so that it co-alighns with frame at tx, ty */
+    if (frame && frame->isVisible())
+    {
+        auto b = frame->getBounds();
+        auto bx = b.getX();
+        auto by = b.getY();
+        auto dx = tx - bx;
+        auto dy = ty - by;
+
+        for (auto c : juceEditor->getChildren())
+        {
+            auto q = c->getBounds();
+            auto nx = q.getX() + dx;
+            auto ny = q.getY() + dy;
+            c->setTopLeftPosition(nx, ny);
+        }
+    }
+}
+
 void SurgeGUIEditor::resizeWindow(float zf) { setZoomFactor(zf, true); }
 
 void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
@@ -3849,8 +3870,6 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
                                             [this, w = juce::Component::SafePointer(cdw)]() {
                                                 if (w)
                                                 {
-                                                    std::cout << __FILE__ << ":" << __LINE__
-                                                              << " Exit Full Screen" << std::endl;
                                                     w->setFullScreen(false);
                                                 }
                                             });
@@ -3861,8 +3880,6 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
                                             [w = juce::Component::SafePointer(cdw)]() {
                                                 if (w)
                                                 {
-                                                    std::cout << __FILE__ << ":" << __LINE__
-                                                              << " Enter Full Screen" << std::endl;
                                                     w->setFullScreen(true);
                                                 }
                                             });

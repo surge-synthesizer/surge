@@ -29,6 +29,7 @@
 #include "RuntimeFont.h"
 #include "AccessibleHelpers.h"
 #include <version.h>
+#include "gui/widgets/MainFrame.h"
 
 struct VKeyboardWheel : public juce::Component
 {
@@ -338,6 +339,13 @@ void SurgeSynthEditor::reapplySurgeComponentColours()
 
 void SurgeSynthEditor::resized()
 {
+    drawExtendedControls = sge->getShowVirtualKeyboard();
+
+    auto w = getWidth();
+    auto h =
+        getHeight() -
+        (drawExtendedControls ? 0.01 * sge->getZoomFactor() * extraYSpaceForVirtualKeyboard : 0);
+
     if (Surge::GUI::getIsStandalone())
     {
         juce::Component *comp = this;
@@ -348,8 +356,22 @@ void SurgeSynthEditor::resized()
             {
                 if (cdw->isFullScreen())
                 {
-                    std::cout << __FILE__ << ":" << __LINE__ << " Deal with Full Screen zoom"
-                              << std::endl;
+                    // target width
+                    auto tw = sge->getWindowSizeX() * sge->getZoomFactor() * 0.01f;
+                    auto th = (sge->getWindowSizeY() +
+                               (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0)) *
+                              sge->getZoomFactor() * 0.01f;
+
+                    auto b = getLocalBounds();
+                    auto pw = (b.getWidth() - tw) / 2.0;
+                    auto ph = (b.getHeight() - th) / 2.0;
+
+                    // turn off aspect ratio
+                    if (getConstrainer())
+                        getConstrainer()->setFixedAspectRatio(0.f);
+
+                    sge->moveTopLeftTo(pw, ph);
+                    return;
                 }
                 comp = nullptr;
             }
@@ -358,14 +380,11 @@ void SurgeSynthEditor::resized()
                 comp = comp->getParentComponent();
             }
         }
+
+        sge->moveTopLeftTo(0, 0);
     }
 
-    drawExtendedControls = sge->getShowVirtualKeyboard();
-
-    auto w = getWidth();
-    auto h =
-        getHeight() -
-        (drawExtendedControls ? 0.01 * sge->getZoomFactor() * extraYSpaceForVirtualKeyboard : 0);
+    auto b = getLocalBounds();
     auto wR = 1.0 * w / sge->getWindowSizeX();
     auto hR = 1.0 * h / sge->getWindowSizeY();
 
