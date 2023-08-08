@@ -108,7 +108,7 @@ int OpenSoundControl::getNoteID(const juce::OSCMessage &om)
             return -1;
         }
         float msg2 = om[2].getFloat32();
-        if (msg2 < 0. || msg2 > std::numeric_limits<int>::max())
+        if (msg2 < 0. || msg2 > (float)(std::numeric_limits<int>::max()))
         {
             sendError("NoteID must be between 0 and " +
                       std::to_string(std::numeric_limits<int>::max()));
