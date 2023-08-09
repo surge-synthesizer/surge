@@ -20,6 +20,8 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include <string>
+
 #include "FxPresetAndClipboardManager.h"
 #include "StringOps.h"
 #include "Effect.h"
@@ -67,7 +69,7 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
                     {
                         workStack.emplace_back(d, top.second);
                     }
-                    else if (path_to_string(d.path().extension()) == ".srgfx")
+                    else if (d.path().extension() == ".srgfx")
                     {
                         sfxfiles.emplace_back(d.path(), top.second);
                     }
@@ -88,7 +90,7 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
     {
         {
             Preset preset;
-            preset.file = path_to_string(f.first);
+            preset.file = f.first;
 
             TiXmlDocument d;
             int t;
@@ -245,13 +247,9 @@ bool FxUserPreset::hasPresetsForSingleType(int id)
     return scannedPresets.find(id) != scannedPresets.end();
 }
 
-void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::string &s)
+void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, fs::path sp)
 {
-    char fxName[TXT_SIZE];
-    fxName[0] = 0;
-    strxcpy(fxName, s.c_str(), TXT_SIZE);
-
-    if (strlen(fxName) == 0)
+    if (sp.empty())
     {
         return;
     }
@@ -259,11 +257,10 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
     /*
      * OK so lets see if there's a path separator in the string
      */
-    auto sp = string_to_path(s);
     auto spp = sp.parent_path();
     auto fnp = sp.filename();
 
-    if (!Surge::Storage::isValidName(path_to_string(fnp)))
+    if (!Surge::Storage::isValidName(fnp))
     {
         return;
     }
@@ -275,15 +272,16 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
     if (!spp.empty())
         storagePath /= spp;
 
-    auto outputPath = storagePath / string_to_path(path_to_string(fnp) + ".srgfx");
+    fs::path outputPath = storagePath;
+    outputPath.replace_extension(".srgfx");
 
     fs::create_directories(storagePath);
 
     std::ofstream pfile(outputPath, std::ios::out);
     if (!pfile.is_open())
     {
-        storage->reportError(std::string("Unable to open FX preset file '") +
-                                 path_to_string(outputPath) + "' for writing!",
+        storage->reportError(std::string("Unable to open FX preset file '") + outputPath.string() +
+                                 "' for writing!",
                              "Error");
         return;
     }
@@ -293,7 +291,7 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
     pfile << "<single-fx streaming_version=\"" << ff_revision << "\">\n";
 
     // take care of 5 special XML characters
-    std::string fxNameSub(path_to_string(fnp));
+    std::string fxNameSub(fnp.string());
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
