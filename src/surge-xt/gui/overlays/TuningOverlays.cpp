@@ -428,7 +428,7 @@ class RadialScaleGraph : public juce::Component,
         if (storage)
         {
             displayMode = (DisplayMode)Surge::Storage::getUserDefaultValue(
-                storage, Surge::Storage::DefaultKey::TuningPolarGraphMode, 0);
+                storage, Surge::Storage::DefaultKey::TuningPolarGraphMode, 1);
             switch (displayMode)
             {
             case DisplayMode::RADIAL:
