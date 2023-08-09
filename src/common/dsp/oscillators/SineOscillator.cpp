@@ -696,7 +696,10 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
             auto lv1 = _mm_load_ps(&lastvalue[1][u]);
 
             auto lv = _mm_add_ps(_mm_mul_ps(lv0, fb0weight), _mm_mul_ps(lv1, fb1weight));
-            auto x = _mm_add_ps(_mm_add_ps(ph, lv), fmpds);
+            auto fba = _mm_mul_ps(
+                _mm_add_ps(_mm_and_ps(fbnegmask, _mm_mul_ps(lv, lv)), _mm_andnot_ps(fbnegmask, lv)),
+                fbv);
+            auto x = _mm_add_ps(_mm_add_ps(ph, fba), fmpds);
 
             x = sst::basic_blocks::dsp::clampToPiRangeSSE(x);
 
@@ -718,12 +721,8 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
             _mm_store_ps(&olv[u], l);
             _mm_store_ps(&orv[u], r);
 
-            auto lastv =
-                _mm_mul_ps(_mm_add_ps(_mm_and_ps(fbnegmask, _mm_mul_ps(out_local, out_local)),
-                                      _mm_andnot_ps(fbnegmask, out_local)),
-                           fbv);
-            _mm_store_ps(&lastvalue[1][u], lv1);
-            _mm_store_ps(&lastvalue[1][u], lastv);
+            _mm_store_ps(&lastvalue[0][u], lv1);
+            _mm_store_ps(&lastvalue[1][u], out_local);
         }
 
         for (int u = 0; u < n_unison; ++u)
