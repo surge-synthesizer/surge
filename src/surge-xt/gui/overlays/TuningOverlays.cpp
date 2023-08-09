@@ -1634,6 +1634,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         juce::Point<float> lastMousePos;
         void mouseDown(const juce::MouseEvent &e) override
         {
+            if (mode == TRUE_KEYS)
+            {
+                return;
+            }
+
             if (!Surge::GUI::showCursor(matrix->overlay->storage))
             {
                 juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
@@ -1643,6 +1648,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseUp(const juce::MouseEvent &e) override
         {
+            if (mode == TRUE_KEYS)
+            {
+                return;
+            }
+
             if (!Surge::GUI::showCursor(matrix->overlay->storage))
             {
                 juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
@@ -1654,6 +1664,10 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseDrag(const juce::MouseEvent &e) override
         {
+            if (mode == TRUE_KEYS)
+            {
+                return;
+            }
 
             auto dPos = e.position.getY() - lastMousePos.getY();
             dPos = -dPos;
