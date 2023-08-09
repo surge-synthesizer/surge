@@ -169,7 +169,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
             return;
         }
 
-        int totalSamples = (1 << 4) * (int)getWidth();
+        int totalSamples = (1 << 3) * (int)getWidth();
         int averagingWindow = 4; // < and Mult of BlockSizeOS
         float disp_pitch_rs = disp_pitch + 12.0 * log2(storage->dsamplerate / 44100.0);
 
@@ -209,16 +209,24 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
             osc->init(disp_pitch_rs, true, true);
         }
 
-        int block_pos = BLOCK_SIZE_OS;
+        int block_pos = BLOCK_SIZE;
         juce::Path wavePath;
+
+        float oscTmp alignas(16)[2][BLOCK_SIZE_OS];
+        sst::filters::HalfRate::HalfRateFilter hr(6, true);
+        hr.load_coefficients();
+        hr.reset();
 
         for (int i = 0; i < totalSamples; i += averagingWindow)
         {
-            if (use_display && block_pos >= BLOCK_SIZE_OS)
+            if (use_display && block_pos >= BLOCK_SIZE)
             {
                 // Lock it even if we aren't wavetable. It's fine.
                 storage->waveTableDataMutex.lock();
                 osc->process_block(disp_pitch_rs);
+                memcpy(oscTmp[0], osc->output, sizeof(oscTmp[0]));
+                memcpy(oscTmp[1], osc->output, sizeof(oscTmp[1]));
+                hr.process_block_D2(oscTmp[0], oscTmp[1], BLOCK_SIZE_OS);
                 block_pos = 0;
                 storage->waveTableDataMutex.unlock();
             }
@@ -229,7 +237,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
             {
                 for (int j = 0; j < averagingWindow; ++j)
                 {
-                    val += osc->output[block_pos];
+                    val += oscTmp[0][block_pos];
                     block_pos++;
                 }
 
