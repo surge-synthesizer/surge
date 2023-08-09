@@ -2701,7 +2701,7 @@ namespace Surge
 {
 namespace Storage
 {
-bool isValidName(const fs::path &path) { return isValidName(path.native()); }
+bool isValidName(const fs::path &path) { return isValidName(path.string()); }
 
 bool isValidName(const std::string &patchName)
 {
