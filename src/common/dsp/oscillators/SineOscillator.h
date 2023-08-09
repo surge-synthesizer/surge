@@ -74,7 +74,7 @@ class SineOscillator : public Oscillator
     float panL alignas(16)[MAX_UNISON], panR alignas(16)[MAX_UNISON];
 
     int id_mode, id_fb, id_fmlegacy, id_detune;
-    float lastvalue alignas(16)[MAX_UNISON];
+    float lastvalue alignas(16)[2][MAX_UNISON];
     bool firstblock = true;
 
     BiquadFilter lp, hp;

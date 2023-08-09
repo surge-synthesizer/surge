@@ -120,7 +120,8 @@ void SineOscillator::init(float pitch, bool is_display, bool nonzero_init_drift)
     {
         phase[i] = // phase in range -PI to PI
             (oscdata->retrigger.val.b || is_display) ? 0.f : 2.0 * M_PI * storage->rand_01() - M_PI;
-        lastvalue[i] = 0.f;
+        lastvalue[0][i] = 0.f;
+        lastvalue[1][i] = 0.f;
         driftLFO[i].init(nonzero_init_drift);
         sine[i].set_phase(phase[i]);
     }
@@ -666,6 +667,18 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
         }
     }
     firstblock = false;
+
+    auto fb_mode = oscdata->p[sine_feedback].deform_type;
+
+    auto fb0weight = _mm_setzero_ps();
+    auto fb1weight = _mm_set1_ps(1.f);
+
+    if (fb_mode == 1)
+    {
+        fb0weight = _mm_set1_ps(0.5f);
+        fb1weight = _mm_set1_ps(0.5f);
+    }
+
     for (int k = 0; k < BLOCK_SIZE_OS; k++)
     {
         float outL = 0.f, outR = 0.f;
@@ -679,7 +692,10 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
             float fph alignas(16)[4] = {(float)phase[u], (float)phase[u + 1], (float)phase[u + 2],
                                         (float)phase[u + 3]};
             auto ph = _mm_load_ps(&fph[0]);
-            auto lv = _mm_load_ps(&lastvalue[u]);
+            auto lv0 = _mm_load_ps(&lastvalue[0][u]);
+            auto lv1 = _mm_load_ps(&lastvalue[1][u]);
+
+            auto lv = _mm_add_ps(_mm_mul_ps(lv0, fb0weight), _mm_mul_ps(lv1, fb1weight));
             auto x = _mm_add_ps(_mm_add_ps(ph, lv), fmpds);
 
             x = sst::basic_blocks::dsp::clampToPiRangeSSE(x);
@@ -706,7 +722,8 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
                 _mm_mul_ps(_mm_add_ps(_mm_and_ps(fbnegmask, _mm_mul_ps(out_local, out_local)),
                                       _mm_andnot_ps(fbnegmask, out_local)),
                            fbv);
-            _mm_store_ps(&lastvalue[u], lastv);
+            _mm_store_ps(&lastvalue[1][u], lv1);
+            _mm_store_ps(&lastvalue[1][u], lastv);
         }
 
         for (int u = 0; u < n_unison; ++u)
