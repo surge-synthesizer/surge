@@ -184,6 +184,14 @@ int main(int argc, char **argv)
     app.add_flag("--osc-out-port", oscOutputPort,
                  "Port for OSC Output; unspecified means input only; input required");
 
+    int sampleRate{0};
+    app.add_flag("--sample-rate", sampleRate,
+                 "Sample Rate for Audio Output. Will use system default if blank");
+
+    int bufferSize{0};
+    app.add_flag("--buffer-size", bufferSize,
+                 "Buffer Size for Audio Output. Will use system default if blank");
+
     std::string initPatch{};
     app.add_flag("--init-patch", initPatch, "Choose this file (by path) as the initial patch");
 
@@ -274,6 +282,7 @@ int main(int argc, char **argv)
 
     const auto &dname = deviceNames[audioDeviceIndex];
     auto device = atype->createDevice(dname, "");
+
     if (!device)
     {
         PRINTERR("Unable to open audio output " << dname);
@@ -281,7 +290,62 @@ int main(int argc, char **argv)
     }
     LOG(BASIC, "Audio Output        : [" << device->getName() << "]");
 
-    auto res = device->open(0, 3 /* bitset - careful */, 48000, 256);
+    auto sr = device->getAvailableSampleRates();
+    auto bs = device->getAvailableBufferSizes();
+
+    if (sampleRate == 0)
+    {
+        auto candSampleRate = device->getCurrentSampleRate();
+        for (auto s : sr)
+        {
+            if (s == candSampleRate)
+                sampleRate = s;
+        }
+        sampleRate = sr[0];
+    }
+    else
+    {
+        auto candSampleRate = sampleRate;
+        sampleRate = 0;
+        for (auto s : sr)
+            if (s == candSampleRate)
+                sampleRate = s;
+        if (sampleRate == 0)
+        {
+            LOG(BASIC, "Sample Rate " << candSampleRate << " not supported.");
+            LOG(BASIC, "Your audio interface supports these rates:");
+            for (auto s : sr)
+            {
+                LOG(BASIC, "   " << s);
+            }
+            exit(2);
+        }
+    }
+
+    if (bufferSize == 0)
+    {
+        bufferSize = device->getDefaultBufferSize();
+        // we just assume this is in the set
+    }
+    else
+    {
+        auto candBufferSize = bufferSize;
+        bufferSize = 0;
+        for (auto s : bs)
+            if (s == candBufferSize)
+                bufferSize = s;
+        if (bufferSize == 0)
+        {
+            LOG(BASIC, "Buffer Size " << bufferSize << " not supported.");
+            LOG(BASIC, "Your audio interface supports these sizes:");
+            for (auto s : bs)
+            {
+                LOG(BASIC, "   " << s);
+            }
+        }
+    }
+
+    auto res = device->open(0, 3 /* bitset - careful */, sampleRate, bufferSize);
     if (!res.isEmpty())
     {
         PRINTERR("Unable to open audio device: " << res);
