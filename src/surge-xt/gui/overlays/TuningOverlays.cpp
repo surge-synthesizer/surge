@@ -401,17 +401,46 @@ class RadialScaleGraph : public juce::Component,
                          public Surge::GUI::IComponentTagValue::Listener
 {
   public:
-    RadialScaleGraph()
+    RadialScaleGraph(SurgeStorage *s) : storage(s)
     {
         toneList = std::make_unique<juce::Viewport>();
         toneInterior = std::make_unique<juce::Component>();
         toneList->setViewedComponent(toneInterior.get(), false);
         addAndMakeVisible(*toneList);
 
+        radialModeKnob = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+        radialModeKnob->setSkin(skin, associatedBitmapStore);
+        radialModeKnob->setStorage(storage);
+        radialModeKnob->setRows(1);
+        radialModeKnob->setColumns(2);
+        radialModeKnob->setTag(78676);
+        radialModeKnob->setLabels({"Radial", "Angular"});
+        radialModeKnob->addListener(this);
+        addAndMakeVisible(*radialModeKnob);
+
         setTuning(Tunings::Tuning(Tunings::evenTemperament12NoteScale(), Tunings::tuneA69To(440)));
     }
 
     SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s)
+    {
+        storage = s;
+        if (storage)
+        {
+            displayMode = (DisplayMode)Surge::Storage::getUserDefaultValue(
+                storage, Surge::Storage::DefaultKey::TuningPolarGraphMode, 0);
+            switch (displayMode)
+            {
+            case DisplayMode::RADIAL:
+                radialModeKnob->setValue(0.f);
+                break;
+            case DisplayMode::ANGULAR:
+                radialModeKnob->setValue(1.f);
+                break;
+            }
+        }
+        repaint();
+    }
 
     void setTuning(const Tunings::Tuning &t)
     {
@@ -559,6 +588,12 @@ class RadialScaleGraph : public juce::Component,
 
     bool centsShowing{true};
 
+    enum struct DisplayMode
+    {
+        RADIAL,
+        ANGULAR
+    } displayMode{DisplayMode::RADIAL};
+
     void valueChanged(GUI::IComponentTagValue *p) override
     {
         if (p == showHideKnob.get())
@@ -569,6 +604,22 @@ class RadialScaleGraph : public juce::Component,
                 t->setPasswordCharacter(centsShowing ? 0 : 0x2022);
             }
             showHideKnob->setLabels({centsShowing ? "Hide" : "Show"});
+        }
+        if (p == radialModeKnob.get())
+        {
+            if (p->getValue() > 0.5)
+            {
+                displayMode = DisplayMode::ANGULAR;
+            }
+            else
+            {
+                displayMode = DisplayMode::RADIAL;
+            }
+            if (storage)
+            {
+                Surge::Storage::updateUserDefaultValue(
+                    storage, Surge::Storage::TuningPolarGraphMode, (int)displayMode);
+            }
         }
         repaint();
     }
@@ -599,6 +650,7 @@ class RadialScaleGraph : public juce::Component,
             te->setText(gt, juce::dontSendNotification);
         }
 
+        radialModeKnob->setSkin(skin, associatedBitmapStore);
         setNotesOn(bitset);
         repaint();
     }
@@ -629,9 +681,14 @@ class RadialScaleGraph : public juce::Component,
     std::vector<std::unique_ptr<juce::TextEditor>> toneEditors;
     std::vector<std::unique_ptr<juce::Label>> toneLabels;
     std::vector<std::unique_ptr<InfiniteKnob>> toneKnobs;
-    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> showHideKnob;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> showHideKnob, radialModeKnob;
 
-    void resized() override { toneList->setBounds(0, 0, usedForSidebar, getHeight()); }
+    void resized() override
+    {
+        auto rmh = 14;
+        toneList->setBounds(0, 0, usedForSidebar, getHeight() - rmh - 4);
+        radialModeKnob->setBounds(0, getHeight() - rmh - 2, usedForSidebar - 20, rmh);
+    }
 
     std::vector<bool> notesOn;
     std::bitset<128> bitset{0};
@@ -771,6 +828,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
     // So first things first - scan for range.
     double ETInterval = scale.tones.back().cents / scale.count;
     double dIntMin = 0, dIntMax = 0;
+    double intMin = std::numeric_limits<double>::max(), intMax = std::numeric_limits<double>::min();
     double pCents = 0;
     std::vector<float> intervals; // between tone i and i-1
 
@@ -780,6 +838,8 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         auto c = t.cents;
         auto in = c - pCents;
 
+        intMin = std::min(intMin, in);
+        intMax = std::max(intMax, in);
         pCents = c;
         intervals.push_back(in);
 
@@ -789,6 +849,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         dIntMin = std::min(intervalDistance, dIntMin);
     }
 
+    // intmin < 0 flash warning in angular
     double range = std::max(0.01, std::max(dIntMax, -dIntMin / 2.0)); // twice as many inside rings
     int iRange = std::ceil(range);
 
@@ -798,119 +859,136 @@ void RadialScaleGraph::paint(juce::Graphics &g)
     double ndn = (int)(iRange * 1.6);
 
     // Now draw the interval circles
-    for (int i = -ndn; i <= nup; ++i)
+    if (displayMode == DisplayMode::RADIAL)
     {
-        if (i == 0)
+        for (int i = -ndn; i <= nup; ++i)
         {
-        }
-        else
-        {
-            float pos = 1.0 * std::abs(i) / ndn;
-            float cpos = std::max(0.f, pos);
-
-            g.setColour(juce::Colour(110, 110, 120)
-                            .interpolatedWith(getLookAndFeel().findColour(
-                                                  juce::ResizableWindow::backgroundColourId),
-                                              cpos * 0.8));
-
-            float rad = 1.0 + dInterval * i;
-
-            g.drawEllipse(-rad, -rad, 2 * rad, 2 * rad, 0.01);
-        }
-    }
-
-    for (int i = 0; i < scale.count; ++i)
-    {
-        double frac = 1.0 * i / (scale.count);
-        double hfrac = 0.5 / scale.count;
-        double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
-        double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
-
-        if (notesOn[i])
-        {
-            g.setColour(juce::Colour(255, 255, 255));
-        }
-        else
-        {
-            g.setColour(juce::Colour(110, 110, 120));
-        }
-
-        g.drawLine(0, 0, (1.0 + outerRadiusExtension) * sx, (1.0 + outerRadiusExtension) * cx,
-                   0.01);
-
-        if (centsShowing)
-        {
-            if (scale.count > 48)
+            if (i == 0)
             {
-                // we just don't have room to draw the intervals
-            }
-            if (scale.count > 18)
-            {
-                // draw them sideways
-                juce::Graphics::ScopedSaveState gs(g);
-                auto t =
-                    juce::AffineTransform()
-                        .scaled(-0.7, 0.7)
-                        .rotated(juce::MathConstants<double>::pi)
-                        .translated(1.05, 0.0)
-                        .rotated((-frac + 0.25 - hfrac) * 2.0 * juce::MathConstants<double>::pi);
-
-                g.addTransform(t);
-                g.setColour(juce::Colours::white);
-                g.setFont(skin->fontManager->getLatoAtSize(0.1));
-
-                auto msg = fmt::format("{:.2f}", intervals[i]);
-                auto tr = juce::Rectangle<float>(0.f, -0.1f, 0.6f, 0.2f);
-
-                g.setColour(juce::Colours::white);
-                g.drawText(msg, tr, juce::Justification::centredLeft);
             }
             else
             {
-                juce::Graphics::ScopedSaveState gs(g);
+                float pos = 1.0 * std::abs(i) / ndn;
+                float cpos = std::max(0.f, pos);
 
-                auto t =
-                    juce::AffineTransform()
-                        .scaled(-0.7, 0.7)
-                        .rotated(juce::MathConstants<double>::pi / 2)
-                        .translated(1.05, 0.0)
-                        .rotated((-frac + 0.25 - hfrac) * 2.0 * juce::MathConstants<double>::pi);
+                g.setColour(juce::Colour(110, 110, 120)
+                                .interpolatedWith(getLookAndFeel().findColour(
+                                                      juce::ResizableWindow::backgroundColourId),
+                                                  cpos * 0.8));
 
-                g.addTransform(t);
-                g.setColour(juce::Colours::white);
-                g.setFont(skin->fontManager->getLatoAtSize(0.1));
+                float rad = 1.0 + dInterval * i;
 
-                auto msg = fmt::format("{:.2f}", intervals[i]);
-                auto tr = juce::Rectangle<float>(-0.3f, -0.2f, 0.6f, 0.2f);
-
-                g.setColour(juce::Colours::white);
-                g.drawText(msg, tr, juce::Justification::centred);
+                g.drawEllipse(-rad, -rad, 2 * rad, 2 * rad, 0.01);
             }
         }
 
-        g.saveState();
-        g.addTransform(juce::AffineTransform::rotation((-frac + 0.25) * 2.0 *
-                                                       juce::MathConstants<double>::pi));
-        g.addTransform(juce::AffineTransform::translation(1.0 + outerRadiusExtension, 0.0));
-        g.addTransform(juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
-        g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
-
-        if (notesOn[i])
+        for (int i = 0; i < scale.count; ++i)
         {
-            g.setColour(juce::Colour(255, 255, 255));
-        }
-        else
-        {
-            g.setColour(juce::Colour(200, 200, 240));
-        }
+            double frac = 1.0 * i / (scale.count);
+            double hfrac = 0.5 / scale.count;
+            double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
+            double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
 
-        // tone labels
-        juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
-        g.setFont(skin->fontManager->getLatoAtSize(0.075));
-        g.drawText(juce::String(i), textPos, juce::Justification::centred, 1);
-        g.restoreState();
+            if (notesOn[i])
+            {
+                g.setColour(juce::Colour(255, 255, 255));
+            }
+            else
+            {
+                g.setColour(juce::Colour(110, 110, 120));
+            }
+
+            g.drawLine(0, 0, (1.0 + outerRadiusExtension) * sx, (1.0 + outerRadiusExtension) * cx,
+                       0.01);
+
+            if (centsShowing)
+            {
+                if (scale.count > 48)
+                {
+                    // we just don't have room to draw the intervals
+                }
+                if (scale.count > 18)
+                {
+                    // draw them sideways
+                    juce::Graphics::ScopedSaveState gs(g);
+                    auto t = juce::AffineTransform()
+                                 .scaled(-0.7, 0.7)
+                                 .rotated(juce::MathConstants<double>::pi)
+                                 .translated(1.05, 0.0)
+                                 .rotated((-frac + 0.25 - hfrac) * 2.0 *
+                                          juce::MathConstants<double>::pi);
+
+                    g.addTransform(t);
+                    g.setColour(juce::Colours::white);
+                    g.setFont(skin->fontManager->getLatoAtSize(0.1));
+
+                    auto msg = fmt::format("{:.2f}", intervals[i]);
+                    auto tr = juce::Rectangle<float>(0.f, -0.1f, 0.6f, 0.2f);
+
+                    g.setColour(juce::Colours::white);
+                    g.drawText(msg, tr, juce::Justification::centredLeft);
+                }
+                else
+                {
+                    juce::Graphics::ScopedSaveState gs(g);
+
+                    auto t = juce::AffineTransform()
+                                 .scaled(-0.7, 0.7)
+                                 .rotated(juce::MathConstants<double>::pi / 2)
+                                 .translated(1.05, 0.0)
+                                 .rotated((-frac + 0.25 - hfrac) * 2.0 *
+                                          juce::MathConstants<double>::pi);
+
+                    g.addTransform(t);
+                    g.setColour(juce::Colours::white);
+                    g.setFont(skin->fontManager->getLatoAtSize(0.1));
+
+                    auto msg = fmt::format("{:.2f}", intervals[i]);
+                    auto tr = juce::Rectangle<float>(-0.3f, -0.2f, 0.6f, 0.2f);
+
+                    g.setColour(juce::Colours::white);
+                    g.drawText(msg, tr, juce::Justification::centred);
+                }
+            }
+
+            g.saveState();
+            g.addTransform(juce::AffineTransform::rotation((-frac + 0.25) * 2.0 *
+                                                           juce::MathConstants<double>::pi));
+            g.addTransform(juce::AffineTransform::translation(1.0 + outerRadiusExtension, 0.0));
+            g.addTransform(juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
+            g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
+
+            if (notesOn[i])
+            {
+                g.setColour(juce::Colour(255, 255, 255));
+            }
+            else
+            {
+                g.setColour(juce::Colour(200, 200, 240));
+            }
+
+            // tone labels
+            juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
+            g.setFont(skin->fontManager->getLatoAtSize(0.075));
+            g.drawText(juce::String(i), textPos, juce::Justification::centred, 1);
+            g.restoreState();
+        }
     }
+    else
+    {
+        for (int i = 0; i < scale.count; ++i)
+        {
+            double frac = 1.0 * i / (scale.count);
+            double hfrac = 0.5 / scale.count;
+            double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
+            double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
 
+            g.setColour(juce::Colour(110, 110, 120));
+
+            float dash[2]{0.03f, 0.02f};
+            g.drawDashedLine({0.f, 0.f, (float)sx, (float)cx}, dash, 2, 0.005);
+        }
+    }
     // Draw the ring at 1.0
     g.setColour(juce::Colour(255, 255, 255));
     g.drawEllipse(-1, -1, 2, 2, 0.01);
@@ -918,103 +996,260 @@ void RadialScaleGraph::paint(juce::Graphics &g)
     // Then draw ellipses for each note
     screenHotSpots.clear();
 
-    for (int i = 1; i <= scale.count; ++i)
+    if (displayMode == DisplayMode::RADIAL)
     {
-        double frac = 1.0 * i / (scale.count);
-        double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
-        double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
-
-        auto t = scale.tones[i - 1];
-        auto c = t.cents;
-        auto expectedC = scale.tones.back().cents / scale.count;
-
-        auto rx = 1.0 + dInterval * (c - expectedC * i) / expectedC;
-        float dx = 0.1, dy = 0.1;
-
-        if (i == scale.count)
+        for (int i = 1; i <= scale.count; ++i)
         {
-            dx = 0.15;
-            dy = 0.15;
-        }
+            double frac = 1.0 * i / (scale.count);
+            double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
+            double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
 
-        float x0 = rx * sx - 0.5 * dx, y0 = rx * cx - 0.5 * dy;
+            auto t = scale.tones[i - 1];
+            auto c = t.cents;
+            auto expectedC = scale.tones.back().cents / scale.count;
 
-        if (notesOn[i])
-        {
-            g.setColour(juce::Colour(255, 255, 255));
-            g.drawLine(sx, cx, rx * sx, rx * cx, 0.03);
-        }
+            auto rx = 1.0 + dInterval * (c - expectedC * i) / expectedC;
+            float dx = 0.1, dy = 0.1;
 
-        juce::Colour drawColour(200, 200, 200);
+            if (i == scale.count)
+            {
+                dx = 0.15;
+                dy = 0.15;
+            }
 
-        // FIXME - this colormap is bad
-        if (rx < 0.99)
-        {
-            // use a blue here
-            drawColour = juce::Colour(200 * (1.0 - 0.6 * rx), 200 * (1.0 - 0.6 * rx), 200);
-        }
-        else if (rx > 1.01)
-        {
-            // Use a yellow here
-            drawColour = juce::Colour(200, 200, 200 * (rx - 1.0));
-        }
+            float x0 = rx * sx - 0.5 * dx, y0 = rx * cx - 0.5 * dy;
 
-        auto originalDrawColor = drawColour;
+            if (notesOn[i])
+            {
+                g.setColour(juce::Colour(255, 255, 255));
+                g.drawLine(sx, cx, rx * sx, rx * cx, 0.03);
+            }
 
-        if (hotSpotIndex == i - 1)
-        {
-            drawColour = drawColour.brighter(0.6);
-        }
+            juce::Colour drawColour(200, 200, 200);
 
-        if (i == scale.count)
-        {
-            g.setColour(drawColour);
-            g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
-            g.fillEllipse(x0, y0, dx, dy);
+            // FIXME - this colormap is bad
+            if (rx < 0.99)
+            {
+                // use a blue here
+                drawColour = juce::Colour(200 * (1.0 - 0.6 * rx), 200 * (1.0 - 0.6 * rx), 200);
+            }
+            else if (rx > 1.01)
+            {
+                // Use a yellow here
+                drawColour = juce::Colour(200, 200, 200 * (rx - 1.0));
+            }
+
+            auto originalDrawColor = drawColour;
 
             if (hotSpotIndex == i - 1)
             {
-                auto p = juce::Path();
-                if (whichSideOfZero < 0)
+                drawColour = drawColour.brighter(0.6);
+            }
+
+            if (i == scale.count)
+            {
+                g.setColour(drawColour);
+                g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
+                g.fillEllipse(x0, y0, dx, dy);
+
+                if (hotSpotIndex == i - 1)
                 {
-                    p.addArc(x0, y0, dx, dy, juce::MathConstants<float>::pi,
-                             juce::MathConstants<float>::twoPi);
+                    auto p = juce::Path();
+                    if (whichSideOfZero < 0)
+                    {
+                        p.addArc(x0, y0, dx, dy, juce::MathConstants<float>::pi,
+                                 juce::MathConstants<float>::twoPi);
+                    }
+                    else
+                    {
+                        p.addArc(x0, y0, dx, dy, 0, juce::MathConstants<float>::pi);
+                    }
+                    g.setColour(juce::Colour(200, 200, 100));
+                    g.fillPath(p);
+                }
+            }
+            else
+            {
+                g.setColour(drawColour);
+
+                g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
+                g.fillEllipse(x0, y0, dx, dy);
+
+                if (hotSpotIndex != i - 1)
+                {
+                    g.setColour(drawColour.brighter(0.6));
+                    g.drawEllipse(x0, y0, dx, dy, 0.01);
+                }
+            }
+
+            if (notesOn[i % scale.count])
+            {
+                g.setColour(juce::Colour(255, 255, 255));
+                g.drawEllipse(x0, y0, dx, dy, 0.02);
+            }
+
+            dx += x0;
+            dy += y0;
+            screenTransform.transformPoint(x0, y0);
+            screenTransform.transformPoint(dx, dy);
+            screenHotSpots.push_back(juce::Rectangle<float>(x0, dy, dx - x0, y0 - dy));
+        }
+    }
+    else
+    {
+        g.setColour(juce::Colour(110, 110, 120));
+        auto oor = outerRadiusExtension;
+        outerRadiusExtension = oor * 0.95;
+        g.drawEllipse(-1 - outerRadiusExtension, -1 - outerRadiusExtension,
+                      2 + 2 * outerRadiusExtension, 2 + 2 * outerRadiusExtension, 0.005);
+
+        g.setColour(juce::Colour(255, 255, 255));
+        auto ps = 0.f;
+        for (int i = 1; i <= scale.count; ++i)
+        {
+            auto dAngle = intervals[i - 1] / scale.tones.back().cents;
+
+            auto ca = ps + dAngle / 2;
+
+            {
+                juce::Graphics::ScopedSaveState gs(g);
+
+                auto t = juce::AffineTransform()
+                             .scaled(-0.7, 0.7)
+                             .rotated(juce::MathConstants<double>::pi)
+                             .translated(1.15, -0.025)
+                             .rotated((-ca + 0.25) * 2.0 * juce::MathConstants<double>::pi);
+
+                g.addTransform(t);
+                g.setColour(juce::Colours::white);
+                g.setFont(skin->fontManager->getLatoAtSize(0.1));
+
+                auto msg = fmt::format("{:.2f}", intervals[i - 1]);
+                auto tr = juce::Rectangle<float>(-0.3f, -0.2f, 0.6f, 0.2f);
+
+                g.setColour(juce::Colours::white);
+                g.drawText(msg, tr, juce::Justification::centred);
+            }
+
+            ps += dAngle;
+
+            {
+                juce::Graphics::ScopedSaveState gs(g);
+                g.addTransform(juce::AffineTransform::rotation((-ps + 0.25) * 2.0 *
+                                                               juce::MathConstants<double>::pi));
+                g.addTransform(juce::AffineTransform::translation(1.0 + oor, 0.0));
+                g.addTransform(
+                    juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
+                g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
+
+                if (notesOn[i])
+                {
+                    g.setColour(juce::Colour(255, 255, 255));
                 }
                 else
                 {
-                    p.addArc(x0, y0, dx, dy, 0, juce::MathConstants<float>::pi);
+                    g.setColour(juce::Colour(200, 200, 240));
                 }
-                g.setColour(juce::Colour(200, 200, 100));
-                g.fillPath(p);
+
+                // tone labels
+                juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
+                g.setFont(skin->fontManager->getLatoAtSize(0.075));
+                g.drawText(juce::String((i == scale.count ? 0 : i)), textPos,
+                           juce::Justification::centred, 1);
             }
-        }
-        else
-        {
-            g.setColour(drawColour);
 
-            g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
-            g.fillEllipse(x0, y0, dx, dy);
+            double sx = std::sin(ps * 2.0 * juce::MathConstants<double>::pi);
+            double cx = std::cos(ps * 2.0 * juce::MathConstants<double>::pi);
 
-            if (hotSpotIndex != i - 1)
+            g.setColour(juce::Colour(110, 110, 120));
+            g.drawLine(0, 0, (1.0 + outerRadiusExtension) * sx, (1.0 + outerRadiusExtension) * cx,
+                       0.005);
+
+            auto t = scale.tones[i - 1];
+            auto c = t.cents;
+            auto expectedC = scale.tones.back().cents / scale.count;
+
+            auto rx = 1.0 + dInterval * (c - expectedC * i) / expectedC;
+
+            float dx = 0.1, dy = 0.1;
+
+            if (i == scale.count)
             {
-                g.setColour(drawColour.brighter(0.6));
-                g.drawEllipse(x0, y0, dx, dy, 0.01);
+                dx = 0.15;
+                dy = 0.15;
             }
-        }
 
-        if (notesOn[i % scale.count])
-        {
-            g.setColour(juce::Colour(255, 255, 255));
-            g.drawEllipse(x0, y0, dx, dy, 0.02);
-        }
+            auto drx = 1.0;
+            float x0 = drx * sx - 0.5 * dx, y0 = drx * cx - 0.5 * dy;
 
-        dx += x0;
-        dy += y0;
-        screenTransform.transformPoint(x0, y0);
-        screenTransform.transformPoint(dx, dy);
-        screenHotSpots.push_back(juce::Rectangle<float>(x0, dy, dx - x0, y0 - dy));
+            juce::Colour drawColour(200, 200, 200);
+
+            // FIXME - this colormap is bad
+            if (rx < 0.99)
+            {
+                // use a blue here
+                drawColour = juce::Colour(200 * (1.0 - 0.6 * rx), 200 * (1.0 - 0.6 * rx), 200);
+            }
+            else if (rx > 1.01)
+            {
+                // Use a yellow here
+                drawColour = juce::Colour(200, 200, 200 * (rx - 1.0));
+            }
+
+            auto originalDrawColor = drawColour;
+
+            if (hotSpotIndex == i - 1)
+            {
+                drawColour = drawColour.brighter(0.6);
+            }
+
+            if (i == scale.count)
+            {
+                g.setColour(drawColour);
+                g.fillEllipse(x0, y0, dx, dy);
+
+                if (hotSpotIndex == i - 1)
+                {
+                    auto p = juce::Path();
+                    if (whichSideOfZero < 0)
+                    {
+                        p.addArc(x0, y0, dx, dy, juce::MathConstants<float>::pi,
+                                 juce::MathConstants<float>::twoPi);
+                    }
+                    else
+                    {
+                        p.addArc(x0, y0, dx, dy, 0, juce::MathConstants<float>::pi);
+                    }
+                    g.setColour(juce::Colour(200, 200, 100));
+                    g.fillPath(p);
+                }
+            }
+            else
+            {
+                g.setColour(drawColour);
+
+                g.fillEllipse(x0, y0, dx, dy);
+
+                if (hotSpotIndex != i - 1)
+                {
+                    g.setColour(drawColour.brighter(0.6));
+                    g.drawEllipse(x0, y0, dx, dy, 0.01);
+                }
+            }
+
+            if (notesOn[i % scale.count])
+            {
+                g.setColour(juce::Colour(255, 255, 255));
+                g.drawEllipse(x0, y0, dx, dy, 0.02);
+            }
+
+            dx += x0;
+            dy += y0;
+            screenTransform.transformPoint(x0, y0);
+            screenTransform.transformPoint(dx, dy);
+            screenHotSpots.push_back(juce::Rectangle<float>(x0, dy, dx - x0, y0 - dy));
+        }
     }
-
     g.restoreState();
 }
 
@@ -1399,6 +1634,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         juce::Point<float> lastMousePos;
         void mouseDown(const juce::MouseEvent &e) override
         {
+            if (mode == TRUE_KEYS)
+            {
+                return;
+            }
+
             if (!Surge::GUI::showCursor(matrix->overlay->storage))
             {
                 juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
@@ -1408,6 +1648,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseUp(const juce::MouseEvent &e) override
         {
+            if (mode == TRUE_KEYS)
+            {
+                return;
+            }
+
             if (!Surge::GUI::showCursor(matrix->overlay->storage))
             {
                 juce::Desktop::getInstance().getMainMouseSource().enableUnboundedMouseMovement(
@@ -1419,6 +1664,10 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
         }
         void mouseDrag(const juce::MouseEvent &e) override
         {
+            if (mode == TRUE_KEYS)
+            {
+                return;
+            }
 
             auto dPos = e.position.getY() - lastMousePos.getY();
             dPos = -dPos;
@@ -1624,17 +1873,25 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
 {
     if (hotSpotIndex != -1)
     {
-        auto mdp = e.getMouseDownPosition().toFloat();
-        auto xd = mdp.getX();
-        auto yd = mdp.getY();
-        screenTransformInverted.transformPoint(xd, yd);
+        float dr = 0;
+        if (displayMode == DisplayMode::RADIAL)
+        {
+            auto mdp = e.getMouseDownPosition().toFloat();
+            auto xd = mdp.getX();
+            auto yd = mdp.getY();
+            screenTransformInverted.transformPoint(xd, yd);
 
-        auto mp = e.getPosition().toFloat();
-        auto x = mp.getX();
-        auto y = mp.getY();
-        screenTransformInverted.transformPoint(x, y);
+            auto mp = e.getPosition().toFloat();
+            auto x = mp.getX();
+            auto y = mp.getY();
+            screenTransformInverted.transformPoint(x, y);
 
-        auto dr = -sqrt(xd * xd + yd * yd) + sqrt(x * x + y * y);
+            dr = -sqrt(xd * xd + yd * yd) + sqrt(x * x + y * y);
+        }
+        else
+        {
+            dr = (e.getMouseDownY() - e.position.getY()) / getHeight();
+        }
         auto speed = 0.7;
         if (e.mods.isShiftDown())
             speed = speed * 0.1;
@@ -2184,8 +2441,7 @@ struct TuningControlArea : public juce::Component,
 
             selectS->setBounds(btnrect);
             selectS->setStorage(overlay->storage);
-            selectS->setLabels(
-                {"Scala", "Radial", "Interval", "To Equal", "Rotation", "True Keys"});
+            selectS->setLabels({"Scala", "Polar", "Interval", "To Equal", "Rotation", "True Keys"});
             selectS->addListener(this);
             selectS->setDraggable(true);
             selectS->setTag(tag_select_tab);
@@ -2374,7 +2630,7 @@ TuningOverlay::TuningOverlay()
         this->onNewSCLKBM(s, k);
     };
 
-    radialScaleGraph = std::make_unique<RadialScaleGraph>();
+    radialScaleGraph = std::make_unique<RadialScaleGraph>(this->storage);
     radialScaleGraph->onToneChanged = [this](int note, double d) { this->onToneChanged(note, d); };
     radialScaleGraph->onToneStringChanged = [this](int note, const std::string &d) {
         this->onToneStringChanged(note, d);
@@ -2399,7 +2655,11 @@ TuningOverlay::TuningOverlay()
     intervalMatrix->setVisible(false);
 }
 
-void TuningOverlay::setStorage(SurgeStorage *s) { storage = s; }
+void TuningOverlay::setStorage(SurgeStorage *s)
+{
+    storage = s;
+    radialScaleGraph->setStorage(s);
+}
 
 TuningOverlay::~TuningOverlay() = default;
 

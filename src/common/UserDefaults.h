@@ -114,6 +114,8 @@ enum DefaultKey
     PromptToActivateShortcutsOnAccKeypress,
     PromptToActivateCategoryAndPatchOnKeypress,
 
+    TuningPolarGraphMode,
+
     // overlay related stuff
     TuningOverlayLocation,
     ModlistOverlayLocation,
