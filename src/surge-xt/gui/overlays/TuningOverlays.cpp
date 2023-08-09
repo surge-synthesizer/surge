@@ -428,7 +428,7 @@ class RadialScaleGraph : public juce::Component,
         if (storage)
         {
             displayMode = (DisplayMode)Surge::Storage::getUserDefaultValue(
-                storage, Surge::Storage::DefaultKey::TuningPolarGraphMode, 0);
+                storage, Surge::Storage::DefaultKey::TuningPolarGraphMode, 1);
             switch (displayMode)
             {
             case DisplayMode::RADIAL:
@@ -779,6 +779,7 @@ class RadialScaleGraph : public juce::Component,
 
     int whichSideOfZero = 0;
 
+    juce::Point<float> lastDragPoint;
     void mouseMove(const juce::MouseEvent &e) override;
     void mouseDown(const juce::MouseEvent &e) override;
     void mouseDrag(const juce::MouseEvent &e) override;
@@ -1867,6 +1868,7 @@ void RadialScaleGraph::mouseDown(const juce::MouseEvent &e)
         angleAtMouseDown = toneKnobs[hotSpotIndex + 1]->angle;
         dIntervalAtMouseDown = dInterval;
     }
+    lastDragPoint = e.position;
 }
 
 void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
@@ -1874,42 +1876,85 @@ void RadialScaleGraph::mouseDrag(const juce::MouseEvent &e)
     if (hotSpotIndex != -1)
     {
         float dr = 0;
+        auto mdp = e.getMouseDownPosition().toFloat();
+        auto xd = mdp.getX();
+        auto yd = mdp.getY();
+        screenTransformInverted.transformPoint(xd, yd);
+
+        auto mp = e.getPosition().toFloat();
+        auto x = mp.getX();
+        auto y = mp.getY();
+        screenTransformInverted.transformPoint(x, y);
+
+        auto lx = lastDragPoint.getX();
+        auto ly = lastDragPoint.getY();
+        screenTransformInverted.transformPoint(lx, ly);
+
         if (displayMode == DisplayMode::RADIAL)
         {
-            auto mdp = e.getMouseDownPosition().toFloat();
-            auto xd = mdp.getX();
-            auto yd = mdp.getY();
-            screenTransformInverted.transformPoint(xd, yd);
-
-            auto mp = e.getPosition().toFloat();
-            auto x = mp.getX();
-            auto y = mp.getY();
-            screenTransformInverted.transformPoint(x, y);
-
             dr = -sqrt(xd * xd + yd * yd) + sqrt(x * x + y * y);
-        }
-        else
-        {
-            dr = (e.getMouseDownY() - e.position.getY()) / getHeight();
-        }
-        auto speed = 0.7;
-        if (e.mods.isShiftDown())
-            speed = speed * 0.1;
-        dr = dr * speed;
 
-        toneKnobs[hotSpotIndex + 1]->angle = angleAtMouseDown + 100 * dr / dIntervalAtMouseDown;
-        toneKnobs[hotSpotIndex + 1]->repaint();
-        selfEditGuard++;
-        if (hotSpotIndex == scale.count - 1 && whichSideOfZero > 0)
-        {
-            auto ct = e.mods.isShiftDown() ? 0.05 : 1;
-            onScaleRescaled(dr > 0 ? ct : -ct);
+            auto speed = 0.7;
+            if (e.mods.isShiftDown())
+                speed = speed * 0.1;
+            dr = dr * speed;
+
+            toneKnobs[hotSpotIndex + 1]->angle = angleAtMouseDown + 100 * dr / dIntervalAtMouseDown;
+            toneKnobs[hotSpotIndex + 1]->repaint();
+            selfEditGuard++;
+            if (hotSpotIndex == scale.count - 1 && whichSideOfZero > 0)
+            {
+                auto ct = e.mods.isShiftDown() ? 0.05 : 1;
+                onScaleRescaled(dr > 0 ? ct : -ct);
+            }
+            else
+            {
+                onToneChanged(hotSpotIndex, centsAtMouseDown + 100 * dr / dIntervalAtMouseDown);
+            }
+            selfEditGuard--;
         }
         else
         {
-            onToneChanged(hotSpotIndex, centsAtMouseDown + 100 * dr / dIntervalAtMouseDown);
+            auto xy2ph = [](auto x, auto y) {
+                float res{0};
+                if (fabs(x) < 0.001)
+                {
+                    res = (y > 0) ? 1 : -1;
+                }
+                else
+                {
+                    res = atan(y / x) / M_PI;
+                    if (x > 0)
+                        res = 0.5 - res;
+                    else
+                        res = 1.5 - res;
+                }
+                return res / 2.0;
+            };
+            auto phsDn = xy2ph(xd, yd);
+            auto phsMs = xy2ph(x, y);
+
+            toneKnobs[hotSpotIndex + 1]->angle = angleAtMouseDown + 100 * dr / dIntervalAtMouseDown;
+            toneKnobs[hotSpotIndex + 1]->repaint();
+            selfEditGuard++;
+            if (hotSpotIndex == scale.count - 1 && whichSideOfZero > 0)
+            {
+                auto ct = e.mods.isShiftDown() ? 0.05 : 1;
+                onScaleRescaled((ly - y) > 0 ? ct : -ct);
+            }
+            else if (hotSpotIndex == scale.count - 1)
+            {
+                auto diff = (y - ly);
+                auto ct = e.mods.isShiftDown() ? 0.01 : 0.2;
+                onToneChanged(hotSpotIndex, (1.0 + ct * diff) * scale.tones.back().cents);
+            }
+            else
+            {
+                onToneChanged(hotSpotIndex, phsMs * scale.tones.back().cents);
+            }
+            selfEditGuard--;
         }
-        selfEditGuard--;
+        lastDragPoint = e.position;
     }
 }
 
