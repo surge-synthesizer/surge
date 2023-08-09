@@ -231,7 +231,9 @@ std::string defaultKeyToString(DefaultKey k)
     case OscilloscopeOverlayLocationTearOut:
         r = "oscilloscopeOverlayLocationTearOut";
         break;
-
+    case TuningPolarGraphMode:
+        r = "tuningPolarGraphMode";
+        break;
     case TuningOverlaySizeTearOut:
         r = "tuningOverlaySizeTearOut";
         break;
