@@ -2340,7 +2340,7 @@ bool SurgeGUIEditor::open(void *parent)
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     frame->setSurgeGUIEditor(this);
 
-    juceEditor->addAndMakeVisible(*frame);
+    juceEditor->topLevelContainer->addAndMakeVisible(*frame);
     juceEditor->addKeyListener(this);
 
     // TODO: SET UP JUCE EDITOR BETTER!
