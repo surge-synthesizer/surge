@@ -1133,7 +1133,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                                                                juce::MathConstants<double>::pi));
                 g.addTransform(juce::AffineTransform::translation(1.0 + oor, 0.0));
                 auto angthresh = 0.013; // inside this rotate
-                if (dAngle > angthresh && dAnglePlus > angthresh)
+                if (fabs(dAngle) > angthresh && fabs(dAnglePlus) > angthresh)
                 {
                     g.addTransform(
                         juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
