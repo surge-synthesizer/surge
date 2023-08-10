@@ -31,6 +31,7 @@
 #include <chrono>
 #include "juce_gui_extra/juce_gui_extra.h"
 #include "UnitConversions.h"
+#include "libMTSClient.h"
 
 namespace Surge
 {
@@ -43,6 +44,14 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
   public:
     TuningTableListBoxModel() {}
     ~TuningTableListBoxModel() { table = nullptr; }
+
+    SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s)
+    {
+        storage = s;
+        if (table)
+            table->repaint();
+    }
 
     void setTableListBox(juce::TableListBox *t) { table = t; }
 
@@ -172,7 +181,16 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         }
 
         auto mn = rowNumber;
-        double fr = tuning.frequencyForMidiNote(mn);
+        double fr = 0;
+
+        if (storage && storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
+        {
+            fr = MTS_NoteToFrequency(storage->oddsound_mts_client, rowNumber, 0);
+        }
+        else
+        {
+            fr = tuning.frequencyForMidiNote(mn);
+        }
 
         std::string notenum, notename, display;
 
@@ -1434,6 +1452,33 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
             ypos += rowHeight;
 
+            auto noteToFreq = [this](auto note) -> float {
+                auto st = matrix->overlay->storage;
+                auto mts = matrix->overlay->mtsMode;
+                if (mts)
+                {
+                    return MTS_NoteToFrequency(st->oddsound_mts_client, note, 0);
+                }
+                else
+                {
+                    return matrix->tuning.frequencyForMidiNote(note);
+                }
+            };
+
+            auto noteToPitch = [this](auto note) -> float {
+                auto st = matrix->overlay->storage;
+                auto mts = matrix->overlay->mtsMode;
+                if (mts)
+                {
+                    return log2(MTS_NoteToFrequency(st->oddsound_mts_client, note, 0) /
+                                Tunings::MIDI_0_FREQ);
+                }
+                else
+                {
+                    return matrix->tuning.logScaledFrequencyForMidiNote(note);
+                }
+            };
+
             for (int i = 0; i < bs.size(); ++i)
             {
                 if (bs[i])
@@ -1443,11 +1488,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                     g.drawText(get_notename(i, oct_offset), hpos, ypos, colWidth, rowHeight,
                                juce::Justification::centredLeft);
                     hpos += colWidth;
-                    g.drawText(fmt::format("{:.2f}Hz", matrix->tuning.frequencyForMidiNote(i)),
-                               hpos, ypos, colWidth, rowHeight, juce::Justification::centredLeft);
+                    g.drawText(fmt::format("{:.2f}Hz", noteToFreq(i)), hpos, ypos, colWidth,
+                               rowHeight, juce::Justification::centredLeft);
                     hpos += colWidth;
 
-                    auto pitch0 = matrix->tuning.logScaledFrequencyForMidiNote(i);
+                    auto pitch0 = noteToPitch(i);
 
                     for (int j = 0; j < bs.size(); ++j)
                     {
@@ -1461,7 +1506,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                                 g.setColour(juce::Colours::darkgrey);
                                 g.drawRect(bx, 1);
                                 g.setColour(skin->getColor(clr::IntervalText));
-                                auto pitch = matrix->tuning.logScaledFrequencyForMidiNote(j);
+                                auto pitch = noteToPitch(j);
                                 g.drawText(fmt::format("{:.2f}", 1200 * (pitch0 - pitch)), bx,
                                            juce::Justification::centred);
                             }
@@ -2716,6 +2761,10 @@ void TuningOverlay::setStorage(SurgeStorage *s)
 {
     storage = s;
     radialScaleGraph->setStorage(s);
+    tuningKeyboardTableModel->setStorage(s);
+    bool isOddsoundOnAsClient =
+        storage->oddsound_mts_active_as_client && storage->oddsound_mts_client;
+    setMTSMode(isOddsoundOnAsClient);
 }
 
 TuningOverlay::~TuningOverlay() = default;
@@ -2728,6 +2777,9 @@ void TuningOverlay::resized()
 
     int kbWidth = 87;
     int ctrlHeight = 35;
+
+    if (mtsMode)
+        ctrlHeight = 0;
 
     t.transformPoint(w, h);
 
@@ -2755,10 +2807,13 @@ void TuningOverlay::resized()
 void TuningOverlay::showEditor(int which)
 {
     jassert(which >= 0 && which <= 5);
-    if (which == 0)
-        controlArea->applyS->setVisible(true);
-    else
-        controlArea->applyS->setVisible(false);
+    if (controlArea->applyS)
+    {
+        if (which == 0)
+            controlArea->applyS->setVisible(true);
+        else
+            controlArea->applyS->setVisible(false);
+    }
     sclKbmDisplay->setVisible(which == 0);
     radialScaleGraph->setVisible(which == 1);
     intervalMatrix->setVisible(which >= 2);
@@ -2936,7 +2991,14 @@ void TuningOverlay::setTuning(const Tunings::Tuning &t)
 
 void TuningOverlay::resetParentTitle()
 {
-    setEnclosingParentTitle("Tuning Editor - " + tuning.scale.description);
+    if (mtsMode)
+    {
+        setEnclosingParentTitle("Tuning Visualizer");
+    }
+    else
+    {
+        setEnclosingParentTitle("Tuning Editor - " + tuning.scale.description);
+    }
     if (getParentComponent())
         getParentComponent()->repaint();
 }
@@ -2970,6 +3032,21 @@ void TuningOverlay::filesDropped(const juce::StringArray &files, int x, int y)
         return;
     if (editor)
         editor->juceEditor->filesDropped(files, x, y);
+}
+
+void TuningOverlay::setMTSMode(bool isMTSOn)
+{
+    mtsMode = isMTSOn;
+
+    resetParentTitle();
+    resized();
+
+    if (controlArea)
+        controlArea->setVisible(!isMTSOn);
+    if (isMTSOn)
+    {
+        showEditor(5);
+    }
 }
 
 } // namespace Overlays

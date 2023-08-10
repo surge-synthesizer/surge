@@ -113,6 +113,9 @@ struct TuningOverlay : public OverlayComponent,
     Tunings::Tuning tuning;
     SurgeStorage *storage{nullptr};
 
+    bool mtsMode{false};
+    void setMTSMode(bool isMTSOn);
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TuningOverlay);
 };
 } // namespace Overlays

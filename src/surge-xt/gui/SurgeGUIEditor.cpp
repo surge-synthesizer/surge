@@ -1244,6 +1244,15 @@ void SurgeGUIEditor::idle()
 
         scanJuceSkinComponents = false;
     }
+
+    if (synth->storage.oddsound_mts_active_as_client)
+    {
+        auto w = getOverlayWrapperIfOpen(TUNING_EDITOR);
+        if (w && (slowIdleCounter % 30 == 0))
+        {
+            w->repaint();
+        }
+    }
 }
 
 void SurgeGUIEditor::toggle_mod_editing()
@@ -3373,6 +3382,13 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         tuningSubMenu.addItem(Surge::GUI::toOSCase("Current Tuning: ") + mtsScale, false, false,
                               []() {});
+
+        std::string openname = isAnyOverlayPresent(TUNING_EDITOR) ? "Close " : "Open ";
+
+        Surge::GUI::addMenuWithShortcut(tuningSubMenu,
+                                        Surge::GUI::toOSCase(openname + "Tuning Visualizer..."),
+                                        showShortcutDescription("Alt + T", u8"\U00002325T"),
+                                        [this]() { this->toggleOverlay(TUNING_EDITOR); });
 
         tuningSubMenu.addSeparator();
     }
