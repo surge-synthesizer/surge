@@ -141,6 +141,9 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
 
     addKeyListener(this);
 
+    topLevelContainer = std::make_unique<juce::Component>();
+    addAndMakeVisible(*topLevelContainer);
+
     sge = std::make_unique<SurgeGUIEditor>(this, processor.surge.get());
 
     auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
@@ -198,13 +201,13 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     tempoLabel = std::make_unique<juce::Label>("Tempo", "Tempo");
     sustainLabel = std::make_unique<juce::Label>("Sustain", "Sustain");
 
-    addChildComponent(*keyboard);
-    addChildComponent(*pitchwheel);
-    addChildComponent(*modwheel);
-    addChildComponent(*suspedal);
-    addChildComponent(*tempoLabel);
-    addChildComponent(*sustainLabel);
-    addChildComponent(*tempoTypein);
+    topLevelContainer->addChildComponent(*keyboard);
+    topLevelContainer->addChildComponent(*pitchwheel);
+    topLevelContainer->addChildComponent(*modwheel);
+    topLevelContainer->addChildComponent(*suspedal);
+    topLevelContainer->addChildComponent(*tempoLabel);
+    topLevelContainer->addChildComponent(*sustainLabel);
+    topLevelContainer->addChildComponent(*tempoTypein);
 
     drawExtendedControls = sge->getShowVirtualKeyboard();
 
@@ -292,6 +295,19 @@ void SurgeSynthEditor::handleAsyncUpdate() {}
 void SurgeSynthEditor::paint(juce::Graphics &g)
 {
     g.fillAll(findColour(SurgeJUCELookAndFeel::SurgeColourIds::tempoBackgroundId));
+
+#if DEBUG_FULLSCREENBOUNDS
+    /* For debugging fullscreen */
+    g.setColour(juce::Colours::red);
+    for (int x = 100; x < getWidth(); x += 100)
+    {
+        g.drawLine(x, 0, x, getHeight(), 1);
+    }
+    for (int y = 100; y < getWidth(); y += 100)
+    {
+        g.drawLine(0, y, getWidth(), y, 1);
+    }
+#endif
 }
 
 void SurgeSynthEditor::idle() { sge->idle(); }
@@ -339,6 +355,7 @@ void SurgeSynthEditor::reapplySurgeComponentColours()
 
 void SurgeSynthEditor::resized()
 {
+    topLevelContainer->setBounds(getLocalBounds());
     drawExtendedControls = sge->getShowVirtualKeyboard();
 
     auto w = getWidth();
@@ -356,13 +373,24 @@ void SurgeSynthEditor::resized()
             {
                 if (cdw->isFullScreen())
                 {
+                    auto b = getLocalBounds();
+                    auto xw = 1.f * sge->getWindowSizeX() / b.getWidth();
+                    auto xh = 1.f *
+                              (sge->getWindowSizeY() +
+                               (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0)) /
+                              b.getHeight();
+
+                    auto nz = std::min(1.0 / xw, 1.0 / xh);
+                    auto snz = nz / sge->getZoomFactor() * 100.f;
+
+                    topLevelContainer->setTransform(juce::AffineTransform().scaled(snz));
+
                     // target width
-                    auto tw = sge->getWindowSizeX() * sge->getZoomFactor() * 0.01f;
+                    auto tw = sge->getWindowSizeX() * sge->getZoomFactor() * 0.01 * snz;
                     auto th = (sge->getWindowSizeY() +
                                (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0)) *
-                              sge->getZoomFactor() * 0.01f;
+                              sge->getZoomFactor() * 0.01 * snz;
 
-                    auto b = getLocalBounds();
                     auto pw = (b.getWidth() - tw) / 2.0;
                     auto ph = (b.getHeight() - th) / 2.0;
 
@@ -370,7 +398,7 @@ void SurgeSynthEditor::resized()
                     if (getConstrainer())
                         getConstrainer()->setFixedAspectRatio(0.f);
 
-                    sge->moveTopLeftTo(pw, ph);
+                    sge->moveTopLeftTo(std::round(pw / snz), std::round(ph / snz));
                     return;
                 }
                 comp = nullptr;
@@ -383,6 +411,8 @@ void SurgeSynthEditor::resized()
 
         sge->moveTopLeftTo(0, 0);
     }
+
+    topLevelContainer->setTransform(juce::AffineTransform());
 
     auto b = getLocalBounds();
     auto wR = 1.0 * w / sge->getWindowSizeX();

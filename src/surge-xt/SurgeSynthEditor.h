@@ -102,6 +102,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::Label> tempoLabel, sustainLabel;
     std::unique_ptr<juce::TextEditor> tempoTypein;
 
+    std::unique_ptr<juce::Component> topLevelContainer;
+
     /* Drag and drop */
     bool isInterestedInFileDrag(const juce::StringArray &files) override;
     void filesDropped(const juce::StringArray &files, int, int) override;
