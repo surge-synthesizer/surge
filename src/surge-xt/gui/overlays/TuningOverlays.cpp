@@ -926,12 +926,16 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 {
                     // we just don't have room to draw the intervals
                 }
+                auto rsf = 0.01;
+                auto irsf = 1.0 / rsf;
+
                 if (scale.count > 18)
                 {
                     // draw them sideways
                     juce::Graphics::ScopedSaveState gs(g);
                     auto t = juce::AffineTransform()
                                  .scaled(-0.7, 0.7)
+                                 .scaled(rsf, rsf)
                                  .rotated(juce::MathConstants<double>::pi)
                                  .translated(1.05, 0.0)
                                  .rotated((-frac + 0.25 - hfrac) * 2.0 *
@@ -942,7 +946,8 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                     g.setFont(skin->fontManager->getLatoAtSize(0.1));
 
                     auto msg = fmt::format("{:.2f}", intervals[i]);
-                    auto tr = juce::Rectangle<float>(0.f, -0.1f, 0.6f, 0.2f);
+                    auto tr =
+                        juce::Rectangle<float>(0.f * irsf, -0.1f * irsf, 0.6f * irsf, 0.2f * irsf);
 
                     g.setColour(juce::Colours::white);
                     g.drawText(msg, tr, juce::Justification::centredLeft);
@@ -953,6 +958,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
                     auto t = juce::AffineTransform()
                                  .scaled(-0.7, 0.7)
+                                 .scaled(rsf, rsf)
                                  .rotated(juce::MathConstants<double>::pi / 2)
                                  .translated(1.05, 0.0)
                                  .rotated((-frac + 0.25 - hfrac) * 2.0 *
@@ -960,22 +966,32 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
                     g.addTransform(t);
                     g.setColour(juce::Colours::white);
-                    g.setFont(skin->fontManager->getLatoAtSize(0.1));
+                    g.setFont(skin->fontManager->getLatoAtSize(0.1 * irsf));
 
                     auto msg = fmt::format("{:.2f}", intervals[i]);
-                    auto tr = juce::Rectangle<float>(-0.3f, -0.2f, 0.6f, 0.2f);
+                    auto tr = juce::Rectangle<float>(-0.3f * irsf, -0.2f * irsf, 0.6f * irsf,
+                                                     0.2f * irsf);
 
                     g.setColour(juce::Colours::white);
                     g.drawText(msg, tr, juce::Justification::centred);
+
+                    // Useful to debug text layout
+                    // g.setColour(juce::Colours::red);
+                    // g.drawRect(tr, 0.01 * irsf);
+                    // g.setColour(juce::Colours::white);
                 }
             }
 
             g.saveState();
+            auto rsf = 0.01;
+            auto irsf = 1.0 / rsf;
+
             g.addTransform(juce::AffineTransform::rotation((-frac + 0.25) * 2.0 *
                                                            juce::MathConstants<double>::pi));
             g.addTransform(juce::AffineTransform::translation(1.0 + outerRadiusExtension, 0.0));
             g.addTransform(juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
             g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
+            g.addTransform(juce::AffineTransform::scale(rsf, rsf));
 
             if (notesOn[i])
             {
@@ -987,9 +1003,17 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             }
 
             // tone labels
-            juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
-            g.setFont(skin->fontManager->getLatoAtSize(0.075));
+            juce::Rectangle<float> textPos(-0.05 * irsf, -0.115 * irsf, 0.1 * irsf, 0.1 * irsf);
+            g.setFont(skin->fontManager->getLatoAtSize(0.075 * irsf));
             g.drawText(juce::String(i), textPos, juce::Justification::centred, 1);
+
+            // PLease leave - useful for debugging bounding boxes
+            // g.setColour(juce::Colours::red);
+            // g.drawRect(textPos, 0.01 * irsf);
+            // g.drawLine(textPos.getCentreX(), textPos.getY(),
+            //           textPos.getCentreX(), textPos.getY() + textPos.getHeight(),
+            //           0.01 * irsf);
+
             g.restoreState();
         }
     }
@@ -1108,9 +1132,9 @@ void RadialScaleGraph::paint(juce::Graphics &g)
     }
     else
     {
-        g.setColour(juce::Colour(110, 110, 120));
+        g.setColour(juce::Colour(110, 110, 120).interpolatedWith(juce::Colours::black, 0.2));
         auto oor = outerRadiusExtension;
-        outerRadiusExtension = oor * 0.95;
+        outerRadiusExtension = oor; //* 0.95;
         g.drawEllipse(-1 - outerRadiusExtension, -1 - outerRadiusExtension,
                       2 + 2 * outerRadiusExtension, 2 + 2 * outerRadiusExtension, 0.005);
 
@@ -1126,21 +1150,41 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             {
                 juce::Graphics::ScopedSaveState gs(g);
 
+                auto rot = fabs(dAngle) < 1.0 / 22.0;
+
+                auto rsf = 0.01;
+                auto irsf = 1.0 / rsf;
                 auto t = juce::AffineTransform()
                              .scaled(-0.7, 0.7)
-                             .rotated(juce::MathConstants<double>::pi)
-                             .translated(1.15, -0.025)
+                             .scaled(rsf, rsf)
+                             .rotated(juce::MathConstants<double>::pi * (rot ? -1.0 : 0.5))
+                             .translated(1.05, 0)
                              .rotated((-ca + 0.25) * 2.0 * juce::MathConstants<double>::pi);
 
                 g.addTransform(t);
                 g.setColour(juce::Colours::white);
-                g.setFont(skin->fontManager->getLatoAtSize(0.1));
+                auto fs = 0.1 * irsf;
+                if (fabs(dAngle) < 0.02)
+                    fs *= 0.75;
+                if (fabs(dAngle) < 0.012)
+                    fs *= 0.8;
+                // and that's as far as we go
+                g.setFont(skin->fontManager->getLatoAtSize(fs));
 
                 auto msg = fmt::format("{:.2f}", intervals[i - 1]);
-                auto tr = juce::Rectangle<float>(-0.3f, -0.2f, 0.6f, 0.2f);
+                auto tr =
+                    juce::Rectangle<float>(-0.3f * irsf, -0.2f * irsf, 0.6f * irsf, 0.2f * irsf);
+                if (rot)
+                    tr = juce::Rectangle<float>(0.02f * irsf, -0.1f * irsf, 0.6f * irsf,
+                                                0.2f * irsf);
 
                 g.setColour(juce::Colours::white);
-                g.drawText(msg, tr, juce::Justification::centred);
+                g.drawText(msg, tr,
+                           rot ? juce::Justification::centredLeft : juce::Justification::centred);
+                // Useful to debug text layout
+                // g.setColour(rot ? juce::Colours::blue  : juce::Colours::red);
+                // g.drawRect(tr, 0.01 * irsf);
+                // g.setColour(juce::Colours::white);
             }
 
             ps += dAngle;
@@ -1151,7 +1195,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                                                                juce::MathConstants<double>::pi));
                 g.addTransform(juce::AffineTransform::translation(1.0 + oor, 0.0));
                 auto angthresh = 0.013; // inside this rotate
-                if (fabs(dAngle) > angthresh && fabs(dAnglePlus) > angthresh)
+                if ((fabs(dAngle) > angthresh && fabs(dAnglePlus) > angthresh) || (i < 10))
                 {
                     g.addTransform(
                         juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
@@ -1167,6 +1211,10 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 }
                 g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
 
+                auto rsf = 0.01;
+                auto irsf = 1.0 / rsf;
+                g.addTransform(juce::AffineTransform::scale(rsf, rsf));
+
                 if (notesOn[i])
                 {
                     g.setColour(juce::Colour(255, 255, 255));
@@ -1177,11 +1225,18 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 }
 
                 // tone labels
-                juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
-                auto fs = 0.075;
+                juce::Rectangle<float> textPos(-0.05 * irsf, -0.115 * irsf, 0.1 * irsf, 0.1 * irsf);
+                auto fs = 0.075 * irsf;
                 g.setFont(skin->fontManager->getLatoAtSize(fs));
                 g.drawText(juce::String((i == scale.count ? 0 : i)), textPos,
                            juce::Justification::centred, 1);
+
+                // Please leave -useful for debugginb  bounding boxes
+                // g.setColour(juce::Colours::red);
+                // g.drawRect(textPos, 0.01 * irsf);
+                // g.drawLine(textPos.getCentreX(), textPos.getY(),
+                //           textPos.getCentreX(), textPos.getY() + textPos.getHeight(),
+                //           0.01 * irsf);
             }
 
             double sx = std::sin(ps * 2.0 * juce::MathConstants<double>::pi);
@@ -1436,6 +1491,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             auto colWidth = 45;
             auto rowHeight = 20;
 
+            auto noteName = [oct_offset](int nn) {
+                std::string s = get_notename(nn, oct_offset);
+                s += " (" + std::to_string(nn) + ")";
+                return s;
+            };
             {
                 int hpos = xpos + 2 * colWidth;
                 for (int i = 0; i < bs.size(); ++i)
@@ -1443,7 +1503,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                     if (bs[i])
                     {
                         g.setColour(skin->getColor(clr::HeatmapZero));
-                        g.drawText(get_notename(i, oct_offset), hpos, ypos, colWidth, rowHeight,
+                        g.drawText(noteName(i), hpos, ypos, colWidth, rowHeight,
                                    juce::Justification::centred);
                         hpos += colWidth;
                     }
@@ -1485,7 +1545,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                 {
                     auto hpos = xpos;
                     g.setColour(skin->getColor(clr::HeatmapZero));
-                    g.drawText(get_notename(i, oct_offset), hpos, ypos, colWidth, rowHeight,
+                    g.drawText(noteName(i), hpos, ypos, colWidth, rowHeight,
                                juce::Justification::centredLeft);
                     hpos += colWidth;
                     g.drawText(fmt::format("{:.2f}Hz", noteToFreq(i)), hpos, ypos, colWidth,
@@ -2993,7 +3053,13 @@ void TuningOverlay::resetParentTitle()
 {
     if (mtsMode)
     {
-        setEnclosingParentTitle("Tuning Visualizer");
+        std::string scale = "";
+        if (storage)
+        {
+            scale = MTS_GetScaleName(storage->oddsound_mts_client);
+            scale = " - " + scale;
+        }
+        setEnclosingParentTitle("Tuning Visualizer" + scale);
     }
     else
     {

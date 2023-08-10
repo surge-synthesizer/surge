@@ -85,6 +85,7 @@ struct TuningOverlay : public OverlayComponent,
     void resetParentTitle();
 
     void resized() override;
+    void visibilityChanged() override { resetParentTitle(); }
 
     void setMidiOnKeys(const std::bitset<128> &keys);
 
