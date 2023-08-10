@@ -983,11 +983,15 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             }
 
             g.saveState();
+            auto rsf = 0.01;
+            auto irsf = 1.0 / rsf;
+
             g.addTransform(juce::AffineTransform::rotation((-frac + 0.25) * 2.0 *
                                                            juce::MathConstants<double>::pi));
             g.addTransform(juce::AffineTransform::translation(1.0 + outerRadiusExtension, 0.0));
             g.addTransform(juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
             g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
+            g.addTransform(juce::AffineTransform::scale(rsf, rsf));
 
             if (notesOn[i])
             {
@@ -999,9 +1003,17 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             }
 
             // tone labels
-            juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
-            g.setFont(skin->fontManager->getLatoAtSize(0.075));
+            juce::Rectangle<float> textPos(-0.05 * irsf, -0.115 * irsf, 0.1 * irsf, 0.1 * irsf);
+            g.setFont(skin->fontManager->getLatoAtSize(0.075 * irsf));
             g.drawText(juce::String(i), textPos, juce::Justification::centred, 1);
+
+            // PLease leave - useful for debugging bounding boxes
+            // g.setColour(juce::Colours::red);
+            // g.drawRect(textPos, 0.01 * irsf);
+            // g.drawLine(textPos.getCentreX(), textPos.getY(),
+            //           textPos.getCentreX(), textPos.getY() + textPos.getHeight(),
+            //           0.01 * irsf);
+
             g.restoreState();
         }
     }
@@ -1199,6 +1211,10 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 }
                 g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
 
+                auto rsf = 0.01;
+                auto irsf = 1.0 / rsf;
+                g.addTransform(juce::AffineTransform::scale(rsf, rsf));
+
                 if (notesOn[i])
                 {
                     g.setColour(juce::Colour(255, 255, 255));
@@ -1209,11 +1225,18 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 }
 
                 // tone labels
-                juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
-                auto fs = 0.075;
+                juce::Rectangle<float> textPos(-0.05 * irsf, -0.115 * irsf, 0.1 * irsf, 0.1 * irsf);
+                auto fs = 0.075 * irsf;
                 g.setFont(skin->fontManager->getLatoAtSize(fs));
                 g.drawText(juce::String((i == scale.count ? 0 : i)), textPos,
                            juce::Justification::centred, 1);
+
+                // Please leave -useful for debugginb  bounding boxes
+                // g.setColour(juce::Colours::red);
+                // g.drawRect(textPos, 0.01 * irsf);
+                // g.drawLine(textPos.getCentreX(), textPos.getY(),
+                //           textPos.getCentreX(), textPos.getY() + textPos.getHeight(),
+                //           0.01 * irsf);
             }
 
             double sx = std::sin(ps * 2.0 * juce::MathConstants<double>::pi);
