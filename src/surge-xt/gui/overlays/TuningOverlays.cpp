@@ -1185,10 +1185,17 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 g.addTransform(t);
                 g.setColour(juce::Colours::white);
                 auto fs = 0.1 * irsf;
+                auto pushFac = 1.0;
                 if (fabs(dAngle) < 0.02)
+                {
+                    pushFac = 1.03;
                     fs *= 0.75;
+                }
                 if (fabs(dAngle) < 0.012)
+                {
+                    pushFac = 1.07;
                     fs *= 0.8;
+                }
                 // and that's as far as we go
                 g.setFont(skin->fontManager->getLatoAtSize(fs));
 
@@ -1205,7 +1212,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                     // left side rotated flip
                     g.addTransform(juce::AffineTransform()
                                        .rotated(juce::MathConstants<double>::pi)
-                                       .translated(tr.getWidth(), 0));
+                                       .translated(tr.getWidth() * pushFac, 0));
                     al = juce::Justification::centredRight;
                 }
                 if (!rot && ca > 0.25 && ca < 0.75)
