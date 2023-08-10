@@ -1468,6 +1468,11 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             auto colWidth = 45;
             auto rowHeight = 20;
 
+            auto noteName = [oct_offset](int nn) {
+                std::string s = get_notename(nn, oct_offset);
+                s += " (" + std::to_string(nn) + ")";
+                return s;
+            };
             {
                 int hpos = xpos + 2 * colWidth;
                 for (int i = 0; i < bs.size(); ++i)
@@ -1475,7 +1480,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                     if (bs[i])
                     {
                         g.setColour(skin->getColor(clr::HeatmapZero));
-                        g.drawText(get_notename(i, oct_offset), hpos, ypos, colWidth, rowHeight,
+                        g.drawText(noteName(i), hpos, ypos, colWidth, rowHeight,
                                    juce::Justification::centred);
                         hpos += colWidth;
                     }
@@ -1517,7 +1522,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                 {
                     auto hpos = xpos;
                     g.setColour(skin->getColor(clr::HeatmapZero));
-                    g.drawText(get_notename(i, oct_offset), hpos, ypos, colWidth, rowHeight,
+                    g.drawText(noteName(i), hpos, ypos, colWidth, rowHeight,
                                juce::Justification::centredLeft);
                     hpos += colWidth;
                     g.drawText(fmt::format("{:.2f}Hz", noteToFreq(i)), hpos, ypos, colWidth,
@@ -3025,7 +3030,13 @@ void TuningOverlay::resetParentTitle()
 {
     if (mtsMode)
     {
-        setEnclosingParentTitle("Tuning Visualizer");
+        std::string scale = "";
+        if (storage)
+        {
+            scale = MTS_GetScaleName(storage->oddsound_mts_client);
+            scale = " - " + scale;
+        }
+        setEnclosingParentTitle("Tuning Visualizer" + scale);
     }
     else
     {
