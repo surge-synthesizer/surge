@@ -943,14 +943,27 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
                     g.addTransform(t);
                     g.setColour(juce::Colours::white);
-                    g.setFont(skin->fontManager->getLatoAtSize(0.1));
+                    g.setFont(skin->fontManager->getLatoAtSize(0.1 * irsf));
 
                     auto msg = fmt::format("{:.2f}", intervals[i]);
                     auto tr =
                         juce::Rectangle<float>(0.f * irsf, -0.1f * irsf, 0.6f * irsf, 0.2f * irsf);
 
+                    auto al = juce::Justification::centredLeft;
+                    if (frac + hfrac > 0.5)
+                    {
+                        // left side rotated flip
+                        g.addTransform(juce::AffineTransform()
+                                           .rotated(juce::MathConstants<double>::pi)
+                                           .translated(tr.getWidth(), 0));
+                        al = juce::Justification::centredRight;
+                    }
                     g.setColour(juce::Colours::white);
-                    g.drawText(msg, tr, juce::Justification::centredLeft);
+                    g.drawText(msg, tr, al);
+
+                    // g.setColour(juce::Colours::red);
+                    // g.drawRect(tr, 0.01 * irsf);
+                    // g.setColour(juce::Colours::white);
                 }
                 else
                 {
@@ -971,6 +984,14 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                     auto msg = fmt::format("{:.2f}", intervals[i]);
                     auto tr = juce::Rectangle<float>(-0.3f * irsf, -0.2f * irsf, 0.6f * irsf,
                                                      0.2f * irsf);
+
+                    if (frac + hfrac >= 0.25 && frac + hfrac <= 0.75)
+                    {
+                        // underneath rotated flip
+                        g.addTransform(juce::AffineTransform()
+                                           .rotated(juce::MathConstants<double>::pi)
+                                           .translated(0, -tr.getHeight()));
+                    }
 
                     g.setColour(juce::Colours::white);
                     g.drawText(msg, tr, juce::Justification::centred);
@@ -1178,9 +1199,24 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                     tr = juce::Rectangle<float>(0.02f * irsf, -0.1f * irsf, 0.6f * irsf,
                                                 0.2f * irsf);
 
+                auto al = rot ? juce::Justification::centredLeft : juce::Justification::centred;
+                if (rot && ca > 0.5)
+                {
+                    // left side rotated flip
+                    g.addTransform(juce::AffineTransform()
+                                       .rotated(juce::MathConstants<double>::pi)
+                                       .translated(tr.getWidth(), 0));
+                    al = juce::Justification::centredRight;
+                }
+                if (!rot && ca > 0.25 && ca < 0.75)
+                {
+                    // underneat rotated flip
+                    g.addTransform(juce::AffineTransform()
+                                       .rotated(juce::MathConstants<double>::pi)
+                                       .translated(0, -tr.getHeight()));
+                }
                 g.setColour(juce::Colours::white);
-                g.drawText(msg, tr,
-                           rot ? juce::Justification::centredLeft : juce::Justification::centred);
+                g.drawText(msg, tr, al);
                 // Useful to debug text layout
                 // g.setColour(rot ? juce::Colours::blue  : juce::Colours::red);
                 // g.drawRect(tr, 0.01 * irsf);
