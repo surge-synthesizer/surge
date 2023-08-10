@@ -984,10 +984,10 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             double sx = std::sin(frac * 2.0 * juce::MathConstants<double>::pi);
             double cx = std::cos(frac * 2.0 * juce::MathConstants<double>::pi);
 
-            g.setColour(juce::Colour(110, 110, 120));
+            g.setColour(juce::Colour(90, 90, 100));
 
             float dash[2]{0.03f, 0.02f};
-            g.drawDashedLine({0.f, 0.f, (float)sx, (float)cx}, dash, 2, 0.005);
+            g.drawDashedLine({0.f, 0.f, (float)sx, (float)cx}, dash, 2, 0.003);
         }
     }
     // Draw the ring at 1.0
@@ -1020,12 +1020,6 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
             float x0 = rx * sx - 0.5 * dx, y0 = rx * cx - 0.5 * dy;
 
-            if (notesOn[i])
-            {
-                g.setColour(juce::Colour(255, 255, 255));
-                g.drawLine(sx, cx, rx * sx, rx * cx, 0.03);
-            }
-
             juce::Colour drawColour(200, 200, 200);
 
             // FIXME - this colormap is bad
@@ -1050,7 +1044,6 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             if (i == scale.count)
             {
                 g.setColour(drawColour);
-                g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
                 g.fillEllipse(x0, y0, dx, dy);
 
                 if (hotSpotIndex == i - 1)
@@ -1073,7 +1066,6 @@ void RadialScaleGraph::paint(juce::Graphics &g)
             {
                 g.setColour(drawColour);
 
-                g.drawLine(sx, cx, rx * sx, rx * cx, 0.01);
                 g.fillEllipse(x0, y0, dx, dy);
 
                 if (hotSpotIndex != i - 1)
@@ -1109,6 +1101,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
         for (int i = 1; i <= scale.count; ++i)
         {
             auto dAngle = intervals[i - 1] / scale.tones.back().cents;
+            auto dAnglePlus = intervals[i % scale.count] / scale.tones.back().cents;
 
             auto ca = ps + dAngle / 2;
 
@@ -1139,8 +1132,21 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 g.addTransform(juce::AffineTransform::rotation((-ps + 0.25) * 2.0 *
                                                                juce::MathConstants<double>::pi));
                 g.addTransform(juce::AffineTransform::translation(1.0 + oor, 0.0));
-                g.addTransform(
-                    juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
+                auto angthresh = 0.013; // inside this rotate
+                if (fabs(dAngle) > angthresh && fabs(dAnglePlus) > angthresh)
+                {
+                    g.addTransform(
+                        juce::AffineTransform::rotation(juce::MathConstants<double>::pi * 0.5));
+                }
+                else
+                {
+                    g.addTransform(juce::AffineTransform::translation(0.05, 0.0));
+                    if (ps < 0.5)
+                    {
+                        g.addTransform(
+                            juce::AffineTransform::rotation(juce::MathConstants<double>::pi));
+                    }
+                }
                 g.addTransform(juce::AffineTransform::scale(-1.0, 1.0));
 
                 if (notesOn[i])
@@ -1154,7 +1160,8 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
                 // tone labels
                 juce::Rectangle<float> textPos(-0.05, -0.115, 0.1, 0.1);
-                g.setFont(skin->fontManager->getLatoAtSize(0.075));
+                auto fs = 0.075;
+                g.setFont(skin->fontManager->getLatoAtSize(fs));
                 g.drawText(juce::String((i == scale.count ? 0 : i)), textPos,
                            juce::Justification::centred, 1);
             }
@@ -1164,7 +1171,12 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
             g.setColour(juce::Colour(110, 110, 120));
             g.drawLine(0, 0, (1.0 + outerRadiusExtension) * sx, (1.0 + outerRadiusExtension) * cx,
-                       0.005);
+                       0.01);
+            if (notesOn[i % scale.count])
+            {
+                g.setColour(juce::Colour(255, 255, 255));
+                g.drawLine(0, 0, sx, cx, 0.02);
+            }
 
             auto t = scale.tones[i - 1];
             auto c = t.cents;
@@ -2907,6 +2919,7 @@ void TuningOverlay::recalculateScaleText()
     catch (const Tunings::TuningError &e)
     {
     }
+    resetParentTitle();
 }
 
 void TuningOverlay::setTuning(const Tunings::Tuning &t)
@@ -2916,7 +2929,16 @@ void TuningOverlay::setTuning(const Tunings::Tuning &t)
     sclKbmDisplay->setTuning(t);
     radialScaleGraph->setTuning(t);
     intervalMatrix->setTuning(t);
+
+    resetParentTitle();
     repaint();
+}
+
+void TuningOverlay::resetParentTitle()
+{
+    setEnclosingParentTitle("Tuning Editor - " + tuning.scale.description);
+    if (getParentComponent())
+        getParentComponent()->repaint();
 }
 
 void TuningOverlay::onSkinChanged()
