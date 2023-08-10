@@ -82,6 +82,8 @@ struct TuningOverlay : public OverlayComponent,
     void onScaleRescaledAbsolute(double setRITo);
     void recalculateScaleText();
     void setTuning(const Tunings::Tuning &t);
+    void resetParentTitle();
+
     void resized() override;
 
     void setMidiOnKeys(const std::bitset<128> &keys);
