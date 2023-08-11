@@ -101,7 +101,7 @@ enum DefaultKey
     MonoPedalMode,
 
     // these are persistent options sprinkled outside of the menu
-    UseODDMTS,
+    UseODDMTS_Deprecated,
     Use3DWavetableView,
     ModListValueDisplay,
 

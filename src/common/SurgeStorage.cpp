@@ -495,7 +495,8 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    bool mtsMode = Surge::Storage::getUserDefaultValue(this, Surge::Storage::UseODDMTS, false);
+    bool mtsMode =
+        true; // Surge::Storage::getUserDefaultValue(this, Surge::Storage::UseODDMTS, false);
     if (mtsMode)
     {
         initialize_oddsound();

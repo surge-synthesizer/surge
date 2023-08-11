@@ -3647,27 +3647,11 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     }
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
-    bool tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
-                                                      Surge::Storage::UseODDMTS, false);
-    std::string txt = "Use" + Surge::GUI::toOSCase(" MTS-ESP if available");
-
-    tuningSubMenu.addItem(txt, true, tsMode, [this, tsMode]() {
-        Surge::Storage::updateUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
-                                               !tsMode);
-        if (tsMode)
-        {
-            this->synth->storage.deinitialize_oddsound();
-        }
-        else
-        {
-            this->synth->storage.initialize_oddsound();
-        }
-    });
-
     auto canMaster = MTS_CanRegisterMaster();
 
-    tsMode = Surge::Storage::getUserDefaultValue(&(this->synth->storage), Surge::Storage::UseODDMTS,
-                                                 false);
+    auto tsMode = true; // Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                        // Surge::Storage::UseODDMTS,
+                        //                      false);
 
     if (tsMode)
     {

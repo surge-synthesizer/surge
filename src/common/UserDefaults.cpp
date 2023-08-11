@@ -69,7 +69,7 @@ std::string defaultKeyToString(DefaultKey k)
     case UserDataPath:
         r = "userDataPath";
         break;
-    case UseODDMTS:
+    case UseODDMTS_Deprecated:
         r = "useODDMTS";
         break;
     case ActivateExtraOutputs:
