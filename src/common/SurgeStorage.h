@@ -1355,6 +1355,7 @@ class alignas(16) SurgeStorage
     int firstUserCategory;
     std::vector<int> patchOrdering;
     std::vector<int> patchCategoryOrdering;
+    std::array<std::array<int, 128>, 128> patchIdToMidiBankAndProgram;
 
     // The in-memory wavetable database
     std::vector<Patch> wt_list;
@@ -1372,6 +1373,7 @@ class alignas(16) SurgeStorage
     fs::path userDefaultFilePath;
     fs::path userDataPath;
     fs::path userPatchesPath;
+    fs::path userPatchesMidiProgramChangePath;
     fs::path userWavetablesPath;
     fs::path userModulatorSettingsPath;
     fs::path userFXPath;
@@ -1379,6 +1381,8 @@ class alignas(16) SurgeStorage
     fs::path userSkinsPath;
     fs::path userMidiMappingsPath;
     fs::path extraThirdPartyWavetablesPath; // used by rack
+
+    std::string midiProgramChangePatchesSubdir{"MIDI Programs"};
 
     std::map<std::string, TiXmlDocument> userMidiMappingsXMLByName;
     void rescanUserMidiMappings();

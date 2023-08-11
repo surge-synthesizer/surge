@@ -299,6 +299,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
     // append separator if not present
     userPatchesPath = userDataPath / "Patches";
+    userPatchesMidiProgramChangePath = userPatchesPath / midiProgramChangePatchesSubdir;
     userWavetablesPath = userDataPath / "Wavetables";
     userWavetablesExportPath = userWavetablesPath / "Exported";
     userFXPath = userDataPath / "FX Presets";
@@ -557,6 +558,19 @@ void SurgeStorage::createUserDirectory()
             reportError(e.what(), "Unable to set up User Directory");
         }
     }
+
+    // Special case - MIDI Program Changes came later
+    if (!fs::exists(userPatchesMidiProgramChangePath))
+    {
+        try
+        {
+            fs::create_directories(userPatchesMidiProgramChangePath);
+        }
+        catch (const fs::filesystem_error &e)
+        {
+            reportError(e.what(), "Unable to set up User Directory");
+        }
+    }
 }
 
 void SurgeStorage::initializePatchDb(bool force)
@@ -728,6 +742,64 @@ void SurgeStorage::refresh_patchlist()
             p.isFavorite = true;
         else
             p.isFavorite = false;
+    }
+
+    /*
+     * Update midi program change here
+     */
+    int loadFactoryBanksInAt{0};
+
+    auto loadCategoryIntoBank = [this](int catid, int bk) {
+        int currProg = 0;
+        for (const auto &pd : patchOrdering)
+        {
+            auto &p = patch_list[pd];
+            if (p.category == catid)
+            {
+                patchIdToMidiBankAndProgram[bk][currProg] = pd;
+                currProg++;
+                if (currProg >= 128)
+                    break;
+            }
+        }
+    };
+    int currBank = 0;
+    // TODO: Initialize the data structure with init patch everywhere
+    for (auto &a : patchIdToMidiBankAndProgram)
+        for (auto &p : a)
+            p = -1;
+
+    for (const auto &c : patch_category)
+    {
+        if (c.name == midiProgramChangePatchesSubdir)
+        {
+            if (c.numberOfPatchesInCatgory > 0)
+            {
+                loadCategoryIntoBank(c.internalid, currBank);
+                currBank++;
+            }
+
+            // And luckily .children are sorted
+            for (const auto &k : c.children)
+            {
+                loadCategoryIntoBank(k.internalid, currBank);
+                currBank++;
+                if (currBank >= 128)
+                    break;
+            }
+        }
+    }
+
+    if (currBank < 128)
+    {
+        for (auto c : patchCategoryOrdering)
+        {
+            loadCategoryIntoBank(c, currBank);
+
+            currBank++;
+            if (currBank >= 128)
+                break;
+        }
     }
 }
 

@@ -1929,8 +1929,10 @@ void SurgeSynthesizer::programChange(char channel, int value)
         return;
 
     PCH = value;
-    // load_patch((CC0<<7) + PCH);
-    patchid_queue = (CC0 << 7) + PCH;
+
+    auto pid = storage.patchIdToMidiBankAndProgram[CC0][PCH];
+    if (pid >= 0)
+        patchid_queue = pid;
 }
 
 void SurgeSynthesizer::updateDisplay()
