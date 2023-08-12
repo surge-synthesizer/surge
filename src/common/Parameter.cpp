@@ -4497,6 +4497,9 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         {
             if (extend_range && s.find("/") != std::string::npos)
             {
+                if (!supports_tuning_value_from_string(s, errMsg))
+                    return false;
+
                 try
                 {
                     auto a = Tunings::toneFromString(s);
@@ -4627,6 +4630,9 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             // Check for a fraction
             if (s.find("/") != std::string::npos)
             {
+                if (!supports_tuning_value_from_string(s, errMsg))
+                    return false;
+
                 try
                 {
                     auto a = Tunings::toneFromString(s);
@@ -4919,6 +4925,9 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
             // Check for a fraction
             if (s.find("/") != std::string::npos)
             {
+                if (!supports_tuning_value_from_string(s, errMsg))
+                    return false;
+
                 try
                 {
                     auto a = Tunings::toneFromString(s);
@@ -5022,6 +5031,9 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
 
             if (s[0] == 'T' || s[0] == 't')
             {
+                if (!supports_tuning_value_from_string(s, errMsg))
+                    return false;
+
                 try
                 {
                     auto a = Tunings::toneFromString(s.c_str() + 1);
@@ -5297,6 +5309,22 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
     valid = false;
 
     return 0.0;
+}
+
+bool Parameter::supports_tuning_value_from_string(const std::string &s, std::string &errMsg)
+{
+    if (!storage)
+    {
+        // Well that's odd! But let it go.
+        return true;
+    }
+    if (storage->tuningApplicationMode == SurgeStorage::TuningApplicationMode::RETUNE_ALL)
+    {
+        errMsg = "No tuning typesin in tune-after mode";
+        return false;
+    }
+
+    return true;
 }
 
 std::atomic<bool> parameterNameUpdated(false);

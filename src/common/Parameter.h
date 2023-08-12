@@ -462,6 +462,7 @@ class Parameter
     void set_value_f01(float v, bool force_integer = false);
     bool set_value_from_string(const std::string &s, std::string &errMsg);
     bool set_value_from_string_onto(const std::string &s, pdata &ontoThis, std::string &errMsg);
+    bool supports_tuning_value_from_string(const std::string &s, std::string &errMsg);
     void set_error_message(std::string &errMsg, const std::string value, const std::string unit,
                            const ErrorMessageMode mode);
     void set_extend_range(bool er);
