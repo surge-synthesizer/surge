@@ -1922,12 +1922,6 @@ void SurgeSynthesizer::polyAftertouch(char channel, int key, int value)
 
 void SurgeSynthesizer::programChange(char channel, int value)
 {
-    auto ignorePC = Surge::Storage::getUserDefaultValue(
-        &(storage), Surge::Storage::IgnoreMIDIProgramChange, false);
-
-    if (ignorePC)
-        return;
-
     PCH = value;
 
     auto pid = storage.patchIdToMidiBankAndProgram[CC0][PCH];
