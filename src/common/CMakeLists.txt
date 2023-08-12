@@ -391,6 +391,12 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
   JUCE_STANDALONE_APPLICATION=0
   )
 
+if (SST_FILTERS_COMB_EXTENSION_FACTOR)
+  message(STATUS "Overriding comb extension factor to ${SST_FILTERS_COMB_EXTENSION_FACTOR}")
+  target_compile_definitions(${PROJECT_NAME} PUBLIC
+          SST_FILTERS_COMB_EXTENSION_FACTOR=${SST_FILTERS_COMB_EXTENSION_FACTOR})
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   dsp
