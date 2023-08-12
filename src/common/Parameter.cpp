@@ -5320,7 +5320,7 @@ bool Parameter::supports_tuning_value_from_string(const std::string &s, std::str
     }
     if (storage->tuningApplicationMode == SurgeStorage::TuningApplicationMode::RETUNE_ALL)
     {
-        errMsg = "No tuning type-ins in tune-after mode";
+        errMsg = "No ratio type-ins in tune-after mode";
         return false;
     }
 
