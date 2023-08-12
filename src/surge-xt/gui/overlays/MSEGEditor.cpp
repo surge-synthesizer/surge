@@ -607,7 +607,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     {
                         float dv = 0;
                         if (verticalScaleByValues)
-                            dv = -2 * dy / vscale / (0.5 * segdx);
+                        {
+                            if (segdx == 0)
+                                dv = 0;
+                            else
+                                dv = -2 * dy / vscale / (0.5 * segdx);
+                        }
                         else
                             dv = -2 * dy / vscale;
 
