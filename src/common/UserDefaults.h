@@ -161,7 +161,7 @@ enum DefaultKey
     FXUnitAssumeFixedBlock,
     FXUnitDefaultZoom,
 
-    IgnoreMIDIProgramChange,
+    IgnoreMIDIProgramChange_Deprecated, // better PC support means skip this
 
     DontShowAudioErrorsAgain,
 

@@ -4757,17 +4757,6 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         });
 
     midiSubMenu.addSeparator();
-    bool igMID = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::IgnoreMIDIProgramChange, false);
-
-    midiSubMenu.addItem("Ignore MIDI Program Change" + Surge::GUI::toOSCase(" Messages"), true,
-                        igMID, [this, igMID]() {
-                            Surge::Storage::updateUserDefaultValue(
-                                &(this->synth->storage), Surge::Storage::IgnoreMIDIProgramChange,
-                                !igMID);
-                        });
-
-    midiSubMenu.addSeparator();
 
     auto chanSubMenu = juce::PopupMenu();
 

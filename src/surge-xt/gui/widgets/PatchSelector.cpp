@@ -498,7 +498,7 @@ void PatchSelector::showClassicMenu(bool single_category)
     bool has_3rdparty = false;
     int last_category = current_category;
     auto patch_cat_size = storage->patch_category.size();
-    int tutorialCat = -1;
+    int tutorialCat = -1, midiPCCat = -1;
 
     if (single_category)
     {
@@ -587,6 +587,11 @@ void PatchSelector::showClassicMenu(bool single_category)
             {
                 tutorialCat = c;
             }
+            else if (!storage->patch_category[c].isFactory &&
+                     storage->patch_category[c].name == storage->midiProgramChangePatchesSubdir)
+            {
+                midiPCCat = c;
+            }
             else
             {
                 populatePatchMenuForCategory(c, contextMenu, single_category, main_e, true);
@@ -597,6 +602,13 @@ void PatchSelector::showClassicMenu(bool single_category)
         {
             optionallyAddFavorites(contextMenu, true);
         }
+    }
+
+    if (midiPCCat >= 0 &&
+        storage->patch_category[midiPCCat].numberOfPatchesInCategoryAndChildren > 0)
+    {
+        contextMenu.addSeparator();
+        populatePatchMenuForCategory(midiPCCat, contextMenu, single_category, main_e, true);
     }
 
     contextMenu.addColumnBreak();

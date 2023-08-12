@@ -790,17 +790,21 @@ void SurgeStorage::refresh_patchlist()
         }
     }
 
-    if (currBank < 128)
-    {
-        for (auto c : patchCategoryOrdering)
-        {
-            loadCategoryIntoBank(c, currBank);
-
-            currBank++;
-            if (currBank >= 128)
-                break;
-        }
-    }
+    /*
+     * Our initial implementation loaded factory banks
+     * in order into unused upper banks. We decided we don't want
+     * this but if you do, you do something like this:
+     * if (currBank < 128)
+     * {
+     *    for (auto c : patchCategoryOrdering)
+     *   {
+     *       loadCategoryIntoBank(c, currBank);
+     *       currBank++;
+     *       if (currBank >= 128)
+     *           break;
+     *   }
+     * }
+     */
 }
 
 void SurgeStorage::refreshPatchlistAddDir(bool userDir, string subdir)
