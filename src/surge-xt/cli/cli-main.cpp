@@ -158,6 +158,18 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
     }
 };
 
+void isQuitPressed(std::atomic<bool> &continueLoop)
+{
+    std::string res;
+
+    while (res != "quit")
+    {
+        std::cout << "\nsurge-xt-cli is running. Type 'quit' to stop\n> ";
+        std::cin >> res;
+    }
+    continueLoop = false;
+}
+
 int main(int argc, char **argv)
 {
     // juce::ConsoleApplication is just such a mess.
@@ -170,12 +182,20 @@ int main(int argc, char **argv)
                  "List all devices available on this system, then exit");
 
     std::string audioInterface{};
-    app.add_flag("-a,--audio-interface", audioInterface,
+    app.add_flag("--audio-interface", audioInterface,
                  "Select an audio interface, using index (like '0.2') as shown in list-devices");
 
-    int midiInput{0};
-    app.add_flag("-m,--midi-input", midiInput,
-                 "Select an midi input using the index from list-devices");
+    std::string audioPorts{};
+    app.add_flag(
+        "--audio-ports", audioPorts,
+        "Select the ports to address in the audio interface. '0,1' means first pair, Zero based.");
+
+    int midiInput{-1};
+    app.add_flag("--midi-input", midiInput,
+                 "Select a single midi input using the index from list-devices");
+
+    bool allMidi{false};
+    app.add_flag("--all-midi-inputs", allMidi, "Bind all midi inputs to the synth (ignoring -m)");
 
     int oscInputPort{0};
     app.add_flag("--osc-in-port", oscInputPort, "Port for OSC Input; unspecified means no OSC");
@@ -217,25 +237,44 @@ int main(int argc, char **argv)
     mm->setCurrentThreadAsMessageThread();
 
     auto items = juce::MidiInput::getAvailableDevices();
-    if (midiInput < 0 || midiInput >= items.size())
+    std::vector<std::unique_ptr<juce::MidiInput>> midiInputs;
+    if (allMidi)
     {
-        PRINTERR("Midi Input must be in range 0..." << items.size() - 1);
-        exit(5);
+        LOG(BASIC, "Binding to all midi inputs");
+        for (auto &vmini : items)
+        {
+            auto inp = juce::MidiInput::openDevice(vmini.identifier, engine.get());
+            if (!inp)
+            {
+                PRINTERR("Unable to open midi device " << vmini.name);
+                exit(1);
+            }
+            midiInputs.push_back(std::move(inp));
+            LOG(BASIC, "Opened Midi Input   : [" << vmini.name << "] ");
+        }
     }
-    auto vmini = items[midiInput];
-
-    auto inp = juce::MidiInput::openDevice(vmini.identifier, engine.get());
-    if (!inp)
+    else
     {
-        PRINTERR("Unable to open midi device " << vmini.name);
-        exit(1);
+        if (midiInput < 0 || midiInput >= items.size())
+        {
+            PRINTERR("Midi Input must be in range 0..." << items.size() - 1);
+            exit(5);
+        }
+        auto vmini = items[midiInput];
+
+        auto inp = juce::MidiInput::openDevice(vmini.identifier, engine.get());
+        if (!inp)
+        {
+            PRINTERR("Unable to open midi device " << vmini.name);
+            exit(1);
+        }
+        midiInputs.push_back(std::move(inp));
+        LOG(BASIC, "Opened Midi Input   : [" << vmini.name << "] ");
     }
-    LOG(BASIC, "Opened Midi Input   : [" << vmini.name << "] ");
 
-    juce::AudioDeviceManager manager;
-
+    auto manager = std::make_unique<juce::AudioDeviceManager>();
     juce::OwnedArray<juce::AudioIODeviceType> types;
-    manager.createAudioDeviceTypes(types);
+    manager->createAudioDeviceTypes(types);
 
     int audioTypeIndex = 0;
     int audioDeviceIndex = 0;
@@ -281,7 +320,8 @@ int main(int argc, char **argv)
     }
 
     const auto &dname = deviceNames[audioDeviceIndex];
-    auto device = atype->createDevice(dname, "");
+    std::unique_ptr<juce::AudioIODevice> device;
+    device.reset(atype->createDevice(dname, ""));
 
     if (!device)
     {
@@ -345,7 +385,25 @@ int main(int argc, char **argv)
         }
     }
 
-    auto res = device->open(0, 3 /* bitset - careful */, sampleRate, bufferSize);
+    auto outputBitset = 3; // ports 0,1
+    if (!audioPorts.empty())
+    {
+        auto p = audioPorts.find(',');
+        if (p == std::string::npos)
+        {
+            PRINTERR("Audio Ports Argument must be of form L,R. You gave " << audioPorts);
+            exit(3);
+        }
+        else
+        {
+            auto dl = std::atoi(audioPorts.substr(0, p).c_str());
+            auto dr = std::atoi(audioPorts.substr(p + 1).c_str());
+            LOG(BASIC, "Binding to outputs  : L=" << dl << ", R=" << dr << "");
+            outputBitset = (1 << (dl)) + (1 << (dr));
+        }
+    }
+
+    auto res = device->open(0, outputBitset, sampleRate, bufferSize);
     if (!res.isEmpty())
     {
         PRINTERR("Unable to open audio device: " << res);
@@ -353,7 +411,10 @@ int main(int argc, char **argv)
     }
 
     device->start(engine.get());
-    inp->start();
+    for (const auto &inp : midiInputs)
+    {
+        inp->start();
+    }
 
     bool needsMessageLoop{false};
     if (oscInputPort > 0)
@@ -377,8 +438,10 @@ int main(int argc, char **argv)
         LOG(BASIC, "Running");
     }
 
-    // TODO: What's the stopping condition
-    while (true)
+    std::atomic<bool> continueLoop{true};
+    std::thread keyboardInputThread([&continueLoop]() { isQuitPressed(continueLoop); });
+
+    while (continueLoop)
     {
         if (needsMessageLoop)
         {
@@ -389,13 +452,22 @@ int main(int argc, char **argv)
         else
         {
             using namespace std::chrono_literals;
-            std::this_thread::sleep_for(1000ms);
+            std::this_thread::sleep_for(200ms);
         }
     }
+
+    keyboardInputThread.join();
+    LOG(BASIC, "Shutting down CLI.");
 
     // Handle interrupt and collect these in lambda to close if you bail out
     device->stop();
     device->close();
-    inp->stop();
+    for (const auto &inp : midiInputs)
+    {
+        inp->stop();
+    }
+
+    device.reset();
+    manager.reset();
     juce::MessageManager::deleteInstance();
 }
