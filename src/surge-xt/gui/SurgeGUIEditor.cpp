@@ -5925,6 +5925,8 @@ void SurgeGUIEditor::modSourceButtonDroppedAt(Surge::Widgets::ModulationSourceBu
 
 void SurgeGUIEditor::swapControllers(int t1, int t2)
 {
+    undoManager()->pushPatch();
+    synth->storage.getPatch().isDirty = true;
     synth->swapMetaControllers(t1 - tag_mod_source0 - ms_ctrl1, t2 - tag_mod_source0 - ms_ctrl1);
 }
 
