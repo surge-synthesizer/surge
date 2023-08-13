@@ -31,6 +31,11 @@
 
 #include "SurgeSynthProcessor.h"
 
+
+// This tells us to keep processing
+std::atomic<bool> continueLoop{true};
+
+
 // Thanks
 // https://stackoverflow.com/questions/16077299/how-to-print-current-time-with-milliseconds-using-c-c11
 std::string logTimestamp()
@@ -67,6 +72,16 @@ int logLevel{BASIC};
     }
 #define PRINT(x) LOG(logLevel + 1, x);
 #define PRINTERR(x) LOG(logLevel + 1, "Error: " << x);
+
+#ifndef WINDOWS
+#include <signal.h>
+void ctrlc_callback_handler(int signum) {
+    std::cout << "\n";
+    LOG(BASIC, "SIGINT (ctrl-c) detected. Shutting down cli");
+    continueLoop = false;
+}
+#endif
+
 
 void listAudioDevices()
 {
@@ -158,13 +173,13 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
     }
 };
 
-void isQuitPressed(std::atomic<bool> &continueLoop)
+void isQuitPressed()
 {
     std::string res;
 
-    while (res != "quit")
+    while (!(std::cin.eof() || res == "quit"))
     {
-        std::cout << "\nsurge-xt-cli is running. Type 'quit' to stop\n> ";
+        std::cout << "\nsurge-xt-cli is running. Type 'quit' or Ctrl+D to stop\n> ";
         std::cin >> res;
     }
     continueLoop = false;
@@ -438,8 +453,12 @@ int main(int argc, char **argv)
         LOG(BASIC, "Running");
     }
 
-    std::atomic<bool> continueLoop{true};
-    std::thread keyboardInputThread([&continueLoop]() { isQuitPressed(continueLoop); });
+    std::thread keyboardInputThread([]() { isQuitPressed(); });
+    keyboardInputThread.detach();
+
+#ifndef WINDOWS
+    signal(SIGINT, ctrlc_callback_handler);
+#endif
 
     while (continueLoop)
     {
@@ -456,7 +475,6 @@ int main(int argc, char **argv)
         }
     }
 
-    keyboardInputThread.join();
     LOG(BASIC, "Shutting down CLI.");
 
     // Handle interrupt and collect these in lambda to close if you bail out
