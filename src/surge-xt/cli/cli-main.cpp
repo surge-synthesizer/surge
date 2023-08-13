@@ -31,10 +31,8 @@
 
 #include "SurgeSynthProcessor.h"
 
-
 // This tells us to keep processing
 std::atomic<bool> continueLoop{true};
-
 
 // Thanks
 // https://stackoverflow.com/questions/16077299/how-to-print-current-time-with-milliseconds-using-c-c11
@@ -75,13 +73,13 @@ int logLevel{BASIC};
 
 #ifndef WINDOWS
 #include <signal.h>
-void ctrlc_callback_handler(int signum) {
+void ctrlc_callback_handler(int signum)
+{
     std::cout << "\n";
     LOG(BASIC, "SIGINT (ctrl-c) detected. Shutting down cli");
     continueLoop = false;
 }
 #endif
-
 
 void listAudioDevices()
 {
