@@ -34,6 +34,8 @@ namespace MSEG
 
 void rebuildCache(MSEGStorage *ms)
 {
+    forceToConstrainedNormalForm(ms);
+
     if (ms->loop_start > ms->n_activeSegments - 1)
     {
         ms->loop_start = -1;
@@ -1182,8 +1184,28 @@ void resetControlPoint(MSEGStorage *ms, int idx)
 
 void constrainControlPointAt(MSEGStorage *ms, int idx)
 {
+    if (!std::isfinite(ms->segments[idx].cpduration))
+        ms->segments[idx].cpduration = 0.5;
+    if (!std::isfinite(ms->segments[idx].cpv))
+        ms->segments[idx].cpv = 0.0;
+
     ms->segments[idx].cpduration = limit_range(ms->segments[idx].cpduration, 0.f, 1.f);
     ms->segments[idx].cpv = limit_range(ms->segments[idx].cpv, -1.f, 1.f);
+}
+
+void forceToConstrainedNormalForm(MSEGStorage *ms) // removes any nans etc
+{
+    for (auto &seg : ms->segments)
+    {
+        if (!std::isfinite(seg.v0))
+            seg.v0 = 0;
+        if (!std::isfinite(seg.cpv))
+            seg.cpv = 0;
+        if (!std::isfinite(seg.duration))
+            seg.duration = 0.1;
+        if (!std::isfinite(seg.cpduration))
+            seg.cpduration = 0.6;
+    }
 }
 
 void scaleDurations(MSEGStorage *ms, float factor, float maxDuration)

@@ -85,6 +85,7 @@ void adjustDurationConstantTotalDuration(MSEGStorage *ms, int idx, float dx, flo
 void resetControlPoint(MSEGStorage *ms, float t);
 void resetControlPoint(MSEGStorage *ms, int idx);
 void constrainControlPointAt(MSEGStorage *ms, int idx);
+void forceToConstrainedNormalForm(MSEGStorage *ms); // removes any nans etc
 
 void scaleDurations(MSEGStorage *ms, float factor, float maxDuration = -1);
 void scaleValues(MSEGStorage *ms, float factor);
