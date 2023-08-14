@@ -56,7 +56,8 @@ void TypeinParamEditor::paint(juce::Graphics &g)
     g.setFont(skin->fontManager->getLatoAtSize(10));
     g.setColour(skin->getColor(Colors::Dialog::Label::Text));
 
-    auto r = getLocalBounds().translated(0, 2).withHeight(14);
+    auto r =
+        getLocalBounds().translated(0, 2).withHeight(14).withTrimmedLeft(2).withTrimmedRight(2);
     g.drawText(mainLabel, r, juce::Justification::centred);
 
     g.setFont(skin->fontManager->getLatoAtSize(8));
@@ -72,7 +73,7 @@ void TypeinParamEditor::paint(juce::Graphics &g)
     if (wasInputInvalid)
     {
         g.setColour(skin->getColor(Colors::Dialog::Label::Error));
-        g.drawText(errorToDisplay, r, juce::Justification::centred);
+        g.drawText(errorToDisplay, r, juce::Justification::centred, false);
     }
     else
     {
@@ -91,7 +92,7 @@ void TypeinParamEditor::paint(juce::Graphics &g)
 juce::Rectangle<int> TypeinParamEditor::getRequiredSize()
 {
     int ht = 50 + (isMod ? 24 : 0);
-    auto r = juce::Rectangle<int>(0, 0, 160, ht);
+    auto r = juce::Rectangle<int>(0, 0, 180, ht);
     return r;
 }
 
