@@ -1755,6 +1755,39 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
     }
 }
 
+void SurgeSynthesizer::releaseNoteByHostNoteID(int32_t host_noteid, char velocity)
+{
+    std::array<uint16_t, 128> done;
+    std::fill(done.begin(), done.end(), 0);
+
+    for (int s = 0; s < n_scenes; ++s)
+    {
+        for (auto v : voices[s])
+        {
+            if (v->host_note_id == host_noteid)
+            {
+                done[v->state.key] |= 1 << v->state.channel;
+            }
+        }
+    }
+
+    int nidx{0};
+    for (auto d : done)
+    {
+        if (d)
+        {
+            for (auto ch = 0; ch < 16; ++ch)
+            {
+                if (d & 1 << ch)
+                {
+                    releaseNote(ch, nidx, velocity, host_noteid);
+                }
+            }
+        }
+        nidx++;
+    }
+}
+
 void SurgeSynthesizer::setNoteExpression(SurgeVoice::NoteExpressionType net, int32_t note_id,
                                          int16_t key, int16_t channel, float value)
 {

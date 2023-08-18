@@ -90,6 +90,9 @@ class alignas(16) SurgeSynthesizer
     void playNoteByFrequency(float freq, char velocity, int32_t id);
     void releaseNote(char channel, char key, char velocity, int32_t host_noteid = -1);
     void chokeNote(int16_t channel, int16_t key, char velocity, int32_t host_noteid = -1);
+    // Release all notes matching just this host noteid. Mostly used for OpenSoundCtrl right now
+    void releaseNoteByHostNoteID(int32_t host_noteid, char velocity);
+
     void releaseNotePostHoldCheck(int scene, char channel, char key, char velocity,
                                   int32_t host_noteid = -1);
     void resetPitchBend(int8_t channel);
