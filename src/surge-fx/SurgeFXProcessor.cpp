@@ -164,7 +164,8 @@ bool SurgefxAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) c
     bool inputValid = layouts.getMainInputChannelSet() == juce::AudioChannelSet::mono() ||
                       layouts.getMainInputChannelSet() == juce::AudioChannelSet::stereo();
 
-    bool outputValid = layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
+    bool outputValid = layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo() ||
+                       layouts.getMainOutputChannelSet() == juce::AudioChannelSet::mono();
 
     bool sidechainValid = layouts.getChannelSet(true, 1).isDisabled() ||
                           layouts.getChannelSet(true, 1) == juce::AudioChannelSet::stereo();
@@ -219,6 +220,35 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         setLatencySamples(BLOCK_SIZE);
         updateHostDisplay(ChangeDetails().withLatencyChanged(true));
     }
+
+    auto mib = getBus(true, 0);
+    if (mib->isEnabled() && !(mib->getNumberOfChannels() == 1 || mib->getNumberOfChannels() == 2))
+    {
+        m_audioValid = false;
+        m_audioValidMessage = "Enabled Input is neither mono nor stereo";
+        return;
+    }
+    if (!mib->isEnabled())
+    {
+        m_audioValid = false;
+        m_audioValidMessage = "Input is not enabled";
+        return;
+    }
+    auto mob = getBus(false, 0);
+    if (mob->isEnabled() && (mob->getNumberOfChannels() != 2))
+    {
+        m_audioValid = false;
+        m_audioValidMessage =
+            "Enabled Output is not stereo " + std::to_string(mib->getNumberOfChannels());
+        return;
+    }
+    if (!mob->isEnabled())
+    {
+        m_audioValid = false;
+        m_audioValidMessage = "Output is not enabled";
+        return;
+    }
+    m_audioValid = true;
 
     auto mainInput = getBusBuffer(buffer, true, 0);
 

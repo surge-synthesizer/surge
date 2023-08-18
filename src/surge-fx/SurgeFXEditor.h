@@ -169,6 +169,18 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
 
     bool keyPressed(const juce::KeyPress &key) override;
 
+    // We have a very slow idle (it just checks invalid bus configs)
+    struct IdleTimer : juce::Timer
+    {
+        IdleTimer(SurgefxAudioProcessorEditor *ed) : ed(ed) {}
+        ~IdleTimer() = default;
+        void timerCallback() override;
+        SurgefxAudioProcessorEditor *ed;
+    };
+    void idle();
+    std::unique_ptr<IdleTimer> idleTimer;
+    bool priorValid{true};
+
   public:
     std::vector<juce::Component *> accessibleOrderWeakRefs;
 
