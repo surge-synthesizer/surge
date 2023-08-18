@@ -257,10 +257,14 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     getConstrainer()->setMinimumWidth(baseWidth * 0.75);
     getConstrainer()->setFixedAspectRatio(baseWidth * 1.0 / baseHeight);
     // setResizable(false, false);
+
+    idleTimer = std::make_unique<IdleTimer>(this);
+    idleTimer->startTimer(1000 / 5);
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
 {
+    idleTimer->stopTimer();
     setLookAndFeel(nullptr);
     this->processor.setParameterChangeListener([]() {});
 }
@@ -681,4 +685,25 @@ bool SurgefxAudioProcessorEditor::keyPressed(const juce::KeyPress &key)
     }
 
     return false;
+}
+
+void SurgefxAudioProcessorEditor::IdleTimer::timerCallback() { ed->idle(); }
+
+void SurgefxAudioProcessorEditor::idle()
+{
+    if (processor.m_audioValid != priorValid)
+    {
+        priorValid = processor.m_audioValid;
+        if (!processor.m_audioValid)
+        {
+            fxNameLabel->setFont(18);
+            fxNameLabel->setText(processor.m_audioValidMessage,
+                                 juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            fxNameLabel->setFont(28);
+            fxNameLabel->setText("Surge XT Effects", juce::NotificationType::dontSendNotification);
+        }
+    }
 }

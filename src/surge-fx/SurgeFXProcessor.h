@@ -283,6 +283,9 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     // Members for the FX. If this looks a lot like surge-rack/SurgeFX.hpp that's not a coincidence
     std::unique_ptr<SurgeStorage> storage;
 
+    std::atomic<bool> m_audioValid{true};
+    std::string m_audioValidMessage{};
+
   private:
     template <typename T, typename F> struct FXAudioParameter : public T
     {
