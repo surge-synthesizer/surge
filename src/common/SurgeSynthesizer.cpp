@@ -1755,7 +1755,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
     }
 }
 
-void SurgeSynthesizer::releaseNoteByHostID(int32_t host_noteid, char velocity)
+void SurgeSynthesizer::releaseNoteByHostNoteID(int32_t host_noteid, char velocity)
 {
     std::array<uint16_t, 128> done;
     std::fill(done.begin(), done.end(), 0);

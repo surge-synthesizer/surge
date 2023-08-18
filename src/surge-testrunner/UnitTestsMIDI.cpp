@@ -1760,11 +1760,11 @@ TEST_CASE("Release by Note ID", "[midi]")
         proc();
         REQUIRE(voicecount() == 2);
 
-        s->releaseNoteByHostID(173, 0);
+        s->releaseNoteByHostNoteID(173, 0);
         proc();
         REQUIRE(voicecount() == 1);
 
-        s->releaseNoteByHostID(177, 0);
+        s->releaseNoteByHostNoteID(177, 0);
         proc();
         REQUIRE(voicecount() == 0);
     }
@@ -1804,11 +1804,11 @@ TEST_CASE("Release by Note ID", "[midi]")
         proc();
         REQUIRE(voicecount() == 4);
 
-        s->releaseNoteByHostID(173, 0);
+        s->releaseNoteByHostNoteID(173, 0);
         proc();
         REQUIRE(voicecount() == 2);
 
-        s->releaseNoteByHostID(177, 0);
+        s->releaseNoteByHostNoteID(177, 0);
         proc();
         REQUIRE(voicecount() == 0);
     }
