@@ -341,7 +341,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         {
             MNOTE,
             FREQNOTE,
-            PARAMETER
+            PARAMETER,
+            NOTEX_PITCH
         } type{PARAMETER};
         Parameter *param;
         float fval{0.0};

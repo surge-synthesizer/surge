@@ -666,6 +666,10 @@ void SurgeSynthProcessor::processBlockOSC()
     {
         switch (om.type)
         {
+        case oscToAudio::NOTEX:
+            // surge->setNoteExpression(SurgeVoice::PITCH, id, mk, -1, offset);
+            break;
+
         case oscToAudio::PARAMETER:
         {
             float pval = om.fval;

@@ -138,7 +138,38 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string address1, address2, address3;
     std::getline(split, address1, '/');
 
-    if (address1 == "fnote")
+    if (address1 == "nex")
+    {
+        if (message.size() != 1)
+        {
+            sendDataCountError("note expression", "1");
+        }
+
+        int id = 444; // change this
+        float val = 0.0;
+        std::getline(split, address2, '/');
+        if (address2 == "vol")
+        {
+            synth.setNoteExpression(SurgeVoice::VOLUME, id, -1, -1, -1);
+        }
+        else if (address2 == "pitch")
+        {
+            mk = 60;      // change this
+            offset = 0.0; // change this
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                frequency, static_cast<char>(velocity), noteon, noteID));
+        }
+        else if (address2 == "pan")
+        {
+        }
+        else if (address2 == "timb")
+        {
+        }
+        else if (address2 == "press")
+        {
+        }
+    }
+    else if (address1 == "fnote")
     // Play a note at the given frequency and velocity
     {
         int32_t noteID = 0;
