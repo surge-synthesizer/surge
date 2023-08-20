@@ -98,16 +98,16 @@ std::string OpenSoundControl::getWholeString(const juce::OSCMessage &om)
     return dataStr;
 }
 
-int OpenSoundControl::getNoteID(const juce::OSCMessage &om)
+int OpenSoundControl::getNoteID(const juce::OSCMessage &om, int pos)
 {
     // note id supplied by sender
     {
-        if (!om[2].isFloat32())
+        if (!om[pos].isFloat32())
         {
-            sendNotFloatError("fnote", "noteID");
+            sendNotFloatError("fnote or note expression", "noteID");
             return -1;
         }
-        float msg2 = om[2].getFloat32();
+        float msg2 = om[pos].getFloat32();
         if (msg2 < 0. || msg2 > (float)(std::numeric_limits<int>::max()))
         {
             sendError("NoteID must be between 0 and " +
@@ -138,7 +138,86 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string address1, address2, address3;
     std::getline(split, address1, '/');
 
-    if (address1 == "fnote")
+    // Note expressions
+    if (address1 == "ne")
+    {
+        if (message.size() != 2)
+        {
+            sendDataCountError("note expression", "2");
+        }
+        if (!message[0].isFloat32())
+        {
+            sendNotFloatError("ne", "value");
+            return;
+        }
+        int noteID = getNoteID(message, 0);
+        if (noteID == -1)
+        {
+            sendError("Note expressions require a valid noteID.");
+            return;
+        }
+        float val = message[1].getFloat32();
+
+        std::getline(split, address2, '/');
+        if (address2 == "volume")
+        {
+            if (val < 0.0 || val > 4.0)
+            {
+                sendError("Note expression (volume) '" + std::to_string(val) +
+                          "' is out of range (0.0 - 4.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_VOL, noteID, val));
+        }
+        else if (address2 == "pitch")
+        {
+            if (val < -120.0 || val > 120.0)
+            {
+                sendError("Note expression (pitch) '" + std::to_string(val) +
+                          "' is out of range (-120.0 - 120.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PITCH, noteID, val));
+        }
+        else if (address2 == "pan")
+        {
+            if (val < 0.0 || val > 1.0)
+            {
+                sendError("Note expression (pan) '" + std::to_string(val) +
+                          "' is out of range (0.0 - 1.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PAN, noteID, val));
+        }
+        else if (address2 == "timbre")
+        {
+            if (val < 0.0 || val > 1.0)
+            {
+                sendError("Note expression (timbre) '" + std::to_string(val) +
+                          "' is out of range (0.0 - 1.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_TIMB, noteID, val));
+        }
+        else if (address2 == "pressure")
+        {
+            if (val < 0.0 || val > 1.0)
+            {
+                sendError("Note expression (pressure) '" + std::to_string(val) +
+                          "' is out of range (0.0 - 1.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PRES, noteID, val));
+        }
+    }
+
+    // 'Frequency' notes
+    else if (address1 == "fnote")
     // Play a note at the given frequency and velocity
     {
         int32_t noteID = 0;
@@ -161,19 +240,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
         if (message.size() == 3)
         {
-            noteID = getNoteID(message);
+            noteID = getNoteID(message, 2);
             if (noteID == -1)
                 return;
-        }
-        if (message.size() == 3)
-        // note id supplied
-        {
-            if (!message[2].isFloat32())
-            {
-                sendNotFloatError("fnote", "noteID");
-                return;
-            }
-            noteID = static_cast<int>(message[2].getFloat32());
         }
 
         float frequency = message[0].getFloat32();
@@ -205,6 +274,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             frequency, static_cast<char>(velocity), noteon, noteID));
     }
 
+    // "MIDI-style" notes
     else if (address1 == "mnote")
     // OSC equivalent of MIDI note
     {
@@ -227,7 +297,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         if (message.size() == 3)
         {
-            noteID = getNoteID(message);
+            noteID = getNoteID(message, 2);
             if (noteID == -1)
                 return;
         }
@@ -256,6 +326,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
     }
 
+    // Parameters
     else if (address1 == "param")
     {
         if (message.size() != 1)
