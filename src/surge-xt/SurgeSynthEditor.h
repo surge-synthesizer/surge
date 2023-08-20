@@ -127,6 +127,9 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     // clang-format on
     std::string currentVKBLayout;
 
+    std::shared_ptr<SurgeJUCELookAndFeel> surgeLF;
+    SurgeJUCELookAndFeel *getSurgeLookAndFeel() { return surgeLF.get(); }
+
   private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
@@ -134,8 +137,6 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     std::unique_ptr<SurgeGUIEditor> sge;
     std::unique_ptr<juce::Drawable> logo;
-
-    std::unique_ptr<SurgeJUCELookAndFeel> surgeLF;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthEditor)
 };

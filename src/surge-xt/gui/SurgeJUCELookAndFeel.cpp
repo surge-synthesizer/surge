@@ -53,9 +53,9 @@ void SurgeJUCELookAndFeel::onSkinChanged()
 
     int menuMode = 0;
 
-    if (storage)
+    if (hasStorage())
     {
-        menuMode = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MenuLightness, 2);
+        menuMode = Surge::Storage::getUserDefaultValue(storage(), Surge::Storage::MenuLightness, 2);
     }
 
     if (menuMode == 1)
@@ -464,9 +464,9 @@ void SurgeJUCELookAndFeel::updateDarkIfNeeded()
 {
     int menuMode = 0;
 
-    if (storage)
+    if (hasStorage())
     {
-        menuMode = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::MenuLightness, 2);
+        menuMode = Surge::Storage::getUserDefaultValue(storage(), Surge::Storage::MenuLightness, 2);
     }
 
     if (menuMode == 1)
