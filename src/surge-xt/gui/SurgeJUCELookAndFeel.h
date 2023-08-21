@@ -25,11 +25,13 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "SkinSupport.h"
+#include <cassert>
 
 class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::SkinConsumingComponent
 {
   public:
-    SurgeJUCELookAndFeel(SurgeStorage *s) : storage(s) {}
+    SurgeJUCELookAndFeel() {}
+
     void drawLabel(juce::Graphics &graphics, juce::Label &label) override;
     void drawTextEditorOutline(juce::Graphics &graphics, int width, int height,
                                juce::TextEditor &editor) override;
@@ -44,7 +46,16 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
                        bool isMouseDown) override;
 
     void onSkinChanged() override;
-    SurgeStorage *storage{nullptr};
+    // SurgeStorage *storage{nullptr};
+    std::set<SurgeStorage *> storagePointers;
+    void addStorage(SurgeStorage *s) { storagePointers.insert(s); }
+    void removeStorage(SurgeStorage *s) { storagePointers.erase(s); }
+    SurgeStorage *storage()
+    {
+        assert(!storagePointers.empty());
+        return *(storagePointers.begin());
+    }
+    bool hasStorage() { return !storagePointers.empty(); }
 
     juce::Font getPopupMenuFont() override;
     juce::Font getPopupMenuBoldFont();

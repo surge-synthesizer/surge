@@ -496,7 +496,7 @@ void SurgeGUIEditor::idle()
     if (slowIdleCounter++ == 600)
     {
         slowIdleCounter = 0;
-        juceEditor->surgeLF->updateDarkIfNeeded();
+        juceEditor->getSurgeLookAndFeel()->updateDarkIfNeeded();
     }
 
     if (needsModUpdate)
@@ -4596,7 +4596,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
         Surge::Storage::getUserDefaultValue(&(synth->storage), Surge::Storage::MenuLightness, 2);
     auto resetMenuTo = [this](int i) {
         Surge::Storage::updateUserDefaultValue(&(synth->storage), Surge::Storage::MenuLightness, i);
-        juceEditor->surgeLF->onSkinChanged();
+        juceEditor->getSurgeLookAndFeel()->onSkinChanged();
     };
 
     skinSubMenu.addSeparator();
@@ -5061,7 +5061,7 @@ void SurgeGUIEditor::reloadFromSkin()
         return;
     }
 
-    juceEditor->surgeLF->setSkin(currentSkin, bitmapStore);
+    juceEditor->getSurgeLookAndFeel()->setSkin(currentSkin, bitmapStore);
 
     float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
 

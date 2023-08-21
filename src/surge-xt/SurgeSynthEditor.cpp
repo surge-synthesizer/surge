@@ -131,13 +131,30 @@ struct VKeyboardSus : public juce::Component
     }
 };
 
+static std::weak_ptr<SurgeJUCELookAndFeel> surgeLookAndFeelWeakPointer;
+static std::mutex surgeLookAndFeelSetupMutex;
+
 //==============================================================================
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     : juce::AudioProcessorEditor(&p), processor(p)
 {
-    surgeLF = std::make_unique<SurgeJUCELookAndFeel>(&(processor.surge->storage));
+    {
+        std::lock_guard<std::mutex> grd(surgeLookAndFeelSetupMutex);
+        if (auto sp = surgeLookAndFeelWeakPointer.lock())
+        {
+            std::cout << "Re-using shared pointer" << std::endl;
+            surgeLF = sp;
+        }
+        else
+        {
+            surgeLF = std::make_shared<SurgeJUCELookAndFeel>();
+            surgeLookAndFeelWeakPointer = surgeLF;
 
-    juce::LookAndFeel::setDefaultLookAndFeel(surgeLF.get());
+            juce::LookAndFeel::setDefaultLookAndFeel(surgeLF.get());
+        }
+
+        surgeLF->addStorage(&(processor.surge->storage));
+    }
 
     addKeyListener(this);
 
@@ -253,6 +270,8 @@ SurgeSynthEditor::~SurgeSynthEditor()
     {
         sge->bitmapStore->clearAllLoadedBitmaps();
     }
+
+    surgeLF->removeStorage(&(processor.surge->storage));
 
     sge.reset(nullptr);
 }
