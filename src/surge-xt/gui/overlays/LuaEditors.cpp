@@ -148,9 +148,75 @@ void CodeEditorContainerWithApply::codeDocumentTextDeleted(int startIndex, int e
 
 bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::Component *o)
 {
-    if (key.getKeyCode() == juce::KeyPress::returnKey && key.getModifiers().isCommandDown())
+    auto keyCode = key.getKeyCode();
+
+    if (keyCode == juce::KeyPress::tabKey)
+    {
+        if (key.getModifiers().isShiftDown())
+        {
+            mainEditor->unindentSelection();
+        }
+        else
+        {
+            mainEditor->indentSelection();
+        }
+
+        return true;
+    }
+    else if (key.getModifiers().isCommandDown() && keyCode == juce::KeyPress::returnKey)
     {
         applyCode();
+
+        return true;
+    }
+    else if (key.getModifiers().isCommandDown() && keyCode == 68) // Ctrl/Cmd+D
+    {
+        auto pos = mainEditor->getCaretPos();
+        auto sel = mainEditor->getHighlightedRegion();
+        auto txt = mainEditor->getTextInRange(sel);
+        bool isMultiline = false;
+        bool doSel = true;
+        int offset = 0;
+
+        // pos.setPositionMaintained(true);
+
+        if (txt.isEmpty())
+        {
+            txt = pos.getLineText();
+            doSel = false;
+        }
+
+        if (txt.containsChar('\n'))
+        {
+            int count = 0;
+
+            // see if selection is multiline
+            for (auto c : txt)
+            {
+                if (c == '\n' && count < 2)
+                {
+                    count++;
+                }
+            }
+
+            // if we have any character after newline, we're still multiline
+            if (!txt.endsWithChar('\n'))
+            {
+                count++;
+            }
+
+            isMultiline = count > 1;
+            offset = -pos.getIndexInLine();
+        }
+
+        mainDocument->insertText(pos.movedBy(isMultiline ? 0 : offset), txt);
+
+        // go back to original position
+        mainEditor->moveCaretTo(pos, false);
+        // move to latest position after insertion,
+        // optionally reselecting the text if a selection existed
+        mainEditor->moveCaretTo(pos.movedBy(txt.length()), doSel);
+
         return true;
     }
     else
@@ -650,8 +716,8 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
       lfo_id(lid), editor(ed)
 {
     mainEditor->setScrollbarThickness(8);
-    mainEditor->setTitle("LUA Modulator Code");
-    mainEditor->setDescription("LUA Modulator Code");
+    mainEditor->setTitle("Formula Modulator Code");
+    mainEditor->setDescription("Formula Modulator Code");
 
     mainDocument->insertText(0, fs->formulaString);
 
@@ -662,8 +728,8 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     preludeDisplay->setTabSize(4, true);
     preludeDisplay->setReadOnly(true);
     preludeDisplay->setScrollbarThickness(8);
-    preludeDisplay->setTitle("LUA Prelude Code");
-    preludeDisplay->setDescription("LUA Prelude Code");
+    preludeDisplay->setTitle("Formula Modulator Prelude Code");
+    preludeDisplay->setDescription("Formula Modulator Prelude Code");
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
 
     controlArea = std::make_unique<FormulaControlArea>(this, editor);

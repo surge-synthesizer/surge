@@ -120,8 +120,8 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &s);
 std::string createDebugViewOfModState(const EvaluatorState &s);
 
 /*
- * Our test harness wants to send bits of lua to the modstate to get results out for
- * regtests. Send a function query(modstate) which returns something leaf like
+ * Our test harness wants to send bits of lua to the modulator state to get results out for
+ * regtests. Send a function query(state) which returns something leaf like
  */
 std::variant<float, std::string, bool> runOverModStateForTesting(const std::string &query,
                                                                  const EvaluatorState &s);

@@ -469,10 +469,10 @@ TEST_CASE("Basic Formula Evaluation", "[formula]")
         SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
-function process(modstate)
+function process(state)
     -- a bipolar saw
-    modstate["output"] = modstate["phase"]
-    return modstate
+    state.output = state.phase
+    return state
 end)FN");
         auto runIt = runFormula(&storage, &fs, 0.0321, 5);
         for (auto c : runIt)
@@ -486,10 +486,10 @@ end)FN");
         SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
-function process(modstate)
+function process(state)
     -- a bipolar saw
-    modstate["output"] = 2 * modstate["phase"] - 1
-    return modstate
+    state.output = 2 * state.phase - 1
+    return state
 end)FN");
         auto runIt = runFormula(&storage, &fs, 0.0321, 5);
         for (auto c : runIt)
@@ -503,10 +503,10 @@ end)FN");
         SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
-function process(modstate)
+function process(state)
     -- a bipolar saw
-    modstate["output"] = math.sin( modstate["phase"] * 3.14159 * 2 )
-    return modstate
+    state.output = math.sin( state.phase * 3.14159 * 2 )
+    return state
 end)FN");
         auto runIt = runFormula(&storage, &fs, 0.0321, 5);
         for (auto c : runIt)
@@ -520,13 +520,13 @@ end)FN");
         SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
-function process(modstate)
+function process(state)
     -- a bipolar saw
-    p = modstate["phase"]
-    d = modstate["deform"]
+    p = state.phase
+    d = state.deform
     r = math.pow( p, 3 * d + 1) * 2 - 1
-    modstate["output"] = r
-    return modstate
+    state.output = r
+    return state
 end)FN");
 
         for (int id = 0; id <= 10; id++)
@@ -547,16 +547,16 @@ end)FN");
         SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
-function process(modstate)
+function process(state)
     -- a bipolar saw
-    p = modstate["phase"]
+    p = state.phase
     r = { }
     r[1] = p < 0.5 and 1 or -1
     r[2] = p < 0.5 and -1 or 1
     r[3] = 0.72;
 
-    modstate["output"] = r
-    return modstate
+    state.output = r
+    return state
 end)FN");
 
         for (int id = 0; id <= 10; id++)
@@ -583,14 +583,14 @@ TEST_CASE("Init Functions", "[formula]")
         SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
-function init(modstate)
-   modstate["av"] = 0.762
-   return modstate
+function init(state)
+   state.av = 0.762
+   return state
 end
 
-function process(modstate)
-    modstate["output"] = modstate["av"]
-    return modstate
+function process(state)
+    state.output = state.av
+    return state
 end)FN");
 
         for (int id = 0; id <= 10; id++)
@@ -612,9 +612,9 @@ TEST_CASE("Clamping", "[formula]")
         SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
-function process(modstate)
-    modstate["output"] = modstate["phase"] * 3 - 1.5
-    return modstate
+function process(state)
+    state.output = state.phase * 3 - 1.5
+    return state
 end)FN");
 
         for (int id = 0; id <= 10; id++)
@@ -633,14 +633,14 @@ end)FN");
         SurgeStorage storage;
         FormulaModulatorStorage fs;
         fs.setFormula(R"FN(
-function init(modstate)
-    modstate["clamp_output"] = false
-    return modstate
+function init(state)
+    state.clamp_output = false
+    return state
 end
 
-function process(modstate)
-    modstate["output"] = modstate["phase"] * 3 - 1.5
-    return modstate
+function process(state)
+    state.output = state.phase * 3 - 1.5
+    return state
 end)FN");
 
         int outOfBounds = 0;
@@ -697,16 +697,16 @@ TEST_CASE("Simple Used Formula Modulator", "[formula]")
         surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
-function init(modstate)
-   modstate["depth"] = 0.2
-   modstate["count"] = -1   -- There is an initial attack which will also run process once
-   return modstate
+function init(state)
+   state.depth = 0.2
+   state.count = -1   -- There is an initial attack which will also run process once
+   return state
 end
 
-function process(modstate)
-    modstate["output"] = (modstate["phase"] * 2 - 1) * modstate["depth" ]
-    modstate["count"] = modstate["count"] + 1
-    return modstate
+function process(state)
+    state.output = (state.phase * 2 - 1) * state.depth
+    state.count = state.count + 1
+    return state
 end)FN");
         for (int i = 0; i < 10; ++i)
             surge->process();
@@ -740,14 +740,14 @@ TEST_CASE("Voice Features And Flags", "[formula]")
         surge->setModDepth01(pitchId, ms_slfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
-function init(modstate)
-   modstate["subscriptions"]["voice"] = true
-   return modstate
+function init(state)
+   state.subscriptions["voice"] = true
+   return state
 end
 
-function process(modstate)
-    modstate["output"] = (modstate["phase"] * 2 - 1)
-    return modstate
+function process(state)
+    state.output = (state.phase * 2 - 1)
+    return state
 end)FN");
         for (int i = 0; i < 10; ++i)
             surge->process();
@@ -787,14 +787,14 @@ end)FN");
         surge->setModDepth01(pitchId, ms_slfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
-function init(modstate)
-   modstate["subscriptions"]["voice"] = true
-   return modstate
+function init(state)
+   state.subscriptions["voice"] = true
+   return state
 end
 
-function process(modstate)
-    modstate["output"] = (modstate["phase"] * 2 - 1)
-    return modstate
+function process(state)
+    state.output = (state.phase * 2 - 1)
+    return state
 end)FN");
 
         for (int i = 0; i < 10; ++i)
@@ -867,14 +867,14 @@ TEST_CASE("NaN Clamper", "[formula]")
         surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
-function init(modstate)
-   modstate["depth"] = 0
-   return modstate
+function init(state)
+   state.depth = 0
+   return state
 end
 
-function process(modstate)
-    modstate["output"] = (modstate["phase"] * 2 - 1) / modstate["depth" ]
-    return modstate
+function process(state)
+    state.output = (state.phase * 2 - 1) / state.depth
+    return state
 end)FN");
         for (int i = 0; i < 10; ++i)
             surge->process();
@@ -901,14 +901,14 @@ end)FN");
         surge->setModDepth01(pitchId, ms_lfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
-function init(modstate)
-   modstate["depth"] = 1
-   return modstate
+function init(state)
+   state.depth = 1
+   return state
 end
 
-function process(modstate)
-    modstate["output"] = (modstate["phase"] * 2 - 1) / modstate["depth" ]
-    return modstate
+function process(state)
+    state.output = (state.phase * 2 - 1) / state.depth
+    return state
 end)FN");
         for (int i = 0; i < 10; ++i)
             surge->process();

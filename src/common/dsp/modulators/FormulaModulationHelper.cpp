@@ -253,9 +253,9 @@ end
                 if (!lua_istable(s.L, -1))
                 {
                     s.isvalid = false;
-                    s.adderror("Your 'init' function must return a table. This usually means "
-                               "that you didn't end your init function with 'return modstate' "
-                               "before the end statement.");
+                    s.adderror("The init() function must return a table. This usually means "
+                               "that you didn't close the init() function with 'return state' "
+                               "before the 'end' statement.");
                     stateData.knownBadFunctions.insert(s.funcName);
                 }
             }
@@ -272,7 +272,7 @@ end
         // FIXME - we have to clean this up when evaluation is done
         lua_setglobal(s.L, s.stateName);
 
-        // the modstate which is now bound to the state name
+        // the modulator state which is now bound to the state name
         lua_pop(s.L, -1);
 
         s.useEnvelope = true;
@@ -349,7 +349,7 @@ end
                 lua_pop(s.L, 1);
 
                 lua_pop(s.L, 1); // the subscriptions
-                lua_pop(s.L, 1); // the modstate
+                lua_pop(s.L, 1); // the modulator state
             }
         }
     }
@@ -839,19 +839,20 @@ std::string createDebugViewOfModState(const EvaluatorState &es)
 
 void createInitFormula(FormulaModulatorStorage *fs)
 {
-    fs->setFormula(R"FN(function init(modstate)
-    -- this function is called at the creation of each LFO (so voice on etc...)
-    -- and allows you to adjust the modstate with pre-calculated values
-    return modstate
+    fs->setFormula(R"FN(function init(state)
+    -- This function is called when each Formula modulator is created (voice on, etc.)
+    -- and allows you to adjust the state with pre-calculated values.
+    return state
 end
 
-function process(modstate)
-    -- this is the per-block'process'. input will contain keys 'phase' 'intphase',
-    -- 'deform'. You must set the output value and return it. See the manual or
-    -- tutorials for more
+function process(state)
+    -- This is the per-block 'process()' function.
+    -- You must set the output value for the state and return it.
+    -- See the tutorial patches for more info.
 
-    modstate["output"] = modstate["phase"] * 2 - 1
-    return modstate
+    state.output = state.phase * 2 - 1
+
+    return state
 end)FN");
     fs->interpreter = FormulaModulatorStorage::LUA;
 }
@@ -926,8 +927,8 @@ std::variant<float, std::string, bool> extractModStateKeyForTesting(const std::s
                                                                     const EvaluatorState &s)
 {
     auto query = fmt::format(R"FN(
-function query(modstate)
-   return modstate["{}"];
+function query(state)
+   return state.{};
 end
 )FN",
                              key);
