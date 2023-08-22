@@ -29,6 +29,7 @@
 #include "juce_audio_utils/juce_audio_utils.h"
 
 #include <forward_list>
+#include "version.h"
 
 class SurgeGUIEditor;
 class SurgeJUCELookAndFeel;
@@ -139,6 +140,34 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     std::unique_ptr<juce::Drawable> logo;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthEditor)
+};
+
+struct SurgeSynthStartupErrorEditor : juce::AudioProcessorEditor
+{
+    SurgeSynthProcessor &ssp;
+    SurgeSynthStartupErrorEditor(SurgeSynthProcessor &p) : juce::AudioProcessorEditor(p), ssp(p)
+    {
+        setSize(700, 700);
+    }
+    void paint(juce::Graphics &g) override
+    {
+        g.fillAll(juce::Colours::black);
+        g.setColour(juce::Colour(255, 50, 50));
+
+        g.setFont(40);
+        auto lb = getLocalBounds().withHeight(50).translated(0, 100);
+        g.drawText("Fatal Surge Startup Error", lb, juce::Justification::centred);
+
+        g.setColour(juce::Colours::white);
+        g.setFont(20);
+        lb = lb.translated(0, 55).withHeight(120);
+        g.drawFittedText(ssp.fatalErrorMessage, lb, juce::Justification::centred, 5);
+        lb = lb.translated(0, 125);
+        g.drawText(Surge::Build::FullVersionStr, lb, juce::Justification::centred);
+        lb = lb.translated(0, 25);
+        g.drawText("Report on Surge discord or github issue with a screenshot of this screen", lb,
+                   juce::Justification::centred);
+    }
 };
 
 #endif // SURGE_SRC_SURGE_XT_SURGESYNTHEDITOR_H

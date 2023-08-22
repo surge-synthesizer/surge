@@ -65,11 +65,19 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         << " using " << Surge::Build::BuildCompiler << "\n";
 #endif
 
-    surge = std::make_unique<SurgeSynthesizer>(this);
-
+    try
+    {
+        surge = std::make_unique<SurgeSynthesizer>(this);
+    }
+    catch (const std::exception &e)
+    {
+        surge.reset();
+        fatalErrorMessage = e.what();
+        return;
+    }
 #if BUILD_IS_DEBUG
-    oss << "  - Data         : " << surge->storage.datapath << "\n"
-        << "  - User Data    : " << surge->storage.userDataPath << std::endl;
+    oss << "  - Data         : " << surge->storage.datapath.u8string() << "\n"
+        << "  - User Data    : " << surge->storage.userDataPath.u8string() << std::endl;
     DBG(oss.str());
 #endif
 
@@ -178,6 +186,9 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
 SurgeSynthProcessor::~SurgeSynthProcessor()
 {
+    if (!surge)
+        return;
+
     if (oscHandler.listening)
     {
         oscHandler.stopListening();
@@ -345,6 +356,9 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p)
 
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
+    if (!surge)
+        return;
+
     surge->setSamplerate(sr);
     // It used to be I would set audio processing active true here *but* REAPER calls this for
     // inactive muted channels so we didn't load if that was the case. Set it true only
@@ -378,6 +392,12 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                        juce::MidiBuffer &midiMessages)
 {
     auto fpuguard = sst::plugininfra::cpufeatures::FPUStateGuard();
+
+    if (!surge)
+    {
+        buffer.clear();
+        return;
+    }
 
     priorCallWasProcessBlockNotBypassed = true;
 
@@ -1076,12 +1096,22 @@ bool SurgeSynthProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *SurgeSynthProcessor::createEditor()
 {
-    return new SurgeSynthEditor(*this);
+    if (surge)
+    {
+        return new SurgeSynthEditor(*this);
+    }
+    else
+    {
+        return new SurgeSynthStartupErrorEditor(*this);
+    }
 }
 
 //==============================================================================
 void SurgeSynthProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
+    if (!surge)
+        return;
+
     surge->populateDawExtraState();
     auto sse = dynamic_cast<SurgeSynthEditor *>(getActiveEditor());
     if (sse)
@@ -1097,6 +1127,9 @@ void SurgeSynthProcessor::getStateInformation(juce::MemoryBlock &destData)
 
 void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
+    if (!surge)
+        return;
+
     surge->enqueuePatchForLoad(data, sizeInBytes);
     surge->processAudioThreadOpsWhenAudioEngineUnavailable();
 }

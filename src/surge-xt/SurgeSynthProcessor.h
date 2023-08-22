@@ -469,6 +469,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
   public:
     bool inputIsLatent{false};
 
+    std::string fatalErrorMessage{false};
+
   private:
     // Have we warned about bad configurations
     bool warnedAboutBadConfig{false};
