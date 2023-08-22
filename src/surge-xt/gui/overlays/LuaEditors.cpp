@@ -580,18 +580,18 @@ struct FormulaControlArea : public juce::Component,
             int m = c->getValue();
 
             if (m > 0.5)
+            {
                 overlay->showPreludeCode();
+            }
             else
+            {
                 overlay->showModulatorCode();
+            }
         }
         break;
         case tag_code_apply:
         {
             overlay->applyCode();
-            if (overlay->debugPanel->isOpen)
-            {
-                overlay->debugPanel->initializeLfoDebugger();
-            }
         }
         break;
         case tag_debugger_show:
@@ -602,7 +602,6 @@ struct FormulaControlArea : public juce::Component,
                 showS->setLabels({"Show"});
                 stepS->setVisible(false);
                 initS->setVisible(false);
-                repaint();
             }
             else
             {
@@ -610,8 +609,9 @@ struct FormulaControlArea : public juce::Component,
                 showS->setLabels({"Hide"});
                 stepS->setVisible(true);
                 initS->setVisible(true);
-                repaint();
             }
+
+            repaint();
         }
         case tag_debugger_init:
         {
@@ -713,6 +713,10 @@ void FormulaModulatorEditor::applyCode()
     editor->undoManager()->pushFormula(scene, lfo_id, *formulastorage);
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     storage->getPatch().isDirty = true;
+    if (debugPanel->isOpen)
+    {
+        debugPanel->initializeLfoDebugger();
+    }
     editor->repaintFrame();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
     setApplyEnabled(false);

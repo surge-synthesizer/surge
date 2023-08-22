@@ -9,6 +9,83 @@
 local surge = {}
 local mod = {}
 
+
+--- MATH FUNCTIONS ---
+
+
+-- signum function returns -1 for negative numbers, 0 for zero, 1 for positive numbers
+function math.sgn(x)
+    return (x > 0 and 1) or (x < 0 and -1) or 0
+end
+
+-- sign function returns -1 for negative numbers and 1 for positive numbers and zero
+function math.sign(x)
+    return (x < 0 and -1) or 1
+end
+
+-- linearly interpolates value from in range to out range
+function math.rescale(value, in_min, in_max, out_min, out_max)
+    return (((value - in_min) * (out_max - out_min)) / (in_max - in_min)) + out_min
+end
+
+-- returns the norm of the two components (hypotenuse)
+function math.norm(a, b)
+    return math.sqrt(a ^ 2 + b ^ 2)
+end
+
+-- returns the absolute range between the two numbers
+function math.range(a, b)
+    return math.abs(a - b)
+end
+
+-- returns the frequency of the given MIDI note number under A440 equal temperament
+-- ref is optional and allows specifying a different center frequency for MIDI note 69 (middle A)
+function math.note_to_freq(note, ref)
+    local default = 440
+    ref = ref or default
+    return 2^((note - 69) / 12) * ref
+end
+
+-- returns the fractional MIDI note number matching given frequency under A440 equal temperament
+-- ref is optional and allows specifying a different center frequency for MIDI note 69 (middle A)
+function math.freq_to_note(freq, ref)
+    local default = 440
+    ref = ref or default
+    return 12 * math.log((freq / ref), 2) + 69
+end
+
+-- returns greatest common denominator between a and b
+-- use with integers only!
+function math.gcd(a, b)
+    local x = a
+    local y = b
+    local t
+
+    while y ~= 0 do
+        t = y
+        y = x % y
+        x = t
+    end
+
+    return x
+end
+
+-- returns least common multiple between a and b
+-- use with integers only!
+function math.lcm(a, b)
+    local t = a
+
+    while t % b ~= 0 do
+        t = t + a
+    end
+
+    return t
+end
+
+
+--- BUILT-IN MODULATORS ---
+
+
 mod.ClockDivider = { numerator = 1,
                      denominator = 1,
                      prioribeat = -1,
@@ -65,4 +142,5 @@ mod.AHDEnvelope.at = function(self, phase)
 end
 
 surge.mod = mod
+
 return surge
