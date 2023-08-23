@@ -150,14 +150,13 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         std::getline(split, address2, '/');
         if (address2 == "vol")
         {
-            synth.setNoteExpression(SurgeVoice::VOLUME, id, -1, -1, -1);
+            // sspPtr->oscRingBuf.push();
         }
         else if (address2 == "pitch")
         {
-            mk = 60;      // change this
-            offset = 0.0; // change this
-            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                frequency, static_cast<char>(velocity), noteon, noteID));
+            float offset = 0.0; // PKS TODO:change this
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PITCH, id, offset));
         }
         else if (address2 == "pan")
         {

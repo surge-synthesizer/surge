@@ -666,11 +666,27 @@ void SurgeSynthProcessor::processBlockOSC()
     {
         switch (om.type)
         {
-        case oscToAudio::NOTEX:
-            // surge->setNoteExpression(SurgeVoice::PITCH, id, mk, -1, offset);
+        case SurgeSynthProcessor::NOTEX_PITCH:
+            surge->setNoteExpression(SurgeVoice::PITCH, om.noteid, -1, -1, om.fval);
             break;
 
-        case oscToAudio::PARAMETER:
+        case SurgeSynthProcessor::NOTEX_VOL:
+            surge->setNoteExpression(SurgeVoice::VOLUME, om.noteid, -1, -1, om.fval);
+            break;
+
+        case SurgeSynthProcessor::NOTEX_PAN:
+            surge->setNoteExpression(SurgeVoice::PAN, om.noteid, -1, -1, om.fval);
+            break;
+
+        case SurgeSynthProcessor::NOTEX_PRES:
+            surge->setNoteExpression(SurgeVoice::PRESSURE, om.noteid, -1, -1, om.fval);
+            break;
+
+        case SurgeSynthProcessor::NOTEX_TIMB:
+            surge->setNoteExpression(SurgeVoice::TIMBRE, om.noteid, -1, -1, om.fval);
+            break;
+
+        case SurgeSynthProcessor::PARAMETER:
         {
             float pval = om.fval;
             if (om.param->valtype == vt_int)
@@ -680,20 +696,20 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
         }
 
-        case oscToAudio::MNOTE:
+        case SurgeSynthProcessor::MNOTE:
             if (om.on)
                 surge->playNote(0, om.mnote, om.vel, 0, om.mnote);
             else
                 surge->releaseNote(0, om.mnote, om.vel, om.mnote);
             break;
 
-        case oscToAudio::FREQNOTE:
+        case SurgeSynthProcessor::FREQNOTE:
             if (om.on)
                 surge->playNoteByFrequency(om.fval, om.vel, om.noteid);
             else
             {
-                auto k = 12 * log2(om.fval / 440) + 69;
-                surge->releaseNote(0, k, om.vel, om.noteid);
+                // auto k = 12 * log2(om.fval / 440) + 69;
+                surge->releaseNoteByHostNoteID(om.vel, om.noteid);
             }
             break;
 
