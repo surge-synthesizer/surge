@@ -137,6 +137,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -fasm-blocks
       )
     endif()
+
+    if (WIN32)
+      add_compile_options(-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH=1)
+    endif()
   elseif(CMAKE_CXX_COMPILER_ID MATCHES "^GNU$")
     # GCC only
     add_compile_options(
