@@ -70,7 +70,7 @@ jobs:
         windows-x64-clang:
           imageName: 'windows-2022'
           isWindows: True
-          cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug"
+          cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++-16 -DCMAKE_C_COMPILER=clang-16 -DCMAKE_BUILD_TYPE=Debug"
           cmakeConfig: "Debug"
           cmakeTarget: $(defaultTargets)
         windows-unittest-clang:
@@ -78,7 +78,7 @@ jobs:
           isWindows: True
           isWindowsUnitTest: True
           isUnitTest: True
-          cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Release"
+          cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++-16 -DCMAKE_C_COMPILER=clang-16 -DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
         linux-juce-python-targets:
