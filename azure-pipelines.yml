@@ -70,8 +70,8 @@ jobs:
         windows-x64-clang:
           imageName: 'windows-2022'
           isWindows: True
-          cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Release"
-          cmakeConfig: "Release"
+          cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug"
+          cmakeConfig: "Debug"
           cmakeTarget: $(defaultTargets)
         windows-unittest-clang:
           imageName: 'windows-2022'
