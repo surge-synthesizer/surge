@@ -78,7 +78,8 @@ jobs:
           isWindows: True
           isWindowsUnitTest: True
           isUnitTest: True
-          cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Release"
+          cmakeArguments: "-A x64 -DCMAKE_BUILD_TYPE=Release"
+          #cmakeArguments: "-GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Release"
           cmakeConfig: "Release"
           cmakeTarget: "surge-testrunner"
         linux-juce-python-targets:
