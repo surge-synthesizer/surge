@@ -69,7 +69,8 @@ struct DriftLFO
  */
 template <typename valtype> struct CharacterFilter
 {
-    SurgeStorage *storage;
+    SurgeStorage *storage{nullptr};
+    CharacterFilter() {}
     CharacterFilter(SurgeStorage *s) noexcept : storage(s) {}
 
     void init(int itype)
