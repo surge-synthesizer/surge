@@ -516,12 +516,25 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     initPatchCategoryType = Surge::Storage::getUserDefaultValue(
         this, Surge::Storage::InitialPatchCategoryType, "Factory");
 
-    fxUserPreset = std::make_unique<Surge::Storage::FxUserPreset>();
-    fxUserPreset->doPresetRescan(this);
+    try
+    {
+        fxUserPreset = std::make_unique<Surge::Storage::FxUserPreset>();
+        fxUserPreset->doPresetRescan(this);
+    }
+    catch (fs::filesystem_error &e)
+    {
+        reportError(e.what(), "Error Scanning FX Presets");
+    }
 
-    modulatorPreset = std::make_unique<Surge::Storage::ModulatorPreset>();
-    modulatorPreset->forcePresetRescan();
-
+    try
+    {
+        modulatorPreset = std::make_unique<Surge::Storage::ModulatorPreset>();
+        modulatorPreset->forcePresetRescan();
+    }
+    catch (fs::filesystem_error &e)
+    {
+        reportError(e.what(), "Error Scnning Modulator Presets");
+    }
     memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }
 
