@@ -75,7 +75,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     SurgeSynthesizer *synth{nullptr};
     SurgeSynthProcessor *sspPtr{nullptr};
     std::string getWholeString(const juce::OSCMessage &message);
-    int getNoteID(const juce::OSCMessage &om);
+    int getNoteID(const juce::OSCMessage &om, int pos);
     juce::OSCSender juceOSCSender;
     void sendError(std::string errorMsg);
     void sendNotFloatError(std::string addr, std::string msg);

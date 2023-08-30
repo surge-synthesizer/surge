@@ -710,7 +710,7 @@ code {
 
                 <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
                     <div class="heading">
-                         <h3>Note Expressions (in progress):</h3>
+                         <h3>Note Expressions:</h3>
                     </div>
                     <table style="border: 2px solid black;">
                          <tr>
@@ -720,34 +720,34 @@ code {
                               <th>Arg. 2</th>
                          </tr>
                          <tr>
-                              <td><b>† </b>/nex/pitch</td>
+                              <td><b>† </b>/ne/pitch</td>
                               <td>pitch note expression</td>
-                              <td>pitch offset (0 - 127)</td>
                               <td>noteID (0 - maxint)§
+                              <td>pitch offset (-120.0 - 120.0:&nbsp;&nbsp;semitones)</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/nex/vol</td>
+                              <td><b>† </b>/ne/volume</td>
                               <td>volume note expression</td>
-                              <td>volume offset (0 - 127)</td>
                               <td>noteID (0 - maxint)§
+                              <td>volume multiplier (0.0 - 4.0)</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/nex/pan</td>
+                              <td><b>† </b>/ne/pan</td>
                               <td>pan note expression</td>
-                              <td>position (0 - 127)</td>
                               <td>noteID (0 - maxint)§
+                              <td>position (0.0 - 1.0:&nbsp;&nbsp;0.0=left&nbsp;&nbsp;0.5=center&nbsp;&nbsp;1.0=right)</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/nex/timb</td>
+                              <td><b>† </b>/ne/timbre</td>
                               <td>timbre note expression</td>
-                              <td>timbre (0 - 127)</td>
                               <td>noteID (0 - maxint)§
+                              <td>timbre (0.0 - 1.0:&nbsp;&nbsp;'brightness')</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/nex/press</td>
+                              <td><b>† </b>/ne/pressure</td>
                               <td>pressure note expression</td>
-                              <td>pressure(0 - 127)</td>
                               <td>noteID (0 - maxint)§
+                              <td>pressure (0.0 - 1.0)</td>
                          </tr>
                          <tr>
                             <td colspan="5">
@@ -757,11 +757,11 @@ code {
                     </table>
                 </div>
                 <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
-                    <span><code>/nex/pitch 0.34 24566</code></span>
-                    <span><code>/nex/vol 0.5 24566</code></span>
-                    <span><code>/nex/pan 0.9 24566</code></span>
-                    <span><code>/nex/timb 0.18 24566</code></span>
-                    <span><code>/nex/press 0.4 24566</code></span>
+                    <span><code>/ne/pitch 24566 0.34</code></span>
+                    <span><code>/ne/volume 24566 0.5</code></span>
+                    <span><code>/ne/pan 24566 0.9</code></span>
+                    <span><code>/ne/timbre 24566 0.18</code></span>
+                    <span><code>/ne/pressure 24566 0.4</code></span>
                 </div>
 
                <div class="tablewrap fl cl">

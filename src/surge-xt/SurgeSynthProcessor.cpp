@@ -693,24 +693,28 @@ void SurgeSynthProcessor::processBlockOSC()
                 pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
             surge->setParameter01(surge->idForParameter(om.param), pval, true);
             surge->storage.getPatch().isDirty = true;
-            break;
         }
+        break;
 
         case SurgeSynthProcessor::MNOTE:
+        {
             if (om.on)
                 surge->playNote(0, om.mnote, om.vel, 0, om.mnote);
             else
                 surge->releaseNote(0, om.mnote, om.vel, om.mnote);
+        }
             break;
 
         case SurgeSynthProcessor::FREQNOTE:
+        {
             if (om.on)
                 surge->playNoteByFrequency(om.fval, om.vel, om.noteid);
             else
             {
                 // auto k = 12 * log2(om.fval / 440) + 69;
-                surge->releaseNoteByHostNoteID(om.vel, om.noteid);
+                surge->releaseNoteByHostNoteID(om.noteid, om.vel);
             }
+        }
             break;
 
         default:
