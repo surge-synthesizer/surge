@@ -747,7 +747,7 @@ code {
                               <td><b>† </b>/ne/pressure</td>
                               <td>pressure note expression</td>
                               <td>noteID (0 - maxint)§
-                              <td>pressure (0.0 - 1.0)</td>
+                              <td>polyphonic aftertouch (0.0 - 1.0)</td>
                          </tr>
                          <tr>
                             <td colspan="5">
