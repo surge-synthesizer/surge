@@ -703,7 +703,7 @@ void SurgeSynthProcessor::processBlockOSC()
             else
                 surge->releaseNote(0, om.mnote, om.vel, om.mnote);
         }
-            break;
+        break;
 
         case SurgeSynthProcessor::FREQNOTE:
         {
@@ -715,7 +715,7 @@ void SurgeSynthProcessor::processBlockOSC()
                 surge->releaseNoteByHostNoteID(om.noteid, om.vel);
             }
         }
-            break;
+        break;
 
         default:
             break;

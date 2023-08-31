@@ -711,7 +711,8 @@ code {
                 <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
                     <div class="heading">
                          <h3>Note Expressions:</h3>
-                    </div>
+                    </div>)HTML"
+          << R"HTML(
                     <table style="border: 2px solid black;">
                          <tr>
                               <th>Address</th>
