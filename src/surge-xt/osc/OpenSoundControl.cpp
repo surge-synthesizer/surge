@@ -327,7 +327,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // All notes off
-    else if (address2 == "allnotesoff")
+    else if (address1 == "allnotesoff")
     {
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLNOTESOFF));
     }
