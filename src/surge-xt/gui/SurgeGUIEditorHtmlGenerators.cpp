@@ -634,7 +634,7 @@ code {
                             not how messages are to be formatted for OSC).
                         </p>
                         <p style="margin-top: 28px;">
-                            All OSC messages described below work in <b>both</b> directions, unless marked with "<b>†</b>". For these, only
+                             <b style="margin-right: 4px;">†</b>All OSC messages described below work in <b>both</b> directions, unless marked with "<b>†</b>". For these, only
                             the incoming OSC message is supported; there is no corresponding OSC out message.
                         </p>
                         <p style="margin-bottom: 0px;">
@@ -693,8 +693,8 @@ code {
                             <td colspan="5">
                                 <p class="tight">* Velocity of 0 releases note; use the '.../rel' messages to release notes with velocity.</p>
                                 <p class="tight">‡ When using '/fnote', Surge XT <em>must</em> be set to standard tuning for proper results. </p>
-                                <p class="tight">§ NoteID can be supplied for more control over the lifecycle of notes (and for future note modulation).
-                                   If it is not supplied, one will be derived from the note or frequency.</p>
+                                <p class="tight">§ NoteID can be optionally supplied for more control over the lifecycle of notes, for note expressions (below),
+                                or (future) note modulation mapping.
                             </td>
                          </tr>
                     </table>
@@ -706,6 +706,63 @@ code {
                     <span><code>/fnote 440.0 0</code></span>
                     <span><code>/mnote/rel 68 45</code></span>
                     <span><code>/fnote/rel 440.0 45</code></span>
+                </div>
+
+                <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
+                    <div class="heading">
+                         <h3>Note Expressions:</h3>
+                    </div>)HTML"
+          << R"HTML(
+                    <table style="border: 2px solid black;">
+                         <tr>
+                              <th>Address</th>
+                              <th>Description</th>
+                              <th>Arg. 1</th>
+                              <th>Arg. 2</th>
+                         </tr>
+                         <tr>
+                              <td><b>† </b>/ne/pitch</td>
+                              <td>pitch note expression</td>
+                              <td>noteID (0 - maxint)§
+                              <td>pitch offset (-120.0 - 120.0:&nbsp;&nbsp;semitones)</td>
+                         </tr>
+                         <tr>
+                              <td><b>† </b>/ne/volume</td>
+                              <td>volume note expression</td>
+                              <td>noteID (0 - maxint)§
+                              <td>volume multiplier (0.0 - 4.0)</td>
+                         </tr>
+                         <tr>
+                              <td><b>† </b>/ne/pan</td>
+                              <td>pan note expression</td>
+                              <td>noteID (0 - maxint)§
+                              <td>position (0.0 - 1.0:&nbsp;&nbsp;0.0=left&nbsp;&nbsp;0.5=center&nbsp;&nbsp;1.0=right)</td>
+                         </tr>
+                         <tr>
+                              <td><b>† </b>/ne/timbre</td>
+                              <td>timbre note expression</td>
+                              <td>noteID (0 - maxint)§
+                              <td>timbre (0.0 - 1.0:&nbsp;&nbsp;'brightness')</td>
+                         </tr>
+                         <tr>
+                              <td><b>† </b>/ne/pressure</td>
+                              <td>pressure note expression</td>
+                              <td>noteID (0 - maxint)§
+                              <td>polyphonic aftertouch (0.0 - 1.0)</td>
+                         </tr>
+                         <tr>
+                            <td colspan="5">
+                                <p class="tight">§ NoteID should be from an already-initiated note.</p>
+                            </td>
+                         </tr>
+                    </table>
+                </div>
+                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                    <span><code>/ne/pitch 24566 0.34</code></span>
+                    <span><code>/ne/volume 24566 0.5</code></span>
+                    <span><code>/ne/pan 24566 0.9</code></span>
+                    <span><code>/ne/timbre 24566 0.18</code></span>
+                    <span><code>/ne/pressure 24566 0.4</code></span>
                 </div>
 
                <div class="tablewrap fl cl">

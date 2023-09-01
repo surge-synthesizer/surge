@@ -335,14 +335,21 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     //==============================================================================
     // Open Sound Control
+    enum oscToAudio_type
+    {
+        MNOTE,
+        FREQNOTE,
+        PARAMETER,
+        NOTEX_PITCH,
+        NOTEX_VOL,
+        NOTEX_PAN,
+        NOTEX_TIMB,
+        NOTEX_PRES
+    };
+
     struct oscToAudio
     {
-        enum Type
-        {
-            MNOTE,
-            FREQNOTE,
-            PARAMETER
-        } type{PARAMETER};
+        oscToAudio_type type;
         Parameter *param;
         float fval{0.0};
         char mnote, vel;
@@ -359,9 +366,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
             : type(MNOTE), mnote(note), vel(velocity), on(noteon), noteid(nid)
         {
         }
+        oscToAudio(oscToAudio_type type, int32_t nid, float f) : type(type), noteid(nid), fval(f) {}
     };
-    LockFreeStack<oscToAudio, 4096> oscInput;
-
     sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
 
     Surge::OSC::OpenSoundControl oscHandler;
