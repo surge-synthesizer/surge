@@ -666,28 +666,35 @@ code {
                               <td>MIDI-style note</td>
                               <td>note number (0 - 127)</td>
                               <td>velocity (0 - 127)*</td>
-                              <td>noteID (optional, 0 - maxint)§
+                              <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td><b>† </b>/fnote ‡</td>
                               <td>frequency note</td>
                               <td>frequency (8.176 - 12543.853)</td>
                               <td>velocity (0 - 127)*</td>
-                              <td>noteID (optional, 0 - maxint)§
+                              <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td><b>† </b>/mnote/rel</td>
                               <td>MIDI-style note release</td>
                               <td>note number (0 - 127)</td>
                               <td>release velocity (0 - 127)</td>
-                              <td>noteID (optional, 0 - maxint)§
+                              <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td><b>† </b>/fnote/rel</td>
                               <td>frequency note release</td>
                               <td>frequency (8.176 - 12543.853)</td>
                               <td>release velocity (0 - 127)</td>
-                              <td>noteID (optional, 0 - maxint)§
+                              <td>noteID (optional, 0 - maxint)§</td>
+                         </tr>
+                         <tr>
+                              <td><b>† </b>/allnotesoff</td>
+                              <td>release all current notes</td>
+                              <td>(none)</td>
+                              <td>(none)</td>
+                              <td>(none)</td>
                          </tr>
                          <tr>
                             <td colspan="5">

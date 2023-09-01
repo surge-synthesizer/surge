@@ -326,6 +326,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
     }
 
+    // All notes off
+    else if (address2 == "allnotesoff")
+    {
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLNOTESOFF));
+    }
+
     // Parameters
     else if (address1 == "param")
     {
@@ -358,6 +364,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 #endif
     }
 
+    // Patch changing
     else if (address1 == "patch")
     {
         std::getline(split, address2, '/');
@@ -408,6 +415,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
     }
 
+    // Tuning switching
     else if (address1 == "tuning")
     {
         fs::path path = getWholeString(message);
@@ -487,6 +495,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
     }
 
+    // Initiate parameter dump
     else if (address1 == "send_all_parameters")
     {
         OpenSoundControl::sendAllParams();
