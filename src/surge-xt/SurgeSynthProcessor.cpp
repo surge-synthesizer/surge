@@ -711,9 +711,14 @@ void SurgeSynthProcessor::processBlockOSC()
                 surge->playNoteByFrequency(om.fval, om.vel, om.noteid);
             else
             {
-                // auto k = 12 * log2(om.fval / 440) + 69;
                 surge->releaseNoteByHostNoteID(om.noteid, om.vel);
             }
+        }
+        break;
+
+        case SurgeSynthProcessor::ALLNOTESOFF:
+        {
+            surge->allNotesOff();
         }
         break;
 

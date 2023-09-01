@@ -344,7 +344,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         NOTEX_VOL,
         NOTEX_PAN,
         NOTEX_TIMB,
-        NOTEX_PRES
+        NOTEX_PRES,
+        ALLNOTESOFF
     };
 
     struct oscToAudio
@@ -357,6 +358,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         int32_t noteid;
 
         oscToAudio() {}
+        oscToAudio(oscToAudio_type omtype) : type(omtype) {}
         oscToAudio(Parameter *p, float f) : type(PARAMETER), param(p), fval(f) {}
         oscToAudio(float freq, char velocity, bool noteon, int32_t nid)
             : type(FREQNOTE), fval(freq), vel(velocity), on(noteon), noteid(nid)
