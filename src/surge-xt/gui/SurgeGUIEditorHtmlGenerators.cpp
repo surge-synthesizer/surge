@@ -614,7 +614,7 @@ code {
                             OSC messages are constructed using the exact (case sensitive)
                             entry listed in the <b>Address</b> column in the tables below.</br>
                             The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
-                            where <code>address</code> is one of the ones listed below, and <code>value</code> can be*:
+                            where <code>address</code> is one of the ones listed below, and zero or more <code>values</code> can be*:
 
                             <ul>
                                 <li>a floating point value between <b>0.0</b> and <b>1.0</b> (note: use '.' as the decimal mark, never ',').</li>
@@ -657,9 +657,9 @@ code {
                          <tr>
                               <th>Address</th>
                               <th>Description</th>
-                              <th>Arg. 1</th>
-                              <th>Arg. 2</th>
-                              <th>Arg. 3</th>
+                              <th>Value 1</th>
+                              <th>Value 2</th>
+                              <th>Value 3</th>
                          </tr>
                          <tr>
                               <td><b>† </b>/mnote</td>
@@ -724,8 +724,8 @@ code {
                          <tr>
                               <th>Address</th>
                               <th>Description</th>
-                              <th>Arg. 1</th>
-                              <th>Arg. 2</th>
+                              <th>Value 1</th>
+                              <th>Value 2</th>
                          </tr>
                          <tr>
                               <td><b>† </b>/ne/pitch</td>
