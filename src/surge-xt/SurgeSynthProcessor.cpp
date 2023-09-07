@@ -768,6 +768,7 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
 
     processBlockPlayhead();
     processBlockMidiFromGUI();
+    processBlockOSC();
 
     auto ev = process->in_events;
     auto evtsz = ev->size(ev);
