@@ -249,21 +249,26 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         int velocity = static_cast<int>(message[1].getFloat32());
         constexpr float MAX_MIDI_FREQ = 12543.854;
 
-        // ensure freq. is in MIDI note range
-        if (frequency < Tunings::MIDI_0_FREQ || frequency > MAX_MIDI_FREQ)
+        bool noteon = (address2 != "rel") && (velocity != 0);
+
+        // (if not a note off-by-noteid) ensure freq. is in MIDI note range
+        if (noteon || noteID == 0)
         {
-            sendError("Frequency '" + std::to_string(frequency) + "' is out of range. (" +
-                      std::to_string(Tunings::MIDI_0_FREQ) + " - " + std::to_string(MAX_MIDI_FREQ) +
-                      ").");
-            return;
+            if (frequency < Tunings::MIDI_0_FREQ || frequency > MAX_MIDI_FREQ)
+            {
+                sendError("Frequency '" + std::to_string(frequency) + "' is out of range. (" +
+                          std::to_string(Tunings::MIDI_0_FREQ) + " - " +
+                          std::to_string(MAX_MIDI_FREQ) + ").");
+                return;
+            }
         }
+
         // check velocity range
         if (velocity < 0 || velocity > 127)
         {
             sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
             return;
         }
-        bool noteon = (address2 != "rel") && (velocity != 0);
 
         // Make a noteID from frequency if not supplied
         if (noteID == 0)
@@ -304,20 +309,24 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         int note = static_cast<int>(message[0].getFloat32());
         int velocity = static_cast<int>(message[1].getFloat32());
+        bool noteon = (address2 != "rel") && (velocity != 0);
 
-        // check note and velocity ranges
-        if (note < 0 || note > 127)
+        // check note and velocity ranges (if not a release w/ id)
+        if (noteon || noteID == 0)
         {
-            sendError("Note '" + std::to_string(note) + "' is out of range (0-127).");
-            return;
+            if (note < 0 || note > 127)
+            {
+                sendError("Note '" + std::to_string(note) + "' is out of range (0-127).");
+                return;
+            }
         }
+
         if (velocity < 0 || velocity > 127)
         {
             sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
             return;
         }
 
-        bool noteon = (address2 != "rel") && (velocity != 0);
         if (noteID == 0)
             noteID = int(note);
 
