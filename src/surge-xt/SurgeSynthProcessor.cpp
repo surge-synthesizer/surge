@@ -699,9 +699,9 @@ void SurgeSynthProcessor::processBlockOSC()
         case SurgeSynthProcessor::MNOTE:
         {
             if (om.on)
-                surge->playNote(0, om.mnote, om.vel, 0, om.mnote);
+                surge->playNote(0, om.mnote, om.vel, 0, om.noteid);
             else
-                surge->releaseNote(0, om.mnote, om.vel, om.mnote);
+                surge->releaseNoteByHostNoteID(om.noteid, om.vel);
         }
         break;
 
