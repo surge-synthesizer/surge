@@ -958,7 +958,12 @@ code {
         )HTML";
         }
 
-        if (itr.ctrlgroup == cg_OSC || itr.ctrlgroup == cg_FX)
+        if ((itr.ctrlgroup == cg_OSC) &&
+            (fs::path(itr.storage_name).filename().string().substr(0, 5) == "param"))
+        {
+            valueType = "(contextual)";
+        }
+        else if (itr.ctrlgroup == cg_FX)
         {
             valueType = "(contextual)";
         }
