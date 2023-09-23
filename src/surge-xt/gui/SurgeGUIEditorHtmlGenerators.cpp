@@ -701,8 +701,7 @@ code {
                                 <p class="tight">* Velocity of 0 releases note; use the '.../rel' messages to release notes with velocity. If noteIDs are
                                     supplied, the note number or frequency value for releases is disregarded.</p>
                                 <p class="tight">‡ When using '/fnote', Surge XT <em>must</em> be set to standard tuning for proper results. </p>
-                                <p class="tight">§ NoteID can be optionally supplied for more control over the lifecycle of notes, for note expressions (below),
-                                or (future) note modulation mapping.
+                                <p class="tight">§ NoteID can be optionally supplied for more control over the lifecycle of notes, or for note expressions (below).
                             </td>
                          </tr>
                     </table>
