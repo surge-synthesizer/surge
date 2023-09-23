@@ -344,7 +344,25 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Parameters
     else if (address1 == "param")
     {
-        if (message.size() != 1)
+        bool normalized = false;
+        if (message.size() == 2)
+        {
+            if (!message[1].isString())
+            {
+                sendNormError();
+                return;
+            }
+            else if (message[1].getString() == "n")
+            {
+                normalized = true;
+            }
+            else
+            {
+                sendNormError();
+                return;
+            }
+        }
+        else if (message.size() != 1)
         {
             sendDataCountError("param", "1");
             return;
@@ -365,7 +383,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, message[0].getFloat32()));
+        sspPtr->oscRingBuf.push(
+            SurgeSynthProcessor::oscToAudio(p, message[0].getFloat32(), normalized));
 
 #ifdef DEBUG_VERBOSE
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
@@ -585,6 +604,11 @@ void OpenSoundControl::sendNotFloatError(std::string addr, std::string msg)
     OpenSoundControl::sendError(
         "/" + addr + " data value '" + msg +
         "' is not expressed as a float. All data must be sent as OSC floats.");
+}
+
+void OpenSoundControl::sendNormError()
+{
+    OpenSoundControl::sendError("Only 'n' (for 'normalized') is accepted as second data value).");
 }
 
 void OpenSoundControl::sendDataCountError(std::string addr, std::string count)

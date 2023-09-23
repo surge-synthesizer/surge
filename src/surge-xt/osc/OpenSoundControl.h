@@ -78,6 +78,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     int getNoteID(const juce::OSCMessage &om, int pos);
     juce::OSCSender juceOSCSender;
     void sendError(std::string errorMsg);
+    void sendNormError();
     void sendNotFloatError(std::string addr, std::string msg);
     void sendDataCountError(std::string addr, std::string count);
 

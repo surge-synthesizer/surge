@@ -891,8 +891,19 @@ code {
                     </table>
                 </div>
 
-                <div style="width: 860px; margin: 16px auto 8px; line-height: 1.75">
-                    <span><code>/param/b/amp/gain 0.63</code></span>
+                <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
+                    <div style="font-size: 12pt; font-family: Lato;">
+                        <p>
+                            For /param messages, floating point data values may be expressed in their natural range
+                            (as described below in the 'Appropriate Values' column) or <u>normalized</u> to the range 0.0 to 1.0.
+                            To use normalized values, add 'n' after the data value, as shown in the first example below.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
+                    <span><code>/param/b/amp/gain 0.63 n</code></span>
+                    <span><code>/param/b/amp/gain 45.3</code></span>
                     <span><code>/param/global/polyphony_limit 12</code></span>
                     <span><code>/param/a/mixer/noise/mute 0</code></span>
                 </div>
@@ -982,7 +993,11 @@ code {
 
             case vt_float:
             {
-                valueType = "float (0.0 to 1.0)";
+                std::stringstream buffer;
+                buffer.precision(1);
+                buffer << std::fixed << "float (" << itr.p->val_min.f << " to " << itr.p->val_max.f
+                       << ")";
+                valueType = buffer.str();
                 break;
             }
 
