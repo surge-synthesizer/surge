@@ -277,6 +277,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // queue packet to audio thread
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
             frequency, static_cast<char>(velocity), noteon, noteID));
+        std::cout << "fnote: " << noteID << "  on/off: " << noteon << std::endl;
     }
 
     // "MIDI-style" notes

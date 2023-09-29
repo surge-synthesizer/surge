@@ -321,7 +321,7 @@ void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, std::string
 {
     if (surge->storage.oscSending && !paramPath.empty())
     {
-        oscHandler.send("/param/" + paramPath, valStr);
+        oscHandler.send(paramPath, valStr);
     }
 }
 
@@ -342,6 +342,11 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p)
 
         case vt_float:
             valStr = float_to_clocalestr(p->val.f);
+            /*
+                auto nat_value = p->normalized_to_value(p->val.f);
+                valStr = float_to_clocalestr(p->val.f) + "  " + float_to_clocalestr(nat_value) +
+               "(n)";
+            */
             break;
 
         default:
