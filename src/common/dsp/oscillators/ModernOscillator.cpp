@@ -125,8 +125,8 @@ void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
 {
     // we need a tiny little portamento since the derivative is pretty
     // unstable under super big pitch changes
-    pitchlag.setRate(0.5);
-    pitchlag.startValue(pitch);
+    pitchlag.newValue(pitch);
+    pitchlag.instantize();
     pwidth.setRate(0.001); // 4x slower
     sync.setRate(0.001 * BLOCK_SIZE_OS);
 
@@ -171,7 +171,7 @@ void ModernOscillator::process_sblk(float pitch, float drift, bool stereo, float
 
     float ud = oscdata->p[mo_unison_detune].get_extended(
         localcopy[oscdata->p[mo_unison_detune].param_id_in_scene].f);
-    pitchlag.startValue(pitch);
+    pitchlag.newValue(pitch);
     sync.newValue(std::max(0.f, localcopy[oscdata->p[mo_sync].param_id_in_scene].f));
 
     float absOff = 0;
