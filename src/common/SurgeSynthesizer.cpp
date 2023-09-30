@@ -523,8 +523,8 @@ void SurgeSynthesizer::playNoteByFrequency(float freq, char velocity, int32_t id
     auto k = 12 * log2(freq / 440) + 69;
     auto mk = (int)std::floor(k);
     auto off = k - mk;
-    //std::cout << "playNote freq: " << freq << "  note: " << mk << "  offset: " << off
-    //   << "  vel: " << static_cast<int>(velocity) << " id : " << id << std::endl;
+    // std::cout << "playNote freq: " << freq << "  note: " << mk << "  offset: " << off
+    //    << "  vel: " << static_cast<int>(velocity) << " id : " << id << std::endl;
     playNote(0, mk, velocity, 0, id);
     // and now to fix the tuning
     this->setNoteExpression(SurgeVoice::PITCH, id, mk, 0, off); // since PITCH is in semitones

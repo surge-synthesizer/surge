@@ -293,7 +293,7 @@ TEST_CASE("Play and release Frequency and Note ID", "[voice]")
             for (auto &c : cmd)
             {
                 auto [play, keyOrFreq, channel, nid, expected] = c;
-                INFO( "CMD " << play << " " << keyOrFreq << " " << nid);
+                INFO("CMD " << play << " " << keyOrFreq << " " << nid);
                 if (play)
                 {
                     if (byNote)
@@ -316,7 +316,8 @@ TEST_CASE("Play and release Frequency and Note ID", "[voice]")
                     {
                         for (const auto &v : s->voices[sc])
                         {
-                            std::cout << v << " " << v->state.gate << " " << v->state.key << " " << v->host_note_id << std::endl;
+                            std::cout << v << " " << v->state.gate << " " << v->state.key << " "
+                                      << v->host_note_id << std::endl;
                         }
                     }
                 }
