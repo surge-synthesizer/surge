@@ -403,6 +403,7 @@ bool Parameter::is_bipolar() const
     case ct_percent_bipolar_stereo:
     case ct_percent_bipolar_pan:
     case ct_percent_bipolar_stringbal:
+    case ct_percent_bipolar_deactivatable:
     case ct_percent_bipolar_w_dynamic_unipolar_formatting:
     case ct_noise_color:
     case ct_twist_aux_mix:

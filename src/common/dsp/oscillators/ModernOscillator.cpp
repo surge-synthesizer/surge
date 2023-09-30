@@ -141,7 +141,8 @@ void ModernOscillator::init(float pitch, bool is_display, bool nonzero_init_drif
         unisonOffsets[u] = us.detune(u);
         us.attenuatedPanLaw(u, mixL[u], mixR[u]);
 
-        phase[u] = oscdata->retrigger.val.b || is_display ? 0.f : storage->rand_01();
+        phase[u] =
+            oscdata->retrigger.val.b || is_display ? pitch_to_dphase(pitch) : storage->rand_01();
         sphase[u] = phase[u];
         sTurnFrac[u] = 0;
         sprior[u] = 0;
