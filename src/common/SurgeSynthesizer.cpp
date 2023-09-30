@@ -483,6 +483,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
 
     channelState[channel].keyState[key].keystate = velocity;
     channelState[channel].keyState[key].lastdetune = detune;
+    channelState[channel].keyState[key].lastNoteIdForKey = host_noteid;
 
     /*
     ** OK so why is there hold stuff here? This is play not release.
@@ -522,8 +523,8 @@ void SurgeSynthesizer::playNoteByFrequency(float freq, char velocity, int32_t id
     auto k = 12 * log2(freq / 440) + 69;
     auto mk = (int)std::floor(k);
     auto off = k - mk;
-    // std::cout << "playNote freq: " << freq << "  note: " << mk << "  offset: " << off
-    //   << "  vel: " << static_cast<int>(velocity) << std::endl;
+    //std::cout << "playNote freq: " << freq << "  note: " << mk << "  offset: " << off
+    //   << "  vel: " << static_cast<int>(velocity) << " id : " << id << std::endl;
     playNote(0, mk, velocity, 0, id);
     // and now to fix the tuning
     this->setNoteExpression(SurgeVoice::PITCH, id, mk, 0, off); // since PITCH is in semitones
@@ -1760,6 +1761,7 @@ void SurgeSynthesizer::releaseNoteByHostNoteID(int32_t host_noteid, char velocit
     std::array<uint16_t, 128> done;
     std::fill(done.begin(), done.end(), 0);
 
+    bool found{false};
     for (int s = 0; s < n_scenes; ++s)
     {
         auto &ptS = storage.getPatch().scene[s];
@@ -1773,6 +1775,7 @@ void SurgeSynthesizer::releaseNoteByHostNoteID(int32_t host_noteid, char velocit
         {
             if (v->host_note_id == host_noteid)
             {
+                found = true;
                 done[v->state.key] |= 1 << v->state.channel;
                 if (recycleNoteID)
                     done[v->originating_host_key] |= 1 << v->state.channel;
@@ -1794,6 +1797,21 @@ void SurgeSynthesizer::releaseNoteByHostNoteID(int32_t host_noteid, char velocit
             }
         }
         nidx++;
+    }
+
+    if (!found)
+    {
+        // go looking in the keystate in case it is a termianted voice
+        for (int ch = 0; ch < 15; ++ch)
+        {
+            for (int k = 0; k < 128; ++k)
+            {
+                if (channelState[ch].keyState[k].lastNoteIdForKey == host_noteid)
+                {
+                    releaseNote(ch, k, velocity, host_noteid);
+                }
+            }
+        }
     }
 }
 
@@ -2432,6 +2450,7 @@ void SurgeSynthesizer::allNotesOff()
         {
             channelState[i].keyState[k].keystate = 0;
             channelState[i].keyState[k].lastdetune = 0;
+            channelState[i].keyState[k].lastNoteIdForKey = -1;
         }
     }
 

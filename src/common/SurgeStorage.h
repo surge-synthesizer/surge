@@ -601,6 +601,7 @@ struct MidiKeyState
 {
     int keystate;
     char lastdetune;
+    int32_t lastNoteIdForKey;
     int64_t voiceOrder;
 };
 

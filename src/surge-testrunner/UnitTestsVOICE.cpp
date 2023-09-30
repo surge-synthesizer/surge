@@ -191,20 +191,20 @@ TEST_CASE("Release by Note ID", "[voice]")
 TEST_CASE("Play and release Frequency and Note ID", "[voice]")
 {
     using cmd = std::tuple<bool, float, int, int, int>;
-    using tcase = std::tuple<int, bool, std::vector<cmd>>;
+    using tcase = std::tuple<std::string, int, bool, std::vector<cmd>>;
 
     // clang-format off
     // This is a list of (mode) (byKeyOrFreq) and actions
     // an action is play-or-release then key, channel, nid, exp
     // exp is the expected voice count after the action.
     auto data = std::vector<tcase>{
-        {pm_poly, true,
+        {"Simple Poly", pm_poly, true,
          {
              {true, 60, 0, 184, 1},
              {false, -1, -1, 184, 0}
          }
         },
-        {pm_poly, true,
+        {"Two Poly", pm_poly, true,
          {
              {true, 60, 0, 184, 1},
              {true, 65, 0, 187, 2},
@@ -212,7 +212,7 @@ TEST_CASE("Play and release Frequency and Note ID", "[voice]")
              {false, -1, -1, 184, 0}
          }
         },
-        {pm_poly, true,
+        {"Two Poly Order Swapped", pm_poly, true,
          {
              {true, 60, 0, 184, 1},
              {true, 65, 0, 187, 2},
@@ -222,7 +222,7 @@ TEST_CASE("Play and release Frequency and Note ID", "[voice]")
         },
         // This are the cases that led to this test.
         // in mono_st you recycle voice ids
-        {pm_mono_st, true,
+        {"Mono ST", pm_mono_st, true,
          {
              {true, 60, 0, 2421, 1},
              {true, 65, 0, 9324, 1}, // but 9324 is gone and we are mono
@@ -230,7 +230,7 @@ TEST_CASE("Play and release Frequency and Note ID", "[voice]")
              {false, -1, -1, 2421, 0}
          }
         },
-        {pm_mono_st, true,
+        {"Mono ST Order Swapped", pm_mono_st, true,
          {
              {true, 60, 0, 2421, 1},
              {true, 65, 0, 9324, 1}, // but 9324 is gone and we are mono
@@ -238,58 +238,90 @@ TEST_CASE("Play and release Frequency and Note ID", "[voice]")
              {false, -1, -1, 9324, 0} // and this is a no-op
          }
         },
+        {"Mono FP", pm_mono_fp, false,
+         {
+             {true, 440, 0, 23, 1},
+             {true, 550, 0, 24, 1},
+             {false, -1, -1, 23, 1},
+             {false, -1, -1, 24, 0}
+         }
+        },
+
+
+        {"Mono FP Swap Order", pm_mono_fp, false,
+         {
+             {true, 440, 0, 23, 1},
+             {true, 550, 0, 24, 1},
+             {false, -1, -1, 24, 1},
+             {false, -1, -1, 23, 0}
+         }
+        },
     };
     // clang-format on
 
     for (auto &d : data)
     {
-        auto mode = std::get<0>(d);
-        auto byNote = std::get<1>(d);
-
-        auto s = surgeOnSine();
-        s->storage.getPatch().scene[0].polymode.val.i = mode;
-
-        auto proc = [&s]() {
-            for (int i = 0; i < 5; ++i)
-            {
-                s->process();
-            }
-        };
-
-        auto voicecount = [&s]() -> int {
-            int res{0};
-            for (auto sc = 0; sc < n_scenes; ++sc)
-            {
-                for (const auto &v : s->voices[sc])
-                {
-                    if (v->state.gate)
-                        res++;
-                }
-            }
-            return res;
-        };
-
-        auto cmd = std::get<2>(d);
-        for (auto &c : cmd)
+        DYNAMIC_SECTION("Test Case: " << std::get<0>(d))
         {
-            auto [play, keyOrFreq, channel, nid, expected] = c;
-            if (play)
-            {
-                if (byNote)
+            auto mode = std::get<1>(d);
+            auto byNote = std::get<2>(d);
+
+            auto s = surgeOnSine();
+            s->storage.getPatch().scene[0].polymode.val.i = mode;
+
+            auto proc = [&s]() {
+                for (int i = 0; i < 17; ++i)
                 {
-                    s->playNote(channel, keyOrFreq, 90, 0, nid);
+                    s->process();
+                }
+            };
+
+            auto voicecount = [&s]() -> int {
+                int res{0};
+                for (auto sc = 0; sc < n_scenes; ++sc)
+                {
+                    for (const auto &v : s->voices[sc])
+                    {
+                        if (v->state.gate)
+                            res++;
+                    }
+                }
+                return res;
+            };
+
+            auto cmd = std::get<3>(d);
+            for (auto &c : cmd)
+            {
+                auto [play, keyOrFreq, channel, nid, expected] = c;
+                INFO( "CMD " << play << " " << keyOrFreq << " " << nid);
+                if (play)
+                {
+                    if (byNote)
+                    {
+                        s->playNote(channel, keyOrFreq, 90, 0, nid);
+                    }
+                    else
+                    {
+                        s->playNoteByFrequency(keyOrFreq, 90, nid);
+                    }
                 }
                 else
                 {
-                    s->playNoteByFrequency(keyOrFreq, 90, nid);
+                    s->releaseNoteByHostNoteID(nid, 0);
                 }
+                proc();
+                if (voicecount() != expected)
+                {
+                    for (auto sc = 0; sc < n_scenes; ++sc)
+                    {
+                        for (const auto &v : s->voices[sc])
+                        {
+                            std::cout << v << " " << v->state.gate << " " << v->state.key << " " << v->host_note_id << std::endl;
+                        }
+                    }
+                }
+                REQUIRE(voicecount() == expected);
             }
-            else
-            {
-                s->releaseNoteByHostNoteID(nid, 0);
-            }
-            proc();
-            REQUIRE(voicecount() == expected);
         }
     }
 }
