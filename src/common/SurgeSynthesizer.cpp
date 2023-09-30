@@ -1762,11 +1762,20 @@ void SurgeSynthesizer::releaseNoteByHostNoteID(int32_t host_noteid, char velocit
 
     for (int s = 0; s < n_scenes; ++s)
     {
+        auto &ptS = storage.getPatch().scene[s];
+
+        // In the single trigger mode we can recycle ids
+        // so we need to portentialy kill the originating
+        // note also
+        bool recycleNoteID =
+            ptS.polymode.val.i == pm_mono_st_fp || ptS.polymode.val.i == pm_mono_st;
         for (auto v : voices[s])
         {
             if (v->host_note_id == host_noteid)
             {
                 done[v->state.key] |= 1 << v->state.channel;
+                if (recycleNoteID)
+                    done[v->originating_host_key] |= 1 << v->state.channel;
             }
         }
     }
