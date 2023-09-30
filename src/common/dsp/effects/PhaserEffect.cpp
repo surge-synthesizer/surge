@@ -97,7 +97,6 @@ void PhaserEffect::init_ctrltypes()
     configureControlsFromFXMetadata();
 }
 
-
 const char *PhaserEffect::group_label(int id)
 {
     switch (id)

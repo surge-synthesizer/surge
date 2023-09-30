@@ -27,8 +27,8 @@
 #include "SurgeSSTFXAdapter.h"
 #include "sst/effects/Phaser.h"
 
-class PhaserEffect : public surge::sstfx::SurgeSSTFXBase<
-                          sst::effects::phaser::Phaser<surge::sstfx::SurgeFXConfig>>
+class PhaserEffect
+    : public surge::sstfx::SurgeSSTFXBase<sst::effects::phaser::Phaser<surge::sstfx::SurgeFXConfig>>
 {
   public:
     PhaserEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
