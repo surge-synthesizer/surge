@@ -28,6 +28,7 @@ add_executable(${PROJECT_NAME}
   UnitTestsPARAM.cpp
   UnitTestsQUERY.cpp
   UnitTestsTUN.cpp
+  UnitTestsVOICE.cpp
   main.cpp
   )
 

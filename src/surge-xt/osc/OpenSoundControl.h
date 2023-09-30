@@ -19,8 +19,8 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
-#ifndef SURGE_SRC_SURGE_XT_OSC_OSCLISTENER_H
-#define SURGE_SRC_SURGE_XT_OSC_OSCLISTENER_H
+#ifndef SURGE_SRC_SURGE_XT_OSC_OPENSOUNDCONTROL_H
+#define SURGE_SRC_SURGE_XT_OSC_OPENSOUNDCONTROL_H
 /*
 ** Surge Synthesizer is Free and Open Source Software
 **
