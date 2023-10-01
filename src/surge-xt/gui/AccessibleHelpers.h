@@ -388,6 +388,7 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     std::function<void(T *)> onMenuKey = [](T *) {};
     // called with 1 0 -1 for max default min
     std::function<void(T *, int)> onMinMaxDef = [](T *, int) {};
+    std::function<void(T *)> onReturnPressed{nullptr};
 
     double min{-1}, max{1}, step{0.01};
 
@@ -519,6 +520,11 @@ template <typename T> bool OverlayAsAccessibleSlider<T>::keyPressed(const juce::
     auto [action, mod] = Surge::Widgets::accessibleEditAction(key, under->storage);
     auto ah = getAccessibilityHandler();
 
+    if (action == Return && onReturnPressed)
+    {
+        onReturnPressed(under);
+        return true;
+    }
     if (action == Increase)
     {
         onJogValue(under, +1, key.getModifiers().isShiftDown(), key.getModifiers().isCtrlDown());

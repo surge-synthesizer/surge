@@ -106,6 +106,8 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
         std::string sn = "Step Value " + std::to_string(i + 1);
         auto q = std::make_unique<OverlayAsAccessibleSlider<LFOAndStepDisplay>>(this, sn);
 
+        q->onReturnPressed = [this, i](auto *) { showStepTypein(i); };
+
         q->onGetValue = [this, i](auto *T) { return ss->steps[i]; };
         q->onValueToString = [this, i](auto *T, float f) -> std::string {
             auto q = f * 12.f;
@@ -2590,6 +2592,20 @@ void LFOAndStepDisplay::showStepRMB(int i)
 
     auto msg = fmt::format("Edit Step {}: {:.{}f} %", i + 1, ss->steps[i] * 100.f, decimals);
 
+    contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false, [this, i]() { showStepTypein(i); });
+
+    contextMenu.showMenuAsync(guiEditor->popupMenuOptions());
+}
+
+void LFOAndStepDisplay::showStepTypein(int i)
+{
+    int decimals = 2;
+
+    if (storage)
+    {
+        decimals = 2 + (4 * Surge::Storage::getUserDefaultValue(
+                                storage, Surge::Storage::HighPrecisionReadouts, 0));
+    }
     auto handleTypein = [this, i](const std::string &s) {
         auto divPos = s.find("/");
         float v = 0.f;
@@ -2620,35 +2636,30 @@ void LFOAndStepDisplay::showStepRMB(int i)
         return true;
     };
 
-    contextMenu.addItem(
-        Surge::GUI::toOSCase(msg), true, false, [this, i, handleTypein, decimals]() {
-            if (!stepEditor)
-            {
-                stepEditor = std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
-                getParentComponent()->addChildComponent(*stepEditor);
-            }
+    if (!stepEditor)
+    {
+        stepEditor = std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
+        getParentComponent()->addChildComponent(*stepEditor);
+    }
 
-            stepEditor->callback = handleTypein;
-            stepEditor->setMainLabel("Edit Step " + std::to_string(i + 1));
-            stepEditor->setValueLabels(
-                fmt::format("current: {:.{}f} %", ss->steps[i] * 100.f, decimals), "");
-            stepEditor->setSkin(skin, associatedBitmapStore);
-            stepEditor->setEditableText(fmt::format("{:.{}f} %", ss->steps[i] * 100.f, decimals));
+    stepEditor->callback = handleTypein;
+    stepEditor->setMainLabel("Edit Step " + std::to_string(i + 1));
+    stepEditor->setValueLabels(fmt::format("current: {:.{}f} %", ss->steps[i] * 100.f, decimals),
+                               "");
+    stepEditor->setSkin(skin, associatedBitmapStore);
+    stepEditor->setEditableText(fmt::format("{:.{}f} %", ss->steps[i] * 100.f, decimals));
 
-            auto topOfControl = getY();
-            auto pb = getBounds();
-            auto cx = steprect[i].getCentreX() + getX();
+    auto topOfControl = getY();
+    auto pb = getBounds();
+    auto cx = steprect[i].getCentreX() + getX();
 
-            auto r = stepEditor->getRequiredSize();
-            cx -= r.getWidth() / 2;
-            r = r.withBottomY(topOfControl).withX(cx);
-            stepEditor->setBounds(r);
+    auto r = stepEditor->getRequiredSize();
+    cx -= r.getWidth() / 2;
+    r = r.withBottomY(topOfControl).withX(cx);
+    stepEditor->setBounds(r);
 
-            stepEditor->setVisible(true);
-            stepEditor->grabFocus();
-        });
-
-    contextMenu.showMenuAsync(guiEditor->popupMenuOptions());
+    stepEditor->setVisible(true);
+    stepEditor->grabFocus();
 }
 
 } // namespace Widgets
