@@ -550,7 +550,24 @@ void ModulatableSlider::mouseUp(const juce::MouseEvent &event)
         if (editTypeWas == DRAG)
         {
             updateLocationState();
-            auto p = juce::Point<float>(handleCX, handleCY);
+
+            /*
+             * The center calculation is a bit off for mouse restore in horizontal
+             * mode. We could fix it and change all the meaning of the items but
+             * its much easier just to bodge in an offset here for now.
+             */
+            auto ptY = handleCY;
+            auto ptX = handleCX;
+            if (orientation == ParamConfig::kHorizontal)
+            {
+                ptY += handleSize.getHeight() / 2;
+            }
+            else
+            {
+                // Idiosyncratically only the horizontal calculation is wrong
+                // ptX += handleSize.getWidth() / 2;
+            }
+            auto p = juce::Point<float>(ptX, ptY);
             if (isEditingModulation)
                 p = juce::Point<float>(handleMX, handleMY);
             p = localPointToGlobal(p);
