@@ -353,9 +353,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 return;
             }
             else if (message[1].getString() == "n")
-            {
                 normalized = true;
-            }
             else
             {
                 sendNormError();
@@ -382,8 +380,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendNotFloatError("param", "");
             return;
         }
-
-        float val = getNormValue(p, message[0].getFloat32());
+        float val = message[0].getFloat32();
+        if (!normalized)
+            val = getNormValue(p, val);
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
 
 #ifdef DEBUG_VERBOSE
