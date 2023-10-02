@@ -194,6 +194,8 @@ struct LFOAndStepDisplay : public juce::Component,
     }
     void stepSeqDirty();
 
+    void showStepTypein(int i);
+
     int stepDirtyCount{0};
     StepSequencerStorage undoStorageCopy;
 
