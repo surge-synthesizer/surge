@@ -269,6 +269,7 @@ TEST_CASE("Play and release Frequency and Note ID", "[voice]")
             auto s = surgeOnSine();
             s->storage.getPatch().scene[0].polymode.val.i = mode;
 
+            // Process enough blocks to allow things to develop
             auto proc = [&s]() {
                 for (int i = 0; i < 17; ++i)
                 {

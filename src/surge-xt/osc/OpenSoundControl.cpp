@@ -383,8 +383,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        sspPtr->oscRingBuf.push(
-            SurgeSynthProcessor::oscToAudio(p, message[0].getFloat32(), normalized));
+        float val = getNormValue(p, message[0].getFloat32());
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
 
 #ifdef DEBUG_VERBOSE
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
@@ -546,6 +546,29 @@ void OpenSoundControl::oscBundleReceived(const juce::OSCBundle &bundle)
         else if (elem.isBundle())
             oscBundleReceived(elem.getBundle());
     }
+}
+
+float OpenSoundControl::getNormValue(Parameter *p, float fval)
+{
+    pdata onto;
+    std::string text, errMsg;
+    std::stringstream ss;
+
+    ss << std::fixed << std::setprecision(10) << fval;
+    text = ss.str();
+
+    if (p->set_value_from_string_onto(text, onto, errMsg))
+    {
+        if (p->valtype == vt_float)
+            return p->value_to_normalized((float)onto.f);
+        if (p->valtype == vt_int)
+            return p->value_to_normalized((float)onto.i);
+        if (p->valtype == vt_bool)
+            return p->value_to_normalized((float)onto.b);
+    }
+    else
+        sendError("Natural-ranged parameter (via OSC): " + errMsg);
+    return 0;
 }
 
 /* ----- OSC Sending  ----- */

@@ -696,19 +696,7 @@ void SurgeSynthProcessor::processBlockOSC()
             float pval = om.fval;
             if (om.param->valtype == vt_int)
                 pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
-            if (om.normalized)
-            {
-                surge->setParameter01(surge->idForParameter(om.param), pval, true);
-            }
-            else
-            {
-                if ((om.param->val_min.f <= pval) && (pval <= om.param->val_max.f))
-                {
-                    std::cout << "sending natural-ranged param of id(" << om.param->id
-                              << ") and val(" << pval << ")" << std::endl;
-                    setParameter(om.param->id, pval);
-                }
-            }
+            surge->setParameter01(surge->idForParameter(om.param), pval, true);
             surge->storage.getPatch().isDirty = true;
         }
         break;
