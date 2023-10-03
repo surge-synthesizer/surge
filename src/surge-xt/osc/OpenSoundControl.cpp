@@ -344,7 +344,23 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Parameters
     else if (address1 == "param")
     {
-        if (message.size() != 1)
+        bool normalized = false;
+        if (message.size() == 2)
+        {
+            if (!message[1].isString())
+            {
+                sendNormError();
+                return;
+            }
+            else if (message[1].getString() == "n")
+                normalized = true;
+            else
+            {
+                sendNormError();
+                return;
+            }
+        }
+        else if (message.size() != 1)
         {
             sendDataCountError("param", "1");
             return;
@@ -364,8 +380,10 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendNotFloatError("param", "");
             return;
         }
-
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, message[0].getFloat32()));
+        float val = message[0].getFloat32();
+        if (!normalized)
+            val = getNormValue(p, val);
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
 
 #ifdef DEBUG_VERBOSE
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
@@ -529,6 +547,29 @@ void OpenSoundControl::oscBundleReceived(const juce::OSCBundle &bundle)
     }
 }
 
+float OpenSoundControl::getNormValue(Parameter *p, float fval)
+{
+    pdata onto;
+    std::string text, errMsg;
+    std::stringstream ss;
+
+    ss << std::fixed << std::setprecision(10) << fval;
+    text = ss.str();
+
+    if (p->set_value_from_string_onto(text, onto, errMsg))
+    {
+        if (p->valtype == vt_float)
+            return p->value_to_normalized((float)onto.f);
+        if (p->valtype == vt_int)
+            return p->value_to_normalized((float)onto.i);
+        if (p->valtype == vt_bool)
+            return p->value_to_normalized((float)onto.b);
+    }
+    else
+        sendError("Natural-ranged parameter (via OSC): " + errMsg);
+    return 0;
+}
+
 /* ----- OSC Sending  ----- */
 
 bool OpenSoundControl::initOSCOut(int port)
@@ -585,6 +626,11 @@ void OpenSoundControl::sendNotFloatError(std::string addr, std::string msg)
     OpenSoundControl::sendError(
         "/" + addr + " data value '" + msg +
         "' is not expressed as a float. All data must be sent as OSC floats.");
+}
+
+void OpenSoundControl::sendNormError()
+{
+    OpenSoundControl::sendError("Only 'n' (for 'normalized') is accepted as second data value).");
 }
 
 void OpenSoundControl::sendDataCountError(std::string addr, std::string count)
