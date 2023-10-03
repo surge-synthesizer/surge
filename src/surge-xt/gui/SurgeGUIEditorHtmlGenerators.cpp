@@ -893,7 +893,7 @@ code {
                 <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
                     <div style="font-size: 12pt; font-family: Lato;">
                         <p>
-                            For /param messages, floating point data values may be expressed in their natural range
+                            For /param messages, 'float' values may be expressed in their natural range
                             (as described below in the 'Appropriate Values' column) or <u>normalized</u> to the range 0.0 to 1.0.
                             To use normalized values, add 'n' after the data value, as shown in the first example below.
                         </p>
