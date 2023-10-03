@@ -35,49 +35,8 @@ using namespace Surge::Test;
 
 TEST_CASE("OSC parsing", "[OpenSoundControl]")
 {
-    /*
-    SECTION("Simple Sine Case")
+    SECTION("Simple Note test")
     {
-        auto s = surgeOnSine();
-
-        auto proc = [&s]() {
-            for (int i = 0; i < 5; ++i)
-            {
-                s->process();
-            }
-        };
-
-        auto voicecount = [&s]() -> int {
-            int res{0};
-            for (auto sc = 0; sc < n_scenes; ++sc)
-            {
-                for (const auto &v : s->voices[sc])
-                {
-                    if (v->state.gate)
-                        res++;
-                }
-            }
-            return res;
-        };
-
-        proc();
-
-        OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
-            s->playNote(0, 60, 127, 0, 173);
-        proc();
-        REQUIRE(voicecount() == 1);
-
-        s->playNote(0, 64, 127, 0, 177);
-        proc();
-        REQUIRE(voicecount() == 2);
-
-        s->releaseNoteByHostNoteID(173, 0);
-        proc();
-        REQUIRE(voicecount() == 1);
-
-        s->releaseNoteByHostNoteID(177, 0);
-        proc();
-        REQUIRE(voicecount() == 0);
+        // Coming soon
     }
-    */
 }
