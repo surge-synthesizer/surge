@@ -27,6 +27,7 @@
 #include "sst/cpputils.h"
 #include "sst/plugininfra/strnatcmp.h"
 #include "UnitConversions.h"
+#include "ModulationSource.h"
 
 namespace Surge
 {
@@ -909,6 +910,29 @@ code {
 
     )HTML";
 
+    // Macros
+    htmls << R"HTML(
+                        <div class = "tablewrap fr cr">
+                            <div class = "heading">
+                                <h3>Control Group: Macros</h3>
+                            </div>
+                            <table style = "border: 2px solid black;">
+                                <tr>
+                                    <th>Address</th>
+                                    <th>Description</th>
+                                    <th>Appropriate Values</th>
+                                </tr>
+        )HTML";
+
+    for (int i = 1; i <= n_customcontrollers; i++)
+    {
+        htmls << "<tr><td>";
+        htmls << "/param/macro/" << i << "";
+        htmls << "</td><td>macro " << i << "</td><td>float (0.0 - 1.0)</td></tr>";
+    }
+    htmls << "</table></div>";
+    /*----  End Macros section  ----*/
+
     std::vector<oscParamInfo> sortvector;
     std::string st_str;
     int currentCtrlGrp = endCG;
@@ -1015,14 +1039,7 @@ code {
         }
     }
 
-    htmls << R"HTML(
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </body>
-        </html>
-      )HTML";
+    htmls << "</table></div></div></div></body></html>";
     return htmls.str();
 }
 

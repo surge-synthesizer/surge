@@ -699,6 +699,11 @@ void SurgeSynthProcessor::processBlockOSC()
             surge->setParameter01(surge->idForParameter(om.param), pval, true);
             surge->storage.getPatch().isDirty = true;
         }
+
+        case SurgeSynthProcessor::MACRO:
+        {
+            surge->setMacroParameter01(om.ival, om.fval);
+        }
         break;
 
         case SurgeSynthProcessor::MNOTE:
