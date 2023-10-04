@@ -635,11 +635,9 @@ code {
                             not how messages are to be formatted for OSC).
                         </p>
                         <p style="margin-top: 28px;">
-                             <b style="margin-right: 4px;">†</b>All OSC messages described below work in <b>both</b> directions, unless marked with "<b>†</b>". For these, only
-                            the incoming OSC message is supported; there is no corresponding OSC out message.
-                        </p>
-                        <p style="margin-bottom: 0px;">
-                            Errors are reported (when feasible) to "/error". Monitor that address to see them.
+                             <b>OSC output</b>: All parameter and patch changes made on Surge XT are reported to OSC out.
+                             Floating point parameters are reported both in their 'natural' range, and normalized (0.0 - 1.0).
+                             Errors are reported (when feasible) to "/error".
                         </p>
                         <div style="margin: 16px 0 8px 0";>
                             <span style="margin-left: 0">
@@ -663,35 +661,35 @@ code {
                               <th>Value 3</th>
                          </tr>
                          <tr>
-                              <td><b>† </b>/mnote</td>
+                              <td>/mnote</td>
                               <td>MIDI-style note</td>
                               <td>note number (0 - 127)</td>
                               <td>velocity (0 - 127)*</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/fnote ‡</td>
+                              <td>/fnote †</td>
                               <td>frequency note</td>
                               <td>frequency (8.176 - 12543.853)</td>
                               <td>velocity (0 - 127)*</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/mnote/rel</td>
+                              <td>/mnote/rel</td>
                               <td>MIDI-style note release</td>
                               <td>note number (0 - 127)</td>
                               <td>release velocity (0 - 127)</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/fnote/rel</td>
+                              <td>/fnote/rel</td>
                               <td>frequency note release</td>
                               <td>frequency (8.176 - 12543.853)</td>
                               <td>release velocity (0 - 127)</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/allnotesoff</td>
+                              <td>/allnotesoff</td>
                               <td>release all current notes</td>
                               <td>(none)</td>
                               <td>(none)</td>
@@ -701,7 +699,7 @@ code {
                             <td colspan="5">
                                 <p class="tight">* Velocity of 0 releases note; use the '.../rel' messages to release notes with velocity. If noteIDs are
                                     supplied, the note number or frequency value for releases is disregarded.</p>
-                                <p class="tight">‡ When using '/fnote', Surge XT <em>must</em> be set to standard tuning for proper results. </p>
+                                <p class="tight">† When using '/fnote', Surge XT <em>must</em> be set to standard tuning for proper results. </p>
                                 <p class="tight">§ NoteID can be optionally supplied for more control over the lifecycle of notes, or for note expressions (below).
                             </td>
                          </tr>
@@ -729,31 +727,31 @@ code {
                               <th>Value 2</th>
                          </tr>
                          <tr>
-                              <td><b>† </b>/ne/pitch</td>
+                              <td>/ne/pitch</td>
                               <td>pitch note expression</td>
                               <td>noteID (0 - maxint)§
                               <td>pitch offset (-120.0 - 120.0:&nbsp;&nbsp;semitones)</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/ne/volume</td>
+                              <td>/ne/volume</td>
                               <td>volume note expression</td>
                               <td>noteID (0 - maxint)§
                               <td>volume multiplier (0.0 - 4.0)</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/ne/pan</td>
+                              <td>/ne/pan</td>
                               <td>pan note expression</td>
                               <td>noteID (0 - maxint)§
                               <td>position (0.0 - 1.0:&nbsp;&nbsp;0.0=left&nbsp;&nbsp;0.5=center&nbsp;&nbsp;1.0=right)</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/ne/timbre</td>
+                              <td>/ne/timbre</td>
                               <td>timbre note expression</td>
                               <td>noteID (0 - maxint)§
                               <td>timbre (0.0 - 1.0:&nbsp;&nbsp;'brightness')</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/ne/pressure</td>
+                              <td>/ne/pressure</td>
                               <td>pressure note expression</td>
                               <td>noteID (0 - maxint)§
                               <td>polyphonic aftertouch (0.0 - 1.0)</td>
@@ -789,34 +787,34 @@ code {
                               <td>file path (absolute, no extension)</td>
                          </tr>
                          <tr>
-                              <td class="nw"><b>† </b>/patch/save</td>
+                              <td class="nw">/patch/save</td>
                               <td class="nw">save patch</td>
                               <td>none: overwrites current patch OR
                                    file path (absolute, no extension, overwrites if file exists)
                               </td>
                          </tr>
                          <tr>
-                              <td class="nw"><b>† </b>/patch/incr</td>
+                              <td class="nw">/patch/incr</td>
                               <td class="nw">increment patch</td>
                               <td>(none)</td>
                          </tr>
                          <tr>
-                              <td class="nw"><b>† </b>/patch/decr</td>
+                              <td class="nw">/patch/decr</td>
                               <td class="nw">decrement patch</td>
                               <td>(none)</td>
                          </tr>
                          <tr>
-                              <td class="nw"><b>† </b>/patch/incr_category</td>
+                              <td class="nw">/patch/incr_category</td>
                               <td class="nw">increment category</td>
                               <td>(none)</td>
                          </tr>
                          <tr>
-                              <td class="nw"><b>† </b>/patch/decr_category</td>
+                              <td class="nw">/patch/decr_category</td>
                               <td class="nw">decrement category</td>
                               <td>(none)</td>
                          </tr>
                          <tr>
-                              <td class="nw"><b>† </b>/patch/random</td>
+                              <td class="nw">/patch/random</td>
                               <td class="nw">choose random patch</td>
                               <td>(none)</td>
                          </tr>
@@ -834,22 +832,22 @@ code {
                               <th>Appropriate Values</th>
                          </tr>
                          <tr>
-                              <td><b>† </b>/tuning/scl</td>
+                              <td>/tuning/scl</td>
                               <td> .scl tuning file</td>
                               <td>file path (absolute or relative)*</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/tuning/kbm</td>
+                              <td>/tuning/kbm</td>
                               <td>.kbm mapping file</td>
                               <td>file path (absolute or relative)*</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/tuning/path/scl</td>
+                              <td>/tuning/path/scl</td>
                               <td>.scl file default path</td>
                               <td>file path (absolute only)</td>
                          </tr>
                          <tr>
-                              <td><b>† </b>/tuning/path/kbm</td>
+                              <td>/tuning/path/kbm</td>
                               <td>.kbm file default path</td>
                               <td>file path (absolute only)</td>
                          </tr>
@@ -881,7 +879,7 @@ code {
                             <th>Appropriate Values</th>
                         </tr>
                         <tr>
-                            <td><b>† </b>/send_all_params</td>
+                            <td>/send_all_params</td>
                             <td>request all parameters</td>
                             <td>none</td>
                         </tr>
