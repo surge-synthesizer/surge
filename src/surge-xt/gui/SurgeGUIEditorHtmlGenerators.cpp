@@ -635,7 +635,7 @@ code {
                             not how messages are to be formatted for OSC).
                         </p>
                         <p style="margin-top: 28px;">
-                             <b>OSC output</b>: All parameter and patch changes made on Surge XT are reported to OSC out.
+                             <b>OSC output</b>: All parameter and patch changes made on Surge XT are reported to OSC out, if OSC output is enabled.
                              Floating point parameters are reported both in their 'natural' range, and normalized (0.0 - 1.0).
                              Errors are reported (when feasible) to "/error".
                         </p>
