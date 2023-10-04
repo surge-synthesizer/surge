@@ -1223,7 +1223,8 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                                        .translated(0, -tr.getHeight()));
                 }
                 g.setColour(juce::Colours::white);
-                g.drawText(msg, tr, al);
+                if (centsShowing)
+                    g.drawText(msg, tr, al);
                 // Useful to debug text layout
                 // g.setColour(rot ? juce::Colours::blue  : juce::Colours::red);
                 // g.drawRect(tr, 0.01 * irsf);
