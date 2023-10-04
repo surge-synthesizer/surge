@@ -321,39 +321,50 @@ void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, std::string
 {
     if (surge->storage.oscSending && !paramPath.empty())
     {
+        // std::cout << "paramPath: " << paramPath << "  value: " << valStr << std::endl;
         oscHandler.send(paramPath, valStr);
     }
 }
 
-void SurgeSynthProcessor::paramChangeToListeners(Parameter *p)
+void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isMacro, int macroNum,
+                                                 std::string newValue)
 {
     std::string valStr = "";
     for (auto &it : this->paramChangeListeners)
     {
-        switch (p->valtype)
+        if (isMacro)
         {
-        case vt_int:
-            valStr = std::to_string(p->val.i);
-            break;
-
-        case vt_bool:
-            valStr = std::to_string(p->val.b);
-            break;
-
-        case vt_float:
-            valStr = float_to_clocalestr(p->val.f);
-            /*
-                auto nat_value = p->normalized_to_value(p->val.f);
-                valStr = float_to_clocalestr(p->val.f) + "  " + float_to_clocalestr(nat_value) +
-               "(n)";
-            */
-            break;
-
-        default:
-            break;
+            std::ostringstream oss;
+            oss << "/param/macro/" << macroNum + 1;
+            (it.second)(oss.str(), newValue);
         }
+        else
+        {
+            switch (p->valtype)
+            {
+            case vt_int:
+                valStr = std::to_string(p->val.i);
+                break;
 
-        (it.second)(p->oscName, valStr);
+            case vt_bool:
+                valStr = std::to_string(p->val.b);
+                break;
+
+            case vt_float:
+            {
+                auto nat_value = p->value_to_normalized(p->val.f);
+                std::ostringstream oss;
+                oss << float_to_clocalestr(p->val.f) << " " << float_to_clocalestr(nat_value)
+                    << " n";
+                valStr = oss.str();
+            }
+            break;
+
+            default:
+                break;
+            }
+            (it.second)(p->oscName, valStr);
+        }
     }
 }
 
