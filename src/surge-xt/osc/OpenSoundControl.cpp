@@ -691,8 +691,14 @@ void OpenSoundControl::sendAllParams()
                     break;
 
                 case vt_float:
-                    valStr = float_to_clocalestr(p.val.f);
-                    break;
+                {
+                    auto nat_value = p.value_to_normalized(p.val.f);
+                    std::ostringstream oss;
+                    oss << float_to_clocalestr(p.val.f) << " " << float_to_clocalestr(nat_value)
+                        << " n";
+                    valStr = oss.str();
+                }
+                break;
 
                 default:
                     break;

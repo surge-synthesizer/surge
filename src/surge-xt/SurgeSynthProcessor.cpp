@@ -290,6 +290,7 @@ bool SurgeSynthProcessor::initOSCOut(int port)
         surge->addPatchLoadedListener("OSC_OUT",
                                       [ssp = this](auto s) { ssp->patch_load_to_OSC(s); });
     }
+
     // Add a listener for parameter changes
     SurgeSynthProcessor::addParamChangeListener(
         "OSC_OUT", [ssp = this](auto str1, auto str2) { ssp->param_change_to_OSC(str1, str2); });
