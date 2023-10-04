@@ -340,6 +340,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         MNOTE,
         FREQNOTE,
         PARAMETER,
+        MACRO,
         NOTEX_PITCH,
         NOTEX_VOL,
         NOTEX_PAN,
@@ -353,12 +354,14 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         oscToAudio_type type;
         Parameter *param;
         float fval{0.0};
+        int ival;
         char mnote, vel;
         bool on{false};
         int32_t noteid;
 
         oscToAudio() {}
         oscToAudio(oscToAudio_type omtype) : type(omtype) {}
+        oscToAudio(int macnum, float f) : type(MACRO), ival(macnum), fval(f) {}
         oscToAudio(Parameter *p, float f) : type(PARAMETER), param(p), fval(f) {}
         oscToAudio(float freq, char velocity, bool noteon, int32_t nid)
             : type(FREQNOTE), fval(freq), vel(velocity), on(noteon), noteid(nid)
@@ -382,7 +385,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     void patch_load_to_OSC(fs::path newpath);
     void param_change_to_OSC(std::string paramPath, std::string valStr);
-    void paramChangeToListeners(Parameter *p);
+    void paramChangeToListeners(Parameter *p, bool isMacro = false, int macronum = 0,
+                                std::string newValue = "");
 
     // --- 'param change' listener(s) ----
     // Listeners are notified whenever a parameter finishes changing, along with the new value.

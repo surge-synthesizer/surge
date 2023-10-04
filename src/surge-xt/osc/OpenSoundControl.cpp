@@ -365,25 +365,53 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendDataCountError("param", "1");
             return;
         }
-
-        auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
-        if (p == NULL)
-        {
-            sendError("No parameter with OSC address of " + addr);
-            // Not a valid OSC address
-            return;
-        }
-
-        if (!message[0].isFloat32())
-        {
-            // Not a valid data value
-            sendNotFloatError("param", "");
-            return;
-        }
         float val = message[0].getFloat32();
-        if (!normalized)
-            val = getNormValue(p, val);
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
+
+        // Special case for /param/macro/
+        std::getline(split, address2, '/'); // check for '/macro'
+        if (address2 == "macro")
+        {
+            int macnum;
+            std::getline(split, address3, '/'); // get macro num
+            try
+            {
+                macnum = stoi(address3);
+            }
+            catch (...)
+            {
+                sendError("OSC /param/macro: Invalid macro number: " + address3);
+                return;
+            }
+            if ((macnum <= 0) || (macnum > n_customcontrollers))
+            {
+                sendError("OSC /param/macro: Invalid macro number: " + address3);
+                return;
+            }
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
+        }
+
+        // all the other /param messages
+        else
+        {
+            auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
+            if (p == NULL)
+            {
+                sendError("No parameter with OSC address of " + addr);
+                // Not a valid OSC address
+                return;
+            }
+
+            if (!message[0].isFloat32())
+            {
+                // Not a valid data value
+                sendNotFloatError("param", "");
+                return;
+            }
+            float val = message[0].getFloat32();
+            if (!normalized)
+                val = getNormValue(p, val);
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
+        }
 
 #ifdef DEBUG_VERBOSE
         std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
