@@ -349,6 +349,11 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
     bool useMIDICh2Ch3 = Surge::Storage::getUserDefaultValue(
         &storage, Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true);
 
+    if (storage.mapChannelToOctave)
+    {
+        useMIDICh2Ch3 = false;
+    }
+
     int channelmask = channel;
 
     if (((channel == 0 || channel > 2) && useMIDICh2Ch3) ||
@@ -2173,7 +2178,17 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         sustainpedalCC = value;
         hasUpdatedMidiCC = true;
 
-        channelState[channel].hold = value > 63; // check hold pedal
+        if (storage.mapChannelToOctave)
+        {
+            for (int c = 0; c < 16; c++)
+            {
+                channelState[c].hold = value > 63;
+            }
+        }
+        else
+        {
+            channelState[channel].hold = value > 63;
+        }
 
         // OK in single mode, only purge scene 0, but in split or dual purge both, and in chsplit
         // pick based on channel

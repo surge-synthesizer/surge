@@ -4749,8 +4749,8 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
         &(this->synth->storage), Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true);
 
     midiSubMenu.addItem(
-        Surge::GUI::toOSCase("Use MIDI Channels 2 and 3 to Play Scenes Individually"), true,
-        useMIDICh2Ch3, [this, useMIDICh2Ch3]() {
+        Surge::GUI::toOSCase("Use MIDI Channels 2 and 3 to Play Scenes Individually"),
+        !synth->storage.mapChannelToOctave, useMIDICh2Ch3, [this, useMIDICh2Ch3]() {
             Surge::Storage::updateUserDefaultValue(
                 &(this->synth->storage), Surge::Storage::UseCh2Ch3ToPlayScenesIndividually,
                 !useMIDICh2Ch3);
