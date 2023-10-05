@@ -43,19 +43,19 @@
 
 #include "sst/basic-blocks/mechanics/block-ops.h"
 #include "sst/basic-blocks/dsp/Clippers.h"
+#include "sst/cpputils/constructors.h"
 
 using namespace std;
 namespace mech = sst::basic_blocks::mechanics;
 namespace sdsp = sst::basic_blocks::dsp;
+namespace cput = sst::cpputils;
 
 using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed first try
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
-    : storage(suppliedDataPath), hpA{&storage, &storage, &storage, &storage}, hpB{&storage,
-                                                                                  &storage,
-                                                                                  &storage,
-                                                                                  &storage},
-      _parent(parent), halfbandA(6, true), halfbandB(6, true), halfbandIN(6, true)
+    : storage(suppliedDataPath), hpA{cput::make_array<BiquadFilter, n_hpBQ>(&storage)},
+      hpB{cput::make_array<BiquadFilter, n_hpBQ>(&storage)}, _parent(parent), halfbandA(6, true),
+      halfbandB(6, true), halfbandIN(6, true)
 {
     switch_toggled_queued = false;
     audio_processing_active = false;
