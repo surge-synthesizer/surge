@@ -345,6 +345,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     else if (address1 == "param")
     {
         bool normalized = false;
+        /*
         if (message.size() == 2)
         {
             if (!message[1].isString())
@@ -360,7 +361,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 return;
             }
         }
-        else if (message.size() != 1)
+
+        else */
+        if (message.size() != 1)
         {
             sendDataCountError("param", "1");
             return;
@@ -408,8 +411,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 return;
             }
             float val = message[0].getFloat32();
-            if (!normalized)
-                val = getNormValue(p, val);
+            // if (!normalized)
+            //     val = getNormValue(p, val);
             sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
         }
 
@@ -692,10 +695,9 @@ void OpenSoundControl::sendAllParams()
 
                 case vt_float:
                 {
-                    auto nat_value = p.value_to_normalized(p.val.f);
                     std::ostringstream oss;
-                    oss << float_to_clocalestr(p.val.f) << " " << float_to_clocalestr(nat_value)
-                        << " n";
+                    oss << p.get_display(false, 0.0) << " "
+                        << float_to_clocalestr(p.value_to_normalized(p.val.f)) << " (normalized)";
                     valStr = oss.str();
                 }
                 break;
