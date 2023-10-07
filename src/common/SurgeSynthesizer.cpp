@@ -43,19 +43,19 @@
 
 #include "sst/basic-blocks/mechanics/block-ops.h"
 #include "sst/basic-blocks/dsp/Clippers.h"
+#include "sst/cpputils/constructors.h"
 
 using namespace std;
 namespace mech = sst::basic_blocks::mechanics;
 namespace sdsp = sst::basic_blocks::dsp;
+namespace cutl = sst::cpputils;
 
 using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed first try
 
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
-    : storage(suppliedDataPath), hpA{&storage, &storage, &storage, &storage}, hpB{&storage,
-                                                                                  &storage,
-                                                                                  &storage,
-                                                                                  &storage},
-      _parent(parent), halfbandA(6, true), halfbandB(6, true), halfbandIN(6, true)
+    : storage(suppliedDataPath), hpA{cutl::make_array<BiquadFilter, n_hpBQ>(&storage)},
+      hpB{cutl::make_array<BiquadFilter, n_hpBQ>(&storage)}, _parent(parent), halfbandA(6, true),
+      halfbandB(6, true), halfbandIN(6, true)
 {
     switch_toggled_queued = false;
     audio_processing_active = false;
@@ -348,6 +348,11 @@ int SurgeSynthesizer::calculateChannelMask(int channel, int key)
 {
     bool useMIDICh2Ch3 = Surge::Storage::getUserDefaultValue(
         &storage, Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true);
+
+    if (storage.mapChannelToOctave)
+    {
+        useMIDICh2Ch3 = false;
+    }
 
     int channelmask = channel;
 
@@ -2173,7 +2178,17 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         sustainpedalCC = value;
         hasUpdatedMidiCC = true;
 
-        channelState[channel].hold = value > 63; // check hold pedal
+        if (storage.mapChannelToOctave)
+        {
+            for (int c = 0; c < 16; c++)
+            {
+                channelState[c].hold = value > 63;
+            }
+        }
+        else
+        {
+            channelState[channel].hold = value > 63;
+        }
 
         // OK in single mode, only purge scene 0, but in split or dual purge both, and in chsplit
         // pick based on channel

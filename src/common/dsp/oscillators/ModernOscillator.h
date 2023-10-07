@@ -75,8 +75,8 @@ class ModernOscillator : public Oscillator
     template <mo_multitypes multitype, bool subOctave, bool FM>
     void process_sblk(float pitch, float drift = 0.f, bool stereo = false, float FMdepth = 0.f);
 
-    lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, detune, fmdepth;
-    lipol<double, true> pitchlag, dpbase[MAX_UNISON], dspbase[MAX_UNISON], subdpbase, subdpsbase;
+    lag<double, true> sawmix, trimix, sqrmix, pwidth, sync, dpbase[MAX_UNISON], dspbase[MAX_UNISON],
+        subdpbase, subdpsbase, detune, pitchlag, fmdepth;
 
     // character filter
     Surge::Oscillator::CharacterFilter<double> charFilt;
