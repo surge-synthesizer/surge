@@ -618,7 +618,8 @@ code {
                             where <code>address</code> is one of the ones listed below, and zero or more <code>values</code> can be*:
 
                             <ul>
-                                <li>a floating point value between <b>0.0</b> and <b>1.0</b> (note: use '.' as the decimal mark, never ',').</li>
+                                <li>a floating point value between <b>0.0</b> and <b>1.0</b>, where 0 represents the minimum acceptable
+                                    value for the parameter, and 1 represents the maximum. <br />(note: use '.' as the decimal mark, never ',').</li>
                                 <li>an integer value</li>
                                 <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
                                 <li>a file path (absolute, or relative to the default path)
@@ -628,6 +629,9 @@ code {
                             Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
                             depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
                         <p>
+                            If a value is received that is less than the minimum or greater than the maximum acceptable value, it will be clipped
+                            to the associated limit.
+                        </p>
                         <p style="border: 1px solid black; padding: 4px;" >
                             <b>*Important note: all numeric values must be sent over OSC as floating point numbers</b>
                             (even if they are listed as integer or boolean type --
@@ -635,7 +639,7 @@ code {
                             not how messages are to be formatted for OSC).
                         </p>
                         <p style="margin-top: 28px;">
-                             <b>OSC output</b>: All parameter and patch changes made on Surge XT are reported to OSC out.
+                             <b>OSC output</b>: All parameter and patch changes made on Surge XT are reported to OSC out, if OSC output is enabled.
                              Floating point parameters are reported both in their 'natural' range, and normalized (0.0 - 1.0).
                              Errors are reported (when feasible) to "/error".
                         </p>
@@ -892,16 +896,13 @@ code {
                 <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
                     <div style="font-size: 12pt; font-family: Lato;">
                         <p>
-                            For /param messages, 'float' values may be expressed in their natural range
-                            (as described below in the 'Appropriate Values' column) or <u>normalized</u> to the range 0.0 to 1.0.
-                            To use normalized values, add 'n' after the data value, as shown in the first example below.
+                            For /param messages, 'float' values must be expressed as 'normalized' in the range 0.0 to 1.0.
                         </p>
                     </div>
                 </div>
 
                 <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
-                    <span><code>/param/b/amp/gain 0.63 n</code></span>
-                    <span><code>/param/b/amp/gain 45.3</code></span>
+                    <span><code>/param/b/amp/gain 0.63</code></span>
                     <span><code>/param/global/polyphony_limit 12</code></span>
                     <span><code>/param/a/mixer/noise/mute 0</code></span>
                 </div>
@@ -1016,8 +1017,11 @@ code {
             {
                 std::stringstream buffer;
                 buffer.precision(1);
-                buffer << std::fixed << "float (" << itr.p->val_min.f << " to " << itr.p->val_max.f
-                       << ")";
+                auto pmin = 0.0;
+                auto pmax = 1.0;
+                // auto pdisp_min = itr.p->get_display(true, 0.0);
+                // auto pdisp_max = itr.p->get_display(true, 1.0);
+                buffer << std::fixed << "float (" << pmin << " to " << pmax << ")";
                 valueType = buffer.str();
                 break;
             }

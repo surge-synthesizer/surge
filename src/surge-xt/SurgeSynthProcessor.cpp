@@ -290,6 +290,7 @@ bool SurgeSynthProcessor::initOSCOut(int port)
         surge->addPatchLoadedListener("OSC_OUT",
                                       [ssp = this](auto s) { ssp->patch_load_to_OSC(s); });
     }
+
     // Add a listener for parameter changes
     SurgeSynthProcessor::addParamChangeListener(
         "OSC_OUT", [ssp = this](auto str1, auto str2) { ssp->param_change_to_OSC(str1, str2); });
@@ -352,10 +353,9 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isMacro, int
 
             case vt_float:
             {
-                auto nat_value = p->value_to_normalized(p->val.f);
                 std::ostringstream oss;
-                oss << float_to_clocalestr(p->val.f) << " " << float_to_clocalestr(nat_value)
-                    << " n";
+                oss << p->get_display(false, 0.0) << " "
+                    << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " (normalized)";
                 valStr = oss.str();
             }
             break;
