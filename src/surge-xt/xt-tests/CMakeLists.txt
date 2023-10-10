@@ -24,5 +24,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         sst-filters-extras
 )
 
-message(STATUS "Using CatchDiscoverTests on ${PROJECT_NAME}" )
-catch_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${SURGE_SOURCE_DIR})
+if (${SURGE_INCLUDE_XT_TESTS_IN_CTEST})
+    message(STATUS "Using CatchDiscoverTests on ${PROJECT_NAME}" )
+    catch_discover_tests(${PROJECT_NAME} WORKING_DIRECTORY ${SURGE_SOURCE_DIR})
+endif()
