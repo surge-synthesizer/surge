@@ -224,6 +224,19 @@ class DroppedUserDataHandler
                       << std::endl;
             return false;
         }
+
+        // mac zip can create a place for the finder bundle that juce
+        // unzips as opposed to applies. Nuke it. See #7249
+        if (fs::is_directory(uncompressTo / "__MACOSX"))
+        {
+            try
+            {
+                fs::remove_all(uncompressTo / "__MACOSX");
+            }
+            catch (const fs::filesystem_error &)
+            {
+            }
+        }
         return true;
     }
 

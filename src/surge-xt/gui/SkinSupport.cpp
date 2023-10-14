@@ -141,8 +141,15 @@ void SkinDB::rescanForSkins(SurgeStorage *storage)
                     {
                         if (fs::is_directory(d))
                         {
-                            alldirs.push_back(d);
-                            workStack.push_back(d);
+                            if (d.path().filename().u8string() == "__MACOSX")
+                            {
+                                // skip this mis-zipped dir. See #7249
+                            }
+                            else
+                            {
+                                alldirs.push_back(d);
+                                workStack.push_back(d);
+                            }
                         }
                     }
                 }
