@@ -22,10 +22,6 @@
 #ifndef SURGE_SRC_COMMON_DSP_VEMBERTECH_PORTABLE_INTRINSICS_H
 #define SURGE_SRC_COMMON_DSP_VEMBERTECH_PORTABLE_INTRINSICS_H
 
-#if LINUX && !ARM_NEON
-#include <immintrin.h>
-#endif
-
 #define vFloat __m128
 
 #define vZero _mm_setzero_ps()
