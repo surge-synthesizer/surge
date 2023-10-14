@@ -726,3 +726,47 @@ TEST_CASE("Don't Fear The Reaper", "[dsp]")
         }
     }
 }
+
+TEST_CASE("Reverb1 White Noise Blast", "[dsp]")
+{
+    auto surge = Surge::Headless::createSurge(44100, true);
+    int idxT = 1, idxF = -1;
+    const auto &pl = surge->storage.patch_list;
+    for (int i = 0; i < pl.size(); ++i)
+    {
+        if (pl[i].name == "Tolk")
+        {
+            idxT = i;
+        }
+        if (pl[i].name == "Monster Feedback")
+        {
+            idxF = i;
+        }
+    }
+    REQUIRE(idxF >= 0);
+    REQUIRE(idxT >= 0);
+
+    int swapEvery = 127;
+    int t = idxF;
+    int n = idxT;
+    int since = 0;
+    int swaps = 0;
+    for (int r = 0; r < swapEvery * 101; r++)
+    {
+        if (r % swapEvery == 0)
+        {
+            std::swap(t, n);
+            surge->loadPatch(t);
+            since = 0;
+            swaps++;
+        }
+        surge->process();
+        INFO("Running " << r << " " << since << " " << swaps << " " << pl[t].name);
+        for (int s = 0; s < BLOCK_SIZE; ++s)
+        {
+            REQUIRE(std::fabs(surge->output[0][s]) < 1e-6);
+            REQUIRE(std::fabs(surge->output[1][s]) < 1e-6);
+        }
+        since++;
+    }
+}
