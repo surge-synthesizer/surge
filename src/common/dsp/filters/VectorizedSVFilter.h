@@ -22,6 +22,7 @@
 #ifndef SURGE_SRC_COMMON_DSP_FILTERS_VECTORIZEDSVFILTER_H
 #define SURGE_SRC_COMMON_DSP_FILTERS_VECTORIZEDSVFILTER_H
 
+#include "globals.h"
 #include <vembertech/portable_intrinsics.h>
 
 //------------------------------------------------------------------------------------------------
