@@ -22,7 +22,7 @@
 #ifndef SURGE_SRC_COMMON_DSP_VEMBERTECH_PORTABLE_INTRINSICS_H
 #define SURGE_SRC_COMMON_DSP_VEMBERTECH_PORTABLE_INTRINSICS_H
 
-#if LINUX && !ARM_NEON
+#if LINUX && !ARM_NEON && !defined(__riscv)
 #include <immintrin.h>
 #endif
 
