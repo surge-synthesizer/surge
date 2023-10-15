@@ -4641,7 +4641,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
                         [this]() { showHTML(skinInspectorHtml()); });
 
     skinSubMenu.addItem(Surge::GUI::toOSCase("Skin Development Guide..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/skin-manual.html").launchInDefaultBrowser();
+        juce::URL("https://surge-synthesizer.github.io/skin-manual/").launchInDefaultBrowser();
     });
 
     return skinSubMenu;
