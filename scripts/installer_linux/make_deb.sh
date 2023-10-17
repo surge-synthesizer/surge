@@ -53,7 +53,7 @@ Provides: vst-plugin
 Section: sound
 Priority: optional
 Description: Subtractive hybrid synthesizer virtual instrument
-Surge XT includes VST3 and CLAP instrument formats for use in compatible hosts and a standalone executable
+ Surge XT includes VST3 and CLAP instrument formats for use in compatible hosts and a standalone executable
 EOT
 
 touch ${PACKAGE_NAME}/usr/share/${SURGE_NAME}/doc/changelog.Debian
