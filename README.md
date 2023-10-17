@@ -127,6 +127,53 @@ The Surge XT 1.3 family moves to JUCE 7 which includes support for LV2 builds. F
 we don't build LV2 either by default or in our CI pipeline. You can activate the LV2 build in your
 environment by adding `-DSURGE_BUILD_LV2=TRUE` on your initial CMake.
 
+## Building and Using the Python Bindings
+
+Surge uses `pybind` to expose the surge synth to python code for direct
+native access to all features of the synth. This is a tool mostly useful
+for developers and the [surge python](https://github.com/surge-synthesizer/surge-python) 
+repository shows some uses.
+
+To use surge in this manner you need to build the python extension. Here's
+how (this shows the result on a mac but win and lin are similar).
+
+First, configure a build with python bindings activated
+
+```
+cmake -Bignore/bpy -DSURGE_BUILD_PYTHON_BINDINGS -DCMAKE_BUILD_TYPE=Release
+```
+
+(note the directory `ignore/bpy` could be anything you want. The `ignore`
+directory is handy since it is in the surge `.gitignore`)
+
+Then build the python plugin
+
+```
+cmake --build ignore/bpy --parallel --target surgepy
+```
+
+which should result in the python dll being present.
+
+```bash
+% ls ignore/bpy/src/surge-python/*so
+ignore/bpy/src/surge-python/surgepy.cpython-311-darwin.so
+```
+
+and finally start python to load that. Here's an example interactive
+session but similar works in the tool of your choosing.
+
+```bash
+% python3
+Python 3.11.4 (main, Jun 20 2023, 17:37:48) [Clang 14.0.0 (clang-1400.0.29.202)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import sys
+>>> sys.path.append("ignore/bpy/src/surge-python")
+>>> import surgepy
+>>> surgepy.getVersion()
+'1.3.main.850bd53b'
+>>> quit()
+```
+
 ## Building an Installer
 
 The CMake target `surge-xt-distribution` builds an install image on your platform at the end of the build process. On
