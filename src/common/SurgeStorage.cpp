@@ -760,45 +760,59 @@ void SurgeStorage::refresh_patchlist()
     /*
      * Update midi program change here
      */
-    int loadFactoryBanksInAt{0};
-
     auto loadCategoryIntoBank = [this](int catid, int bk) {
         int currProg = 0;
+
         for (const auto &pd : patchOrdering)
         {
             auto &p = patch_list[pd];
+
             if (p.category == catid)
             {
                 patchIdToMidiBankAndProgram[bk][currProg] = pd;
                 currProg++;
+
                 if (currProg >= 128)
+                {
                     break;
+                }
             }
         }
     };
-    int currBank = 0;
+
     // TODO: Initialize the data structure with init patch everywhere
     for (auto &a : patchIdToMidiBankAndProgram)
+    {
         for (auto &p : a)
+        {
             p = -1;
+        }
+    }
+
+    int currBank = 0;
 
     for (const auto &c : patch_category)
     {
         if (c.name == midiProgramChangePatchesSubdir)
         {
-            if (c.numberOfPatchesInCatgory > 0)
+            if (c.numberOfPatchesInCategory > 0)
             {
                 loadCategoryIntoBank(c.internalid, currBank);
-                currBank++;
             }
 
-            // And luckily .children are sorted
+            // makes sure subfolders inside MIDI Programs folder always start from Bank Select MSB 1
+            currBank++;
+
+            // luckily, children are sorted
             for (const auto &k : c.children)
             {
                 loadCategoryIntoBank(k.internalid, currBank);
                 currBank++;
+
                 if (currBank >= 128)
+                {
                     break;
+                }
             }
         }
     }
@@ -897,7 +911,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &init
             c.internalid = category;
             c.isFactory = !userDir;
 
-            c.numberOfPatchesInCatgory = 0;
+            c.numberOfPatchesInCategory = 0;
             for (auto &f : fs::directory_iterator(p))
             {
                 std::string xtn = path_to_string(f.path().extension());
@@ -910,11 +924,11 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &init
                     e.name = e.name.substr(0, e.name.size() - xtn.length());
                     items.push_back(e);
 
-                    c.numberOfPatchesInCatgory++;
+                    c.numberOfPatchesInCategory++;
                 }
             }
 
-            c.numberOfPatchesInCategoryAndChildren = c.numberOfPatchesInCatgory;
+            c.numberOfPatchesInCategoryAndChildren = c.numberOfPatchesInCategory;
             local_categories.push_back(c);
             category++;
         }
@@ -974,7 +988,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &init
     std::function<void(PatchCategory &)> recCorrect = [&recCorrect, &nameToLocalIndex,
                                                        &local_categories](PatchCategory &c) {
         local_categories[nameToLocalIndex[c.name]].numberOfPatchesInCategoryAndChildren =
-            c.numberOfPatchesInCatgory;
+            c.numberOfPatchesInCategory;
         for (auto &ckid : c.children)
         {
             recCorrect(local_categories[nameToLocalIndex[ckid.name]]);
