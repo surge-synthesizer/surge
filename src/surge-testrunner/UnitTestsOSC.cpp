@@ -33,7 +33,7 @@
 
 using namespace Surge::Test;
 
-TEST_CASE("OSC parsing", "[OpenSoundControl]")
+TEST_CASE("OSC parsing", "[opensoundcontrol]")
 {
     SECTION("Simple Note test")
     {
