@@ -166,7 +166,7 @@ void SurgeSynthesizer::jogCategory(bool increment)
                 order = (order <= 0) ? c - 1 : order - 1;
 
             current_category_id = storage.patchCategoryOrdering[order];
-        } while (storage.patch_category[current_category_id].numberOfPatchesInCatgory == 0 &&
+        } while (storage.patch_category[current_category_id].numberOfPatchesInCategory == 0 &&
                  order != orderOrig);
         // That order != orderOrig isn't needed unless we have an entire empty category tree, in
         // which case it stops an inf loop

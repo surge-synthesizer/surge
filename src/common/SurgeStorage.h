@@ -1123,7 +1123,7 @@ struct PatchCategory
     bool isFactory;
 
     int internalid;
-    int numberOfPatchesInCatgory;
+    int numberOfPatchesInCategory;
     int numberOfPatchesInCategoryAndChildren;
 };
 
