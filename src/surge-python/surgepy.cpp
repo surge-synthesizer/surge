@@ -612,13 +612,16 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
 
     void releaseNoteWithInts(int ch, int note, int vel) { releaseNote(ch, note, vel); }
 
-    void loadPatchPy(const std::string &s)
+    bool loadPatchPy(const std::string &s)
     {
-        if (!fs::exists(string_to_path(s)))
+        auto path = string_to_path(s);
+
+        if (!fs::exists(path))
         {
             throw std::invalid_argument((std::string("File not found: ") + s).c_str());
         }
-        loadPatchByPath(s.c_str(), -1, "Python");
+
+        return loadPatchByPath(s.c_str(), -1, path.filename().c_str());
     }
 
     void savePatchPy(const std::string &s) { savePatchToPath(string_to_path(s)); }

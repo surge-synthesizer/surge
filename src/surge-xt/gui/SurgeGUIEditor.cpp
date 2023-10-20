@@ -224,6 +224,19 @@ class DroppedUserDataHandler
                       << std::endl;
             return false;
         }
+
+        // mac zip can create a place for the finder bundle that juce
+        // unzips as opposed to applies. Nuke it. See #7249
+        if (fs::is_directory(uncompressTo / "__MACOSX"))
+        {
+            try
+            {
+                fs::remove_all(uncompressTo / "__MACOSX");
+            }
+            catch (const fs::filesystem_error &)
+            {
+            }
+        }
         return true;
     }
 
@@ -4629,7 +4642,7 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
                         [this]() { showHTML(skinInspectorHtml()); });
 
     skinSubMenu.addItem(Surge::GUI::toOSCase("Skin Development Guide..."), []() {
-        juce::URL("https://surge-synthesizer.github.io/skin-manual.html").launchInDefaultBrowser();
+        juce::URL("https://surge-synthesizer.github.io/skin-manual/").launchInDefaultBrowser();
     });
 
     return skinSubMenu;

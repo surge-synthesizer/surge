@@ -2012,38 +2012,18 @@ void SurgeSynthesizer::sendParameterAutomation(long index, float value)
 
 void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, int msbValue)
 {
-    /* OK there are two things we are dealing with here
+    /* The MPE specification v1.0 section 2.1.1 says the RPN message format for MPE Configuration
+       Message is:
 
-     1: The MPE specification v1.0 section 2.1.1 says the message format for RPN is
+          Bn 64 06
+          Bn 65 00
+          Bn 06 mm
 
-        Bn 64 06
-        Bn 65 00
-        Bn 06 mm
+       where n = 0 is lower zone, n=F is upper zone, all others are invalid
+       mm=0 means no MPE and mm=1->F is zone.
+    */
 
-     where n = 0 is lower zone, n=F is upper zone, all others are invalid, and mm=0 means no MPE and
-     mm=1->F is zone.
-
-     So you would think the Roli Seaboard would send, since it is one zone
-
-        B0 64 06 B0 65 00 B0 06 0F
-
-     and be done with it. If it did this code would work.
-
-     But it doesn't. At least with Roli Seaboard Firmware 1.1.7.
-
-     Instead on *each* channel it sends
-
-        Bn 64 04 Bn 64 0 Bn 06 00
-        Bn 64 03 Bn 64 0 Bn 06 00
-
-     for each channel. Which seems unrelated to the spec. But as a result the original onRPN code
-     means you get no MPE with a Roli Seaboard.
-
-     Hey one year later an edit: Those aren't coming from ROLI they are coming from Logic PRO and
-     now that I correct modify and stream MPE state, we should not listen to those messages.
-     */
-
-    if (lsbRPN == 0 && msbRPN == 0) // PITCH BEND RANGE
+    if (lsbRPN == 0 && msbRPN == 0) // pitch bend range
     {
         if (channel == 1)
         {
@@ -2058,27 +2038,19 @@ void SurgeSynthesizer::onRPN(int channel, int lsbRPN, int msbRPN, int lsbValue, 
     {
         mpeEnabled = msbValue > 0;
         mpeVoices = msbValue & 0xF;
+
         if (storage.mpePitchBendRange < 0.0f)
+        {
             storage.mpePitchBendRange = Surge::Storage::getUserDefaultValue(
                 &storage, Surge::Storage::MPEPitchBendRange, 48);
+        }
+
         mpeGlobalPitchBendRange = 0;
+
         return;
     }
-    else if (lsbRPN == 4 && msbRPN == 0 && channel != 0 && channel != 0xF)
+    else // we don't support any other RPN message at this time
     {
-        /*
-        ** This is code sent by logic in all cases for some reason. In ancient times
-        ** I thought it came from a roli. But I since changed the MPE state management so
-        ** with 1.6.5 do this:
-        */
-#if 0
-       // This is the invalid message which the ROLI sends. Rather than have the Roli not work
-       mpeEnabled = true;
-       mpeVoices = msbValue & 0xF;
-       mpePitchBendRange = Surge::Storage::getUserDefaultValue(&storage, "mpePitchBendRange", 48);
-       std::cout << __LINE__ << " " << __FILE__ << " MPEE=" << mpeEnabled << " MPEPBR=" << mpePitchBendRange << std::endl;
-       mpeGlobalPitchBendRange = 0;
-#endif
         return;
     }
 }
