@@ -288,9 +288,10 @@ struct UndoManagerImpl
         }
         if (auto pa = std::get_if<UndoModulation>(&a))
         {
-            return fmt::format("Modulation[id={},source={},scene={},idx={},val={},muted={}]",
-                               pa->paramId, editor->modulatorName(pa->ms, false, pa->scene),
-                               pa->scene, pa->index, pa->val, pa->muted);
+            return fmt::format(
+                "Modulation[id={},source={},scene={},idx={},val={},muted={}]", pa->paramId,
+                ModulatorName::modulatorName(&synth->storage, pa->ms, false, pa->scene), pa->scene,
+                pa->index, pa->val, pa->muted);
         }
         if (auto pa = std::get_if<UndoOscillator>(&a))
         {

@@ -905,7 +905,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             if (lurl != "")
                 lurl = fullyResolvedHelpURL(lurl);
             auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
-                modulatorNameWithIndex(current_scene, modsource, modsource_index, false, false),
+                ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene, modsource,
+                                                      modsource_index, false, false),
                 lurl);
             hmen->setSkin(currentSkin, bitmapStore);
             auto hment = hmen->getTitle();
@@ -984,7 +985,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 parameter->create_fullname(
                                     parameter->get_name(), pname, parameter->ctrlgroup,
                                     parameter->ctrlgroup_entry,
-                                    modulatorName(parameter->ctrlgroup_entry, true).c_str());
+                                    ModulatorName::modulatorName(&synth->storage,
+                                                                 parameter->ctrlgroup_entry, true,
+                                                                 current_scene)
+                                        .c_str());
                                 targetName = pname;
                             }
                             else
@@ -2699,8 +2703,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         modtxt, synth->getModDepth(ptag, ms, sc, modidx),
                                         synth->isBipolarModulation(ms), Parameter::Menu);
 
-                                    std::string srctxt =
-                                        modulatorNameWithIndex(sc, ms, modidx, true, showScene);
+                                    std::string srctxt = ModulatorName::modulatorNameWithIndex(
+                                        &synth->storage, sc, ms, modidx, true, showScene);
 
                                     auto comp =
                                         std::make_unique<Surge::Widgets::ModMenuCustomComponent>(
@@ -2841,7 +2845,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         if ((!synth->isAnyActiveModulation(ptag, ms, current_scene) || isIndexed) &&
                             synth->isValidModulation(ptag, ms))
                         {
-                            auto modName = modulatorName(ms, false);
+                            auto modName = ModulatorName::modulatorName(&synth->storage, ms, false,
+                                                                        current_scene);
 
                             auto *popMenu = &addMIDISub;
                             int modIdx = -1;
@@ -2877,8 +2882,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                                 for (int i = 0; i < maxidx; ++i)
                                 {
-                                    auto subn =
-                                        modulatorNameWithIndex(current_scene, ms, i, false, false);
+                                    auto subn = ModulatorName::modulatorNameWithIndex(
+                                        &synth->storage, current_scene, ms, i, false, false);
 
                                     subm.addItem(subn, [this, p, bvf, ms, modIdx, i]() {
                                         this->promptForUserValueEntry(p, bvf, ms, current_scene, i);
@@ -3796,7 +3801,10 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
                     synth->getParameterName(ptagid, txt);
                 }
 
-                snprintf(pname, TXT_SIZE - 1, "%s -> %s", modulatorName(thisms, true).c_str(), txt);
+                snprintf(pname, TXT_SIZE - 1, "%s -> %s",
+                         ModulatorName::modulatorName(&synth->storage, thisms, true, current_scene)
+                             .c_str(),
+                         txt);
 
                 ModulationDisplayInfoWindowStrings mss;
 

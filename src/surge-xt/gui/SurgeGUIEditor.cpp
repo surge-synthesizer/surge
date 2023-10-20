@@ -1356,7 +1356,8 @@ void SurgeGUIEditor::refresh_mod()
             state |= 4;
 
             // update the LFO title label
-            std::string modname = modulatorName(modsource_editor[current_scene], true);
+            std::string modname = ModulatorName::modulatorName(
+                &synth->storage, modsource_editor[current_scene], true, current_scene);
 
             lfoNameLabel->setText(modname.c_str());
         }
@@ -5263,7 +5264,9 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
             char pname[1024];
 
             p->create_fullname(p->get_name(), pname, p->ctrlgroup, p->ctrlgroup_entry,
-                               modulatorName(p->ctrlgroup_entry, true).c_str());
+                               ModulatorName::modulatorName(&synth->storage, p->ctrlgroup_entry,
+                                                            true, current_scene)
+                                   .c_str());
             lab = pname;
         }
         else
@@ -5273,7 +5276,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     }
     else
     {
-        lab = modulatorName(ms, false);
+        lab = ModulatorName::modulatorName(&synth->storage, ms, false, current_scene);
     }
 
     typeinParamEditor->setMainLabel(lab);
@@ -5318,8 +5321,9 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
 
     if (ismod)
     {
-        std::string mls =
-            std::string("by ") + modulatorNameWithIndex(current_scene, ms, modidx, true, false);
+        std::string mls = std::string("by ") +
+                          ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene, ms,
+                                                                modidx, true, false);
         typeinParamEditor->setModByLabel(mls);
     }
 
@@ -5890,7 +5894,8 @@ void SurgeGUIEditor::openLFORenameDialog(const int lfo_id, const juce::Point<int
     promptForMiniEdit(
         synth->storage.getPatch().LFOBankLabel[current_scene][lfo_id][msi],
         fmt::format("Enter a new name for {:s}:",
-                    modulatorNameWithIndex(current_scene, modsource, msi, false, false, true)),
+                    ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene, modsource,
+                                                          msi, false, false, true)),
         "Rename Modulator", juce::Point<int>(10, 10), callback, c);
 }
 
@@ -7044,7 +7049,8 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     }
 
     // update the LFO title label
-    std::string modname = modulatorName(modsource_editor[current_scene], true);
+    std::string modname = ModulatorName::modulatorName(
+        &synth->storage, modsource_editor[current_scene], true, current_scene);
     lfoNameLabel->setText(modname.c_str());
     lfoNameLabel->repaint();
 
@@ -7175,110 +7181,6 @@ void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component
     }
 }
 
-std::string SurgeGUIEditor::modulatorIndexExtension(int scene, int ms, int index, bool shortV)
-{
-    if (synth->supportsIndexedModulator(scene, (modsources)ms))
-    {
-        if (ms == ms_random_bipolar)
-        {
-            if (index == 0)
-                return shortV ? "" : " (Uniform)";
-            if (index == 1)
-                return shortV ? " N" : " (Normal)";
-        }
-        if (ms == ms_random_unipolar)
-        {
-            if (index == 0)
-                return shortV ? "" : " (Uniform)";
-            if (index == 1)
-                return shortV ? " HN" : " (Half Normal)";
-        }
-        if (ms == ms_lowest_key || ms == ms_latest_key || ms == ms_highest_key)
-        {
-            return (index == 0 ? " Key" : " Voice");
-        }
-
-        if (ms >= ms_lfo1 && ms <= ms_slfo6)
-        {
-            auto lf = &(synth->storage.getPatch().scene[scene].lfo[ms - ms_lfo1]);
-            if (lf->shape.val.i != lt_formula)
-            {
-                if (index == 0)
-                    return "";
-                if (index == 1)
-                {
-                    if (shortV)
-                        return " Raw";
-                    return " (" + Surge::GUI::toOSCase("Raw Waveform") + ")";
-                }
-                if (index == 2)
-                {
-                    if (shortV)
-                        return " EG";
-                    return Surge::GUI::toOSCase(" (EG Only)");
-                }
-            }
-        }
-
-        if (shortV)
-            return "." + std::to_string(index + 1);
-        else
-            return std::string(" Out ") + std::to_string(index + 1);
-    }
-    return "";
-}
-
-std::string SurgeGUIEditor::modulatorNameWithIndex(int scene, int ms, int index, bool forButton,
-                                                   bool useScene, bool baseNameOnly)
-{
-    int lfo_id = ms - ms_lfo1;
-    bool hasOverride = isLFO((modsources)ms) && index >= 0 &&
-                       synth->storage.getPatch().LFOBankLabel[scene][lfo_id][index][0] != 0;
-
-    if (baseNameOnly)
-    {
-        auto base = modulatorName(ms, true, useScene ? scene : -1);
-
-        if (synth->supportsIndexedModulator(scene, (modsources)ms))
-        {
-            base += modulatorIndexExtension(scene, ms, index, true);
-        }
-
-        return base;
-    }
-
-    if (!hasOverride)
-    {
-        auto base = modulatorName(ms, forButton, useScene ? scene : -1);
-
-        if (index >= 0 && synth->supportsIndexedModulator(scene, (modsources)ms))
-        {
-            base += modulatorIndexExtension(scene, ms, index, forButton);
-        }
-
-        return base;
-    }
-    else
-    {
-        if (forButton)
-        {
-            return synth->storage.getPatch().LFOBankLabel[scene][ms - ms_lfo1][index];
-        }
-
-        // Long name is alias (button name)
-        auto base = modulatorName(ms, true, useScene ? scene : -1);
-
-        if (synth->supportsIndexedModulator(scene, (modsources)ms))
-        {
-            base += modulatorIndexExtension(scene, ms, index, true);
-        }
-
-        std::string res = synth->storage.getPatch().LFOBankLabel[scene][ms - ms_lfo1][index];
-        res = res + " (" + base + ")";
-        return res;
-    }
-}
-
 void SurgeGUIEditor::setupAlternates(modsources ms)
 {
     jassert(gui_modsrc[ms]);
@@ -7299,8 +7201,10 @@ void SurgeGUIEditor::setupAlternates(modsources ms)
             idxc = synth->getMaxModulationIndex(current_scene, a);
         for (int q = 0; q < idxc; ++q)
         {
-            auto tl = modulatorNameWithIndex(current_scene, a, q, true, false);
-            auto ll = modulatorNameWithIndex(current_scene, a, q, false, false);
+            auto tl = ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene, a, q,
+                                                            true, false);
+            auto ll = ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene, a, q,
+                                                            false, false);
             indexedAlternates.emplace_back(a, q, tl, ll);
         }
     }
@@ -7989,9 +7893,11 @@ void SurgeGUIEditor::announceGuiState()
     oss << "Patch '" << s->getPatch().name << "'. Scene " << (current_scene == 0 ? "A" : "B")
         << ". "
         << " Oscillator " << (current_osc[current_scene] + 1) << " " << osc_type_names[ot] << "."
-        << " Modulator " << modulatorName(modsource_editor[current_scene], false) << " "
-        << lt_names[ms] << ". " << fxslot_names[current_fx] << " " << fx_type_names[ft] << "."
-        << std::endl;
+        << " Modulator "
+        << ModulatorName::modulatorName(&synth->storage, modsource_editor[current_scene], false,
+                                        current_scene)
+        << " " << lt_names[ms] << ". " << fxslot_names[current_fx] << " " << fx_type_names[ft]
+        << "." << std::endl;
     enqueueAccessibleAnnouncement(oss.str());
 }
 

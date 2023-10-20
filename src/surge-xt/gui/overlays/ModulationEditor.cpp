@@ -894,7 +894,9 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         {
             std::string pfx = p->scene == 1 ? "A " : "B ";
             p->create_fullname(p->get_name(), nm, p->ctrlgroup, p->ctrlgroup_entry,
-                               (pfx + editor->ed->modulatorName(p->ctrlgroup_entry, true)).c_str());
+                               (pfx + ModulatorName::modulatorName(
+                                          &synth->storage, p->ctrlgroup_entry, true, p->scene))
+                                   .c_str());
         }
         else
         {
@@ -904,8 +906,8 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
         d.pscene = p->scene;
         d.pControlGroup = p->ctrlgroup;
 
-        std::string sname = editor->ed->modulatorNameWithIndex(
-            d.source_scene, d.source_id, d.source_index, false, d.inScene < 0);
+        std::string sname = ModulatorName::modulatorNameWithIndex(
+            &synth->storage, d.source_scene, d.source_id, d.source_index, false, d.inScene < 0);
 
         d.sname = sname + sceneMod;
         d.pname = nm;
@@ -1391,7 +1393,8 @@ void ModulationSideControls::showAddSourceMenu()
 
                     for (int i = 0; i < maxidx; ++i)
                     {
-                        auto subn = sge->modulatorNameWithIndex(sc, ms, i, false, false);
+                        auto subn = ModulatorName::modulatorNameWithIndex(&synth->storage, sc, ms,
+                                                                          i, false, false);
 
                         subm.addItem(subn, [this, ms, i, sc, subn]() {
                             add_ms = ms;
@@ -1405,12 +1408,14 @@ void ModulationSideControls::showAddSourceMenu()
                         });
                     }
 
-                    popMenu->addSubMenu(
-                        sge->modulatorNameWithIndex(sc, ms, -1, false, false, false), subm);
+                    popMenu->addSubMenu(ModulatorName::modulatorNameWithIndex(
+                                            &synth->storage, sc, ms, -1, false, false, false),
+                                        subm);
                 }
                 else
                 {
-                    auto sn = sge->modulatorNameWithIndex(sc, ms, 0, false, false);
+                    auto sn = ModulatorName::modulatorNameWithIndex(&synth->storage, sc, ms, 0,
+                                                                    false, false);
 
                     popMenu->addItem(sn, [this, sn, sc, ms]() {
                         add_ms = ms;

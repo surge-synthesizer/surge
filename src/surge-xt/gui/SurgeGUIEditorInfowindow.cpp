@@ -112,7 +112,8 @@ void SurgeGUIEditor::updateInfowindowContents(int ptag, bool isModulated)
     {
         SurgeSynthesizer::ID ptagid;
         char pdisp[TXT_SIZE], txt[TXT_SIZE];
-        auto mn = modulatorNameWithIndex(current_scene, modsource, modsource_index, true, false);
+        auto mn = ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene, modsource,
+                                                        modsource_index, true, false);
 
         if (synth->fromSynthSideId(pid, ptagid))
         {

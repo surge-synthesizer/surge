@@ -1374,8 +1374,10 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
             depth, synth->getModDepth(ptag, thisms, mr.source_scene, mr.source_index),
             synth->isBipolarModulation(thisms), Parameter::Menu);
 
-        globmods << tab4 << "<b>" << modulatorName(mr.source_id, false) << " -> "
-                 << p->get_full_name() << ":</b> " << depth << "<br/>\n";
+        globmods << tab4 << "<b>"
+                 << ModulatorName::modulatorName(&synth->storage, mr.source_id, false,
+                                                 current_scene)
+                 << " -> " << p->get_full_name() << ":</b> " << depth << "<br/>\n";
         modsourceSceneActive.emplace(mr.source_id, mr.source_scene);
     }
 
@@ -1409,8 +1411,10 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
                     depth, synth->getModDepth(ptag, thisms, scn, mr.source_index),
                     synth->isBipolarModulation(thisms), Parameter::Menu);
 
-                curscenemods << tab4 << "<b>" << modulatorName(thisms, false) << " -> "
-                             << p->get_full_name() << ":</b> " << depth << "<br/>\n";
+                curscenemods << tab4 << "<b>"
+                             << ModulatorName::modulatorName(&synth->storage, thisms, false,
+                                                             current_scene)
+                             << " -> " << p->get_full_name() << ":</b> " << depth << "<br/>\n";
                 modsourceSceneActive.emplace(thisms, mr.source_scene);
             }
 
@@ -1639,7 +1643,9 @@ std::string SurgeGUIEditor::patchToHtml(bool includeDefaults)
             if (modsourceSceneActive.find({ms, scn}) != modsourceSceneActive.end())
             {
                 htmls << std::endl
-                      << tab3 << "<h3>" << modulatorName(ms, false) << "</h3>" << std::endl
+                      << tab3 << "<h3>"
+                      << ModulatorName::modulatorName(&synth->storage, ms, false, current_scene)
+                      << "</h3>" << std::endl
                       << tab3 << "<p>" << std::endl;
 
                 const auto *p = &(lf.rate);
