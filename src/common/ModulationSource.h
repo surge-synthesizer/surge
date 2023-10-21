@@ -240,13 +240,13 @@ class SurgeStorage;
 
 namespace ModulatorName
 {
-static std::string modulatorName(const SurgeStorage *s, int ms, bool forButton, int current_scene,
+std::string modulatorName(const SurgeStorage *s, int ms, bool forButton, int current_scene,
                                  int forScene = -1);
-static std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, int index,
+std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, int index,
                                            bool shortV = false);
-static std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int index,
+std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int index,
                                           bool forButton, bool useScene, bool baseNameOnly = false);
-static bool supportsIndexedModulator(int scene, modsources modsource);
+bool supportsIndexedModulator(int scene, modsources modsource);
 
 } // namespace ModulatorName
 

@@ -1562,7 +1562,7 @@ void ModulationSideControls::showAddTargetMenu()
             break;
         case 1000:
         case 1001:
-            return editor->ed->modulatorName(cge, false);
+            return ModulatorName::modulatorName(editor->ed->getStorage(), cge, false, editor->ed->current_scene);
             break;
         default:
             return std::string("CGE=") + std::to_string(cge);

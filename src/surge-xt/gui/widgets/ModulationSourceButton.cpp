@@ -383,11 +383,11 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
         if (hu != "")
         {
             auto lurl = sge->fullyResolvedHelpURL(hu);
-            sge->addHelpHeaderTo(sge->modulatorName(modsource, false), lurl, menu);
+            sge->addHelpHeaderTo(ModulatorName::modulatorName(storage, modsource, false, sge->current_scene), lurl, menu);
         }
         else
         {
-            menu.addItem(sge->modulatorName(modsource, false), []() {});
+            menu.addItem(ModulatorName::modulatorName(storage, modsource, false, sge->current_scene), []() {});
         }
 
         menu.addSeparator();
