@@ -520,11 +520,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             if (ms->segments[i].duration > 0.01 &&
                 ms->segments[i].type != MSEGStorage::segment::HOLD)
             {
-                /*
-                 * Drop in a control point. But where and moving how?
-                 *
-                 * Here's some good defaults
-                 */
+                // Drop in a control point. But where and moving how?
+                // Here's some good defaults
                 bool verticalMotion = true;
                 bool horizontalMotion = false;
                 bool verticalScaleByValues = false;
@@ -1115,9 +1112,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         auto tpx = timeToPx();
         auto pxt = pxToTime();
 
-        /*
-         * Now draw the loop region
-         */
+        // Now draw the loop region
         if (ms->loopMode != MSEGStorage::LoopMode::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
             int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
@@ -1181,8 +1176,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         float pathFirstY, pathLastX, pathLastY, pathLastDef;
 
-        bool drawnLast =
-            false; // this slightly odd construct means we always draw beyond the last point
+        // this slightly odd construct means we always draw beyond the last point
+        bool drawnLast = false;
         int priorEval = 0;
 
         for (int q = 0; q <= drawArea.getWidth(); ++q)
@@ -1192,7 +1187,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             if (!drawnLast)
             {
                 float iup = (int)up;
-
                 float fup = up - iup;
                 float v = Surge::MSEG::valueAt(iup, fup, 0, ms, &es, true);
                 float vdef = Surge::MSEG::valueAt(iup, fup, lfodata->deform.val.f, ms, &esdf, true);
@@ -1206,6 +1200,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     vdef = v;
 
                 int compareWith = es.lastEval;
+
                 if (up >= ms->totalDuration)
                     compareWith = ms->n_activeSegments - 1;
 
@@ -1225,15 +1220,18 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     {
                         addP(highlightPath, i, valpx(ms->segments[priorEval].nv1));
                     }
+
                     priorEval = es.lastEval;
                 }
 
                 if (es.lastEval == hoveredSegment)
                 {
                     bool skipThisAdd = false;
+
                     // edge case when you go exactly up to 1 evenly. See #3940
                     if (up < ms->segmentStart[es.lastEval] || up > ms->segmentEnd[es.lastEval])
                         skipThisAdd = true;
+
                     if (!hlpathUsed)
                     {
                         // We always want to hit the start
@@ -1245,8 +1243,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                             beginP(highlightPath, i, v);
                             beginP(highlightPath, i, v);
                         }
+
                         hlpathUsed = true;
                     }
+
                     if (!skipThisAdd)
                     {
                         addP(highlightPath, i, v);
@@ -1266,14 +1266,17 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     addP(defpath, i, vdef);
                     addP(fillpath, i, v);
                 }
+
                 pathLastX = i;
                 pathLastY = v;
                 pathLastDef = vdef;
             }
+
             drawnLast = up > ms->totalDuration;
         }
 
         int uniLimit = uni ? -1 : 0;
+
         addP(fillpath, pathLastX, valpx(uniLimit));
         addP(fillpath, uniLimit, valpx(uniLimit));
         addP(fillpath, uniLimit, pathFirstY);
@@ -1479,17 +1482,18 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 int sz = 13;
                 int offx = 0, offy = 0;
                 bool showValue = false;
+                const bool isMouseDown = (mouseDownInitiation == MOUSE_DOWN_IN_DRAW_AREA);
 
                 if (h.active)
                 {
-                    offy = 1;
-                    showValue = true;
+                    offy = isMouseDown ? 1 : 0;
+                    showValue = isMouseDown;
                 }
 
                 if (h.dragging)
                 {
                     offy = 2;
-                    showValue = true;
+                    showValue = isMouseDown;
                 }
 
                 if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
@@ -1543,9 +1547,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                     g.setFont(skin->fontManager->lfoTypeFont);
 
-                    float val = h.associatedSegment >= ms->n_activeSegments - 1
-                                    ? ms->segments[h.associatedSegment].v0
-                                    : ms->segments[h.associatedSegment].nv1;
+                    float val = h.specialEndpoint ? ms->segments[h.associatedSegment].nv1
+                                                  : ms->segments[h.associatedSegment].v0;
 
                     std::string txt = fmt::format("X: {:.{}f}", pxt(cx), prec),
                                 txt2 = fmt::format("Y: {:.{}f}", val, prec);
