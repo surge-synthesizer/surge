@@ -467,7 +467,7 @@ class alignas(16) SurgeSynthesizer
     std::unique_ptr<Effect> fx[n_fx_slots];
     std::atomic<bool> halt_engine;
     MidiChannelState channelState[16];
-    bool mpeEnabled = false;
+    bool &mpeEnabled;
     int mpeVoices = 0;
     int mpeGlobalPitchBendRange = 0;
 

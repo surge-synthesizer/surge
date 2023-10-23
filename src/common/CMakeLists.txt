@@ -105,6 +105,7 @@ add_library(${PROJECT_NAME}
   FxPresetAndClipboardManager.h
   LuaSupport.cpp
   LuaSupport.h
+  ModulationSource.cpp
   ModulationSource.h
   ModulatorPresetManager.cpp
   ModulatorPresetManager.h

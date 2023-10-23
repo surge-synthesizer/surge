@@ -55,7 +55,7 @@ using CMSKey = ControllerModulationSourceVector<1>; // sigh see #4286 for failed
 SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppliedDataPath)
     : storage(suppliedDataPath), hpA{cutl::make_array<BiquadFilter, n_hpBQ>(&storage)},
       hpB{cutl::make_array<BiquadFilter, n_hpBQ>(&storage)}, _parent(parent), halfbandA(6, true),
-      halfbandB(6, true), halfbandIN(6, true)
+      halfbandB(6, true), halfbandIN(6, true), mpeEnabled(storage.mpeEnabled)
 {
     switch_toggled_queued = false;
     audio_processing_active = false;

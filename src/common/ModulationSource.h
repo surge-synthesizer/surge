@@ -236,6 +236,20 @@ inline bool canModulateVoiceModulators(modsources ms)
     return (ms <= ms_ctrl8) || ms == ms_timbre;
 }
 
+class SurgeStorage;
+
+namespace ModulatorName
+{
+std::string modulatorName(const SurgeStorage *s, int ms, bool forButton, int current_scene,
+                          int forScene = -1);
+std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, int index,
+                                    bool shortV = false);
+std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int index,
+                                   bool forButton, bool useScene, bool baseNameOnly = false);
+bool supportsIndexedModulator(int scene, modsources modsource);
+
+} // namespace ModulatorName
+
 struct ModulationRouting
 {
     int source_id;
