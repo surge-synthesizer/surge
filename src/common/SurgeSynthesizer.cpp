@@ -2840,12 +2840,15 @@ void SurgeSynthesizer::switch_toggled()
 bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 {
     load_fx_needed = false;
+    bool localSendFX[n_fx_slots];
     for (int s = 0; s < n_fx_slots; s++)
     {
+        localSendFX[s] = false;
         bool something_changed = false;
         if ((fxsync[s].type.val.i != storage.getPatch().fx[s].type.val.i) || force_reload_all ||
             fx_reload[s])
         {
+            localSendFX[s] = true;
             storage.getPatch().isDirty = true;
             fx_reload[s] = false;
 
@@ -3009,6 +3012,14 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
         }
     }
 
+    if (!force_reload_all)
+    {
+        for (int s = 0; s < n_fx_slots; ++s)
+        {
+            resendFXParam[s] = localSendFX[s];
+        }
+    }
+
     // if (something_changed) storage.getPatch().update_controls(false);
     return true;
 }
@@ -3016,12 +3027,12 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
 bool SurgeSynthesizer::loadOscalgos()
 {
     bool algosChanged{false};
+    bool localResendOscParams[n_scenes][n_oscs];
     for (int s = 0; s < n_scenes; s++)
     {
         for (int i = 0; i < n_oscs; i++)
         {
-            bool resend = false;
-
+            localResendOscParams[s][i] = false;
             if (storage.getPatch().scene[s].osc[i].queue_type > -1)
             {
                 algosChanged = true;
@@ -3038,14 +3049,13 @@ bool SurgeSynthesizer::loadOscalgos()
                 storage.getPatch().scene[s].osc[i].queue_type = -1;
                 switch_toggled_queued = true;
                 refresh_editor = true;
-                resend = true;
+                localResendOscParams[s][i] = true;
             }
 
             TiXmlElement *e = (TiXmlElement *)storage.getPatch().scene[s].osc[i].queue_xmldata;
             if (e)
             {
                 storage.getPatch().isDirty = true;
-                resend = true;
 
                 for (int k = 0; k < n_osc_params; k++)
                 {
@@ -3106,6 +3116,13 @@ bool SurgeSynthesizer::loadOscalgos()
     if (algosChanged)
     {
         storage.memoryPools->resetOscillatorPools(&storage);
+        for (int s=0; s<n_scenes; ++s)
+        {
+            for (int o=0; o<n_oscs; ++o)
+            {
+                resendOscParam[s][o] = localResendOscParams[s][o];
+            }
+        }
     }
     return true;
 }
@@ -4587,6 +4604,10 @@ void SurgeSynthesizer::process()
 
         halfbandB.process_block_D2(sceneout[1][0], sceneout[1][1], BLOCK_SIZE_OS);
     }
+
+    /*
+     * ABOVE: Oversampled, Below, Regular sample. So BLOCK_SIZE_OS above BLOCK_SIZE below
+     */
 
     // TODO: FIX SCENE ASSUMPTION
     if (storage.getPatch().scene[0].lowcut.deactivated == false)
