@@ -138,7 +138,8 @@ std::string modulatorName(const SurgeStorage *s, int i, bool button, int current
     }
 }
 
-std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, int index, bool shortV)
+std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, int index,
+                                    bool shortV)
 {
     if (ModulatorName::supportsIndexedModulator(scene, (modsources)ms))
     {
@@ -191,8 +192,8 @@ std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, in
     return "";
 }
 
-std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int index, bool forButton,
-                                   bool useScene, bool baseNameOnly)
+std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int index,
+                                   bool forButton, bool useScene, bool baseNameOnly)
 {
     int lfo_id = ms - ms_lfo1;
     bool hasOverride = isLFO((modsources)ms) && index >= 0 &&

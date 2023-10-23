@@ -893,6 +893,10 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
     {
         return storage.tuningApplicationMode;
     }
+
+    void setMPEEnabled(bool m) { storage.mpeEnabled = m; }
+
+    bool getMPEEnabled() const { return storage.mpeEnabled; }
 };
 
 SurgeSynthesizer *createSurge(float sr)
@@ -1042,7 +1046,8 @@ PYBIND11_MODULE(surgepy, m)
         .def("remapToStandardKeyboard",
              &SurgeSynthesizerWithPythonExtensions::remapToStandardKeyboard,
              "Return to standard C-centered keyboard mapping")
-        .def_readwrite("mpeEnabled", &SurgeSynthesizerWithPythonExtensions::mpeEnabled)
+        .def_property("mpeEnabled", &SurgeSynthesizerWithPythonExtensions::getMPEEnabled,
+                      &SurgeSynthesizerWithPythonExtensions::setMPEEnabled)
         .def_property("tuningApplicationMode",
                       &SurgeSynthesizerWithPythonExtensions::getTuningApplicationMode,
                       &SurgeSynthesizerWithPythonExtensions::setTuningApplicationMode);
