@@ -46,6 +46,7 @@ struct SurgeVoiceState
     ControllerModulationSource mpePitchBend;
     float mpePitchBendRange;
     bool mpeEnabled;
+    bool mtsUseChannelWhenRetuning = false;
     int64_t voiceOrderAtCreate{-1};
 
     float getPitch(SurgeStorage *storage);

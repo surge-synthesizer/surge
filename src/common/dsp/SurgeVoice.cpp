@@ -21,6 +21,7 @@
  */
 
 #include "SurgeVoice.h"
+#include "UserDefaults.h"
 #include "DSPUtils.h"
 #include "QuadFilterChain.h"
 #include "globals.h"
@@ -72,7 +73,8 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
             key != keyRetuningForKey)
         {
             keyRetuningForKey = key;
-            keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key + mpeBend, 0);
+            keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key + mpeBend,
+                                                  mtsUseChannelWhenRetuning ? 0 : channel);
         }
         auto rkey = keyRetuning;
 
@@ -154,11 +156,10 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     assert(oscene);
 
     sampleRateReset();
-
     memcpy(localcopy, paramptr, sizeof(localcopy));
 
-    noteExpressions[VOLUME] = 1.0; // 1 is no ampplification
-    noteExpressions[PAN] = 0.5;    // since it is  0..1
+    noteExpressions[VOLUME] = 1.0; // 1 is no amplification
+    noteExpressions[PAN] = 0.5;    // since it is 0 ... 1
     noteExpressions[PITCH] = 0.0;
     noteExpressions[TIMBRE] = 0.0;
     noteExpressions[PRESSURE] = 0.0;
@@ -168,6 +169,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
     age = 0;
     age_release = 0;
+
     state.key = key;
     state.keyRetuningForKey = -1000;
     state.channel = channel;
@@ -192,6 +194,14 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.mpePitchBend.set_samplerate(storage->samplerate, storage->samplerate_inv);
     state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    const bool isCh23Mode = Surge::Storage::getUserDefaultValue(
+        storage, Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true, false);
+    const bool isChSplitMode = storage->getPatch().scenemode.val.i == sm_chsplit;
+
+    state.mtsUseChannelWhenRetuning = (mpeEnabled || isChSplitMode || isCh23Mode);
+#endif
+
     resetPortamentoFrom(storage->last_key[scene_id], channel);
 
     storage->last_key[scene_id] = key;
@@ -209,6 +219,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     {
         osctype[i] = -1;
     }
+
     memset(&FBP, 0, sizeof(FBP));
     sampleRateReset();
 
@@ -262,8 +273,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     modsources[ms_keytrack] = &keytrackSource;
     modsources[ms_polyaftertouch] = &polyAftertouchSource;
 
-    // Velocity is *almost* never reset except in poly mode so init it here
-    // then make it adapt smoothly.
+    // Velocity is *almost* never reset except in poly mode,
+    // so init it here then make it adapt smoothly.
     velocitySource.init(0, state.fvel);
     velocitySource.smoothingMode = Modulator::SmoothingMode::SLOW_EXP;
     velocitySource.set_samplerate(storage->samplerate, storage->samplerate_inv);
@@ -272,9 +283,9 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
     ampEGSource.init(storage, &scene->adsr[0], localcopy, &state);
     filterEGSource.init(storage, &scene->adsr[1], localcopy, &state);
+
     modsources[ms_ampeg] = &ampEGSource;
     modsources[ms_filtereg] = &filterEGSource;
-
     modsources[ms_modwheel] = oscene->modsources[ms_modwheel];
     modsources[ms_breath] = oscene->modsources[ms_breath];
     modsources[ms_expression] = oscene->modsources[ms_expression];
@@ -285,14 +296,17 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     modsources[ms_latest_key] = oscene->modsources[ms_latest_key];
     modsources[ms_timbre] = &timbreSource;
     modsources[ms_pitchbend] = oscene->modsources[ms_pitchbend];
-    for (int i = 0; i < n_customcontrollers; i++)
-        modsources[ms_ctrl1 + i] = oscene->modsources[ms_ctrl1 + i];
     modsources[ms_slfo1] = oscene->modsources[ms_slfo1];
     modsources[ms_slfo2] = oscene->modsources[ms_slfo2];
     modsources[ms_slfo3] = oscene->modsources[ms_slfo3];
     modsources[ms_slfo4] = oscene->modsources[ms_slfo4];
     modsources[ms_slfo5] = oscene->modsources[ms_slfo5];
     modsources[ms_slfo6] = oscene->modsources[ms_slfo6];
+
+    for (int i = 0; i < n_customcontrollers; i++)
+    {
+        modsources[ms_ctrl1 + i] = oscene->modsources[ms_ctrl1 + i];
+    }
 
     /*
     ** We want to snap the rnd and alt
@@ -340,26 +354,12 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     }
 
     calc_ctrldata<true>(0, 0); // init interpolators
-    SetQFB(0, 0);              // init Quad-Filterblock parameter interpolators
+    SetQFB(0, 0);              // init Quad Filter Block parameter interpolators
 
-    // It is imposrtant that switch_toggled comes last since it creates and activates the
+    // It is important that switch_toggled comes last since it creates and activates the
     // oscillators which need the modulation state set in calc_ctrldata to get sample 0
     // right.
     switch_toggled();
-
-    // for (int i = 0; i < 128; i++)
-    //{
-    //   printf("%.7f %.7f %.7f %.7f\n", table_envrate_exp[(i * 4) + 0], table_envrate_exp[(i * 4) +
-    //   1],
-    //          table_envrate_exp[(i * 4) + 2], table_envrate_exp[(i * 4) + 3]);
-    //}
-    // printf("\n");
-    // for (int i = 0; i < 128; i++)
-    //{
-    //   printf("%.7f %.7f %.7f %.7f\n", table_envrate_linear[(i * 4) + 0],
-    //          table_envrate_linear[(i * 4) + 1], table_envrate_linear[(i * 4) + 2],
-    //          table_envrate_linear[(i * 4) + 3]);
-    //}
 }
 
 SurgeVoice::~SurgeVoice() {}

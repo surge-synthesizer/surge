@@ -368,20 +368,22 @@ std::string defaultKeyToString(DefaultKey k)
 */
 
 std::string getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
-                                const std::string &valueIfMissing)
+                                const std::string &valueIfMissing, bool potentiallyRead)
 {
-    return storage->userDefaultsProvider->getUserDefaultValue(key, valueIfMissing);
+    return storage->userDefaultsProvider->getUserDefaultValue(key, valueIfMissing, potentiallyRead);
 }
 
-int getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, int valueIfMissing)
+int getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, int valueIfMissing,
+                        bool potentiallyRead)
 {
-    return storage->userDefaultsProvider->getUserDefaultValue(key, valueIfMissing);
+    return storage->userDefaultsProvider->getUserDefaultValue(key, valueIfMissing, potentiallyRead);
 }
 
 std::pair<int, int> getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
-                                        const std::pair<int, int> &valueIfMissing)
+                                        const std::pair<int, int> &valueIfMissing,
+                                        bool potentiallyRead)
 {
-    return storage->userDefaultsProvider->getUserDefaultValue(key, valueIfMissing);
+    return storage->userDefaultsProvider->getUserDefaultValue(key, valueIfMissing, potentiallyRead);
 }
 
 bool updateUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, const std::string &value)

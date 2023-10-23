@@ -185,10 +185,12 @@ typedef sst::plugininfra::defaults::Provider<DefaultKey, DefaultKey::nKeys> User
  * on this for both std::string and int stored values.
  */
 std::string getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
-                                const std::string &valueIfMissing);
-int getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, int valueIfMissing);
+                                const std::string &valueIfMissing, bool potentiallyRead = true);
+int getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key, int valueIfMissing,
+                        bool potentiallyRead = true);
 std::pair<int, int> getUserDefaultValue(SurgeStorage *storage, const DefaultKey &key,
-                                        const std::pair<int, int> &valueIfMissing);
+                                        const std::pair<int, int> &valueIfMissing,
+                                        bool potentiallyRead = true);
 inline fs::path getUserDefaultPath(SurgeStorage *storage, const DefaultKey &key,
                                    const fs::path &valueIfMissing)
 {
