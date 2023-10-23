@@ -151,9 +151,9 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCIn, false);
     if (startOSCInNow)
     {
-        int defaultOSCInPort = Surge::Storage::getUserDefaultValue(
-            &(surge->storage), Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
+        int defaultOSCInPort = surge->storage.getPatch().dawExtraState.oscPortIn;
         bool success = initOSCIn(defaultOSCInPort);
+
         if (!success)
         {
             std::ostringstream msg;
@@ -167,8 +167,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCOut, false);
     if (startOSCOutNow)
     {
-        int defaultOSCOutPort = Surge::Storage::getUserDefaultValue(
-            &(surge->storage), Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
+        int defaultOSCOutPort = surge->storage.getPatch().dawExtraState.oscPortOut;
         bool success = initOSCOut(defaultOSCOutPort);
         if (!success)
         {

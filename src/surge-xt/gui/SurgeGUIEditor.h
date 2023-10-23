@@ -294,7 +294,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   public:
     void populateDawExtraState(SurgeSynthesizer *synth);
-    void loadFromDAWExtraState(SurgeSynthesizer *synth);
+    void loadFromDawExtraState(SurgeSynthesizer *synth);
 
     void setZoomCallback(std::function<void(SurgeGUIEditor *, bool resizeWindow)> f)
     {
