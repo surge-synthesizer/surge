@@ -3116,9 +3116,9 @@ bool SurgeSynthesizer::loadOscalgos()
     if (algosChanged)
     {
         storage.memoryPools->resetOscillatorPools(&storage);
-        for (int s=0; s<n_scenes; ++s)
+        for (int s = 0; s < n_scenes; ++s)
         {
-            for (int o=0; o<n_oscs; ++o)
+            for (int o = 0; o < n_oscs; ++o)
             {
                 resendOscParam[s][o] = localResendOscParams[s][o];
             }

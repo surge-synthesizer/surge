@@ -1267,9 +1267,9 @@ void SurgeGUIEditor::idle()
         }
     }
 
-    for (int s=0; s<n_scenes; ++s)
+    for (int s = 0; s < n_scenes; ++s)
     {
-        for (int o=0; o < n_oscs; ++o)
+        for (int o = 0; o < n_oscs; ++o)
         {
             if (synth->resendOscParam[s][o])
             {
@@ -1277,8 +1277,7 @@ void SurgeGUIEditor::idle()
                 SurgeSynthesizer::ID eid = synth->idForParameter(&par);
 
                 juceEditor->beginParameterEdit(&par);
-                synth->getParent()->surgeParameterUpdated(eid,
-                                                          par.get_value_f01());
+                synth->getParent()->surgeParameterUpdated(eid, par.get_value_f01());
                 synth->resendOscParam[s][o] = false;
 
                 juceEditor->endParameterEdit(&par);
@@ -1286,7 +1285,7 @@ void SurgeGUIEditor::idle()
         }
     }
 
-    for (int s=0; s < n_fx_slots; ++s)
+    for (int s = 0; s < n_fx_slots; ++s)
     {
         if (synth->resendFXParam[s])
         {
@@ -1294,8 +1293,7 @@ void SurgeGUIEditor::idle()
             SurgeSynthesizer::ID eid = synth->idForParameter(&par);
 
             juceEditor->beginParameterEdit(&par);
-            synth->getParent()->surgeParameterUpdated(eid,
-                                                      par.get_value_f01());
+            synth->getParent()->surgeParameterUpdated(eid, par.get_value_f01());
             synth->resendFXParam[s] = false;
 
             juceEditor->endParameterEdit(&par);
