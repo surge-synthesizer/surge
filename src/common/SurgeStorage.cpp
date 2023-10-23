@@ -509,6 +509,11 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
 #endif
 
+    oscPortIn =
+        Surge::Storage::getUserDefaultValue(this, Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
+    oscPortOut =
+        Surge::Storage::getUserDefaultValue(this, Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
+
     initPatchName =
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::InitialPatchName, "Init Saw");
     initPatchCategory = Surge::Storage::getUserDefaultValue(
