@@ -64,7 +64,9 @@ class alignas(16) SurgeSynthesizer
 
     // aligned stuff
     SurgeStorage storage alignas(16);
-    lipol_ps FX alignas(16)[n_send_slots], amp alignas(16), amp_mute alignas(16),
+
+    // Each of these operations is post downsample so need to be blocksize not blocksize os.
+    lipol_ps_blocksz FX alignas(16)[n_send_slots], amp alignas(16), amp_mute alignas(16),
         send alignas(16)[n_send_slots][n_scenes];
 
     std::atomic<bool> audio_processing_active;
@@ -131,6 +133,9 @@ class alignas(16) SurgeSynthesizer
     bool loadFx(bool initp, bool force_reload_all);
     void enqueueFXOff(int whichFX);
     bool loadOscalgos();
+    std::atomic<bool> resendOscParam[n_scenes][n_oscs]{};
+    std::atomic<bool> resendFXParam[n_fx_slots]{};
+
     bool load_fx_needed;
 
     /*
