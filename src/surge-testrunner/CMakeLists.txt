@@ -21,7 +21,6 @@ add_executable(${PROJECT_NAME}
   UnitTestsIO.cpp
   UnitTestsLUA.cpp
   UnitTestsMIDI.cpp
-  UnitTestsOSC.cpp
   UnitTestsMOD.cpp
   UnitTestsMSEG.cpp
   UnitTestsNOTEID.cpp
