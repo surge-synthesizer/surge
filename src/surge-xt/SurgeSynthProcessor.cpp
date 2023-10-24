@@ -75,6 +75,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         fatalErrorMessage = e.what();
         return;
     }
+
 #if BUILD_IS_DEBUG
     oss << "  - Data         : " << surge->storage.datapath.u8string() << "\n"
         << "  - User Data    : " << surge->storage.userDataPath.u8string() << std::endl;
@@ -83,15 +84,19 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     auto parent = std::make_unique<juce::AudioProcessorParameterGroup>("Root", "Root", "|");
     auto macroG = std::make_unique<juce::AudioProcessorParameterGroup>("macros", "Macros", "|");
+
     for (int mn = 0; mn < n_customcontrollers; ++mn)
     {
         auto nm = std::make_unique<SurgeMacroToJuceParamAdapter>(surge.get(), mn);
+
         macrosById.push_back(nm.get());
         macroG->addChild(std::move(nm));
     }
+
     parent->addChild(std::move(macroG));
 
     std::map<unsigned int, std::vector<std::unique_ptr<juce::AudioProcessorParameter>>> parByGroup;
+
     for (auto par : surge->storage.getPatch().param_ptr)
     {
         if (par)
@@ -103,30 +108,36 @@ SurgeSynthProcessor::SurgeSynthProcessor()
             parByGroup[pm.clump].push_back(std::move(sja));
         }
     }
+
     for (auto &cv : parByGroup)
     {
         auto clump = cv.first;
         std::string id = std::string("SRG_GRP_") + std::to_string(clump);
         auto name = paramClumpName(clump);
         auto subg = std::make_unique<juce::AudioProcessorParameterGroup>(id, name, "|");
+
         for (auto &p : cv.second)
         {
             subg->addChild(std::move(p));
         }
+
         parent->addChild(std::move(subg));
     }
 
     auto vb = std::make_unique<SurgeBypassParameter>();
+
     bypassParameter = vb.get();
     parent->addChild(std::move(vb));
 
     addParameterGroup(std::move(parent));
 
     presetOrderToPatchList.clear();
+
     for (int i = 0; i < surge->storage.firstThirdPartyCategory; i++)
     {
         // Remap index to the corresponding category in alphabetical order.
         int c = surge->storage.patchCategoryOrdering[i];
+
         for (auto p : surge->storage.patchOrdering)
         {
             if (surge->storage.patch_list[p].category == c)
@@ -142,57 +153,22 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     surge->juceWrapperType = wrapperTypeString;
 
     midiKeyboardState.addListener(this);
-
-#if SURGE_HAS_OSC
-    // OSC (Open Sound Control)
-    oscHandler.initOSC(this, surge);
-
-    bool startOSCInNow =
-        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCIn, false);
-    if (startOSCInNow)
-    {
-        int defaultOSCInPort = surge->storage.getPatch().dawExtraState.oscPortIn;
-        bool success = initOSCIn(defaultOSCInPort);
-
-        if (!success)
-        {
-            std::ostringstream msg;
-            msg << "Surge XT was unable to connect to UDP port " << defaultOSCInPort
-                << " for OSC input.\n"
-                << "It may be in use by another application.";
-            surge->storage.reportError(msg.str(), "OSC Input Initialization Error");
-        }
-    }
-    bool startOSCOutNow =
-        Surge::Storage::getUserDefaultValue(&(surge->storage), Surge::Storage::StartOSCOut, false);
-    if (startOSCOutNow)
-    {
-        int defaultOSCOutPort = surge->storage.getPatch().dawExtraState.oscPortOut;
-        bool success = initOSCOut(defaultOSCOutPort);
-        if (!success)
-        {
-            std::ostringstream msg;
-            msg << "Surge XT was unable to connect to UDP port " << defaultOSCOutPort
-                << " for OSC output.\n"
-                << "It may be in use by another application.";
-            surge->storage.reportError(msg.str(), "OSC Output Initialization Error");
-            return;
-        }
-    }
-
-#endif
 }
 
 SurgeSynthProcessor::~SurgeSynthProcessor()
 {
     if (!surge)
+    {
         return;
+    }
 
     if (oscHandler.listening)
     {
-        oscHandler.stopListening();
+        oscHandler.stopListening(false);
     }
-    stopOSCOut(); // This also deletes the patch change -> OSC out listener
+
+    // This also deletes the patch change -> OSC out listener
+    stopOSCOut(false);
 }
 
 //==============================================================================
@@ -260,8 +236,15 @@ void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newNa
 /* OSC (Open Sound Control) */
 bool SurgeSynthProcessor::initOSCIn(int port)
 {
+    if (port <= 0)
+    {
+        return false;
+    }
+
     auto state = oscHandler.initOSCIn(port);
+
     surge->storage.oscListenerRunning = state;
+    surge->storage.oscStartIn = true;
 
     return state;
 }
@@ -279,8 +262,16 @@ bool SurgeSynthProcessor::changeOSCInPort(int new_port)
 
 bool SurgeSynthProcessor::initOSCOut(int port)
 {
+    if (port <= 0)
+    {
+        return false;
+    }
+
     auto state = oscHandler.initOSCOut(port);
+
     surge->storage.oscSending = state;
+    surge->storage.oscStartOut = true;
+
     if (state)
     {
         // Add listener for patch changes, to send new path to OSC output
@@ -297,12 +288,22 @@ bool SurgeSynthProcessor::initOSCOut(int port)
     return state;
 }
 
-void SurgeSynthProcessor::stopOSCOut()
+void SurgeSynthProcessor::stopOSCOut(bool updateOSCStartInStorage)
 {
     surge->deletePatchLoadedListener("OSC_OUT");
     deleteParamChangeListener("OSC_OUT");
-    oscHandler.stopSending();
+    oscHandler.stopSending(updateOSCStartInStorage);
 }
+
+void SurgeSynthProcessor::initOSCError(int port)
+{
+    std::ostringstream msg;
+
+    msg << "Surge XT was unable to connect to OSC port " << port << ".\n"
+        << "It may be in use by another application.";
+
+    surge->storage.reportError(msg.str(), "OSC Initialization Error");
+};
 
 bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port); }
 
@@ -372,18 +373,28 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isMacro, int
 void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
     if (!surge)
+    {
         return;
+    }
 
     surge->setSamplerate(sr);
-    // It used to be I would set audio processing active true here *but* REAPER calls this for
+
+#if SURGE_HAS_OSC
+    if ((!oscHandler.listening && surge->storage.oscStartIn && surge->storage.oscPortIn > 0) ||
+        (!oscHandler.sendingOSC && surge->storage.oscStartOut && surge->storage.oscPortOut > 0))
+    {
+        oscHandler.initOSC(this, surge);
+    }
+#endif
+
+    // It used to be we would set audio processing active true here *but* REAPER calls this for
     // inactive muted channels so we didn't load if that was the case. Set it true only
     // if we actually have an audio process going! See #6173
 }
 
 void SurgeSynthProcessor::releaseResources()
 {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
+    // When playback stops, you can use this as an opportunity to free up any spare memory, etc.
 }
 
 bool SurgeSynthProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const

@@ -2920,6 +2920,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
             {
                 dawExtraState.oscPortIn = ival;
+                storage->oscPortIn = ival;
             }
 
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oscPortOut"));
@@ -2927,6 +2928,23 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
             {
                 dawExtraState.oscPortOut = ival;
+                storage->oscPortOut = ival;
+            }
+
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oscStartIn"));
+
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+            {
+                dawExtraState.oscStartIn = ival;
+                storage->oscStartIn = ival;
+            }
+
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oscStartOut"));
+
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+            {
+                dawExtraState.oscStartOut = ival;
+                storage->oscStartOut = ival;
             }
 
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("isDirty"));
@@ -3679,6 +3697,14 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement oscPortOut("oscPortOut");
         oscPortOut.SetAttribute("v", dawExtraState.oscPortOut);
         dawExtraXML.InsertEndChild(oscPortOut);
+
+        TiXmlElement oscStartIn("oscStartIn");
+        oscStartIn.SetAttribute("v", dawExtraState.oscStartIn ? 1 : 0);
+        dawExtraXML.InsertEndChild(oscStartIn);
+
+        TiXmlElement oscStartOut("oscStartOut");
+        oscStartOut.SetAttribute("v", dawExtraState.oscStartOut ? 1 : 0);
+        dawExtraXML.InsertEndChild(oscStartOut);
 
         TiXmlElement mppb("mpePitchBendRange");
         mppb.SetAttribute("v", dawExtraState.mpePitchBendRange);

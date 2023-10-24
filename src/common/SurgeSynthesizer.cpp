@@ -4816,6 +4816,8 @@ void SurgeSynthesizer::populateDawExtraState()
 
     des.oscPortIn = storage.oscPortIn;
     des.oscPortOut = storage.oscPortOut;
+    des.oscStartIn = storage.oscStartIn;
+    des.oscStartOut = storage.oscStartOut;
 
     des.mpeEnabled = mpeEnabled;
     des.mpePitchBendRange = storage.mpePitchBendRange;
@@ -4878,6 +4880,8 @@ void SurgeSynthesizer::loadFromDawExtraState()
 
     storage.oscPortIn = des.oscPortIn;
     storage.oscPortOut = des.oscPortOut;
+    storage.oscStartIn = des.oscStartIn;
+    storage.oscStartOut = des.oscStartOut;
 
     if (des.mpePitchBendRange > 0)
     {

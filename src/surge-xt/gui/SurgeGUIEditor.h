@@ -264,7 +264,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int lastTSNum = 0, lastTSDen = 0;
     int lastOverlayRefresh = 0;
     void adjustSize(float &width, float &height) const;
-    void initOSCError(int port);
 
     struct patchdata
     {

@@ -979,6 +979,8 @@ struct DAWExtraStateStorage
 
     int oscPortIn{DEFAULT_OSC_PORT_IN};
     int oscPortOut{DEFAULT_OSC_PORT_OUT};
+    bool oscStartIn{false};
+    bool oscStartOut{false};
 };
 
 struct PatchTuningStorage
@@ -1458,6 +1460,8 @@ class alignas(16) SurgeStorage
 
     int oscPortIn{DEFAULT_OSC_PORT_IN};
     int oscPortOut{DEFAULT_OSC_PORT_OUT};
+    bool oscStartIn{false};
+    bool oscStartOut{false};
 
     static constexpr double MIDI_0_FREQ = Tunings::MIDI_0_FREQ;
     // this value needs to be passed along to FilterCoefficientMaker

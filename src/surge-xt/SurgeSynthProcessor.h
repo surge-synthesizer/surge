@@ -381,7 +381,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     bool initOSCOut(int port);
     bool changeOSCInPort(int newport);
     bool changeOSCOutPort(int newport);
-    void stopOSCOut();
+    void stopOSCOut(bool updateOSCStartInStorage = true);
+    void initOSCError(int port);
 
     void patch_load_to_OSC(fs::path newpath);
     void param_change_to_OSC(std::string paramPath, std::string valStr);
