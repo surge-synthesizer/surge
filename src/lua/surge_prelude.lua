@@ -18,7 +18,7 @@ function math.sgn(x)
     return (x > 0 and 1) or (x < 0 and -1) or 0
 end
 
--- sign function returns -1 for negative numbers and 1 for positive numbers and zero
+-- sign function returns -1 for negative numbers, and 1 both for positive numbers and for zero
 function math.sign(x)
     return (x < 0 and -1) or 1
 end
@@ -81,6 +81,62 @@ function math.lcm(a, b)
 
     return t
 end
+
+
+--- HELPER FUNCTIONS ---
+
+-- If your formula has timing-related functions which do not use the absolute
+-- time functions provided (phase, tempo, songpos, the clock divider below),
+-- your timing will be determined by the length of a processing block.
+-- How fast that is depends on sample rate and block size! You can multiply
+-- stuff by this function to ensure that consistent timing regardless of
+-- those things.
+function timefactor()
+    tf = (samplerate/48000)/(block_size/32)
+
+    return tf
+end
+
+
+
+
+-- This is a general purpose slew limiter. If your formula output has jumps
+-- in it that are too drastic, you can take whatever you were setting
+-- state.output = to, and instead set slewinput = to it. Then set
+-- state.output = slewoutput
+
+-- It defaults to a fairly subtle limiting. Probably enough to remove most
+-- pops and clicks (though you may still get thumps). If you want to control
+-- the slew limit amount, set slew.rate = a value between 0 and 1,
+--  for example by assigning it to a slider like phase. If you want to use
+-- the rate slider, normalize its range first, like this:
+-- rate.norm = -((state.rate-9)/16)
+-- slewrate = rate.norm
+
+
+
+function slew(slewinput,slewrate,slewprior)
+    slewinput = slewinput or 0
+    slewrate = slewrate or 0.05
+    slewprior = slewprior or 0
+
+    r = 1 / ( 1 + (40000 / timefactor() ) * (slewrate^3) )
+
+    delta = i - slewprior
+    
+    if (delta > r) then
+        delta = r
+    end
+
+    if (delta < -r) then
+        delta = -r
+    end
+
+    slewprior = slewprior + delta
+    slew.output = slewprior
+    return slew
+end
+
 
 
 --- BUILT-IN MODULATORS ---
