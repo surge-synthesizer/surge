@@ -401,7 +401,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
             if (querying)
             {
-                std::string macValStr = float_to_clocalestr(synth->getMacroParameter01(macnum));
+                auto macValStr = OpenSoundControl::getMacroValStr(macnum - 1);
                 std::string macName = "/param/macro/" + std::to_string(macnum);
                 if (!this->juceOSCSender.send(
                         juce::OSCMessage(juce::String(macName), juce::String(macValStr))))
@@ -708,7 +708,7 @@ void OpenSoundControl::sendAllParams()
             // Now do the macros
             for (int i = 0; i < n_customcontrollers; i++)
             {
-                std::string macValStr = float_to_clocalestr(synth->getMacroParameter01(i));
+                auto macValStr = OpenSoundControl::getMacroValStr(i);
                 std::string macName = "/param/macro/" + std::to_string(i + 1);
                 if (!this->juceOSCSender.send(
                         juce::OSCMessage(juce::String(macName), juce::String(macValStr))))
@@ -717,6 +717,19 @@ void OpenSoundControl::sendAllParams()
             // delete timer;    // This prints the elapsed time
         });
     }
+}
+
+std::string OpenSoundControl::getMacroValStr(long macnum)
+{
+    auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
+                    .scene[0]
+                    .modsources[macnum + ms_ctrl1]);
+    auto macVal = float_to_clocalestr_wprec(100 * cms->get_output(0), 3);
+    auto macVal01 = float_to_clocalestr_wprec(cms->get_output01(0), 8);
+    std::ostringstream oss;
+
+    oss << macVal << " % " << macVal01 << " (normalized)";
+    return (oss.str());
 }
 
 std::string OpenSoundControl::getParamValStr(const Parameter *p)

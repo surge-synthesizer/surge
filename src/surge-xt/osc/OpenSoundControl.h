@@ -39,6 +39,8 @@
 #include "juce_osc/juce_osc.h"
 #include "SurgeSynthesizer.h"
 #include "SurgeStorage.h"
+#include <fmt/core.h>
+#include <fmt/format.h>
 
 class SurgeSynthProcessor;
 
@@ -82,9 +84,16 @@ class OpenSoundControl : public juce::OSCReceiver,
     void sendDataCountError(std::string addr, std::string count);
     float getNormValue(Parameter *p, float fval);
     std::string getParamValStr(const Parameter *p);
+    std::string getMacroValStr(long macnum);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OpenSoundControl)
 };
+
+// Makes sure that decimal *points* are used, not commas
+inline std::string float_to_clocalestr_wprec(float value, int precision)
+{
+    return fmt::format(std::locale::classic(), "{:." + std::to_string(precision) + "Lf}", value);
+}
 
 } // namespace OSC
 } // namespace Surge
