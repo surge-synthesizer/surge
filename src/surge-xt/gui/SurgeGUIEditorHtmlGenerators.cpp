@@ -887,13 +887,13 @@ code {
                             <td>/q/all_params</td>
                             <td>request all parameters</td>
                             <td>none</td>
-                            <td>Returns a dump of all parameters listed below to OSC out</td>
+                            <td>Sends a dump of all parameters listed below to OSC out</td>
                         </tr>
                         <tr>
                             <td>/q/&ltparameter address&gt</td>
                             <td>request one parameter</td>
                             <td>none</td>
-                            <td>Returns one parameter's value to OSC out</td>
+                            <td>Sends one parameter's value to OSC out</td>
                         </tr>
                         <tr>
                             <td class="center" colspan="3"></td>
