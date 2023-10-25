@@ -874,24 +874,40 @@ code {
                     <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                     <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                 </div>
-                <div class="tablewrap cr cl" style="margin: 0 auto;">
-                    <div class="heading"><h3>All Parameters Query:</h3></div>
+                <div class="tablewrap cr cl" style="width: 1000px; margin: 16px auto;">
+                    <div class="heading"><h3>Parameter Queries</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
                             <th>Address</th>
                             <th>Description</th>
                             <th>Appropriate Values</th>
+                            <th>Action</th>
                         </tr>
                         <tr>
-                            <td>/send_all_params</td>
+                            <td>/q/all_params</td>
                             <td>request all parameters</td>
                             <td>none</td>
+                            <td>Returns a dump of all parameters listed below to OSC out</td>
                         </tr>
                         <tr>
-                            <td class="center" colspan="3">Initiates a dump of all parameters listed below.</td>
+                            <td>/q/&ltparameter address&gt</td>
+                            <td>request one parameter</td>
+                            <td>none</td>
+                            <td>Returns one parameter's value to OSC out</td>
+                        </tr>
+                        <tr>
+                            <td class="center" colspan="3"></td>
                         </tr>
                     </table>
                 </div>
+
+                <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
+                    <span><code>q/all_params</code></span>
+                    <span><code>q/param/b/amp/gain</code></span>
+                    <span><code>q/param/global/polyphony_limit</code></span>
+                    <span><code>q/param/a/mixer/noise/mute</code></span>
+                </div>
+
 
                 <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
                     <div style="font-size: 12pt; font-family: Lato;">

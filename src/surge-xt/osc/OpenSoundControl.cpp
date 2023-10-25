@@ -148,9 +148,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         std::getline(split, address1, '/');
         addr = addr.substr(2);
         // Currently, only params may be queried
-        if (address1 != "param")
+        if ((address1 != "param") && (address1 != "all_params"))
         {
             sendError("No query available for '" + address1 + "'");
+            return;
+        }
+        if (address1 == "all_params")
+        {
+            OpenSoundControl::sendAllParams();
             return;
         }
     }
@@ -572,12 +577,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
             synth->storage.loadMappingFromKBM(def_path);
         }
-    }
-
-    // Initiate parameter dump
-    else if (address1 == "send_all_parameters")
-    {
-        OpenSoundControl::sendAllParams();
     }
 }
 
