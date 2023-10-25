@@ -201,7 +201,7 @@ std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int
 
     if (baseNameOnly)
     {
-        auto base = modulatorName(s, ms, scene, true, useScene ? scene : -1);
+        auto base = modulatorName(s, ms, true, scene, useScene ? scene : -1);
 
         if (ModulatorName::supportsIndexedModulator(scene, (modsources)ms))
         {
@@ -213,7 +213,7 @@ std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int
 
     if (!hasOverride)
     {
-        auto base = modulatorName(s, ms, forButton, useScene ? scene : -1);
+        auto base = modulatorName(s, ms, forButton, scene, useScene ? scene : -1);
 
         if (index >= 0 && ModulatorName::supportsIndexedModulator(scene, (modsources)ms))
         {
@@ -230,7 +230,7 @@ std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int
         }
 
         // Long name is alias (button name)
-        auto base = modulatorName(s, ms, true, useScene ? scene : -1, scene);
+        auto base = modulatorName(s, ms, true, scene, useScene ? scene : -1);
 
         if (ModulatorName::supportsIndexedModulator(scene, (modsources)ms))
         {
