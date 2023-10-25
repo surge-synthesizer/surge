@@ -654,7 +654,7 @@ code {
 
                 <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
                     <div class="heading">
-                         <h3>Notes:</h3>
+                         <h3>Notes</h3>
                     </div>
                     <table style="border: 2px solid black;">
                          <tr>
@@ -720,7 +720,7 @@ code {
 
                 <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
                     <div class="heading">
-                         <h3>Note Expressions:</h3>
+                         <h3>Note Expressions</h3>
                     </div>)HTML"
           << R"HTML(
                     <table style="border: 2px solid black;">
@@ -777,7 +777,7 @@ code {
 
                <div class="tablewrap fl cl">
                     <div class="heading">
-                         <h3>Patches:</h3>
+                         <h3>Patches</h3>
                     </div>
                     <table style="border: 2px solid black;">
                          <tr>
@@ -827,7 +827,7 @@ code {
 
                <div class="tablewrap fr cr">
                     <div class="heading">
-                         <h3>Tuning:</h3>
+                         <h3>Tuning</h3>
                     </div>
                     <table style="border: 2px solid black;">
                          <tr>
