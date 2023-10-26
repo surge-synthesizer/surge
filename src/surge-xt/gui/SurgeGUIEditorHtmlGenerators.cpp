@@ -874,6 +874,7 @@ code {
                     <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                     <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                 </div>
+
                 <div class="tablewrap cr cl" style="width: 1000px; margin: 16px auto;">
                     <div class="heading"><h3>Parameter Queries</h3></div>
                     <table style="border: 2px solid black;">
@@ -952,20 +953,19 @@ code {
     std::string st_str;
     int currentCtrlGrp = endCG;
 
+    // Convert scene specifiers into "*"
     for (auto *p : synth->storage.getPatch().param_ptr)
     {
         st_str = p->get_osc_name();
 
-        if (st_str[6] == '/' && st_str[8] == '/')
-        {
-            if (st_str[7] == 'b')
-                continue; // 'b_...' entries not added to vector
+        std::size_t found = st_str.find("/b/");
+        if (found != std::string::npos)
+            continue; // 'b_...' entries not added to vector
 
-            else if (st_str[7] == 'a')
-            {
-                st_str[7] = '*';
-            }
-        }
+        found = st_str.find("/a/");
+        if (found != std::string::npos)
+            st_str.replace(found + 1, 1, "*");
+
         sortvector.push_back(oscParamInfo{p, st_str, p->get_full_name(), p->ctrlgroup});
     };
 
@@ -1056,6 +1056,55 @@ code {
                   << "<td>" << valueType << "</td></tr>";
         }
     }
+
+    htmls << R"HTML(</table></div><div style="clear: both;"></div>
+
+        <div class="tablewrap cr cl" style="width: 800px; margin: 16px auto;">
+        <div class="heading"><h3>Modulation Routing: Sources</h3></div>
+        <table style="border: 2px solid black;">
+            <tr>
+                <th>Address</th>
+                <th>Description</th>
+                <th>&ltindex&gt=0</th>
+                <th>&ltindex&gt=1</th>
+                <th>&ltindex&gt=2</th>
+            </tr>
+        )HTML";
+
+    int index = 0;
+    for (int i = 1; i < n_modsources; i++) // skips "off"
+    {
+        int modsource_sorted = modsource_display_order[i];
+        std::string sceneStr = "/";
+        std::string indexStr = "";
+        int max_idx = synth->getMaxModulationIndex(0, (modsources)modsource_sorted);
+        if (synth->isModulatorDistinctPerScene((modsources)modsource_sorted))
+            sceneStr = "/*/";
+        if (synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
+            indexStr = "/&ltindex&gt";
+        htmls << "<tr><td>/mod" << sceneStr << modsource_names_tag[modsource_sorted] << indexStr
+              << "</td><td>" << modsource_names[modsource_sorted] << "</td>";
+        for (int i = 0; i < 3; i++)
+        {
+            std::string idxd_str = "";
+            if (i < max_idx)
+                idxd_str = ModulatorName::modulatorIndexExtension(&synth->storage, 0,
+                                                                  (modsources)modsource_sorted, i);
+            if (i == 0 && idxd_str == "" &&
+                synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
+            {
+                idxd_str = modsource_names[modsource_sorted];
+                idxd_str = "(" + idxd_str + ")";
+            }
+            htmls << "<td>" << idxd_str << "</td>";
+        }
+        htmls << "</tr>";
+    }
+    htmls << R"HTML(</table></div>
+        <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
+            <span><code>/mod/b/slfo_1/2 /b/amp/gain 0.45</code></span>
+        </div>
+    )HTML";
 
     htmls << "</table></div></div></div></body></html>";
     return htmls.str();
