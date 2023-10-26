@@ -4813,8 +4813,15 @@ void SurgeSynthesizer::populateDawExtraState()
     auto &des = storage.getPatch().dawExtraState;
 
     des.isPopulated = true;
+
+    des.oscPortIn = storage.oscPortIn;
+    des.oscPortOut = storage.oscPortOut;
+    des.oscStartIn = storage.oscStartIn;
+    des.oscStartOut = storage.oscStartOut;
+
     des.mpeEnabled = mpeEnabled;
     des.mpePitchBendRange = storage.mpePitchBendRange;
+
     des.isDirty = storage.getPatch().isDirty;
 
     des.hasScale = !storage.isStandardScale;
@@ -4870,6 +4877,11 @@ void SurgeSynthesizer::loadFromDawExtraState()
     }
 
     mpeEnabled = des.mpeEnabled;
+
+    storage.oscPortIn = des.oscPortIn;
+    storage.oscPortOut = des.oscPortOut;
+    storage.oscStartIn = des.oscStartIn;
+    storage.oscStartOut = des.oscStartOut;
 
     if (des.mpePitchBendRange > 0)
     {

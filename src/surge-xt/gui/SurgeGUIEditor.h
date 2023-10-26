@@ -264,7 +264,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int lastTSNum = 0, lastTSDen = 0;
     int lastOverlayRefresh = 0;
     void adjustSize(float &width, float &height) const;
-    void initOSCError(int port);
 
     struct patchdata
     {
@@ -294,7 +293,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
   public:
     void populateDawExtraState(SurgeSynthesizer *synth);
-    void loadFromDAWExtraState(SurgeSynthesizer *synth);
+    void loadFromDawExtraState(SurgeSynthesizer *synth);
 
     void setZoomCallback(std::function<void(SurgeGUIEditor *, bool resizeWindow)> f)
     {
