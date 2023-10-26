@@ -1077,13 +1077,17 @@ code {
         int modsource_sorted = modsource_display_order[i];
         std::string sceneStr = "/";
         std::string indexStr = "";
+        std::string modName = modsource_names[modsource_sorted];
         int max_idx = synth->getMaxModulationIndex(0, (modsources)modsource_sorted);
         if (synth->isModulatorDistinctPerScene((modsources)modsource_sorted))
             sceneStr = "/*/";
         if (synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
             indexStr = "/&ltindex&gt";
+        std::string modn = modName;
+        if (modName.find("LFO") != std::string::npos)
+            modn = modName + "†";
         htmls << "<tr><td>/mod" << sceneStr << modsource_names_tag[modsource_sorted] << indexStr
-              << "</td><td>" << modsource_names[modsource_sorted] << "</td>";
+              << "</td><td>" << modn << "</td>";
         for (int i = 0; i < 3; i++)
         {
             std::string idxd_str = "";
@@ -1093,13 +1097,20 @@ code {
             if (i == 0 && idxd_str == "" &&
                 synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
             {
-                idxd_str = modsource_names[modsource_sorted];
+                idxd_str = modName;
                 idxd_str = "(" + idxd_str + ")";
             }
             htmls << "<td>" << idxd_str << "</td>";
         }
         htmls << "</tr>";
     }
+    htmls << R"HTML(
+        <tr>
+            <td colspan="5">
+                <p class="tight">† For LFOs of "Formula" type, indices [0 - 7] correspond to "Formula Out" [1 - 8]</p>
+            </td>
+        </tr>
+    )HTML";
     htmls << R"HTML(</table></div>
         <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
             <span><code>/mod/b/slfo_1/2 /b/amp/gain 0.45</code></span>
