@@ -51,33 +51,41 @@ void OpenSoundControl::initOSC(SurgeSynthProcessor *ssp,
     // Init. pointers to synth and synth processor
     synth = surge.get();
     sspPtr = ssp;
+}
 
-    bool startOSCInNow = surge->storage.getPatch().dawExtraState.oscStartIn;
+void OpenSoundControl::tryOSCStartup()
+{
+    if (!synth || !sspPtr)
+    {
+        return;
+    }
+
+    bool startOSCInNow = synth->storage.getPatch().dawExtraState.oscStartIn;
 
     if (startOSCInNow)
     {
-        int defaultOSCInPort = surge->storage.getPatch().dawExtraState.oscPortIn;
+        int defaultOSCInPort = synth->storage.getPatch().dawExtraState.oscPortIn;
 
         if (defaultOSCInPort > 0)
         {
             if (!initOSCIn(defaultOSCInPort))
             {
-                ssp->initOSCError(defaultOSCInPort);
+                sspPtr->initOSCError(defaultOSCInPort);
             }
         }
     }
 
-    bool startOSCOutNow = surge->storage.getPatch().dawExtraState.oscStartOut;
+    bool startOSCOutNow = synth->storage.getPatch().dawExtraState.oscStartOut;
 
     if (startOSCOutNow)
     {
-        int defaultOSCOutPort = surge->storage.getPatch().dawExtraState.oscPortOut;
+        int defaultOSCOutPort = synth->storage.getPatch().dawExtraState.oscPortOut;
 
         if (defaultOSCOutPort > 0)
         {
             if (!initOSCOut(defaultOSCOutPort))
             {
-                ssp->initOSCError(defaultOSCOutPort);
+                sspPtr->initOSCError(defaultOSCOutPort);
             }
         }
     }

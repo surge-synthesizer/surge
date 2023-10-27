@@ -60,6 +60,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     bool initOSCIn(int port);
     bool initOSCOut(int port);
     void stopListening(bool updateOSCStartInStorage = true);
+    void tryOSCStartup();
 
     int iportnum = DEFAULT_OSC_PORT_IN;
     int oportnum = DEFAULT_OSC_PORT_OUT;
