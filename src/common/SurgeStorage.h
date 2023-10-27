@@ -876,12 +876,12 @@ struct DAWExtraStateStorage
      * Here's the prescription to add something to the editor state
      *
      * 1. Add it here with a reasonable default.
-     * 2. In the SurgeGUIEditor Constructor, read off the value
+     * 2. In the SurgeGUIEditor constructor, read off the value
      * 3. In SurgeGUIEditor::populateDawExtraState write it
      * 4. In SurgeGUIEditor::loadDawExtraState read it (this will probably be pretty similar to
      *    the constructor code in step 4, but this is the step when restoring, as opposed to
-     * creating an object).
-     * 5. In SurgePatch load/save XML write and read it
+     *    creating an object).
+     * 5. In SurgePatch load_xml()/save_xml() read and write it
      *
      * Then the state will survive create/destroy and save/restore
      */
@@ -976,6 +976,11 @@ struct DAWExtraStateStorage
     bool isDirty{false};
 
     bool disconnectFromOddSoundMTS{false};
+
+    int oscPortIn{DEFAULT_OSC_PORT_IN};
+    int oscPortOut{DEFAULT_OSC_PORT_OUT};
+    bool oscStartIn{false};
+    bool oscStartOut{false};
 };
 
 struct PatchTuningStorage
@@ -1433,7 +1438,7 @@ class alignas(16) SurgeStorage
      * to these members, but don't).
      *
      * The functions we provide are
-     * - retuneTo12TetCStandardMapping  (basically resets everytnig)
+     * - retuneTo12TetCStandardMapping  (basically resets everything)
      * - retuneTo12TETScale (resets scale, leaves mapping intact)
      * - reemapToConcertCKeyboard (leaves scale, resets mapping)
      * - retuneToScale( s ) (resets scale, leaves mapping)
@@ -1452,6 +1457,11 @@ class alignas(16) SurgeStorage
     std::atomic<bool> mapChannelToOctave; // When other midi modes come along, clean this up.
 
     bool mpeEnabled{false};
+
+    int oscPortIn{DEFAULT_OSC_PORT_IN};
+    int oscPortOut{DEFAULT_OSC_PORT_OUT};
+    bool oscStartIn{false};
+    bool oscStartOut{false};
 
     static constexpr double MIDI_0_FREQ = Tunings::MIDI_0_FREQ;
     // this value needs to be passed along to FilterCoefficientMaker
