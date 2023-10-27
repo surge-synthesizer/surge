@@ -1058,9 +1058,34 @@ code {
     }
 
     htmls << R"HTML(</table></div><div style="clear: both;"></div>
+        <div style="margin:10pt 10pt 0 10pt; padding: 5pt 12pt; background: #fafbff;">
+            <div style="font-size: 12pt; font-family: Lato;">
+                <p style="margin-top: 14px;">
+                    Modulation-mapping messages are constructed by selecting one of the '/mod' source addresses
+                    listed below and adding a target address selected from the '/param' addresses listed above. Finally,
+                    specify a depth (0.0 - 1.0). If both the source and target addresses are scene-specific (a or b),
+                    the scenes must match. Examples:
+                </p>
+            </div>
+        </div>
+
+        <div style="margin:0 10pt 10pt 10pt; padding: 5pt 12pt; background: #fafbff;">
+            <div style="font-size: 12pt; font-family: Lato;">
+                <p style="margin-top: 0;">
+                    Not all parameters can be modulated by all mod. sources. If a given combination is not
+                    possible, or an improper index is specified, an error will be reported to OSC out.
+                </p>
+            </div>
+        </div>
+
+        <div style="width: 1130px; margin: 0 auto 32px; line-height: 1.75">
+            <span><code>/mod/b/slfo_1/2 /param/b/amp/gain 0.45</code></span>
+            <span><code>/mod/a/feg /param/a/filter/1/cutoff 0.9</code></span>
+            <span><code>/mod/macro_6 /param/a/pitch 0.75</code></span>
+        </div>
 
         <div class="tablewrap cr cl" style="width: 800px; margin: 16px auto;">
-        <div class="heading"><h3>Modulation Routing: Sources (not yet implemented)</h3></div>
+        <div class="heading"><h3>Modulation Mapping: Sources (not yet implemented)</h3></div>
         <table style="border: 2px solid black;">
             <tr>
                 <th>Address</th>
@@ -1110,36 +1135,8 @@ code {
                 <p class="tight">† For Scene or Voice LFOs of "Formula" type, indices [0 - 7] specify "Formula Out" [1 - 8]</p>
             </td>
         </tr>
+        </table></div></div></div></body></html>
     )HTML";
-    htmls << R"HTML(</table></div>
-        <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
-            <div style="font-size: 12pt; font-family: Lato;">
-                <p style="margin-top: 14px;">
-                    Modulation-mapping messages are constructed by selecting one of the '/mod' source addresses
-                    listed above and adding a target address selected from the '/param' addresses listed above. Finally,
-                    specify a depth (0.0 - 1.0). If both the source and target addresses are scene-specific (a or b),
-                    the scenes must match. Examples:
-                </p>
-            </div>
-        </div>
-
-        <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
-            <span><code>/mod/b/slfo_1/2 /param/b/amp/gain 0.45</code></span>
-            <span><code>/mod/a/feg /param/a/filter/1/cutoff 0.9</code></span>
-            <span><code>/mod/macro_6 /param/a/pitch 0.75</code></span>
-        </div>
-
-        <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
-            <div style="font-size: 12pt; font-family: Lato;">
-                <p style="margin-top: 14px;">
-                    Not all parameters can be modulated by all mod. sources. If a given combination is not
-                    possible, or an improper index is specified, an error will be reported to OSC out.
-                </p>
-            </div>
-       </div>
-    )HTML";
-
-    htmls << "</table></div></div></div></body></html>";
     return htmls.str();
 }
 
