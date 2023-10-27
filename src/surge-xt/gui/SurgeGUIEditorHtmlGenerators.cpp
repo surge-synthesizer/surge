@@ -1112,9 +1112,31 @@ code {
         </tr>
     )HTML";
     htmls << R"HTML(</table></div>
-        <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
-            <span><code>/mod/b/slfo_1/2 /b/amp/gain 0.45</code></span>
+        <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
+            <div style="font-size: 12pt; font-family: Lato;">
+                <p style="margin-top: 14px;">
+                    Modulation-mapping messages are constructed by selecting one of the '/mod' source addresses
+                    listed above and adding a target address selected from the '/param' addresses listed above. Finally,
+                    specify a depth (0.0 - 1.0). If both the source and target addresses are scene-specific (a or b),
+                    the scenes must match. Examples:
+                </p>
+            </div>
         </div>
+
+        <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
+            <span><code>/mod/b/slfo_1/2 /param/b/amp/gain 0.45</code></span>
+            <span><code>/mod/a/feg /param/a/filter/1/cutoff 0.9</code></span>
+            <span><code>/mod/macro_6 /param/a/pitch 0.75</code></span>
+        </div>
+
+        <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
+            <div style="font-size: 12pt; font-family: Lato;">
+                <p style="margin-top: 14px;">
+                    Not all parameters can be modulated by all mod. sources. If a given combination is not
+                    possible, or an improper index is specified, an error will be reported to OSC out.
+                </p>
+            </div>
+       </div>
     )HTML";
 
     htmls << "</table></div></div></div></body></html>";
