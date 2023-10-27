@@ -82,63 +82,6 @@ function math.lcm(a, b)
     return t
 end
 
-
---- HELPER FUNCTIONS ---
-
--- If your formula has timing-related functions which do not use the absolute
--- time functions provided (phase, tempo, songpos, the clock divider below),
--- your timing will be determined by the length of a processing block.
--- How fast that is depends on sample rate and block size! You can multiply
--- stuff by this function to ensure that consistent timing regardless of
--- those things.
-function timefactor()
-    tf = (samplerate/48000)/(block_size/32)
-
-    return tf
-end
-
-
-
-
--- This is a general purpose slew limiter. If your formula output has jumps
--- in it that are too drastic, you can take whatever you were setting
--- state.output = to, and instead set slewinput = to it. Then set
--- state.output = slewoutput
-
--- It defaults to a fairly subtle limiting. Probably enough to remove most
--- pops and clicks (though you may still get thumps). If you want to control
--- the slew limit amount, set slew.rate = a value between 0 and 1,
---  for example by assigning it to a slider like phase. If you want to use
--- the rate slider, normalize its range first, like this:
--- rate.norm = -((state.rate-9)/16)
--- slewrate = rate.norm
-
-
-
-function slew(slewinput,slewrate,slewprior)
-    slewinput = slewinput or 0
-    slewrate = slewrate or 0.05
-    slewprior = slewprior or 0
-
-    r = 1 / ( 1 + (40000 / timefactor() ) * (slewrate^3) )
-
-    delta = i - slewprior
-    
-    if (delta > r) then
-        delta = r
-    end
-
-    if (delta < -r) then
-        delta = -r
-    end
-
-    slewprior = slewprior + delta
-    slew.output = slewprior
-    return slew
-end
-
-
-
 --- BUILT-IN MODULATORS ---
 
 
@@ -196,6 +139,55 @@ mod.AHDEnvelope.at = function(self, phase)
         return 0.0
     end
 end
+
+mod.Slew = {        prior = 0,
+                    slewout = 0
+--                  If this worked, multiplying the 10000 in the factor formula below would make it consistent on all systems. But it ain't work...
+--                  SRBSfix = (mod.samplerate/48000)/(mod.block_size/32)
+}
+
+mod.Slew.new = function(self, o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
+end
+
+mod.Slew.SlewLimit = function(self, slewin, slewrate)
+
+    delta = slewin - self.prior
+
+    factor = 1 /(1 + 10000 * slewrate^3)
+
+    if (delta > factor) then
+        delta = factor
+    end
+
+    if (delta < -factor) then
+        delta = -factor
+    end
+
+    self.prior = self.prior + delta
+    self.slewout = self.prior
+end
+
+mod.Simple = {          inbound = 0,
+                        control = 0,
+                        outbound = 0
+}
+
+mod.Simple.new = function(self, o)
+    o = o or {}
+    setmetatable(o, self)
+    self.__index = self
+    return o
+end
+
+mod.Simple.Test = function(self, inbound, control)
+    self.outbound = inbound * control
+end
+
+
 
 surge.mod = mod
 
