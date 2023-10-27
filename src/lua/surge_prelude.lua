@@ -171,24 +171,6 @@ mod.Slew.SlewLimit = function(self, slewin, slewrate)
     self.slewout = self.prior
 end
 
-mod.Simple = {          inbound = 0,
-                        control = 0,
-                        outbound = 0
-}
-
-mod.Simple.new = function(self, o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self
-    return o
-end
-
-mod.Simple.Test = function(self, inbound, control)
-    self.outbound = inbound * control
-end
-
-
-
 surge.mod = mod
 
 return surge
