@@ -544,7 +544,7 @@ void SurgeSynthEditor::populateForStreaming(SurgeSynthesizer *s)
 void SurgeSynthEditor::populateFromStreaming(SurgeSynthesizer *s)
 {
     if (sge)
-        sge->loadFromDAWExtraState(s);
+        sge->loadFromDawExtraState(s);
 }
 
 bool SurgeSynthEditor::isInterestedInFileDrag(const juce::StringArray &files)

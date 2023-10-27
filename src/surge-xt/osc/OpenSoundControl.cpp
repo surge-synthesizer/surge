@@ -40,7 +40,9 @@ OpenSoundControl::OpenSoundControl() {}
 OpenSoundControl::~OpenSoundControl()
 {
     if (listening)
-        stopListening();
+    {
+        stopListening(false);
+    }
 }
 
 void OpenSoundControl::initOSC(SurgeSynthProcessor *ssp,
@@ -49,40 +51,86 @@ void OpenSoundControl::initOSC(SurgeSynthProcessor *ssp,
     // Init. pointers to synth and synth processor
     synth = surge.get();
     sspPtr = ssp;
+
+    bool startOSCInNow = surge->storage.getPatch().dawExtraState.oscStartIn;
+
+    if (startOSCInNow)
+    {
+        int defaultOSCInPort = surge->storage.getPatch().dawExtraState.oscPortIn;
+
+        if (defaultOSCInPort > 0)
+        {
+            if (!initOSCIn(defaultOSCInPort))
+            {
+                ssp->initOSCError(defaultOSCInPort);
+            }
+        }
+    }
+
+    bool startOSCOutNow = surge->storage.getPatch().dawExtraState.oscStartOut;
+
+    if (startOSCOutNow)
+    {
+        int defaultOSCOutPort = surge->storage.getPatch().dawExtraState.oscPortOut;
+
+        if (defaultOSCOutPort > 0)
+        {
+            if (!initOSCOut(defaultOSCOutPort))
+            {
+                ssp->initOSCError(defaultOSCOutPort);
+            }
+        }
+    }
 }
 
 /* ----- OSC Receiver  ----- */
 
 bool OpenSoundControl::initOSCIn(int port)
 {
+    if (port < 1)
+    {
+        return false;
+    }
+
     if (connect(port))
     {
         addListener(this);
         listening = true;
         iportnum = port;
         synth->storage.oscListenerRunning = true;
+        synth->storage.oscStartIn = true;
 
 #ifdef DEBUG
-        std::cout << "SurgeOSC: Listening for OSC on port " << port << "." << std::endl;
+        std::cout << "Surge: Listening for OSC on port " << port << "." << std::endl;
 #endif
         return true;
     }
+
     return false;
 }
 
-void OpenSoundControl::stopListening()
+void OpenSoundControl::stopListening(bool updateOSCStartInStorage)
 {
     if (!listening)
+    {
         return;
+    }
 
     removeListener(this);
     listening = false;
 
     if (synth)
+    {
         synth->storage.oscListenerRunning = false;
 
+        if (updateOSCStartInStorage)
+        {
+            synth->storage.oscStartIn = false;
+        }
+    }
+
 #ifdef DEBUG
-    std::cout << "SurgeOSC: Stopped listening for OSC." << std::endl;
+    std::cout << "Surge: Stopped listening for OSC." << std::endl;
 #endif
 }
 
@@ -585,7 +633,7 @@ void OpenSoundControl::oscBundleReceived(const juce::OSCBundle &bundle)
     std::string msg;
 
 #ifdef DEBUG
-    std::cout << "OSCListener: Got OSC bundle." << msg << std::endl;
+    std::cout << "OSC Listener: Got OSC bundle." << msg << std::endl;
 #endif
 
     for (int i = 0; i < bundle.size(); ++i)
@@ -625,30 +673,45 @@ float OpenSoundControl::getNormValue(Parameter *p, float fval)
 
 bool OpenSoundControl::initOSCOut(int port)
 {
+    if (port < 1)
+    {
+        return false;
+    }
+
     // Send OSC messages to localhost:UDP port number:
     if (!juceOSCSender.connect("127.0.0.1", port))
     {
         return false;
     }
+
     sendingOSC = true;
     oportnum = port;
     synth->storage.oscSending = true;
+    synth->storage.oscStartOut = true;
 
 #ifdef DEBUG
-    std::cout << "SurgeOSC: Sending OSC on port " << port << "." << std::endl;
+    std::cout << "Surge: Sending OSC on port " << port << "." << std::endl;
 #endif
     return true;
 }
 
-void OpenSoundControl::stopSending()
+void OpenSoundControl::stopSending(bool updateOSCStartInStorage)
 {
     if (!sendingOSC)
+    {
         return;
+    }
 
     sendingOSC = false;
     synth->storage.oscSending = false;
+
+    if (updateOSCStartInStorage)
+    {
+        synth->storage.oscStartOut = false;
+    }
+
 #ifdef DEBUG
-    std::cout << "SurgeOSC: Stopped sending OSC." << std::endl;
+    std::cout << "Surge: Stopped sending OSC." << std::endl;
 #endif
 }
 

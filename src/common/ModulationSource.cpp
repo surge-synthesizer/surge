@@ -31,6 +31,11 @@ namespace ModulatorName
 std::string modulatorName(const SurgeStorage *s, int i, bool button, int current_scene,
                           int forScene)
 {
+    if (!s)
+    {
+        return "";
+    }
+
     if ((i >= ms_lfo1 && i <= ms_slfo6))
     {
         int idx = i - ms_lfo1;
@@ -141,6 +146,11 @@ std::string modulatorName(const SurgeStorage *s, int i, bool button, int current
 std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, int index,
                                     bool shortV)
 {
+    if (!s)
+    {
+        return "";
+    }
+
     if (ModulatorName::supportsIndexedModulator(scene, (modsources)ms))
     {
         if (ms == ms_random_bipolar)
@@ -198,6 +208,11 @@ std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, in
 std::string modulatorNameWithIndex(const SurgeStorage *s, int scene, int ms, int index,
                                    bool forButton, bool useScene, bool baseNameOnly)
 {
+    if (!s)
+    {
+        return "";
+    }
+
     int lfo_id = ms - ms_lfo1;
     bool hasOverride = isLFO((modsources)ms) && index >= 0 &&
                        s->getPatch().LFOBankLabel[scene][lfo_id][index][0] != 0;
@@ -260,6 +275,7 @@ bool supportsIndexedModulator(int scene, modsources modsource)
     {
         return true;
     }
+
     return false;
 }
 } // namespace ModulatorName
