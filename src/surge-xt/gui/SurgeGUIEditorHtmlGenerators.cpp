@@ -618,28 +618,28 @@ code {
                             where <code>address</code> is one of the ones listed below, and zero or more <code>values</code> can be*:
 
                             <ul>
-                                <li>a floating point value between <b>0.0</b> and <b>1.0</b>, where 0 represents the minimum acceptable
-                                    value for the parameter, and 1 represents the maximum. <br />(note: use '.' as the decimal mark, never ',').</li>
+                                <li>a floating point value between <b>0.0</b> and <b>1.0</b>, where <b>0</b> represents the minimum acceptable
+                                    value for the parameter, and <b>1</b> represents the maximum. <br />(note: use '<b>.</b>' as the decimal mark, never '<b>,</b>').</li>
                                 <li>an integer value</li>
                                 <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
-                                <li>a file path (absolute, or relative to the default path)
-                                <li>contextual: either an in integer or a float, depending on the context (loaded oscillator or effect type)</li>
+                                <li>a file path (absolute or relative to the default path)
+                                <li>contextual: either an integer or a float, depending on the context (loaded oscillator or effect type)</li>
                             </ul>
 
                             Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
-                            depending on which scene you wish to address - e.g. <code>/a/drift</code> or <code>/b/drift</code>.
+                            depending on which scene you wish to address, e.g. <code>/a/drift</code> or <code>/b/drift</code>.
                         <p>
-                            If a value is received that is less than the minimum or greater than the maximum acceptable value, it will be clipped
+                            If the received value is less than the minimum or greater than the maximum acceptable value, it will be clipped
                             to the associated limit.
                         </p>
                         <p style="border: 1px solid black; padding: 4px;" >
-                            <b>*Important note: all numeric values must be sent over OSC as floating point numbers</b>
+                            <b>Important Note: All numeric values must be sent over OSC as floating point numbers</b>
                             (even if they are listed as integer or boolean type --
-                            the 'appropriate values' describe how the data is used by Surge XT,
+                            the 'Appropriate Values' column describes how the data is used by Surge XT,
                             not how messages are to be formatted for OSC).
                         </p>
                         <p style="margin-top: 28px;">
-                             <b>OSC output</b>: All parameter and patch changes made on Surge XT are reported to OSC out, if OSC output is enabled.
+                             <b>OSC Output</b>: All parameter and patch changes made on Surge XT are reported to OSC out, if OSC output is enabled.
                              Floating point parameters are reported both in their 'natural' range, and normalized (0.0 - 1.0).
                              Errors are reported (when feasible) to "/error".
                         </p>
@@ -652,7 +652,7 @@ code {
                    </div>
                 </div>
 
-                <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
+                <div class="tablewrap" style="width: 1100px; margin: 8px;">
                     <div class="heading">
                          <h3>Notes</h3>
                     </div>
@@ -701,15 +701,15 @@ code {
                          </tr>
                          <tr>
                             <td colspan="5">
-                                <p class="tight">* Velocity of 0 releases note; use the '.../rel' messages to release notes with velocity. If noteIDs are
+                                <p class="tight">* Velocity 0 releases the note; use the <span>.../rel</span> messages to release notes with velocity. If noteIDs are
                                     supplied, the note number or frequency value for releases is disregarded.</p>
-                                <p class="tight">† When using '/fnote', Surge XT <em>must</em> be set to standard tuning for proper results. </p>
-                                <p class="tight">§ NoteID can be optionally supplied for more control over the lifecycle of notes, or for note expressions (below).
+                                <p class="tight">† When using <span>/fnote</span>, Surge XT <em>must</em> be set to standard tuning for proper results! </p>
+                                <p class="tight">§ NoteID can be optionally supplied for more control over the lifecycle of notes, or for Note Expressions.
                             </td>
                          </tr>
                     </table>
                 </div>
-                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/mnote 68 120</code></span>
                     <span><code>/fnote 440.0 120</code></span>
                     <span><code>/mnote 68 0</code></span>
@@ -718,7 +718,7 @@ code {
                     <span><code>/fnote/rel 440.0 45</code></span>
                 </div>
 
-                <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
+                <div class="tablewrap" style="width: 1100px; margin: 8px;">
                     <div class="heading">
                          <h3>Note Expressions</h3>
                     </div>)HTML"
@@ -746,13 +746,13 @@ code {
                               <td>/ne/pan</td>
                               <td>pan note expression</td>
                               <td>noteID (0 - maxint)§
-                              <td>position (0.0 - 1.0:&nbsp;&nbsp;0.0=left&nbsp;&nbsp;0.5=center&nbsp;&nbsp;1.0=right)</td>
+                              <td>position (0.0 - 1.0:&nbsp;&nbsp;0.0 = left&nbsp;&nbsp;0.5 = center&nbsp;&nbsp;1.0 = right)</td>
                          </tr>
                          <tr>
                               <td>/ne/timbre</td>
                               <td>timbre note expression</td>
                               <td>noteID (0 - maxint)§
-                              <td>timbre (0.0 - 1.0:&nbsp;&nbsp;'brightness')</td>
+                              <td>timbre (0.0 - 1.0)</td>
                          </tr>
                          <tr>
                               <td>/ne/pressure</td>
@@ -762,12 +762,12 @@ code {
                          </tr>
                          <tr>
                             <td colspan="5">
-                                <p class="tight">§ NoteID should be from an already-initiated note.</p>
+                                <p class="tight">§ NoteID should belong to an already initiated note.</p>
                             </td>
                          </tr>
                     </table>
                 </div>
-                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/ne/pitch 24566 0.34</code></span>
                     <span><code>/ne/volume 24566 0.5</code></span>
                     <span><code>/ne/pan 24566 0.9</code></span>
@@ -793,7 +793,7 @@ code {
                          <tr>
                               <td class="nw">/patch/save</td>
                               <td class="nw">save patch</td>
-                              <td>none: overwrites current patch OR
+                              <td>none: overwrites current patch <b>or</b>
                                    file path (absolute, no extension, overwrites if file exists)
                               </td>
                          </tr>
@@ -864,18 +864,20 @@ code {
 
                 <div style="clear: both;"></div>
 
-                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/patch/load /Library/Application Support/Surge XT/patches_factory/Plucks/Clean</code></span>
                     <span><code>/patch/save</code></span>
                     <span><code>/patch/incr</code></span>
                 </div>
-                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/tuning/scl ptolemy</code></span>
                     <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                     <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                 </div>
 
-                <div class="tablewrap cr cl" style="width: 1000px; margin: 16px auto;">
+                <div style="clear: both;"></div>
+
+                <div class="tablewrap" style="width: 1000px; margin: 24px 8px 16px 8px;">
                     <div class="heading"><h3>Parameter Queries</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
@@ -902,23 +904,20 @@ code {
                     </table>
                 </div>
 
-                <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>q/all_params</code></span>
                     <span><code>q/param/b/amp/gain</code></span>
                     <span><code>q/param/global/polyphony_limit</code></span>
                     <span><code>q/param/a/mixer/noise/mute</code></span>
                 </div>
 
-
-                <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
-                    <div style="font-size: 12pt; font-family: Lato;">
-                        <p>
-                            For /param messages, 'float' values must be expressed as 'normalized' in the range 0.0 to 1.0.
-                        </p>
+                <div style="margin: 24px 0 4px 22px; font-size: 12pt; font-family: Lato;">
+                    <div class="heading">
+                        <h3>Parameters</h3>
                     </div>
                 </div>
 
-                <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/param/b/amp/gain 0.63</code></span>
                     <span><code>/param/global/polyphony_limit 12</code></span>
                     <span><code>/param/a/mixer/noise/mute 0</code></span>
@@ -1060,11 +1059,17 @@ code {
     htmls << R"HTML(</table></div><div style="clear: both;"></div>
         <div style="margin:10pt 10pt 0 10pt; padding: 5pt 12pt; background: #fafbff;">
             <div style="font-size: 12pt; font-family: Lato;">
-                <p style="margin-top: 14px;">
-                    Modulation-mapping messages are constructed by selecting one of the '/mod' source addresses
-                    listed below and adding a target address selected from the '/param' addresses listed above. Finally,
-                    specify a depth (0.0 - 1.0). If both the source and target addresses are scene-specific (a or b),
-                    the scenes must match. Examples:
+                <div style="font-size: 12pt; font-family: Lato;">
+                    <div class="heading" style="margin-left: 0;">
+                        <h3>Modulation</h3>
+                    </div>
+                </div>
+
+                <p style="margin-top: 14px; margin-bottom: 4px;"">
+                    Modulation Mapping messages are constructed by selecting one of the '/mod' source addresses
+                    listed below and adding a target address selected from the '/param' addresses listed above, then
+                    specifying a depth (0.0 - 1.0). If both the source and target addresses are scene-specific (a or b),
+                    the scenes must match.
                 </p>
             </div>
         </div>
@@ -1078,13 +1083,13 @@ code {
             </div>
         </div>
 
-        <div style="width: 1130px; margin: 0 auto 32px; line-height: 1.75">
+        <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
             <span><code>/mod/b/slfo_1/2 /param/b/amp/gain 0.45</code></span>
             <span><code>/mod/a/feg /param/a/filter/1/cutoff 0.9</code></span>
             <span><code>/mod/macro_6 /param/a/pitch 0.75</code></span>
         </div>
 
-        <div class="tablewrap cr cl" style="width: 800px; margin: 16px auto;">
+        <div class="tablewrap cr cl" style="width: 800px; margin: 16px 8px;">
         <div class="heading"><h3>Modulation Mapping: Sources (not yet implemented)</h3></div>
         <table style="border: 2px solid black;">
             <tr>
