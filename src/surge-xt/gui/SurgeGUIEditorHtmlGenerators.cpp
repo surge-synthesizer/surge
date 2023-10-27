@@ -1060,7 +1060,7 @@ code {
     htmls << R"HTML(</table></div><div style="clear: both;"></div>
 
         <div class="tablewrap cr cl" style="width: 800px; margin: 16px auto;">
-        <div class="heading"><h3>Modulation Routing: Sources</h3></div>
+        <div class="heading"><h3>Modulation Routing: Sources (not yet implemented)</h3></div>
         <table style="border: 2px solid black;">
             <tr>
                 <th>Address</th>
@@ -1107,7 +1107,7 @@ code {
     htmls << R"HTML(
         <tr>
             <td colspan="5">
-                <p class="tight">† For LFOs of "Formula" type, indices [0 - 7] correspond to "Formula Out" [1 - 8]</p>
+                <p class="tight">† For Scene or Voice LFOs of "Formula" type, indices [0 - 7] specify "Formula Out" [1 - 8]</p>
             </td>
         </tr>
     )HTML";
