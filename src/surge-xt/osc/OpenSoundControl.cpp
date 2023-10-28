@@ -183,7 +183,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string addr = message.getAddressPattern().toString().toStdString();
     if (addr.at(0) != '/')
     {
-        sendError("Badly-formed OSC message.");
+        sendError("Bad OSC message format.");
         return;
     }
 
@@ -324,7 +324,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         float frequency = message[0].getFloat32();
-        int velocity = static_cast<int>(message[1].getFloat32());
+        // Future enhancement: keep velocity as float as long as possible
+        int velocity = static_cast<int>(message[1].getFloat32() + 0.5);
         constexpr float MAX_MIDI_FREQ = 12543.854;
 
         bool noteon = (address2 != "rel") && (velocity != 0);
@@ -344,7 +345,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // check velocity range
         if (velocity < 0 || velocity > 127)
         {
-            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0.0 - 127.0).");
             return;
         }
 
@@ -633,6 +634,80 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
             synth->storage.loadMappingFromKBM(def_path);
         }
+    }
+
+    // Modulation mapping
+    else if (address1 == "mod")
+    {
+        if (message.size() != 2)
+        {
+            sendDataCountError("mod", "2");
+            return;
+        }
+
+        int scene = 0;
+        std::getline(split, address2, '/');
+        if ((address2 == "a") || (address2 == "b"))
+        {
+            if (address2 == "b")
+                scene = 1;
+            std::getline(split, address2, '/'); // get mod into address2
+        }
+
+        std::string mod = address2;
+        int modnum = -1;
+        for (int i = 0; i < n_modsources; i++)
+        {
+            if (modsource_names_tag[i] == address2)
+            {
+                modnum = i;
+                break;
+            }
+        }
+
+        if (modnum == -1)
+        {
+            sendError("Bad modulation name field: " + address2);
+            return;
+        }
+
+        int index = 0;
+        std::getline(split, address3, '/'); // address3 = index, if any
+        if (address3 != "")
+        {
+            try
+            {
+                index = stoi(address3);
+            }
+            catch (const std::exception &e)
+            {
+                sendError("Bad format for modulator index.");
+                return;
+            }
+        }
+
+        if (!message[0].isString())
+        {
+            sendError("Bad OSC message format.");
+            return;
+        }
+        if (!message[1].isFloat32())
+        {
+            sendNotFloatError("mod", "depth");
+            return;
+        }
+
+        float depth = message[1].getFloat32();
+
+        std::string parmAddr = message[0].getString().toStdString();
+        auto *p = synth->storage.getPatch().parameterFromOSCName(parmAddr);
+        if (p == NULL)
+        {
+            sendError("No parameter with OSC address of " + parmAddr);
+            return;
+        }
+
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, scene, index, depth));
     }
 }
 

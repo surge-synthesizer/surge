@@ -668,28 +668,28 @@ code {
                               <td>/mnote</td>
                               <td>MIDI-style note</td>
                               <td>note number (0 - 127)</td>
-                              <td>velocity (0 - 127)*</td>
+                              <td>velocity (0.0 - 127.0)*</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td>/fnote †</td>
                               <td>frequency note</td>
                               <td>frequency (8.176 - 12543.853)</td>
-                              <td>velocity (0 - 127)*</td>
+                              <td>velocity (0.0 - 127.0)*</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td>/mnote/rel</td>
                               <td>MIDI-style note release</td>
                               <td>note number (0 - 127)</td>
-                              <td>release velocity (0 - 127)</td>
+                              <td>release velocity (0.0 - 127.0)</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td>/fnote/rel</td>
                               <td>frequency note release</td>
                               <td>frequency (8.176 - 12543.853)</td>
-                              <td>release velocity (0 - 127)</td>
+                              <td>release velocity (0.0 - 127.0)</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
