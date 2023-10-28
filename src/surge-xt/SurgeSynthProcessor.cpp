@@ -153,6 +153,10 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     surge->juceWrapperType = wrapperTypeString;
 
     midiKeyboardState.addListener(this);
+
+#if SURGE_HAS_OSC
+    oscHandler.initOSC(this, surge);
+#endif
 }
 
 SurgeSynthProcessor::~SurgeSynthProcessor()
@@ -383,7 +387,7 @@ void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
     if ((!oscHandler.listening && surge->storage.oscStartIn && surge->storage.oscPortIn > 0) ||
         (!oscHandler.sendingOSC && surge->storage.oscStartOut && surge->storage.oscPortOut > 0))
     {
-        oscHandler.initOSC(this, surge);
+        oscHandler.tryOSCStartup();
     }
 #endif
 
