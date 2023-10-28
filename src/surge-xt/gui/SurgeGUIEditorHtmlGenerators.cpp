@@ -1089,7 +1089,7 @@ code {
             <span><code>/mod/macro_6 /param/a/pitch 0.75</code></span>
         </div>
 
-        <div class="tablewrap cr cl" style="width: 800px; margin: 16px 8px;">
+        <div class="tablewrap cr cl" style="width: 750px; margin: 16px 8px;">
         <div class="heading"><h3>Modulation Mapping: Sources (not yet implemented)</h3></div>
         <table style="border: 2px solid black;">
             <tr>
