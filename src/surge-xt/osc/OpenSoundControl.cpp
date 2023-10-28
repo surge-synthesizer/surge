@@ -667,7 +667,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         if (modnum == -1)
         {
-            sendError("Bad modulation name field: " + address2);
+            sendError("Bad modulator name: " + address2);
             return;
         }
 
@@ -704,6 +704,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (p == NULL)
         {
             sendError("No parameter with OSC address of " + parmAddr);
+            return;
+        }
+
+        if (!synth->isValidModulation(p->id, (modsources)modnum))
+        {
+            sendError("Not a valid modulation.");
             return;
         }
 

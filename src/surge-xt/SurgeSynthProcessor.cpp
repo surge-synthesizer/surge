@@ -760,7 +760,10 @@ void SurgeSynthProcessor::processBlockOSC()
         case SurgeSynthProcessor::MOD:
         {
             // TODO: check for error return?
-            surge->setModDepth01(om.param->id, (modsources)om.ival, om.scene, om.index, om.fval);
+            bool valid = surge->setModDepth01(om.param->id, (modsources)om.ival, om.scene, om.index,
+                                              om.fval);
+            if (!valid)
+                ;
         }
         break;
 
