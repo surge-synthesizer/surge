@@ -83,9 +83,7 @@ void OpenSoundControl::tryOSCStartup()
         if (defaultOSCOutPort > 0)
         {
             if (!initOSCOut(defaultOSCOutPort))
-            {
                 sspPtr->initOSCError(defaultOSCOutPort);
-            }
         }
     }
 }
@@ -134,6 +132,7 @@ void OpenSoundControl::stopListening(bool updateOSCStartInStorage)
         {
             synth->storage.oscStartIn = false;
         }
+        // remove patch change and param change listeners
     }
 
 #ifdef DEBUG
@@ -789,6 +788,15 @@ bool OpenSoundControl::initOSCOut(int port)
         return false;
     }
 
+    // Add listener for patch changes, to send new path to OSC output
+    // This will run on the juce::MessageManager thread so as to
+    // not tie up the patch loading thread.
+    synth->addPatchLoadedListener("OSC_OUT", [ssp = sspPtr](auto s) { ssp->patch_load_to_OSC(s); });
+
+    // Add a listener for parameter changes
+    sspPtr->addParamChangeListener(
+        "OSC_OUT", [ssp = sspPtr](auto str1, auto str2) { ssp->param_change_to_OSC(str1, str2); });
+
     sendingOSC = true;
     oportnum = port;
     synth->storage.oscSending = true;
@@ -809,6 +817,9 @@ void OpenSoundControl::stopSending(bool updateOSCStartInStorage)
 
     sendingOSC = false;
     synth->storage.oscSending = false;
+
+    synth->deletePatchLoadedListener("OSC_OUT");
+    sspPtr->deleteParamChangeListener("OSC_OUT");
 
     if (updateOSCStartInStorage)
     {
