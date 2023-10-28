@@ -687,6 +687,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
         }
 
+        if ((index < 0) || (index >= synth->getMaxModulationIndex(mscene, (modsources)modnum)))
+        {
+            sendError("Modulator index out of range.");
+            return;
+        }
+
         if (!message[0].isString())
         {
             sendError("Bad OSC message format.");
