@@ -26,7 +26,6 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <regex>
 #include "UnitConversions.h"
 #include "Tunings.h"
 
