@@ -1067,16 +1067,16 @@ code {
 
                 <p style="margin-top: 14px;">
                     Modulation Mapping messages are constructed by selecting one of the '/mod' source addresses
-                    listed below and adding a target address selected from the '/param' addresses listed above, then
-                    specifying a depth (0.0 - 1.0). If both the source and target addresses are scene-specific (a or b),
-                    the scenes must match.
+                    listed below (with an appropriate index value, if necessary) and adding a target address selected
+                    from the '/param' addresses listed above, then specifying a depth (0.0 - 1.0).
+                    If both the source and target addresses are scene-specific (a or b), the scenes must match.
                 </p>
                  <p style="margin-top: 8px;">
                     Send a depth of <b>0</b> to disconnect a modulator from its target.
                 </p>
                 <p style="margin-top: 8px;">
                     Not all parameters can be modulated by all mod. sources. If a given combination is not
-                    possible, or an improper index is specified, an error will be reported to OSC out.
+                    possible an error will be reported to OSC out.
                 </p>
            </div>
         </div>
