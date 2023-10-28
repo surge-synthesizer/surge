@@ -645,12 +645,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        int scene = 0;
+        int mscene = 0;
+        bool scene_specified = false;
         std::getline(split, address2, '/');
         if ((address2 == "a") || (address2 == "b"))
         {
+            scene_specified = true;
             if (address2 == "b")
-                scene = 1;
+                mscene = 1;
             std::getline(split, address2, '/'); // get mod into address2
         }
 
@@ -707,13 +709,22 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
+        if (scene_specified)
+        {
+            if ((p->scene - 1) != mscene)
+            {
+                sendError("Modulator scene must be the same as the target scene.");
+                return;
+            }
+        }
+
         if (!synth->isValidModulation(p->id, (modsources)modnum))
         {
             sendError("Not a valid modulation.");
             return;
         }
 
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, scene, index, depth));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
     }
 }
 
