@@ -141,9 +141,9 @@ mod.AHDEnvelope.at = function(self, phase)
 end
 
 mod.Slew = {        prior = 0,
-                    slewout = 0
---                  If this worked, multiplying the 10000 in the factor formula below would make it consistent on all systems. But it ain't work...
---                  SRBSfix = (mod.samplerate/48000)/(mod.block_size/32)
+                    slewout = 0,
+                    SRBSfix = 1,
+                    slewrate = .05
 }
 
 mod.Slew.new = function(self, o)
@@ -157,7 +157,7 @@ mod.Slew.SlewLimit = function(self, slewin, slewrate)
 
     delta = slewin - self.prior
 
-    factor = 1 /(1 + 10000 * slewrate^3)
+    factor = 1 /(1 + (10000 * self.SRBSfix) * slewrate^4)
 
     if (delta > factor) then
         delta = factor
