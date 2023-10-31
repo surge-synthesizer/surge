@@ -165,36 +165,33 @@ end
 mod.Slew =
 {
     prior = 0,
-    blockfactor = 1, --to make control range consistent across systems
+    blockfactor = 1,
+    block_size = 0,
+    samplerate = 0,
+    calculate = true
 }
 
-mod.Slew.new = function(self, o, samplerate, block_size)
-    --When calling :new, set these to = state.samplerate and = state.block_size
-    
-    if (block_size == nil) then
-        block_size = 32
-    end
-
-    if (block_size <= 0) then
-        block_size = 32
-    end
-
-        if (samplerate == nil) then
-        samplerate = 48000
-    end
-
-    if (samplerate <= 0) then
-        samplerate = 48000
-    end
-    
+mod.Slew.new = function(self, o)
     o = o or {}
+    o.blockfactor = 0
     setmetatable(o, self)
     self.__index = self
-    self.blockfactor = (samplerate/48000)/(block_size/32)
+
+    if (o.samplerate == 0 or o.block_size == 0) then
+        o.calculate = false
+    end
+
+    o.blockfactor = (o.samplerate/48000.0)/(o.block_size/32.0)
+
     return o
 end
 
 mod.Slew.run = function(self, input, rate)
+
+    if (not self.calculate) then
+        return 0
+    end
+
     if (rate == nil) then
         rate = .05
     end
