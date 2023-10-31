@@ -1,5 +1,6 @@
--- This document is loaded in each Surge XT session and provides a set of built-in
--- helpers we've found handy when writing modulators. Consider it as a library of functions.
+
+-- This document is loaded in each Surge XT session and provides a set of built-in helpers
+-- we've found handy when writing modulators. Consider it as a library of functions.
 -- For each official update of Surge XT we will freeze the state of the prelude as stable
 -- and not break included functions after that.
 --
@@ -10,7 +11,7 @@ local surge = {}
 local mod = {}
 
 
---- MATH FUNCTIONS ---
+-- MATH FUNCTIONS --
 
 
 -- signum function returns -1 for negative numbers, 0 for zero, 1 for positive numbers
@@ -18,7 +19,7 @@ function math.sgn(x)
     return (x > 0 and 1) or (x < 0 and -1) or 0
 end
 
--- sign function returns -1 for negative numbers, and 1 both for positive numbers and for zero
+-- sign function returns -1 for negative numbers and 1 for positive numbers or zero
 function math.sign(x)
     return (x < 0 and -1) or 1
 end
@@ -39,15 +40,18 @@ function math.range(a, b)
 end
 
 -- returns the frequency of the given MIDI note number under A440 equal temperament
--- ref is optional and allows specifying a different center frequency for MIDI note 69 (middle A)
+-- ref is optional and allows specifying a different center frequency for
+-- MIDI note 69 (middle A)
 function math.note_to_freq(note, ref)
     local default = 440
     ref = ref or default
     return 2^((note - 69) / 12) * ref
 end
 
--- returns the fractional MIDI note number matching given frequency under A440 equal temperament
--- ref is optional and allows specifying a different center frequency for MIDI note 69 (middle A)
+-- returns the fractional MIDI note number matching given frequency under A440
+-- equal temperament
+-- ref is optional and allows specifying a different center frequency for
+-- MIDI note 69 (middle A)
 function math.freq_to_note(freq, ref)
     local default = 440
     ref = ref or default
@@ -82,16 +86,22 @@ function math.lcm(a, b)
     return t
 end
 
---- BUILT-IN MODULATORS ---
+
+-- BUILT-IN MODULATORS --
 
 
-mod.ClockDivider = { numerator = 1,
-                     denominator = 1,
-                     prioribeat = -1,
-                     newbeat = false,
-                     intphase = 0, -- increase from 0 up to n
-                     ibeat = 0, -- wraps with denominator
-                     phase = 0
+--- Clock Divider ---
+
+
+mod.ClockDivider =
+{
+    numerator = 1,
+    denominator = 1,
+    prioribeat = -1,
+    newbeat = false,
+    intphase = 0, -- increase from 0 up to n
+    ibeat = 0,    -- wraps with denominator
+    phase = 0
 }
 
 mod.ClockDivider.new = function(self, o)
@@ -102,8 +112,8 @@ mod.ClockDivider.new = function(self, o)
 end
 
 mod.ClockDivider.tick = function(self, intphase, phase)
-    beat = (intphase + phase) * self.numerator / self.denominator
-    ibeat = math.floor(beat)
+    local beat = (intphase + phase) * self.numerator / self.denominator
+    local ibeat = math.floor(beat)
 
     self.intphase = ibeat
     self.ibeat = ibeat % self.numerator
@@ -117,7 +127,16 @@ mod.ClockDivider.tick = function(self, intphase, phase)
     self.prioribeat = ibeat
 end
 
-mod.AHDEnvelope = { a = 0.1, h = 0.1, d = 0.7 }
+
+--- AHD Envelope ---
+
+
+mod.AHDEnvelope =
+{
+    a = 0.1,
+    h = 0.1,
+    d = 0.7
+}
 
 mod.AHDEnvelope.new = function(self, o)
     o = o or {}
@@ -140,37 +159,68 @@ mod.AHDEnvelope.at = function(self, phase)
     end
 end
 
-mod.Slew = {        prior = 0,
-                    slewout = 0,
-                    SRBSfix = 1,
-                    slewrate = .05
+
+--- Slew Limiter ---
+
+mod.Slew =
+{
+    prior = 0,
+    blockfactor = 1, --to make control range consistent across systems
 }
 
-mod.Slew.new = function(self, o)
+mod.Slew.new = function(self, o, samplerate, block_size)
+    --When calling :new, set these to = state.samplerate and = state.block_size
+    
+    if (block_size == nil) then
+        block_size = 32
+    end
+
+    if (block_size <= 0) then
+        block_size = 32
+    end
+
+        if (samplerate == nil) then
+        samplerate = 48000
+    end
+
+    if (samplerate <= 0) then
+        samplerate = 48000
+    end
+    
     o = o or {}
     setmetatable(o, self)
     self.__index = self
+    self.blockfactor = (samplerate/48000)/(block_size/32)
     return o
 end
 
-mod.Slew.SlewLimit = function(self, slewin, slewrate)
+mod.Slew.run = function(self, input, rate)
+    if (rate == nil) then
+        rate = .05
+    end
+    
+    if (rate < 0) then
+        rate = 0
+    end
+    
+    delta = input - self.prior
+    limit = 1 /(1 + (10000 * self.blockfactor) * rate^4)
 
-    delta = slewin - self.prior
-
-    factor = 1 /(1 + (10000 * self.SRBSfix) * slewrate^4)
-
-    if (delta > factor) then
-        delta = factor
+    if (delta > limit) then
+        delta = limit
     end
 
-    if (delta < -factor) then
-        delta = -factor
+    if (delta < -limit) then
+        delta = -limit
     end
 
     self.prior = self.prior + delta
-    self.slewout = self.prior
+    
+    return self.prior
 end
+
 
 surge.mod = mod
 
 return surge
+
