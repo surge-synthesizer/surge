@@ -97,7 +97,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         fx_reload_mod[i] = false;
     }
 
-    allNotesOff();
+    allSoundOff();
 
     for (int i = 0; i < MAX_VOICES; i++)
     {
@@ -306,7 +306,7 @@ SurgeSynthesizer::~SurgeSynthesizer()
             patchLoadThread->join();
     }
 
-    allNotesOff();
+    allSoundOff();
 
     for (int sc = 0; sc < n_scenes; sc++)
     {
@@ -2248,29 +2248,7 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
         if (doAllNotesOff)
         {
-            std::set<int> heldNotes;
-
-            for (int sc = 0; sc < n_scenes; sc++)
-            {
-                for (int key = 0; key < 128; key++)
-                {
-                    if (midiKeyPressedForScene[sc][key])
-                    {
-                        heldNotes.insert(key);
-                    }
-                }
-            }
-
-            for (auto n : heldNotes)
-            {
-                for (int ch = 0; ch < 16; ch++)
-                {
-                    if (channelState[ch].keyState[n].keystate > 0)
-                    {
-                        releaseNote(ch, n, 0);
-                    }
-                }
-            }
+            allNotesOff();
         }
 
         return;
@@ -2360,6 +2338,33 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
     }
 }
 
+void SurgeSynthesizer::allNotesOff()
+{
+    std::set<int> heldNotes;
+
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        for (int key = 0; key < 128; key++)
+        {
+            if (midiKeyPressedForScene[sc][key])
+            {
+                heldNotes.insert(key);
+            }
+        }
+    }
+
+    for (auto n : heldNotes)
+    {
+        for (int ch = 0; ch < 16; ch++)
+        {
+            if (channelState[ch].keyState[n].keystate > 0)
+            {
+                releaseNote(ch, n, 0);
+            }
+        }
+    }
+}
+
 void SurgeSynthesizer::purgeHoldbuffer(int scene)
 {
     std::list<HoldBufferItem> retainBuffer;
@@ -2427,7 +2432,7 @@ void SurgeSynthesizer::purgeDuplicateHeldVoicesInPolyMode(int scene, int channel
     }
 }
 
-void SurgeSynthesizer::allNotesOff()
+void SurgeSynthesizer::allSoundOff()
 {
     for (int i = 0; i < 16; i++)
     {
@@ -3949,7 +3954,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     {
         patchid = synth->patchid_queue;
         synth->patchid_queue = -1;
-        synth->allNotesOff();
+        synth->allSoundOff();
         synth->loadPatch(patchid);
     }
     if (synth->has_patchid_file)
@@ -3957,7 +3962,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
         ppath = string_to_path(synth->patchid_file);
         synth->has_patchid_file = false;
         had_patchid_file = true;
-        synth->allNotesOff();
+        synth->allSoundOff();
 
         int ptid = -1, ct = 0;
         for (const auto &pti : synth->storage.patch_list)
@@ -4348,7 +4353,7 @@ void SurgeSynthesizer::process()
         {
             std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
             // spawn patch-loading thread
-            allNotesOff();
+            allSoundOff();
             halt_engine = true;
 
             /*

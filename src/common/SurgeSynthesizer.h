@@ -104,6 +104,7 @@ class alignas(16) SurgeSynthesizer
     void channelController(char channel, int cc, int value);
     void programChange(char channel, int value);
     void allNotesOff();
+    void allSoundOff();
     void setSamplerate(float sr);
     void updateHighLowKeys(int scene);
     int getNumInputs() { return N_INPUTS; }

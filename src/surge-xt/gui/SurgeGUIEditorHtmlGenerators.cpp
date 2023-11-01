@@ -700,6 +700,13 @@ code {
                               <td>(none)</td>
                          </tr>
                          <tr>
+                              <td>/allsoundoff</td>
+                              <td>stop all sound NOW</td>
+                              <td>(none)</td>
+                              <td>(none)</td>
+                              <td>(none)</td>
+                         </tr>
+                         <tr>
                             <td colspan="5">
                                 <p class="tight">* Velocity 0 releases the note; use the <span>.../rel</span> messages to release notes with velocity. If noteIDs are
                                     supplied, the note number or frequency value for releases is disregarded.</p>

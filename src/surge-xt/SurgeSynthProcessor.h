@@ -347,6 +347,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         NOTEX_TIMB,
         NOTEX_PRES,
         ALLNOTESOFF,
+        KILLALL,
         MOD
     };
 
