@@ -186,22 +186,33 @@ mod.Slew.new = function(self, o)
     return o
 end
 
-mod.Slew.run = function(self, input, rate)
+mod.Slew.run = function(self, input, uprate, downrate)
 
     if (not self.calculate) then
         return 0
     end
 
-    if (rate == nil) then
-        rate = .05
+    if (uprate == nil) then
+        uprate = .05
     end
     
-    if (rate < 0) then
-        rate = 0
+    if (uprate < 0) then
+        uprate = 0
+    end
+    
+    uplimit = 1 /(1 + (10000 * self.blockfactor) * uprate^3)
+    
+    if (downrate == nil) then
+        downlimit = uplimit
+        downrate = uprate
+    else
+        if (downrate < 0) then
+            downrate = 0
+        end
+        downlimit = 1 /(1 + (10000 * self.blockfactor) * downrate^3)
     end
     
     delta = input - self.prior
-    limit = 1 /(1 + (10000 * self.blockfactor) * rate^4)
 
     if (delta > limit) then
         delta = limit
