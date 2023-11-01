@@ -83,9 +83,7 @@ void OpenSoundControl::tryOSCStartup()
         if (defaultOSCOutPort > 0)
         {
             if (!initOSCOut(defaultOSCOutPort))
-            {
                 sspPtr->initOSCError(defaultOSCOutPort);
-            }
         }
     }
 }
@@ -134,6 +132,7 @@ void OpenSoundControl::stopListening(bool updateOSCStartInStorage)
         {
             synth->storage.oscStartIn = false;
         }
+        // remove patch change and param change listeners
     }
 
 #ifdef DEBUG
@@ -182,7 +181,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string addr = message.getAddressPattern().toString().toStdString();
     if (addr.at(0) != '/')
     {
-        sendError("Badly-formed OSC message.");
+        sendError("Bad OSC message format.");
         return;
     }
 
@@ -193,6 +192,27 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
     std::string address1, address2, address3;
     std::getline(split, address1, '/');
+    bool querying = false;
+
+    // Queries (for params)
+    if (address1 == "q")
+    {
+        querying = true;
+        // remove the '/q' from the address
+        std::getline(split, address1, '/');
+        addr = addr.substr(2);
+        // Currently, only params may be queried
+        if ((address1 != "param") && (address1 != "all_params"))
+        {
+            sendError("No query available for '" + address1 + "'");
+            return;
+        }
+        if (address1 == "all_params")
+        {
+            OpenSoundControl::sendAllParams();
+            return;
+        }
+    }
 
     // Note expressions
     if (address1 == "ne")
@@ -302,7 +322,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         float frequency = message[0].getFloat32();
-        int velocity = static_cast<int>(message[1].getFloat32());
+        // Future enhancement: keep velocity as float as long as possible
+        int velocity = static_cast<int>(message[1].getFloat32() + 0.5);
         constexpr float MAX_MIDI_FREQ = 12543.854;
 
         bool noteon = (address2 != "rel") && (velocity != 0);
@@ -322,7 +343,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // check velocity range
         if (velocity < 0 || velocity > 127)
         {
-            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0.0 - 127.0).");
             return;
         }
 
@@ -400,31 +421,23 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Parameters
     else if (address1 == "param")
     {
-        bool normalized = false;
-        /*
-        if (message.size() == 2)
-        {
-            if (!message[1].isString())
-            {
-                sendNormError();
-                return;
-            }
-            else if (message[1].getString() == "n")
-                normalized = true;
-            else
-            {
-                sendNormError();
-                return;
-            }
-        }
+        float val = 0;
 
-        else */
-        if (message.size() != 1)
+        if ((message.size() != 1) && !querying)
         {
             sendDataCountError("param", "1");
             return;
         }
-        float val = message[0].getFloat32();
+        else if (!querying)
+        {
+            if (!message[0].isFloat32())
+            {
+                // Not a valid data value
+                sendNotFloatError("param", "");
+                return;
+            }
+            val = message[0].getFloat32();
+        }
 
         // Special case for /param/macro/
         std::getline(split, address2, '/'); // check for '/macro'
@@ -446,7 +459,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sendError("OSC /param/macro: Invalid macro number: " + address3);
                 return;
             }
-            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
+            if (querying)
+            {
+                auto macValStr = OpenSoundControl::getMacroValStr(macnum - 1);
+                std::string macName = "/param/macro/" + std::to_string(macnum);
+                if (!this->juceOSCSender.send(
+                        juce::OSCMessage(juce::String(macName), juce::String(macValStr))))
+                    std::cout << "Error: could not send OSC message.";
+            }
+            else
+                sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
         }
 
         // all the other /param messages
@@ -460,16 +482,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 return;
             }
 
-            if (!message[0].isFloat32())
+            if (querying)
             {
-                // Not a valid data value
-                sendNotFloatError("param", "");
-                return;
+                std::string valStr = getParamValStr(p);
+                if (!this->juceOSCSender.send(
+                        juce::OSCMessage(juce::String(p->oscName), juce::String(valStr))))
+                    std::cout << "Error: could not send OSC message.";
             }
-            float val = message[0].getFloat32();
-            // if (!normalized)
-            //     val = getNormValue(p, val);
-            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
+            else
+            {
+                // if (!normalized)
+                //     val = getNormValue(p, val);
+                sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
+            }
         }
 
 #ifdef DEBUG_VERBOSE
@@ -609,10 +634,101 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
     }
 
-    // Initiate parameter dump
-    else if (address1 == "send_all_parameters")
+    // Modulation mapping
+    else if (address1 == "mod")
     {
-        OpenSoundControl::sendAllParams();
+        if (message.size() != 2)
+        {
+            sendDataCountError("mod", "2");
+            return;
+        }
+
+        int mscene = 0;
+        bool scene_specified = false;
+        std::getline(split, address2, '/');
+        if ((address2 == "a") || (address2 == "b"))
+        {
+            scene_specified = true;
+            if (address2 == "b")
+                mscene = 1;
+            std::getline(split, address2, '/'); // get mod into address2
+        }
+
+        std::string mod = address2;
+        int modnum = -1;
+        for (int i = 0; i < n_modsources; i++)
+        {
+            if (modsource_names_tag[i] == address2)
+            {
+                modnum = i;
+                break;
+            }
+        }
+
+        if (modnum == -1)
+        {
+            sendError("Bad modulator name: " + address2);
+            return;
+        }
+
+        int index = 0;
+        std::getline(split, address3, '/'); // address3 = index, if any
+        if (address3 != "")
+        {
+            try
+            {
+                index = stoi(address3);
+            }
+            catch (const std::exception &e)
+            {
+                sendError("Bad format for modulator index.");
+                return;
+            }
+        }
+
+        if ((index < 0) || (index >= synth->getMaxModulationIndex(mscene, (modsources)modnum)))
+        {
+            sendError("Modulator index out of range.");
+            return;
+        }
+
+        if (!message[0].isString())
+        {
+            sendError("Bad OSC message format.");
+            return;
+        }
+        if (!message[1].isFloat32())
+        {
+            sendNotFloatError("mod", "depth");
+            return;
+        }
+
+        float depth = message[1].getFloat32();
+
+        std::string parmAddr = message[0].getString().toStdString();
+        auto *p = synth->storage.getPatch().parameterFromOSCName(parmAddr);
+        if (p == NULL)
+        {
+            sendError("No parameter with OSC address of " + parmAddr);
+            return;
+        }
+
+        if (scene_specified)
+        {
+            if ((p->scene - 1) != mscene)
+            {
+                sendError("Modulator scene must be the same as the target scene.");
+                return;
+            }
+        }
+
+        if (!synth->isValidModulation(p->id, (modsources)modnum))
+        {
+            sendError("Not a valid modulation.");
+            return;
+        }
+
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
     }
 }
 
@@ -672,6 +788,15 @@ bool OpenSoundControl::initOSCOut(int port)
         return false;
     }
 
+    // Add listener for patch changes, to send new path to OSC output
+    // This will run on the juce::MessageManager thread so as to
+    // not tie up the patch loading thread.
+    synth->addPatchLoadedListener("OSC_OUT", [ssp = sspPtr](auto s) { ssp->patch_load_to_OSC(s); });
+
+    // Add a listener for parameter changes
+    sspPtr->addParamChangeListener(
+        "OSC_OUT", [ssp = sspPtr](auto str1, auto str2) { ssp->param_change_to_OSC(str1, str2); });
+
     sendingOSC = true;
     oportnum = port;
     synth->storage.oscSending = true;
@@ -692,6 +817,9 @@ void OpenSoundControl::stopSending(bool updateOSCStartInStorage)
 
     sendingOSC = false;
     synth->storage.oscSending = false;
+
+    synth->deletePatchLoadedListener("OSC_OUT");
+    sspPtr->deleteParamChangeListener("OSC_OUT");
 
     if (updateOSCStartInStorage)
     {
@@ -730,11 +858,6 @@ void OpenSoundControl::sendNotFloatError(std::string addr, std::string msg)
         "' is not expressed as a float. All data must be sent as OSC floats.");
 }
 
-void OpenSoundControl::sendNormError()
-{
-    OpenSoundControl::sendError("Only 'n' (for 'normalized') is accepted as second data value).");
-}
-
 void OpenSoundControl::sendDataCountError(std::string addr, std::string count)
 {
     OpenSoundControl::sendError("Wrong number of data items supplied for /" + addr + "; expected " +
@@ -751,39 +874,68 @@ void OpenSoundControl::sendAllParams()
             // auto timer = new Surge::Debug::TimeBlock("ParameterDump");
             std::string valStr;
             int n = synth->storage.getPatch().param_ptr.size();
+            // Dump all params except for macros
             for (int i = 0; i < n; i++)
             {
                 Parameter p = *synth->storage.getPatch().param_ptr[i];
-                switch (p.valtype)
-                {
-                case vt_int:
-                    valStr = std::to_string(p.val.i);
-                    break;
-
-                case vt_bool:
-                    valStr = std::to_string(p.val.b);
-                    break;
-
-                case vt_float:
-                {
-                    std::ostringstream oss;
-                    oss << p.get_display(false, 0.0) << " "
-                        << float_to_clocalestr(p.value_to_normalized(p.val.f)) << " (normalized)";
-                    valStr = oss.str();
-                }
-                break;
-
-                default:
-                    break;
-                }
-
+                valStr = getParamValStr(&p);
                 if (!this->juceOSCSender.send(
                         juce::OSCMessage(juce::String(p.oscName), juce::String(valStr))))
+                    std::cout << "Error: could not send OSC message.";
+            }
+            // Now do the macros
+            for (int i = 0; i < n_customcontrollers; i++)
+            {
+                auto macValStr = OpenSoundControl::getMacroValStr(i);
+                std::string macName = "/param/macro/" + std::to_string(i + 1);
+                if (!this->juceOSCSender.send(
+                        juce::OSCMessage(juce::String(macName), juce::String(macValStr))))
                     std::cout << "Error: could not send OSC message.";
             }
             // delete timer;    // This prints the elapsed time
         });
     }
+}
+
+std::string OpenSoundControl::getMacroValStr(long macnum)
+{
+    auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
+                    .scene[0]
+                    .modsources[macnum + ms_ctrl1]);
+    auto macVal = float_to_clocalestr_wprec(100 * cms->get_output(0), 3);
+    auto macVal01 = float_to_clocalestr_wprec(cms->get_output01(0), 8);
+    std::ostringstream oss;
+
+    oss << macVal << " % " << macVal01 << " (normalized)";
+    return (oss.str());
+}
+
+std::string OpenSoundControl::getParamValStr(const Parameter *p)
+{
+    std::string valStr;
+    switch (p->valtype)
+    {
+    case vt_int:
+        valStr = std::to_string(p->val.i);
+        break;
+
+    case vt_bool:
+        valStr = std::to_string(p->val.b);
+        break;
+
+    case vt_float:
+    {
+        std::ostringstream oss;
+        oss << p->get_display(false, 0.0) << " "
+            << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " (normalized)";
+        valStr = oss.str();
+    }
+    break;
+
+    default:
+        break;
+    }
+    return valStr;
 }
 
 } // namespace OSC

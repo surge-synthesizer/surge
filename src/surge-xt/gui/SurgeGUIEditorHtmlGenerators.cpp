@@ -619,8 +619,7 @@ code {
 
                             <ul>
                                 <li>a floating point value between <b>0.0</b> and <b>1.0</b>, where <b>0</b> represents the minimum acceptable
-                                    value for the parameter, and <b>1</b> represents the maximum. <br />
-                                    Note: use <b>.</b> as the decimal mark, never <b>,</b>.</li>
+                                    value for the parameter, and <b>1</b> represents the maximum. <br />(note: use '<b>.</b>' as the decimal mark, never '<b>,</b>').</li>
                                 <li>an integer value</li>
                                 <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
                                 <li>a file path (absolute or relative to the default path)
@@ -634,10 +633,10 @@ code {
                             to the associated limit.
                         </p>
                         <p style="border: 1px solid black; padding: 4px;" >
-                            <b>Important Note: All numeric values must be sent over OSC as floating point numbers,</b>
-                            even if they are listed as integer or boolean type --
-                            The 'Appropriate Values' column describes how the data is used by Surge XT,
-                            not how messages are to be formatted for OSC.
+                            <b>Important Note: All numeric values must be sent over OSC as floating point numbers</b>
+                            (even if they are listed as integer or boolean type --
+                            the 'Appropriate Values' column describes how the data is used by Surge XT,
+                            not how messages are to be formatted for OSC).
                         </p>
                         <p style="margin-top: 28px;">
                              <b>OSC Output</b>: All parameter and patch changes made on Surge XT are reported to OSC out, if OSC output is enabled.
@@ -653,9 +652,9 @@ code {
                    </div>
                 </div>
 
-                <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
+                <div class="tablewrap" style="width: 1100px; margin: 8px;">
                     <div class="heading">
-                         <h3>Notes:</h3>
+                         <h3>Notes</h3>
                     </div>
                     <table style="border: 2px solid black;">
                          <tr>
@@ -669,28 +668,28 @@ code {
                               <td>/mnote</td>
                               <td>MIDI-style note</td>
                               <td>note number (0 - 127)</td>
-                              <td>velocity (0 - 127)*</td>
+                              <td>velocity (0.0 - 127.0)*</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td>/fnote †</td>
                               <td>frequency note</td>
                               <td>frequency (8.176 - 12543.853)</td>
-                              <td>velocity (0 - 127)*</td>
+                              <td>velocity (0.0 - 127.0)*</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td>/mnote/rel</td>
                               <td>MIDI-style note release</td>
                               <td>note number (0 - 127)</td>
-                              <td>release velocity (0 - 127)</td>
+                              <td>release velocity (0.0 - 127.0)</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
                               <td>/fnote/rel</td>
                               <td>frequency note release</td>
                               <td>frequency (8.176 - 12543.853)</td>
-                              <td>release velocity (0 - 127)</td>
+                              <td>release velocity (0.0 - 127.0)</td>
                               <td>noteID (optional, 0 - maxint)§</td>
                          </tr>
                          <tr>
@@ -710,7 +709,7 @@ code {
                          </tr>
                     </table>
                 </div>
-                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/mnote 68 120</code></span>
                     <span><code>/fnote 440.0 120</code></span>
                     <span><code>/mnote 68 0</code></span>
@@ -719,9 +718,9 @@ code {
                     <span><code>/fnote/rel 440.0 45</code></span>
                 </div>
 
-                <div class="tablewrap" style="width: 1100px; margin: 8px auto;">
+                <div class="tablewrap" style="width: 1100px; margin: 8px;">
                     <div class="heading">
-                         <h3>Note Expressions:</h3>
+                         <h3>Note Expressions</h3>
                     </div>)HTML"
           << R"HTML(
                     <table style="border: 2px solid black;">
@@ -768,7 +767,7 @@ code {
                          </tr>
                     </table>
                 </div>
-                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/ne/pitch 24566 0.34</code></span>
                     <span><code>/ne/volume 24566 0.5</code></span>
                     <span><code>/ne/pan 24566 0.9</code></span>
@@ -778,7 +777,7 @@ code {
 
                <div class="tablewrap fl cl">
                     <div class="heading">
-                         <h3>Patches:</h3>
+                         <h3>Patches</h3>
                     </div>
                     <table style="border: 2px solid black;">
                          <tr>
@@ -828,7 +827,7 @@ code {
 
                <div class="tablewrap fr cr">
                     <div class="heading">
-                         <h3>Tuning:</h3>
+                         <h3>Tuning</h3>
                     </div>
                     <table style="border: 2px solid black;">
                          <tr>
@@ -865,36 +864,60 @@ code {
 
                 <div style="clear: both;"></div>
 
-                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/patch/load /Library/Application Support/Surge XT/patches_factory/Plucks/Clean</code></span>
                     <span><code>/patch/save</code></span>
                     <span><code>/patch/incr</code></span>
                 </div>
-                <div style="width: 1100px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/tuning/scl ptolemy</code></span>
                     <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                     <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                 </div>
-                <div class="tablewrap cr cl" style="margin: 0 auto;">
-                    <div class="heading"><h3>All Parameters Query:</h3></div>
+
+                <div style="clear: both;"></div>
+
+                <div class="tablewrap" style="width: 1000px; margin: 24px 8px 16px 8px;">
+                    <div class="heading"><h3>Parameter Queries</h3></div>
                     <table style="border: 2px solid black;">
                         <tr>
                             <th>Address</th>
                             <th>Description</th>
                             <th>Appropriate Values</th>
+                            <th>Action</th>
                         </tr>
                         <tr>
-                            <td>/send_all_params</td>
+                            <td>/q/all_params</td>
                             <td>request all parameters</td>
                             <td>none</td>
+                            <td>Sends a dump of all parameters listed below to OSC out</td>
                         </tr>
                         <tr>
-                            <td class="center" colspan="3">Initiates a dump of all parameters listed below.</td>
+                            <td>/q/&ltparameter address&gt</td>
+                            <td>request one parameter</td>
+                            <td>none</td>
+                            <td>Sends one parameter's value to OSC out</td>
+                        </tr>
+                        <tr>
+                            <td class="center" colspan="3"></td>
                         </tr>
                     </table>
                 </div>
 
-                <div style="width: 1130px; margin: 8px auto; line-height: 1.75">
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                    <span><code>q/all_params</code></span>
+                    <span><code>q/param/b/amp/gain</code></span>
+                    <span><code>q/param/global/polyphony_limit</code></span>
+                    <span><code>q/param/a/mixer/noise/mute</code></span>
+                </div>
+
+                <div style="margin: 24px 0 4px 22px; font-size: 12pt; font-family: Lato;">
+                    <div class="heading">
+                        <h3>Parameters</h3>
+                    </div>
+                </div>
+
+                <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
                     <span><code>/param/b/amp/gain 0.63</code></span>
                     <span><code>/param/global/polyphony_limit 12</code></span>
                     <span><code>/param/a/mixer/noise/mute 0</code></span>
@@ -929,20 +952,19 @@ code {
     std::string st_str;
     int currentCtrlGrp = endCG;
 
+    // Convert scene specifiers into "*"
     for (auto *p : synth->storage.getPatch().param_ptr)
     {
         st_str = p->get_osc_name();
 
-        if (st_str[6] == '/' && st_str[8] == '/')
-        {
-            if (st_str[7] == 'b')
-                continue; // 'b_...' entries not added to vector
+        std::size_t found = st_str.find("/b/");
+        if (found != std::string::npos)
+            continue; // 'b_...' entries not added to vector
 
-            else if (st_str[7] == 'a')
-            {
-                st_str[7] = '*';
-            }
-        }
+        found = st_str.find("/a/");
+        if (found != std::string::npos)
+            st_str.replace(found + 1, 1, "*");
+
         sortvector.push_back(oscParamInfo{p, st_str, p->get_full_name(), p->ctrlgroup});
     };
 
@@ -1034,7 +1056,90 @@ code {
         }
     }
 
-    htmls << "</table></div></div></div></body></html>";
+    htmls << R"HTML(</table></div><div style="clear: both;"></div>
+        <div style="margin:10pt 10pt 0 10pt; padding: 5pt 12pt; background: #fafbff;">
+            <div style="font-size: 12pt; font-family: Lato;">
+                <div style="font-size: 12pt; font-family: Lato;">
+                    <div class="heading" style="margin-left: 0;">
+                        <h3>Modulation</h3>
+                    </div>
+                </div>
+
+                <p style="margin-top: 14px;">
+                    Modulation Mapping messages are constructed by selecting one of the '/mod' source addresses
+                    listed below (with an appropriate index value, if necessary) and adding a target address selected
+                    from the '/param' addresses listed above, then specifying a depth (0.0 - 1.0).
+                    If both the source and target addresses are scene-specific (a or b), the scenes must match.
+                </p>
+                 <p style="margin-top: 8px;">
+                    Send a depth of <b>0</b> to disconnect a modulator from its target.
+                </p>
+                <p style="margin-top: 8px;">
+                    Not all parameters can be modulated by all mod. sources. If a given combination is not
+                    possible an error will be reported to OSC out.
+                </p>
+           </div>
+        </div>
+
+        <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+            <span><code>/mod/b/slfo_1/2 /param/b/amp/gain 0.45</code></span>
+            <span><code>/mod/a/feg /param/a/filter/1/cutoff 0.9</code></span>
+            <span><code>/mod/macro_6 /param/a/pitch 0.75</code></span>
+        </div>
+
+        <div class="tablewrap cr cl" style="width: 750px; margin: 16px 8px;">
+        <div class="heading"><h3>Modulation Mapping: Sources</h3></div>
+        <table style="border: 2px solid black;">
+            <tr>
+                <th>Address</th>
+                <th>Description</th>
+                <th>&ltindex&gt=0</th>
+                <th>&ltindex&gt=1</th>
+                <th>&ltindex&gt=2</th>
+            </tr>
+        )HTML";
+
+    int index = 0;
+    for (int i = 1; i < n_modsources; i++) // skips "off"
+    {
+        int modsource_sorted = modsource_display_order[i];
+        std::string sceneStr = "/";
+        std::string indexStr = "";
+        std::string modName = modsource_names[modsource_sorted];
+        int max_idx = synth->getMaxModulationIndex(0, (modsources)modsource_sorted);
+        if (synth->isModulatorDistinctPerScene((modsources)modsource_sorted))
+            sceneStr = "/*/";
+        if (synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
+            indexStr = "/&ltindex&gt";
+        std::string modn = modName;
+        if (modName.find("LFO") != std::string::npos)
+            modn = modName + "†";
+        htmls << "<tr><td>/mod" << sceneStr << modsource_names_tag[modsource_sorted] << indexStr
+              << "</td><td>" << modn << "</td>";
+        for (int i = 0; i < 3; i++)
+        {
+            std::string idxd_str = "";
+            if (i < max_idx)
+                idxd_str = ModulatorName::modulatorIndexExtension(&synth->storage, 0,
+                                                                  (modsources)modsource_sorted, i);
+            if (i == 0 && idxd_str == "" &&
+                synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
+            {
+                idxd_str = modName;
+                idxd_str = "(" + idxd_str + ")";
+            }
+            htmls << "<td>" << idxd_str << "</td>";
+        }
+        htmls << "</tr>";
+    }
+    htmls << R"HTML(
+        <tr>
+            <td colspan="5">
+                <p class="tight">† For Scene or Voice LFOs of "Formula" type, indices [0 - 7] specify "Formula Out" [1 - 8]</p>
+            </td>
+        </tr>
+        </table></div></div></div></body></html>
+    )HTML";
     return htmls.str();
 }
 

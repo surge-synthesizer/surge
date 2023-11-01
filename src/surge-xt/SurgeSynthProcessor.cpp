@@ -276,26 +276,11 @@ bool SurgeSynthProcessor::initOSCOut(int port)
     surge->storage.oscSending = state;
     surge->storage.oscStartOut = true;
 
-    if (state)
-    {
-        // Add listener for patch changes, to send new path to OSC output
-        // This will run on the juce::MessageManager thread so as to
-        // not tie up the patch loading thread.
-        surge->addPatchLoadedListener("OSC_OUT",
-                                      [ssp = this](auto s) { ssp->patch_load_to_OSC(s); });
-    }
-
-    // Add a listener for parameter changes
-    SurgeSynthProcessor::addParamChangeListener(
-        "OSC_OUT", [ssp = this](auto str1, auto str2) { ssp->param_change_to_OSC(str1, str2); });
-
     return state;
 }
 
 void SurgeSynthProcessor::stopOSCOut(bool updateOSCStartInStorage)
 {
-    surge->deletePatchLoadedListener("OSC_OUT");
-    deleteParamChangeListener("OSC_OUT");
     oscHandler.stopSending(updateOSCStartInStorage);
 }
 
@@ -326,7 +311,6 @@ void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, std::string
 {
     if (surge->storage.oscSending && !paramPath.empty())
     {
-        // std::cout << "paramPath: " << paramPath << "  value: " << valStr << std::endl;
         oscHandler.send(paramPath, valStr);
     }
 }
@@ -754,6 +738,12 @@ void SurgeSynthProcessor::processBlockOSC()
         case SurgeSynthProcessor::ALLNOTESOFF:
         {
             surge->allNotesOff();
+        }
+        break;
+
+        case SurgeSynthProcessor::MOD:
+        {
+            surge->setModDepth01(om.param->id, (modsources)om.ival, om.scene, om.index, om.fval);
         }
         break;
 

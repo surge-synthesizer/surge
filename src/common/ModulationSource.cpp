@@ -167,10 +167,13 @@ std::string modulatorIndexExtension(const SurgeStorage *s, int scene, int ms, in
             if (index == 1)
                 return shortV ? " HN" : " (Half Normal)";
         }
+
+        /* This is a remnant from unimplemented #4286
         if (ms == ms_lowest_key || ms == ms_latest_key || ms == ms_highest_key)
         {
-            return (index == 0 ? " Key" : " Voice");
+        return (index == 0 ? " Key" : " Voice");
         }
+        */
 
         if (ms >= ms_lfo1 && ms <= ms_slfo6)
         {
