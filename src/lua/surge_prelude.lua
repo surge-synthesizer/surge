@@ -1,4 +1,3 @@
-
 -- This document is loaded in each Surge XT session and provides a set of built-in helpers
 -- we've found handy when writing modulators. Consider it as a library of functions.
 -- For each official update of Surge XT we will freeze the state of the prelude as stable
@@ -7,11 +6,12 @@
 -- If you have ideas for other useful functions that could be added here, by all means
 -- contact us over GitHub or Discord and let us know!
 
+
 local surge = {}
 local mod = {}
 
 
--- MATH FUNCTIONS --
+--- MATH FUNCTIONS ---
 
 
 -- signum function returns -1 for negative numbers, 0 for zero, 1 for positive numbers
@@ -87,11 +87,10 @@ function math.lcm(a, b)
 end
 
 
--- BUILT-IN MODULATORS --
+--- BUILT-IN MODULATORS ---
 
 
---- Clock Divider ---
-
+-- Clock Divider --
 
 mod.ClockDivider =
 {
@@ -127,9 +126,7 @@ mod.ClockDivider.tick = function(self, intphase, phase)
     self.prioribeat = ibeat
 end
 
-
---- AHD Envelope ---
-
+-- AHD Envelope --
 
 mod.AHDEnvelope =
 {
@@ -159,22 +156,21 @@ mod.AHDEnvelope.at = function(self, phase)
     end
 end
 
-
---- Slew Limiter ---
+-- Slew Limiter --
 
 mod.Slew =
 {
     prior = 0,
-    blockfactor = 1,
+    block_factor = 1,
     block_size = 0,
     samplerate = 0,
     calculate = true,
-    isfirst = true
+    is_first = true
 }
 
 mod.Slew.new = function(self, o)
     o = o or {}
-    o.blockfactor = 0
+    o.block_factor = 0
     setmetatable(o, self)
     self.__index = self
 
@@ -182,49 +178,51 @@ mod.Slew.new = function(self, o)
         o.calculate = false
     end
 
-    o.blockfactor = (o.samplerate/48000.0)/(o.block_size/32.0)
+    o.block_factor = (o.samplerate / 48000) / (o.block_size / 32)
 
     return o
 end
 
-mod.Slew.run = function(self, input, uprate, downrate)
+mod.Slew.run = function(self, input, up_rate, down_rate)
 
     if (not self.calculate) then
         return 0
     end
 
-    if (self.isfirst) then
+    if (self.is_first) then
         self.prior = input
-        self.isfirst = false
+        self.is_first = false
     end
 
-    if (uprate == nil) then
-        uprate = .2
+    if (up_rate == nil) then
+        up_rate = 0.2
     end
     
-    if (uprate < 0) then
-        uprate = 0
+    if (up_rate < 0) then
+        up_rate = 0
     end
     
-    uplimit = 1 /(1 + (10000 * self.blockfactor) * uprate^3)
+    local up_limit = 1 / (1 + (10000 * self.block_factor) * up_rate^3)
+    local down_limit = 1
     
-    if (downrate == nil) then
-        downlimit = uplimit
+    if (down_rate == nil) then
+        down_limit = up_limit
     else
-        if (downrate < 0) then
-            downrate = 0
+        if (down_rate < 0) then
+            down_rate = 0
         end
-        downlimit = 1 /(1 + (10000 * self.blockfactor) * downrate^3)
+
+        down_limit = 1 / (1 + (10000 * self.block_factor) * down_rate^3)
     end
     
-    delta = input - self.prior
+    local delta = input - self.prior
 
-    if (delta > limit) then
-        delta = limit
+    if (delta > up_limit) then
+        delta = up_limit
     end
 
-    if (delta < -limit) then
-        delta = -limit
+    if (delta < -down_limit) then
+        delta = -down_limit
     end
 
     self.prior = self.prior + delta
@@ -233,7 +231,9 @@ mod.Slew.run = function(self, input, uprate, downrate)
 end
 
 
+--- END ---
+
+
 surge.mod = mod
 
 return surge
-
