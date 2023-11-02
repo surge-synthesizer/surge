@@ -420,7 +420,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
     else if (address1 == "allsoundoff")
     {
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::KILLALL));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLSOUNDOFF));
     }
 
     // Parameters

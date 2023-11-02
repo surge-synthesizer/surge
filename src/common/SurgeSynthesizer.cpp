@@ -97,7 +97,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         fx_reload_mod[i] = false;
     }
 
-    allSoundOff();
+    stopSound();
 
     for (int i = 0; i < MAX_VOICES; i++)
     {
@@ -306,7 +306,7 @@ SurgeSynthesizer::~SurgeSynthesizer()
             patchLoadThread->join();
     }
 
-    allSoundOff();
+    stopSound();
 
     for (int sc = 0; sc < n_scenes; sc++)
     {
@@ -2219,38 +2219,17 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         return;
     case 120: // all sound off
     {
-        bool doAllSoundOff = true;
-
         // make sure we only do All Sound Off over the global MPE channel
-        if (mpeEnabled && channel != 0)
-        {
-            doAllSoundOff = false;
-        }
-
-        if (doAllSoundOff)
-        {
-            approachingAllSoundsOff = true;
-            masterfade = 1.f;
-        }
-
+        if (!(mpeEnabled && channel != 0))
+            allSoundOff();
         return;
     }
 
     case 123: // all notes off
     {
-        bool doAllNotesOff = true;
-
         // make sure we only do All Notes Off over the global MPE channel
-        if (mpeEnabled && channel != 0)
-        {
-            doAllNotesOff = false;
-        }
-
-        if (doAllNotesOff)
-        {
+        if (!(mpeEnabled && channel != 0))
             allNotesOff();
-        }
-
         return;
     }
     };
@@ -2336,6 +2315,12 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
             refresh_ctrl_queue_value[j] = fval;
         }
     }
+}
+
+void SurgeSynthesizer::allSoundOff()
+{
+    approachingAllSoundOff = true;
+    masterfade = 1.f;
 }
 
 void SurgeSynthesizer::allNotesOff()
@@ -2432,7 +2417,7 @@ void SurgeSynthesizer::purgeDuplicateHeldVoicesInPolyMode(int scene, int channel
     }
 }
 
-void SurgeSynthesizer::allSoundOff()
+void SurgeSynthesizer::stopSound()
 {
     for (int i = 0; i < 16; i++)
     {
@@ -3954,7 +3939,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
     {
         patchid = synth->patchid_queue;
         synth->patchid_queue = -1;
-        synth->allSoundOff();
+        synth->stopSound();
         synth->loadPatch(patchid);
     }
     if (synth->has_patchid_file)
@@ -3962,7 +3947,7 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
         ppath = string_to_path(synth->patchid_file);
         synth->has_patchid_file = false;
         had_patchid_file = true;
-        synth->allSoundOff();
+        synth->stopSound();
 
         int ptid = -1, ct = 0;
         for (const auto &pti : synth->storage.patch_list)
@@ -4353,7 +4338,7 @@ void SurgeSynthesizer::process()
         {
             std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
             // spawn patch-loading thread
-            allSoundOff();
+            stopSound();
             halt_engine = true;
 
             /*
@@ -4372,7 +4357,7 @@ void SurgeSynthesizer::process()
             return;
         }
     }
-    else if (approachingAllSoundsOff)
+    else if (approachingAllSoundOff)
     {
         masterfade = max(0.f, masterfade - 0.125f); // kill over 8 blocks
         mfade = masterfade * masterfade;
@@ -4381,7 +4366,7 @@ void SurgeSynthesizer::process()
         {
             releaseScene(0);
             releaseScene(1);
-            approachingAllSoundsOff = false;
+            approachingAllSoundOff = false;
         }
     }
 

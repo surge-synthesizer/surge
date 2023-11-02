@@ -434,7 +434,7 @@ void SurgeSynthesizer::processEnqueuedPatchIfNeeded()
 void SurgeSynthesizer::loadRaw(const void *data, int size, bool preset)
 {
     halt_engine = true;
-    allNotesOff();
+    stopSound();
     for (int s = 0; s < n_scenes; s++)
         for (int i = 0; i < n_customcontrollers; i++)
             storage.getPatch().scene[s].modsources[ms_ctrl1 + i]->reset();
