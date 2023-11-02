@@ -5343,8 +5343,9 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
                         .scene[current_scene]
                         .modsources[ms]);
 
-        ptxt1 = fmt::format("current: {:s}", txt);
         ptxt3 = fmt::format("{:.{}f} %", 100.0 * cms->get_output(0), (detailedMode ? 6 : 2));
+        strncpy(txt, ptxt3.c_str(), TXT_SIZE - 1);
+        ptxt1 = fmt::format("current: {:s}", txt);
     }
 
     typeinParamEditor->setValueLabels(ptxt1, ptxt2);
