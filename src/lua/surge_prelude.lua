@@ -168,7 +168,8 @@ mod.Slew =
     blockfactor = 1,
     block_size = 0,
     samplerate = 0,
-    calculate = true
+    calculate = true,
+    isfirst = true
 }
 
 mod.Slew.new = function(self, o)
@@ -192,8 +193,13 @@ mod.Slew.run = function(self, input, uprate, downrate)
         return 0
     end
 
+    if (self.isfirst) then
+        self.prior = input
+        self.isfirst = false
+    end
+
     if (uprate == nil) then
-        uprate = .05
+        uprate = .2
     end
     
     if (uprate < 0) then
@@ -204,7 +210,6 @@ mod.Slew.run = function(self, input, uprate, downrate)
     
     if (downrate == nil) then
         downlimit = uplimit
-        downrate = uprate
     else
         if (downrate < 0) then
             downrate = 0
