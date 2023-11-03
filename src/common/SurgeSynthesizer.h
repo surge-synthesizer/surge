@@ -104,6 +104,7 @@ class alignas(16) SurgeSynthesizer
     void channelController(char channel, int cc, int value);
     void programChange(char channel, int value);
     void allNotesOff();
+    void allSoundOff();
     void setSamplerate(float sr);
     void updateHighLowKeys(int scene);
     int getNumInputs() { return N_INPUTS; }
@@ -465,7 +466,7 @@ class alignas(16) SurgeSynthesizer
   public:
     int CC0, CC32, PCH, patchid;
     float masterfade = 0;
-    bool approachingAllSoundsOff{false};
+    bool approachingAllSoundOff{false};
     // TODO: FIX SCENE ASSUMPTION (for halfbandA/B - use std::array)
     sst::filters::HalfRate::HalfRateFilter halfbandA, halfbandB, halfbandIN;
     std::list<SurgeVoice *> voices[n_scenes];
@@ -526,6 +527,7 @@ class alignas(16) SurgeSynthesizer
     std::list<HoldBufferItem> holdbuffer[n_scenes];
     void purgeHoldbuffer(int scene);
     void purgeDuplicateHeldVoicesInPolyMode(int scehe, int channel, int key);
+    void stopSound();
 
     QuadFilterChainState *FBQ[n_scenes];
 

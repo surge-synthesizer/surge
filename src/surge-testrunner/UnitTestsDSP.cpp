@@ -559,7 +559,7 @@ TEST_CASE( "NaN Patch From Issue #1514", "[dsp]" )
       for( auto &e : events )
          e.atSample += 1000;
 
-      surge->allNotesOff();
+      surge->stopSound();
       for( int i=0; i<100; ++i )
          surge->process();
       

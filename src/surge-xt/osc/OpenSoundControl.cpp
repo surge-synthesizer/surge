@@ -418,6 +418,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLNOTESOFF));
     }
 
+    else if (address1 == "allsoundoff")
+    {
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLSOUNDOFF));
+    }
+
     // Parameters
     else if (address1 == "param")
     {

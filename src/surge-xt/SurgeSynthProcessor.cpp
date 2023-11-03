@@ -452,7 +452,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     {
         if (priorCallWasProcessBlockNotBypassed)
         {
-            surge->allNotesOff();
+            surge->stopSound();
             bypassCountdown = 8; // let us fade out by doing a halted process
         }
 
@@ -471,7 +471,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     {
         // I am just becoming active. There may be lingering notes from when I was
         // deactivated so
-        surge->allNotesOff();
+        surge->stopSound();
     }
 
     surge->audio_processing_active = true;
@@ -741,6 +741,12 @@ void SurgeSynthProcessor::processBlockOSC()
         }
         break;
 
+        case SurgeSynthProcessor::ALLSOUNDOFF:
+        {
+            surge->allSoundOff();
+        }
+        break;
+
         case SurgeSynthProcessor::MOD:
         {
             surge->setModDepth01(om.param->id, (modsources)om.ival, om.scene, om.index, om.fval);
@@ -787,7 +793,7 @@ clap_process_status SurgeSynthProcessor::clap_direct_process(const clap_process 
     {
         // I am just becoming active. There may be lingering notes from when I was
         // deactivated so
-        surge->allNotesOff();
+        surge->stopSound();
     }
     surge->audio_processing_active = true;
 
