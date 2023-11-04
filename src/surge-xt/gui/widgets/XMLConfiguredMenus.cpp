@@ -898,7 +898,7 @@ void FxMenu::saveFX()
         sge->promptForMiniEdit(
             "", "Enter the preset name:", "Save FX Preset", juce::Point<int>{},
             [this](const std::string &s) {
-                this->storage->fxUserPreset->saveFxIn(this->storage, fx, s);
+                this->storage->fxUserPreset->saveFxIn(this->storage, fx, fs::path(s));
                 auto *sge = firstListenerOfType<SurgeGUIEditor>();
                 if (sge)
                     sge->queueRebuildUI();
@@ -948,7 +948,7 @@ void FxMenu::scanExtraPresets()
             alit->itemType = tp.first;
             alit->name = ps.name;
             alit->isUser = !ps.isFactory;
-            alit->path = string_to_path(ps.file);
+            alit->path = ps.file;
             auto thisPath = rootPath;
             for (const auto &q : ps.subPath)
                 thisPath.push_back(path_to_string(q));

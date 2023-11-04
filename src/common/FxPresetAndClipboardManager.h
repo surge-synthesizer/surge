@@ -37,7 +37,7 @@ struct FxUserPreset
 {
     struct Preset
     {
-        std::string file;
+        fs::path file;
         std::string name;
         int streamingVersion{ff_revision};
         fs::path subPath{};
@@ -72,7 +72,7 @@ struct FxUserPreset
     bool hasPresetsForSingleType(int type_id);
     bool readFromXMLSnapshot(Preset &p, TiXmlElement *);
 
-    void saveFxIn(SurgeStorage *s, FxStorage *fxdata, const std::string &fn);
+    void saveFxIn(SurgeStorage *s, FxStorage *fxdata, fs::path sp);
 
     void loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer);
 };
