@@ -925,39 +925,51 @@ void FxMenu::loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p)
 
 void FxMenu::scanExtraPresets()
 {
-    storage->fxUserPreset->doPresetRescan(storage);
-    for (const auto &tp : storage->fxUserPreset->getPresetsByType())
+    try
     {
-        // So let's run all presets until we find the first item with type tp.first
-        auto alit = allPresets.begin();
-        while (alit->itemType != tp.first && alit != allPresets.end())
-            alit++;
-        std::vector<std::string> rootPath;
-        rootPath.push_back(alit->pathElements[0]);
-
-        while (alit != allPresets.end() && alit->itemType == tp.first)
-            alit++;
-
-        // OK so alit now points at the end of the list
-        alit = allPresets.insert(alit, tp.second.size(), Item());
-
-        // OK so insert 'size' into all presets at the end of the position of the type
-
-        for (const auto ps : tp.second)
+        storage->fxUserPreset->doPresetRescan(storage);
+        for (const auto &tp : storage->fxUserPreset->getPresetsByType())
         {
-            alit->itemType = tp.first;
-            alit->name = ps.name;
-            alit->isUser = !ps.isFactory;
-            alit->path = string_to_path(ps.file);
-            auto thisPath = rootPath;
-            for (const auto &q : ps.subPath)
-                thisPath.push_back(path_to_string(q));
+            // So let's run all presets until we find the first item with type tp.first
+            auto alit = allPresets.begin();
+            while (alit->itemType != tp.first && alit != allPresets.end())
+                alit++;
+            std::vector<std::string> rootPath;
+            rootPath.push_back(alit->pathElements[0]);
 
-            alit->pathElements = thisPath;
-            alit->hasFxUserPreset = true;
-            alit->fxPreset = ps;
-            alit++;
+            while (alit != allPresets.end() && alit->itemType == tp.first)
+                alit++;
+
+            // OK so alit now points at the end of the list
+            alit = allPresets.insert(alit, tp.second.size(), Item());
+
+            // OK so insert 'size' into all presets at the end of the position of the type
+
+            for (const auto ps : tp.second)
+            {
+                alit->itemType = tp.first;
+                alit->name = ps.name;
+                alit->isUser = !ps.isFactory;
+                alit->path = string_to_path(ps.file);
+                auto thisPath = rootPath;
+                for (const auto &q : ps.subPath)
+                    thisPath.push_back(path_to_string(q));
+
+                alit->pathElements = thisPath;
+                alit->hasFxUserPreset = true;
+                alit->fxPreset = ps;
+                alit++;
+            }
         }
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        // really nothing to do about this other than continue without the preset
+        std::ostringstream oss;
+        oss << "Experienced file system error when scanning user FX. " << e.what();
+
+        if (storage)
+            storage->reportError(oss.str(), "FileSystem Error");
     }
 }
 
