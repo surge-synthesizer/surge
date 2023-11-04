@@ -68,6 +68,7 @@ struct SurgeParamToJuceInfo
         {
             s->getParameterName(s->idForParameter(p), txt);
         }
+
         return juce::String(txt);
     }
 
@@ -249,9 +250,10 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
 struct SurgeBypassParameter : public juce::RangedAudioParameter
 {
     explicit SurgeBypassParameter()
-        : value(0.f), range(0.f, 1.f, 0.01f),
-          juce::RangedAudioParameter(juce::ParameterID("surgext-bypass", 1), "Bypass Surge XT",
-                                     juce::AudioProcessorParameterWithIDAttributes())
+        : value(0.f),
+          range(0.f, 1.f, 0.01f), juce::RangedAudioParameter(
+                                      juce::ParameterID("surgext-bypass", 1), "Bypass Surge XT",
+                                      juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
