@@ -67,6 +67,20 @@ class alignas(16) Effect
     {
         return -1;
     } // number of blocks it takes for the effect to 'ring out'
+    int groupIndexForParamIndex(int paramIndex)
+    {
+        int fpos = fxdata->p[paramIndex].posy / 10 + fxdata->p[paramIndex].posy_offset;
+        int res = -1;
+        for (auto j = 0; j < n_fx_params && group_label(j); ++j)
+        {
+            if (group_label(j) && group_label_ypos(j) <= fpos // constants for SurgeGUIEditor. Sigh.
+            )
+            {
+                res = j;
+            }
+        }
+        return res;
+    }
 
     virtual void process(float *dataL, float *dataR) { return; }
     virtual void process_only_control()
