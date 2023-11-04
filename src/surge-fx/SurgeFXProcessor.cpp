@@ -39,7 +39,11 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)
                          .withInput("Sidechain", juce::AudioChannelSet::stereo(), true))
 {
-    storage.reset(new SurgeStorage());
+    auto cfg = SurgeStorage::SurgeStorageConfig::fromDataPath("");
+    cfg.createUserDirectory = false;
+    cfg.scanWavetableAndPatches = false;
+
+    storage.reset(new SurgeStorage(cfg));
     storage->userDefaultsProvider->addOverride(Surge::Storage::HighPrecisionReadouts, false);
 
     nonLatentBlockMode = !juce::PluginHostType().isFruityLoops();
@@ -62,9 +66,9 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         lb = fmt::format("fx_parm_{:d}", i);
         nm = fmt::format("FX Parameter {:d}", i);
 
-        addParameter(fxParams[i] =
-                         new float_param_t(lb, nm, juce::NormalisableRange<float>(0.0, 1.0),
-                                           fxstorage->p[fx_param_remap[i]].get_value_f01()));
+        addParameter(fxParams[i] = new float_param_t(
+                         juce::ParameterID(lb, 1), nm, juce::NormalisableRange<float>(0.0, 1.0),
+                         fxstorage->p[fx_param_remap[i]].get_value_f01()));
         fxParams[i]->getTextHandler = [this, i](float f, int len) -> juce::String {
             return juce::String(getParamValueFor(i, f)).substring(0, len);
         };
@@ -74,8 +78,8 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
         fxBaseParams[i] = fxParams[i];
     }
 
-    addParameter(fxType =
-                     new int_param_t("fxtype", "FX Type", fxt_delay, n_fx_types - 1, effectNum));
+    addParameter(fxType = new int_param_t(juce::ParameterID("fxtype", 1), "FX Type", fxt_delay,
+                                          n_fx_types - 1, effectNum));
     fxType->getTextHandler = [this](float f, int len) -> juce::String {
         auto i = 1 + (int)round(f * (n_fx_types - 2));
         if (i >= 1 && i < n_fx_types)
