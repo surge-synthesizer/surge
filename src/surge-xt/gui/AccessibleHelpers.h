@@ -418,6 +418,18 @@ struct OverlayAsAccessibleContainer : public juce::Component
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OverlayAsAccessibleContainer);
 };
 
+struct HasExtendedAccessibleGroupName
+{
+    virtual ~HasExtendedAccessibleGroupName() = default;
+    std::string extendedAccessibleGroupName{};
+    virtual void setExtendedAccessibleGroupName(const std::string &s)
+    {
+        extendedAccessibleGroupName = s;
+        // We should maybe fire an ally event here but this only happens at construction time
+        // so skip it for now
+    }
+};
+
 enum AccessibleKeyEditAction
 {
     None,

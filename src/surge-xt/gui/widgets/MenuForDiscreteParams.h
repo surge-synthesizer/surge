@@ -27,6 +27,7 @@
 #include "WidgetBaseMixin.h"
 #include "ModulatableControlInterface.h"
 #include "SurgeJUCEHelpers.h"
+#include "AccessibleHelpers.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -47,7 +48,8 @@ namespace Widgets
 struct MenuForDiscreteParams : public juce::Component,
                                public WidgetBaseMixin<MenuForDiscreteParams>,
                                public LongHoldMixin<MenuForDiscreteParams>,
-                               public ModulatableControlInterface
+                               public ModulatableControlInterface,
+                               public HasExtendedAccessibleGroupName
 
 {
     MenuForDiscreteParams();
