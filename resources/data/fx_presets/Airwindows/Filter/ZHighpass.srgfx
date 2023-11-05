@@ -1,0 +1,10 @@
+<single-fx streaming_version="22">
+  <snapshot name="ZHighpass"
+     type="14"
+     p0="75"
+     p1="0.1"
+     p2="0.5"
+     p3="1"
+     p4="0.5"
+  />
+</single-fx>

@@ -1,0 +1,12 @@
+<single-fx streaming_version="22">
+  <snapshot name="YNotch"
+     type="14"
+     p0="72"
+     p1="0.1"
+     p2="0.5"
+     p3="0.1"
+     p4="0.1"
+     p5="1"
+     p6="1"
+  />
+</single-fx>
