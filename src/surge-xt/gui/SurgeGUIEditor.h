@@ -495,8 +495,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
                                                 const std::string &action);
 
-    static void setAccessibilityInformationByTitleAndAction(juce::Component *c, const std::string &title,
-                                                     const std::string &action);
+    static void setAccessibilityInformationByTitleAndAction(juce::Component *c,
+                                                            const std::string &title,
+                                                            const std::string &action);
 
     Surge::Overlays::MSEGEditor::State msegEditState[n_scenes][n_lfos];
     Surge::Overlays::MSEGEditor::State mostRecentCopiedMSEGState;

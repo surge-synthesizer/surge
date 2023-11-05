@@ -84,11 +84,9 @@ void Alert::addToggleButtonAndSetText(const std::string &t)
 void Alert::resetAccessibility()
 {
     auto txt = okButton->getButtonText().toStdString();
-    SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(okButton.get(),
-                                                                txt, "Press");
+    SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(okButton.get(), txt, "Press");
     txt = cancelButton->getButtonText().toStdString();
-    SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(cancelButton.get(),
-                                                                txt, "Press");
+    SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(cancelButton.get(), txt, "Press");
 }
 
 juce::Rectangle<int> Alert::getDisplayRegion()
