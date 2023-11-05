@@ -5978,6 +5978,32 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
 
         auto loc = juce::Point<int>(skinCtrl->x, skinCtrl->y + p->posy_offset * yofs);
 
+        // See the discussion in #7238 - for the FX this allows us to brin ghte group name
+        // into the FX, albeit in a somewhat hacky/clumsy way because of the FX group structure
+        // and general memory model errors in SGE
+        std::string extendedAccessibleGroupName{};
+        if (p->ctrlgroup == cg_FX)
+        {
+            auto p0 = &synth->storage.getPatch().fx[p->ctrlgroup_entry].p[0];
+            auto df = p - p0;
+            if (df >= 0 && df < n_fx_params)
+            {
+                auto &fxi = synth->fx[p->ctrlgroup_entry];
+                if (fxi)
+                {
+                    auto gi = fxi->groupIndexForParamIndex(df);
+                    if (gi >= 0)
+                    {
+                        auto gn = fxi->group_label(gi);
+                        if (gn)
+                        {
+                            extendedAccessibleGroupName = gn;
+                        }
+                    }
+                }
+            }
+        }
+
         if (p->is_discrete_selection())
         {
             loc = loc.translated(2, 4);
@@ -6006,6 +6032,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hs->setBackgroundDrawable(dbls[0]);
             hs->setHoverBackgroundDrawable(dbls[1]);
             hs->setDeactivatedFn([p]() { return p->appears_deactivated(); });
+            hs->setExtendedAccessibleGroupName(extendedAccessibleGroupName);
 
             setAccessibilityInformationByParameter(hs.get(), p, "Adjust");
             param[p->id] = hs.get();
@@ -6058,6 +6085,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             hs->setLabel(p->get_name());
         }
+        hs->setExtendedAccessibleGroupName(extendedAccessibleGroupName);
 
         hs->setBipolarFn([p]() { return p->is_bipolar(); });
         hs->setFontStyle(Surge::GUI::Skin::setFontStyleProperty(
@@ -7192,10 +7220,19 @@ void SurgeGUIEditor::setAccessibilityInformationByParameter(juce::Component *c, 
 }
 
 void SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(juce::Component *c,
-                                                                 const std::string &title,
+                                                                 const std::string &titleIn,
                                                                  const std::string &action)
 {
     auto currT = c->getTitle().toStdString();
+    std::string title = titleIn;
+    if (auto heg = dynamic_cast<Surge::Widgets::HasExtendedAccessibleGroupName *>(c))
+    {
+        if (!heg->extendedAccessibleGroupName.empty())
+        {
+            title = title + " - " + heg->extendedAccessibleGroupName;
+        }
+    }
+
 #if MAC
     c->setDescription(title);
     c->setTitle(title);

@@ -67,6 +67,14 @@
 #include "Verbity.h"
 #include "VariMu.h"
 #include "VoiceOfTheStarship.h"
+#include "YBandpass.h"
+#include "YHighpass.h"
+#include "YLowpass.h"
+#include "YNotch.h"
+#include "ZBandpass2.h"
+#include "ZHighpass2.h"
+#include "ZLowpass2.h"
+#include "ZNotch2.h"
 #else
 #include "airwindows/AirWinBaseClass.h"
 #endif
@@ -160,7 +168,7 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
 
     reg.emplace_back(create<BrightAmbience2::BrightAmbience2>, id++, 220, gnAmbience,
                      "Bright Ambience");
-    reg.emplace_back(create<Hombre::Hombre>, id++, 425, gnFilter, "Hombre");
+    reg.emplace_back(create<Hombre::Hombre>, id++, 420, gnFilter, "Hombre");
     reg.emplace_back(create<Melt::Melt>, id++, 240, gnAmbience, "Melt");
     reg.emplace_back(create<PocketVerbs::PocketVerbs>, id++, 250, gnAmbience, "Pocket Verbs");
     reg.emplace_back(create<StarChild::StarChild>, id++, 260, gnAmbience, "Star Child");
@@ -178,21 +186,21 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     reg.emplace_back(create<Spiral2::Spiral2>, id++, 390, gnSaturation, "Spiral");
     reg.emplace_back(create<UnBox::UnBox>, id++, 395, gnSaturation, "Unbox");
 
-    reg.emplace_back(create<DeBess::DeBess>, id++, 420, gnFilter, "De-Bess");
+    reg.emplace_back(create<DeBess::DeBess>, id++, 415, gnFilter, "De-Bess");
     reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnFilter, "NoOp (Was: DeEss)");
 
     reg.emplace_back(create<SingleEndedTriode::SingleEndedTriode>, id++, 380, gnSaturation,
                      "Single-Ended Triode");
 
-    reg.emplace_back(create<IronOxide5::IronOxide5>, id++, 450, gnTape, "Iron Oxide");
-    reg.emplace_back(create<ToTape6::ToTape6>, id++, 460, gnTape, "To Tape");
+    reg.emplace_back(create<IronOxide5::IronOxide5>, id++, 461, gnTape, "Iron Oxide");
+    reg.emplace_back(create<ToTape6::ToTape6>, id++, 462, gnTape, "To Tape");
 
     reg.emplace_back(create<Air::Air>, id++, 400, gnFilter, "Air");
 
     reg.emplace_back(create<BussColors4::BussColors4>, id++, 285, gnSaturation, "Buss Colors");
     reg.emplace_back(create<DrumSlam::DrumSlam>, id++, 46, gnDynamics, "Drum Slam");
 
-    reg.emplace_back(create<Capacitor::Capacitor>, id++, 415, gnFilter, "Capacitor");
+    reg.emplace_back(create<Capacitor::Capacitor>, id++, 410, gnFilter, "Capacitor");
     reg.emplace_back(create<Slew::Slew>, id++, 113, gnClipping, "Slew 1");
     reg.emplace_back(create<Slew2::Slew2>, id++, 114, gnClipping, "Slew 2");
 
@@ -207,24 +215,34 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
     // XT 1.0 additions
     reg.emplace_back(create<Chamber::Chamber>, id++, 223, gnAmbience, "Chamber");
     reg.emplace_back(create<Mackity::Mackity>, id++, 353, gnSaturation, "Mackity");
-    reg.emplace_back(create<MackEQ::MackEQ>, id++, 430, gnFilter, "MackEQ");
+    reg.emplace_back(create<MackEQ::MackEQ>, id++, 425, gnFilter, "MackEQ");
 
     reg.emplace_back(create<AirWindowsNoOp>, id++, -1, gnSaturation, "NoOp (Was: Tube)");
 
     // XT 1.1 additions
-    reg.emplace_back(create<Cabs::Cabs>, id++, 410, gnFilter, "Cabs");
+    reg.emplace_back(create<Cabs::Cabs>, id++, 405, gnFilter, "Cabs");
 
-    reg.emplace_back(create<ChromeOxide::ChromeOxide>, id++, 445, gnTape, "Chrome Oxide");
+    reg.emplace_back(create<ChromeOxide::ChromeOxide>, id++, 460, gnTape, "Chrome Oxide");
     reg.emplace_back(create<DubSub::DubSub>, id++, 422, gnFilter, "Dub Sub");
     reg.emplace_back(create<DubCenter::DubCenter>, id++, 421, gnFilter, "Dub Center");
     reg.emplace_back(create<FireAmp::FireAmp>, id++, 312, gnSaturation, "Fire Amp");
     reg.emplace_back(create<GlitchShifter::GlitchShifter>, id++, 500, gnPitch, "Glitch Shifter");
     reg.emplace_back(create<NonlinearSpace::NonlinearSpace>, id++, 245, gnAmbience,
                      "Nonlinear Space");
-    reg.emplace_back(create<Pafnuty::Pafnuty>, id++, 435, gnFilter, "Pafnuty");
+    reg.emplace_back(create<Pafnuty::Pafnuty>, id++, 428, gnFilter, "Pafnuty");
     reg.emplace_back(create<PowerSag::PowerSag>, id++, 362, gnSaturation, "Power Sag");
     reg.emplace_back(create<TapeDust::TapeDust>, id++, 205, gnNoise, "Tape Dust");
     reg.emplace_back(create<ToVinyl4::ToVinyl4>, id++, 195, gnLoFi, "To Vinyl");
+
+    // XT 1.3 additions
+    reg.emplace_back(create<YLowpass::YLowpass>, id++, 430, gnFilter, "YLowpass");
+    reg.emplace_back(create<YLowpass::YLowpass>, id++, 431, gnFilter, "YBandpass");
+    reg.emplace_back(create<YLowpass::YLowpass>, id++, 432, gnFilter, "YHighpass");
+    reg.emplace_back(create<YLowpass::YLowpass>, id++, 433, gnFilter, "YNotch");
+    reg.emplace_back(create<ZLowpass2::ZLowpass2>, id++, 434, gnFilter, "ZLowpass");
+    reg.emplace_back(create<ZLowpass2::ZLowpass2>, id++, 435, gnFilter, "ZBandpass");
+    reg.emplace_back(create<ZLowpass2::ZLowpass2>, id++, 436, gnFilter, "ZHighpass");
+    reg.emplace_back(create<ZLowpass2::ZLowpass2>, id++, 437, gnFilter, "ZNotch");
 #endif
 
     return reg;

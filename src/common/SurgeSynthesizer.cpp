@@ -3843,6 +3843,45 @@ void SurgeSynthesizer::getParameterName(long index, char *text) const
         snprintf(text, TXT_SIZE, "-");
 }
 
+void SurgeSynthesizer::getParameterNameExtendedByFXGroup(long index, char *text) const
+{
+    if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))
+    {
+        auto par = storage.getPatch().param_ptr[index];
+
+        if (par->ctrlgroup != cg_FX)
+        {
+            getParameterName(index, text);
+            return;
+        }
+
+        std::string fxGroupName{};
+        auto p0 = &storage.getPatch().fx[par->ctrlgroup_entry].p[0];
+        auto df = par - p0;
+        if (df >= 0 && df < n_fx_params)
+        {
+            auto &fxi = fx[par->ctrlgroup_entry];
+            if (fxi)
+            {
+                auto gi = fxi->groupIndexForParamIndex(df);
+                if (gi >= 0)
+                {
+                    auto gn = fxi->group_label(gi);
+                    if (gn)
+                    {
+                        fxGroupName = gn;
+                        fxGroupName = fxGroupName + " - ";
+                    }
+                }
+            }
+        }
+        snprintf(text, TXT_SIZE, "%s %s%s", fxslot_shortnames[par->ctrlgroup_entry],
+                 fxGroupName.c_str(), par->get_name());
+    }
+    else
+        snprintf(text, TXT_SIZE, "-");
+}
+
 void SurgeSynthesizer::getParameterAccessibleName(long index, char *text) const
 {
     if ((index >= 0) && (index < storage.getPatch().param_ptr.size()))

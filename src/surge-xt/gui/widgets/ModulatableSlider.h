@@ -28,6 +28,7 @@
 #include "WidgetBaseMixin.h"
 #include "ModulatableControlInterface.h"
 #include "SurgeJUCEHelpers.h"
+#include "AccessibleHelpers.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -40,7 +41,8 @@ namespace Widgets
 struct ModulatableSlider : public juce::Component,
                            public WidgetBaseMixin<ModulatableSlider>,
                            public LongHoldMixin<ModulatableSlider>,
-                           public ModulatableControlInterface
+                           public ModulatableControlInterface,
+                           public HasExtendedAccessibleGroupName
 {
     ModulatableSlider();
     ~ModulatableSlider();

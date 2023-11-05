@@ -258,6 +258,10 @@ class alignas(16) SurgeSynthesizer
     {
         getParameterName(index.getSynthSideId(), text);
     }
+    void getParameterNameExtendedByFXGroup(const ID &index, char *text) const
+    {
+        getParameterNameExtendedByFXGroup(index.getSynthSideId(), text);
+    }
     void getParameterAccessibleName(const ID &index, char *text) const
     {
         getParameterAccessibleName(index.getSynthSideId(), text);
@@ -337,6 +341,7 @@ class alignas(16) SurgeSynthesizer
     void getParameterDisplay(long index, char *text, float x) const;
     void getParameterDisplayAlt(long index, char *text) const;
     void getParameterName(long index, char *text) const;
+    void getParameterNameExtendedByFXGroup(long index, char *text) const;
     void getParameterAccessibleName(long index, char *text) const;
     void getParameterMeta(long index, parametermeta &pm) const;
 

@@ -74,6 +74,98 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
                 }
             }
         }
+
+        for (const auto &f : sfxfiles)
+        {
+            {
+                Preset preset;
+                preset.file = path_to_string(f.first);
+
+                TiXmlDocument d;
+                int t;
+
+                if (!d.LoadFile(f.first))
+                    goto badPreset;
+
+                auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild("single-fx"));
+
+                if (!r)
+                    goto badPreset;
+
+                preset.streamingVersion = ff_revision;
+                int sv;
+                if (r->QueryIntAttribute("streaming_version", &sv) == TIXML_SUCCESS)
+                {
+                    preset.streamingVersion = sv;
+                }
+
+                auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild("snapshot"));
+
+                if (!s)
+                    goto badPreset;
+
+                if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
+                    goto badPreset;
+
+                preset.type = t;
+                preset.isFactory = f.second;
+
+                fs::path rpath;
+
+                if (f.second)
+                    rpath = f.first.lexically_relative(fd).parent_path();
+                else
+                    rpath = f.first.lexically_relative(storage->userFXPath).parent_path();
+
+                auto startCatPath = rpath.begin();
+                if (*(startCatPath) == fx_type_shortnames[t])
+                {
+                    startCatPath++;
+                }
+
+                while (startCatPath != rpath.end())
+                {
+                    preset.subPath /= *startCatPath;
+                    startCatPath++;
+                }
+
+                if (!readFromXMLSnapshot(preset, s))
+                    goto badPreset;
+
+                if (scannedPresets.find(preset.type) == scannedPresets.end())
+                {
+                    scannedPresets[preset.type] = std::vector<Preset>();
+                }
+
+                scannedPresets[preset.type].push_back(preset);
+            }
+
+        badPreset:;
+        }
+
+        for (auto &a : scannedPresets)
+        {
+            std::sort(a.second.begin(), a.second.end(), [](const Preset &a, const Preset &b) {
+                if (a.type == b.type)
+                {
+                    if (a.isFactory != b.isFactory)
+                    {
+                        return a.isFactory;
+                    }
+
+                    if (a.subPath != b.subPath)
+                    {
+                        return a.subPath < b.subPath;
+                    }
+
+                    return _stricmp(a.name.c_str(), b.name.c_str()) < 0;
+                }
+                else
+                {
+                    return a.type < b.type;
+                }
+            });
+        }
     }
     catch (const fs::filesystem_error &e)
     {
@@ -82,98 +174,6 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
 
         if (storage)
             storage->reportError(oss.str(), "FileSystem Error");
-    }
-
-    for (const auto &f : sfxfiles)
-    {
-        {
-            Preset preset;
-            preset.file = path_to_string(f.first);
-
-            TiXmlDocument d;
-            int t;
-
-            if (!d.LoadFile(f.first))
-                goto badPreset;
-
-            auto r = TINYXML_SAFE_TO_ELEMENT(d.FirstChild("single-fx"));
-
-            if (!r)
-                goto badPreset;
-
-            preset.streamingVersion = ff_revision;
-            int sv;
-            if (r->QueryIntAttribute("streaming_version", &sv) == TIXML_SUCCESS)
-            {
-                preset.streamingVersion = sv;
-            }
-
-            auto s = TINYXML_SAFE_TO_ELEMENT(r->FirstChild("snapshot"));
-
-            if (!s)
-                goto badPreset;
-
-            if (s->QueryIntAttribute("type", &t) != TIXML_SUCCESS)
-                goto badPreset;
-
-            preset.type = t;
-            preset.isFactory = f.second;
-
-            fs::path rpath;
-
-            if (f.second)
-                rpath = f.first.lexically_relative(fd).parent_path();
-            else
-                rpath = f.first.lexically_relative(storage->userFXPath).parent_path();
-
-            auto startCatPath = rpath.begin();
-            if (*(startCatPath) == fx_type_shortnames[t])
-            {
-                startCatPath++;
-            }
-
-            while (startCatPath != rpath.end())
-            {
-                preset.subPath /= *startCatPath;
-                startCatPath++;
-            }
-
-            if (!readFromXMLSnapshot(preset, s))
-                goto badPreset;
-
-            if (scannedPresets.find(preset.type) == scannedPresets.end())
-            {
-                scannedPresets[preset.type] = std::vector<Preset>();
-            }
-
-            scannedPresets[preset.type].push_back(preset);
-        }
-
-    badPreset:;
-    }
-
-    for (auto &a : scannedPresets)
-    {
-        std::sort(a.second.begin(), a.second.end(), [](const Preset &a, const Preset &b) {
-            if (a.type == b.type)
-            {
-                if (a.isFactory != b.isFactory)
-                {
-                    return a.isFactory;
-                }
-
-                if (a.subPath != b.subPath)
-                {
-                    return a.subPath < b.subPath;
-                }
-
-                return _stricmp(a.name.c_str(), b.name.c_str()) < 0;
-            }
-            else
-            {
-                return a.type < b.type;
-            }
-        });
     }
 }
 
@@ -300,7 +300,7 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""), std::string("&quot;"));
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"), std::string("&apos;"));
 
-    pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\" \n";
+    pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\"\n";
 
     pfile << "     type=\"" << fx->type.val.i << "\"\n";
     for (int i = 0; i < n_fx_params; ++i)
