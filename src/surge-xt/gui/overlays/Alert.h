@@ -22,6 +22,8 @@
 #include "SkinSupport.h"
 #include "widgets/SurgeTextButton.h"
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "OverlayComponent.h"
+#include "AccessibleHelpers.h"
 
 namespace Surge
 {
@@ -30,7 +32,7 @@ namespace Overlays
 {
 struct MultiLineSkinLabel;
 
-struct Alert : public juce::Component,
+struct Alert : public Surge::Overlays::OverlayComponent,
                public Surge::GUI::SkinConsumingComponent,
                public juce::Button::Listener
 {
@@ -49,13 +51,17 @@ struct Alert : public juce::Component,
     {
         okButton->setButtonText(ok);
         singleButton = true;
+        resetAccessibility();
     }
     void setOkCancelButtonTexts(const std::string &ok, const std::string &cancel)
     {
         okButton->setButtonText(ok);
         cancelButton->setButtonText(cancel);
+        resetAccessibility();
     }
     void addToggleButtonAndSetText(const std::string &t);
+    void resetAccessibility();
+
     std::function<void()> onOk;
     std::function<void()> onCancel;
     std::function<void(bool)> onOkForToggleState;

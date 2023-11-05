@@ -2387,6 +2387,10 @@ bool SurgeGUIEditor::open(void *parent)
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     frame->setSurgeGUIEditor(this);
 
+    // Comment this in to always start with focus debugger
+    // debugFocus = true;
+    // y-frame->debugFocus = true;
+
     juceEditor->topLevelContainer->addAndMakeVisible(*frame);
     juceEditor->addKeyListener(this);
 
@@ -5647,6 +5651,7 @@ void SurgeGUIEditor::alertBox(const std::string &title, const std::string &promp
     alert->setSkin(currentSkin, bitmapStore);
     alert->setDescription(title);
     alert->setWindowTitle(title);
+
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(prompt);
 
