@@ -356,11 +356,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         oscToAudio_type type;
         Parameter *param;
         float fval{0.0};
-        int ival;
-        char mnote, vel;
+        int ival{-1};
+        char mnote{0}, vel{0};
         bool on{false};
-        int32_t noteid;
-        int scene, index;
+        int32_t noteid{-1};
+        int scene{0}, index{0};
 
         oscToAudio() {}
         oscToAudio(oscToAudio_type omtype) : type(omtype) {}
