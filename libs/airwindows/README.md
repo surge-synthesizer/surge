@@ -2,15 +2,15 @@ This code is an adapted version of the Airwindows plugins https://github.com/air
 
 Airwindows is released under the MIT license as described in the LICENSE file in this directory.
 
-To add another plugin
+To add another plugin:
 
-1. Clone airwindows at the same level as surge (so you have ~/dev/surge and ~/dev/airwindows or whatever); or clone it somewhere else and remember the path
-2. In this directory do `perl grab.pl FXName (airwindowspath)` 
-3. Edit CMakeLists.txt here to add FXName.cpp and FXNameProc.cpp appropriately
-4. Edit libs/airwindows/AirWinBaseClass_pluginRegistry.cpp 
-   and add a registerAirWindow for Fx::Fx **at the end** and an #include "FXName.h" at the top
-5. Modify getParameterDisplay to take a float extVal and bool isExternal using the EXTV macro (in FXName.h and FXName.cpp)
-6. Compile and fix the *in++ idion with the unused value   
-7. As needed implement parseParameterValueFromString and isBipolar on the new FX
-8. Add the new FX to the patches in resources/data/fx_presets
-9. Compile again and everything should work
+1. Clone Airwindows at the same level as Surge XT (so you have `~/dev/surge-xt` and `~/dev/airwindows`, or whatever), or clone it somewhere else and remember the path
+2. From this directory, run `perl grab.pl FXName (airwindowspath)`. If `airwindowspath` is not provided, Airwindows repository will be expected at the same folder level as Surge XT. Alternatively, one can also run the Python script in exactly the same way: `python grab.py FXName (airwindowspath)`.
+3. Edit CMakeLists.txt here to add FXName.cpp and FXNameProc.cpp appropriately.
+4. Edit libs/airwindows/AirWinBaseClass_pluginRegistry.cpp:
+   add a `reg.emplace_back(...)` for FXName::FXName **at the end** of `pluginRegistry()` method, and an #include "FXName.h" at the top.
+5. Modify the signature of `getParameterDisplay` to take additional `float extVal` and `bool isExternal` arguments, with the implementation using the `EXTV` macro instead of raw parameter value (in FXName.h and FXName.cpp). Python script will at least modify the signature with additional arguments.
+6. Compile and fix the *in++ idiom with the unused value.
+7. Implement `parseParameterValueFromString()` and `isBipolar()` for the new FX, if needed.
+8. Add the new FX init presets to the presets in `resources/data/fx_presets`.
+9. Compile again and everything should work!

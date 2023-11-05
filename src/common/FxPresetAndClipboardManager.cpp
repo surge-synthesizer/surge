@@ -300,7 +300,7 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""), std::string("&quot;"));
     Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"), std::string("&apos;"));
 
-    pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\" \n";
+    pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\"\n";
 
     pfile << "     type=\"" << fx->type.val.i << "\"\n";
     for (int i = 0; i < n_fx_params; ++i)
