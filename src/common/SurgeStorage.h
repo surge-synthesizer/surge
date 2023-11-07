@@ -1382,7 +1382,7 @@ class alignas(16) SurgeStorage
     fs::path userSkinsPath;
     fs::path userMidiMappingsPath;
     fs::path extraThirdPartyWavetablesPath; // used by rack
-    fs::path extraUserWavetablesPath; // used by rack
+    fs::path extraUserWavetablesPath;       // used by rack
 
     std::string midiProgramChangePatchesSubdir{"MIDI Programs"};
 
