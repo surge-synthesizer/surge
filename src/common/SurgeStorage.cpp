@@ -307,6 +307,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
     userSkinsPath = userDataPath / "Skins";
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
+    extraUserWavetablesPath = config.extraUsersWavetablesPath;
 
     if (config.createUserDirectory)
     {
@@ -1043,6 +1044,11 @@ void SurgeStorage::refresh_wtlist()
     }
     firstUserWTCategory = wt_category.size();
     refresh_wtlistAddDir(true, "Wavetables");
+
+    if (!extraUserWavetablesPath.empty())
+    {
+        refresh_wtlistFrom(true, extraUserWavetablesPath, "");
+    }
 
     wtCategoryOrdering = std::vector<int>(wt_category.size());
     std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);

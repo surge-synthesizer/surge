@@ -1207,6 +1207,7 @@ class alignas(16) SurgeStorage
         std::string suppliedDataPath{""};
         bool createUserDirectory{true};
         fs::path extraThirdPartyWavetablesPath{};
+        fs::path extraUsersWavetablesPath{};
         bool scanWavetableAndPatches{true};
 
         static SurgeStorageConfig fromDataPath(const std::string &s)
@@ -1387,6 +1388,7 @@ class alignas(16) SurgeStorage
     fs::path userSkinsPath;
     fs::path userMidiMappingsPath;
     fs::path extraThirdPartyWavetablesPath; // used by rack
+    fs::path extraUserWavetablesPath;       // used by rack
 
     std::string midiProgramChangePatchesSubdir{"MIDI Programs"};
 
