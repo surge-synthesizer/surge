@@ -72,7 +72,7 @@ std::string decodeControllerID(int id)
     return out;
 }
 
-void addEnvTrigOptions(SurgeSynthesizer *synth, juce::PopupMenu &contextMenu, int current_scene)
+void SurgeGUIEditor::addEnvTrigOptions(juce::PopupMenu &contextMenu, int current_scene)
 {
     std::vector<std::string> labels = {"Reset to Zero", "Continue from Current Level"};
     std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO, RESTART_FROM_LATEST};
@@ -88,7 +88,9 @@ void addEnvTrigOptions(SurgeSynthesizer *synth, juce::PopupMenu &contextMenu, in
 
         contextMenu.addItem(
             Surge::GUI::toOSCase(labels[i]), true, isChecked,
-            [synth, current_scene, value, isChecked]() {
+            [this, current_scene, value, isChecked]() {
+                undoManager()->pushPatch();
+
                 synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode = value;
 
                 if (!isChecked)
@@ -1866,6 +1868,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         contextMenu.addItem(
                                             Surge::GUI::toOSCase(labels[i]), true, isChecked,
                                             [this, isChecked, vals, i]() {
+                                                undoManager()->pushPatch();
                                                 synth->storage.getPatch()
                                                     .scene[current_scene]
                                                     .monoVoicePriorityMode = vals[i];
@@ -1875,7 +1878,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     }
                                 }
 
-                                addEnvTrigOptions(synth, contextMenu, current_scene);
+                                addEnvTrigOptions(contextMenu, current_scene);
 
                                 contextMenu.addSeparator();
 
@@ -1886,7 +1889,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             if (p->val.i == pm_latch)
                             {
-                                addEnvTrigOptions(synth, contextMenu, current_scene);
+                                addEnvTrigOptions(contextMenu, current_scene);
                             }
                         }
                     }

@@ -1546,6 +1546,7 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         }
 
         clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
+        clipboard_envmode = getPatch().scene[scene].monoVoiceEnvelopeMode;
     }
 
     modRoutingMutex.lock();
@@ -1741,6 +1742,7 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
         }
 
         getPatch().scene[scene].monoVoicePriorityMode = clipboard_primode;
+        getPatch().scene[scene].monoVoiceEnvelopeMode = clipboard_envmode;
     }
 
     if (type == cp_modulator_target)
