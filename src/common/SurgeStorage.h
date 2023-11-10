@@ -1646,6 +1646,7 @@ class alignas(16) SurgeStorage
     std::array<std::string, n_oscs> clipboard_wt_names;
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
+    MonoVoiceEnvelopeMode clipboard_envmode = RESTART_FROM_ZERO;
 
   public:
     // whether to skip loading, desired while exporting manifests. Only used by LV2 currently.
