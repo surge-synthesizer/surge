@@ -250,10 +250,9 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
 struct SurgeBypassParameter : public juce::RangedAudioParameter
 {
     explicit SurgeBypassParameter()
-        : value(0.f),
-          range(0.f, 1.f, 0.01f), juce::RangedAudioParameter(
-                                      juce::ParameterID("surgext-bypass", 1), "Bypass Surge XT",
-                                      juce::AudioProcessorParameterWithIDAttributes())
+        : value(0.f), range(0.f, 1.f, 0.01f),
+          juce::RangedAudioParameter(juce::ParameterID("surgext-bypass", 1), "Bypass Surge XT",
+                                     juce::AudioProcessorParameterWithIDAttributes())
     {
         setValueNotifyingHost(getValue());
     }
@@ -393,6 +392,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
 
     Surge::OSC::OpenSoundControl oscHandler;
+    std::atomic<bool> oscCheckStartup{false};
+    void tryLazyOscStartupFromStreamedState();
 
     bool initOSCIn(int port);
     bool initOSCOut(int port);
