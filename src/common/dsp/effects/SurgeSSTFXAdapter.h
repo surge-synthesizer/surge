@@ -220,6 +220,8 @@ template <typename T> struct SurgeSSTFXBase : T
             {
                 check(pmd.minVal, this->fxdata->p[i].val_min.f, "Minimum Values");
                 check(pmd.maxVal, this->fxdata->p[i].val_max.f, "Maximum Values");
+                // check(pmd.defaultVal, this->fxdata->p[i].val_default.f, "Default Values");
+                this->fxdata->p[i].val_default.f = pmd.defaultVal;
             }
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::INT)
             {
