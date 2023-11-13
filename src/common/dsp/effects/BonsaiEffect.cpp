@@ -84,7 +84,7 @@ void BonsaiEffect::init_ctrltypes()
     fxdata->p[b_noise_sensitivity].set_type(ct_percent);
     fxdata->p[b_noise_sensitivity].posy_offset = 7;
 
-    fxdata->p[b_noise_gain].set_type(ct_decibel_attenuation_large);
+    fxdata->p[b_noise_gain].set_type(ct_decibel_narrow);
     fxdata->p[b_noise_gain].posy_offset = 7;
 
     fxdata->p[b_dull].set_type(ct_percent);
