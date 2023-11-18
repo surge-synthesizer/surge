@@ -366,14 +366,7 @@ void SurgeSynthProcessor::prepareToPlay(double sr, int samplesPerBlock)
     }
 
     surge->setSamplerate(sr);
-
-#if SURGE_HAS_OSC
-    if ((!oscHandler.listening && surge->storage.oscStartIn && surge->storage.oscPortIn > 0) ||
-        (!oscHandler.sendingOSC && surge->storage.oscStartOut && surge->storage.oscPortOut > 0))
-    {
-        oscHandler.tryOSCStartup();
-    }
-#endif
+    oscCheckStartup = true;
 
     // It used to be we would set audio processing active true here *but* REAPER calls this for
     // inactive muted channels so we didn't load if that was the case. Set it true only
@@ -412,6 +405,14 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         buffer.clear();
         return;
     }
+
+#if SURGE_HAS_OSC
+    if (oscCheckStartup)
+    {
+        tryLazyOscStartupFromStreamedState();
+    }
+
+#endif
 
     priorCallWasProcessBlockNotBypassed = true;
 
@@ -1194,6 +1195,14 @@ void SurgeSynthProcessor::setStateInformation(const void *data, int sizeInBytes)
 
     surge->enqueuePatchForLoad(data, sizeInBytes);
     surge->processAudioThreadOpsWhenAudioEngineUnavailable();
+    if (surge->audio_processing_active)
+    {
+        oscCheckStartup = true;
+    }
+    else
+    {
+        tryLazyOscStartupFromStreamedState();
+    }
 }
 
 void SurgeSynthProcessor::surgeParameterUpdated(const SurgeSynthesizer::ID &id, float f)
@@ -1268,6 +1277,16 @@ juce::AudioProcessorParameter *SurgeSynthProcessor::getBypassParameter() const
 }
 
 void SurgeSynthProcessor::reset() { blockPos = 0; }
+
+void SurgeSynthProcessor::tryLazyOscStartupFromStreamedState()
+{
+    if ((!oscHandler.listening && surge->storage.oscStartIn && surge->storage.oscPortIn > 0) ||
+        (!oscHandler.sendingOSC && surge->storage.oscStartOut && surge->storage.oscPortOut > 0))
+    {
+        oscHandler.tryOSCStartup();
+    }
+    oscCheckStartup = false;
+}
 
 #if HAS_CLAP_JUCE_EXTENSIONS
 
