@@ -3209,12 +3209,14 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
                                     .lfo[currentLfoId]
                                     .shape.val.i;
 
-                if (isAnyOverlayPresent(MSEG_EDITOR))
+                if (isAnyOverlayPresent(MSEG_EDITOR) || isAnyOverlayPresent(FORMULA_EDITOR))
                 {
+                    auto editorEnum =
+                        isAnyOverlayPresent(MSEG_EDITOR) ? MSEG_EDITOR : FORMULA_EDITOR;
                     bool tornOut = false;
                     juce::Point<int> tearOutPos;
 
-                    auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+                    auto olw = getOverlayWrapperIfOpen(editorEnum);
 
                     if (olw && olw->isTornOut())
                     {
@@ -3222,14 +3224,15 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
                         tearOutPos = olw->currentTearOutLocation();
                     }
 
-                    closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                    closeOverlay(editorEnum);
 
-                    if (newshape == lt_mseg)
+                    if (newshape == lt_mseg || newshape == lt_formula)
                     {
-                        showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                        showOverlay(editorEnum);
+
                         if (tornOut)
                         {
-                            auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+                            auto olw = getOverlayWrapperIfOpen(editorEnum);
 
                             if (olw)
                             {
@@ -3241,9 +3244,12 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
 
                 this->synth->refresh_editor = true;
             };
+
             m.addItem(p.name, action);
         }
+
         bool haveD = false;
+
         if (cat.path.empty())
         {
             // This is a preset in the root
@@ -5131,11 +5137,12 @@ void SurgeGUIEditor::reloadFromSkin()
     }
 
     // update overlays, if opened
-    if (isAnyOverlayPresent(MSEG_EDITOR))
+    if (isAnyOverlayPresent(MSEG_EDITOR) || isAnyOverlayPresent(FORMULA_EDITOR))
     {
+        auto editorEnum = isAnyOverlayPresent(MSEG_EDITOR) ? MSEG_EDITOR : FORMULA_EDITOR;
         bool tornOut = false;
         juce::Point<int> tearOutPos;
-        auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+        auto olw = getOverlayWrapperIfOpen(editorEnum);
 
         if (olw && olw->isTornOut())
         {
@@ -5143,11 +5150,11 @@ void SurgeGUIEditor::reloadFromSkin()
             tearOutPos = olw->currentTearOutLocation();
         }
 
-        showOverlay(SurgeGUIEditor::MSEG_EDITOR);
+        showOverlay(editorEnum);
 
         if (tornOut)
         {
-            auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+            auto olw = getOverlayWrapperIfOpen(editorEnum);
 
             if (olw)
             {
@@ -7066,6 +7073,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     bool hadExtendedEditor = false;
     bool isTornOut = false;
     juce::Point<int> tearOutPos;
+
     if (isAnyOverlayPresent(MSEG_EDITOR))
     {
         auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
@@ -7077,6 +7085,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
         hadExtendedEditor = true;
     }
+
     if (isAnyOverlayPresent(FORMULA_EDITOR))
     {
         auto olw = getOverlayWrapperIfOpen(FORMULA_EDITOR);

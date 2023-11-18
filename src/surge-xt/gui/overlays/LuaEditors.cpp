@@ -789,6 +789,12 @@ void FormulaModulatorEditor::applyCode()
     mainEditor->grabKeyboardFocus();
 }
 
+void FormulaModulatorEditor::forceRefresh()
+{
+    mainDocument->insertText(0, formulastorage->formulaString);
+    editor->repaintFrame();
+}
+
 void FormulaModulatorEditor::setApplyEnabled(bool b)
 {
     if (controlArea)
