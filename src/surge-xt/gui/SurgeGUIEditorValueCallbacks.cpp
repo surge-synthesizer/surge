@@ -795,14 +795,26 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 synth->storage.clipboard_copy(cp_scene, current_scene, -1);
             });
 
-            contextMenu.addItem(Surge::GUI::toOSCase("Paste Scene"),
-                                synth->storage.get_clipboard_type() == cp_scene, // enabled
-                                false, [this]() {
-                                    undoManager()->pushPatch();
-                                    synth->storage.clipboard_paste(cp_scene, current_scene, -1);
-                                    synth->storage.getPatch().isDirty = true;
-                                    queue_refresh = true;
-                                });
+            contextMenu.addItem(
+                Surge::GUI::toOSCase("Paste Scene"),
+                synth->storage.get_clipboard_type() == cp_scene, // enabled
+                false, [this]() {
+                    undoManager()->pushPatch();
+                    synth->storage.clipboard_paste(
+                        cp_scene, current_scene, -1, ms_original,
+                        [this](int p, modsources m) {
+                            auto res = synth->isValidModulation(p, m);
+                            return res;
+                        },
+                        [this](std::unique_ptr<Surge::FxClipboard::Clipboard> &f, int cge) {
+                            Surge::FxClipboard::pasteFx(&(synth->storage), &synth->fxsync[cge], *f);
+                            synth->fx_reload[cge] = true;
+                        });
+
+                    synth->load_fx_needed = true;
+                    synth->storage.getPatch().isDirty = true;
+                    queue_refresh = true;
+                });
 
             contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
