@@ -1149,6 +1149,12 @@ class MTSClient;
 
 namespace Surge
 {
+
+namespace FxClipboard
+{
+struct Clipboard;
+}
+
 namespace Storage
 {
 struct ScenesOutputData
@@ -1348,9 +1354,11 @@ class alignas(16) SurgeStorage
     // and also to stop me having to move all of isValidModulation and its buddies onto SurgeStorage
     void clipboard_paste(
         int type, int scene, int entry, modsources ms = ms_original,
-        std::function<bool(int, modsources)> isValidModulation = [](auto a, auto b) {
-            return true;
-        });
+        std::function<bool(int, modsources)> isValidModulation = [](auto a,
+                                                                    auto b) { return true; },
+        std::function<void(std::unique_ptr<Surge::FxClipboard::Clipboard> &, int)> updateFxInSlot =
+            [](auto &a, auto b) {});
+    ;
     int get_clipboard_type() const;
     // direction: false for previous, true for next
     int getAdjacentWaveTable(int id, bool direction) const;
@@ -1637,6 +1645,8 @@ class alignas(16) SurgeStorage
     std::vector<Parameter> clipboard_p;
     int clipboard_type;
     StepSequencerStorage clipboard_stepsequences[n_lfos];
+    // UP this for the forward decl fix
+    std::unique_ptr<Surge::FxClipboard::Clipboard> clipboard_scenefx[n_fx_per_chain];
     MSEGStorage clipboard_msegs[n_lfos];
     FormulaModulatorStorage clipboard_formulae[n_lfos];
     OscillatorStorage::ExtraConfigurationData clipboard_extraconfig[n_oscs];
