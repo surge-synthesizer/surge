@@ -352,8 +352,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
     std::string midiMappingToHtml();
-    std::string parametersToHtml();
-
     std::string patchToHtml(bool includeDefaults = false);
 
     // These are unused right now

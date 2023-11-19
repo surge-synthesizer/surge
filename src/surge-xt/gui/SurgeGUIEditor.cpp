@@ -26,6 +26,10 @@
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 
+#if HAS_JUCE
+#include "SurgeSharedBinary.h"
+#endif
+
 #include "UserDefaults.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
@@ -5081,10 +5085,16 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                            });
     }
 
+#if HAS_JUCE
     oscSubMenu.addSeparator();
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."),
-                       [this]() { showHTML(this->parametersToHtml()); });
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."), [this]() {
+        auto oscSpec = std::string(SurgeSharedBinary::oscspecification_html,
+                                   SurgeSharedBinary::oscspecification_htmlSize) +
+                       "\n";
+        showHTML(oscSpec);
+    });
+#endif
 
     return oscSubMenu;
 }
