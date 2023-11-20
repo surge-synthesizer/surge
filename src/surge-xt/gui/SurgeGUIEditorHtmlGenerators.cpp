@@ -626,7 +626,7 @@ code {
                                 <li>contextual: either an integer or a float, depending on the context (loaded oscillator or effect type)</li>
                             </ul>
 
-                            Where an address contains an asterisk <b>(*)</b>, replace the asterisk with either <b>a</b> or <b>b</b>,
+                            Where an address contains <b>'&lt;sc&gt;'</b>, replace the <b>'&lt;sc&gt;'</b> with either <b>a</b> or <b>b</b>,
                             depending on which scene you wish to address, e.g. <code>/a/drift</code> or <code>/b/drift</code>.
                         <p>
                             If the received value is less than the minimum or greater than the maximum acceptable value, it will be clipped
@@ -959,18 +959,17 @@ code {
     std::string st_str;
     int currentCtrlGrp = endCG;
 
-    // Convert scene specifiers into "*"
+    // Convert scene specifiers into "<sc>"
     for (auto *p : synth->storage.getPatch().param_ptr)
-    {
+    {   
         st_str = p->get_osc_name();
-
         std::size_t found = st_str.find("/b/");
         if (found != std::string::npos)
             continue; // 'b_...' entries not added to vector
 
         found = st_str.find("/a/");
         if (found != std::string::npos)
-            st_str.replace(found + 1, 1, "*");
+            st_str.replace(found + 1, 1, "&lt;sc&gt;");
 
         sortvector.push_back(oscParamInfo{p, st_str, p->get_full_name(), p->ctrlgroup});
     };
