@@ -6,23 +6,24 @@ surge_add_lib_subdirectory(eurorack)
 surge_add_lib_subdirectory(fmt)
 
 # Make MTS optional
-if (NOT SURGE_SKIP_ODDSOUND_MTS)
-   surge_add_lib_subdirectory(oddsound-mts)
+if(NOT SURGE_SKIP_ODDSOUND_MTS)
+  surge_add_lib_subdirectory(oddsound-mts)
 else()
-   add_library(oddsound-mts INTERFACE)
-   target_compile_definitions(oddsound-mts INTERFACE SURGE_SKIP_ODDSOUND_MTS)
-   add_library(surge::oddsound-mts ALIAS oddsound-mts)
+  add_library(oddsound-mts INTERFACE)
+  target_compile_definitions(oddsound-mts INTERFACE SURGE_SKIP_ODDSOUND_MTS)
+  add_library(surge::oddsound-mts ALIAS oddsound-mts)
 endif()
 
 if(MINGW)
   set(HAVE_VISIBILITY 0 CACHE INTERNAL "Force-disable libsamplerate's visibility check on MinGW")
 endif()
+
 surge_add_lib_subdirectory(libsamplerate)
 surge_add_lib_subdirectory(pffft)
 surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 
-if (NOT SURGE_SKIP_LUA)
+if(NOT SURGE_SKIP_LUA)
   surge_add_lib_subdirectory(LuaJitLib)
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=1)
 else()
@@ -42,17 +43,18 @@ set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
 set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
 surge_add_lib_subdirectory(PEGTL)
 
-if (NOT SURGE_SKIP_JUCE_FOR_RACK)
+if(NOT SURGE_SKIP_JUCE_FOR_RACK)
   juce_add_binary_data(surge-common-binary
     NAMESPACE SurgeSharedBinary
     HEADER_NAME SurgeSharedBinary.h
     SOURCES
     ${SURGE_SOURCE_DIR}/resources/surge-shared/configuration.xml
-    ${SURGE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
     ${SURGE_SOURCE_DIR}/resources/surge-shared/memoryWavetable.wt
-    ${SURGE_SOURCE_DIR}/resources/surge-shared/windows.wt
+    ${SURGE_SOURCE_DIR}/resources/surge-shared/oscspecification.html
     ${SURGE_SOURCE_DIR}/resources/surge-shared/paramdocumentation.xml
-    )
+    ${SURGE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
+    ${SURGE_SOURCE_DIR}/resources/surge-shared/windows.wt
+  )
   target_compile_definitions(surge-common-binary PUBLIC HAS_JUCE=1 SKIP_JUCE=0)
 
 else()
@@ -64,34 +66,36 @@ else()
   target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
 
   add_library(juce_dsp_rack_sub STATIC
-          ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.cpp
-          ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
-          )
-  if (APPLE)
+    ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.cpp
+    ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
+  )
+
+  if(APPLE)
     target_sources(juce_dsp_rack_sub PRIVATE
-            ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.mm
-            ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.mm
-            )
+      ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.mm
+      ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.mm
+    )
   else()
     target_sources(juce_dsp_rack_sub PRIVATE
-            ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.cpp
-            ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.cpp
-            )
+      ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.cpp
+      ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.cpp
+    )
   endif()
+
   target_compile_definitions(juce_dsp_rack_sub PUBLIC
-          NDEBUG=$<IF:$<CONFIG:Release>,1,0>
-          JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1
-          JUCE_MODULE_AVAILABLE_juce_dsp=1
-          JUCE_MODULE_AVAILABLE_juce_audio_basics=1
-          JUCE_MODULE_AVAILABLE_juce_core=1
-          JUCE_MODULE_VAILABLE_juce_audio_formats=1
-          JUCE_STANDALONE_APPLICATION=0
-          JUCE_USE_CURL=0
-          JUCE_WEB_BROWSER=0
-          JUCE_USE_FLAC=0
-          JUCE_USE_OGGVORBIS=0
-          JUCE_USE_WINDOWS_MEDIA_FORMAT=0
-          )
+    NDEBUG=$<IF:$<CONFIG:Release>,1,0>
+    JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1
+    JUCE_MODULE_AVAILABLE_juce_dsp=1
+    JUCE_MODULE_AVAILABLE_juce_audio_basics=1
+    JUCE_MODULE_AVAILABLE_juce_core=1
+    JUCE_MODULE_VAILABLE_juce_audio_formats=1
+    JUCE_STANDALONE_APPLICATION=0
+    JUCE_USE_CURL=0
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_FLAC=0
+    JUCE_USE_OGGVORBIS=0
+    JUCE_USE_WINDOWS_MEDIA_FORMAT=0
+  )
   target_include_directories(juce_dsp_rack_sub PUBLIC ${SURGE_JUCE_PATH}/modules)
 
   add_library(juce::juce_dsp ALIAS juce_dsp_rack_sub)
@@ -289,10 +293,11 @@ add_library(${PROJECT_NAME}
   resource.h
   version.cpp.in
   version.h
-  )
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(${PROJECT_NAME} PUBLIC SURGE_COMPILE_BLOCK_SIZE=${SURGE_COMPILE_BLOCK_SIZE})
+
 if(APPLE)
   target_compile_definitions(${PROJECT_NAME} PUBLIC MAC=1)
   target_link_libraries(${PROJECT_NAME}
@@ -301,22 +306,25 @@ if(APPLE)
     "-framework CoreServices"
     "-framework CoreFoundation"
     "-framework Foundation"
-    )
+  )
 elseif(UNIX)
   target_compile_definitions(${PROJECT_NAME} PUBLIC LINUX=1)
+
   if(SKBUILD)
     target_link_libraries(${PROJECT_NAME} PRIVATE
       pthread
-      )
+    )
   else()
     target_link_libraries(${PROJECT_NAME} PRIVATE
       pthread
       -Wl,--no-undefined
-      )
+    )
   endif()
+
   if(CMAKE_SYSTEM_NAME MATCHES "BSD")
     target_link_libraries(${PROJECT_NAME} PRIVATE execinfo)
   endif()
+
   target_link_libraries(${PROJECT_NAME} PUBLIC surge::simde)
 elseif(WIN32)
   target_compile_definitions(${PROJECT_NAME} PUBLIC
@@ -330,10 +338,11 @@ elseif(WIN32)
     _CRT_SECURE_NO_WARNINGS=1
     UNICODE
     _UNICODE
-    )
+  )
 endif()
 
 option(SURGE_RELIABLE_VERSION_INFO "Update version info on every build (off: generate only at configuration time)" ON)
+
 if(SURGE_RELIABLE_VERSION_INFO)
   add_custom_target(version-info BYPRODUCTS ${CMAKE_BINARY_DIR}/geninclude/version.cpp
     WORKING_DIRECTORY ${SURGE_SOURCE_DIR}
@@ -346,13 +355,14 @@ if(SURGE_RELIABLE_VERSION_INFO)
     -D CMAKE_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}
     -D CMAKE_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
     -P ${SURGE_SOURCE_DIR}/cmake/versiontools.cmake
-    )
+  )
   add_dependencies(${PROJECT_NAME} version-info)
 else()
   set(SURGESRC ${SURGE_SOURCE_DIR})
   set(SURGEBLD ${CMAKE_BINARY_DIR})
   include(${SURGE_SOURCE_DIR}/cmake/versiontools.cmake)
 endif()
+
 target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/geninclude/version.cpp)
 
 add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
@@ -386,16 +396,16 @@ target_link_libraries(${PROJECT_NAME}
   taocpp::pegtl
   PRIVATE
   juce::juce_dsp
-  )
+)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
   JUCE_STANDALONE_APPLICATION=0
-  )
+)
 
-if (SST_FILTERS_COMB_EXTENSION_FACTOR)
+if(SST_FILTERS_COMB_EXTENSION_FACTOR)
   message(STATUS "Overriding comb extension factor to ${SST_FILTERS_COMB_EXTENSION_FACTOR}")
   target_compile_definitions(${PROJECT_NAME} PUBLIC
-          SST_FILTERS_COMB_EXTENSION_FACTOR=${SST_FILTERS_COMB_EXTENSION_FACTOR})
+    SST_FILTERS_COMB_EXTENSION_FACTOR=${SST_FILTERS_COMB_EXTENSION_FACTOR})
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -407,4 +417,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   dsp/oscillators
   dsp/utilities
   dsp/vembertech
-  )
+)

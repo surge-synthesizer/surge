@@ -1,0 +1,1564 @@
+<html>
+
+<head>
+     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+     <style>
+          table {
+               border-collapse: collapse;
+               width: 100%;
+
+          }
+
+          td {
+               border: 1px solid #CDCED4;
+               padding: 2pt 8px;
+          }
+
+          .center {
+               text-align: center;
+          }
+
+          div.heading {
+               margin: 4px 0px 0px 8px;
+               width: 100%;
+          }
+
+          h2 {
+               margin: 0 0 8px 0;
+               font-size: large;
+          }
+
+          h3 {
+               margin: 0 0 8px 0;
+               font-size: medium;
+          }
+
+          div.outer {
+               font-size: 12pt;
+               margin: 0 0 10pt 0;
+               font-family: Lato;
+               color: #123463;
+               display: flex;
+               justify-content: center;
+          }
+
+          div.frame {
+               max-width: 1300px;
+               border: 1px solid #aaa;
+               overflow: hidden;
+          }
+
+          div.tablewrap {
+               width: 49%;
+               margin: 0 2px 16px 2px;
+               box-sizing: border-box;
+               display: block;
+               border: 1px solid #ccc;
+               padding: 10px;
+               margin-top: 10px;
+          }
+
+          th {
+               padding: 4pt;
+               color: #123463;
+               background: #CDCED4;
+               border: 1px solid #123463;
+          }
+
+          span {
+               margin: 2px 8px;
+               padding: 1px 2px;
+               border: 1px solid #123463;
+               white-space: nowrap;
+          }
+
+          ul {
+               margin: 10px 0;
+          }
+
+          .cl {
+               clear: left;
+          }
+
+          .cr {
+               clear: right;
+          }
+
+          .fl {
+               float: left;
+          }
+
+          .fr {
+               float: right;
+          }
+
+          * {
+               -webkit-box-sizing: border-box;
+               -moz-box-sizing: border-box;
+               box-sizing: border-box;
+          }
+
+          p.tight {
+               margin-top: 5px;
+               margin-bottom: 5px;
+          }
+
+          td.nw {
+               white-space: nowrap;
+          }
+
+
+          code {
+               color: #dc3918;
+               font-size: 16px;
+               padding: 1px 0px;
+          }
+     </style>
+</head>
+
+<body style="margin: 0pt; background: #CDCED4;">
+     <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
+          <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
+               Surge XT 1.3 OSC Specification
+          </div>
+     </div>
+
+     <div style="margin:10pt; padding: 5pt; border: 1px solid #123463; background: #fafbff; overflow:hidden">
+          <div class="outer">
+               <div class="frame">
+                    <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
+                         <div style="font-size: 12pt; font-family: Lato;">
+                              <p>
+                                   Surge XT supports external OSC control of most parameters, including patch and tuning
+                                   changes. Where appropriate and feasible,
+                                   Surge parameters/changes are reported to OSC out, either when they occur, or in the
+                                   special case of <b>/send_all_parameters</b>
+                                   (see below), on request. Notes may also be triggered via OSC, either by frequency or
+                                   by MIDI note number.
+                              </p>
+                              <p>
+                                   OSC messages are constructed using the exact (case sensitive)
+                                   entry listed in the <b>Address</b> column in the tables below.</br>
+                                   The form of the message should be <code>/&ltaddress&gt &ltvalue&gt</code>,
+                                   where <code>address</code> is one of the ones listed below, and zero or more
+                                   <code>values</code> can be*:
+
+                              <ul>
+                                   <li>a floating point value between <b>0.0</b> and <b>1.0</b>, where <b>0</b>
+                                        represents the minimum acceptable
+                                        value for the parameter, and <b>1</b> represents the maximum. <br />(note: use
+                                        '<b>.</b>' as the decimal mark, never '<b>,</b>').</li>
+                                   <li>an integer value</li>
+                                   <li>a boolean value, <b>0</b> (false) or <b>1</b> (true)</li>
+                                   <li>a file path (absolute or relative to the default path)
+                                   <li>contextual: either an integer or a float, depending on the context (loaded
+                                        oscillator or effect type)</li>
+                              </ul>
+
+                              <p>
+                                   If the received value is less than the minimum or greater than the maximum acceptable
+                                   value, it will be clipped
+                                   to the associated limit.
+                              </p>
+                              <p style="border: 1px solid black; padding: 4px;">
+                                   <b>Important Note: All numeric values must be sent over OSC as floating point
+                                        numbers</b>
+                                   (even if they are listed as integer or boolean type --
+                                   the 'Appropriate Values' column describes how the data is used by Surge XT,
+                                   not how messages are to be formatted for OSC).
+                              </p>
+                              <p style="margin-top: 28px;">
+                                   <b>OSC Output</b>: All parameter and patch changes made on Surge XT are reported to
+                                   OSC out, if OSC output is enabled.
+                                   Floating point parameters are reported both in their 'natural' range, and normalized
+                                   (0.0 - 1.0).
+                                   Errors are reported (when feasible) to "/error".
+                              </p>
+                              <div style="margin: 16px 0 8px 0" ;>
+                                   <span style="margin-left: 0">
+                                        <code>Examples are given in red.
+                                </code>
+                                   </span>
+                              </div>
+                         </div>
+                    </div>
+
+                    <div class="tablewrap" style="width: 1100px; margin: 8px;">
+                         <div class="heading">
+                              <h2>Notes</h2>
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Value 1</th>
+                                   <th>Value 2</th>
+                                   <th>Value 3</th>
+                              </tr>
+                              <tr>
+                                   <td>/mnote</td>
+                                   <td>MIDI-style note</td>
+                                   <td>note number (0 - 127)</td>
+                                   <td>velocity (0.0 - 127.0)*</td>
+                                   <td>noteID (optional, 0 - maxint)§</td>
+                              </tr>
+                              <tr>
+                                   <td>/fnote †</td>
+                                   <td>frequency note</td>
+                                   <td>frequency (8.176 - 12543.853)</td>
+                                   <td>velocity (0.0 - 127.0)*</td>
+                                   <td>noteID (optional, 0 - maxint)§</td>
+                              </tr>
+                              <tr>
+                                   <td>/mnote/rel</td>
+                                   <td>MIDI-style note release</td>
+                                   <td>note number (0 - 127)</td>
+                                   <td>release velocity (0.0 - 127.0)</td>
+                                   <td>noteID (optional, 0 - maxint)§</td>
+                              </tr>
+                              <tr>
+                                   <td>/fnote/rel</td>
+                                   <td>frequency note release</td>
+                                   <td>frequency (8.176 - 12543.853)</td>
+                                   <td>release velocity (0.0 - 127.0)</td>
+                                   <td>noteID (optional, 0 - maxint)§</td>
+                              </tr>
+                              <tr>
+                                   <td>/allnotesoff</td>
+                                   <td>release all current notes</td>
+                                   <td>(none)</td>
+                                   <td>(none)</td>
+                                   <td>(none)</td>
+                              </tr>
+                              <tr>
+                                   <td>/allsoundoff</td>
+                                   <td>stop all sound NOW</td>
+                                   <td>(none)</td>
+                                   <td>(none)</td>
+                                   <td>(none)</td>
+                              </tr>
+                              <tr>
+                                   <td colspan="5">
+                                        <p class="tight">* Velocity 0 releases the note; use the <span>.../rel</span>
+                                             messages to release notes with velocity. If noteIDs are
+                                             supplied, the note number or frequency value for releases is disregarded.
+                                        </p>
+                                        <p class="tight">† When using <span>/fnote</span>, Surge XT <em>must</em> be set
+                                             to standard tuning for proper results! </p>
+                                        <p class="tight">§ NoteID can be optionally supplied for more control over the
+                                             lifecycle of notes, or for Note Expressions.
+                                   </td>
+                              </tr>
+                         </table>
+                    </div>
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/mnote 68 120</code></span>
+                         <span><code>/fnote 440.0 120</code></span>
+                         <span><code>/mnote 68 0</code></span>
+                         <span><code>/fnote 440.0 0</code></span>
+                         <span><code>/mnote/rel 68 45</code></span>
+                         <span><code>/fnote/rel 440.0 45</code></span>
+                    </div>
+
+                    <div class="tablewrap" style="width: 1100px; margin: 8px;">
+                         <div class="heading">
+                              <h2>Note Expressions</h2>
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Value 1</th>
+                                   <th>Value 2</th>
+                              </tr>
+                              <tr>
+                                   <td>/ne/pitch</td>
+                                   <td>pitch note expression</td>
+                                   <td>noteID (0 - maxint)§
+                                   <td>pitch offset (-120.0 - 120.0:&nbsp;&nbsp;semitones)</td>
+                              </tr>
+                              <tr>
+                                   <td>/ne/volume</td>
+                                   <td>volume note expression</td>
+                                   <td>noteID (0 - maxint)§
+                                   <td>volume multiplier (0.0 - 4.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/ne/pan</td>
+                                   <td>pan note expression</td>
+                                   <td>noteID (0 - maxint)§
+                                   <td>position (0.0 - 1.0:&nbsp;&nbsp;0.0 = left&nbsp;&nbsp;0.5 = center&nbsp;&nbsp;1.0
+                                        = right)</td>
+                              </tr>
+                              <tr>
+                                   <td>/ne/timbre</td>
+                                   <td>timbre note expression</td>
+                                   <td>noteID (0 - maxint)§
+                                   <td>timbre (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/ne/pressure</td>
+                                   <td>pressure note expression</td>
+                                   <td>noteID (0 - maxint)§
+                                   <td>polyphonic aftertouch (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td colspan="5">
+                                        <p class="tight">§ NoteID should belong to an already initiated note.</p>
+                                   </td>
+                              </tr>
+                         </table>
+                    </div>
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/ne/pitch 24566 0.34</code></span>
+                         <span><code>/ne/volume 24566 0.5</code></span>
+                         <span><code>/ne/pan 24566 0.9</code></span>
+                         <span><code>/ne/timbre 24566 0.18</code></span>
+                         <span><code>/ne/pressure 24566 0.4</code></span>
+                    </div>
+
+                    <div class="tablewrap fl cl">
+                         <div class="heading">
+                              <h2>Patches</h2>
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td class="nw">/patch/load</td>
+                                   <td class="nw">load patch</td>
+                                   <td>file path (absolute, no extension)</td>
+                              </tr>
+                              <tr>
+                                   <td class="nw">/patch/save</td>
+                                   <td class="nw">save patch</td>
+                                   <td>none: overwrites current patch <b>or</b>
+                                        file path (absolute, no extension, overwrites if file exists)
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td class="nw">/patch/incr</td>
+                                   <td class="nw">increment patch</td>
+                                   <td>(none)</td>
+                              </tr>
+                              <tr>
+                                   <td class="nw">/patch/decr</td>
+                                   <td class="nw">decrement patch</td>
+                                   <td>(none)</td>
+                              </tr>
+                              <tr>
+                                   <td class="nw">/patch/incr_category</td>
+                                   <td class="nw">increment category</td>
+                                   <td>(none)</td>
+                              </tr>
+                              <tr>
+                                   <td class="nw">/patch/decr_category</td>
+                                   <td class="nw">decrement category</td>
+                                   <td>(none)</td>
+                              </tr>
+                              <tr>
+                                   <td class="nw">/patch/random</td>
+                                   <td class="nw">choose random patch</td>
+                                   <td>(none)</td>
+                              </tr>
+                         </table>
+                    </div>
+
+                    <div class="tablewrap fr cr">
+                         <div class="heading">
+                              <h2>Tuning</h2>
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/tuning/scl</td>
+                                   <td> .scl tuning file</td>
+                                   <td>file path (absolute or relative)*</td>
+                              </tr>
+                              <tr>
+                                   <td>/tuning/kbm</td>
+                                   <td>.kbm mapping file</td>
+                                   <td>file path (absolute or relative)*</td>
+                              </tr>
+                              <tr>
+                                   <td>/tuning/path/scl</td>
+                                   <td>.scl file default path</td>
+                                   <td>file path (absolute only)</td>
+                              </tr>
+                              <tr>
+                                   <td>/tuning/path/kbm</td>
+                                   <td>.kbm file default path</td>
+                                   <td>file path (absolute only)</td>
+                              </tr>
+                              <tr>
+                                   <td class="center" colspan="3">* no extension; use value = '_reset' to reset path to
+                                        factory default</td>
+                              </tr>
+                         </table>
+                    </div>
+
+                    <div style="clear: both;"></div>
+
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/patch/load /Library/Application Support/Surge XT/patches_factory/Plucks/Clean</code></span>
+                         <span><code>/patch/save</code></span>
+                         <span><code>/patch/incr</code></span>
+                    </div>
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/tuning/scl ptolemy</code></span>
+                         <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
+                         <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
+                    </div>
+
+                    <div style="clear: both;"></div>
+
+                    <div class="tablewrap" style="width: 1000px; margin: 24px 8px 16px 8px;">
+                         <div class="heading">
+                              <h2>Parameter Queries</h2>
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Appropriate Values</th>
+                                   <th>Action</th>
+                              </tr>
+                              <tr>
+                                   <td>/q/all_params</td>
+                                   <td>request all parameters</td>
+                                   <td>none</td>
+                                   <td>Sends a dump of all parameters listed below to OSC out</td>
+                              </tr>
+                              <tr>
+                                   <td>/q/&ltparameter address&gt</td>
+                                   <td>request one parameter</td>
+                                   <td>none</td>
+                                   <td>Sends one parameter's value to OSC out</td>
+                              </tr>
+                              <tr>
+                                   <td class="center" colspan="3"></td>
+                              </tr>
+                         </table>
+                    </div>
+
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>q/all_params</code></span>
+                         <span><code>q/param/b/amp/gain</code></span>
+                         <span><code>q/param/global/polyphony_limit</code></span>
+                         <span><code>q/param/a/mixer/noise/mute</code></span>
+                    </div>
+
+                    <div style="margin: 24px 0 4px 22px; font-size: 12pt; font-family: Lato;">
+                         <div class="heading">
+                              <h2>Parameters</h2>
+                         </div>
+                    </div>
+
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/param/b/amp/gain 0.63</code></span>
+                         <span><code>/param/global/polyphony_limit 12</code></span>
+                         <span><code>/param/a/mixer/noise/mute 0</code></span>
+                    </div>
+
+
+                    <div class="tablewrap fr cr">
+                         <div class="heading">
+                              <h2>Control Group: Macros</h2>
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/param/macro/1</td>
+                                   <td>macro 1</td>
+                                   <td>float (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/macro/2</td>
+                                   <td>macro 2</td>
+                                   <td>float (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/macro/3</td>
+                                   <td>macro 3</td>
+                                   <td>float (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/macro/4</td>
+                                   <td>macro 4</td>
+                                   <td>float (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/macro/5</td>
+                                   <td>macro 5</td>
+                                   <td>float (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/macro/6</td>
+                                   <td>macro 6</td>
+                                   <td>float (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/macro/7</td>
+                                   <td>macro 7</td>
+                                   <td>float (0.0 - 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/macro/8</td>
+                                   <td>macro 8</td>
+                                   <td>float (0.0 - 1.0)</td>
+                              </tr>
+                         </table>
+                    </div>
+                    <div class="tablewrap fl cl">
+                         <div class="heading">
+                              <h2>Control Group: Global</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene)</h3>
+                         </div>
+
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Parameter Name</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/amp/gain</td>
+                                   <td> VCA Gain</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/amp/pan</td>
+                                   <td> Pan</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/amp/vel_to_gain</td>
+                                   <td> Velocity > VCA Gain</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/amp/volume</td>
+                                   <td> Volume</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/amp/width</td>
+                                   <td> Width</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/2/link_resonance</td>
+                                   <td> Link Resonance</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/2/offset_mode</td>
+                                   <td> Filter 2 Offset Mode</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/balance</td>
+                                   <td> Filter Balance</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/config</td>
+                                   <td> Filter Configuration</td>
+                                   <td>integer (0 to 7)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/feedback</td>
+                                   <td> Feedback</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/keytrack_root</td>
+                                   <td> Keytrack Root Key</td>
+                                   <td>integer (0 to 127)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/highpass</td>
+                                   <td> Highpass</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/noise/color</td>
+                                   <td> Noise Color</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/octave</td>
+                                   <td> Octave</td>
+                                   <td>integer (-3 to 3)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/drift</td>
+                                   <td> Osc Drift</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/fm_depth</td>
+                                   <td> FM Depth</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/fm_routing</td>
+                                   <td> FM Routing</td>
+                                   <td>integer (0 to 3)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/pitch</td>
+                                   <td> Pitch</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/pitchbend_down</td>
+                                   <td> Pitch Bend Down Range</td>
+                                   <td>integer (0 to 24)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/pitchbend_up</td>
+                                   <td> Pitch Bend Up Range</td>
+                                   <td>integer (0 to 24)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/play_mode</td>
+                                   <td> Play Mode</td>
+                                   <td>integer (0 to 5)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento</td>
+                                   <td> Portamento</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/send/1/level</td>
+                                   <td> Send FX 1 Level</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/send/2/level</td>
+                                   <td> Send FX 2 Level</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/send/3/level</td>
+                                   <td> Send FX 3 Level</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/send/4/level</td>
+                                   <td> Send FX 4 Level</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/waveshaper/drive</td>
+                                   <td> Waveshaper Drive</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/waveshaper/type</td>
+                                   <td> Waveshaper Type</td>
+                                   <td>integer (0 to 42)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/chain_bypass</td>
+                                   <td> FX Chain Bypass</td>
+                                   <td>integer (0 to 3)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/send/1/return</td>
+                                   <td> Send FX 1 Return</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/send/2/return</td>
+                                   <td> Send FX 2 Return</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/send/3/return</td>
+                                   <td> Send FX 3 Return</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/send/4/return</td>
+                                   <td> Send FX 4 Return</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/global/active_scene</td>
+                                   <td> Active Scene</td>
+                                   <td>integer (0 to 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/global/character</td>
+                                   <td> Character</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/global/polyphony_limit</td>
+                                   <td> Polyphony Limit</td>
+                                   <td>integer (2 to 64)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/global/scene_mode</td>
+                                   <td> Scene Mode</td>
+                                   <td>integer (0 to 3)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/global/split_point</td>
+                                   <td> Split Point</td>
+                                   <td>integer (0 to 127)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/global/volume</td>
+                                   <td> Global Volume</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                         </table>
+                    </div>
+                    <div class="tablewrap fr cr">
+                         <div class="heading">
+                              <h2>Control Group: Oscillators</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and &lt;n&gt; with '1' through '3'
+                                   (oscillator #)
+                              </h3>
+
+                         </div>
+
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Parameter Name</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/keytrack</td>
+                                   <td> Osc &lt;n&gt; Keytrack</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/octave</td>
+                                   <td> Osc &lt;n&gt; Octave</td>
+                                   <td>integer (-3 to 3)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/param1</td>
+                                   <td> Osc &lt;n&gt; Morph</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/param2</td>
+                                   <td> Osc &lt;n&gt; Skew Vertical</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/param3</td>
+                                   <td> Osc &lt;n&gt; Saturate</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/param4</td>
+                                   <td> Osc &lt;n&gt; Formant</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/param5</td>
+                                   <td> Osc &lt;n&gt; Skew Horizontal</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/param6</td>
+                                   <td> Osc &lt;n&gt; Unison Detune</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/param7</td>
+                                   <td> Osc &lt;n&gt; Unison Voices</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/pitch</td>
+                                   <td> Osc &lt;n&gt; Pitch</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/retrigger</td>
+                                   <td> Osc &lt;n&gt; Retrigger</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/osc/&lt;n&gt;/type</td>
+                                   <td> Osc &lt;n&gt; Type</td>
+                                   <td>integer (0 to 11)</td>
+                              </tr>
+                         </table>
+                    </div>
+                    <div class="tablewrap fr cr">
+                         <div class="heading">
+                              <h2>Control Group: Filters</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and '&lt;n&gt;' with '1' or '2' (filter
+                                   #)
+                              </h3>
+                         </div>
+
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Parameter Name</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/&lt;n&gt;/cutoff</td>
+                                   <td> Filter &lt;n&gt; Cutoff</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/&lt;n&gt;/feg_amount</td>
+                                   <td> Filter &lt;n&gt; FEG Mod Amount</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/&lt;n&gt;/keytrack</td>
+                                   <td> Filter &lt;n&gt; Keytrack</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/&lt;n&gt;/resonance</td>
+                                   <td> Filter &lt;n&gt; Resonance</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/&lt;n&gt;/subtype</td>
+                                   <td> Filter &lt;n&gt; Subtype</td>
+                                   <td>integer (0 to 15)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/filter/&lt;n&gt;/type</td>
+                                   <td> Filter &lt;n&gt; Type</td>
+                                   <td>integer (0 to 33)</td>
+                              </tr>
+                         </table>
+                    </div>
+
+                    <div class="tablewrap fl cl">
+                         <div class="heading">
+                              <h2>Control Group: Envelopes</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene)</h3>
+                         </div>
+
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Parameter Name</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/aeg/attack</td>
+                                   <td> Amp EG Attack</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/aeg/attack_shape</td>
+                                   <td> Amp EG Attack Shape</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/aeg/decay</td>
+                                   <td> Amp EG Decay</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/aeg/decay_shape</td>
+                                   <td> Amp EG Decay Shape</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/aeg/mode</td>
+                                   <td> Amp EG Envelope Mode</td>
+                                   <td>integer (0 to 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/aeg/release</td>
+                                   <td> Amp EG Release</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/aeg/release_shape</td>
+                                   <td> Amp EG Release Shape</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/aeg/sustain</td>
+                                   <td> Amp EG Sustain</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/feg/attack</td>
+                                   <td> Filter EG Attack</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/feg/attack_shape</td>
+                                   <td> Filter EG Attack Shape</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/feg/decay</td>
+                                   <td> Filter EG Decay</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/feg/decay_shape</td>
+                                   <td> Filter EG Decay Shape</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/feg/mode</td>
+                                   <td> Filter EG Envelope Mode</td>
+                                   <td>integer (0 to 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/feg/release</td>
+                                   <td> Filter EG Release</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/feg/release_shape</td>
+                                   <td> Filter EG Release Shape</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/feg/sustain</td>
+                                   <td> Filter EG Sustain</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                         </table>
+                    </div>
+
+                    <div class="tablewrap fr cr">
+                         <div class="heading">
+                              <h2>Control Group: FX</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a', 'b', 'global' or 'send' and '&lt;n&gt;' with '1'
+                                   through '4' (slot #)</h3>
+
+                         </div>
+
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Parameter Name</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param1</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 1</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param2</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 2</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param3</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 3</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param4</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 4</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param5</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 5</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param6</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 6</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param7</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 7</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param8</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 8</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param9</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 9</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param10</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 10</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param11</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 11</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/param12</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; Param 12</td>
+                                   <td>(contextual)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/type</td>
+                                   <td> FX &lt;s&gt;&lt;n&gt; FX Type</td>
+                                   <td>int (0 = off; 1 - 29: fx type)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/fx/&lt;s&gt;/&lt;n&gt;/deactivate</td>
+                                   <td> (FX slot Deactivate)</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                         </table>
+                    </div>
+
+                    <div class="tablewrap fl cl">
+                         <div class="heading">
+                              <h2>Control Group: Mixer</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and &lt;n&gt; with '1' through '3'
+                                   (oscillator #)
+                              </h3>
+
+                         </div>
+
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Parameter Name</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/noise/mute</td>
+                                   <td> Noise Mute</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/noise/route</td>
+                                   <td> Noise Route</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/noise/solo</td>
+                                   <td> Noise Solo</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/noise/volume</td>
+                                   <td> Noise Volume</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/osc&lt;n&gt;/mute</td>
+                                   <td> Osc &lt;n&gt; Mute</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/osc&lt;n&gt;/route</td>
+                                   <td> Osc &lt;n&gt; Route</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/osc&lt;n&gt;/solo</td>
+                                   <td> Osc &lt;n&gt; Solo</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/osc&lt;n&gt;/volume</td>
+                                   <td> Osc &lt;n&gt; Volume</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/prefilter_gain</td>
+                                   <td> Pre-Filter Gain</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/rm1x2/mute</td>
+                                   <td> Ring Modulation 1x2 Mute</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/rm1x2/route</td>
+                                   <td> Ring Modulation 1x2 Route</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/rm1x2/solo</td>
+                                   <td> Ring Modulation 1x2 Solo</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/rm1x2/volume</td>
+                                   <td> Ring Modulation 1x2 Volume</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/rm2x3/mute</td>
+                                   <td> Ring Modulation 2x3 Mute</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/rm2x3/route</td>
+                                   <td> Ring Modulation 2x3 Route</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/rm2x3/solo</td>
+                                   <td> Ring Modulation 2x3 Solo</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/mixer/rm2x3/volume</td>
+                                   <td> Ring Modulation 2x3 Volume</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                         </table>
+                    </div>
+
+                    <div class="tablewrap fr cr">
+                         <div class="heading">
+                              <h2>Control Group: Modulators</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and '&lt;n&gt;' with '1' through '6' (lfo
+                                   #)
+                              </h3>
+                         </div>
+
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Parameter Name</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/amplitude</td>
+                                   <td> Scene LFO &lt;n&gt; Amplitude</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/deform</td>
+                                   <td> Scene LFO &lt;n&gt; Deform</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/eg/attack</td>
+                                   <td> Scene LFO &lt;n&gt; Attack</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/eg/decay</td>
+                                   <td> Scene LFO &lt;n&gt; Decay</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/eg/delay</td>
+                                   <td> Scene LFO &lt;n&gt; Delay</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/eg/hold</td>
+                                   <td> Scene LFO &lt;n&gt; Hold</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/eg/release</td>
+                                   <td> Scene LFO &lt;n&gt; Release</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/eg/sustain</td>
+                                   <td> Scene LFO &lt;n&gt; Sustain</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/phase</td>
+                                   <td> Scene LFO &lt;n&gt; Phase</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/rate</td>
+                                   <td> Scene LFO &lt;n&gt; Rate</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/trigger_mode</td>
+                                   <td> Scene LFO &lt;n&gt; Trigger Mode</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/type</td>
+                                   <td> Scene LFO &lt;n&gt; Type</td>
+                                   <td>integer (0 to 9)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/slfo/&lt;n&gt;/unipolar</td>
+                                   <td> Scene LFO &lt;n&gt; Unipolar</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/amplitude</td>
+                                   <td> LFO &lt;n&gt; Amplitude</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/deform</td>
+                                   <td> LFO &lt;n&gt; Deform</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/eg/attack</td>
+                                   <td> LFO &lt;n&gt; Attack</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/eg/decay</td>
+                                   <td> LFO &lt;n&gt; Decay</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/eg/delay</td>
+                                   <td> LFO &lt;n&gt; Delay</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/eg/hold</td>
+                                   <td> LFO &lt;n&gt; Hold</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/eg/release</td>
+                                   <td> LFO &lt;n&gt; Release</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/eg/sustain</td>
+                                   <td> LFO &lt;n&gt; Sustain</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/phase</td>
+                                   <td> LFO &lt;n&gt; Phase</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/rate</td>
+                                   <td> LFO &lt;n&gt; Rate</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/trigger_mode</td>
+                                   <td> LFO &lt;n&gt; Trigger Mode</td>
+                                   <td>integer (0 to 2)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/type</td>
+                                   <td> LFO &lt;n&gt; Type</td>
+                                   <td>integer (0 to 9)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/vlfo/&lt;n&gt;/unipolar</td>
+                                   <td> LFO &lt;n&gt; Unipolar</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                         </table>
+                    </div>
+
+
+                    <div style="clear: both;"></div>
+
+                    <div style="margin:10pt 10pt 0 10pt; padding: 5pt 12pt; background: #fafbff;">
+                         <div style="font-size: 12pt; font-family: Lato;">
+                              <div style="font-size: 12pt; font-family: Lato;">
+                                   <div class="heading" style="margin-left: 0;">
+                                        <h2>Modulation Mapping</h2>
+                                   </div>
+                              </div>
+
+                              <p style="margin-top: 14px;">
+                                   Modulation Mapping messages are constructed by selecting one of the '/mod' source
+                                   addresses
+                                   listed below (with an appropriate index value, if necessary) and adding a target
+                                   address selected
+                                   from the '/param' addresses listed above, then specifying a depth (0.0 - 1.0).
+                                   If both the source and target addresses are scene-specific (a or b), the scenes must
+                                   match.
+                              </p>
+                              <p style="margin-top: 8px;">
+                                   Send a depth of <b>0</b> to disconnect a modulator from its target.
+                              </p>
+                              <p style="margin-top: 8px;">
+                                   Not all parameters can be modulated by all mod. sources. If a given combination is
+                                   not
+                                   possible an error will be reported to OSC out.
+                              </p>
+                         </div>
+                    </div>
+
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/mod/b/slfo_1/2 /param/b/amp/gain 0.45</code></span>
+                         <span><code>/mod/a/feg /param/a/filter/1/cutoff 0.9</code></span>
+                         <span><code>/mod/macro_6 /param/a/pitch 0.75</code></span>
+                    </div>
+
+                    <div class="tablewrap cr cl" style="width: 75%; margin: 16px 8px;">
+                         <div class="heading">
+                              <h2>Modulation Mapping: Sources</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and '&lt;n&gt;' with '1' through '6' (lfo
+                                   #)
+                              </h3>
+
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>&ltindex&gt=0</th>
+                                   <th>&ltindex&gt=1</th>
+                                   <th>&ltindex&gt=2</th>
+                              </tr>
+                              <tr>
+                                   <td>/mod/vel</td>
+                                   <td>Velocity</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/rel_vel</td>
+                                   <td>Release Velocity</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/keytrk</td>
+                                   <td>Keytrack</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/&lt;s&gt;/lowest_key</td>
+                                   <td>Lowest Key</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/&lt;s&gt;/highest_key</td>
+                                   <td>Highest Key</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/&lt;s&gt;/latest_key</td>
+                                   <td>Latest Key</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/pat</td>
+                                   <td>Polyphonic Aftertouch</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/at</td>
+                                   <td>Channel Aftertouch</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/mw</td>
+                                   <td>Modulation Wheel</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/breath</td>
+                                   <td>Breath</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/expr</td>
+                                   <td>Expression</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/sus</td>
+                                   <td>Sustain Pedal</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/pb</td>
+                                   <td>Pitch Bend</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/timbre</td>
+                                   <td>Timbre</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/alt_bi</td>
+                                   <td>Alternate Bipolar</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/alt_uni</td>
+                                   <td>Alternate Unipolar</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/rand_bi/&ltindex&gt</td>
+                                   <td>Random Bipolar</td>
+                                   <td> (Uniform)</td>
+                                   <td> (Normal)</td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/rand_uni/&ltindex&gt</td>
+                                   <td>Random Unipolar</td>
+                                   <td> (Uniform)</td>
+                                   <td> (Half Normal)</td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/&lt;s&gt;/feg</td>
+                                   <td>Filter EG</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/&lt;s&gt;/aeg</td>
+                                   <td>Amp EG</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/&lt;s&gt;/vlfo_&lt;n&gt;/&ltindex&gt</td>
+                                   <td>Voice LFO &lt;n&gt;†</td>
+                                   <td>(Voice LFO &lt;n&gt;)</td>
+                                   <td> (Raw Waveform)</td>
+                                   <td> (EG Only)</td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/&lt;s&gt;/slfo_&lt;n&gt;/&ltindex&gt</td>
+                                   <td>Scene LFO &lt;n&gt;†</td>
+                                   <td>(Scene LFO &lt;n&gt;)</td>
+                                   <td> (Raw Waveform)</td>
+                                   <td> (EG Only)</td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/macro_1</td>
+                                   <td>Macro 1</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/macro_2</td>
+                                   <td>Macro 2</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/macro_3</td>
+                                   <td>Macro 3</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/macro_4</td>
+                                   <td>Macro 4</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/macro_5</td>
+                                   <td>Macro 5</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/macro_6</td>
+                                   <td>Macro 6</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/macro_7</td>
+                                   <td>Macro 7</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td>/mod/macro_8</td>
+                                   <td>Macro 8</td>
+                                   <td></td>
+                                   <td></td>
+                                   <td></td>
+                              </tr>
+                              <tr>
+                                   <td colspan="5">
+                                        <p class="tight">† For Scene or Voice LFOs of "Formula" type, indices [0 - 7]
+                                             specify "Formula Out" [1 - 8]</p>
+                                   </td>
+                              </tr>
+                         </table>
+                    </div>
+               </div>
+          </div>
+</body>
+
+</html>
