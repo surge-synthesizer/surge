@@ -307,6 +307,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
     userSkinsPath = userDataPath / "Skins";
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
+    extraUserWavetablesPath = config.extraUsersWavetablesPath;
 
     if (config.createUserDirectory)
     {
@@ -1044,6 +1045,11 @@ void SurgeStorage::refresh_wtlist()
     firstUserWTCategory = wt_category.size();
     refresh_wtlistAddDir(true, "Wavetables");
 
+    if (!extraUserWavetablesPath.empty())
+    {
+        refresh_wtlistFrom(true, extraUserWavetablesPath, "");
+    }
+
     wtCategoryOrdering = std::vector<int>(wt_category.size());
     std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
 
@@ -1539,7 +1545,31 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             clipboard_extraconfig[i] = getPatch().scene[scene].osc[i].extraConfig;
         }
 
+        auto fxOffset = 0;
+        if (scene == 0)
+        {
+            fxOffset = 0;
+        }
+        else if (scene == 1)
+        {
+            fxOffset = 4;
+        }
+        else
+        {
+            throw std::logic_error(
+                "Scene not 0 or 1; have you gone multi-scene without updating clipboard?");
+        }
+
+        for (int i = 0; i < n_fx_per_chain; ++i)
+        {
+            auto sl = fxslot_order[i + fxOffset];
+            if (!clipboard_scenefx[i])
+                clipboard_scenefx[i] = std::make_unique<Surge::FxClipboard::Clipboard>();
+            Surge::FxClipboard::copyFx(this, &getPatch().fx[sl], *(clipboard_scenefx[i]));
+        }
+
         clipboard_primode = getPatch().scene[scene].monoVoicePriorityMode;
+        clipboard_envmode = getPatch().scene[scene].monoVoiceEnvelopeMode;
     }
 
     modRoutingMutex.lock();
@@ -1607,6 +1637,48 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                     clipboard_modulation_scene.push_back(m);
                 }
             }
+
+            if (type & cp_scene)
+            {
+                n = getPatch().modulation_global.size();
+                for (int i = 0; i < n; i++)
+                {
+                    if (getPatch().modulation_global[i].source_scene != scene)
+                    {
+                        continue;
+                    }
+
+                    ModulationRouting m;
+                    m.source_id = getPatch().modulation_global[i].source_id;
+                    m.source_index = getPatch().modulation_global[i].source_index;
+                    m.source_scene = getPatch().modulation_global[i].source_scene;
+                    m.depth = getPatch().modulation_global[i].depth;
+
+                    auto did = getPatch().modulation_global[i].destination_id;
+                    auto dpar = getPatch().param_ptr[did];
+                    if (dpar->ctrlgroup == cg_FX)
+                    {
+                        assert(scene < 2);
+                        for (int q = 0; q < n_fx_per_chain; ++q)
+                        {
+                            auto srcSl = fxslot_order[q + scene * 4];
+                            auto tgtSl = fxslot_order[q + (1 - scene) * 4];
+                            if (dpar->ctrlgroup_entry == srcSl)
+                            {
+                                int64_t d0 =
+                                    getPatch().fx[tgtSl].p[0].id - getPatch().fx[srcSl].p[0].id;
+                                m.destination_id =
+                                    getPatch().modulation_global[i].destination_id + d0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        m.destination_id = getPatch().modulation_global[i].destination_id;
+                    }
+                    clipboard_modulation_global.push_back(m);
+                }
+            }
         }
 
         if (type & cp_modulator_target)
@@ -1671,8 +1743,10 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
     modRoutingMutex.unlock();
 }
 
-void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms,
-                                   std::function<bool(int, modsources)> isValid)
+void SurgeStorage::clipboard_paste(
+    int type, int scene, int entry, modsources ms, std::function<bool(int, modsources)> isValid,
+    std::function<void(std::unique_ptr<Surge::FxClipboard::Clipboard> &, int)> updateFxInSlot)
+
 {
     assert(scene < n_scenes);
 
@@ -1734,7 +1808,32 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
             getPatch().scene[scene].osc[i].wavetable_display_name = clipboard_wt_names[i];
         }
 
+        auto fxOffset = 0;
+        if (scene == 0)
+        {
+            fxOffset = 0;
+        }
+        else if (scene == 1)
+        {
+            fxOffset = 4;
+        }
+        else
+        {
+            throw std::logic_error(
+                "Scene not 0 or 1; have you gone multi-scene without updating clipboard?");
+        }
+        for (int i = 0; i < n_fx_per_chain; ++i)
+        {
+            auto sl = fxslot_order[i + fxOffset];
+            if (clipboard_scenefx[i] &&
+                Surge::FxClipboard::isPasteAvailable(*(clipboard_scenefx[i])))
+            {
+                updateFxInSlot(clipboard_scenefx[i], sl);
+            }
+        }
+
         getPatch().scene[scene].monoVoicePriorityMode = clipboard_primode;
+        getPatch().scene[scene].monoVoiceEnvelopeMode = clipboard_envmode;
     }
 
     if (type == cp_modulator_target)
@@ -1961,6 +2060,19 @@ void SurgeStorage::clipboard_paste(int type, int scene, int entry, modsources ms
                 m.depth = clipboard_modulation_scene[i].depth;
                 m.destination_id = clipboard_modulation_scene[i].destination_id;
                 pushBackOrOverride(getPatch().scene[scene].modulation_scene, m);
+            }
+
+            n = clipboard_modulation_global.size();
+            for (int i = 0; i < n; i++)
+            {
+                ModulationRouting m;
+                m.source_id = clipboard_modulation_global[i].source_id;
+                m.source_index = clipboard_modulation_global[i].source_index;
+                m.source_scene = scene; /* clipboard_modulation_global[i].source_scene; */
+                m.depth = clipboard_modulation_global[i].depth;
+                m.destination_id = clipboard_modulation_global[i].destination_id;
+
+                pushBackOrOverride(getPatch().modulation_global, m);
             }
         }
     }

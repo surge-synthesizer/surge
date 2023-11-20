@@ -393,6 +393,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
 
     Surge::OSC::OpenSoundControl oscHandler;
+    std::atomic<bool> oscCheckStartup{false};
+    void tryLazyOscStartupFromStreamedState();
 
     bool initOSCIn(int port);
     bool initOSCOut(int port);

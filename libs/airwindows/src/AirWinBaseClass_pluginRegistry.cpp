@@ -236,13 +236,13 @@ std::vector<AirWinBaseClass::Registration> AirWinBaseClass::pluginRegistry()
 
     // XT 1.3 additions
     reg.emplace_back(create<YLowpass::YLowpass>, id++, 430, gnFilter, "YLowpass");
-    reg.emplace_back(create<YLowpass::YLowpass>, id++, 431, gnFilter, "YBandpass");
-    reg.emplace_back(create<YLowpass::YLowpass>, id++, 432, gnFilter, "YHighpass");
-    reg.emplace_back(create<YLowpass::YLowpass>, id++, 433, gnFilter, "YNotch");
+    reg.emplace_back(create<YBandpass::YBandpass>, id++, 431, gnFilter, "YBandpass");
+    reg.emplace_back(create<YHighpass::YHighpass>, id++, 432, gnFilter, "YHighpass");
+    reg.emplace_back(create<YNotch::YNotch>, id++, 433, gnFilter, "YNotch");
     reg.emplace_back(create<ZLowpass2::ZLowpass2>, id++, 434, gnFilter, "ZLowpass");
-    reg.emplace_back(create<ZLowpass2::ZLowpass2>, id++, 435, gnFilter, "ZBandpass");
-    reg.emplace_back(create<ZLowpass2::ZLowpass2>, id++, 436, gnFilter, "ZHighpass");
-    reg.emplace_back(create<ZLowpass2::ZLowpass2>, id++, 437, gnFilter, "ZNotch");
+    reg.emplace_back(create<ZBandpass2::ZBandpass2>, id++, 435, gnFilter, "ZBandpass");
+    reg.emplace_back(create<ZHighpass2::ZHighpass2>, id++, 436, gnFilter, "ZHighpass");
+    reg.emplace_back(create<ZNotch2::ZNotch2>, id++, 437, gnFilter, "ZNotch");
 #endif
 
     return reg;

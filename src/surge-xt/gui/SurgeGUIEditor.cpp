@@ -26,6 +26,10 @@
 #include "SurgeImageStore.h"
 #include "SurgeImage.h"
 
+#if HAS_JUCE
+#include "SurgeSharedBinary.h"
+#endif
+
 #include "UserDefaults.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
@@ -2386,6 +2390,10 @@ bool SurgeGUIEditor::open(void *parent)
     frame = std::make_unique<Surge::Widgets::MainFrame>();
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     frame->setSurgeGUIEditor(this);
+
+    // Comment this in to always start with focus debugger
+    // debugFocus = true;
+    // y-frame->debugFocus = true;
 
     juceEditor->topLevelContainer->addAndMakeVisible(*frame);
     juceEditor->addKeyListener(this);
@@ -5077,10 +5085,16 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                            });
     }
 
+#if HAS_JUCE
     oscSubMenu.addSeparator();
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."),
-                       [this]() { showHTML(this->parametersToHtml()); });
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."), [this]() {
+        auto oscSpec = std::string(SurgeSharedBinary::oscspecification_html,
+                                   SurgeSharedBinary::oscspecification_htmlSize) +
+                       "\n";
+        showHTML(oscSpec);
+    });
+#endif
 
     return oscSubMenu;
 }
@@ -5647,6 +5661,7 @@ void SurgeGUIEditor::alertBox(const std::string &title, const std::string &promp
     alert->setSkin(currentSkin, bitmapStore);
     alert->setDescription(title);
     alert->setWindowTitle(title);
+
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(prompt);
 

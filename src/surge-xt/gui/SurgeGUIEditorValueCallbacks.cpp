@@ -72,7 +72,7 @@ std::string decodeControllerID(int id)
     return out;
 }
 
-void addEnvTrigOptions(SurgeSynthesizer *synth, juce::PopupMenu &contextMenu, int current_scene)
+void SurgeGUIEditor::addEnvTrigOptions(juce::PopupMenu &contextMenu, int current_scene)
 {
     std::vector<std::string> labels = {"Reset to Zero", "Continue from Current Level"};
     std::vector<MonoVoiceEnvelopeMode> vals = {RESTART_FROM_ZERO, RESTART_FROM_LATEST};
@@ -88,7 +88,9 @@ void addEnvTrigOptions(SurgeSynthesizer *synth, juce::PopupMenu &contextMenu, in
 
         contextMenu.addItem(
             Surge::GUI::toOSCase(labels[i]), true, isChecked,
-            [synth, current_scene, value, isChecked]() {
+            [this, current_scene, value, isChecked]() {
+                undoManager()->pushPatch();
+
                 synth->storage.getPatch().scene[current_scene].monoVoiceEnvelopeMode = value;
 
                 if (!isChecked)
@@ -793,14 +795,26 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 synth->storage.clipboard_copy(cp_scene, current_scene, -1);
             });
 
-            contextMenu.addItem(Surge::GUI::toOSCase("Paste Scene"),
-                                synth->storage.get_clipboard_type() == cp_scene, // enabled
-                                false, [this]() {
-                                    undoManager()->pushPatch();
-                                    synth->storage.clipboard_paste(cp_scene, current_scene, -1);
-                                    synth->storage.getPatch().isDirty = true;
-                                    queue_refresh = true;
-                                });
+            contextMenu.addItem(
+                Surge::GUI::toOSCase("Paste Scene"),
+                synth->storage.get_clipboard_type() == cp_scene, // enabled
+                false, [this]() {
+                    undoManager()->pushPatch();
+                    synth->storage.clipboard_paste(
+                        cp_scene, current_scene, -1, ms_original,
+                        [this](int p, modsources m) {
+                            auto res = synth->isValidModulation(p, m);
+                            return res;
+                        },
+                        [this](std::unique_ptr<Surge::FxClipboard::Clipboard> &f, int cge) {
+                            Surge::FxClipboard::pasteFx(&(synth->storage), &synth->fxsync[cge], *f);
+                            synth->fx_reload[cge] = true;
+                        });
+
+                    synth->load_fx_needed = true;
+                    synth->storage.getPatch().isDirty = true;
+                    queue_refresh = true;
+                });
 
             contextMenu.showMenuAsync(popupMenuOptions(control->asJuceComponent(), false),
                                       Surge::GUI::makeEndHoverCallback(control));
@@ -1866,6 +1880,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         contextMenu.addItem(
                                             Surge::GUI::toOSCase(labels[i]), true, isChecked,
                                             [this, isChecked, vals, i]() {
+                                                undoManager()->pushPatch();
                                                 synth->storage.getPatch()
                                                     .scene[current_scene]
                                                     .monoVoicePriorityMode = vals[i];
@@ -1875,7 +1890,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     }
                                 }
 
-                                addEnvTrigOptions(synth, contextMenu, current_scene);
+                                addEnvTrigOptions(contextMenu, current_scene);
 
                                 contextMenu.addSeparator();
 
@@ -1886,7 +1901,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             if (p->val.i == pm_latch)
                             {
-                                addEnvTrigOptions(synth, contextMenu, current_scene);
+                                addEnvTrigOptions(contextMenu, current_scene);
                             }
                         }
                     }

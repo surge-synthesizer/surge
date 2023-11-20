@@ -142,7 +142,6 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
         std::lock_guard<std::mutex> grd(surgeLookAndFeelSetupMutex);
         if (auto sp = surgeLookAndFeelWeakPointer.lock())
         {
-            std::cout << "Re-using shared pointer" << std::endl;
             surgeLF = sp;
         }
         else

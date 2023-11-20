@@ -26,6 +26,7 @@
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
 #include "OverlayUtils.h"
+#include "SurgeGUIEditor.h"
 
 namespace Surge
 {
@@ -78,6 +79,14 @@ void Alert::addToggleButtonAndSetText(const std::string &t)
 {
     toggleButton = std::make_unique<juce::ToggleButton>(t);
     addAndMakeVisible(*toggleButton);
+}
+
+void Alert::resetAccessibility()
+{
+    auto txt = okButton->getButtonText().toStdString();
+    SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(okButton.get(), txt, "Press");
+    txt = cancelButton->getButtonText().toStdString();
+    SurgeGUIEditor::setAccessibilityInformationByTitleAndAction(cancelButton.get(), txt, "Press");
 }
 
 juce::Rectangle<int> Alert::getDisplayRegion()

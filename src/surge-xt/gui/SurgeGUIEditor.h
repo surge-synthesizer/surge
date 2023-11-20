@@ -320,6 +320,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void showZoomMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
     void showLfoMenu(const juce::Point<int> &where, Surge::GUI::IComponentTagValue *launchFrom);
 
+    void addEnvTrigOptions(juce::PopupMenu &, int);
+
     juce::PopupMenu::Options popupMenuOptions(const juce::Point<int> &where);
     juce::PopupMenu::Options popupMenuOptions(const juce::Component *c = nullptr,
                                               bool useComponentBounds = true);
@@ -350,8 +352,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     }
 
     std::string midiMappingToHtml();
-    std::string parametersToHtml();
-
     std::string patchToHtml(bool includeDefaults = false);
 
     // These are unused right now
@@ -495,8 +495,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setAccessibilityInformationByParameter(juce::Component *c, Parameter *p,
                                                 const std::string &action);
 
-    void setAccessibilityInformationByTitleAndAction(juce::Component *c, const std::string &title,
-                                                     const std::string &action);
+    static void setAccessibilityInformationByTitleAndAction(juce::Component *c,
+                                                            const std::string &title,
+                                                            const std::string &action);
 
     Surge::Overlays::MSEGEditor::State msegEditState[n_scenes][n_lfos];
     Surge::Overlays::MSEGEditor::State mostRecentCopiedMSEGState;
