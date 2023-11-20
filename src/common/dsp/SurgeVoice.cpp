@@ -636,8 +636,12 @@ void SurgeVoice::update_portamento()
              ((1.f / quantStep) * fabs(state.getPitch(storage) - state.portasrc_key) + 0.00001));
     }
 
+    float portaClamp = 4;
+    // more than 16 second portamento with the modulation is painful. See #7301
+    assert(scene->portamento.val_max.f < portaClamp);
     state.portaphase +=
-        storage->envelope_rate_linear(localcopy[scene->portamento.param_id_in_scene].f) *
+        storage->envelope_rate_linear(
+            std::min(localcopy[scene->portamento.param_id_in_scene].f, portaClamp)) *
         (scene->portamento.temposync ? storage->temposyncratio : 1.f) * const_rate_factor;
 
     if ((state.portaphase < 1) &&
