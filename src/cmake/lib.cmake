@@ -126,9 +126,10 @@ function(surge_make_installers)
       COMMAND tar cvzf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-linux-${SXTVER}-pluginsonly.tar.gz .
       )
   elseif(WIN32)
-    set(SURGE_PORTABLE_DIR ${CMAKE_BINARY_DIR}/surge-xt-portable)
-    set(portsst "${SURGE_PORTABLE_DIR}/Surge Synth Team")
-    add_custom_command(TARGET surge-xt-distribution
+    if (${SURGE_BITNESS} EQUAL 64)
+      set(SURGE_PORTABLE_DIR ${CMAKE_BINARY_DIR}/surge-xt-portable)
+      set(portsst "${SURGE_PORTABLE_DIR}/Surge Synth Team")
+      add_custom_command(TARGET surge-xt-distribution
         POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PORTABLE_DIR}
             COMMAND ${CMAKE_COMMAND} -E rm -rf "${portsst}"
@@ -151,6 +152,12 @@ function(surge_make_installers)
 
             COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-portable-install.zip "${SURGE_PORTABLE_DIR}/*"
             )
+    else()
+      add_custom_command(TARGET surge-xt-distribution
+        POST_BUILD
+        COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip ${SURGE_PRODUCT_DIR}
+      )
+    endif()
     find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
     if(SURGE_NUGET_EXE)
       message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}")
