@@ -106,7 +106,7 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
     void onSkinChanged() override;
     void setApplyEnabled(bool b) override;
 
-    void forceRefresh() override {}
+    void forceRefresh() override;
 
     DAWExtraStateStorage::EditorState::FormulaEditState &getEditState();
 

@@ -3213,31 +3213,35 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
                                     .lfo[currentLfoId]
                                     .shape.val.i;
 
-                if (isAnyOverlayPresent(MSEG_EDITOR))
+                for (const auto &ov : {MSEG_EDITOR, FORMULA_EDITOR})
                 {
-                    bool tornOut = false;
-                    juce::Point<int> tearOutPos;
-
-                    auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
-
-                    if (olw && olw->isTornOut())
+                    if (isAnyOverlayPresent(ov))
                     {
-                        tornOut = true;
-                        tearOutPos = olw->currentTearOutLocation();
-                    }
+                        bool tornOut = false;
+                        juce::Point<int> tearOutPos;
 
-                    closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                        auto olw = getOverlayWrapperIfOpen(ov);
 
-                    if (newshape == lt_mseg)
-                    {
-                        showOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                        if (tornOut)
+                        if (olw && olw->isTornOut())
                         {
-                            auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
+                            tornOut = true;
+                            tearOutPos = olw->currentTearOutLocation();
+                        }
 
-                            if (olw)
+                        closeOverlay(ov);
+
+                        if (newshape == lt_mseg || newshape == lt_formula)
+                        {
+                            showOverlay(ov);
+
+                            if (tornOut)
                             {
-                                olw->doTearOut(tearOutPos);
+                                auto olw = getOverlayWrapperIfOpen(ov);
+
+                                if (olw)
+                                {
+                                    olw->doTearOut(tearOutPos);
+                                }
                             }
                         }
                     }
@@ -3245,9 +3249,12 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
 
                 this->synth->refresh_editor = true;
             };
+
             m.addItem(p.name, action);
         }
+
         bool haveD = false;
+
         if (cat.path.empty())
         {
             // This is a preset in the root
@@ -5141,27 +5148,30 @@ void SurgeGUIEditor::reloadFromSkin()
     }
 
     // update overlays, if opened
-    if (isAnyOverlayPresent(MSEG_EDITOR))
+    for (const auto &ov : {MSEG_EDITOR, FORMULA_EDITOR})
     {
-        bool tornOut = false;
-        juce::Point<int> tearOutPos;
-        auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
-
-        if (olw && olw->isTornOut())
+        if (isAnyOverlayPresent(ov))
         {
-            tornOut = true;
-            tearOutPos = olw->currentTearOutLocation();
-        }
+            bool tornOut = false;
+            juce::Point<int> tearOutPos;
+            auto olw = getOverlayWrapperIfOpen(ov);
 
-        showOverlay(SurgeGUIEditor::MSEG_EDITOR);
-
-        if (tornOut)
-        {
-            auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
-
-            if (olw)
+            if (olw && olw->isTornOut())
             {
-                olw->doTearOut(tearOutPos);
+                tornOut = true;
+                tearOutPos = olw->currentTearOutLocation();
+            }
+
+            showOverlay(ov);
+
+            if (tornOut)
+            {
+                auto olw = getOverlayWrapperIfOpen(ov);
+
+                if (olw)
+                {
+                    olw->doTearOut(tearOutPos);
+                }
             }
         }
     }
@@ -7064,6 +7074,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         {
             auto msejc = dynamic_cast<juce::Component *>(lfoEditSwitch);
             msejc->setVisible(curr == lt_mseg || curr == lt_formula);
+
             if (curr == lt_formula)
                 setAccessibilityInformationByTitleAndAction(lfoEditSwitch->asJuceComponent(),
                                                             "Show Formula Editor", "Show");
@@ -7073,52 +7084,41 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         }
     }
 
-    bool hadExtendedEditor = false;
-    bool isTornOut = false;
-    juce::Point<int> tearOutPos;
-    if (isAnyOverlayPresent(MSEG_EDITOR))
+    for (const auto &ov : {MSEG_EDITOR, FORMULA_EDITOR})
     {
-        auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
-        if (olw && olw->isTornOut())
-        {
-            isTornOut = true;
-            tearOutPos = olw->currentTearOutLocation();
-        }
-        closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
-        hadExtendedEditor = true;
-    }
-    if (isAnyOverlayPresent(FORMULA_EDITOR))
-    {
-        auto olw = getOverlayWrapperIfOpen(FORMULA_EDITOR);
-        if (olw && olw->isTornOut())
-        {
-            isTornOut = true;
-            tearOutPos = olw->currentTearOutLocation();
-        }
-        closeOverlay(FORMULA_EDITOR);
-        hadExtendedEditor = true;
-    }
+        bool hadExtendedEditor = false;
+        bool isTornOut = false;
+        juce::Point<int> tearOutPos;
 
-    if (hadExtendedEditor)
-    {
-        if (curr == lt_mseg)
+        if (isAnyOverlayPresent(ov))
         {
-            showOverlay(SurgeGUIEditor::MSEG_EDITOR);
-            if (isTornOut)
+            auto olw = getOverlayWrapperIfOpen(ov);
+
+            if (olw && olw->isTornOut())
             {
-                auto olw = getOverlayWrapperIfOpen(MSEG_EDITOR);
-                if (olw)
-                    olw->doTearOut(tearOutPos);
+                isTornOut = true;
+                tearOutPos = olw->currentTearOutLocation();
             }
+
+            closeOverlay(ov);
+
+            hadExtendedEditor = true;
         }
-        if (curr == lt_formula)
+
+        if (hadExtendedEditor)
         {
-            showOverlay(FORMULA_EDITOR);
-            if (isTornOut)
+            if (curr == lt_mseg || curr == lt_formula)
             {
-                auto olw = getOverlayWrapperIfOpen(FORMULA_EDITOR);
-                if (olw)
-                    olw->doTearOut(tearOutPos);
+                showOverlay(ov);
+                if (isTornOut)
+                {
+                    auto olw = getOverlayWrapperIfOpen(ov);
+
+                    if (olw)
+                    {
+                        olw->doTearOut(tearOutPos);
+                    }
+                }
             }
         }
     }
@@ -7133,6 +7133,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
     // And now we have dynamic labels really anything
     auto modol =
         dynamic_cast<Surge::Overlays::ModulationEditor *>(getOverlayIfOpen(MODULATION_EDITOR));
+
     if (modol)
     {
         modol->rebuildContents();
@@ -7147,7 +7148,7 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 }
 
 /*
- * The edit state is independent per LFO. We want to sync some of ti as if it is not
+ * The edit state is independent per LFO. We want to sync some of it as if it is not
  * so this is called at the appropriate time.
  */
 void SurgeGUIEditor::broadcastMSEGState()
