@@ -890,6 +890,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             int16_t channelToReuse, keyToReuse;
             SurgeVoice *stealEnvelopesFrom{nullptr};
             bool wasGated{false};
+            float pkeyToReuse{0.f}, pphaseToReuse{0.f};
             for (iter = voices[scene].begin(); iter != voices[scene].end(); iter++)
             {
                 SurgeVoice *v = *iter;
@@ -902,6 +903,11 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         channelToReuse = v->originating_host_channel;
                         keyToReuse = v->originating_host_key;
                         stealEnvelopesFrom = v;
+                        if (v->state.portaphase < 1 && (v->state.portasrc_key != v->state.pkey))
+                        {
+                            pkeyToReuse = v->state.pkey;
+                            pphaseToReuse = v->state.portaphase;
+                        }
                         wasGated = true;
                     }
                     else
@@ -952,6 +958,14 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         &channelState[channel].keyState[key], &channelState[mpeMainChannel],
                         &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
                         host_originating_key, host_originating_channel, aegReuse, fegReuse);
+
+                    if (wasGated && pkeyToReuse > 0)
+                    {
+                        // In this case we want to continue the preivously
+                        // initiated porta
+                        nvoice->state.pkey = pkeyToReuse;
+                        nvoice->state.portaphase = 1 - pphaseToReuse;
+                    }
                 }
             }
         }
