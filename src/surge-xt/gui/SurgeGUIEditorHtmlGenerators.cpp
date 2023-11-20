@@ -454,8 +454,6 @@ th {
     return htmls.str();
 }
 
-=======
->>>>>>> main
 std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
 {
     std::ostringstream htmls;
