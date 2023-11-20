@@ -126,10 +126,31 @@ function(surge_make_installers)
       COMMAND tar cvzf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-linux-${SXTVER}-pluginsonly.tar.gz .
       )
   elseif(WIN32)
+    set(SURGE_PORTABLE_DIR ${CMAKE_BINARY_DIR}/surge-xt-portable)
+    set(portsst "${SURGE_PORTABLE_DIR}/Surge Synth Team")
     add_custom_command(TARGET surge-xt-distribution
-      POST_BUILD
-      COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip ${SURGE_PRODUCT_DIR}
-      )
+        POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PORTABLE_DIR}
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${portsst}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${portsst}"
+
+            COMMAND ${CMAKE_COMMAND} -E copy "${SURGE_PRODUCT_DIR}/Surge XT.clap" "${portsst}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${SURGE_PRODUCT_DIR}/Surge XT Effects.clap" "${portsst}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${SURGE_PRODUCT_DIR}/Surge XT.exe" "${portsst}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${SURGE_PRODUCT_DIR}/Surge XT Effects.exe" "${portsst}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${SURGE_PRODUCT_DIR}/surge-xt-cli.exe" "${portsst}"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${SURGE_PRODUCT_DIR}/Surge XT.vst3" "${portsst}/Surge XT.vst3"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${SURGE_PRODUCT_DIR}/Surge XT Effects.vst3" "${portsst}/Surge XT Effects.vst3"
+
+            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip "${portsst}/*"
+
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/resources/surge-shared/README_Portable.txt" "${SURGE_PORTABLE_DIR}/README.txt"
+
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${portsst}/SurgeXTData"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/resources/data" "${portsst}/SurgeXTData"
+
+            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-portable-install.zip "${SURGE_PORTABLE_DIR}/*"
+            )
     find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
     if(SURGE_NUGET_EXE)
       message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}")
