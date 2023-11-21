@@ -144,6 +144,7 @@ enum ctrltypes
     ct_stereowidth,
     ct_character,
     ct_sineoscmode,
+    ct_ringmod_sineoscmode,
     ct_sinefmlegacy,
     ct_countedset_percent,            // what % through a counted set are we
     ct_countedset_percent_extendable, // what % through a counted set are we

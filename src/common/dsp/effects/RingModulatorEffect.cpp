@@ -71,6 +71,11 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
     float dphase[MAX_UNISON];
     auto uni = std::max(1, *pd_int[rm_unison_voices]);
 
+    auto isAudioIn = (*pd_int[rm_carrier_shape] == fxdata->p[rm_carrier_shape].val_max.i);
+
+    if (isAudioIn)
+        uni = 1;
+
     // Has unison reset? If so modify settings
     if (uni != last_unison)
     {
@@ -114,24 +119,27 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
     dataOS[1] = dataR;
 #endif
 
-    for (int u = 0; u < uni; ++u)
+    if (!isAudioIn)
     {
-        // need to calc this every time since carrier freq could change
-        if (fxdata->p[rm_unison_detune].absolute)
+        for (int u = 0; u < uni; ++u)
         {
-            dphase[u] =
-                (storage->note_to_pitch(*pd_float[rm_carrier_freq] +
-                                        fxdata->p[rm_unison_detune].get_extended(
-                                            *pd_float[rm_unison_detune] * detune_offset[u]))) *
-                sri;
-        }
-        else
-        {
-            dphase[u] =
-                storage->note_to_pitch(*pd_float[rm_carrier_freq] +
-                                       fxdata->p[rm_unison_detune].get_extended(
-                                           *pd_float[rm_unison_detune] * detune_offset[u])) *
-                Tunings::MIDI_0_FREQ * sri;
+            // need to calc this every time since carrier freq could change
+            if (fxdata->p[rm_unison_detune].absolute)
+            {
+                dphase[u] =
+                    (storage->note_to_pitch(*pd_float[rm_carrier_freq] +
+                                            fxdata->p[rm_unison_detune].get_extended(
+                                                *pd_float[rm_unison_detune] * detune_offset[u]))) *
+                    sri;
+            }
+            else
+            {
+                dphase[u] =
+                    storage->note_to_pitch(*pd_float[rm_carrier_freq] +
+                                           fxdata->p[rm_unison_detune].get_extended(
+                                               *pd_float[rm_unison_detune] * detune_offset[u])) *
+                    Tunings::MIDI_0_FREQ * sri;
+            }
         }
     }
 
@@ -140,16 +148,27 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
         float resL = 0, resR = 0;
         for (int u = 0; u < uni; ++u)
         {
-            // TODO efficiency of course
-            auto vc = SineOscillator::valueFromSinAndCos(
-                sst::basic_blocks::dsp::fastsin(2.0 * M_PI * (phase[u] - 0.5)),
-                sst::basic_blocks::dsp::fastcos(2.0 * M_PI * (phase[u] - 0.5)),
-                *pd_int[rm_carrier_shape]);
-            phase[u] += dphase[u];
+            float vc[2]{0.f, 0.f};
 
-            if (phase[u] > 1)
+            if (isAudioIn)
             {
-                phase[u] -= (int)phase[u];
+                vc[0] = storage->audio_in[0][i] * 2.0;
+                vc[1] = storage->audio_in[1][i] * 2.0;
+            }
+            else
+            {
+                // TODO efficiency of course
+                vc[0] = SineOscillator::valueFromSinAndCos(
+                    sst::basic_blocks::dsp::fastsin(2.0 * M_PI * (phase[u] - 0.5)),
+                    sst::basic_blocks::dsp::fastcos(2.0 * M_PI * (phase[u] - 0.5)),
+                    *pd_int[rm_carrier_shape]);
+                vc[1] = vc[0];
+                phase[u] += dphase[u];
+
+                if (phase[u] > 1)
+                {
+                    phase[u] -= (int)phase[u];
+                }
             }
 
             for (int c = 0; c < 2; ++c)
@@ -157,8 +176,8 @@ void RingModulatorEffect::process(float *dataL, float *dataR)
                 auto vin = (c == 0 ? dataOS[0][i] : dataOS[1][i]);
                 auto wd = 1.0;
 
-                auto A = 0.5 * vin + vc;
-                auto B = vc - 0.5 * vin;
+                auto A = 0.5 * vin + vc[c];
+                auto B = vc[c] - 0.5 * vin;
 
                 float dPA = diode_sim(A);
                 float dMA = diode_sim(-A);
@@ -240,16 +259,45 @@ int RingModulatorEffect::group_label_ypos(int id)
 
 void RingModulatorEffect::init_ctrltypes()
 {
+    static struct RQD : public ParameterDynamicDeactivationFunction
+    {
+        bool getValue(const Parameter *p) const override
+        {
+            auto fx = &(p->storage->getPatch().fx[p->ctrlgroup_entry]);
+            auto idx = p - fx->p;
+            auto isAudioIn = (fx->p[rm_carrier_shape].val.i == fx->p[rm_carrier_shape].val_max.i);
+
+            switch (idx)
+            {
+            case rm_carrier_freq:
+            case rm_unison_detune:
+            case rm_unison_voices:
+                return isAudioIn;
+            default:
+                break;
+            }
+
+            return false;
+        }
+        Parameter *getPrimaryDeactivationDriver(const Parameter *p) const override
+        {
+            return nullptr;
+        }
+    } rmGroupDeact;
+
     Effect::init_ctrltypes();
 
     fxdata->p[rm_carrier_shape].set_name("Shape");
-    fxdata->p[rm_carrier_shape].set_type(ct_sineoscmode);
+    fxdata->p[rm_carrier_shape].set_type(ct_ringmod_sineoscmode);
     fxdata->p[rm_carrier_freq].set_name("Frequency");
     fxdata->p[rm_carrier_freq].set_type(ct_freq_ringmod);
+    fxdata->p[rm_carrier_freq].dynamicDeactivation = &rmGroupDeact;
     fxdata->p[rm_unison_detune].set_name("Unison Detune");
     fxdata->p[rm_unison_detune].set_type(ct_oscspread);
+    fxdata->p[rm_unison_detune].dynamicDeactivation = &rmGroupDeact;
     fxdata->p[rm_unison_voices].set_name("Unison Voices");
     fxdata->p[rm_unison_voices].set_type(ct_osccount);
+    fxdata->p[rm_unison_voices].dynamicDeactivation = &rmGroupDeact;
 
     fxdata->p[rm_diode_fwdbias].set_name("Forward Bias");
     fxdata->p[rm_diode_fwdbias].set_type(ct_percent);
