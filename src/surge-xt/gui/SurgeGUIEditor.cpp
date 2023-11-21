@@ -6093,6 +6093,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         hs->setSkin(currentSkin, bitmapStore, skinCtrl);
         hs->setMoveRate(p->moverate);
 
+        hs->setExtendedAccessibleGroupName(extendedAccessibleGroupName);
         setAccessibilityInformationByParameter(hs.get(), p, "Adjust");
 
         if (p->can_temposync())
@@ -6110,7 +6111,6 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             hs->setLabel(p->get_name());
         }
-        hs->setExtendedAccessibleGroupName(extendedAccessibleGroupName);
 
         hs->setBipolarFn([p]() { return p->is_bipolar(); });
         hs->setFontStyle(Surge::GUI::Skin::setFontStyleProperty(
