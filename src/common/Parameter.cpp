@@ -448,6 +448,7 @@ bool Parameter::is_discrete_selection() const
     {
     case ct_sinefmlegacy:
     case ct_sineoscmode:
+    case ct_ringmod_sineoscmode:
     case ct_wt2window:
     case ct_airwindows_fx:
     case ct_flangermode:
@@ -1054,6 +1055,12 @@ void Parameter::set_type(int ctrltype)
     case ct_sineoscmode:
         val_min.i = 0;
         val_max.i = 27;
+        valtype = vt_int;
+        val_default.i = 0;
+        break;
+    case ct_ringmod_sineoscmode:
+        val_min.i = 0;
+        val_max.i = 28; // above sineosc + 1 for audio in
         valtype = vt_int;
         val_default.i = 0;
         break;
@@ -3793,6 +3800,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 break;
             }
             break;
+        case ct_ringmod_sineoscmode:
         case ct_sineoscmode:
             switch (i)
             {
@@ -3805,6 +3813,9 @@ std::string Parameter::get_display(bool external, float ef) const
             case 6:
             case 7:
                 txt = fmt::format("Wave {:d} (TX {:d})", i + 1, i + 1);
+                break;
+            case 28: // only hit in ringmod_sineoscmode
+                txt = "Audio In";
                 break;
             default:
                 txt = fmt::format("Wave {:d}", i + 1);
@@ -4185,6 +4196,7 @@ bool Parameter::can_be_nondestructively_modulated() const
     case ct_osccount:
     case ct_pitch_octave:
     case ct_wt2window:
+    case ct_ringmod_sineoscmode:
     case ct_sineoscmode:
     case ct_sinefmlegacy:
     case ct_fmratio_int:
