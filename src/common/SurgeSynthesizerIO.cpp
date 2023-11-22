@@ -570,7 +570,26 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
             return;
         }
 
+        auto comppath = savepath;
         savepath /= catPath;
+
+        comppath = comppath.lexically_normal();
+        savepath = savepath.lexically_normal();
+
+        // make sure your category isnt "../../../etc/config"
+
+        auto [_, compIt] =
+            std::mismatch(savepath.begin(), savepath.end(), comppath.begin(), comppath.end());
+        if (compIt != comppath.end())
+        {
+            storage.reportError(
+                "Your save path is not a directory below the user patches directory. "
+                "This usually means you are doing something like trying to use too many ../"
+                " in your category name.",
+                "Save Path not below user path");
+            return;
+        }
+
         create_directories(savepath);
     }
     catch (...)
