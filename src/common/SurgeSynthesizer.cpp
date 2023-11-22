@@ -961,10 +961,13 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
 
                     if (wasGated && pkeyToReuse > 0)
                     {
+                        // This is commented out since it runs away in some
+                        // cases. It is an attempt to fix #7301
+
                         // In this case we want to continue the preivously
                         // initiated porta
-                        nvoice->state.pkey = pkeyToReuse;
-                        nvoice->state.portaphase = 1 - pphaseToReuse;
+                        // nvoice->state.pkey = pkeyToReuse;
+                        // nvoice->state.portaphase = 1 - pphaseToReuse;
                     }
                 }
             }
