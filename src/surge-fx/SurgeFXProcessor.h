@@ -26,6 +26,8 @@
 #include "SurgeStorage.h"
 #include "Effect.h"
 
+#include "sst/filters/HalfRateFilter.h"
+
 #include "juce_audio_processors/juce_audio_processors.h"
 
 #if MAC
@@ -285,6 +287,8 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
 
     std::atomic<bool> m_audioValid{true};
     std::string m_audioValidMessage{};
+
+    sst::filters::HalfRate::HalfRateFilter halfbandIN{6, true};
 
   private:
     template <typename T, typename F> struct FXAudioParameter : public T

@@ -287,13 +287,21 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             auto outL = mainOutput.getWritePointer(0, outPos);
             auto outR = mainOutput.getWritePointer(1, outPos);
 
-            if (effectNum == fxt_vocoder && sideChainBus && sideChainBus->isEnabled())
+            if ((effectNum == fxt_vocoder || effectNum == fxt_ringmod) && sideChainBus &&
+                sideChainBus->isEnabled())
             {
                 auto sideL = sideChainInput.getReadPointer(0, outPos);
                 auto sideR = sideChainInput.getReadPointer(1, outPos);
 
                 memcpy(storage->audio_in_nonOS[0], sideL, BLOCK_SIZE * sizeof(float));
                 memcpy(storage->audio_in_nonOS[1], sideR, BLOCK_SIZE * sizeof(float));
+
+                if (effectNum == fxt_ringmod)
+                {
+                    halfbandIN.process_block_U2(storage->audio_in_nonOS[0],
+                                                storage->audio_in_nonOS[1], storage->audio_in[0],
+                                                storage->audio_in[1], BLOCK_SIZE_OS);
+                }
             }
 
             for (int i = 0; i < n_fx_params; ++i)
