@@ -281,6 +281,7 @@ bool Parameter::can_extend_range() const
     case ct_decibel_narrow_short_extendable:
     case ct_oscspread:
     case ct_oscspread_bipolar:
+    case ct_filter_feedback:
     case ct_osc_feedback:
     case ct_osc_feedback_negative:
     case ct_lfoamplitude:
@@ -368,6 +369,7 @@ bool Parameter::has_deformoptions() const
     case ct_noise_color:
     case ct_amplitude_ringmod:
     case ct_bonsai_bass_boost:
+    case ct_filter_feedback:
     case ct_osc_feedback_negative:
         return true;
     default:
@@ -408,6 +410,7 @@ bool Parameter::is_bipolar() const
     case ct_noise_color:
     case ct_twist_aux_mix:
     case ct_freq_shift:
+    case ct_filter_feedback:
     case ct_osc_feedback_negative:
     case ct_lfodeform:
     case ct_airwindows_param_bipolar:
@@ -1198,6 +1201,7 @@ void Parameter::set_type(int ctrltype)
         valtype = vt_float;
         val_default.f = 0;
         break;
+    case ct_filter_feedback:
     case ct_osc_feedback_negative:
         val_min.f = -1;
         val_max.f = 1;
@@ -1577,6 +1581,7 @@ void Parameter::set_type(int ctrltype)
         displayInfo.extendFactor = 12;
         break;
 
+    case ct_filter_feedback:
     case ct_osc_feedback:
     case ct_osc_feedback_negative:
         displayType = LinearWithScale;
@@ -1730,6 +1735,7 @@ void Parameter::bound_value(bool force_integer)
         case ct_twist_aux_mix:
         case ct_noise_color:
         case ct_rotarydrive:
+        case ct_filter_feedback:
         case ct_osc_feedback:
         case ct_osc_feedback_negative:
         case ct_detuning:
@@ -2225,6 +2231,7 @@ float Parameter::get_extended(float f) const
         return 12.f * f;
     case ct_osc_feedback:
         return 8.f * f - 4.f * f;
+    case ct_filter_feedback:
     case ct_osc_feedback_negative:
         return 4.f * f;
     case ct_lfoamplitude:
@@ -4308,6 +4315,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_flangerpitch:
     case ct_flangervoices:
     case ct_flangerspacing:
+    case ct_filter_feedback:
     case ct_osc_feedback:
     case ct_osc_feedback_negative:
     case ct_chorusmodtime:

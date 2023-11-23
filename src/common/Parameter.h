@@ -155,6 +155,7 @@ enum ctrltypes
     ct_fxlfowave,
     ct_flangervoices,
     ct_flangerspacing,
+    ct_filter_feedback,
     ct_osc_feedback,
     ct_osc_feedback_negative,
     ct_chorusmodtime,
