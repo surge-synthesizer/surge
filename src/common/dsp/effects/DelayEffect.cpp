@@ -131,6 +131,7 @@ void DelayEffect::init_default_values()
 
     fxdata->p[dly_mod_rate].val.f = -2.f;
     fxdata->p[dly_mod_depth].val.f = 0.f;
+    fxdata->p[dly_mod_depth].set_extend_range(false);
     fxdata->p[dly_input_channel].val.f = 0.f;
     fxdata->p[dly_mix].val.f = 0.5f;
     fxdata->p[dly_width].val.f = 0.f;
@@ -154,5 +155,10 @@ void DelayEffect::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 18)
     {
         fxdata->p[dly_feedback].set_extend_range(false);
+    }
+
+    if (streamingRevision <= 21)
+    {
+        fxdata->p[dly_mod_depth].set_extend_range(false);
     }
 }
