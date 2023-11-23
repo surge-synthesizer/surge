@@ -859,11 +859,11 @@ void StringOscillator::init_ctrltypes()
     oscdata->p[str_exciter_level].val_default.f = 1.f;
 
     oscdata->p[str_str1_decay].set_name("String 1 Decay");
-    oscdata->p[str_str1_decay].set_type(ct_percent_with_extend_to_bipolar);
+    oscdata->p[str_str1_decay].set_type(ct_percent_with_extend_to_bipolar_static_default);
     oscdata->p[str_str1_decay].val_default.f = 0.95;
 
     oscdata->p[str_str2_decay].set_name("String 2 Decay");
-    oscdata->p[str_str2_decay].set_type(ct_percent_with_extend_to_bipolar);
+    oscdata->p[str_str2_decay].set_type(ct_percent_with_extend_to_bipolar_static_default);
     oscdata->p[str_str2_decay].val_default.f = 0.95;
 
     oscdata->p[str_str2_detune].set_name("String 2 Detune");

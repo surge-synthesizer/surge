@@ -60,6 +60,7 @@ enum ctrltypes
     ct_percent_bipolar_with_string_filter_hook,
     ct_percent_bipolar_w_dynamic_unipolar_formatting,
     ct_percent_with_extend_to_bipolar,
+    ct_percent_with_extend_to_bipolar_static_default,
     ct_noise_color,
     ct_twist_aux_mix,
     ct_pitch_octave,

@@ -86,7 +86,7 @@ const int FIRipolI16_N = 8;
 const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
 // clang-format off
-// XML file format revision
+// XML file format revision history
 // 0 -> 1                      new filter/amp EG attack shapes (0 -> 1, 1 -> 2, 2 -> 2)
 // 1 -> 2                      new LFO EG stages (if (decay == max) sustain = max else sustain = min)
 // 2 -> 3                      filter subtypes added: Comb defaults to 1, Legacy Ladder defaults to 3
@@ -129,6 +129,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                             changed MIDI mapping behavior
 //                             added capability to deactivate scenes
 //                             added Vintage FM feedback mode to FM2, FM3 and Sine oscillator types
+//                             added extend mode to Delay Crossfeed and Mod Depth parameters
 // clang-format on
 
 const int ff_revision = 22;
