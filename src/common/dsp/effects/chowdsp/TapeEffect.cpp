@@ -205,7 +205,6 @@ void TapeEffect::init_ctrltypes()
     fxdata->p[tape_drive].set_type(ct_tape_drive);
     fxdata->p[tape_drive].posy_offset = 1;
     fxdata->p[tape_drive].val_default.f = 0.85f;
-    fxdata->p[tape_drive].deform_type = SolverType::RK4;
     fxdata->p[tape_saturation].set_name("Saturation");
     fxdata->p[tape_saturation].set_type(ct_percent);
     fxdata->p[tape_saturation].posy_offset = 1;
