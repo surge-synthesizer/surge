@@ -84,7 +84,6 @@ void DelayEffect::init_ctrltypes()
     fxdata->p[dly_time_right].set_type(ct_envtime_linkable_delay);
     fxdata->p[dly_feedback].set_name("Feedback");
     fxdata->p[dly_feedback].set_type(ct_dly_fb_clippingmodes);
-    fxdata->p[dly_feedback].deform_type = 1;
 
     fxdata->p[dly_crossfeed].set_type(ct_percent);
     fxdata->p[dly_lowcut].set_type(ct_freq_audible_deactivatable_hp);
