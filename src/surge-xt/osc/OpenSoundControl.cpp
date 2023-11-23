@@ -190,7 +190,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string throwaway;
     std::getline(split, throwaway, '/');
 
-    std::string address1, address2, address3;
+    std::string address1, address2, address3, address4, address5;
     std::getline(split, address1, '/');
     bool querying = false;
 
@@ -476,6 +476,29 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
         }
 
+        // Special case for /param/fx/<s>/<n>/deactivate, which is not a true 'parameter'
+        else if ((address2 == "fx") && (hasEnding(addr, "deactivate")))
+        {
+            std::string scene = "";
+            std::string fxnum = "";
+            int fxidx = 0;
+            std::getline(split, scene, '/');
+            std::getline(split, fxnum, '/');
+            try
+            {
+                fxidx = stoi(fxnum);
+            }
+            catch (const std::exception &e)
+            {
+                sendError("Bad format for 'scene'. Should be 'a', 'b', 'send' or 'global'.");
+                return;
+            }
+
+            // n_fx_per_chain = 4;
+            // n_send_slots = 4;
+            // SurgeSYnthesizer::fx_suspend_bitmask
+        }
+
         // all the other /param messages
         else
         {
@@ -734,6 +757,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
+    }
+}
+
+bool OpenSoundControl::hasEnding(std::string const &fullString, std::string const &ending)
+{
+    if (fullString.length() >= ending.length())
+    {
+        return (0 ==
+                fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+    }
+    else
+    {
+        return false;
     }
 }
 
