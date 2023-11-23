@@ -403,9 +403,9 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
 
         a->push_back(scene[sc].feedback.assign(p_id.next(), id_s++, "feedback", "Feedback",
                                                fmt::format("{:c}/filter/feedback", 'a' + sc),
-                                               ct_osc_feedback_negative,
-                                               Surge::Skin::Filter::feedback, sc_id, cg_GLOBAL, 0,
-                                               true, int(kHorizontal) | int(kWhite) | int(sceasy)));
+                                               ct_filter_feedback, Surge::Skin::Filter::feedback,
+                                               sc_id, cg_GLOBAL, 0, true,
+                                               int(kHorizontal) | int(kWhite) | int(sceasy)));
 
         a->push_back(scene[sc].filterblock_configuration.assign(
             p_id.next(), id_s++, "fb_config", "Filter Configuration",
