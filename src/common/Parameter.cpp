@@ -269,6 +269,7 @@ bool Parameter::can_extend_range() const
     switch (ctrltype)
     {
     case ct_percent_with_extend_to_bipolar:
+    case ct_percent_with_extend_to_bipolar_static_default:
     case ct_pitch_semi7bp:
     case ct_pitch_semi7bp_absolutable:
     case ct_pitch_extendable_very_low_minval:
@@ -435,6 +436,7 @@ bool Parameter::is_bipolar() const
     break;
     case ct_dly_fb_clippingmodes:
     case ct_percent_with_extend_to_bipolar:
+    case ct_percent_with_extend_to_bipolar_static_default:
     {
         if (extend_range)
             res = true;
@@ -988,6 +990,7 @@ void Parameter::set_type(int ctrltype)
     case ct_percent:
     case ct_percent_with_string_deform_hook:
     case ct_percent_with_extend_to_bipolar:
+    case ct_percent_with_extend_to_bipolar_static_default:
     case ct_percent_deactivatable:
     case ct_dly_fb_clippingmodes:
     case ct_percent_oscdrift:
@@ -1369,6 +1372,7 @@ void Parameter::set_type(int ctrltype)
     {
     case ct_percent:
     case ct_percent_with_extend_to_bipolar:
+    case ct_percent_with_extend_to_bipolar_static_default:
     case ct_percent_with_string_deform_hook:
     case ct_dly_fb_clippingmodes:
     case ct_percent_bipolar_deactivatable:
@@ -1722,6 +1726,7 @@ void Parameter::bound_value(bool force_integer)
         {
         case ct_percent:
         case ct_percent_with_extend_to_bipolar:
+        case ct_percent_with_extend_to_bipolar_static_default:
         case ct_percent_with_string_deform_hook:
         case ct_percent_bipolar_deactivatable:
         case ct_percent_deactivatable:
@@ -2098,6 +2103,9 @@ void Parameter::set_extend_range(bool er)
     {
         switch (ctrltype)
         {
+        case ct_percent_with_extend_to_bipolar:
+            val_default.f = 0.f;
+            break;
         case ct_pitch_extendable_very_low_minval:
         {
             val_min.f = -60.f;
@@ -2159,6 +2167,9 @@ void Parameter::set_extend_range(bool er)
     {
         switch (ctrltype)
         {
+        case ct_percent_with_extend_to_bipolar:
+            val_default.f = 0.5f;
+            break;
         case ct_pitch_extendable_very_low_minval:
         {
             val_min.f = -117.3763; // 0.5 Hz
@@ -2258,6 +2269,7 @@ float Parameter::get_extended(float f) const
     break;
     case ct_dly_fb_clippingmodes:
     case ct_percent_with_extend_to_bipolar:
+    case ct_percent_with_extend_to_bipolar_static_default:
     {
         return 2 * f - 1;
     }
@@ -4243,6 +4255,7 @@ bool Parameter::can_setvalue_from_string() const
     {
     case ct_percent:
     case ct_percent_with_extend_to_bipolar:
+    case ct_percent_with_extend_to_bipolar_static_default:
     case ct_percent_with_string_deform_hook:
     case ct_percent_deactivatable:
     case ct_dly_fb_clippingmodes:

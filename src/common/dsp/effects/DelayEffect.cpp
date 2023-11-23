@@ -85,7 +85,7 @@ void DelayEffect::init_ctrltypes()
     fxdata->p[dly_feedback].set_name("Feedback");
     fxdata->p[dly_feedback].set_type(ct_dly_fb_clippingmodes);
 
-    fxdata->p[dly_crossfeed].set_type(ct_percent);
+    fxdata->p[dly_crossfeed].set_type(ct_percent_with_extend_to_bipolar);
     fxdata->p[dly_lowcut].set_type(ct_freq_audible_deactivatable_hp);
     fxdata->p[dly_highcut].set_type(ct_freq_audible_deactivatable_lp);
     fxdata->p[dly_mod_rate].set_type(ct_lforate);
@@ -122,6 +122,7 @@ void DelayEffect::init_default_values()
     fxdata->p[dly_feedback].deform_type = 1;
     fxdata->p[dly_feedback].set_extend_range(false);
     fxdata->p[dly_crossfeed].val.f = 0.0f;
+    fxdata->p[dly_crossfeed].set_extend_range(false);
 
     fxdata->p[dly_lowcut].val.f = -24.f;
     fxdata->p[dly_lowcut].deactivated = false;
@@ -159,6 +160,7 @@ void DelayEffect::handleStreamingMismatches(int streamingRevision,
 
     if (streamingRevision <= 21)
     {
+        fxdata->p[dly_crossfeed].set_extend_range(false);
         fxdata->p[dly_mod_depth].set_extend_range(false);
     }
 }
