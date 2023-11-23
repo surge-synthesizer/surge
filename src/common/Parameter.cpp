@@ -296,6 +296,7 @@ bool Parameter::can_extend_range() const
     case ct_countedset_percent_extendable:
     case ct_dly_fb_clippingmodes:
     case ct_bonsai_bass_boost:
+    case ct_detuning:
 
     // Extendable integers are really rare and special.
     // If you add one, you may want to chat with us on Discord!
@@ -1561,6 +1562,7 @@ void Parameter::set_type(int ctrltype)
     case ct_detuning:
         displayType = LinearWithScale;
         displayInfo.scale = 100.0;
+        displayInfo.extendFactor = 6;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "cents");
         break;
 
@@ -2222,6 +2224,8 @@ float Parameter::get_extended(float f) const
     case ct_decibel_extendable:
     case ct_bonsai_bass_boost:
         return 3.f * f;
+    case ct_detuning:
+        return 6.f * f;
     case ct_decibel_narrow_extendable:
         return 5.f * f;
     case ct_decibel_narrow_short_extendable:
