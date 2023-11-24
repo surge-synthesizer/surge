@@ -129,7 +129,7 @@ environment by adding `-DSURGE_BUILD_LV2=TRUE` on your initial CMake build.
 
 ## Building and Using the Python Bindings
 
-Surge XT uses `pybind` to expose the innards of the synth to Ppython code for direct
+Surge XT uses `pybind` to expose the innards of the synth to Python code for direct
 native access to all its features. This is a tool mostly useful for developers,
 and the [surge-python](https://github.com/surge-synthesizer/surge-python) 
 repository shows some uses.
