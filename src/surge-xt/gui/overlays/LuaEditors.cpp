@@ -791,7 +791,7 @@ void FormulaModulatorEditor::applyCode()
 
 void FormulaModulatorEditor::forceRefresh()
 {
-    mainDocument->insertText(0, formulastorage->formulaString);
+    mainDocument->replaceAllContent(formulastorage->formulaString);
     editor->repaintFrame();
 }
 
