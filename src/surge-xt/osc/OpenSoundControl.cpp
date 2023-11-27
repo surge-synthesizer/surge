@@ -481,7 +481,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         {
             std::string scene = "";
             std::string fxnum = "";
-            int fxidx = 0;
+            int fxidx = 0, fxslot = 0;
             std::getline(split, scene, '/');
             std::getline(split, fxnum, '/');
             try
@@ -490,13 +490,47 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
             catch (const std::exception &e)
             {
-                sendError("Bad format for 'scene'. Should be 'a', 'b', 'send' or 'global'.");
+                sendError("Bad format FX index.");
+                return;
+            }
+            if (!message[0].isFloat32())
+            {
+                // Not a valid data value
+                sendNotFloatError("fx deactivate", "on/off");
                 return;
             }
 
-            // n_fx_per_chain = 4;
-            // n_send_slots = 4;
-            // SurgeSYnthesizer::fx_suspend_bitmask
+            int onoff = message[0].getFloat32();
+            if (!((onoff == 0) || (onoff == 1)))
+            {
+                sendError("FX deactivate value must be 0 or 1.");
+                return;
+            }
+
+            if (scene == "a")
+            {
+                fxslot = fxidx;
+            }
+            else if (scene == "b")
+            {
+                fxslot = n_fx_per_chain + fxidx;
+            }
+            else if (scene == "send")
+            {
+                fxslot = n_fx_per_chain * n_scenes + fxidx;
+            }
+            else if (scene == "global")
+            {
+                fxslot = n_fx_per_chain * (n_scenes + 1) + fxidx;
+            }
+            else
+            {
+                sendError("Bad scene selector. Should be 'a', 'b', 'send' or 'global'.");
+                return;
+            }
+
+            // Send packet to audio thread
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(fxslot, onoff));
         }
 
         // all the other /param messages
