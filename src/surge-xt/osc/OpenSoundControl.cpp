@@ -479,10 +479,10 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // Special case for /param/fx/<s>/<n>/deactivate, which is not a true 'parameter'
         else if ((address2 == "fx") && (hasEnding(addr, "deactivate")))
         {
-            std::string scene = "";
+            std::string slot_type = "";
             std::string fxnum = "";
             int fxidx = 0, fxslot = 0;
-            std::getline(split, scene, '/');
+            std::getline(split, slot_type, '/');
             std::getline(split, fxnum, '/');
             try
             {
@@ -493,44 +493,59 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sendError("Bad format FX index.");
                 return;
             }
-            if (!message[0].isFloat32())
-            {
-                // Not a valid data value
-                sendNotFloatError("fx deactivate", "on/off");
-                return;
-            }
 
-            int onoff = message[0].getFloat32();
-            if (!((onoff == 0) || (onoff == 1)))
-            {
-                sendError("FX deactivate value must be 0 or 1.");
-                return;
-            }
-
-            if (scene == "a")
+            if (slot_type == "a")
             {
                 fxslot = fxidx;
             }
-            else if (scene == "b")
+            else if (slot_type == "b")
             {
                 fxslot = n_fx_per_chain + fxidx;
             }
-            else if (scene == "send")
+            else if (slot_type == "send")
             {
                 fxslot = n_fx_per_chain * n_scenes + fxidx;
             }
-            else if (scene == "global")
+            else if (slot_type == "global")
             {
                 fxslot = n_fx_per_chain * (n_scenes + 1) + fxidx;
             }
             else
             {
-                sendError("Bad scene selector. Should be 'a', 'b', 'send' or 'global'.");
+                sendError("Bad slot type selector. Should be 'a', 'b', 'send' or 'global'.");
                 return;
             }
 
-            // Send packet to audio thread
-            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(fxslot, onoff));
+            int selected_mask = 1 << (fxslot - 1);
+
+            if (querying)
+            {
+                int deac_mask = synth->storage.getPatch().fx_disable.val.i;
+                std::string deactivated = ((deac_mask & selected_mask) > 0) ? "yes" : "no";
+                std::string addr = "/param/fx/" + slot_type + "/" + fxnum + "/deactivate";
+                if (!this->juceOSCSender.send(
+                        juce::OSCMessage(juce::String(addr), juce::String(deactivated))))
+                    std::cout << "Error: could not send OSC message.";
+            }
+            else
+            {
+                if (!message[0].isFloat32())
+                {
+                    // Not a valid data value
+                    sendNotFloatError("fx deactivate", "on/off");
+                    return;
+                }
+
+                int onoff = message[0].getFloat32();
+                if (!((onoff == 0) || (onoff == 1)))
+                {
+                    sendError("FX deactivate value must be 0 or 1.");
+                    return;
+                }
+
+                // Send packet to audio thread
+                sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(selected_mask, onoff));
+            }
         }
 
         // all the other /param messages

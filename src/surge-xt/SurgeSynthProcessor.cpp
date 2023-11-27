@@ -757,8 +757,7 @@ void SurgeSynthProcessor::processBlockOSC()
 
         case SurgeSynthProcessor::FX_DISABLE:
         {
-            int fxslot = om.ival;
-            int selected_mask = 1 << (fxslot - 1);
+            int selected_mask = om.ival;
             int curmask = surge->storage.getPatch().fx_disable.val.i;
             int msk = selected_mask;
             int newDisabledMask = 0;
@@ -774,6 +773,7 @@ void SurgeSynthProcessor::processBlockOSC()
             surge->storage.getPatch().fx_disable.val.i = newDisabledMask;
             surge->fx_suspend_bitmask = newDisabledMask;
             surge->storage.getPatch().isDirty = true;
+            surge->refresh_editor = true;
             // std::cout << "newDisabledMask: " << std::bitset<16>(newDisabledMask) << std::endl;
         }
         break;

@@ -3689,7 +3689,6 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
             return;
 
         int d = fxc->getDeactivatedBitmask();
-        std::cout << "deactivatedBitmask: " << std::bitset<16>(d) << std::endl;
         synth->fx_suspend_bitmask = synth->storage.getPatch().fx_disable.val.i ^ d;
         synth->storage.getPatch().fx_disable.val.i = d;
         fxc->setDeactivatedBitmask(d);
