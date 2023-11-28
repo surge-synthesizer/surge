@@ -79,12 +79,16 @@ class NimbusEffect : public Effect
 
     virtual int get_ringout_decay() override { return -1; }
 
+    // Only used by rack
+    void setNimbusTrigger(bool b) { nimbusTrigger = b; }
+
   private:
     uint8_t *block_mem, *block_ccm;
     clouds::GranularProcessor *processor;
     static constexpr int processor_sr = 32000;
     static constexpr float processor_sr_inv = 1.f / 32000;
     int old_nmb_mode = 0;
+    bool nimbusTrigger{false};
 
     SRC_STATE_tag *surgeSR_to_euroSR, *euroSR_to_surgeSR;
 

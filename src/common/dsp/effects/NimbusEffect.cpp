@@ -165,8 +165,8 @@ void NimbusEffect::process(float *dataL, float *dataR)
             parm->reverb = clamp01(*pd_float[nmb_reverb]);
             parm->dry_wet = 1.f;
 
-            parm->trigger = false;     // this is an external granulating source. Skip it
-            parm->gate = parm->freeze; // This is the CV for the freeze button
+            parm->trigger = nimbusTrigger; // this is an external granulating source. Skip it
+            parm->gate = parm->freeze;     // This is the CV for the freeze button
 
             processor->Prepare();
             processor->Process(input, output, inputSz);
