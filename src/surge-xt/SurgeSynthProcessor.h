@@ -407,8 +407,14 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
 
     void patch_load_to_OSC(fs::path newpath);
     void param_change_to_OSC(std::string paramPath, std::string valStr);
-    void paramChangeToListeners(Parameter *p, bool isMacro = false, int macronum = 0,
-                                std::string newValue = "");
+    enum specialCaseType
+    {
+        SCT_MACRO,
+        SCT_FX_DEACT
+    };
+
+    void paramChangeToListeners(Parameter *p, bool isSpecialCase = false, int specialCaseType = -1,
+                                int macronum = 0, std::string newValue = "");
 
     // --- 'param change' listener(s) ----
     // Listeners are notified whenever a parameter finishes changing, along with the new value.

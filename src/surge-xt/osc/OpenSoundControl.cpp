@@ -23,8 +23,10 @@
 #include "OpenSoundControl.h"
 #include "Parameter.h"
 #include "SurgeSynthProcessor.h"
+#include "SurgeStorage.h"
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #include <string>
 #include "UnitConversions.h"
 #include "Tunings.h"
@@ -479,50 +481,41 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // Special case for /param/fx/<s>/<n>/deactivate, which is not a true 'parameter'
         else if ((address2 == "fx") && (hasEnding(addr, "deactivate")))
         {
-            std::string slot_type = "";
-            std::string fxnum = "";
             int fxidx = 0, fxslot = 0;
+            std::string slot_type = "";
+            std::string shortOSCname = "fx/";
+            std::string tmp = "";
             std::getline(split, slot_type, '/');
-            std::getline(split, fxnum, '/');
+            shortOSCname += slot_type + '/';
+            std::getline(split, tmp, '/');
             try
             {
-                fxidx = stoi(fxnum);
+                fxidx = stoi(tmp);
             }
             catch (const std::exception &e)
             {
                 sendError("Bad format FX index.");
                 return;
             }
+            shortOSCname += tmp;
 
-            if (slot_type == "a")
+            // find the shortOSCname
+            auto found = std::find(std::begin(fxslot_shortoscname), std::end(fxslot_shortoscname),
+                                   shortOSCname);
+            if (found == std::end(fxslot_shortoscname))
             {
-                fxslot = fxidx;
-            }
-            else if (slot_type == "b")
-            {
-                fxslot = n_fx_per_chain + fxidx;
-            }
-            else if (slot_type == "send")
-            {
-                fxslot = n_fx_per_chain * n_scenes + fxidx;
-            }
-            else if (slot_type == "global")
-            {
-                fxslot = n_fx_per_chain * (n_scenes + 1) + fxidx;
-            }
-            else
-            {
-                sendError("Bad slot type selector. Should be 'a', 'b', 'send' or 'global'.");
+                sendError("Bad slot/index selector.");
                 return;
             }
 
-            int selected_mask = 1 << (fxslot - 1);
+            fxslot = std::distance(std::begin(fxslot_shortoscname), found);
+            int selected_mask = 1 << fxslot;
 
             if (querying)
             {
                 int deac_mask = synth->storage.getPatch().fx_disable.val.i;
                 std::string deactivated = ((deac_mask & selected_mask) > 0) ? "yes" : "no";
-                std::string addr = "/param/fx/" + slot_type + "/" + fxnum + "/deactivate";
+                std::string addr = "/param/" + shortOSCname + "/deactivate";
                 if (!this->juceOSCSender.send(
                         juce::OSCMessage(juce::String(addr), juce::String(deactivated))))
                     std::cout << "Error: could not send OSC message.";

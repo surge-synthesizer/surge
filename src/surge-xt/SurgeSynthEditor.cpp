@@ -581,12 +581,9 @@ void SurgeSynthEditor::beginParameterEdit(Parameter *p)
 
 void SurgeSynthEditor::endParameterEdit(Parameter *p)
 {
-    //  std::cout << "END EDIT " << p->get_name() << std::endl;
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
     par->inEditGesture = false;
     par->endChangeGesture();
-
-    // std::cout << "endParameterEdit" << p->oscName << std::endl;
     processor.paramChangeToListeners(p);
 }
 
@@ -605,8 +602,7 @@ void SurgeSynthEditor::endMacroEdit(long macroNum)
     std::stringstream ss;
     ss << std::fixed << std::setprecision(4) << newval;
     std::string newval_str = ss.str();
-    processor.paramChangeToListeners(nullptr, true, macroNum, newval_str);
-    // std::cout << "macro #" << macroNum + 1 << " new val: " << newval_str << std::endl;
+    processor.paramChangeToListeners(nullptr, true, processor.SCT_MACRO, macroNum, newval_str);
 }
 
 #if LINUX

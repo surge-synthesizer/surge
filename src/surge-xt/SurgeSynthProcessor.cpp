@@ -315,18 +315,38 @@ void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, std::string
     }
 }
 
-void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isMacro, int macroNum,
+void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCase,
+                                                 int specialCaseType, int macroNum,
                                                  std::string newValue)
 {
     std::string valStr = "";
     for (auto &it : this->paramChangeListeners)
     {
-        if (isMacro)
+        if (isSpecialCase)
         {
-            std::ostringstream oss;
-            oss << "/param/macro/" << macroNum + 1;
-            (it.second)(oss.str(), newValue);
+            switch (specialCaseType)
+            {
+            case SCT_MACRO:
+            {
+                std::ostringstream oss;
+                oss << "/param/macro/" << macroNum + 1;
+                (it.second)(oss.str(), newValue);
+            }
+            break;
+
+            case SCT_FX_DEACT:
+            {
+                std::ostringstream oss;
+                oss << "/param/fx/<s>/<n>/deactivate";
+                (it.second)(oss.str(), "new mask: " + newValue);
+            }
+            break;
+
+            default:
+                break;
+            }
         }
+
         else
         {
             switch (p->valtype)

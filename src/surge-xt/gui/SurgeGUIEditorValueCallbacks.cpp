@@ -3688,8 +3688,17 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         if (!fxc)
             return;
 
+        int cur_bitmask = synth->storage.getPatch().fx_disable.val.i;
         int d = fxc->getDeactivatedBitmask();
-        synth->fx_suspend_bitmask = synth->storage.getPatch().fx_disable.val.i ^ d;
+        synth->fx_suspend_bitmask = cur_bitmask ^ d;
+
+        if (d != cur_bitmask)
+        {
+            // Send changed value of mask to OSC out
+            juceEditor->processor.paramChangeToListeners(
+                nullptr, true, juceEditor->processor.SCT_FX_DEACT, 0, std::to_string(d));
+        }
+
         synth->storage.getPatch().fx_disable.val.i = d;
         fxc->setDeactivatedBitmask(d);
 
