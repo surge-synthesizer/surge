@@ -23,8 +23,10 @@
 #include "OpenSoundControl.h"
 #include "Parameter.h"
 #include "SurgeSynthProcessor.h"
+#include "SurgeStorage.h"
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #include <string>
 #include "UnitConversions.h"
 #include "Tunings.h"
@@ -190,7 +192,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string throwaway;
     std::getline(split, throwaway, '/');
 
-    std::string address1, address2, address3;
+    std::string address1, address2, address3, address4, address5;
     std::getline(split, address1, '/');
     bool querying = false;
 
@@ -476,6 +478,69 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
         }
 
+        // Special case for /param/fx/<s>/<n>/deactivate, which is not a true 'parameter'
+        else if ((address2 == "fx") && (hasEnding(addr, "deactivate")))
+        {
+            int fxidx = 0, fxslot = 0;
+            std::string slot_type = "";
+            std::string shortOSCname = "fx/";
+            std::string tmp = "";
+            std::getline(split, slot_type, '/');
+            shortOSCname += slot_type + '/';
+            std::getline(split, tmp, '/');
+            try
+            {
+                fxidx = stoi(tmp);
+            }
+            catch (const std::exception &e)
+            {
+                sendError("Bad format FX index.");
+                return;
+            }
+            shortOSCname += tmp;
+
+            // find the shortOSCname
+            auto found = std::find(std::begin(fxslot_shortoscname), std::end(fxslot_shortoscname),
+                                   shortOSCname);
+            if (found == std::end(fxslot_shortoscname))
+            {
+                sendError("Bad slot/index selector.");
+                return;
+            }
+
+            fxslot = std::distance(std::begin(fxslot_shortoscname), found);
+            int selected_mask = 1 << fxslot;
+
+            if (querying)
+            {
+                int deac_mask = synth->storage.getPatch().fx_disable.val.i;
+                std::string deactivated = ((deac_mask & selected_mask) > 0) ? "yes" : "no";
+                std::string addr = "/param/" + shortOSCname + "/deactivate";
+                if (!this->juceOSCSender.send(
+                        juce::OSCMessage(juce::String(addr), juce::String(deactivated))))
+                    std::cout << "Error: could not send OSC message.";
+            }
+            else
+            {
+                if (!message[0].isFloat32())
+                {
+                    // Not a valid data value
+                    sendNotFloatError("fx deactivate", "on/off");
+                    return;
+                }
+
+                int onoff = message[0].getFloat32();
+                if (!((onoff == 0) || (onoff == 1)))
+                {
+                    sendError("FX deactivate value must be 0 or 1.");
+                    return;
+                }
+
+                // Send packet to audio thread
+                sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(selected_mask, onoff));
+            }
+        }
+
         // all the other /param messages
         else
         {
@@ -734,6 +799,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
+    }
+}
+
+bool OpenSoundControl::hasEnding(std::string const &fullString, std::string const &ending)
+{
+    if (fullString.length() >= ending.length())
+    {
+        return (0 ==
+                fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+    }
+    else
+    {
+        return false;
     }
 }
 

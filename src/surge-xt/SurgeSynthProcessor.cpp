@@ -315,18 +315,38 @@ void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, std::string
     }
 }
 
-void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isMacro, int macroNum,
+void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCase,
+                                                 int specialCaseType, int macroNum,
                                                  std::string newValue)
 {
     std::string valStr = "";
     for (auto &it : this->paramChangeListeners)
     {
-        if (isMacro)
+        if (isSpecialCase)
         {
-            std::ostringstream oss;
-            oss << "/param/macro/" << macroNum + 1;
-            (it.second)(oss.str(), newValue);
+            switch (specialCaseType)
+            {
+            case SCT_MACRO:
+            {
+                std::ostringstream oss;
+                oss << "/param/macro/" << macroNum + 1;
+                (it.second)(oss.str(), newValue);
+            }
+            break;
+
+            case SCT_FX_DEACT:
+            {
+                std::ostringstream oss;
+                oss << "/param/fx/<s>/<n>/deactivate";
+                (it.second)(oss.str(), "new mask: " + newValue);
+            }
+            break;
+
+            default:
+                break;
+            }
         }
+
         else
         {
             switch (p->valtype)
@@ -752,6 +772,29 @@ void SurgeSynthProcessor::processBlockOSC()
         case SurgeSynthProcessor::MOD:
         {
             surge->setModDepth01(om.param->id, (modsources)om.ival, om.scene, om.index, om.fval);
+        }
+        break;
+
+        case SurgeSynthProcessor::FX_DISABLE:
+        {
+            int selected_mask = om.ival;
+            int curmask = surge->storage.getPatch().fx_disable.val.i;
+            int msk = selected_mask;
+            int newDisabledMask = 0;
+            if (om.on == 0) // set selected bit to zero
+            {
+                msk = ~(msk & 0) ^ selected_mask; // all bits to 1 except selected bit
+                newDisabledMask = curmask & msk;
+            }
+            else // set selected bit to one
+            {
+                newDisabledMask = curmask | msk;
+            }
+            surge->storage.getPatch().fx_disable.val.i = newDisabledMask;
+            surge->fx_suspend_bitmask = newDisabledMask;
+            surge->storage.getPatch().isDirty = true;
+            surge->refresh_editor = true;
+            // std::cout << "newDisabledMask: " << std::bitset<16>(newDisabledMask) << std::endl;
         }
         break;
 
