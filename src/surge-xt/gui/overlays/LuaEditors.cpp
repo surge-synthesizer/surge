@@ -860,11 +860,12 @@ void FormulaModulatorEditor::escapeKeyPressed()
                 }
             }
         };
+        auto nocb = [this]() { grabKeyboardFocus(); };
 
         editor->alertYesNo("Close Formula Editor",
                            "Do you really want to close the formula editor? Any "
                            "changes that were not applied will be lost!",
-                           nullptr, cb);
+                           cb, nocb);
     }
     else
     {
