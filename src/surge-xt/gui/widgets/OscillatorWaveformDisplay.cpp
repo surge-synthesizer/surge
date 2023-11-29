@@ -1099,15 +1099,15 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
                     sge->undoManager()->pushWavetable(scene, oscInScene);
                 id = storage->getAdjacentWaveTable(oscdata->wt.current_id, false);
 
-                if (sge)
-                {
-                    std::string announce = "Loaded wavetable is: ";
-                    announce += storage->wt_list[id].name;
-                    sge->enqueueAccessibleAnnouncement(announce);
-                }
-
                 if (id >= 0)
                 {
+                    if (sge)
+                    {
+                        std::string announce = "Loaded wavetable is: ";
+                        announce += storage->wt_list[id].name;
+                        sge->enqueueAccessibleAnnouncement(announce);
+                    }
+
                     oscdata->wt.queue_id = id;
                 }
             }
@@ -1125,15 +1125,15 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
                 id = storage->getAdjacentWaveTable(oscdata->wt.current_id, true);
 
-                if (sge)
-                {
-                    std::string announce = "Loaded wavetable is: ";
-                    announce += storage->wt_list[id].name;
-                    sge->enqueueAccessibleAnnouncement(announce);
-                }
-
                 if (id >= 0)
                 {
+                    if (sge)
+                    {
+                        std::string announce = "Loaded wavetable is: ";
+                        announce += storage->wt_list[id].name;
+                        sge->enqueueAccessibleAnnouncement(announce);
+                    }
+
                     oscdata->wt.queue_id = id;
                 }
             }
