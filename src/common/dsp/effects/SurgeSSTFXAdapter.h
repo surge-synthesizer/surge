@@ -212,9 +212,16 @@ template <typename T> struct SurgeSSTFXBase : T
             this->fxdata->p[i].basicBlocksParamMetaData = pmd;
             auto check = [&, i](auto a, auto b, auto msg) {
                 if (a != b)
-                    std::cout << "Metadata Mismatch (" << msg << "): param[" << i << "]='"
-                              << pmd.name << "'; paramValue=" << a << " expected=" << b
+                {
+                    // If you are sitting here it is because your ct_blah for p[i] is not
+                    // consistent with your sst-effects ParamMetaData. Go fix one of the other
+                    // and this message will vanish
+                    std::string fxn = fx_type_names[this->fxdata->type.val.i];
+                    std::cout << "Metadata Mismatch (fx=" << fxn << " attr=" << msg << "): param["
+                              << i << "]='" << pmd.name << "'; param metadata value=" << a
+                              << " surge value=" << b << " " << __FILE__ << ":" << __LINE__
                               << std::endl;
+                }
             };
             if (pmd.type == sst::basic_blocks::params::ParamMetaData::Type::FLOAT)
             {
