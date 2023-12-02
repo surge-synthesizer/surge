@@ -14,6 +14,11 @@ local mod = {}
 --- MATH FUNCTIONS ---
 
 
+-- parity function returns 0 for even numbers and 1 for odd numbers
+function math.parity(x)
+    return (x % 2 == 1 and 1) or 0
+end
+
 -- signum function returns -1 for negative numbers, 0 for zero, 1 for positive numbers
 function math.sgn(x)
     return (x > 0 and 1) or (x < 0 and -1) or 0
