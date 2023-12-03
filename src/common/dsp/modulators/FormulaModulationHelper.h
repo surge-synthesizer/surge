@@ -55,7 +55,7 @@ struct EvaluatorState
     bool useEnvelope = true;
     bool isFinite = true;
 
-    bool subVoice{false}, subLfoParams{true}, subLfoEnvelope{false}, subTiming{true};
+    bool subVoice{false}, subLfoEnvelope{false}, subTiming{true};
     bool subMacros[n_customcontrollers], subAnyMacro{false};
 
     float del, a, h, dec, s, r;
