@@ -236,6 +236,7 @@ end
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
             addb("released", s.released);
+            addb("clamp_output", true);
 
             auto cres = lua_pcall(s.L, 1, 1, 0);
             if (cres == LUA_OK)
