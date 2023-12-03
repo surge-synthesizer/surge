@@ -203,10 +203,6 @@ end
         lua_pushboolean(s.L, false);
         lua_settable(s.L, -3);
 
-        lua_pushstring(s.L, "lfo_params");
-        lua_pushboolean(s.L, true);
-        lua_settable(s.L, -3);
-
         lua_pushstring(s.L, "voice");
         lua_pushboolean(s.L, false);
         lua_settable(s.L, -3);
@@ -319,7 +315,6 @@ end
                     return res;
                 };
                 s.subLfoEnvelope = gv("lfo_envelope");
-                s.subLfoParams = gv("lfo_params");
                 s.subVoice = gv("voice");
                 s.subTiming = gv("timing");
 
@@ -499,6 +494,11 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     lua_pushinteger(s->L, phaseIntPart);
     lua_settable(s->L, -3);
 
+    // Alias cycle for intphase
+    lua_pushstring(s->L, "cycle");
+    lua_pushinteger(s->L, phaseIntPart);
+    lua_settable(s->L, -3);
+
     auto addn = [s](const char *q, float f) {
         lua_pushstring(s->L, q);
         lua_pushnumber(s->L, f);
@@ -528,7 +528,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addn("sustain", s->s);
         addn("release", s->r);
     }
-    if (s->subLfoParams)
+    if (true /* s->subLfoParams */)
     {
         addn("rate", s->rate);
         addn("amplitude", s->amp);
