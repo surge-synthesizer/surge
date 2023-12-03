@@ -773,7 +773,8 @@ end)FN");
 
         auto cs = Surge::Formula::extractModStateKeyForTesting("is_voice", sms->formulastate);
         auto sval = std::get_if<float>(&cs);
-        REQUIRE(!sval); // a change - we don't even set is_voice if not voice subscribed
+        REQUIRE(sval); // a change - we don't even set is_voice if not voice subscribed
+        REQUIRE((bool)(*sval) == false);
     }
 
     SECTION("Gate And Channel")
@@ -827,7 +828,7 @@ end)FN");
             REQUIRE(!ival);
         };
         check("is_voice", 1, lms);
-        checkMissing("is_voice", sms);
+        check("is_voice", 0, sms);
         check("released", 0, lms);
         check("key", 87, lms);
         checkMissing("key", sms);
@@ -841,7 +842,7 @@ end)FN");
             surge->process();
 
         check("is_voice", 1, lms);
-        checkMissing("is_voice", sms);
+        check("is_voice", 0, sms);
         check("released", 1, lms);
         check("key", 87, lms);
     }
