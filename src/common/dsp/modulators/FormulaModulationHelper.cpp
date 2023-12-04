@@ -199,18 +199,6 @@ end
         }
         lua_settable(s.L, -3);
 
-        lua_pushstring(s.L, "lfo_envelope");
-        lua_pushboolean(s.L, false);
-        lua_settable(s.L, -3);
-
-        lua_pushstring(s.L, "voice");
-        lua_pushboolean(s.L, false);
-        lua_settable(s.L, -3);
-
-        lua_pushstring(s.L, "timing");
-        lua_pushboolean(s.L, true);
-        lua_settable(s.L, -3);
-
         lua_settable(s.L, -3);
 
         lua_pushstring(s.L, "samplerate");
@@ -229,6 +217,11 @@ end
                 lua_pushnumber(s.L, f);
                 lua_settable(s.L, -3);
             };
+            auto addb = [&s](const char *q, bool f) {
+                lua_pushstring(s.L, q);
+                lua_pushboolean(s.L, f);
+                lua_settable(s.L, -3);
+            };
 
             addn("delay", s.del);
             addn("decay", s.dec);
@@ -242,6 +235,8 @@ end
             addn("deform", s.deform);
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
+            addb("released", s.released);
+            addb("clamp_output", true);
 
             auto cres = lua_pcall(s.L, 1, 1, 0);
             if (cres == LUA_OK)
@@ -314,9 +309,6 @@ end
                     lua_pop(s.L, 1);
                     return res;
                 };
-                s.subLfoEnvelope = gv("lfo_envelope");
-                s.subVoice = gv("voice");
-                s.subTiming = gv("timing");
 
                 lua_pushstring(s.L, "macros");
                 lua_gettable(s.L, -2);
@@ -519,7 +511,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
     addn("phase", phaseFracPart);
 
-    if (s->subLfoEnvelope)
+    if (true /* s->subLfoEnvelope */)
     {
         addn("delay", s->del);
         addn("decay", s->dec);
@@ -536,19 +528,24 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addn("deform", s->deform);
     }
 
-    if (s->subTiming)
+    if (true /* s->subTiming */)
     {
         addn("tempo", s->tempo);
         addn("songpos", s->songpos);
         addb("released", s->released);
     }
 
-    if (s->subVoice && s->isVoice)
+    if (/* s->subVoice  && */ s->isVoice)
     {
         addb("is_voice", s->isVoice);
         addn("key", s->key);
         addn("velocity", s->velocity);
         addn("channel", s->channel);
+        addb("released", s->released);
+    }
+    else
+    {
+        addb("is_voice", false);
     }
 
     addnil("retrigger_AEG");
