@@ -11,10 +11,13 @@ This uses scikit-build, a tool for packaging Python extensions built
 with CMake. For more information see https://scikit-build.readthedocs.io
 """
 from skbuild import setup
-
+from pathlib import Path
 
 def just_surgepy(cmake_manifest):
     return [x for x in cmake_manifest if "surgepy" in x]
+
+def find_stubs(path: Path):
+    return [str(pyi.relative_to(path)) for pyi in path.rglob("*.pyi")]
 
 
 setup(
@@ -35,4 +38,5 @@ setup(
         "-DSURGE_SKIP_STANDALONE=TRUE",
     ],
     cmake_process_manifest_hook=just_surgepy,
+    package_data={"surgepy": [*find_stubs(path=Path("surgepy"))]},
 )
