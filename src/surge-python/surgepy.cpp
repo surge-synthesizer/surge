@@ -36,7 +36,7 @@ namespace py = pybind11;
 /*
  * Generate stub types by running `pip install pybind11-stubgen && pybind11-stubgen surgepy`
  * and copy `out/` folder contents to `./surgepy`.
- */ 
+ */
 
 class PythonPluginLayerProxy : public SurgeSynthesizer::PluginLayer
 {
