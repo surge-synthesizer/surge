@@ -75,6 +75,7 @@ enum KeyboardActions
     ZOOM_PLUS_25,
     ZOOM_MINUS_10,
     ZOOM_MINUS_25,
+    ZOOM_FULLSCREEN,
 
     FOCUS_NEXT_CONTROL_GROUP,
     FOCUS_PRIOR_CONTROL_GROUP,
@@ -169,6 +170,8 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "ZOOM_MINUS_10";
     case ZOOM_MINUS_25:
         return "ZOOM_MINUS_25";
+    case ZOOM_FULLSCREEN:
+        return "ZOOM_FULLSCREEN";
 
     case REFRESH_SKIN:
         return "REFRESH_SKIN";
@@ -303,19 +306,22 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         break;
 
     case ZOOM_TO_DEFAULT:
-        desc = "Zoom to Default";
+        desc = Surge::GUI::toOSCase("Zoom: ") + Surge::GUI::toOSCase("Default");
         break;
     case ZOOM_PLUS_10:
-        desc = "Zoom +10%";
+        desc = "Zoom: +10%";
         break;
     case ZOOM_PLUS_25:
-        desc = "Zoom +25%";
+        desc = "Zoom: +25%";
         break;
     case ZOOM_MINUS_10:
-        desc = "Zoom -10%";
+        desc = "Zoom: -10%";
         break;
     case ZOOM_MINUS_25:
-        desc = "Zoom -25%";
+        desc = "Zoom: -25%";
+        break;
+    case ZOOM_FULLSCREEN:
+        desc = Surge::GUI::toOSCase("Zoom: ") + Surge::GUI::toOSCase("Toggle Fullscreen");
         break;
 
     case REFRESH_SKIN:
