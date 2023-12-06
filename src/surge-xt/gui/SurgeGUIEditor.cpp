@@ -3916,42 +3916,50 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
                 },
                 zoomStatus);
         });
+    }
 
-        if (Surge::GUI::getIsStandalone())
+    if (Surge::GUI::getIsStandalone())
+    {
+        juce::Component *comp = frame.get();
+
+        while (comp)
         {
-            juce::Component *comp = frame.get();
-            while (comp)
+            auto *cdw = dynamic_cast<juce::ResizableWindow *>(comp);
+
+            if (cdw)
             {
-                auto *cdw = dynamic_cast<juce::ResizableWindow *>(comp);
-                if (cdw)
+                zoomSubMenu.addSeparator();
+
+                if (cdw->isFullScreen())
                 {
-                    zoomSubMenu.addSeparator();
-                    if (cdw->isFullScreen())
-                    {
-                        zoomSubMenu.addItem("Exit Full Screen",
-                                            [this, w = juce::Component::SafePointer(cdw)]() {
-                                                if (w)
-                                                {
-                                                    w->setFullScreen(false);
-                                                }
-                                            });
-                    }
-                    else
-                    {
-                        zoomSubMenu.addItem("Enter Full Screen",
-                                            [w = juce::Component::SafePointer(cdw)]() {
-                                                if (w)
-                                                {
-                                                    w->setFullScreen(true);
-                                                }
-                                            });
-                    }
-                    comp = nullptr;
+                    Surge::GUI::addMenuWithShortcut(
+                        zoomSubMenu, Surge::GUI::toOSCase("Exit Fullscreen Mode"),
+                        showShortcutDescription("F11"),
+                        [this, w = juce::Component::SafePointer(cdw)]() {
+                            if (w)
+                            {
+                                w->setFullScreen(false);
+                            }
+                        });
                 }
                 else
                 {
-                    comp = comp->getParentComponent();
+                    Surge::GUI::addMenuWithShortcut(
+                        zoomSubMenu, Surge::GUI::toOSCase("Enter Fullscreen Mode"),
+                        showShortcutDescription("F11"),
+                        [this, w = juce::Component::SafePointer(cdw)]() {
+                            if (w)
+                            {
+                                w->setFullScreen(true);
+                            }
+                        });
                 }
+
+                comp = nullptr;
+            }
+            else
+            {
+                comp = comp->getParentComponent();
             }
         }
     }
@@ -7423,6 +7431,11 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_10, {keymap_t::Modifiers::NONE, '-'});
     keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_25, {keymap_t::Modifiers::SHIFT, '-'});
 
+    if (Surge::GUI::getIsStandalone())
+    {
+        keyMapManager->addBinding(Surge::GUI::ZOOM_FULLSCREEN, {juce::KeyPress::F11Key});
+    }
+
     keyMapManager->addBinding(Surge::GUI::FOCUS_NEXT_CONTROL_GROUP,
                               {keymap_t::Modifiers::ALT, (int)'.'});
     keyMapManager->addBinding(Surge::GUI::FOCUS_PRIOR_CONTROL_GROUP,
@@ -7651,10 +7664,43 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                         ? -1
                         : 1;
                 auto jog = zl * di;
+
                 resizeWindow(getZoomFactor() + jog);
+
                 return true;
             }
+            case Surge::GUI::ZOOM_FULLSCREEN:
+            {
+                if (Surge::GUI::getIsStandalone())
+                {
+                    juce::Component *comp = frame.get();
 
+                    while (comp)
+                    {
+                        auto *cdw = dynamic_cast<juce::ResizableWindow *>(comp);
+
+                        if (cdw)
+                        {
+                            auto w = juce::Component::SafePointer(cdw);
+
+                            if (w)
+                            {
+                                w->setFullScreen(!cdw->isFullScreen());
+                            }
+
+                            comp = nullptr;
+                        }
+                        else
+                        {
+                            comp = comp->getParentComponent();
+                        }
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
             case Surge::GUI::FOCUS_NEXT_CONTROL_GROUP:
             case Surge::GUI::FOCUS_PRIOR_CONTROL_GROUP:
             {
