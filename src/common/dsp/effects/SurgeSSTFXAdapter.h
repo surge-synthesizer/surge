@@ -173,6 +173,8 @@ template <typename T> struct SurgeSSTFXBase : T
 
     int get_ringout_decay() override { return T::getRingoutDecay(); }
 
+    void sampleRateReset() override { T::onSampleRateChanged(); }
+
     const char *get_effectname() override { return T::effectName; }
 
     void init_default_values() override
