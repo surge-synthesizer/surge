@@ -26,18 +26,23 @@ AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pda
     : Effect(storage, fxdata, pd)
 {
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
+
     if (storage && (slotType == a_insert_slot || slotType == b_insert_slot))
     {
         int scene = slotType == a_insert_slot ? 1 : 0;
+
         for (int i = 0; i < N_OUTPUTS; i++)
+        {
             sceneDataPtr[i] = storage->scenesOutputData.getSceneData(scene, i);
+        }
     }
 }
+
 void AudioInputEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
-    // -----  Audio Input
+    //   audio input
     fxdata->p[in_audio_input_channel].set_name("Channel");
     fxdata->p[in_audio_input_channel].set_type(ct_percent_bipolar_stereo);
     fxdata->p[in_audio_input_channel].posy_offset = 1;
@@ -50,7 +55,7 @@ void AudioInputEffect::init_ctrltypes()
     fxdata->p[in_audio_input_level].set_type(ct_decibel_attenuation_large);
     fxdata->p[in_audio_input_level].posy_offset = 1;
 
-    // -----  Effect Input
+    // effect input
     fxdata->p[in_effect_input_channel].set_name("Channel");
     fxdata->p[in_effect_input_channel].set_type(ct_percent_bipolar_stereo);
     fxdata->p[in_effect_input_channel].posy_offset = 3;
@@ -63,8 +68,9 @@ void AudioInputEffect::init_ctrltypes()
     fxdata->p[in_effect_input_level].set_type(ct_decibel_attenuation_large);
     fxdata->p[in_effect_input_level].posy_offset = 3;
 
-    // -----  Scene Input
+    // scene input
     effect_slot_type slot_type = getSlotType(fxdata->fxslot);
+
     if (slot_type == a_insert_slot || slot_type == b_insert_slot)
     {
         fxdata->p[in_scene_input_channel].set_name("Channel");
@@ -80,9 +86,9 @@ void AudioInputEffect::init_ctrltypes()
         fxdata->p[in_scene_input_level].posy_offset = 5;
     }
 
-    // -----  Output
+    // output
     fxdata->p[in_output_width].set_name("Width");
-    fxdata->p[in_output_width].set_type(ct_percent_bipolar_stereo);
+    fxdata->p[in_output_width].set_type(ct_percent_bipolar);
     fxdata->p[in_output_width].posy_offset = 7;
 
     fxdata->p[in_output_mix].set_name("Mix");
@@ -92,33 +98,45 @@ void AudioInputEffect::init_ctrltypes()
 
 void AudioInputEffect::init_default_values()
 {
-    fxdata->p[in_audio_input_channel].val.f = 0.0; // p0
-    fxdata->p[in_audio_input_pan].val.f = 0.0;     // p1
-    fxdata->p[in_audio_input_level].val.f = -96.0; // p2
+    fxdata->p[in_audio_input_channel].val.f = 0.0;
+    fxdata->p[in_audio_input_pan].val.f = 0.0;
+    fxdata->p[in_audio_input_level].val.f = -96.0;
 
-    fxdata->p[in_effect_input_channel].val.f = 0.0; // p3
-    fxdata->p[in_effect_input_pan].val.f = 0.0;     // p4
-    fxdata->p[in_effect_input_level].val.f = 0.0;   // p5
+    fxdata->p[in_effect_input_channel].val.f = 0.0;
+    fxdata->p[in_effect_input_pan].val.f = 0.0;
+    fxdata->p[in_effect_input_level].val.f = 0.0;
 
-    fxdata->p[in_scene_input_channel].val.f = 0.0; // p6
-    fxdata->p[in_scene_input_pan].val.f = 0.0;     // p7
-    fxdata->p[in_scene_input_level].val.f = -96.0; // p8
+    fxdata->p[in_scene_input_channel].val.f = 0.0;
+    fxdata->p[in_scene_input_pan].val.f = 0.0;
+    fxdata->p[in_scene_input_level].val.f = -96.0;
 
-    fxdata->p[in_output_width].val.f = 1.0; // p9
-    fxdata->p[in_output_mix].val.f = 1.0;   // p10
+    fxdata->p[in_output_width].val.f = 1.0;
+    fxdata->p[in_output_mix].val.f = 1.0;
 }
+
 const char *AudioInputEffect::group_label(int id)
 {
     std::vector group_labels = {{"Audio Input", "Effect Input", "Scene Input", "Output"}};
     effect_slot_type slot_type = getSlotType(fxdata->fxslot);
+
     if (slot_type == a_insert_slot)
+    {
         group_labels[2] = "Scene B Input";
+    }
     else if (slot_type == b_insert_slot)
+    {
         group_labels[2] = "Scene A Input";
+    }
     else
+    {
         group_labels.erase(group_labels.begin() + 2);
+    }
+
     if (id >= 0 && id < group_labels.size())
+    {
         return group_labels[id];
+    }
+
     return 0;
 }
 
@@ -126,12 +144,20 @@ int AudioInputEffect::group_label_ypos(int id)
 {
     std::vector ypos = {1, 9, 17, 25};
     effect_slot_type slot_type = getSlotType(fxdata->fxslot);
+
     if (slot_type != a_insert_slot && slot_type != b_insert_slot)
+    {
         ypos.erase(ypos.begin() + 2);
+    }
+
     if (id >= 0 && id < ypos.size())
+    {
         return ypos[id];
+    }
+
     return 0;
 }
+
 AudioInputEffect::effect_slot_type AudioInputEffect::getSlotType(fxslot_positions p)
 {
     switch (p)
@@ -158,46 +184,54 @@ AudioInputEffect::effect_slot_type AudioInputEffect::getSlotType(fxslot_position
 
 void AudioInputEffect::process(float *dataL, float *dataR)
 {
-
-    float &effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
-    float &effectInputPan = fxdata->p[in_effect_input_pan].val.f;
-    float &effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
+    auto &effectInputChannel = *pd_float[in_effect_input_channel];
+    auto &effectInputPan = *pd_float[in_effect_input_pan];
+    auto &effectInputLevel = *pd_float[in_effect_input_level];
     float *drySignal[] = {dataL, dataR};
-
     float effectDataBuffer[2][BLOCK_SIZE];
+
     std::memcpy(effectDataBuffer[0], dataL, BLOCK_SIZE * sizeof(float));
     std::memcpy(effectDataBuffer[1], dataR, BLOCK_SIZE * sizeof(float));
-    float *effectDataBuffers[]{effectDataBuffer[0], effectDataBuffer[1]};
-    applySlidersControls(effectDataBuffers, effectInputChannel, effectInputPan, effectInputLevelDb);
 
-    float &inputChannel = fxdata->p[in_audio_input_channel].val.f;
-    float &inputPan = fxdata->p[in_audio_input_pan].val.f;
-    float &inputLevelDb = fxdata->p[in_audio_input_level].val.f;
+    float *effectDataBuffers[]{effectDataBuffer[0], effectDataBuffer[1]};
+
+    applyParameters(effectDataBuffers, effectInputChannel, effectInputPan, effectInputLevel);
+
+    auto &inputChannel = *pd_float[in_audio_input_channel];
+    auto &inputPan = *pd_float[in_audio_input_pan];
+    auto &inputLevel = *pd_float[in_audio_input_level];
     float *inputData[] = {storage->audio_in_nonOS[0], storage->audio_in_nonOS[1]};
     float inputDataBuffer[2][BLOCK_SIZE];
 
     std::memcpy(inputDataBuffer[0], inputData[0], BLOCK_SIZE * sizeof(float));
     std::memcpy(inputDataBuffer[1], inputData[1], BLOCK_SIZE * sizeof(float));
+
     float *inputDataBuffers[] = {inputDataBuffer[0], inputDataBuffer[1]};
 
-    applySlidersControls(inputDataBuffers, inputChannel, inputPan, inputLevelDb);
+    applyParameters(inputDataBuffers, inputChannel, inputPan, inputLevel);
 
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
+
     if (slotType == a_insert_slot || slotType == b_insert_slot)
     {
-        float &sceneInputChannel = fxdata->p[in_scene_input_channel].val.f;
-        float &sceneInputPan = fxdata->p[in_scene_input_pan].val.f;
-        float &sceneInputLevelDb = fxdata->p[in_scene_input_level].val.f;
+        auto &sceneInputChannel = *pd_float[in_scene_input_channel];
+        auto &sceneInputPan = *pd_float[in_scene_input_pan];
+        auto &sceneInputLevel = *pd_float[in_scene_input_level];
 
         float *sceneData[] = {
             sceneDataPtr[0].get(),
             sceneDataPtr[1].get(),
         };
+
         float sceneDataBuffer[2][BLOCK_SIZE];
+
         std::memcpy(sceneDataBuffer[0], sceneData[0], BLOCK_SIZE * sizeof(float));
         std::memcpy(sceneDataBuffer[1], sceneData[1], BLOCK_SIZE * sizeof(float));
+
         float *sceneDataBuffers[]{sceneDataBuffer[0], sceneDataBuffer[1]};
-        applySlidersControls(sceneDataBuffers, sceneInputChannel, sceneInputPan, sceneInputLevelDb);
+
+        applyParameters(sceneDataBuffers, sceneInputChannel, sceneInputPan, sceneInputLevel);
+
         // mixing the scene audio input and the effect audio input
         for (int i = 0; i < BLOCK_SIZE; ++i)
         {
@@ -205,6 +239,7 @@ void AudioInputEffect::process(float *dataL, float *dataR)
             effectDataBuffer[1][i] += sceneDataBuffer[1][i];
         }
     }
+
     // mixing the effect and audio input
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
@@ -212,8 +247,8 @@ void AudioInputEffect::process(float *dataL, float *dataR)
         effectDataBuffer[1][i] += inputDataBuffer[1][i];
     }
 
-    float &outputWidth = fxdata->p[in_output_width].val.f;
-    float &outputMix = fxdata->p[in_output_mix].val.f;
+    auto &outputWidth = *pd_float[in_output_width];
+    auto &outputMix = *pd_float[in_output_mix];
 
     float *dryL = drySignal[0];
     float *dryR = drySignal[1];
@@ -225,6 +260,7 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     {
         float mid = 0.5f * (wetL[i] + wetR[i]);                // Mid (mono) signal
         float side = outputWidth * 0.5f * (wetL[i] - wetR[i]); // Sides (stereo) signal
+
         wetL[i] = mid + side;
         wetR[i] = mid - side;
     }
@@ -234,13 +270,14 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     {
         float wetMix = outputMix;
         float dryMix = 1.0f - outputMix;
+
         dryL[i] = dryMix * dryL[i] + wetMix * wetL[i];
         dryR[i] = dryMix * dryR[i] + wetMix * wetR[i];
     }
 }
 
-void AudioInputEffect::applySlidersControls(float *buffer[], const float &channel, const float &pan,
-                                            const float &levelDb)
+void AudioInputEffect::applyParameters(float *buffer[], const float &channel, const float &pan,
+                                       const float &level)
 {
     float leftGain, rightGain;
 
@@ -262,6 +299,7 @@ void AudioInputEffect::applySlidersControls(float *buffer[], const float &channe
     }
 
     float tempBuffer[2][BLOCK_SIZE];
+
     std::memcpy(tempBuffer[0], buffer[0], BLOCK_SIZE * sizeof(float));
     std::memcpy(tempBuffer[1], buffer[1], BLOCK_SIZE * sizeof(float));
 
@@ -274,7 +312,8 @@ void AudioInputEffect::applySlidersControls(float *buffer[], const float &channe
         buffer[1][i] = buffer[1][i] * rightToRight + tempBuffer[0][i] * (1.0f - leftToLeft);
     }
 
-    float effectInputLevelGain = std::pow(10.0f, levelDb / 20.0f);
+    float effectInputLevelGain = std::pow(10.0f, level / 20.0f);
+
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
         buffer[0][i] *= effectInputLevelGain;

@@ -32,6 +32,7 @@ class AudioInputEffect : public Effect
         send_slot,
         global_slot
     };
+
     enum in_params
     {
         in_audio_input_channel = 0,
@@ -51,8 +52,10 @@ class AudioInputEffect : public Effect
 
         in_num_params
     };
+
     AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     ~AudioInputEffect() = default;
+
     void init_ctrltypes() override;
     void init_default_values() override;
     void process(float *dataL, float *dataR) override;
@@ -62,8 +65,8 @@ class AudioInputEffect : public Effect
   private:
     std::shared_ptr<float> sceneDataPtr[N_OUTPUTS]{nullptr, nullptr};
     effect_slot_type getSlotType(fxslot_positions p);
-    void applySlidersControls(float *buffer[], const float &channel, const float &pan,
-                              const float &levelDb);
+    void applyParameters(float *buffer[], const float &channel, const float &pan,
+                         const float &level);
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_AUDIOINPUTEFFECT_H
