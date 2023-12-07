@@ -1058,6 +1058,12 @@ TEST_CASE("Audio Input Effect", "[fx]")
                             fxStorage->p[controlParam.param].val.f = controlParam.value;
                         }
                         inParamsGroup.fillWithData(surgeStorage);
+
+                        // This call simulated loading the modulation stack from surge->process
+                        // while still allowing direct fx->process to work
+                        surge->storage.getPatch().copy_globaldata(
+                            surge->storage.getPatch().globaldata);
+
                         surge->fx[slot]->process(inParamsGroup.leftEffectInput,
                                                  inParamsGroup.rightEffectInput);
                         for (int i = 0; i < 4; ++i)
