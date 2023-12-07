@@ -58,8 +58,11 @@ class AudioInputEffect : public Effect
     void process(float *dataL, float *dataR) override;
     const char *group_label(int id) override;
     int group_label_ypos(int id) override;
+    void init() override;
 
   private:
+    lipol_ps_blocksz mix alignas(16), width alignas(16);
+
     std::shared_ptr<float> sceneDataPtr[N_OUTPUTS]{nullptr, nullptr};
     effect_slot_type getSlotType(fxslot_positions p);
     void applySlidersControls(float *buffer[], const float &channel, const float &pan,

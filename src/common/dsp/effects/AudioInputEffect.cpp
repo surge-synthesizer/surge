@@ -25,6 +25,12 @@
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
 {
+}
+
+void AudioInputEffect::init()
+{
+    Effect::init();
+
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
     if (storage && (slotType == a_insert_slot || slotType == b_insert_slot))
     {
@@ -32,7 +38,11 @@ AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pda
         for (int i = 0; i < N_OUTPUTS; i++)
             sceneDataPtr[i] = storage->scenesOutputData.getSceneData(scene, i);
     }
+
+    width.set_target_instant(fxdata->p[in_output_width].val.f);
+    mix.set_target_instant(fxdata->p[in_output_mix].val.f);
 }
+
 void AudioInputEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
@@ -82,7 +92,7 @@ void AudioInputEffect::init_ctrltypes()
 
     // -----  Output
     fxdata->p[in_output_width].set_name("Width");
-    fxdata->p[in_output_width].set_type(ct_percent_bipolar_stereo);
+    fxdata->p[in_output_width].set_type(ct_percent_bipolar);
     fxdata->p[in_output_width].posy_offset = 7;
 
     fxdata->p[in_output_mix].set_name("Mix");
@@ -220,22 +230,12 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     float *wetR = effectDataBuffer[1];
 
     // Adjust width of wet signal
-    for (int i = 0; i < BLOCK_SIZE; ++i)
-    {
-        float mid = 0.5f * (wetL[i] + wetR[i]);                // Mid (mono) signal
-        float side = outputWidth * 0.5f * (wetL[i] - wetR[i]); // Sides (stereo) signal
-        wetL[i] = mid + side;
-        wetR[i] = mid - side;
-    }
+    width.set_target_smoothed(outputWidth);
+    applyWidth(wetL, wetR, width);
 
     // Mix dry and wet signal according to outputMix
-    for (int i = 0; i < BLOCK_SIZE; ++i)
-    {
-        float wetMix = outputMix;
-        float dryMix = 1.0f - outputMix;
-        dryL[i] = dryMix * dryL[i] + wetMix * wetL[i];
-        dryR[i] = dryMix * dryR[i] + wetMix * wetR[i];
-    }
+    mix.set_target_smoothed(outputMix);
+    mix.fade_2_blocks_inplace(dryL, wetL, dryR, wetR, BLOCK_SIZE_QUAD);
 }
 
 void AudioInputEffect::applySlidersControls(float *buffer[], const float &channel, const float &pan,
