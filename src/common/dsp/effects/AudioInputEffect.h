@@ -63,8 +63,30 @@ class AudioInputEffect : public Effect
   private:
     lipol_ps_blocksz mix alignas(16), width alignas(16);
 
+    struct SliderSmoothing
+    {
+        using lip = sst::basic_blocks::dsp::lipol_sse<BLOCK_SIZE, true>;
+        lip leftG alignas(16), rightG alignas(16);
+        lip leftP alignas(16), rightP alignas(16);
+        lip omleftP alignas(16), omrightP alignas(16);
+        lip level alignas(16);
+
+        void resetFirstRun()
+        {
+            leftG.first_run = true;
+            leftP.first_run = true;
+            omleftP.first_run = true;
+            rightG.first_run = true;
+            rightP.first_run = true;
+            omrightP.first_run = true;
+            level.first_run = true;
+        }
+    } sliderSmooths[3];
+
     std::shared_ptr<float> sceneDataPtr[N_OUTPUTS]{nullptr, nullptr};
     effect_slot_type getSlotType(fxslot_positions p);
+
+    template <int whichInstance>
     void applySlidersControls(float *buffer[], const float &channel, const float &pan,
                               const float &levelDb);
 };

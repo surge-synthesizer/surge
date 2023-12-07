@@ -21,6 +21,9 @@
  */
 
 #include "AudioInputEffect.h"
+#include "sst/basic-blocks/mechanics/block-ops.h"
+
+namespace mech = sst::basic_blocks::mechanics;
 
 AudioInputEffect::AudioInputEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
@@ -41,6 +44,11 @@ void AudioInputEffect::init()
 
     width.set_target_instant(fxdata->p[in_output_width].val.f);
     mix.set_target_instant(fxdata->p[in_output_mix].val.f);
+
+    for (auto &ss : sliderSmooths)
+    {
+        ss.resetFirstRun();
+    }
 }
 
 void AudioInputEffect::init_ctrltypes()
@@ -177,7 +185,8 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     std::memcpy(effectDataBuffer[0], dataL, BLOCK_SIZE * sizeof(float));
     std::memcpy(effectDataBuffer[1], dataR, BLOCK_SIZE * sizeof(float));
     float *effectDataBuffers[]{effectDataBuffer[0], effectDataBuffer[1]};
-    applySlidersControls(effectDataBuffers, effectInputChannel, effectInputPan, effectInputLevelDb);
+    applySlidersControls<0>(effectDataBuffers, effectInputChannel, effectInputPan,
+                            effectInputLevelDb);
 
     const auto inputChannel{*pd_float[in_audio_input_channel]};
     const auto inputPan{*pd_float[in_audio_input_pan]};
@@ -189,7 +198,7 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     std::memcpy(inputDataBuffer[1], inputData[1], BLOCK_SIZE * sizeof(float));
     float *inputDataBuffers[] = {inputDataBuffer[0], inputDataBuffer[1]};
 
-    applySlidersControls(inputDataBuffers, inputChannel, inputPan, inputLevelDb);
+    applySlidersControls<1>(inputDataBuffers, inputChannel, inputPan, inputLevelDb);
 
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
     if (slotType == a_insert_slot || slotType == b_insert_slot)
@@ -206,7 +215,8 @@ void AudioInputEffect::process(float *dataL, float *dataR)
         std::memcpy(sceneDataBuffer[0], sceneData[0], BLOCK_SIZE * sizeof(float));
         std::memcpy(sceneDataBuffer[1], sceneData[1], BLOCK_SIZE * sizeof(float));
         float *sceneDataBuffers[]{sceneDataBuffer[0], sceneDataBuffer[1]};
-        applySlidersControls(sceneDataBuffers, sceneInputChannel, sceneInputPan, sceneInputLevelDb);
+        applySlidersControls<2>(sceneDataBuffers, sceneInputChannel, sceneInputPan,
+                                sceneInputLevelDb);
         // mixing the scene audio input and the effect audio input
         for (int i = 0; i < BLOCK_SIZE; ++i)
         {
@@ -238,9 +248,11 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     mix.fade_2_blocks_inplace(dryL, wetL, dryR, wetR, BLOCK_SIZE_QUAD);
 }
 
+template <int whichInstance>
 void AudioInputEffect::applySlidersControls(float *buffer[], const float &channel, const float &pan,
                                             const float &levelDb)
 {
+    auto &ss = sliderSmooths[whichInstance];
     float leftGain, rightGain;
 
     if (channel < 0)
@@ -254,11 +266,11 @@ void AudioInputEffect::applySlidersControls(float *buffer[], const float &channe
         rightGain = 1.0f;
     }
 
-    for (int i = 0; i < BLOCK_SIZE; ++i)
-    {
-        buffer[0][i] *= leftGain;
-        buffer[1][i] *= rightGain;
-    }
+    ss.leftG.set_target(leftGain);
+    ss.rightG.set_target(rightGain);
+
+    ss.leftG.multiply_block(buffer[0], BLOCK_SIZE_QUAD);
+    ss.rightG.multiply_block(buffer[1], BLOCK_SIZE_QUAD);
 
     float tempBuffer[2][BLOCK_SIZE];
     std::memcpy(tempBuffer[0], buffer[0], BLOCK_SIZE * sizeof(float));
@@ -267,16 +279,21 @@ void AudioInputEffect::applySlidersControls(float *buffer[], const float &channe
     float leftToLeft = (pan < 0) ? 1.0f : 1.0f - pan;
     float rightToRight = (pan > 0) ? 1.0f : 1.0f + pan;
 
-    for (int i = 0; i < BLOCK_SIZE; ++i)
-    {
-        buffer[0][i] = buffer[0][i] * leftToLeft + tempBuffer[1][i] * (1.0f - rightToRight);
-        buffer[1][i] = buffer[1][i] * rightToRight + tempBuffer[0][i] * (1.0f - leftToLeft);
-    }
+    ss.leftP.set_target(leftToLeft);
+    ss.rightP.set_target(rightToRight);
+    ss.omleftP.set_target(1.f - leftToLeft);
+    ss.omrightP.set_target(1.f - rightToRight);
 
-    auto effectInputLevelGain{storage->db_to_linear(levelDb)};
-    for (int i = 0; i < BLOCK_SIZE; ++i)
-    {
-        buffer[0][i] *= effectInputLevelGain;
-        buffer[1][i] *= effectInputLevelGain;
-    }
+    // buffer[0][i] = buffer[0][i] * leftToLeft + tempBuffer[1][i] * (1.0f - rightToRight);
+    ss.omrightP.multiply_block(tempBuffer[1]);
+    ss.leftP.multiply_block(buffer[0]);
+    mech::add_block<BLOCK_SIZE>(buffer[0], tempBuffer[1]);
+
+    // buffer[1][i] = buffer[1][i] * rightToRight + tempBuffer[0][i] * (1.0f - leftToLeft);
+    ss.omleftP.multiply_block(tempBuffer[0]);
+    ss.rightP.multiply_block(buffer[1]);
+    mech::add_block<BLOCK_SIZE>(buffer[1], tempBuffer[0]);
+
+    ss.level.set_target(storage->db_to_linear(levelDb));
+    ss.level.multiply_2_blocks(buffer[0], buffer[1], BLOCK_SIZE_QUAD);
 }
