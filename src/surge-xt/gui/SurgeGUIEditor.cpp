@@ -3918,6 +3918,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
         });
     }
 
+#if 0
     if (Surge::GUI::getIsStandalone())
     {
         juce::Component *comp = frame.get();
@@ -3963,6 +3964,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
             }
         }
     }
+#endif
 
     return zoomSubMenu;
 }
@@ -7431,10 +7433,12 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_10, {keymap_t::Modifiers::NONE, '-'});
     keyMapManager->addBinding(Surge::GUI::ZOOM_MINUS_25, {keymap_t::Modifiers::SHIFT, '-'});
 
+#if 0
     if (Surge::GUI::getIsStandalone())
     {
         keyMapManager->addBinding(Surge::GUI::ZOOM_FULLSCREEN, {juce::KeyPress::F11Key});
     }
+#endif
 
     keyMapManager->addBinding(Surge::GUI::FOCUS_NEXT_CONTROL_GROUP,
                               {keymap_t::Modifiers::ALT, (int)'.'});
@@ -7671,6 +7675,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             }
             case Surge::GUI::ZOOM_FULLSCREEN:
             {
+#if 0
                 if (Surge::GUI::getIsStandalone())
                 {
                     juce::Component *comp = frame.get();
@@ -7698,6 +7703,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
                     return true;
                 }
+#endif
 
                 return false;
             }
