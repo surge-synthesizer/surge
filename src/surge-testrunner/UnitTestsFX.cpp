@@ -1064,8 +1064,10 @@ TEST_CASE("Audio Input Effect", "[fx]")
                         surge->storage.getPatch().copy_globaldata(
                             surge->storage.getPatch().globaldata);
 
+                        surge->fx[slot]->init();
                         surge->fx[slot]->process(inParamsGroup.leftEffectInput,
                                                  inParamsGroup.rightEffectInput);
+
                         for (int i = 0; i < 4; ++i)
                         {
                             REQUIRE(inParamsGroup.leftEffectInput[i] ==
