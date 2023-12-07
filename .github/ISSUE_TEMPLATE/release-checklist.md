@@ -32,3 +32,4 @@ Link to milestone: https://github.com/surge-synthesizer/surge/milestone/xx
    - [ ] Update homebrew [doc](https://github.com/surge-synthesizer/surge/tree/master/doc)
    - [ ] Update [Winget manifest](https://github.com/microsoft/winget-pkgs) (`wingetcreate update --submit --urls https://github.com/surge-synthesizer/releases-xt/releases/download/x.y.z/surge-xt-win64-x.y.z-setup.exe --version x.y.z SurgeSynthTeam.SurgeXT`)
    - [ ] Post to KvR thread, Facebook, Discord, etc.
+   - [ ] Ping luzpaz in https://github.com/surge-synthesizer/surge/issues/7132#issuecomment-1845384426
