@@ -158,10 +158,9 @@ AudioInputEffect::effect_slot_type AudioInputEffect::getSlotType(fxslot_position
 
 void AudioInputEffect::process(float *dataL, float *dataR)
 {
-
-    float &effectInputChannel = fxdata->p[in_effect_input_channel].val.f;
-    float &effectInputPan = fxdata->p[in_effect_input_pan].val.f;
-    float &effectInputLevelDb = fxdata->p[in_effect_input_level].val.f;
+    const auto effectInputChannel{*pd_float[in_effect_input_channel]};
+    const auto effectInputPan{*pd_float[in_effect_input_pan]};
+    const auto effectInputLevelDb{*pd_float[in_effect_input_level]};
     float *drySignal[] = {dataL, dataR};
 
     float effectDataBuffer[2][BLOCK_SIZE];
@@ -170,9 +169,9 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     float *effectDataBuffers[]{effectDataBuffer[0], effectDataBuffer[1]};
     applySlidersControls(effectDataBuffers, effectInputChannel, effectInputPan, effectInputLevelDb);
 
-    float &inputChannel = fxdata->p[in_audio_input_channel].val.f;
-    float &inputPan = fxdata->p[in_audio_input_pan].val.f;
-    float &inputLevelDb = fxdata->p[in_audio_input_level].val.f;
+    const auto inputChannel{*pd_float[in_audio_input_channel]};
+    const auto inputPan{*pd_float[in_audio_input_pan]};
+    const auto inputLevelDb{*pd_float[in_audio_input_level]};
     float *inputData[] = {storage->audio_in_nonOS[0], storage->audio_in_nonOS[1]};
     float inputDataBuffer[2][BLOCK_SIZE];
 
@@ -185,9 +184,9 @@ void AudioInputEffect::process(float *dataL, float *dataR)
     effect_slot_type slotType = getSlotType(fxdata->fxslot);
     if (slotType == a_insert_slot || slotType == b_insert_slot)
     {
-        float &sceneInputChannel = fxdata->p[in_scene_input_channel].val.f;
-        float &sceneInputPan = fxdata->p[in_scene_input_pan].val.f;
-        float &sceneInputLevelDb = fxdata->p[in_scene_input_level].val.f;
+        const auto sceneInputChannel{*pd_float[in_scene_input_channel]};
+        const auto sceneInputPan{*pd_float[in_scene_input_pan]};
+        const auto sceneInputLevelDb{*pd_float[in_scene_input_level]};
 
         float *sceneData[] = {
             sceneDataPtr[0].get(),
@@ -212,8 +211,8 @@ void AudioInputEffect::process(float *dataL, float *dataR)
         effectDataBuffer[1][i] += inputDataBuffer[1][i];
     }
 
-    float &outputWidth = fxdata->p[in_output_width].val.f;
-    float &outputMix = fxdata->p[in_output_mix].val.f;
+    const auto outputWidth{*pd_float[in_output_width]};
+    const auto outputMix{*pd_float[in_output_mix]};
 
     float *dryL = drySignal[0];
     float *dryR = drySignal[1];
@@ -274,7 +273,7 @@ void AudioInputEffect::applySlidersControls(float *buffer[], const float &channe
         buffer[1][i] = buffer[1][i] * rightToRight + tempBuffer[0][i] * (1.0f - leftToLeft);
     }
 
-    float effectInputLevelGain = std::pow(10.0f, levelDb / 20.0f);
+    auto effectInputLevelGain{storage->db_to_linear(levelDb)};
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
         buffer[0][i] *= effectInputLevelGain;
