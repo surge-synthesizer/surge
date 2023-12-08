@@ -345,7 +345,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // check velocity range
         if (velocity < 0 || velocity > 127)
         {
-            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0.0 - 127.0).");
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0 - 127).");
             return;
         }
 
@@ -395,14 +395,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         {
             if (note < 0 || note > 127)
             {
-                sendError("Note '" + std::to_string(note) + "' is out of range (0-127).");
+                sendError("Note '" + std::to_string(note) + "' is out of range (0 - 127).");
                 return;
             }
         }
 
         if (velocity < 0 || velocity > 127)
         {
-            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0-127).");
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0 - 127).");
             return;
         }
 
