@@ -10,8 +10,10 @@
 #endif
 
 ; uncomment these two lines if building the installer locally!
-;#define SURGE_SRC "..\..\"
-;#define SURGE_BIN "..\..\build\Release"
+#define SURGE_SRC "..\..\"
+#define SURGE_BIN "..\..\build\Release"
+
+#define BANNER_PATH SURGE_SRC + "\scripts\installer_win\assets\banner"
 
 [Setup]
 ArchitecturesInstallIn64BitMode=x64
@@ -31,7 +33,7 @@ DisableDirPage=yes
 DisableReadyPage=no
 LicenseFile={#SURGE_SRC}\LICENSE
 OutputBaseFilename=surge-xt-win64-{#MyAppVersion}-setup
-SetupIconFile={#SURGE_SRC}\scripts\installer_win\surge.ico
+SetupIconFile={#SURGE_SRC}\scripts\installer_win\assets\surge.ico
 UninstallDisplayIcon={uninstallexe}
 UsePreviousAppDir=yes
 Compression=lzma
@@ -40,8 +42,10 @@ UninstallFilesDir={commonappdata}\{#MyAppName}\uninstall
 CloseApplicationsFilter=*.exe,*.vst3,*.ttf
 WizardStyle=modern
 ; replacing that gnarly old blue computer icon in top right with... nothing!
-WizardSmallImageFile={#SURGE_SRC}\scripts\installer_win\empty.bmp
+WizardSmallImageFile={#SURGE_SRC}\scripts\installer_win\assets\empty.bmp
 WizardImageAlphaFormat=defined
+; replacing the left side banner on the last page with something way more awesome!
+WizardImageFile={#BANNER_PATH}1.bmp,{#BANNER_PATH}2.bmp,{#BANNER_PATH}3.bmp,{#BANNER_PATH}4.bmp
 
 [InstallDelete]
 ; clean up factory data folders
