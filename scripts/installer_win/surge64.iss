@@ -10,8 +10,8 @@
 #endif
 
 ; uncomment these two lines if building the installer locally!
-#define SURGE_SRC "..\..\"
-#define SURGE_BIN "..\..\build\Release"
+; #define SURGE_SRC "..\..\"
+; #define SURGE_BIN "..\..\build\Release"
 
 #define BANNER_PATH SURGE_SRC + "\scripts\installer_win\assets\banner"
 
