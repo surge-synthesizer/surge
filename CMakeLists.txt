@@ -179,6 +179,7 @@ if(MSVC)
     # amke msvc define __cplulsplus properly
     $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>
   )
+  add_compile_definitions(_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 endif()
 # }}}
 # Source Groups {{{
