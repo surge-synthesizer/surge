@@ -117,6 +117,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                             added (a lot of) new waveshapers
 //                             added two additional FX slots to all FX chains
 //                             added new Conditioner parameter (Side Low Cut)
+//                             read Global Volume from the patch (it was always stored just never read)
 // 17 -> 18 (XT 1.1 nightlies) added clipping options to Delay Feedback parameter (via deform)
 //                             added Tone parameter to Phaser effect
 // 18 -> 19 (XT 1.1 nightlies) added String deform options (interpolation, bipolar Decay params, Stiffness options)

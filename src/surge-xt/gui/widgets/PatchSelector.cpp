@@ -1440,7 +1440,7 @@ void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
     g.fillRect(getLocalBounds().reduced(1));
     g.setColour(skin->getColor(clr::Text));
     g.setFont(skin->fontManager->getLatoAtSize(9));
-    g.drawMultiLineText(comment, 5, g.getCurrentFont().getHeight() + 2, getWidth(),
+    g.drawMultiLineText(comment, 4, g.getCurrentFont().getHeight() + 2, getWidth(),
                         juce::Justification::left);
 }
 
@@ -1457,6 +1457,7 @@ void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &cen
 
     auto ft = skin->fontManager->getLatoAtSize(9);
     auto width = 0.f;
+    auto maxWidth = (float)maxTooltipWidth;
 
     while (std::getline(ss, to, '\n'))
     {
@@ -1469,17 +1470,18 @@ void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &cen
             w = 1.f;
         }
 
-        auto rows = std::ceil(w / (float)maxTooltipWidth);
+        auto rows = std::ceil(w / maxWidth);
 
         width = std::max(w, width);
         numLines += (int)rows;
     }
 
-    auto height = std::max(numLines * (ft.getHeight() + 2), 30.f);
+    auto height = std::max((numLines * (ft.getHeight() + 2)) + 2, 16.f);
+    auto margin = 10;
 
     auto r = juce::Rectangle<int>()
                  .withCentre(juce::Point(centerPoint.x, centerPoint.y))
-                 .withSizeKeepingCentre(std::min(width, (float)maxTooltipWidth), height)
+                 .withSizeKeepingCentre(std::min(width + margin, maxWidth), height)
                  .translated(0, height / 2);
 
     setBounds(r);
