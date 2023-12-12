@@ -74,7 +74,7 @@ int ensemble_stage_count() { return 7; }
 float calculateFilterParamFrequency(float *fval, SurgeStorage *storage)
 {
     auto param_val = fval[BBDEnsembleEffect::ens_input_filter];
-    auto clock_rate = fval[BBDEnsembleEffect::ens_delay_clockrate];
+    auto clock_rate = std::max(fval[BBDEnsembleEffect::ens_delay_clockrate], 0.01f);
     auto freq = 2.0f * (float)M_PI * 400.0f * storage->note_to_pitch_ignoring_tuning(param_val);
     auto freq_adjust = freq * std::pow(clock_rate * 0.01f, 0.75f);
     return std::min(freq_adjust, 25000.0f);
