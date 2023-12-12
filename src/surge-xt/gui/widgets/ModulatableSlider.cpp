@@ -748,12 +748,12 @@ struct ModulatableSliderAH : public juce::AccessibilityHandler
     };
 
     explicit ModulatableSliderAH(ModulatableSlider *s)
-        : slider(s), juce::AccessibilityHandler(
-                         *s, juce::AccessibilityRole::slider,
-                         juce::AccessibilityActions().addAction(
-                             juce::AccessibilityActionType::showMenu,
-                             [this]() { this->showMenu(); }),
-                         AccessibilityHandler::Interfaces{std::make_unique<MSValue>(s)})
+        : slider(s),
+          juce::AccessibilityHandler(
+              *s, juce::AccessibilityRole::slider,
+              juce::AccessibilityActions().addAction(juce::AccessibilityActionType::showMenu,
+                                                     [this]() { this->showMenu(); }),
+              AccessibilityHandler::Interfaces{std::make_unique<MSValue>(s)})
     {
     }
     void resetToDefault()

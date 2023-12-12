@@ -94,5 +94,6 @@ EOH
         close(IN);
         close(OUT);
         system("mv ${q}.bak ${q}");
+	system("clang-format -i ${q}");
     }
 }

@@ -211,13 +211,13 @@ template <typename T> struct OverlayAsAccessibleButton : public juce::Component
     struct RBAH : public juce::AccessibilityHandler
     {
         explicit RBAH(OverlayAsAccessibleButton<T> *b, T *s)
-            : button(b), mswitch(s), juce::AccessibilityHandler(
-                                         *b, b->role,
-                                         juce::AccessibilityActions()
-                                             .addAction(juce::AccessibilityActionType::showMenu,
-                                                        [this]() { this->showMenu(); })
-                                             .addAction(juce::AccessibilityActionType::press,
-                                                        [this]() { this->press(); }))
+            : button(b), mswitch(s),
+              juce::AccessibilityHandler(
+                  *b, b->role,
+                  juce::AccessibilityActions()
+                      .addAction(juce::AccessibilityActionType::showMenu,
+                                 [this]() { this->showMenu(); })
+                      .addAction(juce::AccessibilityActionType::press, [this]() { this->press(); }))
         {
         }
         void press() { button->onPress(mswitch); }
@@ -288,15 +288,14 @@ struct OverlayAsAccessibleButtonWithValue : public OverlayAsAccessibleButton<T>
     struct RBAHV : public juce::AccessibilityHandler
     {
         explicit RBAHV(OverlayAsAccessibleButtonWithValue<T> *b, T *s)
-            : button(b),
-              mswitch(s), juce::AccessibilityHandler(
-                              *b, b->role,
-                              juce::AccessibilityActions()
-                                  .addAction(juce::AccessibilityActionType::showMenu,
-                                             [this]() { this->showMenu(); })
-                                  .addAction(juce::AccessibilityActionType::press,
-                                             [this]() { this->press(); }),
-                              AccessibilityHandler::Interfaces{std::make_unique<BValue>(b)})
+            : button(b), mswitch(s),
+              juce::AccessibilityHandler(
+                  *b, b->role,
+                  juce::AccessibilityActions()
+                      .addAction(juce::AccessibilityActionType::showMenu,
+                                 [this]() { this->showMenu(); })
+                      .addAction(juce::AccessibilityActionType::press, [this]() { this->press(); }),
+                  AccessibilityHandler::Interfaces{std::make_unique<BValue>(b)})
         {
         }
         void press() { button->onPress(mswitch); }
@@ -364,10 +363,10 @@ template <typename T> struct OverlayAsAccessibleSlider : public juce::Component
     struct RBAH : public juce::AccessibilityHandler
     {
         explicit RBAH(OverlayAsAccessibleSlider<T> *s, T *u)
-            : slider(s),
-              under(u), juce::AccessibilityHandler(
-                            *s, s->role, juce::AccessibilityActions(),
-                            AccessibilityHandler::Interfaces{std::make_unique<SValue>(s)})
+            : slider(s), under(u),
+              juce::AccessibilityHandler(
+                  *s, s->role, juce::AccessibilityActions(),
+                  AccessibilityHandler::Interfaces{std::make_unique<SValue>(s)})
         {
         }
 
