@@ -80,7 +80,7 @@ class HysteresisProcessing
 #endif
         };
 
-            // check for instability
+        // check for instability
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
         auto illCondition =
             _mm_or_pd(_mm_cmpunord_pd(M, M), _mm_cmpgt_pd(M, _mm_set1_pd(upperLim)));

@@ -21,9 +21,12 @@ jobs:
         # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
 
       - bash: |
-          git submodule update --init --recursive
-          cmake -Bignore/cq -DSURGE_SKIP_JUCE_FOR_RACK=TRUE -DCMAKE_BUILD_TYPE=Debug -DSURGE_SKIP_LUA=TRUE
-          cmake --build ignore/cq --target code-quality-pipeline-checks
+          mkdir ignore
+          pushd ignore
+          git clone https://github.com/jidicula/clang-format-action
+          popd
+          ./ignore/clang-format-action/check.sh 16 src llvm
+
         displayName: Do Codequal
 
 

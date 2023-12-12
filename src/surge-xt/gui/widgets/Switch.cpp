@@ -280,15 +280,15 @@ struct SwitchMultiValAH : public juce::AccessibilityHandler
     };
 
     explicit SwitchMultiValAH(Switch *s)
-        : mswitch(s), juce::AccessibilityHandler(
-                          *s, juce::AccessibilityRole::slider,
+        : mswitch(s),
+          juce::AccessibilityHandler(
+              *s, juce::AccessibilityRole::slider,
 
-                          juce::AccessibilityActions()
-                              .addAction(juce::AccessibilityActionType::showMenu,
-                                         [this]() { this->showMenu(); })
-                              .addAction(juce::AccessibilityActionType::press,
-                                         [this]() { this->press(); }),
-                          juce::AccessibilityHandler::Interfaces{std::make_unique<MSValue>(s)})
+              juce::AccessibilityActions()
+                  .addAction(juce::AccessibilityActionType::showMenu,
+                             [this]() { this->showMenu(); })
+                  .addAction(juce::AccessibilityActionType::press, [this]() { this->press(); }),
+              juce::AccessibilityHandler::Interfaces{std::make_unique<MSValue>(s)})
     {
     }
 

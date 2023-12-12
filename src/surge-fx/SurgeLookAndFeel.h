@@ -422,12 +422,12 @@ class SurgeFXParamDisplay : public juce::Component
         };
 
         explicit AH(SurgeFXParamDisplay *s)
-            : comp(s), juce::AccessibilityHandler(
-                           *s, juce::AccessibilityRole::button,
-                           juce::AccessibilityActions().addAction(
-                               juce::AccessibilityActionType::press,
-                               [this]() { this->comp->initializeOverlay(); }),
-                           AccessibilityHandler::Interfaces{std::make_unique<AHV>(s)})
+            : comp(s),
+              juce::AccessibilityHandler(*s, juce::AccessibilityRole::button,
+                                         juce::AccessibilityActions().addAction(
+                                             juce::AccessibilityActionType::press,
+                                             [this]() { this->comp->initializeOverlay(); }),
+                                         AccessibilityHandler::Interfaces{std::make_unique<AHV>(s)})
         {
         }
 

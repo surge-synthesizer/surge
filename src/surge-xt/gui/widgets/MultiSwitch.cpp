@@ -373,13 +373,13 @@ template <juce::AccessibilityRole ROLE> struct MultiSwitchAccOverlayButton : pub
     struct RBAH : public juce::AccessibilityHandler
     {
         explicit RBAH(MultiSwitchAccOverlayButton *b, MultiSwitch *s)
-            : button(b), mswitch(s), juce::AccessibilityHandler(
-                                         *b, ROLE,
-                                         juce::AccessibilityActions()
-                                             .addAction(juce::AccessibilityActionType::press,
-                                                        [this]() { this->press(); })
-                                             .addAction(juce::AccessibilityActionType::showMenu,
-                                                        [this]() { this->showMenu(); }))
+            : button(b), mswitch(s),
+              juce::AccessibilityHandler(
+                  *b, ROLE,
+                  juce::AccessibilityActions()
+                      .addAction(juce::AccessibilityActionType::press, [this]() { this->press(); })
+                      .addAction(juce::AccessibilityActionType::showMenu,
+                                 [this]() { this->showMenu(); }))
         {
         }
         void press()
