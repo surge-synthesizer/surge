@@ -8204,11 +8204,11 @@ void SurgeGUIEditor::showPatchCommentTooltip(const std::string &comment)
     {
         auto psb = patchSelector->getBounds();
 
+        patchSelectorComment->positionForComment(psb.getCentre().withY(psb.getBottom()), comment,
+                                                 psb.getWidth());
         patchSelectorComment->setVisible(true);
         patchSelectorComment->getParentComponent()->toFront(true);
         patchSelectorComment->toFront(true);
-        patchSelectorComment->positionForComment(psb.getCentre().withY(psb.getBottom()), comment,
-                                                 psb.getWidth());
     }
 }
 

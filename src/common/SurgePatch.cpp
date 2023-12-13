@@ -1517,7 +1517,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     assert(parameters);
     int n = param_ptr.size();
 
-    // delete volume & fx_bypass if it's a preset. Those settings should stick
+    // delete volume (below streaming version 17) & fx_bypass if it's a preset
     if (is_preset)
     {
         if (revision < 17)
@@ -1536,14 +1536,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         {
             parameters->RemoveChild(tp);
         }
-
-        /*
-         * As of Surge 1.9, store the polylimit
-         *
-         * tp = TINYXML_SAFE_TO_ELEMENT(parameters->FirstChild("polylimit"));
-         * if (tp)
-         *   parameters->RemoveChild(tp);
-         */
     }
 
     TiXmlElement *p;
