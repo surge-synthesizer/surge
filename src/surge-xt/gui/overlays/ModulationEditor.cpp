@@ -664,17 +664,18 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             {
                 g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
                 g.drawFittedText(datum.mss.dvalplus, rb, juce::Justification::topLeft, 1, 0.1);
+
+                if (datum.isBipolar)
+                {
+                    g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
+                    g.drawFittedText(datum.mss.dvalminus, lb, juce::Justification::topRight, 1,
+                                     0.1);
+                }
             }
 
             if ((contents->valueDisplay & EXTRAS) == 0)
             {
                 return;
-            }
-
-            if (datum.isBipolar)
-            {
-                g.setColour(skin->getColor(Colors::Slider::Modulation::Negative));
-                g.drawFittedText(datum.mss.dvalminus, lb, juce::Justification::topRight, 1, 0.1);
             }
 
             g.setColour(skin->getColor(Colors::Slider::Modulation::Positive));
