@@ -3304,11 +3304,14 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
     }
     if (tag == tag_status_tune)
     {
-        toggleTuning();
         if (synth->storage.isStandardTuningAndHasNoToggle())
         {
             juce::Point<int> where = control->asJuceComponent()->getBounds().getBottomLeft();
             showTuningMenu(where, control);
+        }
+        else
+        {
+            toggleTuning();
         }
 
         return;
