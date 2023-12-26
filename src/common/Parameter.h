@@ -550,7 +550,8 @@ class Parameter
         kUnitsAreSemitonesOrKeys = 1U << 5U,
         kScaleBasedOnIsBiPolar = 1U << 6U,
         kAllowsTuningFractionTypein = 1U << 7U,
-        kAllowsModulationsInNotesAndCents = 1U << 8U
+        kAllowsModulationsInNotesAndCents = 1U << 8U,
+        kSwitchesFromSecToMillisec = 1U << 9U,
     };
 
 #define DISPLAYINFO_TXT_SIZE 128

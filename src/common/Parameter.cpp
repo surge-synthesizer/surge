@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <cstdlib>
+#include <regex>
 #include <algorithm>
 #include <cctype>
 #include <utility>
@@ -1507,10 +1508,11 @@ void Parameter::set_type(int ctrltype)
     case ct_delaymodtime:
         displayType = ATwoToTheBx;
         displayInfo.customFeatures |= ParamDisplayFeatures::kHasCustomMinValue;
+        displayInfo.customFeatures |= ParamDisplayFeatures::kSwitchesFromSecToMillisec;
         displayInfo.minLabelValue = 0.f;
         displayInfo.tempoSyncNotationMultiplier = 1.f;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "s");
-        displayInfo.decimals = 3;
+        displayInfo.decimals = 2;
         break;
 
     case ct_lforate:
@@ -1659,7 +1661,8 @@ void Parameter::set_type(int ctrltype)
         displayType = ATwoToTheBx;
         displayInfo.a = 0.5f;
         displayInfo.b = std::log2(4.5f / 0.5f);
-        displayInfo.decimals = 3;
+        displayInfo.customFeatures |= ParamDisplayFeatures::kSwitchesFromSecToMillisec;
+        displayInfo.decimals = 2;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "s");
         break;
 
@@ -2575,6 +2578,10 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             float mp = displayInfo.a * powf(2.0f, (val.f + modulationDepth) * displayInfo.b);
             float mn = displayInfo.a * powf(2.0f, (val.f - modulationDepth) * displayInfo.b);
 
+            std::string u = displayInfo.unit;
+
+            getSemitonesOrKeys(u);
+
             if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMinValue)
             {
                 if (val.f <= val_min.f)
@@ -2591,9 +2598,19 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 mn = std::min(mn, displayInfo.modulationCap);
             }
 
-            std::string u = displayInfo.unit;
+            float dval = v;
+            int vdp = dp;
+            std::string vu = u;
 
-            getSemitonesOrKeys(u);
+            if (displayInfo.customFeatures & ParamDisplayFeatures::kSwitchesFromSecToMillisec)
+            {
+                if (dval < 1.f)
+                {
+                    dval *= 1000.f;
+                    vu = "ms";
+                    vdp = detailedMode ? 2 : 1;
+                }
+            }
 
             switch (displaymode)
             {
@@ -2601,11 +2618,9 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 snprintf(txt, TXT_SIZE, "%.*f %s", dp, mp - v, u.c_str());
                 break;
             case Menu:
-                // if( isBipolar )
-                //   snprintf( txt, TXT_SIZE, "%.*f / %.*f %s", dp, mn-v, dp, mp-v, u.c_str() );
-                // else
                 snprintf(txt, TXT_SIZE, "%s%.*f %s", (mp - v > 0) ? "+" : "", dp, mp - v,
                          u.c_str());
+
                 if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString &&
                     mp > val_max.f)
                 {
@@ -2620,7 +2635,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     if (iw)
                     {
                         char itxt[ITXT_SIZE];
-                        snprintf(itxt, ITXT_SIZE, "%.*f %s", dp, v, u.c_str());
+                        snprintf(itxt, ITXT_SIZE, "%.*f %s", vdp, dval, vu.c_str());
                         iw->val = itxt;
                         snprintf(itxt, ITXT_SIZE, "%.*f", dp, mp);
                         iw->valplus = itxt;
@@ -2646,15 +2661,15 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         }
                     }
 
-                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, mn, lowersep, dp, v,
-                             uppersep, dp, mp, u.c_str());
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, mn, lowersep, vdp, dval,
+                             uppersep, dp, mp, vu.c_str());
                 }
                 else
                 {
                     if (iw)
                     {
                         char itxt[ITXT_SIZE];
-                        snprintf(itxt, ITXT_SIZE, "%.*f %s", dp, v, u.c_str());
+                        snprintf(itxt, ITXT_SIZE, "%.*f %s", vdp, dval, vu.c_str());
                         iw->val = itxt;
                         snprintf(itxt, ITXT_SIZE, "%.*f", dp, mn);
                         iw->valplus = itxt;
@@ -2664,7 +2679,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         iw->dvalminus = "";
                     }
 
-                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s", dp, v, uppersep, dp, mp, u.c_str());
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s", vdp, dval, uppersep, dp, mp,
+                             vu.c_str());
                 }
                 break;
             }
@@ -3474,6 +3490,17 @@ std::string Parameter::get_display(bool external, float ef) const
             getSemitonesOrKeys(u);
 
             float dval = displayInfo.a * powf(2.0f, f * displayInfo.b);
+            int dec = detailedMode ? 6 : displayInfo.decimals;
+
+            if (displayInfo.customFeatures & ParamDisplayFeatures::kSwitchesFromSecToMillisec)
+            {
+                if (dval < 1.f)
+                {
+                    dval *= 1000.f;
+                    u = "ms";
+                    dec = detailedMode ? 2 : 1;
+                }
+            }
 
             if (f >= val_max.f)
             {
@@ -3503,7 +3530,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 }
             }
 
-            txt = fmt::format("{:.{}f} {:s}", dval, (detailedMode ? 6 : displayInfo.decimals), u);
+            txt = fmt::format("{:.{}f} {:s}", dval, dec, u);
 
             return txt;
         }
@@ -4461,7 +4488,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
         else
         {
-            std::cout << "Value from String failed" << std::endl;
+            std::cout << "Value from string failed" << std::endl;
         }
     }
     if (valtype == vt_int)
@@ -4722,6 +4749,18 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     }
     case ATwoToTheBx:
     {
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kSwitchesFromSecToMillisec)
+        {
+            std::smatch m;
+            std::regex r{"(\\d*(\\.\\d+)?)\\s*(m|ms)$",
+                         std::regex_constants::ECMAScript | std::regex_constants::icase};
+
+            if (std::regex_search(s, m, r))
+            {
+                nv = std::atof(m[1].str().c_str()) * .001f;
+            }
+        }
+
         if (displayInfo.supportsNoteName)
         {
             nv = get_freq_from_note_name(s, nv);
