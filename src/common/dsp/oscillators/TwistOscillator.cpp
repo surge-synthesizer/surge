@@ -199,7 +199,10 @@ static struct EngineDynamicBipolar : public ParameterDynamicBoolFunction
             return false;
         }
         auto idx = (p - engp);
-
+        if (idx < 0 || idx >= engineBipolars[eng].size())
+        {
+            return false;
+        }
         bool res = engineBipolars[eng][idx - 1];
         if (idx == TwistOscillator::twist_aux_mix)
             res = p->extend_range;
