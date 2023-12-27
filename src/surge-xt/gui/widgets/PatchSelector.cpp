@@ -439,7 +439,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
     toggleCommentTooltip(false);
 
     stuckHover = true;
-    showClassicMenu(e.mods.isPopupMenu());
+    showClassicMenu(e.mods.isPopupMenu(), e.mods.isCommandDown());
 }
 
 void PatchSelector::shouldTooltip()
@@ -491,7 +491,7 @@ void PatchSelector::openPatchBrowser()
         sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER);
     }
 }
-void PatchSelector::showClassicMenu(bool single_category)
+void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
 {
     auto contextMenu = juce::PopupMenu();
     int main_e = 0;
@@ -549,13 +549,13 @@ void PatchSelector::showClassicMenu(bool single_category)
     else
     {
         bool addedFavorites = false;
-        if (patch_cat_size && storage->firstThirdPartyCategory > 0)
+        if (!userOnly && patch_cat_size && storage->firstThirdPartyCategory > 0)
         {
             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
                                                                             "FACTORY PATCHES");
         }
 
-        for (int i = 0; i < patch_cat_size; i++)
+        for (int i = (userOnly ? storage->firstUserCategory : 0); i < patch_cat_size; i++)
         {
             if (i == storage->firstThirdPartyCategory || i == storage->firstUserCategory)
             {
@@ -1373,13 +1373,13 @@ bool PatchSelector::keyPressed(const juce::KeyPress &key)
 
     if (action == OpenMenu)
     {
-        showClassicMenu();
+        showClassicMenu(false, key.getModifiers().isCommandDown());
         return true;
     }
 
     if (action == Return)
     {
-        showClassicMenu();
+        showClassicMenu(false, key.getModifiers().isCommandDown());
         return true;
     }
 

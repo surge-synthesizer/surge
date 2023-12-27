@@ -140,7 +140,7 @@ struct PatchSelector : public juce::Component,
     }
 
     bool keyPressed(const juce::KeyPress &key) override;
-    void showClassicMenu(bool singleCategory = false);
+    void showClassicMenu(bool singleCategory = false, bool userOnly = false);
     bool optionallyAddFavorites(juce::PopupMenu &into, bool addColumnBreakAndHeader,
                                 bool addToSubmenu = true);
     void exportFavorites();
