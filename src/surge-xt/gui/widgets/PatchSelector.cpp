@@ -500,6 +500,19 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
     auto patch_cat_size = storage->patch_category.size();
     int tutorialCat = -1, midiPCCat = -1;
 
+    bool anyUser = false;
+    for (auto &c : storage->patch_category)
+    {
+        if (!c.isFactory && c.numberOfPatchesInCategoryAndChildren)
+        {
+            anyUser = true;
+        }
+    }
+    if (userOnly && !anyUser)
+    {
+        userOnly = false;
+    }
+
     if (single_category)
     {
         /*
@@ -565,18 +578,24 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
                 if (i == storage->firstThirdPartyCategory && storage->firstUserCategory != i)
                 {
                     txt = "THIRD PARTY PATCHES";
+                    contextMenu.addColumnBreak();
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                    txt);
                 }
-                else
+                else if (anyUser)
                 {
                     favs = true;
                     txt = "USER PATCHES";
+                    contextMenu.addColumnBreak();
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                    txt);
                 }
 
-                contextMenu.addColumnBreak();
-                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, txt);
                 if (favs && optionallyAddFavorites(contextMenu, false))
+                {
                     contextMenu.addSeparator();
-                addedFavorites = true;
+                    addedFavorites = true;
+                }
             }
 
             // remap index to the corresponding category in alphabetical order.
