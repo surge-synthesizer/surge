@@ -439,7 +439,7 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
     toggleCommentTooltip(false);
 
     stuckHover = true;
-    showClassicMenu(e.mods.isPopupMenu());
+    showClassicMenu(e.mods.isPopupMenu(), e.mods.isCommandDown());
 }
 
 void PatchSelector::shouldTooltip()
@@ -491,7 +491,7 @@ void PatchSelector::openPatchBrowser()
         sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER);
     }
 }
-void PatchSelector::showClassicMenu(bool single_category)
+void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
 {
     auto contextMenu = juce::PopupMenu();
     int main_e = 0;
@@ -499,6 +499,19 @@ void PatchSelector::showClassicMenu(bool single_category)
     int last_category = current_category;
     auto patch_cat_size = storage->patch_category.size();
     int tutorialCat = -1, midiPCCat = -1;
+
+    bool anyUser = false;
+    for (auto &c : storage->patch_category)
+    {
+        if (!c.isFactory && c.numberOfPatchesInCategoryAndChildren)
+        {
+            anyUser = true;
+        }
+    }
+    if (userOnly && !anyUser)
+    {
+        userOnly = false;
+    }
 
     if (single_category)
     {
@@ -549,13 +562,13 @@ void PatchSelector::showClassicMenu(bool single_category)
     else
     {
         bool addedFavorites = false;
-        if (patch_cat_size && storage->firstThirdPartyCategory > 0)
+        if (!userOnly && patch_cat_size && storage->firstThirdPartyCategory > 0)
         {
             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
                                                                             "FACTORY PATCHES");
         }
 
-        for (int i = 0; i < patch_cat_size; i++)
+        for (int i = (userOnly ? storage->firstUserCategory : 0); i < patch_cat_size; i++)
         {
             if (i == storage->firstThirdPartyCategory || i == storage->firstUserCategory)
             {
@@ -565,18 +578,24 @@ void PatchSelector::showClassicMenu(bool single_category)
                 if (i == storage->firstThirdPartyCategory && storage->firstUserCategory != i)
                 {
                     txt = "THIRD PARTY PATCHES";
+                    contextMenu.addColumnBreak();
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                    txt);
                 }
-                else
+                else if (anyUser)
                 {
                     favs = true;
                     txt = "USER PATCHES";
+                    contextMenu.addColumnBreak();
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                                    txt);
                 }
 
-                contextMenu.addColumnBreak();
-                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, txt);
                 if (favs && optionallyAddFavorites(contextMenu, false))
+                {
                     contextMenu.addSeparator();
-                addedFavorites = true;
+                    addedFavorites = true;
+                }
             }
 
             // remap index to the corresponding category in alphabetical order.
@@ -1373,13 +1392,13 @@ bool PatchSelector::keyPressed(const juce::KeyPress &key)
 
     if (action == OpenMenu)
     {
-        showClassicMenu();
+        showClassicMenu(false, key.getModifiers().isCommandDown());
         return true;
     }
 
     if (action == Return)
     {
-        showClassicMenu();
+        showClassicMenu(false, key.getModifiers().isCommandDown());
         return true;
     }
 
