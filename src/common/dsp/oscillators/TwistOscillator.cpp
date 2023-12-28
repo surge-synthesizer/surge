@@ -312,6 +312,8 @@ TwistOscillator::TwistOscillator(SurgeStorage *storage, OscillatorStorage *oscda
 
 float TwistOscillator::tuningAwarePitch(float pitch)
 {
+    float p = pitch;
+
     if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL &&
         !(storage->oddsound_mts_client && storage->oddsound_mts_active_as_client) &&
         !(storage->isStandardTuning))
@@ -320,9 +322,10 @@ float TwistOscillator::tuningAwarePitch(float pitch)
         float frac = pitch - idx; // frac is 0 means use idx; frac is 1 means use idx+1
         float b0 = storage->currentTuning.logScaledFrequencyForMidiNote(idx) * 12;
         float b1 = storage->currentTuning.logScaledFrequencyForMidiNote(idx + 1) * 12;
-        return (1.f - frac) * b0 + frac * b1;
+        p = (1.f - frac) * b0 + frac * b1;
     }
-    return pitch;
+
+    return std::max(p, -24.f);
 }
 
 void TwistOscillator::init(float pitch, bool is_display, bool nonzero_drift)
