@@ -349,6 +349,10 @@ std::string defaultKeyToString(DefaultKey k)
         r = "openSoundControlPortOut";
         break;
 
+    case OSCIPOut:
+        r = "openSoundControlIPAddrOut";
+        break;
+
     case StartOSCIn:
         r = "startOSCIn";
         break;

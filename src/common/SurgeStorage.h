@@ -981,6 +981,7 @@ struct DAWExtraStateStorage
 
     int oscPortIn{DEFAULT_OSC_PORT_IN};
     int oscPortOut{DEFAULT_OSC_PORT_OUT};
+    std::string oscIPAddrOut{DEFAULT_OSC_IPADDR_OUT};
     bool oscStartIn{false};
     bool oscStartOut{false};
 };
@@ -1472,6 +1473,7 @@ class alignas(16) SurgeStorage
 
     int oscPortIn{DEFAULT_OSC_PORT_IN};
     int oscPortOut{DEFAULT_OSC_PORT_OUT};
+    std::string oscOutIP{"127.0.0.1"};
     bool oscStartIn{false};
     bool oscStartOut{false};
 

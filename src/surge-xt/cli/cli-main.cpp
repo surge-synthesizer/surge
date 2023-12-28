@@ -217,6 +217,10 @@ int main(int argc, char **argv)
     app.add_flag("--osc-out-port", oscOutputPort,
                  "Port for OSC Output; unspecified means input only; input required");
 
+    std::string oscOutputIPAddr{"127.0.0.1"};
+    app.add_flag("--osc-out-ipaddr", oscOutputIPAddr,
+                 "IP Address for OSC Output; unspecified means '127.0.0.1 (localhost)'");
+
     int sampleRate{0};
     app.add_flag("--sample-rate", sampleRate,
                  "Sample Rate for Audio Output. Will use system default if blank");
@@ -438,7 +442,7 @@ int main(int argc, char **argv)
         if (oscOutputPort > 0)
         {
             LOG(BASIC, "Starting OSC Output on " << oscOutputPort);
-            engine->proc->initOSCOut(oscOutputPort);
+            engine->proc->initOSCOut(oscOutputPort, oscOutputIPAddr);
         }
     }
 

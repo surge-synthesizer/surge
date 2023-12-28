@@ -58,12 +58,13 @@ class OpenSoundControl : public juce::OSCReceiver,
 
     void initOSC(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge);
     bool initOSCIn(int port);
-    bool initOSCOut(int port);
+    bool initOSCOut(int port, std::string ipaddr);
     void stopListening(bool updateOSCStartInStorage = true);
     void tryOSCStartup();
 
     int iportnum = DEFAULT_OSC_PORT_IN;
     int oportnum = DEFAULT_OSC_PORT_OUT;
+    std::string outIPAddr = DEFAULT_OSC_IPADDR_OUT;
     bool listening = false;
     bool sendingOSC = false;
 

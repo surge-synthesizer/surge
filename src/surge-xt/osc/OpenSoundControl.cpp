@@ -65,13 +65,13 @@ void OpenSoundControl::tryOSCStartup()
 
     if (startOSCInNow)
     {
-        int defaultOSCInPort = synth->storage.getPatch().dawExtraState.oscPortIn;
+        int defaultOSCInPortPort = synth->storage.getPatch().dawExtraState.oscPortIn;
 
-        if (defaultOSCInPort > 0)
+        if (defaultOSCInPortPort > 0)
         {
-            if (!initOSCIn(defaultOSCInPort))
+            if (!initOSCIn(defaultOSCInPortPort))
             {
-                sspPtr->initOSCError(defaultOSCInPort);
+                sspPtr->initOSCError(defaultOSCInPortPort);
             }
         }
     }
@@ -80,12 +80,13 @@ void OpenSoundControl::tryOSCStartup()
 
     if (startOSCOutNow)
     {
-        int defaultOSCOutPort = synth->storage.getPatch().dawExtraState.oscPortOut;
+        int defaultOSCOutPortPort = synth->storage.getPatch().dawExtraState.oscPortOut;
+        std::string defaultOSCOutIPAddr = synth->storage.getPatch().dawExtraState.oscIPAddrOut;
 
-        if (defaultOSCOutPort > 0)
+        if (defaultOSCOutPortPort > 0)
         {
-            if (!initOSCOut(defaultOSCOutPort))
-                sspPtr->initOSCError(defaultOSCOutPort);
+            if (!initOSCOut(defaultOSCOutPortPort, defaultOSCOutIPAddr))
+                sspPtr->initOSCError(defaultOSCOutPortPort, defaultOSCOutIPAddr);
         }
     }
 }
@@ -561,8 +562,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
             else
             {
-                // if (!normalized)
-                //     val = getNormValue(p, val);
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
             }
         }
@@ -833,6 +832,7 @@ void OpenSoundControl::oscBundleReceived(const juce::OSCBundle &bundle)
     }
 }
 
+/*
 float OpenSoundControl::getNormValue(Parameter *p, float fval)
 {
     pdata onto;
@@ -855,18 +855,19 @@ float OpenSoundControl::getNormValue(Parameter *p, float fval)
         sendError("Natural-ranged parameter (via OSC): " + errMsg);
     return 0;
 }
+*/
 
 /* ----- OSC Sending  ----- */
 
-bool OpenSoundControl::initOSCOut(int port)
+bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
 {
     if (port < 1)
     {
         return false;
     }
 
-    // Send OSC messages to localhost:UDP port number:
-    if (!juceOSCSender.connect("127.0.0.1", port))
+    // Send OSC messages to IP Address:UDP port number
+    if (!juceOSCSender.connect(ipaddr, port))
     {
         return false;
     }
@@ -882,6 +883,7 @@ bool OpenSoundControl::initOSCOut(int port)
 
     sendingOSC = true;
     oportnum = port;
+    outIPAddr = ipaddr;
     synth->storage.oscSending = true;
     synth->storage.oscStartOut = true;
 
@@ -989,7 +991,8 @@ std::string OpenSoundControl::getMacroValStr(long macnum)
     auto macVal01 = float_to_clocalestr_wprec(cms->get_output01(0), 8);
     std::ostringstream oss;
 
-    oss << macVal << " % " << macVal01 << " (normalized)";
+    // oss << macVal << " % " << macVal01 << " (normalized)";
+    oss << macVal01 << " (" << macVal << " %)";
     return (oss.str());
 }
 
@@ -1009,8 +1012,8 @@ std::string OpenSoundControl::getParamValStr(const Parameter *p)
     case vt_float:
     {
         std::ostringstream oss;
-        oss << p->get_display(false, 0.0) << " "
-            << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " (normalized)";
+        oss << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " ("
+            << p->get_display(false, 0.0) << ")";
         valStr = oss.str();
     }
     break;

@@ -2365,6 +2365,25 @@ void SurgeSynthesizer::allNotesOff()
             }
         }
     }
+
+    for (const auto &sceneVoices : voices)
+    {
+        for (const auto &v : sceneVoices)
+        {
+            if (v->state.gate)
+            {
+                std::cout << "After all notes off voice is still gated " << (int)v->state.channel
+                          << " " << (int)v->state.key << std::endl;
+
+                std::cout << "Held notes: ";
+                for (auto n : heldNotes)
+                {
+                    std::cout << n << " ";
+                }
+                std::cout << std::endl;
+            }
+        }
+    }
 }
 
 void SurgeSynthesizer::purgeHoldbuffer(int scene)
