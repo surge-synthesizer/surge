@@ -1723,3 +1723,47 @@ TEST_CASE("Latch in Dual MPE", "[midi]")
         }
     }
 }
+
+
+TEST_CASE("Two On All Notes Off", "[midi]")
+{
+    SECTION("Two Onn All Off")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        for (int i=0; i<10; ++i)
+            surge->process();
+        surge->playNote(0,60,120,0,-1);
+        for (int i=0; i<10; ++i)
+            surge->process();
+        surge->playNote(0,60,120,0,-1);
+        for (int i=0; i<10; ++i)
+            surge->process();
+        surge->allNotesOff();
+        bool g = false;
+        REQUIRE(!g);
+    }
+
+    SECTION("Two Onn One Off All Off")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        for (int i=0; i<10; ++i)
+            surge->process();
+        surge->playNote(0,60,120,0,-1);
+        for (int i=0; i<10; ++i)
+            surge->process();
+        surge->playNote(0,60,120,0,-1);
+        for (int i=0; i<10; ++i)
+            surge->process();
+        surge->releaseNote(0,60,120,-1);
+        for (int i=0; i<10; ++i)
+            surge->process();
+
+        surge->allNotesOff();
+        bool g = false;
+        REQUIRE(!g);
+    }
+}
