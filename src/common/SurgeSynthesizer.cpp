@@ -2342,7 +2342,7 @@ void SurgeSynthesizer::allSoundOff()
 
 void SurgeSynthesizer::allNotesOff()
 {
-    std::vector<std::tuple<int,int,int>> gatedChannelKeyID;
+    std::vector<std::tuple<int, int, int>> gatedChannelKeyID;
     for (const auto &sceneVoices : voices)
     {
         for (const auto &v : sceneVoices)
@@ -2354,7 +2354,8 @@ void SurgeSynthesizer::allNotesOff()
         }
     }
 
-    for (auto &[ch, n, id] : gatedChannelKeyID) {
+    for (auto &[ch, n, id] : gatedChannelKeyID)
+    {
         releaseNote(ch, n, 0, id);
     }
 
@@ -2365,8 +2366,8 @@ void SurgeSynthesizer::allNotesOff()
         {
             if (v->state.gate)
             {
-                std::cout << "After all notes off voice is still gated "
-                << (int)v->state.channel << " " << (int)v->state.key << std::endl;
+                std::cout << "After all notes off voice is still gated " << (int)v->state.channel
+                          << " " << (int)v->state.key << std::endl;
             }
         }
     }

@@ -1724,7 +1724,6 @@ TEST_CASE("Latch in Dual MPE", "[midi]")
     }
 }
 
-
 TEST_CASE("Two On All Notes Off", "[midi]")
 {
     SECTION("Two Onn All Off")
@@ -1732,13 +1731,13 @@ TEST_CASE("Two On All Notes Off", "[midi]")
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
 
-        for (int i=0; i<10; ++i)
+        for (int i = 0; i < 10; ++i)
             surge->process();
-        surge->playNote(0,60,120,0,-1);
-        for (int i=0; i<10; ++i)
+        surge->playNote(0, 60, 120, 0, -1);
+        for (int i = 0; i < 10; ++i)
             surge->process();
-        surge->playNote(0,60,120,0,-1);
-        for (int i=0; i<10; ++i)
+        surge->playNote(0, 60, 120, 0, -1);
+        for (int i = 0; i < 10; ++i)
             surge->process();
         surge->allNotesOff();
         bool g = false;
@@ -1750,16 +1749,16 @@ TEST_CASE("Two On All Notes Off", "[midi]")
         auto surge = Surge::Headless::createSurge(44100);
         REQUIRE(surge);
 
-        for (int i=0; i<10; ++i)
+        for (int i = 0; i < 10; ++i)
             surge->process();
-        surge->playNote(0,60,120,0,-1);
-        for (int i=0; i<10; ++i)
+        surge->playNote(0, 60, 120, 0, -1);
+        for (int i = 0; i < 10; ++i)
             surge->process();
-        surge->playNote(0,60,120,0,-1);
-        for (int i=0; i<10; ++i)
+        surge->playNote(0, 60, 120, 0, -1);
+        for (int i = 0; i < 10; ++i)
             surge->process();
-        surge->releaseNote(0,60,120,-1);
-        for (int i=0; i<10; ++i)
+        surge->releaseNote(0, 60, 120, -1);
+        for (int i = 0; i < 10; ++i)
             surge->process();
 
         surge->allNotesOff();
