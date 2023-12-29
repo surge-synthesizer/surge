@@ -2342,29 +2342,36 @@ void SurgeSynthesizer::allSoundOff()
 
 void SurgeSynthesizer::allNotesOff()
 {
-    std::set<int> heldNotes;
-
-    for (int sc = 0; sc < n_scenes; sc++)
+    std::vector<std::tuple<int, int, int>> gatedChannelKeyID;
+    for (const auto &sceneVoices : voices)
     {
-        for (int key = 0; key < 128; key++)
+        for (const auto &v : sceneVoices)
         {
-            if (midiKeyPressedForScene[sc][key])
+            if (v->state.gate)
             {
-                heldNotes.insert(key);
+                gatedChannelKeyID.emplace_back(v->state.channel, v->state.key, v->host_note_id);
             }
         }
     }
 
-    for (auto n : heldNotes)
+    for (auto &[ch, n, id] : gatedChannelKeyID)
     {
-        for (int ch = 0; ch < 16; ch++)
+        releaseNote(ch, n, 0, id);
+    }
+
+#if DEBUG_ALL_VOICES_OFF
+    for (const auto &sceneVoices : voices)
+    {
+        for (const auto &v : sceneVoices)
         {
-            if (channelState[ch].keyState[n].keystate > 0)
+            if (v->state.gate)
             {
-                releaseNote(ch, n, 0);
+                std::cout << "After all notes off voice is still gated " << (int)v->state.channel
+                          << " " << (int)v->state.key << std::endl;
             }
         }
     }
+#endif
 }
 
 void SurgeSynthesizer::purgeHoldbuffer(int scene)
