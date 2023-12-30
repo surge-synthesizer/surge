@@ -5117,34 +5117,34 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                                                        storage->oscOutIP);
             });
 
-        oscSubMenu.addItem(Surge::GUI::toOSCase("Reset OSC Ports to Default"),
-                           [this, storage, defaultOSCInPort, defaultOSCOutPort, defaultOSCOutIP]() {
-                               if (defaultOSCInPort > 0)
-                               {
-                                   if (juceEditor->processor.changeOSCInPort(defaultOSCInPort))
-                                   {
-                                       storage->oscPortIn = defaultOSCInPort;
-                                   }
-                                   else
-                                   {
-                                       juceEditor->processor.initOSCError(defaultOSCInPort);
-                                   }
-                               }
+        oscSubMenu.addItem(
+            Surge::GUI::toOSCase("Reset OSC Ports to Default"),
+            [this, storage, defaultOSCInPort, defaultOSCOutPort, defaultOSCOutIP]() {
+                if (defaultOSCInPort > 0)
+                {
+                    if (juceEditor->processor.changeOSCInPort(defaultOSCInPort))
+                    {
+                        storage->oscPortIn = defaultOSCInPort;
+                    }
+                    else
+                    {
+                        juceEditor->processor.initOSCError(defaultOSCInPort);
+                    }
+                }
 
-                               if (defaultOSCOutPort > 0)
-                               {
-                                   if (juceEditor->processor.changeOSCOut(defaultOSCOutPort,
-                                                                          defaultOSCOutIP))
-                                   {
-                                       storage->oscPortOut = defaultOSCOutPort;
-                                       storage->oscOutIP = defaultOSCOutIP;
-                                   }
-                                   else
-                                   {
-                                       juceEditor->processor.initOSCError(defaultOSCOutPort);
-                                   }
-                               }
-                           });
+                if (defaultOSCOutPort > 0)
+                {
+                    if (juceEditor->processor.changeOSCOut(defaultOSCOutPort, defaultOSCOutIP))
+                    {
+                        storage->oscPortOut = defaultOSCOutPort;
+                        storage->oscOutIP = defaultOSCOutIP;
+                    }
+                    else
+                    {
+                        juceEditor->processor.initOSCError(defaultOSCOutPort);
+                    }
+                }
+            });
     }
 
 #if HAS_JUCE
