@@ -2365,25 +2365,6 @@ void SurgeSynthesizer::allNotesOff()
             }
         }
     }
-
-    for (const auto &sceneVoices : voices)
-    {
-        for (const auto &v : sceneVoices)
-        {
-            if (v->state.gate)
-            {
-                std::cout << "After all notes off voice is still gated " << (int)v->state.channel
-                          << " " << (int)v->state.key << std::endl;
-
-                std::cout << "Held notes: ";
-                for (auto n : heldNotes)
-                {
-                    std::cout << n << " ";
-                }
-                std::cout << std::endl;
-            }
-        }
-    }
 }
 
 void SurgeSynthesizer::purgeHoldbuffer(int scene)
@@ -4881,6 +4862,7 @@ void SurgeSynthesizer::populateDawExtraState()
 
     des.oscPortIn = storage.oscPortIn;
     des.oscPortOut = storage.oscPortOut;
+    des.oscIPAddrOut = storage.oscOutIP;
     des.oscStartIn = storage.oscStartIn;
     des.oscStartOut = storage.oscStartOut;
 
@@ -4945,6 +4927,7 @@ void SurgeSynthesizer::loadFromDawExtraState()
 
     storage.oscPortIn = des.oscPortIn;
     storage.oscPortOut = des.oscPortOut;
+    storage.oscOutIP = des.oscIPAddrOut;
     storage.oscStartIn = des.oscStartIn;
     storage.oscStartOut = des.oscStartOut;
 

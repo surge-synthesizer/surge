@@ -80,13 +80,13 @@ void OpenSoundControl::tryOSCStartup()
 
     if (startOSCOutNow)
     {
-        int defaultOSCOutPortPort = synth->storage.getPatch().dawExtraState.oscPortOut;
+        int defaultOSCOutPort = synth->storage.getPatch().dawExtraState.oscPortOut;
         std::string defaultOSCOutIPAddr = synth->storage.getPatch().dawExtraState.oscIPAddrOut;
 
-        if (defaultOSCOutPortPort > 0)
+        if (defaultOSCOutPort > 0)
         {
-            if (!initOSCOut(defaultOSCOutPortPort, defaultOSCOutIPAddr))
-                sspPtr->initOSCError(defaultOSCOutPortPort, defaultOSCOutIPAddr);
+            if (!initOSCOut(defaultOSCOutPort, defaultOSCOutIPAddr))
+                sspPtr->initOSCError(defaultOSCOutPort, defaultOSCOutIPAddr);
         }
     }
 }
@@ -991,7 +991,6 @@ std::string OpenSoundControl::getMacroValStr(long macnum)
     auto macVal01 = float_to_clocalestr_wprec(cms->get_output01(0), 8);
     std::ostringstream oss;
 
-    // oss << macVal << " % " << macVal01 << " (normalized)";
     oss << macVal01 << " (" << macVal << " %)";
     return (oss.str());
 }

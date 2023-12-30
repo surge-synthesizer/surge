@@ -371,8 +371,8 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             case vt_float:
             {
                 std::ostringstream oss;
-                oss << p->get_display(false, 0.0) << " "
-                    << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " (normalized)";
+                oss << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " "
+                    << p->get_display(false, 0.0);
                 valStr = oss.str();
             }
             break;

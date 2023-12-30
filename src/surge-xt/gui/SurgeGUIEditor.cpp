@@ -4948,7 +4948,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
             {
                 if (!juceEditor->processor.initOSCOut(des->oscPortOut, des->oscIPAddrOut))
                 {
-                    juceEditor->processor.initOSCError(des->oscPortOut);
+                    juceEditor->processor.initOSCError(des->oscPortOut, des->oscIPAddrOut);
                 }
             }
         });

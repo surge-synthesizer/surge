@@ -514,6 +514,8 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
     oscPortOut =
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::OSCPortOut, DEFAULT_OSC_PORT_OUT);
+    oscOutIP =
+        Surge::Storage::getUserDefaultValue(this, Surge::Storage::OSCIPOut, DEFAULT_OSC_IPADDR_OUT);
 
     initPatchName =
         Surge::Storage::getUserDefaultValue(this, Surge::Storage::InitialPatchName, "Init Saw");
