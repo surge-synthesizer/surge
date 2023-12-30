@@ -85,8 +85,8 @@ class OpenSoundControl : public juce::OSCReceiver,
     void sendNotFloatError(std::string addr, std::string msg);
     void sendDataCountError(std::string addr, std::string count);
     float getNormValue(Parameter *p, float fval);
-    std::string getParamValStr(const Parameter *p);
-    std::string getMacroValStr(long macnum);
+    bool sendParameter(const Parameter *p);
+    bool sendMacro(long macnum);
     bool hasEnding(std::string const &fullString, std::string const &ending);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OpenSoundControl)

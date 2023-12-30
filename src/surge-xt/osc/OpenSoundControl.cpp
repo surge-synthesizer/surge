@@ -469,11 +469,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
             if (querying)
             {
-                auto macValStr = OpenSoundControl::getMacroValStr(macnum - 1);
-                std::string macName = "/param/macro/" + std::to_string(macnum);
-                if (!this->juceOSCSender.send(
-                        juce::OSCMessage(juce::String(macName), juce::String(macValStr))))
-                    std::cout << "Error: could not send OSC message.";
+                OpenSoundControl::sendMacro(macnum - 1);
             }
             else
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
@@ -555,10 +551,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
             if (querying)
             {
-                std::string valStr = getParamValStr(p);
-                if (!this->juceOSCSender.send(
-                        juce::OSCMessage(juce::String(p->oscName), juce::String(valStr))))
-                    std::cout << "Error: could not send OSC message.";
+                sendParameter(p);
             }
             else
             {
@@ -962,65 +955,78 @@ void OpenSoundControl::sendAllParams()
             // Dump all params except for macros
             for (int i = 0; i < n; i++)
             {
-                Parameter p = *synth->storage.getPatch().param_ptr[i];
-                valStr = getParamValStr(&p);
-                if (!this->juceOSCSender.send(
-                        juce::OSCMessage(juce::String(p.oscName), juce::String(valStr))))
-                    std::cout << "Error: could not send OSC message.";
+                Parameter *p = synth->storage.getPatch().param_ptr[i];
+                sendParameter(p);
             }
             // Now do the macros
             for (int i = 0; i < n_customcontrollers; i++)
             {
-                auto macValStr = OpenSoundControl::getMacroValStr(i);
-                std::string macName = "/param/macro/" + std::to_string(i + 1);
-                if (!this->juceOSCSender.send(
-                        juce::OSCMessage(juce::String(macName), juce::String(macValStr))))
-                    std::cout << "Error: could not send OSC message.";
+                sendMacro(i);
             }
             // delete timer;    // This prints the elapsed time
         });
     }
 }
 
-std::string OpenSoundControl::getMacroValStr(long macnum)
+bool OpenSoundControl::sendMacro(long macnum)
 {
     auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                     .scene[0]
                     .modsources[macnum + ms_ctrl1]);
-    auto macVal = float_to_clocalestr_wprec(100 * cms->get_output(0), 3);
-    auto macVal01 = float_to_clocalestr_wprec(cms->get_output01(0), 8);
-    std::ostringstream oss;
+    auto valStr = float_to_clocalestr_wprec(100 * cms->get_output(0), 3);
+    float val01 = cms->get_output01(0);
+    std::string addr = "/param/macro/" + std::to_string(macnum + 1);
 
-    oss << macVal01 << " (" << macVal << " %)";
-    return (oss.str());
+    juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+    om.addFloat32(val01);
+    if (valStr != "")
+        om.addString(valStr);
+    if (!this->juceOSCSender.send(om))
+    {
+        std::cout << "Error: could not send OSC message.";
+        return false;
+    }
+
+    return true;
 }
 
-std::string OpenSoundControl::getParamValStr(const Parameter *p)
+bool OpenSoundControl::sendParameter(const Parameter *p)
 {
-    std::string valStr;
+    std::string valStr = "";
+    float val01 = 0.0;
+
     switch (p->valtype)
     {
     case vt_int:
-        valStr = std::to_string(p->val.i);
+        val01 = float(p->val.i);
         break;
 
     case vt_bool:
-        valStr = std::to_string(p->val.b);
+        val01 = float(p->val.b);
         break;
 
     case vt_float:
     {
-        std::ostringstream oss;
-        oss << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " ("
-            << p->get_display(false, 0.0) << ")";
-        valStr = oss.str();
+        val01 = p->val.f;
+        valStr = p->get_display(false, 0.0);
     }
     break;
 
     default:
         break;
     }
-    return valStr;
+
+    juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(p->oscName)));
+    om.addFloat32(val01);
+    if (valStr != "")
+        om.addString(valStr);
+    if (!this->juceOSCSender.send(om))
+    {
+        std::cout << "Error: could not send OSC message.";
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace OSC
