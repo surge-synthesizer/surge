@@ -2661,6 +2661,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         if (dawExtraState.isPopulated)
         {
             int ival;
+            std::string sval;
             TiXmlElement *p;
 
             // This is the non-legacy way to save editor state
@@ -2921,6 +2922,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             {
                 dawExtraState.oscPortOut = ival;
                 storage->oscPortOut = ival;
+            }
+
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oscIPAddrOut"));
+
+            if (p && p->QueryStringAttribute("v", &sval) == TIXML_SUCCESS)
+            {
+                dawExtraState.oscIPAddrOut = sval;
+                storage->oscOutIP = sval;
             }
 
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oscStartIn"));
@@ -3689,6 +3698,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement oscPortOut("oscPortOut");
         oscPortOut.SetAttribute("v", dawExtraState.oscPortOut);
         dawExtraXML.InsertEndChild(oscPortOut);
+
+        TiXmlElement oscIPAddrOut("oscIPAddrOut");
+        oscIPAddrOut.SetAttribute("v", dawExtraState.oscIPAddrOut);
+        dawExtraXML.InsertEndChild(oscIPAddrOut);
 
         TiXmlElement oscStartIn("oscStartIn");
         oscStartIn.SetAttribute("v", dawExtraState.oscStartIn ? 1 : 0);

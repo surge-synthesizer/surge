@@ -170,6 +170,7 @@ enum DefaultKey
     StartOSCOut,
     OSCPortIn,
     OSCPortOut,
+    OSCIPOut,
 
     nKeys
 };

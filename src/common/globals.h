@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <algorithm>
+#include <string>
 
 // if you hit this on msvc and pass the above, you probably need /Zc:__cplusplus
 static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your build");
@@ -98,4 +99,5 @@ const int DEFAULT_POLYLIMIT = 16;
 
 const int DEFAULT_OSC_PORT_IN = 53280;
 const int DEFAULT_OSC_PORT_OUT = 53281;
+const std::string DEFAULT_OSC_IPADDR_OUT = "127.0.0.1";
 #endif // SURGE_SRC_COMMON_GLOBALS_H

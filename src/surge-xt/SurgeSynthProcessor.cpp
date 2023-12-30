@@ -264,14 +264,14 @@ bool SurgeSynthProcessor::changeOSCInPort(int new_port)
     return initOSCIn(new_port);
 }
 
-bool SurgeSynthProcessor::initOSCOut(int port)
+bool SurgeSynthProcessor::initOSCOut(int port, std::string ipaddr)
 {
     if (port <= 0)
     {
         return false;
     }
 
-    auto state = oscHandler.initOSCOut(port);
+    auto state = oscHandler.initOSCOut(port, ipaddr);
 
     surge->storage.oscSending = state;
     surge->storage.oscStartOut = true;
@@ -284,17 +284,26 @@ void SurgeSynthProcessor::stopOSCOut(bool updateOSCStartInStorage)
     oscHandler.stopSending(updateOSCStartInStorage);
 }
 
-void SurgeSynthProcessor::initOSCError(int port)
+void SurgeSynthProcessor::initOSCError(int port, std::string outIP)
 {
     std::ostringstream msg;
 
-    msg << "Surge XT was unable to connect to OSC port " << port << ".\n"
-        << "It may be in use by another application.";
+    msg << "Surge XT was unable to connect to OSC port " << port;
+    if (outIP != "")
+    {
+        msg << "; at IP Address " << outIP;
+    }
+
+    msg << "\n"
+        << "Either it is not a valid port, or it may be in use by another application.";
 
     surge->storage.reportError(msg.str(), "OSC Initialization Error");
 };
 
-bool SurgeSynthProcessor::changeOSCOutPort(int new_port) { return initOSCOut(new_port); }
+bool SurgeSynthProcessor::changeOSCOut(int new_port, std::string ipaddr)
+{
+    return initOSCOut(new_port, ipaddr);
+}
 
 // Called as 'patch loaded' listener; runs on the juce::MessageManager thread
 void SurgeSynthProcessor::patch_load_to_OSC(fs::path fullPath)
@@ -362,8 +371,8 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             case vt_float:
             {
                 std::ostringstream oss;
-                oss << p->get_display(false, 0.0) << " "
-                    << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " (normalized)";
+                oss << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " "
+                    << p->get_display(false, 0.0);
                 valStr = oss.str();
             }
             break;

@@ -391,18 +391,18 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         }
         oscToAudio(oscToAudio_type type, int32_t nid, float f) : type(type), noteid(nid), fval(f) {}
     };
-    sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
+    sst::cpputils::SimpleRingBuffer<oscToAudio, 1024> oscRingBuf; // was 4096
 
     Surge::OSC::OpenSoundControl oscHandler;
     std::atomic<bool> oscCheckStartup{false};
     void tryLazyOscStartupFromStreamedState();
 
     bool initOSCIn(int port);
-    bool initOSCOut(int port);
+    bool initOSCOut(int port, std::string ipaddr);
     bool changeOSCInPort(int newport);
-    bool changeOSCOutPort(int newport);
+    bool changeOSCOut(int newport, std::string ipaddr);
     void stopOSCOut(bool updateOSCStartInStorage = true);
-    void initOSCError(int port);
+    void initOSCError(int port, std::string outIP = "");
 
     void patch_load_to_OSC(fs::path newpath);
     void param_change_to_OSC(std::string paramPath, std::string valStr);
