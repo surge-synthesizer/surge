@@ -3015,10 +3015,13 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 
 void SurgeGUIEditor::setBitmapZoomFactor(float zf)
 {
-    float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
-    int fullPhysicalZoomFactor = (int)(zf * dbs);
-    if (bitmapStore != nullptr)
-        bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
+    if (juce::Desktop::getInstance().isHeadless() == false)
+    {
+        float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
+        int fullPhysicalZoomFactor = (int)(zf * dbs);
+        if (bitmapStore != nullptr)
+            bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
+    }
 }
 
 void SurgeGUIEditor::showMinimumZoomError() const
@@ -5284,6 +5287,9 @@ int SurgeGUIEditor::findLargestFittingZoomBetween(
     float baseW, float baseH)
 {
     // Here is a very crude implementation
+    if (juce::Desktop::getInstance().isHeadless() == true)
+        return 1;
+
     int result = zoomHigh;
     auto screenDim = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->totalArea;
     float sx = screenDim.getWidth() * percentageOfScreenAvailable / 100.0;

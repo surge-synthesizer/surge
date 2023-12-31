@@ -253,8 +253,8 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     setResizable(true, processor.wrapperType == juce::AudioProcessor::wrapperType_VST);
 
     sge->audioLatencyNotified = processor.inputIsLatent;
-
-    sge->open(nullptr);
+    if (juce::Desktop::getInstance().isHeadless() == false)
+        sge->open(nullptr);
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 60);
