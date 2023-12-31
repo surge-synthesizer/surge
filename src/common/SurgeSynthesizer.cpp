@@ -2342,6 +2342,37 @@ void SurgeSynthesizer::allSoundOff()
 
 void SurgeSynthesizer::allNotesOff()
 {
+    /*
+     * For now, until we move to a sightly less delicate voice manager,
+     * do two things here. First run over all the keys we have pressed. Then
+     * run over all the voices we have gated. Release both. This deals with both
+     * midi and generative patterns in poly and mono mode. Probably a bit overkill
+     * but hey that's OK.
+     */
+    std::set<int> heldNotes;
+
+    for (int sc = 0; sc < n_scenes; sc++)
+    {
+        for (int key = 0; key < 128; key++)
+        {
+            if (midiKeyPressedForScene[sc][key])
+            {
+                heldNotes.insert(key);
+            }
+        }
+    }
+
+    for (auto n : heldNotes)
+    {
+        for (int ch = 0; ch < 16; ch++)
+        {
+            if (channelState[ch].keyState[n].keystate > 0)
+            {
+                releaseNote(ch, n, 0);
+            }
+        }
+    }
+
     std::vector<std::tuple<int, int, int>> gatedChannelKeyID;
     for (const auto &sceneVoices : voices)
     {
