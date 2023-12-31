@@ -431,9 +431,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     {
         float val = 0;
 
-        if ((message.size() != 1) && !querying)
+        if ((message.size() < 1) && !querying)
         {
-            sendDataCountError("param", "1");
+            sendDataCountError("param", "1 or more");
             return;
         }
         else if (!querying)
