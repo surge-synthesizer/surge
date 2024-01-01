@@ -7,13 +7,13 @@ file(GLOB SURGE_XT_JUCE_RESOURCES_GLOB
   ${CMAKE_SOURCE_DIR}/resources/fonts/IndieFlower.ttf
   ${CMAKE_SOURCE_DIR}/resources/fonts/FiraMono-Regular.ttf
   ${CMAKE_SOURCE_DIR}/resources/surge-xt/memory-skin.xml
-  )
+)
 
 juce_add_binary_data(surge-xt-binary
   NAMESPACE SurgeXTBinary
   HEADER_NAME SurgeXTBinary.h
   SOURCES ${SURGE_XT_JUCE_RESOURCES_GLOB}
-  )
+)
 
 if(WIN32 AND ${CMAKE_SIZEOF_VOID_P} EQUAL 4)
   set(SURGE_XT_PRODUCT_NAME "Surge XT (32-bit)")
@@ -51,11 +51,12 @@ juce_add_plugin(${PROJECT_NAME}
   LV2_SHARED_LIBRARY_NAME SurgeXT
 
   FORMATS ${SURGE_JUCE_FORMATS}
-  )
+)
 
 if(SURGE_BUILD_CLAP)
   clap_juce_extensions_plugin(TARGET surge-xt
     CLAP_ID "org.surge-synth-team.surge-xt"
+
     # CLAP_SUPPORTS_CUSTOM_FACTORY 1
     CLAP_FEATURES "instrument" "synthesizer" "hybrid" "free and open source")
 endif()
@@ -89,6 +90,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/SurgeGUIEditorOverlays.cpp
   gui/SurgeGUIEditorTags.h
   gui/SurgeGUIEditorValueCallbacks.cpp
+  gui/SurgeGUIEditorMenuStructures.cpp
   gui/SurgeGUIUtils.cpp
   gui/SurgeGUIUtils.h
   gui/SurgeImage.cpp
@@ -173,7 +175,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 
   osc/OpenSoundControl.cpp
   osc/OpenSoundControl.h
-  )
+)
 
 if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
   message(FATAL_ERROR "You must build against at least JUCE 6.1 with accessibility support!")
@@ -195,7 +197,7 @@ endif()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC
   $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
-  )
+)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-common
@@ -208,18 +210,18 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   juce::juce_osc
   surge-xt-binary
   sst-filters-extras
-  )
+)
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/gui
   ${CMAKE_CURRENT_SOURCE_DIR}/osc
   ${CMAKE_CURRENT_SOURCE_DIR}
-  )
+)
 
 add_subdirectory(cli)
 
-if (APPLE)
+if(APPLE)
   add_dependencies(${PROJECT_NAME}_Standalone ${PROJECT_NAME}-cli)
   get_property(cliname TARGET ${PROJECT_NAME}-cli PROPERTY RUNTIME_OUTPUT_DIRECTORY)
   get_property(saname TARGET ${PROJECT_NAME}_Standalone PROPERTY RUNTIME_OUTPUT_DIRECTORY)
@@ -227,11 +229,11 @@ if (APPLE)
   message(STATUS "macOS Standalone includes CLI")
 
   add_custom_command(
-          TARGET ${PROJECT_NAME}_Standalone
-          POST_BUILD
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          COMMAND echo "Relocating cli executable into Standalone"
-          COMMAND ${CMAKE_COMMAND} -E copy "${cliexe}" "${saname}/Surge XT.app/Contents/MacOS"
+    TARGET ${PROJECT_NAME}_Standalone
+    POST_BUILD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND echo "Relocating cli executable into Standalone"
+    COMMAND ${CMAKE_COMMAND} -E copy "${cliexe}" "${saname}/Surge XT.app/Contents/MacOS"
   )
 endif()
 
