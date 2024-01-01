@@ -170,6 +170,9 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
                                            storage->note_to_pitch_inv(pitch2_t));
     }
 
+    pitchmult_inv = std::min(pitchmult_inv, (delayLine[0]->comb_size - 100) * 1.0);
+    pitchmult2_inv = std::min(pitchmult2_inv, (delayLine[0]->comb_size - 100) * 1.0);
+
     noiseLp.coeff_LP2B(noiseLp.calc_omega(0) * OSC_OVERSAMPLING, 0.9);
     for (int i = 0; i < 3; ++i)
     {
