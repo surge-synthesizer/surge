@@ -23,7 +23,9 @@
 #include "BBDEnsembleEffect.h"
 
 #include "sst/basic-blocks/mechanics/block-ops.h"
+
 namespace mech = sst::basic_blocks::mechanics;
+using namespace sst::waveshapers;
 
 std::string ensemble_stage_name(int i)
 {
@@ -104,7 +106,9 @@ BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, p
     }
 
     for (int i = 0; i < 2; ++i)
+    {
         dc_blocker[i].setBlockSize(BLOCK_SIZE);
+    }
 }
 
 BBDEnsembleEffect::~BBDEnsembleEffect() {}
@@ -138,6 +142,7 @@ void BBDEnsembleEffect::init()
 
     // Butterworth highpass
     const auto dc_omega = 2 * M_PI * 50.0 / storage->samplerate;
+
     for (int i = 0; i < 2; ++i)
     {
         dc_blocker[i].suspend();
@@ -180,6 +185,7 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
     mech::copy_from_to<BLOCK_SIZE>(dataR, R);
 
     const auto aa_cutoff = calculateFilterParamFrequency(*pd_float, storage);
+
     sincInputFilter.coeff_LP(2 * M_PI * aa_cutoff / storage->samplerate, 0.7071);
     sincInputFilter.process_block(L, R);
 
@@ -188,6 +194,7 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
     float del0 = delayCenterMs * 0.001 * storage->samplerate;
 
     bbd_saturation_sse.setDrive(*pd_float[ens_delay_sat]);
+
     float fbGain = getFeedbackGain(false);
 
     for (int s = 0; s < BLOCK_SIZE; ++s)
@@ -197,10 +204,8 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
         R[s] *= 0.75f;
 
         // soft-clip input
-        L[s] =
-            storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, L[s] + fbStateL);
-        R[s] =
-            storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft, R[s] + fbStateR);
+        L[s] = storage->lookup_waveshape(WaveshaperType::wst_soft, L[s] + fbStateL);
+        R[s] = storage->lookup_waveshape(WaveshaperType::wst_soft, R[s] + fbStateR);
 
         delL.write(L[s]);
         delR.write(R[s]);
@@ -222,7 +227,8 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
         delayOuts[3] = delR.read(rtap2);
 
         fbStateL = fbGain * (delayOuts[0] + delayOuts[1]);
-        fbStateR = fbGain * (delayOuts[1] + delayOuts[2]);
+        fbStateR = fbGain * (delayOuts[2] + delayOuts[3]);
+
         // avoid DC build-up in the feedback path
         dc_blocker[0].process_sample_nolag(fbStateL, fbStateR);
         dc_blocker[1].process_sample_nolag(fbStateL, fbStateR);
@@ -231,13 +237,19 @@ void BBDEnsembleEffect::process_sinc_delays(float *dataL, float *dataR, float de
         auto waveshaperOutsVec = bbd_saturation_sse.processSample(delayOutsVec);
 
         float waveshaperOuts alignas(16)[4];
+
         _mm_store_ps(waveshaperOuts, waveshaperOutsVec);
+
         L[s] = waveshaperOuts[0] + waveshaperOuts[1];
         R[s] = waveshaperOuts[2] + waveshaperOuts[3];
 
         for (int i = 0; i < 3; ++i)
+        {
             for (int j = 0; j < 2; ++j)
+            {
                 modlfos[j][i].post_process();
+            }
+        }
     }
 }
 
@@ -282,15 +294,18 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         if (block_counter++ == 3)
         {
             const auto aa_cutoff = calculateFilterParamFrequency(*pd_float, storage);
+
             for (auto *del : {&delL1, &delL2, &delR1, &delR2})
+            {
                 del->setFilterFreq(aa_cutoff);
+            }
 
             block_counter = 0;
         }
 
         bbd_saturation_sse.setDrive(*pd_float[ens_delay_sat]);
-        float fbGain = getFeedbackGain(true);
 
+        float fbGain = getFeedbackGain(true);
         float del1 = delayScale * delay1Ms * 0.001;
         float del2 = delayScale * delay2Ms * 0.001;
         float del0 = delayCenterMs * 0.001;
@@ -302,10 +317,8 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             R[s] *= 0.75f;
 
             // soft-clip input
-            L[s] = storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
-                                             L[s] + fbStateL);
-            R[s] = storage->lookup_waveshape(sst::waveshapers::WaveshaperType::wst_soft,
-                                             R[s] + fbStateR);
+            L[s] = storage->lookup_waveshape(WaveshaperType::wst_soft, L[s] + fbStateL);
+            R[s] = storage->lookup_waveshape(WaveshaperType::wst_soft, R[s] + fbStateR);
 
             // OK so look at the diagram in #3743
             float t1 = del1 * modlfos[0][0].value() + del2 * modlfos[1][0].value() + del0;
@@ -318,13 +331,14 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             delR2.setDelayTime(t3);
 
             float delayOuts alignas(16)[4];
+
             delayOuts[0] = delL1.process(L[s]);
             delayOuts[1] = delL2.process(L[s]);
             delayOuts[2] = delR1.process(R[s]);
             delayOuts[3] = delR2.process(R[s]);
 
             fbStateL = fbGain * (delayOuts[0] + delayOuts[1]);
-            fbStateR = fbGain * (delayOuts[1] + delayOuts[2]);
+            fbStateR = fbGain * (delayOuts[2] + delayOuts[3]);
 
             // avoid DC build-up in the feedback path
             dc_blocker[0].process_sample_nolag(fbStateL, fbStateR);
@@ -334,13 +348,19 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
             auto waveshaperOutsVec = bbd_saturation_sse.processSample(delayOutsVec);
 
             float waveshaperOuts alignas(16)[4];
+
             _mm_store_ps(waveshaperOuts, waveshaperOutsVec);
+
             L[s] = waveshaperOuts[0] + waveshaperOuts[1];
             R[s] = waveshaperOuts[2] + waveshaperOuts[3];
 
             for (int i = 0; i < 3; ++i)
+            {
                 for (int j = 0; j < 2; ++j)
+                {
                     modlfos[j][i].post_process();
+                }
+            }
         }
 
         mech::mul_block<BLOCK_SIZE>(L, storage->db_to_linear(-8.0f));
