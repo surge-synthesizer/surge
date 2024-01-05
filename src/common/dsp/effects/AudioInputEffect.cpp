@@ -127,7 +127,7 @@ void AudioInputEffect::init_default_values()
 }
 const char *AudioInputEffect::group_label(int id)
 {
-    std::vector group_labels = {{"Audio Input", "Effect Input", "Scene Input", "Output"}};
+    std::vector group_labels = {"Audio Input", "Effect Input", "Scene Input", "Output"};
     effect_slot_type slot_type = getSlotType(fxdata->fxslot);
     if (slot_type == a_insert_slot)
         group_labels[2] = "Scene B Input";
