@@ -3699,7 +3699,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         {
             // Send changed value of mask to OSC out
             juceEditor->processor.paramChangeToListeners(
-                nullptr, true, juceEditor->processor.SCT_FX_DEACT, 0, std::to_string(d));
+                nullptr, true, juceEditor->processor.SCT_FX_DEACT, 0, 0.0, std::to_string(d));
         }
 
         synth->storage.getPatch().fx_disable.val.i = d;

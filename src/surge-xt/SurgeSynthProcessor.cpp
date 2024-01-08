@@ -28,6 +28,7 @@
 #include "globals.h"
 #include "UserDefaults.h"
 #include "UnitConversions.h"
+#include <any>
 
 #if LINUX
 // getCurrentPosition is deprecated in J7
@@ -316,16 +317,20 @@ void SurgeSynthProcessor::patch_load_to_OSC(fs::path fullPath)
 }
 
 // Called as 'param changed' listener; runs on the juce::MessageManager thread
-void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, std::string valStr)
+void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, bool hasFloat, float value,
+                                              std::string valStr)
 {
     if (surge->storage.oscSending && !paramPath.empty())
     {
-        oscHandler.send(paramPath, valStr);
+        if (hasFloat)
+            oscHandler.send(paramPath, value, valStr);
+        else
+            oscHandler.send(paramPath, valStr);
     }
 }
 
 void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCase,
-                                                 int specialCaseType, int macroNum,
+                                                 int specialCaseType, int macroNum, float fval,
                                                  std::string newValue)
 {
     std::string valStr = "";
@@ -338,8 +343,7 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             case SCT_MACRO:
             {
                 std::ostringstream oss;
-                oss << "/param/macro/" << macroNum + 1;
-                (it.second)(oss.str(), newValue);
+                (it.second)(oss.str(), true, fval, "");
             }
             break;
 
@@ -347,7 +351,7 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             {
                 std::ostringstream oss;
                 oss << "/param/fx/<s>/<n>/deactivate";
-                (it.second)(oss.str(), "new mask: " + newValue);
+                (it.second)(oss.str(), true, fval, "(new deact mask)");
             }
             break;
 
@@ -355,32 +359,31 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
                 break;
             }
         }
-
         else
         {
+            float val = -1.;
+            valStr = p->get_display(false, 0.0);
             switch (p->valtype)
             {
             case vt_int:
-                valStr = std::to_string(p->val.i);
+                val = (float)p->val.i;
                 break;
 
             case vt_bool:
-                valStr = std::to_string(p->val.b);
+                val = (float)p->val.b;
                 break;
 
             case vt_float:
             {
                 std::ostringstream oss;
-                oss << float_to_clocalestr(p->value_to_normalized(p->val.f)) << " "
-                    << p->get_display(false, 0.0);
-                valStr = oss.str();
+                val = p->value_to_normalized(p->val.f);
             }
             break;
 
             default:
                 break;
             }
-            (it.second)(p->oscName, valStr);
+            (it.second)(p->oscName, true, val, valStr);
         }
     }
 }

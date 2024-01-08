@@ -72,6 +72,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
     void send(std::string addr, std::string msg);
+    void send(std::string addr, float fval, std::string msg);
     void sendAllParams();
     void stopSending(bool updateOSCStartInStorage = true);
 

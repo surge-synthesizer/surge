@@ -871,8 +871,10 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
     synth->addPatchLoadedListener("OSC_OUT", [ssp = sspPtr](auto s) { ssp->patch_load_to_OSC(s); });
 
     // Add a listener for parameter changes
-    sspPtr->addParamChangeListener(
-        "OSC_OUT", [ssp = sspPtr](auto str1, auto str2) { ssp->param_change_to_OSC(str1, str2); });
+    sspPtr->addParamChangeListener("OSC_OUT",
+                                   [ssp = sspPtr](auto str1, auto bool1, auto float1, auto str2) {
+                                       ssp->param_change_to_OSC(str1, bool1, float1, str2);
+                                   });
 
     sendingOSC = true;
     oportnum = port;
@@ -916,6 +918,20 @@ void OpenSoundControl::send(std::string addr, std::string msg)
         // Runs on the juce messenger thread
         juce::MessageManager::getInstance()->callAsync([this, msg, addr]() {
             if (!this->juceOSCSender.send(juce::OSCMessage(juce::String(addr), juce::String(msg))))
+                std::cout << "Error: could not send OSC message.";
+        });
+    }
+}
+
+void OpenSoundControl::send(std::string addr, float fval, std::string msg)
+{
+    if (sendingOSC)
+    {
+        juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+        om.addFloat32(fval);
+        // Runs on the juce messenger thread
+        juce::MessageManager::getInstance()->callAsync([this, om]() {
+            if (!this->juceOSCSender.send(om))
                 std::cout << "Error: could not send OSC message.";
         });
     }

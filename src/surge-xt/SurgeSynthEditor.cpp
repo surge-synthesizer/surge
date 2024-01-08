@@ -602,7 +602,8 @@ void SurgeSynthEditor::endMacroEdit(long macroNum)
     std::stringstream ss;
     ss << std::fixed << std::setprecision(4) << newval;
     std::string newval_str = ss.str();
-    processor.paramChangeToListeners(nullptr, true, processor.SCT_MACRO, macroNum, newval_str);
+    processor.paramChangeToListeners(nullptr, true, processor.SCT_MACRO, macroNum, newval,
+                                     newval_str);
 }
 
 #if LINUX

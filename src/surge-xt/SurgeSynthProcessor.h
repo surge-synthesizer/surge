@@ -405,7 +405,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void initOSCError(int port, std::string outIP = "");
 
     void patch_load_to_OSC(fs::path newpath);
-    void param_change_to_OSC(std::string paramPath, std::string valStr);
+    void param_change_to_OSC(std::string paramPath, bool hasFloat, float value, std::string valStr);
     enum specialCaseType
     {
         SCT_MACRO,
@@ -413,7 +413,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     };
 
     void paramChangeToListeners(Parameter *p, bool isSpecialCase = false, int specialCaseType = -1,
-                                int macronum = 0, std::string newValue = "");
+                                int macronum = 0, float fval = 0.0, std::string newValue = "");
 
     // --- 'param change' listener(s) ----
     // Listeners are notified whenever a parameter finishes changing, along with the new value.
@@ -421,11 +421,12 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     // paramChangeListener calls OSCSender::send(), which runs on a juce::MessageManager thread.
     //
     // Be sure to delete any added listeners in the destructor of the class that added them.
-    std::unordered_map<std::string, std::function<void(const std::string &, const std::string &)>>
+    std::unordered_map<std::string, std::function<void(const std::string &, const bool, const float,
+                                                       const std::string &)>>
         paramChangeListeners;
-    void
-    addParamChangeListener(std::string key,
-                           std::function<void(const std::string &, const std::string &)> const &l)
+    void addParamChangeListener(std::string key,
+                                std::function<void(const std::string &, const bool, const float,
+                                                   const std::string &)> const &l)
     {
         paramChangeListeners.insert({key, l});
     }
