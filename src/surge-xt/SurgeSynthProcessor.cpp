@@ -343,15 +343,17 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             case SCT_MACRO:
             {
                 std::ostringstream oss;
+                oss << "/param/macro/" << macroNum + 1;
                 (it.second)(oss.str(), true, fval, "");
             }
             break;
 
             case SCT_FX_DEACT:
             {
-                std::ostringstream oss;
+                std::ostringstream oss, oss2;
                 oss << "/param/fx/<s>/<n>/deactivate";
-                (it.second)(oss.str(), true, fval, "(new deact mask)");
+                oss2 << newValue << "(new mask)";
+                (it.second)(oss.str(), true, fval, oss2.str());
             }
             break;
 

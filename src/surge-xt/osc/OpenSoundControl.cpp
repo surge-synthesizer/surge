@@ -915,9 +915,11 @@ void OpenSoundControl::send(std::string addr, std::string msg)
 {
     if (sendingOSC)
     {
+        juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+        om.addString(msg);
         // Runs on the juce messenger thread
-        juce::MessageManager::getInstance()->callAsync([this, msg, addr]() {
-            if (!this->juceOSCSender.send(juce::OSCMessage(juce::String(addr), juce::String(msg))))
+        juce::MessageManager::getInstance()->callAsync([this, om]() {
+            if (!this->juceOSCSender.send(om))
                 std::cout << "Error: could not send OSC message.";
         });
     }
@@ -929,6 +931,7 @@ void OpenSoundControl::send(std::string addr, float fval, std::string msg)
     {
         juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
         om.addFloat32(fval);
+        om.addString(msg);
         // Runs on the juce messenger thread
         juce::MessageManager::getInstance()->callAsync([this, om]() {
             if (!this->juceOSCSender.send(om))
