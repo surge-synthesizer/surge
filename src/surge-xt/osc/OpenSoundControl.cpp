@@ -215,6 +215,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             OpenSoundControl::sendAllParams();
             return;
         }
+        if (address1 == "all_mods")
+        {
+            OpenSoundControl::sendAllModulators();
+            return;
+        }
     }
 
     // Note expressions
@@ -515,7 +520,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 std::string addr = "/param/" + shortOSCname + "/deactivate";
                 if (!this->juceOSCSender.send(
                         juce::OSCMessage(juce::String(addr), juce::String(deactivated))))
-                    std::cout << "Error: could not send OSC message.";
+                    sendFailed();
             }
             else
             {
@@ -825,31 +830,6 @@ void OpenSoundControl::oscBundleReceived(const juce::OSCBundle &bundle)
     }
 }
 
-/*
-float OpenSoundControl::getNormValue(Parameter *p, float fval)
-{
-    pdata onto;
-    std::string text, errMsg;
-    std::stringstream ss;
-
-    ss << std::fixed << std::setprecision(10) << fval;
-    text = ss.str();
-
-    if (p->set_value_from_string_onto(text, onto, errMsg))
-    {
-        if (p->valtype == vt_float)
-            return p->value_to_normalized((float)onto.f);
-        if (p->valtype == vt_int)
-            return p->value_to_normalized((float)onto.i);
-        if (p->valtype == vt_bool)
-            return p->value_to_normalized((float)onto.b);
-    }
-    else
-        sendError("Natural-ranged parameter (via OSC): " + errMsg);
-    return 0;
-}
-*/
-
 /* ----- OSC Sending  ----- */
 
 bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
@@ -920,7 +900,7 @@ void OpenSoundControl::send(std::string addr, std::string msg)
         // Runs on the juce messenger thread
         juce::MessageManager::getInstance()->callAsync([this, om]() {
             if (!this->juceOSCSender.send(om))
-                std::cout << "Error: could not send OSC message.";
+                sendFailed();
         });
     }
 }
@@ -935,10 +915,12 @@ void OpenSoundControl::send(std::string addr, float fval, std::string msg)
         // Runs on the juce messenger thread
         juce::MessageManager::getInstance()->callAsync([this, om]() {
             if (!this->juceOSCSender.send(om))
-                std::cout << "Error: could not send OSC message.";
+                sendFailed();
         });
     }
 }
+
+void OpenSoundControl::sendFailed() { std::cout << "Error: could not send OSC message."; }
 
 void OpenSoundControl::sendError(std::string errorMsg)
 {
@@ -987,12 +969,43 @@ void OpenSoundControl::sendAllParams()
     }
 }
 
+// Loop through all modulators, send them to OSC Out
+void OpenSoundControl::sendAllModulators()
+{
+    if (sendingOSC)
+    {
+        // Runs on the juce messenger thread
+        juce::MessageManager::getInstance()->callAsync([this]() {
+            // auto timer = new Surge::Debug::TimeBlock("ModulatorDump");
+            auto modlist = synth->storage.getPatch().modulation_global;
+            // modsource_names_tag[i]
+
+            sendModulator();
+            // delete timer;    // This prints the elapsed time
+        });
+    }
+}
+
+bool OpenSoundControl::sendModulator()
+{
+    std::string addr = "/mod/";
+    float val01 = 0.0;
+    juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+    om.addFloat32(val01);
+    if (!this->juceOSCSender.send(om))
+    {
+        sendFailed();
+        return false;
+    }
+    return true;
+}
+
 bool OpenSoundControl::sendMacro(long macnum)
 {
     auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                     .scene[0]
                     .modsources[macnum + ms_ctrl1]);
-    auto valStr = float_to_clocalestr_wprec(100 * cms->get_output(0), 3);
+    auto valStr = float_to_clocalestr_wprec(100 * cms->get_output(0), 3) + " %";
     float val01 = cms->get_output01(0);
     std::string addr = "/param/macro/" + std::to_string(macnum + 1);
 
@@ -1002,7 +1015,7 @@ bool OpenSoundControl::sendMacro(long macnum)
         om.addString(valStr);
     if (!this->juceOSCSender.send(om))
     {
-        std::cout << "Error: could not send OSC message.";
+        sendFailed();
         return false;
     }
 
@@ -1041,10 +1054,9 @@ bool OpenSoundControl::sendParameter(const Parameter *p)
         om.addString(valStr);
     if (!this->juceOSCSender.send(om))
     {
-        std::cout << "Error: could not send OSC message.";
+        sendFailed();
         return false;
     }
-
     return true;
 }
 

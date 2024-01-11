@@ -74,6 +74,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     void send(std::string addr, std::string msg);
     void send(std::string addr, float fval, std::string msg);
     void sendAllParams();
+    void sendAllModulators();
     void stopSending(bool updateOSCStartInStorage = true);
 
   private:
@@ -88,6 +89,8 @@ class OpenSoundControl : public juce::OSCReceiver,
     float getNormValue(Parameter *p, float fval);
     bool sendParameter(const Parameter *p);
     bool sendMacro(long macnum);
+    bool sendModulator();
+    void sendFailed();
     bool hasEnding(std::string const &fullString, std::string const &ending);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OpenSoundControl)
