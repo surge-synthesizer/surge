@@ -30,7 +30,11 @@
 #endif
 
 #define TEST // remember this is how you tell the eurorack code to use dsp not hardware
+#if EURORACK_CLOUDS_IS_SUPERPARASITES
+#include "supercell/dsp/granular_processor.h"
+#else
 #include "clouds/dsp/granular_processor.h"
+#endif
 
 NimbusEffect::NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd)
@@ -40,7 +44,10 @@ NimbusEffect::NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     block_mem = new uint8_t[memLen]();
     block_ccm = new uint8_t[ccmLen]();
     processor = new clouds::GranularProcessor();
+#if EURORACK_CLOUDS_IS_SUPERPARASITES
+#else
     memset(processor, 0, sizeof(*processor));
+#endif
 
     processor->Init(block_mem, memLen, block_ccm, ccmLen);
     mix.set_blocksize(BLOCK_SIZE);
@@ -122,8 +129,15 @@ void NimbusEffect::process(float *dataL, float *dataR)
         int frames_to_go = sdata.output_frames_gen;
         int outpos = 0;
 
+        auto modeInt = *pd_int[nmb_mode];
+        // Just make sure we are safe if we swap between superparasites and not
+#if EURORACK_CLOUDS_IS_SUPERPARASITES
+        modeInt = std::clamp(modeInt, 0, 7);
+#else
+        modeInt = std::clamp(modeInt, 0, 3);
+#endif
         processor->set_playback_mode(
-            (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + *pd_int[nmb_mode]));
+            (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + modeInt));
         processor->set_quality(*pd_int[nmb_quality]);
 
         int consume_ptr = 0;
@@ -165,8 +179,12 @@ void NimbusEffect::process(float *dataL, float *dataR)
             parm->reverb = clamp01(*pd_float[nmb_reverb]);
             parm->dry_wet = 1.f;
 
+#if EURORACK_CLOUDS_IS_SUPERPARASITES
+            parm->capture = nimbusTrigger;
+#else
             parm->trigger = nimbusTrigger; // this is an external granulating source. Skip it
-            parm->gate = parm->freeze;     // This is the CV for the freeze button
+#endif
+            parm->gate = parm->freeze; // This is the CV for the freeze button
 
             processor->Prepare();
             processor->Process(input, output, inputSz);
