@@ -36,6 +36,7 @@ endif()
 # }}}
 
 # Fail on 32 bit except on windows {{{
+option(SURGE_BUILD_32BIT_LINUX "Allow non-working surge build to run on 32bit lin" OFF)
 if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
   if (WIN32)
     message(STATUS "Windows 32 bit build is lightly tested")
@@ -50,7 +51,11 @@ if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     message(WARNING "32 Bit Builds are only available on Windows.")
     message(WARNING "If you are building on an r-pi, install a 64 bit OS.")
     message(WARNING "If you want to help fix this, see the comment in CMakeLists.txt.")
-    message(FATAL_ERROR "Stopping compilation")
+    if (NOT ${SURGE_BUILD_32BIT_LINUX})
+      message(FATAL_ERROR "Stopping compilation")
+    else()
+      message(WARNING "Compilation continuing anyway. Good luck!")
+    endif()
   endif()
 endif()
 # }}}
