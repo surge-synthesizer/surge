@@ -4100,8 +4100,16 @@ bool SurgeGUIEditor::setParameterFromString(Parameter *p, const std::string &s, 
 {
     auto v = p->get_value_f01();
 
-    if (p && p->set_value_from_string(s, errMsg))
+    if (p)
     {
+        undoManager()->pushParameterChange(p->id, p, p->val);
+        auto res = p->set_value_from_string(s, errMsg);
+
+        if (!res)
+        {
+            return false;
+        }
+
         if (v != p->get_value_f01())
             synth->storage.getPatch().isDirty = true;
         repushAutomationFor(p);
@@ -4127,6 +4135,10 @@ bool SurgeGUIEditor::setParameterModulationFromString(Parameter *p, modsources m
     }
     else
     {
+        undoManager()->pushModulationChange(
+            p->id, p, ms, modsourceScene, modidx,
+            synth->getModDepth01(p->id, ms, modsourceScene, modidx),
+            synth->isModulationMuted(p->id, ms, modsourceScene, modidx));
         synth->setModDepth01(p->id, ms, modsourceScene, modidx, mv);
         synth->refresh_editor = true;
         synth->storage.getPatch().isDirty = true;
