@@ -417,6 +417,15 @@ void AboutScreen::resized()
 
         yp += lblvs;
 
+#if EURORACK_CLOUDS_IS_SUPERPARASITES
+        addLabel("Nimbus includes the the integrated superparasites firmware by Patrick Dowling, "
+                 "including"
+                 " mqtthiqs/Parasites and jkammerl/Beat Repeat modes.",
+                 600);
+
+        yp += lblvs;
+#endif
+
         addLabel("Oscilloscope code based on s(m)exoscope by Bram @ Smartelectronix, licensed "
                  "under GNU GPL v3 license",
                  600);

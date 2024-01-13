@@ -1272,7 +1272,11 @@ void Parameter::set_type(int ctrltype)
     case ct_nimbusmode:
         valtype = vt_int;
         val_min.i = 0;
-        val_max.i = 3; // sin, tri, saw, s&h
+#if EURORACK_CLOUDS_IS_SUPERPARASITES
+        val_max.i = 7;
+#else
+        val_max.i = 3;
+#endif
         val_default.i = 0;
         break;
 
@@ -4049,6 +4053,23 @@ std::string Parameter::get_display(bool external, float ef) const
                 break;
             case 3:
                 txt = "Spectral Madness";
+                break;
+#if EURORACK_CLOUDS_IS_SUPERPARASITES
+            case 4:
+                txt = "Oliverb";
+                break;
+            case 5:
+                txt = "Reonestor";
+                break;
+            case 6:
+                txt = "Kammerl";
+                break;
+            case 7:
+                txt = "Spectral Cloud";
+                break;
+#endif
+            default:
+                txt = "Unknown Model";
                 break;
             }
         }
