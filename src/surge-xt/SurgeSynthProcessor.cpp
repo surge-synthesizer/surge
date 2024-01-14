@@ -737,6 +737,15 @@ void SurgeSynthProcessor::processBlockOSC()
                 pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
             surge->setParameter01(surge->idForParameter(om.param), pval, true);
             surge->storage.getPatch().isDirty = true;
+
+            // Special cases: A few control types require a rebuild and
+            // SGE Value Callbacks would do it as would the VST3 param handler
+            // so put them here for now. Bit of a hack...
+            auto ct = om.param->ctrltype;
+            if (ct == ct_bool_solo || ct == ct_bool_mute || ct == ct_scenesel)
+            {
+                surge->refresh_editor = true;
+            }
         }
         break;
 
