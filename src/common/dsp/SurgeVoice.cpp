@@ -719,15 +719,28 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
         }
     }
 
+    auto pm = scene->polymode.val.i;
+
+    bool fromCurrent = (pm == pm_poly && scene->polyVoiceRepeatedKeyMode ==
+                                             PolyVoiceRepeatedKeyMode::ONE_VOICE_PER_KEY) ||
+                       (pm != pm_poly &&
+                        scene->monoVoiceEnvelopeMode == MonoVoiceEnvelopeMode::RESTART_FROM_LATEST);
+
     for (int i = 0; i < n_lfos_voice; ++i)
     {
         if (lfo[i].retrigger_AEG)
         {
-            ((ADSRModulationSource *)modsources[ms_ampeg])->retrigger();
+            auto ms = ((ADSRModulationSource *)modsources[ms_ampeg]);
+            auto val = fromCurrent * ms->get_output(0);
+
+            ms->retriggerFrom(val);
         }
         if (lfo[i].retrigger_FEG)
         {
-            ((ADSRModulationSource *)modsources[ms_filtereg])->retrigger();
+            auto ms = ((ADSRModulationSource *)modsources[ms_filtereg]);
+            auto val = fromCurrent * ms->get_output(0);
+
+            ms->retriggerFrom(val);
         }
     }
 
