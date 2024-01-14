@@ -205,7 +205,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         std::getline(split, address1, '/');
         addr = addr.substr(2);
         // Currently, only params may be queried
-        if ((address1 != "param") && (address1 != "all_params"))
+        if ((address1 != "param") && (address1 != "all_params") && (address1 != "all_mods"))
         {
             sendError("No query available for '" + address1 + "'");
             return;
@@ -977,26 +977,120 @@ void OpenSoundControl::sendAllModulators()
         // Runs on the juce messenger thread
         juce::MessageManager::getInstance()->callAsync([this]() {
             // auto timer = new Surge::Debug::TimeBlock("ModulatorDump");
-            auto modlist = synth->storage.getPatch().modulation_global;
-            // modsource_names_tag[i]
+            std::vector<ModulationRouting> modlist_global =
+                synth->storage.getPatch().modulation_global;
+            std::vector<ModulationRouting> modlist_scene_A_scene =
+                synth->storage.getPatch().scene[0].modulation_scene;
+            std::vector<ModulationRouting> modlist_scene_B_scene =
+                synth->storage.getPatch().scene[1].modulation_scene;
+            std::vector<ModulationRouting> modlist_scene_A_voice =
+                synth->storage.getPatch().scene[0].modulation_voice;
+            std::vector<ModulationRouting> modlist_scene_B_voice =
+                synth->storage.getPatch().scene[1].modulation_voice;
+            /*
+                    append("Global Modulators", synth->storage.getPatch().modulation_global, 0, -1);
+                    append("Scene A - Voice Modulators",
+                           synth->storage.getPatch().scene[0].modulation_voice,
+                           synth->storage.getPatch().scene_start[0], 0);
+                    append("Scene A - Scene Modulators",
+                           synth->storage.getPatch().scene[0].modulation_scene,
+                           synth->storage.getPatch().scene_start[0], 0);
+                    append("Scene B - Voice Modulators",
+                           synth->storage.getPatch().scene[1].modulation_voice,
+                           synth->storage.getPatch().scene_start[1], 1);
+                    append("Scene B - Scene Modulators",
+                           synth->storage.getPatch().scene[1].modulation_scene,
+                           synth->storage.getPatch().scene_start[1], 1);
+            */
 
-            sendModulator();
-            // delete timer;    // This prints the elapsed time
+            // Example code only; delete after use:
+            /*
+                std::ostringstream htmls;
+                for (int i = 1; i < n_modsources; i++) // skips "off"
+                {
+                    int modsource_sorted = modsource_display_order[i];
+                    std::string sceneStr = "/";
+                    std::string indexStr = "";
+                    std::string modName = modsource_names[modsource_sorted];
+                    int max_idx = synth->getMaxModulationIndex(0, (modsources)modsource_sorted);
+                    if (synth->isModulatorDistinctPerScene((modsources)modsource_sorted))
+                        sceneStr = "/<s>/";
+                    if (synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
+                        indexStr = "/&ltindex&gt";
+                    std::string modn = modName;
+                    if (modName.find("LFO") != std::string::npos)
+                        modn = modName + "†";
+                    htmls << "<tr><td>/mod" << sceneStr << modsource_names_tag[modsource_sorted]
+                          << indexStr << "</td><td>" << modn << "</td>";
+                    for (int i = 0; i < 3; i++)
+                    {
+                        std::string idxd_str = "";
+                        if (i < max_idx)
+                            idxd_str = ModulatorName::modulatorIndexExtension(
+                                &synth->storage, 0, (modsources)modsource_sorted, i);
+                        if (i == 0 && idxd_str == "" &&
+                            synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
+                        {
+                            idxd_str = modName;
+                            idxd_str = "(" + idxd_str + ")";
+                        }
+                        htmls << "<td>" << idxd_str << "</td>";
+                    }
+                    htmls << "</tr>";
+                }
+                */
+            // End example code
+
+            for (ModulationRouting mod : modlist_global)
+                sendModulator(mod, -1);
+            for (ModulationRouting mod : modlist_scene_A_scene)
+                sendModulator(mod, 0);
+            for (ModulationRouting mod : modlist_scene_B_scene)
+                sendModulator(mod, 1);
+            for (ModulationRouting mod : modlist_scene_A_voice)
+                sendModulator(mod, 0);
+            for (ModulationRouting mod : modlist_scene_B_voice)
+                sendModulator(mod, 1);
         });
     }
 }
 
-bool OpenSoundControl::sendModulator()
+bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene)
 {
-    std::string addr = "/mod/";
-    float val01 = 0.0;
+    std::string modName = modsource_names_tag[mod.source_id];
+    std::string sceneStr = "";
+    std::string indexStr = "";
+    bool useScene = synth->isModulatorDistinctPerScene((modsources)mod.source_id);
+    bool supIndex = synth->supportsIndexedModulator(0, (modsources)mod.source_id);
+
+    int offset = 0;
+    if (scene != -1)
+        offset = synth->storage.getPatch().scene_start[scene];
+    if (useScene)
+    {
+        if (scene == 0)
+            sceneStr = "a/";
+        else if (scene == 1)
+            sceneStr = "b/";
+    }
+
+    if (supIndex)
+        indexStr = "/" + std::to_string(mod.source_index);
+
+    std::string addr = "/mod/" + sceneStr + modName + indexStr;
+
+    Parameter *p = synth->storage.getPatch().param_ptr[mod.destination_id + offset];
+    float val01 = .0; // synth->getModDepth01();
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+    om.addString(p->oscName);
     om.addFloat32(val01);
+
     if (!this->juceOSCSender.send(om))
     {
         sendFailed();
         return false;
     }
+
     return true;
 }
 
@@ -1039,7 +1133,7 @@ bool OpenSoundControl::sendParameter(const Parameter *p)
 
     case vt_float:
     {
-        val01 = p->val.f;
+        val01 = p->value_to_normalized(p->val.f);
         valStr = p->get_display(false, 0.0);
     }
     break;
