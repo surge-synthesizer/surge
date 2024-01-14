@@ -640,7 +640,6 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
         p[i] = 0.0;
 
     auto outattensse = _mm_set1_ps(out_attenuation);
-    auto fbnegmask = _mm_cmplt_ps(_mm_set1_ps(fb_val), _mm_setzero_ps());
     __m128 playramp[4], dramp[4];
     if (firstblock)
     {
@@ -686,6 +685,7 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
         float fmpd = FM ? FMdepth.v * master_osc[k] : 0.f;
         auto fmpds = _mm_set1_ps(fmpd);
         auto fbv = _mm_set1_ps(FB.v);
+        auto fbnegmask = _mm_cmplt_ps(fbv, _mm_setzero_ps());
 
         for (int u = 0; u < n_unison; u += 4)
         {
