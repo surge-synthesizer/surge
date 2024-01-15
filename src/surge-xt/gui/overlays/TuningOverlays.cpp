@@ -42,7 +42,8 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
                                 public Surge::GUI::SkinConsumingComponent
 {
   public:
-    TuningTableListBoxModel() {}
+    TuningOverlay *parent;
+    TuningTableListBoxModel(TuningOverlay *p) : parent(p) {}
     ~TuningTableListBoxModel() { table = nullptr; }
 
     SurgeStorage *storage{nullptr};
@@ -88,157 +89,192 @@ class TuningTableListBoxModel : public juce::TableListBoxModel,
         }
     }
 
-    virtual void paintCell(juce::Graphics &g, int rowNumber, int columnID, int width, int height,
-                           bool rowIsSelected) override
+    struct TuningRowComp : juce::Component
     {
-        namespace clr = Colors::TuningOverlay::FrequencyKeyboard;
+        TuningTableListBoxModel &parent;
+        TuningRowComp(TuningTableListBoxModel &m) : parent(m) {}
 
-        if (!table)
+        int rowNumber{0}, columnID{0};
+        void paint(juce::Graphics &g) override
         {
-            return;
-        }
+            namespace clr = Colors::TuningOverlay::FrequencyKeyboard;
+            auto skin = parent.skin;
+            auto width = getWidth();
+            auto height = getHeight();
 
-        int noteInScale = rowNumber % 12;
-        bool whitekey = true;
-        bool noblack = false;
+            int noteInScale = rowNumber % 12;
+            bool whitekey = true;
+            bool noblack = false;
 
-        if ((noteInScale == 1 || noteInScale == 3 || noteInScale == 6 || noteInScale == 8 ||
-             noteInScale == 10))
-        {
-            whitekey = false;
-        }
-
-        if (noteInScale == 4 || noteInScale == 11)
-        {
-            noblack = true;
-        }
-
-        // black key
-        auto kbdColour = skin->getColor(clr::BlackKey);
-
-        if (whitekey)
-        {
-            kbdColour = skin->getColor(clr::WhiteKey);
-        }
-
-        bool no = false;
-        auto pressedColour = skin->getColor(clr::PressedKey);
-
-        if (notesOn[rowNumber])
-        {
-            no = true;
-            kbdColour = pressedColour;
-        }
-
-        g.fillAll(kbdColour);
-
-        if (!whitekey && columnID != 1)
-        {
-            g.setColour(skin->getColor(clr::Separator));
-            // draw an inset top and bottom
-            g.fillRect(0, 0, width - 1, 1);
-            g.fillRect(0, height - 1, width - 1, 1);
-        }
-
-        int txtOff = 0;
-
-        if (columnID == 1)
-        {
-            // black key
-            if (!whitekey)
+            if ((noteInScale == 1 || noteInScale == 3 || noteInScale == 6 || noteInScale == 8 ||
+                 noteInScale == 10))
             {
-                txtOff = 10;
-                // "black key"
-                auto kbdColour = skin->getColor(clr::BlackKey);
-                auto kbc = skin->getColor(clr::WhiteKey);
+                whitekey = false;
+            }
 
-                g.setColour(kbc);
-                g.fillRect(-1, 0, txtOff, height + 2);
+            if (noteInScale == 4 || noteInScale == 11)
+            {
+                noblack = true;
+            }
 
-                // OK so now check neighbors
-                if (rowNumber > 0 && notesOn[rowNumber - 1])
+            // black key
+            auto kbdColour = skin->getColor(clr::BlackKey);
+
+            if (whitekey)
+            {
+                kbdColour = skin->getColor(clr::WhiteKey);
+            }
+
+            bool no = false;
+            auto pressedColour = skin->getColor(clr::PressedKey);
+
+            if (parent.notesOn[rowNumber])
+            {
+                no = true;
+                kbdColour = pressedColour;
+            }
+
+            g.fillAll(kbdColour);
+
+            if (!whitekey && columnID != 1)
+            {
+                g.setColour(skin->getColor(clr::Separator));
+                // draw an inset top and bottom
+                g.fillRect(0, 0, width - 1, 1);
+                g.fillRect(0, height - 1, width - 1, 1);
+            }
+
+            int txtOff = 0;
+
+            if (columnID == 1)
+            {
+                // black key
+                if (!whitekey)
                 {
-                    g.setColour(pressedColour);
-                    g.fillRect(0, 0, txtOff, height / 2);
-                }
+                    txtOff = 10;
+                    // "black key"
+                    auto kbdColour = skin->getColor(clr::BlackKey);
+                    auto kbc = skin->getColor(clr::WhiteKey);
 
-                if (rowNumber < 127 && notesOn[rowNumber + 1])
-                {
-                    g.setColour(pressedColour);
-                    g.fillRect(0, height / 2, txtOff, height / 2 + 1);
-                }
+                    g.setColour(kbc);
+                    g.fillRect(-1, 0, txtOff, height + 2);
 
-                g.setColour(skin->getColor(clr::BlackKey));
-                g.fillRect(0, height / 2, txtOff, 1);
+                    // OK so now check neighbors
+                    if (rowNumber > 0 && parent.notesOn[rowNumber - 1])
+                    {
+                        g.setColour(pressedColour);
+                        g.fillRect(0, 0, txtOff, height / 2);
+                    }
 
-                if (no)
-                {
-                    g.fillRect(txtOff, 0, width - 1 - txtOff, 1);
-                    g.fillRect(txtOff, height - 1, width - 1 - txtOff, 1);
-                    g.fillRect(txtOff, 0, 1, height - 1);
+                    if (rowNumber < 127 && parent.notesOn[rowNumber + 1])
+                    {
+                        g.setColour(pressedColour);
+                        g.fillRect(0, height / 2, txtOff, height / 2 + 1);
+                    }
+
+                    g.setColour(skin->getColor(clr::BlackKey));
+                    g.fillRect(0, height / 2, txtOff, 1);
+
+                    if (no)
+                    {
+                        g.fillRect(txtOff, 0, width - 1 - txtOff, 1);
+                        g.fillRect(txtOff, height - 1, width - 1 - txtOff, 1);
+                        g.fillRect(txtOff, 0, 1, height - 1);
+                    }
                 }
+            }
+
+            auto mn = rowNumber;
+            double fr = 0;
+
+            auto storage = parent.storage;
+            const auto &tuning = parent.tuning;
+            if (storage && storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
+            {
+                fr = MTS_NoteToFrequency(storage->oddsound_mts_client, rowNumber, 0);
+            }
+            else
+            {
+                fr = tuning.frequencyForMidiNote(mn);
+            }
+
+            std::string notenum, notename, display;
+
+            g.setColour(skin->getColor(clr::Separator));
+            g.fillRect(width - 1, 0, 1, height);
+
+            if (noblack)
+            {
+                g.fillRect(0, height - 1, width, 1);
+            }
+
+            g.setColour(skin->getColor(clr::Text));
+
+            if (no)
+            {
+                g.setColour(skin->getColor(clr::PressedKeyText));
+            }
+
+            int margin = 5;
+            auto just_l = juce::Justification::centredLeft;
+            auto just_r = juce::Justification::centredRight;
+
+            switch (columnID)
+            {
+            case 1:
+            {
+                notenum = std::to_string(mn);
+                notename = noteInScale % 12 == 0
+                               ? fmt::format("C{:d}", rowNumber / 12 - parent.mcoff)
+                               : "";
+
+                g.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::bold));
+                g.drawText(notename, 2 + txtOff, 0, width - margin, height, just_l, false);
+                g.setFont(skin->fontManager->getLatoAtSize(7));
+                g.drawText(notenum, 2 + txtOff, 0, width - txtOff - margin, height,
+                           juce::Justification::centredRight, false);
+
+                break;
+            }
+            case 2:
+            {
+                display = fmt::format("{:.2f}", fr);
+                g.setFont(skin->fontManager->getLatoAtSize(8));
+                g.drawText(display, 2 + txtOff, 0, width - margin, height, just_r, false);
+                break;
+            }
             }
         }
 
-        auto mn = rowNumber;
-        double fr = 0;
-
-        if (storage && storage->oddsound_mts_client && storage->oddsound_mts_active_as_client)
+        void mouseDown(const juce::MouseEvent &event) override
         {
-            fr = MTS_NoteToFrequency(storage->oddsound_mts_client, rowNumber, 0);
-        }
-        else
-        {
-            fr = tuning.frequencyForMidiNote(mn);
+            parent.parent->editor->playNote(rowNumber, 90);
         }
 
-        std::string notenum, notename, display;
-
-        g.setColour(skin->getColor(clr::Separator));
-        g.fillRect(width - 1, 0, 1, height);
-
-        if (noblack)
+        void mouseUp(const juce::MouseEvent &event) override
         {
-            g.fillRect(0, height - 1, width, 1);
+            parent.parent->editor->releaseNote(rowNumber, 90);
         }
+    };
 
-        g.setColour(skin->getColor(clr::Text));
+    juce::Component *refreshComponentForCell(int rowNumber, int columnId, bool isRowSelected,
+                                             juce::Component *existingComponentToUpdate) override
+    {
+        if (existingComponentToUpdate == nullptr)
+            existingComponentToUpdate = new TuningRowComp(*this);
 
-        if (no)
-        {
-            g.setColour(skin->getColor(clr::PressedKeyText));
-        }
+        auto trc = static_cast<TuningRowComp *>(existingComponentToUpdate);
 
-        int margin = 5;
-        auto just_l = juce::Justification::centredLeft;
-        auto just_r = juce::Justification::centredRight;
+        trc->rowNumber = rowNumber;
+        trc->columnID = columnId;
 
-        switch (columnID)
-        {
-        case 1:
-        {
-            notenum = std::to_string(mn);
-            notename = noteInScale % 12 == 0 ? fmt::format("C{:d}", rowNumber / 12 - mcoff) : "";
-
-            g.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::bold));
-            g.drawText(notename, 2 + txtOff, 0, width - margin, height, just_l, false);
-            g.setFont(skin->fontManager->getLatoAtSize(7));
-            g.drawText(notenum, 2 + txtOff, 0, width - txtOff - margin, height,
-                       juce::Justification::centredRight, false);
-
-            break;
-        }
-        case 2:
-        {
-            display = fmt::format("{:.2f}", fr);
-            g.setFont(skin->fontManager->getLatoAtSize(8));
-            g.drawText(display, 2 + txtOff, 0, width - margin, height, just_r, false);
-            break;
-        }
-        }
+        return existingComponentToUpdate;
     }
 
-    virtual void cellClicked(int rowNumber, int columnId, const juce::MouseEvent &e) override {}
+    void paintCell(juce::Graphics &, int rowNumber, int columnId, int width, int height,
+                   bool rowIsSelected) override
+    {
+    }
 
     virtual void tuningUpdated(const Tunings::Tuning &newTuning)
     {
@@ -2820,7 +2856,7 @@ TuningOverlay::TuningOverlay()
 {
     tuning = Tunings::Tuning(Tunings::evenTemperament12NoteScale(),
                              Tunings::startScaleOnAndTuneNoteTo(60, 60, Tunings::MIDI_0_FREQ * 32));
-    tuningKeyboardTableModel = std::make_unique<TuningTableListBoxModel>();
+    tuningKeyboardTableModel = std::make_unique<TuningTableListBoxModel>(this);
     tuningKeyboardTableModel->tuningUpdated(tuning);
     tuningKeyboardTable =
         std::make_unique<juce::TableListBox>("Tuning", tuningKeyboardTableModel.get());

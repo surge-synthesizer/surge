@@ -528,6 +528,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void ensureParameterItemIsFocused(Parameter *p);
     void setPatchFromUndo(void *data, size_t datasz);
 
+    void playNote(char key, char vel);
+    void releaseNote(char key, char vel);
+
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
     juce::Rectangle<int> positionForModOverview();
