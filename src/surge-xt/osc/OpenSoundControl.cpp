@@ -792,6 +792,18 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
     }
+    if (!synth->audio_processing_active)
+    {
+        // Audio isn't running so the queue wont be drained.
+        // In this case do the (slightly hacky) drain-on-this-thread
+        // approach. There's a small race condition here in that if
+        // processing restarts while we have a message we are doing
+        // here then maybe we go blammo. That's a super-duper edge
+        // case which i'll mention here but not fix. (The fix is probably
+        // to have an atomic book in processBlock and properly atomic
+        // compare and set it and return if two threads are in process).
+        sspPtr->processBlockOSC();
+    }
 }
 
 bool OpenSoundControl::hasEnding(std::string const &fullString, std::string const &ending)
