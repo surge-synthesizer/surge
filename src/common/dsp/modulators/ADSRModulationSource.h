@@ -79,10 +79,12 @@ class ADSRModulationSource : public ModulationSource
         _discharge = 0.f;
     }
 
-    void retrigger()
+    void retrigger() { retriggerFrom(0.f); }
+
+    void retriggerFrom(float start)
     {
         if (envstate < s_release)
-            attack();
+            attackFrom(start);
     }
 
     virtual void attack() override { attackFrom(0.f); }
