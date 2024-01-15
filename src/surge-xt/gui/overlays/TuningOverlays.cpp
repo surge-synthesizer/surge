@@ -1781,13 +1781,13 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             g.setColour(skin->getColor(clr::IntervalText));
                         g.drawText(lb, bx, juce::Justification::centred);
                     }
-                    else if (mode == ROTATION && i > 0)
+                    else if (mode == ROTATION && i > 0 && j > 0)
                     {
                         auto centsi = matrix->rcents[j - 1];
-                        auto centsj = matrix->rcents[i + j - 1];
+                        auto centsj = matrix->rcents[i + j - 2];
                         auto cdiff = centsj - centsi;
 
-                        auto disNote = i;
+                        auto disNote = i - 1;
                         auto lastTone =
                             matrix->tuning.scale.tones[matrix->tuning.scale.count - 1].cents;
                         auto evenStep = lastTone / matrix->tuning.scale.count;
@@ -1877,7 +1877,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
             if (mode == ROTATION)
             {
-                int tonI = (hoverI - 1 + hoverJ - 1) % matrix->tuning.scale.count;
+                int tonI = (hoverI - 1 + hoverJ - 2) % matrix->tuning.scale.count;
                 matrix->overlay->onToneChanged(tonI, matrix->tuning.scale.tones[tonI].cents + dPos);
             }
             else
