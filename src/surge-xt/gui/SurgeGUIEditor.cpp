@@ -6404,3 +6404,19 @@ void SurgeGUIEditor::enqueueAccessibleAnnouncement(const std::string &s)
         accAnnounceStrings.push_back({s, 3});
     }
 }
+
+void SurgeGUIEditor::playNote(char key, char vel)
+{
+    auto ed = juceEditor;
+    auto &proc = ed->processor;
+
+    proc.midiFromGUI.push(SurgeSynthProcessor::midiR(0, key, vel, true));
+}
+
+void SurgeGUIEditor::releaseNote(char key, char vel)
+{
+    auto ed = juceEditor;
+    auto &proc = ed->processor;
+
+    proc.midiFromGUI.push(SurgeSynthProcessor::midiR(0, key, vel, false));
+}
