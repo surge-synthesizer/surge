@@ -67,11 +67,7 @@ struct PatchSelector : public juce::Component,
     }
 
     bool isFavorite{false};
-    void setIsFavorite(bool b)
-    {
-        isFavorite = b;
-        repaint();
-    }
+    void setIsFavorite(bool b);
 
     bool isUser{false};
     void setIsUser(bool b)
@@ -163,6 +159,7 @@ struct PatchSelector : public juce::Component,
     void toggleTypeAheadSearch(bool);
     void enableTypeAheadIfReady();
     void searchUpdated();
+    void typeaheadButtonPressed();
     uint32_t outstandingSearches{0};
     std::unique_ptr<Surge::Widgets::TypeAhead> typeAhead;
     std::unique_ptr<PatchDBTypeAheadProvider> patchDbProvider;
@@ -196,6 +193,12 @@ struct PatchSelector : public juce::Component,
      */
     bool populatePatchMenuForCategory(int index, juce::PopupMenu &contextMenu, bool single_category,
                                       int &main_e, bool rootCall);
+
+    // a little transparent button to alow ally and focus over find and fav
+    struct TB;
+    std::unique_ptr<TB> searchButton, favoriteButton;
+    void showFavoritesMenu();
+    void toggleFavoriteStatus();
 
   private:
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
