@@ -704,7 +704,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Modulation mapping
     else if (address1 == "mod")
     {
-        if (message.size() != 2)
+        if (message.size() < 2)
         {
             sendDataCountError("mod", "2");
             return;
@@ -794,7 +794,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendError("Not a valid modulation.");
             return;
         }
-
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
     }
 }
@@ -1042,7 +1041,7 @@ void OpenSoundControl::sendAllModulators()
             // End example code
 
             for (ModulationRouting mod : modlist_global)
-                sendModulator(mod, -1);
+                sendModulator(mod, 0);
             for (ModulationRouting mod : modlist_scene_A_scene)
                 sendModulator(mod, 0);
             for (ModulationRouting mod : modlist_scene_B_scene)
@@ -1059,13 +1058,12 @@ bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene)
 {
     std::string modName = modsource_names_tag[mod.source_id];
     std::string sceneStr = "";
+    int modIndex = 0;
     std::string indexStr = "";
     bool useScene = synth->isModulatorDistinctPerScene((modsources)mod.source_id);
     bool supIndex = synth->supportsIndexedModulator(0, (modsources)mod.source_id);
 
-    int offset = 0;
-    if (scene != -1)
-        offset = synth->storage.getPatch().scene_start[scene];
+    int offset = synth->storage.getPatch().scene_start[scene];
     if (useScene)
     {
         if (scene == 0)
@@ -1075,12 +1073,15 @@ bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene)
     }
 
     if (supIndex)
-        indexStr = "/" + std::to_string(mod.source_index);
+    {
+        modIndex = mod.source_index;
+        indexStr = "/" + std::to_string(modIndex);
+    }
 
     std::string addr = "/mod/" + sceneStr + modName + indexStr;
 
     Parameter *p = synth->storage.getPatch().param_ptr[mod.destination_id + offset];
-    float val01 = .0; // synth->getModDepth01();
+    float val01 = synth->getModDepth01(p->id, (modsources)mod.source_id, scene, modIndex);
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
     om.addString(p->oscName);
     om.addFloat32(val01);

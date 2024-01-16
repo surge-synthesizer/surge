@@ -391,7 +391,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         }
         oscToAudio(oscToAudio_type type, int32_t nid, float f) : type(type), noteid(nid), fval(f) {}
     };
-    sst::cpputils::SimpleRingBuffer<oscToAudio, 1024> oscRingBuf; // was 4096
+    sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
 
     Surge::OSC::OpenSoundControl oscHandler;
     std::atomic<bool> oscCheckStartup{false};
