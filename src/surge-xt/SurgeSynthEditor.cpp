@@ -599,9 +599,6 @@ void SurgeSynthEditor::endMacroEdit(long macroNum)
     par->endChangeGesture();
     // echo change to OSC out
     float newval = par->getValue();
-    // std::stringstream ss;
-    // ss << std::fixed << std::setprecision(4) << newval;
-    // std::string newval_str = ss.str();
     processor.paramChangeToListeners(nullptr, true, processor.SCT_MACRO, macroNum, newval, "");
 }
 
