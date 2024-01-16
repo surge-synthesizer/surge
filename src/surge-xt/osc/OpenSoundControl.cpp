@@ -988,59 +988,6 @@ void OpenSoundControl::sendAllModulators()
                 synth->storage.getPatch().scene[0].modulation_voice;
             std::vector<ModulationRouting> modlist_scene_B_voice =
                 synth->storage.getPatch().scene[1].modulation_voice;
-            /*
-                    append("Global Modulators", synth->storage.getPatch().modulation_global, 0, -1);
-                    append("Scene A - Voice Modulators",
-                           synth->storage.getPatch().scene[0].modulation_voice,
-                           synth->storage.getPatch().scene_start[0], 0);
-                    append("Scene A - Scene Modulators",
-                           synth->storage.getPatch().scene[0].modulation_scene,
-                           synth->storage.getPatch().scene_start[0], 0);
-                    append("Scene B - Voice Modulators",
-                           synth->storage.getPatch().scene[1].modulation_voice,
-                           synth->storage.getPatch().scene_start[1], 1);
-                    append("Scene B - Scene Modulators",
-                           synth->storage.getPatch().scene[1].modulation_scene,
-                           synth->storage.getPatch().scene_start[1], 1);
-            */
-
-            // Example code only; delete after use:
-            /*
-                std::ostringstream htmls;
-                for (int i = 1; i < n_modsources; i++) // skips "off"
-                {
-                    int modsource_sorted = modsource_display_order[i];
-                    std::string sceneStr = "/";
-                    std::string indexStr = "";
-                    std::string modName = modsource_names[modsource_sorted];
-                    int max_idx = synth->getMaxModulationIndex(0, (modsources)modsource_sorted);
-                    if (synth->isModulatorDistinctPerScene((modsources)modsource_sorted))
-                        sceneStr = "/<s>/";
-                    if (synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
-                        indexStr = "/&ltindex&gt";
-                    std::string modn = modName;
-                    if (modName.find("LFO") != std::string::npos)
-                        modn = modName + "†";
-                    htmls << "<tr><td>/mod" << sceneStr << modsource_names_tag[modsource_sorted]
-                          << indexStr << "</td><td>" << modn << "</td>";
-                    for (int i = 0; i < 3; i++)
-                    {
-                        std::string idxd_str = "";
-                        if (i < max_idx)
-                            idxd_str = ModulatorName::modulatorIndexExtension(
-                                &synth->storage, 0, (modsources)modsource_sorted, i);
-                        if (i == 0 && idxd_str == "" &&
-                            synth->supportsIndexedModulator(0, (modsources)modsource_sorted))
-                        {
-                            idxd_str = modName;
-                            idxd_str = "(" + idxd_str + ")";
-                        }
-                        htmls << "<td>" << idxd_str << "</td>";
-                    }
-                    htmls << "</tr>";
-                }
-                */
-            // End example code
 
             for (ModulationRouting mod : modlist_global)
                 sendModulator(mod, 0);
