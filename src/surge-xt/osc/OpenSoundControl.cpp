@@ -516,10 +516,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             if (querying)
             {
                 int deac_mask = synth->storage.getPatch().fx_disable.val.i;
-                std::string deactivated = ((deac_mask & selected_mask) > 0) ? "yes" : "no";
+                bool isDeact = (deac_mask & selected_mask) > 0;
+                std::string deactivated = isDeact ? "deactivated" : "activated";
                 std::string addr = "/param/" + shortOSCname + "/deactivate";
+                float val = (float)isDeact;
                 if (!this->juceOSCSender.send(
-                        juce::OSCMessage(juce::String(addr), juce::String(deactivated))))
+                        juce::OSCMessage(juce::String(addr), val, juce::String(deactivated))))
                     sendFailed();
             }
             else
