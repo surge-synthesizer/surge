@@ -856,6 +856,8 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
                                    [ssp = sspPtr](auto str1, auto bool1, auto float1, auto str2) {
                                        ssp->param_change_to_OSC(str1, bool1, float1, str2);
                                    });
+    // Add a listener for modulation changes
+    synth->addModulationAPIListener(this);
 
     sendingOSC = true;
     oportnum = port;
@@ -1102,6 +1104,32 @@ bool OpenSoundControl::sendParameter(const Parameter *p)
         return false;
     }
     return true;
+}
+
+// Under construction, but tested as safe!
+void OpenSoundControl::modSet(long ptag, modsources modsource, int modsourceScene, int index,
+                              float value, bool isNew)
+{
+    sendMod("modSet. New value: " + std::to_string(value));
+}
+void OpenSoundControl::modMuted(long ptag, modsources modsource, int modsourceScene, int index,
+                                bool mute)
+{
+    sendMod("modMuted. Mute value: " + std::to_string(mute));
+}
+void OpenSoundControl::modCleared(long ptag, modsources modsource, int modsourceScene, int index)
+{
+    sendMod("modCleared.");
+}
+
+void OpenSoundControl::sendMod(std::string msg)
+{
+    // Runs on the juce messenger thread
+    juce::MessageManager::getInstance()->callAsync([this, msg]() {
+        // Temporary while building: display info
+        // TODO: send OSC out message
+        std::cout << msg << std::endl;
+    });
 }
 
 } // namespace OSC

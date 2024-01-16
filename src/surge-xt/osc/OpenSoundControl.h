@@ -50,6 +50,7 @@ namespace OSC
 {
 
 class OpenSoundControl : public juce::OSCReceiver,
+                         public SurgeSynthesizer::ModulationAPIListener,
                          juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
 {
   public:
@@ -77,6 +78,13 @@ class OpenSoundControl : public juce::OSCReceiver,
     void sendAllModulators();
     void stopSending(bool updateOSCStartInStorage = true);
 
+    // Modulation api listener methods
+    void modSet(long ptag, modsources modsource, int modsourceScene, int index, float value,
+                bool isNew) override;
+    void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
+                  bool mute) override;
+    void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
+
   private:
     SurgeSynthesizer *synth{nullptr};
     SurgeSynthProcessor *sspPtr{nullptr};
@@ -90,6 +98,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     bool sendParameter(const Parameter *p);
     bool sendMacro(long macnum);
     bool sendModulator(ModulationRouting mod, int scene);
+    void sendMod(std::string msg);
     void sendFailed();
     bool hasEnding(std::string const &fullString, std::string const &ending);
 
