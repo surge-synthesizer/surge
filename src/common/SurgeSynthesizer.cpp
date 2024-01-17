@@ -2994,7 +2994,11 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                         {
                             for (int sc = 0; sc < n_scenes; ++sc)
                             {
-                                clearModulation(p->id, (modsources)ms, sc, true);
+                                auto mi = getModulationIndicesBetween(p->id, (modsources)ms, sc);
+                                for (auto m : mi)
+                                {
+                                    clearModulation(p->id, (modsources)ms, sc, m, true);
+                                }
                             }
                         }
                     }
@@ -3022,7 +3026,11 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                     {
                         for (int sc = 0; sc < n_scenes; sc++)
                         {
-                            clearModulation(p->id, (modsources)ms, sc, true);
+                            auto mi = getModulationIndicesBetween(p->id, (modsources)ms, sc);
+                            for (auto m : mi)
+                            {
+                                clearModulation(p->id, (modsources)ms, sc, m, true);
+                            }
                         }
                     }
                 }

@@ -1059,7 +1059,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                                 pushModulationToUndoRedo(md, (modsources)thisms, use_scene, modidx,
                                                          Surge::GUI::UndoManager::UNDO);
-                                synth->clearModulation(md, thisms, use_scene, modidx);
+                                synth->clearModulation(md, thisms, use_scene, modidx, false);
                                 refresh_mod();
 
                                 if (bvf)
@@ -1164,7 +1164,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                                  idx,
                                                                  Surge::GUI::UndoManager::UNDO);
 
-                                        synth->clearModulation(md, thisms, use_scene, idx);
+                                        synth->clearModulation(md, thisms, use_scene, idx, false);
                                     }
                             }
 
@@ -2740,7 +2740,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                         ptag, (modsources)ms, sc, modidx,
                                                         Surge::GUI::UndoManager::UNDO);
                                                     synth->clearModulation(ptag, (modsources)ms, sc,
-                                                                           modidx);
+                                                                           modidx, false);
                                                     refresh_mod();
                                                     synth->storage.getPatch().isDirty = true;
                                                     synth->refresh_editor = true;
@@ -3092,7 +3092,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                 pushModulationToUndoRedo(ptag, (modsources)thisms, use_scene, modsource_index,
                                          Surge::GUI::UndoManager::UNDO);
 
-                synth->clearModulation(ptag, thisms, use_scene, modsource_index);
+                synth->clearModulation(ptag, thisms, use_scene, modsource_index, false);
                 auto ctrms = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
                 jassert(ctrms);
 
