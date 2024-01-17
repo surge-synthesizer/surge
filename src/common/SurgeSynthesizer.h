@@ -374,7 +374,7 @@ class alignas(16) SurgeSynthesizer
     void muteModulation(long ptag, modsources modsource, int modsourceScene, int index, bool mute);
     bool isModulationMuted(long ptag, modsources modsource, int modsourceScene, int index) const;
     void clearModulation(long ptag, modsources modsource, int modsourceScene, int index,
-                         bool clearEvenIfInvalid = false);
+                         bool clearEvenIfInvalid);
     // clear the modulation routings on the algorithm-specific sliders
     void clear_osc_modulation(int scene, int entry);
 

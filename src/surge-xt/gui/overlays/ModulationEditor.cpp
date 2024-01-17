@@ -401,7 +401,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
                         datum.source_scene, datum.source_index, Surge::GUI::UndoManager::UNDO);
                     me->synth->clearModulation(datum.destination_id + datum.idBase,
                                                (modsources)datum.source_id, datum.source_scene,
-                                               datum.source_index);
+                                               datum.source_index, false);
                     // The rebuild may delete this so defer
                     auto c = contents;
                     juce::Timer::callAfterDelay(1, [c, me]() {
