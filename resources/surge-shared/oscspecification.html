@@ -418,9 +418,9 @@
 
                     <div style="clear: both;"></div>
 
-                    <div class="tablewrap" style="width: 1000px; margin: 24px 8px 16px 8px;">
+                    <div class="tablewrap" style="width: 1100px; margin: 24px 8px 16px 8px;">
                          <div class="heading">
-                              <h2>Parameter Queries</h2>
+                              <h2>Queries</h2>
                          </div>
                          <table style="border: 2px solid black;">
                               <tr>
@@ -442,6 +442,13 @@
                                    <td>Sends one parameter's value to OSC out</td>
                               </tr>
                               <tr>
+                                   <td>/q/all_mods</td>
+                                   <td>request all modulation mappings</td>
+                                   <td>none</td>
+                                   <td>Sends a dump of all active modulation mappings to OSC out</td>
+                              </tr>
+
+                              <tr>
                                    <td class="center" colspan="3"></td>
                               </tr>
                          </table>
@@ -452,7 +459,8 @@
                          <span><code>q/param/b/amp/gain</code></span>
                          <span><code>q/param/global/polyphony_limit</code></span>
                          <span><code>q/param/a/mixer/noise/mute</code></span>
-                    </div>
+                         <span><code>q/all_mods</code></span>
+               </div>
 
                     <div style="margin: 24px 0 4px 22px; font-size: 12pt; font-family: Lato;">
                          <div class="heading">
@@ -1301,7 +1309,7 @@
                                    addresses
                                    listed below (with an appropriate index value, if necessary) and adding a target
                                    address selected
-                                   from the '/param' addresses listed above, then specifying a depth (0.0 - 1.0).
+                                   from the '/param' addresses listed above, then specifying a depth (-1.0 - 1.0).
                                    If both the source and target addresses are scene-specific (a or b), the scenes must
                                    match.
                               </p>

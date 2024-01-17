@@ -50,6 +50,7 @@ namespace OSC
 {
 
 class OpenSoundControl : public juce::OSCReceiver,
+                         public SurgeSynthesizer::ModulationAPIListener,
                          juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>
 {
   public:
@@ -72,8 +73,17 @@ class OpenSoundControl : public juce::OSCReceiver,
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
     void send(std::string addr, std::string msg);
+    void send(std::string addr, float fval, std::string msg);
     void sendAllParams();
+    void sendAllModulators();
     void stopSending(bool updateOSCStartInStorage = true);
+
+    // Modulation api listener methods
+    void modSet(long ptag, modsources modsource, int modsourceScene, int index, float value,
+                bool isNew) override;
+    void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
+                  bool mute) override;
+    void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
 
   private:
     SurgeSynthesizer *synth{nullptr};
@@ -87,6 +97,9 @@ class OpenSoundControl : public juce::OSCReceiver,
     float getNormValue(Parameter *p, float fval);
     bool sendParameter(const Parameter *p);
     bool sendMacro(long macnum);
+    bool sendModulator(ModulationRouting mod, int scene);
+    void sendMod(std::string msg);
+    void sendFailed();
     bool hasEnding(std::string const &fullString, std::string const &ending);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OpenSoundControl)
