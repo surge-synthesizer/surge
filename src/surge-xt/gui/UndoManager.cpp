@@ -126,6 +126,7 @@ struct UndoManagerImpl
         int fxslot;
         int type;
         std::vector<UndoParam> undoParamValues;
+        std::vector<UndoModulation> undoModulations;
     };
     struct UndoStep
     {
@@ -625,6 +626,23 @@ struct UndoManagerImpl
             r.undoParamValues.emplace_back(pu);
         }
 
+        const auto &gr = synth->storage.getPatch().modulation_global;
+        for (const auto &rt : gr)
+        {
+            if (rt.destination_id >= fx->p[0].id && rt.destination_id <= fx->p[n_fx_params - 1].id)
+            {
+                auto rm = UndoModulation();
+                auto *p = synth->storage.getPatch().param_ptr[rt.destination_id];
+                auto dt = rt.depth / (p->val_max.f - p->val_min.f); // want the 01
+
+                populateUndoModulation(
+                    rt.destination_id, synth->storage.getPatch().param_ptr[rt.destination_id],
+                    (modsources)rt.source_id, rt.source_scene, rt.source_index, dt, rt.muted, rm);
+
+                r.undoModulations.emplace_back(rm);
+            }
+        }
+
         if (to == UndoManager::UNDO)
             pushUndo(r);
         else
@@ -983,6 +1001,18 @@ struct UndoManagerImpl
                 pa->deactivated = p->undoParamValues[i].deactivated;
                 pa->set_extend_range(p->undoParamValues[i].extend_range);
                 pa->deform_type = p->undoParamValues[i].deform_type;
+            }
+
+            if (!p->undoModulations.empty())
+            {
+                synth->fx_reload_mod[cge] = true;
+                synth->fxmodsync[cge].clear();
+                for (const auto &mod : p->undoModulations)
+                {
+                    synth->fxmodsync[cge].push_back({mod.ms, mod.scene, mod.index,
+                                                     mod.paramId - synth->fxsync[cge].p[0].id,
+                                                     mod.val, mod.muted});
+                }
             }
 
             auto ann = fmt::format("{} FX Type to {}, FX Slot {}", verb, fx_type_names[p->type],

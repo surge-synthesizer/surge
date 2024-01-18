@@ -3009,6 +3009,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                             setModDepth01(storage.getPatch().fx[s].p[t.whichForReal].id,
                                           (modsources)t.source_id, t.source_scene, t.source_index,
                                           t.depth);
+                            muteModulation(storage.getPatch().fx[s].p[t.whichForReal].id,
+                                           (modsources)t.source_id, t.source_scene, t.source_index,
+                                           t.muted);
                         }
                         fxmodsync[s].clear();
                         fx_reload_mod[s] = false;
