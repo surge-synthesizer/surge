@@ -516,6 +516,7 @@ class alignas(16) SurgeSynthesizer
         int source_index;
         int whichForReal;
         float depth;
+        bool muted{false};
     };
     std::array<std::vector<FXModSyncItem>, n_fx_slots> fxmodsync;
     int32_t fx_suspend_bitmask;
