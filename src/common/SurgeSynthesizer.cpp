@@ -5264,8 +5264,11 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
             auto depth =
                 getModDepth01(fxsync[source].p[whichForReal].id, (modsources)mv->at(i).source_id,
                               mv->at(i).source_scene, mv->at(i).source_index);
+            auto mut = isModulationMuted(fxsync[source].p[whichForReal].id,
+                                         (modsources)mv->at(i).source_id, mv->at(i).source_scene,
+                                         mv->at(i).source_index);
             fxmodsync[target].push_back({mv->at(i).source_id, mv->at(i).source_scene,
-                                         mv->at(i).source_index, whichForReal, depth});
+                                         mv->at(i).source_index, whichForReal, depth, mut});
         }
 
         if (m == FXReorderMode::SWAP)
@@ -5287,8 +5290,11 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
                 auto depth = getModDepth01(fxsync[target].p[whichForReal].id,
                                            (modsources)mv->at(i).source_id, mv->at(i).source_scene,
                                            mv->at(i).source_index);
+                auto mut = isModulationMuted(fxsync[target].p[whichForReal].id,
+                                             (modsources)mv->at(i).source_id,
+                                             mv->at(i).source_scene, mv->at(i).source_index);
                 fxmodsync[source].push_back({mv->at(i).source_id, mv->at(i).source_scene,
-                                             mv->at(i).source_index, whichForReal, depth});
+                                             mv->at(i).source_index, whichForReal, depth, mut});
             }
         }
 
