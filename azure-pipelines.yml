@@ -30,6 +30,7 @@ jobs:
         displayName: Do Codequal
 
   - job: BuildLinuxDocker
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     pool:
       vmImage: 'ubuntu-20.04'
 
