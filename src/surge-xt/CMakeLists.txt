@@ -243,4 +243,6 @@ endif()
 
 surge_juce_package(${PROJECT_NAME} "Surge XT")
 
-add_subdirectory(xt-tests)
+if (${SURGE_BUILD_TESTRUNNER})
+  add_subdirectory(xt-tests)
+endif()
