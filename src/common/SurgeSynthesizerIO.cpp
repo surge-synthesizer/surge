@@ -32,30 +32,11 @@
 #include "SurgeMemoryPools.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
+#include "PatchFileHeaderStructs.h"
+
 namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
-
-// seems to be missing from VST2.3, so it's copied from the VST list instead
-//--------------------------------------------------------------------
-// For Preset (Program) (.fxp) with chunk (magic = 'FPCh')
-//--------------------------------------------------------------------
-struct fxChunkSetCustom
-{
-    int chunkMagic; // 'CcnK'
-    int byteSize;   // of this chunk, excl. magic + byteSize
-
-    int fxMagic; // 'FPCh'
-    int version;
-    int fxID; // fx unique id
-    int fxVersion;
-
-    int numPrograms;
-    char prgName[28];
-
-    int chunkSize;
-    // char chunk[8]; // variable
-};
 
 void SurgeSynthesizer::jogPatch(bool increment, bool insideCategory)
 {
@@ -228,6 +209,8 @@ void SurgeSynthesizer::loadPatch(int id)
 bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName,
                                        bool forceIsPreset)
 {
+    using namespace sst::io;
+
     std::filebuf f;
     if (!f.open(string_to_path(fxpPath), std::ios::binary | std::ios::in))
         return false;
@@ -627,6 +610,8 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
 
 void SurgeSynthesizer::savePatchToPath(fs::path filename, bool refreshPatchList)
 {
+    using namespace sst::io;
+
     std::ofstream f(filename, std::ios::out | std::ios::binary);
 
     if (!f)

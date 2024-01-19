@@ -38,6 +38,8 @@
 #include "UnitConversions.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
+#include "PatchFileHeaderStructs.h"
+
 namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
@@ -1102,16 +1104,6 @@ void SurgePatch::update_controls(
     }
 }
 
-#pragma pack(push, 1)
-struct patch_header
-{
-    char tag[4];
-    // TODO: FIX SCENE AND OSC COUNT ASSUMPTION for wtsize
-    // (but also since it's used in streaming, do it with care!)
-    unsigned int xmlsize, wtsize[2][3];
-};
-#pragma pack(pop)
-
 // BASE 64 SUPPORT, THANKS TO:
 // https://renenyffenegger.ch/notes/development/Base64/Encoding-and-decoding-base-64-with-cpp
 static const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -1208,6 +1200,8 @@ std::string base64_decode(std::string const &encoded_string)
 
 void SurgePatch::load_patch(const void *data, int datasize, bool preset)
 {
+    using namespace sst::io;
+
     if (datasize <= 4)
         return;
     assert(datasize);
@@ -1288,6 +1282,8 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
 
 unsigned int SurgePatch::save_patch(void **data)
 {
+    using namespace sst::io;
+
     size_t psize = 0;
     // void **xmldata = new void*();
     void *xmldata = 0;
