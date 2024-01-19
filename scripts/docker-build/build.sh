@@ -5,8 +5,6 @@ set -x
 BUILD=$1
 echo "Building surge in ${BUILD}"
 
-whoami
-
 pushd /home/build/surge
 
 ls -al .

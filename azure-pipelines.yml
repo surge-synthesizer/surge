@@ -44,9 +44,9 @@ jobs:
           export UID=$(id -u)
           export GID=$(id -g)
 
-          docker pull baconpaul/sst-dockerimages-ubuntu18:1
+          docker pull baconpaul/sst-dockerimages-ubuntu18:2
           docker create --user $UID:$GID --name surge-build-u18 --interactive --tty \
-              --volume=`pwd`:/home/build/surge baconpaul/sst-dockerimages-ubuntu18:1
+              --volume=`pwd`:/home/build/surge baconpaul/sst-dockerimages-ubuntu18:2
           docker start surge-build-u18
 
           git submodule update --init --recursive

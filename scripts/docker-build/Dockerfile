@@ -60,6 +60,8 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1
 RUN chmod 755 ./cmake-3.28.1-linux-x86_64.sh
 RUN ./cmake-3.28.1-linux-x86_64.sh --skip-license --prefix=/usr
 
+RUN apt-get install -y rpm
+
 # Switch back go the user space user and build the toolchain
 USER build
 RUN mkdir /home/build/dev
