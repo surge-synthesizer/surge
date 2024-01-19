@@ -29,6 +29,29 @@ jobs:
 
         displayName: Do Codequal
 
+  - job: BuildLinuxDocker
+    pool:
+      vmImage: 'ubuntu-20.04'
+
+    steps:
+      - checkout: self
+        fetchDepth: 1
+        # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
+
+      - bash: |
+          git submodule update --init --recursive
+          docker pull baconpaul/sst-dockerimages-ubuntu18:1
+
+          docker create --name surge-build-u18 --interactive --tty \
+               --volume=`$(pwd)`:/home/build/surge \
+               baconpaul/sst-dockerimages-ubuntu18:1
+          docker start surge-build-u18
+          docker exec -it surge-build-u18 bash -c "(cd /home/build/surge && ./scripts/docker-build/build.sh ignore/scrdock --target surge-xt_Standalone --parallel 4)"
+          docker stop surge-build-u18
+         
+          ls build/surge_xt_products
+        displayName: Do Docker Build
+
 
   - job: BuildForPR
     condition: eq(variables['Build.Reason'], 'PullRequest')
