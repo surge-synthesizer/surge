@@ -1336,10 +1336,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             if (pxa < drawArea.getX() || pxa > drawArea.getRight())
                 continue;
 
-            if (t > 0.1)
-            {
-                g.drawLine(pxa, drawArea.getY(), pxa, drawArea.getBottom() + ticklen, linewidth);
-            }
+            g.drawLine(pxa, drawArea.getY(), pxa, drawArea.getBottom() + ticklen, linewidth);
         }
 
         updateVTicks();
