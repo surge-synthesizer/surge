@@ -39,13 +39,13 @@ jobs:
         # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
 
       - bash: |
-          git submodule update --init --recursive
+          set -x
           docker pull baconpaul/sst-dockerimages-ubuntu18:1
 
-          docker create --name surge-build-u18 --interactive --tty \
-               --volume=`$(pwd)`:/home/build/surge \
-               baconpaul/sst-dockerimages-ubuntu18:1
+          docker create --name surge-build-u18 --interactive --tty --volume=`$(pwd)`:/home/build/surge baconpaul/sst-dockerimages-ubuntu18:1
           docker start surge-build-u18
+
+          git submodule update --init --recursive
           docker exec -it surge-build-u18 bash -c "(cd /home/build/surge && ./scripts/docker-build/build.sh ignore/scrdock --target surge-xt_Standalone --parallel 4)"
           docker stop surge-build-u18
          
