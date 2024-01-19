@@ -42,7 +42,7 @@ jobs:
           set -x
           docker pull baconpaul/sst-dockerimages-ubuntu18:1
 
-          docker create --name surge-build-u18 --interactive --tty --volume=`$(pwd)`:/home/build/surge baconpaul/sst-dockerimages-ubuntu18:1
+          docker create --name surge-build-u18 --interactive --tty --volume=`pwd`:/home/build/surge baconpaul/sst-dockerimages-ubuntu18:1
           docker start surge-build-u18
 
           git submodule update --init --recursive
