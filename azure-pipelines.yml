@@ -50,7 +50,7 @@ jobs:
           docker start surge-build-u18
 
           git submodule update --init --recursive
-          docker exec surge-build-u18 bash -c "(cd /home/build/surge && ./scripts/docker-build/build.sh build --target surge-xt_Standalone --parallel 4)"
+          docker exec surge-build-u18 bash -c "(cd /home/build/surge && ./scripts/docker-build/build.sh build --target surge-xt_LV2 --parallel 6)"
           docker stop surge-build-u18
          
           ls build/surge_xt_products
