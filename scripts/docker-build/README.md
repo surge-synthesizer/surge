@@ -20,9 +20,9 @@ It's all inte azure pipelines but
           export UID=$(id -u)
           export GID=$(id -g)
 
-          docker pull baconpaul/sst-dockerimages-ubuntu18:2
+          docker pull baconpaul/sst-dockerimages-ubuntu18:3
           docker create --user $UID:$GID --name surge-build-u18 --interactive --tty \
-              --volume=`pwd`:/home/build/surge baconpaul/sst-dockerimages-ubuntu18:2
+              --volume=`pwd`:/home/build/surge baconpaul/sst-dockerimages-ubuntu18:3
           docker start surge-build-u18
 
           docker exec surge-build-u18 bash -c "(cd /home/build/surge && ./scripts/docker-build/build.sh build --target surge-xt_LV2 --parallel 6)"

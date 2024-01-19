@@ -19,7 +19,7 @@ RUN apt-get update
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test
 RUN apt-get update 
-RUN apt-get install -y gcc-11 g++-11 git ninja-build flex
+RUN apt-get install -y gcc-9 g++-9 git ninja-build flex
 
 # Then install the prerequistes for a juce build
 RUN apt-get install -y git vim 
