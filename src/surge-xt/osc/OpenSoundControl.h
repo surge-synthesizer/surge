@@ -98,7 +98,8 @@ class OpenSoundControl : public juce::OSCReceiver,
     bool sendParameter(const Parameter *p);
     bool sendMacro(long macnum);
     bool sendModulator(ModulationRouting mod, int scene);
-    void sendMod(std::string msg);
+    std::string getModulatorOSCAddr(int modid, int scene, int index);
+    void sendMod(long ptag, modsources modsource, int modsourceScene, int index);
     void sendFailed();
     bool hasEnding(std::string const &fullString, std::string const &ending);
 

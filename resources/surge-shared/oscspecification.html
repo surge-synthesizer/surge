@@ -445,7 +445,7 @@
                                    <td>/q/all_mods</td>
                                    <td>request all modulation mappings</td>
                                    <td>none</td>
-                                   <td>Sends a dump of all active modulation mappings to OSC out</td>
+                                   <td>Sends a dump of all active modulation mappings and muted/not muted status to OSC out</td>
                               </tr>
 
                               <tr>
@@ -1563,6 +1563,19 @@
                                    </td>
                               </tr>
                          </table>
+                    </div>
+                    <div class="tablewrap cr cl" style="width: 75%; margin: 16px 8px;">
+                         <div class="heading">
+                              <h2>Modulation Mapping: Muting</h2>
+                              <h3>Append '/mute' to above modulation mapping address,
+                                   followed by a value of 0 or 1, to mute or unmute that mapping.
+                              </h3>
+                    
+                         </div>
+                    </div>
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/mod/b/slfo_1/2/mute 1</code></span>
+                         <span><code>/mod/a/feg/mute 0</code></span>
                     </div>
                </div>
           </div>
