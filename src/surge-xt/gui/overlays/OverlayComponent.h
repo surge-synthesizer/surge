@@ -54,7 +54,7 @@ struct OverlayComponent : juce::Component
     virtual void forceDataRefresh() {}
 
     // For A11Y: should the overlay be granted keyboard focus as soon as it appears.
-    virtual bool wantsInitialKeyboardFocus() { return true; }
+    virtual bool wantsInitialKeyboardFocus() const { return true; }
 
     /*
      * This is called when a parent wrapper finally decides to show me, which will
