@@ -25,6 +25,8 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "UserDefaults.h"
+#include <optional>
+#include <utility>
 
 class Parameter;
 class SurgePatch;
@@ -52,7 +54,7 @@ struct OverlayComponent : juce::Component
     virtual void forceDataRefresh() {}
 
     // For A11Y: should the overlay be granted keyboard focus as soon as it appears.
-    virtual bool wantsInitialKeyboardFocus() { return true; }
+    virtual bool wantsInitialKeyboardFocus() const { return true; }
 
     /*
      * This is called when a parent wrapper finally decides to show me, which will
@@ -87,6 +89,16 @@ struct OverlayComponent : juce::Component
     bool getCanMoveAround() { return canMoveAround.first; }
     juce::Point<int> defaultLocation;
     Surge::Storage::DefaultKey getMoveAroundKey() { return canMoveAround.second; }
+
+    /*
+     * If you want to chicken box the close, return a message from here. The pair
+     * is the OK/Cancel title and message, respectively. If you are ok to close,
+     * return std::nullopt, which is the default behavior.
+     */
+    virtual std::optional<std::pair<std::string, std::string>> getPreCloseChickenBoxMessage()
+    {
+        return std::nullopt;
+    }
 };
 } // namespace Overlays
 } // namespace Surge

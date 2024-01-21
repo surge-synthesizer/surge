@@ -339,7 +339,7 @@ sudo apt install build-essential libcairo-dev libxkbcommon-x11-dev libxkbcommon-
 # Continuous Integration
 
 In addition to the build commands above, we use Azure pipelines for continuous integration. This means that each and
-every pull request will be automatically built across all our environments, and a clean build on all platforms is an obvious
+every pull request will be automatically built across all our environment,and a clean build on all platforms is an obvious
 pre-requisite. If you have questions about our CI tools, don't hesitate to ask on
 our [Discord](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link)
 server. We are grateful to Microsoft for providing Azure pipelines for free to the open-source community!

@@ -728,5 +728,27 @@ void OverlayWrapper::onSkinChanged()
     repaint();
 }
 
+void OverlayWrapper::onClose()
+{
+    auto pc = getPrimaryChildAsOverlayComponent();
+    if (pc && pc->getPreCloseChickenBoxMessage().has_value())
+    {
+        auto pcm = *(pc->getPreCloseChickenBoxMessage());
+        editor->alertYesNo(
+            pcm.first, pcm.second,
+            [this]() {
+                closeOverlay();
+                if (isTornOut())
+                    tearOutParent.reset(nullptr);
+            },
+            [pc]() { pc->grabKeyboardFocus(); });
+    }
+    else
+    {
+        closeOverlay();
+        if (isTornOut())
+            tearOutParent.reset(nullptr);
+    }
+}
 } // namespace Overlays
 } // namespace Surge
