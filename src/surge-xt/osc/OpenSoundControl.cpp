@@ -1004,20 +1004,20 @@ void OpenSoundControl::sendAllModulators()
                 synth->storage.getPatch().scene[1].modulation_voice;
 
             for (ModulationRouting mod : modlist_global)
-                sendModulator(mod, 0);
+                sendModulator(mod, 0, true);
             for (ModulationRouting mod : modlist_scene_A_scene)
-                sendModulator(mod, 0);
+                sendModulator(mod, 0, false);
             for (ModulationRouting mod : modlist_scene_B_scene)
-                sendModulator(mod, 1);
+                sendModulator(mod, 1, false);
             for (ModulationRouting mod : modlist_scene_A_voice)
-                sendModulator(mod, 0);
+                sendModulator(mod, 0, false);
             for (ModulationRouting mod : modlist_scene_B_voice)
-                sendModulator(mod, 1);
+                sendModulator(mod, 1, false);
         });
     }
 }
 
-bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene)
+bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene, bool global)
 {
     bool supIndex = synth->supportsIndexedModulator(0, (modsources)mod.source_id);
     int modIndex = 0;
@@ -1027,7 +1027,7 @@ bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene)
     }
     std::string addr = getModulatorOSCAddr(mod.source_id, scene, modIndex, false);
 
-    int offset = synth->storage.getPatch().scene_start[scene];
+    int offset = global ? 0 : synth->storage.getPatch().scene_start[scene];
     Parameter *p = synth->storage.getPatch().param_ptr[mod.destination_id + offset];
     float val = synth->getModDepth01(p->id, (modsources)mod.source_id, scene, modIndex);
     return modOSCout(addr, p->oscName, val);
