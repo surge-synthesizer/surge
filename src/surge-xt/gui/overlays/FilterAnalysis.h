@@ -92,6 +92,8 @@ struct FilterAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCompon
     int whichFilter{0};
     void selectFilter(int which);
 
+    bool wantsInitialKeyboardFocus() const override { return false; }
+
     std::unique_ptr<Surge::Widgets::SelfDrawToggleButton> f1Button, f2Button;
     std::unique_ptr<FilterAnalysisEvaluator> evaluator;
     bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override;

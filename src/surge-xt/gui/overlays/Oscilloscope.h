@@ -214,7 +214,7 @@ class Oscilloscope : public OverlayComponent,
     void resized() override;
     void updateDrawing();
     void visibilityChanged() override;
-    bool wantsInitialKeyboardFocus() override;
+    bool wantsInitialKeyboardFocus() const override { return false; }
 
     void valueChanged(GUI::IComponentTagValue *p) override{};
     int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
