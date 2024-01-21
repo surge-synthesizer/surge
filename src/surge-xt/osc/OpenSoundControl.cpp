@@ -1025,15 +1025,19 @@ bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene)
     {
         modIndex = mod.source_index;
     }
-    std::string addr = getModulatorOSCAddr(mod.source_id, scene, modIndex);
+    std::string addr = getModulatorOSCAddr(mod.source_id, scene, modIndex, false);
 
     int offset = synth->storage.getPatch().scene_start[scene];
     Parameter *p = synth->storage.getPatch().param_ptr[mod.destination_id + offset];
-    float val01 = synth->getModDepth01(p->id, (modsources)mod.source_id, scene, modIndex);
+    float val = synth->getModDepth01(p->id, (modsources)mod.source_id, scene, modIndex);
+    return modOSCout(addr, p->oscName, val);
+}
 
+bool OpenSoundControl::modOSCout(std::string addr, std::string oscName, float val)
+{
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
-    om.addString(p->oscName);
-    om.addFloat32(val01);
+    om.addString(oscName);
+    om.addFloat32(val);
 
     if (!this->juceOSCSender.send(om))
     {
@@ -1044,11 +1048,12 @@ bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene)
     return true;
 }
 
-std::string OpenSoundControl::getModulatorOSCAddr(int modid, int scene, int index)
+std::string OpenSoundControl::getModulatorOSCAddr(int modid, int scene, int index, bool mute)
 {
     std::string modName = modsource_names_tag[modid];
     std::string sceneStr = "";
     std::string indexStr = "";
+    std::string muteStr = "";
 
     bool useScene = synth->isModulatorDistinctPerScene((modsources)modid);
     if (useScene)
@@ -1061,11 +1066,12 @@ std::string OpenSoundControl::getModulatorOSCAddr(int modid, int scene, int inde
 
     bool supIndex = synth->supportsIndexedModulator(0, (modsources)modid);
     if (supIndex)
-    {
         indexStr = "/" + std::to_string(index);
-    }
 
-    return ("/mod/" + sceneStr + modName + indexStr);
+    if (mute)
+        muteStr = "mute/";
+
+    return ("/mod/" + muteStr + sceneStr + modName + indexStr);
 }
 
 bool OpenSoundControl::sendMacro(long macnum)
@@ -1130,30 +1136,32 @@ bool OpenSoundControl::sendParameter(const Parameter *p)
 
 // Under construction, but tested as safe!
 void OpenSoundControl::modSet(long ptag, modsources modsource, int modsourceScene, int index,
-                              float value, bool isNew)
+                              float val, bool isNew)
 {
-    std::string modOSCaddr = getModulatorOSCAddr(modsource, modsourceScene, index);
-    std::cout << "modSet. Addr: " << modOSCaddr << " New value: " << std::to_string(value)
-              << std::endl;
+    sendMod(ptag, modsource, modsourceScene, index, val, false);
 }
+
 void OpenSoundControl::modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                                 bool mute)
 {
-    // sendMod("modMuted. Mute value: " + std::to_string(mute));
-}
-void OpenSoundControl::modCleared(long ptag, modsources modsource, int modsourceScene, int index)
-{
-    // sendMod("modCleared.");
+    sendMod(ptag, modsource, modsourceScene, index, mute ? 1.0 : 0.0, mute);
 }
 
-void OpenSoundControl::sendMod(long ptag, modsources modsource, int modSourceScene, int index)
+void OpenSoundControl::modCleared(long ptag, modsources modsource, int modsourceScene, int index)
+{
+    sendMod(ptag, modsource, modsourceScene, index, 0.0, false);
+}
+
+void OpenSoundControl::sendMod(long ptag, modsources modsource, int modSourceScene, int index,
+                               float val, bool mute)
 {
     // Runs on the juce messenger thread
-    juce::MessageManager::getInstance()->callAsync([this]() {
-        // Temporary while building: display info
-        // TODO: send OSC out message
-        // std::cout << msg << std::endl;
-    });
+    juce::MessageManager::getInstance()->callAsync(
+        [this, ptag, modsource, modSourceScene, index, val, mute]() {
+            std::string modOSCaddr = getModulatorOSCAddr(modsource, modSourceScene, index, mute);
+            Parameter *param = synth->storage.getPatch().param_ptr[ptag];
+            modOSCout(modOSCaddr, param->get_osc_name(), val);
+        });
 }
 
 } // namespace OSC
