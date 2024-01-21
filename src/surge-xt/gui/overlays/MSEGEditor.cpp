@@ -799,13 +799,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         auto tpx = timeToPx();
         float maxt = drawDuration();
 
-        int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-        int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-
         // draw loop area
         if (ms->loopMode != MSEGStorage::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            // std::cout << "LS/LS are " << ls << "/" << le << std::endl;
+            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
+            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
+
             float pxs = limit_range((float)tpx(ms->segmentStart[ls]), (float)haxisArea.getX(),
                                     (float)haxisArea.getRight());
             float pxe = limit_range((float)tpx(ms->segmentEnd[le]), (float)haxisArea.getX(),
