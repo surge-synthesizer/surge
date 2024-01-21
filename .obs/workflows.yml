@@ -3,7 +3,7 @@ workflow_nightly:
     - trigger_services:
         project: home:baconpaul:surge 
         package: surge-xt-nightly
-    - filters:
+    filters:
         event: push
         branches:
           only:
