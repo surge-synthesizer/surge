@@ -1,0 +1,10 @@
+workflow_nightly:
+    steps:
+    - trigger_services:
+        project: home:baconpaul:surge 
+        package: surge-xt-nightly
+    - filters:
+        event: push
+        branches:
+          only:
+            - main
