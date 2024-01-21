@@ -126,12 +126,8 @@ struct OverlayWrapper : public juce::Component,
     bool showCloseButton{true};
     void setShowCloseButton(bool b) { showCloseButton = b; }
 
-    void onClose()
-    {
-        closeOverlay();
-        if (isTornOut())
-            tearOutParent.reset(nullptr);
-    }
+    void onClose();
+
     std::function<void()> closeOverlay = []() {};
     void setCloseOverlay(std::function<void()> f) { closeOverlay = std::move(f); }
 
