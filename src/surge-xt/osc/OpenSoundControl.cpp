@@ -1144,7 +1144,7 @@ void OpenSoundControl::modSet(long ptag, modsources modsource, int modsourceScen
 void OpenSoundControl::modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                                 bool mute)
 {
-    sendMod(ptag, modsource, modsourceScene, index, mute ? 1.0 : 0.0, mute);
+    sendMod(ptag, modsource, modsourceScene, index, mute ? 1.0 : 0.0, true);
 }
 
 void OpenSoundControl::modCleared(long ptag, modsources modsource, int modsourceScene, int index)
