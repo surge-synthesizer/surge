@@ -118,6 +118,8 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
         return false;
     }
 
+    std::optional<std::pair<std::string, std::string>> getPreCloseChickenBoxMessage() override;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaModulatorEditor);
 };
 
