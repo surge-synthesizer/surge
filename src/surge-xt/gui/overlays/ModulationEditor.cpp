@@ -483,6 +483,30 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             resetValuesFromDatum();
         }
 
+        void controlBeginEdit(GUI::IComponentTagValue *control) override
+        {
+            auto synth = contents->editor->ed->synth;
+            for (auto l : contents->editor->ed->synth->modListeners)
+            {
+                auto p = synth->storage.getPatch().param_ptr[datum.destination_id + datum.idBase];
+
+                l->modBeginEdit(p->id, (modsources)datum.source_id, datum.source_scene,
+                                datum.source_index);
+            }
+        }
+
+        void controlEndEdit(GUI::IComponentTagValue *control) override
+        {
+            auto synth = contents->editor->ed->synth;
+            for (auto l : contents->editor->ed->synth->modListeners)
+            {
+                auto p = synth->storage.getPatch().param_ptr[datum.destination_id + datum.idBase];
+
+                l->modEndEdit(p->id, (modsources)datum.source_id, datum.source_scene,
+                              datum.source_index);
+            }
+        }
+
         void resetValuesFromDatum()
         {
             std::string accPostfix = datum.sname + " to " + datum.pname;
