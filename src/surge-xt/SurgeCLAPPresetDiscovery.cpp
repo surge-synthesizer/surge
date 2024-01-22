@@ -31,6 +31,7 @@
 #include <clap/clap.h>
 
 #include "SurgeStorage.h"
+#include "SurgeSynthProcessor.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 #include "PatchFileHeaderStructs.h"
@@ -242,7 +243,7 @@ static const struct clap_preset_discovery_factory surgePresetDiscoveryFactory
 };
 } // namespace sst::surge_xt::preset_discovery
 
-const void *getSurgePresetDiscoveryFactory()
+const void *SurgeSynthProcessor::getSurgePresetDiscoveryFactory()
 {
     return &sst::surge_xt::preset_discovery::surgePresetDiscoveryFactory;
 }

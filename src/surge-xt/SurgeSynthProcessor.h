@@ -522,12 +522,16 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
   public:
     std::unique_ptr<Surge::GUI::UndoManager> undoManager;
 
+#if HAS_CLAP_JUCE_EXTENSIONS
+    static const void *getSurgePresetDiscoveryFactory();
+#endif
+
   private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthProcessor)
 };
 
 #if HAS_CLAP_JUCE_EXTENSIONS
-extern const void *clapJuceExtensionCustomFactory(const char *);
+extern const void * JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *);
 #endif
 
 #endif // SURGE_SRC_SURGE_XT_SURGESYNTHPROCESSOR_H
