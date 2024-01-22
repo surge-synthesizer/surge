@@ -418,7 +418,7 @@
 
                     <div style="clear: both;"></div>
 
-                    <div class="tablewrap" style="width: 1100px; margin: 24px 8px 16px 8px;">
+                    <div class="tablewrap" style="width: 1200px; margin: 24px 8px 16px 8px;">
                          <div class="heading">
                               <h2>Queries</h2>
                          </div>
@@ -445,7 +445,7 @@
                                    <td>/q/all_mods</td>
                                    <td>request all modulation mappings</td>
                                    <td>none</td>
-                                   <td>Sends a dump of all active modulation mappings to OSC out</td>
+                                   <td>Sends a dump of all active modulation mappings and 'muted' status to OSC out</td>
                               </tr>
 
                               <tr>
@@ -1563,6 +1563,19 @@
                                    </td>
                               </tr>
                          </table>
+                    </div>
+                    <div class="tablewrap cr cl" style="width: 75%; margin: 16px 8px;">
+                         <div class="heading">
+                              <h2>Modulation Mapping: Muting</h2>
+                              <p>Replace '/mod/...' with '/mod/mute/...' in the modulation-to-parameter mapping convention described above,
+                                   using a value of 0 to set muting <b>off</b>, or 1 to set muting <b>on</b>.
+                              </p>
+                    
+                         </div>
+                    </div>
+                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/mod/mute/a/feg /param/a/filter/1/cutoff 0</code></span>
+                         <span><code>/mod/mute/a/feg /param/a/filter/1/cutoff 1</code></span>
                     </div>
                </div>
           </div>

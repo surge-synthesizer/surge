@@ -798,6 +798,13 @@ void SurgeSynthProcessor::processBlockOSC()
         }
         break;
 
+        case SurgeSynthProcessor::MOD_MUTE:
+        {
+            bool mute = om.fval > 0.0;
+            surge->muteModulation(om.param->id, (modsources)om.ival, om.scene, om.index, mute);
+        }
+        break;
+
         case SurgeSynthProcessor::FX_DISABLE:
         {
             int selected_mask = om.ival;

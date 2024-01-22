@@ -84,6 +84,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                   bool mute) override;
     void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
+    bool modOSCout(std::string addr, std::string oscName, float val, bool reportMute);
 
   private:
     SurgeSynthesizer *synth{nullptr};
@@ -97,8 +98,10 @@ class OpenSoundControl : public juce::OSCReceiver,
     float getNormValue(Parameter *p, float fval);
     bool sendParameter(const Parameter *p);
     bool sendMacro(long macnum);
-    bool sendModulator(ModulationRouting mod, int scene);
-    void sendMod(std::string msg);
+    bool sendModulator(ModulationRouting mod, int scene, bool global);
+    std::string getModulatorOSCAddr(int modid, int scene, int index, bool mute);
+    void sendMod(long ptag, modsources modsource, int modsourceScene, int index, float val,
+                 bool reportMute);
     void sendFailed();
     bool hasEnding(std::string const &fullString, std::string const &ending);
 
