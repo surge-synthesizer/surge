@@ -247,13 +247,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     modsources getSelectedModsource() { return modsource; }
     void setModsourceSelected(modsources ms, int ms_idx = 0);
 
+    SurgeSynthesizer *synth = nullptr;
+
   private:
     void openOrRecreateEditor();
     std::unique_ptr<Surge::Overlays::OverlayComponent> makeStorePatchDialog();
     void close_editor();
     bool isControlVisible(ControlGroup controlGroup, int controlGroupEntry);
     void repushAutomationFor(Parameter *p);
-    SurgeSynthesizer *synth = nullptr;
     bool editor_open = false;
     bool mod_editor = false;
     modsources modsource = ms_lfo1, modsource_editor[n_scenes] = {ms_lfo1, ms_lfo1};

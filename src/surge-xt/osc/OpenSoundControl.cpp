@@ -1140,7 +1140,7 @@ void OpenSoundControl::sendMod(std::string msg)
     juce::MessageManager::getInstance()->callAsync([this, msg]() {
         // Temporary while building: display info
         // TODO: send OSC out message
-        std::cout << msg << std::endl;
+        // std::cout << msg << std::endl;
     });
 }
 

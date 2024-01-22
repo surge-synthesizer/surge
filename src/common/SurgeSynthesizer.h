@@ -396,6 +396,15 @@ class alignas(16) SurgeSynthesizer
         virtual void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                               bool mute) = 0;
         virtual void modCleared(long ptag, modsources modsource, int modsourceScene, int index) = 0;
+
+        /*
+         * These two methods are called optionally if an event is initiated by a user drag
+         * action or so on. They will only be called on the UI thread. Not every set etc...
+         * is contained in a begin/end and mute and cleared almost definitely will never
+         * be wrapped.
+         */
+        virtual void modBeginEdit(long ptag, modsources modsource, int modsourceScene, int index) {}
+        virtual void modEndEdit(long ptag, modsources modsource, int modsourceScene, int index) {}
     };
     std::set<ModulationAPIListener *> modListeners;
     void addModulationAPIListener(ModulationAPIListener *l) { modListeners.insert(l); }
