@@ -83,10 +83,12 @@ struct PresetProvider
         auto fxp = clap_preset_discovery_filetype{"Surge XT Patch", "", "fxp"};
         res = res && indexer->declare_filetype(indexer, &fxp);
 
+        // PATH_MAX is unreliably available
+        static constexpr int pathSize{8192};
         if (fs::is_directory(storage->datapath / "patches_factory"))
         {
-            char floc[PATH_MAX];
-            strncpy(floc, (storage->datapath / "patches_factory").u8string().c_str(), PATH_MAX - 1);
+            char floc[pathSize];
+            strncpy(floc, (storage->datapath / "patches_factory").u8string().c_str(), pathSize - 1);
             auto factory = clap_preset_discovery_location{
                 CLAP_PRESET_DISCOVERY_IS_FACTORY_CONTENT, "Surge XT Factory Presets",
                 CLAP_PRESET_DISCOVERY_LOCATION_FILE, floc};
@@ -95,9 +97,9 @@ struct PresetProvider
 
         if (fs::is_directory(storage->datapath / "patches_3rdparty"))
         {
-            char tploc[PATH_MAX];
+            char tploc[pathSize];
             strncpy(tploc, (storage->datapath / "patches_3rdparty").u8string().c_str(),
-                    PATH_MAX - 1);
+                    pathSize - 1);
             auto third_party = clap_preset_discovery_location{
                 CLAP_PRESET_DISCOVERY_IS_FACTORY_CONTENT, "Surge XT Third Party Presets",
                 CLAP_PRESET_DISCOVERY_LOCATION_FILE, tploc};
@@ -106,8 +108,8 @@ struct PresetProvider
 
         if (fs::is_directory(storage->userPatchesPath))
         {
-            char uloc[PATH_MAX];
-            strncpy(uloc, storage->userPatchesPath.u8string().c_str(), PATH_MAX - 1);
+            char uloc[pathSize];
+            strncpy(uloc, storage->userPatchesPath.u8string().c_str(), pathSize - 1);
 
             auto userpatch = clap_preset_discovery_location{
                 CLAP_PRESET_DISCOVERY_IS_USER_CONTENT, "Surge XT User Presets",
