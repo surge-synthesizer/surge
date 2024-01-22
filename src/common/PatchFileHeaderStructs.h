@@ -4,7 +4,7 @@
  *
  * Learn more at https://surge-synthesizer.github.io/
  *
- * Copyright 2018-2023, various authors, as described in the GitHub
+ * Copyright 2018-2024, various authors, as described in the GitHub
  * transaction log.
  *
  * Surge XT is released under the GNU General Public Licence v3
@@ -20,8 +20,8 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#ifndef SURGE_SRC_COMMON_FXPHEADERSTRUCTS_H
-#define SURGE_SRC_COMMON_FXPHEADERSTRUCTS_H
+#ifndef SURGE_SRC_COMMON_PATCHFILEHEADERSTRUCTS_H
+#define SURGE_SRC_COMMON_PATCHFILEHEADERSTRUCTS_H
 
 namespace sst::io
 {
