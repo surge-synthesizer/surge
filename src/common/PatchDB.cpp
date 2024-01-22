@@ -32,6 +32,7 @@
 #include "DebugHelpers.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
+#include "PatchFileHeaderStructs.h"
 
 namespace mech = sst::basic_blocks::mechanics;
 
@@ -542,11 +543,11 @@ CREATE TABLE IF NOT EXISTS Favorites (
         STRING
     };
     typedef std::tuple<std::string, FeatureType, int, std::string> feature;
-    std::vector<feature> extractFeaturesFromXML(const std::string &xml)
+    std::vector<feature> extractFeaturesFromXML(const char *xml)
     {
         std::vector<feature> res;
         TiXmlDocument doc;
-        doc.Parse(xml.c_str(), nullptr, TIXML_ENCODING_LEGACY);
+        doc.Parse(xml, nullptr, TIXML_ENCODING_LEGACY);
         if (doc.Error())
         {
 #if TRACE_DB
@@ -839,38 +840,16 @@ CREATE TABLE IF NOT EXISTS Favorites (
         searchName << p.name << " ";
 
         std::ifstream stream(p.path, std::ios::in | std::ios::binary);
-        std::vector<uint8_t> contents((std::istreambuf_iterator<char>(stream)),
-                                      std::istreambuf_iterator<char>());
 
-#pragma pack(push, 1)
-        struct patch_header
+        std::vector<char> fxChunk;
+        fxChunk.resize(sizeof(sst::io::fxChunkSetCustom));
+        stream.read(fxChunk.data(), fxChunk.size());
+        if (!stream)
         {
-            char tag[4];
-            unsigned int xmlsize,
-                wtsize[2][3]; // TODO: FIX SCENE AND OSC COUNT ASSUMPTION (but also since
-            // it's used in streaming, do it with care!)
-        };
+            return;
+        }
 
-        struct fxChunkSetCustom
-        {
-            int chunkMagic; // 'CcnK'
-            int byteSize;   // of this chunk, excl. magic + byteSize
-
-            int fxMagic; // 'FPCh'
-            int version;
-            int fxID; // fx unique id
-            int fxVersion;
-
-            int numPrograms;
-            char prgName[28];
-
-            int chunkSize;
-            // char chunk[8]; // variable
-        };
-#pragma pack(pop)
-
-        uint8_t *d = contents.data();
-        auto *fxp = (fxChunkSetCustom *)d;
+        auto *fxp = (sst::io::fxChunkSetCustom *)(fxChunk.data());
         if ((mech::endian_read_int32BE(fxp->chunkMagic) != 'CcnK') ||
             (mech::endian_read_int32BE(fxp->fxMagic) != 'FPCh') ||
             (mech::endian_read_int32BE(fxp->fxID) != 'cjs3'))
@@ -878,8 +857,14 @@ CREATE TABLE IF NOT EXISTS Favorites (
             return;
         }
 
-        auto phd = d + sizeof(fxChunkSetCustom);
-        auto *ph = (patch_header *)phd;
+        std::vector<char> patchHeaderChunk;
+        patchHeaderChunk.resize(sizeof(sst::io::patch_header));
+        stream.read(patchHeaderChunk.data(), patchHeaderChunk.size());
+        if (!stream)
+        {
+            return;
+        }
+        auto *ph = (sst::io::patch_header *)(patchHeaderChunk.data());
         auto xmlSz = mech::endian_read_int32LE(ph->xmlsize);
 
         if (!memcpy(ph->tag, "sub3", 4) || xmlSz < 0 || xmlSz > 1024 * 1024 * 1024)
@@ -888,16 +873,18 @@ CREATE TABLE IF NOT EXISTS Favorites (
             return;
         }
 
-        auto xd = phd + sizeof(patch_header);
-        std::string xml(xd, xd + xmlSz);
-
+        std::vector<char> xmlData;
+        xmlData.resize(xmlSz);
+        stream.read(xmlData.data(), xmlData.size());
+        if (!stream)
+            return;
         try
         {
             auto ins =
                 SQL::Statement(dbh, "INSERT INTO PATCHFEATURE ( \"patch_id\", \"feature\", "
                                     "\"feature_type\", \"feature_ivalue\", \"feature_svalue\" ) "
                                     "VALUES ( ?1, ?2, ?3, ?4, ?5 )");
-            auto feat = extractFeaturesFromXML(xml);
+            auto feat = extractFeaturesFromXML(xmlData.data());
             for (auto f : feat)
             {
                 auto ftype = std::get<0>(f);

@@ -489,6 +489,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
                            uint32_t & /*pageID*/, juce::String & /*pageName*/,
                            std::array<juce::AudioProcessorParameter *, CLAP_REMOTE_CONTROLS_COUNT>
                                & /*params*/) noexcept override;
+
+    bool supportsPresetLoad() const noexcept override { return true; }
+    bool presetLoadFromLocation(uint32_t /*location_kind*/, const char * /*location*/,
+                                const char * /*load_key*/) noexcept override;
 #endif
 
   private:
@@ -518,8 +522,16 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
   public:
     std::unique_ptr<Surge::GUI::UndoManager> undoManager;
 
+#if HAS_CLAP_JUCE_EXTENSIONS
+    static const void *getSurgePresetDiscoveryFactory();
+#endif
+
   private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthProcessor)
 };
+
+#if HAS_CLAP_JUCE_EXTENSIONS
+extern const void *JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *);
+#endif
 
 #endif // SURGE_SRC_SURGE_XT_SURGESYNTHPROCESSOR_H

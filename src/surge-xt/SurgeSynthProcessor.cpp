@@ -1430,6 +1430,36 @@ bool SurgeSynthProcessor::remoteControlsPageFill(
     }
     return true;
 }
+
+#endif
+
+#if HAS_CLAP_JUCE_EXTENSIONS
+
+bool SurgeSynthProcessor::presetLoadFromLocation(uint32_t location_kind, const char *location,
+                                                 const char * /*load_key*/) noexcept
+{
+    if (location_kind != CLAP_PRESET_DISCOVERY_LOCATION_FILE)
+        return false;
+
+    {
+        std::lock_guard<std::mutex> mg(surge->patchLoadSpawnMutex);
+        strncpy(surge->patchid_file, location, sizeof(surge->patchid_file));
+        surge->has_patchid_file = true;
+    }
+    surge->processAudioThreadOpsWhenAudioEngineUnavailable();
+    return true;
+}
+
+const void *JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *f)
+{
+    if (strcmp(f, CLAP_PRESET_DISCOVERY_FACTORY_ID) == 0 ||
+        strcmp(f, CLAP_PRESET_DISCOVERY_FACTORY_ID_COMPAT) == 0)
+    {
+        return SurgeSynthProcessor::getSurgePresetDiscoveryFactory();
+    }
+
+    return nullptr;
+}
 #endif
 
 //==============================================================================
