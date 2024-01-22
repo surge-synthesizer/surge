@@ -490,8 +490,10 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             {
                 auto p = synth->storage.getPatch().param_ptr[datum.destination_id + datum.idBase];
 
+                auto nm01 = control->getValue() * 2.f - 1.f;
+
                 l->modBeginEdit(p->id, (modsources)datum.source_id, datum.source_scene,
-                                datum.source_index);
+                                datum.source_index, nm01);
             }
         }
 
@@ -502,8 +504,10 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             {
                 auto p = synth->storage.getPatch().param_ptr[datum.destination_id + datum.idBase];
 
+                auto nm01 = control->getValue() * 2.f - 1.f;
+
                 l->modEndEdit(p->id, (modsources)datum.source_id, datum.source_scene,
-                              datum.source_index);
+                              datum.source_index, nm01);
             }
         }
 
