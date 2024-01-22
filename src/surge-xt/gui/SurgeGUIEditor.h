@@ -395,6 +395,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         OSCILLOSCOPE,
         KEYBINDINGS_EDITOR,
         ACTION_HISTORY,
+        OPEN_SOUND_CONTROL_SETTINGS,
 
         n_overlay_tags,
     };

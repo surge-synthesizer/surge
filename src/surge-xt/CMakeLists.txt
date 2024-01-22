@@ -139,6 +139,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/TypeinParamEditor.h
   gui/overlays/WaveShaperAnalysis.cpp
   gui/overlays/WaveShaperAnalysis.h
+  gui/overlays/OpenSoundControlSettings.cpp
   gui/widgets/EffectChooser.cpp
   gui/widgets/EffectChooser.h
   gui/widgets/EffectLabel.h
