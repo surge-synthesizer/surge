@@ -1450,7 +1450,7 @@ bool SurgeSynthProcessor::presetLoadFromLocation(uint32_t location_kind, const c
     return true;
 }
 
-const void * JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *f)
+const void *JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *f)
 {
     if (strcmp(f, CLAP_PRESET_DISCOVERY_FACTORY_ID) == 0 ||
         strcmp(f, CLAP_PRESET_DISCOVERY_FACTORY_ID_COMPAT) == 0)
