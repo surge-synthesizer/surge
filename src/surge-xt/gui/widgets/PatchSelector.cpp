@@ -153,6 +153,64 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
     }
 };
 
+struct PatchSelector::TB : juce::Component
+{
+    SurgeStorage *storage{nullptr};
+    TB(const std::string &s)
+    {
+        setAccessible(true);
+        setWantsKeyboardFocus(true);
+        setTitle(s);
+        setDescription(s);
+    }
+    void paint(juce::Graphics &g) override
+    {
+        /* Useful for debugging
+        g.setColour(juce::Colours::blue);
+        g.drawRect(getLocalBounds(), 1);
+         */
+    }
+
+    void mouseDown(const juce::MouseEvent &e) override
+    {
+        if (e.mods.isPopupMenu() && onMenu())
+        {
+            return;
+        }
+        onPress();
+    }
+
+    void mouseEnter(const juce::MouseEvent &e) override { onEnterExit(true); }
+
+    void mouseExit(const juce::MouseEvent &e) override { onEnterExit(false); }
+
+    bool keyPressed(const juce::KeyPress &e) override
+    {
+        auto [action, mod] = Surge::Widgets::accessibleEditAction(e, storage);
+        if (action == OpenMenu)
+        {
+            return onMenu();
+        }
+        if (action == Return)
+        {
+            return onPress();
+        }
+        return false;
+    }
+
+    std::function<void(bool)> onEnterExit = [](auto b) {};
+    std::function<bool()> onMenu = []() { return false; }, onPress = []() { return false; };
+
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        return std::make_unique<juce::AccessibilityHandler>(
+            *this, juce::AccessibilityRole::button,
+            juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press, [this]() {
+                std::cout << "PRESS EVENT" << std::endl;
+            }));
+    }
+};
+
 PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelector>(this)
 {
     patchDbProvider = std::make_unique<PatchDBTypeAheadProvider>(this);
@@ -163,6 +221,49 @@ PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelecto
 
     addChildComponent(*typeAhead);
 
+    searchButton = std::make_unique<TB>("Open Search DB");
+    searchButton->onEnterExit = [w = juce::Component::SafePointer(this)](bool b) {
+        if (w)
+        {
+            w->searchHover = b;
+            w->favoritesHover = false;
+            w->repaint();
+        }
+    };
+    searchButton->onPress = [w = juce::Component::SafePointer(this)]() {
+        if (w)
+        {
+            w->typeaheadButtonPressed();
+        }
+        return true;
+    };
+    addAndMakeVisible(*searchButton);
+
+    favoriteButton = std::make_unique<TB>("Favorites");
+    addAndMakeVisible(*favoriteButton);
+    favoriteButton->onEnterExit = [w = juce::Component::SafePointer(this)](bool b) {
+        if (w)
+        {
+            w->searchHover = false;
+            w->favoritesHover = b;
+            w->repaint();
+        }
+    };
+    favoriteButton->onPress = [w = juce::Component::SafePointer(this)]() {
+        if (w)
+        {
+            w->toggleFavoriteStatus();
+        }
+        return true;
+    };
+    favoriteButton->onMenu = [w = juce::Component::SafePointer(this)]() {
+        if (w)
+        {
+            w->showFavoritesMenu();
+        }
+        return true;
+    };
+
     setWantsKeyboardFocus(true);
 };
 PatchSelector::~PatchSelector() { typeAhead->removeTypeAheadListener(this); };
@@ -172,6 +273,8 @@ void PatchSelector::setStorage(SurgeStorage *s)
     storage = s;
     storage->patchDB->initialize();
     patchDbProvider->storage = s;
+    searchButton.get()->storage = s;
+    favoriteButton.get()->storage = s;
 }
 
 void PatchSelector::paint(juce::Graphics &g)
@@ -296,11 +399,13 @@ void PatchSelector::resized()
                         .withTrimmedLeft(getWidth() - fsize)
                         .reduced(1, 1)
                         .translated(-2, 1);
+    favoriteButton->setBounds(favoritesRect);
     searchRect = getLocalBounds()
                      .withTrimmedBottom(getHeight() - fsize)
                      .withWidth(fsize)
                      .reduced(1, 1)
                      .translated(2, 1);
+    searchButton->setBounds(searchRect);
 
     auto tad = getLocalBounds().reduced(fsize + 4, 0).translated(0, -2);
 
@@ -379,59 +484,19 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
     {
         if (e.mods.isPopupMenu())
         {
-            juce::PopupMenu menu;
-
-            tooltipCountdown = -1;
-            toggleCommentTooltip(false);
-
-            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FAVORITES");
-
-            auto haveFavs = optionallyAddFavorites(menu, false, false);
-
-            if (haveFavs)
-            {
-                auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-                stuckHover = true;
-                menu.showMenuAsync(sge->popupMenuOptions(favoritesRect.getBottomLeft()),
-                                   [that = juce::Component::SafePointer(this)](int) {
-                                       if (that)
-                                       {
-                                           that->stuckHover = false;
-                                           that->endHover();
-                                       }
-                                   });
-            }
-
+            showFavoritesMenu();
             return;
         }
         else
         {
-            isFavorite = !isFavorite;
-            auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-            if (sge)
-            {
-                sge->setPatchAsFavorite(pname, isFavorite);
-                repaint();
-            }
+            toggleFavoriteStatus();
         }
         return;
     }
 
     if (e.mods.isShiftDown() || searchRect.contains(e.position.toInt()))
     {
-        tooltipCountdown = -1;
-        toggleCommentTooltip(false);
-
-        if (wasTypeaheadCanceledSinceLastIdle)
-        {
-            toggleTypeAheadSearch(false);
-        }
-        else
-        {
-            toggleTypeAheadSearch(!isTypeaheadSearchOn);
-        }
+        typeaheadButtonPressed();
         return;
     }
 
@@ -1529,5 +1594,68 @@ void PatchSelector::searchUpdated()
     juce::Timer::callAfterDelay(1.0 * 1000, cb);
 }
 
+void PatchSelector::typeaheadButtonPressed()
+{
+    tooltipCountdown = -1;
+    toggleCommentTooltip(false);
+
+    if (wasTypeaheadCanceledSinceLastIdle)
+    {
+        toggleTypeAheadSearch(false);
+    }
+    else
+    {
+        toggleTypeAheadSearch(!isTypeaheadSearchOn);
+    }
+}
+
+void PatchSelector::setIsFavorite(bool b)
+{
+    isFavorite = b;
+    favoriteButton->setTitle(b ? "Remove from Favorites" : "Add to Favorites");
+    favoriteButton->setDescription(b ? "Remove from Favorites" : "Add to Favorites");
+    favoriteButton->getAccessibilityHandler()->notifyAccessibilityEvent(
+        juce::AccessibilityEvent::titleChanged);
+    repaint();
+}
+
+void PatchSelector::showFavoritesMenu()
+{
+    juce::PopupMenu menu;
+
+    tooltipCountdown = -1;
+    toggleCommentTooltip(false);
+
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FAVORITES");
+
+    auto haveFavs = optionallyAddFavorites(menu, false, false);
+
+    if (haveFavs)
+    {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+        stuckHover = true;
+        menu.showMenuAsync(sge->popupMenuOptions(favoritesRect.getBottomLeft()),
+                           [that = juce::Component::SafePointer(this)](int) {
+                               if (that)
+                               {
+                                   that->stuckHover = false;
+                                   that->endHover();
+                               }
+                           });
+    }
+}
+
+void PatchSelector::toggleFavoriteStatus()
+{
+    setIsFavorite(!isFavorite);
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (sge)
+    {
+        sge->setPatchAsFavorite(pname, isFavorite);
+        repaint();
+    }
+}
 } // namespace Widgets
 } // namespace Surge
