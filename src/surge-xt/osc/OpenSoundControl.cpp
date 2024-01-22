@@ -1042,11 +1042,19 @@ bool OpenSoundControl::sendModulator(ModulationRouting mod, int scene, bool glob
     int offset = global ? 0 : synth->storage.getPatch().scene_start[scene];
     Parameter *p = synth->storage.getPatch().param_ptr[mod.destination_id + offset];
     float val = synth->getModDepth01(p->id, (modsources)mod.source_id, scene, modIndex);
-    return modOSCout(addr, p->oscName, val);
+    // Send mod-to-param mapping and depth
+    if (!modOSCout(addr, p->oscName, val, false))
+        return false;
+    // Now send the mute status for this mapping
+    val = mod.muted ? 1.0 : 0.0;
+    return (modOSCout(addr, p->oscName, val, true));
 }
 
-bool OpenSoundControl::modOSCout(std::string addr, std::string oscName, float val)
+bool OpenSoundControl::modOSCout(std::string addr, std::string oscName, float val, bool reportMute)
 {
+    std::string paramAddr = addr;
+    if (reportMute)
+        paramAddr = addr.insert(4, "/mute");
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
     om.addString(oscName);
     om.addFloat32(val);
@@ -1172,7 +1180,7 @@ void OpenSoundControl::sendMod(long ptag, modsources modsource, int modSourceSce
         [this, ptag, modsource, modSourceScene, index, val, mute]() {
             std::string modOSCaddr = getModulatorOSCAddr(modsource, modSourceScene, index, mute);
             Parameter *param = synth->storage.getPatch().param_ptr[ptag];
-            modOSCout(modOSCaddr, param->get_osc_name(), val);
+            modOSCout(modOSCaddr, param->get_osc_name(), val, false);
         });
 }
 
