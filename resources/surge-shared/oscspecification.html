@@ -1567,15 +1567,15 @@
                     <div class="tablewrap cr cl" style="width: 75%; margin: 16px 8px;">
                          <div class="heading">
                               <h2>Modulation Mapping: Muting</h2>
-                              <h3>Append '/mute' to above modulation mapping address,
-                                   followed by a value of 0 or 1, to mute or unmute that mapping.
-                              </h3>
+                              <p>Replace '/mod...' with '/mod/mute...' in the modulation-to-parameter mapping convention described above,
+                                   using a value of 0 to set muting <b>off</b>, or 1 to set muting <b>on</b>.
+                              </p>
                     
                          </div>
                     </div>
                     <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
-                         <span><code>/mod/b/slfo_1/2/mute 1</code></span>
-                         <span><code>/mod/a/feg/mute 0</code></span>
+                         <span><code>/mod/mute/a/feg /param/a/filter/1/cutoff 0</code></span>
+                         <span><code>/mod/mute/a/feg /param/a/filter/1/cutoff 1</code></span>
                     </div>
                </div>
           </div>
