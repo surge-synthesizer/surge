@@ -358,7 +358,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         ALLNOTESOFF,
         ALLSOUNDOFF,
         MOD,
-        FX_DISABLE
+        FX_DISABLE,
+        MOD_MUTE
     };
 
     struct oscToAudio
@@ -379,6 +380,10 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         oscToAudio(Parameter *p, float f) : type(PARAMETER), param(p), fval(f) {}
         oscToAudio(Parameter *p, int modulator, int sc, int idx, float depth)
             : type(MOD), param(p), ival(modulator), scene(sc), index(idx), fval(depth)
+        {
+        }
+        oscToAudio(Parameter *p, int modulator, int sc, int idx, float depth, bool mute)
+            : type(MOD_MUTE), param(p), ival(modulator), scene(sc), index(idx), fval(depth)
         {
         }
         oscToAudio(float freq, char velocity, bool noteon, int32_t nid)

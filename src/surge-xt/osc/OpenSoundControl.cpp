@@ -706,15 +706,22 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Modulation mapping
     else if (address1 == "mod")
     {
+        bool muteMsg = false;
         if (message.size() < 2)
         {
             sendDataCountError("mod", "2");
             return;
         }
 
+        std::getline(split, address2, '/');
+        if (address2 == "mute")
+        {
+            muteMsg = true;
+            std::getline(split, address2, '/');
+        }
+
         int mscene = 0;
         bool scene_specified = false;
-        std::getline(split, address2, '/');
         if ((address2 == "a") || (address2 == "b"))
         {
             scene_specified = true;
@@ -796,7 +803,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendError("Not a valid modulation.");
             return;
         }
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
+        if (muteMsg)
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth, true));
+        else
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
     }
     if (!synth->audio_processing_active)
     {
