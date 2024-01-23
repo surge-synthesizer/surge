@@ -1718,6 +1718,10 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
     auto des = &(synth->storage.getPatch().dawExtraState);
     auto oscSubMenu = juce::PopupMenu();
 
+    oscSubMenu.addItem("Show OSC Settings Screen",
+                       [this]() { showOverlay(OPEN_SOUND_CONTROL_SETTINGS); });
+    oscSubMenu.addSeparator();
+
     if (storage->oscListenerRunning || storage->oscSending)
     {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Connections"), [this]() {

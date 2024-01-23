@@ -273,6 +273,8 @@ void PatchStoreDialog::onSkinChanged()
                           skin->getColor(Colors::Dialog::Entry::Border));
         typein->setColour(juce::TextEditor::focusedOutlineColourId,
                           skin->getColor(Colors::Dialog::Entry::Border));
+
+        typein->applyColourToAllText(skin->getColor(Colors::Dialog::Entry::Text));
     };
 
     auto resetLabel = [this](const auto &label) {
