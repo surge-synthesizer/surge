@@ -2545,11 +2545,11 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
                     ptag, synth->storage.getPatch().param_ptr[ptag], modsource, current_scene,
                     modsource_index, mci->modValue,
                     synth->isModulationMuted(ptag, modsource, current_scene, modsource_index));
-            }
 
-            for (auto l : synth->modListeners)
-            {
-                l->modBeginEdit(ptag, modsource, current_scene, modsource_index);
+                for (auto l : synth->modListeners)
+                {
+                    l->modBeginEdit(ptag, modsource, current_scene, modsource_index, mci->modValue);
+                }
             }
         }
         else
@@ -2581,9 +2581,13 @@ void SurgeGUIEditor::controlEndEdit(Surge::GUI::IComponentTagValue *control)
     {
         if (mod_editor)
         {
-            for (auto l : synth->modListeners)
+            auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
+            if (mci)
             {
-                l->modEndEdit(ptag, modsource, current_scene, modsource_index);
+                for (auto l : synth->modListeners)
+                {
+                    l->modEndEdit(ptag, modsource, current_scene, modsource_index, mci->modValue);
+                }
             }
         }
         else

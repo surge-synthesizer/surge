@@ -403,8 +403,14 @@ class alignas(16) SurgeSynthesizer
          * is contained in a begin/end and mute and cleared almost definitely will never
          * be wrapped.
          */
-        virtual void modBeginEdit(long ptag, modsources modsource, int modsourceScene, int index) {}
-        virtual void modEndEdit(long ptag, modsources modsource, int modsourceScene, int index) {}
+        virtual void modBeginEdit(long ptag, modsources modsource, int modsourceScene, int index,
+                                  float depth01)
+        {
+        }
+        virtual void modEndEdit(long ptag, modsources modsource, int modsourceScene, int index,
+                                float depth01)
+        {
+        }
     };
     std::set<ModulationAPIListener *> modListeners;
     void addModulationAPIListener(ModulationAPIListener *l) { modListeners.insert(l); }
