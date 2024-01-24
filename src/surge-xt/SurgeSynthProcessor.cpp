@@ -353,7 +353,6 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
                 int diff = ival ^ ival2;
                 if (diff != 0) // should always be true
                 {
-                    // std::string binary = std::bitset<16>(d).to_string(); // to binary
                     unsigned i = 1, pos = 1;
                     while (pos <= n_fx_slots)
                     {
