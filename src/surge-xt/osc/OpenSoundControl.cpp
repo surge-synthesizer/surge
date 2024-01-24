@@ -889,9 +889,6 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
     synth->storage.oscSending = true;
     synth->storage.oscStartOut = true;
 
-#ifdef DEBUG
-    std::cout << "Surge: Sending OSC on port " << port << "." << std::endl;
-#endif
     return true;
 }
 
@@ -1154,11 +1151,14 @@ bool OpenSoundControl::sendParameter(const Parameter *p)
     return true;
 }
 
-// Under construction, but tested as safe!
+// ModulationAPIListener Implementation
+std::atomic<bool> modChanging = false;
+
 void OpenSoundControl::modSet(long ptag, modsources modsource, int modsourceScene, int index,
                               float val, bool isNew)
 {
-    sendMod(ptag, modsource, modsourceScene, index, val, false);
+    if (!modChanging)
+        sendMod(ptag, modsource, modsourceScene, index, val, false);
 }
 
 void OpenSoundControl::modMuted(long ptag, modsources modsource, int modsourceScene, int index,
@@ -1171,6 +1171,19 @@ void OpenSoundControl::modCleared(long ptag, modsources modsource, int modsource
 {
     sendMod(ptag, modsource, modsourceScene, index, 0.0, false);
 }
+
+void OpenSoundControl::modBeginEdit(long ptag, modsources modsource, int modsourceScene, int index,
+                                    float depth01)
+{
+    modChanging = true;
+};
+
+void OpenSoundControl::modEndEdit(long ptag, modsources modsource, int modsourceScene, int index,
+                                  float depth01)
+{
+    modChanging = false;
+    sendMod(ptag, modsource, modsourceScene, index, depth01, false);
+};
 
 void OpenSoundControl::sendMod(long ptag, modsources modsource, int modSourceScene, int index,
                                float val, bool mute)

@@ -330,8 +330,8 @@ void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, bool hasFlo
 }
 
 void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCase,
-                                                 int specialCaseType, int macroNum, float fval,
-                                                 std::string newValue)
+                                                 int specialCaseType, int ival, float fval,
+                                                 std::string newValue, int ival2)
 {
     std::string valStr = "";
     for (auto &it : this->paramChangeListeners)
@@ -343,17 +343,30 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             case SCT_MACRO:
             {
                 std::ostringstream oss;
-                oss << "/param/macro/" << macroNum + 1;
+                oss << "/param/macro/" << ival + 1;
                 (it.second)(oss.str(), true, fval, "");
             }
             break;
 
             case SCT_FX_DEACT:
             {
-                std::ostringstream oss, oss2;
-                oss << "/param/fx/<s>/<n>/deactivate";
-                oss2 << newValue << "(new mask)";
-                (it.second)(oss.str(), true, fval, oss2.str());
+                int diff = ival ^ ival2;
+                if (diff != 0) // should always be true
+                {
+                    // std::string binary = std::bitset<16>(d).to_string(); // to binary
+                    unsigned i = 1, pos = 1;
+                    while (pos <= n_fx_slots)
+                    {
+                        if (i & diff)
+                        {
+                            std::string addr = "/param/" + fxslot_shortoscname[pos] + "/deactivate";
+                            int newVal = (ival2 & i) == 0 ? 0 : 1;
+                            (it.second)(addr, true, (float)newVal, "");
+                        }
+                        i = i << 1;
+                        ++pos;
+                    }
+                }
             }
             break;
 

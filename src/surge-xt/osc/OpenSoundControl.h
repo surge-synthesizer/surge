@@ -78,12 +78,17 @@ class OpenSoundControl : public juce::OSCReceiver,
     void sendAllModulators();
     void stopSending(bool updateOSCStartInStorage = true);
 
-    // Modulation api listener methods
+    // ModulationAPIListener methods
     void modSet(long ptag, modsources modsource, int modsourceScene, int index, float value,
                 bool isNew) override;
     void modMuted(long ptag, modsources modsource, int modsourceScene, int index,
                   bool mute) override;
     void modCleared(long ptag, modsources modsource, int modsourceScene, int index) override;
+    void modBeginEdit(long ptag, modsources modsource, int modsourceScene, int index,
+                      float depth01) override;
+    void modEndEdit(long ptag, modsources modsource, int modsourceScene, int index,
+                    float depth01) override;
+
     bool modOSCout(std::string addr, std::string oscName, float val, bool reportMute);
 
   private:
