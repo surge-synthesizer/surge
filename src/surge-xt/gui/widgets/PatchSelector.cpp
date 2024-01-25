@@ -205,9 +205,8 @@ struct PatchSelector::TB : juce::Component
     {
         return std::make_unique<juce::AccessibilityHandler>(
             *this, juce::AccessibilityRole::button,
-            juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press, [this]() {
-                std::cout << "PRESS EVENT" << std::endl;
-            }));
+            juce::AccessibilityActions().addAction(juce::AccessibilityActionType::press,
+                                                   [this]() {}));
     }
 };
 
@@ -1614,8 +1613,11 @@ void PatchSelector::setIsFavorite(bool b)
     isFavorite = b;
     favoriteButton->setTitle(b ? "Remove from Favorites" : "Add to Favorites");
     favoriteButton->setDescription(b ? "Remove from Favorites" : "Add to Favorites");
-    favoriteButton->getAccessibilityHandler()->notifyAccessibilityEvent(
-        juce::AccessibilityEvent::titleChanged);
+    if (favoriteButton->getAccessibilityHandler())
+    {
+        favoriteButton->getAccessibilityHandler()->notifyAccessibilityEvent(
+            juce::AccessibilityEvent::titleChanged);
+    }
     repaint();
 }
 
