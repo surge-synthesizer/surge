@@ -51,6 +51,7 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     };
 
     inPort = makeEd("In Port");
+    inPort->setJustification(juce::Justification::centred);
     inPort->addListener(this);
     addAndMakeVisible(*inPort);
 
@@ -63,6 +64,7 @@ OpenSoundControlSettings::OpenSoundControlSettings()
 
     outPort = makeEd("Out Port");
     outPort->setText("456 fixme");
+    outPort->setJustification(juce::Justification::centred);
     outPort->addListener(this);
     addAndMakeVisible(*outPort);
 
@@ -75,6 +77,7 @@ OpenSoundControlSettings::OpenSoundControlSettings()
 
     outIP = makeEd("Out IP");
     outIP->setText("780 fixme");
+    outIP->setJustification(juce::Justification::centred);
     outIP->addListener(this);
     addAndMakeVisible(*outIP);
 
@@ -202,34 +205,38 @@ void OpenSoundControlSettings::resized()
     OSCHeader->setBounds(getLocalBounds().withHeight(30).translated(0, 3));
 
     {
-        auto lcol = col.withHeight(uheight).reduced(5, 0);
-        enableIn->setBounds(lcol);
-        lcol = lcol.translated(0, ushift);
+        auto lcol = col.withHeight(uheight);
+        enableIn->setBounds(lcol.translated(30, 0));
 
-        inPortL->setBounds(lcol);
         lcol = lcol.translated(0, ushift);
-        inPort->setBounds(lcol);
-        inPort->setIndents(4, (inPort->getHeight() - inPort->getTextHeight()) / 2);
+        inPortL->setBounds(lcol);
+
+        lcol = lcol.translated(0, ushift);
+        inPort->setBounds(lcol.reduced(36, 0));
+        inPort->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift * 1.25);
-        inPortReset->setBounds(lcol.reduced(20, 5));
+        inPortReset->setBounds(lcol.reduced(40, 5));
     }
 
     col = col.translated(col.getWidth(), 0);
     {
-        auto lcol = col.withHeight(uheight).reduced(5, 0);
-        enableOut->setBounds(lcol);
+        auto lcol = col.withHeight(uheight);
+        enableOut->setBounds(lcol.reduced(30, 0));
+
         lcol = lcol.translated(0, ushift);
         outPortL->setBounds(lcol);
+
         lcol = lcol.translated(0, ushift);
-        outPort->setBounds(lcol);
-        outPort->setIndents(4, (outPort->getHeight() - outPort->getTextHeight()) / 2);
+        outPort->setBounds(lcol.reduced(36, 0));
+        outPort->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift * 1.4);
-        outPortReset->setBounds(lcol.reduced(20, 5));
+        outPortReset->setBounds(lcol.reduced(40, 5));
 
         lcol = lcol.translated(0, ushift);
         ok->setBounds(lcol.withHeight(buttonHeight).translated(0, ushift).withWidth(buttonWidth));
+
         lcol = lcol.translated(buttonWidth * 1.25, 0);
         cancel->setBounds(
             lcol.withHeight(buttonHeight).translated(0, ushift).withWidth(buttonWidth));
@@ -240,25 +247,14 @@ void OpenSoundControlSettings::resized()
         auto lcol = col.withHeight(uheight).reduced(5, 0);
         lcol = lcol.translated(0, ushift);
         outIPL->setBounds(lcol);
+
         lcol = lcol.translated(0, ushift);
-        outIP->setBounds(lcol);
-        outIP->setIndents(4, (outIP->getHeight() - outIP->getTextHeight()) / 2);
+        outIP->setBounds(lcol.reduced(20, 0));
+        outIP->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift * 1.4);
-        outIPReset->setBounds(lcol.reduced(20, 5));
+        outIPReset->setBounds(lcol.reduced(36, 5));
     }
-
-    /*
-        auto buttonRow = getLocalBounds().withHeight(buttonHeight).withY(ce.getY() + (margin2 * 3));
-
-        auto be =
-            buttonRow.withTrimmedLeft(dialogCenter - buttonWidth - margin2).withWidth(buttonWidth);
-        okButton->setBounds(be);
-        be = buttonRow.withTrimmedLeft(dialogCenter + margin2).withWidth(buttonWidth);
-        cancelButton->setBounds(be);
-    */
-
-    // showSpec->setBounds(spec);
 }
 
 void OpenSoundControlSettings::setValuesFromEditor()
@@ -310,47 +306,16 @@ void OpenSoundControlSettings::buttonClicked(juce::Button *button)
     {
         LOG_CALLBACK << "Reset Out IP" << std::endl;
     }
-
-    if (button == showSpec.get())
+    if (button == ok.get())
     {
-        LOG_CALLBACK << "Show Spec" << std::endl;
+    }
+    if (button == cancel.get())
+    {
     }
 }
-
-/** Called when the user presses the return key. */
-void OpenSoundControlSettings::textEditorReturnKeyPressed(juce::TextEditor &ed) {}
 
 /** Called when the user presses the escape key. */
 void OpenSoundControlSettings::textEditorEscapeKeyPressed(juce::TextEditor &ed) {}
-
-/** Called when the text editor loses focus. */
-void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed) {}
-
-void OpenSoundControlSettings::textEditorTextChanged(juce::TextEditor &ed)
-{
-    if (!editor)
-        return;
-
-    if (!storage)
-        return;
-
-    auto synth = editor->synth;
-
-    if (&ed == inPort.get())
-    {
-        LOG_CALLBACK << "inPort changed to '" << inPort->getText() << "'" << std::endl;
-    }
-
-    if (&ed == outPort.get())
-    {
-        LOG_CALLBACK << "outPort changed to '" << outPort->getText() << "'" << std::endl;
-    }
-
-    if (&ed == outIP.get())
-    {
-        LOG_CALLBACK << "outIP changed to '" << outIP->getText() << "'" << std::endl;
-    }
-}
 
 bool OpenSoundControlSettings::validatePort(std::string portStr)
 {
