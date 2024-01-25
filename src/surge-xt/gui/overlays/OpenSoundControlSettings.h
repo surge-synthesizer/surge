@@ -60,10 +60,15 @@ struct OpenSoundControlSettings : public OverlayComponent,
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
     void textEditorTextChanged(juce::TextEditor &) override;
+    void textEditorReturnKeyPressed(juce::TextEditor &) override;
+    void textEditorEscapeKeyPressed(juce::TextEditor &) override;
+    void textEditorFocusLost(juce::TextEditor &) override;
+
+    bool validatePort(std::string portStr);
 
     std::unique_ptr<juce::TextEditor> inPort, outPort, outIP;
     std::unique_ptr<juce::Label> inPortL, outPortL, outIPL;
-    std::unique_ptr<Widgets::SurgeTextButton> inPortReset, outPortReset, outIPReset;
+    std::unique_ptr<Widgets::SurgeTextButton> inPortReset, outPortReset, outIPReset, ok, cancel;
 
     std::unique_ptr<Widgets::SurgeTextButton> showSpec;
     std::unique_ptr<juce::Label> OSCHeader;

@@ -798,6 +798,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
         }
 
+        // PKS TODO: modulator querying
+        if (querying)
+        {
+        }
+
         if (!synth->isValidModulation(p->id, (modsources)modnum))
         {
             sendError("Not a valid modulation.");

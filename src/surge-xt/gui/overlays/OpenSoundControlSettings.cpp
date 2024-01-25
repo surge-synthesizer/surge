@@ -85,6 +85,14 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     outIPReset->addListener(this);
     addAndMakeVisible(*outIPReset);
 
+    ok = std::make_unique<Widgets::SurgeTextButton>("OK");
+    ok->addListener(this);
+    addAndMakeVisible(*ok);
+
+    cancel = std::make_unique<Widgets::SurgeTextButton>("Cancel");
+    cancel->addListener(this);
+    addAndMakeVisible(*cancel);
+
     enableIn = std::make_unique<juce::ToggleButton>("Enable OSC In");
     enableIn->addListener(this);
     addAndMakeVisible(*enableIn);
@@ -175,14 +183,19 @@ void OpenSoundControlSettings::onSkinChanged()
     outPortReset->setSkin(skin, associatedBitmapStore);
     outIPReset->setSkin(skin, associatedBitmapStore);
     showSpec->setSkin(skin, associatedBitmapStore);
+    ok->setSkin(skin, associatedBitmapStore);
+    cancel->setSkin(skin, associatedBitmapStore);
 }
 
 void OpenSoundControlSettings::resized()
 {
 
     // overall size set in SurgeGUIEditorOverlays.cpp when created
-    auto uheight = 25;
+    auto uheight = 30;
     auto ushift = 28;
+    auto buttonHeight = 26;
+    auto buttonWidth = 70;
+
     auto col = getLocalBounds().withTrimmedTop(50).reduced(20, 0);
     col = col.withWidth(col.getWidth() / 3);
 
@@ -192,13 +205,14 @@ void OpenSoundControlSettings::resized()
         auto lcol = col.withHeight(uheight).reduced(5, 0);
         enableIn->setBounds(lcol);
         lcol = lcol.translated(0, ushift);
+
         inPortL->setBounds(lcol);
         lcol = lcol.translated(0, ushift);
         inPort->setBounds(lcol);
         inPort->setIndents(4, (inPort->getHeight() - inPort->getTextHeight()) / 2);
 
-        lcol = lcol.translated(0, ushift);
-        inPortReset->setBounds(lcol);
+        lcol = lcol.translated(0, ushift * 1.25);
+        inPortReset->setBounds(lcol.reduced(20, 5));
     }
 
     col = col.translated(col.getWidth(), 0);
@@ -211,8 +225,14 @@ void OpenSoundControlSettings::resized()
         outPort->setBounds(lcol);
         outPort->setIndents(4, (outPort->getHeight() - outPort->getTextHeight()) / 2);
 
+        lcol = lcol.translated(0, ushift * 1.4);
+        outPortReset->setBounds(lcol.reduced(20, 5));
+
         lcol = lcol.translated(0, ushift);
-        outPortReset->setBounds(lcol);
+        ok->setBounds(lcol.withHeight(buttonHeight).translated(0, ushift).withWidth(buttonWidth));
+        lcol = lcol.translated(buttonWidth * 1.25, 0);
+        cancel->setBounds(
+            lcol.withHeight(buttonHeight).translated(0, ushift).withWidth(buttonWidth));
     }
 
     col = col.translated(col.getWidth(), 0);
@@ -224,12 +244,21 @@ void OpenSoundControlSettings::resized()
         outIP->setBounds(lcol);
         outIP->setIndents(4, (outIP->getHeight() - outIP->getTextHeight()) / 2);
 
-        lcol = lcol.translated(0, ushift);
-        outIPReset->setBounds(lcol);
+        lcol = lcol.translated(0, ushift * 1.4);
+        outIPReset->setBounds(lcol.reduced(20, 5));
     }
 
-    auto spec = getLocalBounds().withHeight(uheight).translated(0, 6 * ushift).reduced(40, 0);
-    showSpec->setBounds(spec);
+    /*
+        auto buttonRow = getLocalBounds().withHeight(buttonHeight).withY(ce.getY() + (margin2 * 3));
+
+        auto be =
+            buttonRow.withTrimmedLeft(dialogCenter - buttonWidth - margin2).withWidth(buttonWidth);
+        okButton->setBounds(be);
+        be = buttonRow.withTrimmedLeft(dialogCenter + margin2).withWidth(buttonWidth);
+        cancelButton->setBounds(be);
+    */
+
+    // showSpec->setBounds(spec);
 }
 
 void OpenSoundControlSettings::setValuesFromEditor()
@@ -288,6 +317,15 @@ void OpenSoundControlSettings::buttonClicked(juce::Button *button)
     }
 }
 
+/** Called when the user presses the return key. */
+void OpenSoundControlSettings::textEditorReturnKeyPressed(juce::TextEditor &ed) {}
+
+/** Called when the user presses the escape key. */
+void OpenSoundControlSettings::textEditorEscapeKeyPressed(juce::TextEditor &ed) {}
+
+/** Called when the text editor loses focus. */
+void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed) {}
+
 void OpenSoundControlSettings::textEditorTextChanged(juce::TextEditor &ed)
 {
     if (!editor)
@@ -312,6 +350,31 @@ void OpenSoundControlSettings::textEditorTextChanged(juce::TextEditor &ed)
     {
         LOG_CALLBACK << "outIP changed to '" << outIP->getText() << "'" << std::endl;
     }
+}
+
+bool OpenSoundControlSettings::validatePort(std::string portStr)
+{
+    int newPort = 0;
+    try
+    {
+        newPort = std::stoi(inPort->getText().toStdString());
+    }
+    catch (...)
+    {
+        std::ostringstream msg;
+        msg << "Entered value is not a number. Please try again!";
+        storage->reportError(msg.str(), "Input Error");
+        return false;
+    }
+
+    if (newPort > 65535 || newPort < 0)
+    {
+        std::ostringstream msg;
+        msg << "Port number must be between 0 and 65535!";
+        storage->reportError(msg.str(), "Port Number Out Of Range");
+        return false;
+    }
+    return true;
 }
 
 } // namespace Overlays
