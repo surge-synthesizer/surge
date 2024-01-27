@@ -39,6 +39,8 @@
 
 #include "lua/LuaSources.h"
 
+#if HAS_LUA
+
 TEST_CASE("Lua Hello World", "[lua]")
 {
     SECTION("Hello World")
@@ -968,3 +970,5 @@ TEST_CASE("Two Surge XTs", "[formula]")
         }
     }
 }
+
+#endif
