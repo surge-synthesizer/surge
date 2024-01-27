@@ -292,10 +292,7 @@ void OpenSoundControlSettings::textEditorReturnKeyPressed(juce::TextEditor &ed) 
 
 void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
 {
-    if (!editor)
-        return;
-
-    if (!storage)
+    if (!editor || !storage)
         return;
 
     std::string newStr = ed.getText().toStdString();
@@ -352,28 +349,13 @@ void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
             }
         }
     }
+    ok->setEnabled(isInputChanged() || isOutputChanged());
 }
 
 void OpenSoundControlSettings::buttonClicked(juce::Button *button)
 {
-    if (!editor)
+    if (!editor || !storage)
         return;
-
-    if (!storage)
-        return;
-
-    auto synth = editor->synth;
-
-    if (button == enableIn.get())
-    {
-        LOG_CALLBACK << "enableIn is now " << (enableIn->getToggleState() ? "on" : "off")
-                     << std::endl;
-    }
-    if (button == enableOut.get())
-    {
-        LOG_CALLBACK << "enableOut is now " << (enableOut->getToggleState() ? "on" : "off")
-                     << std::endl;
-    }
 
     if (button == inPortReset.get())
     {
@@ -392,38 +374,18 @@ void OpenSoundControlSettings::buttonClicked(juce::Button *button)
     }
     if (button == ok.get())
     {
-        // Check both "enable" controls and 3 text fields for any change
-        bool inputChanged = false;
-        bool outputChanged = false;
-        bool curOSCReceiving = enableIn->getToggleState();
-        bool curOSCSending = enableOut->getToggleState();
-        std::string curInPort = inPort->getText().toStdString();
-        std::string curOutPort = outPort->getText().toStdString();
-        std::string curOutIP = outIP->getText().toStdString();
-        SurgeSynthProcessor *ssp = &editor->juceEditor->processor;
-
-        if ((curOSCReceiving != editor->synth->storage.oscReceiving) ||
-            (curInPort != std::to_string(editor->synth->storage.oscPortIn)))
+        if (isInputChanged())
         {
-            inputChanged = true;
+            // enableIn->getToggleState()
         }
-        if ((curOSCSending != editor->synth->storage.oscSending) ||
-            (curOutPort != std::to_string(editor->synth->storage.oscPortOut)) ||
-            (curOutIP != editor->synth->storage.oscOutIP))
+        if (isOutputChanged())
         {
-            outputChanged = true;
-        }
-
-        if (inputChanged)
-        {
-        }
-        if (outputChanged)
-        {
-            int newPort = std::stoi(curOutPort);
-            if (ssp->changeOSCOut(newPort, curOutIP))
+            // enableOut->getToggleState()
+            int newPort = std::stoi(outPort->getText().toStdString());
+            if (ssp->changeOSCOut(newPort, outIP->getText().toStdString()))
             {
                 storage->oscPortOut = newPort;
-                storage->oscOutIP = curOutIP;
+                storage->oscOutIP = outIP->getText().toStdString();
             }
             else
             {
@@ -436,6 +398,21 @@ void OpenSoundControlSettings::buttonClicked(juce::Button *button)
     {
         editor->closeOverlay(SurgeGUIEditor::OPEN_SOUND_CONTROL_SETTINGS);
     }
+    ok->setEnabled(isInputChanged() || isOutputChanged());
+}
+
+bool OpenSoundControlSettings::isInputChanged()
+{
+    return ((enableIn->getToggleState() != editor->synth->storage.oscReceiving) ||
+            (inPort->getText().toStdString() != std::to_string(editor->synth->storage.oscPortIn)));
+}
+
+bool OpenSoundControlSettings::isOutputChanged()
+{
+    return (
+        (enableOut->getToggleState() != editor->synth->storage.oscSending) ||
+        (outPort->getText().toStdString() != std::to_string(editor->synth->storage.oscPortOut)) ||
+        (outIP->getText().toStdString() != editor->synth->storage.oscOutIP));
 }
 
 bool OpenSoundControlSettings::is_number(const std::string &s)
