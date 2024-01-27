@@ -1228,8 +1228,8 @@ void LFOModulationSource::process_block()
 
         if (formulastate.raisedError)
         {
-            auto em = formulastate.error;
-            formulastate.error = "";
+            auto em = *formulastate.error;
+            formulastate.error.reset();
             formulastate.raisedError = false;
             storage->reportError(em, "Formula Evaluator Error");
             std::cout << "ERROR: " << em << std::endl;
