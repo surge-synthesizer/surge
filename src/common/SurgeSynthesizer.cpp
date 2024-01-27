@@ -667,18 +667,35 @@ void SurgeSynthesizer::freeVoice(SurgeVoice *v)
         }
     }
 
+    int foundScene{-1}, foundIndex{-1};
     for (int i = 0; i < MAX_VOICES; i++)
     {
         if (voices_usedby[0][i] && (v == &voices_array[0][i]))
         {
+            assert(foundScene == -1);
+            assert(foundIndex == -1);
+            foundScene = 0;
+            foundIndex = i;
             voices_usedby[0][i] = 0;
         }
         if (voices_usedby[1][i] && (v == &voices_array[1][i]))
         {
+            assert(foundScene == -1);
+            assert(foundIndex == -1);
+            foundScene = 1;
+            foundIndex = i;
             voices_usedby[1][i] = 0;
         }
     }
     v->freeAllocatedElements();
+
+    /*
+     * Call the SurgeVoice destructor here. But since SurgeVoice lives in an
+     * array it will be destroyed on exit also so re-construct it with the
+     * default on the same meory just to be pedantic
+     */
+    v->~SurgeVoice();
+    v = new (&voices_array[foundScene][foundIndex]) SurgeVoice();
 }
 
 void SurgeSynthesizer::notifyEndedNote(int32_t nid, int16_t key, int16_t chan, bool thisBlock)
@@ -805,6 +822,10 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
 
             if (nvoice)
             {
+                // This is a constructed voice which we are going to re-construct
+                // so run the destructor. See also the handling in freeVoice below
+                nvoice->~SurgeVoice();
+
                 int mpeMainChannel = getMpeMainChannel(channel, key);
 
                 voices[scene].push_back(nvoice);

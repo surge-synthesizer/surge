@@ -27,6 +27,7 @@
 #include "StringOps.h"
 #include "LuaSupport.h"
 #include <variant>
+#include <memory>
 
 class SurgeVoice;
 
@@ -70,17 +71,20 @@ struct EvaluatorState
     // patch features
     float macrovalues[n_customcontrollers];
 
-    std::string error;
+    std::unique_ptr<std::string> error;
     bool raisedError = false;
     void adderror(const std::string &msg)
     {
-        error += msg;
+        if (!error)
+            error = std::make_unique<std::string>();
+
+        *error += msg;
         raisedError = true;
     }
 
     int activeoutputs;
 
-    lua_State *L; // This is assigned by prepareForEvaluation to be one per thread
+    lua_State *L{nullptr}; // This is assigned by prepareForEvaluation to be one per thread
 };
 
 void setupStorage(SurgeStorage *s);

@@ -385,7 +385,7 @@ end
     s.tempo = 120;
 
     if (s.raisedError)
-        std::cout << "ERROR: " << s.error << std::endl;
+        std::cout << "ERROR: " << *(s.error) << std::endl;
 #endif
 
     return true;

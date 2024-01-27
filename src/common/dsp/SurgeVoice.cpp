@@ -133,7 +133,20 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, bool isMpeEnabled
     return res;
 }
 
-SurgeVoice::SurgeVoice() {}
+// This is super useful for debugging placement new issues. Please leave it here until
+// we stabilize 1.3.1 at least
+// #define VOICE_LIFETIME_DEBUG 1
+#ifdef VOICE_LIFETIME_DEBUG
+int voiceCDCount{0};
+#endif
+
+SurgeVoice::SurgeVoice()
+{
+#ifdef VOICE_LIFETIME_DEBUG
+    voiceCDCount++;
+    std::cout << "Calling SurgeVoice CTOR NoArg " << voiceCDCount << std::endl;
+#endif
+}
 
 SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *params, int key,
                        int velocity, int channel, int scene_id, float detune,
@@ -143,6 +156,10 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
                        float fegStart)
 //: fb(storage,oscene)
 {
+#ifdef VOICE_LIFETIME_DEBUG
+    voiceCDCount++;
+    std::cout << "Calling SurgeVoice CTOR FullArg " << voiceCDCount << std::endl;
+#endif
     // assign pointers
     this->storage = storage;
     this->scene = oscene;
@@ -362,7 +379,13 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     switch_toggled();
 }
 
-SurgeVoice::~SurgeVoice() {}
+SurgeVoice::~SurgeVoice()
+{
+#ifdef VOICE_LIFETIME_DEBUG
+    voiceCDCount--;
+    std::cout << "Calling SurgeVoice DTOR " << voiceCDCount << std::endl;
+#endif
+}
 
 void SurgeVoice::legato(int key, int velocity, char detune)
 {
