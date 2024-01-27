@@ -248,7 +248,7 @@ bool SurgeSynthProcessor::initOSCIn(int port)
 
     auto state = oscHandler.initOSCIn(port);
 
-    surge->storage.oscListenerRunning = state;
+    surge->storage.oscReceiving = state;
     surge->storage.oscStartIn = true;
 
     return state;
@@ -258,7 +258,7 @@ bool SurgeSynthProcessor::changeOSCInPort(int new_port)
 {
     if (oscHandler.listening)
     {
-        surge->storage.oscListenerRunning = false;
+        surge->storage.oscReceiving = false;
         oscHandler.stopListening();
     }
 

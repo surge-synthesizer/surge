@@ -1722,7 +1722,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                        [this]() { showOverlay(OPEN_SOUND_CONTROL_SETTINGS); });
     oscSubMenu.addSeparator();
 
-    if (storage->oscListenerRunning || storage->oscSending)
+    if (storage->oscReceiving || storage->oscSending)
     {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Connections"), [this]() {
             juceEditor->processor.oscHandler.stopListening();

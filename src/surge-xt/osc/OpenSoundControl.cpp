@@ -105,7 +105,7 @@ bool OpenSoundControl::initOSCIn(int port)
         addListener(this);
         listening = true;
         iportnum = port;
-        synth->storage.oscListenerRunning = true;
+        synth->storage.oscReceiving = true;
         synth->storage.oscStartIn = true;
 
 #ifdef DEBUG
@@ -129,7 +129,7 @@ void OpenSoundControl::stopListening(bool updateOSCStartInStorage)
 
     if (synth)
     {
-        synth->storage.oscListenerRunning = false;
+        synth->storage.oscReceiving = false;
 
         if (updateOSCStartInStorage)
         {
