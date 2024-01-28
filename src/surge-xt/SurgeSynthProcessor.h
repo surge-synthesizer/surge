@@ -418,7 +418,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     };
 
     void paramChangeToListeners(Parameter *p, bool isSpecialCase = false, int specialCaseType = -1,
-                                int macronum = 0, float fval = 0.0, std::string newValue = "");
+                                int ival = 0, float fval = 0.0, std::string newValue = "",
+                                int ival2 = 0);
 
     // --- 'param change' listener(s) ----
     // Listeners are notified whenever a parameter finishes changing, along with the new value.

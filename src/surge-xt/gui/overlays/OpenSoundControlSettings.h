@@ -25,6 +25,7 @@
 
 #include "SkinSupport.h"
 #include "SurgeStorage.h"
+#include "SurgeSynthProcessor.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "OverlayComponent.h"
@@ -57,15 +58,30 @@ struct OpenSoundControlSettings : public OverlayComponent,
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s);
 
+    int defaultOSCInPort;
+    int defaultOSCOutPort;
+    std::string defaultOSCOutIP;
+
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
-    void textEditorTextChanged(juce::TextEditor &) override;
+
+    void textEditorEscapeKeyPressed(juce::TextEditor &) override;
+    void textEditorReturnKeyPressed(juce::TextEditor &) override;
+    void textEditorFocusLost(juce::TextEditor &) override;
+
+    bool isInputChanged();
+    bool isOutputChanged();
+    bool is_number(const std::string &s);
+    void enableOKforChanges();
+
+    int validPort(std::string portStr, std::string type);
+    bool validateIPString(std::string ipStr);
 
     std::unique_ptr<juce::TextEditor> inPort, outPort, outIP;
     std::unique_ptr<juce::Label> inPortL, outPortL, outIPL;
-    std::unique_ptr<Widgets::SurgeTextButton> inPortReset, outPortReset, outIPReset;
+    std::unique_ptr<Widgets::SurgeTextButton> inPortReset, outPortReset, outIPReset, ok, cancel;
 
-    std::unique_ptr<Widgets::SurgeTextButton> showSpec;
+    // std::unique_ptr<Widgets::SurgeTextButton> showSpec;
     std::unique_ptr<juce::Label> OSCHeader;
 
     std::unique_ptr<juce::ToggleButton> enableOut, enableIn;

@@ -23,10 +23,13 @@
 #include "OpenSoundControlSettings.h"
 #include "RuntimeFont.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeSynthEditor.h"
+#include "SurgeSynthProcessor.h"
 #include "SurgeGUIUtils.h"
 #include "widgets/TypeAheadTextEditor.h"
 #include "widgets/SurgeTextButton.h"
 #include "AccessibleHelpers.h"
+#include <regex>
 
 namespace Surge
 {
@@ -51,39 +54,49 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     };
 
     inPort = makeEd("In Port");
+    inPort->setJustification(juce::Justification::centred);
     inPort->addListener(this);
     addAndMakeVisible(*inPort);
 
     inPortL = std::make_unique<juce::Label>("In Port", "In Port");
     addAndMakeVisible(*inPortL);
 
-    inPortReset = std::make_unique<Widgets::SurgeTextButton>("Reset In Port");
+    inPortReset = std::make_unique<Widgets::SurgeTextButton>("Reset to Default");
     inPortReset->addListener(this);
     addAndMakeVisible(*inPortReset);
 
     outPort = makeEd("Out Port");
-    outPort->setText("456 fixme");
+    outPort->setJustification(juce::Justification::centred);
     outPort->addListener(this);
     addAndMakeVisible(*outPort);
 
     outPortL = std::make_unique<juce::Label>("Out Port", "Out Port");
     addAndMakeVisible(*outPortL);
 
-    outPortReset = std::make_unique<Widgets::SurgeTextButton>("Reset Out Port");
+    outPortReset = std::make_unique<Widgets::SurgeTextButton>("Reset to Default");
     outPortReset->addListener(this);
     addAndMakeVisible(*outPortReset);
 
     outIP = makeEd("Out IP");
-    outIP->setText("780 fixme");
+    outIP->setJustification(juce::Justification::centred);
     outIP->addListener(this);
     addAndMakeVisible(*outIP);
 
     outIPL = std::make_unique<juce::Label>("Out IP", "Out IP");
     addAndMakeVisible(*outIPL);
 
-    outIPReset = std::make_unique<Widgets::SurgeTextButton>("Reset IP");
+    outIPReset = std::make_unique<Widgets::SurgeTextButton>("Reset to Default");
     outIPReset->addListener(this);
     addAndMakeVisible(*outIPReset);
+
+    ok = std::make_unique<Widgets::SurgeTextButton>("OK");
+    ok->addListener(this);
+    ok->setEnabled(false);
+    addAndMakeVisible(*ok);
+
+    cancel = std::make_unique<Widgets::SurgeTextButton>("Cancel");
+    cancel->addListener(this);
+    addAndMakeVisible(*cancel);
 
     enableIn = std::make_unique<juce::ToggleButton>("Enable OSC In");
     enableIn->addListener(this);
@@ -93,9 +106,11 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     enableOut->addListener(this);
     addAndMakeVisible(*enableOut);
 
+    /*
     showSpec = std::make_unique<Widgets::SurgeTextButton>("Show Open Sound Control Spec");
     showSpec->addListener(this);
     addAndMakeVisible(*showSpec);
+    */
 
     OSCHeader = std::make_unique<juce::Label>("OSC Header", "Open Sound Control Settings");
     OSCHeader->setJustificationType(juce::Justification::centredTop);
@@ -104,7 +119,16 @@ OpenSoundControlSettings::OpenSoundControlSettings()
 
 OpenSoundControlSettings::~OpenSoundControlSettings() = default;
 
-void OpenSoundControlSettings::setStorage(SurgeStorage *s) { storage = s; }
+void OpenSoundControlSettings::setStorage(SurgeStorage *s)
+{
+    storage = s;
+    defaultOSCInPort = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::OSCPortIn,
+                                                           DEFAULT_OSC_PORT_IN);
+    defaultOSCOutPort = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::OSCPortOut,
+                                                            DEFAULT_OSC_PORT_OUT);
+    defaultOSCOutIP = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::OSCIPOut,
+                                                          DEFAULT_OSC_IPADDR_OUT);
+}
 
 void OpenSoundControlSettings::paint(juce::Graphics &g)
 {
@@ -174,45 +198,60 @@ void OpenSoundControlSettings::onSkinChanged()
     inPortReset->setSkin(skin, associatedBitmapStore);
     outPortReset->setSkin(skin, associatedBitmapStore);
     outIPReset->setSkin(skin, associatedBitmapStore);
-    showSpec->setSkin(skin, associatedBitmapStore);
+    // showSpec->setSkin(skin, associatedBitmapStore);
+    ok->setSkin(skin, associatedBitmapStore);
+    cancel->setSkin(skin, associatedBitmapStore);
 }
 
 void OpenSoundControlSettings::resized()
 {
-
     // overall size set in SurgeGUIEditorOverlays.cpp when created
-    auto uheight = 25;
+    auto uheight = 30;
     auto ushift = 28;
+    auto buttonHeight = 26;
+    auto buttonWidth = 70;
+
     auto col = getLocalBounds().withTrimmedTop(50).reduced(20, 0);
     col = col.withWidth(col.getWidth() / 3);
 
     OSCHeader->setBounds(getLocalBounds().withHeight(30).translated(0, 3));
 
     {
-        auto lcol = col.withHeight(uheight).reduced(5, 0);
-        enableIn->setBounds(lcol);
-        lcol = lcol.translated(0, ushift);
-        inPortL->setBounds(lcol);
-        lcol = lcol.translated(0, ushift);
-        inPort->setBounds(lcol);
-        inPort->setIndents(4, (inPort->getHeight() - inPort->getTextHeight()) / 2);
+        auto lcol = col.withHeight(uheight);
+        enableIn->setBounds(lcol.translated(30, 0));
 
         lcol = lcol.translated(0, ushift);
-        inPortReset->setBounds(lcol);
+        inPortL->setBounds(lcol);
+
+        lcol = lcol.translated(0, ushift);
+        inPort->setBounds(lcol.reduced(36, 0));
+        inPort->setIndents(4, 0);
+
+        lcol = lcol.translated(0, ushift * 1.1);
+        inPortReset->setBounds(lcol.reduced(40, 8));
     }
 
     col = col.translated(col.getWidth(), 0);
     {
-        auto lcol = col.withHeight(uheight).reduced(5, 0);
-        enableOut->setBounds(lcol);
-        lcol = lcol.translated(0, ushift);
-        outPortL->setBounds(lcol);
-        lcol = lcol.translated(0, ushift);
-        outPort->setBounds(lcol);
-        outPort->setIndents(4, (outPort->getHeight() - outPort->getTextHeight()) / 2);
+        auto lcol = col.withHeight(uheight);
+        enableOut->setBounds(lcol.reduced(30, 0));
 
         lcol = lcol.translated(0, ushift);
-        outPortReset->setBounds(lcol);
+        outPortL->setBounds(lcol);
+
+        lcol = lcol.translated(0, ushift);
+        outPort->setBounds(lcol.reduced(36, 0));
+        outPort->setIndents(4, 0);
+
+        lcol = lcol.translated(0, ushift * 1.1);
+        outPortReset->setBounds(lcol.reduced(40, 8));
+
+        lcol = lcol.translated(0, ushift);
+        ok->setBounds(lcol.withHeight(buttonHeight).translated(0, ushift).withWidth(buttonWidth));
+
+        lcol = lcol.translated(buttonWidth * 1.25, 0);
+        cancel->setBounds(
+            lcol.withHeight(buttonHeight).translated(0, ushift).withWidth(buttonWidth));
     }
 
     col = col.translated(col.getWidth(), 0);
@@ -220,16 +259,14 @@ void OpenSoundControlSettings::resized()
         auto lcol = col.withHeight(uheight).reduced(5, 0);
         lcol = lcol.translated(0, ushift);
         outIPL->setBounds(lcol);
-        lcol = lcol.translated(0, ushift);
-        outIP->setBounds(lcol);
-        outIP->setIndents(4, (outIP->getHeight() - outIP->getTextHeight()) / 2);
 
         lcol = lcol.translated(0, ushift);
-        outIPReset->setBounds(lcol);
+        outIP->setBounds(lcol.reduced(20, 0));
+        outIP->setIndents(4, 0);
+
+        lcol = lcol.translated(0, ushift * 1.1);
+        outIPReset->setBounds(lcol.reduced(36, 8));
     }
-
-    auto spec = getLocalBounds().withHeight(uheight).translated(0, 6 * ushift).reduced(40, 0);
-    showSpec->setBounds(spec);
 }
 
 void OpenSoundControlSettings::setValuesFromEditor()
@@ -237,81 +274,220 @@ void OpenSoundControlSettings::setValuesFromEditor()
     if (!editor)
         return;
 
-    enableIn->setToggleState(editor->synth->storage.oscListenerRunning, juce::dontSendNotification);
+    enableIn->setToggleState(editor->synth->storage.oscReceiving, juce::dontSendNotification);
     enableOut->setToggleState(editor->synth->storage.oscSending, juce::dontSendNotification);
 
     inPort->setText(std::to_string(editor->synth->storage.oscPortIn), juce::dontSendNotification);
+    inPortReset->setEnabled(editor->synth->storage.oscPortIn != defaultOSCInPort);
+
     outPort->setText(std::to_string(editor->synth->storage.oscPortOut), juce::dontSendNotification);
     outIP->setText(editor->synth->storage.oscOutIP, juce::dontSendNotification);
+    outPortReset->setEnabled(editor->synth->storage.oscPortOut != defaultOSCOutPort);
+    outIPReset->setEnabled(editor->synth->storage.oscOutIP != defaultOSCOutIP);
 }
 
 #define LOG_CALLBACK std::cout << "OpenSoundControlSettings.cpp:" << __LINE__ << " "
 
-void OpenSoundControlSettings::buttonClicked(juce::Button *button)
+void OpenSoundControlSettings::textEditorEscapeKeyPressed(juce::TextEditor &ed) {}
+void OpenSoundControlSettings::textEditorReturnKeyPressed(juce::TextEditor &ed) {}
+
+void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
 {
-    if (!editor)
+    if (!editor || !storage)
         return;
 
-    if (!storage)
-        return;
-
-    auto synth = editor->synth;
-
-    if (button == enableIn.get())
-    {
-        LOG_CALLBACK << "enableIn is now " << (enableIn->getToggleState() ? "on" : "off")
-                     << std::endl;
-    }
-    if (button == enableOut.get())
-    {
-        LOG_CALLBACK << "enableOut is now " << (enableOut->getToggleState() ? "on" : "off")
-                     << std::endl;
-    }
-
-    if (button == inPortReset.get())
-    {
-        LOG_CALLBACK << "Reset IN Port" << std::endl;
-        // probably want to do something like set it up then setValuesFromEditor() after you do here
-    }
-    if (button == outPortReset.get())
-    {
-        LOG_CALLBACK << "Reset Out Port" << std::endl;
-    }
-    if (button == outIPReset.get())
-    {
-        LOG_CALLBACK << "Reset Out IP" << std::endl;
-    }
-
-    if (button == showSpec.get())
-    {
-        LOG_CALLBACK << "Show Spec" << std::endl;
-    }
-}
-
-void OpenSoundControlSettings::textEditorTextChanged(juce::TextEditor &ed)
-{
-    if (!editor)
-        return;
-
-    if (!storage)
-        return;
-
-    auto synth = editor->synth;
-
+    std::string newStr = ed.getText().toStdString();
     if (&ed == inPort.get())
     {
-        LOG_CALLBACK << "inPort changed to '" << inPort->getText() << "'" << std::endl;
+        if (newStr != std::to_string(editor->synth->storage.oscPortIn))
+        {
+            int newPort = validPort(newStr, "input");
+            if (newPort > 0)
+            {
+                inPortReset->setEnabled(newPort != defaultOSCInPort);
+            }
+            else
+            {
+                ed.setText(std::to_string(editor->synth->storage.oscPortIn),
+                           juce::dontSendNotification);
+            }
+        }
     }
 
     if (&ed == outPort.get())
     {
-        LOG_CALLBACK << "outPort changed to '" << outPort->getText() << "'" << std::endl;
+        if (newStr != std::to_string(editor->synth->storage.oscPortOut))
+        {
+            int newPort = validPort(newStr, "output");
+            if (newPort > 0)
+            {
+                outPortReset->setEnabled(newPort != defaultOSCOutPort);
+            }
+            else
+            {
+                ed.setText(std::to_string(editor->synth->storage.oscPortOut),
+                           juce::dontSendNotification);
+            }
+        }
     }
 
     if (&ed == outIP.get())
     {
-        LOG_CALLBACK << "outIP changed to '" << outIP->getText() << "'" << std::endl;
+        if (newStr != editor->synth->storage.oscOutIP)
+        {
+            if (validateIPString(newStr))
+            {
+                outIPReset->setEnabled(newStr != defaultOSCOutIP);
+            }
+            else
+            {
+                ed.setText(editor->synth->storage.oscOutIP, juce::dontSendNotification);
+            }
+        }
     }
+    ok->setEnabled(isInputChanged() || isOutputChanged());
+}
+
+void OpenSoundControlSettings::buttonClicked(juce::Button *button)
+{
+    if (!editor || !storage)
+        return;
+
+    if (button == inPortReset.get())
+    {
+        inPortReset->setEnabled(false);
+        inPort->setText(std::to_string(defaultOSCInPort), juce::dontSendNotification);
+    }
+    if (button == outPortReset.get())
+    {
+        outPortReset->setEnabled(false);
+        outPort->setText(std::to_string(defaultOSCOutPort), juce::dontSendNotification);
+    }
+    if (button == outIPReset.get())
+    {
+        outIPReset->setEnabled(false);
+        outIP->setText(defaultOSCOutIP, juce::dontSendNotification);
+    }
+    if (button == ok.get())
+    {
+        SurgeSynthProcessor *ssp = &editor->juceEditor->processor;
+        bool allgood = true;
+
+        if (isInputChanged())
+        {
+            int newPort = std::stoi(inPort->getText().toStdString());
+            if (enableIn->getToggleState())
+            {
+                // This call starts OSC in, if necessary:
+                if (ssp->changeOSCInPort(newPort))
+                {
+                    storage->oscPortIn = newPort;
+                    storage->oscReceiving = true;
+                }
+                else
+                {
+                    ssp->initOSCError(newPort);
+                    allgood = false;
+                }
+            }
+            else
+            {
+                ssp->oscHandler.stopListening();
+                storage->oscPortIn = newPort;
+                storage->oscReceiving = false;
+            }
+        }
+        if (isOutputChanged())
+        {
+            int newPort = std::stoi(outPort->getText().toStdString());
+            if (enableOut->getToggleState())
+            {
+                if (ssp->changeOSCOut(newPort, outIP->getText().toStdString()))
+                {
+                    storage->oscPortOut = newPort;
+                    storage->oscOutIP = outIP->getText().toStdString();
+                    storage->oscSending = true;
+                }
+                else
+                {
+                    ssp->initOSCError(newPort);
+                    allgood = false;
+                }
+            }
+            else
+            {
+                ssp->stopOSCOut();
+                storage->oscPortOut = newPort;
+                storage->oscSending = false;
+            }
+        }
+        if (allgood)
+            editor->closeOverlay(SurgeGUIEditor::OPEN_SOUND_CONTROL_SETTINGS);
+    }
+
+    if (button == cancel.get())
+    {
+        editor->closeOverlay(SurgeGUIEditor::OPEN_SOUND_CONTROL_SETTINGS);
+    }
+    ok->setEnabled(isInputChanged() || isOutputChanged());
+}
+
+bool OpenSoundControlSettings::isInputChanged()
+{
+    return ((enableIn->getToggleState() != editor->synth->storage.oscReceiving) ||
+            (inPort->getText().toStdString() != std::to_string(editor->synth->storage.oscPortIn)));
+}
+
+bool OpenSoundControlSettings::isOutputChanged()
+{
+    return (
+        (enableOut->getToggleState() != editor->synth->storage.oscSending) ||
+        (outPort->getText().toStdString() != std::to_string(editor->synth->storage.oscPortOut)) ||
+        (outIP->getText().toStdString() != editor->synth->storage.oscOutIP));
+}
+
+bool OpenSoundControlSettings::is_number(const std::string &s)
+{
+    return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
+}
+
+// Returns new port integer value if portStr is valid, otherwise returns 0
+int OpenSoundControlSettings::validPort(std::string portStr, std::string type)
+{
+    int newPort = 0;
+    if (!is_number(portStr))
+    {
+        std::ostringstream msg;
+        msg << "Value for " << type << " port number must be a valid number between 1 and 65535!";
+        storage->reportError(msg.str(), "Port Number Error");
+        return 0;
+    }
+    newPort = std::stoi(portStr);
+
+    if (newPort > 65535 || newPort < 1)
+    {
+        std::ostringstream msg;
+        msg << "Value for " << type << " port number must be between 1 and 65535!";
+        storage->reportError(msg.str(), "Port Number Error");
+        return 0;
+    }
+    return newPort;
+}
+
+bool OpenSoundControlSettings::validateIPString(std::string ipStr)
+{
+    // regular expression pattern for an IPv4 address
+    std::regex ipPattern("^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\\.(?!$)|$)){4}$");
+    // Use regex_match to check if the input string matches the pattern
+    if (!std::regex_match(ipStr, ipPattern))
+    {
+        storage->reportError("Please enter a valid IPv4 address, which consists of "
+                             "four numbers between 0 and 255,\n"
+                             "separated by periods.",
+                             "IP Address Error");
+        return false;
+    }
+    return true;
 }
 
 } // namespace Overlays

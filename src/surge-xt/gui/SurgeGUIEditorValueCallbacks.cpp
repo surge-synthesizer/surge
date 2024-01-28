@@ -3040,7 +3040,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
 
 #if SURGE_HAS_OSC
-            if (synth->storage.oscListenerRunning)
+            if (synth->storage.oscReceiving)
             {
                 contextMenu.addSeparator();
 
@@ -3697,10 +3697,8 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
 
         if (d != cur_bitmask)
         {
-            // Send changed value of mask to OSC out
-            std::string binary = std::bitset<16>(d).to_string(); // to binary
             juceEditor->processor.paramChangeToListeners(
-                nullptr, true, juceEditor->processor.SCT_FX_DEACT, 0, (float)d, binary);
+                nullptr, true, juceEditor->processor.SCT_FX_DEACT, cur_bitmask, 0.0, "", d);
         }
 
         synth->storage.getPatch().fx_disable.val.i = d;
