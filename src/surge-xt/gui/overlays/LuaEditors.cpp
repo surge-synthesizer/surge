@@ -847,38 +847,16 @@ void FormulaModulatorEditor::showPreludeCode()
 
 void FormulaModulatorEditor::escapeKeyPressed()
 {
-    auto pcm = getPreCloseChickenBoxMessage();
-    if (pcm.has_value())
+    auto c = getParentComponent();
+    while (c)
     {
-        auto pcp = *pcm;
-        auto cb = [this]() {
-            auto c = getParentComponent();
-            while (c)
-            {
-                if (auto olw = dynamic_cast<OverlayWrapper *>(c))
-                {
-                    olw->onClose();
-                    return;
-                }
-            }
-        };
-        auto nocb = [this]() { grabKeyboardFocus(); };
-
-        editor->alertYesNo(pcp.first, pcp.second, cb, nocb);
-    }
-    else
-    {
-        auto c = getParentComponent();
-        while (c)
+        if (auto olw = dynamic_cast<OverlayWrapper *>(c))
         {
-            if (auto olw = dynamic_cast<OverlayWrapper *>(c))
-            {
-                olw->onClose();
-                return;
-            }
+            olw->onClose();
+            return;
         }
+        c = c->getParentComponent();
     }
-    return;
 }
 
 std::optional<std::pair<std::string, std::string>>
