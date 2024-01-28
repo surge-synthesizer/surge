@@ -57,7 +57,7 @@ void SurgeTextButton::paint(juce::Graphics &g)
 
     if (!isEn)
     {
-        // fg = juce::Colour(skin->getColor(clr::DeactivatedText));
+        fg = fg.withAlpha(0.5f);
     }
     else if (isPr)
     {
