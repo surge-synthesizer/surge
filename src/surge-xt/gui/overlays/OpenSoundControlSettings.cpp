@@ -464,7 +464,7 @@ int OpenSoundControlSettings::validPort(std::string portStr, std::string type)
     }
     newPort = std::stoi(portStr);
 
-    if (newPort > 65535 || newPort < 0)
+    if (newPort > 65535 || newPort < 1)
     {
         std::ostringstream msg;
         msg << "Value for " << type << " port number must be between 1 and 65535!";
