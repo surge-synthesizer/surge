@@ -98,6 +98,8 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 
     void escapeKeyPressed();
 
+    void updateDebugger();
+
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
     SurgeGUIEditor *editor{nullptr};

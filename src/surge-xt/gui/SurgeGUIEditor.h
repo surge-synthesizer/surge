@@ -291,6 +291,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     float initialZoomFactor = 100;
 
     int patchCountdown = -1;
+    int formulaDebugCounter = 0;
 
   public:
     void populateDawExtraState(SurgeSynthesizer *synth);

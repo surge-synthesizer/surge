@@ -779,14 +779,19 @@ void FormulaModulatorEditor::applyCode()
     editor->undoManager()->pushFormula(scene, lfo_id, *formulastorage);
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     storage->getPatch().isDirty = true;
+    updateDebugger();
+    juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
+    setApplyEnabled(false);
+    mainEditor->grabKeyboardFocus();
+}
+
+void FormulaModulatorEditor::updateDebugger()
+{
     if (debugPanel->isOpen)
     {
         debugPanel->initializeLfoDebugger();
     }
     editor->repaintFrame();
-    juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
-    setApplyEnabled(false);
-    mainEditor->grabKeyboardFocus();
 }
 
 void FormulaModulatorEditor::forceRefresh()
