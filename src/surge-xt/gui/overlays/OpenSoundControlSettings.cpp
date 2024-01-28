@@ -63,7 +63,6 @@ OpenSoundControlSettings::OpenSoundControlSettings()
 
     inPortReset = std::make_unique<Widgets::SurgeTextButton>("Reset to Default");
     inPortReset->addListener(this);
-    inPortReset->setEnabled(false);
     addAndMakeVisible(*inPortReset);
 
     outPort = makeEd("Out Port");
@@ -76,7 +75,6 @@ OpenSoundControlSettings::OpenSoundControlSettings()
 
     outPortReset = std::make_unique<Widgets::SurgeTextButton>("Reset to Default");
     outPortReset->addListener(this);
-    outPortReset->setEnabled(false);
     addAndMakeVisible(*outPortReset);
 
     outIP = makeEd("Out IP");
@@ -89,7 +87,6 @@ OpenSoundControlSettings::OpenSoundControlSettings()
 
     outIPReset = std::make_unique<Widgets::SurgeTextButton>("Reset to Default");
     outIPReset->addListener(this);
-    outIPReset->setEnabled(false);
     addAndMakeVisible(*outIPReset);
 
     ok = std::make_unique<Widgets::SurgeTextButton>("OK");
@@ -281,8 +278,12 @@ void OpenSoundControlSettings::setValuesFromEditor()
     enableOut->setToggleState(editor->synth->storage.oscSending, juce::dontSendNotification);
 
     inPort->setText(std::to_string(editor->synth->storage.oscPortIn), juce::dontSendNotification);
+    inPortReset->setEnabled(editor->synth->storage.oscPortIn != defaultOSCInPort);
+
     outPort->setText(std::to_string(editor->synth->storage.oscPortOut), juce::dontSendNotification);
     outIP->setText(editor->synth->storage.oscOutIP, juce::dontSendNotification);
+    outPortReset->setEnabled(editor->synth->storage.oscPortOut != defaultOSCOutPort);
+    outIPReset->setEnabled(editor->synth->storage.oscOutIP != defaultOSCOutIP);
 }
 
 #define LOG_CALLBACK std::cout << "OpenSoundControlSettings.cpp:" << __LINE__ << " "
@@ -374,24 +375,59 @@ void OpenSoundControlSettings::buttonClicked(juce::Button *button)
     }
     if (button == ok.get())
     {
+        SurgeSynthProcessor *ssp = &editor->juceEditor->processor;
+        bool allgood = true;
+
         if (isInputChanged())
         {
-            // enableIn->getToggleState()
-        }
-        if (isOutputChanged())
-        {
-            // enableOut->getToggleState()
-            int newPort = std::stoi(outPort->getText().toStdString());
-            if (ssp->changeOSCOut(newPort, outIP->getText().toStdString()))
+            int newPort = std::stoi(inPort->getText().toStdString());
+            if (enableIn->getToggleState())
             {
-                storage->oscPortOut = newPort;
-                storage->oscOutIP = outIP->getText().toStdString();
+                // This call starts OSC in, if necessary:
+                if (ssp->changeOSCInPort(newPort))
+                {
+                    storage->oscPortIn = newPort;
+                    storage->oscReceiving = true;
+                }
+                else
+                {
+                    ssp->initOSCError(newPort);
+                    allgood = false;
+                }
             }
             else
             {
-                ssp->initOSCError(newPort);
+                ssp->oscHandler.stopListening();
+                storage->oscPortIn = newPort;
+                storage->oscReceiving = false;
             }
         }
+        if (isOutputChanged())
+        {
+            int newPort = std::stoi(outPort->getText().toStdString());
+            if (enableOut->getToggleState())
+            {
+                if (ssp->changeOSCOut(newPort, outIP->getText().toStdString()))
+                {
+                    storage->oscPortOut = newPort;
+                    storage->oscOutIP = outIP->getText().toStdString();
+                    storage->oscSending = true;
+                }
+                else
+                {
+                    ssp->initOSCError(newPort);
+                    allgood = false;
+                }
+            }
+            else
+            {
+                ssp->stopOSCOut();
+                storage->oscPortOut = newPort;
+                storage->oscSending = false;
+            }
+        }
+        if (allgood)
+            editor->closeOverlay(SurgeGUIEditor::OPEN_SOUND_CONTROL_SETTINGS);
     }
 
     if (button == cancel.get())

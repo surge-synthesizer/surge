@@ -56,7 +56,6 @@ struct OpenSoundControlSettings : public OverlayComponent,
     void setSurgeGUIEditor(SurgeGUIEditor *e);
 
     SurgeStorage *storage{nullptr};
-    SurgeSynthProcessor *ssp{nullptr};
     void setStorage(SurgeStorage *s);
 
     int defaultOSCInPort;
