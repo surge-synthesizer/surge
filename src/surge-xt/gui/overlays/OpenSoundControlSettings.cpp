@@ -304,7 +304,6 @@ void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
             int newPort = validPort(newStr, "input");
             if (newPort > 0)
             {
-                ok->setEnabled(true);
                 inPortReset->setEnabled(newPort != defaultOSCInPort);
             }
             else
@@ -322,7 +321,6 @@ void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
             int newPort = validPort(newStr, "output");
             if (newPort > 0)
             {
-                ok->setEnabled(true);
                 outPortReset->setEnabled(newPort != defaultOSCOutPort);
             }
             else
@@ -339,10 +337,7 @@ void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
         {
             if (validateIPString(newStr))
             {
-                ok->setEnabled(true);
-                {
-                    outIPReset->setEnabled(newStr != defaultOSCOutIP);
-                }
+                outIPReset->setEnabled(newStr != defaultOSCOutIP);
             }
             else
             {
