@@ -745,17 +745,10 @@ void SurgeGUIEditor::idle()
             overlaysForNextIdle.clear();
         }
 
-        formulaDebugCounter += 1;
-        formulaDebugCounter %= 30;
-
-        if (formulaDebugCounter == 0)
+        auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(FORMULA_EDITOR);
+        if (ol)
         {
-            auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(FORMULA_EDITOR);
-
-            if (ol)
-            {
-                ol->updateDebugger();
-            }
+            ol->updateDebuggerIfNeeded();
         }
 
         if (synth->storage.getPatch()

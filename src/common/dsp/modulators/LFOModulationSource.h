@@ -107,8 +107,10 @@ class LFOModulationSource : public ModulationSource
     StepSequencerStorage *ss;
     MSEGStorage *ms;
 
+  public:
     FormulaModulatorStorage *fs;
 
+  private:
     float output_multi[Surge::Formula::max_formula_outputs];
 
   public:

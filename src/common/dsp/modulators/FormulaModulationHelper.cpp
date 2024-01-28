@@ -436,7 +436,8 @@ bool initEvaluatorState(EvaluatorState &s)
     return true;
 }
 void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
-             FormulaModulatorStorage *fs, EvaluatorState *s, float output[max_formula_outputs])
+             FormulaModulatorStorage *fs, EvaluatorState *s, float output[max_formula_outputs],
+             bool justSetup)
 {
 #if HAS_LUA
     s->activeoutputs = 1;
@@ -566,6 +567,13 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
             }
         }
         lua_settable(s->L, -3);
+    }
+
+    if (justSetup)
+    {
+        // Don't call but still clear me from the stack
+        lua_pop(s->L, 2);
+        return;
     }
 
     auto lres = lua_pcall(s->L, 1, 1, 0);

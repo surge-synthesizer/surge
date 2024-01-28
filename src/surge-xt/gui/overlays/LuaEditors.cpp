@@ -291,11 +291,39 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             editor->editor->enqueueAccessibleAnnouncement("Reset Debugger");
     }
 
-    void stepLfoDebugger()
+    void refreshDebuggerView() { updateDebuggerWithOptionalStep(false); }
+
+    void stepLfoDebugger() { updateDebuggerWithOptionalStep(true); }
+
+    void updateDebuggerWithOptionalStep(bool doStep)
     {
-        Surge::Formula::setupEvaluatorStateFrom(lfoDebugger->formulastate,
-                                                editor->storage->getPatch());
-        lfoDebugger->process_block();
+        if (doStep)
+        {
+            Surge::Formula::setupEvaluatorStateFrom(lfoDebugger->formulastate,
+                                                    editor->storage->getPatch());
+
+            lfoDebugger->process_block();
+        }
+        else
+        {
+            auto &formulastate = lfoDebugger->formulastate;
+            auto &localcopy = tp;
+            auto lfodata = editor->lfos;
+            auto storage = editor->storage;
+
+            formulastate.rate = localcopy[lfodata->rate.param_id_in_scene].f;
+            formulastate.amp = localcopy[lfodata->magnitude.param_id_in_scene].f;
+            formulastate.phase = localcopy[lfodata->start_phase.param_id_in_scene].f;
+            formulastate.deform = localcopy[lfodata->deform.param_id_in_scene].f;
+            formulastate.tempo = storage->temposyncratio * 120.0;
+            formulastate.songpos = storage->songpos;
+
+            Surge::Formula::setupEvaluatorStateFrom(lfoDebugger->formulastate,
+                                                    editor->storage->getPatch());
+            float out[Surge::Formula::max_formula_outputs];
+            Surge::Formula::valueAt(lfoDebugger->getIntPhase(), lfoDebugger->getPhase(), storage,
+                                    lfoDebugger->fs, &formulastate, out, true);
+        }
 
         auto st = Surge::Formula::createDebugDataOfModState(lfoDebugger->formulastate);
 
@@ -779,19 +807,51 @@ void FormulaModulatorEditor::applyCode()
     editor->undoManager()->pushFormula(scene, lfo_id, *formulastorage);
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     storage->getPatch().isDirty = true;
-    updateDebugger();
+    updateDebuggerIfNeeded();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
     setApplyEnabled(false);
     mainEditor->grabKeyboardFocus();
 }
 
-void FormulaModulatorEditor::updateDebugger()
+void FormulaModulatorEditor::updateDebuggerIfNeeded()
 {
-    if (debugPanel->isOpen)
+    // if (updateDebuggerCounter == 0)
     {
-        debugPanel->initializeLfoDebugger();
+        if (debugPanel->isOpen)
+        {
+            // debugPanel->initializeLfoDebugger();
+            bool anyUpdate{false};
+            auto lfodata = lfos;
+#define CK(x)                                                                                      \
+    {                                                                                              \
+        auto &r = debugPanel->tp[lfodata->x.param_id_in_scene];                                    \
+        if (r.i != lfodata->x.val.i)                                                               \
+        {                                                                                          \
+            r.i = lfodata->x.val.i;                                                                \
+            anyUpdate = true;                                                                      \
+        }                                                                                          \
     }
-    editor->repaintFrame();
+
+            CK(rate);
+            CK(magnitude);
+            CK(start_phase);
+            CK(deform);
+
+            if (debugPanel->lfoDebugger->formulastate.tempo != storage->temposyncratio * 120)
+            {
+                anyUpdate = true;
+            }
+
+#undef CK
+
+            if (anyUpdate)
+            {
+                debugPanel->refreshDebuggerView();
+                editor->repaintFrame();
+            }
+        }
+    }
+    updateDebuggerCounter = (updateDebuggerCounter + 1) & 31;
 }
 
 void FormulaModulatorEditor::forceRefresh()
