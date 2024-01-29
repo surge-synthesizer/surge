@@ -187,7 +187,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::getline(split, address1, '/');
     bool querying = false;
 
-    // Queries (for params)
+    // Queries (for params and modulators)
     if (address1 == "q")
     {
         querying = true;
@@ -195,7 +195,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         std::getline(split, address1, '/');
         addr = addr.substr(2);
         // Currently, only params may be queried
-        if ((address1 != "param") && (address1 != "all_params") && (address1 != "all_mods"))
+        if ((address1 != "param") && (address1 != "all_params") && (address1 != "all_mods") &&
+            (address1 != "mod"))
         {
             sendError("No query available for '" + address1 + "'");
             return;
@@ -696,13 +697,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Modulation mapping
     else if (address1 == "mod")
     {
-        bool muteMsg = false;
-        if (message.size() < 2)
+        if (!querying)
         {
-            sendDataCountError("mod", "2");
-            return;
+            if (message.size() < 2)
+            {
+                sendDataCountError("mod", "2");
+                return;
+            }
         }
 
+        bool muteMsg = false;
         std::getline(split, address2, '/');
         if (address2 == "mute")
         {
@@ -763,7 +767,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendError("Bad OSC message format.");
             return;
         }
-        if (!message[1].isFloat32())
+        if (!querying && !message[1].isFloat32())
         {
             sendNotFloatError("mod", "depth");
             return;
@@ -788,16 +792,28 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
         }
 
-        // PKS TODO: modulator querying
-        if (querying)
-        {
-        }
-
         if (!synth->isValidModulation(p->id, (modsources)modnum))
         {
             sendError("Not a valid modulation.");
             return;
         }
+
+        // modulator querying
+        if (querying)
+        {
+            if (muteMsg)
+            {
+                bool modMuted = synth->isModulationMuted(p->id, (modsources)modnum, mscene, index);
+                modOSCout(addr, p->oscName, modMuted, false);
+            }
+            else
+            {
+                float depth = synth->getModDepth01(p->id, (modsources)modnum, mscene, index);
+                modOSCout(addr, p->oscName, depth, false);
+            }
+            return;
+        }
+
         if (muteMsg)
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth, true));
