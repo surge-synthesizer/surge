@@ -844,6 +844,25 @@ void FormulaModulatorEditor::updateDebuggerIfNeeded()
 
 #undef CK
 
+#define CKENV(x, y)                                                                                \
+    {                                                                                              \
+        auto &tgt = debugPanel->lfoDebugger->formulastate.x;                                       \
+        auto src = lfodata->y.value_to_normalized(lfodata->y.val.f);                               \
+        if (tgt != src)                                                                            \
+        {                                                                                          \
+            tgt = src;                                                                             \
+            anyUpdate = true;                                                                      \
+        }                                                                                          \
+    }
+            CKENV(del, delay);
+            CKENV(a, attack);
+            CKENV(h, hold);
+            CKENV(dec, decay);
+            CKENV(s, sustain);
+            CKENV(r, release);
+
+#undef CKENV
+
             if (anyUpdate)
             {
                 debugPanel->refreshDebuggerView();
