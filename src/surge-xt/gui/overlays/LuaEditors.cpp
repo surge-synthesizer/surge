@@ -808,6 +808,7 @@ void FormulaModulatorEditor::applyCode()
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     storage->getPatch().isDirty = true;
     updateDebuggerIfNeeded();
+    editor->repaintFrame();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
     setApplyEnabled(false);
     mainEditor->grabKeyboardFocus();
@@ -815,16 +816,16 @@ void FormulaModulatorEditor::applyCode()
 
 void FormulaModulatorEditor::updateDebuggerIfNeeded()
 {
-    // if (updateDebuggerCounter == 0)
     {
         if (debugPanel->isOpen)
         {
-            // debugPanel->initializeLfoDebugger();
             bool anyUpdate{false};
             auto lfodata = lfos;
+
 #define CK(x)                                                                                      \
     {                                                                                              \
         auto &r = debugPanel->tp[lfodata->x.param_id_in_scene];                                    \
+                                                                                                   \
         if (r.i != lfodata->x.val.i)                                                               \
         {                                                                                          \
             r.i = lfodata->x.val.i;                                                                \
@@ -848,6 +849,7 @@ void FormulaModulatorEditor::updateDebuggerIfNeeded()
     {                                                                                              \
         auto &tgt = debugPanel->lfoDebugger->formulastate.x;                                       \
         auto src = lfodata->y.value_to_normalized(lfodata->y.val.f);                               \
+                                                                                                   \
         if (tgt != src)                                                                            \
         {                                                                                          \
             tgt = src;                                                                             \
