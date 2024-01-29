@@ -100,7 +100,7 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &p);
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v);
 
 void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *, FormulaModulatorStorage *fs,
-             EvaluatorState *state, float output[max_formula_outputs]);
+             EvaluatorState *state, float output[max_formula_outputs], bool justSetup = false);
 
 struct DebugRow
 {

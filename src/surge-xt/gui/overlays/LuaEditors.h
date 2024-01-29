@@ -98,6 +98,8 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 
     void escapeKeyPressed();
 
+    void updateDebuggerIfNeeded();
+
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
     SurgeGUIEditor *editor{nullptr};
@@ -119,6 +121,8 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
     }
 
     std::optional<std::pair<std::string, std::string>> getPreCloseChickenBoxMessage() override;
+
+    int32_t updateDebuggerCounter{0};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaModulatorEditor);
 };

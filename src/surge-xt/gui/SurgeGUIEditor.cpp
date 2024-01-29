@@ -745,6 +745,12 @@ void SurgeGUIEditor::idle()
             overlaysForNextIdle.clear();
         }
 
+        auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(FORMULA_EDITOR);
+        if (ol)
+        {
+            ol->updateDebuggerIfNeeded();
+        }
+
         if (synth->storage.getPatch()
                 .scene[current_scene]
                 .osc[current_osc[current_scene]]
