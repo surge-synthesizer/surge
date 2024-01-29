@@ -736,12 +736,19 @@ void OverlayWrapper::onClose()
         auto pcm = *(pc->getPreCloseChickenBoxMessage());
         editor->alertYesNo(
             pcm.first, pcm.second,
-            [this]() {
-                closeOverlay();
-                if (isTornOut())
-                    tearOutParent.reset(nullptr);
+            [w = juce::Component::SafePointer(this)]() {
+                if (!w)
+                    return;
+
+                w->closeOverlay();
+                if (w->isTornOut())
+                    w->tearOutParent.reset(nullptr);
             },
-            [pc]() { pc->grabKeyboardFocus(); });
+            [w = juce::Component::SafePointer(pc)]() {
+                if (!w)
+                    return;
+                w->grabKeyboardFocus();
+            });
     }
     else
     {

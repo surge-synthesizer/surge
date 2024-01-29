@@ -1718,11 +1718,10 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
     auto des = &(synth->storage.getPatch().dawExtraState);
     auto oscSubMenu = juce::PopupMenu();
 
-    oscSubMenu.addItem("Show OSC Settings Screen",
-                       [this]() { showOverlay(OPEN_SOUND_CONTROL_SETTINGS); });
-    oscSubMenu.addSeparator();
-
 #if HAS_JUCE
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Settings..."),
+                       [this]() { showOverlay(OPEN_SOUND_CONTROL_SETTINGS); });
+
     oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."), [this]() {
         auto oscSpec = std::string(SurgeSharedBinary::oscspecification_html,
                                    SurgeSharedBinary::oscspecification_htmlSize) +
