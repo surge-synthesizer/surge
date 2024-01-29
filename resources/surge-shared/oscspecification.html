@@ -182,7 +182,7 @@
                          </div>
                     </div>
 
-                    <div class="tablewrap" style="width: 1100px; margin: 8px;">
+                    <div class="tablewrap" style="width: 98%; margin: 8px;">
                          <div class="heading">
                               <h2>Notes</h2>
                          </div>
@@ -250,7 +250,7 @@
                               </tr>
                          </table>
                     </div>
-                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
                          <span><code>/mnote 68 120</code></span>
                          <span><code>/fnote 440.0 120</code></span>
                          <span><code>/mnote 68 0</code></span>
@@ -259,7 +259,7 @@
                          <span><code>/fnote/rel 440.0 45</code></span>
                     </div>
 
-                    <div class="tablewrap" style="width: 1100px; margin: 8px;">
+                    <div class="tablewrap" style="width: 98%; margin: 8px;">
                          <div class="heading">
                               <h2>Note Expressions</h2>
                          </div>
@@ -308,7 +308,7 @@
                               </tr>
                          </table>
                     </div>
-                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
                          <span><code>/ne/pitch 24566 0.34</code></span>
                          <span><code>/ne/volume 24566 0.5</code></span>
                          <span><code>/ne/pan 24566 0.9</code></span>
@@ -405,12 +405,12 @@
 
                     <div style="clear: both;"></div>
 
-                    <div style="width: 1130px; margin: 0 0 16px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 16px 10px; line-height: 1.75">
                          <span><code>/patch/load /Library/Application Support/Surge XT/patches_factory/Plucks/Clean</code></span>
                          <span><code>/patch/save</code></span>
                          <span><code>/patch/incr</code></span>
                     </div>
-                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
                          <span><code>/tuning/scl ptolemy</code></span>
                          <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                          <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
@@ -418,7 +418,7 @@
 
                     <div style="clear: both;"></div>
 
-                    <div class="tablewrap" style="width: 1200px; margin: 24px 8px 16px 8px;">
+                    <div class="tablewrap" style="width: 99%; margin: 24px 8px 16px 8px;">
                          <div class="heading">
                               <h2>Queries</h2>
                          </div>
@@ -426,26 +426,32 @@
                               <tr>
                                    <th>Address</th>
                                    <th>Description</th>
-                                   <th>Appropriate Values</th>
                                    <th>Action</th>
                               </tr>
                               <tr>
                                    <td>/q/all_params</td>
                                    <td>request all parameters</td>
-                                   <td>none</td>
-                                   <td>Sends a dump of all parameters listed below to OSC out</td>
+                                   <td>Sends a dump of all parameters and their values to OSC out</td>
                               </tr>
                               <tr>
                                    <td>/q/&ltparameter address&gt</td>
                                    <td>request one parameter</td>
-                                   <td>none</td>
                                    <td>Sends one parameter's value to OSC out</td>
                               </tr>
                               <tr>
                                    <td>/q/all_mods</td>
                                    <td>request all modulation mappings</td>
-                                   <td>none</td>
                                    <td>Sends a dump of all active modulation mappings and 'muted' status to OSC out</td>
+                              </tr>
+                              <tr>
+                                   <td>/q/mod/&ltmodulation mapping&gt</td>
+                                   <td>request one modulation mapping's depth</td>
+                                   <td>Sends one modulations mapping's depth to OSC out</td>
+                              </tr>
+                              <tr>
+                                   <td>/q/mod/mute/&ltmodulation mapping&gt</td>
+                                   <td>request one modulation mapping's mute status</td>
+                                   <td>Sends one modulation's mute status to OSC out</td>
                               </tr>
 
                               <tr>
@@ -454,26 +460,30 @@
                          </table>
                     </div>
 
-                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
-                         <span><code>q/all_params</code></span>
-                         <span><code>q/param/b/amp/gain</code></span>
-                         <span><code>q/param/global/polyphony_limit</code></span>
-                         <span><code>q/param/a/mixer/noise/mute</code></span>
-                         <span><code>q/all_mods</code></span>
-               </div>
+                    <div style="width: 98%; margin: 0 0 16px 10px; line-height: 1.75">
+                         <span><code>/q/all_params</code></span>
+                         <span><code>/q/param/b/amp/gain</code></span>
+                         <span><code>/q/param/global/polyphony_limit</code></span>
+                         <span><code>/q/param/a/mixer/noise/mute</code></span>
+                    </div>
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/q/all_mods</code></span>
+                         <span><code>/q/mod/rel_vel /param/a/osc/1/pitch</code></span>
+                         <span><code>/q/mod/mute/rel_vel /param/a/osc/1/pitch</code></span>
+                    </div>
 
-                    <div style="margin: 24px 0 4px 22px; font-size: 12pt; font-family: Lato;">
+                    <div style="border: 1px solid lightgray;"></div>
+                    <div style="margin: 32px 0 0px 22px; font-size: 12pt; font-family: Lato;">
                          <div class="heading">
                               <h2>Parameters</h2>
                          </div>
                     </div>
 
-                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 16px 10px; line-height: 1.75">
                          <span><code>/param/b/amp/gain 0.63</code></span>
                          <span><code>/param/global/polyphony_limit 12</code></span>
                          <span><code>/param/a/mixer/noise/mute 0</code></span>
                     </div>
-
 
                     <div class="tablewrap fr cr">
                          <div class="heading">
@@ -1293,7 +1303,6 @@
                          </table>
                     </div>
 
-
                     <div style="clear: both;"></div>
 
                     <div style="margin:10pt 10pt 0 10pt; padding: 5pt 12pt; background: #fafbff;">
@@ -1324,7 +1333,7 @@
                          </div>
                     </div>
 
-                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
                          <span><code>/mod/b/slfo_1/2 /param/b/amp/gain 0.45</code></span>
                          <span><code>/mod/a/feg /param/a/filter/1/cutoff 0.9</code></span>
                          <span><code>/mod/macro_6 /param/a/pitch 0.75</code></span>
@@ -1573,7 +1582,7 @@
                     
                          </div>
                     </div>
-                    <div style="width: 1130px; margin: 0 0 32px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
                          <span><code>/mod/mute/a/feg /param/a/filter/1/cutoff 0</code></span>
                          <span><code>/mod/mute/a/feg /param/a/filter/1/cutoff 1</code></span>
                     </div>
