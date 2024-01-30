@@ -4134,6 +4134,8 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
         if (patchid_queue >= 0)
         {
             loadPatch(patchid_queue);
+            Patch p = storage.patch_list[patchid_queue];
+            storage.lastLoadedPatch = p.path.replace_extension();
             patchid_queue = -1;
         }
 
@@ -4155,10 +4157,13 @@ void SurgeSynthesizer::processAudioThreadOpsWhenAudioEngineUnavailable(bool dang
             if (ptid >= 0)
             {
                 loadPatch(ptid);
+                Patch patch = storage.patch_list[ptid];
+                storage.lastLoadedPatch = patch.path.replace_extension();
             }
             else
             {
                 loadPatchByPath(patchid_file, -1, s.c_str());
+                storage.lastLoadedPatch = p.replace_extension();
             }
             patchid_file[0] = 0;
         }
