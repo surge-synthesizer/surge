@@ -194,15 +194,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // remove the '/q' from the address
         std::getline(split, address1, '/');
         addr = addr.substr(2);
-        // Currently, only params may be queried
-        /*
-        if ((address1 != "param") && (address1 != "all_params") && (address1 != "all_mods") &&
-            (address1 != "mod"))
-        {
-            sendError("No query available for '" + address1 + "'");
-            return;
-        }
-        */
         if (address1 == "all_params")
         {
             OpenSoundControl::sendAllParams();
