@@ -195,12 +195,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         std::getline(split, address1, '/');
         addr = addr.substr(2);
         // Currently, only params may be queried
+        /*
         if ((address1 != "param") && (address1 != "all_params") && (address1 != "all_mods") &&
             (address1 != "mod"))
         {
             sendError("No query available for '" + address1 + "'");
             return;
         }
+        */
         if (address1 == "all_params")
         {
             OpenSoundControl::sendAllParams();
@@ -556,16 +558,18 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
             }
         }
-
-#ifdef DEBUG_VERBOSE
-        std::cout << "Parameter OSC name:" << p->get_osc_name() << "  ";
-        std::cout << "Parameter full name:" << p->get_full_name() << std::endl;
-#endif
     }
 
     // Patch changing
     else if (address1 == "patch")
     {
+        if (querying)
+        {
+            std::string patchpath = synth->storage.patch_list[synth->patchid].path.u8string();
+            sendPath(patchpath.erase(patchpath.length() - 4));
+            return;
+        }
+
         std::getline(split, address2, '/');
         if (address2 == "load")
         {
@@ -617,6 +621,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Tuning switching
     else if (address1 == "tuning")
     {
+        if (querying)
+            return; // Not yet implemented
+
         fs::path path = getWholeString(message);
         fs::path def_path;
 
@@ -1115,6 +1122,18 @@ bool OpenSoundControl::sendMacro(long macnum)
         return false;
     }
 
+    return true;
+}
+
+bool OpenSoundControl::sendPath(std::string pathString)
+{
+    juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String("/patch")));
+    om.addString(pathString);
+    if (!this->juceOSCSender.send(om))
+    {
+        sendFailed();
+        return false;
+    }
     return true;
 }
 
