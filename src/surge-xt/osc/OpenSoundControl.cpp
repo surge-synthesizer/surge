@@ -557,6 +557,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (querying)
         {
             std::string patchpath = synth->storage.lastLoadedPatch.u8string();
+
             if (!patchpath.empty())
             {
                 sendPath(patchpath);

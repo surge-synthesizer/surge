@@ -4115,6 +4115,8 @@ void loadPatchInBackgroundThread(SurgeSynthesizer *sy)
             (it.second)(ppath.replace_extension());
     }
 
+    synth->storage.lastLoadedPatch = ppath;
+
     // Now we want to null out the patchLoadThread since everything is done
     auto myThread = std::move(synth->patchLoadThread);
     myThread->detach();
