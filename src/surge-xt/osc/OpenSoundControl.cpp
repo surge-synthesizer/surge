@@ -559,7 +559,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             std::string patchpath = synth->storage.lastLoadedPatch.u8string();
             if (patchpath != "")
             {
-                sendPath(patchpath.erase(patchpath.length() - 4));
+                sendPath(patchpath);
             }
             else
             {
