@@ -1207,6 +1207,7 @@ class alignas(16) SurgeStorage
     float samplerate{0}, samplerate_inv{1};
     double dsamplerate{0}, dsamplerate_inv{1};
     double dsamplerate_os{0}, dsamplerate_os_inv{1};
+    fs::path lastLoadedPatch{};
     // Ring buffer that holds the audio output, used for the oscilloscope. Will hold a bit under 1/4
     // second of data, assuming the sample rate is 48k.
     sst::cpputils::StereoRingBuffer<float, 8192> audioOut;
