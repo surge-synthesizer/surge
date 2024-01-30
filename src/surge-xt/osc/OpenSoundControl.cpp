@@ -565,8 +565,15 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     {
         if (querying)
         {
-            std::string patchpath = synth->storage.patch_list[synth->patchid].path.u8string();
-            sendPath(patchpath.erase(patchpath.length() - 4));
+            if (synth->patchid >= 0 && synth->patchid < synth->storage.patch_list.size())
+            {
+                std::string patchpath = synth->storage.patch_list[synth->patchid].path.u8string();
+                sendPath(patchpath.erase(patchpath.length() - 4));
+            }
+            else
+            {
+                sendPath("<unknown patch>");
+            }
             return;
         }
 
