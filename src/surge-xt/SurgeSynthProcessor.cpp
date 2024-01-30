@@ -286,7 +286,7 @@ void SurgeSynthProcessor::initOSCError(int port, std::string outIP)
     std::ostringstream msg;
 
     msg << "Surge XT was unable to connect to OSC port " << port;
-    if (outIP != "")
+    if (!outIP.empty())
     {
         msg << "; at IP Address " << outIP;
     }

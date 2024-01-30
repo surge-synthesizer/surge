@@ -557,9 +557,10 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if (querying)
         {
             std::string patchpath = synth->storage.lastLoadedPatch.u8string();
-            if (patchpath != "")
+
+            if (!patchpath.empty())
             {
-                sendPath(patchpath.erase(patchpath.length() - 4));
+                sendPath(patchpath);
             }
             else
             {
@@ -748,7 +749,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         int index = 0;
         std::getline(split, address3, '/'); // address3 = index, if any
-        if (address3 != "")
+        if (!address3.empty())
         {
             try
             {
@@ -1112,7 +1113,7 @@ bool OpenSoundControl::sendMacro(long macnum)
 
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
     om.addFloat32(val01);
-    if (valStr != "")
+    if (!valStr.empty())
         om.addString(valStr);
     if (!this->juceOSCSender.send(om))
     {
@@ -1163,7 +1164,7 @@ bool OpenSoundControl::sendParameter(const Parameter *p)
 
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(p->oscName)));
     om.addFloat32(val01);
-    if (valStr != "")
+    if (!valStr.empty())
         om.addString(valStr);
     if (!this->juceOSCSender.send(om))
     {
