@@ -78,11 +78,8 @@ struct OpenSoundControlSettings : public OverlayComponent,
     bool validateIPString(std::string ipStr);
 
     std::unique_ptr<juce::TextEditor> inPort, outPort, outIP;
-    std::unique_ptr<juce::Label> inPortL, outPortL, outIPL;
+    std::unique_ptr<juce::Label> inL, outL, outIPL;
     std::unique_ptr<Widgets::SurgeTextButton> inPortReset, outPortReset, outIPReset, ok, cancel;
-
-    // std::unique_ptr<Widgets::SurgeTextButton> showSpec;
-    std::unique_ptr<juce::Label> OSCHeader;
 
     std::unique_ptr<juce::ToggleButton> enableOut, enableIn;
 
