@@ -53,22 +53,24 @@ OpenSoundControlSettings::OpenSoundControlSettings()
         return std::move(ed);
     };
 
-    inPort = makeEd("OSC Input");
+    inPort = makeEd("OSC Input Port");
     inPort->setJustification(juce::Justification::centred);
     inPort->addListener(this);
     addAndMakeVisible(*inPort);
 
     inPortReset = std::make_unique<Widgets::SurgeTextButton>("Default Port");
     inPortReset->addListener(this);
+    inPortReset->setTitle("Default OSC Input Port");
     addAndMakeVisible(*inPortReset);
 
-    outPort = makeEd("OSC Output");
+    outPort = makeEd("OSC Output Port");
     outPort->setJustification(juce::Justification::centred);
     outPort->addListener(this);
     addAndMakeVisible(*outPort);
 
     outPortReset = std::make_unique<Widgets::SurgeTextButton>("Default Port");
     outPortReset->addListener(this);
+    outPortReset->setTitle("Default OSC Output Port");
     addAndMakeVisible(*outPortReset);
 
     outIP = makeEd("Out IP Address");
@@ -87,6 +89,7 @@ OpenSoundControlSettings::OpenSoundControlSettings()
 
     outIPReset = std::make_unique<Widgets::SurgeTextButton>("Local Host");
     outIPReset->addListener(this);
+    outIPReset->setTitle("Reset OSC Output IP Address to Local Host");
     addAndMakeVisible(*outIPReset);
 
     ok = std::make_unique<Widgets::SurgeTextButton>("OK");
@@ -100,10 +103,12 @@ OpenSoundControlSettings::OpenSoundControlSettings()
 
     enableIn = std::make_unique<juce::ToggleButton>("");
     enableIn->addListener(this);
+    enableIn->setTitle("OSC Input Enable");
     addAndMakeVisible(*enableIn);
 
     enableOut = std::make_unique<juce::ToggleButton>("");
     enableOut->addListener(this);
+    enableOut->setTitle("OSC Output Enable");
     addAndMakeVisible(*enableOut);
 }
 
