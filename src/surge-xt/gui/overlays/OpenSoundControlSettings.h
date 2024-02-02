@@ -69,17 +69,19 @@ struct OpenSoundControlSettings : public OverlayComponent,
     void textEditorReturnKeyPressed(juce::TextEditor &) override;
     void textEditorFocusLost(juce::TextEditor &) override;
 
+    void setAllEnableds();
+    bool updateAll();
     bool isInputChanged();
     bool isOutputChanged();
     bool is_number(const std::string &s);
-    void enableOKforChanges();
 
     int validPort(std::string portStr, std::string type);
     bool validateIPString(std::string ipStr);
 
     std::unique_ptr<juce::TextEditor> inPort, outPort, outIP;
     std::unique_ptr<juce::Label> inL, outL, outIPL;
-    std::unique_ptr<Widgets::SurgeTextButton> inPortReset, outPortReset, outIPReset, ok, cancel;
+    std::unique_ptr<Widgets::SurgeTextButton> inPortReset, outPortReset, outIPReset, apply, ok,
+        cancel;
 
     std::unique_ptr<juce::ToggleButton> enableOut, enableIn;
 
