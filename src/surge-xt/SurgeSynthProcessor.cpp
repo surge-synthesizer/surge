@@ -288,11 +288,12 @@ void SurgeSynthProcessor::initOSCError(int port, std::string outIP)
     msg << "Surge XT was unable to connect to OSC port " << port;
     if (!outIP.empty())
     {
-        msg << "; at IP Address " << outIP;
+        msg << " at IP Address " << outIP;
     }
 
-    msg << "\n"
-        << "Either it is not a valid port, or it may be in use by another application.";
+    msg << ".\n"
+        << "Either it is not a valid port, or it is already used by Surge XT or another "
+           "application.";
 
     surge->storage.reportError(msg.str(), "OSC Initialization Error");
 };
