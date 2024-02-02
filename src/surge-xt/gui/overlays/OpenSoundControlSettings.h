@@ -65,6 +65,7 @@ struct OpenSoundControlSettings : public OverlayComponent,
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
 
+    void textEditorTextChanged(juce::TextEditor &) override;
     void textEditorEscapeKeyPressed(juce::TextEditor &) override;
     void textEditorReturnKeyPressed(juce::TextEditor &) override;
     void textEditorFocusLost(juce::TextEditor &) override;
