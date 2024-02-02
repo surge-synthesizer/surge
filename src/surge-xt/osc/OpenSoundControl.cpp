@@ -95,7 +95,7 @@ void OpenSoundControl::tryOSCStartup()
 
 bool OpenSoundControl::initOSCIn(int port)
 {
-    if (port < 1)
+    if (port < 1 || port == oportnum)
     {
         return false;
     }
@@ -872,7 +872,7 @@ void OpenSoundControl::oscBundleReceived(const juce::OSCBundle &bundle)
 
 bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
 {
-    if (port < 1)
+    if (port < 1 || port == iportnum)
     {
         return false;
     }

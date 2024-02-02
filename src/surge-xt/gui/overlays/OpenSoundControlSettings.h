@@ -78,6 +78,7 @@ struct OpenSoundControlSettings : public OverlayComponent,
 
     int validPort(std::string portStr, std::string type);
     bool validateIPString(std::string ipStr);
+    void validateInputs(juce::TextEditor &);
 
     std::unique_ptr<juce::TextEditor> inPort, outPort, outIP;
     std::unique_ptr<juce::Label> inL, outL, outIPL;

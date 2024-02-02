@@ -56,6 +56,7 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     inPort = makeEd("OSC Input Port");
     inPort->setJustification(juce::Justification::centred);
     inPort->addListener(this);
+    inPort->setInputRestrictions(5, "0123456789");
     addAndMakeVisible(*inPort);
 
     inPortReset = std::make_unique<Widgets::SurgeTextButton>("Default Port");
@@ -66,6 +67,7 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     outPort = makeEd("OSC Output Port");
     outPort->setJustification(juce::Justification::centred);
     outPort->addListener(this);
+    outPort->setInputRestrictions(5, "0123456789");
     addAndMakeVisible(*outPort);
 
     outPortReset = std::make_unique<Widgets::SurgeTextButton>("Default Port");
@@ -76,6 +78,7 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     outIP = makeEd("Out IP Address");
     outIP->setJustification(juce::Justification::centred);
     outIP->addListener(this);
+    outIP->setInputRestrictions(15, "0123456789.");
     addAndMakeVisible(*outIP);
 
     inL = std::make_unique<juce::Label>("OSC In", "OSC In");
@@ -152,7 +155,7 @@ void OpenSoundControlSettings::shownInParent()
 void OpenSoundControlSettings::onSkinChanged()
 {
     auto resetColors = [this](const auto &typein) {
-        typein->setFont(skin->getFont(Fonts::PatchStore::TextEntry));
+        typein->setFont(skin->getFont(Fonts::System::Display));
         typein->setColour(juce::TextEditor::backgroundColourId,
                           skin->getColor(Colors::Dialog::Entry::Background));
         typein->setColour(juce::TextEditor::textColourId,
@@ -228,7 +231,7 @@ void OpenSoundControlSettings::resized()
         inL->setBounds(inb.translated(20, 0));
 
         lcol = lcol.translated(0, ushift + halfmargin);
-        inPort->setBounds(lcol.reduced(margin, 0));
+        inPort->setBounds(lcol.reduced(margin + halfmargin, 0));
         inPort->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift - halfmargin);
@@ -247,7 +250,7 @@ void OpenSoundControlSettings::resized()
         outL->setBounds(outb.translated(20, 0));
 
         lcol = lcol.translated(0, ushift + halfmargin);
-        outPort->setBounds(lcol.reduced(margin, 0));
+        outPort->setBounds(lcol.reduced(margin + halfmargin, 0));
         outPort->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift - halfmargin);
@@ -263,7 +266,7 @@ void OpenSoundControlSettings::resized()
         outIPL->setBounds(lcol.translated(0, margin));
 
         lcol = lcol.translated(0, ushift + halfmargin);
-        outIP->setBounds(lcol.reduced(margin, 0));
+        outIP->setBounds(lcol.reduced(margin + halfmargin, 0));
         outIP->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift - halfmargin);
@@ -312,6 +315,7 @@ void OpenSoundControlSettings::textEditorReturnKeyPressed(juce::TextEditor &ed)
         return;
     }
 
+    validateInputs(ed);
     updateAll();
     setAllEnableds();
 }
@@ -323,60 +327,7 @@ void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
         return;
     }
 
-    std::string newStr = ed.getText().toStdString();
-
-    if (&ed == inPort.get())
-    {
-        if (newStr != std::to_string(editor->synth->storage.oscPortIn))
-        {
-            int newPort = validPort(newStr, "input");
-
-            if (newPort > 0)
-            {
-                inPortReset->setEnabled(newPort != defaultOSCInPort);
-            }
-            else
-            {
-                ed.setText(std::to_string(editor->synth->storage.oscPortIn),
-                           juce::dontSendNotification);
-            }
-        }
-    }
-
-    if (&ed == outPort.get())
-    {
-        if (newStr != std::to_string(editor->synth->storage.oscPortOut))
-        {
-            int newPort = validPort(newStr, "output");
-
-            if (newPort > 0)
-            {
-                outPortReset->setEnabled(newPort != defaultOSCOutPort);
-            }
-            else
-            {
-                ed.setText(std::to_string(editor->synth->storage.oscPortOut),
-                           juce::dontSendNotification);
-            }
-        }
-    }
-
-    if (&ed == outIP.get())
-    {
-        if (newStr != editor->synth->storage.oscOutIP)
-        {
-            if (validateIPString(newStr))
-            {
-                outIPReset->setEnabled(newStr != defaultOSCOutIP);
-            }
-            else
-            {
-                ed.setText(editor->synth->storage.oscOutIP, juce::dontSendNotification);
-            }
-        }
-    }
-
-    setAllEnableds();
+    validateInputs(ed);
 }
 
 void OpenSoundControlSettings::buttonClicked(juce::Button *button)
@@ -494,6 +445,7 @@ bool OpenSoundControlSettings::updateAll()
             storage->oscSending = false;
         }
     }
+
     return allgood;
 }
 
@@ -524,7 +476,7 @@ int OpenSoundControlSettings::validPort(std::string portStr, std::string type)
     if (!is_number(portStr))
     {
         std::ostringstream msg;
-        msg << "Value for " << type << " port number must be a valid number between 1 and 65535!";
+        msg << type << " port number must be between 1 and 65535!";
         storage->reportError(msg.str(), "Port Number Error");
         return 0;
     }
@@ -534,12 +486,58 @@ int OpenSoundControlSettings::validPort(std::string portStr, std::string type)
     if (newPort > 65535 || newPort < 1)
     {
         std::ostringstream msg;
-        msg << "Value for " << type << " port number must be between 1 and 65535!";
+        msg << type << " port number must be between 1 and 65535!";
         storage->reportError(msg.str(), "Port Number Error");
         return 0;
     }
 
     return newPort;
+}
+
+void OpenSoundControlSettings::validateInputs(juce::TextEditor &ed)
+{
+    std::string newStr = ed.getText().toStdString();
+
+    if (&ed == inPort.get())
+    {
+        if (newStr != std::to_string(editor->synth->storage.oscPortIn))
+        {
+            int newPort = validPort(newStr, "Input");
+
+            if (newPort < 1 || newPort == editor->synth->storage.oscPortOut)
+            {
+                ed.setText(std::to_string(editor->synth->storage.oscPortIn),
+                           juce::dontSendNotification);
+            }
+        }
+    }
+
+    if (&ed == outPort.get())
+    {
+        if (newStr != std::to_string(editor->synth->storage.oscPortOut))
+        {
+            int newPort = validPort(newStr, "Output");
+
+            if (newPort < 1 || newPort == editor->synth->storage.oscPortIn)
+            {
+                ed.setText(std::to_string(editor->synth->storage.oscPortOut),
+                           juce::dontSendNotification);
+            }
+        }
+    }
+
+    if (&ed == outIP.get())
+    {
+        if (newStr != editor->synth->storage.oscOutIP)
+        {
+            if (!validateIPString(newStr))
+            {
+                ed.setText(editor->synth->storage.oscOutIP, juce::dontSendNotification);
+            }
+        }
+    }
+
+    setAllEnableds();
 }
 
 bool OpenSoundControlSettings::validateIPString(std::string ipStr)
