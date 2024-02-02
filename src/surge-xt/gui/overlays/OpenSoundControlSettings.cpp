@@ -170,6 +170,7 @@ void OpenSoundControlSettings::onSkinChanged()
                           skin->getColor(Colors::Dialog::Entry::Border));
 
         typein->applyColourToAllText(skin->getColor(Colors::Dialog::Entry::Text));
+        typein->applyFontToAllText(skin->getFont(Fonts::System::Display));
     };
 
     auto resetLabel = [this](const auto &label) {
