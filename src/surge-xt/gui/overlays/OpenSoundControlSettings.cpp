@@ -256,8 +256,10 @@ void OpenSoundControlSettings::resized()
 
     // right
     col = col.translated(col.getWidth(), 0);
+
     {
         auto lcol = col.withHeight(uheight);
+
         outIPL->setBounds(lcol.translated(0, margin));
 
         lcol = lcol.translated(0, ushift + halfmargin);
@@ -270,14 +272,14 @@ void OpenSoundControlSettings::resized()
 
     // bottom row
     auto row = getLocalBounds();
-    row = row.withHeight(row.getHeight() / 4);
-    row = row.translated(0, getLocalBounds().getHeight() - row.getHeight());
-    row = row.reduced(row.getWidth() / 4.5, 0);
-    apply->setBounds(row.withHeight(buttonHeight).withWidth(buttonWidth));
-    row = row.translated(buttonWidth * 1.25, 0);
-    ok->setBounds(row.withHeight(buttonHeight).withWidth(buttonWidth));
-    row = row.translated(buttonWidth * 1.25, 0);
-    cancel->setBounds(row.withHeight(buttonHeight).withWidth(buttonWidth));
+
+    row = row.translated(row.getWidth() / 2 - buttonWidth / 2,
+                         getLocalBounds().getHeight() - buttonHeight - margin);
+    row.setSize(buttonWidth, buttonHeight);
+
+    ok->setBounds(row);
+    apply->setBounds(row.translated(-buttonWidth - margin, 0));
+    cancel->setBounds(row.translated(buttonWidth + margin, 0));
 }
 
 void OpenSoundControlSettings::setValuesFromEditor()
@@ -299,9 +301,20 @@ void OpenSoundControlSettings::setValuesFromEditor()
     outIPReset->setEnabled(editor->synth->storage.oscOutIP != defaultOSCOutIP);
 }
 
+void OpenSoundControlSettings::textEditorTextChanged(juce::TextEditor &ed) { setAllEnableds(); }
+
 void OpenSoundControlSettings::textEditorEscapeKeyPressed(juce::TextEditor &ed) {}
 
-void OpenSoundControlSettings::textEditorReturnKeyPressed(juce::TextEditor &ed) {}
+void OpenSoundControlSettings::textEditorReturnKeyPressed(juce::TextEditor &ed)
+{
+    if (!editor || !storage)
+    {
+        return;
+    }
+
+    updateAll();
+    setAllEnableds();
+}
 
 void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
 {
@@ -362,6 +375,7 @@ void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
             }
         }
     }
+
     setAllEnableds();
 }
 
@@ -413,12 +427,15 @@ void OpenSoundControlSettings::buttonClicked(juce::Button *button)
 
 void OpenSoundControlSettings::setAllEnableds()
 {
+    // OK stays enabled after first enabling
+    ok->setEnabled(ok->isEnabled() || isInputChanged() || isOutputChanged());
     apply->setEnabled(isInputChanged() || isOutputChanged());
-    ok->setEnabled(ok->isEnabled() || isInputChanged() ||
-                   isOutputChanged()); // OK stays enabled after first enabling
     inPort->setEnabled(enableIn->getToggleState());
     outPort->setEnabled(enableOut->getToggleState());
     outIP->setEnabled(enableOut->getToggleState());
+    inPortReset->setEnabled(editor->synth->storage.oscPortIn != defaultOSCInPort);
+    outPortReset->setEnabled(editor->synth->storage.oscPortOut != defaultOSCOutPort);
+    outIPReset->setEnabled(editor->synth->storage.oscOutIP != defaultOSCOutIP);
 }
 
 bool OpenSoundControlSettings::updateAll()
