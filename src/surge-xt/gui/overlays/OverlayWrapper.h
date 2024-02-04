@@ -126,6 +126,10 @@ struct OverlayWrapper : public juce::Component,
     bool showCloseButton{true};
     void setShowCloseButton(bool b) { showCloseButton = b; }
 
+    bool retainOnRecreate{true};
+    bool getRetainOpenStateOnEditorRecreate() { return retainOnRecreate; }
+    void setRetainOpenStateOnEditorRecreate(bool b) { retainOnRecreate = b; }
+
     void onClose();
 
     std::function<void()> closeOverlay = []() {};
