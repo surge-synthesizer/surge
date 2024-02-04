@@ -76,6 +76,8 @@ struct Alert : public Surge::Overlays::OverlayComponent,
 
     void visibilityChanged() override;
 
+    bool keyPressed(const juce::KeyPress &press) override;
+
     /*
      * Alerts should use default focus order not the wonky tag first and
      * then description and so on order for the main frame (which is laying out controls

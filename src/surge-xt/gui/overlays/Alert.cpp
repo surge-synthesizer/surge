@@ -176,7 +176,26 @@ void Alert::buttonClicked(juce::Button *button)
 void Alert::visibilityChanged()
 {
     if (isVisible())
+    {
         grabKeyboardFocus();
+    }
+}
+
+bool Alert::keyPressed(const juce::KeyPress &press)
+{
+    if (press == juce::KeyPress::escapeKey)
+    {
+        buttonClicked(cancelButton.get());
+        return true;
+    }
+
+    if (press == juce::KeyPress::returnKey)
+    {
+        buttonClicked(okButton.get());
+        return true;
+    }
+
+    return false;
 }
 
 void Alert::setWindowTitle(const std::string &t)
