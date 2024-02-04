@@ -556,7 +556,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     {
         if (querying)
         {
-            std::string patchpath = synth->storage.lastLoadedPatch.u8string();
+            std::string patchpath = synth->storage.lastLoadedPatch.replace_extension().u8string();
 
             if (!patchpath.empty())
             {
@@ -888,7 +888,8 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
     // Add listener for patch changes, to send new path to OSC output
     // This will run on the juce::MessageManager thread so as to
     // not tie up the patch loading thread.
-    synth->addPatchLoadedListener("OSC_OUT", [ssp = sspPtr](auto s) { ssp->patch_load_to_OSC(s); });
+    synth->addPatchLoadedListener(
+        "OSC_OUT", [ssp = sspPtr](auto s) { ssp->patch_load_to_OSC(s.replace_extension()); });
 
     // Add a listener for parameter changes
     sspPtr->addParamChangeListener("OSC_OUT",
