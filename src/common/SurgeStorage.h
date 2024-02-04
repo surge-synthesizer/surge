@@ -984,6 +984,8 @@ struct DAWExtraStateStorage
     std::string oscIPAddrOut{DEFAULT_OSC_IPADDR_OUT};
     bool oscStartIn{false};
     bool oscStartOut{false};
+
+    fs::path lastLoadedPatch{};
 };
 
 struct PatchTuningStorage

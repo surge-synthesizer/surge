@@ -2952,6 +2952,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 dawExtraState.isDirty = ival;
             }
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("lastLoadedPath"));
+            if (p && p->Attribute("v"))
+            {
+                dawExtraState.lastLoadedPatch = fs::path{p->Attribute("v")};
+            }
+
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("disconnectFromOddSoundMTS"));
             dawExtraState.disconnectFromOddSoundMTS = false;
 
@@ -3714,6 +3720,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement isDi("isDirty");
         isDi.SetAttribute("v", dawExtraState.isDirty ? 1 : 0);
         dawExtraXML.InsertEndChild(isDi);
+
+        TiXmlElement llP("lastLoadedPath");
+        llP.SetAttribute("v", dawExtraState.lastLoadedPatch.u8string().c_str());
+        dawExtraXML.InsertEndChild(llP);
 
         TiXmlElement odS("disconnectFromOddSoundMTS");
         odS.SetAttribute("v", dawExtraState.disconnectFromOddSoundMTS ? 1 : 0);
