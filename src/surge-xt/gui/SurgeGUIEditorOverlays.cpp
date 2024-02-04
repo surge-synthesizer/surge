@@ -613,6 +613,7 @@ Surge::Overlays::OverlayWrapper *SurgeGUIEditor::addJuceEditorOverlay(
     {
         ol->setCanTearOut(olc->getCanTearOut());
         ol->setCanTearOutResize(olc->getCanTearOutResize());
+        ol->setRetainOpenStateOnEditorRecreate(olc->getRetainOpenStateOnEditorRecreate());
     }
 
     ol->addAndTakeOwnership(std::move(c));

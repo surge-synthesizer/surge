@@ -91,6 +91,8 @@ struct OpenSoundControlSettings : public OverlayComponent,
 
     void setValuesFromEditor();
 
+    bool getRetainOpenStateOnEditorRecreate() override { return false; }
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OpenSoundControlSettings);
 };
 } // namespace Overlays

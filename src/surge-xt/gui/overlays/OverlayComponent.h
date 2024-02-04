@@ -91,6 +91,12 @@ struct OverlayComponent : juce::Component
     Surge::Storage::DefaultKey getMoveAroundKey() { return canMoveAround.second; }
 
     /*
+     * Use this as 'true' for 'transient' dialogs like settings which
+     * shouldn't persist across editor sessions
+     */
+    virtual bool getRetainOpenStateOnEditorRecreate() { return true; }
+
+    /*
      * If you want to chicken box the close, return a message from here. The pair
      * is the OK/Cancel title and message, respectively. If you are ok to close,
      * return std::nullopt, which is the default behavior.

@@ -6133,7 +6133,7 @@ void SurgeGUIEditor::populateDawExtraState(SurgeSynthesizer *synth)
     {
         auto olw = getOverlayWrapperIfOpen(ol.first);
 
-        if (olw)
+        if (olw && olw->getRetainOpenStateOnEditorRecreate())
         {
             DAWExtraStateStorage::EditorState::OverlayState os;
 
