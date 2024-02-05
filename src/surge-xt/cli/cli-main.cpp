@@ -78,6 +78,7 @@ void ctrlc_callback_handler(int signum)
     std::cout << "\n";
     LOG(BASIC, "SIGINT (ctrl-c) detected. Shutting down cli");
     continueLoop = false;
+    juce::MessageManager::getInstance()->stopDispatchLoop();
 }
 #endif
 
@@ -181,6 +182,7 @@ void isQuitPressed()
         std::cin >> res;
     }
     continueLoop = false;
+    juce::MessageManager::getInstance()->stopDispatchLoop();
 }
 
 int main(int argc, char **argv)
@@ -241,6 +243,9 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    auto *mm = juce::MessageManager::getInstance();
+    mm->setCurrentThreadAsMessageThread();
+
     /*
      * This is the default runloop. Basically this main thread acts as the message queue
      */
@@ -249,9 +254,6 @@ int main(int argc, char **argv)
     {
         engine->proc->surge->loadPatchByPath(initPatch.c_str(), -1, "Loaded Patch");
     }
-
-    auto *mm = juce::MessageManager::getInstance();
-    mm->setCurrentThreadAsMessageThread();
 
     auto items = juce::MidiInput::getAvailableDevices();
     std::vector<std::unique_ptr<juce::MidiInput>> midiInputs;
