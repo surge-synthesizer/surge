@@ -35,6 +35,7 @@
   <special id="action-history" help_url="#action-history"/>
   <special id="level-meter" help_url="#level-meter"/>
   <special id="oscilloscope" help_url="#oscilloscope"/>
+  <special id="opensound-settings" help_url="#osc-settings"/>
 
   <!-- Params for CG 0 -->
   <param id="filter.balance" help_url="#filter-controls"/>

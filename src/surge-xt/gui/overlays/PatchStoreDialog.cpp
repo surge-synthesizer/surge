@@ -145,6 +145,7 @@ PatchStoreDialog::PatchStoreDialog()
         auto ed = std::make_unique<juce::TextEditor>(n);
         ed->setJustification(juce::Justification::centredLeft);
         ed->setWantsKeyboardFocus(true);
+        ed->addListener(this);
         Surge::Widgets::fixupJuceTextEditorAccessibility(*ed);
         ed->setTitle(n);
         addAndMakeVisible(*ed);
@@ -170,6 +171,7 @@ PatchStoreDialog::PatchStoreDialog()
 
     ta->setJustification(juce::Justification::centredLeft);
     ta->setSelectAllWhenFocused(true);
+    ta->addListener(this);
     ta->setToElementZeroOnReturn = true;
 
     catEd = std::move(ta);
@@ -255,6 +257,16 @@ void PatchStoreDialog::shownInParent()
     {
         nameEd->grabKeyboardFocus();
     }
+}
+
+void PatchStoreDialog::textEditorFocusLost(juce::TextEditor &ed)
+{
+    if (!editor || !storage)
+    {
+        return;
+    }
+
+    ed.setHighlightedRegion(juce::Range(-1, -1));
 }
 
 void PatchStoreDialog::onSkinChanged()
