@@ -578,6 +578,7 @@ class RadialScaleGraph : public juce::Component,
                     te->setText(std::to_string(i), juce::NotificationType::dontSendNotification);
                     te->setEnabled(i != 0);
                     te->addListener(this);
+                    te->setSelectAllWhenFocused(true);
 
                     te->onEscapeKey = [this]() { giveAwayKeyboardFocus(); };
                     toneInterior->addAndMakeVisible(*te);
@@ -711,6 +712,7 @@ class RadialScaleGraph : public juce::Component,
 
   private:
     void textEditorReturnKeyPressed(juce::TextEditor &editor) override;
+    void textEditorFocusLost(juce::TextEditor &editor) override;
 
   public:
     virtual void paint(juce::Graphics &g) override;
@@ -2214,6 +2216,11 @@ void RadialScaleGraph::textEditorReturnKeyPressed(juce::TextEditor &editor)
     }
 }
 
+void RadialScaleGraph::textEditorFocusLost(juce::TextEditor &editor)
+{
+    editor.setHighlightedRegion(juce::Range(-1, -1));
+}
+
 struct SCLKBMDisplay : public juce::Component,
                        Surge::GUI::SkinConsumingComponent,
                        juce::TextEditor::Listener,
@@ -2254,12 +2261,16 @@ struct SCLKBMDisplay : public juce::Component,
         teProps(evenDivOf);
         evenDivOf->setText("2", juce::dontSendNotification);
         addAndMakeVisible(*evenDivOf);
+        evenDivOf->addListener(this);
+        evenDivOf->setSelectAllWhenFocused(true);
 
         evenDivIntoL = newL("into");
         evenDivInto = std::make_unique<juce::TextEditor>();
         teProps(evenDivInto);
         evenDivInto->setText("12", juce::dontSendNotification);
         addAndMakeVisible(*evenDivInto);
+        evenDivInto->addListener(this);
+        evenDivInto->setSelectAllWhenFocused(true);
 
         evenDivStepsL = newL("steps");
 
@@ -2311,18 +2322,24 @@ struct SCLKBMDisplay : public juce::Component,
         teProps(kbmStart);
         kbmStart->setText("60", juce::dontSendNotification);
         addAndMakeVisible(*kbmStart);
+        kbmStart->addListener(this);
+        kbmStart->setSelectAllWhenFocused(true);
 
         kbmConstantL = newL("Constant:");
         kbmConstant = std::make_unique<juce::TextEditor>();
         teProps(kbmConstant);
         kbmConstant->setText("69", juce::dontSendNotification);
         addAndMakeVisible(*kbmConstant);
+        kbmConstant->addListener(this);
+        kbmConstant->setSelectAllWhenFocused(true);
 
         kbmFreqL = newL("Freq:");
         kbmFreq = std::make_unique<juce::TextEditor>();
         teProps(kbmFreq);
         kbmFreq->setText("440", juce::dontSendNotification);
         addAndMakeVisible(*kbmFreq);
+        kbmFreq->addListener(this);
+        kbmFreq->setSelectAllWhenFocused(true);
 
         kbmGo = std::make_unique<Surge::Widgets::SelfDrawButton>("Generate");
         kbmGo->setStorage(overlay->storage);
@@ -2555,6 +2572,10 @@ struct SCLKBMDisplay : public juce::Component,
     }
 
     void textEditorTextChanged(juce::TextEditor &editor) override { setApplyEnabled(true); }
+    void textEditorFocusLost(juce::TextEditor &editor) override
+    {
+        editor.setHighlightedRegion(juce::Range(-1, -1));
+    }
 
     void onSkinChanged() override
     {
@@ -2602,7 +2623,7 @@ struct SCLKBMDisplay : public juce::Component,
                          skin->getColor(qclr::ToneLabelText));
             r->applyColourToAllText(skin->getColor(qclr::ToneLabelText), true);
 
-            // Work around a buglet that the text editor applies fonts ontly to newly inserted
+            // Work around a buglet that the text editor applies fonts only to newly inserted
             // text after setFont
             auto t = r->getText();
             r->setText("--", juce::dontSendNotification);

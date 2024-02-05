@@ -28,7 +28,9 @@
 #include "SurgeGUIUtils.h"
 #include "widgets/TypeAheadTextEditor.h"
 #include "widgets/SurgeTextButton.h"
+#include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
+#include "SurgeSharedBinary.h"
 #include <regex>
 
 namespace Surge
@@ -94,6 +96,10 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     outIPReset->addListener(this);
     outIPReset->setTitle("Reset OSC Output IP Address to Local Host");
     addAndMakeVisible(*outIPReset);
+
+    help = std::make_unique<Widgets::SurgeTextButton>("?");
+    help->addListener(this);
+    addAndMakeVisible(*help);
 
     apply = std::make_unique<Widgets::SurgeTextButton>("Apply");
     apply->addListener(this);
@@ -201,6 +207,7 @@ void OpenSoundControlSettings::onSkinChanged()
     inPortReset->setSkin(skin, associatedBitmapStore);
     outPortReset->setSkin(skin, associatedBitmapStore);
     outIPReset->setSkin(skin, associatedBitmapStore);
+    help->setSkin(skin, associatedBitmapStore);
     apply->setSkin(skin, associatedBitmapStore);
     ok->setSkin(skin, associatedBitmapStore);
     cancel->setSkin(skin, associatedBitmapStore);
@@ -232,7 +239,7 @@ void OpenSoundControlSettings::resized()
         inL->setBounds(inb.translated(20, 0));
 
         lcol = lcol.translated(0, ushift + halfmargin);
-        inPort->setBounds(lcol.reduced(margin + halfmargin, 0));
+        inPort->setBounds(lcol.withSizeKeepingCentre(defButtonWidth, buttonHeight));
         inPort->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift - halfmargin);
@@ -251,7 +258,7 @@ void OpenSoundControlSettings::resized()
         outL->setBounds(outb.translated(20, 0));
 
         lcol = lcol.translated(0, ushift + halfmargin);
-        outPort->setBounds(lcol.reduced(margin + halfmargin, 0));
+        outPort->setBounds(lcol.withSizeKeepingCentre(defButtonWidth, buttonHeight));
         outPort->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift - halfmargin);
@@ -271,14 +278,18 @@ void OpenSoundControlSettings::resized()
         outIP->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift - halfmargin);
-        outIPReset->setBounds(lcol.withSizeKeepingCentre(defButtonWidth, buttonHeight));
+        outIPReset->setBounds(lcol.reduced(margin + halfmargin, 0));
     }
 
     // bottom row
     auto row = getLocalBounds();
+    const auto yPos = getLocalBounds().getHeight() - buttonHeight - margin;
 
-    row = row.translated(row.getWidth() / 2 - buttonWidth / 2,
-                         getLocalBounds().getHeight() - buttonHeight - margin);
+    help->setBounds(row.translated(outIPReset->getRight() - buttonHeight, yPos)
+                        .withSize(buttonHeight, buttonHeight));
+
+    row = row.translated(row.getWidth() / 2 - buttonWidth / 2, yPos);
+
     row.setSize(buttonWidth, buttonHeight);
 
     ok->setBounds(row);
@@ -329,6 +340,7 @@ void OpenSoundControlSettings::textEditorFocusLost(juce::TextEditor &ed)
     }
 
     validateInputs(ed);
+    ed.setHighlightedRegion(juce::Range(-1, -1));
 }
 
 void OpenSoundControlSettings::buttonClicked(juce::Button *button)
@@ -354,6 +366,35 @@ void OpenSoundControlSettings::buttonClicked(juce::Button *button)
     {
         outIPReset->setEnabled(false);
         outIP->setText(defaultOSCOutIP, juce::dontSendNotification);
+    }
+
+    if (button == help.get())
+    {
+        auto menu = juce::PopupMenu();
+        auto hu = editor->helpURLForSpecial("opensound-settings");
+        auto lurl = hu;
+
+        if (lurl != "")
+        {
+            lurl = editor->fullyResolvedHelpURL(hu);
+        }
+
+        auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("OSC Settings", lurl);
+        tcomp->setSkin(skin, associatedBitmapStore);
+        auto hment = tcomp->getTitle();
+
+        menu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
+
+        menu.addSeparator();
+
+        menu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."), [this]() {
+            auto oscSpec = std::string(SurgeSharedBinary::oscspecification_html,
+                                       SurgeSharedBinary::oscspecification_htmlSize) +
+                           "\n";
+            editor->showHTML(oscSpec);
+        });
+
+        menu.showMenuAsync(editor->popupMenuOptions());
     }
 
     if (button == apply.get())
@@ -388,6 +429,12 @@ void OpenSoundControlSettings::setAllEnableds()
     inPortReset->setEnabled(editor->synth->storage.oscPortIn != defaultOSCInPort);
     outPortReset->setEnabled(editor->synth->storage.oscPortOut != defaultOSCOutPort);
     outIPReset->setEnabled(editor->synth->storage.oscOutIP != defaultOSCOutIP);
+
+    auto color = skin->getColor(Colors::Dialog::Label::Text);
+
+    inPort->applyColourToAllText(color.withAlpha(0.5f + (enableIn->getToggleState() * 0.5f)));
+    outPort->applyColourToAllText(color.withAlpha(0.5f + (enableOut->getToggleState() * 0.5f)));
+    outIP->applyColourToAllText(color.withAlpha(0.5f + (enableOut->getToggleState() * 0.5f)));
 }
 
 bool OpenSoundControlSettings::updateAll()

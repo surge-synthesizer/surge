@@ -44,7 +44,8 @@ struct PatchStoreDialogCategoryProvider;
 
 struct PatchStoreDialog : public OverlayComponent,
                           public Surge::GUI::SkinConsumingComponent,
-                          public juce::Button::Listener
+                          public juce::Button::Listener,
+                          public juce::TextEditor::Listener
 {
     PatchStoreDialog();
     ~PatchStoreDialog();
@@ -88,6 +89,7 @@ struct PatchStoreDialog : public OverlayComponent,
     void setStoreTuningInPatch(const bool value);
 
     void onSkinChanged() override;
+    void textEditorFocusLost(juce::TextEditor &) override;
     void buttonClicked(juce::Button *button) override;
     std::unique_ptr<juce::TextEditor> nameEd, authorEd, catEd, licenseEd, tagEd, commentEd;
     std::unique_ptr<juce::Label> nameEdL, authorEdL, catEdL, licenseEdL, tagEdL, commentEdL;
