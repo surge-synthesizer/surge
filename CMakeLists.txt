@@ -14,7 +14,7 @@ if(NOT BUILD_TESTING)
   option(BUILD_TESTING "" OFF)
 endif()
 
-project(Surge VERSION 1.3.0 LANGUAGES C CXX ASM)
+project(Surge VERSION 1.3.1 LANGUAGES C CXX ASM)
 
 # Banner {{{
 message(STATUS "It's Surge XT, folks! Version is ${PROJECT_VERSION}")
