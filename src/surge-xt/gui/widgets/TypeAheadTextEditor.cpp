@@ -457,6 +457,8 @@ void TypeAhead::focusLost(juce::Component::FocusChangeType type)
     {
         l->typeaheadCanceled();
     }
+
+    setHighlightedRegion(juce::Range(-1, -1));
 }
 } // namespace Widgets
 } // namespace Surge
