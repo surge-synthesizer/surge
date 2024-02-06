@@ -68,7 +68,7 @@ struct Build
 #define stringManual "https://surge-synthesizer.github.io/manual-xt/"
 #define stringFileDescription "Surge XT - Hybrid Synthesizer"
 #define stringCompanyName "Surge Synth Team\0"
-#define stringLegalCopyright "© 2004-2023 Various Authors"
+#define stringLegalCopyright "© 2004-2024 Various Authors"
 #define stringLegalTrademarks "VST is a trademark of Steinberg Media Technologies GmbH"
 
 #endif //__version__
