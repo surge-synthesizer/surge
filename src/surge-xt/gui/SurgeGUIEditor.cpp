@@ -4246,8 +4246,10 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             auto cols = currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::COLUMNS, "1");
             auto frameoffset =
                 currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::FRAME_OFFSET, "0");
-            auto drgb = currentSkin->propertyValue(skinCtrl,
-                                                   Surge::Skin::Component::DRAGGABLE_HSWITCH, "1");
+            auto drgb =
+                currentSkin->propertyValue(skinCtrl, Surge::Skin::Component::DRAGGABLE_SWITCH, "1");
+            auto whl = currentSkin->propertyValue(
+                skinCtrl, Surge::Skin::Component::MOUSEWHEELABLE_SWITCH, "1");
             auto accAsBut = currentSkin->propertyValue(
                 skinCtrl, Surge::Skin::Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, "0");
             // std::cout << skinCtrl->ui_id << " accAsBut = " << accAsBut << std::endl;
@@ -4259,6 +4261,7 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
             hsw->setTag(tag);
             hsw->addListener(this);
             hsw->setDraggable(std::atoi(drgb.c_str()));
+            hsw->setMousewheelable(std::atoi(whl.c_str()));
             hsw->setHeightOfOneImage(skinCtrl->h);
             hsw->setFrameOffset(std::atoi(frameoffset.c_str()));
 
