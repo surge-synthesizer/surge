@@ -33,7 +33,7 @@ please send a pull-request updating the info.
 
 ## Surge in KXStudio
 
-@falkTX packages up Surge as one of the synthesizers in KXStudio.  <br/>
+[@falkTX](https://github.com/falkTX/) packages up Surge as one of the synthesizers in KXStudio.  <br/>
 You can find out all about the KX distribution at https://kx.studio
 
 KX builds install with a version change to make sure KX overwrites other installs.  <br/>
