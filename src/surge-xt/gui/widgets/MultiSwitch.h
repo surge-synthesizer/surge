@@ -76,6 +76,8 @@ struct MultiSwitch : public juce::Component,
 
     bool draggable{false};
     void setDraggable(bool d) { draggable = d; }
+    bool mousewheelable{false};
+    void setMousewheelable(bool w) { mousewheelable = w; }
 
     bool middleClickable{false};
     void setMiddleClickable(bool m) { middleClickable = m; }
