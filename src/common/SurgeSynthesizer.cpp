@@ -122,6 +122,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     storage.pitchSmoothingMode = (Modulator::SmoothingMode)(int)Surge::Storage::getUserDefaultValue(
         &storage, Surge::Storage::PitchSmoothingMode, (int)(Modulator::SmoothingMode::DIRECT));
 
+    midiSoftTakeover =
+        (bool)Surge::Storage::getUserDefaultValue(&storage, Surge::Storage::MIDISoftTakeover, 0);
+
     patch.polylimit.val.i = DEFAULT_POLYLIMIT;
 
     for (int sc = 0; sc < n_scenes; sc++)
@@ -2330,10 +2333,67 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
     for (int i = 0; i < (n_global_params + (n_scene_params * n_scenes)); i++)
     {
-        if (storage.getPatch().param_ptr[i]->midictrl == cc_encoded &&
-            (storage.getPatch().param_ptr[i]->midichan == channel ||
-             storage.getPatch().param_ptr[i]->midichan == -1))
+        auto p = storage.getPatch().param_ptr[i];
+
+        if (p->midictrl == cc_encoded && (p->midichan == channel || p->midichan == -1))
         {
+            if (midiSoftTakeover)
+            {
+                const auto pval = p->get_value_f01();
+
+                if (fval + 1.0e-3f > p->miditakeover_value ||
+                    fval - 1.0e-3f < p->miditakeover_value)
+                {
+                    p->miditakeover_status = sts_waiting_for_value;
+                }
+                // printf("incoming: %.4f, to: %.4f\n", fval, p->miditakeover_value);
+
+                switch (p->miditakeover_status)
+                {
+                case sts_waiting_for_value:
+                    if (p->miditakeover_value < fval)
+                    {
+                        // printf("wait for val below\n");
+                        p->miditakeover_status = sts_waiting_below;
+                    }
+                    else if (p->miditakeover_value > fval)
+                    {
+                        // printf("wait for val above\n");
+                        p->miditakeover_status = sts_waiting_above;
+                    }
+                    else
+                    {
+                        // printf("wait for val locked\n");
+                        p->miditakeover_status = sts_locked;
+                    }
+                    break;
+                case sts_waiting_below:
+                    if (fval <= p->miditakeover_value + 1.0e-3f)
+                    {
+                        // printf("waiting below locked\n");
+                        p->miditakeover_status = sts_locked;
+                    }
+                    break;
+                case sts_waiting_above:
+                    if (fval >= p->miditakeover_value - 1.0e-3f)
+                    {
+                        // printf("waiting above locked\n");
+                        p->miditakeover_status = sts_locked;
+                    }
+                    break;
+                default:
+                    break;
+                }
+
+                if (p->miditakeover_status != sts_locked)
+                {
+                    // printf("not locked\n");
+                    return;
+                }
+            }
+
+            p->miditakeover_value = fval;
+
             this->setParameterSmoothed(i, fval);
 
             // Notify audio thread param change listeners (OSC, e.g.)

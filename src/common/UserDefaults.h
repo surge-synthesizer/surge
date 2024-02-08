@@ -97,6 +97,7 @@ enum DefaultKey
     PitchSmoothingMode,
     UseCh2Ch3ToPlayScenesIndividually,
     MenuBasedMIDILearnChannel,
+    MIDISoftTakeover,
 
     SmoothingMode,
     MonoPedalMode,

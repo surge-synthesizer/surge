@@ -490,6 +490,7 @@ class alignas(16) SurgeSynthesizer
     std::atomic<int> polydisplay;
     std::atomic<int> hasUpdatedMidiCC;
     std::atomic<int> modwheelCC, pitchbendMIDIVal, sustainpedalCC;
+    std::atomic<bool> midiSoftTakeover;
 
     float vu_peak[8];
     std::atomic<float> cpu_level{0.f};

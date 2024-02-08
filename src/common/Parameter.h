@@ -232,6 +232,14 @@ enum ControlGroup
     endCG
 };
 
+enum SoftTakeoverStatus
+{
+    sts_waiting_for_value,
+    sts_waiting_below,
+    sts_waiting_above,
+    sts_locked
+};
+
 const char ControlGroupDisplay[endCG][32] = {"Global",  "",          "Oscillators", "Mixer",
                                              "Filters", "Envelopes", "Modulators",  "FX"};
 
@@ -513,6 +521,8 @@ class Parameter
     int ctrlstyle = cs_off;
     int midictrl{};
     int midichan{};
+    SoftTakeoverStatus miditakeover_status{};
+    float miditakeover_value{};
     int param_id_in_scene{};
     bool affect_other_parameters{};
     float moverate{};
