@@ -587,22 +587,34 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
     fs::path filename = savepath;
     filename /= string_to_path(storage.getPatch().name + ".fxp");
 
-    if (fs::exists(filename) && !skipOverwrite)
+    try
     {
-        storage.okCancelProvider(std::string("The patch '" + storage.getPatch().name +
-                                             "' already exists in '" + storage.getPatch().category +
-                                             "'. Are you sure you want to overwrite it?"),
-                                 std::string("Overwrite Patch"), SurgeStorage::OK,
-                                 [filename, this](SurgeStorage::OkCancel okc) {
-                                     if (okc == SurgeStorage::OK)
-                                     {
-                                         savePatchToPath(filename);
-                                     }
-                                 });
+        if (fs::exists(filename) && !skipOverwrite)
+        {
+            storage.okCancelProvider(std::string("The patch '" + storage.getPatch().name +
+                                                 "' already exists in '" +
+                                                 storage.getPatch().category +
+                                                 "'. Are you sure you want to overwrite it?"),
+                                     std::string("Overwrite Patch"), SurgeStorage::OK,
+                                     [filename, this](SurgeStorage::OkCancel okc) {
+                                         if (okc == SurgeStorage::OK)
+                                         {
+                                             savePatchToPath(filename);
+                                         }
+                                     });
+        }
+        else
+        {
+            savePatchToPath(filename);
+        }
     }
-    else
+    catch (...)
     {
-        savePatchToPath(filename);
+        storage.reportError("Exception occurred while attempting to write the patch! Most likely, "
+                            "invalid characters or a reserved name was used to name the patch. "
+                            "Please try again with a different name!",
+                            "Error");
+        return;
     }
 
     storage.getPatch().isDirty = false;
