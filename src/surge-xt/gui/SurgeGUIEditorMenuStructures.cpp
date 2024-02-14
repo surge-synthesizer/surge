@@ -1731,7 +1731,7 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 
     oscSubMenu.addSeparator();
 
-    oscSubMenu.addItem(Surge::GUI::toOSCase("Download touchOSC Template..."), []() {
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Download TouchOSC Template..."), []() {
         juce::URL(fmt::format("{}touchosc", stringWebsite)).launchInDefaultBrowser();
     });
 
