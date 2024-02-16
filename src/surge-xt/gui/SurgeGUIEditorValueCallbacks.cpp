@@ -1598,7 +1598,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
             else if (p->valtype == vt_int)
             {
-
                 if (p->can_setvalue_from_string())
                 {
 
@@ -1625,6 +1624,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     }
 
                     if (p->can_extend_range())
+                    {
                         contextMenu.addItem(Surge::GUI::toOSCase("Extend Range"), true,
                                             p->extend_range, [this, p, control]() {
                                                 auto wasExtended = p->extend_range;
@@ -1640,6 +1640,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                 synth->storage.getPatch().isDirty = true;
                                                 synth->refresh_editor = true;
                                             });
+                    }
                 }
                 else
                 {
@@ -1795,11 +1796,24 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         for (int i = p->val_min.i; i <= max; i += incr)
                         {
-                            float ef = (1.0f * i - p->val_min.i) / (p->val_max.i - p->val_min.i);
+                            int ii = i;
+
+                            if (p->ctrltype == ct_scenemode)
+                            {
+                                if (ii == 2)
+                                {
+                                    ii = 3;
+                                }
+                                else if (ii == 3)
+                                {
+                                    ii = 2;
+                                }
+                            }
+
+                            float ef = (1.0f * ii - p->val_min.i) / (p->val_max.i - p->val_min.i);
 
                             contextMenu.addItem(
-                                p->get_display(true, ef), true, (i == p->val.i),
-                                [this, ef, p, i]() {
+                                p->get_display(true, ef), true, (ii == p->val.i), [this, ef, p]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
                                     synth->setParameter01(synth->idForParameter(p), ef, false,
                                                           false);
