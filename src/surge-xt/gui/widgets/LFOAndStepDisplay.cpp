@@ -2606,6 +2606,7 @@ void LFOAndStepDisplay::showStepTypein(int i)
         decimals = 2 + (4 * Surge::Storage::getUserDefaultValue(
                                 storage, Surge::Storage::HighPrecisionReadouts, 0));
     }
+
     auto handleTypein = [this, i](const std::string &s) {
         auto divPos = s.find("/");
         float v = 0.f;
@@ -2622,14 +2623,14 @@ void LFOAndStepDisplay::showStepTypein(int i)
                 return false;
             }
 
-            v = nv / dv;
+            v = (nv / dv) * 100.f;
         }
         else
         {
             v = std::atof(s.c_str());
         }
 
-        ss->steps[i] = std::clamp(v / 100.f, -1.f, 1.f);
+        ss->steps[i] = std::clamp(v * 0.01f, -1.f, 1.f);
 
         repaint();
 
