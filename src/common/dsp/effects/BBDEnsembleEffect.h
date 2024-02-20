@@ -74,6 +74,7 @@ class BBDEnsembleEffect : public Effect
     virtual ~BBDEnsembleEffect();
     virtual const char *get_effectname() override { return "Ensemble"; }
     virtual void init() override;
+    virtual void sampleRateReset() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual void suspend() override;
     void setvars(bool init);
