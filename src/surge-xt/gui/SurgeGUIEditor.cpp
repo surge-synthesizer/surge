@@ -455,6 +455,8 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     }
 
     juceEditor->processor.undoManager->resetEditor(this);
+
+    synth->storage.uiThreadChecksTunings = true;
 }
 
 SurgeGUIEditor::~SurgeGUIEditor()
@@ -467,6 +469,7 @@ SurgeGUIEditor::~SurgeGUIEditor()
     populateDawExtraState(synth); // If I must die, leave my state for future generations
     synth->storage.getPatch().dawExtraState.isPopulated = isPop;
     synth->storage.removeErrorListener(this);
+    synth->storage.uiThreadChecksTunings = false;
 }
 
 void SurgeGUIEditor::forceLFODisplayRebuild() { lfoDisplay->repaint(); }

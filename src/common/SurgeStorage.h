@@ -1596,6 +1596,7 @@ class alignas(16) SurgeStorage
     void disconnect_as_oddsound_main();
     uint64_t lastSentTuningUpdate{0}; // since tuning update starts at 2
     void send_tuning_update();
+    std::atomic<bool> uiThreadChecksTunings{false};
 #endif
     MTSClient *oddsound_mts_client = nullptr;
     std::atomic<bool> oddsound_mts_active_as_client{false};
