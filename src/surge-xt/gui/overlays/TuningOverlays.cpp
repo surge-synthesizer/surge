@@ -3028,6 +3028,13 @@ void TuningOverlay::onScaleRescaled(double scaleBy)
     double sFactor = (tCents + 1) / tCents - 1;
 
     double scale = (1.0 + sFactor * scaleBy);
+    // smallest compression is 20 cents
+    static constexpr float smallestRepInterval{100};
+    if (tCents <= smallestRepInterval && scaleBy < 0)
+    {
+        scale = smallestRepInterval / tCents;
+    }
+
     for (auto &t : storage->currentScale.tones)
     {
         t.type = Tunings::Tone::kToneCents;
