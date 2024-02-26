@@ -2530,6 +2530,15 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
         table_note_omega[1][i] =
             (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
     }
+
+    if (oddsound_mts_active_as_main && !uiThreadChecksTunings)
+    {
+        for (int i = 0; i < 128; ++i)
+        {
+            MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
+        }
+        MTS_SetScaleName(currentTuning.scale.description.c_str());
+    }
     tuningUpdates++;
     return true;
 }
@@ -2826,6 +2835,15 @@ void SurgeStorage::connect_as_oddsound_main()
                     "MTS-ESP Source Initialization Error");
     }
     lastSentTuningUpdate = -1;
+
+    if (!uiThreadChecksTunings && oddsound_mts_active_as_main)
+    {
+        for (int i = 0; i < 128; ++i)
+        {
+            MTS_SetNoteTuning(currentTuning.frequencyForMidiNote(i), i);
+        }
+        MTS_SetScaleName(currentTuning.scale.description.c_str());
+    }
 }
 void SurgeStorage::disconnect_as_oddsound_main()
 {
