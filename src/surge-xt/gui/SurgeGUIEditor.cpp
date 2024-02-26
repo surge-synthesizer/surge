@@ -5111,12 +5111,12 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         }
     }
 
+    bool hadExtendedEditor = false;
+    bool isTornOut = false;
+    juce::Point<int> tearOutPos;
+
     for (const auto &ov : {MSEG_EDITOR, FORMULA_EDITOR})
     {
-        bool hadExtendedEditor = false;
-        bool isTornOut = false;
-        juce::Point<int> tearOutPos;
-
         if (isAnyOverlayPresent(ov))
         {
             auto olw = getOverlayWrapperIfOpen(ov);
@@ -5131,21 +5131,17 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
 
             hadExtendedEditor = true;
         }
-
-        if (hadExtendedEditor)
+    }
+    if (hadExtendedEditor && (curr == lt_mseg || curr == lt_formula))
+    {
+        showOverlay(curr == lt_mseg ? MSEG_EDITOR : FORMULA_EDITOR);
+        if (isTornOut)
         {
-            if (curr == lt_mseg || curr == lt_formula)
-            {
-                showOverlay(ov);
-                if (isTornOut)
-                {
-                    auto olw = getOverlayWrapperIfOpen(ov);
+            auto olw = getOverlayWrapperIfOpen(curr == lt_mseg ? MSEG_EDITOR : FORMULA_EDITOR);
 
-                    if (olw)
-                    {
-                        olw->doTearOut(tearOutPos);
-                    }
-                }
+            if (olw)
+            {
+                olw->doTearOut(tearOutPos);
             }
         }
     }
