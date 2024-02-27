@@ -2649,6 +2649,7 @@ void LFOAndStepDisplay::showStepTypein(int i)
                                "");
     stepEditor->setSkin(skin, associatedBitmapStore);
     stepEditor->setEditableText(fmt::format("{:.{}f} %", ss->steps[i] * 100.f, decimals));
+    stepEditor->setReturnFocusTarget(stepSliderOverlays[i].get());
 
     auto topOfControl = getY();
     auto pb = getBounds();
