@@ -63,7 +63,7 @@ enum LogLevels
 int logLevel{BASIC};
 #define LOG(lev, x)                                                                                \
     {                                                                                              \
-        if (lev >= logLevel)                                                                       \
+        if (logLevel >= lev)                                                                       \
         {                                                                                          \
             std::cout << logTimestamp() << " - " << x << std::endl;                                \
         }                                                                                          \
