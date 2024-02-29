@@ -68,8 +68,8 @@ int logLevel{BASIC};
             std::cout << logTimestamp() << " - " << x << std::endl;                                \
         }                                                                                          \
     }
-#define PRINT(x) LOG(logLevel + 1, x);
-#define PRINTERR(x) LOG(logLevel + 1, "Error: " << x);
+#define PRINT(x) LOG(BASIC, x);
+#define PRINTERR(x) LOG(BASIC, "Error: " << x);
 
 #ifndef WINDOWS
 #include <signal.h>
