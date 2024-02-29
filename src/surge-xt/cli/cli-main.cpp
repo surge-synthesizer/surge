@@ -243,6 +243,12 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    if (midiInput >= juce::MidiInput::getAvailableDevices().size())
+    {
+        PRINTERR("Invalid input midi device index");
+        exit(1);
+    }
+
     auto *mm = juce::MessageManager::getInstance();
     mm->setCurrentThreadAsMessageThread();
 
