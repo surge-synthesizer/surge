@@ -498,6 +498,7 @@ int main(int argc, char **argv)
 
 #ifndef WINDOWS
     signal(SIGINT, ctrlc_callback_handler);
+    signal(SIGTERM, ctrlc_callback_handler);
 #endif
 
     while (continueLoop)
