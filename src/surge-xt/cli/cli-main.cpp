@@ -258,7 +258,14 @@ int main(int argc, char **argv)
     auto engine = std::make_unique<SurgePlayback>();
     if (!initPatch.empty())
     {
-        engine->proc->surge->loadPatchByPath(initPatch.c_str(), -1, "Loaded Patch");
+        if (engine->proc->surge->loadPatchByPath(initPatch.c_str(), -1, "Loaded Patch"))
+        {
+            LOG(BASIC, "Loaded patch        : " << initPatch);
+        }
+        else
+        {
+            LOG(BASIC, "Failed to load patch:" << initPatch);
+        }
     }
 
     auto items = juce::MidiInput::getAvailableDevices();
