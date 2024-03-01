@@ -73,12 +73,35 @@ int logLevel{BASIC};
 
 #ifndef WINDOWS
 #include <signal.h>
+
+[[noreturn]] void onTerminate() noexcept
+{
+    auto e = std::current_exception();
+
+    if (e)
+    {
+        try
+        {
+            rethrow_exception(e);
+        }
+        catch (...)
+        {
+            PRINTERR("Exception occurred");
+        }
+    }
+
+    std::_Exit(continueLoop);
+}
+
 void ctrlc_callback_handler(int signum)
 {
     std::cout << "\n";
     LOG(BASIC, "SIGINT (ctrl-c) detected. Shutting down cli");
     continueLoop = false;
     juce::MessageManager::getInstance()->stopDispatchLoop();
+
+    std::set_terminate(onTerminate);
+    std::terminate();
 }
 #endif
 
