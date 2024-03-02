@@ -126,14 +126,15 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 20 -> 21 (XT 1.2 nightlies) added absolutable mode for Combulator Offset 1/2 (to match the behavior of Center parameter)
 //                             added oddsound_as_mts_main
 // 21 -> 22 (XT 1.3 nighlies)  added new ring modulator modes in the mixer
-//                             added bonsai distortion effect
+//                             added Bonsai distortion effect
 //                             changed MIDI mapping behavior
 //                             added capability to deactivate scenes
 //                             added Vintage FM feedback mode to FM2, FM3 and Sine oscillator types
 //                             added extend mode to Delay Crossfeed and Mod Depth parameters
+// 22 -> 23 (XT 1.3.2 release) added storing of Tempo parameter to the patch (will be loaded in Standalone only if option enabled)
 // clang-format on
 
-const int ff_revision = 22;
+const int ff_revision = 23;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -1317,6 +1318,7 @@ class alignas(16) SurgeStorage
 
     float vu_falloff;
     float temposyncratio, temposyncratio_inv; // 1.f is 120 BPM
+    float unstreamedTempo{120.f};             // this one is in actual BPM
     double songpos;
     void init_tables();
     float nyquist_pitch;

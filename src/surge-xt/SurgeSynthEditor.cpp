@@ -328,7 +328,11 @@ void SurgeSynthEditor::paint(juce::Graphics &g)
 #endif
 }
 
-void SurgeSynthEditor::idle() { sge->idle(); }
+void SurgeSynthEditor::idle()
+{
+    sge->idle();
+    tempoTypein->setText(std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
+}
 
 void SurgeSynthEditor::reapplySurgeComponentColours()
 {

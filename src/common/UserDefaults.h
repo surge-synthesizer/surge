@@ -73,6 +73,7 @@ enum DefaultKey
 
     OverrideTuningOnPatchLoad,
     OverrideMappingOnPatchLoad,
+    OverrideTempoOnPatchLoad,
 
     RememberTabPositionsPerScene,
     RestoreMSEGSnapFromPatch,
