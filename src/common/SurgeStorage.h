@@ -975,6 +975,8 @@ struct DAWExtraStateStorage
     int monoPedalMode = 0;
     int oddsoundRetuneMode = 0;
 
+    int tuningApplicationMode = 1; // RETUNE_MIDI_ONLY
+
     bool isDirty{false};
 
     bool disconnectFromOddSoundMTS{false};
@@ -1586,6 +1588,7 @@ class alignas(16) SurgeStorage
     float remapKeyInMidiOnlyMode(float inKey);
 
     void setTuningApplicationMode(const TuningApplicationMode m);
+    TuningApplicationMode getTuningApplicationMode() const;
 
 #ifndef SURGE_SKIP_ODDSOUND_MTS
     void initialize_oddsound();
