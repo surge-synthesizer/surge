@@ -2991,6 +2991,17 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 dawExtraState.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
             }
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("tuningApplicationMode"));
+
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+            {
+                dawExtraState.tuningApplicationMode = ival;
+            }
+            else
+            {
+                dawExtraState.tuningApplicationMode = 1; // RETUNE_MIDI_ONLY
+            }
+
             auto mts_main = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oddsound_mts_active_as_main"));
             if (mts_main)
             {
@@ -3736,6 +3747,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement osd("oddsoundRetuneMode");
         osd.SetAttribute("v", dawExtraState.oddsoundRetuneMode);
         dawExtraXML.InsertEndChild(osd);
+
+        TiXmlElement tam("tuningApplicationMode");
+        tam.SetAttribute("v", dawExtraState.tuningApplicationMode);
+        dawExtraXML.InsertEndChild(tam);
 
         TiXmlElement tun("hasTuning"); // see comment: Keep this name here for legacy compat
         tun.SetAttribute("v", dawExtraState.hasScale ? 1 : 0);

@@ -6131,6 +6131,8 @@ void SurgeGUIEditor::populateDawExtraState(SurgeSynthesizer *synth)
 
     des->editor.activeOverlays.clear();
 
+    des->tuningApplicationMode = (int)synth->storage.getTuningApplicationMode();
+
     for (const auto &ol : juceOverlays)
     {
         auto olw = getOverlayWrapperIfOpen(ol.first);
@@ -6210,6 +6212,16 @@ void SurgeGUIEditor::loadFromDawExtraState(SurgeSynthesizer *synth)
         {
             showMSEGEditorOnNextIdleOrOpen = false;
             overlaysForNextIdle = des->editor.activeOverlays;
+        }
+
+        switch (des->tuningApplicationMode)
+        {
+        case 0:
+            synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_ALL);
+            break;
+        case 1:
+            synth->storage.setTuningApplicationMode(SurgeStorage::RETUNE_MIDI_ONLY);
+            break;
         }
     }
 }

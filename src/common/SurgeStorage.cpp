@@ -2584,6 +2584,11 @@ void SurgeStorage::setTuningApplicationMode(const TuningApplicationMode m)
     }
 }
 
+SurgeStorage::TuningApplicationMode SurgeStorage::getTuningApplicationMode() const
+{
+    return tuningApplicationMode;
+}
+
 bool SurgeStorage::skipLoadWtAndPatch = false;
 
 void SurgeStorage::rescanUserMidiMappings()
