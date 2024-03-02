@@ -68,17 +68,40 @@ int logLevel{BASIC};
             std::cout << logTimestamp() << " - " << x << std::endl;                                \
         }                                                                                          \
     }
-#define PRINT(x) LOG(logLevel + 1, x);
-#define PRINTERR(x) LOG(logLevel + 1, "Error: " << x);
+#define PRINT(x) LOG(BASIC, x);
+#define PRINTERR(x) LOG(BASIC, "Error: " << x);
 
 #ifndef WINDOWS
 #include <signal.h>
+
+[[noreturn]] void onTerminate() noexcept
+{
+    auto e = std::current_exception();
+
+    if (e)
+    {
+        try
+        {
+            rethrow_exception(e);
+        }
+        catch (...)
+        {
+            PRINTERR("Exception occurred");
+        }
+    }
+
+    std::_Exit(continueLoop);
+}
+
 void ctrlc_callback_handler(int signum)
 {
     std::cout << "\n";
     LOG(BASIC, "SIGINT (ctrl-c) detected. Shutting down cli");
     continueLoop = false;
     juce::MessageManager::getInstance()->stopDispatchLoop();
+
+    std::set_terminate(onTerminate);
+    std::terminate();
 }
 #endif
 
@@ -243,6 +266,12 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    if (midiInput >= juce::MidiInput::getAvailableDevices().size())
+    {
+        PRINTERR("Invalid input midi device index");
+        exit(1);
+    }
+
     auto *mm = juce::MessageManager::getInstance();
     mm->setCurrentThreadAsMessageThread();
 
@@ -252,7 +281,14 @@ int main(int argc, char **argv)
     auto engine = std::make_unique<SurgePlayback>();
     if (!initPatch.empty())
     {
-        engine->proc->surge->loadPatchByPath(initPatch.c_str(), -1, "Loaded Patch");
+        if (engine->proc->surge->loadPatchByPath(initPatch.c_str(), -1, "Loaded Patch"))
+        {
+            LOG(BASIC, "Loaded patch        : " << initPatch);
+        }
+        else
+        {
+            LOG(BASIC, "Failed to load patch:" << initPatch);
+        }
     }
 
     auto items = juce::MidiInput::getAvailableDevices();
@@ -462,6 +498,7 @@ int main(int argc, char **argv)
 
 #ifndef WINDOWS
     signal(SIGINT, ctrlc_callback_handler);
+    signal(SIGTERM, ctrlc_callback_handler);
 #endif
 
     while (continueLoop)
