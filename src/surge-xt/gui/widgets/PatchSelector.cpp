@@ -1204,7 +1204,7 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
         if (n_subc > 1)
         {
-            name = menuName.c_str() + (subc + 1);
+            name = fmt::format("{} {}", menuName, subc + 1).c_str();
         }
         else
         {
