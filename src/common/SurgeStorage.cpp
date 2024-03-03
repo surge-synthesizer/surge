@@ -771,8 +771,12 @@ void SurgeStorage::refresh_patchlist()
         }
         catch (const fs::filesystem_error &e)
         {
-            std::cout << "Error : unable to stat " << p.path.u8string() << " '" << e.what() << "'"
-                      << std::endl;
+            std::ostringstream erross;
+            erross << "Unable to determine the modification time of '" << p.path.u8string() << ". "
+                   << "This usually means the file can't be opened, or is a broken symlink, or "
+                      "some such. Underlying error: "
+                   << e.what();
+            reportError(erross.str(), "Unable to Read File Time");
             p.lastModTime = 0;
         }
         auto ps = p.path.u8string();
@@ -2948,7 +2952,9 @@ void SurgeStorage::reportError(const std::string &msg, const std::string &title,
     }
 
     for (auto l : errorListeners)
+    {
         l->onSurgeError(msg, title, errorType);
+    }
 }
 
 float SurgeStorage::remapKeyInMidiOnlyMode(float res)

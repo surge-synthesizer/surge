@@ -213,7 +213,11 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
 
     std::filebuf f;
     if (!f.open(string_to_path(fxpPath), std::ios::binary | std::ios::in))
+    {
+        storage.reportError(std::string() + "Unable to open file " + std::string(fxpPath),
+                            "Unable to open file");
         return false;
+    }
     fxChunkSetCustom fxp;
     auto read = f.sgetn(reinterpret_cast<char *>(&fxp), sizeof(fxp));
     // FIXME - error if read != chunk size
