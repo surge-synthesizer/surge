@@ -690,6 +690,7 @@ void SurgeSynthProcessor::processBlockPlayhead()
             {
                 standaloneTempo = surge->storage.unstreamedTempo;
                 surge->refresh_editor = true;
+                surge->refresh_vkb = true;
             }
         }
 

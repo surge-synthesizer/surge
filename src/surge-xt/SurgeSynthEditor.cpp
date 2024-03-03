@@ -211,6 +211,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
         float newT = std::atof(tempoTypein->getText().toRawUTF8());
 
         processor.standaloneTempo = newT;
+        processor.surge->storage.unstreamedTempo = newT;
         tempoTypein->giveAwayKeyboardFocus();
     };
 
@@ -331,7 +332,19 @@ void SurgeSynthEditor::paint(juce::Graphics &g)
 void SurgeSynthEditor::idle()
 {
     sge->idle();
-    tempoTypein->setText(std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
+
+    if (processor.surge->refresh_vkb)
+    {
+        const int curTypeinBPM = std::atoi(tempoTypein->getText().toStdString().c_str());
+        const int curBPM = std::round(processor.surge->time_data.tempo);
+
+        if (curTypeinBPM != curBPM)
+        {
+            tempoTypein->setText(fmt::format("{}", curBPM));
+        }
+
+        processor.surge->refresh_vkb = false;
+    }
 }
 
 void SurgeSynthEditor::reapplySurgeComponentColours()
