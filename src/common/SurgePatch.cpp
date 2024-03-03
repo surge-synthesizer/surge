@@ -2655,7 +2655,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     {
         if (tos->QueryDoubleAttribute("v", &d) != TIXML_SUCCESS)
         {
-            d = 1.0;
+            d = 120.0;
         }
     }
 
