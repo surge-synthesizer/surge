@@ -1408,6 +1408,8 @@ class alignas(16) SurgeStorage
     fs::path extraThirdPartyWavetablesPath; // used by rack
     fs::path extraUserWavetablesPath;       // used by rack
 
+    std::atomic<bool> userDataPathValid{false};
+
     std::string midiProgramChangePatchesSubdir{"MIDI Programs"};
 
     std::map<std::string, TiXmlDocument> userMidiMappingsXMLByName;
