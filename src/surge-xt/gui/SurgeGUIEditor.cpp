@@ -567,35 +567,58 @@ void SurgeGUIEditor::idle()
 #ifndef SURGE_SKIP_ODDSOUND_MTS
     getStorage()->send_tuning_update();
 #endif
-
-    if (firstErrorIdleCountdown > 0)
-    {
-        firstErrorIdleCountdown--;
-    }
-    else if ((!alert || !alert->isVisible()) && errorItemCount)
-    {
-        decltype(errorItems)::value_type cp;
-        {
-            std::lock_guard<std::mutex> g(errorItemsMutex);
-            cp = errorItems.front();
-            errorItems.pop_front();
-            errorItemCount--;
-        }
-
-        auto &[msg, title, code] = cp;
-        if (code == SurgeStorage::AUDIO_INPUT_LATENCY_WARNING)
-        {
-            audioLatencyNotified = true;
-            frame->repaint();
-        }
-        else
-        {
-            messageBox(title, msg);
-        }
-    }
-
     if (editor_open && frame && !synth->halt_engine)
     {
+        bool patchChanged = false;
+
+        if (patchSelector)
+        {
+            patchChanged = patchSelector->sel_id != synth->patchid;
+
+            if (synth->storage.getPatch().isDirty != patchSelector->isDirty)
+            {
+                patchSelector->isDirty = synth->storage.getPatch().isDirty;
+                patchSelector->repaint();
+            }
+        }
+
+        if (firstErrorIdleCountdown > 0)
+        {
+            firstErrorIdleCountdown--;
+        }
+        else if (queue_refresh || synth->refresh_editor || patchChanged)
+        {
+            // dont show an alert during a rebuild
+        }
+        else if (errorItemCount)
+        {
+            if (errorItemCount > 1 && alert && alert->isVisible())
+            {
+                // don't show the double error
+            }
+            else
+            {
+                decltype(errorItems)::value_type cp;
+                {
+                    std::lock_guard<std::mutex> g(errorItemsMutex);
+                    cp = errorItems.front();
+                    errorItems.pop_front();
+                    errorItemCount--;
+                }
+
+                auto &[msg, title, code] = cp;
+                if (code == SurgeStorage::AUDIO_INPUT_LATENCY_WARNING)
+                {
+                    audioLatencyNotified = true;
+                    frame->repaint();
+                }
+                else
+                {
+                    messageBox(title, msg);
+                }
+            }
+        }
+
         if (lastObservedMidiNoteEventCount != synth->midiNoteEvents)
         {
             lastObservedMidiNoteEventCount = synth->midiNoteEvents;
@@ -781,19 +804,6 @@ void SurgeGUIEditor::idle()
             {
                 polydisp->setPlayingVoiceCount(synth->polydisplay);
                 polydisp->repaint();
-            }
-        }
-
-        bool patchChanged = false;
-
-        if (patchSelector)
-        {
-            patchChanged = patchSelector->sel_id != synth->patchid;
-
-            if (synth->storage.getPatch().isDirty != patchSelector->isDirty)
-            {
-                patchSelector->isDirty = synth->storage.getPatch().isDirty;
-                patchSelector->repaint();
             }
         }
 
@@ -3703,6 +3713,7 @@ void SurgeGUIEditor::alertBox(const std::string &title, const std::string &promp
     alert->setWindowTitle(title);
 
     addAndMakeVisibleWithTracking(frame.get(), *alert);
+
     alert->setLabel(prompt);
 
     switch (buttonStyle)
@@ -6309,6 +6320,8 @@ void SurgeGUIEditor::resetComponentTracking()
         if (dynamic_cast<Surge::Overlays::TypeinParamEditor *>(comp))
             recurse = false;
         if (dynamic_cast<Surge::Overlays::MiniEdit *>(comp))
+            recurse = false;
+        if (dynamic_cast<Surge::Overlays::Alert *>(comp))
             recurse = false;
         if (dynamic_cast<Surge::Overlays::OverlayWrapper *>(comp))
             recurse = false;
