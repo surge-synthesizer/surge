@@ -1033,6 +1033,30 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
 
     patchDefMenu.addSeparator();
 
+    if (Surge::GUI::getIsStandalone())
+    {
+        auto tempoOnLoadMenu = juce::PopupMenu();
+
+        bool overrideTempoOnLoad = Surge::Storage::getUserDefaultValue(
+            &(synth->storage), Surge::Storage::OverrideTempoOnPatchLoad, true);
+
+        tempoOnLoadMenu.addItem(Surge::GUI::toOSCase("Keep Current Tempo"), true,
+                                !overrideTempoOnLoad, [this, overrideTempoOnLoad]() {
+                                    Surge::Storage::updateUserDefaultValue(
+                                        &(this->synth->storage),
+                                        Surge::Storage::OverrideTempoOnPatchLoad, false);
+                                });
+
+        tempoOnLoadMenu.addItem(Surge::GUI::toOSCase("Override With Embedded Tempo if Available"),
+                                true, overrideTempoOnLoad, [this, overrideTempoOnLoad]() {
+                                    Surge::Storage::updateUserDefaultValue(
+                                        &(this->synth->storage),
+                                        Surge::Storage::OverrideTempoOnPatchLoad, true);
+                                });
+
+        patchDefMenu.addSubMenu(Surge::GUI::toOSCase("Tempo on Patch Load"), tempoOnLoadMenu);
+    }
+
     auto tuningOnLoadMenu = juce::PopupMenu();
 
     bool overrideTuningOnLoad = Surge::Storage::getUserDefaultValue(

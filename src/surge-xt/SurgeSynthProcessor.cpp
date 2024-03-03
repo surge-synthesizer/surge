@@ -682,6 +682,18 @@ void SurgeSynthProcessor::processBlockPlayhead()
     }
     else
     {
+        // only if we want to change tempo on patch load
+        if (surge->storage.unstreamedTempo > -1.f)
+        {
+            // and only if it's different from current one
+            if (surge->storage.unstreamedTempo != standaloneTempo)
+            {
+                standaloneTempo = surge->storage.unstreamedTempo;
+                surge->refresh_editor = true;
+                surge->refresh_vkb = true;
+            }
+        }
+
         surge->time_data.tempo = standaloneTempo;
         surge->time_data.timeSigNumerator = 4;
         surge->time_data.timeSigDenominator = 4;
@@ -1264,7 +1276,7 @@ void SurgeSynthProcessor::getStateInformation(juce::MemoryBlock &destData)
         sse->populateForStreaming(surge.get());
     }
 
-    void *data = nullptr; // surgeInstance owns this on return
+    void *data = nullptr; // Surge instance owns this on return
     unsigned int stateSize = surge->saveRaw(&data);
     destData.setSize(stateSize);
     destData.copyFrom(data, 0, stateSize);
