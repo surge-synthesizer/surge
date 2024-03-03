@@ -568,26 +568,29 @@ void SurgeGUIEditor::idle()
     getStorage()->send_tuning_update();
 #endif
 
-    if (errorItemCount)
+    if (firstErrorIdleCountdown > 0)
     {
-        decltype(errorItems) cp;
+        firstErrorIdleCountdown--;
+    }
+    else if ((!alert || !alert->isVisible()) && errorItemCount)
+    {
+        decltype(errorItems)::value_type cp;
         {
             std::lock_guard<std::mutex> g(errorItemsMutex);
-            cp = errorItems;
-            errorItems.clear();
+            cp = errorItems.front();
+            errorItems.pop_front();
+            errorItemCount--;
         }
 
-        for (const auto &[msg, title, code] : cp)
+        auto &[msg, title, code] = cp;
+        if (code == SurgeStorage::AUDIO_INPUT_LATENCY_WARNING)
         {
-            if (code == SurgeStorage::AUDIO_INPUT_LATENCY_WARNING)
-            {
-                audioLatencyNotified = true;
-                frame->repaint();
-            }
-            else
-            {
-                messageBox(title, msg);
-            }
+            audioLatencyNotified = true;
+            frame->repaint();
+        }
+        else
+        {
+            messageBox(title, msg);
         }
     }
 

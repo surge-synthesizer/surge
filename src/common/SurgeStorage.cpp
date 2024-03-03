@@ -201,6 +201,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
 
     userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
+
 #elif LINUX
     if (!hasSuppliedDataPath)
     {
@@ -280,7 +281,19 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
     if (userDataPath.empty())
     {
-        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
+        try
+        {
+            userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
+        }
+        catch (const std::runtime_error &e)
+        {
+            userDataPath = fs : path{"/documents/not/available"};
+            reportError(
+                std::string() + "Surge is unable to find the %DOCUMENTS% directory. " +
+                    "Your system is misconfigured and several features including saving patches, " +
+                    "the search database and preferences will not work. " + e.what(),
+                "Unable to determine %DOCUMENTS%");
+        }
     }
 #endif
 

@@ -23,6 +23,8 @@
 #ifndef SURGE_SRC_SURGE_XT_GUI_SURGEGUIEDITOR_H
 #define SURGE_SRC_SURGE_XT_GUI_SURGEGUIEDITOR_H
 
+#include <deque>
+
 #include "globals.h"
 
 #include "SurgeGUICallbackInterfaces.h"
@@ -125,7 +127,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Widgets::MainFrame> frame;
 
     std::atomic<int> errorItemCount{0};
-    std::vector<std::tuple<std::string, std::string, SurgeStorage::ErrorType>> errorItems;
+    std::deque<std::tuple<std::string, std::string, SurgeStorage::ErrorType>> errorItems;
     std::mutex errorItemsMutex;
     void onSurgeError(const std::string &msg, const std::string &title,
                       const SurgeStorage::ErrorType &type) override;
@@ -785,6 +787,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     float blinktimer = 0;
     bool blinkstate = false;
     int firstIdleCountdown = 0;
+    int firstErrorIdleCountdown{30};
     int sendStructureChangeIn = -1;
 
     juce::PopupMenu makeSmoothMenu(const juce::Point<int> &where,
