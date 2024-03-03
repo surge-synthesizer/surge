@@ -750,10 +750,18 @@ void SurgeStorage::refresh_patchlist()
     }
     for (auto &p : patch_list)
     {
-        auto qtime = fs::last_write_time(p.path);
-        p.lastModTime =
-            std::chrono::duration_cast<std::chrono::seconds>(qtime.time_since_epoch()).count();
-
+        try
+        {
+            auto qtime = fs::last_write_time(p.path);
+            p.lastModTime =
+                std::chrono::duration_cast<std::chrono::seconds>(qtime.time_since_epoch()).count();
+        }
+        catch (const fs::filesystem_error &e)
+        {
+            std::cout << "Error : unable to stat " << p.path.u8string() << " '" << e.what() << "'"
+                      << std::endl;
+            p.lastModTime = 0;
+        }
         auto ps = p.path.u8string();
         auto pf = pathToTrunc(ps);
 
