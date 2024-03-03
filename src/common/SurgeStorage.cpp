@@ -202,6 +202,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
     userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
 
+    // These are how I test a broken windows install for documents
+    // userDataPath = fs::path{"/good/luck/bozo"};
+    // userDataPath = fs::path{"/usr/sbin"};
 #elif LINUX
     if (!hasSuppliedDataPath)
     {
@@ -297,6 +300,42 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
 #endif
 
+    try
+    {
+        userDataPathValid = false;
+        if (fs::is_directory(userDataPath))
+        {
+            userDataPathValid = true;
+            /*
+             * This code doesn't work because fs:: doesn't have a writable check and I don't
+             * want to create a file just to see in every startup path. We find out later
+             * anyway when we set up the directories.
+            auto stat = fs::status(userDataPath);
+            std::cout << std::oct << (int)stat.permissions() << " " << (int)fs::perms::owner_write
+            << std::endl; if ((stat.permissions() & fs::perms::owner_write) != fs::perms::none)
+            {
+                userDataPathValid = true;
+            }
+            else
+            {
+                reportError(std::string() + "Your user directory '" + userDataPath.u8string() + "'
+            is not writable.", "Path Error");
+            }
+             */
+        }
+        else
+        {
+            reportError(std::string() + "Your user directory '" + userDataPath.u8string() +
+                            "' is not a directory.",
+                        "Path Error");
+        }
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        userDataPathValid = false;
+        reportError(e.what(), "Path Error");
+    }
+
     userDefaultFilePath = userDataPath;
 
     userDefaultsProvider = std::make_unique<Surge::Storage::UserDefaultsProvider>(
@@ -322,7 +361,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
     extraUserWavetablesPath = config.extraUsersWavetablesPath;
 
-    if (config.createUserDirectory)
+    if (config.createUserDirectory && userDataPathValid)
     {
         createUserDirectory();
     }
@@ -563,7 +602,7 @@ void SurgeStorage::createUserDirectory()
 {
     auto p = userDataPath;
     auto needToBuild = false;
-    if (!fs::is_directory(p))
+    if (!fs::is_directory(p) || !fs::is_directory(userPatchesPath))
     {
         needToBuild = true;
     }
@@ -589,20 +628,26 @@ void SurgeStorage::createUserDirectory()
         }
         catch (const fs::filesystem_error &e)
         {
-            reportError(e.what(), "Unable to set up User Directory");
+            reportError(std::string() + "User directory is non-writable. " + e.what(),
+                        "Unable to set up User Directory.");
+            userDataPathValid = false;
         }
     }
 
-    // Special case - MIDI Program Changes came later
-    if (!fs::exists(userPatchesMidiProgramChangePath))
+    if (userDataPathValid)
     {
-        try
+        // Special case - MIDI Program Changes came later
+        if (!fs::exists(userPatchesMidiProgramChangePath))
         {
-            fs::create_directories(userPatchesMidiProgramChangePath);
-        }
-        catch (const fs::filesystem_error &e)
-        {
-            reportError(e.what(), "Unable to set up User Directory");
+            try
+            {
+                fs::create_directories(userPatchesMidiProgramChangePath);
+            }
+            catch (const fs::filesystem_error &e)
+            {
+                reportError(e.what(), "Unable to set up User Directory");
+                userDataPathValid = false;
+            }
         }
     }
 }
@@ -610,6 +655,9 @@ void SurgeStorage::createUserDirectory()
 void SurgeStorage::initializePatchDb(bool force)
 {
     if (patchDBInitialized && !force)
+        return;
+
+    if (!userDataPathValid)
         return;
 
     patchDBInitialized = true;

@@ -283,7 +283,16 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
     case SAVE_PATCH:
     {
-        return makeStorePatchDialog();
+        if (synth->storage.userDataPathValid)
+        {
+            return makeStorePatchDialog();
+        }
+        else
+        {
+            messageBox("Documents Folder Not Writable",
+                       "You have a non-writable User Data Path; patch saving is not available");
+            return nullptr;
+        }
     }
 
     case OPEN_SOUND_CONTROL_SETTINGS:
