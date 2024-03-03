@@ -287,7 +287,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         }
         catch (const std::runtime_error &e)
         {
-            userDataPath = fs : path{"/documents/not/available"};
+            userDataPath = fs::path{"/documents/not/available"};
             reportError(
                 std::string() + "Surge is unable to find the %DOCUMENTS% directory. " +
                     "Your system is misconfigured and several features including saving patches, " +
