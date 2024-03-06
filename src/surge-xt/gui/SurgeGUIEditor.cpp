@@ -3447,6 +3447,21 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     typeinParamEditor->grabFocus();
 }
 
+bool SurgeGUIEditor::promptForUserValueEntry(uint32_t tag, juce::Component *c)
+{
+    auto t = tag - start_paramtags;
+
+    if (t < 0 || t >= n_total_params)
+    {
+        return false;
+    }
+
+    auto p = synth->storage.getPatch().param_ptr[t];
+
+    promptForUserValueEntry(p, c);
+    return true;
+}
+
 std::string SurgeGUIEditor::helpURLFor(Parameter *p)
 {
     auto storage = &(synth->storage);
