@@ -901,13 +901,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void removeUnusedTrackedComponents();
 
   public:
+    void promptForUserValueEntry(Parameter *p, juce::Component *c, int modsource, int modScene,
+                                 int modindex);
+    bool promptForUserValueEntry(Surge::Widgets::ModulatableControlInterface *mci);
+    bool promptForUserValueEntry(uint32_t tag, juce::Component *c);
     void promptForUserValueEntry(Parameter *p, juce::Component *c)
     {
         promptForUserValueEntry(p, c, -1, -1, -1);
     }
-    void promptForUserValueEntry(Parameter *p, juce::Component *c, int modsource, int modScene,
-                                 int modindex);
-    bool promptForUserValueEntry(Surge::Widgets::ModulatableControlInterface *mci);
 
     /*
     ** Skin support
