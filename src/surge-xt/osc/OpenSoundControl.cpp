@@ -464,6 +464,66 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
         }
 
+        // Special case for extended paramter options
+        else if (hasEnding(addr, "_x"))
+        {
+            size_t last_slash = addr.find_last_of("/");
+            std::string rootaddr = addr.substr(0, last_slash);
+            auto *p = synth->storage.getPatch().parameterFromOSCName(rootaddr);
+            std::string extension = addr.substr(last_slash + 1);
+            extension.erase(extension.size() - 2);
+            if (querying)
+            {
+            }
+            else
+            {
+                if (extension == "absol")
+                {
+                    if (!p->can_be_absolute())
+                        sendError("Param " + p->oscName + " can't be absolute.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::ABSOLUTE_X, p, val));
+                }
+                else if (extension == "deact")
+                {
+                    if (!p->can_deactivate())
+                        sendError("Param " + p->oscName + " can't deactivate.");
+                    else
+                        sspPtr->oscRingBuf.push(
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEACT_X, p, val));
+                }
+                else if (extension == "tsync")
+                {
+                    if (!p->can_temposync())
+                        sendError("Param " + p->oscName + " can't tempo-sync.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::TEMPOSYNC_X, p, val));
+                }
+                else if (extension == "extend")
+                {
+                    if (!p->can_extend_range())
+                        sendError("Param " + p->oscName + " can't extend range.");
+                    else
+                        sspPtr->oscRingBuf.push(
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::EXTEND_X, p, val));
+                }
+                else if (extension == "deform")
+                {
+                    if (!p->has_deformoptions())
+                        sendError("Param " + p->oscName + " doesn't have deform options.");
+                    else
+                        sspPtr->oscRingBuf.push(
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEFORM_X, p, val));
+                }
+                else
+                {
+                    sendError("Unknown parameter option: " + extension + "_x");
+                }
+            }
+        }
+
         // Special case for /param/fx/<s>/<n>/deactivate, which is not a true 'parameter'
         else if ((address2 == "fx") && (hasEnding(addr, "deactivate")))
         {

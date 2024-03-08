@@ -837,6 +837,26 @@ void SurgeSynthProcessor::processBlockOSC()
         }
         break;
 
+        case SurgeSynthProcessor::ABSOLUTE_X:
+            om.param->absolute = om.ival;
+            break;
+
+        case SurgeSynthProcessor::TEMPOSYNC_X:
+            om.param->temposync = om.ival;
+            break;
+
+        case SurgeSynthProcessor::DEACT_X:
+            om.param->deactivated = om.ival;
+            break;
+
+        case SurgeSynthProcessor::EXTEND_X:
+            om.param->extend_range = om.ival;
+            break;
+
+        case SurgeSynthProcessor::DEFORM_X:
+            om.param->deform_type = om.ival;
+            break;
+
         default:
             break;
         }
