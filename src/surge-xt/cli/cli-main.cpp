@@ -310,6 +310,12 @@ int main(int argc, char **argv)
         LOG(BASIC, "Opened MIDI Input   : [" << vmini.name << "] ");
     }
 
+    // Warn about mixing MIDI input commands
+    if (midiInput >= 0 && allMidi)
+    {
+        LOG(BASIC, "WARNING: Selecting a single MIDI device overrides --all-midi-inputs.")
+    }
+
     // Requesting all devices always works, even if no devices are found.
     // Explicitly requesting a single MIDI device means we skip this.
     if (allMidi && midiInput < 0)
