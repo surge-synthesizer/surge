@@ -322,7 +322,9 @@ int main(int argc, char **argv)
     // Explicitly requesting a single MIDI device means we skip this.
     if (allMidi && midiInput < 0)
     {
-        LOG(BASIC, "Binding to all MIDI inputs... Found " << midiDevices.size() << " device << midiDevices.size() > 1 ? "s" : "" << "!");
+        LOG(BASIC, "Binding to all MIDI inputs... Found " << midiDevices.size() << " device"
+                                                          << (midiDevices.size() == 1 ? "" : "s")
+                                                          << "!");
         for (auto &vmini : midiDevices)
         {
             auto inp = juce::MidiInput::openDevice(vmini.identifier, engine.get());
