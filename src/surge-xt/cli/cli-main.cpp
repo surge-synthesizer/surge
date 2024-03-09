@@ -221,42 +221,43 @@ int main(int argc, char **argv)
 
     std::string audioInterface{};
     app.add_flag("--audio-interface", audioInterface,
-                 "Select an audio interface, using index (like '0.2') as shown in list-devices");
+                 "Select an audio interface, using index (like '0.2') as shown in list-devices.");
 
     std::string audioPorts{};
     app.add_flag(
         "--audio-ports", audioPorts,
-        "Select the ports to address in the audio interface. '0,1' means first pair, Zero based.");
+        "Select the ports to address in the audio interface. '0,1' means first pair, zero based.");
+
+    bool allMidi{false};
+    app.add_flag("--all-midi-inputs", allMidi, "Bind all available MIDI inputs to the synth.");
 
     int midiInput{};
     app.add_flag("--midi-input", midiInput,
-                 "Select a single MIDI input using the index from list-devices")
+                 "Select a single MIDI input using the index from list-devices. Overrides "
+                 "--all-midi-inputs.")
         ->default_val("-1"); // a value of -1 means we skip loading devices altogether.
 
-    bool allMidi{false};
-    app.add_flag("--all-midi-inputs", allMidi, "Bind all available MIDI inputs to the synth");
-
     int oscInputPort{0};
-    app.add_flag("--osc-in-port", oscInputPort, "Port for OSC Input; unspecified means no OSC");
+    app.add_flag("--osc-in-port", oscInputPort, "Port for OSC Input; unspecified means no OSC.");
 
     int oscOutputPort{0};
     app.add_flag("--osc-out-port", oscOutputPort,
-                 "Port for OSC Output; unspecified means input only; input required");
+                 "Port for OSC Output; unspecified means input only; input required.");
 
     std::string oscOutputIPAddr{"127.0.0.1"};
     app.add_flag("--osc-out-ipaddr", oscOutputIPAddr,
-                 "IP Address for OSC Output; unspecified means '127.0.0.1 (localhost)'");
+                 "IP Address for OSC Output; unspecified means '127.0.0.1 (localhost)'.");
 
     int sampleRate{0};
     app.add_flag("--sample-rate", sampleRate,
-                 "Sample Rate for Audio Output. Will use system default if blank");
+                 "Sample Rate for Audio Output. Will use system default if blank.");
 
     int bufferSize{0};
     app.add_flag("--buffer-size", bufferSize,
-                 "Buffer Size for Audio Output. Will use system default if blank");
+                 "Buffer Size for Audio Output. Will use system default if blank.");
 
     std::string initPatch{};
-    app.add_flag("--init-patch", initPatch, "Choose this file (by path) as the initial patch");
+    app.add_flag("--init-patch", initPatch, "Choose this file (by path) as the initial patch.");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -310,7 +311,8 @@ int main(int argc, char **argv)
     }
 
     // Requesting all devices always works, even if no devices are found.
-    if (allMidi)
+    // Explicitly requesting a single MIDI device means we skip this.
+    if (allMidi && midiInput < 0)
     {
         LOG(BASIC, "Binding to all MIDI inputs. Found " << midiDevices.size() << " device(s).");
         for (auto &vmini : midiDevices)
