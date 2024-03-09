@@ -228,12 +228,13 @@ int main(int argc, char **argv)
         "--audio-ports", audioPorts,
         "Select the ports to address in the audio interface. '0,1' means first pair, Zero based.");
 
-    int midiInput{-1};
+    int midiInput{};
     app.add_flag("--midi-input", midiInput,
-                 "Select a single midi input using the index from list-devices");
+                 "Select a single midi input using the index from list-devices")
+        ->default_val("-1"); // a value of -1 means we skip loading devices altogether.
 
     bool allMidi{false};
-    app.add_flag("--all-midi-inputs", allMidi, "Bind all midi inputs to the synth (ignoring -m)");
+    app.add_flag("--all-midi-inputs", allMidi, "Bind all available midi inputs to the synth");
 
     int oscInputPort{0};
     app.add_flag("--osc-in-port", oscInputPort, "Port for OSC Input; unspecified means no OSC");
@@ -266,12 +267,6 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    if (midiInput >= juce::MidiInput::getAvailableDevices().size())
-    {
-        PRINTERR("Invalid input midi device index");
-        exit(1);
-    }
-
     auto *mm = juce::MessageManager::getInstance();
     mm->setCurrentThreadAsMessageThread();
 
@@ -291,12 +286,34 @@ int main(int argc, char **argv)
         }
     }
 
-    auto items = juce::MidiInput::getAvailableDevices();
+    auto midiDevices = juce::MidiInput::getAvailableDevices();
     std::vector<std::unique_ptr<juce::MidiInput>> midiInputs;
+
+    // Only try to open a midi device when explicitly requested.
+    if (midiInput >= 0)
+    {
+        if (midiInput >= midiDevices.size())
+        {
+            PRINTERR("Invalid midi input device number.");
+            exit(1);
+        }
+
+        auto vmini = midiDevices[midiInput];
+        auto inp = juce::MidiInput::openDevice(vmini.identifier, engine.get());
+        if (!inp)
+        {
+            PRINTERR("Unable to open midi device " << vmini.name);
+            exit(1);
+        }
+        midiInputs.push_back(std::move(inp));
+        LOG(BASIC, "Opened Midi Input   : [" << vmini.name << "] ");
+    }
+
+    // Requesting all devices always works, even if no devices are found.
     if (allMidi)
     {
-        LOG(BASIC, "Binding to all midi inputs");
-        for (auto &vmini : items)
+        LOG(BASIC, "Binding to all midi inputs. Found " << midiDevices.size() << " device(s).");
+        for (auto &vmini : midiDevices)
         {
             auto inp = juce::MidiInput::openDevice(vmini.identifier, engine.get());
             if (!inp)
@@ -307,24 +324,6 @@ int main(int argc, char **argv)
             midiInputs.push_back(std::move(inp));
             LOG(BASIC, "Opened Midi Input   : [" << vmini.name << "] ");
         }
-    }
-    else
-    {
-        if (midiInput < 0 || midiInput >= items.size())
-        {
-            PRINTERR("Midi Input must be in range 0..." << items.size() - 1);
-            exit(5);
-        }
-        auto vmini = items[midiInput];
-
-        auto inp = juce::MidiInput::openDevice(vmini.identifier, engine.get());
-        if (!inp)
-        {
-            PRINTERR("Unable to open midi device " << vmini.name);
-            exit(1);
-        }
-        midiInputs.push_back(std::move(inp));
-        LOG(BASIC, "Opened Midi Input   : [" << vmini.name << "] ");
     }
 
     auto manager = std::make_unique<juce::AudioDeviceManager>();
