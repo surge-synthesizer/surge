@@ -56,6 +56,11 @@
 
 class SurgeSynthEditor;
 
+namespace melatonin
+{
+class Inspector;
+}
+
 namespace Surge
 {
 namespace Widgets
@@ -178,6 +183,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     bool debugFocus{false};
     void globalFocusChanged(juce::Component *fc) override;
+    std::unique_ptr<melatonin::Inspector> melatoninInspector;
 
   protected:
     virtual void setParameter(long index, float value);
