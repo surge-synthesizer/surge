@@ -89,7 +89,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=undefined>
 
     # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-char8_t>
+    $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,9>>:-fno-char8_t>
   )
 
   add_link_options(
