@@ -19,6 +19,7 @@ include(cmake/lib.cmake)
 if (NOT SURGE_SKIP_JUCE_FOR_RACK)
   message(STATUS "Using JUCE from ${SURGE_JUCE_PATH}")
   add_subdirectory(${SURGE_JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../libs/melatonin_inspector" ${CMAKE_BINARY_DIR}/melatonin_inspector EXCLUDE_FROM_ALL)
 endif()
 
 if(${CMAKE_VERSION} VERSION_LESS 3.21)
@@ -70,6 +71,10 @@ target_compile_definitions(surge-juce INTERFACE
 
   JUCE_CATCH_UNHANDLED_EXCEPTIONS=0
   )
+
+if (NOT SURGE_SKIP_JUCE_FOR_RACK)
+  target_link_libraries(surge-juce INTERFACE melatonin_inspector)
+endif()
 
 if(NOT SURGE_SKIP_VST3)
   list(APPEND SURGE_JUCE_FORMATS VST3)

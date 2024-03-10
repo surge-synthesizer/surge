@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include "melatonin_inspector/melatonin_inspector.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIEditorTags.h"
 #include "SurgeGUIUtils.h"
@@ -1784,6 +1785,26 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
 
     devSubMenu.addItem(Surge::GUI::toOSCase("Dump Undo/Redo Stack to stdout"), true, false,
                        [this]() { undoManager()->dumpStack(); });
+
+    if (melatoninInspector)
+    {
+        devSubMenu.addItem("Close Melatonin Inspector", [this]() {
+            if (melatoninInspector)
+            {
+                melatoninInspector->setVisible(false);
+                melatoninInspector.reset();
+            }
+        });
+    }
+    else
+    {
+        devSubMenu.addItem("Launch Melatonin Inspector", [this] {
+            melatoninInspector = std::make_unique<melatonin::Inspector>(*frame);
+            melatoninInspector->onClose = [this]() { melatoninInspector.reset(); };
+
+            melatoninInspector->setVisible(true);
+        });
+    }
 
 #ifdef INSTRUMENT_UI
     devSubMenu.addItem(Surge::GUI::toOSCase("Show UI Instrumentation..."),
