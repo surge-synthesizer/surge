@@ -74,6 +74,7 @@ class TapeEffect : public Effect
     virtual const char *get_effectname() override { return "Tape"; }
 
     virtual void init() override;
+    virtual void sampleRateReset() override;
     virtual void process(float *dataL, float *dataR) override;
     virtual void suspend() override;
     virtual int get_ringout_decay() override { return -1; };
