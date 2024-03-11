@@ -31,6 +31,14 @@
 
 #include "SurgeSynthProcessor.h"
 
+#if JUCE_MAC
+namespace juce
+{
+extern void initialiseNSApplication();
+}
+extern void objCShutdown(); // in cli-mac-helpers.mm
+#endif
+
 // This tells us to keep processing
 std::atomic<bool> continueLoop{true};
 
@@ -513,6 +521,14 @@ int main(int argc, char **argv)
     signal(SIGTERM, ctrlc_callback_handler);
 #endif
 
+#if MAC
+    if (needsMessageLoop)
+    {
+        LOG(BASIC, "Starting NSApp for MAC Loop");
+        juce::initialiseNSApplication();
+    }
+#endif
+
     while (continueLoop)
     {
         if (needsMessageLoop)
@@ -529,6 +545,13 @@ int main(int argc, char **argv)
     }
 
     LOG(BASIC, "Shutting down CLI...");
+#if JUCE_MAC
+    if (needsMessageLoop)
+    {
+        LOG(BASIC, "Shutting down NSApp");
+        objCShutdown();
+    }
+#endif
 
     // Handle interrupt and collect these in lambda to close if you bail out
     device->stop();
