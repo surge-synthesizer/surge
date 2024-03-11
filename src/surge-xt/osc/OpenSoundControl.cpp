@@ -564,6 +564,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 std::string deactivated = ""; // isDeact ? "deactivated" : "activated";
                 std::string addr = "/param/" + shortOSCname + "/deactivate";
                 float val = (float)isDeact;
+                // TODO: change to call to OpenSoundControl::send(), so that this
+                //  runs on the juce messenger thread
                 if (!this->juceOSCSender.send(
                         juce::OSCMessage(juce::String(addr), val, juce::String(deactivated))))
                     sendFailed();
@@ -1128,6 +1130,7 @@ bool OpenSoundControl::modOSCout(std::string addr, std::string oscName, float va
     om.addString(oscName);
     om.addFloat32(val);
 
+    // Sending directly here, because we're already on the JUCE messenger thread
     if (!this->juceOSCSender.send(om))
     {
         sendFailed();
@@ -1227,6 +1230,8 @@ bool OpenSoundControl::sendParameter(const Parameter *p)
     om.addFloat32(val01);
     if (!valStr.empty())
         om.addString(valStr);
+    // This is direct, because we're either already on the JUCE messenger thread (allparams dump,
+    // e.g.), or this is just one parameter going to OSC out.
     if (!this->juceOSCSender.send(om))
     {
         sendFailed();
