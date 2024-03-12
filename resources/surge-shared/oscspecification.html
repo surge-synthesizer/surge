@@ -1314,10 +1314,14 @@
 
                     <div style="clear: both;"></div>
 
-                    <div class="tablewrap fl cl" style="width: 70%; margin: 16px 4px;">
+                    <div class="tablewrap fl cl" style="width: 80%; margin: 16px 4px;">
                          <div class="heading">
                               <h2>Parameter Extended Options</h2>
+                              <h3>Replace '&lt;parameter address&gt;' with full parameter address (as
+                                   above) and '&lt;s&gt;' with 'a' or 'b' (scene).
+                              </h3>
                          </div>
+
                          <div style="margin:0 10pt 0 0;">
                               <p style="margin-top: 4px;">
                                    Some parameters, (sometimes only in certain contexts), may have the following extended options:
@@ -1354,6 +1358,26 @@
                                    <td>&lt;parameter address&gt;/deform_x</td>
                                    <td>deform type OR modern osc option bitmask</td>
                                    <td>integer (0 to 3) OR bitmask</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento/constrate_x</td>
+                                   <td>portamento constant rate</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento/gliss_x</td>
+                                   <td>portamento glissando</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento/retrigger_x</td>
+                                   <td>portamento retrigger at scale degrees</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento/curve_x</td>
+                                   <td>portamento curve </td>
+                                   <td>int (-1:log, 0:linear, or 1:exponential)</td>
                               </tr>
                          </table>
                     </div>
@@ -1638,10 +1662,10 @@
                     <div class="tablewrap cr cl" style="width: 75%; margin: 16px 8px;">
                          <div class="heading">
                               <h2>Modulation Mapping: Muting</h2>
-                              <p>Replace '/mod/...' with '/mod/mute/...' in the modulation-to-parameter mapping
+                              <h3>Replace '/mod/...' with '/mod/mute/...' in the modulation-to-parameter mapping
                                    convention described above,
                                    using a value of 0 to set muting <b>off</b>, or 1 to set muting <b>on</b>.
-                              </p>
+                              </h3>
 
                          </div>
                     </div>

@@ -888,6 +888,42 @@ void SurgeSynthProcessor::processBlockOSC()
             }
             break;
 
+        case SurgeSynthProcessor::PORTA_CONSTRATE_X:
+            if (om.param->porta_constrate != om.ival)
+            {
+                om.param->porta_constrate = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::PORTA_GLISS_X:
+            if (om.param->porta_gliss != om.ival)
+            {
+                om.param->porta_gliss = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::PORTA_RETRIGGER_X:
+            if (om.param->porta_retrigger != om.ival)
+            {
+                om.param->porta_retrigger = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::PORTA_CURVE_X:
+            if (om.param->porta_curve != om.ival)
+            {
+                om.param->porta_curve = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
         default:
             break;
         }

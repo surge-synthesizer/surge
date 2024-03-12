@@ -364,7 +364,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         TEMPOSYNC_X,
         DEACT_X,
         EXTEND_X,
-        DEFORM_X
+        DEFORM_X,
+        PORTA_CONSTRATE_X,
+        PORTA_GLISS_X,
+        PORTA_RETRIGGER_X,
+        PORTA_CURVE_X
     };
 
     struct oscToAudio

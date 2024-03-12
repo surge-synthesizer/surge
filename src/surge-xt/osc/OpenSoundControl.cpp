@@ -517,6 +517,38 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sspPtr->oscRingBuf.push(
                             SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEFORM_X, p, val));
                 }
+                else if (extension == "constrate")
+                {
+                    if (!p->has_portaoptions())
+                        sendError("Param " + p->oscName + " doesn't have portamento options.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::PORTA_CONSTRATE_X, p, val));
+                }
+                else if (extension == "gliss")
+                {
+                    if (!p->has_portaoptions())
+                        sendError("Param " + p->oscName + " doesn't have portamento options.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::PORTA_GLISS_X, p, val));
+                }
+                else if (extension == "retrigger")
+                {
+                    if (!p->has_portaoptions())
+                        sendError("Param " + p->oscName + " doesn't have portamento options.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::PORTA_RETRIGGER_X, p, val));
+                }
+                else if (extension == "curve")
+                {
+                    if (!p->has_portaoptions())
+                        sendError("Param " + p->oscName + " doesn't have portamento options.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::PORTA_CURVE_X, p, val));
+                }
                 else
                 {
                     sendError("Unknown parameter option: " + extension + "_x");
