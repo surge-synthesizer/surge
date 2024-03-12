@@ -844,7 +844,7 @@ void SurgeSynthProcessor::processBlockOSC()
         break;
 
         case SurgeSynthProcessor::ABSOLUTE_X:
-            if (om.param->absolute != om.ival)
+            if (om.param->absolute != (bool)om.ival)
             {
                 om.param->absolute = om.ival;
                 surge->storage.getPatch().isDirty = true;
@@ -853,7 +853,7 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
 
         case SurgeSynthProcessor::TEMPOSYNC_X:
-            if (om.param->temposync != om.ival)
+            if (om.param->temposync != (bool)om.ival)
             {
                 om.param->temposync = om.ival;
                 surge->storage.getPatch().isDirty = true;
@@ -862,7 +862,7 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
 
         case SurgeSynthProcessor::DEACT_X:
-            if (om.param->deactivated != om.ival)
+            if (om.param->deactivated != (bool)om.ival)
             {
                 om.param->deactivated = om.ival;
                 surge->storage.getPatch().isDirty = true;
@@ -871,7 +871,7 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
 
         case SurgeSynthProcessor::EXTEND_X:
-            if (om.param->extend_range != om.ival)
+            if (om.param->extend_range != (bool)om.ival)
             {
                 om.param->extend_range = om.ival;
                 surge->storage.getPatch().isDirty = true;
@@ -889,7 +889,7 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
 
         case SurgeSynthProcessor::PORTA_CONSTRATE_X:
-            if (om.param->porta_constrate != om.ival)
+            if (om.param->porta_constrate != (bool)om.ival)
             {
                 om.param->porta_constrate = om.ival;
                 surge->storage.getPatch().isDirty = true;
@@ -898,7 +898,7 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
 
         case SurgeSynthProcessor::PORTA_GLISS_X:
-            if (om.param->porta_gliss != om.ival)
+            if (om.param->porta_gliss != (bool)om.ival)
             {
                 om.param->porta_gliss = om.ival;
                 surge->storage.getPatch().isDirty = true;
@@ -907,7 +907,7 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
 
         case SurgeSynthProcessor::PORTA_RETRIGGER_X:
-            if (om.param->porta_retrigger != om.ival)
+            if (om.param->porta_retrigger != (bool)om.ival)
             {
                 om.param->porta_retrigger = om.ival;
                 surge->storage.getPatch().isDirty = true;
