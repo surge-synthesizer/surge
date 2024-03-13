@@ -2100,11 +2100,7 @@ void Parameter::set_extend_range(bool er)
 {
     bool prior_extend = extend_range;
 
-#if DEBUG_WRITABLE_EXTEND_RANGE
-    extend_range_internal = er;
-#else
     extend_range = er;
-#endif
 
     if (!extend_range)
     {
