@@ -770,3 +770,52 @@ TEST_CASE("Reverb1 White Noise Blast", "[dsp]")
         since++;
     }
 }
+
+TEST_CASE("Oscillator Onset", "[dsp]") // See issue 7570
+{
+    for (const auto &rt : {true, false})
+    {
+        for (const auto &ot :
+             {ot_classic, ot_wavetable, ot_window, ot_sine, ot_twist, ot_shnoise, ot_FM2, ot_FM3})
+        {
+            auto surge = Surge::Headless::createSurge(44100, ot == ot_wavetable || ot == ot_window);
+            auto storage = &surge->storage;
+
+            auto oscstorage = &(storage->getPatch().scene[0].osc[0]);
+
+            unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
+
+            oscstorage->retrigger.val.b = rt;
+
+            auto o =
+                spawn_osc(ot, storage, oscstorage, storage->getPatch().scenedata[0], oscbuffer);
+            o->init_ctrltypes();
+            o->init_default_values();
+            o->init_extra_config();
+
+            o->init(60);
+
+            int itUntilBigger{0};
+            bool continueChecking{true};
+
+            for (int j = 0; j < 10 && continueChecking; ++j)
+            {
+                o->process_block(60, 0, true, false, 0);
+                for (int i = 0; i < BLOCK_SIZE_OS && continueChecking; ++i)
+                {
+                    itUntilBigger++;
+                    if (std::fabs(o->output[i]) > 1e-6)
+                    {
+                        continueChecking = false;
+                        break;
+                    }
+                }
+            }
+            o->~Oscillator();
+            /*std::cout << "Onset Delay for " << osc_type_names[ot] << " with retrig=" << rt << " is
+               "
+                      << (continueChecking ? "Unknown" : std::to_string(itUntilBigger))
+                      << std::endl;*/
+        }
+    }
+}
