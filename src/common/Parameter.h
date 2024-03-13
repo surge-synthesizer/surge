@@ -517,16 +517,7 @@ class Parameter
     float moverate{};
     bool per_voice_processing{};
     // remember these need to be stashed specially in undo
-    bool temposync{}, absolute{}, deactivated{};
-
-#define DEBUG_WRITABLE_EXTEND_RANGE 0
-#if DEBUG_WRITABLE_EXTEND_RANGE
-    bool extend_range_internal{};
-    const bool &extend_range = extend_range_internal;
-#else
-    bool extend_range{};
-#endif
-
+    bool temposync{}, absolute{}, deactivated{}, extend_range{};
     bool porta_constrate{}, porta_gliss{}, porta_retrigger{};
     int porta_curve{};
     int deform_type{};

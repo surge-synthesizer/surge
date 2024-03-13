@@ -365,11 +365,6 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     Surge::GUI::setIsStandalone(juceEditor->processor.wrapperType ==
                                 juce::AudioProcessor::wrapperType_Standalone);
 
-    minimumZoom = 50;
-#if LINUX
-    minimumZoom = 100; // See github issue #628
-#endif
-
     currentSkin = Surge::GUI::SkinDB::get()->defaultSkin(&(this->synth->storage));
 
     // init the size of the plugin
@@ -2997,20 +2992,24 @@ void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
 
 void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 {
-    zoomFactor = std::max(zf, 25.f);
+    zoomFactor = std::max(zf, static_cast<float>(minimumZoom));
+
 #if LINUX
     if (zoomFactor == 150)
         zoomFactor = 149;
 #endif
 
     float zff = zoomFactor * 0.01;
+
     if (currentSkin && resizeWindow)
     {
         int yExtra = 0;
+
         if (getShowVirtualKeyboard())
         {
             yExtra = SurgeSynthEditor::extraYSpaceForVirtualKeyboard;
         }
+
         juceEditor->setSize(zff * currentSkin->getWindowSizeX(),
                             zff * (currentSkin->getWindowSizeY() + yExtra));
     }
@@ -3019,6 +3018,7 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
     {
         frame->setTransform(juce::AffineTransform().scaled(zff));
     }
+
     setBitmapZoomFactor(zoomFactor);
     rezoomOverlays();
 }
@@ -3029,17 +3029,12 @@ void SurgeGUIEditor::setBitmapZoomFactor(float zf)
     {
         float dbs = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->scale;
         int fullPhysicalZoomFactor = (int)(zf * dbs);
-        if (bitmapStore != nullptr)
-            bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
-    }
-}
 
-void SurgeGUIEditor::showMinimumZoomError() const
-{
-    std::ostringstream oss;
-    oss << "The smallest zoom level possible on your platform is " << minimumZoom
-        << "%. Sorry, you cannot make Surge XT any smaller!";
-    synth->storage.reportError(oss.str(), "Zoom Level Error");
+        if (bitmapStore != nullptr)
+        {
+            bitmapStore->setPhysicalZoomFactor(fullPhysicalZoomFactor);
+        }
+    }
 }
 
 void SurgeGUIEditor::showTooLargeZoomError(double width, double height, float zf) const

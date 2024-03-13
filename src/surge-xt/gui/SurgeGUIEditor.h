@@ -284,7 +284,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void setBitmapZoomFactor(float zf);
     void showTooLargeZoomError(double width, double height, float zf) const;
-    void showMinimumZoomError() const;
 
     /*
     ** Zoom Implementation
@@ -576,7 +575,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   private:
     std::function<void(SurgeGUIEditor *, bool resizeWindow)> zoom_callback;
     bool zoomInvalid = false;
-    int minimumZoom = 100;
+    static constexpr int minimumZoom = 25;
 
     int selectedFX[n_fx_slots];
     std::string fxPresetName[n_fx_slots];
