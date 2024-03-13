@@ -464,6 +464,98 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
         }
 
+        // Special case for extended paramter options
+        else if (hasEnding(addr, "_x"))
+        {
+            size_t last_slash = addr.find_last_of("/");
+            std::string rootaddr = addr.substr(0, last_slash);
+            auto *p = synth->storage.getPatch().parameterFromOSCName(rootaddr);
+            std::string extension = addr.substr(last_slash + 1);
+            extension.erase(extension.size() - 2);
+            if (querying)
+            {
+            }
+            else
+            {
+                if (extension == "absol")
+                {
+                    if (!p->can_be_absolute())
+                        sendError("Param " + p->oscName + " can't be absolute.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::ABSOLUTE_X, p, val));
+                }
+                else if (extension == "deact")
+                {
+                    if (!p->can_deactivate())
+                        sendError("Param " + p->oscName + " can't deactivate.");
+                    else
+                        sspPtr->oscRingBuf.push(
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEACT_X, p, val));
+                }
+                else if (extension == "tsync")
+                {
+                    if (!p->can_temposync())
+                        sendError("Param " + p->oscName + " can't tempo-sync.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::TEMPOSYNC_X, p, val));
+                }
+                else if (extension == "extend")
+                {
+                    if (!p->can_extend_range())
+                        sendError("Param " + p->oscName + " can't extend range.");
+                    else
+                        sspPtr->oscRingBuf.push(
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::EXTEND_X, p, val));
+                }
+                else if (extension == "deform")
+                {
+                    if (!p->has_deformoptions())
+                        sendError("Param " + p->oscName + " doesn't have deform options.");
+                    else
+                        sspPtr->oscRingBuf.push(
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEFORM_X, p, val));
+                }
+                else if (extension == "constrate")
+                {
+                    if (!p->has_portaoptions())
+                        sendError("Param " + p->oscName + " doesn't have portamento options.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::PORTA_CONSTRATE_X, p, val));
+                }
+                else if (extension == "gliss")
+                {
+                    if (!p->has_portaoptions())
+                        sendError("Param " + p->oscName + " doesn't have portamento options.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::PORTA_GLISS_X, p, val));
+                }
+                else if (extension == "retrigger")
+                {
+                    if (!p->has_portaoptions())
+                        sendError("Param " + p->oscName + " doesn't have portamento options.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::PORTA_RETRIGGER_X, p, val));
+                }
+                else if (extension == "curve")
+                {
+                    if (!p->has_portaoptions())
+                        sendError("Param " + p->oscName + " doesn't have portamento options.");
+                    else
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::PORTA_CURVE_X, p, val));
+                }
+                else
+                {
+                    sendError("Unknown parameter option: " + extension + "_x");
+                }
+            }
+        }
+
         // Special case for /param/fx/<s>/<n>/deactivate, which is not a true 'parameter'
         else if ((address2 == "fx") && (hasEnding(addr, "deactivate")))
         {
@@ -504,6 +596,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 std::string deactivated = ""; // isDeact ? "deactivated" : "activated";
                 std::string addr = "/param/" + shortOSCname + "/deactivate";
                 float val = (float)isDeact;
+                // TODO: change to call to OpenSoundControl::send(), so that this
+                //  runs on the juce messenger thread
                 if (!this->juceOSCSender.send(
                         juce::OSCMessage(juce::String(addr), val, juce::String(deactivated))))
                     sendFailed();
@@ -1068,6 +1162,7 @@ bool OpenSoundControl::modOSCout(std::string addr, std::string oscName, float va
     om.addString(oscName);
     om.addFloat32(val);
 
+    // Sending directly here, because we're already on the JUCE messenger thread
     if (!this->juceOSCSender.send(om))
     {
         sendFailed();
@@ -1167,6 +1262,8 @@ bool OpenSoundControl::sendParameter(const Parameter *p)
     om.addFloat32(val01);
     if (!valStr.empty())
         om.addString(valStr);
+    // This is direct, because we're either already on the JUCE messenger thread (allparams dump,
+    // e.g.), or this is just one parameter going to OSC out.
     if (!this->juceOSCSender.send(om))
     {
         sendFailed();

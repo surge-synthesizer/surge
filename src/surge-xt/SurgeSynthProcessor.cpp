@@ -761,16 +761,20 @@ void SurgeSynthProcessor::processBlockOSC()
             float pval = om.fval;
             if (om.param->valtype == vt_int)
                 pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
-            surge->setParameter01(surge->idForParameter(om.param), pval, true);
-            surge->storage.getPatch().isDirty = true;
 
-            // Special cases: A few control types require a rebuild and
-            // SGE Value Callbacks would do it as would the VST3 param handler
-            // so put them here for now. Bit of a hack...
-            auto ct = om.param->ctrltype;
-            if (ct == ct_bool_solo || ct == ct_bool_mute || ct == ct_scenesel)
+            if (pval != om.param->val.f)
             {
-                surge->refresh_editor = true;
+                surge->setParameter01(surge->idForParameter(om.param), pval, true);
+                surge->storage.getPatch().isDirty = true;
+
+                // Special cases: A few control types require a rebuild and
+                // SGE Value Callbacks would do it as would the VST3 param handler
+                // so put them here for now. Bit of a hack...
+                auto ct = om.param->ctrltype;
+                if (ct == ct_bool_solo || ct == ct_bool_mute || ct == ct_scenesel)
+                    surge->refresh_editor = true;
+                else
+                    surge->queueForRefresh(om.param->id);
             }
         }
         break;
@@ -842,12 +846,95 @@ void SurgeSynthProcessor::processBlockOSC()
                 newDisabledMask = curmask | msk;
             }
             surge->storage.getPatch().fx_disable.val.i = newDisabledMask;
-            surge->fx_suspend_bitmask = newDisabledMask;
-            surge->storage.getPatch().isDirty = true;
-            surge->refresh_editor = true;
-            // std::cout << "newDisabledMask: " << std::bitset<16>(newDisabledMask) << std::endl;
+            if (surge->fx_suspend_bitmask != newDisabledMask)
+            {
+                surge->fx_suspend_bitmask = newDisabledMask;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
         }
         break;
+
+        case SurgeSynthProcessor::ABSOLUTE_X:
+            if (om.param->absolute != (bool)om.ival)
+            {
+                om.param->absolute = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::TEMPOSYNC_X:
+            if (om.param->temposync != (bool)om.ival)
+            {
+                om.param->temposync = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::DEACT_X:
+            if (om.param->deactivated != (bool)om.ival)
+            {
+                om.param->deactivated = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::EXTEND_X:
+            if (om.param->extend_range != (bool)om.ival)
+            {
+                om.param->extend_range = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::DEFORM_X:
+            if (om.param->deform_type != om.ival)
+            {
+                om.param->deform_type = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::PORTA_CONSTRATE_X:
+            if (om.param->porta_constrate != (bool)om.ival)
+            {
+                om.param->porta_constrate = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::PORTA_GLISS_X:
+            if (om.param->porta_gliss != (bool)om.ival)
+            {
+                om.param->porta_gliss = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::PORTA_RETRIGGER_X:
+            if (om.param->porta_retrigger != (bool)om.ival)
+            {
+                om.param->porta_retrigger = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
+
+        case SurgeSynthProcessor::PORTA_CURVE_X:
+            if (om.param->porta_curve != om.ival)
+            {
+                om.param->porta_curve = om.ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om.param->id);
+            }
+            break;
 
         default:
             break;

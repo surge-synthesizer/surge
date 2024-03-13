@@ -2874,20 +2874,25 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
 
     if (external && !need_refresh)
     {
-        bool got = false;
-        for (int i = 0; i < 8; i++)
-        {
-            if (refresh_parameter_queue[i] < 0 || refresh_parameter_queue[i] == index)
-            {
-                refresh_parameter_queue[i] = index;
-                got = true;
-                break;
-            }
-        }
-        if (!got)
-            refresh_overflow = true;
+        queueForRefresh(index);
     }
     return need_refresh;
+}
+
+void SurgeSynthesizer::queueForRefresh(int param_index)
+{
+    bool got = false;
+    for (int i = 0; i < 8; i++)
+    {
+        if (refresh_parameter_queue[i] < 0 || refresh_parameter_queue[i] == param_index)
+        {
+            refresh_parameter_queue[i] = param_index;
+            got = true;
+            break;
+        }
+    }
+    if (!got)
+        refresh_overflow = true;
 }
 
 void SurgeSynthesizer::switch_toggled()

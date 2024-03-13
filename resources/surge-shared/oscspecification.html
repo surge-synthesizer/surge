@@ -131,7 +131,8 @@
                               <p>
                                    Surge XT supports external OSC control of most parameters, including patch and tuning
                                    changes. Where appropriate and feasible,
-                                   Surge parameter and other changes are reported to OSC out, either when they occur or when queried
+                                   Surge parameter and other changes are reported to OSC out, either when they occur or
+                                   when queried
                                    (see below). Notes may also be triggered via OSC, either by frequency or
                                    by MIDI note number.
                               </p>
@@ -167,9 +168,11 @@
                                    not how messages are to be formatted for OSC).
                               </p>
                               <p style="margin-top: 28px;">
-                                   <b>OSC Output</b>: All parameter, patch and modulation mapping changes made on Surge XT are reported to
+                                   <b>OSC Output</b>: All parameter, patch and modulation mapping changes made on Surge
+                                   XT are reported to
                                    OSC out, if OSC output is enabled.
-                                   Parameters are reported in the ranges given under "Appropriate Values" (0.0 - 1.0 for 'float' parameters), followed by a
+                                   Parameters are reported in the ranges given under "Appropriate Values" (0.0 - 1.0 for
+                                   'float' parameters), followed by a
                                    displayable string.
                                    Errors are reported (when feasible) to "/error".
                               </p>
@@ -432,8 +435,8 @@
                                    <td>/q/patch</td>
                                    <td>request current patch</td>
                                    <td>Sends the full path of the current patch to OSC out</td>
-                                   </tr>
-                                   <tr>
+                              </tr>
+                              <tr>
                                    <td>/q/all_params</td>
                                    <td>request all parameters</td>
                                    <td>Sends a dump of all parameters and their values to OSC out</td>
@@ -1311,6 +1314,83 @@
 
                     <div style="clear: both;"></div>
 
+                    <div class="tablewrap fl cl" style="width: 80%; margin: 16px 4px;">
+                         <div class="heading">
+                              <h2>Parameter Extended Options</h2>
+                              <h3>Replace '&lt;parameter address&gt;' with full parameter address (as
+                                   above) and '&lt;s&gt;' with 'a' or 'b' (scene).
+                              </h3>
+                         </div>
+
+                         <div style="margin:0 10pt 0 0;">
+                              <p style="margin-top: 4px;">
+                                   Some parameters, (sometimes only in certain contexts), may have the following extended options:
+                              </p>
+                         </div>
+                    
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>&lt;parameter address&gt;/absol_x</td>
+                                   <td>absolute</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>&lt;parameter address&gt;/deact_x</td>
+                                   <td>deactivate</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>&lt;parameter address&gt;/tsync_x</td>
+                                   <td>tempo sync</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>&lt;parameter address&gt;/extend_x</td>
+                                   <td>extend range</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>&lt;parameter address&gt;/deform_x</td>
+                                   <td>deform type OR modern osc option bitmask</td>
+                                   <td>integer (0 to 3) OR bitmask</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento/constrate_x</td>
+                                   <td>portamento constant rate</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento/gliss_x</td>
+                                   <td>portamento glissando</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento/retrigger_x</td>
+                                   <td>portamento retrigger at scale degrees</td>
+                                   <td>boolean (0 or 1)</td>
+                              </tr>
+                              <tr>
+                                   <td>/param/&lt;s&gt;/portamento/curve_x</td>
+                                   <td>portamento curve </td>
+                                   <td>int (-1:log, 0:linear, or 1:exponential)</td>
+                              </tr>
+                         </table>
+                    </div>
+                    
+                    <div style="clear: both;"></div>
+                    
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/param/a/pitch/extend_x 1</code></span>
+                         <span><code>/param/a/osc/1/pitch/absol_x 1</code></span>
+                         <span><code>/param/a/aeg/attack/tsync_x 0</code></span>
+                         <span><code>/param/a/filter/feedback/deform_x 2</code></span>
+                    </div>
+
                     <div style="border: 1px solid lightgray;"></div>
                     <div style="margin:10pt 10pt 0 10pt; padding: 5pt 12pt; background: #fafbff;">
                          <div style="font-size: 12pt; font-family: Lato;">
@@ -1334,8 +1414,7 @@
                               </p>
                               <p style="margin-top: 8px;">
                                    Not all parameters can be modulated by all mod. sources. If a given combination is
-                                   not
-                                   possible an error will be reported to OSC out.
+                                   not possible an error will be reported to OSC out.
                               </p>
                          </div>
                     </div>
@@ -1583,10 +1662,11 @@
                     <div class="tablewrap cr cl" style="width: 75%; margin: 16px 8px;">
                          <div class="heading">
                               <h2>Modulation Mapping: Muting</h2>
-                              <p>Replace '/mod/...' with '/mod/mute/...' in the modulation-to-parameter mapping convention described above,
+                              <h3>Replace '/mod/...' with '/mod/mute/...' in the modulation-to-parameter mapping
+                                   convention described above,
                                    using a value of 0 to set muting <b>off</b>, or 1 to set muting <b>on</b>.
-                              </p>
-                    
+                              </h3>
+
                          </div>
                     </div>
                     <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
