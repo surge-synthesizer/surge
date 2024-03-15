@@ -54,9 +54,13 @@ Component MultiSwitch =
                        "to reach to, valid values are from 0 to 'frames'"})
         .withProperty(Component::BACKGROUND, {"image", "bg_resource", "bg_id"},
                       {"Base image of the switch"})
-        .withProperty(Component::DRAGGABLE_HSWITCH, {"draggable"},
+        .withProperty(Component::DRAGGABLE_SWITCH, {"draggable"},
                       {"Is the switch draggable as a slider via mouse/touch or not. Valid values: "
                        "true, false"})
+        .withProperty(
+            Component::MOUSEWHEELABLE_SWITCH, {"mousewheelable"},
+            {"Is the switch mousewheelable as a slider via mouse/touch or not. Valid values: "
+             "true, false"})
         .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, {"accessible_as_buttons"},
                       {"Is the accessible display buttons (true) or radio buttons (false, def)"})
         .withProperty(Component::HOVER_IMAGE, {"hover_image"},
@@ -551,7 +555,8 @@ namespace OtherControls
 Connector surge_menu = Connector("controls.surge_menu", 848, 550, 50, 15, Components::MultiSwitch,
                                  Connector::SURGE_MENU)
                            .withProperty(Component::BACKGROUND, IDB_MAIN_MENU)
-                           .withProperty(Component::DRAGGABLE_HSWITCH, false);
+                           .withProperty(Component::MOUSEWHEELABLE_SWITCH, false)
+                           .withProperty(Component::DRAGGABLE_SWITCH, false);
 
 Connector patch_browser = Connector("controls.patch_browser", 157, 12, 390, 28, Components::Custom,
                                     Connector::PATCH_BROWSER);
@@ -572,7 +577,8 @@ Connector action_redo =
 Connector patch_save = Connector("controls.patch.save", 510, 42, 37, 12, Components::MultiSwitch,
                                  Connector::SAVE_PATCH)
                            .withHSwitch2Properties(IDB_SAVE_PATCH, 1, 1, 1)
-                           .withProperty(Component::DRAGGABLE_HSWITCH, false)
+                           .withProperty(Component::MOUSEWHEELABLE_SWITCH, false)
+                           .withProperty(Component::DRAGGABLE_SWITCH, false)
                            .withProperty(Component::ACCESSIBLE_AS_MOMENTARY_BUTTON, true);
 
 Connector status_panel = Connector("controls.status.panel", 562, 12, Components::Group);

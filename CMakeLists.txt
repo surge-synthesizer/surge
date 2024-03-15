@@ -14,7 +14,7 @@ if(NOT BUILD_TESTING)
   option(BUILD_TESTING "" OFF)
 endif()
 
-project(Surge VERSION 1.3.1 LANGUAGES C CXX ASM)
+project(Surge VERSION 1.3.2 LANGUAGES C CXX ASM)
 
 # Banner {{{
 message(STATUS "It's Surge XT, folks! Version is ${PROJECT_VERSION}")
@@ -77,7 +77,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   add_compile_options(
     -Wno-multichar
     # Targeting Windows with GCC/Clang is experimental
-    $<$<NOT:$<BOOL:${WIN32}>>:-Werror>
+    $<$<NOT:$<OR:$<BOOL:${WIN32}>,$<BOOL:${SURGE_SKIP_WERROR}>>>:-Werror>
 
     # PE/COFF doesn't support visibility
     $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>

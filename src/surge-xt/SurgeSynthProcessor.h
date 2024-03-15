@@ -529,7 +529,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
   public:
     bool inputIsLatent{false};
 
-    std::string fatalErrorMessage{false};
+    std::string fatalErrorMessage{};
 
   private:
     // Have we warned about bad configurations

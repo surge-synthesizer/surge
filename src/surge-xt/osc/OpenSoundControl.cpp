@@ -596,6 +596,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 std::string deactivated = ""; // isDeact ? "deactivated" : "activated";
                 std::string addr = "/param/" + shortOSCname + "/deactivate";
                 float val = (float)isDeact;
+
                 juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
                 om.addFloat32(val);
                 om.addString(juce::String(deactivated));
@@ -1240,6 +1241,7 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
     om.addFloat32(val01);
     if (!valStr.empty())
         om.addString(valStr);
+
     OpenSoundControl::send(om, needsMessageThread);
 }
 

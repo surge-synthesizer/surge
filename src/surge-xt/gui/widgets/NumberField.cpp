@@ -71,6 +71,7 @@ std::string NumberField::valueToDisplay() const
     }
     return oss.str();
 }
+
 void NumberField::paint(juce::Graphics &g)
 {
     jassert(skin);
@@ -104,6 +105,7 @@ void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlMode
 {
     controlMode = n;
     extended = isExtended;
+
     switch (controlMode)
     {
     case Skin::Parameters::NONE:
@@ -134,6 +136,7 @@ void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlMode
     }
     bounceToInt();
 }
+
 void NumberField::mouseDown(const juce::MouseEvent &event)
 {
     if (forwardedMainFrameMouseDowns(event))
@@ -186,6 +189,7 @@ void NumberField::mouseDrag(const juce::MouseEvent &event)
         lastDistanceChecked = d;
     }
 }
+
 void NumberField::mouseUp(const juce::MouseEvent &event)
 {
     mouseUpLongHold(event);
@@ -230,7 +234,19 @@ bool NumberField::keyPressed(const juce::KeyPress &key)
     auto [action, mod] = Surge::Widgets::accessibleEditAction(key, storage);
 
     if (action == None)
+    {
         return false;
+    }
+
+    if (action == Return)
+    {
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+        if (sge && sge->promptForUserValueEntry(getTag(), this))
+        {
+            return true;
+        }
+    }
 
     if (action == OpenMenu)
     {
@@ -239,9 +255,12 @@ bool NumberField::keyPressed(const juce::KeyPress &key)
     }
 
     if (action != Increase && action != Decrease)
+    {
         return false;
+    }
 
     int amt = 1;
+
     if (action == Decrease)
     {
         amt = -1;
@@ -256,6 +275,7 @@ bool NumberField::keyPressed(const juce::KeyPress &key)
     changeBy(amt);
     notifyEndEdit();
     repaint();
+
     return true;
 }
 

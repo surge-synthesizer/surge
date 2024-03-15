@@ -3146,7 +3146,9 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
         {
             contextMenu.addSeparator();
 
-            auto handleTypein = [pControl, this](const std::string &s) {
+            auto c = pControl->asJuceComponent();
+
+            auto handleTypein = [c, pControl, this](const std::string &s) {
                 auto i = std::atoi(s.c_str());
 
                 if (i >= 1 && i <= 100)
@@ -3154,11 +3156,9 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                     pControl->setValue(Parameter::intScaledToFloat(i, 100, 1));
                     valueChanged(pControl);
 
-                    auto iv = pControl->asJuceComponent();
-
-                    if (iv)
+                    if (c)
                     {
-                        iv->repaint();
+                        c->repaint();
                     }
 
                     return true;
@@ -3169,7 +3169,7 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
             auto val =
                 std::to_string(Parameter::intUnscaledFromFloat(pControl->getValue(), 100, 1));
 
-            auto showTypein = [this, handleTypein, menuName, pControl, val]() {
+            auto showTypein = [this, c, handleTypein, menuName, pControl, val]() {
                 if (!typeinEditor)
                 {
                     typeinEditor =
@@ -3182,9 +3182,10 @@ int32_t MSEGControlRegion::controlModifierClicked(Surge::GUI::IComponentTagValue
                 typeinEditor->setValueLabels("current: " + val, "");
                 typeinEditor->setSkin(skin, associatedBitmapStore);
                 typeinEditor->setEditableText(val);
+                typeinEditor->setReturnFocusTarget(c);
 
-                auto topOfControl = pControl->asJuceComponent()->getParentComponent()->getY();
-                auto pb = pControl->asJuceComponent()->getBounds();
+                auto topOfControl = c->getParentComponent()->getY();
+                auto pb = c->getBounds();
                 auto cx = pb.getCentreX();
 
                 auto r = typeinEditor->getRequiredSize();

@@ -156,7 +156,7 @@ struct SurgeSynthStartupErrorEditor : juce::AudioProcessorEditor
 
         g.setFont(40);
         auto lb = getLocalBounds().withHeight(50).translated(0, 100);
-        g.drawText("Fatal Surge Startup Error", lb, juce::Justification::centred);
+        g.drawText("Fatal Surge XT Startup Error", lb, juce::Justification::centred);
 
         g.setColour(juce::Colours::white);
         g.setFont(20);
@@ -165,8 +165,9 @@ struct SurgeSynthStartupErrorEditor : juce::AudioProcessorEditor
         lb = lb.translated(0, 125);
         g.drawText(Surge::Build::FullVersionStr, lb, juce::Justification::centred);
         lb = lb.translated(0, 25);
-        g.drawText("Report on Surge discord or github issue with a screenshot of this screen", lb,
-                   juce::Justification::centred);
+        g.drawText(
+            "Report issue on Surge Synth Team Discord or GitHub with a screenshot of this screen",
+            lb, juce::Justification::centred);
     }
 };
 

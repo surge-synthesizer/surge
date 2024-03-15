@@ -232,7 +232,17 @@ PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelecto
     searchButton->onPress = [w = juce::Component::SafePointer(this)]() {
         if (w)
         {
-            w->typeaheadButtonPressed();
+            if (!w->storage->userDataPathValid)
+            {
+                auto sge = w->firstListenerOfType<SurgeGUIEditor>();
+                if (sge)
+                    sge->messageBox("Search is not available without a writable user dir",
+                                    "Search Not Available");
+            }
+            else
+            {
+                w->typeaheadButtonPressed();
+            }
         }
         return true;
     };
@@ -251,7 +261,17 @@ PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelecto
     favoriteButton->onPress = [w = juce::Component::SafePointer(this)]() {
         if (w)
         {
-            w->toggleFavoriteStatus();
+            if (!w->storage->userDataPathValid)
+            {
+                auto sge = w->firstListenerOfType<SurgeGUIEditor>();
+                if (sge)
+                    sge->messageBox("Favorites are not available without a writable user dir",
+                                    "Favorites Not Available");
+            }
+            else
+            {
+                w->toggleFavoriteStatus();
+            }
         }
         return true;
     };
@@ -1204,7 +1224,7 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
         if (n_subc > 1)
         {
-            name = menuName.c_str() + (subc + 1);
+            name = fmt::format("{} {}", menuName, subc + 1).c_str();
         }
         else
         {

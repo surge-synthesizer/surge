@@ -121,6 +121,9 @@ std::string defaultKeyToString(DefaultKey k)
     case OverrideMappingOnPatchLoad:
         r = "overrideMappingOnPatchLoad";
         break;
+    case OverrideTempoOnPatchLoad:
+        r = "overrideTempoOnPatchLoad";
+        break;
     case DefaultPatchAuthor:
         r = "defaultPatchAuthor";
         break;

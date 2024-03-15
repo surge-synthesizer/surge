@@ -460,7 +460,7 @@ class alignas(16) SurgeSynthesizer
 
     //==============================================================================
     // synth -> editor variables
-    bool refresh_editor, patch_loaded;
+    bool refresh_editor, refresh_vkb, patch_loaded;
     int learn_param_from_cc, learn_macro_from_cc, learn_param_from_note;
     int refresh_ctrl_queue[8];
     int refresh_parameter_queue[8];

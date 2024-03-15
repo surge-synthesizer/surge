@@ -39,91 +39,99 @@ const static std::string PresetXtn = ".modpreset";
 void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s, int scene,
                                        int lfoid)
 {
-    auto lfo = &(s->getPatch().scene[scene].lfo[lfoid]);
-    int lfotype = lfo->shape.val.i;
-
-    auto containingPath = s->userDataPath / fs::path{PresetDir};
-
-    if (lfotype == lt_mseg)
-        containingPath = containingPath / fs::path{"MSEG"};
-    else if (lfotype == lt_stepseq)
-        containingPath = containingPath / fs::path{"Step Seq"};
-    else if (lfotype == lt_envelope)
-        containingPath = containingPath / fs::path{"Envelope"};
-    else if (lfotype == lt_formula)
-        containingPath = containingPath / fs::path{"Formula"};
-    else
-        containingPath = containingPath / fs::path{"LFO"};
-
-    fs::create_directories(containingPath);
-    auto fullLocation =
-        fs::path({containingPath / location}).replace_extension(fs::path{PresetXtn});
-
-    TiXmlDeclaration decl("1.0", "UTF-8", "yes");
-
-    TiXmlDocument doc;
-    doc.InsertEndChild(decl);
-
-    TiXmlElement lfox("lfo");
-    lfox.SetAttribute("shape", lfotype);
-
-    TiXmlElement params("params");
-    for (auto curr = &(lfo->rate); curr <= &(lfo->release); ++curr)
+    try
     {
-        // shape is odd
-        if (curr == &(lfo->shape))
+        auto lfo = &(s->getPatch().scene[scene].lfo[lfoid]);
+        int lfotype = lfo->shape.val.i;
+
+        auto containingPath = s->userDataPath / fs::path{PresetDir};
+
+        if (lfotype == lt_mseg)
+            containingPath = containingPath / fs::path{"MSEG"};
+        else if (lfotype == lt_stepseq)
+            containingPath = containingPath / fs::path{"Step Seq"};
+        else if (lfotype == lt_envelope)
+            containingPath = containingPath / fs::path{"Envelope"};
+        else if (lfotype == lt_formula)
+            containingPath = containingPath / fs::path{"Formula"};
+        else
+            containingPath = containingPath / fs::path{"LFO"};
+
+        fs::create_directories(containingPath);
+        auto fullLocation =
+            fs::path({containingPath / location}).replace_extension(fs::path{PresetXtn});
+
+        TiXmlDeclaration decl("1.0", "UTF-8", "yes");
+
+        TiXmlDocument doc;
+        doc.InsertEndChild(decl);
+
+        TiXmlElement lfox("lfo");
+        lfox.SetAttribute("shape", lfotype);
+
+        TiXmlElement params("params");
+        for (auto curr = &(lfo->rate); curr <= &(lfo->release); ++curr)
         {
-            continue;
+            // shape is odd
+            if (curr == &(lfo->shape))
+            {
+                continue;
+            }
+
+            // OK the internal name has "lfo7_" at the top or what not. We need this
+            // loadable into any LFO so...
+            std::string in(curr->get_internal_name());
+            auto p = in.find("_");
+            in = in.substr(p + 1);
+            TiXmlElement pn(in);
+
+            if (curr->valtype == vt_float)
+                pn.SetDoubleAttribute("v", curr->val.f);
+            else
+                pn.SetAttribute("i", curr->val.i);
+            pn.SetAttribute("temposync", curr->temposync);
+            pn.SetAttribute("deform_type", curr->deform_type);
+            pn.SetAttribute("extend_range", curr->extend_range);
+            pn.SetAttribute("deactivated", curr->deactivated);
+
+            params.InsertEndChild(pn);
+        }
+        lfox.InsertEndChild(params);
+
+        if (lfotype == lt_mseg)
+        {
+            TiXmlElement ms("mseg");
+            s->getPatch().msegToXMLElement(&(s->getPatch().msegs[scene][lfoid]), ms);
+            lfox.InsertEndChild(ms);
+        }
+        if (lfotype == lt_stepseq)
+        {
+            TiXmlElement ss("sequence");
+            s->getPatch().stepSeqToXmlElement(&(s->getPatch().stepsequences[scene][lfoid]), ss,
+                                              true);
+            lfox.InsertEndChild(ss);
+        }
+        if (lfotype == lt_formula)
+        {
+            TiXmlElement fm("formula");
+            s->getPatch().formulaToXMLElement(&(s->getPatch().formulamods[scene][lfoid]), fm);
+            lfox.InsertEndChild(fm);
         }
 
-        // OK the internal name has "lfo7_" at the top or what not. We need this
-        // loadable into any LFO so...
-        std::string in(curr->get_internal_name());
-        auto p = in.find("_");
-        in = in.substr(p + 1);
-        TiXmlElement pn(in);
+        doc.InsertEndChild(lfox);
 
-        if (curr->valtype == vt_float)
-            pn.SetDoubleAttribute("v", curr->val.f);
-        else
-            pn.SetAttribute("i", curr->val.i);
-        pn.SetAttribute("temposync", curr->temposync);
-        pn.SetAttribute("deform_type", curr->deform_type);
-        pn.SetAttribute("extend_range", curr->extend_range);
-        pn.SetAttribute("deactivated", curr->deactivated);
+        if (!doc.SaveFile(fullLocation))
+        {
+            // uhh ... do something I guess?
+            std::cout << "Could not save" << std::endl;
+        }
 
-        params.InsertEndChild(pn);
+        forcePresetRescan();
     }
-    lfox.InsertEndChild(params);
-
-    if (lfotype == lt_mseg)
+    catch (const fs::filesystem_error &e)
     {
-        TiXmlElement ms("mseg");
-        s->getPatch().msegToXMLElement(&(s->getPatch().msegs[scene][lfoid]), ms);
-        lfox.InsertEndChild(ms);
+        s->reportError(e.what(), "Unable to save LFO Preset");
     }
-    if (lfotype == lt_stepseq)
-    {
-        TiXmlElement ss("sequence");
-        s->getPatch().stepSeqToXmlElement(&(s->getPatch().stepsequences[scene][lfoid]), ss, true);
-        lfox.InsertEndChild(ss);
-    }
-    if (lfotype == lt_formula)
-    {
-        TiXmlElement fm("formula");
-        s->getPatch().formulaToXMLElement(&(s->getPatch().formulamods[scene][lfoid]), fm);
-        lfox.InsertEndChild(fm);
-    }
-
-    doc.InsertEndChild(lfox);
-
-    if (!doc.SaveFile(fullLocation))
-    {
-        // uhh ... do something I guess?
-        std::cout << "Could not save" << std::endl;
-    }
-
-    forcePresetRescan();
 }
 
 /*

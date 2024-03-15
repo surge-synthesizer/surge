@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include "melatonin_inspector/melatonin_inspector.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIEditorTags.h"
 #include "SurgeGUIUtils.h"
@@ -1033,6 +1034,30 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
 
     patchDefMenu.addSeparator();
 
+    if (Surge::GUI::getIsStandalone())
+    {
+        auto tempoOnLoadMenu = juce::PopupMenu();
+
+        bool overrideTempoOnLoad = Surge::Storage::getUserDefaultValue(
+            &(synth->storage), Surge::Storage::OverrideTempoOnPatchLoad, true);
+
+        tempoOnLoadMenu.addItem(Surge::GUI::toOSCase("Keep Current Tempo"), true,
+                                !overrideTempoOnLoad, [this, overrideTempoOnLoad]() {
+                                    Surge::Storage::updateUserDefaultValue(
+                                        &(this->synth->storage),
+                                        Surge::Storage::OverrideTempoOnPatchLoad, false);
+                                });
+
+        tempoOnLoadMenu.addItem(Surge::GUI::toOSCase("Override With Embedded Tempo if Available"),
+                                true, overrideTempoOnLoad, [this, overrideTempoOnLoad]() {
+                                    Surge::Storage::updateUserDefaultValue(
+                                        &(this->synth->storage),
+                                        Surge::Storage::OverrideTempoOnPatchLoad, true);
+                                });
+
+        patchDefMenu.addSubMenu(Surge::GUI::toOSCase("Tempo on Patch Load"), tempoOnLoadMenu);
+    }
+
     auto tuningOnLoadMenu = juce::PopupMenu();
 
     bool overrideTuningOnLoad = Surge::Storage::getUserDefaultValue(
@@ -1728,6 +1753,13 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
                        "\n";
         showHTML(oscSpec);
     });
+
+    oscSubMenu.addSeparator();
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Download TouchOSC Template..."), []() {
+        juce::URL(fmt::format("{}touchosc", stringWebsite)).launchInDefaultBrowser();
+    });
+
 #endif
 
     return oscSubMenu;
@@ -1753,6 +1785,26 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
 
     devSubMenu.addItem(Surge::GUI::toOSCase("Dump Undo/Redo Stack to stdout"), true, false,
                        [this]() { undoManager()->dumpStack(); });
+
+    if (melatoninInspector)
+    {
+        devSubMenu.addItem("Close Melatonin Inspector", [this]() {
+            if (melatoninInspector)
+            {
+                melatoninInspector->setVisible(false);
+                melatoninInspector.reset();
+            }
+        });
+    }
+    else
+    {
+        devSubMenu.addItem("Launch Melatonin Inspector", [this] {
+            melatoninInspector = std::make_unique<melatonin::Inspector>(*frame);
+            melatoninInspector->onClose = [this]() { melatoninInspector.reset(); };
+
+            melatoninInspector->setVisible(true);
+        });
+    }
 
 #ifdef INSTRUMENT_UI
     devSubMenu.addItem(Surge::GUI::toOSCase("Show UI Instrumentation..."),

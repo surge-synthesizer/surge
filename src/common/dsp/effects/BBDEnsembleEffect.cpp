@@ -96,14 +96,7 @@ BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, p
     width.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
 
-    for (int i = 0; i < 2; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            modlfos[i][j].samplerate = storage->samplerate;
-            modlfos[i][j].samplerate_inv = storage->samplerate_inv;
-        }
-    }
+    BBDEnsembleEffect::sampleRateReset();
 
     for (int i = 0; i < 2; ++i)
     {
@@ -118,23 +111,21 @@ void BBDEnsembleEffect::init()
     setvars(true);
     block_counter = 0;
 
-    auto init_bbds = [=](auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
+    auto reset_bbds = [this](auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
         for (auto *del : {&delL1, &delL2, &delR1, &delR2})
         {
-            del->prepare(storage->samplerate);
             del->setFilterFreq(10000.0f);
             del->setDelayTime(0.005f);
         }
     };
 
-    init_bbds(del_128L1, del_128L2, del_128R1, del_128R2);
-    init_bbds(del_256L1, del_256L2, del_256R1, del_256R2);
-    init_bbds(del_512L1, del_512L2, del_512R1, del_512R2);
-    init_bbds(del_1024L1, del_1024L2, del_1024R1, del_1024R2);
-    init_bbds(del_2048L1, del_2048L2, del_2048R1, del_2048R2);
-    init_bbds(del_4096L1, del_4096L2, del_4096R1, del_4096R2);
+    reset_bbds(del_128L1, del_128L2, del_128R1, del_128R2);
+    reset_bbds(del_256L1, del_256L2, del_256R1, del_256R2);
+    reset_bbds(del_512L1, del_512L2, del_512R1, del_512R2);
+    reset_bbds(del_1024L1, del_1024L2, del_1024R1, del_1024R2);
+    reset_bbds(del_2048L1, del_2048L2, del_2048R1, del_2048R2);
+    reset_bbds(del_4096L1, del_4096L2, del_4096R1, del_4096R2);
 
-    bbd_saturation_sse.reset(storage->samplerate);
     bbd_saturation_sse.setDrive(0.5f);
 
     fbStateL = 0.0f;
@@ -166,6 +157,32 @@ void BBDEnsembleEffect::setvars(bool init)
         width.instantize();
         mix.instantize();
     }
+}
+
+void BBDEnsembleEffect::sampleRateReset()
+{
+    for (int i = 0; i < 2; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            modlfos[i][j].samplerate = storage->samplerate;
+            modlfos[i][j].samplerate_inv = storage->samplerate_inv;
+        }
+    }
+
+    bbd_saturation_sse.reset(storage->samplerate);
+
+    auto init_bbds = [this](auto &delL1, auto &delL2, auto &delR1, auto &delR2) {
+        for (auto *del : {&delL1, &delL2, &delR1, &delR2})
+            del->prepare(storage->samplerate);
+    };
+
+    init_bbds(del_128L1, del_128L2, del_128R1, del_128R2);
+    init_bbds(del_256L1, del_256L2, del_256R1, del_256R2);
+    init_bbds(del_512L1, del_512L2, del_512R1, del_512R2);
+    init_bbds(del_1024L1, del_1024L2, del_1024R1, del_1024R2);
+    init_bbds(del_2048L1, del_2048L2, del_2048R1, del_2048R2);
+    init_bbds(del_4096L1, del_4096L2, del_4096R1, del_4096R2);
 }
 
 float BBDEnsembleEffect::getFeedbackGain(bool bbd) const noexcept

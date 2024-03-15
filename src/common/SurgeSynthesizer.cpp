@@ -4366,11 +4366,14 @@ void SurgeSynthesizer::processControl()
     for (int i = 0; i < n; i++)
     {
         int src_id = storage.getPatch().modulation_global[i].source_id;
+        int src_index = storage.getPatch().modulation_global[i].source_index;
         int dst_id = storage.getPatch().modulation_global[i].destination_id;
         float depth = storage.getPatch().modulation_global[i].depth;
         int source_scene = storage.getPatch().modulation_global[i].source_scene;
+
         storage.getPatch().globaldata[dst_id].f +=
-            depth * storage.getPatch().scene[source_scene].modsources[src_id]->get_output(0) *
+            depth *
+            storage.getPatch().scene[source_scene].modsources[src_id]->get_output(src_index) *
             (1 - storage.getPatch().modulation_global[i].muted);
     }
 
