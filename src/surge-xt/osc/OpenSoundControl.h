@@ -72,8 +72,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     void oscMessageReceived(const juce::OSCMessage &message) override;
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
-    void send(std::string addr, std::string msg);
-    void send(std::string addr, float fval, std::string msg);
+    void send(juce::OSCMessage om, bool needsMessengerThread);
     void sendAllParams();
     void sendAllModulators();
     void stopSending(bool updateOSCStartInStorage = true);
@@ -89,7 +88,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     void modEndEdit(long ptag, modsources modsource, int modsourceScene, int index,
                     float depth01) override;
 
-    bool modOSCout(std::string addr, std::string oscName, float val, bool reportMute);
+    void modOSCout(std::string addr, std::string oscName, float val, bool reportMute);
 
   private:
     SurgeSynthesizer *synth{nullptr};
@@ -101,10 +100,10 @@ class OpenSoundControl : public juce::OSCReceiver,
     void sendNotFloatError(std::string addr, std::string msg);
     void sendDataCountError(std::string addr, std::string count);
     float getNormValue(Parameter *p, float fval);
-    bool sendParameter(const Parameter *p);
-    bool sendMacro(long macnum);
-    bool sendModulator(ModulationRouting mod, int scene, bool global);
-    bool sendPath(std::string pathStr);
+    void sendParameter(const Parameter *p, bool needsMsgThread);
+    void sendMacro(long macnum, bool needsMsgThread);
+    void sendModulator(ModulationRouting mod, int scene, bool global);
+    void sendPath(std::string pathStr);
 
     std::string getModulatorOSCAddr(int modid, int scene, int index, bool mute);
     void sendMod(long ptag, modsources modsource, int modsourceScene, int index, float val,
