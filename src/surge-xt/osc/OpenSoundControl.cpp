@@ -1124,12 +1124,14 @@ void OpenSoundControl::send(juce::OSCMessage om, bool needsMessengerThread)
                     sendFailed();
             });
         }
-    }
-    else
-    // Send OSC directly (used when already on the messenger thread)
-    {
-        if (!this->juceOSCSender.send(om))
-            sendFailed();
+        else
+        {
+            // Send OSC directly (used when already on the messenger thread)
+            {
+                if (!this->juceOSCSender.send(om))
+                    sendFailed();
+            }
+        }
     }
 }
 
