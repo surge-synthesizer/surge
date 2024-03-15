@@ -303,26 +303,30 @@ bool SurgeSynthProcessor::changeOSCOut(int new_port, std::string ipaddr)
     return initOSCOut(new_port, ipaddr);
 }
 
-// Called as 'patch loaded' listener; runs on the juce::MessageManager thread
+// Called as 'patch loaded' listener; will run on the juce::MessageManager thread
 void SurgeSynthProcessor::patch_load_to_OSC(fs::path fullPath)
 {
     std::string pathStr = path_to_string(fullPath);
     if (surge->storage.oscSending && !pathStr.empty())
     {
-        oscHandler.send("/patch/load", pathStr);
+        juce::OSCMessage om =
+            juce::OSCMessage(juce::OSCAddressPattern(juce::String("/patch/load")));
+        om.addString(pathStr);
+        oscHandler.send(om, true);
     }
 }
 
-// Called as 'param changed' listener; runs on the juce::MessageManager thread
+// Called as 'param changed' listener; will run on the juce::MessageManager thread
 void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, bool hasFloat, float value,
                                               std::string valStr)
 {
     if (surge->storage.oscSending && !paramPath.empty())
     {
+        juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(paramPath)));
+        om.addString(valStr);
         if (hasFloat)
-            oscHandler.send(paramPath, value, valStr);
-        else
-            oscHandler.send(paramPath, valStr);
+            om.addFloat32(value);
+        oscHandler.send(om, true);
     }
 }
 
