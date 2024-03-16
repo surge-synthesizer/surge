@@ -72,8 +72,9 @@ class OpenSoundControl : public juce::OSCReceiver,
     void oscMessageReceived(const juce::OSCMessage &message) override;
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
 
-    void send(juce::OSCMessage om, bool needsMessengerThread);
+    void send(juce::OSCMessage om, bool needsMessageThread);
     void sendAllParams();
+    void sendAllParamDocs();
     void sendAllModulators();
     void stopSending(bool updateOSCStartInStorage = true);
 
@@ -100,8 +101,9 @@ class OpenSoundControl : public juce::OSCReceiver,
     void sendNotFloatError(std::string addr, std::string msg);
     void sendDataCountError(std::string addr, std::string count);
     float getNormValue(Parameter *p, float fval);
-    void sendParameter(const Parameter *p, bool needsMsgThread);
-    void sendMacro(long macnum, bool needsMsgThread);
+    void sendParameter(const Parameter *p, bool needsMessageThread);
+    void sendParameterDocs(const Parameter *p, bool needsMessageThread);
+    void sendMacro(long macnum, bool needsMessageThread);
     void sendModulator(ModulationRouting mod, int scene, bool global);
     void sendPath(std::string pathStr);
 

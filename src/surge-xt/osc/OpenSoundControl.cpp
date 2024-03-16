@@ -187,6 +187,30 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::getline(split, address1, '/');
     bool querying = false;
 
+    // Doc requests
+    if (address1 == "doc")
+    { // remove the '/doc' from the address
+        std::getline(split, address1, '/');
+        addr = addr.substr(4);
+        if (address1 == "all_docs")
+        {
+            OpenSoundControl::sendAllParamDocs();
+            return;
+        }
+
+        auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
+        if (p == NULL)
+        {
+            // Not a valid OSC address
+            sendError("No parameter with OSC address of " + addr);
+        }
+        else
+        {
+            OpenSoundControl::sendParameterDocs(p, true);
+        }
+        return;
+    }
+
     // Queries (for params and modulators)
     if (address1 == "q")
     {
@@ -888,13 +912,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Modulation mapping
     else if (address1 == "mod")
     {
-        if (!querying)
+        if (querying && message.size() < 1)
         {
-            if (message.size() < 2)
-            {
-                sendDataCountError("mod", "2");
-                return;
-            }
+            sendError("Modulation query must specify both mod source and mod target.");
+            return;
+        }
+
+        if (!querying && message.size() < 2)
+        {
+            sendDataCountError("mod", "2");
+            return;
         }
 
         bool muteMsg = false;
@@ -958,6 +985,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendError("Bad OSC message format.");
             return;
         }
+
         if (!querying && !message[1].isFloat32())
         {
             sendNotFloatError("mod", "depth");
@@ -1112,11 +1140,11 @@ void OpenSoundControl::stopSending(bool updateOSCStartInStorage)
     }
 }
 
-void OpenSoundControl::send(juce::OSCMessage om, bool needsMessengerThread)
+void OpenSoundControl::send(juce::OSCMessage om, bool needsMessageThread)
 {
     if (sendingOSC)
     {
-        if (needsMessengerThread)
+        if (needsMessageThread)
         {
             // Runs on the juce messenger thread
             juce::MessageManager::getInstance()->callAsync([this, om]() {
@@ -1177,6 +1205,32 @@ void OpenSoundControl::sendAllParams()
             {
                 Parameter *p = synth->storage.getPatch().param_ptr[i];
                 sendParameter(p, false);
+            }
+            // Now do the macros
+            for (int i = 0; i < n_customcontrollers; i++)
+            {
+                sendMacro(i, false);
+            }
+            // delete timer;    // This prints the elapsed time
+        });
+    }
+}
+
+// Loop through all params, send them to OSC Out
+void OpenSoundControl::sendAllParamDocs()
+{
+    if (sendingOSC)
+    {
+        // Runs on the juce messenger thread
+        juce::MessageManager::getInstance()->callAsync([this]() {
+            // auto timer = new Surge::Debug::TimeBlock("ParameterDump");
+            std::string valStr;
+            int n = synth->storage.getPatch().param_ptr.size();
+            // Dump all params except for macros
+            for (int i = 0; i < n; i++)
+            {
+                Parameter *p = synth->storage.getPatch().param_ptr[i];
+                sendParameterDocs(p, false);
             }
             // Now do the macros
             for (int i = 0; i < n_customcontrollers; i++)
@@ -1280,7 +1334,7 @@ std::string OpenSoundControl::getModulatorOSCAddr(int modid, int scene, int inde
     return ("/mod/" + muteStr + sceneStr + modName + indexStr);
 }
 
-void OpenSoundControl::sendMacro(long macnum, bool needsMsgThread)
+void OpenSoundControl::sendMacro(long macnum, bool needsMessageThread)
 {
     auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                     .scene[0]
@@ -1294,7 +1348,7 @@ void OpenSoundControl::sendMacro(long macnum, bool needsMsgThread)
     if (!valStr.empty())
         om.addString(valStr);
 
-    OpenSoundControl::send(om, needsMsgThread);
+    OpenSoundControl::send(om, needsMessageThread);
 }
 
 void OpenSoundControl::sendPath(std::string pathString)
@@ -1334,6 +1388,56 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
     om.addFloat32(val01);
     if (!valStr.empty())
         om.addString(valStr);
+    OpenSoundControl::send(om, needsMessageThread);
+}
+
+void OpenSoundControl::sendParameterDocs(const Parameter *p, bool needsMessageThread)
+{
+    // fetch param name/description and set unused params to 'Disabled'
+    // note: unused parameters will still return doc values!
+    std::string paramName = p->get_name();
+    if (paramName.find("Param ") != std::string::npos || paramName == "-")
+        paramName = "Disabled"; // Not a great solution. Maybe turn into a bool.
+
+    // determine value type and set min/max value
+    std::string valMin = "";
+    std::string valMax = "";
+    std::string paramType = "";
+
+    switch (p->valtype)
+    {
+    case vt_int:
+        paramType = "int";
+        valMin = std::to_string(p->val_min.i);
+        valMax = std::to_string(p->val_max.i);
+        break;
+
+    case vt_bool:
+        paramType = "bool";
+        valMin = std::to_string(p->val_min.b);
+        valMax = std::to_string(p->val_max.b);
+        break;
+
+    case vt_float:
+        paramType = "float";
+        valMin = std::to_string(p->val_min.f);
+        valMax = std::to_string(p->val_max.f);
+        break;
+
+    default:
+        paramType = std::to_string(p->valtype);
+        break;
+    }
+
+    // Adding the doc prefix to the address again
+    std::string addr = "/doc" + p->oscName;
+
+    juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+    om.addString(paramName);
+    om.addString(paramType);
+    om.addString(valMin);
+    om.addString(valMax);
+
     OpenSoundControl::send(om, needsMessageThread);
 }
 

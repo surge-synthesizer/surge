@@ -323,9 +323,9 @@ void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, bool hasFlo
     if (surge->storage.oscSending && !paramPath.empty())
     {
         juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(paramPath)));
-        om.addString(valStr);
         if (hasFloat)
             om.addFloat32(value);
+        om.addString(valStr);
         oscHandler.send(om, true);
     }
 }
