@@ -912,13 +912,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Modulation mapping
     else if (address1 == "mod")
     {
-        if (!querying)
+        if (querying && message.size() < 1)
         {
-            if (message.size() < 2)
-            {
-                sendDataCountError("mod", "2");
-                return;
-            }
+            sendError("Modulation query must specify both mod source and mod target.");
+            return;
+        }
+
+        if (!querying && message.size() < 2)
+        {
+            sendDataCountError("mod", "2");
+            return;
         }
 
         bool muteMsg = false;
@@ -982,6 +985,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendError("Bad OSC message format.");
             return;
         }
+
         if (!querying && !message[1].isFloat32())
         {
             sendNotFloatError("mod", "depth");
