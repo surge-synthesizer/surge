@@ -499,6 +499,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             size_t last_slash = addr.find_last_of("/");
             std::string rootaddr = addr.substr(0, last_slash);
             auto *p = synth->storage.getPatch().parameterFromOSCName(rootaddr);
+            if (p == NULL)
+            {
+                sendError("No parameter with OSC address of " + addr);
+                // Not a valid OSC address
+                return;
+            }
             std::string extension = addr.substr(last_slash + 1);
             extension.erase(extension.size() - 2);
             if (querying)
