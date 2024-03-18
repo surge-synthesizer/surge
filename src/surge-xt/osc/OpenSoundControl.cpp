@@ -220,7 +220,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         addr = addr.substr(2);
         if (address1 == "all_params")
         {
-            OpenSoundControl::sendAllParams();
+            OpenSoundControl::sendAllParams(false);
+            return;
+        }
+        if (address1 == "all_params_extended")
+        {
+            OpenSoundControl::sendAllParams(true);
             return;
         }
         if (address1 == "all_mods")
@@ -494,98 +499,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             size_t last_slash = addr.find_last_of("/");
             std::string rootaddr = addr.substr(0, last_slash);
             auto *p = synth->storage.getPatch().parameterFromOSCName(rootaddr);
-            std::string extension = addr.substr(last_slash + 1);
-            extension.erase(extension.size() - 2);
-            if (querying)
+            if (p == NULL)
             {
+                sendError("No parameter with OSC address of " + addr);
+                // Not a valid OSC address
+                return;
             }
-            else
-            {
-                if (extension == "absol")
-                {
-                    if (!p->can_be_absolute())
-                        sendError("Param " + p->oscName + " can't be absolute.");
-                    else
-                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::ABSOLUTE_X, p, val));
-                }
-                else if (extension == "deact")
-                {
-                    if (!p->can_deactivate())
-                        sendError("Param " + p->oscName + " can't deactivate.");
-                    else
-                        sspPtr->oscRingBuf.push(
-                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEACT_X, p, val));
-                }
-                else if (extension == "tsync")
-                {
-                    if (!p->can_temposync())
-                        sendError("Param " + p->oscName + " can't tempo-sync.");
-                    else
-                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::TEMPOSYNC_X, p, val));
-                }
-                else if (extension == "extend")
-                {
-                    if (!p->can_extend_range())
-                        sendError("Param " + p->oscName + " can't extend range.");
-                    else
-                        sspPtr->oscRingBuf.push(
-                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::EXTEND_X, p, val));
-                }
-                else if (extension == "deform")
-                {
-                    if (!p->has_deformoptions())
-                        sendError("Param " + p->oscName + " doesn't have deform options.");
-                    else
-                        sspPtr->oscRingBuf.push(
-                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEFORM_X, p, val));
-                }
-                else if (extension == "constrate")
-                {
-                    if (!p->has_portaoptions())
-                        sendError("Param " + p->oscName + " doesn't have portamento options.");
-                    else
-                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_CONSTRATE_X, p, val));
-                }
-                else if (extension == "gliss")
-                {
-                    if (!p->has_portaoptions())
-                        sendError("Param " + p->oscName + " doesn't have portamento options.");
-                    else
-                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_GLISS_X, p, val));
-                }
-                else if (extension == "retrigger")
-                {
-                    if (!p->has_portaoptions())
-                        sendError("Param " + p->oscName + " doesn't have portamento options.");
-                    else
-                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_RETRIGGER_X, p, val));
-                }
-                else if (extension == "curve")
-                {
-                    if (!p->has_portaoptions())
-                        sendError("Param " + p->oscName + " doesn't have portamento options.");
-                    else
-                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_CURVE_X, p, val));
-                }
-                else
-                {
-                    sendError("Unknown parameter option: " + extension + "_x");
-                }
-            }
-        }
-
-        // Special case for extended paramter options
-        else if (hasEnding(addr, "_x"))
-        {
-            size_t last_slash = addr.find_last_of("/");
-            std::string rootaddr = addr.substr(0, last_slash);
-            auto *p = synth->storage.getPatch().parameterFromOSCName(rootaddr);
             std::string extension = addr.substr(last_slash + 1);
             extension.erase(extension.size() - 2);
             if (querying)
@@ -1191,12 +1110,12 @@ void OpenSoundControl::sendDataCountError(std::string addr, std::string count)
 }
 
 // Loop through all params, send them to OSC Out
-void OpenSoundControl::sendAllParams()
+void OpenSoundControl::sendAllParams(bool sendExtended)
 {
     if (sendingOSC)
     {
         // Runs on the juce messenger thread
-        juce::MessageManager::getInstance()->callAsync([this]() {
+        juce::MessageManager::getInstance()->callAsync([this, sendExtended]() {
             // auto timer = new Surge::Debug::TimeBlock("ParameterDump");
             std::string valStr;
             int n = synth->storage.getPatch().param_ptr.size();
@@ -1205,6 +1124,8 @@ void OpenSoundControl::sendAllParams()
             {
                 Parameter *p = synth->storage.getPatch().param_ptr[i];
                 sendParameter(p, false);
+                if (sendExtended)
+                    sendParameterExtOptions(p, false);
             }
             // Now do the macros
             for (int i = 0; i < n_customcontrollers; i++)
@@ -1216,7 +1137,7 @@ void OpenSoundControl::sendAllParams()
     }
 }
 
-// Loop through all params, send them to OSC Out
+// Loop through all params, send docs to OSC Out
 void OpenSoundControl::sendAllParamDocs()
 {
     if (sendingOSC)
@@ -1239,6 +1160,27 @@ void OpenSoundControl::sendAllParamDocs()
             }
             // delete timer;    // This prints the elapsed time
         });
+    }
+}
+
+void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMessageThread)
+{
+    if (p->can_be_absolute())
+        sendParameter(p, false, "absol");
+    if (p->can_deactivate())
+        sendParameter(p, false, "deact");
+    if (p->can_temposync())
+        sendParameter(p, false, "tsync");
+    if (p->can_extend_range())
+        sendParameter(p, false, "extend");
+    if (p->has_deformoptions())
+        sendParameter(p, false, "deform");
+    if (p->has_portaoptions())
+    {
+        sendParameter(p, false, "constrate");
+        sendParameter(p, false, "gliss");
+        sendParameter(p, false, "retrigger");
+        sendParameter(p, false, "curve");
     }
 }
 
@@ -1358,33 +1300,62 @@ void OpenSoundControl::sendPath(std::string pathString)
     OpenSoundControl::send(om, true);
 }
 
-void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread)
+void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread,
+                                     std::string extension)
 {
     std::string valStr = "";
     float val01 = 0.0;
-    valStr = p->get_display(false, 0.0);
+    std::string addr = "";
 
-    switch (p->valtype)
+    if (extension == "")
     {
-    case vt_int:
-        val01 = float(p->val.i);
+        addr = p->oscName;
+        valStr = p->get_display(false, 0.0);
+
+        switch (p->valtype)
+        {
+        case vt_int:
+            val01 = float(p->val.i);
+            break;
+
+        case vt_bool:
+            val01 = float(p->val.b);
+            break;
+
+        case vt_float:
+        {
+            val01 = p->value_to_normalized(p->val.f);
+        }
         break;
 
-    case vt_bool:
-        val01 = float(p->val.b);
-        break;
-
-    case vt_float:
+        default:
+            break;
+        }
+    }
+    else
     {
-        val01 = p->value_to_normalized(p->val.f);
+        if (extension == "absol")
+            val01 = (float)p->absolute;
+        if (extension == "deact")
+            val01 = (float)p->deactivated;
+        if (extension == "tsync")
+            val01 = (float)p->temposync;
+        if (extension == "extend")
+            val01 = (float)p->extend_range;
+        if (extension == "deform")
+            val01 = (float)p->deform_type;
+        if (extension == "constrate")
+            val01 = (float)p->porta_constrate;
+        if (extension == "gliss")
+            val01 = (float)p->porta_gliss;
+        if (extension == "retrigger")
+            val01 = (float)p->porta_retrigger;
+        if (extension == "curve")
+            val01 = (float)p->porta_curve;
+        addr = p->oscName + "/" + extension + "_x";
     }
-    break;
 
-    default:
-        break;
-    }
-
-    juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(p->oscName)));
+    juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
     om.addFloat32(val01);
     if (!valStr.empty())
         om.addString(valStr);
