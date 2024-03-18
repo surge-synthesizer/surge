@@ -216,10 +216,9 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     const bool isCh23Mode = Surge::Storage::getUserDefaultValue(
         storage, Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true, false);
     const bool isChSplitMode = storage->getPatch().scenemode.val.i == sm_chsplit;
-    const bool ChannelPerOctave = storage->mapChannelToOctave;
 
     state.mtsUseChannelWhenRetuning =
-        (mpeEnabled || isChSplitMode || isCh23Mode || ChannelPerOctave);
+        (mpeEnabled || isChSplitMode || isCh23Mode || storage->mapChannelToOctave);
 #endif
 
     resetPortamentoFrom(storage->last_key[scene_id], channel);
