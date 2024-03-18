@@ -620,6 +620,28 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
     if (tsMode)
     {
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCase("Query Tuning at Note On Only"), true,
+            (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
+            [this]() {
+                if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
+                }
+                else
+                {
+                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
+                }
+            });
+
+        tuningSubMenu.addItem(Surge::GUI::toOSCase("Use MIDI Channel for Octave Shift"),
+                              !synth->mpeEnabled, (synth->storage.mapChannelToOctave), [this]() {
+                                  this->synth->storage.mapChannelToOctave =
+                                      !(this->synth->storage.mapChannelToOctave);
+                              });
+
+        tuningSubMenu.addSeparator();
+
         std::string mtxt = "Act as" + Surge::GUI::toOSCase(" MTS-ESP Source");
 
         tuningSubMenu.addItem(mtxt, canMaster || getStorage()->oddsound_mts_active_as_main,
@@ -677,22 +699,6 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
             this->synth->storage.getPatch().dawExtraState.disconnectFromOddSoundMTS = true;
             MTS_DeregisterClient(q);
         });
-
-        tuningSubMenu.addSeparator();
-
-        tuningSubMenu.addItem(
-            Surge::GUI::toOSCase("Query Tuning at Note On Only"), true,
-            (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_NOTE_ON_ONLY),
-            [this]() {
-                if (this->synth->storage.oddsoundRetuneMode == SurgeStorage::RETUNE_CONSTANT)
-                {
-                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_NOTE_ON_ONLY;
-                }
-                else
-                {
-                    this->synth->storage.oddsoundRetuneMode = SurgeStorage::RETUNE_CONSTANT;
-                }
-            });
     }
 
 #endif

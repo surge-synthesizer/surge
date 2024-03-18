@@ -97,7 +97,7 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, bool isMpeEnabled
                                        SurgeStorage *storage, bool remapKeyForTuning)
 {
     float res = key;
-    if (storage->mapChannelToOctave && !storage->oddsound_mts_active_as_client && !isMpeEnabled)
+    if (storage->mapChannelToOctave && !isMpeEnabled)
     {
         if (remapKeyForTuning)
         {
@@ -121,7 +121,8 @@ float SurgeVoice::channelKeyEquvialent(float key, int channel, bool isMpeEnabled
         else
         {
             // keys are in tuning space so move cents worth of keys
-            if (storage->isStandardTuning)
+            // We don't know the period in MTS-ESP so default to octave for now
+            if (storage->isStandardTuning || storage->oddsound_mts_active_as_client)
                 res += 12 * shift;
             else
             {
@@ -215,8 +216,10 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     const bool isCh23Mode = Surge::Storage::getUserDefaultValue(
         storage, Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true, false);
     const bool isChSplitMode = storage->getPatch().scenemode.val.i == sm_chsplit;
+    const bool ChannelPerOctave = storage->mapChannelToOctave;
 
-    state.mtsUseChannelWhenRetuning = (mpeEnabled || isChSplitMode || isCh23Mode);
+    state.mtsUseChannelWhenRetuning =
+        (mpeEnabled || isChSplitMode || isCh23Mode || ChannelPerOctave);
 #endif
 
     resetPortamentoFrom(storage->last_key[scene_id], channel);
