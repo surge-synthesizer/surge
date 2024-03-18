@@ -1,7 +1,7 @@
 workflow_nightly:
     steps:
     - trigger_services:
-        project: home:baconpaul:surge 
+        project: home:surge-synth-team
         package: surge-xt-nightly
     filters:
         event: push
