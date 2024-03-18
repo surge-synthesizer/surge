@@ -88,7 +88,7 @@ or, in the Windows command prompt:
 set VST2SDK_DIR=c:\path\to\VST2SDK
 ```
 
-Finally, run CMake afresh, and build the VST2 targets:
+Finally, run CMake afresh and build the VST2 targets:
 
 ```
 cmake -Bbuild_vst2
