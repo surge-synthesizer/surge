@@ -439,18 +439,12 @@
                               <tr>
                                    <td>/q/all_params</td>
                                    <td>request all parameters</td>
-                                   <td>Sends a dump of all parameters and their values to OSC out</td>
-                              </tr>
-                              <tr>
-                                   <td>/q/all_params_extended</td>
-                                   <td>request all parameters and extended parameter options</td>
-                                   <td>Sends a dump of all parameters and their values,
-                                        as well as extended parameter options (if any), to OSC out</td>
+                                   <td>Sends a dump of all parameters and their values, extended options (if any), and /doc messages to OSC out</td>
                                    </tr>
                                    <tr>
                                    <td>/q/&ltparameter address&gt</td>
                                    <td>request one parameter</td>
-                                   <td>Sends one parameter's value to OSC out</td>
+                                   <td>Sends one parameter's value, extended options (if any), and /doc message to OSC out</td>
                               </tr>
                               <tr>
                                    <td>/q/all_mods</td>
@@ -1341,47 +1335,47 @@
                                    <th>Appropriate Values</th>
                               </tr>
                               <tr>
-                                   <td>&lt;parameter address&gt;/absol_x</td>
+                                   <td>&lt;parameter address&gt;/abs+</td>
                                    <td>absolute</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>&lt;parameter address&gt;/deact_x</td>
+                                   <td>&lt;parameter address&gt;/deact+</td>
                                    <td>deactivate</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>&lt;parameter address&gt;/tsync_x</td>
+                                   <td>&lt;parameter address&gt;/tsync+</td>
                                    <td>tempo sync</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>&lt;parameter address&gt;/extend_x</td>
+                                   <td>&lt;parameter address&gt;/extend+</td>
                                    <td>extend range</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>&lt;parameter address&gt;/deform_x</td>
+                                   <td>&lt;parameter address&gt;/deform+</td>
                                    <td>deform type OR modern osc option bitmask</td>
                                    <td>integer (0 to 3) OR bitmask</td>
                               </tr>
                               <tr>
-                                   <td>/param/&lt;s&gt;/portamento/constrate_x</td>
+                                   <td>/param/&lt;s&gt;/portamento/conrate+</td>
                                    <td>portamento constant rate</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>/param/&lt;s&gt;/portamento/gliss_x</td>
+                                   <td>/param/&lt;s&gt;/portamento/gliss+</td>
                                    <td>portamento glissando</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>/param/&lt;s&gt;/portamento/retrigger_x</td>
+                                   <td>/param/&lt;s&gt;/portamento/retrig+</td>
                                    <td>portamento retrigger at scale degrees</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>/param/&lt;s&gt;/portamento/curve_x</td>
+                                   <td>/param/&lt;s&gt;/portamento/curve+</td>
                                    <td>portamento curve </td>
                                    <td>int (-1:log, 0:linear, or 1:exponential)</td>
                               </tr>
