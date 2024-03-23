@@ -77,7 +77,7 @@ float calculateFilterParamFrequency(float *fval, SurgeStorage *storage)
 {
     auto param_val = fval[BBDEnsembleEffect::ens_input_filter];
     auto clock_rate = std::max(fval[BBDEnsembleEffect::ens_delay_clockrate], 0.01f);
-    auto freq = 2.0f * (float)M_PI * 400.0f * storage->note_to_pitch_ignoring_tuning(param_val);
+    auto freq = 2.0f * (float)M_PI * 400.f * storage->note_to_pitch_ignoring_tuning(param_val);
     auto freq_adjust = freq * std::pow(clock_rate * 0.01f, 0.75f);
     return std::min(freq_adjust, 25000.0f);
 }
@@ -86,12 +86,13 @@ namespace
 {
 constexpr float delay1Ms = 0.6f;
 constexpr float delay2Ms = 0.2f;
-
 constexpr float qVals2ndOrderButter[] = {1.0 / 0.7654, 1.0 / 1.8478};
+constexpr float defaultFilterCut{45.2326448f}; // 6 kHz (when added to MIDI note 69 = A440)
 } // namespace
 
 BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd), delL(storage->sinctable), delR(storage->sinctable)
+    : Effect(storage, fxdata, pd), delL(storage->sinctable), delR(storage->sinctable),
+      dc_blocker{storage, storage}, reconstrFilter{storage, storage}, sincInputFilter(storage)
 {
     width.set_blocksize(BLOCK_SIZE);
     mix.set_blocksize(BLOCK_SIZE);
@@ -101,6 +102,7 @@ BBDEnsembleEffect::BBDEnsembleEffect(SurgeStorage *storage, FxStorage *fxdata, p
     for (int i = 0; i < 2; ++i)
     {
         dc_blocker[i].setBlockSize(BLOCK_SIZE);
+        reconstrFilter[i].setBlockSize(BLOCK_SIZE);
     }
 }
 
@@ -131,31 +133,51 @@ void BBDEnsembleEffect::init()
     fbStateL = 0.0f;
     fbStateR = 0.0f;
 
-    // Butterworth highpass
-    const auto dc_omega = 2 * M_PI * 50.0 / storage->samplerate;
-
+    // Butterworth highpass and output correction filter
     for (int i = 0; i < 2; ++i)
     {
         dc_blocker[i].suspend();
-        dc_blocker[i].coeff_HP(dc_omega, qVals2ndOrderButter[i]);
-        dc_blocker[i].coeff_instantize();
+        reconstrFilter[i].suspend();
     }
 
-    const auto hf_omega = 2 * M_PI * 20000.0 / storage->samplerate;
     sincInputFilter.suspend();
-    sincInputFilter.coeff_LP(hf_omega, 0.7071);
-    sincInputFilter.coeff_instantize();
 }
 
 void BBDEnsembleEffect::setvars(bool init)
 {
     if (init)
     {
+        // Butterworth highpass and output correction filter
+        for (int i = 0; i < 2; ++i)
+        {
+            dc_blocker[i].coeff_HP(dc_blocker[i].calc_omega_from_Hz(50.0), qVals2ndOrderButter[i]);
+            reconstrFilter[i].coeff_LP(
+                reconstrFilter[i].calc_omega(fxdata->p[ens_output_filter].val.f / 12.f), 0.7071);
+        }
+
+        sincInputFilter.coeff_LP(sincInputFilter.calc_omega_from_Hz(20000.0), 0.7071);
+
         width.set_target(0.f);
         mix.set_target(1.f);
 
         width.instantize();
         mix.instantize();
+    }
+    else
+    {
+        // Butterworth highpass and output correction filter
+        for (int i = 0; i < 2; ++i)
+        {
+            dc_blocker[i].coeff_HP(dc_blocker[i].calc_omega_from_Hz(50.0), qVals2ndOrderButter[i]);
+            dc_blocker[i].coeff_instantize();
+
+            reconstrFilter[i].coeff_LP(
+                reconstrFilter[i].calc_omega(*pd_float[ens_output_filter] / 12.f), 0.7071);
+            reconstrFilter[i].coeff_instantize();
+        }
+
+        sincInputFilter.coeff_LP(sincInputFilter.calc_omega_from_Hz(20000.0), 0.7071);
+        sincInputFilter.coeff_instantize();
     }
 }
 
@@ -409,6 +431,17 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
         break;
     }
 
+    // output correction filter
+    if (!fxdata->p[ens_output_filter].deactivated)
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            reconstrFilter[i].coeff_LP(
+                reconstrFilter[i].calc_omega(*pd_float[ens_output_filter] / 12.f), 0.7071);
+            reconstrFilter[i].process_block(L, R);
+        }
+    }
+
     // scale width
     width.set_target_smoothed(clamp1bp(*pd_float[ens_width]));
 
@@ -456,9 +489,9 @@ void BBDEnsembleEffect::init_ctrltypes()
 {
     Effect::init_ctrltypes();
 
-    fxdata->p[ens_input_filter].set_name("Filter");
+    fxdata->p[ens_input_filter].set_name("Anti-Alias Filter");
     fxdata->p[ens_input_filter].set_type(ct_freq_audible);
-    fxdata->p[ens_input_filter].val_default.f = 3.65f * 12.f;
+    fxdata->p[ens_input_filter].val_default.f = defaultFilterCut;
     fxdata->p[ens_input_filter].posy_offset = 1;
 
     fxdata->p[ens_lfo_freq1].set_name("Frequency 1");
@@ -489,19 +522,23 @@ void BBDEnsembleEffect::init_ctrltypes()
     fxdata->p[ens_delay_feedback].val_default.f = 0.f;
     fxdata->p[ens_delay_feedback].posy_offset = 5;
 
+    fxdata->p[ens_output_filter].set_name("Reconstruction Filter");
+    fxdata->p[ens_output_filter].set_type(ct_freq_audible_deactivatable);
+    fxdata->p[ens_output_filter].val_default.f = defaultFilterCut;
+    fxdata->p[ens_output_filter].posy_offset = 3;
     fxdata->p[ens_width].set_name("Width");
     fxdata->p[ens_width].set_type(ct_percent_bipolar);
     fxdata->p[ens_width].val_default.f = 1.f;
-    fxdata->p[ens_width].posy_offset = 7;
+    fxdata->p[ens_width].posy_offset = 9;
     fxdata->p[ens_mix].set_name("Mix");
     fxdata->p[ens_mix].set_type(ct_percent);
     fxdata->p[ens_mix].val_default.f = 1.f;
-    fxdata->p[ens_mix].posy_offset = 7;
+    fxdata->p[ens_mix].posy_offset = 9;
 }
 
 void BBDEnsembleEffect::init_default_values()
 {
-    fxdata->p[ens_input_filter].val.f = 3.65f * 12.f;
+    fxdata->p[ens_input_filter].val.f = defaultFilterCut;
 
     // we want LFO 1 at .18 Hz and LFO 2 at 5.52 Hz
     // these go as 2^x so...
@@ -516,6 +553,18 @@ void BBDEnsembleEffect::init_default_values()
     fxdata->p[ens_delay_sat].val.f = 0.0f;
     fxdata->p[ens_delay_feedback].val.f = 0.f;
 
+    fxdata->p[ens_output_filter].val.f = defaultFilterCut;
+    fxdata->p[ens_output_filter].deactivated = false;
     fxdata->p[ens_width].val.f = 1.f;
     fxdata->p[ens_mix].val.f = 1.f;
+}
+
+void BBDEnsembleEffect::handleStreamingMismatches(int streamingRevision,
+                                                  int currentSynthStreamingRevision)
+{
+    if (streamingRevision <= 22)
+    {
+        fxdata->p[ens_output_filter].val.f = defaultFilterCut;
+        fxdata->p[ens_output_filter].deactivated = true;
+    }
 }

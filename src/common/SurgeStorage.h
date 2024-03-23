@@ -132,6 +132,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                             added Vintage FM feedback mode to FM2, FM3 and Sine oscillator types
 //                             added extend mode to Delay Crossfeed and Mod Depth parameters
 // 22 -> 23 (XT 1.3.2 release) added storing of Tempo parameter to the patch (will be loaded in Standalone only if option enabled)
+//                             added output filter to the Ensemble effect
 // clang-format on
 
 const int ff_revision = 23;

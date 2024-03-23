@@ -361,9 +361,6 @@ void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStor
     {
         t_fx->init_ctrltypes();
         t_fx->init_default_values();
-        if (p.streamingVersion != ff_revision)
-            t_fx->handleStreamingMismatches(p.streamingVersion, ff_revision);
-        delete t_fx;
     }
 
     for (int i = 0; i < n_fx_params; i++)
@@ -381,12 +378,30 @@ void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStor
         default:
             break;
         }
+
         fxbuffer->p[i].temposync = (int)p.ts[i];
         fxbuffer->p[i].set_extend_range((int)p.er[i]);
         fxbuffer->p[i].deactivated = (int)p.da[i];
 
-        if (p.dt[i] >= 0) // only set deform type if it could be read from the xml
+        // only set deform type if it could be read from the xml
+        if (p.dt[i] >= 0)
+        {
             fxbuffer->p[i].deform_type = p.dt[i];
+        }
+    }
+
+    if (t_fx)
+    {
+        // we need to handle streaming mismatches after we've set all parameters from the preset,
+        // because the for loop above goes through all 12 parameters irrespective of the effect
+        // having them or not, which in some cases can clobber param extensions like deactivated,
+        // extend, deform etc.
+        if (p.streamingVersion != ff_revision)
+        {
+            t_fx->handleStreamingMismatches(p.streamingVersion, ff_revision);
+        }
+
+        delete t_fx;
     }
 }
 } // namespace Storage

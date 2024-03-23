@@ -56,6 +56,8 @@ class BBDEnsembleEffect : public Effect
         ens_width,
         ens_mix,
 
+        ens_output_filter,
+
         ens_num_ctrls,
     };
 
@@ -82,6 +84,8 @@ class BBDEnsembleEffect : public Effect
     virtual void init_default_values() override;
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
 
   private:
     float getFeedbackGain(bool bbd) const noexcept;
@@ -101,6 +105,7 @@ class BBDEnsembleEffect : public Effect
 
     float fbStateL, fbStateR;
     BiquadFilter dc_blocker[2];
+    BiquadFilter reconstrFilter[2];
     BiquadFilter sincInputFilter;
 };
 
