@@ -525,7 +525,6 @@ void BBDEnsembleEffect::init_ctrltypes()
     fxdata->p[ens_output_filter].set_name("Reconstruction Filter");
     fxdata->p[ens_output_filter].set_type(ct_freq_audible_deactivatable);
     fxdata->p[ens_output_filter].val_default.f = defaultFilterCut;
-    fxdata->p[ens_output_filter].deactivated = true;
     fxdata->p[ens_output_filter].posy_offset = 3;
     fxdata->p[ens_width].set_name("Width");
     fxdata->p[ens_width].set_type(ct_percent_bipolar);
@@ -555,7 +554,7 @@ void BBDEnsembleEffect::init_default_values()
     fxdata->p[ens_delay_feedback].val.f = 0.f;
 
     fxdata->p[ens_output_filter].val.f = defaultFilterCut;
-    fxdata->p[ens_output_filter].deactivated = true;
+    fxdata->p[ens_output_filter].deactivated = false;
     fxdata->p[ens_width].val.f = 1.f;
     fxdata->p[ens_mix].val.f = 1.f;
 }
