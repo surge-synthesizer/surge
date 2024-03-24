@@ -74,6 +74,7 @@ if(SURGE_BUILD_CLAP)
       "audio-effect"
       "filter"
       "phaser"
+      "rotary speaker"
       "equalizer"
       "phase-vocoder"
       "granular"
