@@ -79,7 +79,6 @@ if(SURGE_BUILD_CLAP)
       "granular"
       "frequency-shifter"
       "distortion"
-      "transient-shaper"
       "flanger"
       "chorus"
       "delay"
