@@ -70,7 +70,24 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 if(SURGE_BUILD_CLAP)
   clap_juce_extensions_plugin(TARGET surge-fx
     CLAP_ID "org.surge-synth-team.surge-xt-fx"
-    CLAP_FEATURES "effect" "multi-effect" "delay" "rotary speaker" "eq" "reverb" "chorus" "flanger" "distortion" "free and open source")
+    CLAP_FEATURES
+      "audio-effect"
+      "filter"
+      "phaser"
+      "rotary speaker"
+      "equalizer"
+      "phase-vocoder"
+      "granular"
+      "frequency-shifter"
+      "distortion"
+      "transient-shaper"
+      "flanger"
+      "chorus"
+      "delay"
+      "reverb"
+      "multi-effects"
+      "stereo"
+      "free and open source")
 endif()
 
 surge_juce_package(${PROJECT_NAME} "Surge XT Effects")
