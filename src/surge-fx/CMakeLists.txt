@@ -76,7 +76,6 @@ if(SURGE_BUILD_CLAP)
       "phaser"
       "rotary speaker"
       "equalizer"
-      "phase-vocoder"
       "granular"
       "frequency-shifter"
       "distortion"
