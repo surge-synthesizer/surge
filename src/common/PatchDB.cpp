@@ -839,6 +839,32 @@ CREATE TABLE IF NOT EXISTS Favorites (
         std::ostringstream searchName;
         searchName << p.name << " ";
 
+        if (storage)
+        {
+            auto pTmp = p.path.parent_path();
+            std::vector<fs::path> parentFiles;
+            int maxItForSafety{0};
+            while ((pTmp != storage->userPatchesPath) &&
+                   (pTmp != storage->datapath / "patches_factory") &&
+                   (pTmp != storage->datapath / "patches_3rdparty") && !pTmp.empty() &&
+                   (pTmp != pTmp.root_directory()) && maxItForSafety < 10)
+            {
+                parentFiles.push_back(pTmp.filename());
+                pTmp = pTmp.parent_path();
+                maxItForSafety++;
+            }
+
+            if (pTmp == storage->datapath / "patches_3rdparty")
+            {
+                parentFiles.erase(parentFiles.end() - 1);
+            }
+
+            for (auto pf : parentFiles)
+            {
+                searchName << pf.u8string() << " ";
+            }
+        }
+
         std::ifstream stream(p.path, std::ios::in | std::ios::binary);
 
         std::vector<char> fxChunk;
