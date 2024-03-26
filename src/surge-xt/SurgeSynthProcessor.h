@@ -424,7 +424,16 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     enum specialCaseType
     {
         SCT_MACRO,
-        SCT_FX_DEACT
+        SCT_FX_DEACT,
+        SCT_EX_TEMPOSYNC,
+        SCT_EX_EXTENDRANGE,
+        SCT_EX_ABSOLUTE,
+        SCT_EX_DEACTIVATE,
+        SCT_EX_DEFORM,
+        SCT_EX_PORTA_CONRATE,
+        SCT_EX_PORTA_GLISS,
+        SCT_EX_PORTA_RETRIG,
+        SCT_EX_PORTA_CURVE
     };
 
     void paramChangeToListeners(Parameter *p, bool isSpecialCase = false, int specialCaseType = -1,

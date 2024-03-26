@@ -2460,8 +2460,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             contextMenu.addItem(
                                 combinator_mode_names[cxm], true, dt == cxm, [this, p, cxm]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                    p->deform_type = cxm, synth->storage.getPatch().isDirty = true;
+                                    update_deform_type(p, cxm);
+                                    synth->storage.getPatch().isDirty = true;
                                     frame->repaint();
                                 });
                         };
