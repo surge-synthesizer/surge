@@ -837,7 +837,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
 
         std::ostringstream searchName;
-        searchName << p.name << " ";
+        searchName << fs::path(p.path.parent_path().filename() / p.name) << " ";
 
         std::ifstream stream(p.path, std::ios::in | std::ios::binary);
 
