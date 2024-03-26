@@ -854,6 +854,11 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 maxItForSafety++;
             }
 
+            if (pTmp == storage->datapath / "patches_3rdparty")
+            {
+                parentFiles.erase(parentFiles.end() - 1);
+            }
+
             for (auto pf : parentFiles)
             {
                 searchName << pf.u8string() << " ";
