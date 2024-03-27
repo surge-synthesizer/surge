@@ -1635,10 +1635,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                         p->val.i = p->val.i / 100;
                                                     else
                                                         p->val.i = p->val.i * 100;
+                                                    // This requires an extra call to
+                                                    // paramChangeToListeners()
+                                                    juceEditor->processor.paramChangeToListeners(p);
                                                 }
 
                                                 synth->storage.getPatch().isDirty = true;
                                                 synth->refresh_editor = true;
+                                                juceEditor->processor.paramChangeToListeners(
+                                                    p, true,
+                                                    juceEditor->processor.SCT_EX_EXTENDRANGE,
+                                                    (int)p->extend_range, 0.0, "", 0);
                                             });
                     }
                 }
@@ -1948,6 +1955,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             undoManager()->pushParameterChange(p->id, p, p->val);
                             p->temposync = !p->temposync;
                             synth->storage.getPatch().isDirty = true;
+                            // output updated value to OSC
+                            juceEditor->processor.paramChangeToListeners(
+                                p, true, juceEditor->processor.SCT_EX_TEMPOSYNC, p->temposync, 0.0,
+                                "", 0);
 
                             if (p->temposync)
                             {
@@ -2078,6 +2089,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_constrate = !p->porta_constrate;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_CONRATE,
+                                                p->porta_constrate, 0.0, "", 0);
                                         });
 
                     isChecked = p->porta_gliss;
@@ -2086,6 +2101,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_gliss = !p->porta_gliss;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_GLISS,
+                                                p->porta_gliss, 0.0, "", 0);
                                         });
 
                     isChecked = p->porta_retrigger;
@@ -2094,6 +2113,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         isChecked, [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_retrigger = !p->porta_retrigger;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_RETRIG,
+                                                p->porta_retrigger, 0.0, "", 0);
                                         });
 
                     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
@@ -2105,6 +2128,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_curve = -1;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_CURVE,
+                                                p->porta_curve, 0.0, "", 0);
                                         });
 
                     isChecked = (p->porta_curve == 0);
@@ -2113,6 +2140,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_curve = 0;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_CURVE,
+                                                p->porta_curve, 0.0, "", 0);
                                         });
 
                     isChecked = (p->porta_curve == 1);
@@ -2121,6 +2152,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_curve = 1;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_CURVE,
+                                                p->porta_curve, 0.0, "", 0);
                                         });
                 }
 
@@ -2143,7 +2178,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                             contextMenu.addItem(title, true, isChecked, [this, p, i]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
-                                p->deform_type = i;
+                                update_deform_type(p, i);
                                 synth->storage.getPatch().isDirty = true;
                             });
                         }
@@ -2166,7 +2201,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             for (int i = 0; i < lt_num_deforms[lfodata->shape.val.i]; i++)
                             {
                                 std::string title = fmt::format("Type {:d}", (i + 1));
-
                                 bool isChecked = p->deform_type == i;
 
                                 contextMenu.addItem(
@@ -2174,8 +2208,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     [this, isChecked, p, i]() {
                                         if (p->deform_type != i)
                                             undoManager()->pushParameterChange(p->id, p, p->val);
+                                        update_deform_type(p, i);
 
-                                        p->deform_type = i;
                                         if (!isChecked)
                                         {
                                             synth->storage.getPatch().isDirty = true;
@@ -2211,8 +2245,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             contextMenu.addItem(
                                 mo_multitype_names[m], true, isChecked, [this, isChecked, p, m]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                    p->deform_type = (p->deform_type & 0xFFF0) | m;
+                                    update_deform_type(p, (p->deform_type & 0xFFF0) | m);
                                     if (!isChecked)
                                     {
                                         synth->storage.getPatch().isDirty = true;
@@ -2240,8 +2273,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 }
 
                                 undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = (p->deform_type & 0xF) | usubosc | usubskipsync;
+                                update_deform_type(p,
+                                                   (p->deform_type & 0xF) | usubosc | usubskipsync);
 
                                 synth->storage.getPatch().isDirty = true;
                                 synth->refresh_editor = true;
@@ -2264,8 +2297,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 }
 
                                 undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                p->deform_type = (p->deform_type & 0xF) | usubosc | usubskipsync;
+                                update_deform_type(p,
+                                                   (p->deform_type & 0xF) | usubosc | usubskipsync);
 
                                 synth->storage.getPatch().isDirty = true;
                                 synth->refresh_editor = true;
@@ -2283,9 +2316,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                             true, isChecked, [p, this]() {
                                                 undoManager()->pushParameterChange(p->id, p,
                                                                                    p->val);
-
-                                                p->deform_type = !p->deform_type;
-
+                                                update_deform_type(p, !p->deform_type);
                                                 synth->storage.getPatch().isDirty = true;
                                                 synth->refresh_editor = true;
                                             });
@@ -2311,8 +2342,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                     if (p->deform_type != i)
                                                         undoManager()->pushParameterChange(p->id, p,
                                                                                            p->val);
-
-                                                    p->deform_type = i;
+                                                    update_deform_type(p, i);
                                                     if (!isChecked)
                                                     {
                                                         synth->storage.getPatch().isDirty = true;
@@ -2342,8 +2372,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                                     if (p->deform_type != i)
                                                         undoManager()->pushParameterChange(p->id, p,
                                                                                            p->val);
-
-                                                    p->deform_type = i;
+                                                    update_deform_type(p, i);
                                                     if (!isChecked)
                                                     {
                                                         synth->storage.getPatch().isDirty = true;
@@ -2370,8 +2399,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     if (!ticked)
                                     {
                                         undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                        p->deform_type = (p->deform_type & ~allMode) | dm;
+                                        update_deform_type(p, (p->deform_type & ~allMode) | dm);
                                         synth->storage.getPatch().isDirty = true;
                                         frame->repaint();
                                     }
@@ -2434,16 +2462,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             contextMenu.addItem(
                                 "Mono", true, dt == NoiseColorChannels::MONO, [this, p]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                    p->deform_type = NoiseColorChannels::MONO,
+                                    update_deform_type(p, NoiseColorChannels::MONO);
                                     synth->storage.getPatch().isDirty = true;
                                     frame->repaint();
                                 });
                             contextMenu.addItem(
                                 "Stereo", true, dt == NoiseColorChannels::STEREO, [this, p]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                    p->deform_type = NoiseColorChannels::STEREO,
+                                    update_deform_type(p, NoiseColorChannels::STEREO);
                                     synth->storage.getPatch().isDirty = true;
                                     frame->repaint();
                                 });
@@ -2460,8 +2486,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             contextMenu.addItem(
                                 combinator_mode_names[cxm], true, dt == cxm, [this, p, cxm]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
-
-                                    p->deform_type = cxm, synth->storage.getPatch().isDirty = true;
+                                    update_deform_type(p, cxm);
+                                    synth->storage.getPatch().isDirty = true;
                                     frame->repaint();
                                 });
                         };
@@ -2496,14 +2522,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         contextMenu.addItem("Mono", true, dt == 1, [this, p]() {
                             undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = 1, synth->storage.getPatch().isDirty = true;
+                            update_deform_type(p, 1);
+                            synth->storage.getPatch().isDirty = true;
                             frame->repaint();
                         });
                         contextMenu.addItem("Stereo", true, dt == 0, [this, p]() {
                             undoManager()->pushParameterChange(p->id, p, p->val);
-
-                            p->deform_type = 0, synth->storage.getPatch().isDirty = true;
+                            update_deform_type(p, 0);
+                            synth->storage.getPatch().isDirty = true;
                             frame->repaint();
                         });
                         contextMenu.addSeparator();
@@ -2520,13 +2546,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         contextMenu.addItem("Surge", true, dt == 0, [this, p]() {
                             undoManager()->pushParameterChange(p->id, p, p->val);
-                            p->deform_type = 0;
+                            update_deform_type(p, 0);
                             synth->storage.getPatch().isDirty = true;
                             frame->repaint();
                         });
                         contextMenu.addItem("Vintage FM", true, dt == 1, [this, p]() {
                             undoManager()->pushParameterChange(p->id, p, p->val);
-                            p->deform_type = 1;
+                            update_deform_type(p, 1);
                             synth->storage.getPatch().isDirty = true;
                             frame->repaint();
                         });
@@ -2597,6 +2623,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     p->set_extend_range(!p->extend_range);
                                     synth->storage.getPatch().isDirty = true;
                                     synth->refresh_editor = true;
+
+                                    // output updated value to OSC
+                                    juceEditor->processor.paramChangeToListeners(
+                                        p, true, juceEditor->processor.SCT_EX_EXTENDRANGE,
+                                        p->extend_range, 0.0, "", 0);
                                 });
                         }
                     }
@@ -2633,6 +2664,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             p->set_name(ntxt.c_str());
                             synth->refresh_editor = true;
                         }
+
+                        // output updated value to OSC
+                        juceEditor->processor.paramChangeToListeners(
+                            p, true, juceEditor->processor.SCT_EX_ABSOLUTE, (int)p->absolute, 0.0,
+                            "", 0);
                     });
                 }
 
@@ -2668,12 +2704,17 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                     contextMenu.addSeparator();
 
-                    contextMenu.addItem(txt, true, isChecked, [this, q]() {
+                    contextMenu.addItem(txt, true, isChecked, [this, q, p]() {
                         undoManager()->pushParameterChange(q->id, q, q->val);
 
                         q->deactivated = !q->deactivated;
                         synth->storage.getPatch().isDirty = true;
                         synth->refresh_editor = true;
+
+                        // output updated value to OSC
+                        juceEditor->processor.paramChangeToListeners(
+                            p, true, juceEditor->processor.SCT_EX_DEACTIVATE, p->deactivated, 0.0,
+                            "", 0);
                     });
                 }
 
@@ -3243,6 +3284,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
     }
 
     return 0;
+}
+
+void SurgeGUIEditor::update_deform_type(Parameter *p, int type)
+{
+    p->deform_type = type;
+    juceEditor->processor.paramChangeToListeners(p, true, juceEditor->processor.SCT_EX_DEFORM, type,
+                                                 0.0, "", 0);
 }
 
 void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)

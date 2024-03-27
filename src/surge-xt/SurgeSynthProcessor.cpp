@@ -370,6 +370,42 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             }
             break;
 
+            case SCT_EX_ABSOLUTE:
+                (it.second)(p->oscName + "/abs+", true, ival, "");
+                break;
+
+            case SCT_EX_EXTENDRANGE:
+                (it.second)(p->oscName + "/extend+", true, ival, "");
+                break;
+
+            case SCT_EX_DEACTIVATE:
+                (it.second)(p->oscName + "/deact+", true, ival, "");
+                break;
+
+            case SCT_EX_TEMPOSYNC:
+                (it.second)(p->oscName + "/tsync+", true, ival, "");
+                break;
+
+            case SCT_EX_DEFORM:
+                (it.second)(p->oscName + "/deform+", true, ival, "");
+                break;
+
+            case SCT_EX_PORTA_CONRATE:
+                (it.second)(p->oscName + "/portamento/conrate+", true, ival, "");
+                break;
+
+            case SCT_EX_PORTA_GLISS:
+                (it.second)(p->oscName + "/portamento/gliss+", true, ival, "");
+                break;
+
+            case SCT_EX_PORTA_RETRIG:
+                (it.second)(p->oscName + "/portamento/retrig+", true, ival, "");
+                break;
+
+            case SCT_EX_PORTA_CURVE:
+                (it.second)(p->oscName + "/portamento/curve+", true, ival, "");
+                break;
+
             default:
                 break;
             }

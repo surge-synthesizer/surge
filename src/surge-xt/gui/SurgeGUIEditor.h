@@ -274,6 +274,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int lastOverlayRefresh = 0;
     void adjustSize(float &width, float &height) const;
 
+    void update_deform_type(Parameter *p, int type);
+
     struct patchdata
     {
         std::string name;

@@ -187,6 +187,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::getline(split, address1, '/');
     bool querying = false;
 
+    /*
     // Doc requests
     if (address1 == "doc")
     { // remove the '/doc' from the address
@@ -210,6 +211,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
         return;
     }
+    */
 
     // Queries (for params and modulators)
     if (address1 == "q")
@@ -220,12 +222,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         addr = addr.substr(2);
         if (address1 == "all_params")
         {
-            OpenSoundControl::sendAllParams(false);
-            return;
-        }
-        if (address1 == "all_params_extended")
-        {
-            OpenSoundControl::sendAllParams(true);
+            OpenSoundControl::sendAllParams();
             return;
         }
         if (address1 == "all_mods")
@@ -494,7 +491,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         // Special case for extended paramter options
-        else if (hasEnding(addr, "_x"))
+        else if (hasEnding(addr, "+"))
         {
             size_t last_slash = addr.find_last_of("/");
             std::string rootaddr = addr.substr(0, last_slash);
@@ -506,13 +503,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 return;
             }
             std::string extension = addr.substr(last_slash + 1);
-            extension.erase(extension.size() - 2);
+            extension.erase(extension.size() - 1);
             if (querying)
             {
+                sendError("Can't query directly for parameter extended options. They are supplied "
+                          "with the parameter query.");
+                return;
             }
             else
             {
-                if (extension == "absol")
+                if (extension == "abs")
                 {
                     if (!p->can_be_absolute())
                         sendError("Param " + p->oscName + " can't be absolute.");
@@ -552,7 +552,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sspPtr->oscRingBuf.push(
                             SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEFORM_X, p, val));
                 }
-                else if (extension == "constrate")
+                else if (extension == "conrate")
                 {
                     if (!p->has_portaoptions())
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
@@ -568,7 +568,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
                             SurgeSynthProcessor::PORTA_GLISS_X, p, val));
                 }
-                else if (extension == "retrigger")
+                else if (extension == "retrig")
                 {
                     if (!p->has_portaoptions())
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
@@ -586,7 +586,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 }
                 else
                 {
-                    sendError("Unknown parameter option: " + extension + "_x");
+                    sendError("Unknown parameter option: " + extension + "+");
                 }
             }
         }
@@ -670,7 +670,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
             if (querying)
             {
-                sendParameter(p, true);
+                sendAllParameterInfo(p, true);
             }
             else
             {
@@ -1110,12 +1110,12 @@ void OpenSoundControl::sendDataCountError(std::string addr, std::string count)
 }
 
 // Loop through all params, send them to OSC Out
-void OpenSoundControl::sendAllParams(bool sendExtended)
+void OpenSoundControl::sendAllParams()
 {
     if (sendingOSC)
     {
         // Runs on the juce messenger thread
-        juce::MessageManager::getInstance()->callAsync([this, sendExtended]() {
+        juce::MessageManager::getInstance()->callAsync([this]() {
             // auto timer = new Surge::Debug::TimeBlock("ParameterDump");
             std::string valStr;
             int n = synth->storage.getPatch().param_ptr.size();
@@ -1123,9 +1123,7 @@ void OpenSoundControl::sendAllParams(bool sendExtended)
             for (int i = 0; i < n; i++)
             {
                 Parameter *p = synth->storage.getPatch().param_ptr[i];
-                sendParameter(p, false);
-                if (sendExtended)
-                    sendParameterExtOptions(p, false);
+                sendAllParameterInfo(p, false);
             }
             // Now do the macros
             for (int i = 0; i < n_customcontrollers; i++)
@@ -1137,6 +1135,7 @@ void OpenSoundControl::sendAllParams(bool sendExtended)
     }
 }
 
+/*
 // Loop through all params, send docs to OSC Out
 void OpenSoundControl::sendAllParamDocs()
 {
@@ -1162,25 +1161,26 @@ void OpenSoundControl::sendAllParamDocs()
         });
     }
 }
+*/
 
 void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMessageThread)
 {
     if (p->can_be_absolute())
-        sendParameter(p, false, "absol");
+        sendParameter(p, needsMessageThread, "abs");
     if (p->can_deactivate())
-        sendParameter(p, false, "deact");
+        sendParameter(p, needsMessageThread, "deact");
     if (p->can_temposync())
-        sendParameter(p, false, "tsync");
+        sendParameter(p, needsMessageThread, "tsync");
     if (p->can_extend_range())
-        sendParameter(p, false, "extend");
+        sendParameter(p, needsMessageThread, "extend");
     if (p->has_deformoptions())
-        sendParameter(p, false, "deform");
+        sendParameter(p, needsMessageThread, "deform");
     if (p->has_portaoptions())
     {
-        sendParameter(p, false, "constrate");
-        sendParameter(p, false, "gliss");
-        sendParameter(p, false, "retrigger");
-        sendParameter(p, false, "curve");
+        sendParameter(p, needsMessageThread, "crate");
+        sendParameter(p, needsMessageThread, "gliss");
+        sendParameter(p, needsMessageThread, "retrig");
+        sendParameter(p, needsMessageThread, "curve");
     }
 }
 
@@ -1300,6 +1300,10 @@ void OpenSoundControl::sendPath(std::string pathString)
     OpenSoundControl::send(om, true);
 }
 
+/* Send the OSC address and value of the supplied parameter or extended option
+    If 'extension' is not empty, it specifies the extended parameter option to report.
+    'extension' equals "", by default.
+*/
 void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread,
                                      std::string extension)
 {
@@ -1334,7 +1338,7 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
     }
     else
     {
-        if (extension == "absol")
+        if (extension == "abs")
             val01 = (float)p->absolute;
         if (extension == "deact")
             val01 = (float)p->deactivated;
@@ -1344,15 +1348,15 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
             val01 = (float)p->extend_range;
         if (extension == "deform")
             val01 = (float)p->deform_type;
-        if (extension == "constrate")
+        if (extension == "conrate")
             val01 = (float)p->porta_constrate;
         if (extension == "gliss")
             val01 = (float)p->porta_gliss;
-        if (extension == "retrigger")
+        if (extension == "retrig")
             val01 = (float)p->porta_retrigger;
         if (extension == "curve")
             val01 = (float)p->porta_curve;
-        addr = p->oscName + "/" + extension + "_x";
+        addr = p->oscName + "/" + extension + "+";
     }
 
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
@@ -1410,6 +1414,13 @@ void OpenSoundControl::sendParameterDocs(const Parameter *p, bool needsMessageTh
     om.addString(valMax);
 
     OpenSoundControl::send(om, needsMessageThread);
+}
+
+void OpenSoundControl::sendAllParameterInfo(const Parameter *p, bool needsMessageThread)
+{
+    sendParameter(p, needsMessageThread);
+    sendParameterExtOptions(p, needsMessageThread);
+    sendParameterDocs(p, needsMessageThread);
 }
 
 // ModulationAPIListener Implementation
