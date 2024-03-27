@@ -1955,6 +1955,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             undoManager()->pushParameterChange(p->id, p, p->val);
                             p->temposync = !p->temposync;
                             synth->storage.getPatch().isDirty = true;
+                            // output updated value to OSC
+                            juceEditor->processor.paramChangeToListeners(
+                                p, true, juceEditor->processor.SCT_EX_TEMPOSYNC, p->temposync, 0.0,
+                                "", 0);
 
                             if (p->temposync)
                             {
@@ -2085,6 +2089,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_constrate = !p->porta_constrate;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_CONRATE,
+                                                p->porta_constrate, 0.0, "", 0);
                                         });
 
                     isChecked = p->porta_gliss;
@@ -2093,6 +2101,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_gliss = !p->porta_gliss;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_GLISS,
+                                                p->porta_gliss, 0.0, "", 0);
                                         });
 
                     isChecked = p->porta_retrigger;
@@ -2101,6 +2113,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         isChecked, [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_retrigger = !p->porta_retrigger;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_RETRIG,
+                                                p->porta_retrigger, 0.0, "", 0);
                                         });
 
                     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
@@ -2112,6 +2128,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_curve = -1;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_CURVE,
+                                                p->porta_curve, 0.0, "", 0);
                                         });
 
                     isChecked = (p->porta_curve == 0);
@@ -2120,6 +2140,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_curve = 0;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_CURVE,
+                                                p->porta_curve, 0.0, "", 0);
                                         });
 
                     isChecked = (p->porta_curve == 1);
@@ -2128,6 +2152,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                         [this, p]() {
                                             undoManager()->pushParameterChange(p->id, p, p->val);
                                             p->porta_curve = 1;
+                                            // output updated value to OSC
+                                            juceEditor->processor.paramChangeToListeners(
+                                                p, true, juceEditor->processor.SCT_EX_PORTA_CURVE,
+                                                p->porta_curve, 0.0, "", 0);
                                         });
                 }
 

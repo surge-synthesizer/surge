@@ -586,7 +586,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 }
                 else
                 {
-                    sendError("Unknown parameter option: " + extension + "*");
+                    sendError("Unknown parameter option: " + extension + "+");
                 }
             }
         }
