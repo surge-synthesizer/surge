@@ -368,7 +368,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         PORTA_CONSTRATE_X,
         PORTA_GLISS_X,
         PORTA_RETRIGGER_X,
-        PORTA_CURVE_X
+        PORTA_CURVE_X,
+        PITCHBEND
     };
 
     struct oscToAudio
@@ -377,12 +378,13 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         Parameter *param;
         float fval{0.0};
         int ival{-1};
-        char mnote{0}, vel{0};
+        char char0{0}, char1{0};
         bool on{false};
         int32_t noteid{-1};
         int scene{0}, index{0};
 
         oscToAudio() {}
+        oscToAudio(oscToAudio_type omtype, char c, int i) : type(omtype), char0(c), ival(i) {}
         oscToAudio(oscToAudio_type omtype) : type(omtype) {}
         oscToAudio(oscToAudio_type omtype, Parameter *p, int i) : type(omtype), param(p), ival(i) {}
         oscToAudio(int mask, int on) : type(FX_DISABLE), ival(mask), on(on) {}
@@ -397,11 +399,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         {
         }
         oscToAudio(float freq, char velocity, bool noteon, int32_t nid)
-            : type(FREQNOTE), fval(freq), vel(velocity), on(noteon), noteid(nid)
+            : type(FREQNOTE), fval(freq), char1(velocity), on(noteon), noteid(nid)
         {
         }
         oscToAudio(char note, char velocity, bool noteon, int32_t nid)
-            : type(MNOTE), mnote(note), vel(velocity), on(noteon), noteid(nid)
+            : type(MNOTE), char0(note), char1(velocity), on(noteon), noteid(nid)
         {
         }
         oscToAudio(oscToAudio_type type, int32_t nid, float f) : type(type), noteid(nid), fval(f) {}

@@ -776,6 +776,26 @@ void SurgeSynthProcessor::processBlockOSC()
     {
         switch (om.type)
         {
+        case SurgeSynthProcessor::MNOTE:
+        {
+            if (om.on)
+                surge->playNote(0, om.char0, om.char1, 0, om.noteid);
+            else
+                surge->releaseNoteByHostNoteID(om.noteid, om.char1);
+        }
+        break;
+
+        case SurgeSynthProcessor::FREQNOTE:
+        {
+            if (om.on)
+                surge->playNoteByFrequency(om.fval, om.char1, om.noteid);
+            else
+            {
+                surge->releaseNoteByHostNoteID(om.noteid, om.char1);
+            }
+        }
+        break;
+
         case SurgeSynthProcessor::NOTEX_PITCH:
             surge->setNoteExpression(SurgeVoice::PITCH, om.noteid, -1, -1, om.fval);
             break;
@@ -794,6 +814,10 @@ void SurgeSynthProcessor::processBlockOSC()
 
         case SurgeSynthProcessor::NOTEX_TIMB:
             surge->setNoteExpression(SurgeVoice::TIMBRE, om.noteid, -1, -1, om.fval);
+            break;
+
+        case SurgeSynthProcessor::PITCHBEND:
+            surge->pitchBend(om.char0, om.ival);
             break;
 
         case SurgeSynthProcessor::PARAMETER:
@@ -822,26 +846,6 @@ void SurgeSynthProcessor::processBlockOSC()
         case SurgeSynthProcessor::MACRO:
         {
             surge->setMacroParameter01(om.ival, om.fval);
-        }
-        break;
-
-        case SurgeSynthProcessor::MNOTE:
-        {
-            if (om.on)
-                surge->playNote(0, om.mnote, om.vel, 0, om.noteid);
-            else
-                surge->releaseNoteByHostNoteID(om.noteid, om.vel);
-        }
-        break;
-
-        case SurgeSynthProcessor::FREQNOTE:
-        {
-            if (om.on)
-                surge->playNoteByFrequency(om.fval, om.vel, om.noteid);
-            else
-            {
-                surge->releaseNoteByHostNoteID(om.noteid, om.vel);
-            }
         }
         break;
 
@@ -1355,6 +1359,7 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessage &m)
     else if (m.isPitchWheel())
     {
         surge->pitchBend(ch, m.getPitchWheelValue() - 8192);
+        std::cout << "pbend ch: " << ch << "  val: " << m.getPitchWheelValue() - 8192 << std::endl;
     }
     else if (m.isController())
     {

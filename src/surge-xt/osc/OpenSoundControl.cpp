@@ -232,86 +232,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
     }
 
-    // Note expressions
-    if (address1 == "ne")
-    {
-        if (message.size() != 2)
-        {
-            sendDataCountError("note expression", "2");
-        }
-        if (!message[0].isFloat32())
-        {
-            sendNotFloatError("ne", "value");
-            return;
-        }
-        int noteID = getNoteID(message, 0);
-        if (noteID == -1)
-        {
-            sendError("Note expressions require a valid noteID.");
-            return;
-        }
-        float val = message[1].getFloat32();
-
-        std::getline(split, address2, '/');
-        if (address2 == "volume")
-        {
-            if (val < 0.0 || val > 4.0)
-            {
-                sendError("Note expression (volume) '" + std::to_string(val) +
-                          "' is out of range (0.0 - 4.0).");
-                return;
-            }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_VOL, noteID, val));
-        }
-        else if (address2 == "pitch")
-        {
-            if (val < -120.0 || val > 120.0)
-            {
-                sendError("Note expression (pitch) '" + std::to_string(val) +
-                          "' is out of range (-120.0 - 120.0).");
-                return;
-            }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PITCH, noteID, val));
-        }
-        else if (address2 == "pan")
-        {
-            if (val < 0.0 || val > 1.0)
-            {
-                sendError("Note expression (pan) '" + std::to_string(val) +
-                          "' is out of range (0.0 - 1.0).");
-                return;
-            }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PAN, noteID, val));
-        }
-        else if (address2 == "timbre")
-        {
-            if (val < 0.0 || val > 1.0)
-            {
-                sendError("Note expression (timbre) '" + std::to_string(val) +
-                          "' is out of range (0.0 - 1.0).");
-                return;
-            }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_TIMB, noteID, val));
-        }
-        else if (address2 == "pressure")
-        {
-            if (val < 0.0 || val > 1.0)
-            {
-                sendError("Note expression (pressure) '" + std::to_string(val) +
-                          "' is out of range (0.0 - 1.0).");
-                return;
-            }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PRES, noteID, val));
-        }
-    }
-
     // 'Frequency' notes
-    else if (address1 == "fnote")
+    if (address1 == "fnote")
     // Play a note at the given frequency and velocity
     {
         int32_t noteID = 0;
@@ -428,6 +350,105 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // Send packet to audio thread
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
             static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
+    }
+
+    else if (address1 == "pbend")
+    {
+        if (message.size() != 2)
+        {
+            sendDataCountError("pitchbend", "2");
+        }
+        if (!message[0].isFloat32() || !message[1].isFloat32())
+        {
+            sendNotFloatError("pbend", "channel or value");
+            return;
+        }
+
+        float bend = message[1].getFloat32();
+        if ((bend >= -1.0) && (bend <= 1.0))
+        {
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::PITCHBEND, static_cast<char>(message[0].getFloat32()),
+                static_cast<int>(bend * 8192)));
+        }
+    }
+
+    // Note expressions
+    else if (address1 == "ne")
+    {
+        if (message.size() != 2)
+        {
+            sendDataCountError("note expression", "2");
+        }
+        if (!message[0].isFloat32())
+        {
+            sendNotFloatError("ne", "value");
+            return;
+        }
+        int noteID = getNoteID(message, 0);
+        if (noteID == -1)
+        {
+            sendError("Note expressions require a valid noteID.");
+            return;
+        }
+        float val = message[1].getFloat32();
+
+        std::getline(split, address2, '/');
+        if (address2 == "volume")
+        {
+            if (val < 0.0 || val > 4.0)
+            {
+                sendError("Note expression (volume) '" + std::to_string(val) +
+                          "' is out of range (0.0 - 4.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_VOL, noteID, val));
+        }
+        else if (address2 == "pitch")
+        {
+            if (val < -120.0 || val > 120.0)
+            {
+                sendError("Note expression (pitch) '" + std::to_string(val) +
+                          "' is out of range (-120.0 - 120.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PITCH, noteID, val));
+        }
+        else if (address2 == "pan")
+        {
+            if (val < 0.0 || val > 1.0)
+            {
+                sendError("Note expression (pan) '" + std::to_string(val) +
+                          "' is out of range (0.0 - 1.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PAN, noteID, val));
+        }
+        else if (address2 == "timbre")
+        {
+            if (val < 0.0 || val > 1.0)
+            {
+                sendError("Note expression (timbre) '" + std::to_string(val) +
+                          "' is out of range (0.0 - 1.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_TIMB, noteID, val));
+        }
+        else if (address2 == "pressure")
+        {
+            if (val < 0.0 || val > 1.0)
+            {
+                sendError("Note expression (pressure) '" + std::to_string(val) +
+                          "' is out of range (0.0 - 1.0).");
+                return;
+            }
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PRES, noteID, val));
+        }
     }
 
     // All notes off
