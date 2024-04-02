@@ -100,6 +100,7 @@ enum ctrltypes
     ct_freq_vocoder_high,
     ct_bandwidth,
     ct_envtime,
+    ct_envtime_deformable,
     ct_envtime_deactivatable,
     ct_envtime_lfodecay,
     ct_envshape,
