@@ -319,7 +319,7 @@
                          <span><code>/ne/pressure 24566 0.4</code></span>
                     </div>
 
-                    <div class="tablewrap" style="width: 60%; margin: 8px;">
+                    <div class="tablewrap" style="width: 70%; margin: 8px;">
                          <div class="heading">
                               <h2>MIDI-type controllers</h2>
                          </div>
@@ -328,11 +328,22 @@
                                    <th>Address</th>
                                    <th>Description</th>
                                    <th>Value 1</th>
+                                   <th>Value 2</th>
+                                   <th>Value 3</th>
                               </tr>
                               <tr>
                                    <td>/pbend</td>
                                    <td>pitch bend</td>
+                                   <td>channel (0 - 15)</td>
                                    <td>pitch offset (-1.0 - 1.0)</td>
+                                   <td></td>
+                                   </tr>
+                                   <tr>
+                                        <td>/cc</td>
+                                        <td>control change</td>
+                                        <td>channel (0 - 15)</td>
+                                        <td>controller # (0 - 127)</td>
+                                        <td>value (0 - 127)</td>
                               </tr>
                          </table>
                     </div>

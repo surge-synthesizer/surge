@@ -233,7 +233,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // 'Frequency' notes
-    if (address1 == "fnote")
+    if (address1 == "fnote" && !querying)
     // Play a note at the given frequency and velocity
     {
         int32_t noteID = 0;
@@ -297,7 +297,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // "MIDI-style" notes
-    else if (address1 == "mnote")
+    else if (address1 == "mnote" && !querying)
     // OSC equivalent of MIDI note
     {
         int32_t noteID = 0;
@@ -352,7 +352,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
     }
 
-    else if (address1 == "pbend")
+    else if (address1 == "pbend" && !querying)
     {
         if (message.size() != 2)
         {
@@ -373,8 +373,32 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
     }
 
+    else if (address1 == "cc" && !querying)
+    {
+        if (message.size() != 3)
+        {
+            sendDataCountError("cc", "3");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
+        {
+            sendNotFloatError("cc", "channel, control number, or value");
+            return;
+        }
+        float chan = static_cast<int>(message[0].getFloat32());
+        float cnum = static_cast<int>(message[1].getFloat32());
+        float val = static_cast<int>(message[2].getFloat32());
+
+        if ((chan >= 0.0) && (chan <= 15.) && (cnum >= 0.0) && (cnum <= 127.) && (val >= 0.0) &&
+            (val <= 127.0))
+        {
+            std::cout << "chan: " << chan << "  ctrl#: " << cnum << "  value: " << val << std::endl;
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CC, chan, cnum, val));
+        }
+    }
+
     // Note expressions
-    else if (address1 == "ne")
+    else if (address1 == "ne" && !querying)
     {
         if (message.size() != 2)
         {
@@ -1045,10 +1069,10 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
         "OSC_OUT", [ssp = sspPtr](auto s) { ssp->patch_load_to_OSC(s.replace_extension()); });
 
     // Add a listener for parameter changes
-    sspPtr->addParamChangeListener("OSC_OUT",
-                                   [ssp = sspPtr](auto str1, auto bool1, auto float1, auto str2) {
-                                       ssp->param_change_to_OSC(str1, bool1, float1, str2);
-                                   });
+    sspPtr->addParamChangeListener("OSC_OUT", [ssp = sspPtr](auto str1, auto numvals, auto float0,
+                                                             auto float1, auto float2, auto str2) {
+        ssp->param_change_to_OSC(str1, numvals, float0, float1, float2, str2);
+    });
     // Add a listener for modulation changes
     synth->addModulationAPIListener(this);
 

@@ -317,22 +317,27 @@ void SurgeSynthProcessor::patch_load_to_OSC(fs::path fullPath)
 }
 
 // Called as 'param changed' listener; will run on the juce::MessageManager thread
-void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, bool hasFloat, float value,
-                                              std::string valStr)
+void SurgeSynthProcessor::param_change_to_OSC(std::string paramPath, int numval, float val0 = 0.0,
+                                              float val1 = 0.0, float val2 = 0.0,
+                                              std::string valStr = "")
 {
     if (surge->storage.oscSending && !paramPath.empty())
     {
         juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(paramPath)));
-        if (hasFloat)
-            om.addFloat32(value);
+        if (numval > 0)
+            om.addFloat32(val0);
+        if (numval > 1)
+            om.addFloat32(val1);
+        if (numval > 2)
+            om.addFloat32(val2);
         om.addString(valStr);
         oscHandler.send(om, true);
     }
 }
 
 void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCase,
-                                                 int specialCaseType, int ival, float fval,
-                                                 std::string newValue, int ival2)
+                                                 int specialCaseType, float f0, float f1, float f2,
+                                                 std::string newValue)
 {
     std::string valStr = "";
     for (auto &it : this->paramChangeListeners)
@@ -344,14 +349,14 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             case SCT_MACRO:
             {
                 std::ostringstream oss;
-                oss << "/param/macro/" << ival + 1;
-                (it.second)(oss.str(), true, fval, "");
+                oss << "/param/macro/" << f0 + 1;
+                (it.second)(oss.str(), 1, f0, f1, .0, "");
             }
             break;
 
             case SCT_FX_DEACT:
             {
-                int diff = ival ^ ival2;
+                int diff = (int)f0 ^ (int)f1;
                 if (diff != 0) // should always be true
                 {
                     unsigned i = 1, pos = 1;
@@ -360,8 +365,8 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
                         if (i & diff)
                         {
                             std::string addr = "/param/" + fxslot_shortoscname[pos] + "/deactivate";
-                            int newVal = (ival2 & i) == 0 ? 0 : 1;
-                            (it.second)(addr, true, (float)newVal, "");
+                            int newVal = ((int)f1 & i) == 0 ? 0 : 1;
+                            (it.second)(addr, 1, (float)newVal, .0, .0, "");
                         }
                         i = i << 1;
                         ++pos;
@@ -371,39 +376,47 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             break;
 
             case SCT_EX_ABSOLUTE:
-                (it.second)(p->oscName + "/abs+", true, ival, "");
+                (it.second)(p->oscName + "/abs+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_EXTENDRANGE:
-                (it.second)(p->oscName + "/extend+", true, ival, "");
+                (it.second)(p->oscName + "/extend+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_DEACTIVATE:
-                (it.second)(p->oscName + "/deact+", true, ival, "");
+                (it.second)(p->oscName + "/deact+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_TEMPOSYNC:
-                (it.second)(p->oscName + "/tsync+", true, ival, "");
+                (it.second)(p->oscName + "/tsync+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_DEFORM:
-                (it.second)(p->oscName + "/deform+", true, ival, "");
+                (it.second)(p->oscName + "/deform+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_PORTA_CONRATE:
-                (it.second)(p->oscName + "/portamento/conrate+", true, ival, "");
+                (it.second)(p->oscName + "/portamento/conrate+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_PORTA_GLISS:
-                (it.second)(p->oscName + "/portamento/gliss+", true, ival, "");
+                (it.second)(p->oscName + "/portamento/gliss+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_PORTA_RETRIG:
-                (it.second)(p->oscName + "/portamento/retrig+", true, ival, "");
+                (it.second)(p->oscName + "/portamento/retrig+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_PORTA_CURVE:
-                (it.second)(p->oscName + "/portamento/curve+", true, ival, "");
+                (it.second)(p->oscName + "/portamento/curve+", 1, f0, .0, .0, "");
+                break;
+
+            case SCT_PITCHBEND:
+                (it.second)("/pbend", 2, f0, f1, .0, "");
+                break;
+
+            case SCT_CC:
+                (it.second)("/cc", 3, f0, f1, f2, "");
                 break;
 
             default:
@@ -434,7 +447,7 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             default:
                 break;
             }
-            (it.second)(p->oscName, true, val, valStr);
+            (it.second)(p->oscName, 1, val, .0, .0, valStr);
         }
     }
 }
@@ -818,6 +831,10 @@ void SurgeSynthProcessor::processBlockOSC()
 
         case SurgeSynthProcessor::PITCHBEND:
             surge->pitchBend(om.char0, om.ival);
+            break;
+
+        case SurgeSynthProcessor::CC:
+            surge->channelController(om.char0, om.char1, om.ival);
             break;
 
         case SurgeSynthProcessor::PARAMETER:
@@ -1358,12 +1375,15 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessage &m)
     }
     else if (m.isPitchWheel())
     {
-        surge->pitchBend(ch, m.getPitchWheelValue() - 8192);
-        std::cout << "pbend ch: " << ch << "  val: " << m.getPitchWheelValue() - 8192 << std::endl;
+        int pwval = m.getPitchWheelValue() - 8192;
+        surge->pitchBend(ch, pwval);
+        paramChangeToListeners(nullptr, 2, SCT_PITCHBEND, (float)ch, pwval, .0, "");
     }
     else if (m.isController())
     {
         surge->channelController(ch, m.getControllerNumber(), m.getControllerValue());
+        paramChangeToListeners(nullptr, 2, SCT_CC, (float)ch, (float)m.getControllerNumber(),
+                               (float)m.getControllerValue(), "");
     }
     else if (m.isProgramChange())
     {
