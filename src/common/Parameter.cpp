@@ -256,6 +256,7 @@ bool Parameter::can_temposync() const
     case ct_lforate:
     case ct_lforate_deactivatable:
     case ct_envtime:
+    case ct_envtime_deformable:
     case ct_envtime_deactivatable:
     case ct_envtime_linkable_delay:
     case ct_envtime_lfodecay:
@@ -372,6 +373,7 @@ bool Parameter::has_deformoptions() const
     case ct_noise_color:
     case ct_amplitude_ringmod:
     case ct_bonsai_bass_boost:
+    case ct_envtime_deformable:
     case ct_filter_feedback:
     case ct_osc_feedback_negative:
         return true;
@@ -775,6 +777,7 @@ void Parameter::set_type(int ctrltype)
         val_default.f = -8;
         break;
     case ct_envtime:
+    case ct_envtime_deformable:
     case ct_envtime_deactivatable:
     case ct_envtime_linkable_delay:
     case ct_envtime_lfodecay:
@@ -1504,6 +1507,7 @@ void Parameter::set_type(int ctrltype)
         // THERE IS NO BREAK HERE ON PURPOSE so we group to the others
     case ct_portatime:
     case ct_envtime:
+    case ct_envtime_deformable:
     case ct_envtime_deactivatable:
     case ct_envtime_linkable_delay:
     case ct_reverbtime:
@@ -1864,6 +1868,7 @@ void Parameter::bound_value(bool force_integer)
         }
         case ct_portatime:
         case ct_envtime:
+        case ct_envtime_deformable:
         case ct_envtime_deactivatable:
         case ct_envtime_linkable_delay:
         case ct_envtime_lfodecay:
@@ -4339,7 +4344,6 @@ bool Parameter::can_setvalue_from_string() const
     case ct_decibel_fmdepth:
     case ct_decibel_extendable:
     case ct_decibel_deactivatable:
-    case ct_envtime_linkable_delay:
     case ct_freq_audible:
     case ct_freq_audible_deactivatable:
     case ct_freq_audible_deactivatable_hp:
@@ -4356,7 +4360,9 @@ bool Parameter::can_setvalue_from_string() const
     case ct_freq_vocoder_high:
     case ct_bandwidth:
     case ct_envtime:
+    case ct_envtime_deformable:
     case ct_envtime_deactivatable:
+    case ct_envtime_linkable_delay:
     case ct_envtime_lfodecay:
     case ct_delaymodtime:
     case ct_reverbtime:

@@ -489,7 +489,6 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                 sc_id, cg_FILTER, f, true));
         }
 
-        // scene[sc].filterunit[0].type.val.i = 1;
         for (int e = 0; e < 2; e++) // 2 = we have two envelopes, filter and amplifier
         {
             std::string et = (e == 1) ? "feg" : "aeg";
@@ -529,9 +528,12 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                 fmt::format("{:c}/{}/sustain", 'a' + sc, et), ct_percent, getCon("sustain"), sc_id,
                 cg_ENV, e, true, int(kVertical) | int(kWhite) | int(sceasy)));
 
+            // only show Freeze at sustain level option for amplifier envelope
+            const auto ctype = (e == 0) ? ct_envtime_deformable : ct_envtime;
+
             a->push_back(scene[sc].adsr[e].r.assign(
                 p_id.next(), id_s++, "release", "Release",
-                fmt::format("{:c}/{}/release", 'a' + sc, et), ct_envtime, getCon("release"), sc_id,
+                fmt::format("{:c}/{}/release", 'a' + sc, et), ctype, getCon("release"), sc_id,
                 cg_ENV, e, true, int(kVertical) | int(kWhite) | int(sceasy)));
 
             a->push_back(scene[sc].adsr[e].r_s.assign(
@@ -2253,6 +2255,15 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             scene[sc].level_ring_12.deform_type = 0;
             scene[sc].level_ring_23.deform_type = 0;
             scene[sc].volume.deactivated = false;
+        }
+    }
+
+    if (revision <= 22)
+    {
+        for (auto sc = 0; sc < n_scenes; ++sc)
+        {
+            scene[sc].adsr[0].r.deform_type = 0;
+            scene[sc].adsr[1].r.deform_type = 0;
         }
     }
 

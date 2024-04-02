@@ -133,6 +133,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                             added extend mode to Delay Crossfeed and Mod Depth parameters
 // 22 -> 23 (XT 1.3.2 release) added storing of Tempo parameter to the patch (will be loaded in Standalone only if option enabled)
 //                             added output filter to the Ensemble effect
+//                             added deform option for Release parameter of Filter/Amp EG, which only produces an open gate for the release stage
 // clang-format on
 
 const int ff_revision = 23;
