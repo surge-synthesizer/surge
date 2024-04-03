@@ -342,15 +342,7 @@ class ADSRModulationSource : public ModulationSource
                 phase -= storage->envelope_rate_linear_nowrap(lc[r].f) *
                          (adsr->r.temposync ? storage->temposyncratio : 1.f);
 
-                if (r_gated)
-                {
-                    if (phase < 0)
-                    {
-                        envstate = s_idle;
-                        output = 0;
-                    }
-                }
-                else
+                if (!r_gated)
                 {
                     output = phase;
 
@@ -359,13 +351,13 @@ class ADSRModulationSource : public ModulationSource
                         output *= phase;
                     }
 
-                    if (phase < 0)
-                    {
-                        envstate = s_idle;
-                        output = 0;
-                    }
-
                     output *= scalestage;
+                }
+
+                if (phase < 0)
+                {
+                    envstate = s_idle;
+                    output = 0;
                 }
             }
             break;
@@ -373,15 +365,7 @@ class ADSRModulationSource : public ModulationSource
             {
                 phase -= storage->envelope_rate_linear_nowrap(-6.5);
 
-                if (r_gated)
-                {
-                    if (phase < 0)
-                    {
-                        envstate = s_idle;
-                        output = 0;
-                    }
-                }
-                else
+                if (!r_gated)
                 {
                     output = phase;
 
@@ -390,13 +374,13 @@ class ADSRModulationSource : public ModulationSource
                         output *= phase;
                     }
 
-                    if (phase < 0)
-                    {
-                        envstate = s_idle;
-                        output = 0;
-                    }
-
                     output *= scalestage;
+                }
+
+                if (phase < 0)
+                {
+                    envstate = s_idle;
+                    output = 0;
                 }
             }
             break;
