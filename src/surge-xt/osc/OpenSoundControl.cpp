@@ -373,75 +373,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
     }
 
-    else if (address1 == "cc" && !querying)
-    {
-        if (message.size() != 3)
-        {
-            sendDataCountError("cc", "3");
-        }
-        if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
-        {
-            sendNotFloatError("cc", "channel, control number, or value");
-            return;
-        }
-        float chan = static_cast<int>(message[0].getFloat32());
-        float cnum = static_cast<int>(message[1].getFloat32());
-        float val = static_cast<int>(message[2].getFloat32());
-
-        if ((chan >= 0.0) && (chan <= 15.) && (cnum >= 0.0) && (cnum <= 127.) && (val >= 0.0) &&
-            (val <= 127.0))
-        {
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CC, chan, cnum, val));
-        }
-    }
-
-    else if (address1 == "chan_at" && !querying)
-    {
-        if (message.size() != 2)
-        {
-            sendDataCountError("chan_at", "2");
-        }
-        if (!(message[0].isFloat32() && message[1].isFloat32()))
-        {
-            sendNotFloatError("chan_at", "channel or value");
-            return;
-        }
-        float chan = static_cast<int>(message[0].getFloat32());
-        float val = static_cast<int>(message[1].getFloat32());
-
-        if ((chan >= 0.0) && (chan <= 15.) && (val >= 0.0) && (val <= 127.0))
-        {
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CHAN_ATOUCH, chan, val));
-        }
-    }
-
-    else if (address1 == "poly_at" && !querying)
-    {
-        if (message.size() != 3)
-        {
-            sendDataCountError("poly_at", "3");
-        }
-        if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
-        {
-            sendNotFloatError("poly_at", "channel, note number, or value");
-            return;
-        }
-        float chan = static_cast<int>(message[0].getFloat32());
-        float nnum = static_cast<int>(message[1].getFloat32());
-        float val = static_cast<int>(message[2].getFloat32());
-
-        if ((chan >= 0.0) && (chan <= 15.) && (nnum >= 0.0) && (nnum <= 127.) && (val >= 0.0) &&
-            (val <= 127.0))
-        {
-            // std::cout << "Sending poly aftertouch. chan: " << (char)chan
-            //          << "  notenum: " << (char)nnum << "  val: " << (int)val << std::endl;
-            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                SurgeSynthProcessor::POLY_ATOUCH, (char)chan, (char)nnum, (int)val));
-        }
-    }
-
     // Note expressions
     else if (address1 == "ne" && !querying)
     {
@@ -517,6 +448,74 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PRES, noteID, val));
+        }
+    }
+    else if (address1 == "cc" && !querying)
+    {
+        if (message.size() != 3)
+        {
+            sendDataCountError("cc", "3");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
+        {
+            sendNotFloatError("cc", "channel, control number, or value");
+            return;
+        }
+        float chan = static_cast<int>(message[0].getFloat32());
+        float cnum = static_cast<int>(message[1].getFloat32());
+        float val = static_cast<int>(message[2].getFloat32());
+
+        if ((chan >= 0.0) && (chan <= 15.) && (cnum >= 0.0) && (cnum <= 127.) && (val >= 0.0) &&
+            (val <= 127.0))
+        {
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CC, chan, cnum, val));
+        }
+    }
+
+    else if (address1 == "chan_at" && !querying)
+    {
+        if (message.size() != 2)
+        {
+            sendDataCountError("chan_at", "2");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32()))
+        {
+            sendNotFloatError("chan_at", "channel or value");
+            return;
+        }
+        float chan = static_cast<int>(message[0].getFloat32());
+        float val = static_cast<int>(message[1].getFloat32());
+
+        if ((chan >= 0.0) && (chan <= 15.) && (val >= 0.0) && (val <= 127.0))
+        {
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CHAN_ATOUCH, chan, val));
+        }
+    }
+
+    else if (address1 == "poly_at" && !querying)
+    {
+        if (message.size() != 3)
+        {
+            sendDataCountError("poly_at", "3");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
+        {
+            sendNotFloatError("poly_at", "channel, note number, or value");
+            return;
+        }
+        float chan = static_cast<int>(message[0].getFloat32());
+        float nnum = static_cast<int>(message[1].getFloat32());
+        float val = static_cast<int>(message[2].getFloat32());
+
+        if ((chan >= 0.0) && (chan <= 15.) && (nnum >= 0.0) && (nnum <= 127.) && (val >= 0.0) &&
+            (val <= 127.0))
+        {
+            // std::cout << "Sending poly aftertouch. chan: " << (char)chan
+            //          << "  notenum: " << (char)nnum << "  val: " << (int)val << std::endl;
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::POLY_ATOUCH, (char)chan, (char)nnum, (int)val));
         }
     }
 
