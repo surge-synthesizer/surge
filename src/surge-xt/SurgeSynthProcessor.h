@@ -362,7 +362,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         MOD_MUTE,
         ABSOLUTE_X,
         TEMPOSYNC_X,
-        DEACT_X,
+        ENABLE_X,
         EXTEND_X,
         DEFORM_X,
         PORTA_CONSTRATE_X,
@@ -370,7 +370,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         PORTA_RETRIGGER_X,
         PORTA_CURVE_X,
         PITCHBEND,
-        CC
+        CC,
+        CHAN_ATOUCH,
+        POLY_ATOUCH
     };
 
     struct oscToAudio
@@ -436,14 +438,16 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         SCT_EX_TEMPOSYNC,
         SCT_EX_EXTENDRANGE,
         SCT_EX_ABSOLUTE,
-        SCT_EX_DEACTIVATE,
+        SCT_EX_ENABLE,
         SCT_EX_DEFORM,
         SCT_EX_PORTA_CONRATE,
         SCT_EX_PORTA_GLISS,
         SCT_EX_PORTA_RETRIG,
         SCT_EX_PORTA_CURVE,
         SCT_PITCHBEND,
-        SCT_CC
+        SCT_CC,
+        SCT_CHAN_ATOUCH,
+        SCT_POLY_ATOUCH
     };
 
     void paramChangeToListeners(Parameter *p, bool isSpecialCase = false, int specialCaseType = -1,

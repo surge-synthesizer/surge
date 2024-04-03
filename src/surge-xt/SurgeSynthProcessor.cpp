@@ -383,12 +383,12 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
                 (it.second)(p->oscName + "/extend+", 1, f0, .0, .0, "");
                 break;
 
-            case SCT_EX_DEACTIVATE:
-                (it.second)(p->oscName + "/deact+", 1, f0, .0, .0, "");
+            case SCT_EX_ENABLE:
+                (it.second)(p->oscName + "/enable+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_TEMPOSYNC:
-                (it.second)(p->oscName + "/tsync+", 1, f0, .0, .0, "");
+                (it.second)(p->oscName + "/tempo_sync+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_DEFORM:
@@ -396,7 +396,7 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
                 break;
 
             case SCT_EX_PORTA_CONRATE:
-                (it.second)(p->oscName + "/portamento/conrate+", 1, f0, .0, .0, "");
+                (it.second)(p->oscName + "/portamento/const_rate+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_PORTA_GLISS:
@@ -417,6 +417,14 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
 
             case SCT_CC:
                 (it.second)("/cc", 3, f0, f1, f2, "");
+                break;
+
+            case SCT_POLY_ATOUCH:
+                (it.second)("/poly_at", 3, f0, f1, f2, "");
+                break;
+
+            case SCT_CHAN_ATOUCH:
+                (it.second)("/chan_at", 2, f0, f1, .0, "");
                 break;
 
             default:
@@ -837,6 +845,14 @@ void SurgeSynthProcessor::processBlockOSC()
             surge->channelController(om.char0, om.char1, om.ival);
             break;
 
+        case SurgeSynthProcessor::CHAN_ATOUCH:
+            surge->channelAftertouch(om.char0, om.fval);
+            break;
+
+        case SurgeSynthProcessor::POLY_ATOUCH:
+            surge->polyAftertouch(om.char0, (int)om.char1, om.ival);
+            break;
+
         case SurgeSynthProcessor::PARAMETER:
         {
             float pval = om.fval;
@@ -934,14 +950,19 @@ void SurgeSynthProcessor::processBlockOSC()
             }
             break;
 
-        case SurgeSynthProcessor::DEACT_X:
-            if (om.param->deactivated != (bool)om.ival)
+        case SurgeSynthProcessor::ENABLE_X:
+        {
+            // This parameter is stored as 'disabled', but UI uses 'enabled',
+            //  so logic is flipped here:
+            bool disabled = !(bool)om.ival;
+            if (om.param->deactivated != disabled)
             {
-                om.param->deactivated = om.ival;
+                om.param->deactivated = disabled;
                 surge->storage.getPatch().isDirty = true;
                 surge->queueForRefresh(om.param->id);
             }
-            break;
+        }
+        break;
 
         case SurgeSynthProcessor::EXTEND_X:
             if (om.param->extend_range != (bool)om.ival)
@@ -1367,22 +1388,27 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessage &m)
     }
     else if (m.isChannelPressure())
     {
-        surge->channelAftertouch(ch, m.getChannelPressureValue());
+        int atval = m.getChannelPressureValue();
+        surge->channelAftertouch(ch, atval);
+        paramChangeToListeners(nullptr, true, SCT_CHAN_ATOUCH, (float)ch, (float)atval, .0, "");
     }
     else if (m.isAftertouch())
     {
-        surge->polyAftertouch(ch, m.getNoteNumber(), m.getAfterTouchValue());
+        int atval = m.getAfterTouchValue();
+        surge->polyAftertouch(ch, m.getNoteNumber(), atval);
+        paramChangeToListeners(nullptr, true, SCT_POLY_ATOUCH, (float)ch, (float)m.getNoteNumber(),
+                               (float)atval, "");
     }
     else if (m.isPitchWheel())
     {
         int pwval = m.getPitchWheelValue() - 8192;
         surge->pitchBend(ch, pwval);
-        paramChangeToListeners(nullptr, 2, SCT_PITCHBEND, (float)ch, pwval, .0, "");
+        paramChangeToListeners(nullptr, true, SCT_PITCHBEND, (float)ch, pwval, .0, "");
     }
     else if (m.isController())
     {
         surge->channelController(ch, m.getControllerNumber(), m.getControllerValue());
-        paramChangeToListeners(nullptr, 2, SCT_CC, (float)ch, (float)m.getControllerNumber(),
+        paramChangeToListeners(nullptr, true, SCT_CC, (float)ch, (float)m.getControllerNumber(),
                                (float)m.getControllerValue(), "");
     }
     else if (m.isProgramChange())

@@ -337,13 +337,26 @@
                                    <td>channel (0 - 15)</td>
                                    <td>pitch offset (-1.0 - 1.0)</td>
                                    <td></td>
-                                   </tr>
-                                   <tr>
-                                        <td>/cc</td>
-                                        <td>control change</td>
-                                        <td>channel (0 - 15)</td>
-                                        <td>controller # (0 - 127)</td>
-                                        <td>value (0 - 127)</td>
+                              </tr>
+                              <tr>
+                                   <td>/cc</td>
+                                   <td>control change</td>
+                                   <td>channel (0 - 15)</td>
+                                   <td>controller # (0 - 127)</td>
+                                   <td>value (0 - 127)</td>
+                              </tr>
+                              <tr>
+                                   <td>/chan_at</td>
+                                   <td>channel aftertouch</td>
+                                   <td>channel (0 - 15)</td>
+                                   <td>value (0 - 127)</td>
+                              </tr>
+                              <tr>
+                                   <td>/poly_at</td>
+                                   <td>polyphonic aftertouch</td>
+                                   <td>channel (0 - 15)</td>
+                                   <td>note # (0 - 127)</td>
+                                   <td>value (0 - 127)</td>
                               </tr>
                          </table>
                     </div>
@@ -1087,8 +1100,9 @@
                               <tr>
                                    <td>/param/fx/&lt;s&gt;/&lt;n&gt;/deactivate</td>
                                    <td> (FX slot Deactivate)</td>
-                                   <td>boolean (0 or 1)</td>
+                                   <td>boolean (0 or 1)<br />1 = deactivated</td>
                               </tr>
+
                          </table>
                     </div>
 
@@ -1371,12 +1385,12 @@
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>&lt;parameter address&gt;/deact+</td>
-                                   <td>deactivate</td>
+                                   <td>&lt;parameter address&gt;/enable+</td>
+                                   <td>enable</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
                               <tr>
-                                   <td>&lt;parameter address&gt;/tsync+</td>
+                                   <td>&lt;parameter address&gt;/tempo_sync+</td>
                                    <td>tempo sync</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
@@ -1391,7 +1405,7 @@
                                    <td>integer (0 to 3) OR bitmask</td>
                               </tr>
                               <tr>
-                                   <td>/param/&lt;s&gt;/portamento/conrate+</td>
+                                   <td>/param/&lt;s&gt;/portamento/const_rate+</td>
                                    <td>portamento constant rate</td>
                                    <td>boolean (0 or 1)</td>
                               </tr>
@@ -1416,10 +1430,10 @@
                     <div style="clear: both;"></div>
                     
                     <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
-                         <span><code>/param/a/pitch/extend_x 1</code></span>
-                         <span><code>/param/a/osc/1/pitch/absol_x 1</code></span>
-                         <span><code>/param/a/aeg/attack/tsync_x 0</code></span>
-                         <span><code>/param/a/filter/feedback/deform_x 2</code></span>
+                         <span><code>/param/a/pitch/extend+ 1</code></span>
+                         <span><code>/param/a/osc/1/pitch/absol+ 1</code></span>
+                         <span><code>/param/a/aeg/attack/tempo_sync+ 0</code></span>
+                         <span><code>/param/a/filter/feedback/deform+ 2</code></span>
                     </div>
 
                     <div style="border: 1px solid lightgray;"></div>

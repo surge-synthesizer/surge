@@ -2713,7 +2713,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         // output updated value to OSC
                         juceEditor->processor.paramChangeToListeners(
-                            p, true, juceEditor->processor.SCT_EX_DEACTIVATE, (float)p->deactivated,
+                            p, true, juceEditor->processor.SCT_EX_ENABLE, (float)!p->deactivated,
                             .0, .0, "");
                     });
                 }

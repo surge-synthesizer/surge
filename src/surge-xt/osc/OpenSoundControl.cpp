@@ -391,9 +391,54 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if ((chan >= 0.0) && (chan <= 15.) && (cnum >= 0.0) && (cnum <= 127.) && (val >= 0.0) &&
             (val <= 127.0))
         {
-            std::cout << "chan: " << chan << "  ctrl#: " << cnum << "  value: " << val << std::endl;
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CC, chan, cnum, val));
+        }
+    }
+
+    else if (address1 == "chan_at" && !querying)
+    {
+        if (message.size() != 2)
+        {
+            sendDataCountError("chan_at", "2");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32()))
+        {
+            sendNotFloatError("chan_at", "channel or value");
+            return;
+        }
+        float chan = static_cast<int>(message[0].getFloat32());
+        float val = static_cast<int>(message[1].getFloat32());
+
+        if ((chan >= 0.0) && (chan <= 15.) && (val >= 0.0) && (val <= 127.0))
+        {
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CHAN_ATOUCH, chan, val));
+        }
+    }
+
+    else if (address1 == "poly_at" && !querying)
+    {
+        if (message.size() != 3)
+        {
+            sendDataCountError("poly_at", "3");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
+        {
+            sendNotFloatError("poly_at", "channel, note number, or value");
+            return;
+        }
+        float chan = static_cast<int>(message[0].getFloat32());
+        float nnum = static_cast<int>(message[1].getFloat32());
+        float val = static_cast<int>(message[2].getFloat32());
+
+        if ((chan >= 0.0) && (chan <= 15.) && (nnum >= 0.0) && (nnum <= 127.) && (val >= 0.0) &&
+            (val <= 127.0))
+        {
+            // std::cout << "Sending poly aftertouch. chan: " << (char)chan
+            //          << "  notenum: " << (char)nnum << "  val: " << (int)val << std::endl;
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::POLY_ATOUCH, (char)chan, (char)nnum, (int)val));
         }
     }
 
@@ -565,15 +610,15 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
                             SurgeSynthProcessor::ABSOLUTE_X, p, val));
                 }
-                else if (extension == "deact")
+                else if (extension == "enable")
                 {
                     if (!p->can_deactivate())
-                        sendError("Param " + p->oscName + " can't deactivate.");
+                        sendError("Param " + p->oscName + " doesn't support enabling/disabling.");
                     else
                         sspPtr->oscRingBuf.push(
-                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEACT_X, p, val));
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ENABLE_X, p, val));
                 }
-                else if (extension == "tsync")
+                else if (extension == "tempo_sync")
                 {
                     if (!p->can_temposync())
                         sendError("Param " + p->oscName + " can't tempo-sync.");
@@ -597,7 +642,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sspPtr->oscRingBuf.push(
                             SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEFORM_X, p, val));
                 }
-                else if (extension == "conrate")
+                else if (extension == "const_rate")
                 {
                     if (!p->has_portaoptions())
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
@@ -1215,7 +1260,7 @@ void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMes
     if (p->can_deactivate())
         sendParameter(p, needsMessageThread, "deact");
     if (p->can_temposync())
-        sendParameter(p, needsMessageThread, "tsync");
+        sendParameter(p, needsMessageThread, "tempo_sync");
     if (p->can_extend_range())
         sendParameter(p, needsMessageThread, "extend");
     if (p->has_deformoptions())
@@ -1385,15 +1430,15 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
     {
         if (extension == "abs")
             val01 = (float)p->absolute;
-        if (extension == "deact")
+        if (extension == "enable")
             val01 = (float)p->deactivated;
-        if (extension == "tsync")
+        if (extension == "tempo_sync")
             val01 = (float)p->temposync;
         if (extension == "extend")
             val01 = (float)p->extend_range;
         if (extension == "deform")
             val01 = (float)p->deform_type;
-        if (extension == "conrate")
+        if (extension == "const_rate")
             val01 = (float)p->porta_constrate;
         if (extension == "gliss")
             val01 = (float)p->porta_gliss;
