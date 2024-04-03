@@ -121,8 +121,8 @@ struct ClipboardCopyButton : public juce::TextButton, Surge::GUI::SkinConsumingC
     {
         setAccessible(true);
         setWantsKeyboardFocus(true);
-        setDescription("Copy Version Info");
-        setTitle("Copy Version Info");
+        setDescription("Copy Info to Clipboard");
+        setTitle("Copy Info to Clipboard");
     }
 
     void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
@@ -140,7 +140,7 @@ struct ClipboardCopyButton : public juce::TextButton, Surge::GUI::SkinConsumingC
         }
 
         g.setFont(skin->fontManager->getLatoAtSize(10));
-        g.drawText("Copy Version Info", getLocalBounds(), juce::Justification::centred, false);
+        g.drawText("Copy Info to Clipboard", getLocalBounds(), juce::Justification::centred, false);
     }
 };
 
@@ -177,21 +177,27 @@ void AboutScreen::populateData()
     std::string platform = "GLaDOS, Orac or Skynet";
 #endif
 
-    std::string bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
-    std::string system =
-        platform + " " + bitness + " " + wrapper + " on " + sst::plugininfra::cpufeatures::brand();
+    const auto ramsize = juce::SystemStats::getMemorySizeInMegabytes();
+    const auto ramString =
+        fmt::format("{:.0f} {} RAM", ramsize >= 1024 ? std::roundf(ramsize / 1024.f) : ramsize,
+                    ramsize >= 1024 ? "GB" : "MB");
+
+    const auto bitness = (sizeof(size_t) == 4 ? std::string("32") : std::string("64")) + "-bit";
+    const auto system = fmt::format("{} {}{} on {}, {}", platform, bitness,
+                                    wrapper == "Undefined" ? "" : " " + wrapper,
+                                    sst::plugininfra::cpufeatures::brand(), ramString);
 
     lowerLeft.clear();
     lowerLeft.emplace_back("Version:", version, "");
-    lowerLeft.emplace_back("Build:", buildinfo, "");
-    lowerLeft.emplace_back("System:", system, "");
+    lowerLeft.emplace_back("Build Info:", buildinfo, "");
+    lowerLeft.emplace_back("System Info:", system, "");
 
-    auto srString = fmt::format("{:.1f} kHz / Process block size: {} samples",
-                                storage->samplerate / 1000.0, BLOCK_SIZE);
+    const auto srString = fmt::format("{} Hz", (int)storage->samplerate);
 
     if (host != "Unknown")
     {
         auto hstr = host + " @ " + srString;
+
         lowerLeft.emplace_back("Host:", hstr, "");
     }
     else
@@ -199,9 +205,12 @@ void AboutScreen::populateData()
         lowerLeft.emplace_back("Sample Rate:", srString, "");
     }
 
+    lowerLeft.emplace_back("Processing Block:", fmt::format("{} samples", BLOCK_SIZE), "");
+
     lowerLeft.emplace_back("", "", "");
 
-    auto apppath = sst::plugininfra::paths::sharedLibraryBinaryPath();
+    const auto apppath = sst::plugininfra::paths::sharedLibraryBinaryPath();
+
     lowerLeft.emplace_back("Executable:", apppath.u8string(), apppath.parent_path().u8string());
     lowerLeft.emplace_back("Factory Data:", storage->datapath.u8string(),
                            storage->datapath.u8string());
@@ -210,7 +219,7 @@ void AboutScreen::populateData()
 
     lowerRight.clear();
 
-    std::string skinFullName = skin->displayName;
+    auto skinFullName = skin->displayName;
 
     if (!skin->category.empty())
     {
@@ -252,12 +261,12 @@ void AboutScreen::resized()
         auto lrs = lowerRight.size();
         auto h0 = getHeight() - lls * lHeight - margin;
         auto h1 = getHeight() - lrs * lHeight - margin;
-        auto colW = 66;
+        auto colW = 84;
         auto font = skin->fontManager->getLatoAtSize(10);
 
         copyButton = std::make_unique<ClipboardCopyButton>();
         copyButton->setSkin(skin, associatedBitmapStore);
-        copyButton->setBounds(margin + 4, h0 - lHeight - 4, 80, 16);
+        copyButton->setBounds(margin + 4, h0 - lHeight - 4, 100, 16);
         copyButton->addListener(this);
 
         addAndMakeVisible(*copyButton);
