@@ -104,7 +104,7 @@ int logLevel{BASIC};
 void ctrlc_callback_handler(int signum)
 {
     std::cout << "\n";
-    LOG(BASIC, "SIGINT (ctrl-c) detected. Shutting down cli");
+    LOG(BASIC, "SIGINT (Ctrl-C) detected. Shutting down CLI...");
     continueLoop = false;
     juce::MessageManager::getInstance()->stopDispatchLoop();
 
@@ -196,9 +196,9 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
     void audioDeviceStopped() override {}
     void audioDeviceAboutToStart(juce::AudioIODevice *device) override
     {
-        LOG(BASIC, "Audio Starting      : SampleRate=" << device->getCurrentSampleRate()
-                                                       << " BufferSize="
-                                                       << device->getCurrentBufferSizeSamples());
+        LOG(BASIC, "Audio Starting      : Sample Rate "
+                       << (int)device->getCurrentSampleRate() << " Hz, Buffer Size "
+                       << device->getCurrentBufferSizeSamples() << " samples");
         proc->surge->setSamplerate(device->getCurrentSampleRate());
     }
 };
@@ -209,7 +209,7 @@ void isQuitPressed()
 
     while (!(std::cin.eof() || res == "quit"))
     {
-        std::cout << "\nsurge-xt-cli is running. Type 'quit' or Ctrl+D to stop\n> ";
+        std::cout << "\nSurge XT CLI is running. Type 'quit' or Ctrl+D to stop\n> ";
         std::cin >> res;
     }
     continueLoop = false;
@@ -219,13 +219,13 @@ void isQuitPressed()
 int main(int argc, char **argv)
 {
     // juce::ConsoleApplication is just such a mess.
-    CLI::App app("surge-xt-cli - a command line player for Surge XT");
+    CLI::App app("..:: Surge XT CLI - Command Line player for Surge XT ::..");
 
     app.set_version_flag("--version", Surge::Build::FullVersionStr);
 
     bool listDevices{false};
     app.add_flag("-l,--list-devices", listDevices,
-                 "List all devices available on this system, then exit.");
+                 "List all devices available on this system, then quit.");
 
     std::string audioInterface{};
     app.add_flag("--audio-interface", audioInterface,
