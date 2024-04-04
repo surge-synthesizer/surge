@@ -2035,6 +2035,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     pl->ctrlgroup == p->ctrlgroup && pl->can_temposync())
                                 {
                                     pl->temposync = setTSTo;
+                                    // output updated value to OSC
+                                    juceEditor->processor.paramChangeToListeners(
+                                        pl, true, juceEditor->processor.SCT_EX_TEMPOSYNC,
+                                        (float)pl->temposync, .0, .0, "");
 
                                     if (setTSTo)
                                     {
