@@ -356,21 +356,28 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     {
         if (message.size() != 2)
         {
-            sendDataCountError("pitchbend", "2");
+            sendDataCountError(address1, "2");
         }
         if (!message[0].isFloat32() || !message[1].isFloat32())
         {
-            sendNotFloatError("pbend", "channel or value");
+            sendNotFloatError(address1, "channel or value");
             return;
+        }
+
+        char chan = static_cast<char>(message[0].getFloat32());
+        if ((chan < 0) || (chan > 15))
+        {
+            sendError("/pbend channel must be >= 0. and <= 15.");
         }
 
         float bend = message[1].getFloat32();
         if ((bend >= -1.0) && (bend <= 1.0))
         {
             sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                SurgeSynthProcessor::PITCHBEND, static_cast<char>(message[0].getFloat32()),
-                static_cast<int>(bend * 8192)));
+                SurgeSynthProcessor::PITCHBEND, chan, static_cast<int>(bend * 8192)));
         }
+        else
+            sendError("/pbend value must be between -1.0 and 1.0 .");
     }
 
     // Note expressions
@@ -454,11 +461,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     {
         if (message.size() != 3)
         {
-            sendDataCountError("cc", "3");
+            sendDataCountError(address1, "3");
         }
         if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
         {
-            sendNotFloatError("cc", "channel, control number, or value");
+            sendNotFloatError(address1, "channel, control number, or value");
             return;
         }
         float chan = static_cast<int>(message[0].getFloat32());
@@ -471,17 +478,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CC, chan, cnum, val));
         }
+        else
+            sendMidiBoundsError(address1);
     }
 
     else if (address1 == "chan_at" && !querying)
     {
         if (message.size() != 2)
         {
-            sendDataCountError("chan_at", "2");
+            sendDataCountError(address1, "2");
         }
         if (!(message[0].isFloat32() && message[1].isFloat32()))
         {
-            sendNotFloatError("chan_at", "channel or value");
+            sendNotFloatError(address1, "channel or value");
             return;
         }
         float chan = static_cast<int>(message[0].getFloat32());
@@ -492,17 +501,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CHAN_ATOUCH, chan, val));
         }
+        else
+            sendMidiBoundsError(address1);
     }
 
     else if (address1 == "poly_at" && !querying)
     {
         if (message.size() != 3)
         {
-            sendDataCountError("poly_at", "3");
+            sendDataCountError(address1, "3");
         }
         if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
         {
-            sendNotFloatError("poly_at", "channel, note number, or value");
+            sendNotFloatError(address1, "channel, note number, or value");
             return;
         }
         float chan = static_cast<int>(message[0].getFloat32());
@@ -512,11 +523,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         if ((chan >= 0.0) && (chan <= 15.) && (nnum >= 0.0) && (nnum <= 127.) && (val >= 0.0) &&
             (val <= 127.0))
         {
-            // std::cout << "Sending poly aftertouch. chan: " << (char)chan
-            //          << "  notenum: " << (char)nnum << "  val: " << (int)val << std::endl;
             sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
                 SurgeSynthProcessor::POLY_ATOUCH, (char)chan, (char)nnum, (int)val));
         }
+        else
+            sendMidiBoundsError(address1);
     }
 
     // All notes off
@@ -1196,6 +1207,13 @@ void OpenSoundControl::sendDataCountError(std::string addr, std::string count)
 {
     OpenSoundControl::sendError("Wrong number of data items supplied for /" + addr + "; expected " +
                                 count + ".");
+}
+
+void OpenSoundControl::sendMidiBoundsError(std::string addr)
+{
+    OpenSoundControl::sendError("All values for '/" + addr +
+                                "/...' messages must be greater "
+                                "than 0.0 and less than 127.0");
 }
 
 // Loop through all params, send them to OSC Out
