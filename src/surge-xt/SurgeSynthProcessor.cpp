@@ -1390,26 +1390,30 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessage &m)
     {
         int atval = m.getChannelPressureValue();
         surge->channelAftertouch(ch, atval);
-        paramChangeToListeners(nullptr, true, SCT_CHAN_ATOUCH, (float)ch, (float)atval, .0, "");
+        if (surge->storage.echoMIDIctrlToOSC)
+            paramChangeToListeners(nullptr, true, SCT_CHAN_ATOUCH, (float)ch, (float)atval, .0, "");
     }
     else if (m.isAftertouch())
     {
         int atval = m.getAfterTouchValue();
         surge->polyAftertouch(ch, m.getNoteNumber(), atval);
-        paramChangeToListeners(nullptr, true, SCT_POLY_ATOUCH, (float)ch, (float)m.getNoteNumber(),
-                               (float)atval, "");
+        if (surge->storage.echoMIDIctrlToOSC)
+            paramChangeToListeners(nullptr, true, SCT_POLY_ATOUCH, (float)ch,
+                                   (float)m.getNoteNumber(), (float)atval, "");
     }
     else if (m.isPitchWheel())
     {
         int pwval = m.getPitchWheelValue() - 8192;
         surge->pitchBend(ch, pwval);
-        paramChangeToListeners(nullptr, true, SCT_PITCHBEND, (float)ch, pwval, .0, "");
+        if (surge->storage.echoMIDIctrlToOSC)
+            paramChangeToListeners(nullptr, true, SCT_PITCHBEND, (float)ch, pwval, .0, "");
     }
     else if (m.isController())
     {
         surge->channelController(ch, m.getControllerNumber(), m.getControllerValue());
-        paramChangeToListeners(nullptr, true, SCT_CC, (float)ch, (float)m.getControllerNumber(),
-                               (float)m.getControllerValue(), "");
+        if (surge->storage.echoMIDIctrlToOSC)
+            paramChangeToListeners(nullptr, true, SCT_CC, (float)ch, (float)m.getControllerNumber(),
+                                   (float)m.getControllerValue(), "");
     }
     else if (m.isProgramChange())
     {

@@ -459,6 +459,21 @@ class alignas(16) SurgeSynthesizer
     void deletePatchLoadedListener(std::string key) { patchLoadedListeners.erase(key); }
 
     //==============================================================================
+    // Parameter changes coming from within the synth (e.g. from MIDI-learned input)
+    // are communicated to listeners here
+    std::unordered_map<std::string,
+                       std::function<void(const std::string oscname, const float fval)>>
+        audioThreadParamListeners;
+
+    void
+    addAudioParamListener(std::string key,
+                          std::function<void(const std::string oscname, const float fval)> const &l)
+    {
+        audioThreadParamListeners.insert({key, l});
+    }
+    void deleteAudioParamListener(std::string key) { audioThreadParamListeners.erase(key); }
+
+    //==============================================================================
     // synth -> editor variables
     bool refresh_editor, refresh_vkb, patch_loaded;
     int learn_param_from_cc, learn_macro_from_cc, learn_param_from_note;

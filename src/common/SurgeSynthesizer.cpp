@@ -2335,8 +2335,13 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
              storage.getPatch().param_ptr[i]->midichan == -1))
         {
             this->setParameterSmoothed(i, fval);
-            int j = 0;
 
+            // Notify audio thread param change listeners (OSC, e.g.)
+            // (which run on juce messenger thread)
+            for (const auto &it : audioThreadParamListeners)
+                (it.second)(storage.getPatch().param_ptr[i]->oscName, fval);
+
+            int j = 0;
             while (j < 7)
             {
                 if ((refresh_ctrl_queue[j] > -1) && (refresh_ctrl_queue[j] != i))

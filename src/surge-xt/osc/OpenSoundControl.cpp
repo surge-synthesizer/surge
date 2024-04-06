@@ -1128,6 +1128,25 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
                                                              auto float1, auto float2, auto str2) {
         ssp->param_change_to_OSC(str1, numvals, float0, float1, float2, str2);
     });
+
+    // Add a listener for parameter changes that happen on the audio thread
+    //  (e.g. MIDI-'learned' parameters being changed by incoming MIDI messages)
+    synth->addAudioParamListener("OSC_OUT", [this, ssp = sspPtr](std::string oname, float fval) {
+        assert(juce::MessageManager::getInstanceWithoutCreating());
+        auto *mm = juce::MessageManager::getInstanceWithoutCreating();
+        if (mm)
+        {
+            mm->callAsync([ssp, oname, fval]() {
+                ssp->param_change_to_OSC("/" + oname, 1, fval, 0., 0., "");
+            });
+        }
+        else
+        {
+            std::cerr << "The juce message manager is not running. You are misconfigured"
+                      << std::endl;
+        }
+    });
+
     // Add a listener for modulation changes
     synth->addModulationAPIListener(this);
 
@@ -1151,6 +1170,7 @@ void OpenSoundControl::stopSending(bool updateOSCStartInStorage)
     synth->storage.oscSending = false;
 
     synth->deletePatchLoadedListener("OSC_OUT");
+    synth->deleteAudioParamListener("OSC_OUT");
     sspPtr->deleteParamChangeListener("OSC_OUT");
 
     if (updateOSCStartInStorage)

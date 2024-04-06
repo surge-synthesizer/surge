@@ -1486,6 +1486,7 @@ class alignas(16) SurgeStorage
     std::string oscOutIP{"127.0.0.1"};
     bool oscStartIn{false};
     bool oscStartOut{false};
+    bool echoMIDIctrlToOSC{true}; // This may be made UI- or OSC-switchable in future
 
     static constexpr double MIDI_0_FREQ = Tunings::MIDI_0_FREQ;
     // this value needs to be passed along to FilterCoefficientMaker
