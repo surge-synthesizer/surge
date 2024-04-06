@@ -1136,9 +1136,8 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
         auto *mm = juce::MessageManager::getInstanceWithoutCreating();
         if (mm)
         {
-            mm->callAsync([ssp, oname, fval]() {
-                ssp->param_change_to_OSC("/" + oname, 1, fval, 0., 0., "");
-            });
+            mm->callAsync(
+                [ssp, oname, fval]() { ssp->param_change_to_OSC(oname, 1, fval, 0., 0., ""); });
         }
         else
         {
