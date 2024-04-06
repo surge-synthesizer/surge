@@ -1406,7 +1406,7 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessage &m)
         int pwval = m.getPitchWheelValue() - 8192;
         surge->pitchBend(ch, pwval);
         if (surge->storage.echoMIDIctrlToOSC)
-            paramChangeToListeners(nullptr, true, SCT_PITCHBEND, (float)ch, pwval, .0, "");
+            paramChangeToListeners(nullptr, true, SCT_PITCHBEND, (float)ch, pwval / 8192., .0, "");
     }
     else if (m.isController())
     {
