@@ -105,6 +105,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     void sendAllParameterInfo(const Parameter *p, bool needsMessageThread);
 
     void sendParameterDocs(const Parameter *p, bool needsMessageThread);
+    void sendParameterExtDocs(const Parameter *p, bool needsMessageThread);
     void sendMacro(long macnum, bool needsMsgThread);
     void sendModulator(ModulationRouting mod, int scene, bool global);
     void sendPath(std::string pathStr);
