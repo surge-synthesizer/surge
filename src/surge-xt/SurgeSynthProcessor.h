@@ -431,6 +431,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void patch_load_to_OSC(fs::path newpath);
     void param_change_to_OSC(std::string paramPath, int numvals, float val0, float val1, float val2,
                              std::string valStr);
+
     enum specialCaseType
     {
         SCT_MACRO,
