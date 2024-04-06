@@ -99,7 +99,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     void sendError(std::string errorMsg);
     void sendNotFloatError(std::string addr, std::string msg);
     void sendDataCountError(std::string addr, std::string count);
-    float getNormValue(Parameter *p, float fval);
+    void sendMidiBoundsError(std::string addr);
     void sendParameter(const Parameter *p, bool needsMessageThread, std::string extension = "");
     void sendParameterExtOptions(const Parameter *p, bool needsMessageThread);
     void sendAllParameterInfo(const Parameter *p, bool needsMessageThread);

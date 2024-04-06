@@ -362,13 +362,17 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         MOD_MUTE,
         ABSOLUTE_X,
         TEMPOSYNC_X,
-        DEACT_X,
+        ENABLE_X,
         EXTEND_X,
         DEFORM_X,
         PORTA_CONSTRATE_X,
         PORTA_GLISS_X,
         PORTA_RETRIGGER_X,
-        PORTA_CURVE_X
+        PORTA_CURVE_X,
+        PITCHBEND,
+        CC,
+        CHAN_ATOUCH,
+        POLY_ATOUCH
     };
 
     struct oscToAudio
@@ -377,12 +381,17 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         Parameter *param;
         float fval{0.0};
         int ival{-1};
-        char mnote{0}, vel{0};
+        char char0{0}, char1{0};
         bool on{false};
         int32_t noteid{-1};
         int scene{0}, index{0};
 
         oscToAudio() {}
+        oscToAudio(oscToAudio_type omtype, char c0, char c1, int i)
+            : type(omtype), char0(c0), char1(c1), ival(i)
+        {
+        }
+        oscToAudio(oscToAudio_type omtype, char c, int i) : type(omtype), char0(c), ival(i) {}
         oscToAudio(oscToAudio_type omtype) : type(omtype) {}
         oscToAudio(oscToAudio_type omtype, Parameter *p, int i) : type(omtype), param(p), ival(i) {}
         oscToAudio(int mask, int on) : type(FX_DISABLE), ival(mask), on(on) {}
@@ -397,11 +406,11 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         {
         }
         oscToAudio(float freq, char velocity, bool noteon, int32_t nid)
-            : type(FREQNOTE), fval(freq), vel(velocity), on(noteon), noteid(nid)
+            : type(FREQNOTE), fval(freq), char1(velocity), on(noteon), noteid(nid)
         {
         }
         oscToAudio(char note, char velocity, bool noteon, int32_t nid)
-            : type(MNOTE), mnote(note), vel(velocity), on(noteon), noteid(nid)
+            : type(MNOTE), char0(note), char1(velocity), on(noteon), noteid(nid)
         {
         }
         oscToAudio(oscToAudio_type type, int32_t nid, float f) : type(type), noteid(nid), fval(f) {}
@@ -420,7 +429,8 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void initOSCError(int port, std::string outIP = "");
 
     void patch_load_to_OSC(fs::path newpath);
-    void param_change_to_OSC(std::string paramPath, bool hasFloat, float value, std::string valStr);
+    void param_change_to_OSC(std::string paramPath, int numvals, float val0, float val1, float val2,
+                             std::string valStr);
     enum specialCaseType
     {
         SCT_MACRO,
@@ -428,17 +438,21 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         SCT_EX_TEMPOSYNC,
         SCT_EX_EXTENDRANGE,
         SCT_EX_ABSOLUTE,
-        SCT_EX_DEACTIVATE,
+        SCT_EX_ENABLE,
         SCT_EX_DEFORM,
         SCT_EX_PORTA_CONRATE,
         SCT_EX_PORTA_GLISS,
         SCT_EX_PORTA_RETRIG,
-        SCT_EX_PORTA_CURVE
+        SCT_EX_PORTA_CURVE,
+        SCT_PITCHBEND,
+        SCT_CC,
+        SCT_CHAN_ATOUCH,
+        SCT_POLY_ATOUCH
     };
 
     void paramChangeToListeners(Parameter *p, bool isSpecialCase = false, int specialCaseType = -1,
-                                int ival = 0, float fval = 0.0, std::string newValue = "",
-                                int ival2 = 0);
+                                float f0 = 0., float f1 = 0., float f2 = 0.,
+                                std::string newValue = "");
 
     // --- 'param change' listener(s) ----
     // Listeners are notified whenever a parameter finishes changing, along with the new value.
@@ -446,12 +460,14 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     // paramChangeListener calls OSCSender::send(), which runs on a juce::MessageManager thread.
     //
     // Be sure to delete any added listeners in the destructor of the class that added them.
-    std::unordered_map<std::string, std::function<void(const std::string &, const bool, const float,
-                                                       const std::string &)>>
+    std::unordered_map<std::string,
+                       std::function<void(const std::string &, const int, const float, const float,
+                                          const float, const std::string &)>>
         paramChangeListeners;
-    void addParamChangeListener(std::string key,
-                                std::function<void(const std::string &, const bool, const float,
-                                                   const std::string &)> const &l)
+    void addParamChangeListener(
+        std::string key,
+        std::function<void(const std::string &, const int, const float, const float, const float,
+                           const std::string &)> const &l)
     {
         paramChangeListeners.insert({key, l});
     }

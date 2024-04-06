@@ -616,7 +616,8 @@ void SurgeSynthEditor::endMacroEdit(long macroNum)
     par->endChangeGesture();
     // echo change to OSC out
     float newval = par->getValue();
-    processor.paramChangeToListeners(nullptr, true, processor.SCT_MACRO, macroNum, newval, "");
+    processor.paramChangeToListeners(nullptr, true, processor.SCT_MACRO, (float)macroNum, newval,
+                                     .0, "");
 }
 
 #if LINUX

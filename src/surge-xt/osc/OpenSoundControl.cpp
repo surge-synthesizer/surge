@@ -232,8 +232,156 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
     }
 
+    // 'Frequency' notes
+    if (address1 == "fnote" && !querying)
+    // Play a note at the given frequency and velocity
+    {
+        int32_t noteID = 0;
+        std::getline(split, address2, '/'); // check for '/rel'
+
+        if (message.size() < 2 || message.size() > 3)
+        {
+            sendDataCountError("fnote", "2 or 3");
+            return;
+        }
+        if (!message[0].isFloat32())
+        {
+            sendNotFloatError("fnote", "frequency");
+            return;
+        }
+        if (!message[1].isFloat32())
+        {
+            sendNotFloatError("fnote", "velocity");
+            return;
+        }
+        if (message.size() == 3)
+        {
+            noteID = getNoteID(message, 2);
+            if (noteID == -1)
+                return;
+        }
+
+        float frequency = message[0].getFloat32();
+        // Future enhancement: keep velocity as float as long as possible
+        int velocity = static_cast<int>(message[1].getFloat32() + 0.5);
+        constexpr float MAX_MIDI_FREQ = 12543.854;
+
+        bool noteon = (address2 != "rel") && (velocity != 0);
+
+        // (if not a note off-by-noteid) ensure freq. is in MIDI note range
+        if (noteon || noteID == 0)
+        {
+            if (frequency < Tunings::MIDI_0_FREQ || frequency > MAX_MIDI_FREQ)
+            {
+                sendError("Frequency '" + std::to_string(frequency) + "' is out of range. (" +
+                          std::to_string(Tunings::MIDI_0_FREQ) + " - " +
+                          std::to_string(MAX_MIDI_FREQ) + ").");
+                return;
+            }
+        }
+
+        // check velocity range
+        if (velocity < 0 || velocity > 127)
+        {
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0 - 127).");
+            return;
+        }
+
+        // Make a noteID from frequency if not supplied
+        if (noteID == 0)
+            noteID = int(frequency * 10000);
+
+        // queue packet to audio thread
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+            frequency, static_cast<char>(velocity), noteon, noteID));
+    }
+
+    // "MIDI-style" notes
+    else if (address1 == "mnote" && !querying)
+    // OSC equivalent of MIDI note
+    {
+        int32_t noteID = 0;
+
+        if (message.size() < 2 || message.size() > 3)
+        {
+            sendDataCountError("mnote", "2 or 3");
+            return;
+        }
+
+        std::getline(split, address2, '/'); // check for '/rel'
+
+        if (!message[0].isFloat32() || !message[1].isFloat32())
+        {
+            sendError("Invalid data type for OSC MIDI-style note and/or velocity (must be a "
+                      "float between 0 - 127).");
+            return;
+        }
+
+        if (message.size() == 3)
+        {
+            noteID = getNoteID(message, 2);
+            if (noteID == -1)
+                return;
+        }
+
+        int note = static_cast<int>(message[0].getFloat32());
+        int velocity = static_cast<int>(message[1].getFloat32());
+        bool noteon = (address2 != "rel") && (velocity != 0);
+
+        // check note and velocity ranges (if not a release w/ id)
+        if (noteon || noteID == 0)
+        {
+            if (note < 0 || note > 127)
+            {
+                sendError("Note '" + std::to_string(note) + "' is out of range (0 - 127).");
+                return;
+            }
+        }
+
+        if (velocity < 0 || velocity > 127)
+        {
+            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0 - 127).");
+            return;
+        }
+
+        if (noteID == 0)
+            noteID = int(note);
+
+        // Send packet to audio thread
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+            static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
+    }
+
+    else if (address1 == "pbend" && !querying)
+    {
+        if (message.size() != 2)
+        {
+            sendDataCountError(address1, "2");
+        }
+        if (!message[0].isFloat32() || !message[1].isFloat32())
+        {
+            sendNotFloatError(address1, "channel or value");
+            return;
+        }
+
+        char chan = static_cast<char>(message[0].getFloat32());
+        if ((chan < 0) || (chan > 15))
+        {
+            sendError("/pbend channel must be >= 0. and <= 15.");
+        }
+
+        float bend = message[1].getFloat32();
+        if ((bend >= -1.0) && (bend <= 1.0))
+        {
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::PITCHBEND, chan, static_cast<int>(bend * 8192)));
+        }
+        else
+            sendError("/pbend value must be between -1.0 and 1.0 .");
+    }
+
     // Note expressions
-    if (address1 == "ne")
+    else if (address1 == "ne" && !querying)
     {
         if (message.size() != 2)
         {
@@ -309,125 +457,77 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PRES, noteID, val));
         }
     }
-
-    // 'Frequency' notes
-    else if (address1 == "fnote")
-    // Play a note at the given frequency and velocity
+    else if (address1 == "cc" && !querying)
     {
-        int32_t noteID = 0;
-        std::getline(split, address2, '/'); // check for '/rel'
-
-        if (message.size() < 2 || message.size() > 3)
+        if (message.size() != 3)
         {
-            sendDataCountError("fnote", "2 or 3");
+            sendDataCountError(address1, "3");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
+        {
+            sendNotFloatError(address1, "channel, control number, or value");
             return;
         }
-        if (!message[0].isFloat32())
+        float chan = static_cast<int>(message[0].getFloat32());
+        float cnum = static_cast<int>(message[1].getFloat32());
+        float val = static_cast<int>(message[2].getFloat32());
+
+        if ((chan >= 0.0) && (chan <= 15.) && (cnum >= 0.0) && (cnum <= 127.) && (val >= 0.0) &&
+            (val <= 127.0))
         {
-            sendNotFloatError("fnote", "frequency");
-            return;
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CC, chan, cnum, val));
         }
-        if (!message[1].isFloat32())
-        {
-            sendNotFloatError("fnote", "velocity");
-            return;
-        }
-        if (message.size() == 3)
-        {
-            noteID = getNoteID(message, 2);
-            if (noteID == -1)
-                return;
-        }
-
-        float frequency = message[0].getFloat32();
-        // Future enhancement: keep velocity as float as long as possible
-        int velocity = static_cast<int>(message[1].getFloat32() + 0.5);
-        constexpr float MAX_MIDI_FREQ = 12543.854;
-
-        bool noteon = (address2 != "rel") && (velocity != 0);
-
-        // (if not a note off-by-noteid) ensure freq. is in MIDI note range
-        if (noteon || noteID == 0)
-        {
-            if (frequency < Tunings::MIDI_0_FREQ || frequency > MAX_MIDI_FREQ)
-            {
-                sendError("Frequency '" + std::to_string(frequency) + "' is out of range. (" +
-                          std::to_string(Tunings::MIDI_0_FREQ) + " - " +
-                          std::to_string(MAX_MIDI_FREQ) + ").");
-                return;
-            }
-        }
-
-        // check velocity range
-        if (velocity < 0 || velocity > 127)
-        {
-            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0 - 127).");
-            return;
-        }
-
-        // Make a noteID from frequency if not supplied
-        if (noteID == 0)
-            noteID = int(frequency * 10000);
-
-        // queue packet to audio thread
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-            frequency, static_cast<char>(velocity), noteon, noteID));
+        else
+            sendMidiBoundsError(address1);
     }
 
-    // "MIDI-style" notes
-    else if (address1 == "mnote")
-    // OSC equivalent of MIDI note
+    else if (address1 == "chan_at" && !querying)
     {
-        int32_t noteID = 0;
-
-        if (message.size() < 2 || message.size() > 3)
+        if (message.size() != 2)
         {
-            sendDataCountError("mnote", "2 or 3");
+            sendDataCountError(address1, "2");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32()))
+        {
+            sendNotFloatError(address1, "channel or value");
             return;
         }
+        float chan = static_cast<int>(message[0].getFloat32());
+        float val = static_cast<int>(message[1].getFloat32());
 
-        std::getline(split, address2, '/'); // check for '/rel'
-
-        if (!message[0].isFloat32() || !message[1].isFloat32())
+        if ((chan >= 0.0) && (chan <= 15.) && (val >= 0.0) && (val <= 127.0))
         {
-            sendError("Invalid data type for OSC MIDI-style note and/or velocity (must be a "
-                      "float between 0 - 127).");
+            sspPtr->oscRingBuf.push(
+                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CHAN_ATOUCH, chan, val));
+        }
+        else
+            sendMidiBoundsError(address1);
+    }
+
+    else if (address1 == "poly_at" && !querying)
+    {
+        if (message.size() != 3)
+        {
+            sendDataCountError(address1, "3");
+        }
+        if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
+        {
+            sendNotFloatError(address1, "channel, note number, or value");
             return;
         }
+        float chan = static_cast<int>(message[0].getFloat32());
+        float nnum = static_cast<int>(message[1].getFloat32());
+        float val = static_cast<int>(message[2].getFloat32());
 
-        if (message.size() == 3)
+        if ((chan >= 0.0) && (chan <= 15.) && (nnum >= 0.0) && (nnum <= 127.) && (val >= 0.0) &&
+            (val <= 127.0))
         {
-            noteID = getNoteID(message, 2);
-            if (noteID == -1)
-                return;
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::POLY_ATOUCH, (char)chan, (char)nnum, (int)val));
         }
-
-        int note = static_cast<int>(message[0].getFloat32());
-        int velocity = static_cast<int>(message[1].getFloat32());
-        bool noteon = (address2 != "rel") && (velocity != 0);
-
-        // check note and velocity ranges (if not a release w/ id)
-        if (noteon || noteID == 0)
-        {
-            if (note < 0 || note > 127)
-            {
-                sendError("Note '" + std::to_string(note) + "' is out of range (0 - 127).");
-                return;
-            }
-        }
-
-        if (velocity < 0 || velocity > 127)
-        {
-            sendError("Velocity '" + std::to_string(velocity) + "' is out of range (0 - 127).");
-            return;
-        }
-
-        if (noteID == 0)
-            noteID = int(note);
-
-        // Send packet to audio thread
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-            static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
+        else
+            sendMidiBoundsError(address1);
     }
 
     // All notes off
@@ -520,15 +620,15 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
                             SurgeSynthProcessor::ABSOLUTE_X, p, val));
                 }
-                else if (extension == "deact")
+                else if (extension == "enable")
                 {
                     if (!p->can_deactivate())
-                        sendError("Param " + p->oscName + " can't deactivate.");
+                        sendError("Param " + p->oscName + " doesn't support enabling/disabling.");
                     else
                         sspPtr->oscRingBuf.push(
-                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEACT_X, p, val));
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ENABLE_X, p, val));
                 }
-                else if (extension == "tsync")
+                else if (extension == "tempo_sync")
                 {
                     if (!p->can_temposync())
                         sendError("Param " + p->oscName + " can't tempo-sync.");
@@ -552,7 +652,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sspPtr->oscRingBuf.push(
                             SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEFORM_X, p, val));
                 }
-                else if (extension == "conrate")
+                else if (extension == "const_rate")
                 {
                     if (!p->has_portaoptions())
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
@@ -1024,10 +1124,10 @@ bool OpenSoundControl::initOSCOut(int port, std::string ipaddr)
         "OSC_OUT", [ssp = sspPtr](auto s) { ssp->patch_load_to_OSC(s.replace_extension()); });
 
     // Add a listener for parameter changes
-    sspPtr->addParamChangeListener("OSC_OUT",
-                                   [ssp = sspPtr](auto str1, auto bool1, auto float1, auto str2) {
-                                       ssp->param_change_to_OSC(str1, bool1, float1, str2);
-                                   });
+    sspPtr->addParamChangeListener("OSC_OUT", [ssp = sspPtr](auto str1, auto numvals, auto float0,
+                                                             auto float1, auto float2, auto str2) {
+        ssp->param_change_to_OSC(str1, numvals, float0, float1, float2, str2);
+    });
     // Add a listener for modulation changes
     synth->addModulationAPIListener(this);
 
@@ -1109,6 +1209,13 @@ void OpenSoundControl::sendDataCountError(std::string addr, std::string count)
                                 count + ".");
 }
 
+void OpenSoundControl::sendMidiBoundsError(std::string addr)
+{
+    OpenSoundControl::sendError("All values for '/" + addr +
+                                "/...' messages must be greater "
+                                "than 0.0 and less than 127.0");
+}
+
 // Loop through all params, send them to OSC Out
 void OpenSoundControl::sendAllParams()
 {
@@ -1170,7 +1277,7 @@ void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMes
     if (p->can_deactivate())
         sendParameter(p, needsMessageThread, "deact");
     if (p->can_temposync())
-        sendParameter(p, needsMessageThread, "tsync");
+        sendParameter(p, needsMessageThread, "tempo_sync");
     if (p->can_extend_range())
         sendParameter(p, needsMessageThread, "extend");
     if (p->has_deformoptions())
@@ -1340,15 +1447,15 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
     {
         if (extension == "abs")
             val01 = (float)p->absolute;
-        if (extension == "deact")
+        if (extension == "enable")
             val01 = (float)p->deactivated;
-        if (extension == "tsync")
+        if (extension == "tempo_sync")
             val01 = (float)p->temposync;
         if (extension == "extend")
             val01 = (float)p->extend_range;
         if (extension == "deform")
             val01 = (float)p->deform_type;
-        if (extension == "conrate")
+        if (extension == "const_rate")
             val01 = (float)p->porta_constrate;
         if (extension == "gliss")
             val01 = (float)p->porta_gliss;
