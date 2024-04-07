@@ -189,32 +189,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::getline(split, address1, '/');
     bool querying = false;
 
-    /*
-    // Doc requests
-    if (address1 == "doc")
-    { // remove the '/doc' from the address
-        std::getline(split, address1, '/');
-        addr = addr.substr(4);
-        if (address1 == "all_docs")
-        {
-            OpenSoundControl::sendAllParamDocs();
-            return;
-        }
-
-        auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
-        if (p == NULL)
-        {
-            // Not a valid OSC address
-            sendError("No parameter with OSC address of " + addr);
-        }
-        else
-        {
-            OpenSoundControl::sendParameterDocs(p, true);
-        }
-        return;
-    }
-    */
-
     // Queries (for params and modulators)
     if (address1 == "q")
     {
@@ -592,7 +566,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
         }
 
-        // Special case for extended paramter options
+        // Special case for extended parameter options
         else if (hasEnding(addr, "+"))
         {
             size_t last_slash = addr.find_last_of("/");
@@ -802,10 +776,15 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         std::getline(split, address2, '/');
         if (address2 == "load")
         {
-            std::string dataStr = getWholeString(message) + ".fxp";
+            std::string patchPath = getWholeString(message) + ".fxp";
+            if (!fs::exists(patchPath))
+            {
+                sendError("File not found: " + patchPath);
+                return;
+            }
             {
                 std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
-                strncpy(synth->patchid_file, dataStr.c_str(), FILENAME_MAX);
+                strncpy(synth->patchid_file, patchPath.c_str(), FILENAME_MAX);
                 synth->has_patchid_file = true;
             }
             synth->processAudioThreadOpsWhenAudioEngineUnavailable();
@@ -816,10 +795,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             std::string dataStr = getWholeString(message);
             fs::path patchPath = synth->storage.userPatchesPath;
             patchPath += dataStr += ".fxp";
-            std::cout << "Loading path: " << patchPath.string() << "\n";
             if (!fs::exists(patchPath))
             {
-                sendError("Path not found: " + patchPath.string());
+                sendError("File not found: " + patchPath.string());
                 return;
             }
             {
@@ -855,7 +833,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 {
                     fs::path ppath = synth->storage.userPatchesPath;
                     ppath += dataStr += ".fxp";
-                    std::cout << "Saving to " << ppath << "\n";
                     synth->savePatchToPath(ppath);
                 }
             });
@@ -1320,7 +1297,7 @@ void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMes
     }
 }
 
-// Loop through all modulators, send them to OSC Out
+// Loop throuh all modulators, send them to OSC Out
 void OpenSoundControl::sendAllModulators()
 {
     if (sendingOSC)
@@ -1554,26 +1531,28 @@ void OpenSoundControl::sendParameterDocs(const Parameter *p, bool needsMessageTh
 
 void OpenSoundControl::sendParameterExtDocs(const Parameter *p, bool needsMessageThread)
 {
-    std::string extensions[] = {"abs",        "enable", "tempo_sync", "extend", "deform",
-                                "const_rate", "gliss",  "retrig",     "curve"};
+    // Note: this message is always sent, even when no ext params are found.
+    // This way OSC clients can reliably determine the available ext params: there is a
+    // 'null value' in the form of an empty message.
     std::vector<std::string> available_ext;
 
-    for (const auto &ext : extensions)
+    if (p->can_be_absolute())
+        available_ext.push_back("abs");
+    if (p->can_deactivate())
+        available_ext.push_back("enable");
+    if (p->can_temposync())
+        available_ext.push_back("tempo_sync");
+    if (p->can_extend_range())
+        available_ext.push_back("extend");
+    if (p->has_deformoptions())
+        available_ext.push_back("deform");
+    if (p->has_portaoptions())
     {
-        if (ext == "abs" && p->can_be_absolute())
+        for (const auto &ext : {"const_rate", "gliss", "retrig", "curve"})
+        {
             available_ext.push_back(ext);
-        else if (ext == "enable" && p->can_deactivate())
-            available_ext.push_back(ext);
-        else if (ext == "tempo_sync" && p->can_temposync())
-            available_ext.push_back(ext);
-        else if (ext == "extend" && p->can_extend_range())
-            available_ext.push_back(ext);
-        else if (ext == "deform" && p->has_deformoptions())
-            available_ext.push_back(ext);
-        else if ((ext == "const_rate" || ext == "gliss" || ext == "retrig" || ext == "curve") &&
-                 p->has_portaoptions())
-            available_ext.push_back(ext);
-    }
+        }
+    };
 
     // Adding the doc prefix to the address again
     std::string addr = "/doc" + p->oscName + "/ext";
