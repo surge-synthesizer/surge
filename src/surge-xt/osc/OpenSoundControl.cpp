@@ -186,7 +186,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::getline(split, throwaway, '/');
 
     std::string address1, address2, address3;
-    std::string address1, address2, address3;
     std::getline(split, address1, '/');
     bool querying = false;
 
