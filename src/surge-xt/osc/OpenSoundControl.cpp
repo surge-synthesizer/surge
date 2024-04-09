@@ -186,6 +186,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::getline(split, throwaway, '/');
 
     std::string address1, address2, address3;
+    std::string address1, address2, address3;
     std::getline(split, address1, '/');
     bool querying = false;
 
@@ -755,10 +756,10 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
     }
 
+    // Wavetable control
     else if (address1 == "wavetable")
     {
         std::getline(split, address2, '/');
-        // Wavetable control
         if (!(address2 == "a" || address2 == "b"))
         {
             sendError("/wavetable must specify a scene (a or b)");
