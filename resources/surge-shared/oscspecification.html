@@ -470,21 +470,30 @@
                               <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and &lt;n&gt; with '1' through '3'
                                    (oscillator #)
                               </h3>
-
                          </div>
                          <table style="border: 2px solid black;">
                               <tr>
                                    <th>Address</th>
                                    <th>Description</th>
-                                   <th>Appropriate Values</th>
+                                   <th style="width: 35%;">Appropriate Values</th>
                               </tr>
                               <tr>
-                                   <td>/wavetable/&lt;s&gt;/osc/n</td>
-                                   <td> select wavetable by id</td>
-                                   <td>integer (0 - number of wavetables)</td>
+                                   <td>/wavetable/&lt;s&gt;/osc/n/id</td>
+                                   <td>select wavetable by id*</td>
+                                   <td>integer (0 - # of wavetables)</td>
                               </tr>
                               <tr>
-                                   <td class="center" colspan="3">out-of-range wavetable ids will be ignored</td>
+                                   <td>/wavetable/&lt;s&gt;/osc/n/incr</td>
+                                   <td>increment wavetable</td>
+                                   <td></td>
+                                   </tr>
+                                   <tr>
+                                        <td>/wavetable/&lt;s&gt;/osc/n/decr</td>
+                                        <td>decrement wavetable</td>
+                                        <td></td>
+                                   </tr>
+                                   <tr>
+                                        <td class="center" colspan="3">*out-of-range wavetable ids will be ignored</td>
                               </tr>
                          </table>
                     </div>

@@ -758,14 +758,15 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Wavetable control
     else if (address1 == "wavetable")
     {
-        std::getline(split, address2, '/');
-        if (!(address2 == "a" || address2 == "b"))
+        std::string scene_str = "";
+        std::getline(split, scene_str, '/');
+        if (!(scene_str == "a" || scene_str == "b"))
         {
             sendError("/wavetable must specify a scene (a or b)");
             return;
         }
+        int scene_num = scene_str == "a" ? 0 : 1;
 
-        int scene_num = address2 == "a" ? 0 : 1;
         std::getline(split, address2, '/');
         if (address2 != "osc")
         {
@@ -774,33 +775,55 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         std::getline(split, address2, '/');
-        if (!(address2 == "0" || address2 == "1" || address2 == "2"))
+        if (!(address2 == "1" || address2 == "2" || address2 == "3"))
         {
-            sendError("/wavetable: oscillator number out of range (0-2)");
+            sendError("/wavetable: oscillator number out of range (1-3)");
             return;
         }
-
         int osc_num = stoi(address2);
-        OscillatorStorage *oscdata = &(synth->storage.getPatch().scene[scene_num].osc[osc_num]);
+        OscillatorStorage *oscdata = &(synth->storage.getPatch().scene[scene_num].osc[osc_num - 1]);
 
         if (querying)
         {
+            std::stringstream addr;
+            addr << "/wavetable/" << scene_str << "/osc/" << osc_num << "/id";
             juce::OSCMessage om =
-                juce::OSCMessage(juce::OSCAddressPattern(juce::String("/wavetable")));
-            om.addString(oscdata->wavetable_display_name);
+                juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr.str())));
             om.addFloat32(oscdata->wt.current_id);
+            om.addString(oscdata->wavetable_display_name);
             OpenSoundControl::send(om, true);
             return;
         }
 
-        if (!message[0].isFloat32())
-        {
-            sendNotFloatError("wavetable", "wavetable #");
-            return;
-        }
+        std::getline(split, address2, '/');
 
-        // Select the new waveform (invalid ids are ignored)
-        oscdata->wt.queue_id = message[0].getFloat32();
+        int new_id = 0;
+        if (address2 == "incr")
+        {
+            if (!querying)
+            {
+                new_id = synth->storage.getAdjacentWaveTable(oscdata->wt.current_id, true);
+            }
+        }
+        else if (address2 == "decr")
+        {
+            if (!querying)
+            {
+                new_id = synth->storage.getAdjacentWaveTable(oscdata->wt.current_id, false);
+            }
+        }
+        else if (address2 == "id")
+        {
+            if (!message[0].isFloat32())
+            {
+                sendNotFloatError("wavetable", "wavetable #");
+                return;
+            }
+
+            // Select the new waveform (invalid ids are ignored)
+            new_id = (int)(message[0].getFloat32());
+        }
+        oscdata->wt.queue_id = new_id;
     }
 
     // Patch changing
