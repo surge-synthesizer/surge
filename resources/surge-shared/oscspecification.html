@@ -504,17 +504,25 @@
                          <span><code>/patch/save</code></span>
                          <span><code>/patch/incr</code></span>
                     </div>
-                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 16px 10px; line-height: 1.75">
                          <span><code>/tuning/scl ptolemy</code></span>
                          <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                          <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                     </div>
-
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/wavetable/a/osc/1/id 32</code></span>
+                         <span><code>/wavetable/b/osc/3/id 98</code></span>
+                         <span><code>/wavetable/a/osc/2/incr</code></span>
+                         <span><code>/wavetable/b/osc/3/decr</code></span>
+                    </div>
                     <div style="clear: both;"></div>
 
                     <div class="tablewrap" style="width: 99%; margin: 24px 8px 16px 8px;">
                          <div class="heading">
                               <h2>Queries</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and &lt;n&gt; with '1' through '3'
+                                   (oscillator #)</h3>
+
                          </div>
                          <table style="border: 2px solid black;">
                               <tr>
@@ -554,6 +562,11 @@
                                    <td>request one modulation mapping's mute status</td>
                                    <td>Sends one modulation's mute status to OSC out</td>
                               </tr>
+                              <tr>
+                                   <td>/q/wavetable/&lt;s&gt;/osc/&lt;n&gt;</td>
+                                   <td>request id of wavetable for current scene and oscillator</td>
+                                   <td>Sends id of specified wavetable</td>
+                              </tr>
 
                               <tr>
                                    <td class="center" colspan="3"></td>
@@ -572,6 +585,7 @@
                          <span><code>/q/all_mods</code></span>
                          <span><code>/q/mod/rel_vel /param/a/osc/1/pitch</code></span>
                          <span><code>/q/mod/mute/rel_vel /param/a/osc/1/pitch</code></span>
+                         <span><code>/q/wavetable/a/osc/1</code></span>
                     </div>
 
                     <div style="border: 1px solid lightgray;"></div>
