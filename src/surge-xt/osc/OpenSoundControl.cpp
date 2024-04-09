@@ -185,23 +185,23 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string throwaway;
     std::getline(split, throwaway, '/');
 
-    std::string address1, address2, address3;
-    std::getline(split, address1, '/');
+    std::string addr_part = "";
+    std::getline(split, addr_part, '/');
     bool querying = false;
 
     // Queries (for params and modulators)
-    if (address1 == "q")
+    if (addr_part == "q")
     {
         querying = true;
         // remove the '/q' from the address
-        std::getline(split, address1, '/');
+        std::getline(split, addr_part, '/');
         addr = addr.substr(2);
-        if (address1 == "all_params")
+        if (addr_part == "all_params")
         {
             OpenSoundControl::sendAllParams();
             return;
         }
-        if (address1 == "all_mods")
+        if (addr_part == "all_mods")
         {
             OpenSoundControl::sendAllModulators();
             return;
@@ -209,11 +209,11 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // 'Frequency' notes
-    if (address1 == "fnote" && !querying)
+    if (addr_part == "fnote" && !querying)
     // Play a note at the given frequency and velocity
     {
         int32_t noteID = 0;
-        std::getline(split, address2, '/'); // check for '/rel'
+        std::getline(split, addr_part, '/'); // check for '/rel'
 
         if (message.size() < 2 || message.size() > 3)
         {
@@ -242,7 +242,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         int velocity = static_cast<int>(message[1].getFloat32() + 0.5);
         constexpr float MAX_MIDI_FREQ = 12543.854;
 
-        bool noteon = (address2 != "rel") && (velocity != 0);
+        bool noteon = (addr_part != "rel") && (velocity != 0);
 
         // (if not a note off-by-noteid) ensure freq. is in MIDI note range
         if (noteon || noteID == 0)
@@ -273,7 +273,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // "MIDI-style" notes
-    else if (address1 == "mnote" && !querying)
+    else if (addr_part == "mnote" && !querying)
     // OSC equivalent of MIDI note
     {
         int32_t noteID = 0;
@@ -284,7 +284,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        std::getline(split, address2, '/'); // check for '/rel'
+        std::getline(split, addr_part, '/'); // check for '/rel'
 
         if (!message[0].isFloat32() || !message[1].isFloat32())
         {
@@ -302,7 +302,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         int note = static_cast<int>(message[0].getFloat32());
         int velocity = static_cast<int>(message[1].getFloat32());
-        bool noteon = (address2 != "rel") && (velocity != 0);
+        bool noteon = (addr_part != "rel") && (velocity != 0);
 
         // check note and velocity ranges (if not a release w/ id)
         if (noteon || noteID == 0)
@@ -328,15 +328,15 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
     }
 
-    else if (address1 == "pbend" && !querying)
+    else if (addr_part == "pbend" && !querying)
     {
         if (message.size() != 2)
         {
-            sendDataCountError(address1, "2");
+            sendDataCountError(addr_part, "2");
         }
         if (!message[0].isFloat32() || !message[1].isFloat32())
         {
-            sendNotFloatError(address1, "channel or value");
+            sendNotFloatError(addr_part, "channel or value");
             return;
         }
 
@@ -357,7 +357,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // Note expressions
-    else if (address1 == "ne" && !querying)
+    else if (addr_part == "ne" && !querying)
     {
         if (message.size() != 2)
         {
@@ -376,8 +376,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
         float val = message[1].getFloat32();
 
-        std::getline(split, address2, '/');
-        if (address2 == "volume")
+        std::getline(split, addr_part, '/');
+        if (addr_part == "volume")
         {
             if (val < 0.0 || val > 4.0)
             {
@@ -388,7 +388,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_VOL, noteID, val));
         }
-        else if (address2 == "pitch")
+        else if (addr_part == "pitch")
         {
             if (val < -120.0 || val > 120.0)
             {
@@ -399,7 +399,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PITCH, noteID, val));
         }
-        else if (address2 == "pan")
+        else if (addr_part == "pan")
         {
             if (val < 0.0 || val > 1.0)
             {
@@ -410,7 +410,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PAN, noteID, val));
         }
-        else if (address2 == "timbre")
+        else if (addr_part == "timbre")
         {
             if (val < 0.0 || val > 1.0)
             {
@@ -421,7 +421,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sspPtr->oscRingBuf.push(
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_TIMB, noteID, val));
         }
-        else if (address2 == "pressure")
+        else if (addr_part == "pressure")
         {
             if (val < 0.0 || val > 1.0)
             {
@@ -433,15 +433,15 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PRES, noteID, val));
         }
     }
-    else if (address1 == "cc" && !querying)
+    else if (addr_part == "cc" && !querying)
     {
         if (message.size() != 3)
         {
-            sendDataCountError(address1, "3");
+            sendDataCountError(addr_part, "3");
         }
         if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
         {
-            sendNotFloatError(address1, "channel, control number, or value");
+            sendNotFloatError(addr_part, "channel, control number, or value");
             return;
         }
         float chan = static_cast<int>(message[0].getFloat32());
@@ -455,18 +455,18 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CC, chan, cnum, val));
         }
         else
-            sendMidiBoundsError(address1);
+            sendMidiBoundsError(addr_part);
     }
 
-    else if (address1 == "chan_at" && !querying)
+    else if (addr_part == "chan_at" && !querying)
     {
         if (message.size() != 2)
         {
-            sendDataCountError(address1, "2");
+            sendDataCountError(addr_part, "2");
         }
         if (!(message[0].isFloat32() && message[1].isFloat32()))
         {
-            sendNotFloatError(address1, "channel or value");
+            sendNotFloatError(addr_part, "channel or value");
             return;
         }
         float chan = static_cast<int>(message[0].getFloat32());
@@ -478,18 +478,18 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CHAN_ATOUCH, chan, val));
         }
         else
-            sendMidiBoundsError(address1);
+            sendMidiBoundsError(addr_part);
     }
 
-    else if (address1 == "poly_at" && !querying)
+    else if (addr_part == "poly_at" && !querying)
     {
         if (message.size() != 3)
         {
-            sendDataCountError(address1, "3");
+            sendDataCountError(addr_part, "3");
         }
         if (!(message[0].isFloat32() && message[1].isFloat32() && message[2].isFloat32()))
         {
-            sendNotFloatError(address1, "channel, note number, or value");
+            sendNotFloatError(addr_part, "channel, note number, or value");
             return;
         }
         float chan = static_cast<int>(message[0].getFloat32());
@@ -503,22 +503,22 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 SurgeSynthProcessor::POLY_ATOUCH, (char)chan, (char)nnum, (int)val));
         }
         else
-            sendMidiBoundsError(address1);
+            sendMidiBoundsError(addr_part);
     }
 
     // All notes off
-    else if (address1 == "allnotesoff")
+    else if (addr_part == "allnotesoff")
     {
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLNOTESOFF));
     }
 
-    else if (address1 == "allsoundoff")
+    else if (addr_part == "allsoundoff")
     {
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLSOUNDOFF));
     }
 
     // Parameters
-    else if (address1 == "param")
+    else if (addr_part == "param")
     {
         float val = 0;
 
@@ -539,23 +539,23 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         // Special case for /param/macro/
-        std::getline(split, address2, '/'); // check for '/macro'
-        if (address2 == "macro")
+        std::getline(split, addr_part, '/'); // check for '/macro'
+        if (addr_part == "macro")
         {
             int macnum;
-            std::getline(split, address3, '/'); // get macro num
+            std::getline(split, addr_part, '/'); // get macro num
             try
             {
-                macnum = stoi(address3);
+                macnum = stoi(addr_part);
             }
             catch (...)
             {
-                sendError("OSC /param/macro: Invalid macro number: " + address3);
+                sendError("OSC /param/macro: Invalid macro number: " + addr_part);
                 return;
             }
             if ((macnum <= 0) || (macnum > n_customcontrollers))
             {
-                sendError("OSC /param/macro: Invalid macro number: " + address3);
+                sendError("OSC /param/macro: Invalid macro number: " + addr_part);
                 return;
             }
             if (querying)
@@ -668,7 +668,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         // Special case for /param/fx/<s>/<n>/deactivate, which is not a true 'parameter'
-        else if ((address2 == "fx") && (hasEnding(addr, "deactivate")))
+        else if ((addr_part == "fx") && (hasEnding(addr, "deactivate")))
         {
             int fxidx = 0, fxslot = 0;
             std::string slot_type = "";
@@ -756,7 +756,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // Wavetable control
-    else if (address1 == "wavetable")
+    else if (addr_part == "wavetable")
     {
         std::string scene_str = "";
         std::getline(split, scene_str, '/');
@@ -767,20 +767,20 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
         int scene_num = scene_str == "a" ? 0 : 1;
 
-        std::getline(split, address2, '/');
-        if (address2 != "osc")
+        std::getline(split, addr_part, '/');
+        if (addr_part != "osc")
         {
             sendError("/wavetable: bad message format (no '/osc/')");
             return;
         }
 
-        std::getline(split, address2, '/');
-        if (!(address2 == "1" || address2 == "2" || address2 == "3"))
+        std::getline(split, addr_part, '/');
+        if (!(addr_part == "1" || addr_part == "2" || addr_part == "3"))
         {
             sendError("/wavetable: oscillator number out of range (1-3)");
             return;
         }
-        int osc_num = stoi(address2);
+        int osc_num = stoi(addr_part);
         OscillatorStorage *oscdata = &(synth->storage.getPatch().scene[scene_num].osc[osc_num - 1]);
 
         if (querying)
@@ -795,24 +795,24 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        std::getline(split, address2, '/');
+        std::getline(split, addr_part, '/');
 
         int new_id = 0;
-        if (address2 == "incr")
+        if (addr_part == "incr")
         {
             if (!querying)
             {
                 new_id = synth->storage.getAdjacentWaveTable(oscdata->wt.current_id, true);
             }
         }
-        else if (address2 == "decr")
+        else if (addr_part == "decr")
         {
             if (!querying)
             {
                 new_id = synth->storage.getAdjacentWaveTable(oscdata->wt.current_id, false);
             }
         }
-        else if (address2 == "id")
+        else if (addr_part == "id")
         {
             if (!message[0].isFloat32())
             {
@@ -827,7 +827,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // Patch changing
-    else if (address1 == "patch")
+    else if (addr_part == "patch")
     {
         if (querying)
         {
@@ -844,8 +844,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        std::getline(split, address2, '/');
-        if (address2 == "load")
+        std::getline(split, addr_part, '/');
+        if (addr_part == "load")
         {
             std::string patchPath = getWholeString(message) + ".fxp";
             if (!fs::exists(patchPath))
@@ -861,7 +861,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             synth->processAudioThreadOpsWhenAudioEngineUnavailable();
         }
 
-        else if (address2 == "load_user")
+        else if (addr_part == "load_user")
         {
             std::string dataStr = getWholeString(message);
             fs::path patchPath = synth->storage.userPatchesPath;
@@ -878,7 +878,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
             synth->processAudioThreadOpsWhenAudioEngineUnavailable();
         }
-        else if (address2 == "save")
+        else if (addr_part == "save")
         {
             // Run this on the juce messenger thread
             juce::MessageManager::getInstance()->callAsync([this, message]() {
@@ -893,7 +893,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 }
             });
         }
-        else if (address2 == "save_user")
+        else if (addr_part == "save_user")
         {
             // Run this on the juce messenger thread
             juce::MessageManager::getInstance()->callAsync([this, message]() {
@@ -903,30 +903,30 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 synth->savePatchToPath(ppath);
             });
         }
-        else if (address2 == "random")
+        else if (addr_part == "random")
         {
             synth->selectRandomPatch();
         }
-        else if (address2 == "incr")
+        else if (addr_part == "incr")
         {
             synth->jogPatch(true);
         }
-        else if (address2 == "decr")
+        else if (addr_part == "decr")
         {
             synth->jogPatch(false);
         }
-        else if (address2 == "incr_category")
+        else if (addr_part == "incr_category")
         {
             synth->jogCategory(true);
         }
-        else if (address2 == "decr_category")
+        else if (addr_part == "decr_category")
         {
             synth->jogCategory(false);
         }
     }
 
     // Tuning switching
-    else if (address1 == "tuning")
+    else if (addr_part == "tuning")
     {
         if (querying)
             return; // Not yet implemented
@@ -934,9 +934,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         fs::path path = getWholeString(message);
         fs::path def_path;
 
-        std::getline(split, address2, '/');
+        std::getline(split, addr_part, '/');
         // Tuning files path control
-        if (address2 == "path")
+        if (addr_part == "path")
         {
             std::string dataStr = getWholeString(message);
             if ((dataStr != "_reset") && (!fs::exists(dataStr)))
@@ -947,9 +947,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
 
             fs::path ppath = fs::path(dataStr);
-            std::getline(split, address3, '/');
+            std::getline(split, addr_part, '/');
 
-            if (address3 == "scl")
+            if (addr_part == "scl")
             {
                 if (dataStr == "_reset")
                 {
@@ -959,7 +959,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 Surge::Storage::updateUserDefaultPath(&(synth->storage),
                                                       Surge::Storage::LastSCLPath, ppath);
             }
-            else if (address3 == "kbm")
+            else if (addr_part == "kbm")
             {
                 if (dataStr == "_reset")
                 {
@@ -971,7 +971,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             }
         }
         // Tuning file selection
-        else if (address2 == "scl")
+        else if (addr_part == "scl")
         {
             if (path.is_relative())
             {
@@ -989,7 +989,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             synth->storage.loadTuningFromSCL(def_path);
         }
         // KBM mapping file selection
-        else if (address2 == "kbm")
+        else if (addr_part == "kbm")
         {
             if (path.is_relative())
             {
@@ -1009,7 +1009,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     }
 
     // Modulation mapping
-    else if (address1 == "mod")
+    else if (addr_part == "mod")
     {
         if (querying && message.size() < 1)
         {
@@ -1024,28 +1024,28 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         bool muteMsg = false;
-        std::getline(split, address2, '/');
-        if (address2 == "mute")
+        std::getline(split, addr_part, '/');
+        if (addr_part == "mute")
         {
             muteMsg = true;
-            std::getline(split, address2, '/');
+            std::getline(split, addr_part, '/');
         }
 
         int mscene = 0;
         bool scene_specified = false;
-        if ((address2 == "a") || (address2 == "b"))
+        if ((addr_part == "a") || (addr_part == "b"))
         {
             scene_specified = true;
-            if (address2 == "b")
+            if (addr_part == "b")
                 mscene = 1;
-            std::getline(split, address2, '/'); // get mod into address2
+            std::getline(split, addr_part, '/'); // get mod into addr_part
         }
 
-        std::string mod = address2;
+        std::string mod = addr_part;
         int modnum = -1;
         for (int i = 0; i < n_modsources; i++)
         {
-            if (modsource_names_tag[i] == address2)
+            if (modsource_names_tag[i] == addr_part)
             {
                 modnum = i;
                 break;
@@ -1054,17 +1054,17 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         if (modnum == -1)
         {
-            sendError("Bad modulator name: " + address2);
+            sendError("Bad modulator name: " + addr_part);
             return;
         }
 
         int index = 0;
-        std::getline(split, address3, '/'); // address3 = index, if any
-        if (!address3.empty())
+        std::getline(split, addr_part, '/'); // addr_part = index, if any
+        if (!addr_part.empty())
         {
             try
             {
-                index = stoi(address3);
+                index = stoi(addr_part);
             }
             catch (const std::exception &e)
             {
