@@ -24,12 +24,14 @@
 #include "Parameter.h"
 #include "SurgeSynthProcessor.h"
 #include "SurgeStorage.h"
+#include <iostream>
 #include <sstream>
 #include <vector>
 #include <algorithm>
 #include <string>
 #include "UnitConversions.h"
 #include "Tunings.h"
+#include "filesystem/import.h"
 
 namespace Surge
 {
@@ -186,32 +188,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string address1, address2, address3, address4, address5;
     std::getline(split, address1, '/');
     bool querying = false;
-
-    /*
-    // Doc requests
-    if (address1 == "doc")
-    { // remove the '/doc' from the address
-        std::getline(split, address1, '/');
-        addr = addr.substr(4);
-        if (address1 == "all_docs")
-        {
-            OpenSoundControl::sendAllParamDocs();
-            return;
-        }
-
-        auto *p = synth->storage.getPatch().parameterFromOSCName(addr);
-        if (p == NULL)
-        {
-            // Not a valid OSC address
-            sendError("No parameter with OSC address of " + addr);
-        }
-        else
-        {
-            OpenSoundControl::sendParameterDocs(p, true);
-        }
-        return;
-    }
-    */
 
     // Queries (for params and modulators)
     if (address1 == "q")
@@ -590,7 +566,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
         }
 
-        // Special case for extended paramter options
+        // Special case for extended parameter options
         else if (hasEnding(addr, "+"))
         {
             size_t last_slash = addr.find_last_of("/");
@@ -800,10 +776,33 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         std::getline(split, address2, '/');
         if (address2 == "load")
         {
-            std::string dataStr = getWholeString(message) + ".fxp";
+            std::string patchPath = getWholeString(message) + ".fxp";
+            if (!fs::exists(patchPath))
+            {
+                sendError("File not found: " + patchPath);
+                return;
+            }
             {
                 std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
-                strncpy(synth->patchid_file, dataStr.c_str(), FILENAME_MAX);
+                strncpy(synth->patchid_file, patchPath.c_str(), FILENAME_MAX);
+                synth->has_patchid_file = true;
+            }
+            synth->processAudioThreadOpsWhenAudioEngineUnavailable();
+        }
+
+        else if (address2 == "load_user")
+        {
+            std::string dataStr = getWholeString(message);
+            fs::path patchPath = synth->storage.userPatchesPath;
+            patchPath += dataStr += ".fxp";
+            if (!fs::exists(patchPath))
+            {
+                sendError("File not found: " + patchPath.string());
+                return;
+            }
+            {
+                std::lock_guard<std::mutex> mg(synth->patchLoadSpawnMutex);
+                strncpy(synth->patchid_file, patchPath.u8string().c_str(), FILENAME_MAX);
                 synth->has_patchid_file = true;
             }
             synth->processAudioThreadOpsWhenAudioEngineUnavailable();
@@ -821,6 +820,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                     fs::path ppath = fs::path(dataStr);
                     synth->savePatchToPath(ppath);
                 }
+            });
+        }
+        else if (address2 == "save_user")
+        {
+            // Run this on the juce messenger thread
+            juce::MessageManager::getInstance()->callAsync([this, message]() {
+                std::string dataStr = getWholeString(message);
+                fs::path ppath = synth->storage.userPatchesPath;
+                ppath += dataStr += ".fxp";
+                synth->savePatchToPath(ppath);
             });
         }
         else if (address2 == "random")
@@ -1261,34 +1270,7 @@ void OpenSoundControl::sendAllParams()
     }
 }
 
-/*
-// Loop through all params, send docs to OSC Out
-void OpenSoundControl::sendAllParamDocs()
-{
-    if (sendingOSC)
-    {
-        // Runs on the juce messenger thread
-        juce::MessageManager::getInstance()->callAsync([this]() {
-            // auto timer = new Surge::Debug::TimeBlock("ParameterDump");
-            std::string valStr;
-            int n = synth->storage.getPatch().param_ptr.size();
-            // Dump all params except for macros
-            for (int i = 0; i < n; i++)
-            {
-                Parameter *p = synth->storage.getPatch().param_ptr[i];
-                sendParameterDocs(p, false);
-            }
-            // Now do the macros
-            for (int i = 0; i < n_customcontrollers; i++)
-            {
-                sendMacro(i, false);
-            }
-            // delete timer;    // This prints the elapsed time
-        });
-    }
-}
-*/
-
+// Send one message for every extended option for the given parameter
 void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMessageThread)
 {
     if (p->can_be_absolute())
@@ -1310,7 +1292,7 @@ void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMes
     }
 }
 
-// Loop through all modulators, send them to OSC Out
+// Loop throuh all modulators, send them to OSC Out
 void OpenSoundControl::sendAllModulators()
 {
     if (sendingOSC)
@@ -1542,11 +1524,47 @@ void OpenSoundControl::sendParameterDocs(const Parameter *p, bool needsMessageTh
     OpenSoundControl::send(om, needsMessageThread);
 }
 
+void OpenSoundControl::sendParameterExtDocs(const Parameter *p, bool needsMessageThread)
+{
+    // Note: this message is always sent, even when no ext params are found.
+    // This way OSC clients can reliably determine the available ext params: there is a
+    // 'null value' in the form of an empty message.
+    std::vector<std::string> available_ext;
+
+    if (p->can_be_absolute())
+        available_ext.push_back("abs");
+    if (p->can_deactivate())
+        available_ext.push_back("enable");
+    if (p->can_temposync())
+        available_ext.push_back("tempo_sync");
+    if (p->can_extend_range())
+        available_ext.push_back("extend");
+    if (p->has_deformoptions())
+        available_ext.push_back("deform");
+    if (p->has_portaoptions())
+    {
+        for (const auto &ext : {"const_rate", "gliss", "retrig", "curve"})
+        {
+            available_ext.push_back(ext);
+        }
+    };
+
+    // Adding the doc prefix to the address again
+    std::string addr = "/doc" + p->oscName + "/ext";
+    juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+    for (const auto &ext : available_ext)
+    {
+        om.addString(ext);
+    }
+    OpenSoundControl::send(om, needsMessageThread);
+}
+
 void OpenSoundControl::sendAllParameterInfo(const Parameter *p, bool needsMessageThread)
 {
     sendParameter(p, needsMessageThread);
     sendParameterExtOptions(p, needsMessageThread);
     sendParameterDocs(p, needsMessageThread);
+    sendParameterExtDocs(p, needsMessageThread);
 }
 
 // ModulationAPIListener Implementation
