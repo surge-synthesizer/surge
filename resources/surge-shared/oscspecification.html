@@ -386,8 +386,13 @@
                                    <td class="nw">load patch from<br> user patch directory</td>
                                    <td>file path (relative to user patch dir, no extension, overwrites if file exists)
                                    </td>
+<<<<<<< Updated upstream
                               </tr>
                               <tr>
+=======
+                                   </tr>
+                                   <tr>
+>>>>>>> Stashed changes
                                    <td class="nw">/patch/save</td>
                                    <td class="nw">save patch</td>
                                    <td>none: overwrites current patch <b>or</b>
@@ -399,8 +404,13 @@
                                    <td class="nw">save patch to<br> user patch directory</td>
                                    <td>file path (relative to user patch dir, no extension, overwrites if file exists)
                                    </td>
+<<<<<<< Updated upstream
                               </tr>
                               <tr>
+=======
+                                   </tr>
+                                   <tr>
+>>>>>>> Stashed changes
                                    <td class="nw">/patch/incr</td>
                                    <td class="nw">increment patch</td>
                                    <td>(none)</td>
@@ -464,7 +474,30 @@
                               </tr>
                          </table>
                     </div>
+                    <div class="tablewrap fr cr" style="margin-top: 0px;">
+                         <div class="heading">
+                              <h2>Wavetables</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and &lt;n&gt; with '1' through '3'
+                                   (oscillator #)
+                              </h3>
 
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/wavetable/&lt;s&gt;/osc/n</td>
+                                   <td> select wavetable by id</td>
+                                   <td>integer (0 - number of wavetables)</td>
+                              </tr>
+                              <tr>
+                                   <td class="center" colspan="3">out-of-range wavetable ids will be ignored</td>
+                              </tr>
+                         </table>
+                         </div>
                     <div style="clear: both;"></div>
 
                     <div style="width: 98%; margin: 0 0 16px 10px; line-height: 1.75">
@@ -1440,8 +1473,12 @@
                                    <td>int (-1:log, 0:linear, or 1:exponential)</td>
                               </tr>
                          </table>
+<<<<<<< Updated upstream
 
                             <div style="clear: both;"></div>
+=======
+<div style="clear: both;"></div>
+>>>>>>> Stashed changes
 
                          <div style="width: 98%; margin: 2em 0 32px 10px; line-height: 1.75">
                               <span><code>/param/a/pitch/extend+ 1</code></span>
@@ -1449,6 +1486,7 @@
                               <span><code>/param/a/aeg/attack/tempo_sync+ 0</code></span>
                               <span><code>/param/a/filter/feedback/deform+ 2</code></span>
                          </div>
+<<<<<<< Updated upstream
                     </div>
 
 
@@ -1506,6 +1544,63 @@
                     <div style="clear: both;"></div>
 
 
+=======
+                         </div>
+                         
+                         
+                         
+                         
+                         <div class="tablewrap fl cl" style="width: 80%; margin: 16px 4px;">
+                              <div class="heading">
+                                   <h2>Parameter Documentation</h2>
+                                   <h3>Sent to OSC client whenever a parameter is queried using '/q/param' or '/q/all_params'.
+                                   </h3>
+                              </div>
+                         
+                              <div style="margin:0 10pt 0 0;">
+                                   <p style="margin-top: 4px;">
+                                        Some parameters provide different functionality depending on other parameters.
+                                        For instance, changing oscillator types, filter types or effects types will
+                                        alter the descriptions and value types of their related parameters.
+                                   </p>
+                                   <p>
+                                        The '/doc/' prefix indicates documentation for a given parameter.
+                                        There are two kinds of documentation, each with a different message structure.</p>
+                                   <p> A parameter documentation message is structured like this:</p>
+                              </div>
+                         
+                              <table style="border: 2px solid black;">
+                                   <tr>
+                                        <td>/doc/&lt;parameter address&gt;</td>
+                                        <td>description</td>
+                                        <td>minimum value</td>
+                                        <td>maximum value</td>
+                                   </tr>
+                         
+                              </table>
+                         
+                              <p>Such a message might look like this:</p>
+                              <span><code>"/doc/param/a/osc/1/param2", "Feedback", "float", "-1.000000", "1.000000"</code></span>
+                         
+                              <p>A parameter extended options documentation message is structured like this:</p>
+                         
+                              <table style="border: 2px solid black;">
+                                   <tr>
+                                        <td>/doc/&lt;parameter address&gt;/ext</td>
+                                        <td>option 1</td>
+                                        <td>option 2</td>
+                                        <td>option 3</td>
+                                        <td>option 4 etc...</td>
+                                   </tr>
+                              </table>
+                         
+                              <p>Such a message might look like this:</p>
+                              <span><code>"/doc/param/a/osc/1/param2/ext", "extend", "deform"</code></span>
+                         
+                         </div>
+                         
+                         <div style="clear: both;"></div>
+>>>>>>> Stashed changes
 
                     <div style="border: 1px solid lightgray;"></div>
                     <div style="margin:10pt 10pt 0 10pt; padding: 5pt 12pt; background: #fafbff;">

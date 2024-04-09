@@ -185,7 +185,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string throwaway;
     std::getline(split, throwaway, '/');
 
-    std::string address1, address2, address3, address4, address5;
+    std::string address1, address2, address3;
     std::getline(split, address1, '/');
     bool querying = false;
 
@@ -753,6 +753,54 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(p, val));
             }
         }
+    }
+
+    else if (address1 == "wavetable")
+    {
+        std::getline(split, address2, '/');
+        // Wavetable control
+        if (!(address2 == "a" || address2 == "b"))
+        {
+            sendError("/wavetable must specify a scene (a or b)");
+            return;
+        }
+
+        int scene_num = address2 == "a" ? 0 : 1;
+        std::getline(split, address2, '/');
+        if (address2 != "osc")
+        {
+            sendError("/wavetable: bad message format (no '/osc/')");
+            return;
+        }
+
+        std::getline(split, address2, '/');
+        if (!(address2 == "0" || address2 == "1" || address2 == "2"))
+        {
+            sendError("/wavetable: oscillator number out of range (0-2)");
+            return;
+        }
+
+        int osc_num = stoi(address2);
+        OscillatorStorage *oscdata = &(synth->storage.getPatch().scene[scene_num].osc[osc_num]);
+
+        if (querying)
+        {
+            juce::OSCMessage om =
+                juce::OSCMessage(juce::OSCAddressPattern(juce::String("/wavetable")));
+            om.addString(oscdata->wavetable_display_name);
+            om.addFloat32(oscdata->wt.current_id);
+            OpenSoundControl::send(om, true);
+            return;
+        }
+
+        if (!message[0].isFloat32())
+        {
+            sendNotFloatError("wavetable", "wavetable #");
+            return;
+        }
+
+        // Select the new waveform (invalid ids are ignored)
+        oscdata->wt.queue_id = message[0].getFloat32();
     }
 
     // Patch changing

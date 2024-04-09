@@ -22,6 +22,8 @@
 
 #include "OscillatorWaveformDisplay.h"
 #include "SurgeStorage.h"
+#include "SurgeSynthProcessor.h"
+#include "SurgeSynthEditor.h"
 #include "Oscillator.h"
 #include "OscillatorBase.h"
 #include "RuntimeFont.h"
@@ -1090,6 +1092,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
     {
         int id = oscdata->wt.current_id;
         bool openMenu = false;
+        auto &ssp = sge->juceEditor->processor;
 
         if (leftJog.contains(event.position))
         {
@@ -1135,6 +1138,10 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
                     }
 
                     oscdata->wt.queue_id = id;
+
+                    auto new_name = storage->wt_list.at(id).name;
+                    ssp.paramChangeToListeners(nullptr, true, ssp.SCT_WAVETABLE, (float)scene,
+                                               (float)oscInScene, (float)id, new_name);
                 }
             }
             else
