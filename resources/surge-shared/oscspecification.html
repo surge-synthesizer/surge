@@ -464,7 +464,39 @@
                               </tr>
                          </table>
                     </div>
-
+                    <div class="tablewrap fr cr" style="margin-top: 0px;">
+                         <div class="heading">
+                              <h2>Wavetables</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and &lt;n&gt; with '1' through '3'
+                                   (oscillator #)
+                              </h3>
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th style="width: 29%;">Description</th>
+                                   <th style="width: 33%;">Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/wavetable/&lt;s&gt;/osc/&lt;n&gt;/id</td>
+                                   <td>select wavetable by id</td>
+                                   <td>int (0 - # of wavetables)*</td>
+                              </tr>
+                              <tr>
+                                   <td>/wavetable/&lt;s&gt;/osc/&lt;n&gt;/incr</td>
+                                   <td>increment wavetable</td>
+                                   <td></td>
+                                   </tr>
+                                   <tr>
+                                        <td>/wavetable/&lt;s&gt;/osc/&lt;n&gt;/decr</td>
+                                        <td>decrement wavetable</td>
+                                        <td></td>
+                                   </tr>
+                                   <tr>
+                                        <td class="center" colspan="3">*out-of-range wavetable ids will be ignored</td>
+                              </tr>
+                         </table>
+                    </div>
                     <div style="clear: both;"></div>
 
                     <div style="width: 98%; margin: 0 0 16px 10px; line-height: 1.75">
@@ -472,17 +504,25 @@
                          <span><code>/patch/save</code></span>
                          <span><code>/patch/incr</code></span>
                     </div>
-                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
+                    <div style="width: 98%; margin: 0 0 16px 10px; line-height: 1.75">
                          <span><code>/tuning/scl ptolemy</code></span>
                          <span><code>/tuning/scl /Users/jane/scala_tunings/ptolemy</code></span>
                          <span><code>/tuning/path/scl /Users/jane/scala_tunings</code></span>
                     </div>
-
+                    <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
+                         <span><code>/wavetable/a/osc/1/id 32</code></span>
+                         <span><code>/wavetable/b/osc/3/id 98</code></span>
+                         <span><code>/wavetable/a/osc/2/incr</code></span>
+                         <span><code>/wavetable/b/osc/3/decr</code></span>
+                    </div>
                     <div style="clear: both;"></div>
 
                     <div class="tablewrap" style="width: 99%; margin: 24px 8px 16px 8px;">
                          <div class="heading">
                               <h2>Queries</h2>
+                              <h3>Replace '&lt;s&gt;' with 'a' or 'b' (scene) and &lt;n&gt; with '1' through '3'
+                                   (oscillator #)</h3>
+
                          </div>
                          <table style="border: 2px solid black;">
                               <tr>
@@ -498,12 +538,14 @@
                               <tr>
                                    <td>/q/all_params</td>
                                    <td>request all parameters</td>
-                                   <td>Sends a dump of all parameters and their values, extended options (if any), and /doc messages to OSC out</td>
-                                   </tr>
-                                   <tr>
+                                   <td>Sends a dump of all parameters and their values, extended options (if any), and
+                                        /doc messages to OSC out</td>
+                              </tr>
+                              <tr>
                                    <td>/q/&ltparameter address&gt</td>
                                    <td>request one parameter</td>
-                                   <td>Sends one parameter's value, extended options (if any), and /doc message to OSC out</td>
+                                   <td>Sends one parameter's value, extended options (if any), and /doc message to OSC
+                                        out</td>
                               </tr>
                               <tr>
                                    <td>/q/all_mods</td>
@@ -519,6 +561,11 @@
                                    <td>/q/mod/mute/&ltmodulation mapping&gt</td>
                                    <td>request one modulation mapping's mute status</td>
                                    <td>Sends one modulation's mute status to OSC out</td>
+                              </tr>
+                              <tr>
+                                   <td>/q/wavetable/&lt;s&gt;/osc/&lt;n&gt;</td>
+                                   <td>request wavetable info for specified scene and oscillator</td>
+                                   <td>Sends id and name of specified wavetable</td>
                               </tr>
 
                               <tr>
@@ -538,6 +585,7 @@
                          <span><code>/q/all_mods</code></span>
                          <span><code>/q/mod/rel_vel /param/a/osc/1/pitch</code></span>
                          <span><code>/q/mod/mute/rel_vel /param/a/osc/1/pitch</code></span>
+                         <span><code>/q/wavetable/a/osc/1</code></span>
                     </div>
 
                     <div style="border: 1px solid lightgray;"></div>
@@ -1384,7 +1432,8 @@
 
                          <div style="margin:0 10pt 0 0;">
                               <p style="margin-top: 4px;">
-                                   Some parameters, (sometimes only in certain contexts), may have the following extended options:
+                                   Some parameters, (sometimes only in certain contexts), may have the following
+                                   extended options:
                               </p>
                          </div>
 
@@ -1440,8 +1489,7 @@
                                    <td>int (-1:log, 0:linear, or 1:exponential)</td>
                               </tr>
                          </table>
-
-                            <div style="clear: both;"></div>
+                         <div style="clear: both;"></div>
 
                          <div style="width: 98%; margin: 2em 0 32px 10px; line-height: 1.75">
                               <span><code>/param/a/pitch/extend+ 1</code></span>
@@ -1457,7 +1505,8 @@
                     <div class="tablewrap fl cl" style="width: 80%; margin: 16px 4px;">
                          <div class="heading">
                               <h2>Parameter Documentation</h2>
-                              <h3>Sent to OSC client whenever a parameter is queried using '/q/param' or '/q/all_params'.
+                              <h3>Sent to OSC client whenever a parameter is queried using '/q/param' or
+                                   '/q/all_params'.
                               </h3>
                          </div>
 
@@ -1470,7 +1519,7 @@
                               <p>
                                    The '/doc/' prefix indicates documentation for a given parameter.
                                    There are two kinds of documentation, each with a different message structure.</p>
-                                   <p> A parameter documentation message is structured like this:</p>
+                              <p> A parameter documentation message is structured like this:</p>
                          </div>
 
                          <table style="border: 2px solid black;">
@@ -1489,23 +1538,21 @@
                          <p>A parameter extended options documentation message is structured like this:</p>
 
                          <table style="border: 2px solid black;">
-                            <tr>
-                                <td>/doc/&lt;parameter address&gt;/ext</td>
-                                <td>option 1</td>
-                                <td>option 2</td>
-                                <td>option 3</td>
-                                <td>option 4 etc...</td>
-                            </tr>
-                        </table>
+                              <tr>
+                                   <td>/doc/&lt;parameter address&gt;/ext</td>
+                                   <td>option 1</td>
+                                   <td>option 2</td>
+                                   <td>option 3</td>
+                                   <td>option 4 etc...</td>
+                              </tr>
+                         </table>
 
-                        <p>Such a message might look like this:</p>
-                        <span><code>"/doc/param/a/osc/1/param2/ext", "extend", "deform"</code></span>
+                         <p>Such a message might look like this:</p>
+                         <span><code>"/doc/param/a/osc/1/param2/ext", "extend", "deform"</code></span>
 
                     </div>
 
                     <div style="clear: both;"></div>
-
-
 
                     <div style="border: 1px solid lightgray;"></div>
                     <div style="margin:10pt 10pt 0 10pt; padding: 5pt 12pt; background: #fafbff;">

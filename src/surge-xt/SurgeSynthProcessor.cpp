@@ -427,6 +427,15 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
                 (it.second)("/chan_at", 2, f0, f1, .0, "");
                 break;
 
+            case SCT_WAVETABLE:
+            {
+                std::stringstream s;
+                std::string scene = f0 > 0.0 ? "b" : "a";
+                s << "/wavetable/" << scene << "/osc/" << ((int)f1) + 1;
+                (it.second)(s.str(), 1, f2, .0, .0, newValue);
+            }
+            break;
+
             default:
                 break;
             }

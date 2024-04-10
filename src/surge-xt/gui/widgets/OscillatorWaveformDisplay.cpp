@@ -22,6 +22,8 @@
 
 #include "OscillatorWaveformDisplay.h"
 #include "SurgeStorage.h"
+#include "SurgeSynthProcessor.h"
+#include "SurgeSynthEditor.h"
 #include "Oscillator.h"
 #include "OscillatorBase.h"
 #include "RuntimeFont.h"
@@ -94,6 +96,10 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             sge->enqueueAccessibleAnnouncement(announce);
 
             oscdata->wt.queue_id = id;
+            auto new_name = storage->wt_list.at(id).name;
+            SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
+            ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
+                                        (float)oscInScene, (float)id, new_name);
         }
     };
     ol->onReturnKey = [ov = ol.get()](OscillatorWaveformDisplay *d) {
@@ -1015,6 +1021,10 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
             sge->enqueueAccessibleAnnouncement(announce);
         }
         oscdata->wt.queue_id = id;
+        auto new_name = storage->wt_list.at(id).name;
+        SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
+        ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
+                                    (float)oscInScene, (float)id, new_name);
     }
 }
 
@@ -1109,6 +1119,10 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
                     }
 
                     oscdata->wt.queue_id = id;
+                    auto new_name = storage->wt_list.at(id).name;
+                    SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
+                    ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
+                                                (float)oscInScene, (float)id, new_name);
                 }
             }
             else
@@ -1135,6 +1149,10 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
                     }
 
                     oscdata->wt.queue_id = id;
+                    auto new_name = storage->wt_list.at(id).name;
+                    SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
+                    ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
+                                                (float)oscInScene, (float)id, new_name);
                 }
             }
             else
