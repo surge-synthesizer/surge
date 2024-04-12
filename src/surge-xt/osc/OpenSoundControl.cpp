@@ -791,7 +791,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             juce::OSCMessage om =
                 juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr.str())));
             om.addFloat32(oscdata->wt.current_id);
-            om.addString(oscdata->wavetable_display_name);
+            om.addString(synth->storage.getCurrentWavetableName(oscdata));
             OpenSoundControl::send(om, true);
             return;
         }

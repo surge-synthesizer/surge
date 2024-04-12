@@ -1536,6 +1536,35 @@ int SurgeStorage::getAdjacentWaveTable(int id, bool direction) const
     }
 }
 
+std::string SurgeStorage::getCurrentWavetableName(OscillatorStorage *oscdata)
+{
+    waveTableDataMutex.lock();
+
+    std::string wttxt;
+    int wtid = oscdata->wt.current_id;
+
+    if (!oscdata->wavetable_display_name.empty())
+    {
+        wttxt = oscdata->wavetable_display_name;
+    }
+    else if ((wtid >= 0) && (wtid < wt_list.size()))
+    {
+        wttxt = wt_list.at(wtid).name;
+    }
+    else if (oscdata->wt.flags & wtf_is_sample)
+    {
+        wttxt = "(Patch Sample)";
+    }
+    else
+    {
+        wttxt = "(Patch Wavetable)";
+    }
+
+    waveTableDataMutex.unlock();
+
+    return wttxt;
+}
+
 void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
 {
     bool includemod = false, includeall = false;
