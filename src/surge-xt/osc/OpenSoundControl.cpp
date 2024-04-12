@@ -781,6 +781,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
         int osc_num = stoi(addr_part);
+
         OscillatorStorage *oscdata = &(synth->storage.getPatch().scene[scene_num].osc[osc_num - 1]);
 
         if (querying)
