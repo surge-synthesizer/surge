@@ -91,23 +91,27 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
         void timerCallback() override;
         SurgeSynthEditor *ed;
     };
-    void idle();
-    std::unique_ptr<IdleTimer> idleTimer;
 
+    void idle();
+
+    std::unique_ptr<IdleTimer> idleTimer;
     bool drawExtendedControls{false};
     int midiKeyboardOctave{5};
     float midiKeyboardVelocity{127.f / 127.f}; // see issue #6409
-    void setPitchModSustainGUI(int pitch, int mod, int sus);
+
     std::unique_ptr<juce::Component> pitchwheel, modwheel, suspedal;
     std::unique_ptr<juce::MidiKeyboardComponent> keyboard;
     std::unique_ptr<juce::Label> tempoLabel, sustainLabel;
     std::unique_ptr<juce::TextEditor> tempoTypein;
-
     std::unique_ptr<juce::Component> topLevelContainer;
+
+    void setPitchModSustainGUI(int pitch, int mod, int sus);
 
     /* Drag and drop */
     bool isInterestedInFileDrag(const juce::StringArray &files) override;
     void filesDropped(const juce::StringArray &files, int, int) override;
+
+    void modifyHostMenu(juce::PopupMenu &menu);
 
     juce::PopupMenu hostMenuFor(Parameter *p);
     juce::PopupMenu hostMenuForMacro(int macro);
