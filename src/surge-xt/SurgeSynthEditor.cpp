@@ -625,13 +625,41 @@ void SurgeSynthEditor::endMacroEdit(long macroNum)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+void SurgeSynthEditor::modifyHostMenu(juce::PopupMenu &menu)
+{
+    // make things look a bit nicer for our friends from Image-Line
+    if (juce::PluginHostType().isFruityLoops())
+    {
+        auto it = juce::PopupMenu::MenuItemIterator(menu);
+
+        while (it.next())
+        {
+            auto txt = it.getItem().text;
+
+            if (txt.startsWithChar('-'))
+            {
+                it.getItem().isSectionHeader = true;
+                it.getItem().text = txt.fromFirstOccurrenceOf("-", false, false);
+            }
+        }
+    }
+}
+
 juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 {
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
 
     if (auto *c = getHostContext())
+    {
         if (auto menuInfo = c->getContextMenuForParameterIndex(par))
-            return menuInfo->getEquivalentPopupMenu();
+        {
+            auto menu = menuInfo->getEquivalentPopupMenu();
+
+            modifyHostMenu(menu);
+
+            return menu;
+        }
+    }
 
     return juce::PopupMenu();
 }
@@ -641,8 +669,16 @@ juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
     auto par = processor.macrosById[macro];
 
     if (auto *c = getHostContext())
+    {
         if (auto menuInfo = c->getContextMenuForParameterIndex(par))
-            return menuInfo->getEquivalentPopupMenu();
+        {
+            auto menu = menuInfo->getEquivalentPopupMenu();
+
+            modifyHostMenu(menu);
+
+            return menu;
+        }
+    }
 
     return juce::PopupMenu();
 }

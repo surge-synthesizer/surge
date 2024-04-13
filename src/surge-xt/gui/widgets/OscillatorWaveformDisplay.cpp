@@ -97,6 +97,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
 
             oscdata->wt.queue_id = id;
             auto new_name = storage->getCurrentWavetableName(oscdata);
+
             SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
             ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
                                         (float)oscInScene, (float)id, new_name);
@@ -993,6 +994,7 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
         }
         oscdata->wt.queue_id = id;
         auto new_name = storage->getCurrentWavetableName(oscdata);
+
         SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
         ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
                                     (float)oscInScene, (float)id, new_name);
@@ -1121,7 +1123,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
 
                     oscdata->wt.queue_id = id;
                     auto new_name = storage->getCurrentWavetableName(oscdata);
-                    SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
+                   SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
                     ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
                                                 (float)oscInScene, (float)id, new_name);
                 }
