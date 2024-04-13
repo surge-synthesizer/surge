@@ -431,7 +431,7 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             {
                 std::stringstream s;
                 std::string scene = f0 > 0.0 ? "b" : "a";
-                s << "/wavetable/" << scene << "/osc/" << ((int)f1) + 1;
+                s << "/wavetable/" << scene << "/osc/" << ((int)f1) + 1 << "/id";
                 (it.second)(s.str(), 1, f2, .0, .0, newValue);
             }
             break;

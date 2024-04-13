@@ -1373,6 +1373,7 @@ class alignas(16) SurgeStorage
     int get_clipboard_type() const;
     // direction: false for previous, true for next
     int getAdjacentWaveTable(int id, bool direction) const;
+    std::string getCurrentWavetableName(OscillatorStorage *);
 
     // The in-memory patch database
     std::vector<Patch> patch_list;
