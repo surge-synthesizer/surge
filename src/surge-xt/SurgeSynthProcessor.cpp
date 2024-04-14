@@ -396,19 +396,19 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
                 break;
 
             case SCT_EX_PORTA_CONRATE:
-                (it.second)(p->oscName + "/portamento/const_rate+", 1, f0, .0, .0, "");
+                (it.second)(p->oscName + "/const_rate+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_PORTA_GLISS:
-                (it.second)(p->oscName + "/portamento/gliss+", 1, f0, .0, .0, "");
+                (it.second)(p->oscName + "/gliss+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_PORTA_RETRIG:
-                (it.second)(p->oscName + "/portamento/retrig+", 1, f0, .0, .0, "");
+                (it.second)(p->oscName + "/retrig+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_EX_PORTA_CURVE:
-                (it.second)(p->oscName + "/portamento/curve+", 1, f0, .0, .0, "");
+                (it.second)(p->oscName + "/curve+", 1, f0, .0, .0, "");
                 break;
 
             case SCT_PITCHBEND:
