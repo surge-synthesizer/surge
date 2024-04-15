@@ -1358,7 +1358,7 @@ void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMes
         sendParameter(p, needsMessageThread, "deform");
     if (p->has_portaoptions())
     {
-        sendParameter(p, needsMessageThread, "crate");
+        sendParameter(p, needsMessageThread, "const_rate");
         sendParameter(p, needsMessageThread, "gliss");
         sendParameter(p, needsMessageThread, "retrig");
         sendParameter(p, needsMessageThread, "curve");
@@ -1538,6 +1538,7 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
         if (extension == "curve")
             val01 = (float)p->porta_curve;
         addr = p->oscName + "/" + extension + "+";
+        std::cout << "p->oscName: " << p->oscName << std::endl;
     }
 
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
