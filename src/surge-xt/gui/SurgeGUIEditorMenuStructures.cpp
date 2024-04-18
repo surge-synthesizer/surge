@@ -399,19 +399,18 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         tuningSubMenu.addSeparator();
 
-        tuningSubMenu.addItem(Surge::GUI::toOSCase("Set to Standard Tuning"),
-                              !this->synth->storage.isStandardTuning, false, [this]() {
-                                  this->synth->storage.retuneTo12TETScaleC261Mapping();
-                                  this->synth->storage.resetTuningToggle();
-                                  this->synth->refresh_editor = true;
-                                  tuningChanged();
-                                  juceEditor->processor.paramChangeToListeners(
-                                      nullptr, true, juceEditor->processor.SCT_TUNING_SCL, .0, .0,
-                                      .0, "(standard)");
-                                  juceEditor->processor.paramChangeToListeners(
-                                      nullptr, true, juceEditor->processor.SCT_TUNING_KBM, .0, .0,
-                                      .0, "(standard)");
-                              });
+        tuningSubMenu.addItem(
+            Surge::GUI::toOSCase("Set to Standard Tuning"), !this->synth->storage.isStandardTuning,
+            false, [this]() {
+                this->synth->storage.retuneTo12TETScaleC261Mapping();
+                this->synth->storage.resetTuningToggle();
+                this->synth->refresh_editor = true;
+                tuningChanged();
+                juceEditor->processor.paramChangeToListeners(
+                    nullptr, true, juceEditor->processor.SCT_TUNING_SCL, .0, .0, .0, "(standard)");
+                juceEditor->processor.paramChangeToListeners(
+                    nullptr, true, juceEditor->processor.SCT_TUNING_KBM, .0, .0, .0, "(standard)");
+            });
 
         tuningSubMenu.addItem(Surge::GUI::toOSCase("Set to Standard Mapping (Concert C)"),
                               (!this->synth->storage.isStandardMapping), false, [this]() {
