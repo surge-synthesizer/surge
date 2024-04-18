@@ -533,7 +533,7 @@
                               <tr>
                                    <td>/q/patch</td>
                                    <td>request current patch</td>
-                                   <td>Sends the full path of the current patch to OSC out</td>
+                                   <td>Sends the full path (minus extension) of the current patch to OSC out</td>
                               </tr>
                               <tr>
                                    <td>/q/all_params</td>
@@ -566,6 +566,16 @@
                                    <td>/q/wavetable/&lt;s&gt;/osc/&lt;n&gt;</td>
                                    <td>request wavetable info for specified scene and oscillator</td>
                                    <td>Sends id and name of specified wavetable to OSC out</td>
+                              </tr>
+                              <tr>
+                                   <td>/q/tuning/scl</td>
+                                   <td>request current tuning</td>
+                                   <td>Sends full path (minus extension) of current .scl tuning to OSC out</td>
+                              </tr>
+                              <tr>
+                                   <td>/q/tuning/kbm</td>
+                                   <td>request current keyboard mapping</td>
+                                   <td>Sends full path (minus extension) of current .kbm mapping to OSC out</td>
                               </tr>
 
                               <tr>

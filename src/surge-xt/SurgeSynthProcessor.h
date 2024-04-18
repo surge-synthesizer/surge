@@ -449,7 +449,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         SCT_CC,
         SCT_CHAN_ATOUCH,
         SCT_POLY_ATOUCH,
-        SCT_WAVETABLE
+        SCT_WAVETABLE,
+        SCT_TUNING_SCL,
+        SCT_TUNING_KBM
     };
 
     void paramChangeToListeners(Parameter *p, bool isSpecialCase = false, int specialCaseType = -1,

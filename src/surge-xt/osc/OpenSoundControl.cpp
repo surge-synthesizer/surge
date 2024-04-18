@@ -930,9 +930,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // Tuning switching
     else if (addr_part == "tuning")
     {
-        if (querying)
-            return; // Not yet implemented
-
         fs::path path = getWholeString(message);
         fs::path def_path;
 
@@ -940,6 +937,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // Tuning files path control
         if (addr_part == "path")
         {
+            if (querying)
+                return; // Not supported
+
             std::string dataStr = getWholeString(message);
             if ((dataStr != "_reset") && (!fs::exists(dataStr)))
             {
@@ -955,6 +955,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             {
                 if (dataStr == "_reset")
                 {
+                    if (querying)
+                        return; // Not sensical
                     ppath = synth->storage.datapath;
                     ppath /= "tuning_library/SCL";
                 }
@@ -975,6 +977,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // Tuning file selection
         else if (addr_part == "scl")
         {
+            if (querying)
+            {
+                auto tuningLabel = path_to_string(fs::path(synth->storage.currentScale.name));
+                tuningLabel = tuningLabel.substr(0, tuningLabel.find_last_of("."));
+                if (tuningLabel == "Scale from patch")
+                    tuningLabel = "(standard)";
+                std::string addr = "/tuning/scl";
+                juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+                om.addString(tuningLabel);
+                OpenSoundControl::send(om, true);
+                return;
+            }
+
             if (path.is_relative())
             {
                 def_path = Surge::Storage::getUserDefaultPath(
@@ -993,6 +1008,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         // KBM mapping file selection
         else if (addr_part == "kbm")
         {
+            if (querying)
+            {
+                auto mappingLabel = synth->storage.currentMapping.name;
+                mappingLabel = mappingLabel.substr(0, mappingLabel.find_last_of("."));
+                if (mappingLabel == "")
+                    mappingLabel = "(standard)";
+                std::string addr = "/tuning/kbm";
+                juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
+                om.addString(mappingLabel);
+                OpenSoundControl::send(om, true);
+                return;
+            }
+
             if (path.is_relative())
             {
                 def_path = Surge::Storage::getUserDefaultPath(
@@ -1538,7 +1566,6 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
         if (extension == "curve")
             val01 = (float)p->porta_curve;
         addr = p->oscName + "/" + extension + "+";
-        std::cout << "p->oscName: " << p->oscName << std::endl;
     }
 
     juce::OSCMessage om = juce::OSCMessage(juce::OSCAddressPattern(juce::String(addr)));
