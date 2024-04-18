@@ -436,6 +436,20 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
             }
             break;
 
+            case SCT_TUNING_SCL:
+            {
+                std::string s = "/tuning/scl";
+                (it.second)(s, 0, .0, .0, .0, newValue);
+            }
+            break;
+
+            case SCT_TUNING_KBM:
+            {
+                std::string s = "/tuning/kbm";
+                (it.second)(s, 0, .0, .0, .0, newValue);
+            }
+            break;
+
             default:
                 break;
             }

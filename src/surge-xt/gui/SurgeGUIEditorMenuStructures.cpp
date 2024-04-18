@@ -405,6 +405,12 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                                   this->synth->storage.resetTuningToggle();
                                   this->synth->refresh_editor = true;
                                   tuningChanged();
+                                  juceEditor->processor.paramChangeToListeners(
+                                      nullptr, true, juceEditor->processor.SCT_TUNING_SCL, .0, .0,
+                                      .0, "(standard)");
+                                  juceEditor->processor.paramChangeToListeners(
+                                      nullptr, true, juceEditor->processor.SCT_TUNING_KBM, .0, .0,
+                                      .0, "(standard)");
                               });
 
         tuningSubMenu.addItem(Surge::GUI::toOSCase("Set to Standard Mapping (Concert C)"),
@@ -412,6 +418,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                                   this->synth->storage.remapToConcertCKeyboard();
                                   this->synth->refresh_editor = true;
                                   tuningChanged();
+                                  juceEditor->processor.paramChangeToListeners(
+                                      nullptr, true, juceEditor->processor.SCT_TUNING_KBM, .0, .0,
+                                      .0, "(standard)");
                               });
 
         tuningSubMenu.addItem(Surge::GUI::toOSCase("Set to Standard Scale (12-TET)"),
@@ -419,6 +428,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                                   this->synth->storage.retuneTo12TETScale();
                                   this->synth->refresh_editor = true;
                                   tuningChanged();
+                                  juceEditor->processor.paramChangeToListeners(
+                                      nullptr, true, juceEditor->processor.SCT_TUNING_SCL, .0, .0,
+                                      .0, "(standard)");
                               });
 
         tuningSubMenu.addSeparator();
@@ -454,6 +466,10 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                     synth->storage.reportError(e.what(), "Loading Error");
                 }
                 tuningChanged();
+                auto tuningLabel = path_to_string(fs::path(synth->storage.currentScale.name));
+                tuningLabel = tuningLabel.substr(0, tuningLabel.find_last_of("."));
+                juceEditor->processor.paramChangeToListeners(
+                    nullptr, true, juceEditor->processor.SCT_TUNING_SCL, .0, .0, .0, tuningLabel);
             };
 
             auto scl_path = this->synth->storage.datapath / "tuning_library" / "SCL";
@@ -475,6 +491,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                     auto dir =
                         string_to_path(res.getParentDirectory().getFullPathName().toStdString());
                     cb(rString);
+
                     if (dir != scl_path)
                     {
                         Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
@@ -515,6 +532,10 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                     synth->storage.reportError(e.what(), "Loading Error");
                 }
                 tuningChanged();
+                auto mappingLabel = synth->storage.currentMapping.name;
+                mappingLabel = mappingLabel.substr(0, mappingLabel.find_last_of("."));
+                juceEditor->processor.paramChangeToListeners(
+                    nullptr, true, juceEditor->processor.SCT_TUNING_KBM, .0, .0, .0, mappingLabel);
             };
 
             auto kbm_path = this->synth->storage.datapath / "tuning_library" / "KBM Concert Pitch";
