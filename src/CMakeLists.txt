@@ -4,6 +4,7 @@ option(SURGE_BUILD_XT "Build Surge XT synth" ON)
 option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge Python bindings with pybind11" OFF)
 option(SURGE_COPY_TO_PRODUCTS "Copy built plugins to the products directory" ON)
 option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to system plugin area after build" OFF)
+option(SURGE_EXPOSE_PRESETS "Expose surge presets via the JUCE Program API" OFF)
 
 # Currently the JUCE LV2 build crashes in our CI pipeline, so leave it for users to self build
 option(SURGE_BUILD_LV2 "Build Surge as an LV2" OFF)
