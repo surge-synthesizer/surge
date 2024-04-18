@@ -134,7 +134,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     presetOrderToPatchList.clear();
 
-    for (int i = 0; i < surge->storage.firstThirdPartyCategory; i++)
+    for (int i = 0; i < surge->storage.firstUserCategory; i++)
     {
         // Remap index to the corresponding category in alphabetical order.
         int c = surge->storage.patchCategoryOrdering[i];
@@ -187,12 +187,10 @@ bool SurgeSynthProcessor::isMidiEffect() const { return false; }
 
 double SurgeSynthProcessor::getTailLengthSeconds() const { return 2.0; }
 
-#undef SURGE_JUCE_PRESETS
-
 int SurgeSynthProcessor::getNumPrograms()
 {
-#ifdef SURGE_JUCE_PRESETS
-    return surge->storage.patch_list.size() + 1;
+#ifdef SURGE_EXPOSE_PRESETS
+    return presetOrderToPatchList.size() + 1;
 #else
     return 1;
 #endif
@@ -200,7 +198,7 @@ int SurgeSynthProcessor::getNumPrograms()
 
 int SurgeSynthProcessor::getCurrentProgram()
 {
-#ifdef SURGE_JUCE_PRESETS
+#ifdef SURGE_EXPOSE_PRESETS
     return juceSidePresetId;
 #else
     return 0;
@@ -209,7 +207,7 @@ int SurgeSynthProcessor::getCurrentProgram()
 
 void SurgeSynthProcessor::setCurrentProgram(int index)
 {
-#ifdef SURGE_JUCE_PRESETS
+#ifdef SURGE_EXPOSE_PRESETS
     if (index > 0 && index <= presetOrderToPatchList.size())
     {
         juceSidePresetId = index;
@@ -220,16 +218,16 @@ void SurgeSynthProcessor::setCurrentProgram(int index)
 
 const juce::String SurgeSynthProcessor::getProgramName(int index)
 {
-#ifdef SURGE_JUCE_PRESETS
+#ifdef SURGE_EXPOSE_PRESETS
     if (index == 0)
-        return "INIT OR DROPPED";
+        return "INIT";
     index--;
     if (index < 0 || index >= presetOrderToPatchList.size())
     {
         return "RANGE ERROR";
     }
     auto patch = surge->storage.patch_list[presetOrderToPatchList[index]];
-    auto res = surge->storage.patch_category[patch.category].name + " / " + patch.name;
+    auto res = surge->storage.patch_category[patch.category].name + "/" + patch.name;
     return res;
 #else
     return "";

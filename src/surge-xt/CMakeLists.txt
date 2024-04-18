@@ -69,6 +69,11 @@ if(JUCE_ASIO_SUPPORT)
   target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_ASIO=1)
 endif()
 
+if (SURGE_EXPOSE_PRESETS)
+  message(STATUS "Building with JUCE Preset API (getProgramName etc) enabled")
+  target_compile_definitions(${PROJECT_NAME} PUBLIC SURGE_EXPOSE_PRESETS=1)
+endif()
+
 target_sources(${PROJECT_NAME} PRIVATE
   SurgeSynthEditor.cpp
   SurgeSynthEditor.h
