@@ -2602,6 +2602,11 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             int vdp = dp;
             std::string vu = u;
 
+            // Display modulation values
+            float dmp = mp;
+            float dmn = mn;
+            float diffFac{1.f};
+
             if (displayInfo.customFeatures & ParamDisplayFeatures::kSwitchesFromSecToMillisec)
             {
                 if (dval < 1.f)
@@ -2609,6 +2614,9 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                     dval *= 1000.f;
                     vu = "ms";
                     vdp = detailedMode ? 2 : 1;
+                    dmp *= 1000.f;
+                    dmn *= 1000.f;
+                    diffFac = 1000.f;
                 }
             }
 
@@ -2637,13 +2645,15 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         char itxt[ITXT_SIZE];
                         snprintf(itxt, ITXT_SIZE, "%.*f %s", vdp, dval, vu.c_str());
                         iw->val = itxt;
-                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, mp);
+                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, dmp);
                         iw->valplus = itxt;
-                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, mn);
+                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, dmn);
                         iw->valminus = itxt;
-                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mp - v > 0 ? "+" : ""), dp, mp - v);
+                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mp - v > 0 ? "+" : ""), dp,
+                                 diffFac * (mp - v));
                         iw->dvalplus = itxt;
-                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mn - v > 0 ? "+" : ""), dp, mn - v);
+                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mn - v > 0 ? "+" : ""), dp,
+                                 diffFac * (mn - v));
                         iw->dvalminus = itxt;
 
                         if (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString)
@@ -2661,8 +2671,8 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         }
                     }
 
-                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, mn, lowersep, vdp, dval,
-                             uppersep, dp, mp, vu.c_str());
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s %.*f %s", dp, dmn, lowersep, vdp, dval,
+                             uppersep, dp, dmp, vu.c_str());
                 }
                 else
                 {
@@ -2671,15 +2681,16 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                         char itxt[ITXT_SIZE];
                         snprintf(itxt, ITXT_SIZE, "%.*f %s", vdp, dval, vu.c_str());
                         iw->val = itxt;
-                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, mn);
+                        snprintf(itxt, ITXT_SIZE, "%.*f", dp, dmp);
                         iw->valplus = itxt;
                         iw->valminus = "";
-                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mp - v > 0 ? "+" : ""), dp, mp - v);
+                        snprintf(itxt, ITXT_SIZE, "%s%.*f", (mp - v > 0 ? "+" : ""), dp,
+                                 diffFac * (mp - v));
                         iw->dvalplus = itxt;
                         iw->dvalminus = "";
                     }
 
-                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s", vdp, dval, uppersep, dp, mp,
+                    snprintf(txt, TXT_SIZE, "%.*f %s %.*f %s", vdp, dval, uppersep, dp, dmp,
                              vu.c_str());
                 }
                 break;
