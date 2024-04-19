@@ -75,6 +75,7 @@ class ADSRModulationSource : public ModulationSource
         _v_c1 = 0.f;
         _v_c1_delayed = 0.f;
         _discharge = 0.f;
+        _ungateHold = 0.f;
     }
 
     void retrigger() { retriggerFrom(0.f); }
@@ -116,6 +117,7 @@ class ADSRModulationSource : public ModulationSource
         _v_c1 = start;
         _v_c1_delayed = start;
         _discharge = 0.f;
+        _ungateHold = 0.f;
 
         envstate = s_attack;
 
@@ -240,6 +242,17 @@ class ADSRModulationSource : public ModulationSource
             _mm_store_ss(&_discharge, discharge);
 
             _mm_store_ss(&output, v_c1);
+            if (gate)
+            {
+                _ungateHold = output;
+            }
+            else
+            {
+                if (r_gated)
+                {
+                    output = _ungateHold;
+                }
+            }
 
             const float SILENCE_THRESHOLD = 1e-6;
 
@@ -461,6 +474,7 @@ class ADSRModulationSource : public ModulationSource
     float _v_c1 = 0.f;
     float _v_c1_delayed = 0.f;
     float _discharge = 0.f;
+    float _ungateHold = 0.f;
 
     float corr_v_c1{0.f};
     float corr_v_c1_delayed{0.f};
