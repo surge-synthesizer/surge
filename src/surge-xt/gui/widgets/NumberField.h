@@ -157,6 +157,9 @@ struct NumberField : public juce::Component,
         repaint();
     }
 
+    // Special case - we use these without an SGE so hack around a bit for now. See the ::keyPressed
+    std::function<bool(uint32_t, NumberField *)> onReturnPressed{nullptr};
+
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NumberField);

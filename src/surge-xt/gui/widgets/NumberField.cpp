@@ -246,6 +246,10 @@ bool NumberField::keyPressed(const juce::KeyPress &key)
         {
             return true;
         }
+        else if (onReturnPressed)
+        {
+            return onReturnPressed(getTag(), this);
+        }
     }
 
     if (action == OpenMenu)
