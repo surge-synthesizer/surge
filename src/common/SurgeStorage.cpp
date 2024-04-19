@@ -206,30 +206,68 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     // userDataPath = fs::path{"/good/luck/bozo"};
     // userDataPath = fs::path{"/usr/sbin"};
 #elif LINUX
+    const auto installPath = sst::plugininfra::paths::sharedLibraryBinaryPath().parent_path();
+
     if (!hasSuppliedDataPath)
     {
-        auto userlower = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxtlower, true);
-        auto userreg = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
-        auto globallower = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxtlower, false);
-        auto globalreg = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
-
         bool founddir{false};
-        for (const auto &p : {userreg, userlower, globalreg, globallower})
+
+        // First check the portable mode sitting beside me
+        auto cp{installPath};
+
+        while (datapath.empty() && cp.has_parent_path() && cp != cp.parent_path())
         {
-            if (fs::is_directory(p) && !founddir)
+            auto portable = cp / L"SurgeXTData";
+
+            if (fs::is_directory(portable))
             {
+                datapath = std::move(portable);
                 founddir = true;
-                datapath = p;
             }
+
+            cp = cp.parent_path();
         }
+
         if (!founddir)
-            datapath = globallower;
+        {
+            auto userlower =
+                sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxtlower, true);
+            auto userreg = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
+            auto globallower =
+                sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxtlower, false);
+            auto globalreg = sst::plugininfra::paths::bestLibrarySharedFolderPathFor(sxt, true);
+
+            for (const auto &p : {userreg, userlower, globalreg, globallower})
+            {
+                if (fs::is_directory(p) && !founddir)
+                {
+                    founddir = true;
+                    datapath = p;
+                }
+            }
+            if (!founddir)
+                datapath = globallower;
+        }
     }
     else
     {
         datapath = suppliedDataPath;
     }
 
+    // First check the portable mode sitting beside me
+    auto up{installPath};
+
+    while (userDataPath.empty() && up.has_parent_path() && up != up.parent_path())
+    {
+        auto portable = up / L"SurgeXTUserData";
+
+        if (fs::is_directory(portable))
+        {
+            userDataPath = std::move(portable);
+        }
+
+        up = up.parent_path();
+    }
     userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
 
 #elif WINDOWS
