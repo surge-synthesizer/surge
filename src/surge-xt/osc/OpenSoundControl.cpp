@@ -31,6 +31,7 @@
 #include <string>
 #include "UnitConversions.h"
 #include "Tunings.h"
+#include "filesystem/ghc-filesystem.h"
 #include "filesystem/import.h"
 
 namespace Surge
@@ -902,6 +903,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 std::string dataStr = getWholeString(message);
                 fs::path ppath = synth->storage.userPatchesPath;
                 ppath += dataStr += ".fxp";
+                // If the requested dir doesn't exist, create it. If that fails, send error.
+                std::cout << "Path is: " << ppath.string();
+                if (!fs::exists(ppath.parent_path())) {
+                    std::cout << "Creating parent dirs";
+                    fs::create_directories(ppath.parent_path());
+                    if (!fs::exists(ppath.parent_path())) {
+                        sendError("Unable to create user patches path...");
+                        return;
+                    }
+                };
                 synth->savePatchToPath(ppath);
             });
         }
