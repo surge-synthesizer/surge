@@ -31,7 +31,6 @@
 #include <string>
 #include "UnitConversions.h"
 #include "Tunings.h"
-#include "filesystem/ghc-filesystem.h"
 #include "filesystem/import.h"
 
 namespace Surge
