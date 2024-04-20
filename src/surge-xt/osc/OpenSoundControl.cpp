@@ -902,6 +902,20 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 std::string dataStr = getWholeString(message);
                 fs::path ppath = synth->storage.userPatchesPath;
                 ppath += dataStr += ".fxp";
+
+                if (!fs::exists(ppath.parent_path()))
+                {
+                    try
+                    {
+                        fs::create_directories(ppath.parent_path());
+                    }
+                    catch (const fs::filesystem_error &e)
+                    {
+                        sendError("User patch directory not available: " + std::string(e.what()));
+                        return;
+                    }
+                }
+
                 synth->savePatchToPath(ppath);
             });
         }
