@@ -1935,6 +1935,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             p->deactivated = !p->deactivated;
                             synth->storage.getPatch().isDirty = true;
                             synth->refresh_editor = true;
+
+                            // output updated value to OSC
+                            juceEditor->processor.paramChangeToListeners(
+                                p, true, juceEditor->processor.SCT_EX_ENABLE,
+                                (float)!p->deactivated, .0, .0, "");
                         });
                     }
                 }

@@ -1391,7 +1391,7 @@ void OpenSoundControl::sendParameterExtOptions(const Parameter *p, bool needsMes
     if (p->can_be_absolute())
         sendParameter(p, needsMessageThread, "abs");
     if (p->can_deactivate())
-        sendParameter(p, needsMessageThread, "deact");
+        sendParameter(p, needsMessageThread, "enable");
     if (p->can_temposync())
         sendParameter(p, needsMessageThread, "tempo_sync");
     if (p->can_extend_range())
@@ -1564,7 +1564,7 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
         if (extension == "abs")
             val01 = (float)p->absolute;
         if (extension == "enable")
-            val01 = (float)p->deactivated;
+            val01 = (float)!p->deactivated;
         if (extension == "tempo_sync")
             val01 = (float)p->temposync;
         if (extension == "extend")
