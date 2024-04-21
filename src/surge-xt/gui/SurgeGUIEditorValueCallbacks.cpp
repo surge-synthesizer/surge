@@ -2564,6 +2564,25 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         break;
                     }
+                    case ct_envtime_deformable:
+                    {
+                        contextMenu.addSeparator();
+
+                        auto dt = p->deform_type;
+
+                        contextMenu.addItem(Surge::GUI::toOSCase("Freeze Release at Sustain Level"),
+                                            true, dt > 0, [this, p]() {
+                                                undoManager()->pushParameterChange(p->id, p,
+                                                                                   p->val);
+                                                update_deform_type(p, !p->deform_type);
+                                                synth->storage.getPatch().isDirty = true;
+                                                frame->repaint();
+                                            });
+
+                        contextMenu.addSeparator();
+
+                        break;
+                    }
                     default:
                     {
                         break;

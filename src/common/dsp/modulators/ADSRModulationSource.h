@@ -42,8 +42,6 @@ enum ADSRState
 
 const float one = 1.f;
 const float zero = 0.f;
-const float db96 = powf(10.f, 0.05f * -96.f);
-const float db60 = powf(10.f, 0.05f * -60.f);
 
 class ADSRModulationSource : public ModulationSource
 {
@@ -77,6 +75,7 @@ class ADSRModulationSource : public ModulationSource
         _v_c1 = 0.f;
         _v_c1_delayed = 0.f;
         _discharge = 0.f;
+        _ungateHold = 0.f;
     }
 
     void retrigger() { retriggerFrom(0.f); }
@@ -99,27 +98,29 @@ class ADSRModulationSource : public ModulationSource
         if (start > 0)
         {
             output = start;
+
             switch (lc[a_s].i)
             {
             case 0:
-                // output = sqrt(phase);
                 phase = output * output;
                 break;
             case 1:
                 phase = output;
                 break;
             case 2:
-                // output = phase * phase;
                 phase = sqrt(output);
                 break;
             };
         }
+
         // Reset the analog state machine too
         _v_c1 = start;
         _v_c1_delayed = start;
         _discharge = 0.f;
+        _ungateHold = 0.f;
 
         envstate = s_attack;
+
         if ((lc[a].f - adsr->a.val_min.f) < 0.01)
         {
             envstate = s_decay;
@@ -135,47 +136,28 @@ class ADSRModulationSource : public ModulationSource
 
     void release() override
     {
-        /*if(envstate == s_attack)
-        {
-                phase = powf(phase,(float)(1.0f+lc[a_s].i)/(1.0f+lc[r_s].i));
-        }
-        else
-        if(envstate == s_decay)
-        {
-                phase = powf(phase,(float)1.0f/(1.0f+lc[r_s].i));
-        }
-        phase = limit_range(phase,0,1);*/
         scalestage = output;
         phase = 1;
         envstate = s_release;
     }
+
     void uber_release()
     {
-        /*if(envstate == s_attack)
-        {
-                phase = powf(phase,(float)(1.0f+lc[a_s].i)/(1.0f+lc[r_s].i));
-        }
-        else
-        if(envstate == s_decay)
-        {
-                phase = powf(phase,(float)1.0f/(1.0f+lc[r_s].i));
-        }
-        phase = limit_range(phase,0,1);*/
         scalestage = output;
         phase = 1;
         envstate = s_uberrelease;
     }
+
     bool is_idle() { return (envstate == s_idle) && (idlecount > 0); }
+
     bool correctAnalogMode{false};
+
     virtual void process_block() override
     {
+        const bool r_gated = adsr->r.deform_type;
+
         if (lc[mode].b)
         {
-            if (correctAnalogMode)
-            {
-                doCorrectAnalogMode();
-                return;
-            }
             /*
             ** This is the "analog" mode of the envelope. If you are unclear what it is doing
             ** because of the SSE the algo is pretty simple; charge up and discharge a capacitor
@@ -185,6 +167,13 @@ class ADSRModulationSource : public ModulationSource
             ** There is, in src/headless/UnitTests.cpp in the "Clone the Analog" section,
             ** a non-SSE implementation of this which makes it much easier to understand.
             */
+
+            // TODO: Use this mode in XT2 (currently this is only used by VCV Rack modules)
+            if (correctAnalogMode)
+            {
+                doCorrectAnalogMode();
+                return;
+            }
             const float v_cc = 1.5f;
 
             __m128 v_c1 = _mm_load_ss(&_v_c1);
@@ -192,14 +181,13 @@ class ADSRModulationSource : public ModulationSource
             __m128 discharge = _mm_load_ss(&_discharge);
             const __m128 one = _mm_set_ss(1.0f); // attack->decay switch at 1 volt
             const __m128 v_cc_vec = _mm_set_ss(v_cc);
-
             bool gate = (envstate == s_attack) || (envstate == s_decay);
             __m128 v_gate = gate ? _mm_set_ss(v_cc) : _mm_set_ss(0.f);
             __m128 v_is_gate = _mm_cmpgt_ss(v_gate, _mm_set_ss(0.0));
 
             // The original code here was
             // _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_gate);
-            // which ored in the v_gate value as opposed to the boolean
+            // which ORed in the v_gate value as opposed to the boolean
             discharge =
                 _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_is_gate);
 
@@ -254,6 +242,17 @@ class ADSRModulationSource : public ModulationSource
             _mm_store_ss(&_discharge, discharge);
 
             _mm_store_ss(&output, v_c1);
+            if (gate)
+            {
+                _ungateHold = output;
+            }
+            else
+            {
+                if (r_gated)
+                {
+                    output = _ungateHold;
+                }
+            }
 
             const float SILENCE_THRESHOLD = 1e-6;
 
@@ -272,14 +271,14 @@ class ADSRModulationSource : public ModulationSource
             {
                 phase += storage->envelope_rate_linear_nowrap(lc[a].f) *
                          (adsr->a.temposync ? storage->temposyncratio : 1.f);
+
                 if (phase >= 1)
                 {
                     phase = 1;
                     envstate = s_decay;
                     sustain = lc[s].f;
                 }
-                /*output = phase;
-                for(int i=0; i<lc[a_s].i; i++) output *= phase;*/
+
                 switch (lc[a_s].i)
                 {
                 case 0:
@@ -296,14 +295,8 @@ class ADSRModulationSource : public ModulationSource
             break;
             case (s_decay):
             {
-                /*phase -= (1-sustain) * envelope_rate_linear(adsr->d.val.f);
-                if(phase < sustain)
-                {
-                phase = sustain;
-                }*/
                 float rate = storage->envelope_rate_linear_nowrap(lc[d].f) *
                              (adsr->d.temposync ? storage->temposyncratio : 1.f);
-
                 float l_lo, l_hi;
 
                 switch (lc[d_s].i)
@@ -311,6 +304,7 @@ class ADSRModulationSource : public ModulationSource
                 case 1:
                 {
                     float sx = sqrt(phase);
+
                     l_lo = phase - 2 * sx * rate + rate * rate;
                     l_hi = phase + 2 * sx * rate + rate * rate;
 
@@ -321,8 +315,11 @@ class ADSRModulationSource : public ModulationSource
                     ** empirical. Git blame to see the various issues around here which show the
                     ** test cases.
                     */
+
                     if ((lc[s].f < 1e-3 && phase < 1e-4) || (lc[s].f == 0 && lc[d].f < -7))
+                    {
                         l_lo = 0;
+                    }
                     /*
                     ** Similarly if the rate is very high - larger than one - we can push l_lo well
                     ** above the sustain, which can set back a feedback cycle where we bounce onto
@@ -330,12 +327,15 @@ class ADSRModulationSource : public ModulationSource
                     ** test-data/patches/ADSR-Self-Oscillate.fxp
                     */
                     if (rate > 1.0 && l_lo > lc[s].f)
+                    {
                         l_lo = lc[s].f;
+                    }
                 }
                 break;
                 case 2:
                 {
                     float sx = powf(phase, 0.3333333f);
+
                     l_lo = phase - 3 * sx * sx * rate + 3 * sx * rate * rate - rate * rate * rate;
                     l_hi = phase + 3 * sx * sx * rate + 3 * sx * rate * rate + rate * rate * rate;
                 }
@@ -354,30 +354,47 @@ class ADSRModulationSource : public ModulationSource
             {
                 phase -= storage->envelope_rate_linear_nowrap(lc[r].f) *
                          (adsr->r.temposync ? storage->temposyncratio : 1.f);
-                output = phase;
-                for (int i = 0; i < lc[r_s].i; i++)
-                    output *= phase;
+
+                if (!r_gated)
+                {
+                    output = phase;
+
+                    for (int i = 0; i < lc[r_s].i; i++)
+                    {
+                        output *= phase;
+                    }
+
+                    output *= scalestage;
+                }
 
                 if (phase < 0)
                 {
                     envstate = s_idle;
                     output = 0;
                 }
-                output *= scalestage;
             }
             break;
             case (s_uberrelease):
             {
                 phase -= storage->envelope_rate_linear_nowrap(-6.5);
-                output = phase;
-                for (int i = 0; i < lc[r_s].i; i++)
-                    output *= phase;
+
+                if (!r_gated)
+                {
+                    output = phase;
+
+                    for (int i = 0; i < lc[r_s].i; i++)
+                    {
+                        output *= phase;
+                    }
+
+                    output *= scalestage;
+                }
+
                 if (phase < 0)
                 {
                     envstate = s_idle;
                     output = 0;
                 }
-                output *= scalestage;
             }
             break;
             case s_idle:
@@ -410,36 +427,36 @@ class ADSRModulationSource : public ModulationSource
         auto gate = (envstate == s_attack) || (envstate == s_decay);
         float v_gate = gate ? v_cc : 0.f;
 
-        // discharge = _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge),
-        // v_gate);
+        // discharge = _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_gate);
         corr_discharge = ((corr_v_c1_delayed >= 1) || corr_discharge) && gate;
         corr_v_c1_delayed = corr_v_c1;
 
         float sparm = limit_range(lc[s].f, 0.f, 1.f);
-        float S = sparm; // * sparm;
+        float S = sparm;
         float normD = std::max(0.05f, 1 - S);
         coef_D /= normD;
 
         float v_attack = corr_discharge ? 0 : v_gate;
-
         float v_decay = corr_discharge ? S : v_cc;
         float v_release = v_gate;
 
         float diff_v_a = std::max(0.f, v_attack - corr_v_c1);
         float diff_v_d =
             (corr_discharge && gate) ? v_decay - corr_v_c1 : std::min(0.f, v_decay - corr_v_c1);
-        // float diff_v_d = std::min( 0.f, v_decay   - v_c1 );
         float diff_v_r = std::min(0.f, v_release - corr_v_c1);
 
         corr_v_c1 = corr_v_c1 + diff_v_a * coef_A;
         corr_v_c1 = corr_v_c1 + diff_v_d * coef_D;
         corr_v_c1 = corr_v_c1 + diff_v_r * coef_R;
 
-        // adsr->process_block();
         output = corr_v_c1;
+
         if (!gate && !corr_discharge && corr_v_c1 < 1e-6)
+        {
             output = 0;
+        }
     }
+
     int getEnvState() { return envstate; }
 
   private:
@@ -457,6 +474,7 @@ class ADSRModulationSource : public ModulationSource
     float _v_c1 = 0.f;
     float _v_c1_delayed = 0.f;
     float _discharge = 0.f;
+    float _ungateHold = 0.f;
 
     float corr_v_c1{0.f};
     float corr_v_c1_delayed{0.f};
