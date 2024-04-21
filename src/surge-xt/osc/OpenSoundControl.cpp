@@ -1550,7 +1550,7 @@ void OpenSoundControl::sendParameter(const Parameter *p, bool needsMessageThread
         if (extension == "abs")
             val01 = (float)p->absolute;
         if (extension == "enable")
-            val01 = (float)p->deactivated;
+            val01 = (float)!p->deactivated;
         if (extension == "tempo_sync")
             val01 = (float)p->temposync;
         if (extension == "extend")
