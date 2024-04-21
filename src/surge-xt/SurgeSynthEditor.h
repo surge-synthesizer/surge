@@ -111,7 +111,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     bool isInterestedInFileDrag(const juce::StringArray &files) override;
     void filesDropped(const juce::StringArray &files, int, int) override;
 
-    void modifyHostMenu(juce::PopupMenu &menu);
+    juce::PopupMenu modifyHostMenu(juce::PopupMenu menu);
 
     juce::PopupMenu hostMenuFor(Parameter *p);
     juce::PopupMenu hostMenuForMacro(int macro);
