@@ -99,6 +99,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     int midiKeyboardOctave{5};
     float midiKeyboardVelocity{127.f / 127.f}; // see issue #6409
 
+    bool fireListenersOnEndEdit{true};
+
     std::unique_ptr<juce::Component> pitchwheel, modwheel, suspedal;
     std::unique_ptr<juce::MidiKeyboardComponent> keyboard;
     std::unique_ptr<juce::Label> tempoLabel, sustainLabel;
