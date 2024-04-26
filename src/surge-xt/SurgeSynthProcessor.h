@@ -103,17 +103,11 @@ struct SurgeBaseParam : juce::RangedAudioParameter
     }
 };
 
+struct SurgeSynthProcessor;
+
 struct SurgeParamToJuceParamAdapter : SurgeBaseParam
 {
-    explicit SurgeParamToJuceParamAdapter(SurgeSynthesizer *s, Parameter *p)
-        : s(s), p(p), range(0.f, 1.f, 0.001f),
-          SurgeBaseParam(juce::ParameterID(p->get_storage_name(),
-                                           1), // This "1" needs thought if we add params
-                         SurgeParamToJuceInfo::getParameterName(s, p),
-                         juce::AudioProcessorParameterWithIDAttributes())
-    {
-        setValueNotifyingHost(getValue());
-    }
+    explicit SurgeParamToJuceParamAdapter(SurgeSynthProcessor *jp, Parameter *p);
 
     std::atomic<bool> inEditGesture{false};
 
@@ -125,22 +119,7 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
     }
     float getValue() const override { return s->getParameter01(s->idForParameter(p)); }
     float getDefaultValue() const override { return 0.0; /* FIXME */ }
-    void setValue(float f) override
-    {
-        auto matches = (f == getValue());
-        if (!matches && !inEditGesture)
-        {
-            s->setParameter01(s->idForParameter(p), f, true);
-        }
-        /*
-         * In LIVE 11.1 and 11.2 this will fire and matches will be false
-        else if (inEditGesture)
-        {
-            std::cout << ">>> VST3 SUPPRESSED >>> " << f << " " << (matches ? "match" : "DIFFERENT")
-                      << std::endl;
-        }
-         */
-    }
+    void setValue(float f) override;
 
     int getNumSteps() const override { return RangedAudioParameter::getNumSteps(); }
     float getValueForText(const juce::String &text) const override
@@ -166,8 +145,9 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
     bool isMetaParameter() const override { return true; }
     const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
     juce::NormalisableRange<float> range;
-    SurgeSynthesizer *s;
-    Parameter *p;
+    SurgeSynthProcessor *ssp{nullptr};
+    SurgeSynthesizer *s{nullptr};
+    Parameter *p{nullptr};
 
 #if HAS_CLAP_JUCE_EXTENSIONS
     bool supportsMonophonicModulation() override { return p->can_be_nondestructively_modulated(); }
@@ -190,14 +170,7 @@ struct SurgeParamToJuceParamAdapter : SurgeBaseParam
 
 struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
 {
-    explicit SurgeMacroToJuceParamAdapter(SurgeSynthesizer *s, long macroNum)
-        : s(s), macroNum(macroNum), range(0.f, 1.f, 0.001f),
-          SurgeBaseParam(juce::ParameterID(std::string("macro_") + std::to_string(macroNum), 1),
-                         std::string("M") + std::to_string(macroNum + 1),
-                         juce::AudioProcessorParameterWithIDAttributes())
-    {
-        setValueNotifyingHost(getValue());
-    }
+    explicit SurgeMacroToJuceParamAdapter(SurgeSynthProcessor *s, long macroNum);
 
     juce::String getName(int i) const override
     {
@@ -223,11 +196,8 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
         return std::max(std::min(tf, 1.0), 0.0);
     }
     float getDefaultValue() const override { return 0.0; /* FIXME */ }
-    void setValue(float f) override
-    {
-        if (f != getValue())
-            s->setMacroParameter01(macroNum, f);
-    }
+    void setValue(float f) override;
+
     juce::String getText(float normalisedValue, int i) const override
     {
         return std::to_string(s->getMacroParameter01(macroNum));
@@ -244,6 +214,7 @@ struct SurgeMacroToJuceParamAdapter : public SurgeBaseParam
     const juce::NormalisableRange<float> &getNormalisableRange() const override { return range; }
     juce::NormalisableRange<float> range;
     SurgeSynthesizer *s;
+    SurgeSynthProcessor *ssp;
     long macroNum;
 };
 

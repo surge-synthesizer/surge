@@ -88,7 +88,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
 
     for (int mn = 0; mn < n_customcontrollers; ++mn)
     {
-        auto nm = std::make_unique<SurgeMacroToJuceParamAdapter>(surge.get(), mn);
+        auto nm = std::make_unique<SurgeMacroToJuceParamAdapter>(this, mn);
 
         macrosById.push_back(nm.get());
         macroG->addChild(std::move(nm));
@@ -104,7 +104,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         {
             parametermeta pm;
             surge->getParameterMeta(surge->idForParameter(par), pm);
-            auto sja = std::make_unique<SurgeParamToJuceParamAdapter>(surge.get(), par);
+            auto sja = std::make_unique<SurgeParamToJuceParamAdapter>(this, par);
             paramsByID[surge->idForParameter(par)] = sja.get();
             parByGroup[pm.clump].push_back(std::move(sja));
         }
@@ -1693,6 +1693,44 @@ const void *JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *f)
 }
 #endif
 
+SurgeParamToJuceParamAdapter::SurgeParamToJuceParamAdapter(SurgeSynthProcessor *jp, Parameter *p)
+    : ssp(jp), s(jp->surge.get()), p(p), range(0.f, 1.f, 0.001f),
+      SurgeBaseParam(juce::ParameterID(p->get_storage_name(),
+                                       1), // This "1" needs thought if we add params
+                     SurgeParamToJuceInfo::getParameterName(jp->surge.get(), p),
+                     juce::AudioProcessorParameterWithIDAttributes())
+{
+    setValueNotifyingHost(getValue());
+}
+
+void SurgeParamToJuceParamAdapter::setValue(float f)
+{
+    auto matches = (f == getValue());
+    if (!matches && !inEditGesture)
+    {
+        s->setParameter01(s->idForParameter(p), f, true);
+        // Probably OSC needs this
+        // ssp->paramChangeToListeners(p);
+    }
+}
+
+SurgeMacroToJuceParamAdapter::SurgeMacroToJuceParamAdapter(SurgeSynthProcessor *jp, long macroNum)
+    : ssp(jp), s(jp->surge.get()), macroNum(macroNum), range(0.f, 1.f, 0.001f),
+      SurgeBaseParam(juce::ParameterID(std::string("macro_") + std::to_string(macroNum), 1),
+                     std::string("M") + std::to_string(macroNum + 1),
+                     juce::AudioProcessorParameterWithIDAttributes())
+{
+    setValueNotifyingHost(getValue());
+}
+
+void SurgeMacroToJuceParamAdapter::setValue(float f)
+{
+    if (f != getValue())
+    {
+        s->setMacroParameter01(macroNum, f);
+        // Do whatever macros do
+    }
+}
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() { return new SurgeSynthProcessor(); }
