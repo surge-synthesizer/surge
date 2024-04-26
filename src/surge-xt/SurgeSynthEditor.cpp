@@ -625,7 +625,7 @@ void SurgeSynthEditor::endMacroEdit(long macroNum)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-void SurgeSynthEditor::modifyHostMenu(juce::PopupMenu &menu)
+juce::PopupMenu SurgeSynthEditor::modifyHostMenu(juce::PopupMenu menu)
 {
     // make things look a bit nicer for our friends from Image-Line
     if (juce::PluginHostType().isFruityLoops())
@@ -642,7 +642,36 @@ void SurgeSynthEditor::modifyHostMenu(juce::PopupMenu &menu)
                 it.getItem().text = txt.fromFirstOccurrenceOf("-", false, false);
             }
         }
+
+        return menu;
     }
+
+    // we really don't need that parameter name repeated in Reaper...
+    if (juce::PluginHostType().isReaper())
+    {
+        auto newMenu = juce::PopupMenu();
+        auto it = juce::PopupMenu::MenuItemIterator(menu);
+
+        while (it.next())
+        {
+            auto txt = it.getItem().text;
+            bool include = true;
+
+            if (txt.startsWithChar('[') && txt.endsWithChar(']'))
+            {
+                include = it.next();
+            }
+
+            if (include)
+            {
+                newMenu.addItem(it.getItem());
+            }
+        }
+
+        return newMenu;
+    }
+
+    return menu;
 }
 
 juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
@@ -655,7 +684,7 @@ juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
         {
             auto menu = menuInfo->getEquivalentPopupMenu();
 
-            modifyHostMenu(menu);
+            menu = modifyHostMenu(menu);
 
             return menu;
         }
