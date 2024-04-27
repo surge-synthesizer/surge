@@ -943,6 +943,10 @@ void SurgeSynthProcessor::processBlockOSC()
             {
                 newDisabledMask = curmask | msk;
             }
+
+            std::cout << "FX_DISABLE, selected_mask = " << selected_mask
+                      << " newval = " << newDisabledMask << " pptr: " << om.param << std::endl;
+
             surge->storage.getPatch().fx_disable.val.i = newDisabledMask;
             if (surge->fx_suspend_bitmask != newDisabledMask)
             {
@@ -1709,8 +1713,7 @@ void SurgeParamToJuceParamAdapter::setValue(float f)
     if (!matches && !inEditGesture)
     {
         s->setParameter01(s->idForParameter(p), f, true);
-        // Probably OSC needs this
-        // ssp->paramChangeToListeners(p);
+        ssp->paramChangeToListeners(p);
     }
 }
 

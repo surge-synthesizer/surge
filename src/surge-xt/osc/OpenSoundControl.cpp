@@ -729,7 +729,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 }
 
                 // Send packet to audio thread
-                sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(selected_mask, onoff));
+                //         explicit oscToAudio(oscToAudio_type omtype, Parameter *p, float f, int i,
+                //         char c0, char c1, bool on, int32_t noteid, int scene, int index)
+
+                sspPtr->oscRingBuf.push(
+                    SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::FX_DISABLE, nullptr, 0.0,
+                                                    selected_mask, 0, 0, onoff > 0, 0, 0, 0));
             }
         }
 
