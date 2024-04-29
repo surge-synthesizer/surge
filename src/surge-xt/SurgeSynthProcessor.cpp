@@ -357,7 +357,7 @@ void SurgeSynthProcessor::paramChangeToListeners(Parameter *p, bool isSpecialCas
                 int diff = (int)f0 ^ (int)f1;
                 if (diff != 0) // should always be true
                 {
-                    unsigned i = 1, pos = 1;
+                    unsigned i = 1, pos = 0;
                     while (pos <= n_fx_slots)
                     {
                         if (i & diff)
@@ -878,22 +878,20 @@ void SurgeSynthProcessor::processBlockOSC()
         {
             float pval = om.fval;
             if (om.param->valtype == vt_int)
-                pval = Parameter::intScaledToFloat(pval, om.param->val_max.i, om.param->val_min.i);
+                pval =
+                    Parameter::intScaledToFloat(om.fval, om.param->val_max.i, om.param->val_min.i);
 
-            if (pval != om.param->val.f)
-            {
-                surge->setParameter01(surge->idForParameter(om.param), pval, true);
-                surge->storage.getPatch().isDirty = true;
+            surge->setParameter01(surge->idForParameter(om.param), pval, true);
+            surge->storage.getPatch().isDirty = true;
 
-                // Special cases: A few control types require a rebuild and
-                // SGE Value Callbacks would do it as would the VST3 param handler
-                // so put them here for now. Bit of a hack...
-                auto ct = om.param->ctrltype;
-                if (ct == ct_bool_solo || ct == ct_bool_mute || ct == ct_scenesel)
-                    surge->refresh_editor = true;
-                else
-                    surge->queueForRefresh(om.param->id);
-            }
+            // Special cases: A few control types require a rebuild and
+            // SGE Value Callbacks would do it as would the VST3 param handler
+            // so put them here for now. Bit of a hack...
+            auto ct = om.param->ctrltype;
+            if (ct == ct_bool_solo || ct == ct_bool_mute || ct == ct_scenesel)
+                surge->refresh_editor = true;
+            else
+                surge->queueForRefresh(om.param->id);
         }
         break;
 
@@ -944,15 +942,12 @@ void SurgeSynthProcessor::processBlockOSC()
                 newDisabledMask = curmask | msk;
             }
 
-            std::cout << "FX_DISABLE, selected_mask = " << selected_mask
-                      << " newval = " << newDisabledMask << " pptr: " << om.param << std::endl;
-
             surge->storage.getPatch().fx_disable.val.i = newDisabledMask;
             if (surge->fx_suspend_bitmask != newDisabledMask)
             {
                 surge->fx_suspend_bitmask = newDisabledMask;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->refresh_editor = true;
             }
         }
         break;
