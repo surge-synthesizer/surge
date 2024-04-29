@@ -938,17 +938,12 @@ void SurgeSynthProcessor::processBlockOSC()
                 newDisabledMask = curmask & msk;
             }
             else // set selected bit to one
-            {
                 newDisabledMask = curmask | msk;
-            }
 
             surge->storage.getPatch().fx_disable.val.i = newDisabledMask;
-            if (surge->fx_suspend_bitmask != newDisabledMask)
-            {
-                surge->fx_suspend_bitmask = newDisabledMask;
-                surge->storage.getPatch().isDirty = true;
-                surge->refresh_editor = true;
-            }
+            surge->fx_suspend_bitmask = newDisabledMask;
+            surge->storage.getPatch().isDirty = true;
+            surge->refresh_editor = true;
         }
         break;
 
