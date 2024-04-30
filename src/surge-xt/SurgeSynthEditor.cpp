@@ -601,7 +601,8 @@ void SurgeSynthEditor::endParameterEdit(Parameter *p)
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
     par->inEditGesture = false;
     par->endChangeGesture();
-    processor.paramChangeToListeners(p);
+    if (fireListenersOnEndEdit)
+        processor.paramChangeToListeners(p);
 }
 
 void SurgeSynthEditor::beginMacroEdit(long macroNum)

@@ -699,7 +699,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
             fxslot = std::distance(std::begin(fxslot_shortoscname), found);
             int selected_mask = 1 << fxslot;
-
             if (querying)
             {
                 int deac_mask = synth->storage.getPatch().fx_disable.val.i;
@@ -729,7 +728,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 }
 
                 // Send packet to audio thread
-                sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(selected_mask, onoff));
+                sspPtr->oscRingBuf.push(
+                    SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::FX_DISABLE, nullptr, 0.0,
+                                                    selected_mask, 0, 0, onoff > 0, 0, 0, 0));
             }
         }
 

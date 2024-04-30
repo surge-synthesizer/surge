@@ -1285,6 +1285,7 @@ void SurgeGUIEditor::idle()
         }
     }
 
+    juceEditor->fireListenersOnEndEdit = false;
     for (int s = 0; s < n_scenes; ++s)
     {
         for (int o = 0; o < n_oscs; ++o)
@@ -1317,6 +1318,7 @@ void SurgeGUIEditor::idle()
             juceEditor->endParameterEdit(&par);
         }
     }
+    juceEditor->fireListenersOnEndEdit = true;
 }
 
 void SurgeGUIEditor::toggle_mod_editing()
