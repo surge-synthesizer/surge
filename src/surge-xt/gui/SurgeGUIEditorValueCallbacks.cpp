@@ -3122,7 +3122,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     });
             }
 
-#if SURGE_HAS_OSC
             if (synth->storage.oscReceiving)
             {
                 contextMenu.addSeparator();
@@ -3137,7 +3136,6 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                 contextMenu.addItem(i);
             }
-#endif
 
             auto jpm = juceEditor->hostMenuFor(p);
 

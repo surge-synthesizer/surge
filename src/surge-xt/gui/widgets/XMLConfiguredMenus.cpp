@@ -435,7 +435,6 @@ void OscillatorMenu::populate()
 
         menu.addCustomItem(-1, std::move(hmen), nullptr, title);
 
-#if SURGE_HAS_OSC
         if (storage->oscReceiving)
         {
             menu.addSeparator();
@@ -451,7 +450,6 @@ void OscillatorMenu::populate()
 
             menu.addItem(i);
         }
-#endif
     }
 }
 
@@ -853,7 +851,6 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
 
         menu.addCustomItem(-1, std::move(hmen), nullptr, helpMenuScreeReaderText);
 
-#if SURGE_HAS_OSC
         if (storage->oscReceiving)
         {
             menu.addSeparator();
@@ -869,7 +866,6 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
 
             menu.addItem(i);
         }
-#endif
     }
 }
 
