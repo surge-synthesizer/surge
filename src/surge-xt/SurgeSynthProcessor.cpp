@@ -154,10 +154,7 @@ SurgeSynthProcessor::SurgeSynthProcessor()
     surge->juceWrapperType = wrapperTypeString;
 
     midiKeyboardState.addListener(this);
-
-#if SURGE_HAS_OSC
     oscHandler.initOSC(this, surge);
-#endif
 }
 
 SurgeSynthProcessor::~SurgeSynthProcessor()
@@ -531,13 +528,10 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         return;
     }
 
-#if SURGE_HAS_OSC
     if (oscCheckStartup)
     {
         tryLazyOscStartupFromStreamedState();
     }
-
-#endif
 
     priorCallWasProcessBlockNotBypassed = true;
 

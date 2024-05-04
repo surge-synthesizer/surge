@@ -1761,8 +1761,6 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
     return midiSubMenu;
 }
 
-#if SURGE_HAS_OSC
-
 juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 {
     auto storage = &(synth->storage);
@@ -1790,8 +1788,6 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
 
     return oscSubMenu;
 }
-
-#endif
 
 juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
 {
@@ -1910,10 +1906,8 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
     auto midiSubMenu = makeMidiMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("MIDI Settings"), midiSubMenu);
 
-#if SURGE_HAS_OSC
     auto oscSubMenu = makeOSCMenu(where);
     settingsMenu.addSubMenu(Surge::GUI::toOSCase("OSC Settings"), oscSubMenu);
-#endif
 
     auto tuningSubMenu = makeTuningMenu(where, false);
     settingsMenu.addSubMenu("Tuning", tuningSubMenu);

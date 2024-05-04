@@ -72,10 +72,6 @@ static inline int _stricmp(const char *s1, const char *s2) { return strcasecmp(s
 #error You must compile with -DSURGE_COMPILE_BLOCK_SIZE=32 (or whatnot)
 #endif
 
-#ifndef SURGE_HAS_OSC
-#define SURGE_HAS_OSC 1
-#endif
-
 const int BASE_WINDOW_SIZE_X = 913;
 const int BASE_WINDOW_SIZE_Y = 569;
 const int NAMECHARS = 64;
