@@ -234,7 +234,7 @@ enum ControlGroup
 
 enum SoftTakeoverStatus
 {
-    sts_waiting_for_value,
+    sts_waiting_for_first_look,
     sts_waiting_below,
     sts_waiting_above,
     sts_locked
@@ -521,8 +521,8 @@ class Parameter
     int ctrlstyle = cs_off;
     int midictrl{};
     int midichan{};
-    SoftTakeoverStatus miditakeover_status{};
-    float miditakeover_value{};
+    SoftTakeoverStatus miditakeover_status{sts_waiting_for_first_look};
+
     int param_id_in_scene{};
     bool affect_other_parameters{};
     float moverate{};

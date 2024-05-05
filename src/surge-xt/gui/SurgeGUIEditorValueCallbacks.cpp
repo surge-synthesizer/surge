@@ -3859,6 +3859,9 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         {
             Parameter *p = synth->storage.getPatch().param_ptr[ptag];
 
+            // The UI reset the value; means soft takeover needs to try again
+            p->miditakeover_status = sts_waiting_for_first_look;
+
             if (p->is_nonlocal_on_change())
             {
                 frame->repaint();

@@ -2337,26 +2337,25 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
         if (p->midictrl == cc_encoded && (p->midichan == channel || p->midichan == -1))
         {
-            if (midiSoftTakeover)
+            bool applyControl{true};
+            if (midiSoftTakeover && p->miditakeover_status != sts_locked)
             {
                 const auto pval = p->get_value_f01();
-
-                if (fval + 1.0e-3f > p->miditakeover_value ||
-                    fval - 1.0e-3f < p->miditakeover_value)
-                {
-                    p->miditakeover_status = sts_waiting_for_value;
-                }
-                // printf("incoming: %.4f, to: %.4f\n", fval, p->miditakeover_value);
+                /*
+                std::cout << "Takeover " << p->get_full_name() << " " << pval << " " << fval
+                          << " " << p->miditakeover_status
+                          << std::endl;
+                          */
 
                 switch (p->miditakeover_status)
                 {
-                case sts_waiting_for_value:
-                    if (p->miditakeover_value < fval)
+                case sts_waiting_for_first_look:
+                    if (fval < pval - 0.01)
                     {
                         // printf("wait for val below\n");
                         p->miditakeover_status = sts_waiting_below;
                     }
-                    else if (p->miditakeover_value > fval)
+                    else if (fval > pval + 0.01)
                     {
                         // printf("wait for val above\n");
                         p->miditakeover_status = sts_waiting_above;
@@ -2368,14 +2367,14 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
                     }
                     break;
                 case sts_waiting_below:
-                    if (fval <= p->miditakeover_value + 1.0e-3f)
+                    if (fval > pval)
                     {
                         // printf("waiting below locked\n");
                         p->miditakeover_status = sts_locked;
                     }
                     break;
                 case sts_waiting_above:
-                    if (fval >= p->miditakeover_value - 1.0e-3f)
+                    if (fval < pval)
                     {
                         // printf("waiting above locked\n");
                         p->miditakeover_status = sts_locked;
@@ -2388,34 +2387,37 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
                 if (p->miditakeover_status != sts_locked)
                 {
                     // printf("not locked\n");
-                    return;
+                    applyControl = false;
                 }
             }
 
-            p->miditakeover_value = fval;
-
-            this->setParameterSmoothed(i, fval);
-
-            // Notify audio thread param change listeners (OSC, e.g.)
-            // (which run on juce messenger thread)
-            for (const auto &it : audioThreadParamListeners)
-                (it.second)(storage.getPatch().param_ptr[i]->oscName, fval);
-
-            int j = 0;
-            while (j < 7)
+            if (applyControl)
             {
-                if ((refresh_ctrl_queue[j] > -1) && (refresh_ctrl_queue[j] != i))
-                {
-                    j++;
-                }
-                else
-                {
-                    break;
-                }
-            }
+                // std::cout << "About to set parameter to " << fval << std::endl;
 
-            refresh_ctrl_queue[j] = i;
-            refresh_ctrl_queue_value[j] = fval;
+                this->setParameterSmoothed(i, fval);
+
+                // Notify audio thread param change listeners (OSC, e.g.)
+                // (which run on juce messenger thread)
+                for (const auto &it : audioThreadParamListeners)
+                    (it.second)(storage.getPatch().param_ptr[i]->oscName, fval);
+
+                int j = 0;
+                while (j < 7)
+                {
+                    if ((refresh_ctrl_queue[j] > -1) && (refresh_ctrl_queue[j] != i))
+                    {
+                        j++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                refresh_ctrl_queue[j] = i;
+                refresh_ctrl_queue_value[j] = fval;
+            }
         }
     }
 }

@@ -975,8 +975,6 @@ void SurgeGUIEditor::idle()
 
                     if (sp)
                     {
-                        sp->miditakeover_status = sts_waiting_for_value;
-
                         if (sp->ctrlgroup == cg_FILTER)
                         {
                             // force repaint any filter overlays
