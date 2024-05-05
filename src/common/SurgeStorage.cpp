@@ -2671,6 +2671,7 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
             (float)cos(2 * M_PI * min(0.5, 440 * table_pitch[i] * dsamplerate_os_inv));
     }
 
+#ifndef SURGE_SKIP_ODDSOUND_MTS
     if (oddsound_mts_active_as_main && !uiThreadChecksTunings)
     {
         for (int i = 0; i < 128; ++i)
@@ -2680,6 +2681,7 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
         MTS_SetScaleName(currentTuning.scale.description.c_str());
     }
     tuningUpdates++;
+#endif
     return true;
 }
 
