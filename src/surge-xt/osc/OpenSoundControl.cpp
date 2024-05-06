@@ -268,8 +268,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             noteID = int(frequency * 10000);
 
         // queue packet to audio thread
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-            frequency, static_cast<char>(velocity), noteon, noteID));
+        sspPtr->oscRingBuf.push(
+            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::FREQNOTE, nullptr, frequency, 0, 0,
+                                            static_cast<char>(velocity), noteon, noteID, 0, 0));
     }
 
     // "MIDI-style" notes
@@ -325,9 +326,9 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
         // Send packet to audio thread
         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-            static_cast<char>(note), static_cast<char>(velocity), noteon, noteID));
+            SurgeSynthProcessor::MNOTE, nullptr, 0.0, 0, static_cast<char>(note),
+            static_cast<char>(velocity), noteon, noteID, 0, 0));
     }
-
     else if (addr_part == "pbend" && !querying)
     {
         if (message.size() != 2)
@@ -340,17 +341,19 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             return;
         }
 
-        char chan = static_cast<char>(message[0].getFloat32());
+        int chan = static_cast<int>(message[0].getFloat32());
         if ((chan < 0) || (chan > 15))
         {
             sendError("/pbend channel must be >= 0. and <= 15.");
+            return;
         }
 
         float bend = message[1].getFloat32();
         if ((bend >= -1.0) && (bend <= 1.0))
         {
             sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                SurgeSynthProcessor::PITCHBEND, chan, static_cast<int>(bend * 8192)));
+                SurgeSynthProcessor::PITCHBEND, nullptr, 0.0, static_cast<int>(bend * 8192),
+                static_cast<char>(chan), 0, 0, 0, 0, 0));
         }
         else
             sendError("/pbend value must be between -1.0 and 1.0 .");
@@ -385,8 +388,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                           "' is out of range (0.0 - 4.0).");
                 return;
             }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_VOL, noteID, val));
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::NOTEX_VOL, nullptr, val, 0, 0, 0, 0, noteID, 0, 0));
         }
         else if (addr_part == "pitch")
         {
@@ -396,8 +399,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                           "' is out of range (-120.0 - 120.0).");
                 return;
             }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PITCH, noteID, val));
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::NOTEX_PITCH, nullptr, val, 0, 0, 0, 0, noteID, 0, 0));
         }
         else if (addr_part == "pan")
         {
@@ -407,8 +410,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                           "' is out of range (0.0 - 1.0).");
                 return;
             }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PAN, noteID, val));
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::NOTEX_PAN, nullptr, val, 0, 0, 0, 0, noteID, 0, 0));
         }
         else if (addr_part == "timbre")
         {
@@ -418,8 +421,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                           "' is out of range (0.0 - 1.0).");
                 return;
             }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_TIMB, noteID, val));
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::NOTEX_TIMB, nullptr, val, 0, 0, 0, 0, noteID, 0, 0));
         }
         else if (addr_part == "pressure")
         {
@@ -429,8 +432,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                           "' is out of range (0.0 - 1.0).");
                 return;
             }
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::NOTEX_PRES, noteID, val));
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::NOTEX_PRES, nullptr, val, 0, 0, 0, 0, noteID, 0, 0));
         }
     }
     else if (addr_part == "cc" && !querying)
@@ -444,15 +447,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendNotFloatError(addr_part, "channel, control number, or value");
             return;
         }
-        float chan = static_cast<int>(message[0].getFloat32());
-        float cnum = static_cast<int>(message[1].getFloat32());
-        float val = static_cast<int>(message[2].getFloat32());
+        float chan = message[0].getFloat32();
+        float cnum = message[1].getFloat32();
+        float val = message[2].getFloat32();
 
         if ((chan >= 0.0) && (chan <= 15.) && (cnum >= 0.0) && (cnum <= 127.) && (val >= 0.0) &&
             (val <= 127.0))
         {
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CC, chan, cnum, val));
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::CC, nullptr, 0.0, static_cast<int>(val),
+                static_cast<char>(chan), static_cast<char>(cnum), 0, 0, 0, 0));
         }
         else
             sendMidiBoundsError(addr_part);
@@ -469,13 +473,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendNotFloatError(addr_part, "channel or value");
             return;
         }
-        float chan = static_cast<int>(message[0].getFloat32());
-        float val = static_cast<int>(message[1].getFloat32());
+        float chan = message[0].getFloat32();
+        float val = message[1].getFloat32();
 
         if ((chan >= 0.0) && (chan <= 15.) && (val >= 0.0) && (val <= 127.0))
         {
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::CHAN_ATOUCH, chan, val));
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::CHAN_ATOUCH, nullptr, 0.0, static_cast<int>(val),
+                static_cast<char>(chan), 0, 0, 0, 0, 0));
         }
         else
             sendMidiBoundsError(addr_part);
@@ -492,15 +497,16 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             sendNotFloatError(addr_part, "channel, note number, or value");
             return;
         }
-        float chan = static_cast<int>(message[0].getFloat32());
-        float nnum = static_cast<int>(message[1].getFloat32());
-        float val = static_cast<int>(message[2].getFloat32());
+        float chan = message[0].getFloat32();
+        float nnum = message[1].getFloat32();
+        float val = message[2].getFloat32();
 
         if ((chan >= 0.0) && (chan <= 15.) && (nnum >= 0.0) && (nnum <= 127.) && (val >= 0.0) &&
             (val <= 127.0))
         {
             sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                SurgeSynthProcessor::POLY_ATOUCH, (char)chan, (char)nnum, (int)val));
+                SurgeSynthProcessor::POLY_ATOUCH, nullptr, 0.0, static_cast<int>(val),
+                static_cast<char>(chan), static_cast<char>(nnum), 0, 0, 0, 0));
         }
         else
             sendMidiBoundsError(addr_part);
@@ -509,12 +515,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     // All notes off
     else if (addr_part == "allnotesoff")
     {
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLNOTESOFF));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLNOTESOFF,
+                                                                nullptr, 0.0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     else if (addr_part == "allsoundoff")
     {
-        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLSOUNDOFF));
+        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ALLSOUNDOFF,
+                                                                nullptr, 0.0, 0, 0, 0, 0, 0, 0, 0));
     }
 
     // Parameters
@@ -563,7 +571,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 OpenSoundControl::sendMacro(macnum - 1, true);
             }
             else
-                sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(--macnum, val));
+                sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                    SurgeSynthProcessor::MACRO, nullptr, val, --macnum, 0, 0, 0, 0, 0, 0));
         }
 
         // Special case for extended parameter options
@@ -594,15 +603,17 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sendError("Param " + p->oscName + " can't be absolute.");
                     else
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::ABSOLUTE_X, p, val));
+                            SurgeSynthProcessor::ABSOLUTE_X, p, 0.0, 0, 0, 0,
+                            static_cast<bool>(val), 0, 0, 0));
                 }
                 else if (extension == "enable")
                 {
                     if (!p->can_deactivate())
                         sendError("Param " + p->oscName + " doesn't support enabling/disabling.");
                     else
-                        sspPtr->oscRingBuf.push(
-                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::ENABLE_X, p, val));
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::ENABLE_X, p, 0.0, 0, 0, 0, static_cast<bool>(val),
+                            0, 0, 0));
                 }
                 else if (extension == "tempo_sync")
                 {
@@ -610,23 +621,26 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sendError("Param " + p->oscName + " can't tempo-sync.");
                     else
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::TEMPOSYNC_X, p, val));
+                            SurgeSynthProcessor::TEMPOSYNC_X, p, 0.0, 0, 0, 0,
+                            static_cast<bool>(val), 0, 0, 0));
                 }
                 else if (extension == "extend")
                 {
                     if (!p->can_extend_range())
                         sendError("Param " + p->oscName + " can't extend range.");
                     else
-                        sspPtr->oscRingBuf.push(
-                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::EXTEND_X, p, val));
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::EXTEND_X, p, 0.0, 0, 0, 0, static_cast<bool>(val),
+                            0, 0, 0));
                 }
                 else if (extension == "deform")
                 {
                     if (!p->has_deformoptions())
                         sendError("Param " + p->oscName + " doesn't have deform options.");
                     else
-                        sspPtr->oscRingBuf.push(
-                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::DEFORM_X, p, val));
+                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                            SurgeSynthProcessor::DEFORM_X, p, 0.0, 0, 0, 0, static_cast<bool>(val),
+                            0, 0, 0));
                 }
                 else if (extension == "const_rate")
                 {
@@ -634,7 +648,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
                     else
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_CONSTRATE_X, p, val));
+                            SurgeSynthProcessor::PORTA_CONSTRATE_X, p, 0.0, 0, 0, 0,
+                            static_cast<bool>(val), 0, 0, 0));
                 }
                 else if (extension == "gliss")
                 {
@@ -642,7 +657,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
                     else
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_GLISS_X, p, val));
+                            SurgeSynthProcessor::PORTA_GLISS_X, p, 0.0, 0, 0, 0,
+                            static_cast<bool>(val), 0, 0, 0));
                 }
                 else if (extension == "retrig")
                 {
@@ -650,7 +666,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
                     else
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_RETRIGGER_X, p, val));
+                            SurgeSynthProcessor::PORTA_RETRIGGER_X, p, 0.0, 0, 0, 0,
+                            static_cast<bool>(val), 0, 0, 0));
                 }
                 else if (extension == "curve")
                 {
@@ -658,7 +675,8 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
                     else
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_CURVE_X, p, val));
+                            SurgeSynthProcessor::PORTA_CURVE_X, p, 0.0, 0, 0, 0,
+                            static_cast<bool>(val), 0, 0, 0));
                 }
                 else
                 {
@@ -1178,11 +1196,12 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         if (muteMsg)
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth, true));
+
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::MOD_MUTE, p, depth, modnum, 0, 0, 0, 0, mscene, index));
         else
-            sspPtr->oscRingBuf.push(
-                SurgeSynthProcessor::oscToAudio(p, modnum, mscene, index, depth));
+            sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
+                SurgeSynthProcessor::MOD, p, depth, modnum, 0, 0, 0, 0, mscene, index));
     }
     if (!synth->audio_processing_active)
     {
