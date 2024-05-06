@@ -63,6 +63,9 @@ std::string defaultKeyToString(DefaultKey k)
     case MenuBasedMIDILearnChannel:
         r = "menuBasedMIDILearnChannel";
         break;
+    case MIDISoftTakeover:
+        r = "MIDISoftTakeover";
+        break;
     case RestoreMSEGSnapFromPatch:
         r = "restoreMSEGSnapFromPatch";
         break;
