@@ -2305,6 +2305,7 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
         {
             storage.getPatch().param_ptr[learn_param_from_cc]->midictrl = cc_encoded;
             storage.getPatch().param_ptr[learn_param_from_cc]->midichan = channel;
+            storage.getPatch().param_ptr[learn_param_from_cc]->miditakeover_status = sts_locked;
 
             learn_param_from_cc = -1;
         }
@@ -2347,15 +2348,17 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
                           << std::endl;
                           */
 
+                static constexpr float buffer = {1.5f / 127.f}; // 1.5 midi CCs away
+
                 switch (p->miditakeover_status)
                 {
                 case sts_waiting_for_first_look:
-                    if (fval < pval - 0.01)
+                    if (fval < pval - buffer)
                     {
                         // printf("wait for val below\n");
                         p->miditakeover_status = sts_waiting_below;
                     }
-                    else if (fval > pval + 0.01)
+                    else if (fval > pval + buffer)
                     {
                         // printf("wait for val above\n");
                         p->miditakeover_status = sts_waiting_above;
@@ -2367,14 +2370,14 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
                     }
                     break;
                 case sts_waiting_below:
-                    if (fval > pval)
+                    if (fval > pval - buffer)
                     {
                         // printf("waiting below locked\n");
                         p->miditakeover_status = sts_locked;
                     }
                     break;
                 case sts_waiting_above:
-                    if (fval < pval)
+                    if (fval < pval + buffer)
                     {
                         // printf("waiting above locked\n");
                         p->miditakeover_status = sts_locked;
