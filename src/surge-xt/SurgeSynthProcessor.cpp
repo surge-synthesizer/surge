@@ -964,7 +964,6 @@ void SurgeSynthProcessor::processBlockOSC()
             // This parameter is stored as 'disabled', but UI uses 'enabled',
             //  so logic is flipped here:
             bool disabled = !om.on;
-            std::cout << om.param->oscName << " - disabled: " << disabled << std::endl;
             if (om.param->deactivated != disabled)
             {
                 om.param->deactivated = disabled;
