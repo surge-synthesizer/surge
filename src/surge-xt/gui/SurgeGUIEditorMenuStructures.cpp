@@ -1696,6 +1696,19 @@ juce::PopupMenu SurgeGUIEditor::makeMidiMenu(const juce::Point<int> &where)
     midiSubMenu.addSubMenu(Surge::GUI::toOSCase("Default Channel For Menu-Based MIDI Learn"),
                            chanSubMenu);
 
+    bool softTakeover = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                            Surge::Storage::MIDISoftTakeover, 0);
+
+    midiSubMenu.addItem(Surge::GUI::toOSCase("Soft Takeover MIDI Learned Parameters"), true,
+                        softTakeover, [this, softTakeover]() {
+                            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                                   Surge::Storage::MIDISoftTakeover,
+                                                                   !softTakeover);
+                            this->synth->midiSoftTakeover = !softTakeover;
+                        });
+
+    midiSubMenu.addSeparator();
+
     midiSubMenu.addItem(Surge::GUI::toOSCase("Save MIDI Mapping As..."), [this, where]() {
         this->scannedForMidiPresets = false; // force a rescan
 

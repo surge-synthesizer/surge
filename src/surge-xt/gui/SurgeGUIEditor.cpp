@@ -2556,7 +2556,13 @@ void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
 
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
-        if (mod_editor)
+        bool isModEdit = mod_editor;
+        if (isModEdit)
+        {
+            auto *pp = synth->storage.getPatch().param_ptr[ptag];
+            isModEdit = isModEdit && synth->isValidModulation(pp->id, modsource);
+        }
+        if (isModEdit)
         {
             auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
             if (mci)
@@ -2599,7 +2605,13 @@ void SurgeGUIEditor::controlEndEdit(Surge::GUI::IComponentTagValue *control)
 
     if (ptag >= 0 && ptag < synth->storage.getPatch().param_ptr.size())
     {
-        if (mod_editor)
+        bool isModEdit = mod_editor;
+        if (isModEdit)
+        {
+            auto *pp = synth->storage.getPatch().param_ptr[ptag];
+            isModEdit = isModEdit && synth->isValidModulation(pp->id, modsource);
+        }
+        if (isModEdit)
         {
             auto mci = dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(control);
             if (mci)

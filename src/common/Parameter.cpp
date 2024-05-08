@@ -219,6 +219,7 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
     per_voice_processing = scene ? true : false;
     midictrl = -1;
     midichan = -1;
+    miditakeover_status = sts_waiting_for_first_look;
 
     clear_flags();
 
