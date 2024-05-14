@@ -1625,7 +1625,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                     if (p->can_extend_range())
                     {
-                        contextMenu.addItem(Surge::GUI::toOSCase("Extend Range"), true,
+                        contextMenu.addItem(Surge::GUI::toOSCase("Use Decimal Values"), true,
                                             p->extend_range, [this, p, control]() {
                                                 auto wasExtended = p->extend_range;
                                                 p->set_extend_range(!p->extend_range);
