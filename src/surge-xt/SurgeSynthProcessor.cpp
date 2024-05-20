@@ -983,9 +983,9 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
 
         case SurgeSynthProcessor::DEFORM_X:
-            if (om.param->deform_type != om.on)
+            if (om.param->deform_type != om.ival)
             {
-                om.param->deform_type = om.on;
+                om.param->deform_type = om.ival;
                 surge->storage.getPatch().isDirty = true;
                 surge->queueForRefresh(om.param->id);
             }

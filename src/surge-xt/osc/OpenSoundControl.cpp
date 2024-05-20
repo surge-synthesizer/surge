@@ -639,7 +639,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                         sendError("Param " + p->oscName + " doesn't have deform options.");
                     else
                         sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::DEFORM_X, p, 0.0, 0, 0, 0, static_cast<bool>(val),
+                            SurgeSynthProcessor::DEFORM_X, p, 0.0, static_cast<int>(val), 0, 0, 0,
                             0, 0, 0));
                 }
                 else if (extension == "const_rate")
