@@ -1019,9 +1019,9 @@ void SurgeSynthProcessor::processBlockOSC()
             break;
 
         case SurgeSynthProcessor::PORTA_CURVE_X:
-            if (om.param->porta_curve != om.on)
+            if (om.param->porta_curve != om.ival)
             {
-                om.param->porta_curve = om.on;
+                om.param->porta_curve = om.ival;
                 surge->storage.getPatch().isDirty = true;
                 surge->queueForRefresh(om.param->id);
             }

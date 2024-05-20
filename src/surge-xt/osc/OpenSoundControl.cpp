@@ -674,9 +674,14 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                     if (!p->has_portaoptions())
                         sendError("Param " + p->oscName + " doesn't have portamento options.");
                     else
-                        sspPtr->oscRingBuf.push(SurgeSynthProcessor::oscToAudio(
-                            SurgeSynthProcessor::PORTA_CURVE_X, p, 0.0, 0, 0, 0,
-                            static_cast<bool>(val), 0, 0, 0));
+                    {
+                        int new_curve = static_cast<int>(val);
+                        if ((new_curve < -1) || (new_curve > 1))
+                            new_curve = 0;
+                        sspPtr->oscRingBuf.push(
+                            SurgeSynthProcessor::oscToAudio(SurgeSynthProcessor::PORTA_CURVE_X, p,
+                                                            0.0, new_curve, 0, 0, false, 0, 0, 0));
+                    }
                 }
                 else
                 {
