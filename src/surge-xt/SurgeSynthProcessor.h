@@ -346,6 +346,7 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         POLY_ATOUCH
     };
 
+    // Message from OSC input to the audio thread
     struct oscToAudio
     {
         oscToAudio_type type;
@@ -358,40 +359,15 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
         int scene{0}, index{0};
 
         oscToAudio() {}
+        // Various OSC messages use different subsets of the following fields
         explicit oscToAudio(oscToAudio_type omtype, Parameter *p, float f, int i, char c0, char c1,
                             bool on, int32_t noteid, int scene, int index)
             : type(omtype), param(p), fval(f), ival(i), char0(c0), char1(c1), on(on),
               noteid(noteid), scene(scene), index(index)
         {
         }
-
-        oscToAudio(oscToAudio_type omtype, char c0, char c1, int i)
-            : type(omtype), char0(c0), char1(c1), ival(i)
-        {
-        }
-        oscToAudio(oscToAudio_type omtype, char c, int i) : type(omtype), char0(c), ival(i) {}
-        oscToAudio(oscToAudio_type omtype) : type(omtype) {}
-        oscToAudio(oscToAudio_type omtype, Parameter *p, int i) : type(omtype), param(p), ival(i) {}
-        oscToAudio(int mask, int on) : type(FX_DISABLE), ival(mask), on(on) {}
-        oscToAudio(int macnum, float f) : type(MACRO), ival(macnum), fval(f) {}
+        // Constructor for common parameter updates
         oscToAudio(Parameter *p, float f) : type(PARAMETER), param(p), fval(f) {}
-        oscToAudio(Parameter *p, int modulator, int sc, int idx, float depth)
-            : type(MOD), param(p), ival(modulator), scene(sc), index(idx), fval(depth)
-        {
-        }
-        oscToAudio(Parameter *p, int modulator, int sc, int idx, float depth, bool mute)
-            : type(MOD_MUTE), param(p), ival(modulator), scene(sc), index(idx), fval(depth)
-        {
-        }
-        oscToAudio(float freq, char velocity, bool noteon, int32_t nid)
-            : type(FREQNOTE), fval(freq), char1(velocity), on(noteon), noteid(nid)
-        {
-        }
-        oscToAudio(char note, char velocity, bool noteon, int32_t nid)
-            : type(MNOTE), char0(note), char1(velocity), on(noteon), noteid(nid)
-        {
-        }
-        oscToAudio(oscToAudio_type type, int32_t nid, float f) : type(type), noteid(nid), fval(f) {}
     };
     sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
 
