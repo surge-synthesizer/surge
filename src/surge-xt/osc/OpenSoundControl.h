@@ -126,8 +126,8 @@ inline std::string float_to_clocalestr_wprec(float value, int precision)
     assert(precision == 3);
     return fmt::format(std::locale::classic(), "{:.3Lf}", value);
     // return fmt::format(std::locale::classic(), "{:." + std::to_string(precision) + "Lf}", value);
-    // return fmt::format(std::locale::classic(), "{:.{}Lf}", value, precision); is I think the answer
-    // value);
+    // return fmt::format(std::locale::classic(), "{:.{}Lf}", value, precision); is I think the
+    // answer value);
 }
 
 } // namespace OSC
