@@ -126,6 +126,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Any Clang
     add_compile_options(
+      -Wno-conversion
       -Wno-unused-command-line-argument
       -Wno-deprecated-declarations
       -Werror=inconsistent-missing-override
