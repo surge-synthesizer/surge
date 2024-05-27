@@ -122,7 +122,12 @@ class OpenSoundControl : public juce::OSCReceiver,
 // Makes sure that decimal *points* are used, not commas
 inline std::string float_to_clocalestr_wprec(float value, int precision)
 {
-    return fmt::format(std::locale::classic(), "{:." + std::to_string(precision) + "Lf}", value);
+    /** c++20/fmt-10 fix this has to be a const expression */
+    assert(precision == 3);
+    return fmt::format(std::locale::classic(), "{:.3Lf}", value);
+    // return fmt::format(std::locale::classic(), "{:." + std::to_string(precision) + "Lf}", value);
+    // return fmt::format(std::locale::classic(), "{:.{}Lf}", value, precision); is I think the answer
+    // value);
 }
 
 } // namespace OSC
