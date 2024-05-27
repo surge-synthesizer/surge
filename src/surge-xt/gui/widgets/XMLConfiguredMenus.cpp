@@ -322,7 +322,7 @@ void XMLMenuPopulator::populate()
 
     rootTree->buildJuceMenu(menu, this);
 
-    maxIdx = allPresets.size();
+    maxIdx = (int)allPresets.size();
 }
 
 OscillatorMenu::OscillatorMenu() : juce::Component(), WidgetBaseMixin<OscillatorMenu>(this)
