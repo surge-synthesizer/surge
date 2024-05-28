@@ -30,7 +30,7 @@ jobs:
         displayName: Do Codequal
 
   - job: BuildLinuxDocker
-    condition: eq(variables['Build.Reason'], 'DEACTIVATE-PullRequest')
+    condition: eq(variables['Build.Reason'], 'PullRequest')
     pool:
       vmImage: 'ubuntu-20.04'
 
@@ -83,13 +83,6 @@ jobs:
           isMac: True
           isMacFat: True
           cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=x86_64\""
-          cmakeTarget: $(defaultTargets)
-          cmakeConfig: "Debug"
-        macOS-arm-xcode:
-          imageName: 'macos-latest'
-          isMac: True
-          isMacFat: True
-          cmakeArguments: "-GXcode -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
           cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
         macOS-arm:

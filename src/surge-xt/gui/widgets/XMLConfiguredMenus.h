@@ -109,7 +109,7 @@ struct XMLMenuPopulator
         {
             idx += dir;
             if (idx < 0)
-                idx = (int)allPresets.size() - 1;
+                idx = allPresets.size() - 1;
 
             if (idx >= (int)allPresets.size())
                 idx = 0;

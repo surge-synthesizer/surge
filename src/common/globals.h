@@ -30,8 +30,7 @@
 #include <string>
 
 // if you hit this on msvc and pass the above, you probably need /Zc:__cplusplus
-// Why this form? gcc10 works but provides -std=c++2a in some cases
-static_assert(__cplusplus > 201703L, "Surge requires C++20; please update your build");
+static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your build");
 
 #if MAC
 
