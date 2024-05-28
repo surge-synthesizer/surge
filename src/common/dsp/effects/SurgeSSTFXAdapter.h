@@ -90,7 +90,7 @@ struct SurgeFXConfig
     using GlobalStorage = SurgeStorage;
     using EffectStorage = FxStorage;
     using ValueStorage = pdata;
-    using BiquadAdapter = sst::filters::Biquad::DefaultTuningAndDBAdapter<GlobalStorage>;
+    using BiquadAdapter = SurgeFXConfig;
 
     static inline float floatValueAt(const Effect *const e, const ValueStorage *const v, int idx)
     {
