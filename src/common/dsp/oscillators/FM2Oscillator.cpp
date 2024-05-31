@@ -82,7 +82,9 @@ void FM2Oscillator::process_block_internal(float pitch, float drift, float fmdep
 {
     auto driftlfo = driftLFO.next() * drift;
     double omega = min(M_PI, (double)pitch_to_omega(pitch + driftlfo));
-    double sh = localcopy[oscdata->p[fm2_m12offset].param_id_in_scene].f * storage->dsamplerate_inv;
+    double sh = oscdata->p[fm2_m12offset].get_extended(
+                    localcopy[oscdata->p[fm2_m12offset].param_id_in_scene].f) *
+                storage->dsamplerate_inv;
 
     fb_val = oscdata->p[fm2_feedback].get_extended(
         localcopy[oscdata->p[fm2_feedback].param_id_in_scene].f);
@@ -154,7 +156,7 @@ void FM2Oscillator::init_ctrltypes()
     oscdata->p[fm2_m2ratio].set_name("M2 Ratio");
     oscdata->p[fm2_m2ratio].set_type(ct_fmratio_int);
     oscdata->p[fm2_m12offset].set_name("M1/2 Offset");
-    oscdata->p[fm2_m12offset].set_type(ct_freq_shift);
+    oscdata->p[fm2_m12offset].set_type(ct_freq_fm2_offset);
     oscdata->p[fm2_m12phase].set_name("M1/2 Phase");
     oscdata->p[fm2_m12phase].set_type(ct_percent);
     oscdata->p[fm2_feedback].set_name("Feedback");
@@ -188,5 +190,10 @@ void FM2Oscillator::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 21)
     {
         oscdata->p[fm2_feedback].deform_type = 0;
+    }
+
+    if (streamingRevision <= 23)
+    {
+        oscdata->p[fm2_m12offset].extend_range = false;
     }
 }

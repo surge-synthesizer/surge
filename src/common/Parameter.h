@@ -96,6 +96,7 @@ enum ctrltypes
     ct_freq_mod,
     ct_freq_hpf,
     ct_freq_shift,
+    ct_freq_fm2_offset,
     ct_freq_vocoder_low,
     ct_freq_vocoder_high,
     ct_bandwidth,
