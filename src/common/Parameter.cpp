@@ -3249,9 +3249,37 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
         }
     }
 
+    int detailedMode =
+        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
+
     txt[0] = 0;
     switch (ctrltype)
     {
+    case ct_lforate:
+    case ct_lforate_deactivatable:
+    {
+        float f = val.f;
+        float fInv = 0.f;
+        int dec = detailedMode ? 6 : displayInfo.decimals;
+        std::string u = "s";
+
+        fInv = 1.f / (displayInfo.a * powf(2.0f, f * displayInfo.b));
+
+        if (temposync)
+        {
+            fInv *= storage->temposyncratio_inv;
+        }
+
+        if (fInv < 1.f)
+        {
+            fInv *= 1000.f;
+            u = "ms";
+        }
+
+        snprintf(txt, TXT_SIZE, "%.*f %s", dec, fInv, u.c_str());
+
+        break;
+    }
     case ct_pitch_extendable_very_low_minval:
     case ct_freq_hpf:
     case ct_freq_audible:
