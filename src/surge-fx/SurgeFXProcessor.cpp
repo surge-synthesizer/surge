@@ -143,6 +143,56 @@ const juce::String SurgefxAudioProcessor::getProgramName(int index) { return "De
 
 void SurgefxAudioProcessor::changeProgramName(int index, const juce::String &newName) {}
 
+void SurgefxAudioProcessor::tryLazyOscStartupFromStreamedState()
+{
+    if ((!oscHandler.listening && oscStartIn && oscPortIn > 0))
+    {
+        oscHandler.tryOSCStartup();
+    }
+    oscCheckStartup = false;
+}
+
+//==============================================================================
+/* OSC (Open Sound Control) */
+bool SurgefxAudioProcessor::initOSCIn(int port)
+{
+    if (port <= 0)
+    {
+        return false;
+    }
+
+    auto state = oscHandler.initOSCIn(port);
+
+    oscReceiving = state;
+    oscStartIn = true;
+
+    return state;
+}
+
+bool SurgefxAudioProcessor::changeOSCInPort(int new_port)
+{
+    oscReceiving = false;
+    oscHandler.stopListening();
+    return initOSCIn(new_port);
+}
+
+void SurgefxAudioProcessor::initOSCError(int port, std::string outIP)
+{
+    std::ostringstream msg;
+
+    msg << "Surge XT was unable to connect to OSC port " << port;
+    if (!outIP.empty())
+    {
+        msg << " at IP Address " << outIP;
+    }
+
+    msg << ".\n"
+        << "Either it is not a valid port, or it is already used by Surge XT or another "
+           "application.";
+
+    storage->reportError(msg.str(), "OSC Initialization Error");
+};
+
 //==============================================================================
 void SurgefxAudioProcessor::prepareToPlay(double sr, int samplesPerBlock)
 {
@@ -472,6 +522,8 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
     }
 
     xml->setAttribute("fxt", effectNum);
+    xml->setAttribute("oscpin", oscPortIn);
+    xml->setAttribute("oscin", oscStartIn);
 
     copyXmlToBinary(*xml, destData);
 }
@@ -491,6 +543,10 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
 
             effectNum = xmlState->getIntAttribute("fxt", fxt_delay);
             resetFxType(effectNum, false);
+
+            oscPortIn = xmlState->getIntAttribute("oscpin", 0);
+            oscStartIn = xmlState->getBoolAttribute("oscin", false);
+            // TODO: start OSC, if variables merit it
 
             for (int i = 0; i < n_fx_params; ++i)
             {
