@@ -67,6 +67,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-juce
   juce::juce_audio_utils
   juce::juce_audio_processors
+  juce::juce_osc
   )
 
 if(SURGE_BUILD_CLAP)
