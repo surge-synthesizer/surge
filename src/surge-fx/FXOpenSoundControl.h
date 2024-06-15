@@ -28,7 +28,7 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 
-class SurgeFXProcessor;
+class SurgefxAudioProcessor;
 
 namespace SurgeFX
 {
@@ -42,7 +42,7 @@ class FXOpenSoundControl : public juce::OSCReceiver,
     FXOpenSoundControl();
     ~FXOpenSoundControl();
 
-    void initOSC(SurgeFXProcessor *sfxp, const std::unique_ptr<SurgeSynthesizer> &surge);
+    void initOSC(SurgefxAudioProcessor *sfxp, const std::unique_ptr<SurgeSynthesizer> &surge);
     bool initOSCIn(int port);
     void stopListening(bool updateOSCStartInStorage = true);
     void tryOSCStartup();
@@ -65,7 +65,7 @@ class FXOpenSoundControl : public juce::OSCReceiver,
 
   private:
     SurgeSynthesizer *synth{nullptr};
-    SurgeFXProcessor *sfxPtr{nullptr};
+    SurgefxAudioProcessor *sfxPtr{nullptr};
     std::string getWholeString(const juce::OSCMessage &message);
     // juce::OSCSender juceOSCSender;
     // void sendError(std::string errorMsg);

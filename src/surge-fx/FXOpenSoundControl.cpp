@@ -21,6 +21,7 @@
  */
 
 #include "FXOpenSoundControl.h"
+#include "SurgeFXProcessor.h"
 #include "Parameter.h"
 #include "SurgeStorage.h"
 #include <iostream>
@@ -46,7 +47,7 @@ FXOpenSoundControl::~FXOpenSoundControl()
     }
 }
 
-void FXOpenSoundControl::initOSC(SurgeFXProcessor *sfxp,
+void FXOpenSoundControl::initOSC(SurgefxAudioProcessor *sfxp,
                                  const std::unique_ptr<SurgeSynthesizer> &surge)
 {
     // Init. pointers to synth and synth processor
@@ -72,7 +73,7 @@ void FXOpenSoundControl::tryOSCStartup()
             if (!initOSCIn(defaultOSCInPort))
             {
                 // TODO: get this working!!!
-                // sfxPtr->initOSCError(defaultOSCInPort);
+                sfxPtr->initOSCError(defaultOSCInPort);
             }
         }
     }

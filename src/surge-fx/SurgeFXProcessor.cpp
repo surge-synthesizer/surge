@@ -21,6 +21,7 @@
  */
 
 #include "SurgeFXProcessor.h"
+#include "FXOpenSoundControl.h"
 #include "SurgeFXEditor.h"
 #include "DebugHelpers.h"
 #include "UserDefaults.h"
