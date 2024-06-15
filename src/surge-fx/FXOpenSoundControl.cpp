@@ -62,17 +62,15 @@ void FXOpenSoundControl::tryOSCStartup()
         return;
     }
 
-    bool startOSCInNow = synth->storage.getPatch().dawExtraState.oscStartIn;
-
+    bool startOSCInNow = sfxPtr->oscStartIn;
     if (startOSCInNow)
     {
-        int defaultOSCInPort = synth->storage.getPatch().dawExtraState.oscPortIn;
+        int defaultOSCInPort = sfxPtr->oscPortIn;
 
         if (defaultOSCInPort > 0)
         {
             if (!initOSCIn(defaultOSCInPort))
             {
-                // TODO: get this working!!!
                 sfxPtr->initOSCError(defaultOSCInPort);
             }
         }

@@ -56,6 +56,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     void makeMenu();
     void showMenu();
     void toggleLatencyMode();
+    void changeOSCInputPort();
 
     //==============================================================================
     void paint(juce::Graphics &) override;

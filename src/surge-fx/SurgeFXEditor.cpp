@@ -526,7 +526,12 @@ void SurgefxAudioProcessorEditor::showMenu()
     auto sm = juce::PopupMenu();
     sm.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
                [this]() { toggleLatencyMode(); });
-
+    auto oscm = juce::PopupMenu();
+    oscm.addItem(Surge::GUI::toOSCase("OSC input: start listening"), true, false,
+                 [this]() { changeOSCInputPort(); });
+    oscm.addItem(Surge::GUI::toOSCase("Set OSC input port"), true, false,
+                 [this]() { changeOSCInputPort(); });
+    sm.addSubMenu("OSC", oscm);
     p.addSubMenu("Options", sm);
 
     std::vector<int> zoomTos = {{75, 100, 125, 150, 200}};
@@ -580,6 +585,11 @@ void SurgefxAudioProcessorEditor::showMenu()
         juce::PopupMenu::Options::PopupDirection::downwards);
 
     p.showMenuAsync(o);
+}
+
+void SurgefxAudioProcessorEditor::changeOSCInputPort()
+{
+    // TODO: fill this out
 }
 
 void SurgefxAudioProcessorEditor::toggleLatencyMode()

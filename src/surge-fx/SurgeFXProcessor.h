@@ -390,8 +390,6 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     int storage_id_start, storage_id_end;
 
     int effectNum;
-    bool oscStartIn;
-    int oscPortIn;
 
     int fx_param_remap[n_fx_params];
     std::string group_names[n_fx_params];
@@ -403,6 +401,9 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     std::atomic<bool> audioRunning{false};
 
   public:
+    bool oscStartIn;
+    int oscPortIn;
+
     void prepareParametersAbsentAudio();
     void setParameterByString(int i, const std::string &s);
     float getParameterValueForString(int i, const std::string &s);
