@@ -527,6 +527,7 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
     xml->setAttribute("oscin", oscStartIn);
 
     copyXmlToBinary(*xml, destData);
+    storage->reportError("Wow!", "Error Reporting Testing");
 }
 
 void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInBytes)

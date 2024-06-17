@@ -526,11 +526,7 @@ void SurgefxAudioProcessorEditor::showMenu()
     auto sm = juce::PopupMenu();
     sm.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
                [this]() { toggleLatencyMode(); });
-    auto oscm = juce::PopupMenu();
-    oscm.addItem(Surge::GUI::toOSCase("OSC input: start listening"), true, false,
-                 [this]() { changeOSCInputPort(); });
-    oscm.addItem(Surge::GUI::toOSCase("Set OSC input port"), true, false,
-                 [this]() { changeOSCInputPort(); });
+    auto oscm = makeOSCMenu();
     sm.addSubMenu("OSC", oscm);
     p.addSubMenu("Options", sm);
 
@@ -587,6 +583,138 @@ void SurgefxAudioProcessorEditor::showMenu()
     p.showMenuAsync(o);
 }
 
+juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
+{
+    auto oscSubMenu = juce::PopupMenu();
+
+    if (processor.oscReceiving)
+    {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Connections"),
+                           [this]() { processor.oscHandler.stopListening(); });
+    }
+    else
+    {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Connections"), [this]() {
+            if (processor.oscPortIn > 0)
+            {
+                if (!processor.initOSCIn(processor.oscPortIn))
+                {
+                    processor.initOSCError(processor.oscPortIn);
+                }
+            }
+        });
+    }
+
+    oscSubMenu.addSeparator();
+
+    std::string iport =
+        (processor.oscPortIn == 0) ? "not used" : std::to_string(processor.oscPortIn);
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Input Port (current: " + iport + ")..."),
+                       []() {
+                           /* TODO: This is where the replacement for 'promptForMiniEdit' is needed
+                            */
+                           /*
+                           const auto c{std::to_string(processor.oscPortIn)};
+
+                            promptForMiniEdit(
+                                  c, "Enter a new value:", "OSC Input Port Number",
+                                  juce::Point<int>(10, 10),
+                                  [this, storage](const std::string &c) {
+                                      int newPort = storage->oscPortIn;
+
+                                      try
+                                      {
+                                          newPort = std::stoi(c);
+                                      }
+                                      catch (...)
+                                      {
+                                          std::ostringstream msg;
+                                          msg << "Entered value is not a number. Please try again!";
+                                          storage->reportError(msg.str(), "Input Error");
+                                          return;
+                                      }
+
+                                      if (newPort > 65535 || newPort < 0)
+                                      {
+                                          std::ostringstream msg;
+                                          msg << "Port number must be between 0 and 65535!";
+                                          storage->reportError(msg.str(), "Port Number Out Of
+                              Range"); return;
+                                      }
+
+                                      if (newPort == 0)
+                                      {
+                                          processor.oscHandler.stopListening();
+                                          storage->oscPortIn = newPort;
+                                      }
+                                      else if (processor.changeOSCInPort(newPort))
+                                      {
+                                          storage->oscPortIn = newPort;
+                                      }
+                                      else
+                                      {
+                                          processor.initOSCError(newPort);
+                                      }
+                                  },
+                                  mainMenu);
+                          */
+                       });
+
+    // TODO: FIX THIS
+    //        const int defaultOSCInPort = Surge::Storage::getUserDefaultValue(
+    //            storage, Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
+    const int defaultOSCInPort = 53290;
+    int iportnum = processor.oscHandler.iportnum;
+
+    /*
+    if (iportnum != defaultOSCInPort)
+    {
+        oscSubMenu.addSeparator();
+
+        oscSubMenu.addItem(
+            Surge::GUI::toOSCase("Set Current OSC Settings as Default"), [this, storage]() {
+                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::OSCPortIn,
+                                                       storage->oscPortIn);
+                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::OSCPortOut,
+                                                       storage->oscPortOut);
+                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::OSCIPOut,
+                                                       storage->oscOutIP);
+            });
+
+        oscSubMenu.addItem(
+            Surge::GUI::toOSCase("Reset OSC Settings to Default"),
+            [this, storage, defaultOSCInPort, defaultOSCOutPort, defaultOSCOutIP]() {
+                if (defaultOSCInPort > 0)
+                {
+                    if (juceEditor->processor.changeOSCInPort(defaultOSCInPort))
+                    {
+                        storage->oscPortIn = defaultOSCInPort;
+                    }
+                    else
+                    {
+                        juceEditor->processor.initOSCError(defaultOSCInPort);
+                    }
+                }
+
+                if (defaultOSCOutPort > 0)
+                {
+                    if (juceEditor->processor.changeOSCOut(defaultOSCOutPort, defaultOSCOutIP))
+                    {
+                        storage->oscPortOut = defaultOSCOutPort;
+                        storage->oscOutIP = defaultOSCOutIP;
+                    }
+                    else
+                    {
+                        juceEditor->processor.initOSCError(defaultOSCOutPort);
+                    }
+                }
+            });
+        }
+        */
+    return oscSubMenu;
+}
+
 void SurgefxAudioProcessorEditor::changeOSCInputPort()
 {
     // TODO: fill this out
@@ -600,13 +728,18 @@ void SurgefxAudioProcessorEditor::toggleLatencyMode()
     processor.nonLatentBlockMode = !clm;
 
     std::ostringstream oss;
-    oss << "Please restart the DAW transport or reload your DAW project for this setting to take "
+    oss << "Please restart the DAW transport or reload your DAW project for this setting "
+           "to take "
            "effect!\n\n"
-        << (clm ? "The processing latency is now 32 samples, and variable size audio buffers are "
+        << (clm ? "The processing latency is now 32 samples, and variable size audio "
+                  "buffers are "
                   "supported."
-                : "The processing latency is now disabled, so fixed size buffers of at least "
-                  "32 samples are required. Note that some DAWs (particularly FL Studio) use "
-                  "variable size buffers by default, so in this mode you have to adjust the plugin "
+                : "The processing latency is now disabled, so fixed size buffers of at "
+                  "least "
+                  "32 samples are required. Note that some DAWs (particularly FL Studio) "
+                  "use "
+                  "variable size buffers by default, so in this mode you have to adjust "
+                  "the plugin "
                   "processing options in your DAW to send fixed size audio buffers.");
 
     juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,

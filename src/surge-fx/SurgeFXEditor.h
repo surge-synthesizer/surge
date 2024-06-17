@@ -159,6 +159,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     void blastToggleState(int i);
     void resetLabels();
 
+    juce::PopupMenu makeOSCMenu();
+
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
     std::unique_ptr<juce::Label> fxNameLabel;
 
