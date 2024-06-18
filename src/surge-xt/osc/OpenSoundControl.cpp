@@ -1127,6 +1127,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
         }
 
         int index = 0;
+        addr_part = "";
         std::getline(split, addr_part, '/'); // addr_part = index, if any
         if (!addr_part.empty())
         {
