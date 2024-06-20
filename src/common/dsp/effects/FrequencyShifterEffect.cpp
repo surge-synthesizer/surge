@@ -68,6 +68,8 @@ void FrequencyShifterEffect::setvars(bool init)
                       FIRoffset);
     mix.set_target_smoothed(*pd_float[freq_mix]);
 
+    // TODO XT2: This is wrong, we should just get_extended() to get a range extending from 10 Hz to
+    // 1000 Hz, this increases far too much (from 100 Hz to 10 kHz)!
     double shift = *pd_float[freq_shift] * (fxdata->p[freq_shift].extend_range ? 1000.0 : 10.0);
     double omega = shift * M_PI * 2.0 * storage->dsamplerate_inv;
     o1L.set_rate(M_PI * 0.5 - min(0.0, omega));
