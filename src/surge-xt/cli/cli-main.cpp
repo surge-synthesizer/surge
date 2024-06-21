@@ -189,6 +189,10 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
             }
             outputChannelData[0][i] = proc->surge->output[0][pos];
             outputChannelData[1][i] = proc->surge->output[1][pos];
+
+            proc->surge->input[0][pos] = inputChannelData[0][i];
+            proc->surge->input[1][pos] = inputChannelData[1][i];
+
             pos++;
         }
     }
