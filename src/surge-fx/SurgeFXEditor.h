@@ -31,7 +31,9 @@
 //==============================================================================
 /**
  */
-class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::AsyncUpdater
+class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
+                                    juce::AsyncUpdater,
+                                    SurgeStorage::ErrorListener
 {
   public:
     SurgefxAudioProcessorEditor(SurgefxAudioProcessor &);
@@ -92,6 +94,9 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     SurgefxAudioProcessor &processor;
+
+    void onSurgeError(const std::string &msg, const std::string &title,
+                      const SurgeStorage::ErrorType &errorType) override;
 
     static constexpr int baseWidth = 600, baseHeight = 55 * 6 + 80 + topSection;
 

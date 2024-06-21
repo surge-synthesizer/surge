@@ -121,6 +121,7 @@ struct Picker : public juce::Component
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
     : AudioProcessorEditor(&p), processor(p)
 {
+    processor.storage->addErrorListener(this);
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
@@ -267,6 +268,7 @@ SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
     idleTimer->stopTimer();
     setLookAndFeel(nullptr);
     this->processor.setParameterChangeListener([]() {});
+    this->processor.storage->removeErrorListener(this);
 }
 
 void SurgefxAudioProcessorEditor::resetLabels()
@@ -713,6 +715,18 @@ juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
         }
         */
     return oscSubMenu;
+}
+
+void SurgefxAudioProcessorEditor::onSurgeError(const std::string &msg, const std::string &title,
+                                               const SurgeStorage::ErrorType &errorType)
+{
+    /*
+     * We could be cleverer than this but for now lets just do this
+     */
+    juce::MessageManager::callAsync([msg, title]() {
+        juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::AlertIconType::WarningIcon, title,
+                                               msg, "OK");
+    });
 }
 
 void SurgefxAudioProcessorEditor::changeOSCInputPort()
