@@ -1109,7 +1109,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             std::getline(split, addr_part, '/'); // get mod into addr_part
         }
 
-        std::string mod = addr_part;
         int modnum = -1;
         for (int i = 0; i < n_modsources; i++)
         {

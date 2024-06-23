@@ -151,12 +151,10 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
     std::stringstream msg;
-    msg << "OSC in addr string: " << addr << std::endl;
-    storage->reportError(msg.str(), "OSC input");
 
-    if (!addr.empty() || addr.at(0) != '/')
+    if (addr.empty() || addr.at(0) != '/')
     {
-        // sendError("Bad OSC message format.");
+        storage->reportError("Bad OSC message format.", "OSC input error");
         return;
     }
 
@@ -165,23 +163,48 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string throwaway;
     std::getline(split, throwaway, '/');
 
+    // The only message accepted here is "/fx/param/<n>", where n >= 0 and n <= 11
     std::string addr_part = "";
     std::getline(split, addr_part, '/');
 
-    /*
-        if (!synth->audio_processing_active)
+    if (addr_part == "fx")
+    {
+        int index = 0;
+        std::getline(split, addr_part, '/');
+        if (addr_part == "param")
         {
-            // Audio isn't running so the queue wont be drained.
-            // In this case do the (slightly hacky) drain-on-this-thread
-            // approach. There's a small race condition here in that if
-            // processing restarts while we have a message we are doing
-            // here then maybe we go blammo. That's a super-duper edge
-            // case which i'll mention here but not fix. (The fix is probably
-            // to have an atomic book in processBlock and properly atomic
-            // compare and set it and return if two threads are in process).
-            sspPtr->processBlockOSC();
+            std::getline(split, addr_part, '/');
+            try
+            {
+                index = stoi(addr_part);
+                if (index < 0 || index > 11)
+                {
+                    storage->reportError("Bad FX parameter index. Must be 0-11.",
+                                         "OSC input error");
+                    return;
+                }
+            }
+            catch (const std::exception &e)
+            {
+                storage->reportError("Bad format for FX parameter index.", "OSC input error");
+                return;
+            }
+            if (!message[0].isFloat32())
+            {
+                storage->reportError("Expected float value.", "OSC input error");
+                return;
+            }
+
+            float depth = message[0].getFloat32();
+            // Send message to audio thread
+            sfxPtr->oscRingBuf.push(
+                SurgefxAudioProcessor::oscToAudio(SurgefxAudioProcessor::FX_PARAM, depth, index));
         }
-    */
+    }
+    else
+    {
+        storage->reportError("Badly-formed '/fx/param/...' message.", "OSC input error");
+    }
 }
 
 bool FXOpenSoundControl::hasEnding(std::string const &fullString, std::string const &ending)

@@ -62,6 +62,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
 
     void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
+    void processBlockOSC();
 
     //==============================================================================
     juce::AudioProcessorEditor *createEditor() override;
@@ -78,10 +79,14 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     struct oscToAudio
     {
         oscToAudio_type type;
+        int p_index{0};
         float fval{0.0};
 
         oscToAudio() {}
-        explicit oscToAudio(oscToAudio_type omtype, float f) : type(omtype), fval(f) {}
+        explicit oscToAudio(oscToAudio_type omtype, float f, int pidx)
+            : type(omtype), fval(f), p_index(pidx)
+        {
+        }
     };
     sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
 
