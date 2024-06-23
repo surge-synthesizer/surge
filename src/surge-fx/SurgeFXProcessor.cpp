@@ -115,6 +115,8 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
     paramChangeListener = []() {};
     resettingFx = false;
+
+    oscHandler.initOSC(this, storage);
 }
 
 SurgefxAudioProcessor::~SurgefxAudioProcessor() {}
@@ -236,6 +238,11 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     audioRunning = true;
     if (resettingFx || !surge_effect)
         return;
+
+    if (oscCheckStartup)
+    {
+        tryLazyOscStartupFromStreamedState();
+    }
 
     juce::ScopedNoDenormals noDenormals;
 
@@ -547,7 +554,8 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
 
             oscPortIn = xmlState->getIntAttribute("oscpin", 0);
             oscStartIn = xmlState->getBoolAttribute("oscin", false);
-            // TODO: start OSC, if variables merit it
+            // start OSC, if variables merit it
+            oscCheckStartup = true;
 
             for (int i = 0; i < n_fx_params; ++i)
             {

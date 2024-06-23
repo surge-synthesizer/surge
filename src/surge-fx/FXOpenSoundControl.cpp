@@ -48,41 +48,40 @@ FXOpenSoundControl::~FXOpenSoundControl()
 }
 
 void FXOpenSoundControl::initOSC(SurgefxAudioProcessor *sfxp,
-                                 const std::unique_ptr<SurgeSynthesizer> &surge)
+                                 const std::unique_ptr<SurgeStorage> &stor)
 {
     // Init. pointers to synth and synth processor
-    synth = surge.get();
+    storage = stor.get();
     sfxPtr = sfxp;
 }
 
 void FXOpenSoundControl::tryOSCStartup()
 {
-    if (!synth || !sfxPtr)
+    if (!storage || !sfxPtr)
     {
+        storage->reportError("synth or sfxPtr are null", "OSC startup failure");
         return;
     }
 
     bool startOSCInNow = sfxPtr->oscStartIn;
     if (startOSCInNow)
     {
-        int defaultOSCInPort = sfxPtr->oscPortIn;
+        int inPort = sfxPtr->oscPortIn;
 
-        if (defaultOSCInPort > 0)
+        if (inPort > 0)
         {
-            if (!initOSCIn(defaultOSCInPort))
+            if (!initOSCIn(inPort))
             {
-                sfxPtr->initOSCError(defaultOSCInPort);
+                sfxPtr->initOSCError(inPort);
             }
         }
     }
 
     /*
-    bool startOSCOutNow = synth->storage.getPatch().dawExtraState.oscStartOut;
-
     if (startOSCOutNow)
     {
-        int defaultOSCOutPort = synth->storage.getPatch().dawExtraState.oscPortOut;
-        std::string defaultOSCOutIPAddr = synth->storage.getPatch().dawExtraState.oscIPAddrOut;
+        int defaultOSCOutPort = storage->getPatch().dawExtraState.oscPortOut;
+        std::string defaultOSCOutIPAddr = storage->getPatch().dawExtraState.oscIPAddrOut;
 
         if (defaultOSCOutPort > 0)
         {
@@ -107,8 +106,8 @@ bool FXOpenSoundControl::initOSCIn(int port)
         addListener(this);
         listening = true;
         iportnum = port;
-        synth->storage.oscReceiving = true;
-        synth->storage.oscStartIn = true;
+        storage->oscReceiving = true;
+        storage->oscStartIn = true;
         return true;
     }
 
@@ -125,12 +124,12 @@ void FXOpenSoundControl::stopListening(bool updateOSCStartInStorage)
     removeListener(this);
     listening = false;
 
-    if (synth)
+    if (storage)
     {
-        synth->storage.oscReceiving = false;
+        storage->oscReceiving = false;
         if (updateOSCStartInStorage)
         {
-            synth->storage.oscStartIn = false;
+            storage->oscStartIn = false;
         }
     }
 }
@@ -151,7 +150,11 @@ std::string FXOpenSoundControl::getWholeString(const juce::OSCMessage &om)
 void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
-    if (addr.at(0) != '/')
+    std::stringstream msg;
+    msg << "OSC in addr string: " << addr << std::endl;
+    storage->reportError(msg.str(), "OSC input");
+
+    if (!addr.empty() || addr.at(0) != '/')
     {
         // sendError("Bad OSC message format.");
         return;
