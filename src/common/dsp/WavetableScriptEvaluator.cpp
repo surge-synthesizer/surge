@@ -27,8 +27,8 @@ namespace Surge
 {
 namespace WavetableScript
 {
-std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution, int frame,
-                                         int nFrames)
+std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::string &eqn,
+                                         int resolution, int frame, int nFrames)
 {
 #if HAS_LUA
     static lua_State *L = nullptr;
@@ -93,12 +93,24 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
                     lua_pop(L, 1);
                 }
             }
-            lua_pop(L, 1);
         }
+        else
+        {
+            // If pcr is not LUA_OK then lua pushes an error string onto the stack. Show this error
+            std::string luaerr = lua_tostring(L, -1);
+            if (storage)
+                storage->reportError(luaerr, "Wavetable Evaluator Runtime Error");
+            else
+                std::cerr << luaerr;
+        }
+        lua_pop(L, 1); // Error string or pcall result
     }
     else
     {
-        std::cout << emsg << std::endl;
+        if (storage)
+            storage->reportError(emsg, "Wavetable Evaluator Syntax Error");
+        else
+            std::cerr << emsg;
         lua_pop(L, 1);
     }
     return values;
@@ -107,8 +119,8 @@ std::vector<float> evaluateScriptAtFrame(const std::string &eqn, int resolution,
 #endif
 }
 
-bool constructWavetable(const std::string &eqn, int resolution, int frames, wt_header &wh,
-                        float **wavdata)
+bool constructWavetable(SurgeStorage *storage, const std::string &eqn, int resolution, int frames,
+                        wt_header &wh, float **wavdata)
 {
     auto wd = new float[frames * resolution];
     wh.n_samples = resolution;
@@ -118,7 +130,7 @@ bool constructWavetable(const std::string &eqn, int resolution, int frames, wt_h
 
     for (int i = 0; i < frames; ++i)
     {
-        auto v = evaluateScriptAtFrame(eqn, resolution, i, frames);
+        auto v = evaluateScriptAtFrame(storage, eqn, resolution, i, frames);
         memcpy(&(wd[i * resolution]), &(v[0]), resolution * sizeof(float));
     }
     return true;

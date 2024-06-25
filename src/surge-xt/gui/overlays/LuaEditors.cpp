@@ -1119,7 +1119,7 @@ void WavetableEquationEditor::rerenderFromUIState()
         respt *= 2;
 
     renderer->points = Surge::WavetableScript::evaluateScriptAtFrame(
-        mainDocument->getAllContent().toStdString(), respt, cfr, nfr);
+        storage, mainDocument->getAllContent().toStdString(), respt, cfr, nfr);
     renderer->frameNumber = cfr;
     renderer->repaint();
 }
@@ -1142,8 +1142,8 @@ void WavetableEquationEditor::buttonClicked(juce::Button *button)
 
         wt_header wh;
         float *wd = nullptr;
-        Surge::WavetableScript::constructWavetable(mainDocument->getAllContent().toStdString(),
-                                                   respt, nfr, wh, &wd);
+        Surge::WavetableScript::constructWavetable(
+            storage, mainDocument->getAllContent().toStdString(), respt, nfr, wh, &wd);
         storage->waveTableDataMutex.lock();
         osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
         osc->wavetable_display_name = "Scripted Wavetable";
