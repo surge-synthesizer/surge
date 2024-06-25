@@ -754,7 +754,9 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         }
     }
 
-    void processMultiBlockWithInput(const py::array_t<float> &in_arr, const py::array_t<float> &out_arr, int startBlock = 0, int nBlocks = -1)
+    void processMultiBlockWithInput(const py::array_t<float> &in_arr,
+                                    const py::array_t<float> &out_arr, int startBlock = 0,
+                                    int nBlocks = -1)
     {
         auto in_buf = in_arr.request();
         auto out_buf = out_arr.request(true);
@@ -1134,12 +1136,14 @@ PYBIND11_MODULE(surgepy, m)
              "Either populate the\n"
              "entire array, or starting at startBlock position in the output, populate nBlocks.",
              py::arg("val"), py::arg("startBlock") = 0, py::arg("nBlocks") = -1)
-        .def("processMultiBlockWithInput", &SurgeSynthesizerWithPythonExtensions::processMultiBlockWithInput,
+        .def("processMultiBlockWithInput",
+             &SurgeSynthesizerWithPythonExtensions::processMultiBlockWithInput,
              "Run the Surge XT engine for multiple blocks using the input numpy array, "
              "updating the value in the output numpy array. "
              "Either populate the\n"
              "entire array, or starting at startBlock position in the output, populate nBlocks.",
-             py::arg("inVal"), py::arg("outVal"), py::arg("startBlock") = 0, py::arg("nBlocks") = -1)
+             py::arg("inVal"), py::arg("outVal"), py::arg("startBlock") = 0,
+             py::arg("nBlocks") = -1)
 
         .def("getPatch", &SurgeSynthesizerWithPythonExtensions::getPatchAsPy,
              "Get a Python dictionary with the Surge XT parameters laid out in the logical patch "
