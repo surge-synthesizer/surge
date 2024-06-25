@@ -754,6 +754,106 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         }
     }
 
+    void processMultiBlockWithInput(const py::array_t<float> &in_arr, const py::array_t<float> &out_arr, int startBlock = 0, int nBlocks = -1)
+    {
+        auto in_buf = in_arr.request();
+        auto out_buf = out_arr.request(true);
+
+        /*
+         * Error condition checks
+         */
+        if (in_buf.itemsize != sizeof(float))
+        {
+            std::ostringstream oss;
+            oss << "Input numpy array must have dtype float; you provided an array with "
+                << in_buf.format << "/" << in_buf.size;
+            throw std::invalid_argument(oss.str().c_str());
+        }
+
+        if (out_buf.itemsize != sizeof(float))
+        {
+            std::ostringstream oss;
+            oss << "Output numpy array must have dtype float; you provided an array with "
+                << out_buf.format << "/" << out_buf.size;
+            throw std::invalid_argument(oss.str().c_str());
+        }
+
+        if (out_buf.ndim != 2)
+        {
+            std::ostringstream oss;
+            oss << "Output numpy array must have 2 dimensions (2, m*BLOCK_SIZE); you provided an "
+                   "array with "
+                << out_buf.ndim << " dimensions";
+            throw std::invalid_argument(oss.str().c_str());
+        }
+
+        if (out_buf.shape[0] != 2 || out_buf.shape[1] % BLOCK_SIZE != 0)
+        {
+            std::ostringstream oss;
+            oss << "Output numpy array must have dimensions (2, m*BLOCK_SIZE); you provided an "
+                   "array with "
+                << out_buf.shape[0] << "x" << out_buf.shape[1];
+            throw std::invalid_argument(oss.str().c_str());
+        }
+
+        if (in_buf.shape != out_buf.shape)
+        {
+            std::ostringstream oss;
+            oss << "Input numpy array dimensions must match output; you provided an "
+                   "array with "
+                << in_buf.shape[0] << "x" << in_buf.shape[1];
+            throw std::invalid_argument(oss.str().c_str());
+        }
+
+        size_t maxBlockStorage = out_buf.shape[1] / BLOCK_SIZE;
+
+        if (startBlock >= maxBlockStorage)
+        {
+            std::ostringstream oss;
+            oss << "Start block of " << startBlock << " is beyond the end of input storage with "
+                << maxBlockStorage << " blocks";
+            throw std::invalid_argument(oss.str().c_str());
+        }
+
+        int blockIterations = maxBlockStorage - startBlock;
+
+        if (nBlocks > 0)
+        {
+            blockIterations = nBlocks;
+        }
+
+        if (startBlock + blockIterations > maxBlockStorage)
+        {
+            std::ostringstream oss;
+            oss << "Start block / nBlock combo " << startBlock << " " << nBlocks
+                << " is beyond the end of input storage with " << maxBlockStorage << " blocks";
+            throw std::invalid_argument(oss.str().c_str());
+        }
+
+        process_input = true;
+
+        auto in_ptr = static_cast<float *>(in_buf.ptr);
+        float *iL = in_ptr + startBlock * BLOCK_SIZE;
+        float *iR = in_ptr + in_buf.shape[1] + startBlock * BLOCK_SIZE;
+        auto out_ptr = static_cast<float *>(out_buf.ptr);
+        float *oL = out_ptr + startBlock * BLOCK_SIZE;
+        float *oR = out_ptr + out_buf.shape[1] + startBlock * BLOCK_SIZE;
+
+        for (auto i = 0; i < blockIterations; ++i)
+        {
+            memcpy((void *)(input[0]), (void *)iL, BLOCK_SIZE * sizeof(float));
+            memcpy((void *)(input[1]), (void *)iR, BLOCK_SIZE * sizeof(float));
+            process();
+            memcpy((void *)oL, (void *)(output[0]), BLOCK_SIZE * sizeof(float));
+            memcpy((void *)oR, (void *)(output[1]), BLOCK_SIZE * sizeof(float));
+
+            iL += BLOCK_SIZE;
+            iR += BLOCK_SIZE;
+            oL += BLOCK_SIZE;
+            oR += BLOCK_SIZE;
+        }
+    }
+
     py::dict getPatchAsPy()
     {
         auto pc = SurgePyPatchConverter(this);
@@ -1034,6 +1134,12 @@ PYBIND11_MODULE(surgepy, m)
              "Either populate the\n"
              "entire array, or starting at startBlock position in the output, populate nBlocks.",
              py::arg("val"), py::arg("startBlock") = 0, py::arg("nBlocks") = -1)
+        .def("processMultiBlockWithInput", &SurgeSynthesizerWithPythonExtensions::processMultiBlockWithInput,
+             "Run the Surge XT engine for multiple blocks using the input numpy array, "
+             "updating the value in the output numpy array. "
+             "Either populate the\n"
+             "entire array, or starting at startBlock position in the output, populate nBlocks.",
+             py::arg("inVal"), py::arg("outVal"), py::arg("startBlock") = 0, py::arg("nBlocks") = -1)
 
         .def("getPatch", &SurgeSynthesizerWithPythonExtensions::getPatchAsPy,
              "Get a Python dictionary with the Surge XT parameters laid out in the logical patch "
