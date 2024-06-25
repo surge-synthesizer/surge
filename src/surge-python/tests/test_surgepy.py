@@ -26,6 +26,20 @@ def test_render_note():
     s.processMultiBlock(buf)
     assert not np.all(buf == 0.0)
 
+def test_render_note_with_input():
+    """
+    Test rendering a note with an input buffer into an output buffer.
+    """
+    s = surgepy.createSurge(44100)
+    n_blocks = int(2 * s.getSampleRate() / s.getBlockSize())
+    in_buf = s.createMultiBlock(n_blocks)
+    in_buf[0] = np.random.normal(0, 1000, size=in_buf[0].size)
+    in_buf[1] = np.random.normal(0, 1000, size=in_buf[1].size)
+    out_buf = s.createMultiBlock(n_blocks)
+    s.playNote(0, 60, 127, 0)
+    s.processMultiBlockWithInput(in_buf, out_buf)
+    assert not np.all(out_buf == 0.0)
+
 
 def test_default_mpeEnabled():
     """
