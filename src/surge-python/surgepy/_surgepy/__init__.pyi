@@ -191,6 +191,12 @@ class SurgeSynthesizer:
         Run the Surge XT engine for multiple blocks, updating the value in the numpy array. Either populate the
         entire array, or starting at startBlock position in the output, populate nBlocks.
         """
+    def processMultiBlockWithInput(self, inVal: numpy.ndarray[numpy.float32], outVal: numpy.ndarray[numpy.float32], startBlock: int = 0, nBlocks: int = -1) -> None:
+        """
+        Run the Surge XT engine for multiple blocks using the input numpy array,
+        updating the value in the output numpy array. Either populate the
+        entire array, or starting at startBlock position in the output, populate nBlocks.
+        """
     def releaseNote(self, channel: int, midiNote: int, releaseVelocity: int = 0) -> None:
         """
         Release a note on this Surge XT instance.
