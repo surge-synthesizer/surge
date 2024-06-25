@@ -665,6 +665,7 @@ TEST_CASE("Wavetable Script", "[formula]")
 {
     SECTION("Just The Sines")
     {
+        SurgeStorage storage;
         const std::string s = R"FN(
 function generate(config)
     res = config.xs
@@ -676,7 +677,7 @@ end
         )FN";
         for (int fno = 0; fno < 4; ++fno)
         {
-            auto fr = Surge::WavetableScript::evaluateScriptAtFrame(s, 512, fno, 4);
+            auto fr = Surge::WavetableScript::evaluateScriptAtFrame(nullptr, s, 512, fno, 4);
             REQUIRE(fr.size() == 512);
             auto dp = 1.0 / (512 - 1);
             for (int i = 0; i < 512; ++i)
