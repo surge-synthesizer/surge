@@ -610,49 +610,49 @@ juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
     std::string iport =
         (processor.oscPortIn == 0) ? "not used" : std::to_string(processor.oscPortIn);
 
-    oscSubMenu.addItem(
-        Surge::GUI::toOSCase("Change OSC Input Port (current: " + iport + ")..."),
-        [w = juce::Component::SafePointer(this), iport]() {
-            if (!w)
-                return;
-            w->promptForTypeinValue(
-                "Enter a new OSC input port number:", iport, [w](const auto &a) {
-                    int newPort;
-                    try
-                    {
-                        newPort = std::stoi(a);
-                    }
-                    catch (...)
-                    {
-                        std::ostringstream msg;
-                        msg << "Entered value is not a number. Please try again!";
-                        w->processor.storage->reportError(msg.str(), "Input Error");
-                        return;
-                    }
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Input Port (current: " + iport + ")..."),
+                       [w = juce::Component::SafePointer(this), iport]() {
+                           if (!w)
+                               return;
+                           w->promptForTypeinValue(
+                               "Enter a new OSC input port number:", iport, [w](const auto &a) {
+                                   int newPort;
+                                   try
+                                   {
+                                       newPort = std::stoi(a);
+                                   }
+                                   catch (...)
+                                   {
+                                       std::ostringstream msg;
+                                       msg << "Entered value is not a number. Please try again!";
+                                       w->processor.storage->reportError(msg.str(), "Input Error");
+                                       return;
+                                   }
 
-                    if (newPort > 65535 || newPort < 0)
-                    {
-                        std::ostringstream msg;
-                        msg << "Port number must be between 0 and 65535!";
-                        w->processor.storage->reportError(msg.str(), "Port Number Out Of Range");
-                        return;
-                    }
+                                   if (newPort > 65535 || newPort < 0)
+                                   {
+                                       std::ostringstream msg;
+                                       msg << "Port number must be between 0 and 65535!";
+                                       w->processor.storage->reportError(
+                                           msg.str(), "Port Number Out Of Range");
+                                       return;
+                                   }
 
-                    if (newPort == 0)
-                    {
-                        w->processor.oscHandler.stopListening();
-                        w->processor.oscPortIn = newPort;
-                    }
-                    else if (w->processor.changeOSCInPort(newPort))
-                    {
-                        w->processor.oscPortIn = newPort;
-                    }
-                    else
-                    {
-                        w->processor.initOSCError(newPort);
-                    }
-                });
-        });
+                                   if (newPort == 0)
+                                   {
+                                       w->processor.oscHandler.stopListening();
+                                       w->processor.oscPortIn = newPort;
+                                   }
+                                   else if (w->processor.changeOSCInPort(newPort))
+                                   {
+                                       w->processor.oscPortIn = newPort;
+                                   }
+                                   else
+                                   {
+                                       w->processor.initOSCError(newPort);
+                                   }
+                               });
+                       });
 
     oscSubMenu.addItem(
         Surge::GUI::toOSCase("FX OSC Message Format"), [w = juce::Component::SafePointer(this)]() {
