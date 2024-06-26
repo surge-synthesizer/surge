@@ -96,7 +96,7 @@ void FXOpenSoundControl::tryOSCStartup()
 
 bool FXOpenSoundControl::initOSCIn(int port)
 {
-    if (port < 1 || port == oportnum)
+    if (port < 1)
     {
         return false;
     }
@@ -106,8 +106,9 @@ bool FXOpenSoundControl::initOSCIn(int port)
         addListener(this);
         listening = true;
         iportnum = port;
-        storage->oscReceiving = true;
-        storage->oscStartIn = true;
+        sfxPtr->oscReceiving = true;
+        sfxPtr->oscStartIn = true;
+        sfxPtr->oscPortIn = port;
         return true;
     }
 
@@ -126,10 +127,10 @@ void FXOpenSoundControl::stopListening(bool updateOSCStartInStorage)
 
     if (storage)
     {
-        storage->oscReceiving = false;
+        sfxPtr->oscReceiving = false;
         if (updateOSCStartInStorage)
         {
-            storage->oscStartIn = false;
+            sfxPtr->oscStartIn = false;
         }
     }
 }
@@ -195,10 +196,10 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 return;
             }
 
-            float depth = message[0].getFloat32();
+            float newval = message[0].getFloat32();
             // Send message to audio thread
             sfxPtr->oscRingBuf.push(
-                SurgefxAudioProcessor::oscToAudio(SurgefxAudioProcessor::FX_PARAM, depth, index));
+                SurgefxAudioProcessor::oscToAudio(SurgefxAudioProcessor::FX_PARAM, newval, index));
         }
     }
     else

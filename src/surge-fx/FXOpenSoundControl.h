@@ -48,8 +48,6 @@ class FXOpenSoundControl : public juce::OSCReceiver,
     void tryOSCStartup();
 
     int iportnum = DEFAULT_OSC_PORT_IN;
-    int oportnum = DEFAULT_OSC_PORT_OUT;
-    std::string outIPAddr = DEFAULT_OSC_IPADDR_OUT;
     bool listening = false;
     bool sendingOSC = false;
 

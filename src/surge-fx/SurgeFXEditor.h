@@ -95,6 +95,11 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     // access the processor object that created it.
     SurgefxAudioProcessor &processor;
 
+    void promptForTypeinValue(const std::string &prompt, const std::string &initValue,
+                              std::function<void(const std::string &)> cb);
+    struct PromptOverlay;
+    std::unique_ptr<PromptOverlay> promptOverlay;
+
     void onSurgeError(const std::string &msg, const std::string &title,
                       const SurgeStorage::ErrorType &errorType) override;
 
