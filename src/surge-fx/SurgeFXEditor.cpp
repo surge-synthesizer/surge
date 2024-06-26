@@ -617,95 +617,45 @@ juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
         [w = juce::Component::SafePointer(this), iport]() {
             if (!w)
                 return;
-            w->promptForTypeinValue("Enter a new port number", iport, [w](const auto &a) {
-                int newPort;
-                try
-                {
-                    newPort = std::stoi(a);
-                }
-                catch (...)
-                {
-                    std::ostringstream msg;
-                    msg << "Entered value is not a number. Please try again!";
-                    w->processor.storage->reportError(msg.str(), "Input Error");
-                    return;
-                }
+            w->promptForTypeinValue(
+                "Enter a new OSC input port number:", iport, [w](const auto &a) {
+                    int newPort;
+                    try
+                    {
+                        newPort = std::stoi(a);
+                    }
+                    catch (...)
+                    {
+                        std::ostringstream msg;
+                        msg << "Entered value is not a number. Please try again!";
+                        w->processor.storage->reportError(msg.str(), "Input Error");
+                        return;
+                    }
 
-                if (newPort > 65535 || newPort < 0)
-                {
-                    std::ostringstream msg;
-                    msg << "Port number must be between 0 and 65535!";
-                    w->processor.storage->reportError(msg.str(), "Port Number Out Of Range");
-                    return;
-                }
+                    if (newPort > 65535 || newPort < 0)
+                    {
+                        std::ostringstream msg;
+                        msg << "Port number must be between 0 and 65535!";
+                        w->processor.storage->reportError(msg.str(), "Port Number Out Of Range");
+                        return;
+                    }
 
-                if (newPort == 0)
-                {
-                    w->processor.oscHandler.stopListening();
-                    w->processor.oscPortIn = newPort;
-                }
-                else if (w->processor.changeOSCInPort(newPort))
-                {
-                    w->processor.oscPortIn = newPort;
-                }
-                else
-                {
-                    w->processor.initOSCError(newPort);
-                }
-            });
+                    if (newPort == 0)
+                    {
+                        w->processor.oscHandler.stopListening();
+                        w->processor.oscPortIn = newPort;
+                    }
+                    else if (w->processor.changeOSCInPort(newPort))
+                    {
+                        w->processor.oscPortIn = newPort;
+                    }
+                    else
+                    {
+                        w->processor.initOSCError(newPort);
+                    }
+                });
         });
 
-    // TODO: FIX THIS
-    //        const int defaultOSCInPort = Surge::Storage::getUserDefaultValue(
-    //            storage, Surge::Storage::OSCPortIn, DEFAULT_OSC_PORT_IN);
-    // const int defaultOSCInPort = 53290;
-    // int iportnum = processor.oscHandler.iportnum;
-
-    /*
-    if (iportnum != defaultOSCInPort)
-    {
-        oscSubMenu.addSeparator();
-
-        oscSubMenu.addItem(
-            Surge::GUI::toOSCase("Set Current OSC Settings as Default"), [this, storage]() {
-                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::OSCPortIn,
-                                                       storage->oscPortIn);
-                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::OSCPortOut,
-                                                       storage->oscPortOut);
-                Surge::Storage::updateUserDefaultValue(storage, Surge::Storage::OSCIPOut,
-                                                       storage->oscOutIP);
-            });
-
-        oscSubMenu.addItem(
-            Surge::GUI::toOSCase("Reset OSC Settings to Default"),
-            [this, storage, defaultOSCInPort, defaultOSCOutPort, defaultOSCOutIP]() {
-                if (defaultOSCInPort > 0)
-                {
-                    if (juceEditor->processor.changeOSCInPort(defaultOSCInPort))
-                    {
-                        storage->oscPortIn = defaultOSCInPort;
-                    }
-                    else
-                    {
-                        juceEditor->processor.initOSCError(defaultOSCInPort);
-                    }
-                }
-
-                if (defaultOSCOutPort > 0)
-                {
-                    if (juceEditor->processor.changeOSCOut(defaultOSCOutPort, defaultOSCOutIP))
-                    {
-                        storage->oscPortOut = defaultOSCOutPort;
-                        storage->oscOutIP = defaultOSCOutIP;
-                    }
-                    else
-                    {
-                        juceEditor->processor.initOSCError(defaultOSCOutPort);
-                    }
-                }
-            });
-        }
-        */
     return oscSubMenu;
 }
 

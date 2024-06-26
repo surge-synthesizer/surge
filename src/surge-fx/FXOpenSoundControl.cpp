@@ -76,20 +76,6 @@ void FXOpenSoundControl::tryOSCStartup()
             }
         }
     }
-
-    /*
-    if (startOSCOutNow)
-    {
-        int defaultOSCOutPort = storage->getPatch().dawExtraState.oscPortOut;
-        std::string defaultOSCOutIPAddr = storage->getPatch().dawExtraState.oscIPAddrOut;
-
-        if (defaultOSCOutPort > 0)
-        {
-            if (!initOSCOut(defaultOSCOutPort, defaultOSCOutIPAddr))
-                sfxPtr->initOSCError(defaultOSCOutPort, defaultOSCOutIPAddr);
-        }
-    }
-    */
 }
 
 /* ----- OSC Receiver  ----- */
