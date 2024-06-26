@@ -222,4 +222,4 @@ void FXOpenSoundControl::oscBundleReceived(const juce::OSCBundle &bundle)
 }
 
 } // namespace FxOSC
-} // namespace Surge
+} // namespace SurgeFX
