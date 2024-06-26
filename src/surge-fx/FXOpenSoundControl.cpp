@@ -164,7 +164,7 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
     std::string throwaway;
     std::getline(split, throwaway, '/');
 
-    // The only message accepted here is "/fx/param/<n>", where n >= 0 and n <= 11
+    // The only message accepted here is "/fx/param/<n>", where n >= 1 and n <= 12
     std::string addr_part = "";
     std::getline(split, addr_part, '/');
 
@@ -178,9 +178,9 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             try
             {
                 index = stoi(addr_part);
-                if (index < 0 || index > 11)
+                if (index < 1 || index > 12)
                 {
-                    storage->reportError("Bad FX parameter index. Must be 0-11.",
+                    storage->reportError("Bad FX parameter index. Must be 1-12.",
                                          "OSC input error");
                     return;
                 }
@@ -198,8 +198,8 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
             float newval = message[0].getFloat32();
             // Send message to audio thread
-            sfxPtr->oscRingBuf.push(
-                SurgefxAudioProcessor::oscToAudio(SurgefxAudioProcessor::FX_PARAM, newval, index));
+            sfxPtr->oscRingBuf.push(SurgefxAudioProcessor::oscToAudio(
+                SurgefxAudioProcessor::FX_PARAM, newval, index - 1));
         }
     }
     else
