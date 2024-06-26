@@ -607,8 +607,6 @@ juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
         });
     }
 
-    oscSubMenu.addSeparator();
-
     std::string iport =
         (processor.oscPortIn == 0) ? "not used" : std::to_string(processor.oscPortIn);
 
@@ -654,6 +652,16 @@ juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
                         w->processor.initOSCError(newPort);
                     }
                 });
+        });
+
+    oscSubMenu.addItem(
+        Surge::GUI::toOSCase("FX OSC Message Format"), [w = juce::Component::SafePointer(this)]() {
+            if (!w)
+                return;
+
+            std::string form_str =
+                "'/fx/param/<n> <val>'; replace <n> with 1 - 12 and <val> with 0.0 - 1.0 ";
+            w->processor.storage->reportError(form_str, "OSC Message Format:");
         });
 
     return oscSubMenu;

@@ -119,7 +119,7 @@
 <body style="margin: 0pt; background: #CDCED4;">
      <div style="border-bottom: 1px solid #123463; background: #ff9000; padding: 2pt;">
           <div style="font-size: 20pt; font-family: Lato; padding: 2pt; color:#123463;">
-               Surge XT 1.3 OSC Specification
+               Surge XT (and FX) 1.3 OSC Specification
           </div>
      </div>
 
@@ -128,14 +128,6 @@
                <div class="frame">
                     <div style="margin:10pt; padding: 5pt 12pt; background: #fafbff;">
                          <div style="font-size: 12pt; font-family: Lato;">
-                              <p>
-                                   Surge XT supports external OSC control of most parameters, including patch and tuning
-                                   changes. Where appropriate and feasible,
-                                   Surge parameter and other changes are reported to OSC out, either when they occur or
-                                   when queried
-                                   (see below). Notes may also be triggered via OSC, either by frequency or
-                                   by MIDI note number.
-                              </p>
                               <p>
                                    OSC messages are constructed using the exact (case sensitive)
                                    entry listed in the <b>Address</b> column in the tables below.</br>
@@ -164,10 +156,20 @@
                                    <b>*Important Note: All numeric values must be sent over OSC as floating point
                                         numbers</b>
                                    (even if they are listed as integer or boolean type --
-                                   the 'Appropriate Values' column describes how the data is used by Surge XT,
+                                   the 'Appropriate Values' column describes how the data is used by Surge,
                                    not how messages are to be formatted for OSC).
                               </p>
-                              <p style="margin-top: 28px;">
+                              <a name="surgext"></a><span style="font-size: 32px; border: 0 none;">Surge XT</span>
+                              <span style="border: 0 none;">(for Surge FX see <a href="#surgefx">here</a>)</span>
+                              <p>
+                                   Surge XT supports external OSC control of most parameters, including patch and tuning
+                                   changes. Where appropriate and feasible,
+                                   Surge parameter and other changes are reported to OSC out, either when they occur or
+                                   when queried
+                                   (see below). Notes may also be triggered via OSC, either by frequency or
+                                   by MIDI note number.
+                              </p>
+                         <p style="margin-top: 28px;">
                                    <b>OSC Output</b>: Parameter, patch, tuning and modulation mapping changes
                                    made on Surge XT are reported to OSC out, if OSC output is enabled.
                                    Parameters are reported in the ranges given under "Appropriate Values"
@@ -1839,15 +1841,39 @@
                                    convention described above,
                                    using a value of 0 to set muting <b>off</b>, or 1 to set muting <b>on</b>.
                               </h3>
-
                          </div>
                     </div>
                     <div style="width: 98%; margin: 0 0 32px 10px; line-height: 1.75">
                          <span><code>/mod/mute/a/feg /param/a/filter/1/cutoff 0</code></span>
                          <span><code>/mod/mute/a/feg /param/a/filter/1/cutoff 1</code></span>
                     </div>
-               </div>
+                    <div style="width: 98%; margin: 10px 0 18px 10px; line-height: 1.75">
+                         <a name="surgefx"></a><span style="font-size: 32px; border: 0 none;">Surge FX</span>
+                         <span style="border: 0 none;">(for Surge XT see <a href="#surgext">here</a>)</span>
+                         <p>
+                              Surge FX supports external OSC control of the twelve standard FX parameters.
+                         </p>
+                    </div>
+                    <div class="tablewrap fl cl">
+                         <div class="heading">
+                              <h2>Surge FX parameters 1-12</h2>
+                              <h3>Replace '&ltindex&gt' with '1' through '12'</h3>
+                         </div>
+                         <table style="border: 2px solid black;">
+                              <tr>
+                                   <th>Address</th>
+                                   <th>Description</th>
+                                   <th>Appropriate Values</th>
+                              </tr>
+                              <tr>
+                                   <td>/fx/param/&ltindex&gt</td>
+                                   <td>Change FX parameter &ltindex&gt</td>
+                                   <td>float (0.0 to 1.0)</td>
+                              </tr>
+                         </table>
+                    </div>
+                    </div>
+          </div>
           </div>
 </body>
-
 </html>
