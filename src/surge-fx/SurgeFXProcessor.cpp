@@ -21,6 +21,7 @@
  */
 
 #include "SurgeFXProcessor.h"
+#include "FXOpenSoundControl.h"
 #include "SurgeFXEditor.h"
 #include "DebugHelpers.h"
 #include "UserDefaults.h"
@@ -114,6 +115,8 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
 
     paramChangeListener = []() {};
     resettingFx = false;
+
+    oscHandler.initOSC(this, storage);
 }
 
 SurgefxAudioProcessor::~SurgefxAudioProcessor() {}
@@ -142,6 +145,56 @@ void SurgefxAudioProcessor::setCurrentProgram(int index) {}
 const juce::String SurgefxAudioProcessor::getProgramName(int index) { return "Default"; }
 
 void SurgefxAudioProcessor::changeProgramName(int index, const juce::String &newName) {}
+
+void SurgefxAudioProcessor::tryLazyOscStartupFromStreamedState()
+{
+    if ((!oscHandler.listening && oscStartIn && oscPortIn > 0))
+    {
+        oscHandler.tryOSCStartup();
+    }
+    oscCheckStartup = false;
+}
+
+//==============================================================================
+/* OSC (Open Sound Control) */
+bool SurgefxAudioProcessor::initOSCIn(int port)
+{
+    if (port <= 0)
+    {
+        return false;
+    }
+
+    auto state = oscHandler.initOSCIn(port);
+
+    oscReceiving = state;
+    oscStartIn = true;
+
+    return state;
+}
+
+bool SurgefxAudioProcessor::changeOSCInPort(int new_port)
+{
+    oscReceiving = false;
+    oscHandler.stopListening();
+    return initOSCIn(new_port);
+}
+
+void SurgefxAudioProcessor::initOSCError(int port, std::string outIP)
+{
+    std::ostringstream msg;
+
+    msg << "Surge XT was unable to connect to OSC port " << port;
+    if (!outIP.empty())
+    {
+        msg << " at IP Address " << outIP;
+    }
+
+    msg << ".\n"
+        << "Either it is not a valid port, or it is already used by Surge XT or another "
+           "application.";
+
+    storage->reportError(msg.str(), "OSC Initialization Error");
+};
 
 //==============================================================================
 void SurgefxAudioProcessor::prepareToPlay(double sr, int samplesPerBlock)
@@ -185,6 +238,11 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     audioRunning = true;
     if (resettingFx || !surge_effect)
         return;
+
+    if (oscCheckStartup)
+    {
+        tryLazyOscStartupFromStreamedState();
+    }
 
     juce::ScopedNoDenormals noDenormals;
 
@@ -411,6 +469,29 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
             outR[i] = std::clamp(outR[i], -2.f, 2.f);
         }
     }
+
+    if (oscReceiving)
+        processBlockOSC();
+}
+
+// Pull incoming OSC events from ring buffer
+void SurgefxAudioProcessor::processBlockOSC()
+{
+    while (true)
+    {
+        auto om = oscRingBuf.pop();
+        if (!om.has_value())
+            break;
+        switch (om->type)
+        {
+        case SurgefxAudioProcessor::FX_PARAM:
+        {
+            fxstorage->p[fx_param_remap[om->p_index]].set_value_f01(om->fval);
+            resetFxParams(true);
+        }
+        break;
+        }
+    }
 }
 
 //==============================================================================
@@ -472,6 +553,8 @@ void SurgefxAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
     }
 
     xml->setAttribute("fxt", effectNum);
+    xml->setAttribute("oscpin", oscPortIn);
+    xml->setAttribute("oscin", oscStartIn);
 
     copyXmlToBinary(*xml, destData);
 }
@@ -491,6 +574,11 @@ void SurgefxAudioProcessor::setStateInformation(const void *data, int sizeInByte
 
             effectNum = xmlState->getIntAttribute("fxt", fxt_delay);
             resetFxType(effectNum, false);
+
+            oscPortIn = xmlState->getIntAttribute("oscpin", 0);
+            oscStartIn = xmlState->getBoolAttribute("oscin", false);
+            // start OSC, if variables merit it
+            oscCheckStartup = true;
 
             for (int i = 0; i < n_fx_params; ++i)
             {

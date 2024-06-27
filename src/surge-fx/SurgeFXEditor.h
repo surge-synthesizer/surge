@@ -31,7 +31,9 @@
 //==============================================================================
 /**
  */
-class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::AsyncUpdater
+class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
+                                    juce::AsyncUpdater,
+                                    SurgeStorage::ErrorListener
 {
   public:
     SurgefxAudioProcessorEditor(SurgefxAudioProcessor &);
@@ -56,6 +58,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     void makeMenu();
     void showMenu();
     void toggleLatencyMode();
+    void changeOSCInputPort();
 
     //==============================================================================
     void paint(juce::Graphics &) override;
@@ -91,6 +94,14 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     SurgefxAudioProcessor &processor;
+
+    void promptForTypeinValue(const std::string &prompt, const std::string &initValue,
+                              std::function<void(const std::string &)> cb);
+    struct PromptOverlay;
+    std::unique_ptr<PromptOverlay> promptOverlay;
+
+    void onSurgeError(const std::string &msg, const std::string &title,
+                      const SurgeStorage::ErrorType &errorType) override;
 
     static constexpr int baseWidth = 600, baseHeight = 55 * 6 + 80 + topSection;
 
@@ -157,6 +168,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor, juce::Asy
 
     void blastToggleState(int i);
     void resetLabels();
+
+    juce::PopupMenu makeOSCMenu();
 
     std::unique_ptr<SurgeLookAndFeel> surgeLookFeel;
     std::unique_ptr<juce::Label> fxNameLabel;

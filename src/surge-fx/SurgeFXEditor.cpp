@@ -121,6 +121,7 @@ struct Picker : public juce::Component
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
     : AudioProcessorEditor(&p), processor(p)
 {
+    processor.storage->addErrorListener(this);
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
@@ -267,6 +268,7 @@ SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
     idleTimer->stopTimer();
     setLookAndFeel(nullptr);
     this->processor.setParameterChangeListener([]() {});
+    this->processor.storage->removeErrorListener(this);
 }
 
 void SurgefxAudioProcessorEditor::resetLabels()
@@ -526,7 +528,8 @@ void SurgefxAudioProcessorEditor::showMenu()
     auto sm = juce::PopupMenu();
     sm.addItem(Surge::GUI::toOSCase("Zero Latency Mode"), true, processor.nonLatentBlockMode,
                [this]() { toggleLatencyMode(); });
-
+    auto oscm = makeOSCMenu();
+    sm.addSubMenu("OSC", oscm);
     p.addSubMenu("Options", sm);
 
     std::vector<int> zoomTos = {{75, 100, 125, 150, 200}};
@@ -582,6 +585,188 @@ void SurgefxAudioProcessorEditor::showMenu()
     p.showMenuAsync(o);
 }
 
+juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
+{
+    auto oscSubMenu = juce::PopupMenu();
+
+    if (processor.oscReceiving)
+    {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Connections"),
+                           [this]() { processor.oscHandler.stopListening(); });
+    }
+    else
+    {
+        oscSubMenu.addItem(Surge::GUI::toOSCase("Start OSC Connections"), [this]() {
+            if (processor.oscPortIn > 0)
+            {
+                if (!processor.initOSCIn(processor.oscPortIn))
+                {
+                    processor.initOSCError(processor.oscPortIn);
+                }
+            }
+        });
+    }
+
+    std::string iport =
+        (processor.oscPortIn == 0) ? "not used" : std::to_string(processor.oscPortIn);
+
+    oscSubMenu.addItem(Surge::GUI::toOSCase("Change OSC Input Port (current: " + iport + ")..."),
+                       [w = juce::Component::SafePointer(this), iport]() {
+                           if (!w)
+                               return;
+                           w->promptForTypeinValue(
+                               "Enter a new OSC input port number:", iport, [w](const auto &a) {
+                                   int newPort;
+                                   try
+                                   {
+                                       newPort = std::stoi(a);
+                                   }
+                                   catch (...)
+                                   {
+                                       std::ostringstream msg;
+                                       msg << "Entered value is not a number. Please try again!";
+                                       w->processor.storage->reportError(msg.str(), "Input Error");
+                                       return;
+                                   }
+
+                                   if (newPort > 65535 || newPort < 0)
+                                   {
+                                       std::ostringstream msg;
+                                       msg << "Port number must be between 0 and 65535!";
+                                       w->processor.storage->reportError(
+                                           msg.str(), "Port Number Out Of Range");
+                                       return;
+                                   }
+
+                                   if (newPort == 0)
+                                   {
+                                       w->processor.oscHandler.stopListening();
+                                       w->processor.oscPortIn = newPort;
+                                   }
+                                   else if (w->processor.changeOSCInPort(newPort))
+                                   {
+                                       w->processor.oscPortIn = newPort;
+                                   }
+                                   else
+                                   {
+                                       w->processor.initOSCError(newPort);
+                                   }
+                               });
+                       });
+
+    oscSubMenu.addItem(
+        Surge::GUI::toOSCase("FX OSC Message Format"), [w = juce::Component::SafePointer(this)]() {
+            if (!w)
+                return;
+
+            std::string form_str =
+                "'/fx/param/<n> <val>'; replace <n> with 1 - 12 and <val> with 0.0 - 1.0 ";
+            w->processor.storage->reportError(form_str, "OSC Message Format:");
+        });
+
+    return oscSubMenu;
+}
+
+struct SurgefxAudioProcessorEditor::PromptOverlay : juce::Component, juce::TextEditor::Listener
+{
+    std::string prompt;
+    std::unique_ptr<juce::TextEditor> ed;
+    std::function<void(const std::string &)> cb{nullptr};
+
+    PromptOverlay()
+    {
+        ed = std::make_unique<juce::TextEditor>();
+        ed->setFont(juce::Font(28));
+        ed->setColour(juce::TextEditor::ColourIds::textColourId, juce::Colours::white);
+        ed->setJustification(juce::Justification::centred);
+        ed->addListener(this);
+        ed->setWantsKeyboardFocus(true);
+        addAndMakeVisible(*ed);
+    }
+
+    void setInitVal(const std::string &s)
+    {
+        ed->clear();
+        ed->setText(s, juce::NotificationType::dontSendNotification);
+        ed->applyFontToAllText(juce::Font(28));
+        ed->applyColourToAllText(juce::Colours::white);
+        ed->repaint();
+    }
+
+    void resized() override
+    {
+        auto teh = 35;
+        auto h = (getHeight() - teh) * 0.5;
+        ed->setBounds(10, h, getWidth() - 20, teh);
+    }
+
+    void paint(juce::Graphics &g) override
+    {
+        g.fillAll(juce::Colours::black.withAlpha(0.9f));
+        g.setColour(juce::Colours::white);
+        g.setFont(28);
+        g.drawMultiLineText(prompt, 0, 50, getWidth(), juce::Justification::centred);
+    }
+
+    void textEditorReturnKeyPressed(juce::TextEditor &editor) override
+    {
+        if (cb)
+            cb(ed->getText().toStdString());
+        dismiss();
+    }
+
+    void textEditorEscapeKeyPressed(juce::TextEditor &editor) override { dismiss(); }
+
+    void visibilityChanged() override
+    {
+        if (isVisible())
+            ed->setWantsKeyboardFocus(true);
+    }
+
+    void dismiss()
+    {
+        cb = nullptr;
+        setVisible(false);
+    }
+};
+
+void SurgefxAudioProcessorEditor::promptForTypeinValue(const std::string &prompt,
+                                                       const std::string &initValue,
+                                                       std::function<void(const std::string &)> cb)
+{
+    if (promptOverlay && promptOverlay->isVisible())
+        return;
+
+    if (!promptOverlay)
+        promptOverlay = std::make_unique<PromptOverlay>();
+
+    promptOverlay->prompt = prompt;
+    promptOverlay->cb = cb;
+    promptOverlay->setInitVal(initValue);
+
+    promptOverlay->setBounds(getLocalBounds());
+    addAndMakeVisible(*promptOverlay);
+
+    std::cout << "Showing " << prompt << std::endl;
+}
+
+void SurgefxAudioProcessorEditor::onSurgeError(const std::string &msg, const std::string &title,
+                                               const SurgeStorage::ErrorType &errorType)
+{
+    /*
+     * We could be cleverer than this but for now lets just do this
+     */
+    juce::MessageManager::callAsync([msg, title]() {
+        juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::AlertIconType::WarningIcon, title,
+                                               msg, "OK");
+    });
+}
+
+void SurgefxAudioProcessorEditor::changeOSCInputPort()
+{
+    // TODO: fill this out
+}
+
 void SurgefxAudioProcessorEditor::toggleLatencyMode()
 {
     auto clm = processor.nonLatentBlockMode;
@@ -590,13 +775,18 @@ void SurgefxAudioProcessorEditor::toggleLatencyMode()
     processor.nonLatentBlockMode = !clm;
 
     std::ostringstream oss;
-    oss << "Please restart the DAW transport or reload your DAW project for this setting to take "
+    oss << "Please restart the DAW transport or reload your DAW project for this setting "
+           "to take "
            "effect!\n\n"
-        << (clm ? "The processing latency is now 32 samples, and variable size audio buffers are "
+        << (clm ? "The processing latency is now 32 samples, and variable size audio "
+                  "buffers are "
                   "supported."
-                : "The processing latency is now disabled, so fixed size buffers of at least "
-                  "32 samples are required. Note that some DAWs (particularly FL Studio) use "
-                  "variable size buffers by default, so in this mode you have to adjust the plugin "
+                : "The processing latency is now disabled, so fixed size buffers of at "
+                  "least "
+                  "32 samples are required. Note that some DAWs (particularly FL Studio) "
+                  "use "
+                  "variable size buffers by default, so in this mode you have to adjust "
+                  "the plugin "
                   "processing options in your DAW to send fixed size audio buffers.");
 
     juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,

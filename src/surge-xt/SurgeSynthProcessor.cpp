@@ -807,91 +807,93 @@ void SurgeSynthProcessor::processBlockMidiFromGUI()
 
 void SurgeSynthProcessor::processBlockOSC()
 {
-    auto messages = oscRingBuf.popall();
-    for (const auto &om : messages)
+    while (true)
     {
-        switch (om.type)
+        auto om = oscRingBuf.pop();
+        if (!om.has_value())
+            break; // no data waiting; return
+        switch (om->type)
         {
         case SurgeSynthProcessor::MNOTE:
         {
-            if (om.on)
-                surge->playNote(0, om.char0, om.char1, 0, om.noteid);
+            if (om->on)
+                surge->playNote(0, om->char0, om->char1, 0, om->noteid);
             else
-                surge->releaseNoteByHostNoteID(om.noteid, om.char1);
+                surge->releaseNoteByHostNoteID(om->noteid, om->char1);
         }
         break;
 
         case SurgeSynthProcessor::FREQNOTE:
         {
-            if (om.on)
-                surge->playNoteByFrequency(om.fval, om.char1, om.noteid);
+            if (om->on)
+                surge->playNoteByFrequency(om->fval, om->char1, om->noteid);
             else
             {
-                surge->releaseNoteByHostNoteID(om.noteid, om.char1);
+                surge->releaseNoteByHostNoteID(om->noteid, om->char1);
             }
         }
         break;
 
         case SurgeSynthProcessor::NOTEX_PITCH:
-            surge->setNoteExpression(SurgeVoice::PITCH, om.noteid, -1, -1, om.fval);
+            surge->setNoteExpression(SurgeVoice::PITCH, om->noteid, -1, -1, om->fval);
             break;
 
         case SurgeSynthProcessor::NOTEX_VOL:
-            surge->setNoteExpression(SurgeVoice::VOLUME, om.noteid, -1, -1, om.fval);
+            surge->setNoteExpression(SurgeVoice::VOLUME, om->noteid, -1, -1, om->fval);
             break;
 
         case SurgeSynthProcessor::NOTEX_PAN:
-            surge->setNoteExpression(SurgeVoice::PAN, om.noteid, -1, -1, om.fval);
+            surge->setNoteExpression(SurgeVoice::PAN, om->noteid, -1, -1, om->fval);
             break;
 
         case SurgeSynthProcessor::NOTEX_PRES:
-            surge->setNoteExpression(SurgeVoice::PRESSURE, om.noteid, -1, -1, om.fval);
+            surge->setNoteExpression(SurgeVoice::PRESSURE, om->noteid, -1, -1, om->fval);
             break;
 
         case SurgeSynthProcessor::NOTEX_TIMB:
-            surge->setNoteExpression(SurgeVoice::TIMBRE, om.noteid, -1, -1, om.fval);
+            surge->setNoteExpression(SurgeVoice::TIMBRE, om->noteid, -1, -1, om->fval);
             break;
 
         case SurgeSynthProcessor::PITCHBEND:
-            surge->pitchBend(om.char0, om.ival);
+            surge->pitchBend(om->char0, om->ival);
             break;
 
         case SurgeSynthProcessor::CC:
-            surge->channelController(om.char0, om.char1, om.ival);
+            surge->channelController(om->char0, om->char1, om->ival);
             break;
 
         case SurgeSynthProcessor::CHAN_ATOUCH:
-            surge->channelAftertouch(om.char0, om.ival);
+            surge->channelAftertouch(om->char0, om->ival);
             break;
 
         case SurgeSynthProcessor::POLY_ATOUCH:
-            surge->polyAftertouch(om.char0, (int)om.char1, om.ival);
+            surge->polyAftertouch(om->char0, (int)om->char1, om->ival);
             break;
 
         case SurgeSynthProcessor::PARAMETER:
         {
-            float pval = om.fval;
-            if (om.param->valtype == vt_int)
-                pval =
-                    Parameter::intScaledToFloat(om.fval, om.param->val_max.i, om.param->val_min.i);
+            float pval = om->fval;
+            if (om->param->valtype == vt_int)
+                pval = Parameter::intScaledToFloat(om->fval, om->param->val_max.i,
+                                                   om->param->val_min.i);
 
-            surge->setParameter01(surge->idForParameter(om.param), pval, true);
+            surge->setParameter01(surge->idForParameter(om->param), pval, true);
             surge->storage.getPatch().isDirty = true;
 
             // Special cases: A few control types require a rebuild and
             // SGE Value Callbacks would do it as would the VST3 param handler
             // so put them here for now. Bit of a hack...
-            auto ct = om.param->ctrltype;
+            auto ct = om->param->ctrltype;
             if (ct == ct_bool_solo || ct == ct_bool_mute || ct == ct_scenesel)
                 surge->refresh_editor = true;
             else
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
         }
         break;
 
         case SurgeSynthProcessor::MACRO:
         {
-            surge->setMacroParameter01(om.ival, om.fval);
+            surge->setMacroParameter01(om->ival, om->fval);
         }
         break;
 
@@ -909,24 +911,25 @@ void SurgeSynthProcessor::processBlockOSC()
 
         case SurgeSynthProcessor::MOD:
         {
-            surge->setModDepth01(om.param->id, (modsources)om.ival, om.scene, om.index, om.fval);
+            surge->setModDepth01(om->param->id, (modsources)om->ival, om->scene, om->index,
+                                 om->fval);
         }
         break;
 
         case SurgeSynthProcessor::MOD_MUTE:
         {
-            bool mute = om.fval > 0.0;
-            surge->muteModulation(om.param->id, (modsources)om.ival, om.scene, om.index, mute);
+            bool mute = om->fval > 0.0;
+            surge->muteModulation(om->param->id, (modsources)om->ival, om->scene, om->index, mute);
         }
         break;
 
         case SurgeSynthProcessor::FX_DISABLE:
         {
-            int selected_mask = om.ival;
+            int selected_mask = om->ival;
             int curmask = surge->storage.getPatch().fx_disable.val.i;
             int msk = selected_mask;
             int newDisabledMask = 0;
-            if (om.on == 0) // set selected bit to zero
+            if (om->on == 0) // set selected bit to zero
             {
                 msk = ~(msk & 0) ^ selected_mask; // all bits to 1 except selected bit
                 newDisabledMask = curmask & msk;
@@ -942,20 +945,20 @@ void SurgeSynthProcessor::processBlockOSC()
         break;
 
         case SurgeSynthProcessor::ABSOLUTE_X:
-            if (om.param->absolute != (bool)om.on)
+            if (om->param->absolute != (bool)om->on)
             {
-                om.param->absolute = om.on;
+                om->param->absolute = om->on;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
             break;
 
         case SurgeSynthProcessor::TEMPOSYNC_X:
-            if (om.param->temposync != (bool)om.on)
+            if (om->param->temposync != (bool)om->on)
             {
-                om.param->temposync = om.on;
+                om->param->temposync = om->on;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
             break;
 
@@ -963,67 +966,67 @@ void SurgeSynthProcessor::processBlockOSC()
         {
             // This parameter is stored as 'disabled', but UI uses 'enabled',
             //  so logic is flipped here:
-            bool disabled = !om.on;
-            if (om.param->deactivated != disabled)
+            bool disabled = !om->on;
+            if (om->param->deactivated != disabled)
             {
-                om.param->deactivated = disabled;
+                om->param->deactivated = disabled;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
         }
         break;
 
         case SurgeSynthProcessor::EXTEND_X:
-            if (om.param->extend_range != om.on)
+            if (om->param->extend_range != om->on)
             {
-                om.param->extend_range = om.on;
+                om->param->extend_range = om->on;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
             break;
 
         case SurgeSynthProcessor::DEFORM_X:
-            if (om.param->deform_type != om.ival)
+            if (om->param->deform_type != om->ival)
             {
-                om.param->deform_type = om.ival;
+                om->param->deform_type = om->ival;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
             break;
 
         case SurgeSynthProcessor::PORTA_CONSTRATE_X:
-            if (om.param->porta_constrate != om.on)
+            if (om->param->porta_constrate != om->on)
             {
-                om.param->porta_constrate = om.on;
+                om->param->porta_constrate = om->on;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
             break;
 
         case SurgeSynthProcessor::PORTA_GLISS_X:
-            if (om.param->porta_gliss != om.on)
+            if (om->param->porta_gliss != om->on)
             {
-                om.param->porta_gliss = om.on;
+                om->param->porta_gliss = om->on;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
             break;
 
         case SurgeSynthProcessor::PORTA_RETRIGGER_X:
-            if (om.param->porta_retrigger != om.on)
+            if (om->param->porta_retrigger != om->on)
             {
-                om.param->porta_retrigger = om.on;
+                om->param->porta_retrigger = om->on;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
             break;
 
         case SurgeSynthProcessor::PORTA_CURVE_X:
-            if (om.param->porta_curve != om.ival)
+            if (om->param->porta_curve != om->ival)
             {
-                om.param->porta_curve = om.ival;
+                om->param->porta_curve = om->ival;
                 surge->storage.getPatch().isDirty = true;
-                surge->queueForRefresh(om.param->id);
+                surge->queueForRefresh(om->param->id);
             }
             break;
 
