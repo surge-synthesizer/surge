@@ -25,6 +25,7 @@
 
 #include "SurgeStorage.h"
 #include "Effect.h"
+#include "FXOpenSoundControl.h"
 
 #include "sst/filters/HalfRateFilter.h"
 
@@ -61,10 +62,42 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
 
     void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
+    void processBlockOSC();
 
     //==============================================================================
     juce::AudioProcessorEditor *createEditor() override;
     bool hasEditor() const override;
+
+    //==============================================================================
+    // Open Sound Control
+    enum oscToAudio_type
+    {
+        FX_PARAM
+    };
+
+    // Message from OSC input to the audio thread
+    struct oscToAudio
+    {
+        oscToAudio_type type;
+        int p_index{0};
+        float fval{0.0};
+
+        oscToAudio() {}
+        explicit oscToAudio(oscToAudio_type omtype, float f, int pidx)
+            : type(omtype), fval(f), p_index(pidx)
+        {
+        }
+    };
+    sst::cpputils::SimpleRingBuffer<oscToAudio, 4096> oscRingBuf;
+
+    SurgeFX::FxOSC::FXOpenSoundControl oscHandler;
+    std::atomic<bool> oscCheckStartup{false};
+    void tryLazyOscStartupFromStreamedState();
+
+    bool initOSCIn(int port);
+    bool changeOSCInPort(int newport);
+    void initOSCError(int port, std::string outIP = "");
+    bool oscReceiving = false;
 
     //==============================================================================
     const juce::String getName() const override;
@@ -373,6 +406,9 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     std::atomic<bool> audioRunning{false};
 
   public:
+    bool oscStartIn = false;
+    int oscPortIn = 53290;
+
     void prepareParametersAbsentAudio();
     void setParameterByString(int i, const std::string &s);
     float getParameterValueForString(int i, const std::string &s);

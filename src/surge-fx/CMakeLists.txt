@@ -57,6 +57,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXProcessor.cpp
   SurgeFXProcessor.h
   SurgeLookAndFeel.h
+  FXOpenSoundControl.cpp
+  FXOpenSoundControl.h
   )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -65,6 +67,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-juce
   juce::juce_audio_utils
   juce::juce_audio_processors
+  juce::juce_osc
   )
 
 if(SURGE_BUILD_CLAP)

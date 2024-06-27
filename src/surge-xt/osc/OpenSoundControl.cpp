@@ -174,7 +174,7 @@ int OpenSoundControl::getNoteID(const juce::OSCMessage &om, int pos)
 void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 {
     std::string addr = message.getAddressPattern().toString().toStdString();
-    if (addr.at(0) != '/')
+    if (addr.empty() || addr.at(0) != '/')
     {
         sendError("Bad OSC message format.");
         return;
@@ -1109,7 +1109,6 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             std::getline(split, addr_part, '/'); // get mod into addr_part
         }
 
-        std::string mod = addr_part;
         int modnum = -1;
         for (int i = 0; i < n_modsources; i++)
         {
