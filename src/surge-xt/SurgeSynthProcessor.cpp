@@ -888,152 +888,151 @@ void SurgeSynthProcessor::processBlockOSC()
                 surge->refresh_editor = true;
             else
                 surge->queueForRefresh(om->param->id);
-                }
-                break;
+        }
+        break;
 
-                case SurgeSynthProcessor::MACRO:
-                {
-                    surge->setMacroParameter01(om->ival, om->fval);
-                }
-                break;
+        case SurgeSynthProcessor::MACRO:
+        {
+            surge->setMacroParameter01(om->ival, om->fval);
+        }
+        break;
 
-                case SurgeSynthProcessor::ALLNOTESOFF:
-                {
-                    surge->allNotesOff();
-                }
-                break;
+        case SurgeSynthProcessor::ALLNOTESOFF:
+        {
+            surge->allNotesOff();
+        }
+        break;
 
-                case SurgeSynthProcessor::ALLSOUNDOFF:
-                {
-                    surge->allSoundOff();
-                }
-                break;
+        case SurgeSynthProcessor::ALLSOUNDOFF:
+        {
+            surge->allSoundOff();
+        }
+        break;
 
-                case SurgeSynthProcessor::MOD:
-                {
-                    surge->setModDepth01(om->param->id, (modsources)om->ival, om->scene, om->index,
-                                         om->fval);
-                }
-                break;
+        case SurgeSynthProcessor::MOD:
+        {
+            surge->setModDepth01(om->param->id, (modsources)om->ival, om->scene, om->index,
+                                 om->fval);
+        }
+        break;
 
-                case SurgeSynthProcessor::MOD_MUTE:
-                {
-                    bool mute = om->fval > 0.0;
-                    surge->muteModulation(om->param->id, (modsources)om->ival, om->scene, om->index,
-                                          mute);
-                }
-                break;
+        case SurgeSynthProcessor::MOD_MUTE:
+        {
+            bool mute = om->fval > 0.0;
+            surge->muteModulation(om->param->id, (modsources)om->ival, om->scene, om->index, mute);
+        }
+        break;
 
-                case SurgeSynthProcessor::FX_DISABLE:
-                {
-                    int selected_mask = om->ival;
-                    int curmask = surge->storage.getPatch().fx_disable.val.i;
-                    int msk = selected_mask;
-                    int newDisabledMask = 0;
-                    if (om->on == 0) // set selected bit to zero
-                    {
-                        msk = ~(msk & 0) ^ selected_mask; // all bits to 1 except selected bit
-                        newDisabledMask = curmask & msk;
-                    }
-                    else // set selected bit to one
-                        newDisabledMask = curmask | msk;
+        case SurgeSynthProcessor::FX_DISABLE:
+        {
+            int selected_mask = om->ival;
+            int curmask = surge->storage.getPatch().fx_disable.val.i;
+            int msk = selected_mask;
+            int newDisabledMask = 0;
+            if (om->on == 0) // set selected bit to zero
+            {
+                msk = ~(msk & 0) ^ selected_mask; // all bits to 1 except selected bit
+                newDisabledMask = curmask & msk;
+            }
+            else // set selected bit to one
+                newDisabledMask = curmask | msk;
 
-                    surge->storage.getPatch().fx_disable.val.i = newDisabledMask;
-                    surge->fx_suspend_bitmask = newDisabledMask;
-                    surge->storage.getPatch().isDirty = true;
-                    surge->refresh_editor = true;
-                }
-                break;
+            surge->storage.getPatch().fx_disable.val.i = newDisabledMask;
+            surge->fx_suspend_bitmask = newDisabledMask;
+            surge->storage.getPatch().isDirty = true;
+            surge->refresh_editor = true;
+        }
+        break;
 
-                case SurgeSynthProcessor::ABSOLUTE_X:
-                    if (om->param->absolute != (bool)om->on)
-                    {
-                        om->param->absolute = om->on;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                    break;
+        case SurgeSynthProcessor::ABSOLUTE_X:
+            if (om->param->absolute != (bool)om->on)
+            {
+                om->param->absolute = om->on;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+            break;
 
-                case SurgeSynthProcessor::TEMPOSYNC_X:
-                    if (om->param->temposync != (bool)om->on)
-                    {
-                        om->param->temposync = om->on;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                    break;
+        case SurgeSynthProcessor::TEMPOSYNC_X:
+            if (om->param->temposync != (bool)om->on)
+            {
+                om->param->temposync = om->on;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+            break;
 
-                case SurgeSynthProcessor::ENABLE_X:
-                {
-                    // This parameter is stored as 'disabled', but UI uses 'enabled',
-                    //  so logic is flipped here:
-                    bool disabled = !om->on;
-                    if (om->param->deactivated != disabled)
-                    {
-                        om->param->deactivated = disabled;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                }
-                break;
+        case SurgeSynthProcessor::ENABLE_X:
+        {
+            // This parameter is stored as 'disabled', but UI uses 'enabled',
+            //  so logic is flipped here:
+            bool disabled = !om->on;
+            if (om->param->deactivated != disabled)
+            {
+                om->param->deactivated = disabled;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+        }
+        break;
 
-                case SurgeSynthProcessor::EXTEND_X:
-                    if (om->param->extend_range != om->on)
-                    {
-                        om->param->extend_range = om->on;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                    break;
+        case SurgeSynthProcessor::EXTEND_X:
+            if (om->param->extend_range != om->on)
+            {
+                om->param->extend_range = om->on;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+            break;
 
-                case SurgeSynthProcessor::DEFORM_X:
-                    if (om->param->deform_type != om->ival)
-                    {
-                        om->param->deform_type = om->ival;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                    break;
+        case SurgeSynthProcessor::DEFORM_X:
+            if (om->param->deform_type != om->ival)
+            {
+                om->param->deform_type = om->ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+            break;
 
-                case SurgeSynthProcessor::PORTA_CONSTRATE_X:
-                    if (om->param->porta_constrate != om->on)
-                    {
-                        om->param->porta_constrate = om->on;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                    break;
+        case SurgeSynthProcessor::PORTA_CONSTRATE_X:
+            if (om->param->porta_constrate != om->on)
+            {
+                om->param->porta_constrate = om->on;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+            break;
 
-                case SurgeSynthProcessor::PORTA_GLISS_X:
-                    if (om->param->porta_gliss != om->on)
-                    {
-                        om->param->porta_gliss = om->on;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                    break;
+        case SurgeSynthProcessor::PORTA_GLISS_X:
+            if (om->param->porta_gliss != om->on)
+            {
+                om->param->porta_gliss = om->on;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+            break;
 
-                case SurgeSynthProcessor::PORTA_RETRIGGER_X:
-                    if (om->param->porta_retrigger != om->on)
-                    {
-                        om->param->porta_retrigger = om->on;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                    break;
+        case SurgeSynthProcessor::PORTA_RETRIGGER_X:
+            if (om->param->porta_retrigger != om->on)
+            {
+                om->param->porta_retrigger = om->on;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+            break;
 
-                case SurgeSynthProcessor::PORTA_CURVE_X:
-                    if (om->param->porta_curve != om->ival)
-                    {
-                        om->param->porta_curve = om->ival;
-                        surge->storage.getPatch().isDirty = true;
-                        surge->queueForRefresh(om->param->id);
-                    }
-                    break;
+        case SurgeSynthProcessor::PORTA_CURVE_X:
+            if (om->param->porta_curve != om->ival)
+            {
+                om->param->porta_curve = om->ival;
+                surge->storage.getPatch().isDirty = true;
+                surge->queueForRefresh(om->param->id);
+            }
+            break;
 
-                default:
-                    break;
-                }
+        default:
+            break;
+        }
     }
 }
 
