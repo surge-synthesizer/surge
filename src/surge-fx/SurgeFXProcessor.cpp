@@ -470,20 +470,23 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         }
     }
 
-    processBlockOSC();
+    if (oscReceiving)
+        processBlockOSC();
 }
 
 // Pull incoming OSC events from ring buffer
 void SurgefxAudioProcessor::processBlockOSC()
 {
-    auto messages = oscRingBuf.popall();
-    for (const auto &om : messages)
+    while (true)
     {
-        switch (om.type)
+        auto om = oscRingBuf.pop();
+        if (!om.has_value())
+            break;
+        switch (om->type)
         {
         case SurgefxAudioProcessor::FX_PARAM:
         {
-            fxstorage->p[fx_param_remap[om.p_index]].set_value_f01(om.fval);
+            fxstorage->p[fx_param_remap[om->p_index]].set_value_f01(om->fval);
             resetFxParams(true);
         }
         break;

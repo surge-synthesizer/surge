@@ -406,7 +406,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     std::atomic<bool> audioRunning{false};
 
   public:
-    bool oscStartIn = true;
+    bool oscStartIn = false;
     int oscPortIn = 53290;
 
     void prepareParametersAbsentAudio();
