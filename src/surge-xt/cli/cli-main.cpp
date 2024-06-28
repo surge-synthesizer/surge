@@ -131,8 +131,18 @@ void listAudioDevices()
 
         for (int j = 0; j < deviceNames.size(); ++j)
         {
-            PRINT("Audio Device: [" << i << "." << j << "] : " << typeName << "."
-                                    << deviceNames[j]);
+            PRINT("Output Audio Device: [" << i << "." << j << "] : " << typeName << "."
+                                           << deviceNames[j]);
+        }
+
+        juce::StringArray inputDeviceNames(
+            types[i]->getDeviceNames(true)); // This will now return a list of
+                                             // available devices of this type
+
+        for (int j = 0; j < inputDeviceNames.size(); ++j)
+        {
+            PRINT("Input Audio Device: [" << i << "." << j << "] : " << typeName << "."
+                                          << inputDeviceNames[j]);
         }
     }
 }
@@ -152,7 +162,12 @@ void listMidiDevices()
 struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
 {
     std::unique_ptr<SurgeSynthProcessor> proc;
-    SurgePlayback() { proc = std::make_unique<SurgeSynthProcessor>(); }
+    SurgePlayback()
+    {
+        juce::AudioProcessor::setTypeOfNextNewPlugin(juce::AudioProcessor::wrapperType_Standalone);
+        proc = std::make_unique<SurgeSynthProcessor>();
+        proc->standaloneTempo = 120;
+    }
 
     static constexpr int midiBufferSz{4096}, midiBufferSzMask{midiBufferSz - 1};
     std::array<juce::MidiMessage, midiBufferSz> midiBuffer;
@@ -172,6 +187,14 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
                                      const juce::AudioIODeviceCallbackContext &context) override
     {
         proc->processBlockOSC();
+        proc->processBlockPlayhead();
+
+        if (numInputChannels > 0)
+        {
+            proc->surge->process_input = true;
+        }
+
+        int inputR = numInputChannels > 1 ? 1 : 0;
 
         for (int i = 0; i < numSamples; ++i)
         {
@@ -185,7 +208,13 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
                     midiRP = (midiRP + 1) & midiBufferSzMask;
                 }
                 proc->surge->process();
+
                 pos = 0;
+            }
+            if (numInputChannels > 0)
+            {
+                proc->surge->input[0][pos] = inputChannelData[0][i];
+                proc->surge->input[1][pos] = inputChannelData[inputR][i];
             }
             outputChannelData[0][i] = proc->surge->output[0][pos];
             outputChannelData[1][i] = proc->surge->output[1][pos];
@@ -235,6 +264,16 @@ int main(int argc, char **argv)
     app.add_flag(
         "--audio-ports", audioPorts,
         "Select the ports to address in the audio interface. '0,1' means first pair, zero based.");
+
+    std::string audioInputInterface{};
+    app.add_flag(
+        "--audio-input-interface", audioInputInterface,
+        "Select an audio input interface, using index (like '0.2') as shown in list-devices.");
+
+    std::string audioInputPorts{};
+    app.add_flag("--audio-input-ports", audioInputPorts,
+                 "Select the ports to address in the audio interface. '0,1' means first pair, zero "
+                 "based. For a single channel just use a single number");
 
     bool allMidi{false};
     app.add_flag("--all-midi-inputs", allMidi, "Bind all available MIDI inputs to the synth.");
@@ -386,6 +425,40 @@ int main(int argc, char **argv)
     const auto &atype = types[audioTypeIndex];
     LOG(BASIC, "Audio driver type   : [" << atype->getTypeName() << "]")
 
+    int inputTypeIndex = -1;
+    int inputDeviceIndex = -1;
+    if (!audioInputInterface.empty())
+    {
+        auto p = audioInputInterface.find('.');
+        if (p == std::string::npos)
+        {
+            PRINTERR("Audio input interface argument must be of form a.b, as per --list-devices. "
+                     "You gave "
+                     << audioInputInterface << ".");
+            exit(3);
+        }
+        else
+        {
+            auto da = std::atoi(audioInputInterface.substr(0, p).c_str());
+            auto dt = std::atoi(audioInputInterface.substr(p + 1).c_str());
+            inputTypeIndex = da;
+            inputDeviceIndex = dt;
+
+            if (da < 0 || da >= types.size())
+            {
+                PRINTERR("Audio type index must be in range 0 ... " << types.size() - 1 << "!");
+                exit(4);
+            }
+
+            if (inputTypeIndex != audioTypeIndex)
+            {
+                PRINTERR(
+                    "Right now, the type (a. or a.b) of the input and output must be the same");
+                exit(5);
+            }
+        }
+    }
+
     atype->scanForDevices(); // This must be called before getting the list of devices
     juce::StringArray deviceNames(atype->getDeviceNames()); // This will now return a list of
 
@@ -394,16 +467,19 @@ int main(int argc, char **argv)
         PRINTERR("Audio device index must be in range 0 ... " << deviceNames.size() - 1 << "!");
     }
 
-    const auto &dname = deviceNames[audioDeviceIndex];
-    std::unique_ptr<juce::AudioIODevice> device;
-    device.reset(atype->createDevice(dname, ""));
-
-    if (!device)
+    auto iname = juce::String();
+    if (inputDeviceIndex >= 0)
     {
-        PRINTERR("Unable to open audio output " << dname << "!");
-        exit(2);
+        juce::StringArray inputDeviceNames(atype->getDeviceNames(true));
+        iname = inputDeviceNames[inputDeviceIndex];
+        LOG(BASIC, "Input device        : [" << iname << "]");
     }
-    LOG(BASIC, "Audio Output        : [" << device->getName() << "]");
+
+    const auto &dname = deviceNames[audioDeviceIndex];
+
+    LOG(BASIC, "Output device       : [" << dname << "]");
+    std::unique_ptr<juce::AudioIODevice> device;
+    device.reset(atype->createDevice(dname, iname));
 
     auto sr = device->getAvailableSampleRates();
     auto bs = device->getAvailableBufferSizes();
@@ -478,7 +554,34 @@ int main(int argc, char **argv)
         }
     }
 
-    auto res = device->open(0, outputBitset, sampleRate, bufferSize);
+    // For now default input to the stereo or mono set
+    auto inputBitset = 3;
+    auto c = device->getInputChannelNames();
+    if (c.size() == 1)
+        inputBitset = 1;
+    if (c.isEmpty())
+        inputBitset = 0;
+
+    if (!audioInputPorts.empty())
+    {
+        auto p = audioInputPorts.find(',');
+        if (p == std::string::npos)
+        {
+            auto dl = std::atoi(audioInputPorts.c_str());
+            LOG(BASIC, "Binding to input    : mono = " << dl);
+
+            inputBitset = 1 << dl;
+        }
+        else
+        {
+            auto dl = std::atoi(audioInputPorts.substr(0, p).c_str());
+            auto dr = std::atoi(audioInputPorts.substr(p + 1).c_str());
+            LOG(BASIC, "Binding to inputs   : L = " << dl << ", R = " << dr << "");
+            inputBitset = (1 << (dl)) + (1 << (dr));
+        }
+    }
+
+    auto res = device->open(inputBitset, outputBitset, sampleRate, bufferSize);
     if (!res.isEmpty())
     {
         PRINTERR("Unable to open audio device: " << res << "!");
@@ -486,10 +589,13 @@ int main(int argc, char **argv)
     }
 
     device->start(engine.get());
+
     for (const auto &inp : midiInputs)
     {
         inp->start();
     }
+
+    manager->addAudioCallback(engine.get());
 
     bool needsMessageLoop{false};
     if (oscInputPort > 0)
