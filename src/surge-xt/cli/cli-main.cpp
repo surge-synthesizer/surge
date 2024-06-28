@@ -42,7 +42,7 @@ extern void objCShutdown(); // in cli-mac-helpers.mm
 // This tells us to keep processing
 std::atomic<bool> continueLoop{true};
 
-// Thanks
+// Thanks to
 // https://stackoverflow.com/questions/16077299/how-to-print-current-time-with-milliseconds-using-c-c11
 std::string logTimestamp()
 {
