@@ -30,8 +30,6 @@
 #include <cstdlib>
 #endif
 
-#include <features.h>
-
 #ifdef __GLIBC__ || MAC
 #include <execinfo.h>
 #endif
