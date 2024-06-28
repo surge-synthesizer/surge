@@ -130,7 +130,7 @@ bool constructWavetable(SurgeStorage *storage, const std::string &eqn, int resol
 
     for (int i = 0; i < frames; ++i)
     {
-        auto v = evaluateScriptAtFrame(storage, eqn, resolution, i, frames);
+        auto v = evaluateScriptAtFrame(storage, eqn, resolution, i + 1, frames);
         memcpy(&(wd[i * resolution]), &(v[0]), resolution * sizeof(float));
     }
     return true;
@@ -142,10 +142,10 @@ std::string defaultWavetableFormula()
 --- generator function. The function takes an array of x values (xs) and a frame number (n) and
 --- generates the result as the n-th frame. The sample below generates a Fourier sine to saw
 --- which, remember, is: sum 2 / pi n * sin n x
-    res = {}
+    local res = {}
     for i,x in ipairs(config.xs) do
-        lv = 0
-        for q = 1,(config.n+1) do
+        local lv = 0
+        for q = 1,(config.n) do
             lv = lv + 2 * sin ( q * x * 2 * pi ) / ( pi * q )
         end
         res[i] = lv
