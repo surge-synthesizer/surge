@@ -88,7 +88,7 @@ bool Surge::Debug::toggleConsole()
 
 void Surge::Debug::stackTraceToStdout(int depth)
 {
-#ifdef __GLIBC__ || MAC
+#if __GLIBC__ || MAC
     void *callstack[128];
     int i, frames = backtrace(callstack, 128);
     char **strs = backtrace_symbols(callstack, frames);
