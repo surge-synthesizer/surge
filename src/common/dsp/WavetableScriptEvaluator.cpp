@@ -58,14 +58,14 @@ std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::strin
         double dp = 1.0 / (resolution - 1);
         for (auto i = 0; i < resolution; ++i)
         {
-            lua_pushinteger(L, i + 1); // lua has a 1 based convention
+            lua_pushinteger(L, i + 1); // lua has a 1 based index convention
             lua_pushnumber(L, i * dp);
             lua_settable(L, -3);
         }
         lua_settable(L, -3);
 
         lua_pushstring(L, "n");
-        lua_pushinteger(L, frame);
+        lua_pushinteger(L, frame + 1);
         lua_settable(L, -3);
 
         lua_pushstring(L, "nTables");
@@ -138,15 +138,22 @@ bool constructWavetable(SurgeStorage *storage, const std::string &eqn, int resol
 std::string defaultWavetableFormula()
 {
     return R"FN(function generate(config)
---- This function was inserted as a guide, since the wavetable editor in this patch/oscillator has no
---- generator function. The function takes an array of x values (xs) and a frame number (n) and
---- generates the result as the n-th frame. The sample below generates a Fourier sine to saw
---- which, remember, is: sum 2 / pi n * sin n x
-    res = {}
+-- This script serves as the default example for the wavetable script editor. Unlike the formula editor, which executes
+-- repeatedly every block, the Lua code here runs only upon applying new settings or receiving GUI inputs like the frame slider.
+--
+-- When the Generate button is pressed, this function is called for each frame, and the results are collected and sent
+-- to the Wavetable oscillator. The oscillator can sweep through these frames to evolve the sound produced using the Morph parameter.
+--
+-- The for loops iterate over an array of sample values (xs) and a frame number (n) and generate the result for the n-th frame.
+-- This example uses additive synthesis, a technique that adds sine waves to create waveshapes. The initial frame starts with a
+-- single sine wave, and additional sine waves are added in subsequent frames. This process creates a Fourier series sawtooth wave
+-- defined by the formula: sum 2 / pi n * sin n x. See the tutorial patches for more info.
+
+    local res = {}
     for i,x in ipairs(config.xs) do
-        lv = 0
-        for q = 1,(config.n+1) do
-            lv = lv + 2 * sin ( q * x * 2 * pi ) / ( pi * q )
+        local lv = 0
+        for q = 1,(config.n) do
+            lv = lv + 2 * sin(2 * pi * q * x) / (pi * q)
         end
         res[i] = lv
     end

@@ -670,7 +670,7 @@ TEST_CASE("Wavetable Script", "[formula]")
 function generate(config)
     res = config.xs
     for i,x in ipairs(config.xs) do
-        res[i] = math.sin(x * (config.n+1) * 2 * math.pi)
+        res[i] = math.sin(x * (config.n) * 2 * math.pi)
     end
     return res
 end

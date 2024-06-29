@@ -1112,7 +1112,7 @@ void WavetableEquationEditor::rerenderFromUIState()
 {
     auto resi = resolution->getSelectedId();
     auto nfr = std::atoi(frames->getText().toRawUTF8());
-    auto cfr = (int)round(nfr * currentFrame->getValue() / 10.0);
+    auto cfr = (int)round((nfr - 1) * currentFrame->getValue() / 10.0);
 
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
@@ -1120,7 +1120,7 @@ void WavetableEquationEditor::rerenderFromUIState()
 
     renderer->points = Surge::WavetableScript::evaluateScriptAtFrame(
         storage, mainDocument->getAllContent().toStdString(), respt, cfr, nfr);
-    renderer->frameNumber = cfr;
+    renderer->frameNumber = cfr + 1;
     renderer->repaint();
 }
 
@@ -1133,12 +1133,13 @@ void WavetableEquationEditor::buttonClicked(juce::Button *button)
 {
     if (button == generate.get())
     {
-        std::cout << "GENERATE" << std::endl;
         auto resi = resolution->getSelectedId();
         auto nfr = std::atoi(frames->getText().toRawUTF8());
         auto respt = 32;
         for (int i = 1; i < resi; ++i)
             respt *= 2;
+        std::cout << "Generating wavetable with " << respt << " samples and " << nfr << " frames"
+                  << std::endl;
 
         wt_header wh;
         float *wd = nullptr;
