@@ -891,6 +891,7 @@ void SurgeGUIEditor::idle()
         {
             refreshOverlayWithOpenClose(MSEG_EDITOR);
             refreshOverlayWithOpenClose(FORMULA_EDITOR);
+            refreshOverlayWithOpenClose(WTSCRIPT_EDITOR);
             refreshOverlayWithOpenClose(TUNING_EDITOR);
             refreshOverlayWithOpenClose(MODULATION_EDITOR);
         }
@@ -2035,6 +2036,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH_DIALOG:
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FORMULA_EDITOR_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::WTSCRIPT_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW:
@@ -6083,9 +6085,8 @@ void SurgeGUIEditor::announceGuiState()
                   .shape.val.i;
 
     oss << "Patch '" << s->getPatch().name << "'. Scene " << (current_scene == 0 ? "A" : "B")
-        << ". "
-        << " Oscillator " << (current_osc[current_scene] + 1) << " " << osc_type_names[ot] << "."
-        << " Modulator "
+        << ". " << " Oscillator " << (current_osc[current_scene] + 1) << " " << osc_type_names[ot]
+        << "." << " Modulator "
         << ModulatorName::modulatorName(&synth->storage, modsource_editor[current_scene], false,
                                         current_scene)
         << " " << lt_names[ms] << ". " << fxslot_names[current_fx] << " " << fx_type_names[ft]

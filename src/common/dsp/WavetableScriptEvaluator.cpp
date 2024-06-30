@@ -27,6 +27,7 @@ namespace Surge
 {
 namespace WavetableScript
 {
+
 std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::string &eqn,
                                          int resolution, int frame, int nFrames)
 {
@@ -139,15 +140,17 @@ std::string defaultWavetableFormula()
 {
     return R"FN(function generate(config)
 -- This script serves as the default example for the wavetable script editor. Unlike the formula editor, which executes
--- repeatedly every block, the Lua code here runs only upon applying new settings or receiving GUI inputs like the frame slider.
+-- repeatedly every block, the Lua code here runs only upon applying new settings or receiving GUI inputs like the frame 
+-- slider.
 --
 -- When the Generate button is pressed, this function is called for each frame, and the results are collected and sent
--- to the Wavetable oscillator. The oscillator can sweep through these frames to evolve the sound produced using the Morph parameter.
+-- to the Wavetable oscillator. The oscillator can sweep through these frames to evolve the sound produced using the 
+-- Morph parameter.
 --
--- The for loops iterate over an array of sample values (xs) and a frame number (n) and generate the result for the n-th frame.
--- This example uses additive synthesis, a technique that adds sine waves to create waveshapes. The initial frame starts with a
--- single sine wave, and additional sine waves are added in subsequent frames. This process creates a Fourier series sawtooth wave
--- defined by the formula: sum 2 / pi n * sin n x. See the tutorial patches for more info.
+-- The for loops iterate over an array of sample values (xs) and a frame number (n) and generate the result for the n-th 
+-- frame. This example uses additive synthesis, a technique that adds sine waves to create waveshapes. The initial frame 
+-- starts with a single sine wave, and additional sine waves are added in subsequent frames. This process creates a Fourier 
+-- series sawtooth wave defined by the formula: sum 2 / pi n * sin n x. See the tutorial patches for more info.
 
     local res = {}
     for i,x in ipairs(config.xs) do
