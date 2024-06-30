@@ -670,7 +670,7 @@ TEST_CASE("Wavetable Script", "[formula]")
 function generate(config)
     res = config.xs
     for i,x in ipairs(config.xs) do
-        res[i] = math.sin(x * (config.n) * 2 * math.pi)
+        res[i] = math.sin(2 * math.pi * x * config.n)
     end
     return res
 end
@@ -683,7 +683,7 @@ end
             for (int i = 0; i < 512; ++i)
             {
                 auto x = i * dp;
-                auto r = sin(x * (fno + 1) * 2 * M_PI);
+                auto r = sin(2 * M_PI * x * (fno + 1));
                 REQUIRE(r == Approx(fr[i]));
             }
         }

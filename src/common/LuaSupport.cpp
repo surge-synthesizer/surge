@@ -140,6 +140,7 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
 
     // Now a list of functions we do include
     std::vector<std::string> functionWhitelist = {"ipairs", "error"};
+
     for (const auto &f : functionWhitelist)
     {
         lua_pushstring(L, f.c_str());

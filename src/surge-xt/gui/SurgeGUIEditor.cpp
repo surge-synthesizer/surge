@@ -891,6 +891,7 @@ void SurgeGUIEditor::idle()
         {
             refreshOverlayWithOpenClose(MSEG_EDITOR);
             refreshOverlayWithOpenClose(FORMULA_EDITOR);
+            refreshOverlayWithOpenClose(WTSCRIPT_EDITOR);
             refreshOverlayWithOpenClose(TUNING_EDITOR);
             refreshOverlayWithOpenClose(MODULATION_EDITOR);
         }
@@ -2035,6 +2036,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH_DIALOG:
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FORMULA_EDITOR_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::WTSCRIPT_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW:

@@ -127,13 +127,12 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaModulatorEditor);
 };
 
-class WavetablePreviewComponent;
+struct WavetablePreviewComponent;
 
-class WavetableEquationEditor : public CodeEditorContainerWithApply,
-                                public juce::Slider::Listener,
-                                public juce::ComboBox::Listener
+struct WavetableEquationEditor : public CodeEditorContainerWithApply,
+                                 public juce::Slider::Listener,
+                                 public juce::ComboBox::Listener
 {
-  public:
     WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os,
                             Surge::GUI::Skin::ptr_t sk);
     ~WavetableEquationEditor() noexcept;

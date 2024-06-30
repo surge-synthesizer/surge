@@ -206,6 +206,9 @@ std::string defaultKeyToString(DefaultKey k)
     case FormulaOverlayLocation:
         r = "formulaOverlayLocation";
         break;
+    case WTScriptOverlayLocation:
+        r = "wtScriptOverlayLocation";
+        break;
     case WSAnalysisOverlayLocation:
         r = "wsAnalysisOverlayLocation";
         break;
@@ -227,6 +230,9 @@ std::string defaultKeyToString(DefaultKey k)
         break;
     case FormulaOverlayLocationTearOut:
         r = "formulaOverlayLocationTearOut";
+        break;
+    case WTScriptOverlayLocationTearOut:
+        r = "wtScriptOverlayLocationTearOut";
         break;
     case WSAnalysisOverlayLocationTearOut:
         r = "wsAnalysisOverlayLocationTearOut";
@@ -252,6 +258,9 @@ std::string defaultKeyToString(DefaultKey k)
     case FormulaOverlaySizeTearOut:
         r = "formulaOverlaySizeTearOut";
         break;
+    case WTScriptOverlaySizeTearOut:
+        r = "wtScriptOverlaySizeTearOut";
+        break;
     case WSAnalysisOverlaySizeTearOut:
         r = "wsAnalysisOverlaySizeTearOut";
         break;
@@ -274,6 +283,9 @@ std::string defaultKeyToString(DefaultKey k)
     case FormulaOverlayTearOutAlwaysOnTop:
         r = "formulaOverlayTearOutAlwaysOnTop";
         break;
+    case WTScriptOverlayTearOutAlwaysOnTop:
+        r = "wtScriptOverlayTearOutAlwaysOnTop";
+        break;
     case WSAnalysisOverlayTearOutAlwaysOnTop:
         r = "wsAnalysisOverlayTearOutAlwaysOnTop";
         break;
@@ -295,6 +307,9 @@ std::string defaultKeyToString(DefaultKey k)
         break;
     case FormulaOverlayTearOutAlwaysOnTop_Plugin:
         r = "formulaOverlayTearOutAlwaysOnTop_Plugin";
+        break;
+    case WTScriptOverlayTearOutAlwaysOnTop_Plugin:
+        r = "wtScriptOverlayTearOutAlwaysOnTop_Plugin";
         break;
     case WSAnalysisOverlayTearOutAlwaysOnTop_Plugin:
         r = "wsAnalysisOverlayTearOutAlwaysOnTop_Plugin";
