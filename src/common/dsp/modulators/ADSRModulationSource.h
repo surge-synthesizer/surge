@@ -316,7 +316,7 @@ class ADSRModulationSource : public ModulationSource
                     ** test cases.
                     */
 
-                    if ((lc[s].f < 1e-3 && phase < 1e-4) || (lc[s].f == 0 && lc[d].f < -7))
+                    if ((lc[s].f < 1e-3 && phase < 5e-3) || (lc[s].f == 0 && lc[d].f < -7))
                     {
                         l_lo = 0;
                     }
