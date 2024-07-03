@@ -36,8 +36,7 @@ using DriftLFO = sst::basic_blocks::dsp::DriftLFO;
 template <typename valtype>
 using CharacterFilter = sst::basic_blocks::dsp::CharacterFilter<valtype, SurgeStorage>;
 
-template <typename valtype>
-using UnisonSetup = sst::basic_blocks::dsp::UnisonSetup<valtype>;
+template <typename valtype> using UnisonSetup = sst::basic_blocks::dsp::UnisonSetup<valtype>;
 } // namespace Oscillator
 } // namespace Surge
 
