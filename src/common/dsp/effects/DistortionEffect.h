@@ -25,7 +25,6 @@
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
-#include "AllpassFilter.h"
 
 #include <sst/filters/HalfRateFilter.h>
 #include <vembertech/lipol.h>

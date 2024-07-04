@@ -22,10 +22,10 @@
 
 #ifndef SURGE_SRC_COMMON_DSP_EFFECTS_REVERB2EFFECT_H
 #define SURGE_SRC_COMMON_DSP_EFFECTS_REVERB2EFFECT_H
+
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
-#include "AllpassFilter.h"
 
 #include <vembertech/lipol.h>
 #include "sst/basic-blocks/dsp/QuadratureOscillators.h"
