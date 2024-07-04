@@ -167,7 +167,6 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         return pt;
     }
-    break;
 
     case MSEG_EDITOR:
     {
@@ -281,6 +280,42 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         return fme;
     }
 
+    case WTSCRIPT_EDITOR:
+    {
+        /*
+        int w = 800, h = 520;
+        auto px = (getWindowSizeX() - w) / 2;
+        auto py = (getWindowSizeY() - h) / 2;
+        auto r = juce::Rectangle<int>(px, py, w, h);
+        */
+
+        auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+
+        if (!os)
+        {
+            return nullptr;
+        }
+
+        auto wtse = std::make_unique<Surge::Overlays::WavetableEquationEditor>(
+            this, &(this->synth->storage), os, currentSkin);
+
+        wtse->setSkin(currentSkin, bitmapStore);
+        // wtse->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
+        std::string title = "Wavetable Script Editor Osc ";
+        title += std::to_string(current_osc[current_scene] + 1);
+        wtse->setEnclosingParentTitle(title);
+        wtse->setCanTearOut({true, Surge::Storage::WTScriptOverlayLocationTearOut,
+                             Surge::Storage::WTScriptOverlayTearOutAlwaysOnTop,
+                             Surge::Storage::WTScriptOverlayTearOutAlwaysOnTop_Plugin});
+        wtse->setCanTearOutResize({true, Surge::Storage::WTScriptOverlaySizeTearOut});
+        wtse->setMinimumSize(500, 400);
+        locationGet(wtse.get(),
+                    Surge::Skin::Connector::NonParameterConnection::WTSCRIPT_EDITOR_WINDOW,
+                    Surge::Storage::WTScriptOverlayLocation);
+
+        return wtse;
+    }
+
     case SAVE_PATCH:
     {
         if (synth->storage.userDataPathValid)
@@ -311,7 +346,6 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
         return te;
     }
-    break;
 
     case TUNING_EDITOR:
     {
@@ -331,25 +365,6 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
                     Surge::Storage::TuningOverlayLocation);
 
         return te;
-    }
-
-    case WT_SCRIPTING_EDITOR:
-    {
-        int w = 800, h = 520;
-        auto px = (getWindowSizeX() - w) / 2;
-        auto py = (getWindowSizeY() - h) / 2;
-        auto r = juce::Rectangle<int>(px, py, w, h);
-
-        auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
-
-        auto wtse = std::make_unique<Surge::Overlays::WavetableEquationEditor>(
-            this, &(this->synth->storage), os, currentSkin);
-
-        wtse->setSkin(currentSkin, bitmapStore);
-        wtse->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
-        wtse->setEnclosingParentTitle("Wavetable Script Editor");
-
-        return wtse;
     }
 
     case WAVESHAPER_ANALYZER:

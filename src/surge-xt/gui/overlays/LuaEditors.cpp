@@ -793,6 +793,7 @@ DAWExtraStateStorage::EditorState::FormulaEditState &FormulaModulatorEditor::get
 {
     return storage->getPatch().dawExtraState.editor.formulaEditState[scene][lfo_id];
 }
+
 void FormulaModulatorEditor::onSkinChanged()
 {
     CodeEditorContainerWithApply::onSkinChanged();
@@ -970,7 +971,7 @@ struct WavetablePreviewComponent : juce::Component
         g.setFont(skin->fontManager->getFiraMonoAtSize(9));
 
         g.setColour(juce::Colour(230, 230, 255)); // could be a skin->getColor of course
-        auto s1 = std::string("Frame : ") + std::to_string(frameNumber);
+        auto s1 = std::string("Frame : ") + std::to_string(frameNumber + 1);
         auto s2 = std::string("Res   : ") + std::to_string(points.size());
         g.drawSingleLineText(s1, 3, 18);
         g.drawSingleLineText(s2, 3, 30);
@@ -1001,7 +1002,7 @@ struct WavetablePreviewComponent : juce::Component
         g.strokePath(p, juce::PathStrokeType(1.0));
     }
 
-    int frameNumber = 0;
+    int frameNumber;
     std::vector<float> points;
 
     SurgeStorage *storage;
@@ -1062,7 +1063,7 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
     currentFrame = std::make_unique<juce::Slider>("currF");
     currentFrame->setSliderStyle(juce::Slider::LinearVertical);
     currentFrame->setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-    currentFrame->setRange(0.0, 10.0);
+    currentFrame->setRange(0.0, 1.0);
     currentFrame->addListener(this);
     addAndMakeVisible(currentFrame.get());
 }
@@ -1112,7 +1113,7 @@ void WavetableEquationEditor::rerenderFromUIState()
 {
     auto resi = resolution->getSelectedId();
     auto nfr = std::atoi(frames->getText().toRawUTF8());
-    auto cfr = (int)round((nfr - 1) * currentFrame->getValue() / 10.0);
+    auto cfr = (int)round((nfr - 1) * currentFrame->getValue()); // map slider to 0 .. nFrames - 1
 
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
@@ -1120,7 +1121,7 @@ void WavetableEquationEditor::rerenderFromUIState()
 
     renderer->points = Surge::WavetableScript::evaluateScriptAtFrame(
         storage, mainDocument->getAllContent().toStdString(), respt, cfr, nfr);
-    renderer->frameNumber = cfr + 1;
+    renderer->frameNumber = cfr;
     renderer->repaint();
 }
 
@@ -1128,6 +1129,7 @@ void WavetableEquationEditor::comboBoxChanged(juce::ComboBox *comboBoxThatHasCha
 {
     rerenderFromUIState();
 }
+
 void WavetableEquationEditor::sliderValueChanged(juce::Slider *slider) { rerenderFromUIState(); }
 void WavetableEquationEditor::buttonClicked(juce::Button *button)
 {
