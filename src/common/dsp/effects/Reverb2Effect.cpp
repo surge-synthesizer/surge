@@ -22,7 +22,8 @@
 #include "Reverb2Effect.h"
 
 Reverb2Effect::Reverb2Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : surge::sstfx::SurgeSSTFXBase<sst::effects::reverb2::Reverb2<surge::sstfx::SurgeFXConfig>>(storage, fxdata, pd)
+    : surge::sstfx::SurgeSSTFXBase<sst::effects::reverb2::Reverb2<surge::sstfx::SurgeFXConfig>>(
+          storage, fxdata, pd)
 {
 }
 
@@ -102,4 +103,3 @@ void Reverb2Effect::init_ctrltypes()
 
     configureControlsFromFXMetadata();
 }
-

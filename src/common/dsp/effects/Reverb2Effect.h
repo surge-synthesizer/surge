@@ -23,7 +23,6 @@
 #ifndef SURGE_SRC_COMMON_DSP_EFFECTS_REVERB2EFFECT_H
 #define SURGE_SRC_COMMON_DSP_EFFECTS_REVERB2EFFECT_H
 
-
 #include "Effect.h"
 #include "SurgeSSTFXAdapter.h"
 #include "sst/effects/Reverb2.h"
