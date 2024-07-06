@@ -486,8 +486,12 @@ void SurgefxAudioProcessor::processBlockOSC()
         {
         case SurgefxAudioProcessor::FX_PARAM:
         {
-            fxstorage->p[fx_param_remap[om->p_index]].set_value_f01(om->fval);
-            resetFxParams(true);
+            prepareParametersAbsentAudio();
+            setFXParamValue01(om->p_index, om->fval);
+            // this order does matter
+            changedParamsValue[om->p_index] = om->fval;
+            changedParams[om->p_index] = true;
+            triggerAsyncUpdate();
         }
         break;
         }
