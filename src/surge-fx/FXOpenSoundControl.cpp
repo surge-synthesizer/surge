@@ -188,10 +188,6 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 SurgefxAudioProcessor::FX_PARAM, newval, index - 1));
         }
     }
-    else
-    {
-        storage->reportError("Badly-formed '/fx/param/...' message.", "OSC input error");
-    }
 }
 
 bool FXOpenSoundControl::hasEnding(std::string const &fullString, std::string const &ending)
