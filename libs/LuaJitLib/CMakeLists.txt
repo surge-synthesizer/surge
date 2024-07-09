@@ -34,7 +34,7 @@ message(STATUS "LUAJIT_INC = ${LUAJIT_INC}")
 
 set(LUAJIT_LIB "")
 # Define the library filename based on platform
-if(WIN32 AND NOT MINGW)
+if(MSVC)
   set(LUAJIT_LIB ${LUAJIT_BLD}/bin/lua51.lib)
 else()
   set(LUAJIT_LIB ${LUAJIT_BLD}/bin/libluajit.a)
@@ -63,7 +63,7 @@ if(NOT EXISTS ${LUAJIT_LIB})
       RESULT_VARIABLE SCRIPT_RESULT
       OUTPUT_VARIABLE SCRIPT_OUTPUT
       ERROR_VARIABLE SCRIPT_ERROR)
-  elseif(WIN32)
+  elseif(MSVC)
     execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
       COMMAND ${cmd_wrapper} build-msvc-luajit.bat ${LUAJIT_BLD}
       RESULT_VARIABLE SCRIPT_RESULT
