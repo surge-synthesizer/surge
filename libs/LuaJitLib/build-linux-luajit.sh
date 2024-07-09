@@ -19,7 +19,7 @@ mkdir "${SD}"
 cp -r LuaJIT/ "${SD}"
 cd "${SD}/LuaJIT/src"
 
-make amalg "BUILDMODE=static" || echo "That's OK though"
+make amalg "BUILDMODE=static" CFLAGS+=" -fPIC" || echo "That's OK though"
 
 mv lib*a "${OD}"
 ls -al ${OD}
