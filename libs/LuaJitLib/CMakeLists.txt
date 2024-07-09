@@ -1,7 +1,7 @@
 # LuaJitLib
 
-#project(LuaJIT C ASM)
-project(luajit-5.1)
+project(LuaJIT C ASM)
+#project(luajit-5.1)
 
 set(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/LuaJIT)
 set(LUAJIT_BLD ${CMAKE_CURRENT_BINARY_DIR}/LuaJIT)
