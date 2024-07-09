@@ -56,3 +56,6 @@
 [submodule "libs/melatonin_inspector"]
 	path = libs/melatonin_inspector
 	url = https://github.com/sudara/melatonin_inspector.git
+[submodule "libs/LuaJitLib/cmake"]
+	path = libs/LuaJitLib/cmake
+	url = https://github.com/scikit-build/cmake-FindVcvars
