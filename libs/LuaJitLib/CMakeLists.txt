@@ -7,6 +7,14 @@ set(LUAJIT_DIR ${CMAKE_CURRENT_LIST_DIR}/LuaJIT)
 set(LUAJIT_BLD ${CMAKE_CURRENT_BINARY_DIR}/LuaJIT)
 set(LUAJIT_INC ${CMAKE_CURRENT_BINARY_DIR}/LuaJIT/src/LuaJIT/src)
 
+# Load cmake-FindVcvars
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_LIST_DIR}/cmake)
+set(cmd_wrapper)
+if(MSVC)
+  find_package(Vcvars REQUIRED)
+  set(cmd_wrapper ${Vcvars_LAUNCHER})
+endif()
+
 # Debugging info
 message(STATUS "CMAKE_MAKE_PROGRAM = ${CMAKE_MAKE_PROGRAM}")
 message(STATUS "CMAKE_COMMAND = ${CMAKE_COMMAND}")
@@ -57,7 +65,7 @@ if(NOT EXISTS ${LUAJIT_LIB})
       ERROR_VARIABLE SCRIPT_ERROR)
   elseif(WIN32)
     execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-      COMMAND build-msvc-luajit.bat ${LUAJIT_BLD}
+      COMMAND ${cmd_wrapper} build-msvc-luajit.bat ${LUAJIT_BLD}
       RESULT_VARIABLE SCRIPT_RESULT
       OUTPUT_VARIABLE SCRIPT_OUTPUT
       ERROR_VARIABLE SCRIPT_ERROR)
