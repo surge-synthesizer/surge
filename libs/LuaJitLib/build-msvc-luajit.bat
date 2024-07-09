@@ -17,9 +17,10 @@ mkdir "%OD%"
 mkdir "%SD%"
 
 xcopy /e /i /h LuaJIT "%SD%\LuaJIT"
+xcopy /y msvcbuild.bat "%SD%\LuaJIT\src\"
 cd "%SD%\LuaJIT\src"
 
-call msvcbuild.bat amalg static
+call msvcbuild.bat static
 if %errorlevel% neq 0 (
     echo That's OK though
 )
