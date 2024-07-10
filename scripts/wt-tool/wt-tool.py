@@ -40,7 +40,8 @@ def read_wt_header(fn):
     flags = {}
     flags["is_sample"] = (fl[0] & 0x01 != 0)
     flags["loop_sample"] = (fl[0] & 0x02 != 0)
-    flags["format"] = "int16" if (fl[0] & 0x04 != 0) else "float32"
+
+    flags["format"] = "int16-full-range" if (fl[0] == 0xC) else "int16" if (fl[0] & 0x04 != 0) else "float32"
     flags["samplebytes"] = 2 if (fl[0] & 0x04 != 0) else 4
 
     header["flags"] = flags
@@ -74,7 +75,7 @@ def explode(fn, wav_dir):
                 wav_file.writeframes(bdata)
 
 
-def create(fn, wavdir, norm):
+def create(fn, wavdir, norm, intform):
     onlyfiles = [f for f in listdir(wavdir) if (isfile(join(wavdir, f)) and f.endswith(".wav"))]
     onlyfiles.sort()
 
@@ -122,8 +123,8 @@ def create(fn, wavdir, norm):
                 newrec[2 * i + 1] = nms
             newdb.append(newrec)
         databuffer = newdb
-    elif (norm == "peak"):
-        print("Normalizing to peak")
+    elif (norm == "peak" or norm == "peak16"):
+        print("Normalizing to " + norm)
         peakp = 0
         peakm = 0
         for d in databuffer:
@@ -141,6 +142,11 @@ def create(fn, wavdir, norm):
             peakp = -peakm
         print("Peak value is ", peakp)
         newdb = []
+
+        den = 16384.0
+        if (norm == "peak16"):
+            den = den * 2
+
         for d in databuffer:
             newrec = bytearray(len(d))
 
@@ -149,7 +155,7 @@ def create(fn, wavdir, norm):
                 ms = d[2 * i + 1]
                 if(ms >= 128):
                     ms -= 256
-                r = int((ls + ms * 256) * 16384.0 / peakp)
+                r = int((ls + ms * 256) * den / peakp)
 
                 nls = int(r % 256)
                 nms = int(r / 256)
@@ -169,7 +175,7 @@ def create(fn, wavdir, norm):
         outf.write(b'vawt')
         outf.write(nf.to_bytes(4, byteorder='little'))
         outf.write((len(onlyfiles)).to_bytes(2, byteorder='little'))
-        outf.write(bytes([4, 0]))
+        outf.write(bytes([4 if (intform == "i15") else 12, 0]))
         for d in databuffer:
             outf.write(d)
 
@@ -199,7 +205,10 @@ def main():
 Modes are 'none' leave input untouched;
 'half' input wav are divided by 2 (so 2^16 range becomes 2^15 range);
 'peak' input wav are scanned and re-peaked to 2^15.
+'peak16' input wav are scanned and re-peaked to 2^15.
 """)
+    parser.add_option("-i", "--int-range", dest="intrange", default="i15", metavar="INTRANGE",
+                      help = "Int range for creating i16 files. Either i15 or i16")
     (options, args) = parser.parse_args()
 
     act = options.action
@@ -208,7 +217,7 @@ Modes are 'none' leave input untouched;
             parser.print_help()
             print("\nYou must specify a file and wav_dir for create")
         else:
-            create(options.file, options.wav_dir, options.normalize)
+            create(options.file, options.wav_dir, options.normalize, options.intrange)
     elif act == "explode":
         if(options.file is None or options.wav_dir is None):
             parser.print_help()

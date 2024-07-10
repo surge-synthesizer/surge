@@ -77,7 +77,7 @@ class WindowOscillator : public Oscillator
     void applyFilter();
     template <bool is_init> void update_lagvals();
 
-    void ProcessWindowOscs(bool stereo, bool FM);
+    template <bool FM, bool Full16> void ProcessWindowOscs(bool stereo);
     lag<double> FMdepth[MAX_UNISON];
     lag<float> l_morph;
 
