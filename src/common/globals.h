@@ -51,12 +51,15 @@ static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your 
     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #include <emmintrin.h>
 #else
-#if defined(__arm__) || defined(__aarch64__) || defined(__riscv)
+// With the upgrade to simde 0.8.2 and subsequent conversations
+// with simde maintainers, this include should work for every
+// non-intel platform, so remove the prior condition
+//
+// #if defined(__arm__) || defined(__aarch64__) || defined(__riscv)
+//
+// and just always include this in the else side
 #define SIMDE_ENABLE_NATIVE_ALIASES
 #include "simde/x86/sse2.h"
-#else
-#error Surge XT requires either X86/SSE2 or ARM architectures.
-#endif
 #endif
 
 #if MAC || LINUX
