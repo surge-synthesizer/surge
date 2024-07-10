@@ -8,7 +8,7 @@ set(LUAJIT_BLD ${CMAKE_CURRENT_BINARY_DIR}/LuaJIT)
 set(LUAJIT_INC ${CMAKE_CURRENT_BINARY_DIR}/LuaJIT/include)
 
 # Set to "1" to show additional debug messages
-set(LUAJIT_DEBUG 0)
+set(LUAJIT_DEBUG 1)
 
 # Load cmake-FindVcvars
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_LIST_DIR}/cmake)
