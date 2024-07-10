@@ -2,22 +2,24 @@
 
 set "BD=%1"
 if "%BD%"=="" (
-    echo Usage: build-mingw-luajit BUILDDIR
+    echo Usage: build-msvc-luajit.bat BUILDDIR
     exit /b 1
 )
 echo Building in %BD%
 
-set "OD=%BD%\bin"
 set "SD=%BD%\src"
+set "OD=%BD%\bin"
+set "HD=%BD%\include"
 
 if exist "%BD%" rd /s /q "%BD%"
 mkdir "%BD%"
 
-mkdir "%OD%"
 mkdir "%SD%"
+mkdir "%OD%"
+mkdir "%HD%"
 
 xcopy /e /i /h LuaJIT "%SD%\LuaJIT"
-xcopy /y msvcbuild.bat "%SD%\LuaJIT\src\"
+copy /y msvcbuild.bat "%SD%\LuaJIT\src\"
 cd "%SD%\LuaJIT\src"
 
 call msvcbuild.bat static
@@ -25,7 +27,13 @@ if %errorlevel% neq 0 (
     echo That's OK though
 )
 
-copy lua*.lib "%OD%"
+copy lua51*.lib "%OD%"
+echo "%OD%"
 dir "%OD%"
+
+copy *.h "%HD%"
+copy *.hpp "%HD%"
+echo "%HD%"
+dir "%HD%"
 
 exit /b 0
