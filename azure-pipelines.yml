@@ -90,7 +90,7 @@ jobs:
           isMac: True
           isMacFat: True
           cmakeArguments: "-GNinja -DCMAKE_BUILD_TYPE=Debug -D\"CMAKE_OSX_ARCHITECTURES=arm64\""
-          cmakeTarget: "surge-xt_Standalone"
+          cmakeTarget: $(defaultTargets)
           cmakeConfig: "Debug"
         windows-x64-msvc:
           imageName: 'windows-2019'
