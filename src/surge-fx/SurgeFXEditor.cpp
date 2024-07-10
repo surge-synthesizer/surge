@@ -354,7 +354,7 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
             if (i < n_fx_params)
             {
                 fxParamSliders[i].setValue(fv[i], juce::NotificationType::dontSendNotification);
-                fxParamDisplay[i].setDisplay(processor.getParamValue(i));
+                fxParamDisplay[i].setDisplay(processor.getParamValueFor(i, fv[i]));
             }
             else
             {

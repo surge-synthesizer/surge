@@ -788,8 +788,15 @@ float SurgefxAudioProcessor::getParameterValueForString(int i, const std::string
     pdata v;
     // TODO: range error reporting
     std::string errMsg;
-    p->set_value_from_string_onto(s, v, errMsg);
-    return v.f;
+    auto res = p->set_value_from_string_onto(s, v, errMsg);
+    if (res)
+    {
+        return p->value_to_normalized(v.f);
+    }
+    else
+    {
+        return 0;
+    }
 }
 void SurgefxAudioProcessor::setParameterByString(int i, const std::string &s)
 {
