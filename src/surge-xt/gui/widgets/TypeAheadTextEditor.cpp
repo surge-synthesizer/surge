@@ -206,7 +206,7 @@ struct TypeAheadListBox : public juce::ListBox
     {
         juce::ListBox::paintOverChildren(graphics);
 
-        if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
+        if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getListBoxModel()))
         {
             m->provider->paintOverChildren(graphics,
                                            getLocalBounds().reduced(getOutlineThickness()));
@@ -217,7 +217,7 @@ struct TypeAheadListBox : public juce::ListBox
     {
         if (press.isKeyCode(juce::KeyPress::escapeKey))
         {
-            if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
+            if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getListBoxModel()))
             {
                 m->escapeKeyPressed();
 
@@ -230,7 +230,7 @@ struct TypeAheadListBox : public juce::ListBox
 
     void focusLost(FocusChangeType cause) override
     {
-        if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getModel()))
+        if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getListBoxModel()))
         {
             m->ta->focusLost(cause);
         }
