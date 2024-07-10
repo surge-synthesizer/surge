@@ -743,6 +743,8 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         float *dL = ptr + startBlock * BLOCK_SIZE;
         float *dR = ptr + buf.shape[1] + startBlock * BLOCK_SIZE;
 
+        process_input = false;
+
         for (auto i = 0; i < blockIterations; ++i)
         {
             process();
