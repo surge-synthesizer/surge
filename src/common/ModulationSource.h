@@ -288,7 +288,7 @@ class ModulationSource
     virtual void set_active_outputs(int ao) { active_outputs = ao; }
     virtual int get_active_outputs() { return active_outputs; }
 
-    virtual float get_output(int which)
+    virtual float get_output(int which) const
     {
         if (which == 0)
         {
@@ -304,7 +304,7 @@ class ModulationSource
         }
     }
 
-    virtual float get_output01(int which)
+    virtual float get_output01(int which) const
     {
         if (which == 0)
         {
@@ -444,9 +444,9 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
         }
     }
 
-    virtual float get_output(int which) override { return value[which]; }
+    virtual float get_output(int which) const override { return value[which]; }
 
-    virtual float get_output01(int i) override
+    virtual float get_output01(int i) const override
     {
         if (bipolar)
         {
@@ -600,12 +600,12 @@ struct MacroModulationSource : ControllerModulationSource
         modunderlyer.init(0);
     }
 
-    virtual float get_output(int which) override
+    virtual float get_output(int which) const override
     {
         return value[which] + modunderlyer.get_output(which);
     }
 
-    virtual float get_output01(int i) override
+    virtual float get_output01(int i) const override
     {
         if (bipolar)
             return 0.5f + 0.5f * (value[i] + modunderlyer.value[i]);
@@ -654,7 +654,7 @@ class RandomModulationSource : public ModulationSource
         return 2; // bipolar can't support lognormal obvs
     }
 
-    float get_output(int which) override { return output[which]; }
+    float get_output(int which) const override { return output[which]; }
 
     virtual void attack() override
     {

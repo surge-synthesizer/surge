@@ -755,7 +755,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     storage.getPatch().scene[scene].modsources[ms_slfo1 + l]);
                 if (lms)
                 {
-                    Surge::Formula::setupEvaluatorStateFrom(lms->formulastate, storage.getPatch());
+                    Surge::Formula::setupEvaluatorStateFrom(lms->formulastate, storage.getPatch(),
+                                                            scene);
                 }
             }
             storage.getPatch().scene[scene].modsources[ms_slfo1 + l]->attack();
@@ -3546,6 +3547,14 @@ void SurgeSynthesizer::prepareModsourceDoProcess(int scenemask)
 {
     for (int scene = 0; scene < n_scenes; scene++)
     {
+        bool anyFormula{false};
+        for (auto &lfs : storage.getPatch().scene[scene].lfo)
+        {
+            if (lfs.shape.val.i == lt_formula)
+            {
+                anyFormula = true;
+            }
+        }
         if ((1 << scene) & scenemask)
         {
             for (int i = 0; i < n_modsources; i++)
@@ -3561,6 +3570,13 @@ void SurgeSynthesizer::prepareModsourceDoProcess(int scenemask)
                     }
                 }
                 storage.getPatch().scene[scene].modsource_doprocess[i] = setTo;
+
+                if (i == ms_pitchbend || i == ms_aftertouch || i == ms_modwheel || i == ms_breath ||
+                    i == ms_expression || i == ms_sustain || i == ms_lowest_key ||
+                    i == ms_highest_key || i == ms_latest_key)
+                {
+                    storage.getPatch().scene[scene].modsource_doprocess[i] |= anyFormula;
+                }
             }
 
             for (int j = 0; j < 3; j++)
@@ -4422,7 +4438,7 @@ void SurgeSynthesizer::processControl()
                     if (lms)
                     {
                         Surge::Formula::setupEvaluatorStateFrom(lms->formulastate,
-                                                                storage.getPatch());
+                                                                storage.getPatch(), s);
                     }
                 }
                 storage.getPatch().scene[s].modsources[ms_slfo1 + i]->process_block();

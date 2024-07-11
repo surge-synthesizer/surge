@@ -261,7 +261,6 @@ class alignas(16) SurgeVoice
 
     // data
     int lag_id[8], pitch_id, octave_id, volume_id, pan_id, width_id;
-    SurgeStorage *storage;
     SurgeSceneStorage *scene, *origscene;
     pdata *paramptr;
     int route[6];
@@ -277,8 +276,9 @@ class alignas(16) SurgeVoice
 
   public: // this is public, but only for the regtests
     std::array<ModulationSource *, n_modsources> modsources;
+    SurgeStorage *storage;
 
-  private:
+  public:
     ControllerModulationSource velocitySource;
     ModulationSource releaseVelocitySource;
     ModulationSource keytrackSource;

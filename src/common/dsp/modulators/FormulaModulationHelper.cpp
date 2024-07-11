@@ -541,8 +541,15 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addb("is_voice", s->isVoice);
         addn("key", s->key);
         addn("velocity", s->velocity);
+        addn("releasevelocity", s->releasevelocity);
         addn("channel", s->channel);
         addb("released", s->released);
+
+        addn("polyat", s->polyat);
+        addn("mpebend", s->mpebend);
+        addn("mpetimbre", s->mpetimbre);
+        addn("mpepressure", s->mpepressure);
+        addn("mpebendrange", s->mpebendrange);
     }
     else
     {
@@ -568,6 +575,16 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         }
         lua_settable(s->L, -3);
     }
+
+    addn("pitchbend", s->pitchbend);
+    addn("aftertouch", s->aftertouch);
+    addn("modwheel", s->modwheel);
+    addn("breath", s->breath);
+    addn("expression", s->expression);
+    addn("sustain_pedal", s->sustain);
+    addn("lowest_key", s->lowest_key);
+    addn("highest_key", s->highest_key);
+    addn("latest_key", s->latest_key);
 
     if (justSetup)
     {
@@ -862,23 +879,43 @@ end)FN");
     fs->interpreter = FormulaModulatorStorage::LUA;
 }
 
-void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &p)
+void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sceneIndex)
 {
     for (int i = 0; i < n_customcontrollers; ++i)
     {
-        auto ms = p.scene[0].modsources[ms_ctrl1 + i];
+        // macros are all in scene 0
+        auto ms = patch.scene[0].modsources[ms_ctrl1 + i];
         auto cms = dynamic_cast<ControllerModulationSource *>(ms);
         if (cms)
         {
             s.macrovalues[i] = cms->get_output(0);
         }
     }
+    auto &scene = patch.scene[sceneIndex];
+    s.pitchbend = scene.modsources[ms_pitchbend]->get_output(0);
+    s.aftertouch = scene.modsources[ms_aftertouch]->get_output(0);
+    s.modwheel = scene.modsources[ms_modwheel]->get_output(0);
+    s.breath = scene.modsources[ms_breath]->get_output(0);
+    s.expression = scene.modsources[ms_expression]->get_output(0);
+    s.sustain = scene.modsources[ms_sustain]->get_output(0);
+    s.lowest_key = scene.modsources[ms_lowest_key]->get_output(0);
+    s.highest_key = scene.modsources[ms_highest_key]->get_output(0);
+    s.latest_key = scene.modsources[ms_latest_key]->get_output(0);
 }
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
 {
     s.key = v->state.key;
     s.channel = v->state.channel;
     s.velocity = v->state.velocity;
+    s.releasevelocity = v->state.releasevelocity;
+
+    s.polyat =
+        v->storage
+            ->poly_aftertouch[v->state.scene_id & 1][v->state.channel & 15][v->state.key & 127];
+    s.mpebend = (v->state.mpeEnabled ? v->state.mpePitchBend.get_output(0) : 0);
+    s.mpetimbre = (v->state.mpeEnabled ? v->timbreSource.get_output(0) : 0);
+    s.mpepressure = (v->state.mpeEnabled ? v->monoAftertouchSource.get_output(0) : 0);
+    s.mpebendrange = (v->state.mpeEnabled ? v->state.mpePitchBendRange : 0);
 }
 
 std::variant<float, std::string, bool> runOverModStateForTesting(const std::string &query,

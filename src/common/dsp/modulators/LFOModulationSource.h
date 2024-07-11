@@ -78,8 +78,8 @@ class LFOModulationSource : public ModulationSource
         else
             return 3;
     }
-    float get_output(int which) override { return output_multi[which]; }
-    float get_output01(int which) override { return output_multi[which]; }
+    float get_output(int which) const override { return output_multi[which]; }
+    float get_output01(int which) const override { return output_multi[which]; }
     void set_output(int which, float f) override
     {
         // set_output on an LFO should never be called. Blow up in debug if it is

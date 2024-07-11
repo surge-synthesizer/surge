@@ -2424,7 +2424,8 @@ void LFOAndStepDisplay::populateLFOMS(LFOModulationSource *s)
     if (s->isVoice)
         s->formulastate.velocity = 100;
 
-    Surge::Formula::setupEvaluatorStateFrom(s->formulastate, storage->getPatch());
+    Surge::Formula::setupEvaluatorStateFrom(s->formulastate, storage->getPatch(),
+                                            guiEditor->current_scene);
 }
 
 void LFOAndStepDisplay::updateShapeTo(int i)

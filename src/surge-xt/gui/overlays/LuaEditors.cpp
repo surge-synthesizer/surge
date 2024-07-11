@@ -300,7 +300,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         if (doStep)
         {
             Surge::Formula::setupEvaluatorStateFrom(lfoDebugger->formulastate,
-                                                    editor->storage->getPatch());
+                                                    editor->storage->getPatch(), editor->scene);
 
             lfoDebugger->process_block();
         }
@@ -319,7 +319,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             formulastate.songpos = storage->songpos;
 
             Surge::Formula::setupEvaluatorStateFrom(lfoDebugger->formulastate,
-                                                    editor->storage->getPatch());
+                                                    editor->storage->getPatch(), editor->scene);
             float out[Surge::Formula::max_formula_outputs];
             Surge::Formula::valueAt(lfoDebugger->getIntPhase(), lfoDebugger->getPhase(), storage,
                                     lfoDebugger->fs, &formulastate, out, true);
