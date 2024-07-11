@@ -541,15 +541,15 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addb("is_voice", s->isVoice);
         addn("key", s->key);
         addn("velocity", s->velocity);
-        addn("releasevelocity", s->releasevelocity);
+        addn("rel_velocity", s->releasevelocity);
         addn("channel", s->channel);
         addb("released", s->released);
 
-        addn("polyat", s->polyat);
-        addn("mpebend", s->mpebend);
-        addn("mpetimbre", s->mpetimbre);
-        addn("mpepressure", s->mpepressure);
-        addn("mpebendrange", s->mpebendrange);
+        addn("poly_at", s->polyat);
+        addn("mpe_bend", s->mpebend);
+        addn("mpe_timbre", s->mpetimbre);
+        addn("mpe_pressure", s->mpepressure);
+        addn("mpe_bendrange", s->mpebendrange);
     }
     else
     {
@@ -576,12 +576,12 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         lua_settable(s->L, -3);
     }
 
-    addn("pitchbend", s->pitchbend);
-    addn("aftertouch", s->aftertouch);
-    addn("modwheel", s->modwheel);
-    addn("breath", s->breath);
-    addn("expression", s->expression);
-    addn("sustain_pedal", s->sustain);
+    addn("pb", s->pitchbend);
+    addn("chan_at", s->aftertouch);
+    addn("cc_mw", s->modwheel);
+    addn("cc_breath", s->breath);
+    addn("cc_expr", s->expression);
+    addn("cc_sus", s->sustain);
     addn("lowest_key", s->lowest_key);
     addn("highest_key", s->highest_key);
     addn("latest_key", s->latest_key);
