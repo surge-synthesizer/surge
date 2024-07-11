@@ -280,7 +280,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
 
         if (scene->lfo[i].shape.val.i == lt_formula)
         {
-            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch());
+            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch(),
+                                                    scene_id);
             Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, this);
         }
 
@@ -734,7 +735,8 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     {
         if (scene->lfo[i].shape.val.i == lt_formula)
         {
-            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch());
+            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch(),
+                                                    state.scene_id);
             Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, this);
         }
 
