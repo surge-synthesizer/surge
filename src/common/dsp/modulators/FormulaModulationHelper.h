@@ -66,10 +66,13 @@ struct EvaluatorState
 
     // voice features
     bool isVoice;
-    int key{60}, channel{0}, velocity{0};
+    int key{60}, channel{0}, velocity{0}, releasevelocity{0}, mpebendrange{24};
+    float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0};
 
-    // patch features
+    // scene features
     float macrovalues[n_customcontrollers];
+    float pitchbend, aftertouch, modwheel, breath, expression, sustain, lowest_key, highest_key,
+        latest_key;
 
     std::unique_ptr<std::string> error;
     bool raisedError = false;
@@ -96,7 +99,7 @@ void removeFunctionsAssociatedWith(SurgeStorage *,
 bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,
                           bool is_display);
 
-void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &p);
+void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sceneIndex);
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v);
 
 void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *, FormulaModulatorStorage *fs,

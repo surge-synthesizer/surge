@@ -54,6 +54,15 @@ inline void i152float_block(short *s, float *f, int n)
     }
 }
 
+inline void i162float_block(short *s, float *f, int n)
+{
+    const float scale = 1.f / (16384.f * 2);
+    for (int i = 0; i < n; i++)
+    {
+        f[i] = (float)s[i] * scale;
+    }
+}
+
 inline void i16toi15_block(short *s, short *o, int n)
 {
     for (int i = 0; i < n; i++)

@@ -196,7 +196,7 @@ inline unsigned int BigMULr16(unsigned int a, unsigned int b)
     return c >> 16u;
 }
 
-void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
+template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool stereo)
 {
     const unsigned int M0Mask = 0x07f8;
     unsigned int SizeMask = (oscdata->wt.size << 16) - 1;
@@ -332,8 +332,9 @@ void WindowOscillator::ProcessWindowOscs(bool stereo, bool FM)
 #endif
 
                 iWin[0] = (iWin[0] + iWin[1] + iWin[2] + iWin[3]) >> 13;
-                iWave[0] = (iWave[0] + iWave[1] + iWave[2] + iWave[3]) >> 13;
-                iWaveP1[0] = (iWaveP1[0] + iWaveP1[1] + iWaveP1[2] + iWaveP1[3]) >> 13;
+                iWave[0] = (iWave[0] + iWave[1] + iWave[2] + iWave[3]) >> (13 + (Full16 ? 1 : 0));
+                iWaveP1[0] =
+                    (iWaveP1[0] + iWaveP1[1] + iWaveP1[2] + iWaveP1[3]) >> (13 + (Full16 ? 1 : 0));
 
                 iWave[0] = (int)((1.f - FTable) * iWave[0] + FTable * iWaveP1[0]);
 
@@ -414,7 +415,30 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
         }
     }
 
-    ProcessWindowOscs(stereo, FM);
+    bool is16 = oscdata->wt.flags & wtf_int16_is_16;
+
+    if (FM)
+    {
+        if (is16)
+        {
+            ProcessWindowOscs<true, true>(stereo);
+        }
+        else
+        {
+            ProcessWindowOscs<true, false>(stereo);
+        }
+    }
+    else
+    {
+        if (is16)
+        {
+            ProcessWindowOscs<false, true>(stereo);
+        }
+        else
+        {
+            ProcessWindowOscs<false, false>(stereo);
+        }
+    }
 
     // int32 -> float conversion
     __m128 scale = _mm_load1_ps(&OutAttenuation);

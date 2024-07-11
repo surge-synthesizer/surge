@@ -4545,13 +4545,13 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             switch (valtype)
             {
             case vt_int:
-                val.i = (int)std::round(*res);
+                ontoThis.i = (int)std::round(*res);
                 break;
             case vt_float:
-                val.f = *res;
+                ontoThis.f = *res;
                 break;
             case vt_bool:
-                val.b = (*res > 0.5);
+                ontoThis.b = (*res > 0.5);
                 break;
             }
             return true;
