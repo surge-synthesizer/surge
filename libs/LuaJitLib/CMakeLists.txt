@@ -28,9 +28,9 @@ if(NOT EXISTS ${LUAJIT_LIB})
   message(STATUS "Building LuaJIT at CMake time right now; configure with -DSURGE_SKIP_LUA=TRUE to disable")
   # TODO: Add custom script for CMAKE_CROSSCOMPILING
   if(APPLE)
-    message(STATUS "./build-macos-luajit.sh \"${LUAJIT_BLD}\" in ${CMAKE_CURRENT_LIST_DIR}")
+    message(STATUS "./build-fat-luajit.sh \"${LUAJIT_BLD}\" in ${CMAKE_CURRENT_LIST_DIR}")
     execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-      COMMAND ./build-macos-luajit.sh "${LUAJIT_BLD}"
+      COMMAND ./build-fat-luajit.sh "${LUAJIT_BLD}"
       RESULT_VARIABLE LUAJIT_RESULT
       OUTPUT_VARIABLE LUAJIT_OUTPUT
       ERROR_VARIABLE LUAJIT_ERROR)
