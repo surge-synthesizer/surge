@@ -23,9 +23,6 @@ copy /y msvcbuild.bat "%SD%\LuaJIT\src\"
 cd "%SD%\LuaJIT\src"
 
 call msvcbuild.bat static
-if %errorlevel% neq 0 (
-    echo That's OK though
-)
 
 copy lua51*.lib "%OD%"
 echo "%OD%"
