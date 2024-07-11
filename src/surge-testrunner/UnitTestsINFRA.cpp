@@ -234,3 +234,54 @@ TEST_CASE("strnatcmp With Spaces", "[infra]")
 
     SECTION("Doubled Spaces") { REQUIRE(strnatcmp("Spa  Day", "Spa Day") == 0); }
 }
+
+TEST_CASE("Template Patches are Rational", "[infra]")
+{
+    auto surge = Surge::Headless::createSurge(48000, true);
+
+    int tempCat{-1};
+    for (const auto &c : surge->storage.patch_category)
+    {
+        if (c.name == "Templates" && c.isFactory)
+        {
+            tempCat = c.internalid;
+        }
+    }
+    REQUIRE(tempCat >= 0);
+
+    int tested{0};
+    int idx{0};
+    for (auto &p : surge->storage.patch_list)
+    {
+        if (p.category == tempCat)
+        {
+            INFO("Testing " << p.name);
+
+            surge->loadPatch(idx);
+
+            for (int i = 0; i < 5; ++i)
+                surge->process();
+
+            auto &patch = surge->storage.getPatch();
+
+            REQUIRE(patch.name == p.name);
+
+            for (int sc = 0; sc < n_scenes; ++sc)
+            {
+                auto &scene = patch.scene[sc];
+                // Make sure the filters and waveshapers aren't off in each scene
+                REQUIRE(!scene.filterunit[0].type.deactivated);
+                REQUIRE(!scene.filterunit[1].type.deactivated);
+                REQUIRE(!scene.wsunit.type.deactivated);
+
+                // Make sure at least one oscillator is not muted in each
+                bool somethingOn = !scene.mute_o1.val.b || !scene.mute_o2.val.b ||
+                                   !scene.mute_o3.val.b || !scene.mute_noise.val.b;
+                REQUIRE(somethingOn);
+            }
+            tested++;
+        }
+        ++idx;
+    }
+    REQUIRE(tested);
+}
