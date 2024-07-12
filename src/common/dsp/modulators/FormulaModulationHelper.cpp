@@ -547,9 +547,9 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
         addn("poly_at", s->polyat);
         addn("mpe_bend", s->mpebend);
+        addn("mpe_bendrange", s->mpebendrange);
         addn("mpe_timbre", s->mpetimbre);
         addn("mpe_pressure", s->mpepressure);
-        addn("mpe_bendrange", s->mpebendrange);
     }
     else
     {
@@ -577,8 +577,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     }
 
     addn("pb", s->pitchbend);
-    addn("pbrange_up", s->pbrange_up);
-    addn("pbrange_dn", s->pbrange_dn);
+    addn("pb_range_up", s->pbrange_up);
+    addn("pb_range_dn", s->pbrange_dn);
     addn("chan_at", s->aftertouch);
     addn("cc_mw", s->modwheel);
     addn("cc_breath", s->breath);
