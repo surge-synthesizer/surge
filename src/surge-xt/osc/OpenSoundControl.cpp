@@ -1042,6 +1042,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 def_path += ".scl";
             }
             synth->storage.loadTuningFromSCL(def_path);
+            synth->refresh_editor = true;
         }
         // KBM mapping file selection
         else if (addr_part == "kbm")
@@ -1073,6 +1074,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 def_path += ".kbm";
             }
             synth->storage.loadMappingFromKBM(def_path);
+            synth->refresh_editor = true;
         }
     }
 
