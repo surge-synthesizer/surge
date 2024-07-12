@@ -21,6 +21,12 @@ mkdir "${HD}" || error=1
 cp -r LuaJIT "${SD}" || error=1
 cd "${SD}/LuaJIT/src" || error=1
 
+# Check if mingw32-make is available, see https://www.msys2.org/wiki/Porting/
+MAKE_CMD="make"
+if command -v mingw32-make &> /dev/null; then
+    MAKE_CMD="mingw32-make"
+fi
+
 $MAKE_CMD amalg "BUILDMODE=static" || error=1
 
 cp lib*a "${OD}" || error=1

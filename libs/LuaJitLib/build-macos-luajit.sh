@@ -20,7 +20,7 @@ mkdir "${OD}/x86_64" || error=1
 mkdir "${HD}" || error=1
 
 cp -r LuaJIT "${SD}" || error=1
-# LuaJIT's top level makefile also has Darwin specific config so use that
+# LuaJIT's top level makefile also has Darwin specific config so build from the top directory
 cd "${SD}/LuaJIT" || error=1
 
 # Setting MACOSX_DEPLOYMENT_TARGET is required for building LuaJIT
