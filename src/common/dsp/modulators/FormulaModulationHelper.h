@@ -71,8 +71,8 @@ struct EvaluatorState
 
     // scene features
     float macrovalues[n_customcontrollers];
-    float pitchbend, aftertouch, modwheel, breath, expression, sustain, lowest_key, highest_key,
-        latest_key;
+    float pitchbend, pbrange_up, pbrange_dn, aftertouch, modwheel, breath, expression, sustain,
+        lowest_key, highest_key, latest_key;
 
     std::unique_ptr<std::string> error;
     bool raisedError = false;

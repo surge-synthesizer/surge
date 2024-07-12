@@ -2783,7 +2783,17 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                 int s = storage.getPatch().param_ptr[index]->scene - 1;
                 release_if_latched[s & 1] = true;
                 release_anyway[s & 1] = true;
-                // release old notes if previous polymode was latch
+                if (!voices[s].empty())
+                {
+                    // The release if latched initiates a release scene
+                    // which kills all voices but doesn't clear up the
+                    // keyboard state. So
+                    for (auto &v : voices[s])
+                    {
+                        const auto &st = v->state;
+                        channelState[st.channel].keyState[st.key].keystate = 0;
+                    }
+                }
             }
             break;
         case ct_filtertype:
