@@ -577,6 +577,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     }
 
     addn("pb", s->pitchbend);
+    addn("pbrange_up", s->pbrange_up);
+    addn("pbrange_dn", s->pbrange_dn);
     addn("chan_at", s->aftertouch);
     addn("cc_mw", s->modwheel);
     addn("cc_breath", s->breath);
@@ -893,6 +895,9 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sce
     }
     auto &scene = patch.scene[sceneIndex];
     s.pitchbend = scene.modsources[ms_pitchbend]->get_output(0);
+    s.pbrange_up = (float)scene.pbrange_up.val.i * (scene.pbrange_up.extend_range ? 0.01f : 1.f);
+    s.pbrange_dn = (float)scene.pbrange_dn.val.i * (scene.pbrange_dn.extend_range ? 0.01f : 1.f);
+
     s.aftertouch = scene.modsources[ms_aftertouch]->get_output(0);
     s.modwheel = scene.modsources[ms_modwheel]->get_output(0);
     s.breath = scene.modsources[ms_breath]->get_output(0);
