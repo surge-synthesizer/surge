@@ -933,13 +933,13 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
             cxor43_2_block(src1_l, src2_l, dst_l, nquads);
             cxor43_2_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case CombinatorMode::cxm_cxor43_3:
-            cxor43_3_block(src1_l, src2_l, dst_l, nquads);
-            cxor43_3_block(src1_r, src2_r, dst_r, nquads);
+        case CombinatorMode::cxm_cxor43_3_legacy:
+            cxor43_3_legacy_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_3_legacy_block(src1_r, src2_r, dst_r, nquads);
             break;
-        case CombinatorMode::cxm_cxor43_4:
-            cxor43_4_block(src1_l, src2_l, dst_l, nquads);
-            cxor43_4_block(src1_r, src2_r, dst_r, nquads);
+        case CombinatorMode::cxm_cxor43_4_legacy:
+            cxor43_4_legacy_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_4_legacy_block(src1_r, src2_r, dst_r, nquads);
             break;
         case CombinatorMode::cxm_cxor93_0:
             cxor93_0_block(src1_l, src2_l, dst_l, nquads);
@@ -961,6 +961,14 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
             cxor93_4_block(src1_l, src2_l, dst_l, nquads);
             cxor93_4_block(src1_r, src2_r, dst_r, nquads);
             break;
+        case CombinatorMode::cxm_cxor43_3:
+            cxor43_3_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_3_block(src1_r, src2_r, dst_r, nquads);
+            break;
+        case CombinatorMode::cxm_cxor43_4:
+            cxor43_4_block(src1_l, src2_l, dst_l, nquads);
+            cxor43_4_block(src1_r, src2_r, dst_r, nquads);
+            break;
         }
         osclevels.multiply_2_blocks(dst_l, dst_r, nquads);
     }
@@ -980,11 +988,11 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
         case CombinatorMode::cxm_cxor43_2:
             cxor43_2_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case CombinatorMode::cxm_cxor43_3:
-            cxor43_3_block(src1_l, src2_l, dst_l, nquads);
+        case CombinatorMode::cxm_cxor43_3_legacy:
+            cxor43_3_legacy_block(src1_l, src2_l, dst_l, nquads);
             break;
-        case CombinatorMode::cxm_cxor43_4:
-            cxor43_4_block(src1_l, src2_l, dst_l, nquads);
+        case CombinatorMode::cxm_cxor43_4_legacy:
+            cxor43_4_legacy_block(src1_l, src2_l, dst_l, nquads);
             break;
         case CombinatorMode::cxm_cxor93_0:
             cxor93_0_block(src1_l, src2_l, dst_l, nquads);
@@ -1000,6 +1008,12 @@ inline void all_ring_modes_block(float *__restrict src1_l, float *__restrict src
             break;
         case CombinatorMode::cxm_cxor93_4:
             cxor93_4_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case CombinatorMode::cxm_cxor43_3:
+            cxor43_3_block(src1_l, src2_l, dst_l, nquads);
+            break;
+        case CombinatorMode::cxm_cxor43_4:
+            cxor43_4_block(src1_l, src2_l, dst_l, nquads);
             break;
         }
         osclevels.multiply_block(dst_l, nquads);

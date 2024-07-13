@@ -2511,13 +2511,15 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         addEntry(cxm_cxor43_1);
                         addEntry(cxm_cxor43_2);
-                        addEntry(cxm_cxor43_3);
-                        addEntry(cxm_cxor43_4);
+                        addEntry(cxm_cxor43_3_legacy);
+                        addEntry(cxm_cxor43_4_legacy);
                         addEntry(cxm_cxor93_0);
                         addEntry(cxm_cxor93_1);
                         addEntry(cxm_cxor93_2);
                         addEntry(cxm_cxor93_3);
                         addEntry(cxm_cxor93_4);
+                        addEntry(cxm_cxor43_3);
+                        addEntry(cxm_cxor43_4);
 
                         break;
                     }
