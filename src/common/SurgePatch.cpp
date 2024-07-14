@@ -2272,10 +2272,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         for (auto sc = 0; sc < n_scenes; ++sc)
         {
             // adds corrected 3 and 4 modes in middle of deform type
-            if (scene[sc].level_ring_12.deform_type > 4) {
+            if (scene[sc].level_ring_12.deform_type > 4)
+            {
                 scene[sc].level_ring_12.deform_type += 2;
             }
-            if (scene[sc].level_ring_23.deform_type > 4) {
+            if (scene[sc].level_ring_23.deform_type > 4)
+            {
                 scene[sc].level_ring_23.deform_type += 2;
             }
         }
