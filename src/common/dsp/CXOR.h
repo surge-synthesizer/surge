@@ -54,8 +54,8 @@ inline void cxor43_2_block(float *__restrict src1, float *__restrict src2, float
     }
 }
 
-inline void cxor43_3_legacy_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-                           unsigned int nquads)
+inline void cxor43_3_legacy_block(float *__restrict src1, float *__restrict src2,
+                                  float *__restrict dst, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -64,8 +64,8 @@ inline void cxor43_3_legacy_block(float *__restrict src1, float *__restrict src2
     }
 }
 
-inline void cxor43_4_legacy_block(float *__restrict src1, float *__restrict src2, float *__restrict dst,
-                           unsigned int nquads)
+inline void cxor43_4_legacy_block(float *__restrict src1, float *__restrict src2,
+                                  float *__restrict dst, unsigned int nquads)
 {
     for (auto i = 0U; i < nquads << 2; ++i)
     {
@@ -80,7 +80,8 @@ inline void cxor43_3_block(float *__restrict src1, float *__restrict src2, float
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         const auto cx = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
-        dst[i] = fmin(-fmin(cx, -src2[i]), fmax(src1[i], src2[i])); // minus was in the wrong place
+        dst[i] = fmin(-fmin(cx, -src2[i]), fmax(src1[i], src2[i]));
+        // minus was in the wrong place
     }
 }
 
@@ -90,7 +91,8 @@ inline void cxor43_4_block(float *__restrict src1, float *__restrict src2, float
     for (auto i = 0U; i < nquads << 2; ++i)
     {
         const auto cx = fmin(fmax(src1[i], src2[i]), -fmin(src1[i], src2[i]));
-        dst[i] = fmin(-fmin(cx, src2[i]), fmax(src1[i], cx)); // wasn't supposed to have a minus sign
+        dst[i] = fmin(-fmin(cx, src2[i]), fmax(src1[i], cx));
+        // wasn't supposed to have a minus sign
     }
 }
 
