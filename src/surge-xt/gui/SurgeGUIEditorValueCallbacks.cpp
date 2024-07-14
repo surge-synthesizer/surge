@@ -2491,34 +2491,44 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         contextMenu.addSeparator();
 
                         auto dt = p->deform_type;
-                        auto addEntry = [this, &contextMenu, dt, p](CombinatorMode cxm) {
-                            contextMenu.addItem(
-                                combinator_mode_names[cxm], true, dt == cxm, [this, p, cxm]() {
-                                    undoManager()->pushParameterChange(p->id, p, p->val);
-                                    update_deform_type(p, cxm);
-                                    synth->storage.getPatch().isDirty = true;
-                                    frame->repaint();
-                                });
+                        auto addEntry = [this, dt, p](juce::PopupMenu &menu, CombinatorMode cxm) {
+                            menu.addItem(Surge::GUI::toOSCase(combinator_mode_names[cxm]), true,
+                                         dt == cxm, [this, p, cxm]() {
+                                             undoManager()->pushParameterChange(p->id, p, p->val);
+                                             update_deform_type(p, cxm);
+                                             synth->storage.getPatch().isDirty = true;
+                                             frame->repaint();
+                                         });
                         };
 
                         Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
                             contextMenu, "COMBINATOR MODE");
 
-                        addEntry(cxm_ring);
-                        addEntry(cxm_cxor43_0);
+                        addEntry(contextMenu, cxm_ring);
+                        addEntry(contextMenu, cxm_cxor43_0);
 
-                        contextMenu.addItem(-1, "Scale-Invariant Linear Modulation:", false, false);
+                        contextMenu.addItem(
+                            -1, Surge::GUI::toOSCase("Scale-Invariant Linear Modulation:"), false,
+                            false);
 
-                        addEntry(cxm_cxor43_1);
-                        addEntry(cxm_cxor43_2);
-                        addEntry(cxm_cxor43_3);
-                        addEntry(cxm_cxor43_4);
-                        addEntry(cxm_cxor93_0);
-                        addEntry(cxm_cxor93_1);
-                        addEntry(cxm_cxor93_2);
-                        addEntry(cxm_cxor93_3);
-                        addEntry(cxm_cxor93_4);
+                        auto subMenu = juce::PopupMenu();
 
+                        addEntry(subMenu, cxm_cxor43_1);
+                        addEntry(subMenu, cxm_cxor43_2);
+                        addEntry(subMenu, cxm_cxor43_3);
+                        addEntry(subMenu, cxm_cxor43_4);
+
+                        contextMenu.addSubMenu(Surge::GUI::toOSCase("4 Gradients"), subMenu);
+
+                        subMenu.clear();
+
+                        addEntry(subMenu, cxm_cxor93_0);
+                        addEntry(subMenu, cxm_cxor93_1);
+                        addEntry(subMenu, cxm_cxor93_2);
+                        addEntry(subMenu, cxm_cxor93_3);
+                        addEntry(subMenu, cxm_cxor93_4);
+
+                        contextMenu.addSubMenu(Surge::GUI::toOSCase("9 Gradients"), subMenu);
                         break;
                     }
                     case ct_bonsai_bass_boost:
