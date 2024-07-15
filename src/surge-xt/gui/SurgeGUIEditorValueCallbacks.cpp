@@ -2515,6 +2515,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         addEntry(subMenu, cxm_cxor43_1);
                         addEntry(subMenu, cxm_cxor43_2);
+                        addEntry(subMenu, cxm_cxor43_3_legacy);
+                        addEntry(subMenu, cxm_cxor43_4_legacy);
                         addEntry(subMenu, cxm_cxor43_3);
                         addEntry(subMenu, cxm_cxor43_4);
 
