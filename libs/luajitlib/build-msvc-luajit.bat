@@ -24,7 +24,7 @@ cd "%SD%\LuaJIT\src"
 
 call msvcbuild.bat static
 
-copy lua51*.lib "%OD%"
+copy lua51.lib "%OD%"
 echo "%OD%"
 dir "%OD%"
 

@@ -13,8 +13,8 @@
 [submodule "libs/libsamplerate"]
 	path = libs/libsamplerate
 	url = https://github.com/libsndfile/libsamplerate.git
-[submodule "libs/LuaJitLib/LuaJIT"]
-	path = libs/LuaJitLib/LuaJIT
+[submodule "libs/luajitlib/LuaJIT"]
+	path = libs/luajitlib/LuaJIT
 	url = https://github.com/LuaJIT/LuaJIT.git
 [submodule "libs/simde"]
 	path = libs/simde
@@ -56,6 +56,6 @@
 [submodule "libs/melatonin_inspector"]
 	path = libs/melatonin_inspector
 	url = https://github.com/sudara/melatonin_inspector.git
-[submodule "libs/LuaJitLib/cmake"]
-	path = libs/LuaJitLib/cmake
+[submodule "libs/luajitlib/cmake"]
+	path = libs/luajitlib/cmake
 	url = https://github.com/scikit-build/cmake-FindVcvars
