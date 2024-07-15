@@ -214,6 +214,8 @@ enum CombinatorMode
     cxm_cxor43_0,
     cxm_cxor43_1,
     cxm_cxor43_2,
+    cxm_cxor43_3_legacy,
+    cxm_cxor43_4_legacy,
     cxm_cxor43_3,
     cxm_cxor43_4,
     cxm_cxor93_0,
@@ -226,9 +228,9 @@ enum CombinatorMode
 };
 
 const char combinator_mode_names[n_cxm_modes][20] = {
-    "Ring Modulation", "Continuous XOR",                               //
-    "Mode 1",          "Mode 2",         "Mode 3", "Mode 4",           // SILM 4 gradients
-    "Mode 1",          "Mode 2",         "Mode 3", "Mode 4", "Mode 5", // SILM 9 gradients
+    "Ring Modulation", "Continuous XOR",                                         //
+    "Mode 1",          "Mode 2",         "Mode 3", "Mode 4", "Mode 5", "Mode 6", // SILM 4 gradients
+    "Mode 1",          "Mode 2",         "Mode 3", "Mode 4", "Mode 5",           // SILM 9 gradients
 };
 
 enum lfo_trigger_mode
