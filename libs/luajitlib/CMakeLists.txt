@@ -37,7 +37,7 @@ function(print_debug_info)
   message(STATUS "Build script error: ${LUAJIT_ERROR}")
 endfunction()
 
-# Error handling function
+# Error handling
 function(handle_error message)
   # Start with displaying debug info
   print_debug_info()
