@@ -4,7 +4,7 @@ luajitlib is a collection of scripts and a CMake configuration that attempts to 
 
 ## Troubleshooting
 
-CMake should output a series of debug messages and a general error message if a build fails. Examining these messages is the first step to troubleshoot why a build failed. See the sections below for more information on specific use scenarios and platforms and refer to the LuaJIT documentation [here](https://luajit.org/install.html) for more information. The `build-*platform*-luajit.*` scripts in the luajitlib directory can also be ran manually by adding a `"builddir"` parameter to test without CMake.
+CMake should output a series of debug messages and a general error message if a build fails. Examining these messages is the first step to troubleshoot why a build failed. See the sections below for more information on specific use scenarios and platforms and refer to the LuaJIT documentation [here](https://luajit.org/install.html) for more information. The `build-[platform]-luajit.*` scripts in the luajitlib directory can also be ran manually by adding a `"builddir"` parameter to test without CMake.
 
 Alternatively, a pre-built statically linked library can be placed directly in the build output directory at `/libs/luajitlib/bin` with the header files in `/libs/luajitlib/include`. If named either `libluajit.a` or `lua51.lib`, it should be automatically detected and used instead of compiling LuaJIT from source during the CMake configuration process.
 
