@@ -21,14 +21,14 @@ mkdir -p "${OD}/arm64" || error=1
 mkdir "${OD}/x86_64" || error=1
 mkdir "${HD}" || error=1
 
-# LuaJIT's top level makefile also has Darwin specific config so build from the top source directory
+# LuaJIT's top level makefile also has Darwin specific config so we build from the top source directory
 cp -r LuaJIT "${SD}" || error=1
 cd "${SD}/LuaJIT" || error=1
 
 # Setting MACOSX_DEPLOYMENT_TARGET environment variable is required for building LuaJIT
 export MACOSX_DEPLOYMENT_TARGET=10.9
 
-# Pipe output to /dev/null suppress linker errors
+# Pipe output to /dev/null to suppress linker errors
 make amalg -j HOST_CC="clang -target `uname -m`-apple-macos10.9" TARGET_CC="xcrun --toolchain arm64 clang -target arm64-apply-macos10.9 -isysroot $(xcrun --sdk macosx --show-sdk-path) -fvisibility=hidden -fvisibility-inlines-hidden" TARGET_CFLAGS="-O3" > /dev/null 2>&1
 cp src/lib*a "${OD}/arm64" || error=1
 
