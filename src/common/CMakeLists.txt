@@ -24,7 +24,7 @@ surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 
 if(NOT SURGE_SKIP_LUA)
-  surge_add_lib_subdirectory(LuaJitLib)
+  surge_add_lib_subdirectory(luajitlib)
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=1)
 else()
   # Make sure we know it is missing
