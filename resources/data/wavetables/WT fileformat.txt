@@ -7,7 +7,7 @@ byte
         0002: is a looped sample
         0004: if not set, wave data is in float32 format
               if set, wave data is in int16 format
-        0008: if not set, int16 data has a maximum peak of +/- 2^15 (legacy)
+        0008: if not set, a sample with 0 dBFS peak will end up having a peak of 2^14 (uses 15 bits, -6 dBFS peak)
               if set, int16 data uses the full 16-bit range
 12-end	wave data
         float32 format: 4 * wave_size * wave_count bytes
