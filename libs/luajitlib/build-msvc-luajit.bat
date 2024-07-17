@@ -1,6 +1,6 @@
 @echo off
 
-set "BD=%1"
+set BD="%1"
 if "%BD%"=="" (
     echo Usage: build-msvc-luajit.bat BUILDDIR
     exit /b 1
