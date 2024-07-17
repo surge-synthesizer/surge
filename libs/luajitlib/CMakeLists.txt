@@ -7,7 +7,7 @@ set(LUAJIT_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/LuaJIT")
 set(LUAJIT_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/LuaJIT/include")
 
 # Define library filename based on platform
-if(WIN32 AND MSVC)
+if(WIN32 AND NOT MINGW)
   set(LUAJIT_LIBRARY "${LUAJIT_BUILD_DIR}/bin/lua51.lib")
 else()
   set(LUAJIT_LIBRARY "${LUAJIT_BUILD_DIR}/bin/libluajit.a")
@@ -16,7 +16,7 @@ endif()
 # Load cmake-FindVcvars
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(cmd_wrapper)
-if(WIN32 AND MSVC)
+if(WIN32 AND NOT MINGW)
   find_package(Vcvars REQUIRED)
   set(cmd_wrapper ${Vcvars_LAUNCHER})
 endif()
@@ -52,7 +52,7 @@ endfunction()
 # Build LuaJIT if existing library is not found
 if(NOT EXISTS "${LUAJIT_LIBRARY}")
   message(STATUS "Building LuaJIT at CMake time right now; configure with -DSURGE_SKIP_LUA=TRUE to disable")
-  # TODO: Add custom script for CMAKE_CROSSCOMPILING
+  # Check APPLE before UNIX
   if(APPLE)
     message(STATUS "Running ./build-macos-luajit.sh \"${LUAJIT_BUILD_DIR}\" in ${CMAKE_CURRENT_LIST_DIR}")
     execute_process(WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
@@ -67,17 +67,18 @@ if(NOT EXISTS "${LUAJIT_LIBRARY}")
       RESULT_VARIABLE LUAJIT_RESULT
       OUTPUT_VARIABLE LUAJIT_OUTPUT
       ERROR_VARIABLE LUAJIT_ERROR)
-  elseif(WIN32 AND MSVC)
-    message(STATUS "Running build-msvc-luajit.bat \"${LUAJIT_BUILD_DIR}\" in ${CMAKE_CURRENT_LIST_DIR}")
-    execute_process(WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
-      COMMAND ${cmd_wrapper} build-msvc-luajit.bat "${LUAJIT_BUILD_DIR}"
-      RESULT_VARIABLE LUAJIT_RESULT
-      OUTPUT_VARIABLE LUAJIT_OUTPUT
-      ERROR_VARIABLE LUAJIT_ERROR)
+  # Check MINGW before WIN32
   elseif(MINGW)
     message(STATUS "Running ./build-mingw-luajit.sh \"${LUAJIT_BUILD_DIR}\" in ${CMAKE_CURRENT_LIST_DIR}")
     execute_process(WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
       COMMAND sh ./build-mingw-luajit.sh "${LUAJIT_BUILD_DIR}"
+      RESULT_VARIABLE LUAJIT_RESULT
+      OUTPUT_VARIABLE LUAJIT_OUTPUT
+      ERROR_VARIABLE LUAJIT_ERROR)
+  elseif(WIN32)
+    message(STATUS "Running build-msvc-luajit.bat \"${LUAJIT_BUILD_DIR}\" in ${CMAKE_CURRENT_LIST_DIR}")
+    execute_process(WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
+      COMMAND ${cmd_wrapper} build-msvc-luajit.bat "${LUAJIT_BUILD_DIR}"
       RESULT_VARIABLE LUAJIT_RESULT
       OUTPUT_VARIABLE LUAJIT_OUTPUT
       ERROR_VARIABLE LUAJIT_ERROR)
