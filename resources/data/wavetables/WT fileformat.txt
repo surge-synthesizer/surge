@@ -1,14 +1,14 @@
 byte
-0-3	'vawt'		as text/big-endian-
-the rest of the data is in little-endian types
-4-7	wave_size 	size of each wave, max: 1024 (v1.2)
-8-9	wave_count 	number of waves, max: 512 (v1.2)
+0-3	'vawt'		as big-endian text - all the following bytes are little-endian
+4-7	wave_size 	size of each wave; 2 ... 4096, must be a power of 2 (v1.3)
+8-9	wave_count 	number of waves; 1 ... 512 (v1.3)
 10-11	flags
-        0001: is sample
-        0002: loop sample
-        0004: if clear, wave data is in float32 format
+        0001: is a sample instead of a wavetable
+        0002: is a looped sample
+        0004: if not set, wave data is in float32 format
               if set, wave data is in int16 format
-        0008: if set, int16 data is in range 2^16; if not set it is in range 2^15 (legacy)
+        0008: if not set, a sample with 0 dBFS peak will end up having a peak of 2^14 (uses 15 bits, -6 dBFS peak)
+              if set, int16 data uses the full 16-bit range
 12-end	wave data
-        float32 format: 4*wave_size*wave_count bytes
-        int16 format: 2*wave_size*wave_count bytes
+        float32 format: 4 * wave_size * wave_count bytes
+        int16 format:   2 * wave_size * wave_count bytes
