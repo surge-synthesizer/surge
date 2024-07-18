@@ -135,7 +135,7 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     {
         // Add whitelisted item to top of stack
         lua_getglobal(L, f.c_str());
-        // Set key of table directly and implicitly pop global from stack so we're back to func > table
+        // Set key of table directly, pop global from stack so we're back to func > table
         lua_setfield(L, -2, f.c_str());
     }
 

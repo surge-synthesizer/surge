@@ -187,7 +187,7 @@ end
         lua_createtable(s.L, 0, 10);
 
         // add subscription hooks
-        lua_createtable(s.L, 0, 5); // subscriptions
+        lua_createtable(s.L, 0, 5);                   // subscriptions
         lua_createtable(s.L, n_customcontrollers, 0); // macros
         for (int i = 0; i < n_customcontrollers; ++i)
         {
@@ -463,7 +463,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     }
     lua_getglobal(s->L, s->stateName);
 
-   /*
+    /*
     lua_pushstring(s->L, "av");
     lua_gettable(s->L, -2);
     lua_pop(s->L, 1);
