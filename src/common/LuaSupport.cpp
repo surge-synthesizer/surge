@@ -125,36 +125,25 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     }
 
     // Stack is ...>func
-    lua_createtable(L, 0, 10);
+    lua_createtable(L, 0, 20);
     // stack is now func > table
 
-    lua_pushstring(L, "math");
-    lua_getglobal(L, "math");
-    // stack is now func > table > "math" > (math) so set math on table
-    lua_settable(L, -3);
+    // List of whitelisted functions and modules
+    std::vector<std::string> sandboxWhitelist = {"ipairs", "error", "math", "surge"};
 
-    lua_pushstring(L, "surge");
-    lua_getglobal(L, "surge");
-    // stack is now func > table > "surge" > (surge) so set math on table
-    lua_settable(L, -3);
-
-    // Now a list of functions we do include
-    std::vector<std::string> functionWhitelist = {"ipairs", "error"};
-
-    for (const auto &f : functionWhitelist)
+    for (const auto &f : sandboxWhitelist)
     {
-        lua_pushstring(L, f.c_str());
+        // Add whitelisted item to top of stack
         lua_getglobal(L, f.c_str());
-        lua_settable(L, -3);
+        // Set key of table directly and implicitly pop global from stack so we're back to func > table
+        lua_setfield(L, -2, f.c_str());
     }
 
-    lua_pushstring(L, "limit_range");
     lua_pushcfunction(L, lua_limitRange);
-    lua_settable(L, -3);
+    lua_setfield(L, -2, "limit_range");
 
-    lua_pushstring(L, "clamp");
     lua_pushcfunction(L, lua_limitRange);
-    lua_settable(L, -3);
+    lua_setfield(L, -2, "clamp");
 
     // stack is now func > table again *BUT* now load math in stripped
     lua_getglobal(L, "math");

@@ -54,8 +54,8 @@ std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::strin
         lua_createtable(L, 0, 10);
 
         // xs is an array of the x locations in phase space
-        lua_pushstring(L, "xs");
         lua_createtable(L, resolution, 0);
+
         double dp = 1.0 / (resolution - 1);
         for (auto i = 0; i < resolution; ++i)
         {
@@ -63,15 +63,13 @@ std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::strin
             lua_pushnumber(L, i * dp);
             lua_settable(L, -3);
         }
-        lua_settable(L, -3);
+        lua_setfield(L, -2, "xs");
 
-        lua_pushstring(L, "n");
         lua_pushinteger(L, frame + 1);
-        lua_settable(L, -3);
+        lua_setfield(L, -2, "n");
 
-        lua_pushstring(L, "nTables");
         lua_pushinteger(L, nFrames);
-        lua_settable(L, -3);
+        lua_setfield(L, -2, "nTables");
 
         // So stack is now the table and the function
         auto pcr = lua_pcall(L, 1, 1, 0);
