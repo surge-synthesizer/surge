@@ -202,13 +202,11 @@ end
         {
             lua_createtable(L, 0, 4);
 
-            lua_pushstring(L, "a");
             lua_pushnumber(L, 13);
-            lua_settable(L, -3); /* 3rd element from the stack top */
+            lua_setfield(L, -2, "a"); /* 2nd element from the stack top */
 
-            lua_pushstring(L, "b");
             lua_pushnumber(L, 27);
-            lua_settable(L, -3);
+            lua_setfield(L, -2, "b");
 
             // So now the table is the top of the stack so
             lua_pcall(L, 1, 1, 0);

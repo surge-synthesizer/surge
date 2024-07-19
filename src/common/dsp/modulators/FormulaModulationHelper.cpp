@@ -187,40 +187,33 @@ end
         lua_createtable(s.L, 0, 10);
 
         // add subscription hooks
-        lua_pushstring(s.L, "subscriptions");
-        lua_createtable(s.L, 0, 5);
-        lua_pushstring(s.L, "macros");
-        lua_createtable(s.L, n_customcontrollers, 0);
+        lua_createtable(s.L, 0, 5);                   // subscriptions
+        lua_createtable(s.L, n_customcontrollers, 0); // macros
         for (int i = 0; i < n_customcontrollers; ++i)
         {
             lua_pushnumber(s.L, i + 1);
             lua_pushboolean(s.L, false);
             lua_settable(s.L, -3);
         }
-        lua_settable(s.L, -3);
+        lua_setfield(s.L, -2, "macros");
+        lua_setfield(s.L, -2, "subscriptions");
 
-        lua_settable(s.L, -3);
-
-        lua_pushstring(s.L, "samplerate");
         lua_pushnumber(s.L, storage->samplerate);
-        lua_settable(s.L, -3);
+        lua_setfield(s.L, -2, "samplerate");
 
-        lua_pushstring(s.L, "block_size");
         lua_pushnumber(s.L, BLOCK_SIZE);
-        lua_settable(s.L, -3);
+        lua_setfield(s.L, -2, "block_size");
 
         if (lua_isfunction(s.L, -2))
         {
             // CALL HERE
             auto addn = [&s](const char *q, float f) {
-                lua_pushstring(s.L, q);
                 lua_pushnumber(s.L, f);
-                lua_settable(s.L, -3);
+                lua_setfield(s.L, -2, q);
             };
             auto addb = [&s](const char *q, bool f) {
-                lua_pushstring(s.L, q);
                 lua_pushboolean(s.L, f);
-                lua_settable(s.L, -3);
+                lua_setfield(s.L, -2, q);
             };
 
             addn("delay", s.del);
@@ -282,8 +275,7 @@ end
                 {
                     // read off the envelope control
                     auto gv = Surge::LuaSupport::SGLD("prepareForEvaluation::enveloperead", s.L);
-                    lua_pushstring(s.L, "use_envelope");
-                    lua_gettable(s.L, -2);
+                    lua_getfield(s.L, -1, "use_envelope");
                     if (lua_isboolean(s.L, -1))
                     {
                         s.useEnvelope = lua_toboolean(s.L, -1);
@@ -292,16 +284,14 @@ end
                 }
 
                 // now let's read off those subscriptions
-                lua_pushstring(s.L, "subscriptions");
-                lua_gettable(s.L, -2);
+                lua_getfield(s.L, -1, "subscriptions");
 
                 auto gv = [&s](const char *k) -> bool {
                     auto gv =
                         Surge::LuaSupport::SGLD("prepareForEvaluation::subscriptions::gv", s.L);
 
                     auto res = false;
-                    lua_pushstring(s.L, k);
-                    lua_gettable(s.L, -2);
+                    lua_getfield(s.L, -1, k);
                     if (lua_isboolean(s.L, -1))
                     {
                         res = lua_toboolean(s.L, -1);
@@ -310,8 +300,7 @@ end
                     return res;
                 };
 
-                lua_pushstring(s.L, "macros");
-                lua_gettable(s.L, -2);
+                lua_getfield(s.L, -1, "macros");
                 if (lua_isboolean(s.L, -1))
                 {
                     auto b = lua_toboolean(s.L, -1);
@@ -333,10 +322,7 @@ end
                         s.subMacros[i] = res;
                     }
                 }
-                lua_pop(s.L, 1);
-
-                lua_pop(s.L, 1); // the subscriptions
-                lua_pop(s.L, 1); // the modulator state
+                lua_pop(s.L, 3); // pop the macros, subscriptions, and modulator state
             }
         }
     }
@@ -354,8 +340,7 @@ end
         }
         else
         {
-            lua_pushstring(s.L, "randomseed");
-            lua_gettable(s.L, -2);
+            lua_getfield(s.L, -1, "randomseed");
             // > math > randomseed
             if (lua_isnil(s.L, -1))
             {
@@ -478,36 +463,33 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     }
     lua_getglobal(s->L, s->stateName);
 
+    /*
     lua_pushstring(s->L, "av");
     lua_gettable(s->L, -2);
     lua_pop(s->L, 1);
+    */
 
     // Stack is now func > table  so we can update the table
-    lua_pushstring(s->L, "intphase");
     lua_pushinteger(s->L, phaseIntPart);
-    lua_settable(s->L, -3);
+    lua_setfield(s->L, -2, "intphase");
 
     // Alias cycle for intphase
-    lua_pushstring(s->L, "cycle");
     lua_pushinteger(s->L, phaseIntPart);
-    lua_settable(s->L, -3);
+    lua_setfield(s->L, -2, "cycle");
 
     auto addn = [s](const char *q, float f) {
-        lua_pushstring(s->L, q);
         lua_pushnumber(s->L, f);
-        lua_settable(s->L, -3);
+        lua_setfield(s->L, -2, q);
     };
 
     auto addb = [s](const char *q, bool b) {
-        lua_pushstring(s->L, q);
         lua_pushboolean(s->L, b);
-        lua_settable(s->L, -3);
+        lua_setfield(s->L, -2, q);
     };
 
     auto addnil = [s](const char *q) {
-        lua_pushstring(s->L, q);
         lua_pushnil(s->L);
-        lua_settable(s->L, -3);
+        lua_setfield(s->L, -2, q);
     };
 
     addn("phase", phaseFracPart);
@@ -562,8 +544,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     if (s->subAnyMacro)
     {
         // load the macros
-        lua_pushstring(s->L, "macros");
-        lua_createtable(s->L, n_customcontrollers, 0);
+        lua_createtable(s->L, n_customcontrollers, 0); // macros
         for (int i = 0; i < n_customcontrollers; ++i)
         {
             if (s->subMacros[i])
@@ -573,7 +554,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
                 lua_settable(s->L, -3);
             }
         }
-        lua_settable(s->L, -3);
+        lua_setfield(s->L, -2, "macros");
     }
 
     addn("pb", s->pitchbend);
@@ -630,8 +611,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         lua_setglobal(s->L, s->stateName);
         lua_getglobal(s->L, s->stateName);
 
-        lua_pushstring(s->L, "output");
-        lua_gettable(s->L, -2);
+        lua_getfield(s->L, -1, "output");
         // top of stack is now the result
         float res = 0.0;
         if (lua_isnumber(s->L, -1))
@@ -693,8 +673,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
         auto getBoolDefault = [s](const char *n, bool def) -> bool {
             auto res = def;
-            lua_pushstring(s->L, n);
-            lua_gettable(s->L, -2);
+            lua_getfield(s->L, -1, n);
             if (lua_isboolean(s->L, -1))
             {
                 res = lua_toboolean(s->L, -1);
@@ -824,8 +803,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
 
             for (auto s : skeys)
             {
-                lua_pushstring(es.L, s.c_str());
-                lua_gettable(es.L, -2);
+                lua_getfield(es.L, -1, s.c_str());
                 guts(s);
                 lua_pop(es.L, 1);
             }
