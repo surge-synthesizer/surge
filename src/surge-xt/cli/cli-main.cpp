@@ -308,6 +308,11 @@ int main(int argc, char **argv)
     std::string initPatch{};
     app.add_flag("--init-patch", initPatch, "Choose this file path as the initial patch.");
 
+    bool noStdIn{false};
+    app.add_flag("--no-stdin", noStdIn,
+                 "Do not assume stdin and do not poll keyboard for quit or ctrl-d. Useful for "
+                 "daemon modes.");
+
     CLI11_PARSE(app, argc, argv);
 
     if (listDevices)
@@ -612,15 +617,22 @@ int main(int argc, char **argv)
 
     if (needsMessageLoop)
     {
-        LOG(BASIC, "Beginning message loop...");
+        LOG(BASIC, "Running CLI with message loop");
     }
     else
     {
-        LOG(BASIC, "Running");
+        LOG(BASIC, "Running CLI without message loop");
     }
 
-    std::thread keyboardInputThread([]() { isQuitPressed(); });
-    keyboardInputThread.detach();
+    if (!noStdIn)
+    {
+        std::thread keyboardInputThread([]() { isQuitPressed(); });
+        keyboardInputThread.detach();
+    }
+    else
+    {
+        LOG(BASIC, "Daemon mode without stdin. Send SIGINT or SIGTERM to cleanly stop execution.");
+    }
 
 #ifndef WINDOWS
     signal(SIGINT, ctrlc_callback_handler);
