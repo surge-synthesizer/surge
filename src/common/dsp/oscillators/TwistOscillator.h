@@ -24,8 +24,6 @@
  * What's our samplerate strategy
  */
 #include "globals.h"
-#define SAMPLERATE_SRC 0
-#define SAMPLERATE_LANCZOS 1
 
 #include "OscillatorBase.h"
 #include <memory>
@@ -33,10 +31,8 @@
 #include "DSPUtils.h"
 #include "OscillatorCommonFunctions.h"
 
-#if SAMPLERATE_LANCZOS
 // #include "LanczosResampler.h"
 #include "sst/basic-blocks/dsp/LanczosResampler.h"
-#endif
 
 namespace plaits
 {
@@ -49,8 +45,6 @@ namespace stmlib
 {
 class BufferAllocator;
 }
-
-struct SRC_STATE_tag;
 
 class TwistOscillator : public Oscillator
 {
@@ -95,15 +89,13 @@ class TwistOscillator : public Oscillator
     char *shared_buffer{nullptr};
 
     // Keep this here for now even if using lanczos since I'm using SRC for FM still
-    SRC_STATE_tag *srcstate, *fmdownsamplestate;
     float fmlagbuffer[BLOCK_SIZE_OS << 1];
     int fmwp, fmrp;
 
     bool useCorrectLPGBlockSize{false}; // See #6760
 
-#if SAMPLERATE_LANCZOS
-    std::unique_ptr<sst::basic_blocks::dsp::LanczosResampler<BLOCK_SIZE>> lancRes;
-#endif
+    using resamp_t = sst::basic_blocks::dsp::LanczosResampler<BLOCK_SIZE>;
+    std::unique_ptr<resamp_t> lancRes, fmDownSampler;
 
     float carryover[BLOCK_SIZE_OS][2];
     int carrover_size = 0;

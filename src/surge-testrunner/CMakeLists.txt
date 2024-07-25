@@ -32,7 +32,6 @@ add_executable(${PROJECT_NAME}
   )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  samplerate
   surge-lua-src
   surge::catch2_v3
   surge::surge-common
