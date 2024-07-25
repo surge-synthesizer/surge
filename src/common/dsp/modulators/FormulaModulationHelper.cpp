@@ -526,6 +526,9 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addn("rel_velocity", s->releasevelocity);
         addn("channel", s->channel);
         addb("released", s->released);
+        addn("voice_order", s->voice_order);
+        addn("voice_limit", s->voice_limit);
+        addn("voice_n", s->voice_n);
 
         addn("poly_at", s->polyat);
         addn("mpe_bend", s->mpebend);
@@ -891,6 +894,9 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
     s.channel = v->state.channel;
     s.velocity = v->state.velocity;
     s.releasevelocity = v->state.releasevelocity;
+    s.voice_order = v->state.voiceOrderAtCreate;
+    s.voice_limit = v->state.polyLimit;
+    s.voice_n = v->state.voiceN + 1;
 
     s.polyat =
         v->storage

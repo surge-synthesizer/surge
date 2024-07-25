@@ -176,6 +176,7 @@ class alignas(16) SurgeSynthesizer
     unsigned int voices_usedby[2][MAX_VOICES]; // 0 indicates no user, 1 is scene A, 2 is scene B
 
     int64_t voiceCounter = 1L;
+    int voiceN = 0;
 
     std::atomic<unsigned int> processRunning{0};
 

@@ -47,7 +47,7 @@ class alignas(16) SurgeVoice
     SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *scene, pdata *params, int key,
                int velocity, int channel, int scene_id, float detune, MidiKeyState *keyState,
                MidiChannelState *mainChannelState, MidiChannelState *voiceChannelState,
-               bool mpeEnabled, int64_t voiceOrder, int32_t host_note_id,
+               bool mpeEnabled, int64_t voiceOrder, int voiceN, int polyLimit, int32_t host_note_id,
                int16_t originating_host_key, int16_t originating_host_channel, float aegStart,
                float fegStart);
     ~SurgeVoice();

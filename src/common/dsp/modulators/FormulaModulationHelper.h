@@ -66,7 +66,8 @@ struct EvaluatorState
 
     // voice features
     bool isVoice;
-    int key{60}, channel{0}, velocity{0}, releasevelocity{0}, mpebendrange{24};
+    int key{60}, channel{0}, velocity{0}, releasevelocity{0}, voice_order{0}, voice_limit{0},
+        voice_n{0}, mpebendrange{24};
     float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0};
 
     // scene features

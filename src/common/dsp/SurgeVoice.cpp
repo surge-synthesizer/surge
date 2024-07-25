@@ -153,8 +153,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
                        int velocity, int channel, int scene_id, float detune,
                        MidiKeyState *keyState, MidiChannelState *mainChannelState,
                        MidiChannelState *voiceChannelState, bool mpeEnabled, int64_t voiceOrder,
-                       int32_t host_nid, int16_t host_key, int16_t host_chan, float aegStart,
-                       float fegStart)
+                       int voiceN, int polyLimit, int32_t host_nid, int16_t host_key,
+                       int16_t host_chan, float aegStart, float fegStart)
 //: fb(storage,oscene)
 {
 #ifdef VOICE_LIFETIME_DEBUG
@@ -192,6 +192,9 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.keyRetuningForKey = -1000;
     state.channel = channel;
     state.voiceOrderAtCreate = voiceOrder;
+    state.polyLimit = polyLimit;
+    // state.polyLimit = storage->getPatch().polylimit.val.i;
+    state.voiceN = voiceN;
 
     state.velocity = velocity;
     state.fvel = velocity / 127.f;
