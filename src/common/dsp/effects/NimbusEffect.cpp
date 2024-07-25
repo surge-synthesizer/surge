@@ -21,7 +21,6 @@
  */
 
 #include "NimbusEffect.h"
-#include "samplerate.h"
 #include "DebugHelpers.h"
 #include "fmt/core.h"
 
@@ -52,18 +51,7 @@ NimbusEffect::NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     processor->Init(block_mem, memLen, block_ccm, ccmLen);
     mix.set_blocksize(BLOCK_SIZE);
 
-    int error;
-    surgeSR_to_euroSR = src_new(SRC_SINC_FASTEST, 2, &error);
-    if (error != 0)
-    {
-        surgeSR_to_euroSR = nullptr;
-    }
-
-    euroSR_to_surgeSR = src_new(SRC_SINC_FASTEST, 2, &error);
-    if (error != 0)
-    {
-        euroSR_to_surgeSR = nullptr;
-    }
+    sampleRateReset();
 }
 
 NimbusEffect::~NimbusEffect()
@@ -71,17 +59,15 @@ NimbusEffect::~NimbusEffect()
     delete[] block_mem;
     delete[] block_ccm;
     delete processor;
-
-    if (surgeSR_to_euroSR)
-        surgeSR_to_euroSR = src_delete(surgeSR_to_euroSR);
-    if (euroSR_to_surgeSR)
-        euroSR_to_surgeSR = src_delete(euroSR_to_surgeSR);
 }
 
 void NimbusEffect::init()
 {
     mix.set_target(1.f);
     mix.instantize();
+
+    surgeSR_to_euroSR = std::make_unique<resamp_t>(storage->samplerate, processor_sr);
+    euroSR_to_surgeSR = std::make_unique<resamp_t>(processor_sr, storage->samplerate);
 
     memset(resampled_output, 0, raw_out_sz * 2 * sizeof(float));
 
@@ -102,31 +88,24 @@ void NimbusEffect::process(float *dataL, float *dataR)
         return;
 
     /* Resample Temp Buffers */
-    float resample_this[BLOCK_SIZE << 3][2];
-    float resample_into[BLOCK_SIZE << 3][2];
+    float resample_this[2][BLOCK_SIZE << 3];
+    float resample_into[2][BLOCK_SIZE << 3];
 
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
-        resample_this[i][0] = dataL[i];
-        resample_this[i][1] = dataR[i];
+        surgeSR_to_euroSR->push(dataL[i], dataR[i]);
     }
 
-    SRC_DATA sdata;
-    sdata.end_of_input = 0;
-    sdata.src_ratio = processor_sr * storage->samplerate_inv;
-    sdata.data_in = &(resample_this[0][0]);
-    sdata.data_out = &(resample_into[0][0]);
-    sdata.input_frames = BLOCK_SIZE;
-    sdata.output_frames = (BLOCK_SIZE << 3);
-    auto res = src_process(surgeSR_to_euroSR, &sdata);
-    consumed += sdata.input_frames_used;
+    float srgToEur[2][BLOCK_SIZE << 3];
+    auto outputFramesGen =
+        surgeSR_to_euroSR->populateNext(resample_into[0], resample_into[1], BLOCK_SIZE << 3);
 
-    if (sdata.output_frames_gen)
+    if (outputFramesGen)
     {
         clouds::ShortFrame input[BLOCK_SIZE << 3];
         clouds::ShortFrame output[BLOCK_SIZE << 3];
 
-        int frames_to_go = sdata.output_frames_gen;
+        int frames_to_go = outputFramesGen;
         int outpos = 0;
 
         auto modeInt = *pd_int[nmb_mode];
@@ -141,6 +120,7 @@ void NimbusEffect::process(float *dataL, float *dataR)
         processor->set_quality(*pd_int[nmb_quality]);
 
         int consume_ptr = 0;
+
         while (frames_to_go + numStubs >= nimbusprocess_blocksize)
         {
             int sp = 0;
@@ -154,8 +134,8 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
             for (int i = sp; i < nimbusprocess_blocksize; ++i)
             {
-                input[i].l = (short)(clamp1bp(resample_into[consume_ptr][0]) * 32767.0f);
-                input[i].r = (short)(clamp1bp(resample_into[consume_ptr][1]) * 32767.0f);
+                input[i].l = (short)(clamp1bp(resample_into[0][consume_ptr]) * 32767.0f);
+                input[i].r = (short)(clamp1bp(resample_into[1][consume_ptr]) * 32767.0f);
                 consume_ptr++;
             }
 
@@ -191,8 +171,8 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
             for (int i = 0; i < inputSz; ++i)
             {
-                resample_this[outpos + i][0] = output[i].l / 32767.0f;
-                resample_this[outpos + i][1] = output[i].r / 32767.0f;
+                resample_this[0][outpos + i] = output[i].l / 32767.0f;
+                resample_this[1][outpos + i] = output[i].r / 32767.0f;
             }
             outpos += inputSz;
             frames_to_go -= (nimbusprocess_blocksize - sp);
@@ -206,30 +186,28 @@ void NimbusEffect::process(float *dataL, float *dataR)
 
             for (int i = 0; i < addStub; ++i)
             {
-                stub_input[0][i + startSub] = resample_into[consume_ptr][0];
-                stub_input[1][i + startSub] = resample_into[consume_ptr][1];
+                stub_input[0][i + startSub] = resample_into[0][consume_ptr];
+                stub_input[1][i + startSub] = resample_into[1][consume_ptr];
                 consume_ptr++;
             }
         }
 
         if (outpos > 0)
         {
-            SRC_DATA odata;
-            odata.end_of_input = 0;
-            odata.src_ratio = processor_sr_inv * storage->samplerate;
-            odata.data_in = &(resample_this[0][0]);
-            odata.data_out = &(resample_into[0][0]);
-            odata.input_frames = outpos;
-            odata.output_frames = BLOCK_SIZE << 3;
-            auto reso = src_process(euroSR_to_surgeSR, &odata);
-            if (!builtBuffer)
-                created += odata.output_frames_gen;
+            for (int i = 0; i < outpos; ++i)
+            {
+                euroSR_to_surgeSR->push(resample_this[0][i], resample_this[1][i]);
+            }
+
+            auto dsoutputFramesGen = euroSR_to_surgeSR->populateNext(
+                resample_into[0], resample_into[1], BLOCK_SIZE << 3);
+            created += dsoutputFramesGen;
 
             size_t w = resampWritePtr;
-            for (int i = 0; i < odata.output_frames_gen; ++i)
+            for (int i = 0; i < dsoutputFramesGen; ++i)
             {
-                resampled_output[w][0] = resample_into[i][0];
-                resampled_output[w][1] = resample_into[i][1];
+                resampled_output[0][w] = resample_into[0][i];
+                resampled_output[1][w] = resample_into[1][i];
 
                 w = (w + 1U) & (raw_out_sz - 1U);
             }
@@ -247,8 +225,8 @@ void NimbusEffect::process(float *dataL, float *dataR)
     size_t rp = resampReadPtr;
     for (int i = 0; i < BLOCK_SIZE; ++i)
     {
-        L[i] = resampled_output[rp][0];
-        R[i] = resampled_output[rp][1];
+        L[i] = resampled_output[0][rp];
+        R[i] = resampled_output[1][rp];
         rp = (rp + rpi) & (raw_out_sz - 1);
     }
     resampReadPtr = rp;
@@ -453,4 +431,10 @@ void NimbusEffect::init_default_values()
     fxdata->p[nmb_reverb].val.f = 0.f;
     fxdata->p[nmb_spread].val.f = 0.f;
     fxdata->p[nmb_mix].val.f = 0.5;
+}
+void NimbusEffect::sampleRateReset()
+{
+    Effect::sampleRateReset();
+    surgeSR_to_euroSR = std::make_unique<resamp_t>(storage->samplerate, processor_sr);
+    euroSR_to_surgeSR = std::make_unique<resamp_t>(processor_sr, storage->samplerate);
 }
