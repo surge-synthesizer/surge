@@ -27,6 +27,7 @@
 
 #include <memory>
 #include <vembertech/lipol.h>
+#include "sst/basic-blocks/dsp/LanczosResampler.h"
 
 namespace clouds
 {
@@ -82,6 +83,8 @@ class NimbusEffect : public Effect
     // Only used by rack
     void setNimbusTrigger(bool b) { nimbusTrigger = b; }
 
+    void sampleRateReset() override;
+
   private:
     uint8_t *block_mem, *block_ccm;
     clouds::GranularProcessor *processor;
@@ -90,10 +93,11 @@ class NimbusEffect : public Effect
     int old_nmb_mode = 0;
     bool nimbusTrigger{false};
 
-    SRC_STATE_tag *surgeSR_to_euroSR, *euroSR_to_surgeSR;
+    using resamp_t = sst::basic_blocks::dsp::LanczosResampler<BLOCK_SIZE>;
+    std::unique_ptr<resamp_t> surgeSR_to_euroSR, euroSR_to_surgeSR;
 
     static constexpr int raw_out_sz = BLOCK_SIZE_OS << 5; // power of 2 pls
-    float resampled_output[raw_out_sz][2];                // at sr
+    float resampled_output[2][raw_out_sz];                // at sr
     size_t resampReadPtr = 0, resampWritePtr = 1;         // see comment in init
 
     static constexpr int nimbusprocess_blocksize = 8;
