@@ -117,6 +117,7 @@ struct SGLD
     lua_State *L;
     int top;
 };
+
 } // namespace LuaSupport
 } // namespace Surge
 

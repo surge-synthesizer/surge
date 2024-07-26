@@ -833,12 +833,12 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 int mpeMainChannel = getMpeMainChannel(channel, key);
 
                 voices[scene].push_back(nvoice);
-                new (nvoice) SurgeVoice(
-                    &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
-                    key, velocity, channel, scene, detune, &channelState[channel].keyState[key],
-                    &channelState[mpeMainChannel], &channelState[channel], mpeEnabled,
-                    voiceCounter++, voiceN, storage.getPatch().polylimit.val.i, host_noteid,
-                    host_originating_key, host_originating_channel, 0.f, 0.f);
+                new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
+                                        storage.getPatch().scenedata[scene], key, velocity, channel,
+                                        scene, detune, &channelState[channel].keyState[key],
+                                        &channelState[mpeMainChannel], &channelState[channel],
+                                        mpeEnabled, voiceCounter++, host_noteid,
+                                        host_originating_key, host_originating_channel, 0.f, 0.f);
             }
         }
         break;
@@ -981,9 +981,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         &storage, &storage.getPatch().scene[scene],
                         storage.getPatch().scenedata[scene], key, velocity, channel, scene, detune,
                         &channelState[channel].keyState[key], &channelState[mpeMainChannel],
-                        &channelState[channel], mpeEnabled, voiceCounter++, voiceN,
-                        storage.getPatch().polylimit.val.i, host_noteid, host_originating_key,
-                        host_originating_channel, aegReuse, fegReuse);
+                        &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
+                        host_originating_key, host_originating_channel, aegReuse, fegReuse);
 
                     if (wasGated && pkeyToReuse > 0)
                     {
@@ -1126,9 +1125,8 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         &storage, &storage.getPatch().scene[scene],
                         storage.getPatch().scenedata[scene], key, velocity, channel, scene, detune,
                         &channelState[channel].keyState[key], &channelState[mpeMainChannel],
-                        &channelState[channel], mpeEnabled, voiceCounter++, voiceN,
-                        storage.getPatch().polylimit.val.i, host_noteid, host_originating_key,
-                        host_originating_channel, aegStart, fegStart);
+                        &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
+                        host_originating_key, host_originating_channel, aegStart, fegStart);
                 }
             }
             else
@@ -4711,7 +4709,6 @@ void SurgeSynthesizer::process()
         }
 
         storage.modRoutingMutex.unlock();
-        voiceN = vcount;
 
         using sst::filters::FilterType, sst::filters::FilterSubType;
         fbq_global g;
@@ -4795,6 +4792,7 @@ void SurgeSynthesizer::process()
 
     storage.modRoutingMutex.unlock();
     polydisplay = vcount;
+    storage.voiceCount = vcount;
 
     // TODO: FIX SCENE ASSUMPTION
     if (play_scene[0])

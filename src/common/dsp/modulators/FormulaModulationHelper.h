@@ -64,10 +64,12 @@ struct EvaluatorState
 
     bool retrigger_AEG, retrigger_FEG;
 
+    bool is_display = false;
+
     // voice features
     bool isVoice;
-    int key{60}, channel{0}, velocity{0}, releasevelocity{0}, voice_order{0}, voice_limit{0},
-        voice_n{0}, mpebendrange{24};
+    int key{60}, channel{0}, velocity{0}, releasevelocity{0}, voicemax{1}, mpebendrange{24};
+    int64_t voiceid{1L};
     float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0};
 
     // scene features

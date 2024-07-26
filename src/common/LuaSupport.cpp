@@ -129,7 +129,12 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     // stack is now func > table
 
     // List of whitelisted functions and modules
-    std::vector<std::string> sandboxWhitelist = {"ipairs", "error", "math", "surge"};
+    std::vector<std::string> sandboxWhitelist = {"ipairs", "error", "math", "surge", "global"};
+    /*
+    std::vector<std::string> sandboxWhitelist = {"pairs", "ipairs",       "next",   "print",
+                                                 "error", "math",         "string", "table",
+                                                 "bit",   "setmetatable", "surge",  "shared"};
+    */
 
     for (const auto &f : sandboxWhitelist)
     {
@@ -162,6 +167,22 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     }
     // when lua_next returns false it has nothing on stack so
     // stack is now f>t>(m). Pop m
+    lua_pop(L, 1);
+
+    // retrieve "shared" table and set entries to nil
+    lua_getglobal(L, "shared");
+    if (lua_istable(L, -1))
+    {
+        lua_pushnil(L);
+        while (lua_next(L, -2))
+        {
+            lua_pop(L, 1);        // pop value
+            lua_pushvalue(L, -1); // duplicate the key
+            lua_pushnil(L);
+            lua_settable(L, -4); // clear the key
+        }
+    }
+    // pop the retrieved value (either table or nil) from the stack
     lua_pop(L, 1);
 
     // and now we are back to f>t so we can setfenv it

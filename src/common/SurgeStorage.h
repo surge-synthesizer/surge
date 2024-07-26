@@ -1344,6 +1344,8 @@ class alignas(16) SurgeStorage
     bool oscReceiving{false};
     bool oscSending{false};
 
+    int voiceCount;
+
     bool getOverrideDataHome(std::string &value);
     void createUserDirectory();
 
