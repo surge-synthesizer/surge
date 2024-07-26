@@ -21,221 +21,17 @@
  */
 
 #include "NimbusEffect.h"
+#include "sst/effects/NimbusImpl.h"
+
 #include "DebugHelpers.h"
 #include "fmt/core.h"
 
-#ifdef _MSC_VER
-#define __attribute__(x)
-#endif
-
-#define TEST // remember this is how you tell the eurorack code to use dsp not hardware
-#if EURORACK_CLOUDS_IS_SUPERPARASITES
-#include "supercell/dsp/granular_processor.h"
-#else
-#include "clouds/dsp/granular_processor.h"
-#endif
-
 NimbusEffect::NimbusEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd)
+    : parent_t(storage, fxdata, pd)
 {
-    const int memLen = 118784;
-    const int ccmLen = 65536 - 128;
-    block_mem = new uint8_t[memLen]();
-    block_ccm = new uint8_t[ccmLen]();
-    processor = new clouds::GranularProcessor();
-#if EURORACK_CLOUDS_IS_SUPERPARASITES
-#else
-    memset(processor, 0, sizeof(*processor));
-#endif
-
-    processor->Init(block_mem, memLen, block_ccm, ccmLen);
-    mix.set_blocksize(BLOCK_SIZE);
 
     sampleRateReset();
 }
-
-NimbusEffect::~NimbusEffect()
-{
-    delete[] block_mem;
-    delete[] block_ccm;
-    delete processor;
-}
-
-void NimbusEffect::init()
-{
-    mix.set_target(1.f);
-    mix.instantize();
-
-    surgeSR_to_euroSR = std::make_unique<resamp_t>(storage->samplerate, processor_sr);
-    euroSR_to_surgeSR = std::make_unique<resamp_t>(processor_sr, storage->samplerate);
-
-    memset(resampled_output, 0, raw_out_sz * 2 * sizeof(float));
-
-    consumed = 0;
-    created = 0;
-    builtBuffer = false;
-    resampReadPtr = 0;
-    resampWritePtr = 1; // why 1? well while we are stalling we want to output 0 so write 1 ahead
-}
-
-void NimbusEffect::setvars(bool init) {}
-
-void NimbusEffect::process(float *dataL, float *dataR)
-{
-    setvars(false);
-
-    if (!surgeSR_to_euroSR || !euroSR_to_surgeSR)
-        return;
-
-    /* Resample Temp Buffers */
-    float resample_this[2][BLOCK_SIZE << 3];
-    float resample_into[2][BLOCK_SIZE << 3];
-
-    for (int i = 0; i < BLOCK_SIZE; ++i)
-    {
-        surgeSR_to_euroSR->push(dataL[i], dataR[i]);
-    }
-
-    float srgToEur[2][BLOCK_SIZE << 3];
-    auto outputFramesGen =
-        surgeSR_to_euroSR->populateNext(resample_into[0], resample_into[1], BLOCK_SIZE << 3);
-
-    if (outputFramesGen)
-    {
-        clouds::ShortFrame input[BLOCK_SIZE << 3];
-        clouds::ShortFrame output[BLOCK_SIZE << 3];
-
-        int frames_to_go = outputFramesGen;
-        int outpos = 0;
-
-        auto modeInt = *pd_int[nmb_mode];
-        // Just make sure we are safe if we swap between superparasites and not
-#if EURORACK_CLOUDS_IS_SUPERPARASITES
-        modeInt = std::clamp(modeInt, 0, 7);
-#else
-        modeInt = std::clamp(modeInt, 0, 3);
-#endif
-        processor->set_playback_mode(
-            (clouds::PlaybackMode)((int)clouds::PLAYBACK_MODE_GRANULAR + modeInt));
-        processor->set_quality(*pd_int[nmb_quality]);
-
-        int consume_ptr = 0;
-
-        while (frames_to_go + numStubs >= nimbusprocess_blocksize)
-        {
-            int sp = 0;
-            while (numStubs > 0)
-            {
-                input[sp].l = (short)(clamp1bp(stub_input[0][sp]) * 32767.0f);
-                input[sp].r = (short)(clamp1bp(stub_input[1][sp]) * 32767.0f);
-                sp++;
-                numStubs--;
-            }
-
-            for (int i = sp; i < nimbusprocess_blocksize; ++i)
-            {
-                input[i].l = (short)(clamp1bp(resample_into[0][consume_ptr]) * 32767.0f);
-                input[i].r = (short)(clamp1bp(resample_into[1][consume_ptr]) * 32767.0f);
-                consume_ptr++;
-            }
-
-            int inputSz = nimbusprocess_blocksize; // sdata.output_frames_gen + sp;
-
-            auto parm = processor->mutable_parameters();
-
-            float den_val, tex_val;
-
-            den_val = (*pd_float[nmb_density] + 1.f) * 0.5;
-            tex_val = (*pd_float[nmb_texture] + 1.f) * 0.5;
-
-            parm->position = clamp01(*pd_float[nmb_position]);
-            parm->size = clamp01(*pd_float[nmb_size]);
-            parm->density = clamp01(den_val);
-            parm->texture = clamp01(tex_val);
-            parm->pitch = limit_range(*pd_float[nmb_pitch], -48.f, 48.f);
-            parm->stereo_spread = clamp01(*pd_float[nmb_spread]);
-            parm->feedback = clamp01(*pd_float[nmb_feedback]);
-            parm->freeze = *pd_float[nmb_freeze] > 0.5;
-            parm->reverb = clamp01(*pd_float[nmb_reverb]);
-            parm->dry_wet = 1.f;
-
-#if EURORACK_CLOUDS_IS_SUPERPARASITES
-            parm->capture = nimbusTrigger;
-#else
-            parm->trigger = nimbusTrigger; // this is an external granulating source. Skip it
-#endif
-            parm->gate = parm->freeze; // This is the CV for the freeze button
-
-            processor->Prepare();
-            processor->Process(input, output, inputSz);
-
-            for (int i = 0; i < inputSz; ++i)
-            {
-                resample_this[0][outpos + i] = output[i].l / 32767.0f;
-                resample_this[1][outpos + i] = output[i].r / 32767.0f;
-            }
-            outpos += inputSz;
-            frames_to_go -= (nimbusprocess_blocksize - sp);
-        }
-
-        if (frames_to_go > 0)
-        {
-            int startSub = numStubs;
-            int addStub = frames_to_go;
-            numStubs += frames_to_go;
-
-            for (int i = 0; i < addStub; ++i)
-            {
-                stub_input[0][i + startSub] = resample_into[0][consume_ptr];
-                stub_input[1][i + startSub] = resample_into[1][consume_ptr];
-                consume_ptr++;
-            }
-        }
-
-        if (outpos > 0)
-        {
-            for (int i = 0; i < outpos; ++i)
-            {
-                euroSR_to_surgeSR->push(resample_this[0][i], resample_this[1][i]);
-            }
-
-            auto dsoutputFramesGen = euroSR_to_surgeSR->populateNext(
-                resample_into[0], resample_into[1], BLOCK_SIZE << 3);
-            created += dsoutputFramesGen;
-
-            size_t w = resampWritePtr;
-            for (int i = 0; i < dsoutputFramesGen; ++i)
-            {
-                resampled_output[0][w] = resample_into[0][i];
-                resampled_output[1][w] = resample_into[1][i];
-
-                w = (w + 1U) & (raw_out_sz - 1U);
-            }
-            resampWritePtr = w;
-        }
-    }
-
-    // If you hit this you need to adjust this gapping ratio probably.
-    static_assert(BLOCK_SIZE >= nimbusprocess_blocksize);
-    int ratio = std::max((int)std::ceil(processor_sr_inv * storage->samplerate) - 2, 0);
-    bool rpi = (created) > (BLOCK_SIZE * (1 + ratio) + 8); // leave some buffer
-    if (rpi)
-        builtBuffer = true;
-
-    size_t rp = resampReadPtr;
-    for (int i = 0; i < BLOCK_SIZE; ++i)
-    {
-        L[i] = resampled_output[0][rp];
-        R[i] = resampled_output[1][rp];
-        rp = (rp + rpi) & (raw_out_sz - 1);
-    }
-    resampReadPtr = rp;
-
-    mix.set_target_smoothed(clamp01(*pd_float[nmb_mix]));
-    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
-}
-
-void NimbusEffect::suspend() { init(); }
 
 const char *NimbusEffect::group_label(int id)
 {
@@ -415,26 +211,10 @@ void NimbusEffect::init_ctrltypes()
     fxdata->p[nmb_mix].set_type(ct_percent);
     fxdata->p[nmb_mix].val_default.f = 0.5;
     fxdata->p[nmb_mix].posy_offset = ypos;
+
+    configureControlsFromFXMetadata();
 }
 
-void NimbusEffect::init_default_values()
-{
-    fxdata->p[nmb_mode].val.i = 0;
-    fxdata->p[nmb_quality].val.i = 0;
-    fxdata->p[nmb_position].val.f = 0.f;
-    fxdata->p[nmb_size].val.f = 0.5;
-    fxdata->p[nmb_density].val.f = 0.f;
-    fxdata->p[nmb_texture].val.f = 0.f;
-    fxdata->p[nmb_pitch].val.f = 0.f;
-    fxdata->p[nmb_freeze].val.f = 0.f;
-    fxdata->p[nmb_feedback].val.f = 0.f;
-    fxdata->p[nmb_reverb].val.f = 0.f;
-    fxdata->p[nmb_spread].val.f = 0.f;
-    fxdata->p[nmb_mix].val.f = 0.5;
-}
-void NimbusEffect::sampleRateReset()
-{
-    Effect::sampleRateReset();
-    surgeSR_to_euroSR = std::make_unique<resamp_t>(storage->samplerate, processor_sr);
-    euroSR_to_surgeSR = std::make_unique<resamp_t>(processor_sr, storage->samplerate);
-}
+// Just to be safe, explicitly instantiate the base class.
+template struct surge::sstfx::SurgeSSTFXBase<
+    sst::effects::nimbus::Nimbus<surge::sstfx::SurgeFXConfig>>;

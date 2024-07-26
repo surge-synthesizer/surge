@@ -200,6 +200,7 @@ template <typename T> struct SurgeSSTFXBase : T
         // 2: make it throw a logic_error for really miscofingured cases
         for (int i = 0; i < T::numParams; ++i)
         {
+            bool started{false};
             auto pmd = T::paramAt(i);
 
             if (this->fxdata->p[i].ctrltype == ct_none &&
@@ -208,13 +209,21 @@ template <typename T> struct SurgeSSTFXBase : T
 
             if (pmd.name.empty())
             {
-                std::cout << "\n\n----- " << i << " " << this->fxdata->p[i].get_name() << std::endl;
+                std::cout << "\n\n----- " << i << " [pmdname-missing] "
+                          << this->fxdata->p[i].get_name() << std::endl;
+                started = true;
             }
             this->fxdata->p[i].set_name(pmd.name.c_str());
             this->fxdata->p[i].basicBlocksParamMetaData = pmd;
             auto check = [&, i](auto a, auto b, auto msg) {
                 if (a != b)
                 {
+                    if (!started)
+                    {
+                        std::cout << "\n\n----- " << i << " `" << pmd.name << "` `"
+                                  << this->fxdata->p[i].get_name() << "'" << std::endl;
+                        started = true;
+                    }
                     // If you are sitting here it is because your ct_blah for p[i] is not
                     // consistent with your sst-effects ParamMetaData. Go fix one of the other
                     // and this message will vanish

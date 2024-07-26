@@ -33,14 +33,9 @@
 
 #include <vembertech/lipol.h>
 
-class Reverb2Effect : public surge::sstfx::SurgeSSTFXBase<
-                          sst::effects::reverb2::Reverb2<surge::sstfx::SurgeFXConfig>>
+struct Reverb2Effect : public surge::sstfx::SurgeSSTFXBase<
+                           sst::effects::reverb2::Reverb2<surge::sstfx::SurgeFXConfig>>
 {
-    // These are set to make sure we have delay lengths up to 384k
-
-    lipol_ps_blocksz mix alignas(16), width alignas(16);
-
-  public:
     Reverb2Effect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
     virtual ~Reverb2Effect();
 
