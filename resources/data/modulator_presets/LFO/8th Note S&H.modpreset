@@ -7,11 +7,11 @@
         <deform v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
         <trigmode i="1" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
         <unipolar i="0" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
-        <delay v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
-        <hold v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
-        <attack v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
-        <decay v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
-        <sustain v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
-        <release v="5.000000" temposync="0" deform_type="0" extend_range="0" deactivated="1" />
+        <delay v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="0" />
+        <hold v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="0" />
+        <attack v="-8.000000" temposync="0" deform_type="0" extend_range="0" deactivated="0" />
+        <decay v="0.000000" temposync="0" deform_type="0" extend_range="0" deactivated="0" />
+        <sustain v="1.000000" temposync="0" deform_type="0" extend_range="0" deactivated="0" />
+        <release v="5.000000" temposync="0" deform_type="0" extend_range="0" deactivated="0" />
     </params>
 </lfo>
