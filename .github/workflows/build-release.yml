@@ -5,7 +5,7 @@ on:
       - main
       - testrelease
     tags:
-      - 'v**'
+      - 'release_xt_**'
 
 defaults:
   run:
@@ -28,10 +28,22 @@ jobs:
             os: windows-latest
             cmakeArgs: -A Win32
     steps:
-      - name: Configure surge version
+      - name: Configure surge version (Nightly)
+        if: ${{ github.ref == 'refs/heads/release_xt_' || github.ref == 'refs/heads/testrelease' }}
         run: |
           echo ${{ toJSON(github.event) }}
-          exit 976
+          export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
+
+      - name: Configure surge version (Numbered Release)
+        if: startsWith(github.ref, 'refs/tags/release_xt_')
+        run: |
+          echo Numbered Releases are not yet implemented
+          exit 123
+
+      - name: Debug Surge Version Some
+        run: |
+          echo ${SURGE_VERSION}
+          exit 11
 
       - name: Checkout code
         uses: actions/checkout@v4
