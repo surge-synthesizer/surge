@@ -1,0 +1,149 @@
+name: Build Release or Nightly Installer
+on:
+  push:
+    branches:
+      - main
+      - testrelease
+    tags:
+      - 'v**'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build_plugin:
+    name: Release Build - ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - name: "windows clang x64"
+            os: windows-latest
+            cmakeArgs: -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+          - name: "macos"
+            os: macos-latest
+            cmakeArgs: -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+          - name: "windows 32 bit"
+            os: windows-latest
+            cmakeArgs: -A Win32
+    steps:
+      - name: Configure surge version
+        run: |
+          echo ${{ toJSON(github.event) }}
+          exit 976
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: apple-actions/import-codesign-certs@v3
+        if: runner.os == 'macOS'
+        with:
+          p12-file-base64: ${{ secrets.MAC_CERTS_P12 }}
+          p12-password: ${{ secrets.CERT_PWD }}
+
+      - name: Prepare for JUCE
+        uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
+        with:
+          os: ${{ runner.os }}
+
+
+      - name: Build release version
+        run: |
+          
+          export MAC_SIGNING_CERT="${{ secrets.MAC_SIGNING_CERT_NAME }}"
+          export MAC_INSTALLING_CERT="${{ secrets.MAC_INSTALLING_CERT_NAME }}"
+          
+          export MAC_SIGNING_ID="${{ secrets.MAC_SIGNING_ID }}"
+          export MAC_SIGNING_1UPW="${{ secrets.MAC_SIGNING_1UPW }}"
+          export MAC_SIGNING_TEAM="${{ secrets.MAC_SIGNING_TEAM }}"
+          
+          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmakeArgs }}
+          cmake --build ./build --config Release --target shortcircuit-installer --parallel 3
+
+      - name: Show Installer Directory
+        run: |
+          ls -l ./build/installer
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: build/installer
+          name: build-${{ matrix.os }}
+
+  build_plugin_docker:
+    name: Docker Build Ubuntu18
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build in Docker
+        uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
+        with:
+          username: ${{ github.actor }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          cmakeArgs: -DCMAKE_BUILD_TYPE=Release -GNinja
+          target: shortcircuit-installer
+
+
+      - name: Show Installer Directory
+        run: |
+          ls -l ./build/installer
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: build/installer
+          name: build-docker
+
+  publish-scxt-nightly:
+    name: Publish scxt Nightly
+    if: ${{ github.ref == 'refs/heads/main' && github.repository_owner == 'surge-synthesizer' }}
+    runs-on: ubuntu-latest
+    needs: [ build_plugin, build_plugin_docker ]
+    steps:
+      - name: Upload to Nightly
+        uses: surge-synthesizer/sst-githubactions/upload-to-release@main
+        with:
+          tag: Nightly
+          reuse_tag: true
+          create_tag: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release_blurb_file: doc/NightlyBlurb.md
+
+      - name: Post to Discord
+        uses: surge-synthesizer/sst-githubactions/discord-release-notify@main
+        with:
+          webhook: ${{ secrets.DISCORD_SHORTCIRCUIT_WEBHOOK }}
+          tag: Nightly
+          title: "A New ShortCircuit Nightly is Available"
+          subtitle: "Still pre-alpha! Use care!"
+
+
+  publish-scxt-release:
+    name: Publish scxt Release
+    if: startsWith(github.ref, 'refs/tags/v') && github.repository_owner == 'surge-synthesizer'
+    runs-on: ubuntu-latest
+    needs: [ build_plugin, build_plugin_docker ]
+    steps:
+      - name: Upload to Release
+        uses: surge-synthesizer/sst-githubactions/upload-to-release@main
+        with:
+          tag: ${{ github.ref_name }}
+          reuse_tag: false
+          create_tag: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post to Discord
+        uses: surge-synthesizer/sst-githubactions/discord-release-notify@main
+        with:
+          webhook: ${{ secrets.DISCORD_SHORTCIRCUIT_WEBHOOK }}
+          tag: ${{ github.ref_name }}
+          title: "A New ShortCircuit XT Release is Available"
+          subtitle: "Release ${{ github.ref_name }}"
+
