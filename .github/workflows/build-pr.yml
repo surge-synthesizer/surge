@@ -30,12 +30,12 @@ jobs:
             runTests: false
           - name: "ubuntu standalone"
             os: ubuntu-latest
-            target: scxt_plugin_Standalone
+            target: surge-xt_Standalone
             cmakeConfig: -DCMAKE_BUILD_TYPE=Debug
             runTests: false
           - name: "macos standalone"
             os: macos-latest
-            target: scxt_plugin_Standalone
+            target: surge-xt_Standalone
             cmakeConfig: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
             runTests: false
 
