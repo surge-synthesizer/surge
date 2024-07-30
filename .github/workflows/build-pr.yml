@@ -16,44 +16,53 @@ jobs:
           - name: "windows msvc"
             os: windows-latest
             target: surge-xt_Standalone
-            cmakeConfig: -DCMAKE_BUILD_TYPE=Debug -A x64
+            cmakeConfig: -A x64
+            cmakeOpt: DEBUG
             runTests: false
           - name: "windows msvc 32 bit"
             os: windows-latest
             target: surge-xt_Standalone
-            cmakeConfig: -DCMAKE_BUILD_TYPE=Debug -A Win32
+            cmakeConfig: -A Win32
+            cmakeOpt: DEBUG
             runTests: false
           - name: "windows clang"
             os: windows-latest
             target: surge-xt_Standalone
-            cmakeConfig: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+            cmakeConfig: -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+            cmakeOpt: DEBUG
             runTests: false
           - name: "ubuntu standalone"
             os: ubuntu-latest
             target: surge-xt_Standalone
-            cmakeConfig: -DCMAKE_BUILD_TYPE=Debug
+            cmakeConfig:
+            cmakeOpt: DEBUG
             runTests: false
           - name: "macos standalone"
             os: macos-latest
             target: surge-xt_Standalone
-            cmakeConfig: -DCMAKE_BUILD_TYPE=Debug -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+            cmakeConfig: -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+            cmakeOpt: DEBUG
             runTests: false
 
           - name: "mac test runner"
             os: macos-latest
             target: surge-testrunner
-            cmakeConfig: -DCMAKE_BUILD_TYPE=Release
+            cmakeConfig:
+            cmakeOpt: RELEASE
             runTests: true
           - name: "linux test runner"
             os: ubuntu-latest
             target: surge-testrunner
-            cmakeConfig: -DCMAKE_BUILD_TYPE=Release
+            cmakeConfig:
+            cmakeOpt: RELEASE
             runTests: true
           - name: "windows test runner"
             os: windows-latest
             target: surge-testrunner
-            cmakeConfig: -A x64 -DCMAKE_BUILD_TYPE=Release
+            cmakeConfig: -A x64
+            cmakeOpt: RELEASE
             runTests: true
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,8 +76,8 @@ jobs:
 
       - name: Build pull request version
         run: |
-          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Debug ${{ matrix.cmakeConfig }}
-          cmake --build ./build --config Debug --target ${{ matrix.target }} --parallel 3
+          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=${{ matrix.cmakeOpt }} ${{ matrix.cmakeConfig }}
+          cmake --build ./build --config ${{ matrix.cmakeOpt }} --target ${{ matrix.target }} --parallel 3
 
       - name: Run Tests
         if: ${{ matrix.runTests }}
