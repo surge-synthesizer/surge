@@ -28,10 +28,14 @@ jobs:
             os: windows-latest
             cmakeArgs: -A Win32
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
       - name: Configure surge version (Nightly)
         if: ${{ github.ref == 'refs/heads/release_xt_' || github.ref == 'refs/heads/testrelease' }}
         run: |
-          echo ${{ toJSON(github.event) }}
           export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
 
       - name: Configure surge version (Numbered Release)
@@ -44,11 +48,6 @@ jobs:
         run: |
           echo ${SURGE_VERSION}
           exit 11
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - uses: apple-actions/import-codesign-certs@v3
         if: runner.os == 'macOS'
