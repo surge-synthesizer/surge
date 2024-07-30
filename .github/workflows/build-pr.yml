@@ -1,0 +1,106 @@
+name: Build Pull Request
+on:
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build_plugin:
+    name: PR - ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - name: "windows msvc"
+            os: windows-latest
+            target: surge-xt_Standalone
+            cmakeConfig: -A x64
+            cmakeOpt: DEBUG
+            runTests: false
+          - name: "windows msvc 32 bit"
+            os: windows-latest
+            target: surge-xt_Standalone
+            cmakeConfig: -A Win32
+            cmakeOpt: DEBUG
+            runTests: false
+          - name: "windows clang"
+            os: windows-latest
+            target: surge-xt_Standalone
+            cmakeConfig: -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+            cmakeOpt: DEBUG
+            runTests: false
+          - name: "ubuntu standalone"
+            os: ubuntu-latest
+            target: surge-xt_Standalone
+            cmakeConfig:
+            cmakeOpt: DEBUG
+            runTests: false
+          - name: "macos standalone"
+            os: macos-latest
+            target: surge-xt_Standalone
+            cmakeConfig: -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+            cmakeOpt: DEBUG
+            runTests: false
+
+          - name: "mac test runner"
+            os: macos-latest
+            target: surge-testrunner
+            cmakeConfig:
+            cmakeOpt: RELEASE
+            runTests: true
+          - name: "linux test runner"
+            os: ubuntu-latest
+            target: surge-testrunner
+            cmakeConfig:
+            cmakeOpt: RELEASE
+            runTests: true
+          - name: "windows test runner"
+            os: windows-latest
+            target: surge-testrunner
+            cmakeConfig: -A x64
+            cmakeOpt: RELEASE
+            runTests: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Prepare for JUCE
+        uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
+        with:
+          os: ${{ runner.os }}
+
+      - name: Build pull request version
+        run: |
+          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=${{ matrix.cmakeOpt }} ${{ matrix.cmakeConfig }}
+          cmake --build ./build --config ${{ matrix.cmakeOpt }} --target ${{ matrix.target }} --parallel 3
+
+      - name: Run Tests
+        if: ${{ matrix.runTests }}
+        run: |
+          set -e
+
+          cd build
+          ctest -j 4 || ctest --rerun-failed --output-on-failure
+
+  build_plugin_lindoc:
+    name: PR - U18 Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build in Docker
+        uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
+        with:
+          username: ${{ github.actor }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          cmakeArgs: -DCMAKE_BUILD_TYPE=Debug -GNinja
+          target: surge-xt_Standalone
+
