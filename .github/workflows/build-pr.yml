@@ -18,6 +18,11 @@ jobs:
             target: surge-xt_Standalone
             cmakeConfig: -DCMAKE_BUILD_TYPE=Debug -A x64
             runTests: false
+          - name: "windows msvc 32 bit"
+            os: windows-latest
+            target: surge-xt_Standalone
+            cmakeConfig: -DCMAKE_BUILD_TYPE=Debug -A Win32
+            runTests: false
           - name: "windows clang"
             os: windows-latest
             target: surge-xt_Standalone
