@@ -129,7 +129,7 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     // stack is now func > table
 
     // List of whitelisted functions and modules
-    std::vector<std::string> sandboxWhitelist = {"ipairs", "error", "math", "surge", "global"};
+    std::vector<std::string> sandboxWhitelist = {"ipairs", "error", "math", "surge", "shared"};
     /*
     std::vector<std::string> sandboxWhitelist = {"pairs", "ipairs",       "next",   "print",
                                                  "error", "math",         "string", "table",
