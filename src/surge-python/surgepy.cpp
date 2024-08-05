@@ -626,7 +626,15 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             throw std::invalid_argument((std::string("File not found: ") + s).c_str());
         }
 
-        return loadPatchByPath(s.c_str(), -1, path.filename().c_str());
+        bool result = loadPatchByPath(s.c_str(), -1, path.filename().c_str());
+
+        // update tempo if we want to change it on patch load
+        if (storage.unstreamedTempo > -1.f)
+        {
+            time_data.tempo = storage.unstreamedTempo;
+        }
+
+        return result;
     }
 
     void savePatchPy(const std::string &s) { savePatchToPath(string_to_path(s)); }
@@ -748,6 +756,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
         for (auto i = 0; i < blockIterations; ++i)
         {
             process();
+            time_data.ppqPos += (double)BLOCK_SIZE * time_data.tempo / (60. * storage.samplerate);
             memcpy((void *)dL, (void *)(output[0]), BLOCK_SIZE * sizeof(float));
             memcpy((void *)dR, (void *)(output[1]), BLOCK_SIZE * sizeof(float));
 
@@ -848,6 +857,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             memcpy((void *)(input[0]), (void *)iL, BLOCK_SIZE * sizeof(float));
             memcpy((void *)(input[1]), (void *)iR, BLOCK_SIZE * sizeof(float));
             process();
+            time_data.ppqPos += (double)BLOCK_SIZE * time_data.tempo / (60. * storage.samplerate);
             memcpy((void *)oL, (void *)(output[0]), BLOCK_SIZE * sizeof(float));
             memcpy((void *)oR, (void *)(output[1]), BLOCK_SIZE * sizeof(float));
 
