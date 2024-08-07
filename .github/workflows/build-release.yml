@@ -55,10 +55,6 @@ jobs:
           - os: macos-latest
             cmakeArgs: -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
     steps:
-      - name: ABORT
-        run: |
-          exit 123
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -105,10 +101,6 @@ jobs:
     needs: [ surge_version ]
 
     steps:
-      - name: ABORT
-        run: |
-          exit 123
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -151,10 +143,9 @@ jobs:
       - name: Post to Discord
         uses: surge-synthesizer/sst-githubactions/discord-release-notify@main
         with:
-          webhook: ${{ secrets.DISCORD_SHORTCIRCUIT_WEBHOOK }}
+          webhook: ${{ secrets.DISCORD_SURGE_WEBHOOK }}
           tag: Nightly
-          title: "A New ShortCircuit Nightly is Available"
-          subtitle: "Still pre-alpha! Use care!"
+          title: "A New Surge Nightly is Available"
 
 
   publish-scxt-release:
@@ -174,9 +165,9 @@ jobs:
       - name: Post to Discord
         uses: surge-synthesizer/sst-githubactions/discord-release-notify@main
         with:
-          webhook: ${{ secrets.DISCORD_SHORTCIRCUIT_WEBHOOK }}
+          webhook: ${{ secrets.DISCORD_SURGE_WEBHOOK }}
           tag: ${{ github.ref_name }}
-          title: "A New SurgeXT Release is Available"
+          title: "A New Surge Release is Available"
           subtitle: "Release ${{ github.ref_name }}"
 
   create_web_links:
