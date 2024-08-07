@@ -235,7 +235,7 @@ end
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
             addb("released", s.released);
-            addb("is_display", s.is_display);
+            addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
 
             auto cres = lua_pcall(s.L, 1, 1, 0);
