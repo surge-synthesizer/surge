@@ -533,7 +533,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addb("released", s->released);
 
         addn("voice_id", s->voiceOrderAtCreate);
-        addn("voice_polylimit", s->polylimit);
+        addn("poly_limit", s->polylimit);
 
         addn("poly_at", s->polyat);
         addn("mpe_bend", s->mpebend);
@@ -548,7 +548,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
     addnil("retrigger_AEG");
     addnil("retrigger_FEG");
-    addb("is_display", s->is_display);
+    addb("is_rendering_to_ui", s->is_display);
 
     if (s->subAnyMacro)
     {
