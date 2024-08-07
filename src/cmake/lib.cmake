@@ -100,7 +100,8 @@ function(surge_make_installers)
     set (SXTVER ${SURGE_VERSION})
   else()
     set(SXTVER $ENV{SURGE_VERSION})
-  endif
+  endif()
+
   if("${SXTVER}" STREQUAL "")
     set(SXTVER "LOCAL")
   endif()
