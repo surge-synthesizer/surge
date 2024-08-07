@@ -96,10 +96,16 @@ function(surge_make_installers)
   set(SURGE_XT_DIST_OUTPUT_DIR ${CMAKE_BINARY_DIR}/surge-xt-dist)
   file(MAKE_DIRECTORY ${SURGE_XT_DIST_OUTPUT_DIR})
 
-  set(SXTVER $ENV{SURGE_VERSION})
+  if (DEFINED SURGE_VERSION)
+    set (SXTVER ${SURGE_VERSION})
+  else()
+    set(SXTVER $ENV{SURGE_VERSION})
+  endif()
+
   if("${SXTVER}" STREQUAL "")
     set(SXTVER "LOCAL")
   endif()
+  message(STATUS "Installer Surge Version is ${SXTVER}")
 
   function(run_installer_script PATH)
     add_custom_command(TARGET surge-xt-distribution

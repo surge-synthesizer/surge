@@ -2,36 +2,10 @@
 # https://aka.ms/yaml
 
 trigger:
-  - main
-  - xt-alpha
-  - release-xt/*
-
-pr:
-  - main
   - release-xt/*
 
 jobs:
-  - job: BuildCodeQuality
-    pool:
-      vmImage: 'ubuntu-20.04'
-
-    steps:
-      - checkout: self
-        fetchDepth: 1
-        # submodules: recursive # can't do submodules here b'cuz depth=1 fails with Github
-
-      - bash: |
-          mkdir ignore
-          pushd ignore
-          git clone https://github.com/jidicula/clang-format-action
-          popd
-          ./ignore/clang-format-action/check.sh 16 src llvm
-
-        displayName: Do Codequal
-
   - job: NotifyReleases
-    dependsOn: BuildCodeQuality
-    condition: and(succeeded(), not(eq(variables['Build.Reason'], 'PullRequest')))
     pool:
       vmImage: 'ubuntu-20.04'
 
@@ -52,7 +26,7 @@ jobs:
           # remove refs/heads/
           export BRANCH="${BUILD_SOURCEBRANCH/refs\/heads\/}"
 
-          if ! [[ $BRANCH =~ ^(main|release-xt/.+)$ ]]; then
+          if ! [[ $BRANCH =~ ^(release-xt/.+)$ ]]; then
             exit
           fi
 
