@@ -1344,7 +1344,9 @@ class alignas(16) SurgeStorage
     bool oscReceiving{false};
     bool oscSending{false};
 
-    int voiceCount;
+    int voiceCount; // TODO: use SurgeSynthesizer class to fetch synth->polydisplay directly from
+                    // valueAt() in FormulaModulationHelper.cpp where it's needed and remove
+                    // this and its assignment in SurgeSynthesizer.cpp
 
     bool getOverrideDataHome(std::string &value);
     void createUserDirectory();
