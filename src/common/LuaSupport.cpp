@@ -194,7 +194,7 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     return true;
 }
 
-bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
+bool Surge::LuaSupport::loadSurgePrelude(lua_State *s, const char *surgeTableName)
 {
 #if HAS_LUA
     auto guard = SGLD("loadPrologue", s);
@@ -203,7 +203,7 @@ bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
     auto lua_size = lua_script.size();
     auto load_stat = luaL_loadbuffer(s, lua_script.c_str(), lua_size, lua_script.c_str());
     auto pcall = lua_pcall(s, 0, 1, 0);
-    lua_setglobal(s, "surge");
+    lua_setglobal(s, surgeTableName);
 #endif
     return true;
 }

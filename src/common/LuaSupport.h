@@ -85,10 +85,10 @@ int parseStringDefiningMultipleFunctions(lua_State *s, const std::string &defini
 bool setSurgeFunctionEnvironment(lua_State *s);
 
 /*
- * Call this function with a LUA state and it will introduce the global
+ * Call this function with a LUA state and a tablename and it will introduce the global
  * 'surge' which is the surge prelude
  */
-bool loadSurgePrelude(lua_State *s);
+bool loadSurgePrelude(lua_State *s, const char *surgeTableName);
 
 /*
  * Call this function to get a string representation of the prelude

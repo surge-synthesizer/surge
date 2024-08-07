@@ -193,7 +193,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.channel = channel;
 
     state.voiceOrderAtCreate = voiceOrder;
-    state.voiceMax = storage->getPatch().polylimit.val.i;
+    state.polylimit = storage->getPatch().polylimit.val.i;
 
     state.velocity = velocity;
     state.fvel = velocity / 127.f;

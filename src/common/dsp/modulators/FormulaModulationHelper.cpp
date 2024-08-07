@@ -81,12 +81,12 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
 
     if (firstTimeThrough)
     {
-        // setup global table
+        // setup shared table
         lua_newtable(s.L);
-        lua_setglobal(s.L, "shared");
+        lua_setglobal(s.L, sharedTableName);
 
         // setup prelude
-        Surge::LuaSupport::loadSurgePrelude(s.L);
+        Surge::LuaSupport::loadSurgePrelude(s.L, surgeTableName);
         auto reserved0 = std::string(R"FN(
 function surge_reserved_formula_error_stub(m)
     return 0;
@@ -485,10 +485,10 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     lua_setfield(s->L, -2, "cycle");
 
     // fake voice count for display calls
-    int vcount = 1;
+    int voiceCount = 1;
     if (storage->voiceCount != 0)
-        vcount = storage->voiceCount;
-    lua_pushinteger(s->L, vcount);
+        voiceCount = storage->voiceCount;
+    lua_pushinteger(s->L, voiceCount);
     lua_setfield(s->L, -2, "voice_count");
 
     auto addn = [s](const char *q, float f) {
@@ -532,8 +532,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addn("channel", s->channel);
         addb("released", s->released);
 
-        addn("voice_id", s->voiceid);
-        addn("voice_max", s->voicemax);
+        addn("voice_id", s->voiceOrderAtCreate);
+        addn("voice_polylimit", s->polylimit);
 
         addn("poly_at", s->polyat);
         addn("mpe_bend", s->mpebend);
@@ -820,7 +820,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
         }
     };
 
-    std::vector<std::string> tablesList = {es.stateName, "shared"};
+    std::vector<std::string> tablesList = {es.stateName, sharedTableName};
     for (const auto &t : tablesList)
     {
         lua_getglobal(es.L, t.c_str());
@@ -828,7 +828,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
         {
             lua_pop(es.L, -1);
             rows.emplace_back(0, "Error", "Not a Table");
-            return rows;
+            continue;
         }
         rec(0, false);
         lua_pop(es.L, -1);
@@ -916,8 +916,8 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
     s.velocity = v->state.velocity;
     s.releasevelocity = v->state.releasevelocity;
 
-    s.voiceid = v->state.voiceOrderAtCreate;
-    s.voicemax = v->state.voiceMax;
+    s.voiceOrderAtCreate = v->state.voiceOrderAtCreate;
+    s.polylimit = v->state.polylimit;
 
     s.polyat =
         v->storage
