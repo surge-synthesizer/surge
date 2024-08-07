@@ -44,6 +44,8 @@ struct GlobalData
 };
 
 static constexpr int max_formula_outputs{max_lfo_indices};
+static constexpr const char *surgeTableName{"surge"};
+static constexpr const char *sharedTableName{"shared"};
 
 struct EvaluatorState
 {
@@ -64,9 +66,12 @@ struct EvaluatorState
 
     bool retrigger_AEG, retrigger_FEG;
 
+    bool is_display = false;
+
     // voice features
     bool isVoice;
-    int key{60}, channel{0}, velocity{0}, releasevelocity{0}, mpebendrange{24};
+    int key{60}, channel{0}, velocity{0}, releasevelocity{0}, polylimit{1}, mpebendrange{24};
+    int64_t voiceOrderAtCreate{1L};
     float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0};
 
     // scene features

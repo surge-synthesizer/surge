@@ -129,7 +129,12 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     // stack is now func > table
 
     // List of whitelisted functions and modules
-    std::vector<std::string> sandboxWhitelist = {"ipairs", "error", "math", "surge"};
+    std::vector<std::string> sandboxWhitelist = {"ipairs", "error", "math", "surge", "shared"};
+    /*
+    std::vector<std::string> sandboxWhitelist = {"pairs", "ipairs",       "next",   "print",
+                                                 "error", "math",         "string", "table",
+                                                 "bit",   "setmetatable", "surge",  "shared"};
+    */
 
     for (const auto &f : sandboxWhitelist)
     {
@@ -164,6 +169,22 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     // stack is now f>t>(m). Pop m
     lua_pop(L, 1);
 
+    // retrieve "shared" table and set entries to nil
+    lua_getglobal(L, "shared");
+    if (lua_istable(L, -1))
+    {
+        lua_pushnil(L);
+        while (lua_next(L, -2))
+        {
+            lua_pop(L, 1);        // pop value
+            lua_pushvalue(L, -1); // duplicate the key
+            lua_pushnil(L);
+            lua_settable(L, -4); // clear the key
+        }
+    }
+    // pop the retrieved value (either table or nil) from the stack
+    lua_pop(L, 1);
+
     // and now we are back to f>t so we can setfenv it
     lua_setfenv(L, -2);
 
@@ -173,7 +194,7 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     return true;
 }
 
-bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
+bool Surge::LuaSupport::loadSurgePrelude(lua_State *s, const char *surgeTableName)
 {
 #if HAS_LUA
     auto guard = SGLD("loadPrologue", s);
@@ -182,7 +203,7 @@ bool Surge::LuaSupport::loadSurgePrelude(lua_State *s)
     auto lua_size = lua_script.size();
     auto load_stat = luaL_loadbuffer(s, lua_script.c_str(), lua_size, lua_script.c_str());
     auto pcall = lua_pcall(s, 0, 1, 0);
-    lua_setglobal(s, "surge");
+    lua_setglobal(s, surgeTableName);
 #endif
     return true;
 }

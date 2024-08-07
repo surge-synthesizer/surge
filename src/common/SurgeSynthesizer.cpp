@@ -4792,6 +4792,7 @@ void SurgeSynthesizer::process()
 
     storage.modRoutingMutex.unlock();
     polydisplay = vcount;
+    storage.voiceCount = vcount;
 
     // TODO: FIX SCENE ASSUMPTION
     if (play_scene[0])
