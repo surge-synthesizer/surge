@@ -51,18 +51,23 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
     auto lerr = luaL_loadbuffer(L, lua_script, strlen(lua_script), "lua-script");
     if (lerr != LUA_OK)
     {
-        if (lerr == LUA_ERRSYNTAX)
+        std::ostringstream oss;
+        switch (lerr)
         {
-            std::ostringstream oss;
-            oss << "Lua Syntax Error: " << lua_tostring(L, -1);
-            errorMessage = oss.str();
+        case LUA_ERRSYNTAX:
+            oss << "Lua Syntax Error: ";
+            break;
+        case LUA_ERRMEM:
+            oss << "Lua Memory Allocation Error: ";
+            break;
+        default:
+            // The default case should never get called unless the underlying Lua library source
+            // gets modified, but we can handle it anyway
+            oss << "Lua Unknown Error: ";
+            break;
         }
-        else
-        {
-            std::ostringstream oss;
-            oss << "Lua Unknown Error: " << lua_tostring(L, -1);
-            errorMessage = oss.str();
-        }
+        oss << lua_tostring(L, -1);
+        errorMessage = oss.str();
         lua_pop(L, 1);
         for (auto f : functions)
             lua_pushnil(L);
@@ -72,9 +77,24 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
     lerr = lua_pcall(L, 0, 0, 0);
     if (lerr != LUA_OK)
     {
-        // FIXME obviously
         std::ostringstream oss;
-        oss << "Lua Evaluation Error: " << lua_tostring(L, -1);
+        switch (lerr)
+        {
+        case LUA_ERRRUN:
+            oss << "Lua Evaluation Error: ";
+            break;
+        case LUA_ERRMEM:
+            oss << "Lua Memory Allocation Error: ";
+            break;
+        case LUA_ERRERR:
+            // We're running pcall without an error function now but we might in the future
+            oss << "Lua Error Handler Function Error: ";
+            break;
+        default:
+            oss << "Lua Unknown Error: ";
+            break;
+        }
+        oss << lua_tostring(L, -1);
         errorMessage = oss.str();
         lua_pop(L, 1);
         for (auto f : functions)
@@ -116,6 +136,25 @@ int lua_limitRange(lua_State *L)
     return 1;
 }
 
+// customized print that outputs limted amount of arguments and restricts use to strings and numbers
+int lua_sandboxPrint(lua_State *L)
+{
+#if HAS_LUA
+    int n = lua_gettop(L); // number of arguments
+    if (n > 20)
+        n = 20;
+    for (int i = 1; i <= n; i++)
+    {
+        if (!lua_isstring(L, i))
+            return luaL_error(L, "Error: 'print' only accepts strings or numbers");
+        const char *s = lua_tostring(L, i); // get the string
+        fputs(s, stdout);                   // print the string
+    }
+    fputs("\n", stdout);
+#endif
+    return 0;
+}
+
 bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
 {
 #if HAS_LUA
@@ -124,52 +163,84 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
         return false;
     }
 
-    // Stack is ...>func
-    lua_createtable(L, 0, 20);
-    // stack is now func > table
+    lua_createtable(L, 0, 40); // stack: ... > function > table
+    int eidx = lua_gettop(L);  // environment table index
 
-    // List of whitelisted functions and modules
-    std::vector<std::string> sandboxWhitelist = {"ipairs", "error", "math", "surge", "shared"};
-    /*
-    std::vector<std::string> sandboxWhitelist = {"pairs", "ipairs",       "next",   "print",
-                                                 "error", "math",         "string", "table",
-                                                 "bit",   "setmetatable", "surge",  "shared"};
-    */
+    // add custom functions
+    lua_pushcfunction(L, lua_limitRange);
+    lua_setfield(L, eidx, "limit_range");
+    lua_pushcfunction(L, lua_limitRange);
+    lua_setfield(L, eidx, "clamp");
+    lua_pushcfunction(L, lua_sandboxPrint);
+    lua_setfield(L, eidx, "print");
 
+    // add whitelisted functions and modules
+    std::vector<std::string> sandboxWhitelist = {"pairs", "ipairs",   "unpack",   "next",
+                                                 "type",  "tostring", "tonumber", "setmetatable",
+                                                 "error", "surge",    "shared"};
     for (const auto &f : sandboxWhitelist)
     {
-        // Add whitelisted item to top of stack
-        lua_getglobal(L, f.c_str());
-        // Set key of table directly, pop global from stack so we're back to func > table
-        lua_setfield(L, -2, f.c_str());
+        lua_getglobal(L, f.c_str()); // stack: f>t>f
+        if (lua_isnil(L, -1))        // check if the global exists
+        {
+            lua_pop(L, 1);
+            std::cout << "Error: global not found [ " << f.c_str() << " ]" << std::endl;
+            continue;
+        }
+        lua_setfield(L, -2, f.c_str()); // stack: f>t
     }
 
-    lua_pushcfunction(L, lua_limitRange);
-    lua_setfield(L, -2, "limit_range");
+    // add library tables
+    std::vector<std::string> sandboxLibraryTables = {"math", "string", "table", "bit"};
+    for (const auto &t : sandboxLibraryTables)
+    {
+        lua_getglobal(L, t.c_str()); // stack: f>t>(t)
+        int gidx = lua_gettop(L);
+        if (!lua_istable(L, gidx))
+        {
+            lua_pop(L, 1);
+            std::cout << "Error: not a table [ " << t.c_str() << " ]" << std::endl;
+            continue;
+        }
 
-    lua_pushcfunction(L, lua_limitRange);
-    lua_setfield(L, -2, "clamp");
+        // we want to add to a local table so the entries in the global table can't be overwritten
+        lua_createtable(L, 0, 10); // stack: f>t>(t)>t
+        lua_setfield(L, eidx, t.c_str());
+        lua_getfield(L, eidx, t.c_str());
+        int lidx = lua_gettop(L);
 
-    // stack is now func > table again *BUT* now load math in stripped
-    lua_getglobal(L, "math");
+        lua_pushnil(L);
+        while (lua_next(L, gidx))
+        {
+            // stack: f>t>(t)>t>k>v
+            lua_pushvalue(L, -2);
+            lua_pushvalue(L, -2);
+            // stack is now f>t>(t)>t>k>v>k>v and we want k>v in the local library table
+            lua_settable(L, lidx);
+            // stack is now f>t>(t)>t>k>v and we want the key on top for next so
+            lua_pop(L, 1);
+        }
+        // when next returns false it has nothing on stack so stack is now f>t>(t)>t
+        lua_pop(L, 2); // pop global and local tables and stack is back to f>t
+    }
+
+    // we want to also load in the math functions stripped so go over math again
+    lua_getglobal(L, "math"); // stack: f>t>(m)
+
     lua_pushnil(L);
-
     // func > table > (math) > nil so lua next -2 will iterate over (math)
     while (lua_next(L, -2))
     {
-        // stack is now f>t>(m)>k>v
+        // stack: f>t>(m)>k>v
         lua_pushvalue(L, -2);
         lua_pushvalue(L, -2);
-        // stack is now f>t>(m)>k>v>k>v and we want k>v in the table
-        lua_settable(L, -6); // that -6 reaches back to 2
-        // stack is now f>t>(m)>k>v and we want the key on top for next so
+        // stack is now f>t>(m)>k>v>k>v and we want k>v added to the environment table
+        lua_settable(L, eidx);
         lua_pop(L, 1);
     }
-    // when lua_next returns false it has nothing on stack so
-    // stack is now f>t>(m). Pop m
-    lua_pop(L, 1);
+    lua_pop(L, 1); // pop global math table and stack is back to f>t
 
-    // retrieve "shared" table and set entries to nil
+    // retrieve shared table and set entries to nil
     lua_getglobal(L, "shared");
     if (lua_istable(L, -1))
     {

@@ -718,7 +718,6 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         lua_pop(s->L, 1);
         return;
     }
-#else
 #endif
 }
 
