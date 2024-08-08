@@ -81,7 +81,7 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         switch (lerr)
         {
         case LUA_ERRRUN:
-            oss << "Lua Runtime Error: ";
+            oss << "Lua Evaluation Error: ";
             break;
         case LUA_ERRMEM:
             oss << "Lua Memory Allocation Error: ";
