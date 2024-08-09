@@ -1500,7 +1500,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                     else
                     { // MPE branch
                         int highest = -1, lowest = 128, latest = -1;
-                        int hichan{-1}, lowchan{-1}, latechan{-1 };
+                        int hichan{-1}, lowchan{-1}, latechan{-1};
                         int64_t lt = 0;
 
                         for (k = hikey; k >= lowkey && !do_switch; k--)
