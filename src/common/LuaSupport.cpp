@@ -136,7 +136,7 @@ int lua_limitRange(lua_State *L)
     return 1;
 }
 
-// customized print that outputs limted amount of arguments and restricts use to strings and numbers
+// custom print that outputs limited amount of arguments and restricts use to strings and numbers
 int lua_sandboxPrint(lua_State *L)
 {
 #if HAS_LUA
@@ -174,10 +174,16 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_pushcfunction(L, lua_sandboxPrint);
     lua_setfield(L, eidx, "print");
 
+    // add global tables
+    lua_getglobal(L, "surge");
+    lua_setfield(L, eidx, "surge");
+    lua_getglobal(L, "shared");
+    lua_setfield(L, eidx, "shared");
+
     // add whitelisted functions and modules
-    std::vector<std::string> sandboxWhitelist = {"pairs", "ipairs",   "unpack",   "next",
-                                                 "type",  "tostring", "tonumber", "setmetatable",
-                                                 "error", "surge",    "shared"};
+    std::vector<std::string> sandboxWhitelist = {"pairs",    "ipairs",       "unpack",
+                                                 "next",     "type",         "tostring",
+                                                 "tonumber", "setmetatable", "error"};
     for (const auto &f : sandboxWhitelist)
     {
         lua_getglobal(L, f.c_str()); // stack: f>t>f
