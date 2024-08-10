@@ -521,6 +521,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addn("phase", phaseFracPart);
     addn("tempo", s->tempo);
     addn("songpos", s->songpos);
+    addn("poly_limit", s->polylimit);
     addb("released", s->released);
 
     if (s->isVoice)
@@ -531,9 +532,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addn("rel_velocity", s->releasevelocity);
         addn("channel", s->channel);
         addb("released", s->released);
-
         addn("voice_id", s->voiceOrderAtCreate);
-        addn("poly_limit", s->polylimit);
 
         addn("poly_at", s->polyat);
         addn("mpe_bend", s->mpebend);

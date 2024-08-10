@@ -903,7 +903,7 @@ void FormulaModulatorEditor::resized()
     int debugPanelMargin = 0;
     if (debugPanel->isVisible())
     {
-        debugPanelWidth = 200;
+        debugPanelWidth = 215;
         debugPanelMargin = 2;
     }
     auto edRect = juce::Rectangle<int>(2, 2, w - 4 - debugPanelMargin - debugPanelWidth,
