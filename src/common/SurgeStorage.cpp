@@ -381,7 +381,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
     extraUserWavetablesPath = config.extraUsersWavetablesPath;
 
-    if (config.createUserDirectory && !userDataPathValid)
+    if (config.createUserDirectory)
     {
         createUserDirectory();
     }
@@ -636,6 +636,7 @@ void SurgeStorage::createUserDirectory()
                             userSkinsPath, userMidiMappingsPath})
                 fs::create_directories(s);
 
+            userDataPathValid = true;
 #if HAS_JUCE
             auto rd = std::string(SurgeSharedBinary::README_UserArea_txt,
                                   SurgeSharedBinary::README_UserArea_txtSize) +
