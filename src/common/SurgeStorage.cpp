@@ -348,30 +348,12 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
              * This code doesn't work because fs:: doesn't have a writable check and I don't
              * want to create a file just to see in every startup path. We find out later
              * anyway when we set up the directories.
-            auto stat = fs::status(userDataPath);
-            std::cout << std::oct << (int)stat.permissions() << " " << (int)fs::perms::owner_write
-            << std::endl; if ((stat.permissions() & fs::perms::owner_write) != fs::perms::none)
-            {
-                userDataPathValid = true;
-            }
-            else
-            {
-                reportError(std::string() + "Your user directory '" + userDataPath.u8string() + "'
-            is not writable.", "Path Error");
-            }
              */
-        }
-        else
-        {
-            reportError(std::string() + "Your user directory '" + userDataPath.u8string() +
-                            "' is not a directory.",
-                        "Path Error");
         }
     }
     catch (const fs::filesystem_error &e)
     {
         userDataPathValid = false;
-        reportError(e.what(), "Path Error");
     }
 
     userDefaultFilePath = userDataPath;
@@ -399,7 +381,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
     extraUserWavetablesPath = config.extraUsersWavetablesPath;
 
-    if (config.createUserDirectory && userDataPathValid)
+    if (config.createUserDirectory && !userDataPathValid)
     {
         createUserDirectory();
     }
