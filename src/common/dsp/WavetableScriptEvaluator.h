@@ -46,7 +46,7 @@ std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::strin
 bool constructWavetable(SurgeStorage *storage, const std::string &eqn, int resolution, int frames,
                         wt_header &wh, float **wavdata);
 
-std::string defaultWavetableFormula();
+std::string defaultWavetableScript();
 
 } // namespace WavetableScript
 } // namespace Surge

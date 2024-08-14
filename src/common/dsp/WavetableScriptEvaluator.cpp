@@ -134,7 +134,7 @@ bool constructWavetable(SurgeStorage *storage, const std::string &eqn, int resol
     }
     return true;
 }
-std::string defaultWavetableFormula()
+std::string defaultWavetableScript()
 {
     return R"FN(function generate(config)
 -- This script serves as the default example for the wavetable script editor. Unlike the formula editor, which executes

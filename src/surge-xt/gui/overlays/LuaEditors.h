@@ -88,32 +88,30 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
                            Surge::GUI::Skin::ptr_t sk);
     ~FormulaModulatorEditor();
 
-    std::unique_ptr<ExpandingFormulaDebugger> debugPanel;
-    std::unique_ptr<FormulaControlArea> controlArea;
     void resized() override;
+    void onSkinChanged() override;
     void applyCode() override;
-
+    void forceRefresh() override;
+    void setApplyEnabled(bool b) override;
     void showModulatorCode();
     void showPreludeCode();
-
     void escapeKeyPressed();
 
     void updateDebuggerIfNeeded();
+
+    std::unique_ptr<juce::CodeDocument> preludeDocument;
+    std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
+    std::unique_ptr<FormulaControlArea> controlArea;
+
+    std::unique_ptr<ExpandingFormulaDebugger> debugPanel;
 
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
     SurgeGUIEditor *editor{nullptr};
     int lfo_id, scene;
-
-    void onSkinChanged() override;
-    void setApplyEnabled(bool b) override;
-
-    void forceRefresh() override;
+    int32_t updateDebuggerCounter{0};
 
     DAWExtraStateStorage::EditorState::FormulaEditState &getEditState();
-
-    std::unique_ptr<juce::CodeDocument> preludeDocument;
-    std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
 
     bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override
     {
@@ -122,20 +120,64 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 
     std::optional<std::pair<std::string, std::string>> getPreCloseChickenBoxMessage() override;
 
-    int32_t updateDebuggerCounter{0};
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaModulatorEditor);
 };
 
 struct WavetablePreviewComponent;
+struct WavetableScriptControlArea;
 
-struct WavetableEquationEditor : public CodeEditorContainerWithApply,
+struct WavetableScriptEditor : public CodeEditorContainerWithApply,
+                               public RefreshableOverlay,
+                               public juce::Slider::Listener
+{
+    WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os, int oscid,
+                          int scene, Surge::GUI::Skin::ptr_t sk);
+    ~WavetableScriptEditor();
+
+    void resized() override;
+    void onSkinChanged() override;
+    void applyCode() override;
+    void forceRefresh() override;
+    void setApplyEnabled(bool b) override;
+    void showModulatorCode();
+    void showPreludeCode();
+    void escapeKeyPressed();
+
+    void sliderValueChanged(juce::Slider *slider) override;
+    void generateWavetable();
+    void rerenderFromUIState();
+
+    std::unique_ptr<juce::CodeDocument> preludeDocument;
+    std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
+    std::unique_ptr<WavetableScriptControlArea> controlArea;
+
+    std::unique_ptr<WavetablePreviewComponent> rendererComponent;
+    std::unique_ptr<juce::Slider> currentFrame;
+
+    OscillatorStorage *osc;
+    SurgeGUIEditor *editor{nullptr};
+    int osc_id, scene;
+
+    DAWExtraStateStorage::EditorState::WavetableScriptEditState &getEditState();
+
+    bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override
+    {
+        return false;
+    }
+
+    std::optional<std::pair<std::string, std::string>> getPreCloseChickenBoxMessage() override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableScriptEditor);
+};
+
+/*
+struct WavetableScriptEditor : public CodeEditorContainerWithApply,
                                  public juce::Slider::Listener,
                                  public juce::ComboBox::Listener
 {
-    WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os,
+    WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os,
                             Surge::GUI::Skin::ptr_t sk);
-    ~WavetableEquationEditor() noexcept;
+    ~WavetableScriptEditor() noexcept;
 
     std::unique_ptr<juce::Label> resolutionLabel;
     std::unique_ptr<juce::ComboBox> resolution;
@@ -160,8 +202,10 @@ struct WavetableEquationEditor : public CodeEditorContainerWithApply,
 
     OscillatorStorage *osc;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableEquationEditor);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableScriptEditor);
 };
+
+*/
 
 } // namespace Overlays
 } // namespace Surge

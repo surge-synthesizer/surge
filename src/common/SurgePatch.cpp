@@ -2875,6 +2875,26 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                             }
                         }
                     }
+
+                    for (int osc = 0; osc < n_oscs; osc++)
+                    {
+                        std::string wsns =
+                            "wtse_state_" + std::to_string(sc) + "_" + std::to_string(osc);
+                        auto wss = TINYXML_SAFE_TO_ELEMENT(p->FirstChild(wsns));
+
+                        if (wss)
+                        {
+                            auto q = &(dawExtraState.editor.wavetableScriptEditState[sc][osc]);
+                            int vv;
+
+                            q->codeOrPrelude = 0;
+
+                            if (wss->QueryIntAttribute("codeOrPrelude", &vv) == TIXML_SUCCESS)
+                            {
+                                q->codeOrPrelude = vv;
+                            }
+                        }
+                    }
                 } // end of scene loop
 
                 {
@@ -3716,6 +3736,17 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                 fss.SetAttribute("debuggerOpen", q->debuggerOpen);
 
                 eds.InsertEndChild(fss);
+            }
+
+            for (int os = 0; os < n_oscs; ++os)
+            {
+                auto q = &(dawExtraState.editor.wavetableScriptEditState[sc][os]);
+                std::string wsns = "wtse_state_" + std::to_string(sc) + "_" + std::to_string(os);
+                TiXmlElement wss(wsns);
+
+                wss.SetAttribute("codeOrPrelude", q->codeOrPrelude);
+
+                eds.InsertEndChild(wss);
             }
 
             TiXmlElement modEd("modulation_editor");

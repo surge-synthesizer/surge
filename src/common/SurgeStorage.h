@@ -136,9 +136,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                               added deform option for Release parameter of Filter/Amp EG, which only produces an open gate for the release stage
 // 23 -> 24 (XT 1.3.3 nightlies) added actually functioning extend mode to FM2 oscillator's M1/2 Offset parameter
 //                                     (old patches load with extend disabled even if they had it enabled)
+// 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Script Editor window state
 // clang-format on
 
-const int ff_revision = 24;
+const int ff_revision = 25;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -920,6 +921,11 @@ struct DAWExtraStateStorage
         {
             bool hasCustomEditor = false;
         } oscExtraEditState[n_scenes][n_lfos];
+
+        struct WavetableScriptEditState
+        {
+            int codeOrPrelude{0};
+        } wavetableScriptEditState[n_scenes][n_oscs];
 
         struct OverlayState
         {

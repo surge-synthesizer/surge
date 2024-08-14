@@ -57,6 +57,7 @@ struct SurgeCodeEditorComponent : public juce::CodeEditorComponent
         }
     }
 };
+
 struct EditorColors
 {
     static void setColorsFromSkin(juce::CodeEditorComponent *comp,
@@ -522,7 +523,6 @@ struct FormulaControlArea : public juce::Component,
     {
         int labelHeight = 12;
         int buttonHeight = 14;
-        int numfieldHeight = 12;
         int margin = 2;
         int xpos = 10;
 
@@ -540,7 +540,6 @@ struct FormulaControlArea : public juce::Component,
 
             codeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
             auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
-
             codeS->setBounds(btnrect);
             codeS->setStorage(overlay->storage);
             codeS->setTitle("Code Selection");
@@ -555,15 +554,13 @@ struct FormulaControlArea : public juce::Component,
             codeS->setValue(overlay->getEditState().codeOrPrelude);
             codeS->setSkin(skin, associatedBitmapStore);
             addAndMakeVisible(*codeS);
-            marginPos += btnWidth + margin;
 
             applyS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
             btnrect = juce::Rectangle<int>(getWidth() / 2 - 30, ypos - 1, 60, buttonHeight);
-
             applyS->setBounds(btnrect);
+            applyS->setStorage(overlay->storage);
             applyS->setTitle("Apply");
             applyS->setDescription("Apply");
-            applyS->setStorage(overlay->storage);
             applyS->setLabels({"Apply"});
             applyS->addListener(this);
             applyS->setTag(tag_code_apply);
@@ -574,7 +571,6 @@ struct FormulaControlArea : public juce::Component,
             applyS->setSkin(skin, associatedBitmapStore);
             applyS->setEnabled(false);
             addAndMakeVisible(*applyS);
-            xpos += 60 + 10;
         }
 
         // Debugger Controls from the left
@@ -659,7 +655,6 @@ struct FormulaControlArea : public juce::Component,
         default:
             break;
         }
-
         return 0;
     }
 
@@ -704,7 +699,6 @@ struct FormulaControlArea : public juce::Component,
                 stepS->setVisible(true);
                 initS->setVisible(true);
             }
-
             repaint();
         }
         case tag_debugger_init:
@@ -815,67 +809,6 @@ void FormulaModulatorEditor::applyCode()
     mainEditor->grabKeyboardFocus();
 }
 
-void FormulaModulatorEditor::updateDebuggerIfNeeded()
-{
-    {
-        if (debugPanel->isOpen)
-        {
-            bool anyUpdate{false};
-            auto lfodata = lfos;
-
-#define CK(x)                                                                                      \
-    {                                                                                              \
-        auto &r = debugPanel->tp[lfodata->x.param_id_in_scene];                                    \
-                                                                                                   \
-        if (r.i != lfodata->x.val.i)                                                               \
-        {                                                                                          \
-            r.i = lfodata->x.val.i;                                                                \
-            anyUpdate = true;                                                                      \
-        }                                                                                          \
-    }
-
-            CK(rate);
-            CK(magnitude);
-            CK(start_phase);
-            CK(deform);
-
-            if (debugPanel->lfoDebugger->formulastate.tempo != storage->temposyncratio * 120)
-            {
-                anyUpdate = true;
-            }
-
-#undef CK
-
-#define CKENV(x, y)                                                                                \
-    {                                                                                              \
-        auto &tgt = debugPanel->lfoDebugger->formulastate.x;                                       \
-        auto src = lfodata->y.value_to_normalized(lfodata->y.val.f);                               \
-                                                                                                   \
-        if (tgt != src)                                                                            \
-        {                                                                                          \
-            tgt = src;                                                                             \
-            anyUpdate = true;                                                                      \
-        }                                                                                          \
-    }
-            CKENV(del, delay);
-            CKENV(a, attack);
-            CKENV(h, hold);
-            CKENV(dec, decay);
-            CKENV(s, sustain);
-            CKENV(r, release);
-
-#undef CKENV
-
-            if (anyUpdate)
-            {
-                debugPanel->refreshDebuggerView();
-                editor->repaintFrame();
-            }
-        }
-    }
-    updateDebuggerCounter = (updateDebuggerCounter + 1) & 31;
-}
-
 void FormulaModulatorEditor::forceRefresh()
 {
     mainDocument->replaceAllContent(formulastorage->formulaString);
@@ -946,6 +879,67 @@ void FormulaModulatorEditor::escapeKeyPressed()
     }
 }
 
+void FormulaModulatorEditor::updateDebuggerIfNeeded()
+{
+    {
+        if (debugPanel->isOpen)
+        {
+            bool anyUpdate{false};
+            auto lfodata = lfos;
+
+#define CK(x)                                                                                      \
+    {                                                                                              \
+        auto &r = debugPanel->tp[lfodata->x.param_id_in_scene];                                    \
+                                                                                                   \
+        if (r.i != lfodata->x.val.i)                                                               \
+        {                                                                                          \
+            r.i = lfodata->x.val.i;                                                                \
+            anyUpdate = true;                                                                      \
+        }                                                                                          \
+    }
+
+            CK(rate);
+            CK(magnitude);
+            CK(start_phase);
+            CK(deform);
+
+            if (debugPanel->lfoDebugger->formulastate.tempo != storage->temposyncratio * 120)
+            {
+                anyUpdate = true;
+            }
+
+#undef CK
+
+#define CKENV(x, y)                                                                                \
+    {                                                                                              \
+        auto &tgt = debugPanel->lfoDebugger->formulastate.x;                                       \
+        auto src = lfodata->y.value_to_normalized(lfodata->y.val.f);                               \
+                                                                                                   \
+        if (tgt != src)                                                                            \
+        {                                                                                          \
+            tgt = src;                                                                             \
+            anyUpdate = true;                                                                      \
+        }                                                                                          \
+    }
+            CKENV(del, delay);
+            CKENV(a, attack);
+            CKENV(h, hold);
+            CKENV(dec, decay);
+            CKENV(s, sustain);
+            CKENV(r, release);
+
+#undef CKENV
+
+            if (anyUpdate)
+            {
+                debugPanel->refreshDebuggerView();
+                editor->repaintFrame();
+            }
+        }
+    }
+    updateDebuggerCounter = (updateDebuggerCounter + 1) & 31;
+}
+
 std::optional<std::pair<std::string, std::string>>
 FormulaModulatorEditor::getPreCloseChickenBoxMessage()
 {
@@ -958,7 +952,7 @@ FormulaModulatorEditor::getPreCloseChickenBoxMessage()
     return std::nullopt;
 }
 
-struct WavetablePreviewComponent : juce::Component
+struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
     WavetablePreviewComponent(SurgeStorage *s, OscillatorStorage *os, Surge::GUI::Skin::ptr_t skin)
         : storage(s), osc(os), skin(skin)
@@ -967,25 +961,42 @@ struct WavetablePreviewComponent : juce::Component
 
     void paint(juce::Graphics &g) override
     {
-        g.fillAll(juce::Colour(0, 0, 0));
+        g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
         g.setFont(skin->fontManager->getFiraMonoAtSize(9));
 
-        g.setColour(juce::Colour(230, 230, 255)); // could be a skin->getColor of course
-        auto s1 = std::string("Frame : ") + std::to_string(frameNumber + 1);
-        auto s2 = std::string("Res   : ") + std::to_string(points.size());
-        g.drawSingleLineText(s1, 3, 18);
-        g.drawSingleLineText(s2, 3, 30);
+        g.setColour(skin->getColor(Colors::MSEGEditor::Text));
+        auto s1 = std::string("Frame: ") + std::to_string(frameNumber + 1);
+        auto s2 = std::string("Res:   ") + std::to_string(points.size());
+        g.drawSingleLineText(s1, 5, 18);
+        g.drawSingleLineText(s2, 5, 30);
 
-        g.setColour(juce::Colour(160, 160, 160));
         auto h = getHeight();
         auto w = getWidth();
 
         auto t = h * 0.05;
         auto m = h * 0.5;
         auto b = h * 0.95;
-        g.drawLine(0, t, w, t);
+
+        g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
+        for (float x : {0.25f, 0.75f})
+        {
+            g.drawLine(0, h * x, w, h * x);
+        }
+
+        g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
+        for (float y : {0.25f, 0.5f, 0.75f})
+        {
+            g.drawLine(w * y, 0, w * y, h);
+        }
+
+        g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+        g.drawLine(0, 0, w, 0);
+        g.drawLine(0, h, w, h);
+
+        g.drawLine(0, 0, 0, h);
+        g.drawLine(w, 0, w, h);
+
         g.drawLine(0, m, w, m);
-        g.drawLine(0, b, w, b);
 
         auto p = juce::Path();
         auto dx = 1.0 / (points.size() - 1);
@@ -998,7 +1009,7 @@ struct WavetablePreviewComponent : juce::Component
             else
                 p.lineTo(xp, yp);
         }
-        g.setColour(juce::Colour(255, 180, 0));
+        g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
         g.strokePath(p, juce::PathStrokeType(1.0));
     }
 
@@ -1010,7 +1021,455 @@ struct WavetablePreviewComponent : juce::Component
     Surge::GUI::Skin::ptr_t skin;
 };
 
-WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorage *s,
+struct WavetableScriptControlArea : public juce::Component,
+                                    public Surge::GUI::SkinConsumingComponent,
+                                    public Surge::GUI::IComponentTagValue::Listener,
+                                    public juce::ComboBox::Listener,
+                                    public juce::TextEditor::Listener
+{
+    enum tags
+    {
+        tag_select_tab = 0x597500,
+        tag_code_apply,
+        tag_generate_wt
+    };
+
+    WavetableScriptEditor *overlay{nullptr};
+    SurgeGUIEditor *editor{nullptr};
+
+    WavetableScriptControlArea(WavetableScriptEditor *ol, SurgeGUIEditor *ed)
+        : overlay(ol), editor(ed)
+    {
+        setAccessible(true);
+        setTitle("Controls");
+        setDescription("Controls");
+        setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
+    }
+
+    void resized() override
+    {
+        if (skin)
+        {
+            rebuild();
+        }
+    }
+
+    void rebuild()
+    {
+        int labelHeight = 12;
+        int buttonHeight = 14;
+        int margin = 2;
+        int xpos = 10;
+
+        removeAllChildren();
+        auto h = getHeight();
+
+        {
+            int marginPos = xpos + margin;
+            int btnWidth = 100;
+            int ypos = 1 + labelHeight + margin;
+
+            codeL = newL("Code");
+            codeL->setBounds(xpos, 1, 100, labelHeight);
+            addAndMakeVisible(*codeL);
+
+            codeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
+            codeS->setBounds(btnrect);
+            codeS->setStorage(overlay->storage);
+            codeS->setTitle("Code Selection");
+            codeS->setDescription("Code Selection");
+            codeS->setLabels({"Modulator", "Prelude"});
+            codeS->addListener(this);
+            codeS->setTag(tag_select_tab);
+            codeS->setHeightOfOneImage(buttonHeight);
+            codeS->setRows(1);
+            codeS->setColumns(2);
+            codeS->setDraggable(true);
+            codeS->setValue(overlay->getEditState().codeOrPrelude);
+            codeS->setSkin(skin, associatedBitmapStore);
+            addAndMakeVisible(*codeS);
+
+            btnWidth = 60;
+
+            applyS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            btnrect = juce::Rectangle<int>(getWidth() / 2 - 30, ypos - 1, btnWidth, buttonHeight);
+            applyS->setBounds(btnrect);
+            applyS->setStorage(overlay->storage);
+            applyS->setTitle("Apply");
+            applyS->setDescription("Apply");
+            applyS->setLabels({"Apply"});
+            applyS->addListener(this);
+            applyS->setTag(tag_code_apply);
+            applyS->setHeightOfOneImage(buttonHeight);
+            applyS->setRows(1);
+            applyS->setColumns(1);
+            applyS->setDraggable(true);
+            applyS->setSkin(skin, associatedBitmapStore);
+            applyS->setEnabled(false);
+            addAndMakeVisible(*applyS);
+
+            int bpos = getWidth() - marginPos - 3 * btnWidth - 10;
+
+            resolutionL = newL("Resolution");
+            resolutionL->setBounds(bpos - 3, 1, 100, labelHeight);
+            addAndMakeVisible(*resolutionL);
+
+            resolutionB = std::make_unique<juce::ComboBox>("res");
+            btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
+            resolutionB->setBounds(btnrect);
+            int id = 1, grid = 32;
+            while (grid <= 4096)
+            {
+                resolutionB->addItem(std::to_string(grid), id);
+                id++;
+                grid *= 2;
+            }
+            resolutionB->setSelectedId(overlay->osc->wavetable_formula_res_base,
+                                       juce::NotificationType::dontSendNotification);
+            resolutionB->addListener(this);
+            addAndMakeVisible(*resolutionB);
+
+            bpos += btnWidth + 5;
+
+            framesL = newL("Frames");
+            framesL->setBounds(bpos - 3, 1, 100, labelHeight);
+            addAndMakeVisible(*framesL);
+
+            framesT = std::make_unique<juce::TextEditor>("frm");
+            btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
+            framesT->setBounds(btnrect);
+            framesT->setFont(skin->fontManager->getLatoAtSize(10));
+            framesT->setText(std::to_string(overlay->osc->wavetable_formula_nframes),
+                             juce::NotificationType::dontSendNotification);
+            framesT->addListener(this);
+            addAndMakeVisible(*framesT);
+
+            bpos += btnWidth + 5;
+
+            generateS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
+            generateS->setBounds(btnrect);
+            generateS->setStorage(overlay->storage);
+            generateS->setTitle("Generate");
+            generateS->setDescription("Generate");
+            generateS->setLabels({"Generate"});
+            generateS->addListener(this);
+            generateS->setTag(tag_generate_wt);
+            generateS->setHeightOfOneImage(buttonHeight);
+            generateS->setRows(1);
+            generateS->setColumns(1);
+            generateS->setDraggable(false);
+            generateS->setSkin(skin, associatedBitmapStore);
+            generateS->setEnabled(true);
+            addAndMakeVisible(*generateS);
+        }
+    }
+
+    std::unique_ptr<juce::Label> newL(const std::string &s)
+    {
+        auto res = std::make_unique<juce::Label>(s, s);
+        res->setText(s, juce::dontSendNotification);
+        res->setFont(skin->fontManager->getLatoAtSize(9, juce::Font::bold));
+        res->setColour(juce::Label::textColourId, skin->getColor(Colors::MSEGEditor::Text));
+        return res;
+    }
+
+    int32_t controlModifierClicked(GUI::IComponentTagValue *c, const juce::ModifierKeys &mods,
+                                   bool isDoubleClickEvent) override
+    {
+        auto tag = (tags)(c->getTag());
+
+        switch (tag)
+        {
+        case tag_select_tab:
+        case tag_code_apply:
+        case tag_generate_wt:
+        {
+            juce::PopupMenu contextMenu;
+
+            auto msurl = editor->helpURLForSpecial("formula-editor");
+            auto hurl = editor->fullyResolvedHelpURL(msurl);
+
+            editor->addHelpHeaderTo("Formula Editor", hurl, contextMenu);
+
+            contextMenu.showMenuAsync(editor->popupMenuOptions(this, false),
+                                      Surge::GUI::makeEndHoverCallback(c));
+        }
+        break;
+        default:
+            break;
+        }
+        return 0;
+    }
+
+    void valueChanged(GUI::IComponentTagValue *c) override
+    {
+        auto tag = (tags)(c->getTag());
+
+        switch (tag)
+        {
+        case tag_select_tab:
+        {
+            int m = c->getValue();
+
+            if (m > 0.5)
+            {
+                overlay->showPreludeCode();
+            }
+            else
+            {
+                overlay->showModulatorCode();
+            }
+        }
+        break;
+        case tag_code_apply:
+        {
+            overlay->applyCode();
+        }
+        break;
+        case tag_generate_wt:
+        {
+            overlay->generateWavetable();
+        }
+        break;
+        default:
+            break;
+        }
+    }
+
+    void comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged) override
+    {
+        overlay->osc->wavetable_formula_res_base = resolutionB->getSelectedId();
+        overlay->rerenderFromUIState();
+    }
+
+    void textEditorReturnKeyPressed(juce::TextEditor &)
+    {
+        overlay->osc->wavetable_formula_nframes = std::atoi(framesT->getText().toRawUTF8());
+        overlay->rerenderFromUIState();
+    }
+
+    std::unique_ptr<juce::Label> codeL, resolutionL, framesL;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> codeS, applyS, generateS;
+    std::unique_ptr<juce::ComboBox> resolutionB;
+    std::unique_ptr<juce::TextEditor> framesT;
+
+    void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
+
+    void onSkinChanged() override { rebuild(); }
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableScriptControlArea);
+};
+
+WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s,
+                                             OscillatorStorage *os, int oid, int scene,
+                                             Surge::GUI::Skin::ptr_t skin)
+
+    : CodeEditorContainerWithApply(ed, s, skin, false), osc(os), osc_id(oid), scene(scene),
+      editor(ed)
+{
+    mainEditor->setScrollbarThickness(8);
+    mainEditor->setTitle("Wavetable Code");
+    mainEditor->setDescription("Wavetable Code");
+
+    if (osc->wavetable_formula == "")
+    {
+        mainDocument->insertText(0, Surge::WavetableScript::defaultWavetableScript());
+    }
+    else
+    {
+        mainDocument->insertText(0, osc->wavetable_formula);
+    }
+
+    // FIXME: split prelude into Formula and WTSE
+    preludeDocument = std::make_unique<juce::CodeDocument>();
+    preludeDocument->insertText(0, Surge::LuaSupport::getSurgePrelude());
+
+    preludeDisplay = std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get());
+    preludeDisplay->setTabSize(4, true);
+    preludeDisplay->setReadOnly(true);
+    preludeDisplay->setScrollbarThickness(8);
+    preludeDisplay->setTitle("Wavetable Prelude Code");
+    preludeDisplay->setDescription("Wavetable Prelude Code");
+    EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
+
+    controlArea = std::make_unique<WavetableScriptControlArea>(this, editor);
+    addAndMakeVisible(*controlArea);
+    addAndMakeVisible(*mainEditor);
+    addChildComponent(*preludeDisplay);
+
+    currentFrame = std::make_unique<juce::Slider>("currF");
+    currentFrame->setSliderStyle(juce::Slider::LinearVertical);
+    currentFrame->setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+    currentFrame->setRange(0.0, 1.0);
+    currentFrame->addListener(this);
+    addAndMakeVisible(*currentFrame);
+
+    rendererComponent = std::make_unique<WavetablePreviewComponent>(storage, osc, skin);
+    addAndMakeVisible(*rendererComponent);
+
+    switch (getEditState().codeOrPrelude)
+    {
+    case 0:
+        showModulatorCode();
+        break;
+    case 1:
+        showPreludeCode();
+        break;
+    }
+}
+
+WavetableScriptEditor::~WavetableScriptEditor() = default;
+
+DAWExtraStateStorage::EditorState::WavetableScriptEditState &WavetableScriptEditor::getEditState()
+{
+    return storage->getPatch().dawExtraState.editor.wavetableScriptEditState[scene][osc_id];
+}
+
+void WavetableScriptEditor::onSkinChanged()
+{
+    CodeEditorContainerWithApply::onSkinChanged();
+    preludeDisplay->setFont(skin->getFont(Fonts::LuaEditor::Code));
+    EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
+    controlArea->setSkin(skin, associatedBitmapStore);
+    rendererComponent->setSkin(skin, associatedBitmapStore); // FIXME
+}
+
+void WavetableScriptEditor::applyCode()
+{
+    osc->wavetable_formula = mainDocument->getAllContent().toStdString();
+    osc->wavetable_formula_res_base = controlArea->resolutionB->getSelectedId();
+    osc->wavetable_formula_nframes = std::atoi(controlArea->framesT->getText().toRawUTF8());
+
+    editor->repaintFrame();
+    rerenderFromUIState();
+    setApplyEnabled(false);
+    mainEditor->grabKeyboardFocus();
+}
+
+void WavetableScriptEditor::forceRefresh()
+{
+    mainDocument->replaceAllContent(osc->wavetable_formula);
+    editor->repaintFrame();
+}
+
+void WavetableScriptEditor::setApplyEnabled(bool b)
+{
+    if (controlArea)
+    {
+        controlArea->applyS->setEnabled(b);
+        controlArea->applyS->repaint();
+    }
+}
+
+void WavetableScriptEditor::resized()
+{
+    auto t = getTransform().inverted();
+    auto h = getHeight();
+    auto w = getWidth();
+    t.transformPoint(w, h);
+
+    int itemWidth = 100;
+    int topHeight = 20;
+    int controlHeight = 35;
+    int rendererHeight = 150;
+
+    auto edRect = juce::Rectangle<int>(2, 2, w - 4, h - controlHeight - rendererHeight - 6);
+    mainEditor->setBounds(edRect);
+    preludeDisplay->setBounds(edRect);
+    controlArea->setBounds(0, h - controlHeight - rendererHeight - 2, w,
+                           controlHeight + rendererHeight + 2);
+
+    currentFrame->setBounds(2, h - rendererHeight - 2, 32, rendererHeight);
+    rendererComponent->setBounds(2 + 30, h - rendererHeight, w - 2 - 30, rendererHeight);
+
+    rerenderFromUIState();
+}
+
+void WavetableScriptEditor::showModulatorCode()
+{
+    preludeDisplay->setVisible(false);
+    mainEditor->setVisible(true);
+    getEditState().codeOrPrelude = 0;
+}
+
+void WavetableScriptEditor::showPreludeCode()
+{
+    preludeDisplay->setVisible(true);
+    mainEditor->setVisible(false);
+    getEditState().codeOrPrelude = 1;
+}
+
+void WavetableScriptEditor::escapeKeyPressed()
+{
+    auto c = getParentComponent();
+    while (c)
+    {
+        if (auto olw = dynamic_cast<OverlayWrapper *>(c))
+        {
+            olw->onClose();
+            return;
+        }
+        c = c->getParentComponent();
+    }
+}
+
+void WavetableScriptEditor::rerenderFromUIState()
+{
+    auto resi = controlArea->resolutionB->getSelectedId();
+    auto nfr = std::atoi(controlArea->framesT->getText().toRawUTF8());
+    auto cfr = (int)round((nfr - 1) * currentFrame->getValue()); // map slider to 0 .. nFrames - 1
+
+    auto respt = 32;
+    for (int i = 1; i < resi; ++i)
+        respt *= 2;
+
+    rendererComponent->points = Surge::WavetableScript::evaluateScriptAtFrame(
+        storage, mainDocument->getAllContent().toStdString(), respt, cfr, nfr);
+    rendererComponent->frameNumber = cfr;
+    rendererComponent->repaint();
+}
+
+void WavetableScriptEditor::generateWavetable()
+{
+    auto resi = controlArea->resolutionB->getSelectedId();
+    auto nfr = std::atoi(controlArea->framesT->getText().toRawUTF8());
+    auto respt = 32;
+    for (int i = 1; i < resi; ++i)
+        respt *= 2;
+    std::cout << "Generating wavetable with " << respt << " samples and " << nfr << " frames"
+              << std::endl;
+
+    wt_header wh;
+    float *wd = nullptr;
+    Surge::WavetableScript::constructWavetable(storage, mainDocument->getAllContent().toStdString(),
+                                               respt, nfr, wh, &wd);
+    storage->waveTableDataMutex.lock();
+    osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
+    osc->wavetable_display_name = "Scripted Wavetable";
+    storage->waveTableDataMutex.unlock();
+
+    delete[] wd;
+    editor->repaintFrame();
+}
+
+void WavetableScriptEditor::sliderValueChanged(juce::Slider *slider) { rerenderFromUIState(); }
+
+std::optional<std::pair<std::string, std::string>>
+WavetableScriptEditor::getPreCloseChickenBoxMessage()
+{
+    if (controlArea->applyS->isEnabled())
+    {
+        return std::make_pair("Close Wavetable Script Editor",
+                              "Do you really want to close the wavetable editor? Any "
+                              "changes that were not applied will be lost!");
+    }
+    return std::nullopt;
+}
+
+/*
+WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s,
                                                  OscillatorStorage *os,
                                                  Surge::GUI::Skin::ptr_t skin)
     : CodeEditorContainerWithApply(ed, s, skin, true), osc(os)
@@ -1068,9 +1527,9 @@ WavetableEquationEditor::WavetableEquationEditor(SurgeGUIEditor *ed, SurgeStorag
     addAndMakeVisible(currentFrame.get());
 }
 
-WavetableEquationEditor::~WavetableEquationEditor() noexcept = default;
+WavetableScriptEditor::~WavetableScriptEditor() noexcept = default;
 
-void WavetableEquationEditor::resized()
+void WavetableScriptEditor::resized()
 {
     auto w = getWidth() - 5;
     auto h = getHeight() - 5; // this is a hack obvs
@@ -1085,7 +1544,6 @@ void WavetableEquationEditor::resized()
     resolution->setBounds(m * 2 + itemW, m, itemW, topH);
     framesLabel->setBounds(m * 3 + 2 * itemW, m, itemW, topH);
     frames->setBounds(m * 4 + 3 * itemW, m, itemW, topH);
-
     generate->setBounds(w - m - itemW, m, itemW, topH);
     applyButton->setBounds(w - 2 * m - 2 * itemW, m, itemW, topH);
 
@@ -1097,7 +1555,7 @@ void WavetableEquationEditor::resized()
     rerenderFromUIState();
 }
 
-void WavetableEquationEditor::applyCode()
+void WavetableScriptEditor::applyCode()
 {
     osc->wavetable_formula = mainDocument->getAllContent().toStdString();
     osc->wavetable_formula_res_base = resolution->getSelectedId();
@@ -1109,7 +1567,7 @@ void WavetableEquationEditor::applyCode()
     editor->repaintFrame();
 }
 
-void WavetableEquationEditor::rerenderFromUIState()
+void WavetableScriptEditor::rerenderFromUIState()
 {
     auto resi = resolution->getSelectedId();
     auto nfr = std::atoi(frames->getText().toRawUTF8());
@@ -1125,13 +1583,13 @@ void WavetableEquationEditor::rerenderFromUIState()
     renderer->repaint();
 }
 
-void WavetableEquationEditor::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
+void WavetableScriptEditor::comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged)
 {
     rerenderFromUIState();
 }
 
-void WavetableEquationEditor::sliderValueChanged(juce::Slider *slider) { rerenderFromUIState(); }
-void WavetableEquationEditor::buttonClicked(juce::Button *button)
+void WavetableScriptEditor::sliderValueChanged(juce::Slider *slider) { rerenderFromUIState(); }
+void WavetableScriptEditor::buttonClicked(juce::Button *button)
 {
     if (button == generate.get())
     {
@@ -1159,6 +1617,7 @@ void WavetableEquationEditor::buttonClicked(juce::Button *button)
     }
     CodeEditorContainerWithApply::buttonClicked(button);
 }
+*/
 
 } // namespace Overlays
 } // namespace Surge
