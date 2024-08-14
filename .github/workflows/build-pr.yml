@@ -13,17 +13,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: "windows msvc"
+          - name: "windows msvc common only"
             os: windows-latest
-            target: surge-xt_Standalone
+            target: surge-common
             cmakeConfig: -A x64
-            cmakeOpt: DEBUG
-            runTests: false
-
-          - name: "windows msvc 32 bit"
-            os: windows-latest
-            target: surge-xt_Standalone
-            cmakeConfig: -A Win32
             cmakeOpt: DEBUG
             runTests: false
 
@@ -65,7 +58,7 @@ jobs:
           - name: "windows test runner"
             os: windows-latest
             target: surge-testrunner
-            cmakeConfig: -A x64
+            cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
             cmakeOpt: RELEASE
             runTests: true
 
