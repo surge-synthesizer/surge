@@ -196,7 +196,10 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.polylimit = storage->getPatch().polylimit.val.i;
     state.scenemode = storage->getPatch().scenemode.val.i;
     state.polymode = storage->getPatch().scene[scene_id].polymode.val.i;
+
     state.splitpoint = storage->getPatch().splitpoint.val.i;
+    if (state.scenemode == sm_chsplit)
+        state.splitpoint = (int)(state.splitpoint / 8 + 1);
 
     state.velocity = velocity;
     state.fvel = velocity / 127.f;
