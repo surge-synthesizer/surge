@@ -282,12 +282,6 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
 
     case WTSCRIPT_EDITOR:
     {
-        /*
-        int w = 800, h = 520;
-        auto px = (getWindowSizeX() - w) / 2;
-        auto py = (getWindowSizeY() - h) / 2;
-        auto r = juce::Rectangle<int>(px, py, w, h);
-        */
 
         auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
 
@@ -296,13 +290,14 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
             return nullptr;
         }
 
-        auto wtse = std::make_unique<Surge::Overlays::WavetableEquationEditor>(
-            this, &(this->synth->storage), os, currentSkin);
+        auto wtse = std::make_unique<Surge::Overlays::WavetableScriptEditor>(
+            this, &(this->synth->storage), os, current_osc[current_scene], current_scene,
+            currentSkin);
 
-        wtse->setSkin(currentSkin, bitmapStore);
-        // wtse->setEnclosingParentPosition(juce::Rectangle<int>(px, py, w, h));
         std::string title = "Wavetable Script Editor Osc ";
         title += std::to_string(current_osc[current_scene] + 1);
+
+        wtse->setSkin(currentSkin, bitmapStore);
         wtse->setEnclosingParentTitle(title);
         wtse->setCanTearOut({true, Surge::Storage::WTScriptOverlayLocationTearOut,
                              Surge::Storage::WTScriptOverlayTearOutAlwaysOnTop,
