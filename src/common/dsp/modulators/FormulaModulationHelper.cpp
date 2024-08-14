@@ -523,7 +523,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addn("songpos", s->songpos);
     addn("poly_limit", s->polylimit);
     addn("scene_mode", s->scenemode);
-    addn("poly_mode", s->polymode);
+    addn("play_mode", s->polymode);
     addn("split_point", s->splitpoint);
     addb("released", s->released);
 
