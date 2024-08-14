@@ -522,6 +522,9 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addn("tempo", s->tempo);
     addn("songpos", s->songpos);
     addn("poly_limit", s->polylimit);
+    addn("scene_mode", s->scenemode);
+    addn("play_mode", s->polymode);
+    addn("split_point", s->splitpoint);
     addb("released", s->released);
 
     if (s->isVoice)
@@ -552,7 +555,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     if (s->subAnyMacro)
     {
         // load the macros
-        lua_createtable(s->L, n_customcontrollers, 0); // macros
+        lua_createtable(s->L, n_customcontrollers, 0);
         for (int i = 0; i < n_customcontrollers; ++i)
         {
             if (s->subMacros[i])
@@ -916,6 +919,9 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
 
     s.voiceOrderAtCreate = v->state.voiceOrderAtCreate;
     s.polylimit = v->state.polylimit;
+    s.scenemode = v->state.scenemode;
+    s.polymode = v->state.polymode;
+    s.splitpoint = v->state.splitpoint;
 
     s.polyat =
         v->storage
