@@ -235,7 +235,7 @@ end
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
             addb("released", s.released);
-            addb("is_rendering_to_UI", s.is_display);
+            addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
 
             auto cres = lua_pcall(s.L, 1, 1, 0);
@@ -550,7 +550,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
     addnil("retrigger_AEG");
     addnil("retrigger_FEG");
-    addb("is_rendering_to_UI", s->is_display);
+    addb("is_rendering_to_ui", s->is_display);
 
     if (s->subAnyMacro)
     {
