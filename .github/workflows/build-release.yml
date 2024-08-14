@@ -53,9 +53,7 @@ jobs:
           - os: windows-latest
             name: windows-64bit
             cmakeArgs: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
-          - os: windows-latest
-            name: windows-32bit
-            cmakeArgs: -A Win32
+
           - os: macos-latest
             name: macos
             cmakeArgs: -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
