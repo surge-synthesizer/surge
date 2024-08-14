@@ -52,7 +52,7 @@ jobs:
         include:
           - os: windows-latest
             name: windows-64bit
-            cmakeArgs: -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+            cmakeArgs: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
           - os: windows-latest
             name: windows-32bit
             cmakeArgs: -A Win32

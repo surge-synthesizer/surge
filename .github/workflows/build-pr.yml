@@ -19,43 +19,49 @@ jobs:
             cmakeConfig: -A x64
             cmakeOpt: DEBUG
             runTests: false
+
           - name: "windows msvc 32 bit"
             os: windows-latest
             target: surge-xt_Standalone
             cmakeConfig: -A Win32
             cmakeOpt: DEBUG
             runTests: false
+
           - name: "windows clang"
             os: windows-latest
             target: surge-xt_Standalone
-            cmakeConfig: -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+            cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
             cmakeOpt: DEBUG
             runTests: false
+
           - name: "ubuntu standalone"
             os: ubuntu-latest
             target: surge-xt_Standalone
-            cmakeConfig:
+            cmakeConfig: -GNinja
             cmakeOpt: DEBUG
             runTests: false
+
           - name: "macos standalone"
             os: macos-latest
             target: surge-xt_Standalone
-            cmakeConfig: -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+            cmakeConfig: -GNinja -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
             cmakeOpt: DEBUG
             runTests: false
 
           - name: "mac test runner"
             os: macos-latest
             target: surge-testrunner
-            cmakeConfig:
+            cmakeConfig: -GNinja
             cmakeOpt: RELEASE
             runTests: true
+
           - name: "linux test runner"
             os: ubuntu-latest
             target: surge-testrunner
-            cmakeConfig:
+            cmakeConfig: -GNinja
             cmakeOpt: RELEASE
             runTests: true
+
           - name: "windows test runner"
             os: windows-latest
             target: surge-testrunner
@@ -76,7 +82,7 @@ jobs:
 
       - name: Build pull request version
         run: |
-          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=${{ matrix.cmakeOpt }} ${{ matrix.cmakeConfig }}
+          cmake -S . -B ./build ${{ matrix.cmakeConfig }} -DCMAKE_BUILD_TYPE=${{ matrix.cmakeOpt }}
           cmake --build ./build --config ${{ matrix.cmakeOpt }} --target ${{ matrix.target }} --parallel 3
 
       - name: Run Tests
