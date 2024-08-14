@@ -1244,7 +1244,7 @@ struct WavetableScriptControlArea : public juce::Component,
         overlay->rerenderFromUIState();
     }
 
-    void textEditorReturnKeyPressed(juce::TextEditor &)
+    void textEditorReturnKeyPressed(juce::TextEditor &) override
     {
         overlay->osc->wavetable_formula_nframes = std::atoi(framesT->getText().toRawUTF8());
         overlay->rerenderFromUIState();
