@@ -235,7 +235,7 @@ end
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
             addb("released", s.released);
-            addb("is_rendering_to_ui", s.is_display);
+            addb("is_rendering_to_UI", s.is_display);
             addb("clamp_output", true);
 
             auto cres = lua_pcall(s.L, 1, 1, 0);
@@ -522,6 +522,9 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addn("tempo", s->tempo);
     addn("songpos", s->songpos);
     addn("poly_limit", s->polylimit);
+    addn("scene_mode", s->scenemode);
+    addn("poly_mode", s->polymode);
+    addn("split_point", s->splitpoint);
     addb("released", s->released);
 
     if (s->isVoice)
@@ -547,12 +550,12 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
     addnil("retrigger_AEG");
     addnil("retrigger_FEG");
-    addb("is_rendering_to_ui", s->is_display);
+    addb("is_rendering_to_UI", s->is_display);
 
     if (s->subAnyMacro)
     {
         // load the macros
-        lua_createtable(s->L, n_customcontrollers, 0); // macros
+        lua_createtable(s->L, n_customcontrollers, 0);
         for (int i = 0; i < n_customcontrollers; ++i)
         {
             if (s->subMacros[i])
@@ -916,6 +919,9 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
 
     s.voiceOrderAtCreate = v->state.voiceOrderAtCreate;
     s.polylimit = v->state.polylimit;
+    s.scenemode = v->state.scenemode;
+    s.polymode = v->state.polymode;
+    s.splitpoint = v->state.splitpoint;
 
     s.polyat =
         v->storage

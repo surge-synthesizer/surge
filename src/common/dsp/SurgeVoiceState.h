@@ -33,7 +33,8 @@ struct SurgeVoiceState
     MidiKeyState *keyState;
     MidiChannelState *mainChannelState;
     MidiChannelState *voiceChannelState;
-    int key, velocity, channel, scene_id, releasevelocity, polylimit;
+    int key, velocity, channel, scene_id, releasevelocity, polylimit, scenemode, polymode,
+        splitpoint;
     float portasrc_key, portaphase;
     bool porta_doretrigger;
 
