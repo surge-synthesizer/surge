@@ -170,43 +170,6 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply,
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableScriptEditor);
 };
 
-/*
-struct WavetableScriptEditor : public CodeEditorContainerWithApply,
-                                 public juce::Slider::Listener,
-                                 public juce::ComboBox::Listener
-{
-    WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os,
-                            Surge::GUI::Skin::ptr_t sk);
-    ~WavetableScriptEditor() noexcept;
-
-    std::unique_ptr<juce::Label> resolutionLabel;
-    std::unique_ptr<juce::ComboBox> resolution;
-
-    std::unique_ptr<juce::Label> framesLabel;
-    std::unique_ptr<juce::TextEditor> frames;
-
-    std::unique_ptr<juce::Slider> currentFrame;
-    std::unique_ptr<WavetablePreviewComponent> renderer;
-
-    std::unique_ptr<juce::Button> generate;
-
-    void comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged) override;
-    void sliderValueChanged(juce::Slider *slider) override;
-
-    void resized() override;
-    void applyCode() override;
-
-    void rerenderFromUIState();
-
-    void buttonClicked(juce::Button *button) override;
-
-    OscillatorStorage *osc;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableScriptEditor);
-};
-
-*/
-
 } // namespace Overlays
 } // namespace Surge
 

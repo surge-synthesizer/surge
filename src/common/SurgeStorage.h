@@ -911,6 +911,11 @@ struct DAWExtraStateStorage
             int timeEditMode = 0;
         } msegEditState[n_scenes][n_lfos];
 
+        /*
+         * Window state parameters for Formula Editor overlay
+         * codeOrPrelude: Code editor selected tab
+         * debuggerOpen: Debug panel toggle
+         */
         struct FormulaEditState
         {
             int codeOrPrelude{0};
@@ -922,6 +927,10 @@ struct DAWExtraStateStorage
             bool hasCustomEditor = false;
         } oscExtraEditState[n_scenes][n_lfos];
 
+        /*
+         * Window state parameters for WTSE overlay
+         * codeOrPrelude: Code editor selected tab
+         */
         struct WavetableScriptEditState
         {
             int codeOrPrelude{0};
