@@ -461,13 +461,13 @@ class alignas(16) SurgeSynthesizer
     //==============================================================================
     // Parameter changes coming from within the synth (e.g. from MIDI-learned input)
     // are communicated to listeners here
-    std::unordered_map<std::string,
-                       std::function<void(const std::string oscname, const float fval)>>
+    std::unordered_map<std::string, std::function<void(const std::string oscname, const float fval,
+                                                       std::string valstr)>>
         audioThreadParamListeners;
 
-    void
-    addAudioParamListener(std::string key,
-                          std::function<void(const std::string oscname, const float fval)> const &l)
+    void addAudioParamListener(std::string key,
+                               std::function<void(const std::string oscname, const float fval,
+                                                  std::string valstr)> const &l)
     {
         audioThreadParamListeners.insert({key, l});
     }
