@@ -217,24 +217,28 @@ end
                 lua_pushnumber(s.L, f);
                 lua_setfield(s.L, -2, q);
             };
+
             auto addb = [&s](const char *q, bool f) {
                 lua_pushboolean(s.L, f);
                 lua_setfield(s.L, -2, q);
             };
 
             addn("delay", s.del);
-            addn("decay", s.dec);
             addn("attack", s.a);
             addn("hold", s.h);
+            addn("decay", s.dec);
             addn("sustain", s.s);
             addn("release", s.r);
+
             addn("rate", s.rate);
-            addn("amplitude", s.amp);
             addn("startphase", s.phase);
             addn("deform", s.deform);
+            addn("amplitude", s.amp);
+
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
             addb("released", s.released);
+
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
 
@@ -476,23 +480,13 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     }
     lua_getglobal(s->L, s->stateName);
 
-    // Stack is now func > table  so we can update the table
-    lua_pushinteger(s->L, phaseIntPart);
-    lua_setfield(s->L, -2, "intphase");
-
-    // Alias cycle for intphase
-    lua_pushinteger(s->L, phaseIntPart);
-    lua_setfield(s->L, -2, "cycle");
-
-    // fake voice count for display calls
-    int voiceCount = 1;
-    if (storage->voiceCount != 0)
-        voiceCount = storage->voiceCount;
-    lua_pushinteger(s->L, voiceCount);
-    lua_setfield(s->L, -2, "voice_count");
-
     auto addn = [s](const char *q, float f) {
         lua_pushnumber(s->L, f);
+        lua_setfield(s->L, -2, q);
+    };
+
+    auto addi = [s](const char *q, int i) {
+        lua_pushnumber(s->L, i);
         lua_setfield(s->L, -2, q);
     };
 
@@ -506,6 +500,16 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         lua_setfield(s->L, -2, q);
     };
 
+    // Stack is now func > table so we can update the table
+    addi("intphase", phaseIntPart);
+    addi("cycle", phaseIntPart); // Alias cycle for intphase
+
+    // Fake a voice count of one for display calls
+    int voiceCount = 1;
+    if (storage->voiceCount != 0)
+        voiceCount = storage->voiceCount;
+    addi("voice_count", voiceCount);
+
     addn("delay", s->del);
     addn("decay", s->dec);
     addn("attack", s->a);
@@ -514,43 +518,60 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addn("release", s->r);
 
     addn("rate", s->rate);
-    addn("amplitude", s->amp);
     addn("startphase", s->phase);
+    addn("amplitude", s->amp);
     addn("deform", s->deform);
 
     addn("phase", phaseFracPart);
     addn("tempo", s->tempo);
     addn("songpos", s->songpos);
-    addn("poly_limit", s->polylimit);
-    addn("scene_mode", s->scenemode);
-    addn("play_mode", s->polymode);
-    addn("split_point", s->splitpoint);
+
+    addn("pb", s->pitchbend);
+    addn("pb_range_up", s->pbrange_up);
+    addn("pb_range_dn", s->pbrange_dn);
+    addn("chan_at", s->aftertouch);
+    addn("cc_mw", s->modwheel);
+    addn("cc_breath", s->breath);
+    addn("cc_expr", s->expression);
+    addn("cc_sus", s->sustain);
+    addn("lowest_key", s->lowest_key);
+    addn("highest_key", s->highest_key);
+    addn("latest_key", s->latest_key);
+
+    addi("poly_limit", s->polylimit);
+    addi("scene_mode", s->scenemode);
+    addi("play_mode", s->polymode);
+    addi("split_point", s->splitpoint);
+
     addb("released", s->released);
+    addb("is_rendering_to_ui", s->is_display);
+
+    addnil("retrigger_AEG");
+    addnil("retrigger_FEG");
 
     if (s->isVoice)
     {
-        addb("is_voice", s->isVoice);
-        addn("key", s->key);
-        addn("velocity", s->velocity);
-        addn("rel_velocity", s->releasevelocity);
-        addn("channel", s->channel);
-        addb("released", s->released);
-        addn("voice_id", s->voiceOrderAtCreate);
+        addi("key", s->key);
+        addi("velocity", s->velocity);
+        addi("rel_velocity", s->releasevelocity);
+        addi("channel", s->channel);
 
         addn("poly_at", s->polyat);
         addn("mpe_bend", s->mpebend);
         addn("mpe_bendrange", s->mpebendrange);
         addn("mpe_timbre", s->mpetimbre);
         addn("mpe_pressure", s->mpepressure);
+
+        addb("is_voice", s->isVoice);
+        addb("released", s->released);
+
+        // LuaJIT has no exposed API for 64-bit int so push this as number
+        addn("voice_id", s->voiceOrderAtCreate);
     }
     else
     {
         addb("is_voice", false);
     }
-
-    addnil("retrigger_AEG");
-    addnil("retrigger_FEG");
-    addb("is_rendering_to_ui", s->is_display);
 
     if (s->subAnyMacro)
     {
@@ -567,18 +588,6 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         }
         lua_setfield(s->L, -2, "macros");
     }
-
-    addn("pb", s->pitchbend);
-    addn("pb_range_up", s->pbrange_up);
-    addn("pb_range_dn", s->pbrange_dn);
-    addn("chan_at", s->aftertouch);
-    addn("cc_mw", s->modwheel);
-    addn("cc_breath", s->breath);
-    addn("cc_expr", s->expression);
-    addn("cc_sus", s->sustain);
-    addn("lowest_key", s->lowest_key);
-    addn("highest_key", s->highest_key);
-    addn("latest_key", s->latest_key);
 
     if (justSetup)
     {
@@ -908,6 +917,14 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sce
     s.lowest_key = scene.modsources[ms_lowest_key]->get_output(0);
     s.highest_key = scene.modsources[ms_highest_key]->get_output(0);
     s.latest_key = scene.modsources[ms_latest_key]->get_output(0);
+
+    s.polylimit = patch.polylimit.val.i;
+    s.scenemode = patch.scenemode.val.i;
+    s.polymode = patch.scene[sceneIndex].polymode.val.i;
+
+    s.splitpoint = patch.splitpoint.val.i;
+    if (s.scenemode == sm_chsplit)
+        s.splitpoint = (int)(s.splitpoint / 8 + 1);
 }
 
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
@@ -918,10 +935,6 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
     s.releasevelocity = v->state.releasevelocity;
 
     s.voiceOrderAtCreate = v->state.voiceOrderAtCreate;
-    s.polylimit = v->state.polylimit;
-    s.scenemode = v->state.scenemode;
-    s.polymode = v->state.polymode;
-    s.splitpoint = v->state.splitpoint;
 
     s.polyat =
         v->storage
