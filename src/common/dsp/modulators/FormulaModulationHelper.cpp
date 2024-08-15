@@ -505,9 +505,9 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addi("cycle", phaseIntPart); // Alias cycle for intphase
 
     // Fake a voice count of one for display calls
-    int voiceCount = 1;
-    if (storage->voiceCount != 0)
-        voiceCount = storage->voiceCount;
+    int voiceCount = storage->voiceCount;
+    if (voiceCount == 0)
+        voiceCount = 1;
     addi("voice_count", voiceCount);
 
     addn("delay", s->del);
