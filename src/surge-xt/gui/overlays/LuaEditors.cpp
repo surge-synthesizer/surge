@@ -27,7 +27,11 @@
 #include "SkinColors.h"
 #include "WavetableScriptEvaluator.h"
 #include "LuaSupport.h"
+#include "SurgeImage.h"
+#include "SurgeImageStore.h"
 #include "widgets/MultiSwitch.h"
+#include "widgets/NumberField.h"
+#include "overlays/TypeinParamEditor.h"
 #include "widgets/MenuCustomComponents.h"
 #include <fmt/core.h>
 
@@ -484,6 +488,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
 
     std::unique_ptr<LFOModulationSource> lfoDebugger;
 
+  private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ExpandingFormulaDebugger);
 };
 
@@ -525,14 +530,12 @@ struct FormulaControlArea : public juce::Component,
         int buttonHeight = 14;
         int margin = 2;
         int xpos = 10;
-
+        int ypos = 1 + labelHeight + margin;
+        int marginPos = xpos + margin;
         removeAllChildren();
-        auto h = getHeight();
 
         {
-            int marginPos = xpos + margin;
             int btnWidth = 100;
-            int ypos = 1 + labelHeight + margin;
 
             codeL = newL("Code");
             codeL->setBounds(xpos, 1, 100, labelHeight);
@@ -544,7 +547,7 @@ struct FormulaControlArea : public juce::Component,
             codeS->setStorage(overlay->storage);
             codeS->setTitle("Code Selection");
             codeS->setDescription("Code Selection");
-            codeS->setLabels({"Modulator", "Prelude"});
+            codeS->setLabels({"Editor", "Prelude"});
             codeS->addListener(this);
             codeS->setTag(tag_select_tab);
             codeS->setHeightOfOneImage(buttonHeight);
@@ -555,8 +558,10 @@ struct FormulaControlArea : public juce::Component,
             codeS->setSkin(skin, associatedBitmapStore);
             addAndMakeVisible(*codeS);
 
+            btnWidth = 60;
+
             applyS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-            btnrect = juce::Rectangle<int>(getWidth() / 2 - 30, ypos - 1, 60, buttonHeight);
+            btnrect = juce::Rectangle<int>(getWidth() / 2 - 30, ypos - 1, btnWidth, buttonHeight);
             applyS->setBounds(btnrect);
             applyS->setStorage(overlay->storage);
             applyS->setTitle("Apply");
@@ -628,10 +633,10 @@ struct FormulaControlArea : public juce::Component,
         return res;
     }
 
-    int32_t controlModifierClicked(GUI::IComponentTagValue *c, const juce::ModifierKeys &mods,
-                                   bool isDoubleClickEvent) override
+    int32_t controlModifierClicked(GUI::IComponentTagValue *pControl,
+                                   const juce::ModifierKeys &mods, bool isDoubleClickEvent) override
     {
-        auto tag = (tags)(c->getTag());
+        int tag = pControl->getTag();
 
         switch (tag)
         {
@@ -641,7 +646,7 @@ struct FormulaControlArea : public juce::Component,
         case tag_debugger_init:
         case tag_debugger_step:
         {
-            juce::PopupMenu contextMenu;
+            auto contextMenu = juce::PopupMenu();
 
             auto msurl = editor->helpURLForSpecial("formula-editor");
             auto hurl = editor->fullyResolvedHelpURL(msurl);
@@ -649,13 +654,13 @@ struct FormulaControlArea : public juce::Component,
             editor->addHelpHeaderTo("Formula Editor", hurl, contextMenu);
 
             contextMenu.showMenuAsync(editor->popupMenuOptions(this, false),
-                                      Surge::GUI::makeEndHoverCallback(c));
+                                      Surge::GUI::makeEndHoverCallback(pControl));
         }
         break;
         default:
             break;
         }
-        return 0;
+        return 1;
     }
 
     void valueChanged(GUI::IComponentTagValue *c) override
@@ -679,10 +684,8 @@ struct FormulaControlArea : public juce::Component,
         }
         break;
         case tag_code_apply:
-        {
             overlay->applyCode();
-        }
-        break;
+            break;
         case tag_debugger_show:
         {
             if (overlay->debugPanel->isOpen)
@@ -702,17 +705,14 @@ struct FormulaControlArea : public juce::Component,
             repaint();
         }
         case tag_debugger_init:
-        {
             overlay->debugPanel->initializeLfoDebugger();
-        }
-        break;
+            break;
         case tag_debugger_step:
         {
             if (!overlay->debugPanel->lfoDebugger)
             {
                 overlay->debugPanel->initializeLfoDebugger();
             }
-
             overlay->debugPanel->stepLfoDebugger();
         }
         break;
@@ -728,6 +728,7 @@ struct FormulaControlArea : public juce::Component,
 
     void onSkinChanged() override { rebuild(); }
 
+  private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FormulaControlArea);
 };
 
@@ -827,28 +828,29 @@ void FormulaModulatorEditor::setApplyEnabled(bool b)
 void FormulaModulatorEditor::resized()
 {
     auto t = getTransform().inverted();
-    auto h = getHeight();
-    auto w = getWidth();
-    t.transformPoint(w, h);
+    auto width = getWidth();
+    auto height = getHeight();
+    t.transformPoint(width, height);
 
     int controlHeight = 35;
     int debugPanelWidth = 0;
     int debugPanelMargin = 0;
+
     if (debugPanel->isVisible())
     {
         debugPanelWidth = 215;
         debugPanelMargin = 2;
     }
-    auto edRect = juce::Rectangle<int>(2, 2, w - 4 - debugPanelMargin - debugPanelWidth,
-                                       h - controlHeight - 4);
+    auto edRect = juce::Rectangle<int>(2, 2, width - 4 - debugPanelMargin - debugPanelWidth,
+                                       height - controlHeight - 4);
     mainEditor->setBounds(edRect);
     preludeDisplay->setBounds(edRect);
     if (debugPanel->isVisible())
     {
-        debugPanel->setBounds(w - 4 - debugPanelWidth + debugPanelMargin, 2, debugPanelWidth,
-                              h - 4 - controlHeight);
+        debugPanel->setBounds(width - 4 - debugPanelWidth + debugPanelMargin, 2, debugPanelWidth,
+                              height - 4 - controlHeight);
     }
-    controlArea->setBounds(0, h - controlHeight, w, controlHeight);
+    controlArea->setBounds(0, height - controlHeight, width, controlHeight);
 }
 
 void FormulaModulatorEditor::showModulatorCode()
@@ -954,83 +956,146 @@ FormulaModulatorEditor::getPreCloseChickenBoxMessage()
 
 struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::SkinConsumingComponent
 {
-    WavetablePreviewComponent(SurgeStorage *s, OscillatorStorage *os, Surge::GUI::Skin::ptr_t skin)
-        : storage(s), osc(os), skin(skin)
+    WavetableScriptEditor *overlay{nullptr};
+    SurgeGUIEditor *editor{nullptr};
+    Surge::GUI::Skin::ptr_t skin;
+
+    WavetablePreviewComponent(WavetableScriptEditor *ol, SurgeGUIEditor *ed,
+                              Surge::GUI::Skin::ptr_t skin)
+        : overlay(ol), editor(ed), skin(skin)
+
     {
     }
 
     void paint(juce::Graphics &g) override
     {
-        g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
-        g.setFont(skin->fontManager->getFiraMonoAtSize(9));
+        auto height = getHeight();
+        auto width = getWidth();
+        auto middle = height * 0.5;
+        int axisSpaceX = 18;
 
-        g.setColour(skin->getColor(Colors::MSEGEditor::Text));
-        auto s1 = std::string("Frame: ") + std::to_string(frameNumber + 1);
-        auto s2 = std::string("Res:   ") + std::to_string(points.size());
-        g.drawSingleLineText(s1, 5, 18);
-        g.drawSingleLineText(s2, 5, 30);
+        juce::Rectangle<float> drawArea(axisSpaceX, 0, width - axisSpaceX, height);
+        juce::Rectangle<float> vaxisArea(0, 0, axisSpaceX, height);
 
-        auto h = getHeight();
-        auto w = getWidth();
+        // auto primaryFont = skin->fontManager->getLatoAtSize(9, juce::Font::bold);
+        auto secondaryFont = skin->fontManager->getLatoAtSize(7);
 
-        auto t = h * 0.05;
-        auto m = h * 0.5;
-        auto b = h * 0.95;
+        g.setColour(skin->getColor(Colors::MSEGEditor::Background));
+        g.fillRect(drawArea);
 
+        // Vertical axis
+        std::vector<std::string> txt = {"1.0", "0.0", "-1.0"};
+        g.setFont(secondaryFont);
+        g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
+        g.drawText(txt[0], vaxisArea.getX() - 3, 4, vaxisArea.getWidth(), 12,
+                   juce::Justification::topRight);
+        g.drawText(txt[1], vaxisArea.getX() - 3, middle - 12, vaxisArea.getWidth(), 12,
+                   juce::Justification::bottomRight);
+        g.drawText(txt[2], vaxisArea.getX() - 3, height - 14, vaxisArea.getWidth(), 12,
+                   juce::Justification::centredRight);
+
+        // Grid
         g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
-        for (float x : {0.25f, 0.75f})
-        {
-            g.drawLine(0, h * x, w, h * x);
-        }
+        for (float y : {0.25f, 0.75f})
+            g.drawLine(drawArea.getX() - 8, height * y, width, height * y);
 
         g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
-        for (float y : {0.25f, 0.5f, 0.75f})
-        {
-            g.drawLine(w * y, 0, w * y, h);
-        }
+        for (float x : {0.25f, 0.5f, 0.75f})
+            g.drawLine(drawArea.getX() + drawArea.getWidth() * x, 0,
+                       drawArea.getX() + drawArea.getWidth() * x, height);
 
+        // Borders
         g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-        g.drawLine(0, 0, w, 0);
-        g.drawLine(0, h, w, h);
+        g.drawLine(4, 0, width, 0);
+        g.drawLine(4, height, width, height);
+        g.drawLine(axisSpaceX, 0, axisSpaceX, height);
+        g.drawLine(width, 0, width, height);
+        g.drawLine(axisSpaceX, middle, width, middle);
 
-        g.drawLine(0, 0, 0, h);
-        g.drawLine(w, 0, w, h);
-
-        g.drawLine(0, m, w, m);
-
+        // Graph
         auto p = juce::Path();
-        auto dx = 1.0 / (points.size() - 1);
-        for (int i = 0; i < points.size(); ++i)
+        if (!points.empty())
         {
-            float xp = dx * i * w;
-            float yp = -((points[i] + 1) * 0.5) * (b - t) + b;
-            if (i == 0)
-                p.startNewSubPath(xp, yp);
-            else
-                p.lineTo(xp, yp);
+            float dx = (width - axisSpaceX) / float(points.size() - 1);
+            for (int i = 0; i < points.size(); ++i)
+            {
+                float xp = dx * i;
+                float yp = 0.5f * (1 - points[i]) * height;
+
+                if (yp < 0.0f) // clamp to vertical bounds
+                    yp = 0.0f;
+                else if (yp > height)
+                    yp = height;
+
+                if (i == 0)
+                    p.startNewSubPath(xp + axisSpaceX, middle);
+
+                p.lineTo(xp + axisSpaceX, yp);
+
+                if (i == points.size() - 1)
+                    p.lineTo(xp + axisSpaceX, middle);
+            }
+
+            auto cg = juce::ColourGradient::vertical(
+                skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
+                skin->getColor(Colors::MSEGEditor::GradientFill::StartColor), drawArea);
+            cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+
+            g.setGradientFill(cg);
+            g.fillPath(p);
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
+            g.strokePath(p, juce::PathStrokeType(1.0));
         }
-        g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
-        g.strokePath(p, juce::PathStrokeType(1.0));
     }
 
-    int frameNumber;
+    void mouseDown(const juce::MouseEvent &event) override
+    {
+        lastDrag = event.getPosition().x + -event.getPosition().y;
+        setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+    }
+
+    void mouseDrag(const juce::MouseEvent &event) override
+    {
+        int currentDrag = event.getPosition().x + -event.getPosition().y;
+        int delta = (currentDrag - lastDrag) * 2;
+        lastDrag = currentDrag;
+
+        int value = 0;
+        if (delta > 0)
+            value = 1;
+        else if (delta < 0)
+            value = -1;
+
+        overlay->setCurrentFrame(value);
+        repaint();
+    }
+
+    void mouseUp(const juce::MouseEvent &event) override
+    {
+        setMouseCursor(juce::MouseCursor::NormalCursor);
+    }
+
+    int frameNumber{1};
     std::vector<float> points;
 
-    SurgeStorage *storage;
-    OscillatorStorage *osc;
-    Surge::GUI::Skin::ptr_t skin;
+  private:
+    int lastDrag;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetablePreviewComponent);
 };
 
 struct WavetableScriptControlArea : public juce::Component,
                                     public Surge::GUI::SkinConsumingComponent,
-                                    public Surge::GUI::IComponentTagValue::Listener,
-                                    public juce::ComboBox::Listener,
-                                    public juce::TextEditor::Listener
+                                    public Surge::GUI::IComponentTagValue::Listener
 {
     enum tags
     {
         tag_select_tab = 0x597500,
         tag_code_apply,
+        tag_current_frame,
+        tag_frames_value,
+        tag_res_value,
         tag_generate_wt
     };
 
@@ -1056,18 +1121,20 @@ struct WavetableScriptControlArea : public juce::Component,
 
     void rebuild()
     {
-        int labelHeight = 12;
-        int buttonHeight = 14;
-        int margin = 2;
-        int xpos = 10;
-
         removeAllChildren();
-        auto h = getHeight();
 
         {
-            int marginPos = xpos + margin;
             int btnWidth = 100;
+
+            int labelHeight = 12;
+            int buttonHeight = 14;
+            int numfieldWidth = 32;
+            int numfieldHeight = 12;
+
+            int margin = 2;
+            int xpos = 10;
             int ypos = 1 + labelHeight + margin;
+            int marginPos = xpos + margin;
 
             codeL = newL("Code");
             codeL->setBounds(xpos, 1, 100, labelHeight);
@@ -1079,7 +1146,7 @@ struct WavetableScriptControlArea : public juce::Component,
             codeS->setStorage(overlay->storage);
             codeS->setTitle("Code Selection");
             codeS->setDescription("Code Selection");
-            codeS->setLabels({"Modulator", "Prelude"});
+            codeS->setLabels({"Editor", "Prelude"});
             codeS->addListener(this);
             codeS->setTag(tag_select_tab);
             codeS->setHeightOfOneImage(buttonHeight);
@@ -1109,43 +1176,88 @@ struct WavetableScriptControlArea : public juce::Component,
             applyS->setEnabled(false);
             addAndMakeVisible(*applyS);
 
-            int bpos = getWidth() - marginPos - 3 * btnWidth - 10;
+            int bpos = getWidth() - marginPos - numfieldWidth * 3 - btnWidth - 10;
+            auto images = skin->standardHoverAndHoverOnForIDB(IDB_MSEG_SNAPVALUE_NUMFIELD,
+                                                              associatedBitmapStore);
 
-            resolutionL = newL("Resolution");
-            resolutionL->setBounds(bpos - 3, 1, 100, labelHeight);
-            addAndMakeVisible(*resolutionL);
+            currentFrameL = newL("View");
+            currentFrameL->setBounds(bpos - 3, 1, 100, labelHeight);
+            addAndMakeVisible(*currentFrameL);
 
-            resolutionB = std::make_unique<juce::ComboBox>("res");
-            btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
-            resolutionB->setBounds(btnrect);
-            int id = 1, grid = 32;
-            while (grid <= 4096)
-            {
-                resolutionB->addItem(std::to_string(grid), id);
-                id++;
-                grid *= 2;
-            }
-            resolutionB->setSelectedId(overlay->osc->wavetable_formula_res_base,
-                                       juce::NotificationType::dontSendNotification);
-            resolutionB->addListener(this);
-            addAndMakeVisible(*resolutionB);
+            currentFrameN = std::make_unique<Surge::Widgets::NumberField>();
+            currentFrameN->setControlMode(Surge::Skin::Parameters::WTSE_FRAMES);
+            currentFrameN->setIntValue(1);
+            currentFrameN->addListener(this);
+            currentFrameN->setTag(tag_current_frame);
+            currentFrameN->setStorage(overlay->storage);
+            currentFrameN->setTitle("Current Frame");
+            currentFrameN->setDescription("Current Frame");
+            currentFrameN->setSkin(skin, associatedBitmapStore);
+            btnrect = juce::Rectangle<int>(bpos, ypos - 1, numfieldWidth, numfieldHeight);
+            currentFrameN->setBounds(btnrect);
+            currentFrameN->setBackgroundDrawable(images[0]);
+            currentFrameN->setHoverBackgroundDrawable(images[1]);
+            currentFrameN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+            currentFrameN->setHoverTextColour(
+                skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
+            addAndMakeVisible(*currentFrameN);
 
-            bpos += btnWidth + 5;
+            bpos += numfieldWidth + 5;
 
             framesL = newL("Frames");
             framesL->setBounds(bpos - 3, 1, 100, labelHeight);
             addAndMakeVisible(*framesL);
 
-            framesT = std::make_unique<juce::TextEditor>("frm");
-            btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
-            framesT->setBounds(btnrect);
-            framesT->setFont(skin->fontManager->getLatoAtSize(10));
-            framesT->setText(std::to_string(overlay->osc->wavetable_formula_nframes),
-                             juce::NotificationType::dontSendNotification);
-            framesT->addListener(this);
-            addAndMakeVisible(*framesT);
+            framesN = std::make_unique<Surge::Widgets::NumberField>();
+            framesN->setControlMode(Surge::Skin::Parameters::WTSE_FRAMES);
+            framesN->setIntValue(overlay->osc->wavetable_formula_nframes);
+            framesN->addListener(this);
+            framesN->setTag(tag_frames_value);
+            framesN->setStorage(overlay->storage);
+            framesN->setTitle("Max Frame");
+            framesN->setDescription("Max Frame");
+            framesN->setSkin(skin, associatedBitmapStore);
+            btnrect = juce::Rectangle<int>(bpos, ypos - 1, numfieldWidth, numfieldHeight);
+            framesN->setBounds(btnrect);
+            framesN->setBackgroundDrawable(images[0]);
+            framesN->setHoverBackgroundDrawable(images[1]);
+            framesN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+            framesN->setHoverTextColour(skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
+            framesN->onReturnPressed = [w = juce::Component::SafePointer(this)](auto tag, auto nf) {
+                if (w)
+                {
+                    w->overlay->rerenderFromUIState();
+                    return true;
+                }
+                return false;
+            };
+            addAndMakeVisible(*framesN);
 
-            bpos += btnWidth + 5;
+            bpos += numfieldWidth + 5;
+
+            resolutionL = newL("Samples");
+            resolutionL->setBounds(bpos - 3, 1, 100, labelHeight);
+            addAndMakeVisible(*resolutionL);
+
+            resolutionN = std::make_unique<Surge::Widgets::NumberField>();
+            resolutionN->setControlMode(Surge::Skin::Parameters::WTSE_RESOLUTION);
+            resolutionN->setIntValue(overlay->osc->wavetable_formula_res_base);
+            resolutionN->addListener(this);
+            resolutionN->setTag(tag_res_value);
+            resolutionN->setStorage(overlay->storage);
+            resolutionN->setTitle("Samples");
+            resolutionN->setDescription("Samples");
+            resolutionN->setSkin(skin, associatedBitmapStore);
+            btnrect = juce::Rectangle<int>(bpos, ypos - 1, numfieldWidth, numfieldHeight);
+            resolutionN->setBounds(btnrect);
+            resolutionN->setBackgroundDrawable(images[0]);
+            resolutionN->setHoverBackgroundDrawable(images[1]);
+            resolutionN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
+            resolutionN->setHoverTextColour(
+                skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
+            addAndMakeVisible(*resolutionN);
+
+            bpos += numfieldWidth + 5;
 
             generateS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
             btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
@@ -1175,32 +1287,155 @@ struct WavetableScriptControlArea : public juce::Component,
         return res;
     }
 
-    int32_t controlModifierClicked(GUI::IComponentTagValue *c, const juce::ModifierKeys &mods,
-                                   bool isDoubleClickEvent) override
+    int32_t controlModifierClicked(GUI::IComponentTagValue *pControl,
+                                   const juce::ModifierKeys &mods, bool isDoubleClickEvent) override
     {
-        auto tag = (tags)(c->getTag());
+        int tag = pControl->getTag();
+
+        std::vector<std::pair<std::string, float>> options;
+        bool hasTypein = false;
+        std::string menuName;
 
         switch (tag)
         {
         case tag_select_tab:
         case tag_code_apply:
+        case tag_current_frame:
+        case tag_res_value:
         case tag_generate_wt:
         {
-            juce::PopupMenu contextMenu;
+            auto contextMenu = juce::PopupMenu();
 
-            auto msurl = editor->helpURLForSpecial("formula-editor");
+            auto msurl = editor->helpURLForSpecial("wtse-editor");
             auto hurl = editor->fullyResolvedHelpURL(msurl);
 
-            editor->addHelpHeaderTo("Formula Editor", hurl, contextMenu);
+            editor->addHelpHeaderTo("WTSE Editor", hurl, contextMenu);
 
             contextMenu.showMenuAsync(editor->popupMenuOptions(this, false),
-                                      Surge::GUI::makeEndHoverCallback(c));
+                                      Surge::GUI::makeEndHoverCallback(pControl));
         }
         break;
+        case tag_frames_value:
+        {
+            hasTypein = true;
+            menuName = "WTSE Wavetable Frame Amount";
+
+            auto addStop = [&options](int v) {
+                options.push_back(
+                    std::make_pair(std::to_string(v), Parameter::intScaledToFloat(v, 256, 1)));
+            };
+
+            addStop(10);
+            addStop(16);
+            addStop(20);
+            addStop(32);
+            addStop(50);
+            addStop(64);
+            addStop(100);
+            addStop(128);
+            addStop(200);
+            addStop(256);
+            break;
+        }
         default:
             break;
         }
-        return 0;
+
+        if (!options.empty())
+        {
+            auto contextMenu = juce::PopupMenu();
+
+            auto msurl = SurgeGUIEditor::helpURLForSpecial(overlay->storage, "wtse-editor");
+            auto hurl = SurgeGUIEditor::fullyResolvedHelpURL(msurl);
+            auto tcomp = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(menuName, hurl);
+
+            tcomp->setSkin(skin, associatedBitmapStore);
+            auto hment = tcomp->getTitle();
+
+            contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
+
+            contextMenu.addSeparator();
+
+            for (auto op : options)
+            {
+                auto val = op.second;
+
+                contextMenu.addItem(op.first, true, (val == pControl->getValue()),
+                                    [val, pControl, this]() {
+                                        pControl->setValue(val);
+                                        valueChanged(pControl);
+
+                                        auto iv = pControl->asJuceComponent();
+
+                                        if (iv)
+                                        {
+                                            iv->repaint();
+                                        }
+                                    });
+            }
+
+            if (hasTypein)
+            {
+                contextMenu.addSeparator();
+
+                auto c = pControl->asJuceComponent();
+
+                auto handleTypein = [c, pControl, this](const std::string &s) {
+                    auto i = std::atoi(s.c_str());
+
+                    if (i >= 1 && i <= 256)
+                    {
+                        pControl->setValue(Parameter::intScaledToFloat(i, 256, 1));
+                        valueChanged(pControl);
+
+                        if (c)
+                        {
+                            c->repaint();
+                        }
+
+                        return true;
+                    }
+                    return false;
+                };
+
+                auto val =
+                    std::to_string(Parameter::intUnscaledFromFloat(pControl->getValue(), 256, 1));
+
+                auto showTypein = [this, c, handleTypein, menuName, pControl, val]() {
+                    if (!typeinEditor)
+                    {
+                        typeinEditor =
+                            std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
+                        getParentComponent()->addChildComponent(*typeinEditor);
+                    }
+
+                    typeinEditor->callback = handleTypein;
+                    typeinEditor->setMainLabel(menuName);
+                    typeinEditor->setValueLabels("current: " + val, "");
+                    typeinEditor->setSkin(skin, associatedBitmapStore);
+                    typeinEditor->setEditableText(val);
+                    typeinEditor->setReturnFocusTarget(c);
+
+                    auto topOfControl = c->getParentComponent()->getY();
+                    auto pb = c->getBounds();
+                    auto cx = pb.getCentreX();
+
+                    auto r = typeinEditor->getRequiredSize();
+                    cx -= r.getWidth() / 2;
+                    r = r.withBottomY(topOfControl).withX(cx);
+                    typeinEditor->setBounds(r);
+
+                    typeinEditor->setVisible(true);
+                    typeinEditor->grabFocus();
+                };
+
+                contextMenu.addItem(Surge::GUI::toOSCase("Edit Value: ") + val, true, false,
+                                    showTypein);
+            }
+            contextMenu.showMenuAsync(editor->popupMenuOptions(),
+                                      Surge::GUI::makeEndHoverCallback(pControl));
+        }
+        return 1;
     }
 
     void valueChanged(GUI::IComponentTagValue *c) override
@@ -1224,41 +1459,59 @@ struct WavetableScriptControlArea : public juce::Component,
         }
         break;
         case tag_code_apply:
-        {
             overlay->applyCode();
-        }
-        break;
-        case tag_generate_wt:
+            break;
+        case tag_current_frame:
         {
-            overlay->generateWavetable();
+            int currentFrame = currentFrameN->getIntValue();
+            int maxFrames = framesN->getIntValue();
+            if (currentFrame > maxFrames)
+            {
+                currentFrame = maxFrames;
+                currentFrameN->setIntValue(currentFrame);
+            }
+            overlay->rendererComponent->frameNumber = currentFrame;
+            overlay->rerenderFromUIState();
         }
         break;
+        case tag_frames_value:
+        {
+            int currentFrame = currentFrameN->getIntValue();
+            int maxFrames = framesN->getIntValue();
+            if (currentFrame > maxFrames)
+            {
+                currentFrameN->setIntValue(maxFrames);
+                overlay->rendererComponent->frameNumber = maxFrames;
+            }
+            overlay->osc->wavetable_formula_nframes = maxFrames;
+            overlay->rerenderFromUIState();
+        }
+        break;
+        case tag_res_value:
+        {
+            overlay->osc->wavetable_formula_res_base = resolutionN->getIntValue();
+            overlay->rerenderFromUIState();
+        }
+        break;
+
+        case tag_generate_wt:
+            overlay->generateWavetable();
+            break;
         default:
             break;
         }
     }
 
-    void comboBoxChanged(juce::ComboBox *comboBoxThatHasChanged) override
-    {
-        overlay->osc->wavetable_formula_res_base = resolutionB->getSelectedId();
-        overlay->rerenderFromUIState();
-    }
-
-    void textEditorReturnKeyPressed(juce::TextEditor &) override
-    {
-        overlay->osc->wavetable_formula_nframes = std::atoi(framesT->getText().toRawUTF8());
-        overlay->rerenderFromUIState();
-    }
-
-    std::unique_ptr<juce::Label> codeL, resolutionL, framesL;
+    std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
+    std::unique_ptr<juce::Label> codeL, currentFrameL, framesL, resolutionL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> codeS, applyS, generateS;
-    std::unique_ptr<juce::ComboBox> resolutionB;
-    std::unique_ptr<juce::TextEditor> framesT;
+    std::unique_ptr<Surge::Widgets::NumberField> currentFrameN, framesN, resolutionN;
 
     void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
 
     void onSkinChanged() override { rebuild(); }
 
+  private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetableScriptControlArea);
 };
 
@@ -1298,14 +1551,7 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
     addAndMakeVisible(*mainEditor);
     addChildComponent(*preludeDisplay);
 
-    currentFrame = std::make_unique<juce::Slider>("currF");
-    currentFrame->setSliderStyle(juce::Slider::LinearVertical);
-    currentFrame->setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-    currentFrame->setRange(0.0, 1.0);
-    currentFrame->addListener(this);
-    addAndMakeVisible(*currentFrame);
-
-    rendererComponent = std::make_unique<WavetablePreviewComponent>(storage, osc, skin);
+    rendererComponent = std::make_unique<WavetablePreviewComponent>(this, editor, skin);
     addAndMakeVisible(*rendererComponent);
 
     switch (getEditState().codeOrPrelude)
@@ -1338,8 +1584,8 @@ void WavetableScriptEditor::onSkinChanged()
 void WavetableScriptEditor::applyCode()
 {
     osc->wavetable_formula = mainDocument->getAllContent().toStdString();
-    osc->wavetable_formula_res_base = controlArea->resolutionB->getSelectedId();
-    osc->wavetable_formula_nframes = std::atoi(controlArea->framesT->getText().toRawUTF8());
+    osc->wavetable_formula_res_base = controlArea->resolutionN->getIntValue();
+    osc->wavetable_formula_nframes = controlArea->framesN->getIntValue();
 
     editor->repaintFrame();
     rerenderFromUIState();
@@ -1365,23 +1611,22 @@ void WavetableScriptEditor::setApplyEnabled(bool b)
 void WavetableScriptEditor::resized()
 {
     auto t = getTransform().inverted();
-    auto h = getHeight();
-    auto w = getWidth();
-    t.transformPoint(w, h);
+    auto width = getWidth();
+    auto height = getHeight();
+    t.transformPoint(width, height);
 
     int itemWidth = 100;
     int topHeight = 20;
     int controlHeight = 35;
-    int rendererHeight = 150;
+    int rendererHeight = 125;
 
-    auto edRect = juce::Rectangle<int>(2, 2, w - 4, h - controlHeight - rendererHeight - 6);
+    auto edRect =
+        juce::Rectangle<int>(2, 2, width - 4, height - controlHeight - rendererHeight - 6);
     mainEditor->setBounds(edRect);
     preludeDisplay->setBounds(edRect);
-    controlArea->setBounds(0, h - controlHeight - rendererHeight - 2, w,
+    controlArea->setBounds(0, height - controlHeight - rendererHeight - 2, width,
                            controlHeight + rendererHeight + 2);
-
-    currentFrame->setBounds(2, h - rendererHeight - 2, 32, rendererHeight);
-    rendererComponent->setBounds(2 + 30, h - rendererHeight, w - 2 - 30, rendererHeight);
+    rendererComponent->setBounds(2, height - rendererHeight, width - 2, rendererHeight);
 
     rerenderFromUIState();
 }
@@ -1416,9 +1661,9 @@ void WavetableScriptEditor::escapeKeyPressed()
 
 void WavetableScriptEditor::rerenderFromUIState()
 {
-    auto resi = controlArea->resolutionB->getSelectedId();
-    auto nfr = std::atoi(controlArea->framesT->getText().toRawUTF8());
-    auto cfr = (int)round((nfr - 1) * currentFrame->getValue()); // map slider to 0 .. nFrames - 1
+    auto resi = controlArea->resolutionN->getIntValue();
+    auto nfr = controlArea->framesN->getIntValue();
+    auto cfr = rendererComponent->frameNumber;
 
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
@@ -1426,17 +1671,33 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     rendererComponent->points = Surge::WavetableScript::evaluateScriptAtFrame(
         storage, mainDocument->getAllContent().toStdString(), respt, cfr, nfr);
-    rendererComponent->frameNumber = cfr;
     rendererComponent->repaint();
+}
+
+void WavetableScriptEditor::setCurrentFrame(int value)
+{
+    int frameNumber = rendererComponent->frameNumber;
+    int maxFrames = controlArea->framesN->getIntValue();
+    frameNumber += value;
+
+    if (frameNumber < 1)
+        frameNumber = 1;
+    else if (frameNumber > maxFrames)
+        frameNumber = maxFrames;
+
+    rendererComponent->frameNumber = frameNumber;
+    controlArea->currentFrameN->setIntValue(frameNumber);
 }
 
 void WavetableScriptEditor::generateWavetable()
 {
-    auto resi = controlArea->resolutionB->getSelectedId();
-    auto nfr = std::atoi(controlArea->framesT->getText().toRawUTF8());
+    auto resi = controlArea->resolutionN->getIntValue();
+    auto nfr = controlArea->framesN->getIntValue();
     auto respt = 32;
+
     for (int i = 1; i < resi; ++i)
         respt *= 2;
+
     std::cout << "Generating wavetable with " << respt << " samples and " << nfr << " frames"
               << std::endl;
 
@@ -1452,8 +1713,6 @@ void WavetableScriptEditor::generateWavetable()
     delete[] wd;
     editor->repaintFrame();
 }
-
-void WavetableScriptEditor::sliderValueChanged(juce::Slider *slider) { rerenderFromUIState(); }
 
 std::optional<std::pair<std::string, std::string>>
 WavetableScriptEditor::getPreCloseChickenBoxMessage()

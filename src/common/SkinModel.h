@@ -110,7 +110,9 @@ enum NumberfieldControlModes
     NOTENAME,
     MIDICHANNEL_FROM_127,
     MSEG_SNAP_H,
-    MSEG_SNAP_V
+    MSEG_SNAP_V,
+    WTSE_RESOLUTION,
+    WTSE_FRAMES
 };
 }
 
