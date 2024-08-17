@@ -159,12 +159,11 @@ TEST_CASE("Surge Prelude", "[lua]")
         REQUIRE(L);
         luaL_openlibs(L);
 
-        static constexpr const char *surgeTableName{"surge"};
-        REQUIRE(Surge::LuaSupport::loadSurgePrelude(L, surgeTableName));
+        REQUIRE(Surge::LuaSupport::loadSurgePrelude(L, Surge::LuaSources::formula_prelude));
 
         std::string emsg;
         REQUIRE(Surge::LuaSupport::parseStringDefiningFunction(
-            L, Surge::LuaSources::surge_prelude_test, "test", emsg));
+            L, Surge::LuaSources::formula_prelude_test, "test", emsg));
         Surge::LuaSupport::setSurgeFunctionEnvironment(L);
 
         auto pcall = lua_pcall(L, 0, 1, 0);

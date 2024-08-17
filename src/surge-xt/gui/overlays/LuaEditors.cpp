@@ -744,7 +744,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     mainDocument->insertText(0, fs->formulaString);
 
     preludeDocument = std::make_unique<juce::CodeDocument>();
-    preludeDocument->insertText(0, Surge::LuaSupport::getSurgePrelude());
+    preludeDocument->insertText(0, Surge::LuaSupport::getFormulaPrelude());
 
     preludeDisplay = std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get());
     preludeDisplay->setTabSize(4, true);
@@ -1282,9 +1282,8 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
         mainDocument->insertText(0, osc->wavetable_formula);
     }
 
-    // FIXME: split prelude into Formula and WTSE
     preludeDocument = std::make_unique<juce::CodeDocument>();
-    preludeDocument->insertText(0, Surge::LuaSupport::getSurgePrelude());
+    preludeDocument->insertText(0, Surge::LuaSupport::getWTSEPrelude());
 
     preludeDisplay = std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get());
     preludeDisplay->setTabSize(4, true);

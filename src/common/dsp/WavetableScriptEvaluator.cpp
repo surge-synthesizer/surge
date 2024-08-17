@@ -22,6 +22,7 @@
 
 #include "WavetableScriptEvaluator.h"
 #include "LuaSupport.h"
+#include "lua/LuaSources.h"
 
 namespace Surge
 {
@@ -42,6 +43,10 @@ std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::strin
     auto values = std::vector<float>();
 
     auto wg = Surge::LuaSupport::SGLD("WavetableScript::evaluate", L);
+
+    // Load the WTSE prelude
+    Surge::LuaSupport::loadSurgePrelude(L, Surge::LuaSources::wtse_prelude);
+
     std::string emsg;
     auto res = Surge::LuaSupport::parseStringDefiningFunction(L, eqn.c_str(), "generate", emsg);
     if (res)

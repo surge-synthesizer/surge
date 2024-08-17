@@ -175,10 +175,10 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_setfield(L, eidx, "print");
 
     // add global tables
-    lua_getglobal(L, "surge");
-    lua_setfield(L, eidx, "surge");
-    lua_getglobal(L, "shared");
-    lua_setfield(L, eidx, "shared");
+    lua_getglobal(L, surgeTableName);
+    lua_setfield(L, eidx, surgeTableName);
+    lua_getglobal(L, sharedTableName);
+    lua_setfield(L, eidx, sharedTableName);
 
     // add whitelisted functions and modules
     std::vector<std::string> sandboxWhitelist = {"pairs",    "ipairs",       "unpack",
@@ -271,21 +271,32 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     return true;
 }
 
-bool Surge::LuaSupport::loadSurgePrelude(lua_State *s, const char *surgeTableName)
+bool Surge::LuaSupport::loadSurgePrelude(lua_State *L, const std::string &lua_script)
 {
 #if HAS_LUA
-    auto guard = SGLD("loadPrologue", s);
-    // now load the surge library
-    auto &lua_script = LuaSources::surge_prelude;
+    auto guard = SGLD("loadSurgePrelude", L);
+    // Load the specified Lua script into the global table "surge"
     auto lua_size = lua_script.size();
-    auto load_stat = luaL_loadbuffer(s, lua_script.c_str(), lua_size, lua_script.c_str());
-    auto pcall = lua_pcall(s, 0, 1, 0);
-    lua_setglobal(s, surgeTableName);
+    auto status = luaL_loadbuffer(L, lua_script.c_str(), lua_size, lua_script.c_str());
+    if (status != 0)
+    {
+        std::cout << "Error: Failed to load Lua file [ " << lua_script.c_str() << " ]" << std::endl;
+        return false;
+    }
+    auto pcall = lua_pcall(L, 0, 1, 0);
+    if (pcall != 0)
+    {
+        std::cout << "Error: Failed to run Lua file [ " << lua_script.c_str() << " ]" << std::endl;
+        return false;
+    }
+    lua_setglobal(L, surgeTableName);
 #endif
     return true;
 }
 
-std::string Surge::LuaSupport::getSurgePrelude() { return LuaSources::surge_prelude; }
+std::string Surge::LuaSupport::getFormulaPrelude() { return LuaSources::formula_prelude; }
+
+std::string Surge::LuaSupport::getWTSEPrelude() { return LuaSources::wtse_prelude; }
 
 Surge::LuaSupport::SGLD::~SGLD()
 {
