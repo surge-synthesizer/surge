@@ -185,21 +185,14 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     // We want this on the keystate so it survives the voice for mono mode
     keyState->voiceOrder = voiceOrder;
 
+    state.voiceOrderAtCreate = voiceOrder;
+
     age = 0;
     age_release = 0;
 
     state.key = key;
     state.keyRetuningForKey = -1000;
     state.channel = channel;
-
-    state.voiceOrderAtCreate = voiceOrder;
-    state.polylimit = storage->getPatch().polylimit.val.i;
-    state.scenemode = storage->getPatch().scenemode.val.i;
-    state.polymode = storage->getPatch().scene[scene_id].polymode.val.i;
-
-    state.splitpoint = storage->getPatch().splitpoint.val.i;
-    if (state.scenemode == sm_chsplit)
-        state.splitpoint = (int)(state.splitpoint / 8 + 1);
 
     state.velocity = velocity;
     state.fvel = velocity / 127.f;
