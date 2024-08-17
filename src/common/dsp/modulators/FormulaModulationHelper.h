@@ -44,7 +44,6 @@ struct GlobalData
 };
 
 static constexpr int max_formula_outputs{max_lfo_indices};
-static constexpr const char *surgeTableName{"surge"};
 static constexpr const char *sharedTableName{"shared"};
 
 struct EvaluatorState

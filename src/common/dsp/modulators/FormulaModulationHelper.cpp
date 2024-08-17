@@ -27,6 +27,7 @@
 #include <thread>
 #include <functional>
 #include "fmt/core.h"
+#include "lua/LuaSources.h"
 
 namespace Surge
 {
@@ -81,12 +82,13 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
 
     if (firstTimeThrough)
     {
-        // setup shared table
+        // Setup shared table
         lua_newtable(s.L);
         lua_setglobal(s.L, sharedTableName);
 
-        // setup prelude
-        Surge::LuaSupport::loadSurgePrelude(s.L, surgeTableName);
+        // Load the Formula prelude
+        Surge::LuaSupport::loadSurgePrelude(s.L, Surge::LuaSources::formula_prelude);
+
         auto reserved0 = std::string(R"FN(
 function surge_reserved_formula_error_stub(m)
     return 0;

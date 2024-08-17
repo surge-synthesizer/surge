@@ -85,15 +85,20 @@ int parseStringDefiningMultipleFunctions(lua_State *s, const std::string &defini
 bool setSurgeFunctionEnvironment(lua_State *s);
 
 /*
- * Call this function with a LUA state and a tablename and it will introduce the global
- * 'surge' which is the surge prelude
+ * Call this function with a LUA state, the std::string at Surge::LuaSources and it will load the
+ * prelude in the table "surge"
  */
-bool loadSurgePrelude(lua_State *s, const char *surgeTableName);
+bool loadSurgePrelude(lua_State *s, const std::string &lua_script);
 
 /*
- * Call this function to get a string representation of the prelude
+ * Call this function to get a string representation of the Formula prelude
  */
-std::string getSurgePrelude();
+std::string getFormulaPrelude();
+
+/*
+ * Call this function to get a string representation of the WTSE prelude
+ */
+std::string getWTSEPrelude();
 
 /*
  * A little leak debugger. Make this on your stack and if you exit the
@@ -117,6 +122,12 @@ struct SGLD
     lua_State *L;
     int top;
 };
+
+/*
+ * Global table names
+ */
+static constexpr const char *surgeTableName{"surge"};
+static constexpr const char *sharedTableName{"shared"};
 
 } // namespace LuaSupport
 } // namespace Surge
