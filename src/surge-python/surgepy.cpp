@@ -617,6 +617,25 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
 
     void releaseNoteWithInts(int ch, int note, int vel) { releaseNote(ch, note, vel); }
 
+    bool loadWavetablePy(int scene, int osc, const std::string &s)
+    {
+        auto path = string_to_path(s);
+
+        if (scene < 0 || scene >= n_scenes || osc < 0 || osc >= n_oscs)
+        {
+            throw std::invalid_argument("OSC and SCENE out of range in loadWavetable");
+        }
+        if (!fs::exists(path))
+        {
+            throw std::invalid_argument((std::string("File not found: ") + s).c_str());
+        }
+        std::cout << "Would load " << scene << " " << osc << " with " << s << std::endl;
+        auto os = &(storage.getPatch().scene[scene].osc[osc]);
+        auto wt = &(os->wt);
+        storage.load_wt(s, wt, os);
+
+        return true;
+    }
     bool loadPatchPy(const std::string &s)
     {
         auto path = string_to_path(s);
@@ -1110,6 +1129,11 @@ PYBIND11_MODULE(surgepy, m)
              "Load a Surge XT .fxp patch from the file system.", py::arg("path"))
         .def("savePatch", &SurgeSynthesizerWithPythonExtensions::savePatchPy,
              "Save the current state of Surge XT to an .fxp file.", py::arg("path"))
+
+        .def("loadWavetable", &SurgeSynthesizerWithPythonExtensions::loadWavetablePy,
+             "Load a wavetable file directly into a scene and oscillator immediately on this "
+             "thread.",
+             py::arg("scene"), py::arg("osc"), py::arg("path"))
 
         .def("getModSource", &SurgeSynthesizerWithPythonExtensions::getModSource,
              "Given a constant from surge.constants.ms_*, provide a modulator object",
