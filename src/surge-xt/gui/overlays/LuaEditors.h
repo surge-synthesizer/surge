@@ -126,9 +126,7 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 struct WavetablePreviewComponent;
 struct WavetableScriptControlArea;
 
-struct WavetableScriptEditor : public CodeEditorContainerWithApply,
-                               public RefreshableOverlay,
-                               public juce::Slider::Listener
+struct WavetableScriptEditor : public CodeEditorContainerWithApply, public RefreshableOverlay
 {
     WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os, int oscid,
                           int scene, Surge::GUI::Skin::ptr_t sk);
@@ -143,16 +141,15 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply,
     void showPreludeCode();
     void escapeKeyPressed();
 
-    void sliderValueChanged(juce::Slider *slider) override;
     void generateWavetable();
     void rerenderFromUIState();
+    void setCurrentFrame(int value);
 
     std::unique_ptr<juce::CodeDocument> preludeDocument;
     std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
     std::unique_ptr<WavetableScriptControlArea> controlArea;
 
     std::unique_ptr<WavetablePreviewComponent> rendererComponent;
-    std::unique_ptr<juce::Slider> currentFrame;
 
     OscillatorStorage *osc;
     SurgeGUIEditor *editor{nullptr};

@@ -62,6 +62,14 @@ std::string NumberField::valueToDisplay() const
     case Skin::Parameters::POLY_COUNT:
         oss << poly << " / " << iValue;
         break;
+    case Skin::Parameters::WTSE_RESOLUTION:
+    {
+        auto respt = 32;
+        for (int i = 1; i < iValue; ++i)
+            respt *= 2;
+        oss << respt;
+    }
+    break;
     default:
         if (extended)
             return fmt::format("{:.2f}", (float)(iValue / 100.0));
@@ -132,6 +140,14 @@ void NumberField::setControlMode(Surge::Skin::Parameters::NumberfieldControlMode
     case Skin::Parameters::MSEG_SNAP_V:
         iMin = 1;
         iMax = 100;
+        break;
+    case Skin::Parameters::WTSE_RESOLUTION:
+        iMin = 1;
+        iMax = 8;
+        break;
+    case Skin::Parameters::WTSE_FRAMES:
+        iMin = 1;
+        iMax = 256;
         break;
     }
     bounceToInt();
