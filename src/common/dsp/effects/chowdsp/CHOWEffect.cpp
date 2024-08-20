@@ -75,14 +75,14 @@ void CHOWEffect::process(float *dataL, float *dataR)
     }
 
     if (cur_os)
-        process_block_os(dataL, dataR);
+        process_block_os(L, R);
     else
-        process_block(dataL, dataR);
+        process_block(L, R);
 
-    makeup.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
+    makeup.multiply_2_blocks(L, R, BLOCK_SIZE_QUAD);
 
     mix.set_target_smoothed(clamp01(*pd_float[chow_mix]));
-    mix.fade_2_blocks_inplace(L, dataL, R, dataR, BLOCK_SIZE_QUAD);
+    mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
 }
 
 void CHOWEffect::set_params()
