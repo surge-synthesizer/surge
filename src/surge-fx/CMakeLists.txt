@@ -64,13 +64,11 @@ target_sources(${PROJECT_NAME} PRIVATE
   FXOpenSoundControl.h
   )
 
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
   surge::surge-common
   surge-fx-binary
-  surge-juce
-  juce::juce_audio_utils
-  juce::juce_audio_processors
-  juce::juce_osc
+  surge-juce-for-surge-xt
   )
 
 if(SURGE_BUILD_CLAP)
@@ -93,5 +91,18 @@ if(SURGE_BUILD_CLAP)
       "stereo"
       "free and open source")
 endif()
+
+
+function(nouni sfx)
+  if (TARGET "${PROJECT_NAME}_${sfx}")
+    set_target_properties(${PROJECT_NAME}_${sfx} PROPERTIES UNITY_BUILD FALSE)
+  endif()
+endfunction()
+set_target_properties(${PROJECT_NAME} PROPERTIES UNITY_BUILD FALSE)
+nouni(Standalone)
+nouni(VST3)
+nouni(CLAP)
+nouni(AU)
+nouni(LV2)
 
 surge_juce_package(${PROJECT_NAME} "Surge XT Effects")

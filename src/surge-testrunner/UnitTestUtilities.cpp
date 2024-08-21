@@ -220,7 +220,7 @@ std::shared_ptr<SurgeSynthesizer> surgeOnPatch(const std::string &otp)
         return surge;
 }
 
-std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp, float sr = 44100)
+std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp, float sr)
 {
     auto surge = Surge::Headless::createSurge(sr);
 
@@ -249,7 +249,7 @@ std::shared_ptr<SurgeSynthesizer> surgeOnTemplate(const std::string &otp, float 
     return surge;
 }
 
-std::shared_ptr<SurgeSynthesizer> surgeOnSine(float sr = 44100)
+std::shared_ptr<SurgeSynthesizer> surgeOnSine(float sr)
 {
     auto surge = Surge::Headless::createSurge(sr);
 
@@ -260,7 +260,7 @@ std::shared_ptr<SurgeSynthesizer> surgeOnSine(float sr = 44100)
     surge->loadPatchByPath(path_to_string(isin).c_str(), -1, "Test");
     return surge;
 }
-std::shared_ptr<SurgeSynthesizer> surgeOnSaw(float sr = 44100)
+std::shared_ptr<SurgeSynthesizer> surgeOnSaw(float sr)
 {
     auto surge = Surge::Headless::createSurge(sr);
 

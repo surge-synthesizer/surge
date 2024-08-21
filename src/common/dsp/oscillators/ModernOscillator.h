@@ -20,6 +20,9 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#ifndef SURGE_SRC_MODERN_OSC_H
+#define SURGE_SRC_MODERN_OSC_H
+
 #include "OscillatorBase.h"
 #include "DSPUtils.h"
 #include "OscillatorCommonFunctions.h"
@@ -98,3 +101,4 @@ class ModernOscillator : public Oscillator
 };
 
 const char mo_multitype_names[3][16] = {"Triangle", "Square", "Sine"};
+#endif

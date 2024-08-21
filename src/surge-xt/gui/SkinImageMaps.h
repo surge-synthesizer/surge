@@ -19,6 +19,10 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+
+#ifndef SURGE_SKINIMAGEMAPS_H
+#define SURGE_SKINIMAGEMAPS_H
+
 inline std::unordered_map<std::string, int> createIdNameMap()
 {
     std::unordered_map<std::string, int> res;
@@ -169,3 +173,5 @@ inline std::unordered_set<int> allowedImageIds()
 
     return allowed;
 }
+
+#endif
