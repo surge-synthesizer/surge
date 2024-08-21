@@ -77,17 +77,18 @@ endif()
 
 add_library(surge-juce-for-surge-common INTERFACE)
 target_link_libraries(surge-juce-for-surge-common INTERFACE surge-juce)
-if (NOT ${CMAKE_UNITY_BUILD})
+if (NOT CMAKE_UNITY_BUILD)
     target_link_libraries(surge-juce-for-surge-common INTERFACE surge-juce juce::juce_dsp)
 endif()
 
 
 add_library(surge-juce-for-surge-xt INTERFACE)
 target_link_libraries(surge-juce-for-surge-xt INTERFACE surge-juce)
-if (NOT ${CMAKE_UNITY_BUILD})
+if (NOT CMAKE_UNITY_BUILD)
     target_link_libraries(surge-juce-for-surge-xt INTERFACE surge-juce
             juce::juce_gui_basics
             juce::juce_osc
+            juce::juce_audio_utils
     )
 endif()
 
