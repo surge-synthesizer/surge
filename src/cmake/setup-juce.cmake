@@ -48,6 +48,9 @@ if (${CMAKE_UNITY_BUILD})
 
     set_target_properties(surge-juce PROPERTIES UNITY_BUILD FALSE)
 
+    if (WIN32)
+        target_compile_definitions(surge-juce PUBLIC NOMINMAX=1)
+    endif()
 else()
     add_library(surge-juce INTERFACE)
     target_compile_definitions(surge-juce INTERFACE
@@ -74,11 +77,12 @@ else()
 
             JUCE_CATCH_UNHANDLED_EXCEPTIONS=0
     )
+
+    if (WIN32)
+        target_compile_definitions(surge-juce INTERFACE NOMINMAX=1)
+    endif()
 endif()
 
-if (WIN32)
-    target_compile_definitions(surge-juce PUBLIC NOMINMAX=1)
-endif()
 
 add_library(surge-juce-for-surge-common INTERFACE)
 target_link_libraries(surge-juce-for-surge-common INTERFACE surge-juce)
