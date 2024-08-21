@@ -14,6 +14,7 @@ juce_add_binary_data(surge-xt-binary
   HEADER_NAME SurgeXTBinary.h
   SOURCES ${SURGE_XT_JUCE_RESOURCES_GLOB}
 )
+set_target_properties(surge-xt-binary PROPERTIES UNITY_BUILD FALSE)
 
 if(WIN32 AND ${CMAKE_SIZEOF_VOID_P} EQUAL 4)
   set(SURGE_XT_PRODUCT_NAME "Surge XT (32-bit)")
@@ -77,14 +78,8 @@ if (SURGE_EXPOSE_PRESETS)
   target_compile_definitions(${PROJECT_NAME} PUBLIC SURGE_EXPOSE_PRESETS=1)
 endif()
 
-target_sources(${PROJECT_NAME} PRIVATE
-  SurgeSynthEditor.cpp
-  SurgeSynthEditor.h
-  SurgeSynthProcessor.cpp
-  SurgeSynthProcessor.h
-
-  SurgeCLAPPresetDiscovery.cpp
-
+add_library(${PROJECT_NAME}-impl STATIC)
+target_sources(${PROJECT_NAME}-impl PRIVATE
   util/LockFreeStack.h
 
   gui/AccessibleHelpers.h
@@ -191,6 +186,31 @@ target_sources(${PROJECT_NAME} PRIVATE
   osc/OpenSoundControl.cpp
   osc/OpenSoundControl.h
 )
+target_link_libraries(${PROJECT_NAME}-impl
+        PUBLIC
+        surge-common
+        surge-platform
+        surge-xt-binary
+        sst-filters-extras
+        surge-juce-for-surge-xt)
+
+target_include_directories(${PROJECT_NAME}-impl
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/gui
+        ${CMAKE_CURRENT_SOURCE_DIR}/osc
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_compile_definitions(${PROJECT_NAME}-impl PUBLIC
+        $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
+)
+
+target_sources(${PROJECT_NAME} PRIVATE
+        SurgeSynthEditor.cpp
+        SurgeSynthEditor.h
+        SurgeSynthProcessor.cpp
+        SurgeSynthProcessor.h
+        SurgeCLAPPresetDiscovery.cpp
+)
 
 if(NOT EXISTS ${SURGE_JUCE_PATH}/modules/juce_gui_basics/accessibility/juce_AccessibilityHandler.h)
   message(FATAL_ERROR "You must build against at least JUCE 6.1 with accessibility support!")
@@ -210,29 +230,23 @@ else()
   message(STATUS "No JUCE VST3 client extensions in this version!")
 endif()
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC
-  $<IF:$<CONFIG:DEBUG>,BUILD_IS_DEBUG,BUILD_IS_RELEASE>=1
-)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-  surge-common
-  surge-platform
-  surge-juce
-  juce::juce_graphics
-  juce::juce_audio_utils
-  juce::juce_audio_processors
-  juce::juce_audio_plugin_client
-  juce::juce_osc
-  surge-xt-binary
-  sst-filters-extras
+  ${PROJECT_NAME}-impl
 )
 
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/gui
-  ${CMAKE_CURRENT_SOURCE_DIR}/osc
-  ${CMAKE_CURRENT_SOURCE_DIR}
-)
+function(nouni sfx)
+  if (TARGET "${PROJECT_NAME}_${sfx}")
+    set_target_properties(${PROJECT_NAME}_${sfx} PROPERTIES UNITY_BUILD FALSE)
+  endif()
+endfunction()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES UNITY_BUILD FALSE)
+nouni(Standalone)
+nouni(VST3)
+nouni(CLAP)
+nouni(AU)
+nouni(LV2)
 
 add_subdirectory(cli)
 

@@ -21,6 +21,7 @@
  */
 
 #include "melatonin_inspector/melatonin_inspector.h"
+
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIEditorTags.h"
 #include "SurgeGUIUtils.h"
