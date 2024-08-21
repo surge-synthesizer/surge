@@ -6,6 +6,7 @@ if (${CMAKE_UNITY_BUILD})
         juce::juce_osc
         juce::juce_graphics
         juce::juce_audio_utils
+        melatonin_inspector
     )
 
     target_compile_definitions(surge-juce
@@ -93,16 +94,8 @@ if (NOT CMAKE_UNITY_BUILD)
             juce::juce_gui_basics
             juce::juce_osc
             juce::juce_audio_utils
+            melatonin_inspector
     )
-endif()
-
-
-
-if (NOT SURGE_SKIP_JUCE_FOR_RACK)
-    if (NOT ${CMAKE_UNITY_BUILD})
-        target_link_libraries(surge-juce INTERFACE melatonin_inspector)
-        target_compile_definitions(surge-juce PUBLIC HAS_MELATONIN_INSPECTOR=1)
-    endif()
 endif()
 
 if(NOT SURGE_SKIP_VST3)
