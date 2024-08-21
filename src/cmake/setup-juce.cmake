@@ -75,6 +75,10 @@ else()
     )
 endif()
 
+if (WIN32)
+    target_compile_definitions(surge-juce PUBLIC NOMINMAX=1)
+endif()
+
 add_library(surge-juce-for-surge-common INTERFACE)
 target_link_libraries(surge-juce-for-surge-common INTERFACE surge-juce)
 if (NOT CMAKE_UNITY_BUILD)
