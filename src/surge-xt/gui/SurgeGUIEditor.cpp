@@ -20,7 +20,9 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#if HAS_MELATONIN_INSPECTOR
 #include "melatonin_inspector/melatonin_inspector.h"
+#endif
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 
