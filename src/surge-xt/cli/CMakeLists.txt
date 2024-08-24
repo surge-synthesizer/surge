@@ -10,9 +10,6 @@ get_target_property(output_dir surge-xt RUNTIME_OUTPUT_DIRECTORY)
 set_property(TARGET ${PROJECT_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${output_dir}/CLI)
 target_link_libraries(${PROJECT_NAME} PRIVATE
         surge-xt
-        surge-xt-impl
         surge-common
-        surge-juce-for-surge-xt
+        juce::juce_core
         CLI11)
-# AppKit and unity are unhappy together
-set_target_properties(${PROJECT_NAME} PROPERTIES UNITY_BUILD FALSE)
