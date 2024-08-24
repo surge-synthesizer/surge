@@ -32,8 +32,10 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
+  surge-lua-src
   surge::catch2_v3
   surge::surge-common
+  juce::juce_audio_basics
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC

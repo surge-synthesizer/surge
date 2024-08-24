@@ -8,7 +8,6 @@ surge_add_lib_subdirectory(fmt)
 # Make MTS optional
 if(NOT SURGE_SKIP_ODDSOUND_MTS)
   surge_add_lib_subdirectory(oddsound-mts)
-  set_target_properties(oddsound-mts PROPERTIES UNITY_BUILD FALSE)
 else()
   add_library(oddsound-mts INTERFACE)
   target_compile_definitions(oddsound-mts INTERFACE SURGE_SKIP_ODDSOUND_MTS)
@@ -31,8 +30,6 @@ endif()
 surge_add_lib_subdirectory(sst/sst-basic-blocks)
 surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
-set_target_properties(sst-plugininfra PROPERTIES UNITY_BUILD FALSE)
-
 surge_add_lib_subdirectory(sst/sst-filters)
 surge_add_lib_subdirectory(sst/sst-waveshapers)
 surge_add_lib_subdirectory(sst/sst-effects)
@@ -53,11 +50,8 @@ if(NOT SURGE_SKIP_JUCE_FOR_RACK)
     ${SURGE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
     ${SURGE_SOURCE_DIR}/resources/surge-shared/windows.wt
   )
-  set_target_properties(surge-common-binary PROPERTIES UNITY_BUILD FALSE)
   target_compile_definitions(surge-common-binary PUBLIC HAS_JUCE=1 SKIP_JUCE=0)
 
-  add_library(local_common_juce_libs INTERFACE)
-  target_link_libraries(local_common_juce_libs INTERFACE surge-juce-for-surge-common)
 else()
   # So what the heck is this? Well a few effects use juce_dsp so this
   # is code which skips the entire juce build infrastructure but buids the
@@ -99,7 +93,7 @@ else()
   )
   target_include_directories(juce_dsp_rack_sub PUBLIC ${SURGE_JUCE_PATH}/modules)
 
-  add_library(local_common_juce_libs ALIAS juce_dsp_rack_sub)
+  add_library(juce::juce_dsp ALIAS juce_dsp_rack_sub)
 endif()
 
 add_library(${PROJECT_NAME}
@@ -356,8 +350,6 @@ if(SURGE_RELIABLE_VERSION_INFO)
     -D CMAKE_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}
     -P ${SURGE_SOURCE_DIR}/cmake/versiontools.cmake
   )
-  set_source_files_properties(${CMAKE_BINARY_DIR}/geninclude/version.cpp
-          PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
   add_dependencies(${PROJECT_NAME} version-info)
 else()
   set(SURGESRC ${SURGE_SOURCE_DIR})
@@ -390,13 +382,13 @@ target_link_libraries(${PROJECT_NAME}
   surge::sqlite
   surge-common-binary
   tuning-library
-  surge-lua-src
-
   PRIVATE
+  surge-lua-src
   surge-platform
+  surge-juce
   taocpp::pegtl
   PRIVATE
-  local_common_juce_libs
+  juce::juce_dsp
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE

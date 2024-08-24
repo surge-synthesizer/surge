@@ -62,27 +62,6 @@ jobs:
             cmakeOpt: RELEASE
             runTests: true
 
-          - name: "windows unity clang"
-            os: windows-latest
-            target: surge-xt surge-fx
-            cmakeConfig: -GNinja -DCMAKE_UNITY_BUILD=TRUE -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
-            cmakeOpt: DEBUG
-            runTests: false
-
-          - name: "ubuntu unity"
-            os: ubuntu-latest
-            target: surge-xt surge-fx
-            cmakeConfig: -GNinja -DCMAKE_UNITY_BUILD=TRUE
-            cmakeOpt: DEBUG
-            runTests: false
-
-          - name: "macos unity"
-            os: macos-latest
-            target: surge-xt surge-fx
-            cmakeConfig: -GNinja -DCMAKE_UNITY_BUILD=TRUE -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
-            cmakeOpt: DEBUG
-            runTests: false
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

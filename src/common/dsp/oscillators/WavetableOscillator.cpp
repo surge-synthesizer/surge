@@ -29,7 +29,7 @@ namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
 
-const float wavetable_hpf_cycle_loss = 0.99f;
+const float hpf_cycle_loss = 0.99f;
 
 WavetableOscillator::WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                          pdata *localcopy)
@@ -376,7 +376,7 @@ template <bool is_init> void WavetableOscillator::update_lagvals()
     float invt = min(1.0, (8.175798915 * storage->note_to_pitch_tuningctr(pitch_t)) *
                               storage->dsamplerate_os_inv);
     // TODO: Make a lookup table
-    float hpf2 = min(integrator_hpf, powf(wavetable_hpf_cycle_loss, 4 * invt));
+    float hpf2 = min(integrator_hpf, powf(hpf_cycle_loss, 4 * invt));
 
     hpf_coeff.newValue(hpf2);
     integrator_mult.newValue(invt);
