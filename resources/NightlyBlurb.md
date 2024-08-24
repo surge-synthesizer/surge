@@ -1,6 +1,6 @@
 ## SurgeXT Nightly Release
 
-This is the nightly release of SurgeXT. Surge nightlies are usually pretty stable, but they may contain bugs or incomplete features. Please use caution running this beta software.
+This is the nightly release of SurgeXT. Surge nightlies are usually quite stable, but they may contain bugs or incomplete features. Please use caution running this beta software.
 
 If you want a stable production release, you can always find the latest stable release at [the Surge Website](https://surge-synthesizer.github.io)
 
