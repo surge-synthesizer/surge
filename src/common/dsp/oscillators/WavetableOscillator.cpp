@@ -86,7 +86,6 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     nointerp = !oscdata->p[wt_morph].extend_range;
 
     float shape = l_shape.v;
-    //float shape = oscdata->p[wt_morph].val.f;
 
     float intpart;
     shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
