@@ -84,7 +84,9 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     // nointerp adjusts the tableid range so that it scans the whole wavetable
     // rather than wavetable from first to second to last frame
     nointerp = !oscdata->p[wt_morph].extend_range;
-    float shape = oscdata->p[wt_morph].val.f;
+
+    float shape = l_shape.v;
+
     float intpart;
     shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
     tableipol = modff(shape, &intpart);
