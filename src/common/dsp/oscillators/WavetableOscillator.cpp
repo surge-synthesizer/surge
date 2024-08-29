@@ -62,12 +62,10 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 
     n_unison = limit_range(oscdata->p[wt_unison_voices].val.i, 1, MAX_UNISON);
 
-    isOneShot = 0;
     if (oscdata->wt.flags & wtf_is_sample)
     {
         sampleloop = n_unison;
         n_unison = 1;
-        isOneShot = 1;
     }
 
     if (is_display)
@@ -448,6 +446,28 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
         tableipol = shape;
         modff(shape, &intpart);
         tableid = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2 + nointerp);
+        /*
+        if (tableid > last_tableid)
+        {
+            if (last_tableipol != 1.f)
+            {
+                tableid = last_tableid;
+                tableipol = 1.f;
+            }
+            else
+                last_tableipol = 0.0f;
+        }
+        else if (tableid < last_tableid)
+        {
+            if (last_tableipol != 0.f)
+            {
+                tableid = last_tableid;
+                tableipol = 0.f;
+            }
+            else
+                last_tableipol = 1.0f;
+        }
+        */
     }
 
     if (FM)
