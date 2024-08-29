@@ -62,10 +62,12 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 
     n_unison = limit_range(oscdata->p[wt_unison_voices].val.i, 1, MAX_UNISON);
 
+    isOneShot = 0;
     if (oscdata->wt.flags & wtf_is_sample)
     {
         sampleloop = n_unison;
         n_unison = 1;
+        isOneShot = 1;
     }
 
     if (is_display)
@@ -89,7 +91,8 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 
     float intpart;
     shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
-    tableipol = modff(shape, &intpart);
+    tableipol = shape;
+    modff(shape, &intpart);
     tableid = limit_range((int)intpart, 0, std::max((int)oscdata->wt.n_tables - 2 + nointerp, 0));
     last_tableipol = tableipol;
     last_tableid = tableid;
@@ -194,7 +197,7 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
         if (oscdata->wt.flags & wtf_is_sample)
         {
             tableid++;
-            if (tableid > oscdata->wt.n_tables - 3 + nointerp)
+            if (tableid > oscdata->wt.n_tables - 4)
             {
                 if (sampleloop < 7)
                     sampleloop--;
@@ -205,11 +208,14 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
                 }
                 else
                 {
-                    tableid = oscdata->wt.n_tables - 2 + nointerp;
+                    tableid = oscdata->wt.n_tables - 1;
                     oscstate[voice] = 100000000000.f; // rather large number
                     return;
                 }
             }
+
+            tableipol = tableid;
+            last_tableipol = tableid;
         }
 
         int ts = oscdata->wt.size;
@@ -297,15 +303,16 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
     float newlevel;
 
     // in Continuous Morph mode tblip_ipol gives us position between current and next frame
-    // when not in Continuous Morph mode, we don't interpolate so this position should be zero
-    float lipol = (1 - nointerp) * tblip_ipol;
+    int tempTableId = floor(tblip_ipol);
+    float interpolationProc = (tblip_ipol - tempTableId) * (1 - nointerp);
 
     // that 1 - nointerp makes sure we don't read the table off memory, keeps us bounded
     // and since it gets multiplied by lipol, in morph mode ends up being zero - no sweat!
     newlevel = distort_level(
-        (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid][state[voice]] * (1.f - lipol)) +
-        (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tableid + 1 - nointerp][state[voice]] *
-         lipol));
+        (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tempTableId][state[voice]] *
+         (1.f - interpolationProc)) +
+        (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tempTableId + 1 - nointerp][state[voice]] *
+         interpolationProc));
 
     g = newlevel - last_level[voice];
     last_level[voice] = newlevel;
@@ -427,8 +434,8 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
     }
     else if (oscdata->wt.flags & wtf_is_sample)
     {
-        tableipol = 0.f;
-        last_tableipol = 0.f;
+        tableipol = tableid;
+        last_tableipol = tableid;
     }
     else
     {
@@ -438,29 +445,9 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
         float shape = l_shape.v;
         float intpart;
         shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
-        tableipol = modff(shape, &intpart);
+        tableipol = shape;
+        modff(shape, &intpart);
         tableid = limit_range((int)intpart, 0, (int)oscdata->wt.n_tables - 2 + nointerp);
-
-        if (tableid > last_tableid)
-        {
-            if (last_tableipol != 1.f)
-            {
-                tableid = last_tableid;
-                tableipol = 1.f;
-            }
-            else
-                last_tableipol = 0.0f;
-        }
-        else if (tableid < last_tableid)
-        {
-            if (last_tableipol != 0.f)
-            {
-                tableid = last_tableid;
-                tableipol = 0.f;
-            }
-            else
-                last_tableipol = 1.0f;
-        }
     }
 
     if (FM)
