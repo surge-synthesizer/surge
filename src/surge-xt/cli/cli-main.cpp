@@ -186,6 +186,7 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
                                      int numSamples,
                                      const juce::AudioIODeviceCallbackContext &context) override
     {
+        proc->surge->audio_processing_active = true;
         proc->processBlockOSC();
         proc->processBlockPlayhead();
 
@@ -222,7 +223,7 @@ struct SurgePlayback : juce::MidiInputCallback, juce::AudioIODeviceCallback
         }
     }
 
-    void audioDeviceStopped() override {}
+    void audioDeviceStopped() override { proc->surge->audio_processing_active = false; }
     void audioDeviceAboutToStart(juce::AudioIODevice *device) override
     {
         LOG(BASIC, "Audio Starting      : Sample Rate "
