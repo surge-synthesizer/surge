@@ -817,7 +817,8 @@ TEST_CASE("LFO Tempo Sync Drift in Latch Mode", "[mod]")
         surge->setParameter01(rid, 0.455068, false, false);
         lfostorage->shape.val.i = lt_square;
 
-        surge->storage.getPatch().copy_scenedata(surge->storage.getPatch().scenedata[0], 0);
+        surge->storage.getPatch().copy_scenedata(surge->storage.getPatch().scenedata[0],
+                                                 surge->storage.getPatch().scenedataOrig[1], 0);
 
         lfo->assign(&(surge->storage), lfostorage, surge->storage.getPatch().scenedata[0], nullptr,
                     ss.get(), nullptr, nullptr);

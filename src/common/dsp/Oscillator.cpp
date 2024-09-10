@@ -42,7 +42,7 @@
 using namespace std;
 
 Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *oscdata,
-                      pdata *localcopy, unsigned char *onto)
+                      pdata *localcopy, pdata *localcopyUnmod, unsigned char *onto)
 {
     static bool checkSizes = true;
     if (checkSizes)
@@ -91,7 +91,7 @@ Oscillator *spawn_osc(int osctype, SurgeStorage *storage, OscillatorStorage *osc
     case ot_classic:
         return new (onto) ClassicOscillator(storage, oscdata, localcopy);
     case ot_wavetable:
-        return new (onto) WavetableOscillator(storage, oscdata, localcopy);
+        return new (onto) WavetableOscillator(storage, oscdata, localcopy, localcopyUnmod);
     case ot_window:
     {
         // In the event we are misconfigured, window oscillator will segfault. If you still play

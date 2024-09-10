@@ -978,14 +978,18 @@ void SurgePatch::init_default_values()
 
 SurgePatch::~SurgePatch() { free(patchptr); }
 
-void SurgePatch::copy_scenedata(pdata *d, int scene)
+void SurgePatch::copy_scenedata(pdata *d, pdata *dUnmod, int scene)
 {
+
     int s = scene_start[scene];
     for (int i = 0; i < n_scene_params; i++)
     {
         // if (param_ptr[i+s]->valtype == vt_float)
         // d[i].f = param_ptr[i+s]->val.f;
         d[i].i = param_ptr[i + s]->val.i;
+
+        if (param_ptr[i + s]->ctrlgroup == cg_OSC)
+            dUnmod[i].f = d[i].f;
     }
 
     for (int i = 0; i < paramModulationCount; ++i)
@@ -1068,7 +1072,7 @@ void SurgePatch::update_controls(
 
             unsigned char mbuf alignas(16)[oscillator_buffer_size];
             Oscillator *t_osc =
-                spawn_osc(sc.osc[osc].type.val.i, storage, &sc.osc[osc], nullptr, mbuf);
+                spawn_osc(sc.osc[osc].type.val.i, storage, &sc.osc[osc], nullptr, nullptr, mbuf);
             if (t_osc)
             {
                 t_osc->init_ctrltypes(sn, osc);

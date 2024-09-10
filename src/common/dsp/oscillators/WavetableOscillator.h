@@ -43,7 +43,8 @@ class WavetableOscillator : public AbstractBlitOscillator
     };
 
     lipol_ps li_hpf, li_DC, li_integratormult;
-    WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
+    WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy,
+                        pdata *localcopyUnmod);
     virtual void init(float pitch, bool is_display = false,
                       bool nonzero_init_drift = true) override;
     virtual void init_ctrltypes() override;
@@ -72,6 +73,7 @@ class WavetableOscillator : public AbstractBlitOscillator
     int nointerp;
     float FMmul_inv;
     int sampleloop;
+    pdata *unmodulatedLocalcopy;
 };
 
 #endif // SURGE_SRC_COMMON_DSP_OSCILLATORS_WAVETABLEOSCILLATOR_H

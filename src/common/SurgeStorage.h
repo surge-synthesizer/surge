@@ -1031,7 +1031,7 @@ class SurgePatch
     void init_default_values();
     void update_controls(bool init = false, void *init_osc = 0, bool from_stream = false);
     void do_morph();
-    void copy_scenedata(pdata *, int scene);
+    void copy_scenedata(pdata *, pdata *, int scene);
     void copy_globaldata(pdata *);
 
     // load/save
@@ -1086,6 +1086,7 @@ class SurgePatch
 
     std::vector<ModulationRouting> modulation_global;
     pdata scenedata[n_scenes][n_scene_params];
+    pdata scenedataOrig[n_scenes][n_scene_params];
     pdata globaldata[n_global_params];
     void *patchptr;
     SurgeStorage *storage;

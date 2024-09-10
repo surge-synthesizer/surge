@@ -149,9 +149,9 @@ SurgeVoice::SurgeVoice()
 #endif
 }
 
-SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *params, int key,
-                       int velocity, int channel, int scene_id, float detune,
-                       MidiKeyState *keyState, MidiChannelState *mainChannelState,
+SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *params,
+                       pdata *paramsUnmod, int key, int velocity, int channel, int scene_id,
+                       float detune, MidiKeyState *keyState, MidiChannelState *mainChannelState,
                        MidiChannelState *voiceChannelState, bool mpeEnabled, int64_t voiceOrder,
                        int32_t host_nid, int16_t host_key, int16_t host_chan, float aegStart,
                        float fegStart)
@@ -165,6 +165,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     this->storage = storage;
     this->scene = oscene;
     this->paramptr = params;
+    this->paramptrUnmod = paramsUnmod;
     this->mpeEnabled = mpeEnabled;
     this->host_note_id = host_nid;
     this->originating_host_key = host_key;
@@ -527,7 +528,7 @@ void SurgeVoice::switch_toggled()
         {
             bool nzid = scene->drift.extend_range;
             osc[i] = spawn_osc(scene->osc[i].type.val.i, storage, &scene->osc[i], localcopy,
-                               oscbuffer[i]);
+                               this->paramptrUnmod, oscbuffer[i]);
             if (osc[i])
             {
                 // this matches the override in ::process_block
