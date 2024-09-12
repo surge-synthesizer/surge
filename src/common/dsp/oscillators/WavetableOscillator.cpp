@@ -32,9 +32,10 @@ using namespace std;
 const float hpf_cycle_loss = 0.99f;
 
 WavetableOscillator::WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
-                                         pdata *localcopy)
+                                         pdata *localcopy, pdata *localcopyUnmod)
     : AbstractBlitOscillator(storage, oscdata, localcopy)
 {
+    unmodulatedLocalcopy = localcopyUnmod;
 }
 
 WavetableOscillator::~WavetableOscillator() {}
@@ -85,8 +86,8 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     // rather than wavetable from first to second to last frame
     nointerp = !oscdata->p[wt_morph].extend_range;
 
-    float shape = l_shape.v;
-
+    float shape = limit_range(
+        l_shape.v + (localcopy[id_shape].f - unmodulatedLocalcopy[id_shape].f), 0.f, 1.f);
     float intpart;
     shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
     tableipol = shape;
@@ -377,7 +378,7 @@ template <bool is_init> void WavetableOscillator::update_lagvals()
     l_hskew.newValue(limit_range(localcopy[id_hskew].f, -1.f, 1.f));
     float a = limit_range(localcopy[id_clip].f, 0.f, 1.f);
     l_clip.newValue(-8 * a * a * a);
-    l_shape.newValue(limit_range(localcopy[id_shape].f, 0.f, 1.f));
+    l_shape.newValue(unmodulatedLocalcopy[id_shape].f);
     formant_t = max(0.f, localcopy[id_formant].f);
 
     float invt = min(1.0, (8.175798915 * storage->note_to_pitch_tuningctr(pitch_t)) *
@@ -440,7 +441,8 @@ void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, 
         last_tableipol = tableipol;
         last_tableid = tableid;
 
-        float shape = l_shape.v;
+        float shape = limit_range(
+            l_shape.v + (localcopy[id_shape].f - unmodulatedLocalcopy[id_shape].f), 0.f, 1.f);
         float intpart;
         shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
         tableipol = shape;

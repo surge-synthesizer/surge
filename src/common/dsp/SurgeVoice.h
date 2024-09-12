@@ -39,17 +39,18 @@ class alignas(16) SurgeVoice
     float output alignas(16)[2][BLOCK_SIZE_OS];
     lipol_ps osclevels alignas(16)[7];
     pdata localcopy alignas(16)[n_scene_params];
+    pdata localcopy2 alignas(16)[n_scene_params];
     float fmbuffer alignas(16)[BLOCK_SIZE_OS];
 
     // used for the 2>1<3 FM-mode (Needs the pointer earlier)
 
     SurgeVoice();
-    SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *scene, pdata *params, int key,
-               int velocity, int channel, int scene_id, float detune, MidiKeyState *keyState,
-               MidiChannelState *mainChannelState, MidiChannelState *voiceChannelState,
-               bool mpeEnabled, int64_t voiceOrder, int32_t host_note_id,
-               int16_t originating_host_key, int16_t originating_host_channel, float aegStart,
-               float fegStart);
+    SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *scene, pdata *params, pdata *paramsUnmod,
+               int key, int velocity, int channel, int scene_id, float detune,
+               MidiKeyState *keyState, MidiChannelState *mainChannelState,
+               MidiChannelState *voiceChannelState, bool mpeEnabled, int64_t voiceOrder,
+               int32_t host_note_id, int16_t originating_host_key, int16_t originating_host_channel,
+               float aegStart, float fegStart);
     ~SurgeVoice();
 
     void release();
@@ -261,8 +262,9 @@ class alignas(16) SurgeVoice
 
     // data
     int lag_id[8], pitch_id, octave_id, volume_id, pan_id, width_id;
-    SurgeSceneStorage *scene, *origscene;
+    SurgeSceneStorage *scene;
     pdata *paramptr;
+    pdata *paramptrUnmod;
     int route[6];
 
     float octaveSize = 12.0f;

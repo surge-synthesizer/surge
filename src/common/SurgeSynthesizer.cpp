@@ -87,6 +87,10 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
     // TODO: FIX SCENE ASSUMPTION
     memset(storage.getPatch().scenedata[0], 0, sizeof(pdata) * n_scene_params);
     memset(storage.getPatch().scenedata[1], 0, sizeof(pdata) * n_scene_params);
+
+    memset(storage.getPatch().scenedataOrig[0], 0, sizeof(pdata) * n_scene_params);
+    memset(storage.getPatch().scenedataOrig[1], 0, sizeof(pdata) * n_scene_params);
+
     memset(storage.getPatch().globaldata, 0, sizeof(pdata) * n_global_params);
     memset(mControlInterpolatorUsed, 0, sizeof(bool) * num_controlinterpolators);
 
@@ -833,12 +837,12 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                 int mpeMainChannel = getMpeMainChannel(channel, key);
 
                 voices[scene].push_back(nvoice);
-                new (nvoice) SurgeVoice(&storage, &storage.getPatch().scene[scene],
-                                        storage.getPatch().scenedata[scene], key, velocity, channel,
-                                        scene, detune, &channelState[channel].keyState[key],
-                                        &channelState[mpeMainChannel], &channelState[channel],
-                                        mpeEnabled, voiceCounter++, host_noteid,
-                                        host_originating_key, host_originating_channel, 0.f, 0.f);
+                new (nvoice) SurgeVoice(
+                    &storage, &storage.getPatch().scene[scene], storage.getPatch().scenedata[scene],
+                    storage.getPatch().scenedataOrig[scene], key, velocity, channel, scene, detune,
+                    &channelState[channel].keyState[key], &channelState[mpeMainChannel],
+                    &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
+                    host_originating_key, host_originating_channel, 0.f, 0.f);
             }
         }
         break;
@@ -979,8 +983,9 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                         storage.last_key[scene] = key;
                     new (nvoice) SurgeVoice(
                         &storage, &storage.getPatch().scene[scene],
-                        storage.getPatch().scenedata[scene], key, velocity, channel, scene, detune,
-                        &channelState[channel].keyState[key], &channelState[mpeMainChannel],
+                        storage.getPatch().scenedata[scene],
+                        storage.getPatch().scenedataOrig[scene], key, velocity, channel, scene,
+                        detune, &channelState[channel].keyState[key], &channelState[mpeMainChannel],
                         &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
                         host_originating_key, host_originating_channel, aegReuse, fegReuse);
 
@@ -1123,8 +1128,9 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     voices[scene].push_back(nvoice);
                     new (nvoice) SurgeVoice(
                         &storage, &storage.getPatch().scene[scene],
-                        storage.getPatch().scenedata[scene], key, velocity, channel, scene, detune,
-                        &channelState[channel].keyState[key], &channelState[mpeMainChannel],
+                        storage.getPatch().scenedata[scene],
+                        storage.getPatch().scenedataOrig[scene], key, velocity, channel, scene,
+                        detune, &channelState[channel].keyState[key], &channelState[mpeMainChannel],
                         &channelState[channel], mpeEnabled, voiceCounter++, host_noteid,
                         host_originating_key, host_originating_channel, aegStart, fegStart);
                 }
@@ -4395,9 +4401,11 @@ void SurgeSynthesizer::processControl()
 
     // TODO: FIX SCENE ASSUMPTION
     if (playA)
-        storage.getPatch().copy_scenedata(storage.getPatch().scenedata[0], 0); // -""-
+        storage.getPatch().copy_scenedata(storage.getPatch().scenedata[0],
+                                          storage.getPatch().scenedataOrig[0], 0); // -""-
     if (playB)
-        storage.getPatch().copy_scenedata(storage.getPatch().scenedata[1], 1);
+        storage.getPatch().copy_scenedata(storage.getPatch().scenedata[1],
+                                          storage.getPatch().scenedataOrig[1], 1);
 
     // TODO: FIX SCENE ASSUMPTION.
     // Prior to 1.1 we could play before or after copying modulation data but as we

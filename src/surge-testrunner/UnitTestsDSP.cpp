@@ -715,8 +715,8 @@ TEST_CASE("Oscillator Onset", "[dsp]") // See issue 7570
 
             oscstorage->retrigger.val.b = rt;
 
-            auto o =
-                spawn_osc(ot, storage, oscstorage, storage->getPatch().scenedata[0], oscbuffer);
+            auto o = spawn_osc(ot, storage, oscstorage, storage->getPatch().scenedata[0],
+                               storage->getPatch().scenedataOrig[0], oscbuffer);
             o->init_ctrltypes();
             o->init_default_values();
             o->init_extra_config();

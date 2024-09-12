@@ -525,7 +525,7 @@ void OscillatorWaveformDisplay::repaintBasedOnOscMuteState()
         tp[oscdata->p[i].param_id_in_scene].i = oscdata->p[i].val.i;
     }
 
-    return spawn_osc(oscdata->type.val.i, storage, oscdata, tp, oscbuffer);
+    return spawn_osc(oscdata->type.val.i, storage, oscdata, tp, tp, oscbuffer);
 }
 
 void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int selectedItem,
