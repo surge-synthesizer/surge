@@ -62,7 +62,6 @@ class alignas(16) SurgeVoice
     void legato(int key, int velocity, char detune);
     void switch_toggled();
     void freeAllocatedElements();
-    void copyParametersToLocal();
     int osctype[n_oscs];
     SurgeVoiceState state;
     int age, age_release;
