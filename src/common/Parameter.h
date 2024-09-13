@@ -149,8 +149,9 @@ enum ctrltypes
     ct_sineoscmode,
     ct_ringmod_sineoscmode,
     ct_sinefmlegacy,
-    ct_countedset_percent,            // what % through a counted set are we
-    ct_countedset_percent_extendable, // what % through a counted set are we
+    ct_countedset_percent,                     // what % through a counted set are we
+    ct_countedset_percent_extendable,          // what % through a counted set are we
+    ct_countedset_percent_extendable_wtdeform, // what % through a counted set are we
     ct_vocoder_bandcount,
     ct_distortion_waveshape,
     ct_flangerpitch,

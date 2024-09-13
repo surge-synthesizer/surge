@@ -49,6 +49,7 @@
 #include "overlays/ModulationEditor.h"
 #include "overlays/PatchStoreDialog.h"
 #include "overlays/TypeinParamEditor.h"
+#include "WavetableOscillator.h"
 
 std::string decodeControllerID(int id)
 {
@@ -2600,6 +2601,29 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         break;
                     }
+                    case ct_countedset_percent_extendable_wtdeform:
+                    {
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+                        for (const auto &[opt, lab] :
+                             {std::make_pair(WavetableOscillator::FeatureDeform::XT_134_EARLIER,
+                                             "Slow Lag and WT Jump Noise (<= 1.3.4 behavior)"),
+                              {WavetableOscillator::FeatureDeform::XT_14,
+                               "No Modulation Lag and No WT Jump Noise (1.4 and later)"}})
+                        {
+                            contextMenu.addItem(Surge::GUI::toOSCase(lab), true, dt == (int)opt,
+                                                [this, p, ov = opt]() {
+                                                    undoManager()->pushParameterChange(p->id, p,
+                                                                                       p->val);
+                                                    update_deform_type(p, (int)ov);
+                                                    synth->storage.getPatch().isDirty = true;
+                                                    frame->repaint();
+                                                });
+                        }
+
+                        contextMenu.addSeparator();
+                    }
+                    break;
                     default:
                     {
                         break;
@@ -2647,6 +2671,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             txt = "Pan Main and Auxiliary Signals";
                             break;
                         case ct_countedset_percent_extendable:
+                        case ct_countedset_percent_extendable_wtdeform:
                             txt = "Continuous Morph";
                             break;
                         default:

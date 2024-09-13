@@ -137,9 +137,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 23 -> 24 (XT 1.3.3 nightlies) added actually functioning extend mode to FM2 oscillator's M1/2 Offset parameter
 //                                     (old patches load with extend disabled even if they had it enabled)
 // 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Script Editor window state
+// 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
 // clang-format on
 
-const int ff_revision = 25;
+const int ff_revision = 26;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type

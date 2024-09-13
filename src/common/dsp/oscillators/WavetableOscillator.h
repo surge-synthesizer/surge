@@ -42,6 +42,12 @@ class WavetableOscillator : public AbstractBlitOscillator
         wt_unison_voices,
     };
 
+    enum FeatureDeform
+    {
+        XT_134_EARLIER = 0,
+        XT_14 = 1 << 0
+    };
+
     lipol_ps li_hpf, li_DC, li_integratormult;
     WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy,
                         pdata *localcopyUnmod);
