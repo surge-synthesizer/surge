@@ -2605,21 +2605,20 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                     {
                         contextMenu.addSeparator();
                         auto dt = p->deform_type;
-                        for (const auto &[opt, lab] :
-                             {std::make_pair(WavetableOscillator::FeatureDeform::XT_134_EARLIER,
-                                             "Slow Lag and WT Jump Noise (<= 1.3.4 behavior)"),
-                              {WavetableOscillator::FeatureDeform::XT_14,
-                               "No Modulation Lag and No WT Jump Noise (1.4 and later)"}})
-                        {
-                            contextMenu.addItem(Surge::GUI::toOSCase(lab), true, dt == (int)opt,
-                                                [this, p, ov = opt]() {
-                                                    undoManager()->pushParameterChange(p->id, p,
-                                                                                       p->val);
-                                                    update_deform_type(p, (int)ov);
-                                                    synth->storage.getPatch().isDirty = true;
-                                                    frame->repaint();
-                                                });
-                        }
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Legacy Lag, Smooth and Table Interp"), true,
+                            dt == (int)WavetableOscillator::FeatureDeform::XT_134_EARLIER,
+                            [this, p, dt]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                auto ov =
+                                    (dt == WavetableOscillator::FeatureDeform::XT_134_EARLIER
+                                         ? WavetableOscillator::FeatureDeform::XT_14
+                                         : WavetableOscillator::FeatureDeform::XT_134_EARLIER);
+                                update_deform_type(p, (int)ov);
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
 
                         contextMenu.addSeparator();
                     }
