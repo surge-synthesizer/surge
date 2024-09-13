@@ -130,7 +130,7 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 void WavetableOscillator::init_ctrltypes()
 {
     oscdata->p[wt_morph].set_name("Morph");
-    oscdata->p[wt_morph].set_type(ct_countedset_percent_extendable);
+    oscdata->p[wt_morph].set_type(ct_countedset_percent_extendable_wtdeform);
     oscdata->p[wt_morph].set_user_data(oscdata);
     oscdata->p[wt_skewv].set_name("Skew Vertical");
     oscdata->p[wt_skewv].set_type(ct_percent_bipolar);
@@ -150,6 +150,7 @@ void WavetableOscillator::init_default_values()
 {
     oscdata->p[wt_morph].val.f = 0.0f;
     oscdata->p[wt_morph].set_extend_range(true);
+    oscdata->p[wt_morph].deform_type = FeatureDeform::XT_14;
     oscdata->p[wt_skewv].val.f = 0.0f;
     oscdata->p[wt_saturate].val.f = 0.f;
     oscdata->p[wt_formant].val.f = 0.f;
@@ -407,6 +408,18 @@ template <bool is_init> void WavetableOscillator::update_lagvals()
 void WavetableOscillator::process_block(float pitch0, float drift, bool stereo, bool FM,
                                         float depth)
 {
+    auto fd = (FeatureDeform)oscdata->p[wt_morph].deform_type;
+#if 0
+    if (fd == XT_134_EARLIER)
+    {
+        std::cout << "OLD WAY" << std::endl;
+    }
+    else
+    {
+        std::cout << "NEW WAY" << std::endl;
+    }
+#endif
+
     pitch_last = pitch_t;
     pitch_t = min(148.f, pitch0);
     pitchmult_inv =
@@ -563,5 +576,9 @@ void WavetableOscillator::handleStreamingMismatches(int streamingRevision,
     if (streamingRevision <= 16)
     {
         oscdata->p[wt_morph].set_extend_range(true);
+    }
+    if (streamingRevision <= 25)
+    {
+        oscdata->p[wt_morph].deform_type = (int)FeatureDeform::XT_134_EARLIER;
     }
 }

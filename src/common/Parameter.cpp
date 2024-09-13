@@ -299,6 +299,7 @@ bool Parameter::can_extend_range() const
     case ct_percent_oscdrift:
     case ct_twist_aux_mix:
     case ct_countedset_percent_extendable:
+    case ct_countedset_percent_extendable_wtdeform:
     case ct_dly_fb_clippingmodes:
     case ct_bonsai_bass_boost:
     case ct_detuning:
@@ -378,6 +379,7 @@ bool Parameter::has_deformoptions() const
     case ct_envtime_deformable:
     case ct_filter_feedback:
     case ct_osc_feedback_negative:
+    case ct_countedset_percent_extendable_wtdeform:
         return true;
     default:
         break;
@@ -527,6 +529,7 @@ void Parameter::set_user_data(ParamUserData *ud)
     {
     case ct_countedset_percent:
     case ct_countedset_percent_extendable:
+    case ct_countedset_percent_extendable_wtdeform:
         if (dynamic_cast<CountedSetUserData *>(ud))
         {
             user_data = ud;
@@ -1123,6 +1126,7 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_countedset_percent:
     case ct_countedset_percent_extendable:
+    case ct_countedset_percent_extendable_wtdeform:
         val_min.f = 0;
         val_max.f = 1;
         valtype = vt_float;
@@ -1398,6 +1402,7 @@ void Parameter::set_type(int ctrltype)
     case ct_rotarydrive:
     case ct_countedset_percent:
     case ct_countedset_percent_extendable:
+    case ct_countedset_percent_extendable_wtdeform:
     case ct_lfoamplitude:
     case ct_lfophaseshuffle:
     case ct_reson_res_extendable:
@@ -1933,6 +1938,7 @@ void Parameter::bound_value(bool force_integer)
         }
         case ct_countedset_percent:
         case ct_countedset_percent_extendable:
+        case ct_countedset_percent_extendable_wtdeform:
         {
             CountedSetUserData *cs = reinterpret_cast<CountedSetUserData *>(user_data);
             if (cs)
@@ -3343,6 +3349,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
     }
     case ct_countedset_percent:
     case ct_countedset_percent_extendable:
+    case ct_countedset_percent_extendable_wtdeform:
         if (user_data != nullptr)
         {
             // We check when set so the reinterpret cast is safe and fast
@@ -4430,6 +4437,7 @@ bool Parameter::can_setvalue_from_string() const
     case ct_oscspread_bipolar:
     case ct_countedset_percent:
     case ct_countedset_percent_extendable:
+    case ct_countedset_percent_extendable_wtdeform:
     case ct_flangerpitch:
     case ct_flangervoices:
     case ct_flangerspacing:

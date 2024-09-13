@@ -49,6 +49,7 @@
 #include "overlays/ModulationEditor.h"
 #include "overlays/PatchStoreDialog.h"
 #include "overlays/TypeinParamEditor.h"
+#include "WavetableOscillator.h"
 
 std::string decodeControllerID(int id)
 {
@@ -2600,6 +2601,28 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
                         break;
                     }
+                    case ct_countedset_percent_extendable_wtdeform:
+                    {
+                        contextMenu.addSeparator();
+                        auto dt = p->deform_type;
+
+                        contextMenu.addItem(
+                            Surge::GUI::toOSCase("Legacy Lag, Smooth and Table Interp"), true,
+                            dt == (int)WavetableOscillator::FeatureDeform::XT_134_EARLIER,
+                            [this, p, dt]() {
+                                undoManager()->pushParameterChange(p->id, p, p->val);
+                                auto ov =
+                                    (dt == WavetableOscillator::FeatureDeform::XT_134_EARLIER
+                                         ? WavetableOscillator::FeatureDeform::XT_14
+                                         : WavetableOscillator::FeatureDeform::XT_134_EARLIER);
+                                update_deform_type(p, (int)ov);
+                                synth->storage.getPatch().isDirty = true;
+                                frame->repaint();
+                            });
+
+                        contextMenu.addSeparator();
+                    }
+                    break;
                     default:
                     {
                         break;
@@ -2647,6 +2670,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             txt = "Pan Main and Auxiliary Signals";
                             break;
                         case ct_countedset_percent_extendable:
+                        case ct_countedset_percent_extendable_wtdeform:
                             txt = "Continuous Morph";
                             break;
                         default:
