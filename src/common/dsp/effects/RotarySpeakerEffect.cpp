@@ -89,6 +89,8 @@ void RotarySpeakerEffect::init_ctrltypes()
 
     fxdata->p[rot_width].posy_offset = 7;
     fxdata->p[rot_mix].posy_offset = 7;
+
+    configureControlsFromFXMetadata();
 }
 
 

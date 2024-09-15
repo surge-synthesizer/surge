@@ -39,7 +39,12 @@ class RotarySpeakerEffect
           sst::effects::rotaryspeaker::RotarySpeaker<surge::sstfx::SurgeFXConfig>>
 {
   public:
-    RotarySpeakerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
+    RotarySpeakerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+        : surge::sstfx::SurgeSSTFXBase<
+              sst::effects::rotaryspeaker::RotarySpeaker<surge::sstfx::SurgeFXConfig>>(storage,
+                                                                                       fxdata, pd)
+    {
+    }
     virtual ~RotarySpeakerEffect() = default;
 
     virtual void init_ctrltypes() override;
@@ -48,6 +53,7 @@ class RotarySpeakerEffect
 
     void handleStreamingMismatches(int streamingRevision,
                                    int currentSynthStreamingRevision) override;
+    
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_ROTARYSPEAKEREFFECT_H
