@@ -148,12 +148,12 @@ struct SurgeFXConfig
     static inline float dbToLinear(GlobalStorage *s, float f) { return s->db_to_linear(f); }
 };
 
-template <typename T> class Has_processOnlyControl
+template <typename T> class Has_processControlOnly
 {
     using No = uint8_t;
     using Yes = uint64_t;
     static_assert(sizeof(No) != sizeof(Yes));
-    template <typename C> static Yes test(decltype(C::processOnlyControl) *);
+    template <typename C> static Yes test(decltype(C::processControlOnly) *);
     template <typename C> static No test(...);
 
   public:
@@ -272,7 +272,7 @@ template <typename T> struct SurgeSSTFXBase : T
 
     void process_control_only()
     {
-        if constexpr (sstfx::Has_processOnlyControl<T>::value)
+        if constexpr (sstfx::Has_processControlOnly<T>::value)
         {
             this->processControlOnly();
         }
