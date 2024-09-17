@@ -23,7 +23,6 @@
 
 using namespace std;
 
-
 const char *RotarySpeakerEffect::group_label(int id)
 {
     switch (id)
@@ -92,7 +91,6 @@ void RotarySpeakerEffect::init_ctrltypes()
 
     configureControlsFromFXMetadata();
 }
-
 
 void RotarySpeakerEffect::handleStreamingMismatches(int streamingRevision,
                                                     int currentSynthStreamingRevision)

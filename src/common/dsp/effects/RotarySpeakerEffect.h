@@ -53,7 +53,6 @@ class RotarySpeakerEffect
 
     void handleStreamingMismatches(int streamingRevision,
                                    int currentSynthStreamingRevision) override;
-    
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_ROTARYSPEAKEREFFECT_H
