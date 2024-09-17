@@ -31,58 +31,28 @@
 #include "sst/waveshapers.h"
 #include "sst/basic-blocks/dsp/QuadratureOscillators.h"
 
-class RotarySpeakerEffect : public Effect
+#include "sst/effects/RotarySpeaker.h"
+#include "SurgeSSTFXAdapter.h"
+
+class RotarySpeakerEffect
+    : public surge::sstfx::SurgeSSTFXBase<
+          sst::effects::rotaryspeaker::RotarySpeaker<surge::sstfx::SurgeFXConfig>>
 {
   public:
-    lipol_ps_blocksz width alignas(16), mix alignas(16);
-    sst::waveshapers::QuadWaveshaperState wsState alignas(16);
+    RotarySpeakerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
+        : surge::sstfx::SurgeSSTFXBase<
+              sst::effects::rotaryspeaker::RotarySpeaker<surge::sstfx::SurgeFXConfig>>(storage,
+                                                                                       fxdata, pd)
+    {
+    }
+    virtual ~RotarySpeakerEffect() = default;
 
-    RotarySpeakerEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
-    virtual ~RotarySpeakerEffect();
-    virtual void process_only_control() override;
-    virtual const char *get_effectname() override { return "rotary"; }
-    virtual void process(float *dataL, float *dataR) override;
-    virtual int get_ringout_decay() override { return max_delay_length >> 5; }
-    void setvars(bool init);
-    virtual void suspend() override;
-    virtual void init() override;
     virtual void init_ctrltypes() override;
-    virtual void init_default_values() override;
     virtual const char *group_label(int id) override;
     virtual int group_label_ypos(int id) override;
 
-    virtual void handleStreamingMismatches(int streamingRevision,
-                                           int currentSynthStreamingRevision) override;
-
-    enum rotary_params
-    {
-        rot_horn_rate = 0,
-        rot_doppler,
-        rot_tremolo,
-        rot_rotor_rate,
-        rot_drive,
-        rot_waveshape,
-        rot_width,
-        rot_mix,
-
-        rot_num_params,
-    };
-
-  protected:
-    float buffer[max_delay_length];
-    int wpos;
-    // filter *lp[2],*hp[2];
-    // biquadunit rotor_lpL,rotor_lpR;
-    BiquadFilter xover, lowbass;
-    // float
-    // f_rotor_lp[2][n_filter_parameters],f_xover[n_filter_parameters],f_lowbass[n_filter_parameters];
-
-    using quadr_osc = sst::basic_blocks::dsp::SurgeQuadrOsc<float>;
-    quadr_osc lfo;
-    quadr_osc lf_lfo;
-    lipol<float> dL, dR, hornamp[2];
-    lag<float, true> drive;
-    bool first_run;
+    void handleStreamingMismatches(int streamingRevision,
+                                   int currentSynthStreamingRevision) override;
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_ROTARYSPEAKEREFFECT_H

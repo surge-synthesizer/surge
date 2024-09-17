@@ -148,6 +148,21 @@ struct SurgeFXConfig
     static inline float dbToLinear(GlobalStorage *s, float f) { return s->db_to_linear(f); }
 };
 
+template <typename T> class Has_processControlOnly
+{
+    using No = uint8_t;
+    using Yes = uint64_t;
+    static_assert(sizeof(No) != sizeof(Yes));
+    template <typename C> static Yes test(decltype(C::processControlOnly) *);
+    template <typename C> static No test(...);
+
+  public:
+    enum
+    {
+        value = sizeof(test<T>(nullptr)) == sizeof(Yes)
+    };
+};
+
 /*
  * The SurgeSSTFXBase is a template class which adapts the surge Effect virtyal
  * methods to the sst-effects T<Config> concrete methods.
@@ -252,6 +267,14 @@ template <typename T> struct SurgeSSTFXBase : T
             check(pmd.canExtend, this->fxdata->p[i].can_extend_range(), "Can Extend");
             check(pmd.canDeactivate, this->fxdata->p[i].can_deactivate(), "Can Deactivate");
             check(pmd.supportsStringConversion, true, "Supports string value");
+        }
+    }
+
+    void process_control_only()
+    {
+        if constexpr (sstfx::Has_processControlOnly<T>::value)
+        {
+            this->processControlOnly();
         }
     }
 };
