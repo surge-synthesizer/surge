@@ -65,6 +65,14 @@ class WavetableOscillator : public AbstractBlitOscillator
     void convolute(int voice, bool FM, bool stereo);
     template <bool is_init> void update_lagvals();
     inline float distort_level(float);
+    void readDeformType();
+    void selectDeform();
+    float getMorph();
+    float deformLegacy(float, int);
+    float deformContinuous(float, int);
+    float deformMorph(float, int);
+
+    float (WavetableOscillator::*deformSelected)(float, int);
     bool first_run;
     float oscpitch[MAX_UNISON];
     float dc, dc_uni[MAX_UNISON], last_level[MAX_UNISON];
@@ -80,6 +88,7 @@ class WavetableOscillator : public AbstractBlitOscillator
     float FMmul_inv;
     int sampleloop;
     pdata *unmodulatedLocalcopy;
+    FeatureDeform deformType;
 };
 
 #endif // SURGE_SRC_COMMON_DSP_OSCILLATORS_WAVETABLEOSCILLATOR_H
