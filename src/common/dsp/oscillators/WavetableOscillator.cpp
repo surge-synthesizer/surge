@@ -99,7 +99,7 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     }
 
     shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
-    tableipol = deformType == XT_134_EARLIER ? shape : modff(shape, &intpart);
+    tableipol = deformType == XT_134_EARLIER ? modff(shape, &intpart) : shape;
     tableid = limit_range((int)intpart, 0, std::max((int)oscdata->wt.n_tables - 2 + nointerp, 0));
     last_tableipol = tableipol;
     last_tableid = tableid;
@@ -438,19 +438,7 @@ void WavetableOscillator::selectDeform()
     }
     else
     {
-        /*
-        switch to morph mode when frame skips are larger than x amount of frames in one block.
-        this will reduce noise from scrubbing over a short amount of time and also reduce noise from
-        adjusting values via GUI
-        */
-        if (abs(last_tableipol - tableipol) > 5)
-        {
-            deformSelected = &WavetableOscillator::deformMorph;
-        }
-        else
-        {
-            deformSelected = &WavetableOscillator::deformContinuous;
-        }
+        deformSelected = &WavetableOscillator::deformContinuous;
     }
 }
 
@@ -492,16 +480,17 @@ float WavetableOscillator::deformLegacy(float block_pos, int voice)
 
 float WavetableOscillator::deformContinuous(float block_pos, int voice)
 {
-
+    block_pos = nointerp ? 1 : block_pos;
     float tblip_ipol = (1 - block_pos) * last_tableipol + block_pos * tableipol;
 
     int tempTableId = floor(tblip_ipol);
+    int targetTableId = min((int)(tempTableId + 1), (int)(oscdata->wt.n_tables - 1));
+
     float interpolationProc = (tblip_ipol - tempTableId) * (1 - nointerp);
 
     return (oscdata->wt.TableF32WeakPointers[mipmap[voice]][tempTableId][state[voice]] *
             (1.f - interpolationProc)) +
-           (oscdata->wt
-                .TableF32WeakPointers[mipmap[voice]][tempTableId + 1 - nointerp][state[voice]] *
+           (oscdata->wt.TableF32WeakPointers[mipmap[voice]][targetTableId][state[voice]] *
             interpolationProc);
 }
 
