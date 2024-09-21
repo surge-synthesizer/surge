@@ -32,6 +32,7 @@ surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
 surge_add_lib_subdirectory(sst/sst-waveshapers)
+target_compile_definitions(sst-waveshapers INTERFACE SURGE_XT_1X_WST=1)
 surge_add_lib_subdirectory(sst/sst-effects)
 
 set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
