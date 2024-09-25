@@ -61,7 +61,7 @@ class WavetableOscillator : public AbstractBlitOscillator
     virtual void handleStreamingMismatches(int streamingRevision,
                                            int currentSynthStreamingRevision) override;
 
-    virtual void processSamplesForDisplay(float *samples, int size, bool real);
+    void processSamplesForDisplay(float *samples, int size, bool real) override;
 
   private:
     void convolute(int voice, bool FM, bool stereo);
