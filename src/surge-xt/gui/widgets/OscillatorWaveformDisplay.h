@@ -132,6 +132,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
     std::unique_ptr<juce::Component> customEditorAccOverlay;
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
     int lastWavetableId{-1};
+    std::string lastWavetableFilename;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };

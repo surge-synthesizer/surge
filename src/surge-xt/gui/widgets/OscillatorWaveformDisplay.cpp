@@ -317,7 +317,8 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
     {
         // It's a bit unsatisfactory to put this here but we don't really get notified
         // once the wavetable change is done other than through repaint
-        if (oscdata->wt.current_id != lastWavetableId)
+        if (oscdata->wt.current_id != lastWavetableId ||
+            oscdata->wt.current_filename != lastWavetableFilename) // more unsatisfactory!)
         {
             auto nd = std::string("Wavetable: ") + storage->getCurrentWavetableName(oscdata);
 
@@ -1267,260 +1268,276 @@ struct WaveTable3DEditor : public juce::Component,
 
     std::unique_ptr<juce::Image> backingImage;
 
+    /*
+        For Profiling!
+
+        TRUE
+        All graphics will be produced by the oscillator.process_block.
+
+        FALSE
+        Wt data will be used and processed by the oscillator
+    */
+
+    const bool PROCESS_WITH_OSC = false;
+
+    float samplesCached[128][128];
+    float morphValue = 0.0;
+
+    union ParamCached
+    {
+        int i;
+        float f;
+    };
+
+    ParamCached paramCached[7];
+
+    /* Values exported from
+     * https://www.blancoberg.com/surgewt3d?json=%7B%22rendered_frames%22%3A40%2C%22rendered_samples%22%3A53%2C%22paddingX%22%3A0.017679932260795936%2C%22paddingY%22%3A0.2127688399661304%2C%22skew%22%3A0.3%2C%22perspective%22%3A0%2C%22amplitude%22%3A0.14970364098221847%2C%22adjustX%22%3A0%2C%22adjustY%22%3A0%2C%22thickness%22%3A0.3989839119390347%2C%22morph%22%3A0%7D
+     */
+
+    int w, h;
+    float wf, hf;
+    int wt_size = 0;
+    int wt_nframes = 64;
+    int rendered_frames = 40;
+    int rendered_samples = 60;
+    float paddingX = 0.017679932260795936;
+    float paddingY = 0.2127688399661304;
+    float skew = 0.3;
+    float perspective = 0;
+    float amplitude = 0.14970364098221847;
+    float morph = 0;
+    float thickness = 0.3191871295512278;
+    float adjustX = 0;
+    float adjustY = 0;
+
+    //////////////////////////////////////////////////
+
     WaveTable3DEditor(OscillatorWaveformDisplay *pD, SurgeStorage *s, OscillatorStorage *osc,
                       SurgeGUIEditor *ed)
         : parent(pD), storage(s), oscdata(osc), sge(ed)
     {
+        clearSampleCache();
+    }
+
+    void cacheParams()
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            this->paramCached[i].i = oscdata->p[i].val.i;
+            this->paramCached[i].f = oscdata->p[i].val.f;
+        }
+    }
+
+    void clearSampleCache()
+    {
+        for (int i = 0; i < 128; i++)
+        {
+            samplesCached[i][0] = 0.f;
+        }
+    }
+
+    bool paramsHaveChanged()
+    {
+
+        for (int i = 0; i < 7; i++)
+        {
+            if (oscdata->p[i].val.i != this->paramCached[i].i ||
+                oscdata->p[i].val.f != this->paramCached[i].f)
+            {
+                cacheParams();
+                return true;
+            }
+        }
+        return false;
     }
 
     void resized() override { backingImage = nullptr; }
 
-    void paint(juce::Graphics &g) override
+    /*
+        create a interpolated frame based on a float frame value
+    */
+
+    void getInterpFrame(float *samples, float frame, float frames, bool processForReal,
+                        bool useCache)
     {
-        auto wtlockguard = std::lock_guard<std::mutex>(parent->storage->waveTableDataMutex);
         auto &wt = oscdata->wt;
-        auto pos = -1.f;
-        bool off = false;
+        float actualFrame = (frame / (frames - 1.f)) * (float)(wt_nframes - 1);
+        int frameFrom = (int)(actualFrame);
+        float proc = actualFrame - (float)frameFrom;
 
-        if (uses_wavetabledata(oscdata->type.val.i))
+        if (processForReal == false)
         {
-            pos = oscdata->p[0].val.f;
-            off = oscdata->p[0].extend_range;
+            if (samplesCached[(int)frame][0] == 0.f || useCache == false)
+            {
+                int frameTo = frameFrom + 1 > wt_nframes - 1 ? frameFrom : frameFrom + 1;
+
+                for (int i = 0; i < rendered_samples; i++)
+                {
+
+                    int pos = floor((((float)i) / (float)std::max(rendered_samples - 1, 1)) *
+                                    ((float)wt_size - 1.f));
+
+                    samples[i] = wt.TableF32WeakPointers[0][frameFrom][pos] * (1.f - proc) +
+                                 wt.TableF32WeakPointers[0][frameTo][pos] * proc;
+                    if (useCache)
+                        samplesCached[(int)frame][i + 1] = samples[i];
+                }
+
+                samplesCached[(int)frame][0] = 1.f;
+            }
+            else
+            {
+                for (int i = 0; i < rendered_samples; i++)
+                {
+                    samples[i] = samplesCached[(int)frame][i + 1];
+                }
+            }
         }
-        else
+    }
+
+    void drawWavetable(juce::Graphics &g)
+    {
+
+        auto osc = parent->setupOscillator();
+        osc->init(0, true, false);
+
+        float opacity = 1;
+
+        float opacityMultiplier = parent->isMuted ? 0.5f : 1.f;
+
+        /*
+            Draw the base layer
+        */
+
+        if (paramsHaveChanged() || !backingImage)
         {
-            pos = 0.f;
-        };
 
-        auto tpos = pos * (wt.n_tables - off);
-
-        // OK so now go backwards through the tables but also tilt and raise for the 3D effect
-        auto smp = wt.size;
-        auto smpinv = 1.0 / smp;
-        auto w = getWidth();
-        auto h = getHeight();
-
-        // Now we have a sort of skew back and offset as we go. The skew is sort of a rotation
-        // and the depth is sort of how flattened it is. Finally the hCompress augments height.
-        auto skewPct = 0.4;
-        auto depthPct = 0.6;
-        auto hCompress = 0.55;
-
-        // calculate thinning factor for frame drawing
-        int thintbl = 1;
-        int nt = wt.n_tables;
-
-        while (nt > 16)
-        {
-            thintbl <<= 1;
-            nt >>= 1;
-        }
-
-        // calculate thinning factor for sample drawing
-        int thinsmp = 1;
-        int s = smp;
-
-        while (s > 128)
-        {
-            thinsmp <<= 1;
-            s >>= 1;
-        }
-
-        static constexpr float backingScale = 2.f;
-
-        auto wxf = w;
-        auto hxf = h;
-
-        if (!backingImage)
-        {
             backingImage =
-                std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, wxf, hxf, true);
+                std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, w * 2, h * 2, true);
 
-            // shadow on purpose
             auto g = juce::Graphics(*backingImage);
 
-            // draw the wavetable frames
-            std::vector<int> ts;
-
-            for (int t = wt.n_tables - 1; t >= 0; t = t - thintbl)
+            for (int i = 0; i < rendered_frames; i++)
             {
-                ts.push_back(t);
-            }
 
-            if (ts.back() != 0)
-            {
-                ts.push_back(0);
-            }
+                // on lower frames lower the opacity, as we will add the actual frames on top of the
+                // base shape for emphasis
 
-            for (auto t : ts)
-            {
-                auto tb = wt.TableF32WeakPointers[0][t];
-                float tpct = 1.0 * t / std::max((int)(wt.n_tables - 1), 1);
-
-                if (wt.n_tables == 1)
+                if (wt_nframes <= 10 && wt_nframes > 1)
                 {
-                    tpct = 0.f;
+                    opacity = 0.5;
                 }
 
-                float x0 = tpct * skewPct * wxf;
-                float y0 = (1.0 - tpct) * depthPct * hxf;
-                auto lw = wxf * (1.0 - skewPct);
-                auto hw = hxf * depthPct * hCompress;
+                float proc = (float)i / (float)rendered_frames;
 
-                juce::Path p;
-                juce::Path ribbon;
-
-                p.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
-                ribbon.startNewSubPath(x0, y0 + (-tb[0] + 1) * 0.5 * hw);
-
-                for (int s = 1; s < smp; s = s + thinsmp)
-                {
-                    auto x = x0 + s * smpinv * lw;
-
-                    p.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
-                    ribbon.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
-                }
-
-                if (t > 0)
-                {
-                    nt = std::max(t - thintbl, 0);
-                    tpct = 1.0 * nt / (wt.n_tables - 1);
-                    tb = wt.TableF32WeakPointers[0][nt];
-                    x0 = tpct * skewPct * wxf;
-                    y0 = (1.0 - tpct) * depthPct * hxf;
-                    lw = w * (1.0 - skewPct);
-
-                    for (int s = smp - 1; s >= 0; s = s - thinsmp)
-                    {
-                        auto x = x0 + s * smpinv * lw;
-
-                        ribbon.lineTo(x, y0 + (-tb[s] + 1) * 0.5 * hw);
-                    }
-
-                    g.setColour(skin->getColor(Colors::Osc::Display::WaveFillStart3D)
-                                    .interpolatedWith(
-                                        skin->getColor(Colors::Osc::Display::WaveFillEnd3D), tpct)
-                                    .withMultipliedAlpha(parent->isMuted ? 0.5f : 1.f));
-                    g.fillPath(ribbon);
-                }
-
-                g.setColour(
-                    skin->getColor(Colors::Osc::Display::WaveStart3D)
-                        .interpolatedWith(skin->getColor(Colors::Osc::Display::WaveEnd3D), tpct)
-                        .withMultipliedAlpha((1.0 - abs(0.25 - (tpct * tpct * 0.5))) *
-                                             (parent->isMuted ? 0.5f : 1.f)));
-                g.strokePath(p, juce::PathStrokeType(0.75));
+                drawWaveform(g, i, rendered_frames,
+                             skin->getColor(Colors::Osc::Display::WaveCurrent3D),
+                             (0.9 - 0.7 * proc) * opacityMultiplier * 0.5, 1, osc, 1.f, true);
             }
+
+            // On lower frames, draw the actual frames on top of the base shape
+
+            if (wt_nframes <= 10 && wt_nframes > 1)
+            {
+
+                opacity = 0.7;
+                for (int i = 0; i < wt_nframes; i++)
+                {
+                    float proc = (float)i / (float)rendered_frames;
+                    int fr = (float)i / ((float)wt_nframes - 1) * ((float)rendered_frames - 1.f);
+                    drawWaveform(g, fr, rendered_frames,
+                                 skin->getColor(Colors::Osc::Display::WaveCurrent3D),
+                                 (0.9 - 0.7 * proc) * opacityMultiplier * 0.6, 1.0, osc, 1.f, true);
+                }
+            }
+
+            /*
+            Draw the wavetable position (morph)
+            Do not use cache for a smoother motion
+            */
+
+            float pos = morphValue;
+            int position = pos * (128 - 1);
+            drawWaveform(g, position, 128, skin->getColor(Colors::Osc::Display::WaveCurrent3D),
+                         0.9 * opacityMultiplier, 1.5, osc, 1.f, false);
         }
 
-        g.setOpacity(parent->isMuted ? 0.5f : 1.f);
+        // draw backingimage to graphics context
         g.drawImage(*backingImage, getLocalBounds().toFloat(),
                     juce::RectanglePlacement::fillDestination);
-        g.setOpacity(1.f);
 
-        // draw currently selected frame
+        // osc->~Oscillator();
+        // osc = nullptr;
+    }
+
+    /*
+        draws the waveform
+    */
+    void drawWaveform(juce::Graphics &g, int i, int renderedFrames, juce::Colour color,
+                      float opacity, float thick, ::Oscillator *osc, float scale, bool useCache)
+    {
+
+        bool processForReal = PROCESS_WITH_OSC;
+
+        juce::Path p;
+        float procFrames = ((float)i) / (float)(renderedFrames - 1);
+
+        float samples[64];
+
+        getInterpFrame(samples, (float)i, (float)renderedFrames, processForReal, useCache);
+
+        osc->processSamplesForDisplay(samples, rendered_samples, processForReal);
+
+        float xScaled = wf * scale;
+        float YScaled = hf * scale;
+
+        float skewCalc = skew;
+
+        for (int k = 0; k < rendered_samples; k++)
         {
-            auto sel = std::clamp(tpos, 0.f, (wt.n_tables - 1.f));
-            auto tb = wt.TableF32WeakPointers[0][(int)std::floor(sel)];
-            float tpct = 1.0 * sel / std::max((int)(wt.n_tables - 1), 1);
 
-            if (wt.n_tables == 1)
+            float proc = (float)k / ((float)rendered_samples - 1.f);
+
+            float x = xScaled *
+                      (adjustX + 0.5 * perspective * procFrames + paddingX + skewCalc * procFrames +
+                       proc * (1 - paddingX * 2.0 - skewCalc - perspective * procFrames));
+            x += perspective * skewCalc * wf * 0.5;
+
+            float y = adjustY * YScaled + YScaled - paddingY * YScaled -
+                      (YScaled - paddingY * 2 * YScaled) * procFrames +
+                      samples[k] * YScaled * -(amplitude * (1 - 0.2 * perspective * procFrames)) *
+                          (1 - perspective * procFrames);
+
+            if (k == 0)
             {
-                tpct = 0.f;
+                p.startNewSubPath(x, y);
             }
-
-            float x0 = tpct * skewPct * w;
-            float y0 = (1.0 - tpct) * depthPct * h;
-            auto lw = w * (1.0 - skewPct);
-            auto hw = h * depthPct * hCompress;
-
-            auto osc = parent->setupOscillator();
-
-            if (!osc)
+            else
             {
-                return;
+                p.lineTo(x, y);
             }
-
-            int totalSamples = getWidth();
-            // empirically set up... don't ask!
-            float disp_pitch_rs =
-                12.f * std::log2f((700.f * (storage->samplerate / 48000.f)) / 440.f) + 69.f;
-
-            if (!storage->isStandardTuning)
-            {
-                // OK so in this case we need to find a better version of the note which gets us
-                // that pitch. Only way is to search really.
-                auto pit = storage->note_to_pitch_ignoring_tuning(disp_pitch_rs);
-                int bracket = -1;
-
-                for (int i = 0; i < 128; ++i)
-                {
-                    if (storage->note_to_pitch(i) < pit && storage->note_to_pitch(i + 1) > pit)
-                    {
-                        bracket = i;
-
-                        break;
-                    }
-                }
-
-                if (bracket >= 0)
-                {
-                    float f1 = storage->note_to_pitch(bracket);
-                    float f2 = storage->note_to_pitch(bracket + 1);
-                    float frac = (pit - f1) / (f2 - f1);
-
-                    disp_pitch_rs = bracket + frac;
-                }
-
-                // That's a strange non-monotonic tuning. Oh well.
-            }
-
-            bool use_display = osc->allow_display();
-
-            if (use_display)
-            {
-                osc->init(disp_pitch_rs, true, true);
-            }
-
-            int block_pos = BLOCK_SIZE_OS;
-            juce::Path wavePath;
-
-            wavePath.startNewSubPath(0.f, 0.f);
-
-            for (int i = 0; i < totalSamples; i++)
-            {
-                if (use_display && block_pos >= BLOCK_SIZE_OS)
-                {
-                    osc->process_block(disp_pitch_rs);
-                    block_pos = 0;
-                }
-
-                float val = 0.f;
-
-                if (use_display)
-                {
-                    val = osc->output[block_pos];
-                    block_pos++;
-                }
-
-                if (i >= 4)
-                {
-                    float xc = 1.f * (i - 4) / totalSamples;
-
-                    wavePath.lineTo(xc, val);
-                }
-            }
-
-            osc->~Oscillator();
-            osc = nullptr;
-
-            auto tf =
-                juce::AffineTransform().scaled(w * 0.61, h * -0.17).translated(x0, y0 + (0.5 * hw));
-
-            g.setColour(skin->getColor(Colors::Osc::Display::WaveCurrent3D)
-                            .withMultipliedAlpha(parent->isMuted ? 0.5f : 1.f));
-            g.strokePath(wavePath, juce::PathStrokeType(0.85), tf);
         }
+
+        g.setColour(color.withMultipliedAlpha(opacity));
+        g.strokePath(p, juce::PathStrokeType(thickness * xScaled * 0.01 * 2 * thick));
+    }
+
+    void paint(juce::Graphics &g) override
+    {
+        auto &wt = oscdata->wt;
+        wt_size = wt.size;
+        wt_nframes = wt.n_tables;
+
+        morphValue = oscdata->p[0].val.f;
+
+        w = getWidth();
+        h = getHeight();
+
+        wf = (float)w * 2.f;
+        hf = (float)h * 2.f;
+
+        drawWavetable(g);
     }
 
     void mouseDown(const juce::MouseEvent &event) override

@@ -54,6 +54,8 @@ class WindowOscillator : public Oscillator
     virtual void handleStreamingMismatches(int streamingRevision,
                                            int currentSynthStreamingRevision) override;
 
+    virtual void processSamplesForDisplay(float *samples, int size, bool real);
+
   private:
     int IOutputL alignas(16)[BLOCK_SIZE_OS];
     int IOutputR alignas(16)[BLOCK_SIZE_OS];
