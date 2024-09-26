@@ -1295,6 +1295,8 @@ struct WaveTable3DEditor : public juce::Component,
     float samplesCached[128][128];
     float morphValue = 0.0;
 
+    int currentBreakingPoint = -1;
+
     union ParamCached
     {
         int i;
@@ -1302,7 +1304,7 @@ struct WaveTable3DEditor : public juce::Component,
     };
 
     ParamCached paramCached[7];
-    float zoomFactor = 1.0;
+    float zoomFactor = -1.0;
     bool hasResized = false;
 
     /* Values exported from
@@ -1332,7 +1334,6 @@ struct WaveTable3DEditor : public juce::Component,
         : parent(pD), storage(s), oscdata(osc), sge(ed)
     {
         clearSampleCache();
-        resized();
     }
 
     void cacheParams()
@@ -1384,12 +1385,12 @@ struct WaveTable3DEditor : public juce::Component,
             w = getWidth();
             h = getHeight();
 
-            wf = (float)w * 2.f;
-            hf = (float)h * 2.f;
+            wf = (float)w * zoomFactor * 2;
+            hf = (float)h * zoomFactor * 2;
 
             backingImage = nullptr;
-            backingImage = std::make_unique<juce::Image>(
-                juce::Image::PixelFormat::ARGB, (int)wf * zoomFactor, (int)(hf)*zoomFactor, true);
+            backingImage = std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, (int)wf,
+                                                         (int)(hf), true);
         }
     }
 
@@ -1527,8 +1528,8 @@ struct WaveTable3DEditor : public juce::Component,
 
         osc->processSamplesForDisplay(samples, rendered_samples, processForReal);
 
-        float xScaled = wf * scale * zoomFactor;
-        float YScaled = hf * scale * zoomFactor;
+        float xScaled = wf * scale;
+        float YScaled = hf * scale;
 
         float skewCalc = skew;
 
@@ -1982,6 +1983,8 @@ void OscillatorWaveformDisplay::showCustomEditor()
         auto b = getLocalBounds().withTrimmedBottom(wtbheight);
         customEditor->setBounds(b);
         addAndMakeVisible(*customEditor);
+        customEditor->resized(); // Resize needs to happen after it has been added to the scene.
+                                 // Otherwise bounds will return 0
         repaint();
 
         customEditorAccOverlay->setTitle("Close Custom Editor");
