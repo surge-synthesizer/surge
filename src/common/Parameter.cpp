@@ -262,6 +262,7 @@ bool Parameter::can_temposync() const
     case ct_envtime_linkable_delay:
     case ct_envtime_lfodecay:
     case ct_reverbpredelaytime:
+    case ct_floaty_delay_time:
         return true;
     }
     return false;
