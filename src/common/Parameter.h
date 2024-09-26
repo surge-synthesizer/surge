@@ -213,6 +213,9 @@ enum ctrltypes
     ct_bonsai_sat_filter,
     ct_bonsai_sat_mode,
     ct_bonsai_noise_mode,
+    ct_floaty_warp_time,
+    ct_floaty_delay_time,
+    ct_floaty_delay_playrate,
 
     num_ctrltypes,
 };

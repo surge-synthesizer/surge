@@ -49,6 +49,7 @@
 #include "chowdsp/TapeEffect.h"
 #include "DebugHelpers.h"
 #include "AudioInputEffect.h"
+#include "FloatyDelayEffect.h"
 
 using namespace std;
 
@@ -116,6 +117,9 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new BonsaiEffect(storage, fxdata, pd);
     case fxt_audio_input:
         return new AudioInputEffect(storage, fxdata, pd);
+    case fxt_floaty_delay:
+        return new FloatyDelayEffect(storage, fxdata, pd);
+
     default:
         return 0;
     };

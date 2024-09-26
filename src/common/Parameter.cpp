@@ -428,6 +428,7 @@ bool Parameter::is_bipolar() const
     case ct_pitch4oct:
     case ct_modern_trimix:
     case ct_oscspread_bipolar:
+    case ct_floaty_delay_playrate:
     case ct_bonsai_bass_boost:
         res = true;
         break;
@@ -792,6 +793,18 @@ void Parameter::set_type(int ctrltype)
         val_min.f = -8;
         val_max.f = 5;
         val_default.f = 0;
+        break;
+    case ct_floaty_warp_time:
+        valtype = vt_float;
+        val_min.f = -3;
+        val_max.f = 4;
+        val_default.f = 0;
+        break;
+    case ct_floaty_delay_time:
+        valtype = vt_float;
+        val_min.f = -5.64386;     // 20ms
+        val_max.f = 3;            // 8s
+        val_default.f = -1.73697; // 300ms
         break;
     case ct_delaymodtime:
     case ct_chorusmodtime:
@@ -1362,6 +1375,13 @@ void Parameter::set_type(int ctrltype)
         val_max.i = 1;
         break;
 
+    case ct_floaty_delay_playrate:
+        valtype = vt_float;
+        val_min.f = -5.f;
+        val_default.f = 1.f;
+        val_max.f = 5.f;
+        break;
+
     case ct_none:
     default:
         snprintf(dispname, NAMECHARS, "-");
@@ -1407,6 +1427,9 @@ void Parameter::set_type(int ctrltype)
     case ct_lfophaseshuffle:
     case ct_reson_res_extendable:
     case ct_modern_trimix:
+    case ct_floaty_warp_time:
+    case ct_floaty_delay_time:
+    case ct_floaty_delay_playrate:
     case ct_alias_mask:
     case ct_tape_drive:
         displayType = LinearWithScale;
@@ -4470,6 +4493,9 @@ bool Parameter::can_setvalue_from_string() const
     case ct_tape_speed:
     case ct_spring_decay:
     case ct_bonsai_bass_boost:
+    case ct_floaty_warp_time:
+    case ct_floaty_delay_time:
+    case ct_floaty_delay_playrate:
     {
         return true;
     }
