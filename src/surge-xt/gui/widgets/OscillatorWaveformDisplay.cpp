@@ -317,9 +317,13 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
     {
         // It's a bit unsatisfactory to put this here but we don't really get notified
         // once the wavetable change is done other than through repaint
-        if (oscdata->wt.current_id != lastWavetableId ||
-            oscdata->wt.current_filename != lastWavetableFilename) // more unsatisfactory!)
+        if (oscdata->wt.current_id != lastWavetableId || forceWTRepaint) // more unsatisfactory!)
         {
+            if (forceWTRepaint)
+            {
+                forceWTRepaint = false;
+            }
+
             auto nd = std::string("Wavetable: ") + storage->getCurrentWavetableName(oscdata);
 
             menuOverlays[0]->setTitle(nd);
@@ -419,6 +423,14 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
             g.drawText(lmsg.c_str(), getLocalBounds().reduced(2, 2).translated(0, 10),
                        juce::Justification::topLeft);
         }
+    }
+}
+
+void OscillatorWaveformDisplay::setZoomFactor(int zoom)
+{
+    if (customEditor && uses_wavetabledata(oscdata->type.val.i))
+    {
+        customEditor->resized();
     }
 }
 
@@ -1290,6 +1302,8 @@ struct WaveTable3DEditor : public juce::Component,
     };
 
     ParamCached paramCached[7];
+    float zoomFactor = 1.0;
+    bool hasResized = false;
 
     /* Values exported from
      * https://www.blancoberg.com/surgewt3d?json=%7B%22rendered_frames%22%3A40%2C%22rendered_samples%22%3A53%2C%22paddingX%22%3A0.017679932260795936%2C%22paddingY%22%3A0.2127688399661304%2C%22skew%22%3A0.3%2C%22perspective%22%3A0%2C%22amplitude%22%3A0.14970364098221847%2C%22adjustX%22%3A0%2C%22adjustY%22%3A0%2C%22thickness%22%3A0.3989839119390347%2C%22morph%22%3A0%7D
@@ -1318,6 +1332,7 @@ struct WaveTable3DEditor : public juce::Component,
         : parent(pD), storage(s), oscdata(osc), sge(ed)
     {
         clearSampleCache();
+        resized();
     }
 
     void cacheParams()
@@ -1352,7 +1367,31 @@ struct WaveTable3DEditor : public juce::Component,
         return false;
     }
 
-    void resized() override { backingImage = nullptr; }
+    float getCurrentZoomFactor()
+    {
+        float zoom = (float)sge->getZoomFactor() * 0.01;
+        return zoom;
+    }
+
+    void resized() override
+    {
+        float currentZoom = getCurrentZoomFactor();
+
+        if (currentZoom != zoomFactor)
+        {
+            zoomFactor = currentZoom;
+            hasResized = true;
+            w = getWidth();
+            h = getHeight();
+
+            wf = (float)w * 2.f;
+            hf = (float)h * 2.f;
+
+            backingImage = nullptr;
+            backingImage = std::make_unique<juce::Image>(
+                juce::Image::PixelFormat::ARGB, (int)wf * zoomFactor, (int)(hf)*zoomFactor, true);
+        }
+    }
 
     /*
         create a interpolated frame based on a float frame value
@@ -1398,7 +1437,6 @@ struct WaveTable3DEditor : public juce::Component,
 
     void drawWavetable(juce::Graphics &g)
     {
-
         auto osc = parent->setupOscillator();
         osc->init(0, true, false);
 
@@ -1410,17 +1448,18 @@ struct WaveTable3DEditor : public juce::Component,
             Draw the base layer
         */
 
-        if (paramsHaveChanged() || !backingImage)
+        if (paramsHaveChanged() || hasResized)
         {
+            hasResized = false;
+            juce::Colour color =
+                juce::Colour((unsigned char)0, (unsigned char)0, (unsigned char)0, 0.f);
 
-            backingImage =
-                std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, w * 2, h * 2, true);
-
+            backingImage->clear(
+                juce::Rectangle(0, 0, int(zoomFactor * w * 2), int(zoomFactor * h * 2)), color);
             auto g = juce::Graphics(*backingImage);
 
             for (int i = 0; i < rendered_frames; i++)
             {
-
                 // on lower frames lower the opacity, as we will add the actual frames on top of the
                 // base shape for emphasis
 
@@ -1440,7 +1479,6 @@ struct WaveTable3DEditor : public juce::Component,
 
             if (wt_nframes <= 10 && wt_nframes > 1)
             {
-
                 opacity = 0.7;
                 for (int i = 0; i < wt_nframes; i++)
                 {
@@ -1489,8 +1527,8 @@ struct WaveTable3DEditor : public juce::Component,
 
         osc->processSamplesForDisplay(samples, rendered_samples, processForReal);
 
-        float xScaled = wf * scale;
-        float YScaled = hf * scale;
+        float xScaled = wf * scale * zoomFactor;
+        float YScaled = hf * scale * zoomFactor;
 
         float skewCalc = skew;
 
@@ -1530,12 +1568,6 @@ struct WaveTable3DEditor : public juce::Component,
         wt_nframes = wt.n_tables;
 
         morphValue = oscdata->p[0].val.f;
-
-        w = getWidth();
-        h = getHeight();
-
-        wf = (float)w * 2.f;
-        hf = (float)h * 2.f;
 
         drawWavetable(g);
     }

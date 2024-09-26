@@ -1272,6 +1272,7 @@ void SurgeStorage::perform_queued_wtloads()
                     patch.isDirty = true;
                 load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
+                patch.scene[sc].osc[o].wt.is_dnd_imported = false;
                 patch.scene[sc].osc[o].wt.refresh_display = true;
             }
             else if (patch.scene[sc].osc[o].wt.queue_filename[0])
@@ -1293,6 +1294,7 @@ void SurgeStorage::perform_queued_wtloads()
                 patch.scene[sc].osc[o].wt.current_id = wtidx;
                 load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
+                patch.scene[sc].osc[o].wt.is_dnd_imported = true;
                 patch.scene[sc].osc[o].wt.refresh_display = true;
                 if (patch.scene[sc].osc[o].wt.everBuilt)
                     patch.isDirty = true;

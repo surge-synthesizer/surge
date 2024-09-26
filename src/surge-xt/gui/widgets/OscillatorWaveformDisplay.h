@@ -70,6 +70,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
     }
 
     bool isMuted{false};
+    bool forceWTRepaint{false};
 
     SurgeGUIEditor *sge{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
@@ -79,12 +80,15 @@ struct OscillatorWaveformDisplay : public juce::Component,
 
     void repaintIfIdIsInRange(int id);
     void repaintBasedOnOscMuteState();
+    void repaintForceForWT() { forceWTRepaint = true; };
 
     ::Oscillator *setupOscillator();
     unsigned char oscbuffer alignas(16)[oscillator_buffer_size];
 
     void paint(juce::Graphics &g) override;
     void resized() override;
+
+    void setZoomFactor(int);
 
     pdata tp[n_scene_params];
     juce::Rectangle<float> leftJog, rightJog, waveTableName;
