@@ -464,7 +464,7 @@ const char fx_type_shortnames[n_fx_types][16] = {
 const char fx_type_acronyms[n_fx_types][8] = {
     "OFF", "DLY",  "RV1", "PH", "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC",
     "RV2", "FL",   "RM",  "AW", "NEU", "GEQ",  "RES", "CHW", "XCT", "ENS", "CMB",
-    "NIM", "TAPE", "TM",  "WS", "M-S", "SRV",  "BON", "IN",  "FLD"};
+    "NIM", "TAPE", "TM",  "WS", "M-S", "SRV",  "BON", "IN",  "FDL"};
 
 enum fx_bypass
 {
