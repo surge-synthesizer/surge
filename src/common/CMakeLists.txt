@@ -163,6 +163,8 @@ add_library(${PROJECT_NAME}
   dsp/effects/DistortionEffect.h
   dsp/effects/FlangerEffect.cpp
   dsp/effects/FlangerEffect.h
+  dsp/effects/FloatyDelayEffect.cpp
+  dsp/effects/FloatyDelayEffect.h
   dsp/effects/FrequencyShifterEffect.cpp
   dsp/effects/FrequencyShifterEffect.h
   dsp/effects/GraphicEQ11BandEffect.cpp

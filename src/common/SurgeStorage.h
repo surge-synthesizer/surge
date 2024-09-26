@@ -416,6 +416,7 @@ enum fx_type
     fxt_spring_reverb,
     fxt_bonsai,
     fxt_audio_input,
+    fxt_floaty_delay,
 
     n_fx_types,
 };
@@ -449,19 +450,21 @@ const char fx_type_names[n_fx_types][32] = {"Off",
                                             "Mid-Side Tool",
                                             "Spring Reverb",
                                             "Bonsai",
-                                            "Audio Input"};
+                                            "Audio Input",
+                                            "Floaty Delay"};
 
 const char fx_type_shortnames[n_fx_types][16] = {
     "Off",         "Delay",      "Reverb 1",      "Phaser",        "Rotary",     "Distortion",
     "EQ",          "Freq Shift", "Conditioner",   "Chorus",        "Vocoder",    "Reverb 2",
     "Flanger",     "Ring Mod",   "Airwindows",    "Neuron",        "Graphic EQ", "Resonator",
     "CHOW",        "Exciter",    "Ensemble",      "Combulator",    "Nimbus",     "Tape",
-    "Treemonster", "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Bonsai",     "Audio In"};
+    "Treemonster", "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Bonsai",     "Audio In",
+    "Floaty Delay"};
 
 const char fx_type_acronyms[n_fx_types][8] = {
-    "OFF", "DLY", "RV1", "PH",   "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",
-    "VOC", "RV2", "FL",  "RM",   "AW",  "NEU",  "GEQ", "RES", "CHW", "XCT",
-    "ENS", "CMB", "NIM", "TAPE", "TM",  "WS",   "M-S", "SRV", "BON", "IN"};
+    "OFF", "DLY",  "RV1", "PH", "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC",
+    "RV2", "FL",   "RM",  "AW", "NEU", "GEQ",  "RES", "CHW", "XCT", "ENS", "CMB",
+    "NIM", "TAPE", "TM",  "WS", "M-S", "SRV",  "BON", "IN",  "FDL"};
 
 enum fx_bypass
 {
