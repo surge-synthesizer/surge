@@ -182,6 +182,83 @@ float WavetableOscillator::distort_level(float x)
     return x;
 }
 
+void WavetableOscillator::processSamplesForDisplay(float *samples, int size, bool real)
+{
+    if (!real)
+    {
+        // saturate and skewY
+        for (int i = 0; i < size; i++)
+        {
+            samples[i] = distort_level(samples[i]);
+        }
+
+        // formant
+        if (oscdata->p[wt_formant].val.f > 0.f)
+        {
+            float mult = pow(2, oscdata->p[wt_formant].val.f * 0.08333333333333333);
+
+            for (int i = 0; i < size; i++)
+            {
+                float pos = limit_range((float)i * mult, 0.f, (float)size - 1.f);
+                int from = floor(pos);
+                int to = limit_range(from + 1, 0, size - 1);
+
+                float proc = pos - (float)from;
+
+                samples[i] = samples[from] * (1.f - proc) + samples[to] * proc;
+            }
+        }
+
+        // skewX
+        /*
+            TODO
+            this is not even close to the correct inplementation of skewx.
+        */
+        /*
+        float samplePos = 0.f;
+
+        float mul = 1.f / (float)size;
+        float fsize = (float)size;
+
+        float tempSamples[64];
+
+        float hskew = -oscdata->p[wt_skewh].val.f;
+        float taylorscale = sqrtf(27.f / 4);
+
+        for (int i = 0; i < size; i++)
+        {
+            float xt = (i + 0.5) * mul;
+            xt = 1 + hskew * 4 * xt * (xt - 1) * (2 * xt - 1) * taylorscale;
+            samplePos = (samplePos + xt);
+            if (samplePos > fsize - 1.f)
+                samplePos -= fsize;
+
+            int from = ((int)samplePos + size * 2) % size;
+            float proc = samplePos - from;
+            int to = (from + 1) % size;
+
+            // interpolate samples
+            tempSamples[i] = samples[from] * (1.f - proc) + samples[to] * proc;
+        }
+
+        for (int i = 0; i < size; i++)
+        {
+            samples[i] = tempSamples[i];
+        }
+        */
+    }
+    else
+    {
+
+        // todo populate samples with process_block()
+        for (int i = 0; i < size; i++)
+        {
+            samples[i] = 0;
+        }
+    }
+    // saturation
+};
+
 void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 {
     float block_pos = oscstate[voice] * BLOCK_SIZE_OS_INV * pitchmult_inv;

@@ -49,6 +49,9 @@ class alignas(16) Oscillator
                                float FMdepth = 0.f)
     {
     }
+
+    virtual void processSamplesForDisplay(float *samples, int size, bool real){};
+
     virtual void assign_fm(float *master_osc) { this->master_osc = master_osc; }
     virtual bool allow_display() { return true; }
     inline double pitch_to_omega(float x)

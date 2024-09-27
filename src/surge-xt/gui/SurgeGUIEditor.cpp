@@ -771,23 +771,24 @@ void SurgeGUIEditor::idle()
         }
 
         auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(FORMULA_EDITOR);
+
         if (ol)
         {
             ol->updateDebuggerIfNeeded();
         }
 
-        if (synth->storage.getPatch()
-                .scene[current_scene]
-                .osc[current_osc[current_scene]]
-                .wt.refresh_display)
+        auto wt =
+            &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]].wt;
+        if (wt->refresh_display)
         {
-            synth->storage.getPatch()
-                .scene[current_scene]
-                .osc[current_osc[current_scene]]
-                .wt.refresh_display = false;
+            wt->refresh_display = false;
 
             if (oscWaveform)
             {
+                if (wt->is_dnd_imported)
+                {
+                    oscWaveform->repaintForceForWT();
+                }
                 oscWaveform->repaint();
             }
         }
@@ -3008,6 +3009,7 @@ void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
 
 void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 {
+
     zoomFactor = std::max(zf, static_cast<float>(minimumZoom));
 
 #if LINUX
@@ -3034,6 +3036,9 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
     {
         frame->setTransform(juce::AffineTransform().scaled(zff));
     }
+
+    if (oscWaveform)
+        oscWaveform->setZoomFactor(zoomFactor);
 
     setBitmapZoomFactor(zoomFactor);
     rezoomOverlays();

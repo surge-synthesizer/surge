@@ -196,6 +196,86 @@ inline unsigned int BigMULr16(unsigned int a, unsigned int b)
     return c >> 16u;
 }
 
+void WindowOscillator::processSamplesForDisplay(float *samples, int size, bool real)
+{
+    if (!real)
+    {
+
+        // formant
+
+        float formant = oscdata->p[win_formant].val.f;
+        float newSamples[64];
+
+        float mult = pow(2.f, formant / 12.f);
+
+        for (int i = 0; i < size; i++)
+        {
+            float pos = (float)i * mult;
+            int from = (int)(pos);
+
+            float proc = pos - (float)from;
+            from = from % (size);
+            int to = (from + 1) % size;
+            newSamples[i] = samples[from] * (1.f - proc) + samples[to] * proc;
+        }
+
+        int window = limit_range(oscdata->p[win_window].val.i, 0, 8);
+        int windowSize = storage->WindowWT.size;
+
+        for (int i = 0; i < size; i++)
+        {
+            samples[i] = newSamples[i];
+        }
+
+        // apply window
+
+        for (int i = 0; i < size; i++)
+        {
+            float windowPos = ((float)i / (float)size); // correct
+            windowPos *= (float)windowSize;
+            float v = storage->WindowWT.TableI16WeakPointers[0][window][(int)windowPos];
+            samples[i] = samples[i] * v * 0.00006103515625; // there is most likely a better way
+            //  of doing this ( divide by 2pow13)
+        }
+
+        // filters
+
+        for (int k = 0; k < size; k += BLOCK_SIZE)
+        {
+            float blockSamples[BLOCK_SIZE];
+
+            for (int i = 0; i < BLOCK_SIZE; i++)
+            {
+                int s = i + k;
+                blockSamples[i] = s < size ? samples[s] : 0;
+            }
+
+            if (!oscdata->p[win_lowcut].deactivated)
+                hp.process_block(blockSamples, samples);
+            if (!oscdata->p[win_highcut].deactivated)
+                lp.process_block(blockSamples, samples);
+
+            for (int i = 0; i < BLOCK_SIZE; i++)
+            {
+                int s = i + k;
+                if (s < size)
+                {
+                    samples[s] = blockSamples[i];
+                }
+            }
+        }
+    }
+    else
+    {
+
+        // todo populate samples with process_block()
+        for (int i = 0; i < size; i++)
+        {
+            samples[i] = 0;
+        }
+    }
+};
+
 template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool stereo)
 {
     const unsigned int M0Mask = 0x07f8;
