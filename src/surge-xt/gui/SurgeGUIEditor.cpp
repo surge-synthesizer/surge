@@ -4213,7 +4213,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             if (currentSkin->typeFaces.find(ff) != currentSkin->typeFaces.end())
             {
-                hs->setFont(juce::Font(juce::FontOptions(currentSkin->typeFaces[ff])).withPointHeight(fs));
+                hs->setFont(
+                    juce::Font(juce::FontOptions(currentSkin->typeFaces[ff])).withPointHeight(fs));
                 hs->setFontSize(fs);
             }
         }

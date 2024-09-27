@@ -1499,8 +1499,9 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
                 juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
             // Label will go past the end of the scopeRect.
             const auto labelRect =
-                juce::Rectangle{font.getStringWidth(freqString), labelHeight}.withCentre(
-                    juce::Point<int>(xPos, height + 10));
+                juce::Rectangle{(int)juce::GlyphArrangement::getStringWidth(font, freqString),
+                                labelHeight}
+                    .withCentre(juce::Point<int>(xPos, height + 10));
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
             g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
@@ -1541,9 +1542,11 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
             std::string dbString = convert.str() + " dB";
 
             // Label will go past the end of the scopeRect.
-            const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
-                                       .withBottomY((int)(yPos + (labelHeight / 2)) + 1)
-                                       .withRightX(width + 32);
+            const auto labelRect =
+                juce::Rectangle{(int)juce::GlyphArrangement::getStringWidth(font, dbString),
+                                labelHeight}
+                    .withBottomY((int)(yPos + (labelHeight / 2)) + 1)
+                    .withRightX(width + 32);
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);
@@ -1654,7 +1657,7 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
             }
 
             // Label will go past the end of the scopeRect.
-            auto labelWidth = font.getStringWidth(timeString);
+            auto labelWidth = (int)juce::GlyphArrangement::getStringWidth(font, timeString);
             auto labelRect = juce::Rectangle{labelWidth, labelHeight}.withCentre(
                 juce::Point<int>(xPos, height + 10));
             auto justify = juce::Justification::bottom;

@@ -96,7 +96,7 @@ void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 
     idealHeight =
         standardMenuItemHeight > 0 ? standardMenuItemHeight : std::round(font.getHeight() * 1.3f);
-    idealWidth = font.getStringWidth(label) + idealHeight * 2;
+    idealWidth = (int)juce::GlyphArrangement::getStringWidth(font, label) + idealHeight * 2;
     idealWidth += 20;
 }
 
