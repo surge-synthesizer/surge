@@ -106,7 +106,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
         return res;
     }
 
-    juce::Font font{12};
+    juce::Font font{juce::FontOptions{12}};
     juce::Colour hl, hlbg, txt, bg;
 
     void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,

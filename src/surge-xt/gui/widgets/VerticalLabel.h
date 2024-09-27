@@ -48,7 +48,7 @@ struct VerticalLabel : public juce::Component
         repaint();
     }
 
-    juce::Font font;
+    juce::Font font{juce::FontOptions()};
     void setFont(const juce::Font &f)
     {
         font = f;
