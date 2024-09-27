@@ -676,7 +676,7 @@ struct SurgefxAudioProcessorEditor::PromptOverlay : juce::Component, juce::TextE
     PromptOverlay()
     {
         ed = std::make_unique<juce::TextEditor>();
-        ed->setFont(juce::Font(28));
+        ed->setFont(juce::FontOptions(28));
         ed->setColour(juce::TextEditor::ColourIds::textColourId, juce::Colours::white);
         ed->setJustification(juce::Justification::centred);
         ed->addListener(this);
@@ -688,7 +688,7 @@ struct SurgefxAudioProcessorEditor::PromptOverlay : juce::Component, juce::TextE
     {
         ed->clear();
         ed->setText(s, juce::NotificationType::dontSendNotification);
-        ed->applyFontToAllText(juce::Font(28));
+        ed->applyFontToAllText(juce::FontOptions(28));
         ed->applyColourToAllText(juce::Colours::white);
         ed->repaint();
     }

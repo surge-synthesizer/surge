@@ -250,7 +250,7 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
         g.drawLine(0, h - orangeHeight, w, h - orangeHeight);
 
         // text
-        g.setFont(12);
+        g.setFont(juce::FontOptions(12));
         g.drawSingleLineText(Surge::Build::FullVersionStr, w - 3, h - 26.f,
                              juce::Justification::right);
         g.drawSingleLineText(Surge::Build::BuildDate, w - 3, h - 6.f, juce::Justification::right);
@@ -334,15 +334,15 @@ class SurgeFXParamDisplay : public juce::Component
         if (isEnabled())
         {
             g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
-            g.setFont(10 * hScale);
+            g.setFont(juce::FontOptions(10 * hScale));
             g.drawSingleLineText(group, bounds.getX() + 5, bounds.getY() + 2 + 10 * hScale);
-            g.setFont(12 * hScale);
+            g.setFont(juce::FontOptions(12 * hScale));
             g.drawSingleLineText(name, bounds.getX() + 5,
                                  bounds.getY() + 2 + (10 + 3 + 11) * hScale);
 
             if (!overlayEditor->isVisible())
             {
-                g.setFont(20 * hScale);
+                g.setFont(juce::FontOptions(20 * hScale));
                 g.drawSingleLineText(display, bounds.getX() + 5,
                                      bounds.getY() + bounds.getHeight() - 5);
             }
@@ -384,7 +384,7 @@ class SurgeFXParamDisplay : public juce::Component
         overlayEditor->setColour(juce::TextEditor::ColourIds::highlightColourId,
                                  juce::Colour(0xFF775522));
         overlayEditor->setJustification(juce::Justification::bottomLeft);
-        overlayEditor->setFont(juce::Font(20));
+        overlayEditor->setFont(juce::FontOptions(20));
         overlayEditor->setText(display, juce::dontSendNotification);
         overlayEditor->setVisible(true);
         overlayEditor->grabKeyboardFocus();
