@@ -131,9 +131,9 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
 
     if (name.empty())
     {
-        auto sl1 = font.getStringWidth(display);
-        auto sl2 = font.getStringWidth(displayAlt);
-        auto pad = font.getStringWidth("  ");
+        auto sl1 = (int)juce::GlyphArrangement::getStringWidth(font, display);
+        auto sl2 = (int)juce::GlyphArrangement::getStringWidth(font, displayAlt);
+        auto pad = (int)juce::GlyphArrangement::getStringWidth(font, "  ");
         desiredWidth = std::max(sl1 + sl2 + pad, desiredWidth);
     }
     else
@@ -144,16 +144,17 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
         {
             lheight = font.getHeight() * 3 + 11;
             // row 2
-            auto r1l = font.getStringWidth(name);
-            auto r2l =
-                font.getStringWidth(mdiws.dvalminus + "  " + mdiws.val + "  " + mdiws.dvalplus);
-            auto r3l = font.getStringWidth(mdiws.valminus + "  " + mdiws.valplus);
+            auto r1l = (int)juce::GlyphArrangement::getStringWidth(font, name);
+            auto r2l = (int)juce::GlyphArrangement::getStringWidth(
+                font, mdiws.dvalminus + "  " + mdiws.val + "  " + mdiws.dvalplus);
+            auto r3l = (int)juce::GlyphArrangement::getStringWidth(font, mdiws.valminus + "  " +
+                                                                             mdiws.valplus);
             desiredWidth = std::max(std::max(std::max(r1l, r2l), r3l) + 8, desiredWidth);
         }
         else
         {
-            auto sln = font.getStringWidth(name);
-            auto sl1 = font.getStringWidth(display);
+            auto sln = (int)juce::GlyphArrangement::getStringWidth(font, name);
+            auto sl1 = (int)juce::GlyphArrangement::getStringWidth(font, display);
             desiredWidth = std::max(std::max(sln, sl1) + 8, desiredWidth);
             lheight = font.getHeight() * 2 + 9;
         }

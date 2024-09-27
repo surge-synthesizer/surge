@@ -5,6 +5,7 @@ option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge Python bindings with pybind11" O
 option(SURGE_COPY_TO_PRODUCTS "Copy built plugins to the products directory" ON)
 option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to system plugin area after build" OFF)
 option(SURGE_EXPOSE_PRESETS "Expose surge presets via the JUCE Program API" OFF)
+option(SURGE_INCLUDE_MELATONIN_INSPECTOR "Include melatonin inspector" OFF)
 
 # Currently the JUCE LV2 build crashes in our CI pipeline, so leave it for users to self build
 option(SURGE_BUILD_LV2 "Build Surge as an LV2" OFF)
@@ -20,7 +21,9 @@ include(cmake/lib.cmake)
 if (NOT SURGE_SKIP_JUCE_FOR_RACK)
   message(STATUS "Using JUCE from ${SURGE_JUCE_PATH}")
   add_subdirectory(${SURGE_JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
-  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../libs/melatonin_inspector" ${CMAKE_BINARY_DIR}/melatonin_inspector EXCLUDE_FROM_ALL)
+  if (SURGE_INCLUDE_MELATONIN_INSPECTOR)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../libs/melatonin_inspector" ${CMAKE_BINARY_DIR}/melatonin_inspector EXCLUDE_FROM_ALL)
+  endif()
 endif()
 
 if(${CMAKE_VERSION} VERSION_LESS 3.21)
@@ -57,7 +60,8 @@ target_compile_definitions(surge-juce INTERFACE
   JUCE_WEB_BROWSER=0
   JUCE_USE_CAMERA=disabled
 
-  JUCE_DISPLAY_SPLASH_SCREEN=0
+  # No longer needed with JUCE 8
+  # JUCE_DISPLAY_SPLASH_SCREEN=0
   JUCE_REPORT_APP_USAGE=0
 
   JUCE_MODAL_LOOPS_PERMITTED=0
@@ -74,7 +78,10 @@ target_compile_definitions(surge-juce INTERFACE
   )
 
 if (NOT SURGE_SKIP_JUCE_FOR_RACK)
-  target_link_libraries(surge-juce INTERFACE melatonin_inspector)
+  if (SURGE_INCLUDE_MELATONIN_INSPECTOR)
+    target_link_libraries(surge-juce INTERFACE melatonin_inspector)
+    target_compile_definitions(surge-juce INTERFACE SURGE_INCLUDE_MELATONIN_INSPECTOR=1)
+  endif()
 endif()
 
 if(NOT SURGE_SKIP_VST3)

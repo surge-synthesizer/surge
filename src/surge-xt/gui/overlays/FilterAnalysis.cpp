@@ -219,9 +219,11 @@ void FilterAnalysis::paint(juce::Graphics &g)
             const auto over1000 = freq >= 1000.f;
             const auto freqString =
                 juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
-            const auto labelRect = juce::Rectangle{font.getStringWidth(freqString), labelHeight}
-                                       .withBottomY(height - 2)
-                                       .withRightX((int)xPos);
+            const auto labelRect =
+                juce::Rectangle{(int)juce::GlyphArrangement::getStringWidth(font, freqString),
+                                labelHeight}
+                    .withBottomY(height - 2)
+                    .withRightX((int)xPos);
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
             g.drawFittedText(freqString, labelRect, juce::Justification::bottom, 1);
@@ -245,9 +247,11 @@ void FilterAnalysis::paint(juce::Graphics &g)
             g.drawLine(line);
 
             const auto dbString = juce::String(dB) + " dB";
-            const auto labelRect = juce::Rectangle{font.getStringWidth(dbString), labelHeight}
-                                       .withBottomY((int)yPos)
-                                       .withRightX(width - 2);
+            const auto labelRect =
+                juce::Rectangle{(int)juce::GlyphArrangement::getStringWidth(font, dbString),
+                                labelHeight}
+                    .withBottomY((int)yPos)
+                    .withRightX(width - 2);
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
             g.drawFittedText(dbString, labelRect, juce::Justification::right, 1);

@@ -20,7 +20,10 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#if SURGE_INCLUDE_MELATONIN_INSPECTOR
 #include "melatonin_inspector/melatonin_inspector.h"
+#endif
+
 #include "SurgeGUIEditor.h"
 #include "resource.h"
 
@@ -4210,7 +4213,8 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
         {
             if (currentSkin->typeFaces.find(ff) != currentSkin->typeFaces.end())
             {
-                hs->setFont(juce::Font(currentSkin->typeFaces[ff]).withPointHeight(fs));
+                hs->setFont(
+                    juce::Font(juce::FontOptions(currentSkin->typeFaces[ff])).withPointHeight(fs));
                 hs->setFontSize(fs);
             }
         }

@@ -45,10 +45,10 @@ struct FontManager
 
     bool useOSLato{false};
 
-    juce::Font displayFont;
-    juce::Font patchNameFont;
-    juce::Font lfoTypeFont;
-    juce::Font aboutFont;
+    juce::Font displayFont{juce::FontOptions()};
+    juce::Font patchNameFont{juce::FontOptions()};
+    juce::Font lfoTypeFont{juce::FontOptions()};
+    juce::Font aboutFont{juce::FontOptions()};
     void setupFontMembers();
 
     juce::ReferenceCountedObjectPtr<juce::Typeface> latoRegularTypeface, latoBoldTypeface,

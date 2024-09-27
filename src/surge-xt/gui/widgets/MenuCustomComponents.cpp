@@ -82,11 +82,8 @@ void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 {
     auto standardMenuItemHeight = 25;
 
-    juce::Font font;
-
-    auto ft = getLookAndFeel().getPopupMenuFont();
-    ft = ft.withHeight(ft.getHeight() - 1);
-    font = ft;
+    auto font = getLookAndFeel().getPopupMenuFont();
+    font = font.withHeight(font.getHeight() - 1);
 
     if (isBoldened)
     {
@@ -99,7 +96,7 @@ void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 
     idealHeight =
         standardMenuItemHeight > 0 ? standardMenuItemHeight : std::round(font.getHeight() * 1.3f);
-    idealWidth = font.getStringWidth(label) + idealHeight * 2;
+    idealWidth = (int)juce::GlyphArrangement::getStringWidth(font, label) + idealHeight * 2;
     idealWidth += 20;
 }
 
