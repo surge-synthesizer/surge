@@ -342,13 +342,17 @@ void PatchSelector::paint(juce::Graphics &g)
     // patch name
     if (!isTypeaheadSearchOn)
     {
-        auto catsz = skin->fontManager->displayFont.getStringWidthFloat(category);
-        auto authsz = skin->fontManager->displayFont.getStringWidthFloat(author);
+        auto catsz =
+            juce::GlyphArrangement::getStringWidth(skin->fontManager->displayFont, category);
+        auto authsz =
+            juce::GlyphArrangement::getStringWidth(skin->fontManager->displayFont, author);
 
-        auto catszwith =
-            skin->fontManager->displayFont.getStringWidthFloat("Category: " + category);
-        auto authszwith = skin->fontManager->displayFont.getStringWidthFloat("By: " + author);
-        auto mainsz = skin->fontManager->patchNameFont.getStringWidthFloat(pname);
+        auto catszwith = juce::GlyphArrangement::getStringWidth(skin->fontManager->displayFont,
+                                                                "Category: " + category);
+        auto authszwith =
+            juce::GlyphArrangement::getStringWidth(skin->fontManager->displayFont, "By: " + author);
+        auto mainsz =
+            juce::GlyphArrangement::getStringWidth(skin->fontManager->patchNameFont, pname);
 
         bool useCatAndBy{false}, alignTop{false};
 
@@ -1564,7 +1568,7 @@ void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &cen
 
     while (std::getline(ss, to, '\n'))
     {
-        auto w = ft.getStringWidthFloat(to);
+        auto w = juce::GlyphArrangement::getStringWidth(ft, to);
 
         // in case of an empty line, we still need to count it as an extra row
         // so bump it up a bit so that the rows calculation ceils to 1

@@ -865,14 +865,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
                     g.setFont(primaryFont);
                     txt = fmt::format("{:d}", int(t));
-                    sw = primaryFont.getStringWidthFloat(txt);
+                    sw = juce::GlyphArrangement::getStringWidth(primaryFont, txt);
                 }
                 else
                 {
                     g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
                     g.setFont(secondaryFont);
                     txt = fmt::format("{:5.2f}", t);
-                    sw = secondaryFont.getStringWidthFloat(txt);
+                    sw = juce::GlyphArrangement::getStringWidth(secondaryFont, txt);
                 }
 
                 g.drawText(txt, px - (sw / 2), haxisArea.getY() + 2, sw, yofs,
