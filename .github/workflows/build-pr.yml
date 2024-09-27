@@ -102,5 +102,5 @@ jobs:
           username: ${{ github.actor }}
           token: ${{ secrets.GITHUB_TOKEN }}
           cmakeArgs: -DCMAKE_BUILD_TYPE=Debug -GNinja
-          target: surge-xt_Standalone
+          target: surge-xt_Standalone surge-fx_Standalone
 
