@@ -46,7 +46,7 @@ struct Picker : public juce::Component
         g.setColour(edge);
         g.drawRoundedRectangle(bounds, 5, 1);
         g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
-        g.setFont(28);
+        g.setFont(juce::FontOptions(28));
         g.drawText(fx_type_names[editor->processor.getEffectType()], bounds.reduced(8, 3),
                    juce::Justification::centred);
 
@@ -237,7 +237,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     }
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
-    fxNameLabel->setFont(28);
+    fxNameLabel->setFont(juce::FontOptions(28));
     fxNameLabel->setColour(juce::Label::textColourId, juce::Colours::black);
     fxNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisibleRecordOrder(fxNameLabel.get());
@@ -425,7 +425,7 @@ void SurgefxAudioProcessorEditor::resized()
         fxParamDisplay[i].setBounds(dispPos);
     }
 
-    fxNameLabel->setFont(28);
+    fxNameLabel->setFont(juce::FontOptions(28));
     fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
 }
 
@@ -704,7 +704,7 @@ struct SurgefxAudioProcessorEditor::PromptOverlay : juce::Component, juce::TextE
     {
         g.fillAll(juce::Colours::black.withAlpha(0.9f));
         g.setColour(juce::Colours::white);
-        g.setFont(28);
+        g.setFont(juce::FontOptions(28));
         g.drawMultiLineText(prompt, 0, 50, getWidth(), juce::Justification::centred);
     }
 
@@ -886,13 +886,13 @@ void SurgefxAudioProcessorEditor::idle()
         priorValid = processor.m_audioValid;
         if (!processor.m_audioValid)
         {
-            fxNameLabel->setFont(18);
+            fxNameLabel->setFont(juce::FontOptions(18));
             fxNameLabel->setText(processor.m_audioValidMessage,
                                  juce::NotificationType::dontSendNotification);
         }
         else
         {
-            fxNameLabel->setFont(28);
+            fxNameLabel->setFont(juce::FontOptions(28));
             fxNameLabel->setText("Surge XT Effects", juce::NotificationType::dontSendNotification);
         }
     }
