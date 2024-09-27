@@ -87,7 +87,7 @@ jobs:
           ctest -j 4 || ctest --rerun-failed --output-on-failure
 
   build_plugin_lindoc:
-    name: PR - U18 Docker
+    name: PR - U20 Docker
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -98,6 +98,7 @@ jobs:
       - name: Build in Docker
         uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
         with:
+          image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu20_gcc11:main
           username: ${{ github.actor }}
           token: ${{ secrets.GITHUB_TOKEN }}
           cmakeArgs: -DCMAKE_BUILD_TYPE=Debug -GNinja
