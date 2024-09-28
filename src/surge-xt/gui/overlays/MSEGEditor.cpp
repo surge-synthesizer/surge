@@ -858,21 +858,21 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             if (!(c & TickDrawStyle::kNoLabel))
             {
 
-                auto sw = 0.f;
+                int sw = 0;
 
                 if (fmod(t, 1.f) == 0.f)
                 {
                     g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
                     g.setFont(primaryFont);
                     txt = fmt::format("{:d}", int(t));
-                    sw = juce::GlyphArrangement::getStringWidth(primaryFont, txt);
+                    sw = juce::GlyphArrangement::getStringWidthInt(primaryFont, txt);
                 }
                 else
                 {
                     g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
                     g.setFont(secondaryFont);
                     txt = fmt::format("{:5.2f}", t);
-                    sw = juce::GlyphArrangement::getStringWidth(secondaryFont, txt);
+                    sw = juce::GlyphArrangement::getStringWidthInt(secondaryFont, txt);
                 }
 
                 g.drawText(txt, px - (sw / 2), haxisArea.getY() + 2, sw, yofs,
