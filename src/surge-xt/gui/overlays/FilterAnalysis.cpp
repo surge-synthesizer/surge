@@ -220,7 +220,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
             const auto freqString =
                 juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
             const auto labelRect =
-                juce::Rectangle{(int)juce::GlyphArrangement::getStringWidth(font, freqString),
+                juce::Rectangle{juce::GlyphArrangement::getStringWidthInt(font, freqString),
                                 labelHeight}
                     .withBottomY(height - 2)
                     .withRightX((int)xPos);
@@ -248,7 +248,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
             const auto dbString = juce::String(dB) + " dB";
             const auto labelRect =
-                juce::Rectangle{(int)juce::GlyphArrangement::getStringWidth(font, dbString),
+                juce::Rectangle{juce::GlyphArrangement::getStringWidthInt(font, dbString),
                                 labelHeight}
                     .withBottomY((int)yPos)
                     .withRightX(width - 2);

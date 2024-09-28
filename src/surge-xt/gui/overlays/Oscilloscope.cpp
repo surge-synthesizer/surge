@@ -1499,7 +1499,7 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
                 juce::String(over1000 ? freq / 1000.f : freq) + (over1000 ? "k" : "");
             // Label will go past the end of the scopeRect.
             const auto labelRect =
-                juce::Rectangle{(int)juce::GlyphArrangement::getStringWidth(font, freqString),
+                juce::Rectangle{juce::GlyphArrangement::getStringWidthInt(font, freqString),
                                 labelHeight}
                     .withCentre(juce::Point<int>(xPos, height + 10));
 
@@ -1543,7 +1543,7 @@ void Oscilloscope::Background::paintSpectrumBackground(juce::Graphics &g)
 
             // Label will go past the end of the scopeRect.
             const auto labelRect =
-                juce::Rectangle{(int)juce::GlyphArrangement::getStringWidth(font, dbString),
+                juce::Rectangle{juce::GlyphArrangement::getStringWidthInt(font, dbString),
                                 labelHeight}
                     .withBottomY((int)(yPos + (labelHeight / 2)) + 1)
                     .withRightX(width + 32);
@@ -1657,7 +1657,7 @@ void Oscilloscope::Background::paintWaveformBackground(juce::Graphics &g)
             }
 
             // Label will go past the end of the scopeRect.
-            auto labelWidth = (int)juce::GlyphArrangement::getStringWidth(font, timeString);
+            auto labelWidth = juce::GlyphArrangement::getStringWidthInt(font, timeString);
             auto labelRect = juce::Rectangle{labelWidth, labelHeight}.withCentre(
                 juce::Point<int>(xPos, height + 10));
             auto justify = juce::Justification::bottom;
