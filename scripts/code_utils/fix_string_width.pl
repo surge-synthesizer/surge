@@ -26,7 +26,8 @@ sub findfiles
             if (m/getStringWidth/)
             {
                 print;
-                s/([^\s\{]+).getStringWidthFloat\(/juce::GlyphArrangement::getStringWidth\($1, /;
+                # s/([^\s\{]+).getStringWidthFloat\(/juce::GlyphArrangement::getStringWidth\($1, /;
+                s/\(int\)juce::GlyphArrangement::getStringWidth/juce::GlyphArrangement::getStringWidthInt/;
                 print;
                 #die;
             }

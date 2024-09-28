@@ -1553,8 +1553,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     std::string txt = fmt::format("X: {:.{}f}", pxt(cx), prec),
                                 txt2 = fmt::format("Y: {:.{}f}", val, prec);
 
-                    int sw1 = (int)juce::GlyphArrangement::getStringWidth(g.getCurrentFont(), txt),
-                        sw2 = (int)juce::GlyphArrangement::getStringWidth(g.getCurrentFont(), txt2);
+                    int sw1 = juce::GlyphArrangement::getStringWidthInt(g.getCurrentFont(), txt),
+                        sw2 = juce::GlyphArrangement::getStringWidthInt(g.getCurrentFont(), txt2);
 
                     float dragX = r.getRight(), dragY = r.getBottom();
                     float dragW = 6 + std::max(sw1, sw2), dragH = 22;
