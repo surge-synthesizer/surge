@@ -315,9 +315,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
     if (usesWT)
     {
-        // It's a bit unsatisfactory to put this here but we don't really get notified
-        // once the wavetable change is done other than through repaint
-        if (oscdata->wt.current_id != lastWavetableId || forceWTRepaint) // more unsatisfactory!)
+        if (oscdata->wt.current_id != lastWavetableId || forceWTRepaint)
         {
             if (forceWTRepaint)
             {
@@ -525,6 +523,7 @@ void OscillatorWaveformDisplay::repaintBasedOnOscMuteState()
 
     if (oscInvalid)
     {
+        forceWTRepaint = true;
         repaint();
     }
 }
@@ -1441,14 +1440,10 @@ struct WaveTable3DEditor : public juce::Component,
         auto osc = parent->setupOscillator();
         osc->init(0, true, false);
 
-        float opacity = 1;
-
+        float opacity = 0.666;
         float opacityMultiplier = parent->isMuted ? 0.5f : 1.f;
 
-        /*
-            Draw the base layer
-        */
-
+        // draw the base layer
         if (paramsHaveChanged() || hasResized)
         {
             hasResized = false;
@@ -1461,58 +1456,44 @@ struct WaveTable3DEditor : public juce::Component,
 
             for (int i = 0; i < rendered_frames; i++)
             {
-                // on lower frames lower the opacity, as we will add the actual frames on top of the
-                // base shape for emphasis
-
-                if (wt_nframes <= 10 && wt_nframes > 1)
-                {
-                    opacity = 0.5;
-                }
-
                 float proc = (float)i / (float)rendered_frames;
 
-                drawWaveform(g, i, rendered_frames,
-                             skin->getColor(Colors::Osc::Display::WaveCurrent3D),
-                             (0.9 - 0.7 * proc) * opacityMultiplier * 0.5, 1, osc, 1.f, true);
+                drawWaveform(
+                    g, i, rendered_frames, skin->getColor(Colors::Osc::Display::WaveCurrent3D),
+                    (0.9 - 0.7 * proc) * opacity * opacityMultiplier * 0.5, 1, osc, 1.f, true);
             }
 
-            // On lower frames, draw the actual frames on top of the base shape
-
+            // on lower frames, draw the actual frames on top of the base shape
             if (wt_nframes <= 10 && wt_nframes > 1)
             {
-                opacity = 0.7;
+                opacity = 0.5;
+
                 for (int i = 0; i < wt_nframes; i++)
                 {
                     float proc = (float)i / (float)rendered_frames;
                     int fr = (float)i / ((float)wt_nframes - 1) * ((float)rendered_frames - 1.f);
+
                     drawWaveform(g, fr, rendered_frames,
                                  skin->getColor(Colors::Osc::Display::WaveCurrent3D),
-                                 (0.9 - 0.7 * proc) * opacityMultiplier * 0.6, 1.0, osc, 1.f, true);
+                                 (0.9 - 0.7 * proc) * opacity * opacityMultiplier * 0.5, 1.0, osc,
+                                 1.f, true);
                 }
             }
 
-            /*
-            Draw the wavetable position (morph)
-            Do not use cache for a smoother motion
-            */
-
+            // draw the wavetable position (morph)
+            // do not use cache for a smoother motion
             float pos = morphValue;
             int position = pos * (128 - 1);
+
             drawWaveform(g, position, 128, skin->getColor(Colors::Osc::Display::WaveCurrent3D),
                          0.9 * opacityMultiplier, 1.5, osc, 1.f, false);
         }
 
-        // draw backingimage to graphics context
+        // draw backing image to graphics context
         g.drawImage(*backingImage, getLocalBounds().toFloat(),
                     juce::RectanglePlacement::fillDestination);
-
-        // osc->~Oscillator();
-        // osc = nullptr;
     }
 
-    /*
-        draws the waveform
-    */
     void drawWaveform(juce::Graphics &g, int i, int renderedFrames, juce::Colour color,
                       float opacity, float thick, ::Oscillator *osc, float scale, bool useCache)
     {

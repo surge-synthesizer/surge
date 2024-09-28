@@ -2607,7 +2607,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         auto dt = p->deform_type;
 
                         contextMenu.addItem(
-                            Surge::GUI::toOSCase("Legacy Lag, Smooth and Table Interp"), true,
+                            Surge::GUI::toOSCase("Legacy Mode"), true,
                             dt == (int)WavetableOscillator::FeatureDeform::XT_134_EARLIER,
                             [this, p, dt]() {
                                 undoManager()->pushParameterChange(p->id, p, p->val);
