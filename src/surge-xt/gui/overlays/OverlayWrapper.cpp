@@ -280,6 +280,15 @@ struct TearOutWindow : public juce::DocumentWindow, public Surge::GUI::SkinConsu
         repaint();
     }
 
+    WindowControlKind findControlAtPoint(juce::Point<float> point) const override
+    {
+        // See issue 7805 for this temporary fix
+        auto res = DocumentWindow::findControlAtPoint(point);
+        if (res == WindowControlKind::minimise || res == WindowControlKind::close)
+            return WindowControlKind::client;
+        return res;
+    }
+
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
         auto oc = dynamic_cast<Surge::Overlays::OverlayComponent *>(wrapping->primaryChild.get());
