@@ -27,6 +27,7 @@
 #include "SurgeJUCELookAndFeel.h"
 #include <fmt/format.h>
 #include <StringOps.h>
+#include "RuntimeFont.h"
 
 namespace Surge
 {
@@ -96,7 +97,7 @@ void MenuTitleHelpComponent::getIdealSize(int &idealWidth, int &idealHeight)
 
     idealHeight =
         standardMenuItemHeight > 0 ? standardMenuItemHeight : std::round(font.getHeight() * 1.3f);
-    idealWidth = juce::GlyphArrangement::getStringWidthInt(font, label) + idealHeight * 2;
+    idealWidth = SST_STRING_WIDTH_INT(font, label) + idealHeight * 2;
     idealWidth += 20;
 }
 

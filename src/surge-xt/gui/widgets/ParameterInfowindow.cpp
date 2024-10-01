@@ -131,9 +131,9 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
 
     if (name.empty())
     {
-        auto sl1 = juce::GlyphArrangement::getStringWidthInt(font, display);
-        auto sl2 = juce::GlyphArrangement::getStringWidthInt(font, displayAlt);
-        auto pad = juce::GlyphArrangement::getStringWidthInt(font, "  ");
+        auto sl1 = SST_STRING_WIDTH_INT(font, display);
+        auto sl2 = SST_STRING_WIDTH_INT(font, displayAlt);
+        auto pad = SST_STRING_WIDTH_INT(font, "  ");
         desiredWidth = std::max(sl1 + sl2 + pad, desiredWidth);
     }
     else
@@ -144,17 +144,17 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
         {
             lheight = font.getHeight() * 3 + 11;
             // row 2
-            auto r1l = juce::GlyphArrangement::getStringWidthInt(font, name);
-            auto r2l = juce::GlyphArrangement::getStringWidthInt(
+            auto r1l = SST_STRING_WIDTH_INT(font, name);
+            auto r2l = SST_STRING_WIDTH_INT(
                 font, mdiws.dvalminus + "  " + mdiws.val + "  " + mdiws.dvalplus);
-            auto r3l = juce::GlyphArrangement::getStringWidthInt(font, mdiws.valminus + "  " +
+            auto r3l = SST_STRING_WIDTH_INT(font, mdiws.valminus + "  " +
                                                                            mdiws.valplus);
             desiredWidth = std::max(std::max(std::max(r1l, r2l), r3l) + 8, desiredWidth);
         }
         else
         {
-            auto sln = juce::GlyphArrangement::getStringWidthInt(font, name);
-            auto sl1 = juce::GlyphArrangement::getStringWidthInt(font, display);
+            auto sln = SST_STRING_WIDTH_INT(font, name);
+            auto sl1 = SST_STRING_WIDTH_INT(font, display);
             desiredWidth = std::max(std::max(sln, sl1) + 8, desiredWidth);
             lheight = font.getHeight() * 2 + 9;
         }
