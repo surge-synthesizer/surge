@@ -328,17 +328,13 @@ void PatchSelector::paint(juce::Graphics &g)
     // patch name
     if (!isTypeaheadSearchOn)
     {
-        auto catsz =
-            SST_STRING_WIDTH_FLOAT(skin->fontManager->displayFont, category);
-        auto authsz =
-            SST_STRING_WIDTH_FLOAT(skin->fontManager->displayFont, author);
+        auto catsz = SST_STRING_WIDTH_FLOAT(skin->fontManager->displayFont, category);
+        auto authsz = SST_STRING_WIDTH_FLOAT(skin->fontManager->displayFont, author);
 
-        auto catszwith = SST_STRING_WIDTH_FLOAT(skin->fontManager->displayFont,
-                                                                "Category: " + category);
-        auto authszwith =
-            SST_STRING_WIDTH_FLOAT(skin->fontManager->displayFont, "By: " + author);
-        auto mainsz =
-            SST_STRING_WIDTH_FLOAT(skin->fontManager->patchNameFont, pname);
+        auto catszwith =
+            SST_STRING_WIDTH_FLOAT(skin->fontManager->displayFont, "Category: " + category);
+        auto authszwith = SST_STRING_WIDTH_FLOAT(skin->fontManager->displayFont, "By: " + author);
+        auto mainsz = SST_STRING_WIDTH_FLOAT(skin->fontManager->patchNameFont, pname);
 
         bool useCatAndBy{false}, alignTop{false};
 

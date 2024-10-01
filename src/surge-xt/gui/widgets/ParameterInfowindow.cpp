@@ -145,10 +145,9 @@ void ParameterInfowindow::setBoundsToAccompany(const juce::Rectangle<int> &contr
             lheight = font.getHeight() * 3 + 11;
             // row 2
             auto r1l = SST_STRING_WIDTH_INT(font, name);
-            auto r2l = SST_STRING_WIDTH_INT(
-                font, mdiws.dvalminus + "  " + mdiws.val + "  " + mdiws.dvalplus);
-            auto r3l = SST_STRING_WIDTH_INT(font, mdiws.valminus + "  " +
-                                                                           mdiws.valplus);
+            auto r2l = SST_STRING_WIDTH_INT(font, mdiws.dvalminus + "  " + mdiws.val + "  " +
+                                                      mdiws.dvalplus);
+            auto r3l = SST_STRING_WIDTH_INT(font, mdiws.valminus + "  " + mdiws.valplus);
             desiredWidth = std::max(std::max(std::max(r1l, r2l), r3l) + 8, desiredWidth);
         }
         else
