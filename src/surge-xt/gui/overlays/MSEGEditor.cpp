@@ -865,14 +865,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
                     g.setFont(primaryFont);
                     txt = fmt::format("{:d}", int(t));
-                    sw = juce::GlyphArrangement::getStringWidthInt(primaryFont, txt);
+                    sw = SST_STRING_WIDTH_INT(primaryFont, txt);
                 }
                 else
                 {
                     g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
                     g.setFont(secondaryFont);
                     txt = fmt::format("{:5.2f}", t);
-                    sw = juce::GlyphArrangement::getStringWidthInt(secondaryFont, txt);
+                    sw = SST_STRING_WIDTH_INT(secondaryFont, txt);
                 }
 
                 g.drawText(txt, px - (sw / 2), haxisArea.getY() + 2, sw, yofs,
@@ -1553,8 +1553,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     std::string txt = fmt::format("X: {:.{}f}", pxt(cx), prec),
                                 txt2 = fmt::format("Y: {:.{}f}", val, prec);
 
-                    int sw1 = juce::GlyphArrangement::getStringWidthInt(g.getCurrentFont(), txt),
-                        sw2 = juce::GlyphArrangement::getStringWidthInt(g.getCurrentFont(), txt2);
+                    int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt),
+                        sw2 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt2);
 
                     float dragX = r.getRight(), dragY = r.getBottom();
                     float dragW = 6 + std::max(sw1, sw2), dragH = 22;

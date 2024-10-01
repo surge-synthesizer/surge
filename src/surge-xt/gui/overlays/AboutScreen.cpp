@@ -302,7 +302,7 @@ void AboutScreen::resized()
                 lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
                 lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
 
-                auto strw = juce::GlyphArrangement::getStringWidthInt(font, std::get<1>(l)) + 8;
+                auto strw = SST_STRING_WIDTH_INT(font, std::get<1>(l)) + 8;
                 lb->setBounds(margin + colW, h0, strw, lHeight);
 
                 addAndMakeVisible(*lb);
@@ -344,7 +344,7 @@ void AboutScreen::resized()
                 lb->setColour(juce::Label::textColourId, skin->getColor(Colors::AboutPage::Link));
                 lb->setText(std::get<1>(l), juce::NotificationType::dontSendNotification);
 
-                auto strw = juce::GlyphArrangement::getStringWidthInt(font, std::get<1>(l)) + 8;
+                auto strw = SST_STRING_WIDTH_INT(font, std::get<1>(l)) + 8;
                 lb->setBounds(rightSide + colW, h1, strw, lHeight);
 
                 addAndMakeVisible(*lb);

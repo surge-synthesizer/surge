@@ -146,7 +146,7 @@ void SurgeJUCELookAndFeel::drawLabel(Graphics &graphics, Label &label)
 int SurgeJUCELookAndFeel::getTabButtonBestWidth(TabBarButton &b, int d)
 {
     auto f = skin->getFont(Fonts::Widgets::TabButtonFont);
-    auto r = juce::GlyphArrangement::getStringWidthInt(f, b.getButtonText()) + 20;
+    auto r = SST_STRING_WIDTH_INT(f, b.getButtonText()) + 20;
     return r;
 }
 
@@ -238,8 +238,8 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Gr
         fontVersion = fontSurge;
     }
 
-    auto sw = juce::GlyphArrangement::getStringWidthInt(fontSurge, surgeLabel);
-    auto vw = juce::GlyphArrangement::getStringWidthInt(fontVersion, surgeVersion);
+    auto sw = SST_STRING_WIDTH_INT(fontSurge, surgeLabel);
+    auto vw = SST_STRING_WIDTH_INT(fontVersion, surgeVersion);
 
     auto icon = associatedBitmapStore->getImage(IDB_SURGE_ICON);
 
