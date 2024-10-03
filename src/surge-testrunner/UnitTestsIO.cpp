@@ -730,3 +730,57 @@ TEST_CASE("Mono Voice Priority Streams", "[io]")
         }
     }
 }
+
+TEST_CASE("XML Direct", "[io]")
+{
+    // This is not a public API but we want to make sure it
+    // doesn't nuke surge with garbage
+    SECTION("Nothin")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string blank{};
+        surge->storage.getPatch().load_xml(blank.c_str(), blank.size(), false);
+    }
+
+    SECTION("Not XML")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"This Is Not A Standard String, says Renee"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+    }
+
+    SECTION("Not XML")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"This Is Not A Standard String, says Renee"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+    }
+
+    SECTION("Funny root node")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<funny/>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+    }
+
+    SECTION("Invalid XML")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<funny></business>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+    }
+
+    SECTION("Empty Patch")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch/>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+    }
+
+    SECTION("Empty Parameters")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        std::string test{"<patch><parameters/></patch>"};
+        surge->storage.getPatch().load_xml(test.c_str(), test.size(), false);
+    }
+}

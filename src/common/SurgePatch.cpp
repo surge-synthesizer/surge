@@ -1516,7 +1516,10 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 
     TiXmlElement *parameters = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("parameters"));
-    assert(parameters);
+    if (!parameters)
+    {
+        return;
+    }
     int n = param_ptr.size();
 
     // delete volume (below streaming version 17) & fx_bypass if it's a preset
