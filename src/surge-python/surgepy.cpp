@@ -645,7 +645,7 @@ class SurgeSynthesizerWithPythonExtensions : public SurgeSynthesizer
             throw std::invalid_argument((std::string("File not found: ") + s).c_str());
         }
 
-        bool result = loadPatchByPath(s.c_str(), -1, path.filename().c_str());
+        bool result = loadPatchByPath(s.c_str(), -1, path.filename().u8string().c_str());
 
         // update tempo if we want to change it on patch load
         if (storage.unstreamedTempo > -1.f)
