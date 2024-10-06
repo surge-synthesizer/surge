@@ -99,7 +99,9 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
     }
 
     shape *= ((float)oscdata->wt.n_tables - 1.f + nointerp) * 0.99999f;
-    tableipol = deformType == XT_134_EARLIER ? modff(shape, &intpart) : shape;
+    tableipol = modff(shape, &intpart);
+    if (deformType != XT_134_EARLIER)
+        tableipol = shape;
     tableid = limit_range((int)intpart, 0, std::max((int)oscdata->wt.n_tables - 2 + nointerp, 0));
     last_tableipol = tableipol;
     last_tableid = tableid;
