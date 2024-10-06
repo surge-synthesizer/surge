@@ -20,6 +20,13 @@ jobs:
             cmakeOpt: DEBUG
             runTests: false
 
+          - name: "windows msvc surgepy"
+            os: windows-latest
+            target: surgepy
+            cmakeConfig: -A x64 -DSURGE_BUILD_PYTHON_BINDINGS=TRUE
+            cmakeOpt: DEBUG
+            runTests: false
+
           - name: "windows clang"
             os: windows-latest
             target: surge-xt_Standalone
@@ -31,6 +38,13 @@ jobs:
             os: ubuntu-latest
             target: surge-xt_Standalone
             cmakeConfig: -GNinja
+            cmakeOpt: DEBUG
+            runTests: false
+
+          - name: "ubuntu latest surgepy"
+            os: ubuntu-latest
+            target: surgepy
+            cmakeConfig: -GNinja -DSURGE_BUILD_PYTHON_BINDINGS=TRUE
             cmakeOpt: DEBUG
             runTests: false
 
