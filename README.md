@@ -140,7 +140,7 @@ how (this shows the result on Mac, but Windows and Linux are similar).
 First, configure a build with Python bindings activated:
 
 ```
-cmake -Bignore/bpy -DSURGE_BUILD_PYTHON_BINDINGS -DCMAKE_BUILD_TYPE=Release
+cmake -Bignore/bpy -DSURGE_BUILD_PYTHON_BINDINGS=ON -DCMAKE_BUILD_TYPE=Release
 ```
 
 Note the directory `ignore/bpy` could be anything you want. The `ignore`
@@ -159,6 +159,14 @@ which should result in the Python .dll being present:
 ignore/bpy/src/surge-python/surgepy.cpython-311-darwin.so
 ```
 
+on Windows, look for the `.pyd` file instead:
+
+```bash
+ls ignore/bpy/src/surge-python/Debug/*pyd
+```
+
+and you should see a file like `surgepy.cp312-win_amd64.pyd`
+
 Now you can finally start Python to load that. Here is an example interactive
 session, but it will work similarly in the tool of your choosing:
 
@@ -173,6 +181,8 @@ Type "help", "copyright", "credits" or "license" for more information.
 '1.3.main.850bd53b'
 >>> quit()
 ```
+
+on Windows, run `sys.path.append("ignore/bpy/src/surge-python/Debug")` instead, as the path is slightly different.
 
 ## Building an Installer
 
