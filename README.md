@@ -159,7 +159,7 @@ which should result in the Python .dll being present:
 ignore/bpy/src/surge-python/surgepy.cpython-311-darwin.so
 ```
 
-on windows, look for the `.pyd` file instead:
+on Windows, look for the `.pyd` file instead:
 
 ```bash
 ls ignore/bpy/src/surge-python/Debug/*pyd
