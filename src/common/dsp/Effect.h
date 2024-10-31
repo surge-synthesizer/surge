@@ -23,6 +23,7 @@
 #ifndef SURGE_SRC_COMMON_DSP_EFFECT_H
 #define SURGE_SRC_COMMON_DSP_EFFECT_H
 
+#include "globals.h"
 #include "DSPUtils.h"
 #include "SurgeStorage.h"
 #include "lipol.h"

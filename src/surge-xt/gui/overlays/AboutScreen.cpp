@@ -171,6 +171,11 @@ void AboutScreen::populateData()
     std::string platform = "macOS";
 #elif WINDOWS
     std::string platform = "Windows";
+#if defined(_M_ARM64EC)
+    platform += " (arm64ec)";
+#elif defined(_M_ARM64)
+    platform += " (arm64)";
+#endif
 #elif LINUX
     std::string platform = "Linux";
 #else

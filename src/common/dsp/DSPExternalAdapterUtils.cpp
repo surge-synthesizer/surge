@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include "globals.h"
 #include "DSPExternalAdapterUtils.h"
 #include "sst/filters/FilterPlotter.h"
 
