@@ -77,6 +77,7 @@ class HysteresisProcessing
             M = _mm_set1_pd(0.0);
 #else
             M = 0.0;
+#endif
         };
 
         // check for instability
@@ -96,24 +97,23 @@ class HysteresisProcessing
         H_d_n1 = H_d;
 
         return M;
-#endif
-        }
+    }
 
-      private:
-        // runge-kutta solvers
-        template <typename Float> inline Float RK2Solver(Float H, Float H_d) noexcept
-        {
+  private:
+    // runge-kutta solvers
+    template <typename Float> inline Float RK2Solver(Float H, Float H_d) noexcept
+    {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
 #define F(a) _mm_set1_pd(a)
 #define M(a, b) _mm_mul_pd(a, b)
 #define A(a, b) _mm_add_pd(a, b)
-            const auto k1 = M(HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState), F(T));
+        const auto k1 = M(HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState), F(T));
 
-            const auto k2 =
-                M(HysteresisOps::hysteresisFunc(A(M_n1, M(k1, F(0.5))), M(A(H, H_n1), F(0.5)),
-                                                M(A(H_d, H_d_n1), F(0.5)), hpState),
-                  F(T));
-            return A(M_n1, k2);
+        const auto k2 =
+            M(HysteresisOps::hysteresisFunc(A(M_n1, M(k1, F(0.5))), M(A(H, H_n1), F(0.5)),
+                                            M(A(H_d, H_d_n1), F(0.5)), hpState),
+              F(T));
+        return A(M_n1, k2);
 #undef F
 #undef M
 #undef A
@@ -124,30 +124,27 @@ class HysteresisProcessing
                          T;
         return M_n1 + k2;
 #endif
-        }
+    }
 
-        template <typename Float> inline Float RK4Solver(Float H, Float H_d) noexcept
-        {
+    template <typename Float> inline Float RK4Solver(Float H, Float H_d) noexcept
+    {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
 #define F(a) _mm_set1_pd(a)
 #define M(a, b) _mm_mul_pd(a, b)
 #define A(a, b) _mm_add_pd(a, b)
-            const auto H_1_2 = M(A(H, H_n1), F(0.5));
-            const auto H_d_1_2 = M(A(H_d, H_d_n1), F(0.5));
+        const auto H_1_2 = M(A(H, H_n1), F(0.5));
+        const auto H_d_1_2 = M(A(H_d, H_d_n1), F(0.5));
 
-            const auto k1 = M(HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState), F(T));
-            const auto k2 =
-                M(HysteresisOps::hysteresisFunc(A(M_n1, M(k1, F(0.5))), H_1_2, H_d_1_2, hpState),
-                  F(T));
-            const auto k3 =
-                M(HysteresisOps::hysteresisFunc(A(M_n1, M(k2, F(0.5))), H_1_2, H_d_1_2, hpState),
-                  F(T));
-            const auto k4 = M(HysteresisOps::hysteresisFunc(A(M_n1, k3), H, H_d, hpState), F(T));
+        const auto k1 = M(HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState), F(T));
+        const auto k2 =
+            M(HysteresisOps::hysteresisFunc(A(M_n1, M(k1, F(0.5))), H_1_2, H_d_1_2, hpState), F(T));
+        const auto k3 =
+            M(HysteresisOps::hysteresisFunc(A(M_n1, M(k2, F(0.5))), H_1_2, H_d_1_2, hpState), F(T));
+        const auto k4 = M(HysteresisOps::hysteresisFunc(A(M_n1, k3), H, H_d, hpState), F(T));
 
-            const static auto oneSixth = F(1.0 / 6.0);
-            const static auto oneThird = F(1.0 / 3.0);
-            return A(M_n1,
-                     A(M(k1, oneSixth), A(M(k2, oneThird), A(M(k3, oneThird), M(k4, oneSixth)))));
+        const static auto oneSixth = F(1.0 / 6.0);
+        const static auto oneThird = F(1.0 / 3.0);
+        return A(M_n1, A(M(k1, oneSixth), A(M(k2, oneThird), A(M(k3, oneThird), M(k4, oneSixth)))));
 #undef F
 #undef M
 #undef A
@@ -166,34 +163,33 @@ class HysteresisProcessing
         constexpr double oneThird = 1.0 / 3.0;
         return M_n1 + k1 * oneSixth + k2 * oneThird + k3 * oneThird + k4 * oneSixth;
 #endif
-        }
+    }
 
-        // newton-raphson solvers
-        template <int nIterations, typename Float>
-        inline Float NRSolver(Float H, Float H_d) noexcept
-        {
+    // newton-raphson solvers
+    template <int nIterations, typename Float> inline Float NRSolver(Float H, Float H_d) noexcept
+    {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
 #define F(a) _mm_set1_pd(a)
 #define M(a, b) _mm_mul_pd(a, b)
 #define D(a, b) _mm_div_pd(a, b)
 #define A(a, b) _mm_add_pd(a, b)
 #define S(a, b) _mm_sub_pd(a, b)
-            auto _M = M_n1;
-            const auto last_dMdt = HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState);
+        auto _M = M_n1;
+        const auto last_dMdt = HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState);
 
-            __m128d dMdt, dMdtPrime, deltaNR, num, den;
-            for (int n = 0; n < nIterations; ++n)
-            {
-                dMdt = HysteresisOps::hysteresisFunc(_M, H, H_d, hpState);
-                dMdtPrime = HysteresisOps::hysteresisFuncPrime(H_d, dMdt, hpState);
+        __m128d dMdt, dMdtPrime, deltaNR, num, den;
+        for (int n = 0; n < nIterations; ++n)
+        {
+            dMdt = HysteresisOps::hysteresisFunc(_M, H, H_d, hpState);
+            dMdtPrime = HysteresisOps::hysteresisFuncPrime(H_d, dMdt, hpState);
 
-                num = S(S(_M, M_n1), M(F(Talpha), A(dMdt, last_dMdt)));
-                den = S(F(1.0), M(F(Talpha), dMdtPrime));
-                deltaNR = D(num, den);
-                _M = S(_M, deltaNR);
-            }
+            num = S(S(_M, M_n1), M(F(Talpha), A(dMdt, last_dMdt)));
+            den = S(F(1.0), M(F(Talpha), dMdtPrime));
+            deltaNR = D(num, den);
+            _M = S(_M, deltaNR);
+        }
 
-            return _M;
+        return _M;
 #undef F
 #undef M
 #undef D
@@ -217,26 +213,26 @@ class HysteresisProcessing
 
         return M;
 #endif
-        }
+    }
 
-        // parameter values
-        double fs = 48000.0;
-        double T = 1.0 / fs;
-        double Talpha = T / 1.9;
-        double upperLim = 20.0;
+    // parameter values
+    double fs = 48000.0;
+    double T = 1.0 / fs;
+    double Talpha = T / 1.9;
+    double upperLim = 20.0;
 
-        // state variables
+    // state variables
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-        __m128d M_n1;
-        __m128d H_n1;
-        __m128d H_d_n1;
+    __m128d M_n1;
+    __m128d H_n1;
+    __m128d H_d_n1;
 #else
     double M_n1 = 0.0;
     double H_n1 = 0.0;
     double H_d_n1 = 0.0;
 #endif
 
-        HysteresisOps::HysteresisState hpState;
-    };
+    HysteresisOps::HysteresisState hpState;
+};
 
 #endif
