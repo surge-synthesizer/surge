@@ -161,9 +161,9 @@ endif()
 
 if(MSVC)
   if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec")
-    message(STATUS "Skipping warning as error (-Wx) on arm64ec for now")
+    message(STATUS "Skipping warning as error (-WX) on arm64ec for now")
   else()
-    add_compile_options(-Wx)
+    add_compile_options(-WX)
   endif()
 
   add_compile_options(
