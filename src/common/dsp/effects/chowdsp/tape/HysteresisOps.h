@@ -26,7 +26,11 @@
 #include "globals.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
 
+#if defined(_M_ARM64EC)
+#define CHOWTAPE_HYSTERESIS_USE_SIMD 0
+#else
 #define CHOWTAPE_HYSTERESIS_USE_SIMD 1
+#endif
 
 namespace HysteresisOps
 {

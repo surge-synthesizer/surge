@@ -32,23 +32,8 @@
 // if you hit this on msvc and pass the above, you probably need /Zc:__cplusplus
 static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your build");
 
-#if MAC
-
-#if defined(__x86_64__)
-#else
-#define ARM_NEON 1
-#endif
-
-#endif
-
-#if LINUX
-#if defined(__aarch64__) || defined(__arm__)
-#define ARM_NEON 1
-#endif
-#endif
-
-#if defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                   \
-    (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#if (defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                  \
+     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) //&& !defined(_M_ARM64EC)
 #include <emmintrin.h>
 #else
 // With the upgrade to simde 0.8.2 and subsequent conversations
@@ -58,6 +43,7 @@ static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your 
 // #if defined(__arm__) || defined(__aarch64__) || defined(__riscv)
 //
 // and just always include this in the else side
+#include <cmath>
 #define SIMDE_ENABLE_NATIVE_ALIASES
 #include "simde/x86/sse2.h"
 #endif

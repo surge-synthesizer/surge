@@ -336,6 +336,10 @@ elseif(WIN32)
     UNICODE
     _UNICODE
   )
+
+  message(STATUS "Adding simde interface library on windows")
+  target_link_libraries(${PROJECT_NAME} PUBLIC surge::simde)
+
 endif()
 
 option(SURGE_RELIABLE_VERSION_INFO "Update version info on every build (off: generate only at configuration time)" ON)

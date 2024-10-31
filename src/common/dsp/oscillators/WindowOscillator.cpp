@@ -38,14 +38,7 @@ inline bool _BitScanReverse(unsigned long *result, unsigned long bits)
 }
 } // anonymous namespace
 #endif
-int Float2Int(float x)
-{
-#ifdef ARM_NEON
-    return int(x + 0.5f);
-#else
-    return _mm_cvt_ss2si(_mm_load_ss(&x));
-#endif
-}
+int Float2Int(float x) { return int(x + 0.5f); }
 WindowOscillator::WindowOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                    pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)
@@ -188,11 +181,7 @@ void WindowOscillator::init_default_values()
 inline unsigned int BigMULr16(unsigned int a, unsigned int b)
 {
     // 64-bit unsigned multiply with right shift by 16 bits
-#ifdef _MSC_VER
-    const auto c{__emulu(a, b)};
-#else
     const auto c{std::uint64_t{a} * std::uint64_t{b}};
-#endif
     return c >> 16u;
 }
 

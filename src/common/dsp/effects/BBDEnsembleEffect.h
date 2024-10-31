@@ -22,6 +22,9 @@
 
 #ifndef SURGE_SRC_COMMON_DSP_EFFECTS_BBDENSEMBLEEFFECT_H
 #define SURGE_SRC_COMMON_DSP_EFFECTS_BBDENSEMBLEEFFECT_H
+
+#if !defined(_M_ARM64EC)
+
 #include "Effect.h"
 #include "BiquadFilter.h"
 #include "DSPUtils.h"
@@ -107,5 +110,7 @@ class BBDEnsembleEffect : public Effect
     BiquadFilter reconstrFilter[2];
     BiquadFilter sincInputFilter;
 };
+
+#endif
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_BBDENSEMBLEEFFECT_H
