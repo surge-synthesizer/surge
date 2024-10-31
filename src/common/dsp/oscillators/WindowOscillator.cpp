@@ -38,10 +38,7 @@ inline bool _BitScanReverse(unsigned long *result, unsigned long bits)
 }
 } // anonymous namespace
 #endif
-int Float2Int(float x)
-{
-    return int(x + 0.5f);
-}
+int Float2Int(float x) { return int(x + 0.5f); }
 WindowOscillator::WindowOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                    pdata *localcopy)
     : Oscillator(storage, oscdata, localcopy), lp(storage), hp(storage)

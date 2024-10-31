@@ -32,12 +32,12 @@
 // if you hit this on msvc and pass the above, you probably need /Zc:__cplusplus
 static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your build");
 
-#if (defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                   \
-    (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) //&& !defined(_M_ARM64EC)
+#if (defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                  \
+     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) //&& !defined(_M_ARM64EC)
 #include <intrin.h>
 #else
 // With the upgrade to simde 0.8.2 and subsequent conversations
-// with simde maintainers, this include should work for every 
+// with simde maintainers, this include should work for every
 // non-intel platform, so remove the prior condition
 //
 // #if defined(__arm__) || defined(__aarch64__) || defined(__riscv)
