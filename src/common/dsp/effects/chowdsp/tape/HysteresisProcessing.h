@@ -77,7 +77,6 @@ class HysteresisProcessing
             M = _mm_set1_pd(0.0);
 #else
             M = 0.0;
-#endif
         };
 
         // check for instability
@@ -97,6 +96,7 @@ class HysteresisProcessing
         H_d_n1 = H_d;
 
         return M;
+#endif
     }
 
   private:

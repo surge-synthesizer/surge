@@ -196,7 +196,7 @@ class BBDNonlin
 
     void setDrive(float newDrive) { drive = newDrive; }
 
-    inline __m128 processSample(__m128 Vg) noexcept
+    inline __m128 processSample(__m128 Vg) noexcept 
     {
         Vin->setVoltage(Vg);
         Is->setCurrent(getCurrent(Vg, Vp));
@@ -205,7 +205,12 @@ class BBDNonlin
         S2.incident(D1.reflected());
         Vp = Cpk->voltage();
 
-        return vAdd(vMul(Vp, vLoad1(drive)), vMul(Vg, vLoad1(1.0f - drive)));
+        auto vd = vLoad1(drive);
+        auto vdm = vLoad1(1.0f - drive);
+        auto a1 = vMul(Vp, vd);
+        auto a2 = vMul(Vg,vdm);
+        auto res = vAdd(a1, a2);
+        return res;
     }
 
   private:
