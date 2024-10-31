@@ -34,7 +34,7 @@ static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your 
 
 #if (defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                  \
      (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) //&& !defined(_M_ARM64EC)
-#include <intrin.h>
+#include <emmintrin.h>
 #else
 // With the upgrade to simde 0.8.2 and subsequent conversations
 // with simde maintainers, this include should work for every
