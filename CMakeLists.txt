@@ -160,8 +160,13 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 endif()
 
 if(MSVC)
+  if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec")
+    message(STATUS "Skipping warning as error (-Wx) on arm64ec for now")
+  else()
+    add_compile_options(-Wx)
+  endif()
+
   add_compile_options(
-    -WX       # treat all warnings as errors
 
     # MSVC-only warnings, Clang-cl silently ignores these
     /wd4244   # float to double

@@ -351,7 +351,8 @@ void WavetableOscillator::convolute(int voice, bool FM, bool stereo)
 
     unsigned int m = ((ipos >> 16) & 0xff) * (FIRipol_N << 1);
     unsigned int lipolui16 = (ipos & 0xffff);
-    __m128 lipol128 = _mm_cvtsi32_ss(lipol128, lipolui16);
+    __m128 lipol128 = _mm_setzero_ps();
+    lipol128 = _mm_cvtsi32_ss(lipol128, lipolui16);
     lipol128 = _mm_shuffle_ps(lipol128, lipol128, _MM_SHUFFLE(0, 0, 0, 0));
 
     float g, gR;
