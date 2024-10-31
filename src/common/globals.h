@@ -33,8 +33,12 @@
 static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your build");
 
 #if (defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                  \
-     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) //&& !defined(_M_ARM64EC)
+     (defined(_M_IX86_FP) && _M_IX86_FP >= 2)) || defined(_M_ARM64EC)
 #include <emmintrin.h>
+
+#include <cmath>
+#include "simde/x86/sse2.h"
+
 #else
 // With the upgrade to simde 0.8.2 and subsequent conversations
 // with simde maintainers, this include should work for every
@@ -44,9 +48,22 @@ static_assert(__cplusplus == 201703L, "Surge requires C++17; please update your 
 //
 // and just always include this in the else side
 #include <cmath>
+#ifndef SIMDE_SKIP_ENABLE_NATIVE_ALIASES
 #define SIMDE_ENABLE_NATIVE_ALIASES
+#endif
+
 #include "simde/x86/sse2.h"
 #endif
+
+#if (defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) ||                                  \
+(defined(_M_IX86_FP) && _M_IX86_FP >= 2))  // note this *doesn't* have ARM64EC
+#define SIMD_MM(x) _mm_##x
+#define SIMD_M128 __m128
+#else
+#define SIMD_MM(x) simde_mm_##x
+#define SIMD_M128 simde__m128
+#endif
+
 
 #if MAC || LINUX
 #include <strings.h>
