@@ -37,21 +37,21 @@
 
 struct SSEComplex
 {
-    typedef __m128 T;
+    typedef SIMD_M128 T;
     T _r, _i;
-    constexpr SSEComplex(const T &r = _mm_setzero_ps(), const T &i = _mm_setzero_ps())
+    constexpr SSEComplex(const T &r = SIMD_MM(setzero_ps)(), const T &i = SIMD_MM(setzero_ps)())
         : _r(r), _i(i)
     {
     }
 
     SSEComplex(float r[4], float i[4])
     {
-        _r = _mm_loadu_ps(r);
-        _i = _mm_loadu_ps(i);
+        _r = SIMD_MM(loadu_ps)(r);
+        _i = SIMD_MM(loadu_ps)(i);
     }
 
-    inline __m128 real() const { return _r; }
-    inline __m128 imag() const { return _i; }
+    inline SIMD_M128 real() const { return _r; }
+    inline SIMD_M128 imag() const { return _i; }
 
     SSEComplex(std::initializer_list<float> r, std::initializer_list<float> i)
     {
@@ -66,25 +66,25 @@ struct SSEComplex
             ifl[q] = *(i.begin() + q);
         }
 
-        _r = _mm_load_ps(rfl);
-        _i = _mm_load_ps(ifl);
+        _r = SIMD_MM(load_ps)(rfl);
+        _i = SIMD_MM(load_ps)(ifl);
     }
     inline SSEComplex &operator+=(const SSEComplex &o)
     {
-        _r = _mm_add_ps(_r, o._r);
-        _i = _mm_add_ps(_i, o._i);
+        _r = SIMD_MM(add_ps)(_r, o._r);
+        _i = SIMD_MM(add_ps)(_i, o._i);
         return *this;
     }
 
     std::complex<float> atIndex(int i) const
     {
         float rfl alignas(16)[4], ifl alignas(16)[4];
-        _mm_store_ps(rfl, _r);
-        _mm_store_ps(ifl, _i);
+        SIMD_MM(store_ps)(rfl, _r);
+        SIMD_MM(store_ps)(ifl, _i);
         return std::complex<float>{rfl[i], ifl[i]};
     }
 
-    inline static SSEComplex fastExp(__m128 angle)
+    inline static SSEComplex fastExp(SIMD_M128 angle)
     {
         angle = sst::basic_blocks::dsp::clampToPiRangeSSE(angle);
         return {sst::basic_blocks::dsp::fastcosSSE(angle),
@@ -94,8 +94,8 @@ struct SSEComplex
     inline SSEComplex map(std::function<std::complex<float>(const std::complex<float> &)> f)
     {
         float rfl alignas(16)[4], ifl alignas(16)[4];
-        _mm_store_ps(rfl, _r);
-        _mm_store_ps(ifl, _i);
+        SIMD_MM(store_ps)(rfl, _r);
+        SIMD_MM(store_ps)(ifl, _i);
 
         float rflR alignas(16)[4], iflR alignas(16)[4];
         for (int i = 0; i < 4; ++i)
@@ -105,14 +105,14 @@ struct SSEComplex
             rflR[i] = b.real();
             iflR[i] = b.imag();
         }
-        return {_mm_load_ps(rflR), _mm_load_ps(iflR)};
+        return {SIMD_MM(load_ps)(rflR), SIMD_MM(load_ps)(iflR)};
     }
 
-    inline __m128 map_float(std::function<float(const std::complex<float> &)> f)
+    inline SIMD_M128 map_float(std::function<float(const std::complex<float> &)> f)
     {
         float rfl alignas(16)[4], ifl alignas(16)[4];
-        _mm_store_ps(rfl, _r);
-        _mm_store_ps(ifl, _i);
+        SIMD_MM(store_ps)(rfl, _r);
+        SIMD_MM(store_ps)(ifl, _i);
 
         float out alignas(16)[4];
         for (int i = 0; i < 4; ++i)
@@ -120,23 +120,23 @@ struct SSEComplex
             auto a = std::complex<float>{rfl[i], ifl[i]};
             out[i] = f(a);
         }
-        return _mm_load_ps(out);
+        return SIMD_MM(load_ps)(out);
     }
 };
 
 inline SSEComplex operator+(const SSEComplex &a, const SSEComplex &b)
 {
-    return {_mm_add_ps(a._r, b._r), _mm_add_ps(a._i, b._i)};
+    return {SIMD_MM(add_ps)(a._r, b._r), SIMD_MM(add_ps)(a._i, b._i)};
 }
 
-inline __m128 SSEComplexMulReal(const SSEComplex &a, const SSEComplex &b)
+inline SIMD_M128 SSEComplexMulReal(const SSEComplex &a, const SSEComplex &b)
 {
-    return _mm_sub_ps(_mm_mul_ps(a._r, b._r), _mm_mul_ps(a._i, b._i));
+    return SIMD_MM(sub_ps)(SIMD_MM(mul_ps)(a._r, b._r), SIMD_MM(mul_ps)(a._i, b._i));
 }
 
-inline __m128 SSEComplexMulImag(const SSEComplex &a, const SSEComplex &b)
+inline SIMD_M128 SSEComplexMulImag(const SSEComplex &a, const SSEComplex &b)
 {
-    return _mm_add_ps(_mm_mul_ps(a._r, b._i), _mm_mul_ps(a._i, b._r));
+    return SIMD_MM(add_ps)(SIMD_MM(mul_ps)(a._r, b._i), SIMD_MM(mul_ps)(a._i, b._r));
 }
 
 inline SSEComplex operator*(const SSEComplex &a, const SSEComplex &b)
@@ -146,8 +146,8 @@ inline SSEComplex operator*(const SSEComplex &a, const SSEComplex &b)
 
 inline SSEComplex operator*(const SSEComplex &a, const float &b)
 {
-    const __m128 scalar = _mm_set1_ps(b);
-    return {_mm_mul_ps(a._r, scalar), _mm_mul_ps(a._i, scalar)};
+    const auto scalar = SIMD_MM(set1_ps)(b);
+    return {SIMD_MM(mul_ps)(a._r, scalar), SIMD_MM(mul_ps)(a._i, scalar)};
 }
 
 #endif // SURGE_SSECOMPLEX_H

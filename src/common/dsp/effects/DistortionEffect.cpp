@@ -51,7 +51,7 @@ void DistortionEffect::init()
     R = 0.f;
 
     for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
-        wsState.R[i] = _mm_setzero_ps();
+        wsState.R[i] = SIMD_MM(setzero_ps)();
 }
 
 void DistortionEffect::setvars(bool init)
@@ -151,9 +151,9 @@ void DistortionEffect::process(float *dataL, float *dataR)
 
                 sb[0] = L * dInv;
                 sb[1] = R * dInv;
-                auto lr128 = _mm_load_ps(sb);
-                auto wsres = wsop(&wsState, lr128, _mm_set1_ps(dNow));
-                _mm_store_ps(sb, wsres);
+                auto lr128 = SIMD_MM(load_ps)(sb);
+                auto wsres = wsop(&wsState, lr128, SIMD_MM(set1_ps)(dNow));
+                SIMD_MM(store_ps)(sb, wsres);
                 L = sb[0];
                 R = sb[1];
 

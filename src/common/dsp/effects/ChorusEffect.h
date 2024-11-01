@@ -31,7 +31,7 @@
 template <int v> class ChorusEffect : public Effect
 {
     lipol_ps_blocksz feedback alignas(16), mix alignas(16), width alignas(16);
-    __m128 voicepanL4 alignas(16)[v], voicepanR4 alignas(16)[v];
+    SIMD_M128 voicepanL4 alignas(16)[v], voicepanR4 alignas(16)[v];
     float buffer alignas(16)[max_delay_length + FIRipol_N]; // Includes padding so we can use SSE
                                                             // interpolation without wrapping
 

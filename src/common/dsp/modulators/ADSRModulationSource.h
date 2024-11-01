@@ -176,41 +176,42 @@ class ADSRModulationSource : public ModulationSource
             }
             const float v_cc = 1.5f;
 
-            __m128 v_c1 = _mm_load_ss(&_v_c1);
-            __m128 v_c1_delayed = _mm_load_ss(&_v_c1_delayed);
-            __m128 discharge = _mm_load_ss(&_discharge);
-            const __m128 one = _mm_set_ss(1.0f); // attack->decay switch at 1 volt
-            const __m128 v_cc_vec = _mm_set_ss(v_cc);
+            auto v_c1 = SIMD_MM(load_ss)(&_v_c1);
+            auto v_c1_delayed = SIMD_MM(load_ss)(&_v_c1_delayed);
+            auto discharge = SIMD_MM(load_ss)(&_discharge);
+            const auto one = SIMD_MM(set_ss)(1.0f); // attack->decay switch at 1 volt
+            const auto v_cc_vec = SIMD_MM(set_ss)(v_cc);
             bool gate = (envstate == s_attack) || (envstate == s_decay);
-            __m128 v_gate = gate ? _mm_set_ss(v_cc) : _mm_set_ss(0.f);
-            __m128 v_is_gate = _mm_cmpgt_ss(v_gate, _mm_set_ss(0.0));
+            auto v_gate = gate ? SIMD_MM(set_ss)(v_cc) : SIMD_MM(set_ss)(0.f);
+            auto v_is_gate = SIMD_MM(cmpgt_ss)(v_gate, SIMD_MM(set_ss)(0.0));
 
             // The original code here was
-            // _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_gate);
-            // which ORed in the v_gate value as opposed to the boolean
-            discharge =
-                _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_is_gate);
+            // SIMD_MM(and_ps)(SIMD_MM(or_ps)(SIMD_MM(cmpgt_ss)(v_c1_delayed, one), discharge),
+            // v_gate); which ORed in the v_gate value as opposed to the boolean
+            discharge = SIMD_MM(and_ps)(
+                SIMD_MM(or_ps)(SIMD_MM(cmpgt_ss)(v_c1_delayed, one), discharge), v_is_gate);
 
             v_c1_delayed = v_c1;
 
             float sparm = limit_range(lc[s].f, 0.f, 1.f);
-            __m128 S = _mm_load_ss(&sparm);
-            S = _mm_mul_ss(S, S);
-            __m128 v_attack = _mm_andnot_ps(discharge, v_gate);
-            __m128 v_decay =
-                _mm_or_ps(_mm_andnot_ps(discharge, v_cc_vec), _mm_and_ps(discharge, S));
-            __m128 v_release = v_gate;
+            auto S = SIMD_MM(load_ss)(&sparm);
+            S = SIMD_MM(mul_ss)(S, S);
+            auto v_attack = SIMD_MM(andnot_ps)(discharge, v_gate);
+            auto v_decay = SIMD_MM(or_ps)(SIMD_MM(andnot_ps)(discharge, v_cc_vec),
+                                          SIMD_MM(and_ps)(discharge, S));
+            auto v_release = v_gate;
 
-            __m128 diff_v_a = _mm_max_ss(_mm_setzero_ps(), _mm_sub_ss(v_attack, v_c1));
+            auto diff_v_a = SIMD_MM(max_ss)(SIMD_MM(setzero_ps)(), SIMD_MM(sub_ss)(v_attack, v_c1));
 
             // This change from a straight min allows sustain swells
-            __m128 diff_vd_kernel = _mm_sub_ss(v_decay, v_c1);
-            __m128 diff_vd_kernel_min = _mm_min_ss(_mm_setzero_ps(), diff_vd_kernel);
-            __m128 dis_and_gate = _mm_and_ps(discharge, v_is_gate);
-            __m128 diff_v_d = _mm_or_ps(_mm_and_ps(dis_and_gate, diff_vd_kernel),
-                                        _mm_andnot_ps(dis_and_gate, diff_vd_kernel_min));
+            auto diff_vd_kernel = SIMD_MM(sub_ss)(v_decay, v_c1);
+            auto diff_vd_kernel_min = SIMD_MM(min_ss)(SIMD_MM(setzero_ps)(), diff_vd_kernel);
+            auto dis_and_gate = SIMD_MM(and_ps)(discharge, v_is_gate);
+            auto diff_v_d = SIMD_MM(or_ps)(SIMD_MM(and_ps)(dis_and_gate, diff_vd_kernel),
+                                           SIMD_MM(andnot_ps)(dis_and_gate, diff_vd_kernel_min));
 
-            __m128 diff_v_r = _mm_min_ss(_mm_setzero_ps(), _mm_sub_ss(v_release, v_c1));
+            auto diff_v_r =
+                SIMD_MM(min_ss)(SIMD_MM(setzero_ps)(), SIMD_MM(sub_ss)(v_release, v_c1));
 
             // calculate coefficients for envelope
             const float shortest = 6.f;
@@ -233,15 +234,15 @@ class ADSRModulationSource : public ModulationSource
                                                                        ? storage->temposyncratio
                                                                        : 1.f)));
 
-            v_c1 = _mm_add_ss(v_c1, _mm_mul_ss(diff_v_a, _mm_load_ss(&coef_A)));
-            v_c1 = _mm_add_ss(v_c1, _mm_mul_ss(diff_v_d, _mm_load_ss(&coef_D)));
-            v_c1 = _mm_add_ss(v_c1, _mm_mul_ss(diff_v_r, _mm_load_ss(&coef_R)));
+            v_c1 = SIMD_MM(add_ss)(v_c1, SIMD_MM(mul_ss)(diff_v_a, SIMD_MM(load_ss)(&coef_A)));
+            v_c1 = SIMD_MM(add_ss)(v_c1, SIMD_MM(mul_ss)(diff_v_d, SIMD_MM(load_ss)(&coef_D)));
+            v_c1 = SIMD_MM(add_ss)(v_c1, SIMD_MM(mul_ss)(diff_v_r, SIMD_MM(load_ss)(&coef_R)));
 
-            _mm_store_ss(&_v_c1, v_c1);
-            _mm_store_ss(&_v_c1_delayed, v_c1_delayed);
-            _mm_store_ss(&_discharge, discharge);
+            SIMD_MM(store_ss)(&_v_c1, v_c1);
+            SIMD_MM(store_ss)(&_v_c1_delayed, v_c1_delayed);
+            SIMD_MM(store_ss)(&_discharge, discharge);
 
-            _mm_store_ss(&output, v_c1);
+            SIMD_MM(store_ss)(&output, v_c1);
             if (gate)
             {
                 _ungateHold = output;
@@ -427,7 +428,8 @@ class ADSRModulationSource : public ModulationSource
         auto gate = (envstate == s_attack) || (envstate == s_decay);
         float v_gate = gate ? v_cc : 0.f;
 
-        // discharge = _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge), v_gate);
+        // discharge = SIMD_MM(and_ps)(SIMD_MM(or_ps)(SIMD_MM(cmpgt_ss)(v_c1_delayed, one),
+        // discharge), v_gate);
         corr_discharge = ((corr_v_c1_delayed >= 1) || corr_discharge) && gate;
         corr_v_c1_delayed = corr_v_c1;
 

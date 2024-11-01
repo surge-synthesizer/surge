@@ -52,7 +52,7 @@ void WaveShaperSelector::paint(juce::Graphics &g)
         /*
          * The waveshapers are re-entrant as long as they have a unique state pointer
          */
-        auto drive = _mm_set1_ps(1.f);
+        auto drive = SIMD_MM(set1_ps)(1.f);
         float xs alignas(16)[4], vals alignas(16)[4];
 
         for (int i = 0; i < 4; ++i)
@@ -69,10 +69,10 @@ void WaveShaperSelector::paint(juce::Graphics &g)
 
         for (int i = 0; i < 4; ++i)
         {
-            s.R[i] = _mm_load_ps(R);
+            s.R[i] = SIMD_MM(load_ps)(R);
         }
 
-        s.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps());
+        s.init = SIMD_MM(cmpeq_ps)(SIMD_MM(setzero_ps)(), SIMD_MM(setzero_ps)());
 
         float dx = 0.05;
 
@@ -82,13 +82,13 @@ void WaveShaperSelector::paint(juce::Graphics &g)
             if (wsop)
             {
                 vals[0] = x;
-                auto in = _mm_load_ps(vals);
+                auto in = SIMD_MM(load_ps)(vals);
                 auto r = wsop(&s, in, drive);
                 for (int i = 0; i < 4; ++i)
-                    s.R[i] = _mm_load_ps(R);
-                s.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps());
+                    s.R[i] = SIMD_MM(load_ps)(R);
+                s.init = SIMD_MM(cmpeq_ps)(SIMD_MM(setzero_ps)(), SIMD_MM(setzero_ps)());
 
-                _mm_store_ps(vals, r);
+                SIMD_MM(store_ps)(vals, r);
                 if (x >= -2)
                     wsCurves[(int)iValue].emplace_back(x, vals[0]);
             }

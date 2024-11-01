@@ -395,8 +395,8 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
             auto gate = !released;
             float v_gate = gate ? v_cc : 0.f;
 
-            // discharge = _mm_and_ps(_mm_or_ps(_mm_cmpgt_ss(v_c1_delayed, one), discharge),
-            // v_gate);
+            // discharge = SIMD_MM(and_ps)(SIMD_MM(or_ps)(SIMD_MM(cmpgt_ss)(v_c1_delayed, one),
+            // discharge), v_gate);
             discharge = ((v_c1_delayed > 1) || discharge) && gate;
             v_c1_delayed = v_c1;
 
@@ -404,15 +404,15 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
 
             float v_attack = discharge ? 0 : v_gate;
             // OK so this line:
-            // __m128 v_decay = _mm_or_ps(_mm_andnot_ps(discharge, v_cc_vec), _mm_and_ps(discharge,
-            // S)); The semantic intent is discharge ? S : v_cc but in the ADSR discharge has a
-            // value of v_gate which is 1.5 (v_cc) not 1.0. That bitwise and with 1.5 acts as a
-            // binary filter (the mantissa) and a rounding operation (from the .5) so I need to
-            // duplicate it exactly here.
+            // auto v_decay = SIMD_MM(or_ps)(SIMD_MM(andnot_ps)(discharge, v_cc_vec),
+            // SIMD_MM(and_ps)(discharge, S)); The semantic intent is discharge ? S : v_cc but in
+            // the ADSR discharge has a value of v_gate which is 1.5 (v_cc) not 1.0. That bitwise
+            // and with 1.5 acts as a binary filter (the mantissa) and a rounding operation (from
+            // the .5) so I need to duplicate it exactly here.
             /*
-            __m128 sM = _mm_load_ss(&S);
-            __m128 dM = _mm_load_ss(&v_cc);
-            __m128 vdv = _mm_and_ps(dM, sM);
+            auto sM = SIMD_MM(load_ss)(&S);
+            auto dM = SIMD_MM(load_ss)(&v_cc);
+            auto vdv = SIMD_MM(and_ps)(dM, sM);
             float v_decay = discharge ? vdv[0] : v_cc;
             */
             // Alternately I can correct the SSE code for discharge

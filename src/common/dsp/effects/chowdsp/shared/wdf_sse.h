@@ -74,16 +74,16 @@ class WDF
     virtual void propagateImpedance() = 0;
 
     /** Sub-classes override this function to accept an incident wave. */
-    virtual void incident(__m128 x) noexcept = 0;
+    virtual void incident(SIMD_M128 x) noexcept = 0;
 
     /** Sub-classes override this function to propagate a reflected wave. */
-    virtual __m128 reflected() noexcept = 0;
+    virtual SIMD_M128 reflected() noexcept = 0;
 
     /** Probe the voltage across this circuit element. */
-    inline __m128 voltage() const noexcept { return vMul(vAdd(a, b), vLoad1(0.5f)); }
+    inline SIMD_M128 voltage() const noexcept { return vMul(vAdd(a, b), vLoad1(0.5f)); }
 
     /**Probe the current through this circuit element. */
-    inline __m128 current() const noexcept { return vMul(vSub(a, b), vMul(vLoad1(0.5f), G)); }
+    inline SIMD_M128 current() const noexcept { return vMul(vSub(a, b), vMul(vLoad1(0.5f), G)); }
 
     // These classes need access to a,b
     friend class YParameter;
@@ -94,12 +94,12 @@ class WDF
 
     template <typename Port1Type, typename Port2Type> friend class WDFSeriesT;
 
-    __m128 R; // impedance
-    __m128 G; // admittance
+    SIMD_M128 R; // impedance
+    SIMD_M128 G; // admittance
 
   protected:
-    __m128 a = vZero; // incident wave
-    __m128 b = vZero; // reflected wave
+    SIMD_M128 a = vZero; // incident wave
+    SIMD_M128 b = vZero; // reflected wave
 
   private:
     const std::string type;
@@ -157,21 +157,21 @@ class Resistor : public WDFNode
     inline void calcImpedance() override
     {
         R = R_value;
-        G = _mm_div_ps(vLoad1(1.0f), R);
+        G = SIMD_MM(div_ps)(vLoad1(1.0f), R);
     }
 
     /** Accepts an incident wave into a WDF resistor. */
-    inline void incident(__m128 x) noexcept override { a = x; }
+    inline void incident(SIMD_M128 x) noexcept override { a = x; }
 
     /** Propagates a reflected wave from a WDF resistor. */
-    inline __m128 reflected() noexcept override
+    inline SIMD_M128 reflected() noexcept override
     {
         b = vLoad1(0.0f);
         return b;
     }
 
   private:
-    __m128 R_value = vLoad1(1.0e-9f);
+    SIMD_M128 R_value = vLoad1(1.0e-9f);
 };
 
 /** WDF Capacitor Node */
@@ -210,33 +210,33 @@ class Capacitor : public WDFNode
      */
     inline void calcImpedance() override
     {
-        R = _mm_div_ps(vLoad1(1.0f), vMul(vMul(vAdd(vLoad1(1.0f), alpha), C_value), fs));
-        G = _mm_div_ps(vLoad1(1.0f), R);
+        R = SIMD_MM(div_ps)(vLoad1(1.0f), vMul(vMul(vAdd(vLoad1(1.0f), alpha), C_value), fs));
+        G = SIMD_MM(div_ps)(vLoad1(1.0f), R);
     }
 
     /** Accepts an incident wave into a WDF capacitor. */
-    inline void incident(__m128 x) noexcept override
+    inline void incident(SIMD_M128 x) noexcept override
     {
         a = x;
         z = a;
     }
 
     /** Propagates a reflected wave from a WDF capacitor. */
-    inline __m128 reflected() noexcept override
+    inline SIMD_M128 reflected() noexcept override
     {
         b = vAdd(vMul(b_coef, b), vMul(a_coef, z));
         return b;
     }
 
   private:
-    __m128 C_value;
-    __m128 z = vZero;
+    SIMD_M128 C_value;
+    SIMD_M128 z = vZero;
 
-    const __m128 fs;
-    const __m128 alpha;
+    const SIMD_M128 fs;
+    const SIMD_M128 alpha;
 
-    const __m128 b_coef;
-    const __m128 a_coef;
+    const SIMD_M128 b_coef;
+    const SIMD_M128 a_coef;
 };
 
 /** WDF Voltage Polarity Inverter */
@@ -259,18 +259,18 @@ template <typename PortType> class PolarityInverterT : public WDFNode
     inline void calcImpedance() override
     {
         R = port1->R;
-        G = _mm_div_ps(vLoad1(1.0f), R);
+        G = SIMD_MM(div_ps)(vLoad1(1.0f), R);
     }
 
     /** Accepts an incident wave into a WDF inverter. */
-    inline void incident(__m128 x) noexcept override
+    inline void incident(SIMD_M128 x) noexcept override
     {
         a = x;
         port1->incident(vNeg(x));
     }
 
     /** Propagates a reflected wave from a WDF inverter. */
-    inline __m128 reflected() noexcept override
+    inline SIMD_M128 reflected() noexcept override
     {
         b = vNeg(port1->reflected());
         return b;
@@ -306,13 +306,13 @@ template <typename Port1Type, typename Port2Type> class WDFParallelT : public WD
     inline void calcImpedance() override
     {
         G = vAdd(port1->G, port2->G);
-        R = _mm_div_ps(vLoad1(1.0f), G);
-        port1Reflect = _mm_div_ps(port1->G, G);
-        port2Reflect = _mm_div_ps(port2->G, G);
+        R = SIMD_MM(div_ps)(vLoad1(1.0f), G);
+        port1Reflect = SIMD_MM(div_ps)(port1->G, G);
+        port2Reflect = SIMD_MM(div_ps)(port2->G, G);
     }
 
     /** Accepts an incident wave into a WDF parallel adaptor. */
-    inline void incident(__m128 x) noexcept override
+    inline void incident(SIMD_M128 x) noexcept override
     {
         port1->incident(vAdd(x, vMul(vSub(port2->b, port1->b), port2Reflect)));
         port2->incident(vAdd(x, vMul(vSub(port2->b, port1->b), vNeg(port1Reflect))));
@@ -320,7 +320,7 @@ template <typename Port1Type, typename Port2Type> class WDFParallelT : public WD
     }
 
     /** Propagates a reflected wave from a WDF parallel adaptor. */
-    inline __m128 reflected() noexcept override
+    inline SIMD_M128 reflected() noexcept override
     {
         b = vAdd(vMul(port1Reflect, port1->reflected()), vMul(port2Reflect, port2->reflected()));
         return b;
@@ -330,8 +330,8 @@ template <typename Port1Type, typename Port2Type> class WDFParallelT : public WD
     std::unique_ptr<Port2Type> port2;
 
   private:
-    __m128 port1Reflect;
-    __m128 port2Reflect;
+    SIMD_M128 port1Reflect;
+    SIMD_M128 port2Reflect;
 };
 
 /** WDF 3-port series adaptor */
@@ -359,13 +359,13 @@ template <typename Port1Type, typename Port2Type> class WDFSeriesT : public WDFN
     inline void calcImpedance() override
     {
         R = vAdd(port1->R, port2->R);
-        G = _mm_div_ps(vLoad1(1.0f), R);
-        port1Reflect = _mm_div_ps(port1->R, R);
-        port2Reflect = _mm_div_ps(port2->R, R);
+        G = SIMD_MM(div_ps)(vLoad1(1.0f), R);
+        port1Reflect = SIMD_MM(div_ps)(port1->R, R);
+        port2Reflect = SIMD_MM(div_ps)(port2->R, R);
     }
 
     /** Accepts an incident wave into a WDF series adaptor. */
-    inline void incident(__m128 x) noexcept override
+    inline void incident(SIMD_M128 x) noexcept override
     {
         port1->incident(vSub(port1->b, vMul(port1Reflect, vAdd(x, vAdd(port1->b, port2->b)))));
         port2->incident(vSub(port2->b, vMul(port2Reflect, vAdd(x, vAdd(port1->b, port2->b)))));
@@ -374,7 +374,7 @@ template <typename Port1Type, typename Port2Type> class WDFSeriesT : public WDFN
     }
 
     /** Propagates a reflected wave from a WDF series adaptor. */
-    inline __m128 reflected() noexcept override
+    inline SIMD_M128 reflected() noexcept override
     {
         b = vNeg(vAdd(port1->reflected(), port2->reflected()));
         return b;
@@ -384,8 +384,8 @@ template <typename Port1Type, typename Port2Type> class WDFSeriesT : public WDFN
     std::unique_ptr<Port2Type> port2;
 
   private:
-    __m128 port1Reflect;
-    __m128 port2Reflect;
+    SIMD_M128 port1Reflect;
+    SIMD_M128 port2Reflect;
 };
 
 /** WDF Voltage source with series resistance */
@@ -419,25 +419,25 @@ class ResistiveVoltageSource : public WDFNode
     inline void calcImpedance() override
     {
         R = R_value;
-        G = _mm_div_ps(vLoad1(1.0f), R);
+        G = SIMD_MM(div_ps)(vLoad1(1.0f), R);
     }
 
     /** Sets the voltage of the voltage source, in Volts */
-    void setVoltage(__m128 newV) { Vs = newV; }
+    void setVoltage(SIMD_M128 newV) { Vs = newV; }
 
     /** Accepts an incident wave into a WDF resistive voltage source. */
-    inline void incident(__m128 x) noexcept override { a = x; }
+    inline void incident(SIMD_M128 x) noexcept override { a = x; }
 
     /** Propagates a reflected wave from a WDF resistive voltage source. */
-    inline __m128 reflected() noexcept override
+    inline SIMD_M128 reflected() noexcept override
     {
         b = Vs;
         return b;
     }
 
   private:
-    __m128 Vs;
-    __m128 R_value;
+    SIMD_M128 Vs;
+    SIMD_M128 R_value;
 };
 
 /** WDF Current source with parallel resistance */
@@ -471,25 +471,25 @@ class ResistiveCurrentSource : public WDFNode
     inline void calcImpedance() override
     {
         R = R_value;
-        G = _mm_div_ps(vLoad1(1.0f), R);
+        G = SIMD_MM(div_ps)(vLoad1(1.0f), R);
     }
 
     /** Sets the current of the current source, in Amps */
-    void setCurrent(__m128 newI) { Is = newI; }
+    void setCurrent(SIMD_M128 newI) { Is = newI; }
 
     /** Accepts an incident wave into a WDF resistive current source. */
-    inline void incident(__m128 x) noexcept override { a = x; }
+    inline void incident(SIMD_M128 x) noexcept override { a = x; }
 
     /** Propagates a reflected wave from a WDF resistive current source. */
-    inline __m128 reflected() noexcept override
+    inline SIMD_M128 reflected() noexcept override
     {
         b = vMul(vLoad1(2.0f), vMul(R, Is));
         return b;
     }
 
   private:
-    __m128 Is;
-    __m128 R_value;
+    SIMD_M128 Is;
+    SIMD_M128 R_value;
 };
 
 } // namespace WDF_SSE

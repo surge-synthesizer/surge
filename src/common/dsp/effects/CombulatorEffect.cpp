@@ -176,9 +176,9 @@ void CombulatorEffect::setvars(bool init)
     }
 }
 
-inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
+inline void set1f(SIMD_M128 &m, int i, float f) { *((float *)&m + i) = f; }
 
-inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
+inline float get1f(SIMD_M128 m, int i) { return *((float *)&m + i); }
 
 void CombulatorEffect::sampleRateReset()
 {
@@ -270,8 +270,8 @@ void CombulatorEffect::process(float *dataL, float *dataR)
                            noiseGen[c][0], noiseGen[c][1], 0, storage->rand_pm1());
         }
 
-        auto l128 = _mm_setzero_ps();
-        auto r128 = _mm_setzero_ps();
+        auto l128 = SIMD_MM(setzero_ps)();
+        auto r128 = SIMD_MM(setzero_ps)();
 
         // FIXME - we want to interpolate the non-integral part if we like this
         int panIndex2 = (int)((limit_range(pan2.v, -1.f, 1.f) + 1) * ((PANLAW_SIZE - 1) / 2)) &
@@ -281,20 +281,20 @@ void CombulatorEffect::process(float *dataL, float *dataR)
 
         if (filtptr)
         {
-            l128 = filtptr(&(qfus[0]), _mm_set1_ps(dataOS[0][s] + noise[0]));
-            r128 = filtptr(&(qfus[1]), _mm_set1_ps(dataOS[1][s] + noise[1]));
+            l128 = filtptr(&(qfus[0]), SIMD_MM(set1_ps)(dataOS[0][s] + noise[0]));
+            r128 = filtptr(&(qfus[1]), SIMD_MM(set1_ps)(dataOS[1][s] + noise[1]));
         }
         else
         {
-            l128 = _mm_set1_ps(dataOS[0][s]);
-            r128 = _mm_set1_ps(dataOS[1][s]);
+            l128 = SIMD_MM(set1_ps)(dataOS[0][s]);
+            r128 = SIMD_MM(set1_ps)(dataOS[1][s]);
         }
 
         float mixl = 0, mixr = 0;
         float tl[4], tr[4];
 
-        _mm_store_ps(tl, l128);
-        _mm_store_ps(tr, r128);
+        SIMD_MM(store_ps)(tl, l128);
+        SIMD_MM(store_ps)(tr, r128);
 
         for (int i = 0; i < 3; ++i)
         {

@@ -62,7 +62,7 @@ class ReflectionNetwork
             feedbackArr[i] *= 0.23f * mix * (0.735f + 0.235f * reverbSize);
         }
 
-        feedback = _mm_load_ps(feedbackArr);
+        feedback = SIMD_MM(load_ps)(feedbackArr);
 
         float dampDB = -1.0f - 9.0f * damping;
         shelfFilter.calcCoefs(1.0f, (float)dB_to_linear((double)dampDB), 800.0f, fs);
@@ -74,14 +74,14 @@ class ReflectionNetwork
         for (int i = 0; i < 4; ++i)
             output[i] = delays[i].popSample(ch);
 
-        auto outVec = _mm_load_ps(output);
+        auto outVec = SIMD_MM(load_ps)(output);
 
         // householder matrix
         constexpr auto householderFactor = -2.0f / (float)4;
         const auto sumXhh = vSum(outVec) * householderFactor;
-        outVec = _mm_add_ps(outVec, _mm_load1_ps(&sumXhh));
+        outVec = SIMD_MM(add_ps)(outVec, SIMD_MM(load1_ps)(&sumXhh));
 
-        outVec = _mm_mul_ps(outVec, feedback);
+        outVec = SIMD_MM(mul_ps)(outVec, feedback);
         return shelfFilter.processSample(vSum(outVec) / (float)4);
     }
 
@@ -98,7 +98,7 @@ class ReflectionNetwork
     std::array<ReflectionDelay, 4> delays{ReflectionDelay{1 << 18}, ReflectionDelay{1 << 18},
                                           ReflectionDelay{1 << 18}, ReflectionDelay{1 << 18}};
 
-    __m128 feedback;
+    SIMD_M128 feedback;
 
     chowdsp::ShelfFilter<> shelfFilter;
 };

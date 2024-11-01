@@ -133,10 +133,10 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
 
         for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
         {
-            wss.R[i] = _mm_set1_ps(R[i]);
+            wss.R[i] = SIMD_MM(set1_ps)(R[i]);
         }
 
-        wss.init = _mm_cmpneq_ps(_mm_setzero_ps(), _mm_setzero_ps());
+        wss.init = SIMD_MM(cmpneq_ps)(SIMD_MM(setzero_ps)(), SIMD_MM(setzero_ps)());
     }
 
     auto wsptr = sst::waveshapers::GetQuadWaveshaper(lastShape);
@@ -154,14 +154,14 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
             din[0] = hbfComp * scalef * dataOS[0][i] + bias.v;
             din[1] = hbfComp * scalef * dataOS[1][i] + bias.v;
 
-            auto dat = _mm_load_ps(din);
-            auto drv = _mm_set1_ps(drive.v);
+            auto dat = SIMD_MM(load_ps)(din);
+            auto drv = SIMD_MM(set1_ps)(drive.v);
 
             dat = wsptr(&wss, dat, drv);
 
             float res alignas(16)[4];
 
-            _mm_store_ps(res, dat);
+            SIMD_MM(store_ps)(res, dat);
 
             dataOS[0][i] = res[0] * oscalef;
             dataOS[1][i] = res[1] * oscalef;
