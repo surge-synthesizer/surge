@@ -16,11 +16,11 @@
  * held by Claes Johanson at Vember Audio during that period.
  * Claes made Surge open source in September 2018.
  */
+
 #ifndef SURGE_SRC_SURGE_FX_FXOPENSOUNDCONTROL_H
 #define SURGE_SRC_SURGE_FX_FXOPENSOUNDCONTROL_H
-/* All source for Surge XT is available at
- * https://github.com/surge-synthesizer/surge
- */
+
+#include <juce_gui_extra/juce_gui_extra.h>
 
 #include "juce_osc/juce_osc.h"
 #include "SurgeSynthesizer.h"
