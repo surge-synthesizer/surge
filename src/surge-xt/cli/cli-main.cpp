@@ -20,7 +20,6 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
 #include <juce_audio_devices/juce_audio_devices.h>
