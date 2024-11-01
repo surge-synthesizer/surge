@@ -20,11 +20,14 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#include <iostream>
-
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
 #include <juce_audio_devices/juce_audio_devices.h>
+#if defined(_M_ARM64EC)
+#include <juce_gui_extra/juce_gui_extra.h>
+#endif
+
+#include <iostream>
 #include <CLI11/CLI11.hpp>
 
 #include "version.h"

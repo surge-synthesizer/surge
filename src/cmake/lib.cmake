@@ -153,6 +153,9 @@ function(surge_make_installers)
     if (${SURGE_BITNESS} EQUAL 64)
       set(SURGE_PORTABLE_DIR ${CMAKE_BINARY_DIR}/surge-xt-portable)
       set(portsst "${SURGE_PORTABLE_DIR}/Surge Synth Team")
+      if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec")
+        set(WINARCH "-arm64ec-beta")
+      endif()
       add_custom_command(TARGET surge-xt-distribution
         POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory ${SURGE_PORTABLE_DIR}
@@ -167,14 +170,14 @@ function(surge_make_installers)
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${SURGE_PRODUCT_DIR}/Surge XT.vst3" "${portsst}/Surge XT.vst3"
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${SURGE_PRODUCT_DIR}/Surge XT Effects.vst3" "${portsst}/Surge XT Effects.vst3"
 
-            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip "${portsst}/*"
+            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}${WINARCH}-${SXTVER}-pluginsonly.zip "${portsst}/*"
 
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/resources/surge-shared/README_Portable.txt" "${SURGE_PORTABLE_DIR}/README.txt"
 
             COMMAND ${CMAKE_COMMAND} -E make_directory "${portsst}/SurgeXTData"
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/resources/data" "${portsst}/SurgeXTData"
 
-            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-portable-install.zip "${SURGE_PORTABLE_DIR}/*"
+            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}${WINARCH}-${SXTVER}-portable-install.zip "${SURGE_PORTABLE_DIR}/*"
             )
     else()
       add_custom_command(TARGET surge-xt-distribution
@@ -182,17 +185,21 @@ function(surge_make_installers)
         COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}-${SXTVER}-pluginsonly.zip ${SURGE_PRODUCT_DIR}
       )
     endif()
-    find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
-    if(SURGE_NUGET_EXE)
-      message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}")
-      add_custom_command(TARGET surge-xt-distribution
-        POST_BUILD
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        COMMAND ${SURGE_NUGET_EXE} install Tools.InnoSetup -version 6.1.2
-        COMMAND Tools.InnoSetup.6.1.2/tools/iscc.exe /O"${SURGE_XT_DIST_OUTPUT_DIR}" /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge${SURGE_BITNESS}.iss"
-        )
+    if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec")
+      message(STATUS "Not making installer for arm64ec")
     else()
-      message(STATUS "NuGet not found, not creating InnoSetup installer")
+      find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
+      if(SURGE_NUGET_EXE)
+        message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}")
+        add_custom_command(TARGET surge-xt-distribution
+          POST_BUILD
+          WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+          COMMAND ${SURGE_NUGET_EXE} install Tools.InnoSetup -version 6.1.2
+          COMMAND Tools.InnoSetup.6.1.2/tools/iscc.exe /O"${SURGE_XT_DIST_OUTPUT_DIR}" /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge${SURGE_BITNESS}.iss"
+          )
+      else()
+        message(STATUS "NuGet not found, not creating InnoSetup installer")
+      endif()
     endif()
   endif()
 endfunction()
