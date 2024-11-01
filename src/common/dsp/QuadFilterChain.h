@@ -130,15 +130,15 @@ struct QuadFilterChainState
     sst::filters::QuadFilterUnitState FU[4];      // 2 filters left and right
     sst::waveshapers::QuadWaveshaperState WSS[2]; // 1 shaper left and right
 
-    __m128 Gain, FB, Mix1, Mix2, Drive;
-    __m128 dGain, dFB, dMix1, dMix2, dDrive;
+    SIMD_M128 Gain, FB, Mix1, Mix2, Drive;
+    SIMD_M128 dGain, dFB, dMix1, dMix2, dDrive;
 
-    __m128 wsLPF, FBlineL, FBlineR;
+    SIMD_M128 wsLPF, FBlineL, FBlineR;
 
-    __m128 DL[BLOCK_SIZE_OS], DR[BLOCK_SIZE_OS]; // wavedata
+    SIMD_M128 DL[BLOCK_SIZE_OS], DR[BLOCK_SIZE_OS]; // wavedata
 
-    __m128 OutL, OutR, dOutL, dOutR;
-    __m128 Out2L, Out2R, dOut2L, dOut2R; // fc_stereo only
+    SIMD_M128 OutL, OutR, dOutL, dOutR;
+    SIMD_M128 Out2L, Out2R, dOut2L, dOut2R; // fc_stereo only
 };
 
 /*

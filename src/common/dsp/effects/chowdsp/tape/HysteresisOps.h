@@ -34,11 +34,11 @@
 
 namespace HysteresisOps
 {
-#define F(a) _mm_set1_pd(a)
-#define M(a, b) _mm_mul_pd(a, b)
-#define D(a, b) _mm_div_pd(a, b)
-#define A(a, b) _mm_add_pd(a, b)
-#define S(a, b) _mm_sub_pd(a, b)
+#define F(a) SIMD_MM(set1_pd)(a)
+#define M(a, b) SIMD_MM(mul_pd)(a, b)
+#define D(a, b) SIMD_MM(div_pd)(a, b)
+#define A(a, b) SIMD_MM(add_pd)(a, b)
+#define S(a, b) SIMD_MM(sub_pd)(a, b)
 
 struct HysteresisState
 {
@@ -60,9 +60,9 @@ struct HysteresisState
 
     // temp vars
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-    __m128d Q, M_diff, L_prime, kap1, f1Denom, f1, f2, f3;
-    __m128d coth;
-    __m128d nearZero;
+    SIMD_M128D Q, M_diff, L_prime, kap1, f1Denom, f1, f2, f3;
+    SIMD_M128D coth;
+    SIMD_M128D nearZero;
 #else
     double Q, M_diff, L_prime, kap1, f1Denom, f1, f2, f3;
     double coth = 0.0;
@@ -75,10 +75,10 @@ constexpr double NEG_TWO_OVER_15 = -2.0 / 15.0;
 
 constexpr inline int sign(double x) { return int(x > 0.0) - int(x < 0.0); }
 
-static inline __m128d signumSIMD(__m128d val)
+static inline SIMD_M128D signumSIMD(SIMD_M128D val)
 {
-    auto positive = _mm_and_pd(F(1.0), _mm_cmplt_pd(F(0.0), val));
-    auto negative = _mm_and_pd(F(1.0), _mm_cmplt_pd(val, F(0.0)));
+    auto positive = SIMD_MM(and_pd)(F(1.0), SIMD_MM(cmplt_pd)(F(0.0), val));
+    auto negative = SIMD_MM(and_pd)(F(1.0), SIMD_MM(cmplt_pd)(val, F(0.0)));
     return S(positive, negative);
 }
 
@@ -88,12 +88,12 @@ static inline __m128d signumSIMD(__m128d val)
  * double-precision SIMD registers. Also uses a slightly
  * higher-order continued fraction.
  */
-static inline __m128d tanhSIMD(__m128d x)
+static inline SIMD_M128D tanhSIMD(SIMD_M128D x)
 {
-    auto xc = _mm_min_pd(F(5.7), _mm_max_pd(F(-5.7), x));
+    auto xc = SIMD_MM(min_pd)(F(5.7), SIMD_MM(max_pd)(F(-5.7), x));
 
-    const __m128d v2027025 = F(2027025.0), v270270 = F(270270.0), v6930 = F(6930.0), v36 = F(36.0),
-                  v945945 = F(945945.0), v51975 = F(51975.0), v630 = F(630.0);
+    const SIMD_M128D v2027025 = F(2027025.0), v270270 = F(270270.0), v6930 = F(6930.0),
+                     v36 = F(36.0), v945945 = F(945945.0), v51975 = F(51975.0), v630 = F(630.0);
 
     auto x2 = M(xc, xc);
     auto numerator = M(xc, A(v2027025, M(x2, A(v270270, M(x2, A(v6930, M(v36, x2)))))));
@@ -106,7 +106,8 @@ template <typename Float, typename Bool>
 static inline Float langevin(Float x, Float coth, Bool nearZero) noexcept
 {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-    return A(_mm_andnot_pd(nearZero, S(coth, D(F(1.0), x))), _mm_and_pd(nearZero, D(x, F(3.0))));
+    return A(SIMD_MM(andnot_pd)(nearZero, S(coth, D(F(1.0), x))),
+             SIMD_MM(and_pd)(nearZero, D(x, F(3.0))));
 #else
     return !nearZero ? (coth) - (1.0 / x) : x / 3.0;
 #endif
@@ -117,8 +118,8 @@ template <typename Float, typename Bool>
 static inline Float langevinD(Float x, Float coth, Bool nearZero) noexcept
 {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-    return A(_mm_andnot_pd(nearZero, A(S(D(F(1.0), M(x, x)), M(coth, coth)), F(1.0))),
-             _mm_and_pd(nearZero, F(ONE_THIRD)));
+    return A(SIMD_MM(andnot_pd)(nearZero, A(S(D(F(1.0), M(x, x)), M(coth, coth)), F(1.0))),
+             SIMD_MM(and_pd)(nearZero, F(ONE_THIRD)));
 #else
     return !nearZero ? (1.0 / (x * x)) - (coth * coth) + 1.0 : ONE_THIRD;
 #endif
@@ -131,7 +132,8 @@ static inline Float langevinD2(Float x, Float coth, Bool nearZero) noexcept
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
     auto x3 = D(F(2.0), M(x, M(x, x)));
     auto coth3 = M(F(2.0), M(coth, S(M(coth, coth), F(1.0))));
-    return A(_mm_andnot_pd(nearZero, S(coth3, x3)), _mm_and_pd(nearZero, M(x, F(NEG_TWO_OVER_15))));
+    return A(SIMD_MM(andnot_pd)(nearZero, S(coth3, x3)),
+             SIMD_MM(and_pd)(nearZero, M(x, F(NEG_TWO_OVER_15))));
 #else
     return !nearZero ? 2.0 * coth * (coth * coth - 1.0) - (2.0 / (x * x * x)) : NEG_TWO_OVER_15 * x;
 #endif
@@ -142,7 +144,7 @@ template <typename Float>
 static inline Float deriv(Float x_n, Float x_n1, Float x_d_n1, Float T) noexcept
 {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-    const static __m128d dAlpha = F(0.75);
+    const static SIMD_M128D dAlpha = F(0.75);
     return S(M(D(A(F(1.0), dAlpha), T), S(x_n, x_n1)), M(dAlpha, x_d_n1));
 #else
     constexpr Float dAlpha = 0.75;
@@ -152,19 +154,20 @@ static inline Float deriv(Float x_n, Float x_n1, Float x_d_n1, Float T) noexcept
 
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
 /** hysteresis function dM/dt */
-static inline __m128d hysteresisFunc(__m128d _M, __m128d H, __m128d H_d,
-                                     HysteresisState &hp) noexcept
+static inline SIMD_M128D hysteresisFunc(SIMD_M128D _M, SIMD_M128D H, SIMD_M128D H_d,
+                                        HysteresisState &hp) noexcept
 {
     hp.Q = M(A(H, M(_M, F(hp.alpha))), D(F(1.0), F(hp.a)));
 
     hp.coth = D(F(1.0), tanhSIMD(hp.Q));
-    hp.nearZero = _mm_and_pd(_mm_cmplt_pd(hp.Q, F(0.001)), _mm_cmpgt_pd(hp.Q, F(-0.001)));
+    hp.nearZero =
+        SIMD_MM(and_pd)(SIMD_MM(cmplt_pd)(hp.Q, F(0.001)), SIMD_MM(cmpgt_pd)(hp.Q, F(-0.001)));
 
     hp.M_diff = S(M(langevin(hp.Q, hp.coth, hp.nearZero), F(hp.M_s)), _M);
-    const auto delta = S(_mm_and_pd(F(1.0), _mm_cmpge_pd(H_d, F(0.0))),
-                         _mm_and_pd(F(1.0), _mm_cmplt_pd(H_d, F(0.0))));
-    const auto delta_M = _mm_cmpeq_pd(signumSIMD(delta), signumSIMD(hp.M_diff));
-    hp.kap1 = _mm_and_pd(F(hp.nc), delta_M);
+    const auto delta = S(SIMD_MM(and_pd)(F(1.0), SIMD_MM(cmpge_pd)(H_d, F(0.0))),
+                         SIMD_MM(and_pd)(F(1.0), SIMD_MM(cmplt_pd)(H_d, F(0.0))));
+    const auto delta_M = SIMD_MM(cmpeq_pd)(signumSIMD(delta), signumSIMD(hp.M_diff));
+    hp.kap1 = SIMD_MM(and_pd)(F(hp.nc), delta_M);
 
     hp.L_prime = langevinD(hp.Q, hp.coth, hp.nearZero);
 
@@ -177,7 +180,8 @@ static inline __m128d hysteresisFunc(__m128d _M, __m128d H, __m128d H_d,
 }
 
 // derivative of hysteresis func w.r.t M (depends on cached values from computing hysteresisFunc)
-static inline __m128d hysteresisFuncPrime(__m128d H_d, __m128d dMdt, HysteresisState &hp) noexcept
+static inline SIMD_M128D hysteresisFuncPrime(SIMD_M128D H_d, SIMD_M128D dMdt,
+                                             HysteresisState &hp) noexcept
 {
     const auto L_prime2 = langevinD2(hp.Q, hp.coth, hp.nearZero);
     const auto M_diff2 = S(M(hp.L_prime, F(hp.M_s_oa_talpha)), F(1.0));

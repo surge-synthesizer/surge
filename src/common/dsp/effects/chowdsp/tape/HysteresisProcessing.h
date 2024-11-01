@@ -52,7 +52,7 @@ class HysteresisProcessing
     template <SolverType solver, typename Float> inline Float process(Float H) noexcept
     {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-        auto H_d = HysteresisOps::deriv(H, H_n1, H_d_n1, _mm_set1_pd(T));
+        auto H_d = HysteresisOps::deriv(H, H_n1, H_d_n1, SIMD_MM(set1_pd)(T));
 #else
         auto H_d = HysteresisOps::deriv(H, H_n1, H_d_n1, T);
 #endif
@@ -74,7 +74,7 @@ class HysteresisProcessing
             break;
         default:
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-            M = _mm_set1_pd(0.0);
+            M = SIMD_MM(set1_pd)(0.0);
 #else
             M = 0.0;
 #endif
@@ -82,10 +82,10 @@ class HysteresisProcessing
 
         // check for instability
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-        auto illCondition =
-            _mm_or_pd(_mm_cmpunord_pd(M, M), _mm_cmpgt_pd(M, _mm_set1_pd(upperLim)));
-        M = _mm_andnot_pd(illCondition, M);
-        H_d = _mm_andnot_pd(illCondition, H_d);
+        auto illCondition = SIMD_MM(or_pd)(SIMD_MM(cmpunord_pd)(M, M),
+                                           SIMD_MM(cmpgt_pd)(M, SIMD_MM(set1_pd)(upperLim)));
+        M = SIMD_MM(andnot_pd)(illCondition, M);
+        H_d = SIMD_MM(andnot_pd)(illCondition, H_d);
 #else
         bool illCondition = std::isnan(M) || M > upperLim;
         M = illCondition ? 0.0 : M;
@@ -104,9 +104,9 @@ class HysteresisProcessing
     template <typename Float> inline Float RK2Solver(Float H, Float H_d) noexcept
     {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-#define F(a) _mm_set1_pd(a)
-#define M(a, b) _mm_mul_pd(a, b)
-#define A(a, b) _mm_add_pd(a, b)
+#define F(a) SIMD_MM(set1_pd)(a)
+#define M(a, b) SIMD_MM(mul_pd)(a, b)
+#define A(a, b) SIMD_MM(add_pd)(a, b)
         const auto k1 = M(HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState), F(T));
 
         const auto k2 =
@@ -129,9 +129,9 @@ class HysteresisProcessing
     template <typename Float> inline Float RK4Solver(Float H, Float H_d) noexcept
     {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-#define F(a) _mm_set1_pd(a)
-#define M(a, b) _mm_mul_pd(a, b)
-#define A(a, b) _mm_add_pd(a, b)
+#define F(a) SIMD_MM(set1_pd)(a)
+#define M(a, b) SIMD_MM(mul_pd)(a, b)
+#define A(a, b) SIMD_MM(add_pd)(a, b)
         const auto H_1_2 = M(A(H, H_n1), F(0.5));
         const auto H_d_1_2 = M(A(H_d, H_d_n1), F(0.5));
 
@@ -169,15 +169,15 @@ class HysteresisProcessing
     template <int nIterations, typename Float> inline Float NRSolver(Float H, Float H_d) noexcept
     {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-#define F(a) _mm_set1_pd(a)
-#define M(a, b) _mm_mul_pd(a, b)
-#define D(a, b) _mm_div_pd(a, b)
-#define A(a, b) _mm_add_pd(a, b)
-#define S(a, b) _mm_sub_pd(a, b)
+#define F(a) SIMD_MM(set1_pd)(a)
+#define M(a, b) SIMD_MM(mul_pd)(a, b)
+#define D(a, b) SIMD_MM(div_pd)(a, b)
+#define A(a, b) SIMD_MM(add_pd)(a, b)
+#define S(a, b) SIMD_MM(sub_pd)(a, b)
         auto _M = M_n1;
         const auto last_dMdt = HysteresisOps::hysteresisFunc(M_n1, H_n1, H_d_n1, hpState);
 
-        __m128d dMdt, dMdtPrime, deltaNR, num, den;
+        SIMD_M128D dMdt, dMdtPrime, deltaNR, num, den;
         for (int n = 0; n < nIterations; ++n)
         {
             dMdt = HysteresisOps::hysteresisFunc(_M, H, H_d, hpState);
@@ -223,9 +223,9 @@ class HysteresisProcessing
 
     // state variables
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-    __m128d M_n1;
-    __m128d H_n1;
-    __m128d H_d_n1;
+    SIMD_M128D M_n1;
+    SIMD_M128D H_n1;
+    SIMD_M128D H_d_n1;
 #else
     double M_n1 = 0.0;
     double H_n1 = 0.0;

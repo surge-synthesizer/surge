@@ -30,22 +30,26 @@ namespace mech = sst::basic_blocks::mechanics;
 namespace sdsp = sst::basic_blocks::dsp;
 
 #define MWriteOutputs(x)                                                                           \
-    d.OutL = _mm_add_ps(d.OutL, d.dOutL);                                                          \
-    d.OutR = _mm_add_ps(d.OutR, d.dOutR);                                                          \
-    __m128 outL = _mm_mul_ps(x, d.OutL);                                                           \
-    __m128 outR = _mm_mul_ps(x, d.OutR);                                                           \
-    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), mech::sum_ps_to_ss(outL)));           \
-    _mm_store_ss(&OutR[k], _mm_add_ss(_mm_load_ss(&OutR[k]), mech::sum_ps_to_ss(outR)));
+    d.OutL = SIMD_MM(add_ps)(d.OutL, d.dOutL);                                                     \
+    d.OutR = SIMD_MM(add_ps)(d.OutR, d.dOutR);                                                     \
+    auto outL = SIMD_MM(mul_ps)(x, d.OutL);                                                        \
+    auto outR = SIMD_MM(mul_ps)(x, d.OutR);                                                        \
+    SIMD_MM(store_ss)                                                                              \
+    (&OutL[k], SIMD_MM(add_ss)(SIMD_MM(load_ss)(&OutL[k]), mech::sum_ps_to_ss(outL)));             \
+    SIMD_MM(store_ss)                                                                              \
+    (&OutR[k], SIMD_MM(add_ss)(SIMD_MM(load_ss)(&OutR[k]), mech::sum_ps_to_ss(outR)));
 
 #define MWriteOutputsDual(x, y)                                                                    \
-    d.OutL = _mm_add_ps(d.OutL, d.dOutL);                                                          \
-    d.OutR = _mm_add_ps(d.OutR, d.dOutR);                                                          \
-    d.Out2L = _mm_add_ps(d.Out2L, d.dOut2L);                                                       \
-    d.Out2R = _mm_add_ps(d.Out2R, d.dOut2R);                                                       \
-    __m128 outL = vMAdd(x, d.OutL, vMul(y, d.Out2L));                                              \
-    __m128 outR = vMAdd(x, d.OutR, vMul(y, d.Out2R));                                              \
-    _mm_store_ss(&OutL[k], _mm_add_ss(_mm_load_ss(&OutL[k]), mech::sum_ps_to_ss(outL)));           \
-    _mm_store_ss(&OutR[k], _mm_add_ss(_mm_load_ss(&OutR[k]), mech::sum_ps_to_ss(outR)));
+    d.OutL = SIMD_MM(add_ps)(d.OutL, d.dOutL);                                                     \
+    d.OutR = SIMD_MM(add_ps)(d.OutR, d.dOutR);                                                     \
+    d.Out2L = SIMD_MM(add_ps)(d.Out2L, d.dOut2L);                                                  \
+    d.Out2R = SIMD_MM(add_ps)(d.Out2R, d.dOut2R);                                                  \
+    auto outL = vMAdd(x, d.OutL, vMul(y, d.Out2L));                                                \
+    auto outR = vMAdd(x, d.OutR, vMul(y, d.Out2R));                                                \
+    SIMD_MM(store_ss)                                                                              \
+    (&OutL[k], SIMD_MM(add_ss)(SIMD_MM(load_ss)(&OutL[k]), mech::sum_ps_to_ss(outL)));             \
+    SIMD_MM(store_ss)                                                                              \
+    (&OutR[k], SIMD_MM(add_ss)(SIMD_MM(load_ss)(&OutR[k]), mech::sum_ps_to_ss(outR)));
 
 #if 0 // DEBUG
 #define AssertReasonableAudioFloat(x) assert(x<32.f && x> - 32.f);
@@ -56,43 +60,45 @@ namespace sdsp = sst::basic_blocks::dsp;
 template <int config, bool A, bool WS, bool B>
 void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *OutR)
 {
-    const __m128 hb_c = _mm_set1_ps(0.5f); // If this is changed from 0.5, make sure to change
-                                           // this in the code because it is assumed to be half
-    const __m128 one = _mm_set1_ps(1.0f);
+    const auto hb_c = SIMD_MM(set1_ps)(0.5f); // If this is changed from 0.5, make sure to change
+                                              // this in the code because it is assumed to be half
+    const auto one = SIMD_MM(set1_ps)(1.0f);
 
     switch (config)
     {
     case fc_serial1: // no feedback at all  (saves CPU)
         for (int k = 0; k < BLOCK_SIZE_OS; k++)
         {
-            __m128 input = d.DL[k];
-            __m128 x = input, y = d.DR[k];
-            __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
+            auto input = d.DL[k];
+            auto x = input, y = d.DR[k];
+            auto mask = SIMD_MM(load_ps)((float *)&d.FU[0].active);
 
             if (A)
                 x = g.FU1ptr(&d.FU[0], x);
             if (WS)
             {
-                d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
-                d.Drive = _mm_add_ps(d.Drive, d.dDrive);
+                d.wsLPF = SIMD_MM(mul_ps)(hb_c, SIMD_MM(add_ps)(d.wsLPF, SIMD_MM(and_ps)(mask, x)));
+                d.Drive = SIMD_MM(add_ps)(d.Drive, d.dDrive);
                 x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             if (A || WS)
             {
-                d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
-                x = _mm_add_ps(_mm_mul_ps(input, _mm_sub_ps(one, d.Mix1)), _mm_mul_ps(x, d.Mix1));
+                d.Mix1 = SIMD_MM(add_ps)(d.Mix1, d.dMix1);
+                x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(input, SIMD_MM(sub_ps)(one, d.Mix1)),
+                                    SIMD_MM(mul_ps)(x, d.Mix1));
             }
 
-            y = _mm_add_ps(x, y);
+            y = SIMD_MM(add_ps)(x, y);
 
             if (B)
                 y = g.FU2ptr(&d.FU[1], y);
 
-            d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
-            x = _mm_add_ps(_mm_mul_ps(x, _mm_sub_ps(one, d.Mix2)), _mm_mul_ps(y, d.Mix2));
-            d.Gain = _mm_add_ps(d.Gain, d.dGain);
-            __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
+            d.Mix2 = SIMD_MM(add_ps)(d.Mix2, d.dMix2);
+            x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(x, SIMD_MM(sub_ps)(one, d.Mix2)),
+                                SIMD_MM(mul_ps)(y, d.Mix2));
+            d.Gain = SIMD_MM(add_ps)(d.Gain, d.dGain);
+            auto out = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(x, d.Gain));
 
             // output stage
             MWriteOutputs(out)
@@ -101,36 +107,38 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
     case fc_serial2:
         for (int k = 0; k < BLOCK_SIZE_OS; k++)
         {
-            d.FB = _mm_add_ps(d.FB, d.dFB);
-            __m128 input = vMul(d.FB, d.FBlineL);
+            d.FB = SIMD_MM(add_ps)(d.FB, d.dFB);
+            auto input = vMul(d.FB, d.FBlineL);
             input = vAdd(d.DL[k], sdsp::softclip_ps(input));
-            __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
-            __m128 x = input, y = d.DR[k];
+            auto mask = SIMD_MM(load_ps)((float *)&d.FU[0].active);
+            auto x = input, y = d.DR[k];
 
             if (A)
                 x = g.FU1ptr(&d.FU[0], x);
             if (WS)
             {
-                d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
-                d.Drive = _mm_add_ps(d.Drive, d.dDrive);
+                d.wsLPF = SIMD_MM(mul_ps)(hb_c, SIMD_MM(add_ps)(d.wsLPF, SIMD_MM(and_ps)(mask, x)));
+                d.Drive = SIMD_MM(add_ps)(d.Drive, d.dDrive);
                 x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             if (A || WS)
             {
-                d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
-                x = _mm_add_ps(_mm_mul_ps(input, _mm_sub_ps(one, d.Mix1)), _mm_mul_ps(x, d.Mix1));
+                d.Mix1 = SIMD_MM(add_ps)(d.Mix1, d.dMix1);
+                x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(input, SIMD_MM(sub_ps)(one, d.Mix1)),
+                                    SIMD_MM(mul_ps)(x, d.Mix1));
             }
 
-            y = _mm_add_ps(x, y);
+            y = SIMD_MM(add_ps)(x, y);
 
             if (B)
                 y = g.FU2ptr(&d.FU[1], y);
 
-            d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
-            x = _mm_add_ps(_mm_mul_ps(x, _mm_sub_ps(one, d.Mix2)), _mm_mul_ps(y, d.Mix2));
-            d.Gain = _mm_add_ps(d.Gain, d.dGain);
-            __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
+            d.Mix2 = SIMD_MM(add_ps)(d.Mix2, d.dMix2);
+            x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(x, SIMD_MM(sub_ps)(one, d.Mix2)),
+                                SIMD_MM(mul_ps)(y, d.Mix2));
+            d.Gain = SIMD_MM(add_ps)(d.Gain, d.dGain);
+            auto out = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(x, d.Gain));
             d.FBlineL = out;
 
             // output stage
@@ -141,40 +149,42 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
                      // with comb as f2
         for (int k = 0; k < BLOCK_SIZE_OS; k++)
         {
-            d.FB = _mm_add_ps(d.FB, d.dFB);
-            __m128 input = vMul(d.FB, d.FBlineL);
+            d.FB = SIMD_MM(add_ps)(d.FB, d.dFB);
+            auto input = vMul(d.FB, d.FBlineL);
             input = vAdd(d.DL[k], sdsp::softclip_ps(input));
-            __m128 x = input, y = d.DR[k];
-            __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
+            auto x = input, y = d.DR[k];
+            auto mask = SIMD_MM(load_ps)((float *)&d.FU[0].active);
 
             if (A)
                 x = g.FU1ptr(&d.FU[0], x);
             if (WS)
             {
-                d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
-                d.Drive = _mm_add_ps(d.Drive, d.dDrive);
+                d.wsLPF = SIMD_MM(mul_ps)(hb_c, SIMD_MM(add_ps)(d.wsLPF, SIMD_MM(and_ps)(mask, x)));
+                d.Drive = SIMD_MM(add_ps)(d.Drive, d.dDrive);
                 x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             if (A || WS)
             {
-                d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
-                x = _mm_add_ps(_mm_mul_ps(input, _mm_sub_ps(one, d.Mix1)), _mm_mul_ps(x, d.Mix1));
+                d.Mix1 = SIMD_MM(add_ps)(d.Mix1, d.dMix1);
+                x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(input, SIMD_MM(sub_ps)(one, d.Mix1)),
+                                    SIMD_MM(mul_ps)(x, d.Mix1));
             }
 
             // output stage
-            d.Gain = _mm_add_ps(d.Gain, d.dGain);
-            x = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
+            d.Gain = SIMD_MM(add_ps)(d.Gain, d.dGain);
+            x = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(x, d.Gain));
 
             MWriteOutputs(x)
 
-                y = _mm_add_ps(x, y);
+                y = SIMD_MM(add_ps)(x, y);
 
             if (B)
                 y = g.FU2ptr(&d.FU[1], y);
 
-            d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
-            x = _mm_add_ps(_mm_mul_ps(x, _mm_sub_ps(one, d.Mix2)), _mm_mul_ps(y, d.Mix2));
+            d.Mix2 = SIMD_MM(add_ps)(d.Mix2, d.dMix2);
+            x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(x, SIMD_MM(sub_ps)(one, d.Mix2)),
+                                SIMD_MM(mul_ps)(y, d.Mix2));
 
             d.FBlineL = y;
         }
@@ -182,31 +192,31 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
     case fc_dual1:
         for (int k = 0; k < BLOCK_SIZE_OS; k++)
         {
-            d.FB = _mm_add_ps(d.FB, d.dFB);
-            __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
+            d.FB = SIMD_MM(add_ps)(d.FB, d.dFB);
+            auto fb = SIMD_MM(mul_ps)(d.FB, d.FBlineL);
             fb = sdsp::softclip_ps(fb);
-            __m128 x = _mm_add_ps(d.DL[k], fb);
-            __m128 y = _mm_add_ps(d.DR[k], fb);
-            __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
+            auto x = SIMD_MM(add_ps)(d.DL[k], fb);
+            auto y = SIMD_MM(add_ps)(d.DR[k], fb);
+            auto mask = SIMD_MM(load_ps)((float *)&d.FU[0].active);
 
             if (A)
                 x = g.FU1ptr(&d.FU[0], x);
             if (B)
                 y = g.FU2ptr(&d.FU[1], y);
 
-            d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
-            d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
-            x = _mm_add_ps(_mm_mul_ps(x, d.Mix1), _mm_mul_ps(y, d.Mix2));
+            d.Mix1 = SIMD_MM(add_ps)(d.Mix1, d.dMix1);
+            d.Mix2 = SIMD_MM(add_ps)(d.Mix2, d.dMix2);
+            x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(x, d.Mix1), SIMD_MM(mul_ps)(y, d.Mix2));
 
             if (WS)
             {
-                d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
-                d.Drive = _mm_add_ps(d.Drive, d.dDrive);
+                d.wsLPF = SIMD_MM(mul_ps)(hb_c, SIMD_MM(add_ps)(d.wsLPF, SIMD_MM(and_ps)(mask, x)));
+                d.Drive = SIMD_MM(add_ps)(d.Drive, d.dDrive);
                 x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
-            d.Gain = _mm_add_ps(d.Gain, d.dGain);
-            __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
+            d.Gain = SIMD_MM(add_ps)(d.Gain, d.dGain);
+            auto out = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(x, d.Gain));
             d.FBlineL = out;
             // output stage
             MWriteOutputs(out)
@@ -215,31 +225,31 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
     case fc_dual2:
         for (int k = 0; k < BLOCK_SIZE_OS; k++)
         {
-            d.FB = _mm_add_ps(d.FB, d.dFB);
-            __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
+            d.FB = SIMD_MM(add_ps)(d.FB, d.dFB);
+            auto fb = SIMD_MM(mul_ps)(d.FB, d.FBlineL);
             fb = sdsp::softclip_ps(fb);
-            __m128 x = _mm_add_ps(d.DL[k], fb);
-            __m128 y = _mm_add_ps(d.DR[k], fb);
-            __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
+            auto x = SIMD_MM(add_ps)(d.DL[k], fb);
+            auto y = SIMD_MM(add_ps)(d.DR[k], fb);
+            auto mask = SIMD_MM(load_ps)((float *)&d.FU[0].active);
 
             if (A)
                 x = g.FU1ptr(&d.FU[0], x);
             if (WS)
             {
-                d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, _mm_and_ps(mask, x)));
-                d.Drive = _mm_add_ps(d.Drive, d.dDrive);
+                d.wsLPF = SIMD_MM(mul_ps)(hb_c, SIMD_MM(add_ps)(d.wsLPF, SIMD_MM(and_ps)(mask, x)));
+                d.Drive = SIMD_MM(add_ps)(d.Drive, d.dDrive);
                 x = g.WSptr(&d.WSS[0], d.wsLPF, d.Drive);
             }
 
             if (B)
                 y = g.FU2ptr(&d.FU[1], y);
 
-            d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
-            d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
-            x = _mm_add_ps(_mm_mul_ps(x, d.Mix1), _mm_mul_ps(y, d.Mix2));
+            d.Mix1 = SIMD_MM(add_ps)(d.Mix1, d.dMix1);
+            d.Mix2 = SIMD_MM(add_ps)(d.Mix2, d.dMix2);
+            x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(x, d.Mix1), SIMD_MM(mul_ps)(y, d.Mix2));
 
-            d.Gain = _mm_add_ps(d.Gain, d.dGain);
-            __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
+            d.Gain = SIMD_MM(add_ps)(d.Gain, d.dGain);
+            auto out = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(x, d.Gain));
             d.FBlineL = out;
             // output stage
             MWriteOutputs(out)
@@ -248,34 +258,35 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
     case fc_ring:
         for (int k = 0; k < BLOCK_SIZE_OS; k++)
         {
-            d.FB = _mm_add_ps(d.FB, d.dFB);
-            __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
+            d.FB = SIMD_MM(add_ps)(d.FB, d.dFB);
+            auto fb = SIMD_MM(mul_ps)(d.FB, d.FBlineL);
             fb = sdsp::softclip_ps(fb);
-            __m128 x = _mm_add_ps(d.DL[k], fb);
-            __m128 y = _mm_add_ps(d.DR[k], fb);
-            __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
+            auto x = SIMD_MM(add_ps)(d.DL[k], fb);
+            auto y = SIMD_MM(add_ps)(d.DR[k], fb);
+            auto mask = SIMD_MM(load_ps)((float *)&d.FU[0].active);
 
             if (A)
                 x = g.FU1ptr(&d.FU[0], x);
             if (B)
                 y = g.FU2ptr(&d.FU[1], y);
 
-            d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
-            d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
+            d.Mix1 = SIMD_MM(add_ps)(d.Mix1, d.dMix1);
+            d.Mix2 = SIMD_MM(add_ps)(d.Mix2, d.dMix2);
 
-            x = _mm_mul_ps(
-                _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, d.Mix1), y), _mm_mul_ps(x, d.Mix1)),
-                _mm_add_ps(_mm_mul_ps(_mm_sub_ps(one, d.Mix2), x), _mm_mul_ps(y, d.Mix2)));
+            x = SIMD_MM(mul_ps)(SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, d.Mix1), y),
+                                                SIMD_MM(mul_ps)(x, d.Mix1)),
+                                SIMD_MM(add_ps)(SIMD_MM(mul_ps)(SIMD_MM(sub_ps)(one, d.Mix2), x),
+                                                SIMD_MM(mul_ps)(y, d.Mix2)));
 
             if (WS)
             {
-                d.wsLPF = _mm_mul_ps(hb_c, _mm_add_ps(d.wsLPF, x));
-                d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(&d.WSS[0], _mm_and_ps(mask, d.wsLPF), d.Drive);
+                d.wsLPF = SIMD_MM(mul_ps)(hb_c, SIMD_MM(add_ps)(d.wsLPF, x));
+                d.Drive = SIMD_MM(add_ps)(d.Drive, d.dDrive);
+                x = g.WSptr(&d.WSS[0], SIMD_MM(and_ps)(mask, d.wsLPF), d.Drive);
             }
 
-            d.Gain = _mm_add_ps(d.Gain, d.dGain);
-            __m128 out = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
+            d.Gain = SIMD_MM(add_ps)(d.Gain, d.dGain);
+            auto out = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(x, d.Gain));
             d.FBlineL = out;
             // output stage
             MWriteOutputs(out)
@@ -284,12 +295,12 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
     case fc_stereo:
         for (int k = 0; k < BLOCK_SIZE_OS; k++)
         {
-            d.FB = _mm_add_ps(d.FB, d.dFB);
-            __m128 fb = _mm_mul_ps(d.FB, d.FBlineL);
+            d.FB = SIMD_MM(add_ps)(d.FB, d.dFB);
+            auto fb = SIMD_MM(mul_ps)(d.FB, d.FBlineL);
             fb = sdsp::softclip_ps(fb);
-            __m128 x = _mm_add_ps(d.DL[k], fb);
-            __m128 y = _mm_add_ps(d.DR[k], fb);
-            __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
+            auto x = SIMD_MM(add_ps)(d.DL[k], fb);
+            auto y = SIMD_MM(add_ps)(d.DR[k], fb);
+            auto mask = SIMD_MM(load_ps)((float *)&d.FU[0].active);
 
             if (A)
                 x = g.FU1ptr(&d.FU[0], x);
@@ -298,20 +309,20 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
 
             if (WS)
             {
-                d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(&d.WSS[0], _mm_and_ps(mask, x), d.Drive);
-                y = g.WSptr(&d.WSS[1], _mm_and_ps(mask, y), d.Drive);
+                d.Drive = SIMD_MM(add_ps)(d.Drive, d.dDrive);
+                x = g.WSptr(&d.WSS[0], SIMD_MM(and_ps)(mask, x), d.Drive);
+                y = g.WSptr(&d.WSS[1], SIMD_MM(and_ps)(mask, y), d.Drive);
             }
 
-            d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
-            d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
-            x = _mm_mul_ps(x, d.Mix1);
-            y = _mm_mul_ps(y, d.Mix2);
+            d.Mix1 = SIMD_MM(add_ps)(d.Mix1, d.dMix1);
+            d.Mix2 = SIMD_MM(add_ps)(d.Mix2, d.dMix2);
+            x = SIMD_MM(mul_ps)(x, d.Mix1);
+            y = SIMD_MM(mul_ps)(y, d.Mix2);
 
-            d.Gain = _mm_add_ps(d.Gain, d.dGain);
-            x = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
-            y = _mm_and_ps(mask, _mm_mul_ps(y, d.Gain));
-            d.FBlineL = _mm_add_ps(x, y);
+            d.Gain = SIMD_MM(add_ps)(d.Gain, d.dGain);
+            x = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(x, d.Gain));
+            y = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(y, d.Gain));
+            d.FBlineL = SIMD_MM(add_ps)(x, y);
 
             // output stage
             MWriteOutputsDual(x, y) AssertReasonableAudioFloat(OutL[k]);
@@ -321,15 +332,15 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
     case fc_wide:
         for (int k = 0; k < BLOCK_SIZE_OS; k++)
         {
-            d.FB = _mm_add_ps(d.FB, d.dFB);
-            __m128 fbL = _mm_mul_ps(d.FB, d.FBlineL);
-            __m128 fbR = _mm_mul_ps(d.FB, d.FBlineR);
-            __m128 xin = _mm_add_ps(d.DL[k], sdsp::softclip_ps(fbL));
-            __m128 yin = _mm_add_ps(d.DR[k], sdsp::softclip_ps(fbR));
-            __m128 x = xin;
-            __m128 y = yin;
+            d.FB = SIMD_MM(add_ps)(d.FB, d.dFB);
+            auto fbL = SIMD_MM(mul_ps)(d.FB, d.FBlineL);
+            auto fbR = SIMD_MM(mul_ps)(d.FB, d.FBlineR);
+            auto xin = SIMD_MM(add_ps)(d.DL[k], sdsp::softclip_ps(fbL));
+            auto yin = SIMD_MM(add_ps)(d.DR[k], sdsp::softclip_ps(fbR));
+            auto x = xin;
+            auto y = yin;
 
-            __m128 mask = _mm_load_ps((float *)&d.FU[0].active);
+            auto mask = SIMD_MM(load_ps)((float *)&d.FU[0].active);
 
             if (A)
             {
@@ -339,33 +350,33 @@ void ProcessFBQuad(QuadFilterChainState &d, fbq_global &g, float *OutL, float *O
 
             if (WS)
             {
-                d.Drive = _mm_add_ps(d.Drive, d.dDrive);
-                x = g.WSptr(&d.WSS[0], _mm_and_ps(mask, x), d.Drive);
-                y = g.WSptr(&d.WSS[1], _mm_and_ps(mask, y), d.Drive);
+                d.Drive = SIMD_MM(add_ps)(d.Drive, d.dDrive);
+                x = g.WSptr(&d.WSS[0], SIMD_MM(and_ps)(mask, x), d.Drive);
+                y = g.WSptr(&d.WSS[1], SIMD_MM(and_ps)(mask, y), d.Drive);
             }
 
             if (A || WS)
             {
-                d.Mix1 = _mm_add_ps(d.Mix1, d.dMix1);
-                __m128 t = _mm_sub_ps(one, d.Mix1);
-                x = _mm_add_ps(_mm_mul_ps(xin, t), _mm_mul_ps(x, d.Mix1));
-                y = _mm_add_ps(_mm_mul_ps(yin, t), _mm_mul_ps(y, d.Mix1));
+                d.Mix1 = SIMD_MM(add_ps)(d.Mix1, d.dMix1);
+                auto t = SIMD_MM(sub_ps)(one, d.Mix1);
+                x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(xin, t), SIMD_MM(mul_ps)(x, d.Mix1));
+                y = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(yin, t), SIMD_MM(mul_ps)(y, d.Mix1));
             }
 
             if (B)
             {
-                __m128 z = g.FU2ptr(&d.FU[1], x);
-                __m128 w = g.FU2ptr(&d.FU[3], y);
+                auto z = g.FU2ptr(&d.FU[1], x);
+                auto w = g.FU2ptr(&d.FU[3], y);
 
-                d.Mix2 = _mm_add_ps(d.Mix2, d.dMix2);
-                __m128 t = _mm_sub_ps(one, d.Mix2);
-                x = _mm_add_ps(_mm_mul_ps(x, t), _mm_mul_ps(z, d.Mix2));
-                y = _mm_add_ps(_mm_mul_ps(y, t), _mm_mul_ps(w, d.Mix2));
+                d.Mix2 = SIMD_MM(add_ps)(d.Mix2, d.dMix2);
+                auto t = SIMD_MM(sub_ps)(one, d.Mix2);
+                x = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(x, t), SIMD_MM(mul_ps)(z, d.Mix2));
+                y = SIMD_MM(add_ps)(SIMD_MM(mul_ps)(y, t), SIMD_MM(mul_ps)(w, d.Mix2));
             }
 
-            d.Gain = _mm_add_ps(d.Gain, d.dGain);
-            x = _mm_and_ps(mask, _mm_mul_ps(x, d.Gain));
-            y = _mm_and_ps(mask, _mm_mul_ps(y, d.Gain));
+            d.Gain = SIMD_MM(add_ps)(d.Gain, d.dGain);
+            x = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(x, d.Gain));
+            y = SIMD_MM(and_ps)(mask, SIMD_MM(mul_ps)(y, d.Gain));
             d.FBlineL = x;
             d.FBlineR = y;
 
@@ -442,33 +453,33 @@ FBQFPtr GetFBQPointer(int config, bool A, bool WS, bool B)
 
 void InitQuadFilterChainStateToZero(QuadFilterChainState *Q)
 {
-    Q->Gain = _mm_setzero_ps();
-    Q->FB = _mm_setzero_ps();
-    Q->Mix1 = _mm_setzero_ps();
-    Q->Mix2 = _mm_setzero_ps();
-    Q->Drive = _mm_setzero_ps();
-    Q->dGain = _mm_setzero_ps();
-    Q->dFB = _mm_setzero_ps();
-    Q->dMix1 = _mm_setzero_ps();
-    Q->dMix2 = _mm_setzero_ps();
-    Q->dDrive = _mm_setzero_ps();
+    Q->Gain = SIMD_MM(setzero_ps)();
+    Q->FB = SIMD_MM(setzero_ps)();
+    Q->Mix1 = SIMD_MM(setzero_ps)();
+    Q->Mix2 = SIMD_MM(setzero_ps)();
+    Q->Drive = SIMD_MM(setzero_ps)();
+    Q->dGain = SIMD_MM(setzero_ps)();
+    Q->dFB = SIMD_MM(setzero_ps)();
+    Q->dMix1 = SIMD_MM(setzero_ps)();
+    Q->dMix2 = SIMD_MM(setzero_ps)();
+    Q->dDrive = SIMD_MM(setzero_ps)();
 
-    Q->wsLPF = _mm_setzero_ps();
-    Q->FBlineL = _mm_setzero_ps();
-    Q->FBlineR = _mm_setzero_ps();
+    Q->wsLPF = SIMD_MM(setzero_ps)();
+    Q->FBlineL = SIMD_MM(setzero_ps)();
+    Q->FBlineR = SIMD_MM(setzero_ps)();
 
     for (auto i = 0; i < BLOCK_SIZE_OS; ++i)
     {
-        Q->DL[i] = _mm_setzero_ps();
-        Q->DR[i] = _mm_setzero_ps();
+        Q->DL[i] = SIMD_MM(setzero_ps)();
+        Q->DR[i] = SIMD_MM(setzero_ps)();
     }
 
-    Q->OutL = _mm_setzero_ps();
-    Q->OutR = _mm_setzero_ps();
-    Q->dOutL = _mm_setzero_ps();
-    Q->dOutR = _mm_setzero_ps();
-    Q->Out2L = _mm_setzero_ps();
-    Q->Out2R = _mm_setzero_ps();
-    Q->dOut2L = _mm_setzero_ps();
-    Q->dOut2R = _mm_setzero_ps();
+    Q->OutL = SIMD_MM(setzero_ps)();
+    Q->OutR = SIMD_MM(setzero_ps)();
+    Q->dOutL = SIMD_MM(setzero_ps)();
+    Q->dOutR = SIMD_MM(setzero_ps)();
+    Q->Out2L = SIMD_MM(setzero_ps)();
+    Q->Out2R = SIMD_MM(setzero_ps)();
+    Q->dOut2L = SIMD_MM(setzero_ps)();
+    Q->dOut2R = SIMD_MM(setzero_ps)();
 }

@@ -366,38 +366,47 @@ template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool st
                 unsigned int MPos = FPos >> (16 + MipMapB);
                 unsigned int MSPos = ((FPos >> (8 + MipMapB)) & 0xFF);
 
-                __m128i Wave =
-                    _mm_madd_epi16(_mm_load_si128(((__m128i *)storage->sinctableI16 + MSPos)),
-                                   _mm_loadu_si128((__m128i *)&WaveAdr[MPos]));
-                __m128i WaveP1 =
-                    _mm_madd_epi16(_mm_load_si128(((__m128i *)storage->sinctableI16 + MSPos)),
-                                   _mm_loadu_si128((__m128i *)&WaveAdrP1[MPos]));
+                SIMD_M128I Wave = SIMD_MM(madd_epi16)(
+                    SIMD_MM(load_si128)(((SIMD_M128I *)storage->sinctableI16 + MSPos)),
+                    SIMD_MM(loadu_si128)((SIMD_M128I *)&WaveAdr[MPos]));
+                SIMD_M128I WaveP1 = SIMD_MM(madd_epi16)(
+                    SIMD_MM(load_si128)(((SIMD_M128I *)storage->sinctableI16 + MSPos)),
+                    SIMD_MM(loadu_si128)((SIMD_M128I *)&WaveAdrP1[MPos]));
 
-                __m128i Win =
-                    _mm_madd_epi16(_mm_load_si128(((__m128i *)storage->sinctableI16 + WinSPos)),
-                                   _mm_loadu_si128((__m128i *)&WinAdr[WinPos]));
+                SIMD_M128I Win = SIMD_MM(madd_epi16)(
+                    SIMD_MM(load_si128)(((SIMD_M128I *)storage->sinctableI16 + WinSPos)),
+                    SIMD_MM(loadu_si128)((SIMD_M128I *)&WinAdr[WinPos]));
 
                 // Sum
                 int iWin alignas(16)[4], iWaveP1 alignas(16)[4], iWave alignas(16)[4];
 #if MAC
                 // this should be very fast on C2D/C1D (and there are no macs with K8's)
-                iWin[0] = _mm_cvtsi128_si32(Win);
-                iWin[1] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Win, _MM_SHUFFLE(1, 1, 1, 1)));
-                iWin[2] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Win, _MM_SHUFFLE(2, 2, 2, 2)));
-                iWin[3] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Win, _MM_SHUFFLE(3, 3, 3, 3)));
-                iWave[0] = _mm_cvtsi128_si32(Wave);
-                iWave[1] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Wave, _MM_SHUFFLE(1, 1, 1, 1)));
-                iWave[2] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Wave, _MM_SHUFFLE(2, 2, 2, 2)));
-                iWave[3] = _mm_cvtsi128_si32(_mm_shuffle_epi32(Wave, _MM_SHUFFLE(3, 3, 3, 3)));
-                iWaveP1[0] = _mm_cvtsi128_si32(WaveP1);
-                iWaveP1[1] = _mm_cvtsi128_si32(_mm_shuffle_epi32(WaveP1, _MM_SHUFFLE(1, 1, 1, 1)));
-                iWaveP1[2] = _mm_cvtsi128_si32(_mm_shuffle_epi32(WaveP1, _MM_SHUFFLE(2, 2, 2, 2)));
-                iWaveP1[3] = _mm_cvtsi128_si32(_mm_shuffle_epi32(WaveP1, _MM_SHUFFLE(3, 3, 3, 3)));
+                iWin[0] = SIMD_MM(cvtsi128_si32)(Win);
+                iWin[1] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(Win, SIMD_MM_SHUFFLE(1, 1, 1, 1)));
+                iWin[2] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(Win, SIMD_MM_SHUFFLE(2, 2, 2, 2)));
+                iWin[3] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(Win, SIMD_MM_SHUFFLE(3, 3, 3, 3)));
+                iWave[0] = SIMD_MM(cvtsi128_si32)(Wave);
+                iWave[1] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(Wave, SIMD_MM_SHUFFLE(1, 1, 1, 1)));
+                iWave[2] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(Wave, SIMD_MM_SHUFFLE(2, 2, 2, 2)));
+                iWave[3] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(Wave, SIMD_MM_SHUFFLE(3, 3, 3, 3)));
+                iWaveP1[0] = SIMD_MM(cvtsi128_si32)(WaveP1);
+                iWaveP1[1] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(WaveP1, SIMD_MM_SHUFFLE(1, 1, 1, 1)));
+                iWaveP1[2] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(WaveP1, SIMD_MM_SHUFFLE(2, 2, 2, 2)));
+                iWaveP1[3] = SIMD_MM(cvtsi128_si32)(
+                    SIMD_MM(shuffle_epi32)(WaveP1, SIMD_MM_SHUFFLE(3, 3, 3, 3)));
 
 #else
-                _mm_store_si128((__m128i *)&iWin, Win);
-                _mm_store_si128((__m128i *)&iWave, Wave);
-                _mm_store_si128((__m128i *)&iWaveP1, WaveP1);
+                SIMD_MM(store_si128)((SIMD_M128I *)&iWin, Win);
+                SIMD_MM(store_si128)((SIMD_M128I *)&iWave, Wave);
+                SIMD_MM(store_si128)((SIMD_M128I *)&iWaveP1, WaveP1);
 #endif
 
                 iWin[0] = (iWin[0] + iWin[1] + iWin[2] + iWin[3]) >> 13;
@@ -510,25 +519,28 @@ void WindowOscillator::process_block(float pitch, float drift, bool stereo, bool
     }
 
     // int32 -> float conversion
-    __m128 scale = _mm_load1_ps(&OutAttenuation);
+    auto scale = SIMD_MM(load1_ps)(&OutAttenuation);
     {
         // SSE2 path
         if (stereo)
         {
             for (int i = 0; i < BLOCK_SIZE_OS; i += 4)
             {
-                _mm_store_ps(&output[i],
-                             _mm_mul_ps(_mm_cvtepi32_ps(*(__m128i *)&IOutputL[i]), scale));
-                _mm_store_ps(&outputR[i],
-                             _mm_mul_ps(_mm_cvtepi32_ps(*(__m128i *)&IOutputR[i]), scale));
+                SIMD_MM(store_ps)
+                (&output[i],
+                 SIMD_MM(mul_ps)(SIMD_MM(cvtepi32_ps)(*(SIMD_M128I *)&IOutputL[i]), scale));
+                SIMD_MM(store_ps)
+                (&outputR[i],
+                 SIMD_MM(mul_ps)(SIMD_MM(cvtepi32_ps)(*(SIMD_M128I *)&IOutputR[i]), scale));
             }
         }
         else
         {
             for (int i = 0; i < BLOCK_SIZE_OS; i += 4)
             {
-                _mm_store_ps(&output[i],
-                             _mm_mul_ps(_mm_cvtepi32_ps(*(__m128i *)&IOutputL[i]), scale));
+                SIMD_MM(store_ps)
+                (&output[i],
+                 SIMD_MM(mul_ps)(SIMD_MM(cvtepi32_ps)(*(SIMD_M128I *)&IOutputL[i]), scale));
             }
         }
     }

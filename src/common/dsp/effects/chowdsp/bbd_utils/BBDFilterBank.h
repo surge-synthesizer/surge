@@ -52,10 +52,10 @@ constexpr std::complex<float> oFiltPole[] = {
     {-51468.0f, -21437.0f}, {-51468.0f, +21437.0f}, {-26276.0f, -59699.0f}, {-26276.0f, +59699.0f}};
 } // namespace FilterSpec
 
-inline SSEComplex fast_complex_pow(__m128 angle, float b)
+inline SSEComplex fast_complex_pow(SIMD_M128 angle, float b)
 {
-    const __m128 scalar = _mm_set1_ps(b);
-    auto angle_pow = _mm_mul_ps(angle, scalar);
+    const auto scalar = SIMD_MM(set1_ps)(b);
+    auto angle_pow = SIMD_MM(mul_ps)(angle, scalar);
     return SSEComplex::fastExp(angle_pow);
 }
 
@@ -107,7 +107,7 @@ struct InputFilterBank
 
     inline void process(float u)
     {
-        x = pole_corr * x + SSEComplex(_mm_set1_ps(u), _mm_set1_ps(0.0f));
+        x = pole_corr * x + SSEComplex(SIMD_MM(set1_ps)(u), SIMD_MM(set1_ps)(0.0f));
     }
 
     SSEComplex x;
@@ -118,7 +118,7 @@ struct InputFilterBank
     SSEComplex poles;
     SSEComplex root_corr;
     SSEComplex pole_corr;
-    __m128 pole_corr_angle;
+    SIMD_M128 pole_corr_angle;
 
     SSEComplex Aplus;
 
@@ -184,7 +184,7 @@ struct OutputFilterBank
     SSEComplex poles;
     SSEComplex root_corr;
     SSEComplex pole_corr;
-    __m128 pole_corr_angle;
+    SIMD_M128 pole_corr_angle;
 
     SSEComplex Aplus;
 

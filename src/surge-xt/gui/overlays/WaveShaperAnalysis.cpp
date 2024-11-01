@@ -173,10 +173,10 @@ void WaveShaperAnalysis::recalcFromSlider()
 
     for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
     {
-        wss.R[i] = _mm_set1_ps(R[i]);
+        wss.R[i] = SIMD_MM(set1_ps)(R[i]);
     }
 
-    wss.init = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_setzero_ps()); // better way?
+    wss.init = SIMD_MM(cmpeq_ps)(SIMD_MM(setzero_ps)(), SIMD_MM(setzero_ps)()); // better way?
 
     auto wsop = sst::waveshapers::GetQuadWaveshaper(wstype);
 
@@ -184,13 +184,13 @@ void WaveShaperAnalysis::recalcFromSlider()
     auto amp = powf(2.f, sliderDb / 18.f);
 
     auto pfg = powf(2.f, getPFG() / 18.f);
-    auto d1 = _mm_set1_ps(amp);
+    auto d1 = SIMD_MM(set1_ps)(amp);
 
     for (int i = 0; i < npts; i++)
     {
         float x = i * dx;
         float inval = pfg * std::sin(x * 4.0 * M_PI);
-        auto ivs = _mm_set1_ps(inval);
+        auto ivs = SIMD_MM(set1_ps)(inval);
         auto ov1 = ivs;
 
         if (wsop)
@@ -199,7 +199,7 @@ void WaveShaperAnalysis::recalcFromSlider()
         }
 
         float r alignas(16)[8];
-        _mm_store_ps(r, ov1);
+        SIMD_MM(store_ps)(r, ov1);
 
         sliderDrivenCurve.emplace_back(x, inval, r[0]);
     }

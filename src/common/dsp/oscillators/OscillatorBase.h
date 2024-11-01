@@ -97,7 +97,7 @@ class AbstractBlitOscillator : public Oscillator
     float oscbuffer alignas(16)[OB_LENGTH + FIRipol_N];
     float oscbufferR alignas(16)[OB_LENGTH + FIRipol_N];
     float dcbuffer alignas(16)[OB_LENGTH + FIRipol_N];
-    __m128 osc_out, osc_out2, osc_outR, osc_out2R;
+    SIMD_M128 osc_out, osc_out2, osc_outR, osc_out2R;
     void prepare_unison(int voices);
     float integrator_hpf;
     float pitchmult, pitchmult_inv;

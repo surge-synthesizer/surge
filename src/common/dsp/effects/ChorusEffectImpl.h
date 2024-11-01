@@ -60,8 +60,8 @@ template <int v> void ChorusEffect<v>::init()
         x = 2.f * x - 1.f;
         voicepan[i][0] = sqrt(0.5 - 0.5 * x) * gainscale;
         voicepan[i][1] = sqrt(0.5 + 0.5 * x) * gainscale;
-        voicepanL4[i] = _mm_set1_ps(voicepan[i][0]);
-        voicepanR4[i] = _mm_set1_ps(voicepan[i][1]);
+        voicepanL4[i] = SIMD_MM(set1_ps)(voicepan[i][0]);
+        voicepanR4[i] = SIMD_MM(set1_ps)(voicepan[i][1]);
     }
 
     setvars(true);
@@ -118,7 +118,7 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
-        __m128 L = _mm_setzero_ps(), R = _mm_setzero_ps();
+        auto L = SIMD_MM(setzero_ps)(), R = SIMD_MM(setzero_ps)();
 
         for (int j = 0; j < v; j++)
         {
@@ -129,20 +129,23 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
             int sinc = FIRipol_N * limit_range((int)(FIRipol_M * (float(i_dtime + 1) - vtime)), 0,
                                                FIRipol_M - 1);
 
-            __m128 vo;
-            vo = _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sinc]), _mm_loadu_ps(&buffer[rp]));
-            vo = _mm_add_ps(vo, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sinc + 4]),
-                                           _mm_loadu_ps(&buffer[rp + 4])));
-            vo = _mm_add_ps(vo, _mm_mul_ps(_mm_load_ps(&storage->sinctable1X[sinc + 8]),
-                                           _mm_loadu_ps(&buffer[rp + 8])));
+            SIMD_M128 vo;
+            vo = SIMD_MM(mul_ps)(SIMD_MM(load_ps)(&storage->sinctable1X[sinc]),
+                                 SIMD_MM(loadu_ps)(&buffer[rp]));
+            vo = SIMD_MM(add_ps)(vo,
+                                 SIMD_MM(mul_ps)(SIMD_MM(load_ps)(&storage->sinctable1X[sinc + 4]),
+                                                 SIMD_MM(loadu_ps)(&buffer[rp + 4])));
+            vo = SIMD_MM(add_ps)(vo,
+                                 SIMD_MM(mul_ps)(SIMD_MM(load_ps)(&storage->sinctable1X[sinc + 8]),
+                                                 SIMD_MM(loadu_ps)(&buffer[rp + 8])));
 
-            L = _mm_add_ps(L, _mm_mul_ps(vo, voicepanL4[j]));
-            R = _mm_add_ps(R, _mm_mul_ps(vo, voicepanR4[j]));
+            L = SIMD_MM(add_ps)(L, SIMD_MM(mul_ps)(vo, voicepanL4[j]));
+            R = SIMD_MM(add_ps)(R, SIMD_MM(mul_ps)(vo, voicepanR4[j]));
         }
         L = mech::sum_ps_to_ss(L);
         R = mech::sum_ps_to_ss(R);
-        _mm_store_ss(&tbufferL[k], L);
-        _mm_store_ss(&tbufferR[k], R);
+        SIMD_MM(store_ss)(&tbufferL[k], L);
+        SIMD_MM(store_ss)(&tbufferR[k], R);
     }
 
     if (!fxdata->p[ch_highcut].deactivated)

@@ -27,12 +27,12 @@ HysteresisProcessing::HysteresisProcessing() {}
 void HysteresisProcessing::reset()
 {
 #if CHOWTAPE_HYSTERESIS_USE_SIMD
-    M_n1 = _mm_set1_pd(0.0);
-    H_n1 = _mm_set1_pd(0.0);
-    H_d_n1 = _mm_set1_pd(0.0);
+    M_n1 = SIMD_MM(set1_pd)(0.0);
+    H_n1 = SIMD_MM(set1_pd)(0.0);
+    H_d_n1 = SIMD_MM(set1_pd)(0.0);
 
-    hpState.coth = _mm_set1_pd(0.0);
-    hpState.nearZero = _mm_set1_pd(0.0);
+    hpState.coth = SIMD_MM(set1_pd)(0.0);
+    hpState.nearZero = SIMD_MM(set1_pd)(0.0);
 #else
     M_n1 = 0.0;
     H_n1 = 0.0;

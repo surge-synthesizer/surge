@@ -22,37 +22,37 @@
 #ifndef SURGE_SRC_COMMON_DSP_VEMBERTECH_PORTABLE_INTRINSICS_H
 #define SURGE_SRC_COMMON_DSP_VEMBERTECH_PORTABLE_INTRINSICS_H
 
-#define vFloat __m128
+#define vFloat SIMD_M128
 
-#define vZero _mm_setzero_ps()
+#define vZero SIMD_MM(setzero_ps)()
 
-#define vAdd _mm_add_ps
-#define vSub _mm_sub_ps
-#define vMul _mm_mul_ps
-#define vMAdd(a, b, c) _mm_add_ps(_mm_mul_ps(a, b), c)
-#define vNMSub(a, b, c) _mm_sub_ps(c, _mm_mul_ps(a, b))
+#define vAdd SIMD_MM(add_ps)
+#define vSub SIMD_MM(sub_ps)
+#define vMul SIMD_MM(mul_ps)
+#define vMAdd(a, b, c) SIMD_MM(add_ps)(SIMD_MM(mul_ps)(a, b), c)
+#define vNMSub(a, b, c) SIMD_MM(sub_ps)(c, SIMD_MM(mul_ps)(a, b))
 #define vNeg(a) vSub(vZero, a)
 
-#define vAnd _mm_and_ps
-#define vOr _mm_or_ps
+#define vAnd SIMD_MM(and_ps)
+#define vOr SIMD_MM(or_ps)
 
-#define vCmpGE _mm_cmpge_ps
+#define vCmpGE SIMD_MM(cmpge_ps)
 
-#define vMax _mm_max_ps
-#define vMin _mm_min_ps
+#define vMax SIMD_MM(max_ps)
+#define vMin SIMD_MM(min_ps)
 
-#define vLoad _mm_load_ps
+#define vLoad SIMD_MM(load_ps)
 
-inline vFloat vLoad1(float f) { return _mm_load1_ps(&f); }
+inline vFloat vLoad1(float f) { return SIMD_MM(load1_ps)(&f); }
 
-inline vFloat vSqrtFast(vFloat v) { return _mm_rcp_ps(_mm_rsqrt_ps(v)); }
+inline vFloat vSqrtFast(vFloat v) { return SIMD_MM(rcp_ps)(SIMD_MM(rsqrt_ps)(v)); }
 
 inline float vSum(vFloat x)
 {
-    __m128 a = _mm_add_ps(x, _mm_movehl_ps(x, x));
-    a = _mm_add_ss(a, _mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 0, 0, 1)));
+    auto a = SIMD_MM(add_ps)(x, SIMD_MM(movehl_ps)(x, x));
+    a = SIMD_MM(add_ss)(a, SIMD_MM(shuffle_ps)(a, a, SIMD_MM_SHUFFLE(0, 0, 0, 1)));
     float f;
-    _mm_store_ss(&f, a);
+    SIMD_MM(store_ss)(&f, a);
 
     return f;
 }

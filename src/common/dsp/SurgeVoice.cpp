@@ -50,12 +50,12 @@ enum lag_entries
     le_pfg,
 };
 
-inline void set1f(__m128 &m, int i, float f) { *((float *)&m + i) = f; }
+inline void set1f(SIMD_M128 &m, int i, float f) { *((float *)&m + i) = f; }
 
-inline void set1i(__m128 &m, int e, int i) { *((int *)&m + e) = i; }
-inline void set1ui(__m128 &m, int e, unsigned int i) { *((unsigned int *)&m + e) = i; }
+inline void set1i(SIMD_M128 &m, int e, int i) { *((int *)&m + e) = i; }
+inline void set1ui(SIMD_M128 &m, int e, unsigned int i) { *((unsigned int *)&m + e) = i; }
 
-inline float get1f(__m128 m, int i) { return *((float *)&m + i); }
+inline float get1f(SIMD_M128 m, int i) { return *((float *)&m + i); }
 
 float SurgeVoiceState::getPitch(SurgeStorage *storage)
 {
@@ -1262,8 +1262,8 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
     for (int i = 0; i < BLOCK_SIZE_OS; i++)
     {
-        _mm_store_ss(((float *)&Q.DL[i] + Qe), _mm_load_ss(&output[0][i]));
-        _mm_store_ss(((float *)&Q.DR[i] + Qe), _mm_load_ss(&output[1][i]));
+        SIMD_MM(store_ss)(((float *)&Q.DL[i] + Qe), SIMD_MM(load_ss)(&output[0][i]));
+        SIMD_MM(store_ss)(((float *)&Q.DR[i] + Qe), SIMD_MM(load_ss)(&output[1][i]));
     }
     SetQFB(&Q, Qe);
 

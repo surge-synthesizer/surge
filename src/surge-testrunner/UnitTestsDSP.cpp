@@ -439,7 +439,7 @@ TEST_CASE("SSE std::complex", "[dsp]")
             sum += qtr.atIndex(i).real();
 
         float sumSSE alignas(16)[4];
-        _mm_store1_ps(sumSSE, sst::basic_blocks::mechanics::sum_ps_to_ss(qtr.real()));
+        SIMD_MM(store1_ps)(sumSSE, sst::basic_blocks::mechanics::sum_ps_to_ss(qtr.real()));
         REQUIRE(sum == Approx(sumSSE[0]).margin(1e-5));
 
         float angles alignas(16)[4];
@@ -447,7 +447,7 @@ TEST_CASE("SSE std::complex", "[dsp]")
         angles[1] = M_PI / 2;
         angles[2] = 3 * M_PI / 4;
         angles[3] = M_PI;
-        auto asse = _mm_load_ps(angles);
+        auto asse = SIMD_MM(load_ps)(angles);
         auto c = SSEComplex::fastExp(asse);
 
         auto c0 = c.atIndex(0);
@@ -550,7 +550,7 @@ TEST_CASE("Wavehaper Lookup Table", "[dsp]")
         auto shafted_tanh = [](double x) { return (exp(x) - exp(-x * 1.2)) / (exp(x) + exp(-x)); };
         sst::waveshapers::QuadWaveshaperState qss{};
         for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
-            qss.R[i] = _mm_setzero_ps();
+            qss.R[i] = SIMD_MM(setzero_ps)();
 
         /*
          * asym:
@@ -563,13 +563,13 @@ TEST_CASE("Wavehaper Lookup Table", "[dsp]")
          */
         for (float x = -8; x < 8; x += 0.07)
         {
-            auto d = _mm_set1_ps(1.0);
+            auto d = SIMD_MM(set1_ps)(1.0);
             float out alignas(16)[4], inv alignas(16)[4];
-            auto in = _mm_set_ps(x, x + 0.01, x + 0.03, x + 0.05);
-            _mm_store_ps(inv, in);
+            auto in = SIMD_MM(set_ps)(x, x + 0.01, x + 0.03, x + 0.05);
+            SIMD_MM(store_ps)(inv, in);
 
             auto r = wst(&qss, in, d);
-            _mm_store_ps(out, r);
+            SIMD_MM(store_ps)(out, r);
 
             // sinus has functional form sin((i-512) * PI/512)
             // or i = 256 x + 512
