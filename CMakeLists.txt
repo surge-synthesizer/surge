@@ -176,6 +176,7 @@ if(MSVC)
     /wd4388   # signed unsigned mismatch in comparison
     /wd4065   # standalone default in a switch with no case
     /wd4702   # unreachable code. I generally do if( a ) return foo else return bar; return nullptr so don't warn on that
+    /wd4005   # macro redefinition. Thanks NOMINMAX
 
     # Clang-cl-only warnings
     $<$<CXX_COMPILER_ID:Clang>:-Wno-microsoft-exception-spec>

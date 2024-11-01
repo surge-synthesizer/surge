@@ -20,6 +20,10 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_gui_extra/juce_gui_extra.h>
+
 #include "SurgeJUCELookAndFeel.h"
 #include "RuntimeFont.h"
 #include "SkinSupport.h"
@@ -253,12 +257,12 @@ void SurgeJUCELookAndFeel::drawDocumentWindowTitleBar(DocumentWindow &window, Gr
         icon->drawAt(g, titleCenter - (titleTextWidth / 2) - 14 - textMargin, h / 2 - 7, 1.0);
     }
 
-    auto boxSurge = Rectangle<int>(titleCenter - (titleTextWidth / 2), 0, sw, h);
+    auto boxSurge = juce::Rectangle<int>(titleCenter - (titleTextWidth / 2), 0, sw, h);
     g.setFont(fontSurge);
     g.drawText(surgeLabel, boxSurge, Justification::centredLeft);
 
     auto boxVersion =
-        Rectangle<int>(titleCenter - (titleTextWidth / 2) + sw + textMargin, 0, vw, h);
+        juce::Rectangle<int>(titleCenter - (titleTextWidth / 2) + sw + textMargin, 0, vw, h);
     g.setFont(fontVersion);
     g.drawText(surgeVersion, boxVersion, Justification::centredLeft);
 }
@@ -286,7 +290,7 @@ class SurgeJUCELookAndFeel_DocumentWindowButton : public Button
 
         auto reducedRect =
             Justification(Justification::centred)
-                .appliedToRectangle(Rectangle<int>(getHeight(), getHeight()), getLocalBounds())
+                .appliedToRectangle(juce::Rectangle<int>(getHeight(), getHeight()), getLocalBounds())
                 .toFloat()
                 .reduced((float)getHeight() * 0.25f);
 
@@ -360,7 +364,7 @@ juce::Font SurgeJUCELookAndFeel::getPopupMenuBoldFont()
 }
 
 // overridden here just to make the shortcut text same size as normal menu entry text
-void SurgeJUCELookAndFeel::drawPopupMenuItem(Graphics &g, const Rectangle<int> &area,
+void SurgeJUCELookAndFeel::drawPopupMenuItem(Graphics &g, const juce::Rectangle<int> &area,
                                              const bool isSeparator, const bool isActive,
                                              const bool isHighlighted, const bool isTicked,
                                              const bool hasSubMenu, const String &text,
@@ -479,7 +483,7 @@ void SurgeJUCELookAndFeel::updateDarkIfNeeded()
     }
 }
 void SurgeJUCELookAndFeel::drawPopupMenuSectionHeaderWithOptions(Graphics &graphics,
-                                                                 const Rectangle<int> &area,
+                                                                 const juce::Rectangle<int> &area,
                                                                  const String &sectionName,
                                                                  const PopupMenu::Options &options)
 {

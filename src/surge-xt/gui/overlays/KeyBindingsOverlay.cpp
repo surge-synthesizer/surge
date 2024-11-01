@@ -20,6 +20,8 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 #include "KeyBindingsOverlay.h"
 #include <SurgeJUCELookAndFeel.h>
 #include "widgets/MenuCustomComponents.h"

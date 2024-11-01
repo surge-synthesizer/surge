@@ -27,12 +27,14 @@
 #ifndef SURGE_SRC_SURGE_XT_GUI_OVERLAYS_LUAEDITORS_H
 #define SURGE_SRC_SURGE_XT_GUI_OVERLAYS_LUAEDITORS_H
 
+#include <juce_gui_extra/juce_gui_extra.h>
+
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
 
-#include "juce_gui_extra/juce_gui_extra.h"
 #include "OverlayComponent.h"
 #include "RefreshableOverlay.h"
+
 
 class SurgeGUIEditor;
 

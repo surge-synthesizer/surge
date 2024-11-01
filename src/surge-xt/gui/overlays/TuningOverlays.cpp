@@ -19,6 +19,9 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+
+#include <juce_gui_extra/juce_gui_extra.h>
+
 #include "TuningOverlays.h"
 #include "RuntimeFont.h"
 #include "SurgeStorage.h"
@@ -29,7 +32,6 @@
 #include "widgets/MultiSwitch.h"
 #include "fmt/core.h"
 #include <chrono>
-#include "juce_gui_extra/juce_gui_extra.h"
 #include "UnitConversions.h"
 #include "libMTSClient.h"
 
