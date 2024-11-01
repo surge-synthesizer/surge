@@ -20,7 +20,6 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_gui_extra/juce_gui_extra.h>
 
@@ -288,11 +287,11 @@ class SurgeJUCELookAndFeel_DocumentWindowButton : public Button
         g.setColour(colour);
         auto &p = getToggleState() ? toggledShape : normalShape;
 
-        auto reducedRect =
-            Justification(Justification::centred)
-                .appliedToRectangle(juce::Rectangle<int>(getHeight(), getHeight()), getLocalBounds())
-                .toFloat()
-                .reduced((float)getHeight() * 0.25f);
+        auto reducedRect = Justification(Justification::centred)
+                               .appliedToRectangle(juce::Rectangle<int>(getHeight(), getHeight()),
+                                                   getLocalBounds())
+                               .toFloat()
+                               .reduced((float)getHeight() * 0.25f);
 
         g.fillPath(p, p.getTransformToScaleToFit(reducedRect, true));
     }

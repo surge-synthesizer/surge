@@ -35,7 +35,6 @@
 #include "OverlayComponent.h"
 #include "RefreshableOverlay.h"
 
-
 class SurgeGUIEditor;
 
 namespace Surge
