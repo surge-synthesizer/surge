@@ -20,7 +20,10 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#if !defined(_M_ARM64EC)
 #include "BBDEnsembleEffect.h"
+#endif
+
 #include "BonsaiEffect.h"
 #include "ChorusEffectImpl.h"
 #include "CombulatorEffect.h"
@@ -105,7 +108,11 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
     case fxt_tape:
         return new chowdsp::TapeEffect(storage, fxdata, pd);
     case fxt_ensemble:
+#if defined(_M_ARM64EC)
+        return nullptr;
+#else
         return new BBDEnsembleEffect(storage, fxdata, pd);
+#endif
     case fxt_treemonster:
         return new TreemonsterEffect(storage, fxdata, pd);
     case fxt_waveshaper:
