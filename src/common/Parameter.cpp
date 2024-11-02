@@ -1178,18 +1178,11 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_ensemble_stages:
     {
-#if defined(_M_ARM64EC)
-        valtype = vt_int;
-        val_min.i = 0;
-        val_max.i = 1;
-        val_default.i = 0;
-#else
         extern int ensemble_stage_count();
         valtype = vt_int;
         val_min.i = 0;
         val_max.i = ensemble_stage_count() - 1;
         val_default.i = 0;
-#endif
         break;
     }
     case ct_stringosc_excitation_model:
@@ -4071,12 +4064,8 @@ std::string Parameter::get_display(bool external, float ef) const
         break;
         case ct_ensemble_stages:
         {
-#if defined(_M_ARM64EC)
-            txt = "name";
-#else
             extern std::string ensemble_stage_name(int);
             txt = ensemble_stage_name(i);
-#endif
         }
         break;
         case ct_reson_mode:

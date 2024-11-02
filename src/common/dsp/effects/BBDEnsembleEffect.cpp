@@ -20,8 +20,6 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#if !defined(_M_ARM64EC)
-
 #include "BBDEnsembleEffect.h"
 
 #include "sst/basic-blocks/mechanics/block-ops.h"
@@ -571,5 +569,3 @@ void BBDEnsembleEffect::handleStreamingMismatches(int streamingRevision,
         fxdata->p[ens_output_filter].deactivated = true;
     }
 }
-
-#endif
