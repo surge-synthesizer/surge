@@ -109,5 +109,4 @@ class BBDEnsembleEffect : public Effect
     BiquadFilter sincInputFilter;
 };
 
-
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_BBDENSEMBLEEFFECT_H
