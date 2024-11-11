@@ -25,7 +25,6 @@
 #include "DebugHelpers.h"
 #include "SurgeStorage.h"
 #include "tinyxml/tinyxml.h"
-#include "DebugHelpers.h"
 #include "sst/plugininfra/strnatcmp.h"
 
 namespace Surge
@@ -81,7 +80,7 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
             // OK the internal name has "lfo7_" at the top or what not. We need this
             // loadable into any LFO so...
             std::string in(curr->get_internal_name());
-            auto p = in.find("_");
+            auto p = in.find('_');
             in = in.substr(p + 1);
             TiXmlElement pn(in);
 
@@ -176,7 +175,7 @@ void ModulatorPreset::loadPresetFrom(const fs::path &location, SurgeStorage *s, 
         // OK the internal name has "lfo7_" at the top or what not. We need this
         // loadable into any LFO so...
         std::string in(curr->get_internal_name());
-        auto p = in.find("_");
+        auto p = in.find('_');
         in = in.substr(p + 1);
         auto valNode = params->FirstChildElement(in.c_str());
         if (valNode)

@@ -852,16 +852,8 @@ void insertAtIndex(MSEGStorage *ms, int insertIndex)
         nxt = 0;
     }
 
-    if (nxt == insertIndex)
-    {
-        ms->segments[insertIndex].cpv = ms->segments[nxt].v0 * 0.5;
-        ms->segments[insertIndex].cpduration = 0.125;
-    }
-    else
-    {
-        ms->segments[insertIndex].cpv = ms->segments[nxt].v0 * 0.5;
-        ms->segments[insertIndex].cpduration = 0.125;
-    }
+    ms->segments[insertIndex].cpv = ms->segments[nxt].v0 * 0.5;
+    ms->segments[insertIndex].cpduration = 0.125;
 
     /*
      * Handle the loops. We have just inserted at index so if start or end

@@ -69,7 +69,7 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         oss << lua_tostring(L, -1);
         errorMessage = oss.str();
         lua_pop(L, 1);
-        for (auto f : functions)
+        for (const auto &f : functions)
             lua_pushnil(L);
         return 0;
     }
@@ -97,7 +97,7 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         oss << lua_tostring(L, -1);
         errorMessage = oss.str();
         lua_pop(L, 1);
-        for (auto f : functions)
+        for (const auto &f : functions)
             lua_pushnil(L);
         return 0;
     }

@@ -647,8 +647,6 @@ void SineOscillator::process_block_internal(float pitch, float drift, float fmde
     FB.newValue(fb_val);
 
     float p alignas(16)[MAX_UNISON];
-    float sx alignas(16)[MAX_UNISON];
-    float cx alignas(16)[MAX_UNISON];
     float olv alignas(16)[MAX_UNISON];
     float orv alignas(16)[MAX_UNISON];
 
