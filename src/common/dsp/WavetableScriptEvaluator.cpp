@@ -48,7 +48,7 @@ std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::strin
     Surge::LuaSupport::loadSurgePrelude(L, Surge::LuaSources::wtse_prelude);
 
     std::string emsg;
-    auto res = Surge::LuaSupport::parseStringDefiningFunction(L, eqn.c_str(), "generate", emsg);
+    auto res = Surge::LuaSupport::parseStringDefiningFunction(L, eqn, "generate", emsg);
     if (res)
     {
         Surge::LuaSupport::setSurgeFunctionEnvironment(L);

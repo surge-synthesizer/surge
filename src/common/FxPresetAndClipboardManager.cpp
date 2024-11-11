@@ -249,14 +249,8 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
 {
     try
     {
-        char fxName[TXT_SIZE];
-        fxName[0] = 0;
-        strxcpy(fxName, s.c_str(), TXT_SIZE);
-
-        if (strlen(fxName) == 0)
-        {
+        if (s.empty())
             return;
-        }
 
         /*
          * OK so lets see if there's a path separator in the string

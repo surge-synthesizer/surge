@@ -123,11 +123,6 @@ void ExciterEffect::init_ctrltypes()
     fxdata->p[exciter_tone].val_default.f = 0.5f;
     fxdata->p[exciter_tone].posy_offset = 1;
 
-    fxdata->p[exciter_tone].set_name("Tone");
-    fxdata->p[exciter_tone].set_type(ct_percent);
-    fxdata->p[exciter_tone].val_default.f = 0.5f;
-    fxdata->p[exciter_tone].posy_offset = 1;
-
     fxdata->p[exciter_att].set_name("Attack");
     fxdata->p[exciter_att].set_type(ct_comp_attack_ms);
     fxdata->p[exciter_att].val_max.f = std::log2(20.0f) / fxdata->p[exciter_att].displayInfo.b;
