@@ -153,7 +153,7 @@ bool Apicolypse::parseParameterValueFromString(VstInt32 index, const char* txt, 
 
    if (index == kParamD)
    {
-      string2dB(txt, v);
+      f = string2dB(txt, v);
    }
    else
    {
