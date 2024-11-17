@@ -671,9 +671,7 @@ struct FormulaControlArea : public juce::Component,
         {
         case tag_select_tab:
         {
-            int m = c->getValue();
-
-            if (m > 0.5)
+            if (c->getValue() > 0.5)
             {
                 overlay->showPreludeCode();
             }
@@ -1446,9 +1444,7 @@ struct WavetableScriptControlArea : public juce::Component,
         {
         case tag_select_tab:
         {
-            int m = c->getValue();
-
-            if (m > 0.5)
+            if (c->getValue() > 0.5)
             {
                 overlay->showPreludeCode();
             }
