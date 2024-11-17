@@ -839,7 +839,6 @@ CREATE TABLE IF NOT EXISTS Favorites (
         std::ostringstream searchName;
         searchName << p.name << " ";
 
-        if (storage)
         {
             auto pTmp = p.path.parent_path();
             std::vector<fs::path> parentFiles;

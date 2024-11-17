@@ -2943,14 +2943,11 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
         Surge::MSEG::modifyEditMode(this->ms, editMode);
 
         // zoom to fit
-        if (canvas)
-        {
-            canvas->ms->axisStart = 0.f;
-            canvas->ms->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
+        canvas->ms->axisStart = 0.f;
+        canvas->ms->axisWidth = editMode ? 1.f : ms->envelopeModeDuration;
 
-            canvas->modelChanged(0, false);
-            canvas->repaint();
-        }
+        canvas->modelChanged(0, false);
+        canvas->repaint();
 
         repaint();
         break;
@@ -2961,11 +2958,8 @@ void MSEGControlRegion::valueChanged(Surge::GUI::IComponentTagValue *p)
         canvas->pushToUndo();
         int m = floor((val * 2) + 0.1) + 1;
         ms->loopMode = (MSEGStorage::LoopMode)m;
-        if (canvas)
-        {
-            canvas->modelChanged();
-            canvas->repaint();
-        }
+        canvas->modelChanged();
+        canvas->repaint();
         repaint();
         break;
     }

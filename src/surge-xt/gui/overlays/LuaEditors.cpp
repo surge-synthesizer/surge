@@ -292,7 +292,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
 
         stepLfoDebugger();
 
-        if (editor && editor->editor)
+        if (editor->editor)
             editor->editor->enqueueAccessibleAnnouncement("Reset Debugger");
     }
 
@@ -339,7 +339,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             debugTable->repaint();
         }
 
-        if (editor && editor->editor)
+        if (editor->editor)
             editor->editor->enqueueAccessibleAnnouncement("Stepped Debugger");
     }
 

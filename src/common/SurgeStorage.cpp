@@ -1332,11 +1332,6 @@ void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)
         return;
     }
 
-    if (!wt)
-    {
-        return;
-    }
-
     load_wt(path_to_string(wt_list[id].path), wt, osc);
 
     if (osc)
