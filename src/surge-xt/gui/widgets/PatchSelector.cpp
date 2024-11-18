@@ -1210,11 +1210,11 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
         if (n_subc > 1)
         {
-            name = fmt::format("{} {}", menuName, subc + 1).c_str();
+            name = fmt::format("{} {}", menuName, subc + 1);
         }
         else
         {
-            name = menuName.c_str();
+            name = menuName;
         }
 
         if (!single_category)

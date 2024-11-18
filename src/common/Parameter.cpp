@@ -4680,7 +4680,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         }
         case ct_pbdepth:
         {
-            if (extend_range && s.find("/") != std::string::npos)
+            if (extend_range && s.find('/') != std::string::npos)
             {
                 if (!supports_tuning_value_from_string(s, errMsg))
                     return false;
@@ -4813,7 +4813,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
         if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
         {
             // Check for a fraction
-            if (s.find("/") != std::string::npos)
+            if (s.find('/') != std::string::npos)
             {
                 if (!supports_tuning_value_from_string(s, errMsg))
                     return false;
@@ -5016,7 +5016,7 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
             // OK so do we contain a /?
             const char *slp;
 
-            if ((slp = strstr(strip, "/")) != nullptr)
+            if ((slp = strchr(strip, '/')) != nullptr)
             {
                 float num = std::atof(strip);
                 float den = std::atof(slp + 1);
@@ -5120,7 +5120,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
         if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
         {
             // Check for a fraction
-            if (s.find("/") != std::string::npos)
+            if (s.find('/') != std::string::npos)
             {
                 if (!supports_tuning_value_from_string(s, errMsg))
                     return false;
@@ -5435,7 +5435,7 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
             // OK so do we contain a /?
             const char *slp;
 
-            if ((slp = strstr(strip, "/")) != nullptr)
+            if ((slp = strchr(strip, '/')) != nullptr)
             {
                 float num = std::atof(strip);
                 float den = std::atof(slp + 1);
