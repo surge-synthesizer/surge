@@ -448,7 +448,7 @@ std::vector<formulaObservation> runFormula(SurgeStorage *storage, FormulaModulat
 
         float r[Surge::Formula::max_formula_outputs];
         Surge::Formula::valueAt(iphase, phase, storage, fs, &es, r);
-        res.push_back(formulaObservation(iphase, phase, r[0]));
+        res.emplace_back(formulaObservation(iphase, phase, r[0]));
         for (int i = 0; i < Surge::Formula::max_formula_outputs; ++i)
             res.back().vVec[i] = r[i];
 

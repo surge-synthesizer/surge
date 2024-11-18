@@ -286,7 +286,7 @@ std::vector<Connector> Connector::connectorsByComponentType(const Component &c)
     for (auto it : *idmap)
     {
         if (it.second->defaultComponent == c)
-            res.push_back(Connector(it.second));
+            res.emplace_back(Connector(it.second));
     }
     return res;
 }
