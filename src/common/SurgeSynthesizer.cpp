@@ -2507,7 +2507,7 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
 {
     std::list<HoldBufferItem> retainBuffer;
 
-    for (const auto & hp : holdbuffer[scene])
+    for (const auto &hp : holdbuffer[scene])
     {
         auto channel = hp.channel;
         auto key = hp.key;

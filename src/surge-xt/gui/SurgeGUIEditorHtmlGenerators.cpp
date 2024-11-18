@@ -665,12 +665,12 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
     {
         htmls << "<ul>\n";
         auto r1 = bitmapStore->nonResourceBitmapIDs(SurgeImageStore::STRINGID);
-        for (const auto & v : r1)
+        for (const auto &v : r1)
         {
             htmls << "<li>" << v << "</li>\n";
         }
         auto r2 = bitmapStore->nonResourceBitmapIDs(SurgeImageStore::PATH);
-        for (const auto & v : r2)
+        for (const auto &v : r2)
         {
             htmls << "<li>" << v << "</li>\n";
         }

@@ -176,7 +176,7 @@ struct PatchDBSQLTreeViewItem : public SharedTreeViewItem
                 if (type == 1)
                 {
                     auto res = storage->patchDB->readAllFeatureValueString(feature);
-                    for (const auto & r : res)
+                    for (const auto &r : res)
                         addSubItem(new TextSubItem(editor, storage, r));
                 }
                 else
