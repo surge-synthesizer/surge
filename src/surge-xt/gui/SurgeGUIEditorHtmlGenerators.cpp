@@ -614,7 +614,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
         auto co = Surge::Skin::Connector::allConnectorIDs();
         htmls << "<table><tr><th>Name</th><th>Geometry "
                  "(XxY+WxH)</th><th>Class</th><th>Properties</th></tr>\n";
-        for (const auto & c : co)
+        for (const auto &c : co)
         {
             htmls << "<tr><td>" << c << "</td><td>";
             auto comp = currentSkin->getOrCreateControlForConnector(
