@@ -1335,9 +1335,9 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
 
     auto q = boxo;
 
-    const auto tfpath = juce::AffineTransform()
-                            .scaled(boxo.getWidth() / valScale, boxo.getHeight() / valScale)
-                            .translated(q.getTopLeft().x, q.getTopLeft().y);
+    const auto tfpath = juce::AffineTransform().
+                            scaled(boxo.getWidth() / valScale, boxo.getHeight() / valScale).
+                            translated(q.getTopLeft().x, q.getTopLeft().y);
 
     g.setColour(skin->getColor(Colors::LFO::StepSeq::Envelope));
 
