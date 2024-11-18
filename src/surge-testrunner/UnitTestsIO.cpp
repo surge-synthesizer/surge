@@ -447,7 +447,6 @@ TEST_CASE("Stream Wavetable Names", "[io]")
 
 TEST_CASE("Load Patches With Embedded KBM", "[io]")
 {
-    std::vector<std::string> patches = {};
     SECTION("Check Restore")
     {
         {

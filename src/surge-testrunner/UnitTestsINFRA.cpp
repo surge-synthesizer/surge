@@ -102,7 +102,6 @@ TEST_CASE("QuadFilterUnit Is SIMD Aligned", "[infra]")
     SECTION("Array of QuadFilterUnits")
     {
         int nqfus = 5;
-        std::vector<sst::filters::QuadFilterUnitState *> pointers;
         for (int i = 0; i < 5000; ++i)
         {
             auto *f = new sst::filters::QuadFilterUnitState[nqfus]();
