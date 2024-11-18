@@ -84,6 +84,7 @@ void FloatyDelayEffect::init_ctrltypes()
     fxdata->p[fld_pitch_warp_depth].set_type(ct_percent);
     fxdata->p[fld_filt_warp_depth].set_type(ct_percent);
 
+    fxdata->p[fld_HP_freq].set_type(ct_freq_audible);
     fxdata->p[fld_mix].set_type(ct_percent);
 
     fxdata->p[fld_time].posy_offset = 1;
@@ -98,6 +99,7 @@ void FloatyDelayEffect::init_ctrltypes()
     fxdata->p[fld_pitch_warp_depth].posy_offset = 5;
     fxdata->p[fld_filt_warp_depth].posy_offset = 5;
 
+    fxdata->p[fld_HP_freq].posy_offset = 7;
     fxdata->p[fld_mix].posy_offset = 7;
 
     configureControlsFromFXMetadata();
@@ -106,6 +108,7 @@ void FloatyDelayEffect::init_ctrltypes()
 void FloatyDelayEffect::init_default_values()
 {
     fxdata->p[fld_mix].val.f = .3f;
+    fxdata->p[fld_HP_freq].val.f = -60.f;
 
     fxdata->p[fld_time].val.f = -1.73697f;
     fxdata->p[fld_playrate].val.f = 1.f;
