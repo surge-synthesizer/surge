@@ -1335,11 +1335,9 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
 
     auto q = boxo;
 
-    auto tf = juce::AffineTransform()
-                  .scaled(boxo.getWidth() / valScale, boxo.getHeight() / valScale)
-                  .translated(q.getTopLeft().x, q.getTopLeft().y);
-
-    auto tfpath = tf;
+    const auto tfpath = juce::AffineTransform()
+                            .scaled(boxo.getWidth() / valScale, boxo.getHeight() / valScale)
+                            .translated(q.getTopLeft().x, q.getTopLeft().y);
 
     g.setColour(skin->getColor(Colors::LFO::StepSeq::Envelope));
 
@@ -2609,7 +2607,7 @@ void LFOAndStepDisplay::showStepTypein(int i)
     }
 
     auto handleTypein = [this, i](const std::string &s) {
-        auto divPos = s.find("/");
+        auto divPos = s.find('/');
         float v = 0.f;
 
         if (divPos != std::string::npos)
