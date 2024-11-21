@@ -181,9 +181,13 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_setfield(L, eidx, sharedTableName);
 
     // add whitelisted functions and modules
-    static constexpr std::initializer_list<const char *> sandboxWhitelist{
-        "pairs",    "ipairs",   "unpack",       "next", "type",
-        "tostring", "tonumber", "setmetatable", "error"};
+
+    // clang-format off
+    static constexpr std::initializer_list<const char *> sandboxWhitelist
+                                                 {"pairs",    "ipairs",       "unpack",
+                                                 "next",     "type",         "tostring",
+                                                 "tonumber", "setmetatable", "error"};
+    // clang-format on
 
     for (const auto &f : sandboxWhitelist)
     {
@@ -198,8 +202,9 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     }
 
     // add library tables
-    static constexpr std::initializer_list<const char *> sandboxLibraryTables = {"math", "string",
-                                                                                 "table", "bit"};
+    // clang-format off
+    static constexpr std::initializer_list<const char *> sandboxLibraryTables = {"math", "string", "table", "bit"};
+    // clang-format on
     for (const auto &t : sandboxLibraryTables)
     {
         lua_getglobal(L, t); // stack: f>t>(t)
