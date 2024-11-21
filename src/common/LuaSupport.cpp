@@ -181,38 +181,35 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_setfield(L, eidx, sharedTableName);
 
     // add whitelisted functions and modules
-    std::vector<std::string> sandboxWhitelist = {"pairs",    "ipairs",       "unpack",
-                                                 "next",     "type",         "tostring",
-                                                 "tonumber", "setmetatable", "error"};
-    for (const auto &f : sandboxWhitelist)
+    for (const auto &f : {"pairs", "ipairs", "unpack", "next", "type", "tostring", "tonumber",
+                          "setmetatable", "error"})
     {
-        lua_getglobal(L, f.c_str()); // stack: f>t>f
-        if (lua_isnil(L, -1))        // check if the global exists
+        lua_getglobal(L, f);  // stack: f>t>f
+        if (lua_isnil(L, -1)) // check if the global exists
         {
             lua_pop(L, 1);
-            std::cout << "Error: global not found [ " << f.c_str() << " ]" << std::endl;
+            std::cout << "Error: global not found [ " << f << " ]" << std::endl;
             continue;
         }
-        lua_setfield(L, -2, f.c_str()); // stack: f>t
+        lua_setfield(L, -2, f); // stack: f>t
     }
 
     // add library tables
-    std::vector<std::string> sandboxLibraryTables = {"math", "string", "table", "bit"};
-    for (const auto &t : sandboxLibraryTables)
+    for (const auto &t : {"math", "string", "table", "bit"})
     {
-        lua_getglobal(L, t.c_str()); // stack: f>t>(t)
+        lua_getglobal(L, t); // stack: f>t>(t)
         int gidx = lua_gettop(L);
         if (!lua_istable(L, gidx))
         {
             lua_pop(L, 1);
-            std::cout << "Error: not a table [ " << t.c_str() << " ]" << std::endl;
+            std::cout << "Error: not a table [ " << t << " ]" << std::endl;
             continue;
         }
 
         // we want to add to a local table so the entries in the global table can't be overwritten
         lua_createtable(L, 0, 10); // stack: f>t>(t)>t
-        lua_setfield(L, eidx, t.c_str());
-        lua_getfield(L, eidx, t.c_str());
+        lua_setfield(L, eidx, t);
+        lua_getfield(L, eidx, t);
         int lidx = lua_gettop(L);
 
         lua_pushnil(L);
