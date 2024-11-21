@@ -1259,7 +1259,6 @@ Skin::hoverBitmapOverlayForBackgroundBitmap(Skin::Control::ptr_t c, SurgeImage *
         auto pos = b->fname.find("bmp00");
         if (pos != std::string::npos)
         {
-            auto b4 = b->fname.substr(0, pos);
             auto ftr = b->fname.substr(pos + 3);
 
             switch (t)

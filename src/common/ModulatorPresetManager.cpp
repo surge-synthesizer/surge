@@ -262,13 +262,11 @@ std::vector<ModulatorPreset::Category> ModulatorPreset::getPresets(SurgeStorage 
         bool isU = i;
         try
         {
-            std::string currentCategoryName = "";
             Category currentCategory;
             for (auto &d : fs::recursive_directory_iterator(p))
             {
                 auto dp = fs::path(d);
                 auto base = dp.stem();
-                auto fn = dp.filename();
                 auto ext = dp.extension();
                 if (path_to_string(ext) != ".modpreset")
                 {
