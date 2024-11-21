@@ -966,7 +966,7 @@ struct ModulationListContents : public juce::Component, public Surge::GUI::SkinC
             if (r.empty())
                 return;
 
-            for (auto q : r)
+            for (const auto &q : r)
             {
                 Datum d;
                 d.source_scene = q.source_scene;

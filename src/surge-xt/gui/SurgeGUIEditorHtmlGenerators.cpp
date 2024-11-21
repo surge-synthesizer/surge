@@ -614,7 +614,7 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
         auto co = Surge::Skin::Connector::allConnectorIDs();
         htmls << "<table><tr><th>Name</th><th>Geometry "
                  "(XxY+WxH)</th><th>Class</th><th>Properties</th></tr>\n";
-        for (auto c : co)
+        for (const auto &c : co)
         {
             htmls << "<tr><td>" << c << "</td><td>";
             auto comp = currentSkin->getOrCreateControlForConnector(
@@ -665,12 +665,12 @@ std::string SurgeGUIEditor::skinInspectorHtml(SkinInspectorFlags f)
     {
         htmls << "<ul>\n";
         auto r1 = bitmapStore->nonResourceBitmapIDs(SurgeImageStore::STRINGID);
-        for (auto v : r1)
+        for (const auto &v : r1)
         {
             htmls << "<li>" << v << "</li>\n";
         }
         auto r2 = bitmapStore->nonResourceBitmapIDs(SurgeImageStore::PATH);
-        for (auto v : r2)
+        for (const auto &v : r2)
         {
             htmls << "<li>" << v << "</li>\n";
         }

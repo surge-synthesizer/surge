@@ -2507,7 +2507,7 @@ void SurgeSynthesizer::purgeHoldbuffer(int scene)
 {
     std::list<HoldBufferItem> retainBuffer;
 
-    for (auto hp : holdbuffer[scene])
+    for (const auto &hp : holdbuffer[scene])
     {
         auto channel = hp.channel;
         auto key = hp.key;
@@ -5283,20 +5283,17 @@ void SurgeSynthesizer::swapMetaControllers(int c1, int c2)
 
             if (mv)
             {
-                int n = mv->size();
+                const int n = mv->size();
                 for (int i = 0; i < n; ++i)
                 {
-                    if (mv->at(i).source_id == ms_ctrl1 + c1)
+                    auto &mati = mv->at(i);
+                    if (mati.source_id == ms_ctrl1 + c1)
                     {
-                        auto q = mv->at(i);
-                        q.source_id = ms_ctrl1 + c2;
-                        mv->at(i) = q;
+                        mati.source_id = ms_ctrl1 + c2;
                     }
-                    else if (mv->at(i).source_id == ms_ctrl1 + c2)
+                    else if (mati.source_id == ms_ctrl1 + c2)
                     {
-                        auto q = mv->at(i);
-                        q.source_id = ms_ctrl1 + c1;
-                        mv->at(i) = q;
+                        mati.source_id = ms_ctrl1 + c1;
                     }
                 }
             }
