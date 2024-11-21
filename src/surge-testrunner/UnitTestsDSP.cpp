@@ -239,7 +239,7 @@ TEST_CASE("Unison at Different Sample Rates", "[osc]")
         }
     };
 
-    constexpr std::initializer_list<int> srs{44100, 48000};
+    static constexpr std::initializer_list<int> srs{44100, 48000};
 
     SECTION("Wavetable Oscillator")
     {
