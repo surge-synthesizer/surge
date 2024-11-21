@@ -4794,7 +4794,7 @@ namespace Catch {
 
             while ( separatorPos < reporterSpec.size() ) {
                 const auto nextSeparator = findNextSeparator( separatorPos );
-                parts.emplace_back( static_cast<std::string>( reporterSpec.substr(
+                parts.push_back( static_cast<std::string>( reporterSpec.substr(
                     separatorPos, nextSeparator - separatorPos ) ) );
 
                 if ( nextSeparator == static_cast<size_t>( -1 ) ) {
