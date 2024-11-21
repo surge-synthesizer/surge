@@ -105,7 +105,7 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
     // sloppy
     int res = 0;
     std::vector<std::string> frev(functions.rbegin(), functions.rend());
-    for (auto functionName : frev)
+    for (const auto &functionName : frev)
     {
         lua_getglobal(L, functionName.c_str());
         if (lua_isfunction(L, -1))
@@ -124,7 +124,7 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
 #endif
 }
 
-int lua_limitRange(lua_State *L)
+static int lua_limitRange(lua_State *L)
 {
 #if HAS_LUA
     auto x = luaL_checknumber(L, -3);
@@ -137,7 +137,7 @@ int lua_limitRange(lua_State *L)
 }
 
 // custom print that outputs limited amount of arguments and restricts use to strings and numbers
-int lua_sandboxPrint(lua_State *L)
+static int lua_sandboxPrint(lua_State *L)
 {
 #if HAS_LUA
     int n = lua_gettop(L); // number of arguments
@@ -181,8 +181,11 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_setfield(L, eidx, sharedTableName);
 
     // add whitelisted functions and modules
-    for (const auto &f : {"pairs", "ipairs", "unpack", "next", "type", "tostring", "tonumber",
-                          "setmetatable", "error"})
+    static constexpr std::initializer_list<const char *> sandboxWhitelist{
+        "pairs",    "ipairs",   "unpack",       "next", "type",
+        "tostring", "tonumber", "setmetatable", "error"};
+
+    for (const auto &f : sandboxWhitelist)
     {
         lua_getglobal(L, f);  // stack: f>t>f
         if (lua_isnil(L, -1)) // check if the global exists
@@ -195,7 +198,9 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     }
 
     // add library tables
-    for (const auto &t : {"math", "string", "table", "bit"})
+    static constexpr std::initializer_list<const char *> sandboxLibraryTables = {"math", "string",
+                                                                                 "table", "bit"};
+    for (const auto &t : sandboxLibraryTables)
     {
         lua_getglobal(L, t); // stack: f>t>(t)
         int gidx = lua_gettop(L);
