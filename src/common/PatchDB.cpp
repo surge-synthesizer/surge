@@ -803,7 +803,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Load Check");
+            if (storage)
+            {
+                storage->reportError(e.what(), "PatchDB - Load Check");
+            }
             return;
         }
 
@@ -832,13 +835,17 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Insert Patch");
+            if (storage)
+            {
+                storage->reportError(e.what(), "PatchDB - Insert Patch");
+            }
             return;
         }
 
         std::ostringstream searchName;
         searchName << p.name << " ";
 
+        if (storage)
         {
             auto pTmp = p.path.parent_path();
             std::vector<fs::path> parentFiles;
