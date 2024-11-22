@@ -327,11 +327,9 @@ end
                     {
                         lua_pushnumber(s.L, i + 1);
                         lua_gettable(s.L, -2);
-                        bool res = false;
-                        if (lua_isboolean(s.L, -1))
-                            res = lua_toboolean(s.L, -1);
+                        const bool res = (lua_isboolean(s.L, -1)) ? lua_toboolean(s.L, -1) : false;
                         lua_pop(s.L, 1);
-                        s.subAnyMacro = s.subAnyMacro | res;
+                        s.subAnyMacro = s.subAnyMacro || res;
                         s.subMacros[i] = res;
                     }
                 }
@@ -832,10 +830,9 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
         }
     };
 
-    std::vector<std::string> tablesList = {es.stateName, sharedTableName};
-    for (const auto &t : tablesList)
+    for (const auto &t : {es.stateName, sharedTableName})
     {
-        lua_getglobal(es.L, t.c_str());
+        lua_getglobal(es.L, t);
         if (!lua_istable(es.L, -1))
         {
             lua_pop(es.L, -1);
