@@ -67,7 +67,7 @@ struct EditorColors
     static void setColorsFromSkin(juce::CodeEditorComponent *comp,
                                   const Surge::GUI::Skin::ptr_t &skin)
     {
-        auto cs = comp->getColourScheme();
+        juce::CodeEditorComponent::ColourScheme cs = comp->getColourScheme();
 
         cs.set("Bracket", skin->getColor(Colors::FormulaEditor::Lua::Bracket));
         cs.set("Comment", skin->getColor(Colors::FormulaEditor::Lua::Comment));
@@ -362,7 +362,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
 
         std::string getText(int rowNumber, int columnId)
         {
-            auto r = rows[rowNumber];
+            const auto &r = rows[rowNumber];
 
             if (columnId == 1)
             {
@@ -391,7 +391,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             if (rowNumber < 0 || rowNumber >= rows.size())
                 return;
 
-            auto r = rows[rowNumber];
+            const auto &r = rows[rowNumber];
             auto b = juce::Rectangle<int>(0, 0, w, h);
             g.setFont(skin->fontManager->getFiraMonoAtSize(9));
             if (r.isInternal)
@@ -1354,7 +1354,7 @@ struct WavetableScriptControlArea : public juce::Component,
 
             contextMenu.addSeparator();
 
-            for (auto op : options)
+            for (const auto &op : options)
             {
                 auto val = op.second;
 
