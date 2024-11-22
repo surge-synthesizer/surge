@@ -803,7 +803,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Load Check");
+            if (storage)
+            {
+                storage->reportError(e.what(), "PatchDB - Load Check");
+            }
             return;
         }
 
@@ -832,7 +835,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Insert Patch");
+            if (storage)
+            {
+                storage->reportError(e.what(), "PatchDB - Insert Patch");
+            }
             return;
         }
 
@@ -934,7 +940,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - FXP Features");
+            if (storage)
+            {
+                storage->reportError(e.what(), "PatchDB - FXP Features");
+            }
             return;
         }
 
@@ -950,7 +959,10 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - FXP Features");
+            if (storage)
+            {
+                storage->reportError(e.what(), "PatchDB - FXP Features");
+            }
             return;
         }
     }
