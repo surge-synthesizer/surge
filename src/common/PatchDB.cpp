@@ -80,7 +80,7 @@ struct LockedException : public Exception
     int rc;
 };
 
-void Exec(sqlite3 *h, const std::string &statement)
+static void Exec(sqlite3 *h, const std::string &statement)
 {
     char *emsg;
     auto rc = sqlite3_exec(h, statement.c_str(), nullptr, nullptr, &emsg);
@@ -471,7 +471,6 @@ CREATE TABLE IF NOT EXISTS Favorites (
             // storage->reportError(e.what(), "SQLLite3 Startup Error");
         }
 
-        char *emsg;
         if (rebuild)
         {
 #if TRACE_DB
@@ -669,8 +668,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 if (keepRunning)
                 {
                     auto b = pathQ.begin();
-                    auto e = (pathQ.size() < transChunkSize) ? pathQ.end()
-                                                             : pathQ.begin() + transChunkSize;
+                    const auto &e = (pathQ.size() < transChunkSize)
+                                        ? pathQ.end()
+                                        : pathQ.begin() + transChunkSize;
                     std::copy(b, e, std::back_inserter(doThis));
                     pathQ.erase(b, e);
                 }
@@ -865,7 +865,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
                 parentFiles.erase(parentFiles.end() - 1);
             }
 
-            for (auto pf : parentFiles)
+            for (const auto &pf : parentFiles)
             {
                 searchName << pf.u8string() << " ";
             }
@@ -917,9 +917,9 @@ CREATE TABLE IF NOT EXISTS Favorites (
                                     "\"feature_type\", \"feature_ivalue\", \"feature_svalue\" ) "
                                     "VALUES ( ?1, ?2, ?3, ?4, ?5 )");
             auto feat = extractFeaturesFromXML(xmlData.data());
-            for (auto f : feat)
+            for (const auto &f : feat)
             {
-                auto ftype = std::get<0>(f);
+                const auto &ftype = std::get<0>(f);
                 ins.bindi64(1, patchid);
                 ins.bind(2, std::get<0>(f));
                 ins.bind(3, (int)std::get<1>(f));
@@ -1485,7 +1485,7 @@ std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser:
 {
     auto protect = [](const std::string &s) -> std::string {
         std::vector<std::pair<std::string, std::string>> replacements{{"'", "''"}, {"%", "%%"}};
-        auto res = s;
+        std::string res = s;
         for (const auto &[search, replace] : replacements)
         {
             size_t pos = res.find(search);
