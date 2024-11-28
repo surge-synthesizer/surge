@@ -222,7 +222,7 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
         send[i][1].set_blocksize(BLOCK_SIZE);
     }
 
-    polydisplay = 0;
+    storage.activeVoiceCount = 0;
     refresh_editor = false;
     patch_loaded = false;
     storage.getPatch().category = "Init";
@@ -4822,8 +4822,7 @@ void SurgeSynthesizer::process()
     }
 
     storage.modRoutingMutex.unlock();
-    polydisplay = vcount;
-    storage.voiceCount = vcount;
+    storage.activeVoiceCount = vcount;
 
     // TODO: FIX SCENE ASSUMPTION
     if (play_scene[0])

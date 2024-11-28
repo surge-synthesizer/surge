@@ -487,7 +487,6 @@ class alignas(16) SurgeSynthesizer
     std::atomic<int> patchid_queue;
 
     // updated in audio thread, read from UI, so have assignments be atomic
-    std::atomic<int> polydisplay;
     std::atomic<int> hasUpdatedMidiCC;
     std::atomic<int> modwheelCC, pitchbendMIDIVal, sustainpedalCC;
     std::atomic<bool> midiSoftTakeover;

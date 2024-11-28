@@ -1364,9 +1364,11 @@ class alignas(16) SurgeStorage
     bool oscReceiving{false};
     bool oscSending{false};
 
-    int voiceCount; // TODO: use SurgeSynthesizer class to fetch synth->polydisplay directly from
-                    // valueAt() in FormulaModulationHelper.cpp where it's needed and remove
-                    // this and its assignment in SurgeSynthesizer.cpp
+    /*
+     * A bit of a cheat - this isn't really the storage, but is updated by the synth at render time.
+     * We put it here so LFOS can get it, which formula needs
+     */
+    std::atomic<int> activeVoiceCount{0};
 
     bool getOverrideDataHome(std::string &value);
     void createUserDirectory();
