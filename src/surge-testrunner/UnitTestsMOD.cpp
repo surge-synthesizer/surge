@@ -20,7 +20,6 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include <iostream>
-#include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
@@ -172,9 +171,9 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
         {
             if (sturns.size() != 3)
             {
-                for (auto s : simple)
+                for (const auto &s : simple)
                     std::cout << s.first << " " << s.second << std::endl;
-                for (auto s : sturns)
+                for (const auto &s : sturns)
                     std::cout << s.first << " " << s.second << std::endl;
             }
             REQUIRE(sturns.size() == 3);
@@ -189,10 +188,10 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
         {
             if (sturns.size() != 5)
             {
-                for (auto s : simple)
+                for (const auto &s : simple)
                     std::cout << s.first << " " << s.second << std::endl;
                 std::cout << "TURNS" << std::endl;
-                for (auto s : sturns)
+                for (const auto &s : sturns)
                     std::cout << s.first << " " << s.second << std::endl;
             }
             REQUIRE(sturns.size() == 5);
@@ -247,7 +246,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
     SECTION("Digital Envelope With Quadratic Slope Hits Zero")
     {
         auto res = runAdsr(0.1, 0.1, 0.0, 0.1, 0, 1, 0, false, 0.4, 0.5);
-        for (auto p : res)
+        for (const auto &p : res)
         {
             if (p.first > 0.22)
             {
@@ -271,7 +270,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
             float zerot = 0;
             float valAtRelEnd = -1;
             std::vector<float> heldPeriod;
-            for (auto obs : ae)
+            for (const auto &obs : ae)
             {
                 // std::cout << obs.first << " " << obs.second << std::endl;
 
@@ -335,7 +334,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
         auto testSusPush = [&](float s1, float s2) {
             auto digPush = runAdsr(0.05, 0.05, s1, 0.1, 0, 0, 0, false, 0.5, s2, 0.25, s2);
             int obs = 0;
-            for (auto s : digPush)
+            for (const auto &s : digPush)
             {
                 if (s.first > 0.2 && obs == 0)
                 {
@@ -486,7 +485,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
 
             int obs = 0;
             INFO("Non-SIMD Analog Envelope Passes Sustain Push");
-            for (auto s : aDupPush)
+            for (const auto &s : aDupPush)
             {
                 if (s.first > 0.2 && obs == 0)
                 {
@@ -502,7 +501,7 @@ TEST_CASE("ADSR Envelope Behaviour", "[mod]")
 
             obs = 0;
             INFO("SSE Analog Envelope Passes Sustain Push");
-            for (auto s : aSurgePush)
+            for (const auto &s : aSurgePush)
             {
                 if (s.first > 0.2 && obs == 0)
                 {
@@ -659,15 +658,18 @@ TEST_CASE("Extended Pitch Bend", "[mod]")
 
 TEST_CASE("Pitch Bend And Tuning", "[mod][tun]")
 {
-    std::vector<std::string> testScales = {"resources/test-data/scl/12-intune.scl",
-                                           "resources/test-data/scl/zeus22.scl",
-                                           "resources/test-data/scl/6-exact.scl"};
-
     SECTION("Multi Scale Bend Distances")
     {
         auto surge = surgeOnSine();
         surge->storage.tuningApplicationMode = SurgeStorage::RETUNE_ALL;
         surge->mpeEnabled = false;
+
+        // clang-format off
+        static constexpr std::initializer_list<const char *> testScales
+                    {"resources/test-data/scl/12-intune.scl",
+                     "resources/test-data/scl/zeus22.scl",
+                     "resources/test-data/scl/6-exact.scl"};
+        // clang-format on
 
         for (auto sclf : testScales)
         {
