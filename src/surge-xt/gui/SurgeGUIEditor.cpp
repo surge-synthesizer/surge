@@ -800,9 +800,9 @@ void SurgeGUIEditor::idle()
         {
             int prior = polydisp->getPlayingVoiceCount();
 
-            if (prior != synth->polydisplay)
+            if (prior != synth->storage.activeVoiceCount)
             {
-                polydisp->setPlayingVoiceCount(synth->polydisplay);
+                polydisp->setPlayingVoiceCount(synth->storage.activeVoiceCount);
                 polydisp->repaint();
             }
         }
