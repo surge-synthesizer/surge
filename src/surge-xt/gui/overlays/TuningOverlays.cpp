@@ -553,19 +553,19 @@ class RadialScaleGraph : public juce::Component,
                     toneInterior->addAndMakeVisible(*tk);
                     toneKnobs.push_back(std::move(tk));
 
-                    showHideKnob = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-                    showHideKnob->setSkin(skin, associatedBitmapStore);
-                    showHideKnob->setStorage(storage);
-                    showHideKnob->setRows(1);
-                    showHideKnob->setColumns(1);
-                    showHideKnob->setTag(12345);
-                    showHideKnob->setLabels({"Hide"});
-                    showHideKnob->addListener(this);
+                    hideBtn = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+                    hideBtn->setSkin(skin, associatedBitmapStore);
+                    hideBtn->setStorage(storage);
+                    hideBtn->setRows(1);
+                    hideBtn->setColumns(1);
+                    hideBtn->setTag(12345);
+                    hideBtn->setLabels({"Hide"});
+                    hideBtn->addListener(this);
 
-                    showHideKnob->setBounds(
+                    hideBtn->setBounds(
                         totalR.withTrimmedLeft(labw + m).withTrimmedRight(h + m).reduced(3));
 
-                    toneInterior->addAndMakeVisible(*showHideKnob);
+                    toneInterior->addAndMakeVisible(*hideBtn);
                 }
                 else
                 {
@@ -653,14 +653,14 @@ class RadialScaleGraph : public juce::Component,
 
     void valueChanged(GUI::IComponentTagValue *p) override
     {
-        if (p == showHideKnob.get())
+        if (p == hideBtn.get())
         {
             centsShowing = !centsShowing;
             for (const auto &t : toneEditors)
             {
                 t->setPasswordCharacter(centsShowing ? 0 : 0x2022);
             }
-            showHideKnob->setLabels({centsShowing ? "Hide" : "Show"});
+            hideBtn->setLabels({centsShowing ? "Hide" : "Show"});
         }
         if (p == radialModeKnob.get())
         {
@@ -683,9 +683,9 @@ class RadialScaleGraph : public juce::Component,
 
     void onSkinChanged() override
     {
-        if (showHideKnob)
+        if (hideBtn)
         {
-            showHideKnob->setSkin(skin, associatedBitmapStore);
+            hideBtn->setSkin(skin, associatedBitmapStore);
         }
 
         for (const auto &k : toneKnobs)
@@ -732,14 +732,14 @@ class RadialScaleGraph : public juce::Component,
         [](int, const std::string &) {};
     std::function<void(double)> onScaleRescaled = [](double) {};
     std::function<void(double)> onScaleRescaledAbsolute = [](double) {};
-    static constexpr int usedForSidebar = 160;
+    static constexpr int usedForSidebar = 185;
 
     std::unique_ptr<juce::Viewport> toneList;
     std::unique_ptr<juce::Component> toneInterior;
     std::vector<std::unique_ptr<juce::TextEditor>> toneEditors;
     std::vector<std::unique_ptr<juce::Label>> toneLabels;
     std::vector<std::unique_ptr<InfiniteKnob>> toneKnobs;
-    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> showHideKnob, radialModeKnob;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> hideBtn, radialModeKnob;
 
     void resized() override
     {
@@ -863,7 +863,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
 
     g.fillAll(skin->getColor(clr::Background));
 
-    int w = getWidth() - usedForSidebar;
+    int w = getWidth() - usedForSidebar - 25;
     int h = getHeight();
     float r = std::min(w, h) / 2.1;
     float xo = (w - 2 * r) / 2.0;
