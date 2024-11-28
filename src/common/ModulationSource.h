@@ -562,18 +562,15 @@ template <int NDX = 1> class ControllerModulationSourceVector : public Modulatio
     {
         assert(samplerate > 1000);
 
-        if (smoothingMode == Modulator::SmoothingMode::LEGACY)
-        {
-            processSmoothing(Modulator::SmoothingMode::SLOW_EXP, sigma);
-        }
-        else
-        {
-            processSmoothing(smoothingMode, sigma);
-        }
+        const auto sm = smoothingMode == Modulator::SmoothingMode::LEGACY
+                            ? Modulator::SmoothingMode::SLOW_EXP
+                            : smoothingMode;
 
-        auto res = (value[0] != target[0]);
+        processSmoothing(sm, sigma);
 
-        for (int i = 1; i < NDX; ++i)
+        bool res = true;
+
+        for (int i = 0; (i < NDX) && res; ++i)
         {
             res &= (value[i] != target[i]);
         }
