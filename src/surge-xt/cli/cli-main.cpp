@@ -317,6 +317,9 @@ int main(int argc, char **argv)
                  "Do not assume stdin and do not poll keyboard for quit or ctrl-d. Useful for "
                  "daemon modes.");
 
+    bool mpeEnable{false};
+    app.add_flag("--mpe-enable", mpeEnable, "Enable MPE mode on this instance of Surge XT CLI");
+
     CLI11_PARSE(app, argc, argv);
 
     if (listDevices)
@@ -343,6 +346,16 @@ int main(int argc, char **argv)
         {
             LOG(BASIC, "Failed to load patch:" << initPatch << "!");
         }
+    }
+
+    if (mpeEnable)
+    {
+        LOG(BASIC, "MPE Status          : Enabled");
+        engine->proc->surge->mpeEnabled = true;
+    }
+    else
+    {
+        engine->proc->surge->mpeEnabled = false; // the default
     }
 
     auto midiDevices = juce::MidiInput::getAvailableDevices();
