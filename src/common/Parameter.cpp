@@ -3974,8 +3974,13 @@ std::string Parameter::get_display(bool external, float ef) const
             txt = fmt::format("{:d} bands", i);
             break;
         case ct_distortion_waveshape:
-            txt = sst::waveshapers::wst_names[(int)FXWaveShapers[i]];
-            break;
+        {
+            if (i < 0 || i >= FXWaveShapers.size())
+                txt = "ERROR " + std::to_string(i);
+            else
+                txt = sst::waveshapers::wst_names[(int)FXWaveShapers[i]];
+        }
+        break;
         case ct_mscodec:
             switch (i)
             {
