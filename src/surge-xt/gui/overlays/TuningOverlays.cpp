@@ -1680,7 +1680,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
             namespace clr = Colors::TuningOverlay::Interval;
             g.fillAll(skin->getColor(clr::Background));
             auto ic = matrix->tuning.scale.count;
-            int mt = ic + (mode == ROTATION ? 1 : 2);
+            int mt = ic + 2;
             g.setFont(skin->fontManager->getLatoAtSize(9));
             for (int i = 0; i < mt; ++i)
             {
@@ -1797,9 +1797,10 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                         auto evenStep = lastTone / matrix->tuning.scale.count;
                         auto desCents = disNote * evenStep;
 
+                        juce::Colour bg;
                         if (fabs(cdiff - desCents) < 0.1)
                         {
-                            g.setColour(skin->getColor(clr::HeatmapZero));
+                            bg = (skin->getColor(clr::HeatmapZero));
                         }
                         else if (cdiff < desCents)
                         {
@@ -1808,7 +1809,7 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             auto r = (1.0 - dist);
                             auto c1 = skin->getColor(clr::HeatmapNegFar);
                             auto c2 = skin->getColor(clr::HeatmapNegNear);
-                            g.setColour(c1.interpolatedWith(c2, r));
+                            bg = (c1.interpolatedWith(c2, r));
                         }
                         else
                         {
@@ -1816,15 +1817,23 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
                             auto b = 1.0 - dist;
                             auto c1 = skin->getColor(clr::HeatmapPosFar);
                             auto c2 = skin->getColor(clr::HeatmapPosNear);
-                            g.setColour(c1.interpolatedWith(c2, b));
+                            bg = (c1.interpolatedWith(c2, b));
                         }
+                        if (i == mt - 1 || i == 1)
+                            bg = skin->getColor(clr::HeatmapZero).withAlpha(0.9f);
+
+                        g.setColour(bg);
                         g.fillRect(bx);
 
+                        juce::Colour fg;
                         if (isHovered)
-                            g.setColour(skin->getColor(clr::IntervalTextHover));
+                            fg = skin->getColor(clr::IntervalTextHover);
                         else
-                            g.setColour(skin->getColor(clr::IntervalText));
+                            fg = skin->getColor(clr::IntervalText);
+                        if (i == mt - 1 || i == 1)
+                            fg = fg.withAlpha(0.7f);
 
+                        g.setColour(fg);
                         g.drawText(fmt::format("{:.1f}", cdiff), bx, juce::Justification::centred);
                     }
                 }
@@ -1881,8 +1890,14 @@ struct IntervalMatrix : public juce::Component, public Surge::GUI::SkinConsuming
 
             if (mode == ROTATION)
             {
-                int tonI = (hoverI - 1 + hoverJ - 2) % matrix->tuning.scale.count;
-                matrix->overlay->onToneChanged(tonI, matrix->tuning.scale.tones[tonI].cents + dPos);
+                if (hoverI > 1 && hoverI <= matrix->tuning.scale.count)
+                {
+                    int tonI = (hoverI - 1 + hoverJ - 2);
+
+                    tonI = tonI % matrix->tuning.scale.count;
+                    matrix->overlay->onToneChanged(tonI,
+                                                   matrix->tuning.scale.tones[tonI].cents + dPos);
+                }
             }
             else
             {
