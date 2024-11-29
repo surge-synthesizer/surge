@@ -31,22 +31,37 @@ namespace Surge
 {
 namespace WavetableScript
 {
-/*
- * Unlike the LFO modulator this is called at render time of the wavetable
- * not at the evaluation or synthesis time. As such I expect you call it from
- * one thread at a time and just you know generally be careful.
- */
-std::vector<float> evaluateScriptAtFrame(SurgeStorage *storage, const std::string &eqn,
-                                         int resolution, int frame, int nFrames);
+struct LuaWTEvaluator
+{
+    struct Details;
+    std::unique_ptr<Details> details;
+    LuaWTEvaluator();
+    ~LuaWTEvaluator();
 
-/*
- * Generate all the data required to call BuildWT. The wavdata here is data you
- * must free with delete[]
- */
-bool constructWavetable(SurgeStorage *storage, const std::string &eqn, int resolution, int frames,
-                        wt_header &wh, float **wavdata);
+    void setStorage(SurgeStorage *);
+    void setScript(const std::string &);
+    void setResolution(size_t);
+    void setFrameCount(size_t);
 
-std::string defaultWavetableScript();
+    void prepare();
+
+    /*
+     * Unlike the LFO modulator this is called at render time of the wavetable
+     * not at the evaluation or synthesis time. As such I expect you call it from
+     * one thread at a time and just you know generally be careful.
+     */
+    std::optional<std::vector<float>> evaluateScriptAtFrame(size_t frame);
+
+    /*
+     * Generate all the data required to call BuildWT. The wavdata here is data you
+     * must free with delete[]
+     */
+    bool constructWavetable(wt_header &wh, float **wavdata);
+
+    std::string getSuggestedWavetableName();
+
+    static std::string defaultWavetableScript();
+};
 
 } // namespace WavetableScript
 } // namespace Surge

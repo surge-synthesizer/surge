@@ -1524,7 +1524,8 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
 
     if (osc->wavetable_formula == "")
     {
-        mainDocument->insertText(0, Surge::WavetableScript::defaultWavetableScript());
+        mainDocument->insertText(0,
+                                 Surge::WavetableScript::LuaWTEvaluator::defaultWavetableScript());
     }
     else
     {
@@ -1559,6 +1560,9 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
         showPreludeCode();
         break;
     }
+
+    evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+    evaluator->setStorage(storage);
 }
 
 WavetableScriptEditor::~WavetableScriptEditor() = default;
@@ -1577,11 +1581,27 @@ void WavetableScriptEditor::onSkinChanged()
     rendererComponent->setSkin(skin, associatedBitmapStore); // FIXME
 }
 
+void WavetableScriptEditor::setupEvaluator()
+{
+    auto resi = controlArea->resolutionN->getIntValue();
+    auto respt = 32;
+    for (int i = 1; i < resi; ++i)
+        respt *= 2;
+
+    evaluator->setScript(mainDocument->getAllContent().toStdString());
+    evaluator->setResolution(respt);
+    evaluator->setFrameCount(controlArea->framesN->getIntValue());
+
+    evaluator->prepare();
+}
+
 void WavetableScriptEditor::applyCode()
 {
     osc->wavetable_formula = mainDocument->getAllContent().toStdString();
     osc->wavetable_formula_res_base = controlArea->resolutionN->getIntValue();
     osc->wavetable_formula_nframes = controlArea->framesN->getIntValue();
+
+    setupEvaluator();
 
     editor->repaintFrame();
     rerenderFromUIState();
@@ -1665,8 +1685,16 @@ void WavetableScriptEditor::rerenderFromUIState()
     for (int i = 1; i < resi; ++i)
         respt *= 2;
 
-    rendererComponent->points = Surge::WavetableScript::evaluateScriptAtFrame(
-        storage, mainDocument->getAllContent().toStdString(), respt, cfr, nfr);
+    setupEvaluator();
+    auto rs = evaluator->evaluateScriptAtFrame(cfr);
+    if (rs.has_value())
+    {
+        rendererComponent->points = *rs;
+    }
+    else
+    {
+        rendererComponent->points.clear();
+    }
     rendererComponent->repaint();
 }
 
@@ -1699,11 +1727,11 @@ void WavetableScriptEditor::generateWavetable()
 
     wt_header wh;
     float *wd = nullptr;
-    Surge::WavetableScript::constructWavetable(storage, mainDocument->getAllContent().toStdString(),
-                                               respt, nfr, wh, &wd);
+    setupEvaluator();
+    evaluator->constructWavetable(wh, &wd);
     storage->waveTableDataMutex.lock();
     osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
-    osc->wavetable_display_name = "Scripted Wavetable";
+    osc->wavetable_display_name = evaluator->getSuggestedWavetableName();
     storage->waveTableDataMutex.unlock();
 
     delete[] wd;
