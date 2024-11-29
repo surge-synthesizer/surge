@@ -117,6 +117,26 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
             lfox.InsertEndChild(fm);
         }
 
+        if (lfotype == lt_formula)
+        {
+            TiXmlElement xtraName("indexNames");
+            bool hasAny{false};
+            for (int i = 0; i < max_lfo_indices; ++i)
+            {
+                if (s->getPatch().LFOBankLabel[scene][lfoid][i][0] != 0)
+                {
+                    hasAny = true;
+                    TiXmlElement xn("name");
+                    xn.SetAttribute("index", i);
+                    xn.SetAttribute("name", s->getPatch().LFOBankLabel[scene][lfoid][i]);
+                    xtraName.InsertEndChild(xn);
+                }
+            }
+            if (hasAny)
+            {
+                lfox.InsertEndChild(xtraName);
+            }
+        }
         doc.InsertEndChild(lfox);
 
         if (!doc.SaveFile(fullLocation))
@@ -238,6 +258,26 @@ void ModulatorPreset::loadPresetFrom(const fs::path &location, SurgeStorage *s, 
         auto frm = lfox->FirstChildElement("formula");
         if (frm)
             s->getPatch().formulaFromXMLElement(&(s->getPatch().formulamods[scene][lfoid]), frm);
+    }
+
+    auto xn = lfox->FirstChildElement("indexNames");
+    if (xn)
+    {
+        auto nn = xn->FirstChildElement("name");
+        while (nn)
+        {
+            auto na = nn->Attribute("name");
+            int ni{0};
+            auto res = nn->QueryIntAttribute("index", &ni);
+            if (na && res == TIXML_SUCCESS && ni >= 0 && ni < max_lfo_indices)
+            {
+                memset(s->getPatch().LFOBankLabel[scene][lfoid][ni], 0,
+                       CUSTOM_CONTROLLER_LABEL_SIZE * sizeof(char));
+                strncpy(s->getPatch().LFOBankLabel[scene][lfoid][ni], na,
+                        CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+            }
+            nn = nn->NextSiblingElement("name");
+        }
     }
 }
 
