@@ -29,6 +29,8 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
+#include "WavetableScriptEvaluator.h"
+
 #include "SurgeStorage.h"
 #include "SkinSupport.h"
 
@@ -146,6 +148,9 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void rerenderFromUIState();
     void setCurrentFrame(int value);
 
+    void setupEvaluator();
+
+    std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     std::unique_ptr<juce::CodeDocument> preludeDocument;
     std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
     std::unique_ptr<WavetableScriptControlArea> controlArea;

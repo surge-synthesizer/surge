@@ -673,16 +673,23 @@ function generate(config)
     return res
 end
         )FN";
+        auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+        la->setResolution(512);
+        la->setStorage(nullptr);
+        la->setFrameCount(4);
+        la->setScript(s);
+
         for (int fno = 0; fno < 4; ++fno)
         {
-            auto fr = Surge::WavetableScript::evaluateScriptAtFrame(nullptr, s, 512, fno, 4);
-            REQUIRE(fr.size() == 512);
+            auto fr = la->evaluateScriptAtFrame(fno);
+            REQUIRE(fr.has_value());
+            REQUIRE(fr->size() == 512);
             auto dp = 1.0 / (512 - 1);
             for (int i = 0; i < 512; ++i)
             {
                 auto x = i * dp;
                 auto r = sin(2 * M_PI * x * (fno + 1));
-                REQUIRE(r == Approx(fr[i]));
+                REQUIRE(r == Approx((*fr)[i]));
             }
         }
     }
