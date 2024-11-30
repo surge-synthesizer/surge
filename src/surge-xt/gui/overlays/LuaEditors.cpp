@@ -1181,6 +1181,24 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
         }
     }
 
+    float accum{0.f};
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override
+    {
+        accum += wheel.deltaX * 400;
+        while (accum > 1)
+        {
+            accum -= 1;
+            adjustStartX(1);
+            repaint();
+        }
+        while (accum < -1)
+        {
+            accum += 1;
+            adjustStartX(-1);
+            repaint();
+        }
+    }
     void mouseUp(const juce::MouseEvent &event) override
     {
         setMouseCursor(juce::MouseCursor::NormalCursor);
@@ -1199,7 +1217,7 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
     std::vector<float> points;
     std::vector<std::vector<float>> fsPoints;
 
-    int mode{0};
+    int mode{1};
 
   private:
     int lastDrag;
@@ -1301,7 +1319,7 @@ struct WavetableScriptControlArea : public juce::Component,
             renderModeS->setRows(1);
             renderModeS->setColumns(2);
             renderModeS->setDraggable(true);
-            renderModeS->setValue(0);
+            renderModeS->setValue(overlay->rendererComponent->mode);
             renderModeS->setSkin(skin, associatedBitmapStore);
             renderModeS->setAccessible(false);
             addAndMakeVisible(*renderModeS);
