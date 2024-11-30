@@ -279,9 +279,6 @@ std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t f
         lua_pushinteger(L, resolution);
         lua_setfield(L, -2, "sample_count");
 
-        lua_getglobal(L, statetable);
-        lua_setfield(L, -2, "state");
-
         // So stack is now the table and the function
         auto pcr = lua_pcall(L, 1, 1, 0);
         if (pcr == LUA_OK)
