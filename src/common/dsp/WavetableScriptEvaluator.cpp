@@ -31,6 +31,7 @@ namespace WavetableScript
 
 static constexpr const char *statetable{"statetable"};
 
+#if HAS_LUA
 struct LuaWTEvaluator::Details
 {
     SurgeStorage *storage{nullptr};
@@ -149,6 +150,11 @@ struct LuaWTEvaluator::Details
         }
     }
 };
+#else
+struct LuaWTEvaluator::Details
+{
+}
+#endif
 
 LuaWTEvaluator::LuaWTEvaluator() { details = std::make_unique<Details>(); }
 
@@ -285,7 +291,7 @@ std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t f
     return res;
 
 #else
-    return {};
+    return std::nullopt;;
 #endif
 }
 
@@ -324,6 +330,7 @@ std::string LuaWTEvaluator::getSuggestedWavetableName()
 {
     std::string res = "Scripted Wavetable";
 
+#if HAS_LUA
     details->prepare();
     details->parseIfNeeded();
     details->callInitFn();
@@ -343,6 +350,8 @@ std::string LuaWTEvaluator::getSuggestedWavetableName()
     }
 
     lua_pop(L, -1);
+#endif
+
 
     return res;
 }
