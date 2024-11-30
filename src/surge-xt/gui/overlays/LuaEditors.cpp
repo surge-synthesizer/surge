@@ -34,6 +34,7 @@
 #include "overlays/TypeinParamEditor.h"
 #include "widgets/MenuCustomComponents.h"
 #include <fmt/core.h>
+#include "widgets/OscillatorWaveformDisplay.h"
 
 namespace Surge
 {
@@ -1077,12 +1078,14 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                 g.drawVerticalLine(xpos + axisSpaceX, 0, height);
 
                 auto p = juce::Path();
+                auto pStroke = juce::Path();
                 if (!cpoint.empty())
                 {
                     float dx = (height) / float(cpoint.size() - 1);
+                    float xp{0};
                     for (int i = 0; i < cpoint.size(); ++i)
                     {
-                        float xp = dx * i + xpos;
+                        xp = dx * i + xpos;
                         float yp = 0.5f * (1 - cpoint[i]) * height;
 
                         if (yp < 0.0f) // clamp to vertical bounds
@@ -1091,11 +1094,18 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                             yp = height;
 
                         if (i == 0)
+                        {
                             p.startNewSubPath(xp + axisSpaceX, middle);
+                            p.lineTo(xp + axisSpaceX, yp);
+                            pStroke.startNewSubPath(xp + axisSpaceX, yp);
+                        }
+                        else
+                        {
+                            p.lineTo(xp + axisSpaceX, yp);
+                            pStroke.lineTo(xp + axisSpaceX, yp);
+                        }
 
-                        p.lineTo(xp + axisSpaceX, yp);
-
-                        if (i == points.size() - 1)
+                        if (i == cpoint.size() - 1)
                             p.lineTo(xp + axisSpaceX, middle);
                     }
 
@@ -1108,7 +1118,7 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                     g.fillPath(p);
 
                     g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
-                    g.strokePath(p, juce::PathStrokeType(1.0));
+                    g.strokePath(pStroke, juce::PathStrokeType(1.0));
                 }
 
                 g.setFont(secondaryFont);
@@ -1660,6 +1670,7 @@ struct WavetableScriptControlArea : public juce::Component,
         break;
 
         case tag_generate_wt:
+            overlay->applyCode();
             overlay->generateWavetable();
             break;
 
@@ -1794,12 +1805,14 @@ void WavetableScriptEditor::applyCode()
     osc->wavetable_formula_res_base = controlArea->resolutionN->getIntValue();
     osc->wavetable_formula_nframes = controlArea->framesN->getIntValue();
 
+    lastFrames = -1;
     setupEvaluator();
-
-    editor->repaintFrame();
     rerenderFromUIState();
+    editor->repaintFrame();
     setApplyEnabled(false);
     mainEditor->grabKeyboardFocus();
+
+    repaint();
 }
 
 void WavetableScriptEditor::forceRefresh()
@@ -1955,9 +1968,6 @@ void WavetableScriptEditor::generateWavetable()
     for (int i = 1; i < resi; ++i)
         respt *= 2;
 
-    std::cout << "Generating wavetable with " << respt << " samples and " << nfr << " frames"
-              << std::endl;
-
     wt_header wh;
     float *wd = nullptr;
     setupEvaluator();
@@ -1968,6 +1978,7 @@ void WavetableScriptEditor::generateWavetable()
     storage->waveTableDataMutex.unlock();
 
     delete[] wd;
+    editor->oscWaveform->repaintForceForWT();
     editor->repaintFrame();
 }
 

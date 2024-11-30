@@ -777,7 +777,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     Parameter *typeinEditTarget = nullptr;
     int typeinModSource = -1;
 
+  public:
     std::unique_ptr<Surge::Widgets::OscillatorWaveformDisplay> oscWaveform;
+
+  private:
     std::unique_ptr<Surge::Widgets::NumberField> polydisp;
     std::unique_ptr<Surge::Widgets::NumberField> splitpointControl;
 
