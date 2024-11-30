@@ -160,17 +160,34 @@ LuaWTEvaluator::LuaWTEvaluator() { details = std::make_unique<Details>(); }
 
 LuaWTEvaluator::~LuaWTEvaluator() = default;
 
-void LuaWTEvaluator::setStorage(SurgeStorage *s) { details->storage = s; }
+void LuaWTEvaluator::setStorage(SurgeStorage *s)
+{
+#if HAS_LUA
+    details->storage = s;
+#endif
+}
 void LuaWTEvaluator::setScript(const std::string &e)
 {
+#if HAS_LUA
     if (e != details->script)
     {
         details->script = e;
         details->needsParse = true;
     }
+#endif
 }
-void LuaWTEvaluator::setResolution(size_t r) { details->resolution = r; }
-void LuaWTEvaluator::setFrameCount(size_t n) { details->frameCount = n; }
+void LuaWTEvaluator::setResolution(size_t r)
+{
+#if HAS_LUA
+    details->resolution = r;
+#endif
+}
+void LuaWTEvaluator::setFrameCount(size_t n)
+{
+#if HAS_LUA
+    details->frameCount = n;
+#endif
+}
 
 std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t frame)
 {
@@ -297,6 +314,7 @@ std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t f
 
 bool LuaWTEvaluator::constructWavetable(wt_header &wh, float **wavdata)
 {
+#if HAS_LUA
     auto storage = details->storage;
     auto &eqn = details->script;
     auto resolution = details->resolution;
@@ -324,6 +342,9 @@ bool LuaWTEvaluator::constructWavetable(wt_header &wh, float **wavdata)
         }
     }
     return true;
+#else
+    return false;
+#endif
 }
 
 std::string LuaWTEvaluator::getSuggestedWavetableName()
@@ -357,9 +378,11 @@ std::string LuaWTEvaluator::getSuggestedWavetableName()
 
 void LuaWTEvaluator::prepare()
 {
+#if HAS_LUA
     details->prepare();
     details->parseIfNeeded();
     details->callInitFn();
+#endif
 }
 
 std::string LuaWTEvaluator::defaultWavetableScript()
