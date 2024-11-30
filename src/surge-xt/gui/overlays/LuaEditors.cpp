@@ -965,12 +965,14 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
     {
     }
 
+    void setSingleFrame() { mode = 0; }
+    void setFilmstrip() { mode = 1; }
+
     void paint(juce::Graphics &g) override
     {
         auto height = getHeight();
         auto width = getWidth();
         auto middle = height * 0.5;
-        int axisSpaceX = 18;
 
         juce::Rectangle<float> drawArea(axisSpaceX, 0, width - axisSpaceX, height);
         juce::Rectangle<float> vaxisArea(0, 0, axisSpaceX, height);
@@ -992,61 +994,140 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
         g.drawText(txt[2], vaxisArea.getX() - 3, height - 14, vaxisArea.getWidth(), 12,
                    juce::Justification::centredRight);
 
-        // Grid
-        g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
-        for (float y : {0.25f, 0.75f})
-            g.drawLine(drawArea.getX() - 8, height * y, width, height * y);
-
-        g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
-        for (float x : {0.25f, 0.5f, 0.75f})
-            g.drawLine(drawArea.getX() + drawArea.getWidth() * x, 0,
-                       drawArea.getX() + drawArea.getWidth() * x, height);
-
-        // Borders
-        g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-        g.drawLine(4, 0, width, 0);
-        g.drawLine(4, height, width, height);
-        g.drawLine(axisSpaceX, 0, axisSpaceX, height);
-        g.drawLine(width, 0, width, height);
-        g.drawLine(axisSpaceX, middle, width, middle);
-
-        // Graph
-        auto p = juce::Path();
-        if (!points.empty())
+        if (mode == 0)
         {
-            float dx = (width - axisSpaceX) / float(points.size() - 1);
-            for (int i = 0; i < points.size(); ++i)
+            // Grid
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
+            for (float y : {0.25f, 0.75f})
+                g.drawLine(drawArea.getX() - 8, height * y, width, height * y);
+
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
+            for (float x : {0.25f, 0.5f, 0.75f})
+                g.drawLine(drawArea.getX() + drawArea.getWidth() * x, 0,
+                           drawArea.getX() + drawArea.getWidth() * x, height);
+
+            // Borders
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+            g.drawLine(4, 0, width, 0);
+            g.drawLine(4, height, width, height);
+            g.drawLine(axisSpaceX, 0, axisSpaceX, height);
+            g.drawLine(width, 0, width, height);
+            g.drawLine(axisSpaceX, middle, width, middle);
+
+            // Graph
+            auto p = juce::Path();
+            if (!points.empty())
             {
-                float xp = dx * i;
-                float yp = 0.5f * (1 - points[i]) * height;
+                float dx = (width - axisSpaceX) / float(points.size() - 1);
+                for (int i = 0; i < points.size(); ++i)
+                {
+                    float xp = dx * i;
+                    float yp = 0.5f * (1 - points[i]) * height;
 
-                if (yp < 0.0f) // clamp to vertical bounds
-                    yp = 0.0f;
-                else if (yp > height)
-                    yp = height;
+                    if (yp < 0.0f) // clamp to vertical bounds
+                        yp = 0.0f;
+                    else if (yp > height)
+                        yp = height;
 
-                if (i == 0)
-                    p.startNewSubPath(xp + axisSpaceX, middle);
+                    if (i == 0)
+                        p.startNewSubPath(xp + axisSpaceX, middle);
 
-                p.lineTo(xp + axisSpaceX, yp);
+                    p.lineTo(xp + axisSpaceX, yp);
 
-                if (i == points.size() - 1)
-                    p.lineTo(xp + axisSpaceX, middle);
+                    if (i == points.size() - 1)
+                        p.lineTo(xp + axisSpaceX, middle);
+                }
+
+                auto cg = juce::ColourGradient::vertical(
+                    skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
+                    skin->getColor(Colors::MSEGEditor::GradientFill::StartColor), drawArea);
+                cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+
+                g.setGradientFill(cg);
+                g.fillPath(p);
+
+                g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
+                g.strokePath(p, juce::PathStrokeType(1.0));
             }
+        }
+        else
+        {
+            assert(mode == 1); // there are only two modes right now
+            // Grid
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
+            for (float y : {0.25f, 0.75f})
+                g.drawLine(drawArea.getX() - 8, height * y, width, height * y);
 
-            auto cg = juce::ColourGradient::vertical(
-                skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
-                skin->getColor(Colors::MSEGEditor::GradientFill::StartColor), drawArea);
-            cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+            // Borders
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+            g.drawLine(4, 0, width, 0);
+            g.drawLine(4, height, width, height);
+            g.drawLine(axisSpaceX, 0, axisSpaceX, height);
+            g.drawLine(width, 0, width, height);
+            g.drawLine(axisSpaceX, middle, width, middle);
 
-            g.setGradientFill(cg);
-            g.fillPath(p);
+            auto gs = juce::Graphics::ScopedSaveState(g);
+            g.reduceClipRegion(axisSpaceX, 0, width - axisSpaceX, height);
+            auto xpos = startX;
 
-            g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
-            g.strokePath(p, juce::PathStrokeType(1.0));
+            int idx{0};
+            for (const auto &cpoint : fsPoints)
+            {
+                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+                g.drawVerticalLine(xpos + axisSpaceX, 0, height);
+
+                auto p = juce::Path();
+                if (!cpoint.empty())
+                {
+                    float dx = (height) / float(cpoint.size() - 1);
+                    for (int i = 0; i < cpoint.size(); ++i)
+                    {
+                        float xp = dx * i + xpos;
+                        float yp = 0.5f * (1 - cpoint[i]) * height;
+
+                        if (yp < 0.0f) // clamp to vertical bounds
+                            yp = 0.0f;
+                        else if (yp > height)
+                            yp = height;
+
+                        if (i == 0)
+                            p.startNewSubPath(xp + axisSpaceX, middle);
+
+                        p.lineTo(xp + axisSpaceX, yp);
+
+                        if (i == points.size() - 1)
+                            p.lineTo(xp + axisSpaceX, middle);
+                    }
+
+                    auto cg = juce::ColourGradient::vertical(
+                        skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
+                        skin->getColor(Colors::MSEGEditor::GradientFill::StartColor), drawArea);
+                    cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+
+                    g.setGradientFill(cg);
+                    g.fillPath(p);
+
+                    g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
+                    g.strokePath(p, juce::PathStrokeType(1.0));
+                }
+
+                g.setFont(secondaryFont);
+                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+                g.drawText(std::to_string(idx + 1), xpos + axisSpaceX + 4, 2, height - 5,
+                           height - 5, juce::Justification::topLeft);
+                idx++;
+
+                g.setColour(skin->getColor(Colors::MSEGEditor::Background));
+                g.fillRect(xpos + height + axisSpaceX, 0, fsGap, height);
+
+                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+                g.drawVerticalLine(xpos + height + axisSpaceX, 0, height);
+                xpos += height + fsGap;
+            }
         }
     }
 
+    void resized() override {}
     void mouseDown(const juce::MouseEvent &event) override
     {
         lastDrag = event.getPosition().x + -event.getPosition().y;
@@ -1055,30 +1136,94 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
     void mouseDrag(const juce::MouseEvent &event) override
     {
-        int currentDrag = event.getPosition().x + -event.getPosition().y;
-        int delta = (currentDrag - lastDrag) * 2;
-        lastDrag = currentDrag;
+        if (mode == 0)
+        {
+            int currentDrag = event.getPosition().x + -event.getPosition().y;
+            int delta = (currentDrag - lastDrag) * 2;
+            lastDrag = currentDrag;
 
-        int value = 0;
-        if (delta > 0)
-            value = 1;
-        else if (delta < 0)
-            value = -1;
+            int value = 0;
+            if (delta > 0)
+                value = 1;
+            else if (delta < 0)
+                value = -1;
 
-        overlay->setCurrentFrame(value);
-        repaint();
+            overlay->setCurrentFrame(value);
+            repaint();
+        }
+        else
+        {
+            int currentDrag = event.getPosition().x + -event.getPosition().y;
+            int delta = (currentDrag - lastDrag) * 2;
+            lastDrag = currentDrag;
+
+            if (delta != 0)
+            {
+                adjustStartX(delta);
+                repaint();
+            }
+        }
     }
 
+    void adjustStartX(int delta)
+    {
+        auto paintWidth =
+            (int)(fsPoints.size()) * (getHeight() + fsGap) - fsGap + 2 + axisSpaceX - getWidth();
+        if (paintWidth > 0)
+        {
+            startX += delta;
+            startX = std::min(0, startX);
+            startX = std::max(-paintWidth, startX);
+        }
+        else
+        {
+            startX = 0;
+        }
+    }
+
+    float accum{0.f};
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override
+    {
+        accum += wheel.deltaX * 400;
+        while (accum > 1)
+        {
+            accum -= 1;
+            adjustStartX(1);
+            repaint();
+        }
+        while (accum < -1)
+        {
+            accum += 1;
+            adjustStartX(-1);
+            repaint();
+        }
+    }
     void mouseUp(const juce::MouseEvent &event) override
     {
         setMouseCursor(juce::MouseCursor::NormalCursor);
     }
 
+    void mouseDoubleClick(const juce::MouseEvent &event) override
+    {
+        if (mode == 1)
+        {
+            startX = 0;
+            repaint();
+        }
+    }
+
     int frameNumber{1};
     std::vector<float> points;
+    std::vector<std::vector<float>> fsPoints;
+
+    int mode{1};
 
   private:
     int lastDrag;
+    int startX{0};
+    static constexpr int fsGap{6};
+    static constexpr int axisSpaceX{18};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetablePreviewComponent);
 };
@@ -1094,7 +1239,8 @@ struct WavetableScriptControlArea : public juce::Component,
         tag_current_frame,
         tag_frames_value,
         tag_res_value,
-        tag_generate_wt
+        tag_generate_wt,
+        tag_select_rendermode
     };
 
     WavetableScriptEditor *overlay{nullptr};
@@ -1138,6 +1284,10 @@ struct WavetableScriptControlArea : public juce::Component,
             codeL->setBounds(xpos, 1, 100, labelHeight);
             addAndMakeVisible(*codeL);
 
+            renderModeL = newL("Display Mode");
+            renderModeL->setBounds(xpos + btnWidth + 5, 1, 100, labelHeight);
+            addAndMakeVisible(*renderModeL);
+
             codeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
             auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
             codeS->setBounds(btnrect);
@@ -1154,6 +1304,25 @@ struct WavetableScriptControlArea : public juce::Component,
             codeS->setValue(overlay->getEditState().codeOrPrelude);
             codeS->setSkin(skin, associatedBitmapStore);
             addAndMakeVisible(*codeS);
+
+            renderModeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
+            btnrect =
+                juce::Rectangle<int>(marginPos + btnWidth + 5, ypos - 1, btnWidth, buttonHeight);
+            renderModeS->setBounds(btnrect);
+            renderModeS->setStorage(overlay->storage);
+            renderModeS->setTitle("Display Mode");
+            renderModeS->setDescription("Display Mode");
+            renderModeS->setLabels({"Single", "Filmstrip"});
+            renderModeS->addListener(this);
+            renderModeS->setTag(tag_select_rendermode);
+            renderModeS->setHeightOfOneImage(buttonHeight);
+            renderModeS->setRows(1);
+            renderModeS->setColumns(2);
+            renderModeS->setDraggable(true);
+            renderModeS->setValue(overlay->rendererComponent->mode);
+            renderModeS->setSkin(skin, associatedBitmapStore);
+            renderModeS->setAccessible(false);
+            addAndMakeVisible(*renderModeS);
 
             btnWidth = 60;
 
@@ -1191,7 +1360,7 @@ struct WavetableScriptControlArea : public juce::Component,
             currentFrameN->setTitle("Current Frame");
             currentFrameN->setDescription("Current Frame");
             currentFrameN->setSkin(skin, associatedBitmapStore);
-            btnrect = juce::Rectangle<int>(bpos, ypos - 1, numfieldWidth, numfieldHeight);
+            btnrect = juce::Rectangle<int>(bpos, ypos, numfieldWidth, numfieldHeight);
             currentFrameN->setBounds(btnrect);
             currentFrameN->setBackgroundDrawable(images[0]);
             currentFrameN->setHoverBackgroundDrawable(images[1]);
@@ -1215,7 +1384,7 @@ struct WavetableScriptControlArea : public juce::Component,
             framesN->setTitle("Max Frame");
             framesN->setDescription("Max Frame");
             framesN->setSkin(skin, associatedBitmapStore);
-            btnrect = juce::Rectangle<int>(bpos, ypos - 1, numfieldWidth, numfieldHeight);
+            btnrect = juce::Rectangle<int>(bpos, ypos, numfieldWidth, numfieldHeight);
             framesN->setBounds(btnrect);
             framesN->setBackgroundDrawable(images[0]);
             framesN->setHoverBackgroundDrawable(images[1]);
@@ -1246,7 +1415,7 @@ struct WavetableScriptControlArea : public juce::Component,
             resolutionN->setTitle("Samples");
             resolutionN->setDescription("Samples");
             resolutionN->setSkin(skin, associatedBitmapStore);
-            btnrect = juce::Rectangle<int>(bpos, ypos - 1, numfieldWidth, numfieldHeight);
+            btnrect = juce::Rectangle<int>(bpos, ypos, numfieldWidth, numfieldHeight);
             resolutionN->setBounds(btnrect);
             resolutionN->setBackgroundDrawable(images[0]);
             resolutionN->setHoverBackgroundDrawable(images[1]);
@@ -1493,14 +1662,38 @@ struct WavetableScriptControlArea : public juce::Component,
         case tag_generate_wt:
             overlay->generateWavetable();
             break;
+
+        case tag_select_rendermode:
+        {
+            auto rm = renderModeS->getIntegerValue();
+            if (rm == 1)
+            {
+                // FILMSTRIP
+                currentFrameN->setVisible(false);
+                currentFrameL->setVisible(false);
+
+                overlay->rerenderFromUIState();
+                overlay->rendererComponent->setFilmstrip();
+            }
+            else
+            {
+                assert(rm == 0);
+                // Frame
+                currentFrameN->setVisible(true);
+                currentFrameL->setVisible(true);
+
+                overlay->rerenderFromUIState();
+                overlay->rendererComponent->setSingleFrame();
+            }
+        }
         default:
             break;
         }
     }
 
     std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
-    std::unique_ptr<juce::Label> codeL, currentFrameL, framesL, resolutionL;
-    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> codeS, applyS, generateS;
+    std::unique_ptr<juce::Label> codeL, renderModeL, currentFrameL, framesL, resolutionL;
+    std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> codeS, renderModeS, applyS, generateS;
     std::unique_ptr<Surge::Widgets::NumberField> currentFrameN, framesN, resolutionN;
 
     void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
@@ -1640,9 +1833,9 @@ void WavetableScriptEditor::resized()
         juce::Rectangle<int>(2, 2, width - 4, height - controlHeight - rendererHeight - 6);
     mainEditor->setBounds(edRect);
     preludeDisplay->setBounds(edRect);
-    controlArea->setBounds(0, height - controlHeight - rendererHeight - 2, width,
-                           controlHeight + rendererHeight + 2);
-    rendererComponent->setBounds(2, height - rendererHeight, width - 2, rendererHeight);
+    controlArea->setBounds(0, height - controlHeight, width, controlHeight + rendererHeight);
+    rendererComponent->setBounds(2, height - rendererHeight - controlHeight - 2, width - 2,
+                                 rendererHeight);
 
     rerenderFromUIState();
 }
@@ -1679,21 +1872,61 @@ void WavetableScriptEditor::rerenderFromUIState()
 {
     auto resi = controlArea->resolutionN->getIntValue();
     auto nfr = controlArea->framesN->getIntValue();
+    auto rm = controlArea->renderModeS->getIntegerValue();
     auto cfr = rendererComponent->frameNumber;
+
+    if (rm == lastRm)
+    {
+        if (rm == 0 && resi == lastRes && nfr == lastFrames && cfr == lastFrame)
+        {
+            return;
+        }
+
+        if (rm == 1 && resi == lastRes && nfr == lastFrames)
+        {
+            return;
+        }
+    }
+
+    lastRes = resi;
+    lastFrame = cfr;
+    lastFrames = nfr;
+    lastRm = rm;
 
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
         respt *= 2;
 
     setupEvaluator();
-    auto rs = evaluator->evaluateScriptAtFrame(cfr);
-    if (rs.has_value())
+
+    if (rm == 0)
     {
-        rendererComponent->points = *rs;
+        auto rs = evaluator->evaluateScriptAtFrame(cfr);
+        if (rs.has_value())
+        {
+            rendererComponent->points = *rs;
+        }
+        else
+        {
+            rendererComponent->points.clear();
+        }
     }
     else
     {
-        rendererComponent->points.clear();
+        rendererComponent->fsPoints.clear();
+        for (int i = 0; i < nfr; ++i)
+        {
+            auto rs = evaluator->evaluateScriptAtFrame(i);
+            if (rs.has_value())
+            {
+                rendererComponent->fsPoints.emplace_back(*rs);
+            }
+            else
+            {
+                rendererComponent->fsPoints.emplace_back();
+            }
+        }
+        rendererComponent->adjustStartX(0);
     }
     rendererComponent->repaint();
 }
