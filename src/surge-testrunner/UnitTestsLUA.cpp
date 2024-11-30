@@ -681,7 +681,7 @@ end
 
         for (int fno = 0; fno < 4; ++fno)
         {
-            auto fr = la->evaluateScriptAtFrame( fno);
+            auto fr = la->evaluateScriptAtFrame(fno);
             REQUIRE(fr.has_value());
             REQUIRE(fr->size() == 512);
             auto dp = 1.0 / (512 - 1);
