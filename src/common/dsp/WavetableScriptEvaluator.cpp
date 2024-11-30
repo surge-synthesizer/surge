@@ -224,8 +224,21 @@ std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t f
 
         lua_pushnil(L); /* first key */
         assert(lua_istable(L, -2));
+        bool useLegacyNames{true};
+
         while (lua_next(L, -2) != 0)
         {
+            // stack is now new > global  > k > v but we want to see if k 'legacy_config' is true
+            if (lua_isstring(L, -2))
+            {
+                if (strcmp(lua_tostring(L, -2), "legacy_config") == 0)
+                {
+                    if (lua_isboolean(L, -1))
+                    {
+                        useLegacyNames = lua_toboolean(L, -1);
+                    }
+                }
+            }
             // stack is now new > global > k > v
             lua_pushvalue(L, -2);
             // stack is now new > global > k > v > k
@@ -237,23 +250,25 @@ std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t f
         // pop the remaining key
         lua_pop(L, 1);
 
-        // xs is an array of the x locations in phase space
-        lua_createtable(L, resolution, 0);
-
-        double dp = 1.0 / (resolution - 1);
-        for (auto i = 0; i < resolution; ++i)
+        if (useLegacyNames)
         {
-            lua_pushinteger(L, i + 1); // lua has a 1 based index convention
-            lua_pushnumber(L, i * dp);
-            lua_settable(L, -3);
+            // xs is an array of the x locations in phase space
+            lua_createtable(L, resolution, 0);
+            double dp = 1.0 / (resolution - 1);
+            for (auto i = 0; i < resolution; ++i)
+            {
+                lua_pushinteger(L, i + 1); // lua has a 1 based index convention
+                lua_pushnumber(L, i * dp);
+                lua_settable(L, -3);
+            }
+            lua_setfield(L, -2, "xs");
+
+            lua_pushinteger(L, frame + 1);
+            lua_setfield(L, -2, "n");
+
+            lua_pushinteger(L, nFrames);
+            lua_setfield(L, -2, "nTables");
         }
-        lua_setfield(L, -2, "xs");
-
-        lua_pushinteger(L, frame + 1);
-        lua_setfield(L, -2, "n");
-
-        lua_pushinteger(L, nFrames);
-        lua_setfield(L, -2, "nTables");
 
         lua_pushinteger(L, frame + 1);
         lua_setfield(L, -2, "frame");
@@ -263,9 +278,6 @@ std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t f
 
         lua_pushinteger(L, resolution);
         lua_setfield(L, -2, "sample_count");
-
-        lua_getglobal(L, statetable);
-        lua_setfield(L, -2, "state");
 
         // So stack is now the table and the function
         auto pcr = lua_pcall(L, 1, 1, 0);
