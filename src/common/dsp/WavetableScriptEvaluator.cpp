@@ -291,7 +291,7 @@ std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t f
     return res;
 
 #else
-    return std::nullopt;;
+    return std::nullopt;
 #endif
 }
 
@@ -351,7 +351,6 @@ std::string LuaWTEvaluator::getSuggestedWavetableName()
 
     lua_pop(L, -1);
 #endif
-
 
     return res;
 }
