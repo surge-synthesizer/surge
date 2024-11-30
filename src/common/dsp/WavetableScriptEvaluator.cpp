@@ -209,15 +209,15 @@ std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t f
         assert(lua_istable(L, -2));
         while (lua_next(L, -2) != 0)
         {
-            // stack is now v > k > global > new
+            // stack is now new > global > k > v
             lua_pushvalue(L, -2);
-            // stack is now k > v > k > global > new
+            // stack is now new > global > k > v > k
             lua_insert(L, -2);
-            // stack is now v > k > k > global > new
+            // stack is now new > global > k > k > v
             lua_settable(L, -5);
-            // stack is now k > global > new
+            // stack is now new > global > k and k/v is inserted into new so we can iterate
         }
-
+        // pop the remaining key
         lua_pop(L, 1);
 
         // xs is an array of the x locations in phase space
