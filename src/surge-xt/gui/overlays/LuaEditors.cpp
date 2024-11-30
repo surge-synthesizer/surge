@@ -957,13 +957,12 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 {
     WavetableScriptEditor *overlay{nullptr};
     SurgeGUIEditor *editor{nullptr};
-    Surge::GUI::Skin::ptr_t skin;
 
     WavetablePreviewComponent(WavetableScriptEditor *ol, SurgeGUIEditor *ed,
                               Surge::GUI::Skin::ptr_t skin)
-        : overlay(ol), editor(ed), skin(skin)
-
+        : overlay(ol), editor(ed)
     {
+        setSkin(skin);
     }
 
     void setSingleFrame() { mode = 0; }
@@ -1223,6 +1222,8 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
         }
     }
 
+    void onSkinChanged() override { repaint(); }
+
     int frameNumber{1};
     std::vector<float> points;
     std::vector<std::vector<float>> fsPoints;
@@ -1452,6 +1453,12 @@ struct WavetableScriptControlArea : public juce::Component,
             generateS->setSkin(skin, associatedBitmapStore);
             generateS->setEnabled(true);
             addAndMakeVisible(*generateS);
+
+            if (overlay->rendererComponent->mode == 1)
+            {
+                currentFrameL->setVisible(false);
+                currentFrameN->setVisible(false);
+            }
         }
     }
 
@@ -1782,7 +1789,7 @@ void WavetableScriptEditor::onSkinChanged()
     preludeDisplay->setFont(skin->getFont(Fonts::LuaEditor::Code));
     EditorColors::setColorsFromSkin(preludeDisplay.get(), skin);
     controlArea->setSkin(skin, associatedBitmapStore);
-    rendererComponent->setSkin(skin, associatedBitmapStore); // FIXME
+    rendererComponent->setSkin(skin, associatedBitmapStore);
 }
 
 void WavetableScriptEditor::setupEvaluator()
