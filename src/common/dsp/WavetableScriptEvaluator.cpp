@@ -153,7 +153,7 @@ struct LuaWTEvaluator::Details
 #else
 struct LuaWTEvaluator::Details
 {
-}
+};
 #endif
 
 LuaWTEvaluator::LuaWTEvaluator() { details = std::make_unique<Details>(); }
