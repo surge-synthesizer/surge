@@ -601,6 +601,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
 // Change this to 0 to disable WTSE component, to disable for release: change value, test, and push
 #define INCLUDE_WT_SCRIPTING_EDITOR 1
+#if HAS_LUA
 #if INCLUDE_WT_SCRIPTING_EDITOR
     contextMenu.addSeparator();
 
@@ -611,6 +612,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
     contextMenu.addSeparator();
+#endif
 #endif
 
     // add this option only if we have any wavetables in the list
@@ -727,6 +729,17 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
             contextMenu.addItem(
                 Surge::GUI::toOSCase(fmt::format("Frame Length: {} samples", oscdata->wt.size)),
                 true, false, nullptr);
+
+#if HAS_LUA
+            contextMenu.addSeparator();
+            contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."),
+                                [w = juce::Component::SafePointer(this)]() {
+                                    if (!w)
+                                        return;
+                                    if (w->sge)
+                                        w->sge->showOverlay(SurgeGUIEditor::WTSCRIPT_EDITOR);
+                                });
+#endif
         }
     }
 }
