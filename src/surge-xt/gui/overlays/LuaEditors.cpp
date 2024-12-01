@@ -1137,6 +1137,39 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
     }
 
     void resized() override {}
+    bool isHandMove{false};
+    void mouseEnter(const juce::MouseEvent &event) override
+    {
+        if (event.x > axisSpaceX)
+        {
+            setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+            isHandMove = true;
+        }
+        else
+        {
+            isHandMove = false;
+        }
+    }
+    void mouseMove(const juce::MouseEvent &event) override
+    {
+        if (event.x > axisSpaceX)
+        {
+            if (!isHandMove)
+                setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+            isHandMove = true;
+        }
+        else
+        {
+            if (isHandMove)
+                setMouseCursor(juce::MouseCursor::NormalCursor);
+            isHandMove = false;
+        }
+    }
+    void mouseExit(const juce::MouseEvent &event) override
+    {
+        setMouseCursor(juce::MouseCursor::NormalCursor);
+        isHandMove = false;
+    }
     void mouseDown(const juce::MouseEvent &event) override
     {
         lastDrag = event.getPosition().x + -event.getPosition().y;
@@ -1210,7 +1243,15 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
     }
     void mouseUp(const juce::MouseEvent &event) override
     {
-        setMouseCursor(juce::MouseCursor::NormalCursor);
+        if (event.x < axisSpaceX)
+        {
+            isHandMove = false;
+            setMouseCursor(juce::MouseCursor::NormalCursor);
+        }
+        else
+        {
+            isHandMove = true;
+        }
     }
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
@@ -1934,16 +1975,25 @@ void WavetableScriptEditor::rerenderFromUIState()
     else
     {
         rendererComponent->fsPoints.clear();
+        bool hasFailed{false};
         for (int i = 0; i < nfr; ++i)
         {
-            auto rs = evaluator->evaluateScriptAtFrame(i);
-            if (rs.has_value())
+            if (hasFailed)
             {
-                rendererComponent->fsPoints.emplace_back(*rs);
+                rendererComponent->fsPoints.emplace_back();
             }
             else
             {
-                rendererComponent->fsPoints.emplace_back();
+                auto rs = evaluator->evaluateScriptAtFrame(i);
+                if (rs.has_value())
+                {
+                    rendererComponent->fsPoints.emplace_back(*rs);
+                }
+                else
+                {
+                    rendererComponent->fsPoints.emplace_back();
+                    hasFailed = true;
+                }
             }
         }
         rendererComponent->adjustStartX(0);
