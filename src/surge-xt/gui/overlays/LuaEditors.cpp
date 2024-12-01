@@ -61,6 +61,62 @@ struct SurgeCodeEditorComponent : public juce::CodeEditorComponent
             c = c->getParentComponent();
         }
     }
+
+    // Handles auto indentation
+
+    void handleReturnKey() override
+    {
+
+        auto pos = this->getCaretPos();
+        auto txt = pos.getLineText();
+        int tabs = 0;
+
+        for (int i = 0; i < txt.length(); i++)
+        {
+            if (txt.substring(i, i + 1) == " ")
+            {
+                tabs++;
+            }
+            else if (txt.substring(i, i + 1) == "\t")
+            {
+                tabs += this->getTabSize();
+            }
+            else
+            {
+                bool indent = false;
+                auto trimmedTxt = txt.trim();
+
+                if (txt.substring(i, i + 8) == "function")
+                {
+
+                    indent = true;
+                }
+                else if (txt.substring(i, i + 2) == "if" &&
+                         trimmedTxt.substring(trimmedTxt.length() - 4, trimmedTxt.length()) ==
+                             "then")
+                {
+                    indent = true;
+                }
+                else if (trimmedTxt.substring(0, 4) == "else")
+                {
+                    indent = true;
+                }
+                else if (trimmedTxt.substring(trimmedTxt.length() - 2, trimmedTxt.length()) ==
+                             "do" ||
+                         trimmedTxt.substring(0, 5) == "while")
+                {
+                    indent = true;
+                }
+
+                tabs += indent == true ? this->getTabSize() : 0;
+
+                break;
+            }
+        }
+
+        this->insertTextAtCaret("\n");
+        this->insertTextAtCaret(std::string(tabs, ' '));
+    }
 };
 
 struct EditorColors
@@ -164,7 +220,7 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
         }
         else
         {
-            mainEditor->indentSelection();
+            mainEditor->insertTabAtCaret();
         }
 
         return true;
@@ -223,6 +279,53 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
         // optionally reselecting the text if a selection existed
         mainEditor->moveCaretTo(pos.movedBy(txt.length()), doSel);
 
+        return true;
+    }
+    // search
+    else if (key.getModifiers().isCommandDown() && keyCode == 70)
+    {
+        /*
+            search for characters and use getCharacterBounds to get its screen position
+        */
+        return false;
+    }
+
+    // handle string inserts
+    // add handling of both types
+
+    else if (keyCode == 50)
+    {
+
+        auto pos = mainEditor->getCaretPos();
+        auto txt = pos.getLineText();
+
+        int ApostrCount = 0;
+
+        for (int i = 0; i < txt.length(); i++)
+        {
+            if (txt.substring(i, i + 1) == "\"")
+                ApostrCount++;
+        }
+
+        // Close string
+        if (ApostrCount % 2 == 0)
+        {
+
+            if (txt.substring(pos.getIndexInLine(), pos.getIndexInLine() + 1) != "\"")
+            {
+                mainEditor->insertTextAtCaret("\"\"");
+                mainEditor->moveCaretLeft(false, false);
+            }
+
+            else
+            {
+                mainEditor->moveCaretRight(false, false);
+            }
+        }
+        else
+        {
+            mainEditor->insertTextAtCaret("\"");
+        }
         return true;
     }
     else
