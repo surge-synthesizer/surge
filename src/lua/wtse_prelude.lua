@@ -92,7 +92,7 @@ end
 function math.maxAbsFromTable(t)
     local o = 0
     for i = 1, #t do
-            local a = abs(t[i])
+            local a = math.abs(t[i])
             if a > o then o = a end
     end
     return o
