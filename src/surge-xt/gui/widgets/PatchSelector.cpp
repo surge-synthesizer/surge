@@ -773,7 +773,7 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
 
         if (isUser)
         {
-            contextMenu.addItem(Surge::GUI::toOSCase("Rename Patch"), [this, sge]() {
+            contextMenu.addItem(Surge::GUI::toOSCase("Rename Patch..."), [this, sge]() {
                 sge->showOverlay(
                     SurgeGUIEditor::SAVE_PATCH, [this](Overlays::OverlayComponent *co) {
                         auto psd = dynamic_cast<Surge::Overlays::PatchStoreDialog *>(co);

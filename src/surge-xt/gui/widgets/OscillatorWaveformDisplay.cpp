@@ -36,6 +36,9 @@
 #include "UserDefaults.h"
 #include "fmt/core.h"
 
+// Change this to 0 to disable WTSE component, to disable for release: change value, test, and push
+#define INCLUDE_WT_SCRIPTING_EDITOR 1
+
 namespace Surge
 {
 namespace Widgets
@@ -599,11 +602,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     contextMenu.addSeparator();
 
-// Change this to 0 to disable WTSE component, to disable for release: change value, test, and push
-#define INCLUDE_WT_SCRIPTING_EDITOR 1
 #if INCLUDE_WT_SCRIPTING_EDITOR
-    contextMenu.addSeparator();
-
     auto owts = [this]() {
         if (sge)
             sge->showOverlay(SurgeGUIEditor::WTSCRIPT_EDITOR);
@@ -636,7 +635,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         }
     };
 
-    contextMenu.addItem(Surge::GUI::toOSCase("Change Wavetable Display Name..."), rnaction);
+    contextMenu.addItem(Surge::GUI::toOSCase("Rename Wavetable..."), rnaction);
 
     contextMenu.addSeparator();
 
@@ -644,10 +643,21 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     contextMenu.addItem(Surge::GUI::toOSCase("Load Wavetable from File..."), action);
 
     auto exportAction = [this]() {
-        int oscNum = this->oscInScene;
-        int scene = this->scene;
-        std::string baseName = storage->getPatch().name + "_osc" + std::to_string(oscNum + 1) +
-                               "_scene" + (scene == 0 ? "A" : "B");
+        int sc = this->scene;
+        int o = this->oscInScene;
+        std::string wtName = storage->getPatch().scene[sc].osc[o].wavetable_display_name;
+        std::string baseName = "";
+
+        if (wtName.compare(0, 6, "(Patch") == 0)
+        {
+            baseName = fmt::format("{} {}{}", storage->getPatch().name, (sc == 0 ? "A" : "B"),
+                                   std::to_string(o + 1));
+        }
+        else
+        {
+            baseName = wtName;
+        }
+
         auto fn = storage->export_wt_wav_portable(baseName, &(oscdata->wt));
 
         if (!fn.empty())
@@ -715,6 +725,18 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
             auto text = fmt::format("Switch to {} Display", (customEditor) ? "2D" : "3D");
 
             contextMenu.addItem(Surge::GUI::toOSCase(text), action);
+
+#if INCLUDE_WT_SCRIPTING_EDITOR
+            contextMenu.addSeparator();
+
+            auto owts = [this]() {
+                if (sge)
+                    sge->showOverlay(SurgeGUIEditor::WTSCRIPT_EDITOR);
+            };
+
+            contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
+            contextMenu.addSeparator();
+#endif
 
             contextMenu.addSeparator();
 
