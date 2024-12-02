@@ -35,6 +35,7 @@
 #include "widgets/MenuCustomComponents.h"
 #include <fmt/core.h>
 #include "widgets/OscillatorWaveformDisplay.h"
+#include <regex>
 
 namespace Surge
 {
@@ -287,51 +288,79 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
         /*
             search for characters and use getCharacterBounds to get its screen position
         */
-        return false;
+        return true;
     }
 
-    // handle string inserts
-    // add handling of both types
+    // handle string completion
 
     else if (keyCode == 50)
     {
-
-        auto pos = mainEditor->getCaretPos();
-        auto txt = pos.getLineText();
-
-        int ApostrCount = 0;
-
-        for (int i = 0; i < txt.length(); i++)
-        {
-            if (txt.substring(i, i + 1) == "\"")
-                ApostrCount++;
-        }
-
-        // Close string
-        if (ApostrCount % 2 == 0)
-        {
-
-            if (txt.substring(pos.getIndexInLine(), pos.getIndexInLine() + 1) != "\"")
-            {
-                mainEditor->insertTextAtCaret("\"\"");
-                mainEditor->moveCaretLeft(false, false);
-            }
-
-            else
-            {
-                mainEditor->moveCaretRight(false, false);
-            }
-        }
-        else
-        {
-            mainEditor->insertTextAtCaret("\"");
-        }
-        return true;
+        return this->autoCompleteStringDeclaration("\"");
+    }
+    else if (keyCode == 39)
+    {
+        return this->autoCompleteStringDeclaration("'");
     }
     else
     {
         return Component::keyPressed(key);
     }
+}
+
+void CodeEditorContainerWithApply::removeStringTrailsFromDocument()
+{
+
+    /*
+       this needs some work as the caret position gets all screwed up after clean up
+    */
+
+    /*
+    auto caretPos = mainEditor->getCaretPos();
+
+    std::string s = mainEditor->getDocument().getAllContent().toStdString();
+    std::regex pattern("[ \t]+$");
+    std::string replacement = "";
+    std::string result = std::regex_replace(s, pattern, replacement);
+    mainEditor->getDocument().replaceAllContent(result);
+    mainEditor->moveCaretTo(caretPos, false);
+    */
+}
+
+bool CodeEditorContainerWithApply::autoCompleteStringDeclaration(juce::String str)
+{
+
+    auto pos = mainEditor->getCaretPos();
+    auto txt = pos.getLineText();
+
+    int ApostrCount = 0;
+
+    for (int i = 0; i < txt.length(); i++)
+    {
+        if (txt.substring(i, i + 1) == str)
+            ApostrCount++;
+    }
+
+    // Close string
+    if (ApostrCount % 2 == 0)
+    {
+
+        if (txt.substring(pos.getIndexInLine(), pos.getIndexInLine() + 1) != str)
+        {
+            mainEditor->insertTextAtCaret(str + str);
+            mainEditor->moveCaretLeft(false, false);
+        }
+
+        else
+        {
+            mainEditor->moveCaretRight(false, false);
+        }
+    }
+    else
+    {
+        mainEditor->insertTextAtCaret(str);
+    }
+    return true;
+    // sdfsd
 }
 
 void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
@@ -902,6 +931,7 @@ void FormulaModulatorEditor::onSkinChanged()
 
 void FormulaModulatorEditor::applyCode()
 {
+    removeStringTrailsFromDocument();
     editor->undoManager()->pushFormula(scene, lfo_id, *formulastorage);
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     storage->getPatch().isDirty = true;
@@ -1240,6 +1270,39 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
     }
 
     void resized() override {}
+    bool isHandMove{false};
+    void mouseEnter(const juce::MouseEvent &event) override
+    {
+        if (event.x > axisSpaceX)
+        {
+            setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+            isHandMove = true;
+        }
+        else
+        {
+            isHandMove = false;
+        }
+    }
+    void mouseMove(const juce::MouseEvent &event) override
+    {
+        if (event.x > axisSpaceX)
+        {
+            if (!isHandMove)
+                setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+            isHandMove = true;
+        }
+        else
+        {
+            if (isHandMove)
+                setMouseCursor(juce::MouseCursor::NormalCursor);
+            isHandMove = false;
+        }
+    }
+    void mouseExit(const juce::MouseEvent &event) override
+    {
+        setMouseCursor(juce::MouseCursor::NormalCursor);
+        isHandMove = false;
+    }
     void mouseDown(const juce::MouseEvent &event) override
     {
         lastDrag = event.getPosition().x + -event.getPosition().y;
@@ -1313,7 +1376,15 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
     }
     void mouseUp(const juce::MouseEvent &event) override
     {
-        setMouseCursor(juce::MouseCursor::NormalCursor);
+        if (event.x < axisSpaceX)
+        {
+            isHandMove = false;
+            setMouseCursor(juce::MouseCursor::NormalCursor);
+        }
+        else
+        {
+            isHandMove = true;
+        }
     }
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
@@ -1911,6 +1982,7 @@ void WavetableScriptEditor::setupEvaluator()
 
 void WavetableScriptEditor::applyCode()
 {
+    removeStringTrailsFromDocument();
     osc->wavetable_formula = mainDocument->getAllContent().toStdString();
     osc->wavetable_formula_res_base = controlArea->resolutionN->getIntValue();
     osc->wavetable_formula_nframes = controlArea->framesN->getIntValue();
@@ -2037,16 +2109,25 @@ void WavetableScriptEditor::rerenderFromUIState()
     else
     {
         rendererComponent->fsPoints.clear();
+        bool hasFailed{false};
         for (int i = 0; i < nfr; ++i)
         {
-            auto rs = evaluator->evaluateScriptAtFrame(i);
-            if (rs.has_value())
+            if (hasFailed)
             {
-                rendererComponent->fsPoints.emplace_back(*rs);
+                rendererComponent->fsPoints.emplace_back();
             }
             else
             {
-                rendererComponent->fsPoints.emplace_back();
+                auto rs = evaluator->evaluateScriptAtFrame(i);
+                if (rs.has_value())
+                {
+                    rendererComponent->fsPoints.emplace_back(*rs);
+                }
+                else
+                {
+                    rendererComponent->fsPoints.emplace_back();
+                    hasFailed = true;
+                }
             }
         }
         rendererComponent->adjustStartX(0);
