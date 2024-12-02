@@ -35,7 +35,6 @@
 #include "widgets/MenuCustomComponents.h"
 #include <fmt/core.h>
 #include "widgets/OscillatorWaveformDisplay.h"
-#include <regex>
 
 namespace Surge
 {
@@ -166,6 +165,7 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
 
     mainDocument = std::make_unique<juce::CodeDocument>();
     mainDocument->addListener(this);
+    mainDocument->setNewLineCharacters("\n");
     tokenizer = std::make_unique<juce::LuaTokeniser>();
 
     mainEditor = std::make_unique<SurgeCodeEditorComponent>(*mainDocument, tokenizer.get());
@@ -307,23 +307,37 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
     }
 }
 
-void CodeEditorContainerWithApply::removeStringTrailsFromDocument()
+void CodeEditorContainerWithApply::removeTrailingWhitespaceFromDocument()
 {
+    const auto caretPos = mainEditor->getCaretPos();
+    const auto caretLine = caretPos.getLineNumber();
+    const auto numLines = mainEditor->getDocument().getNumLines();
+    uint32_t charsRemoved = 0;
 
-    /*
-       this needs some work as the caret position gets all screwed up after clean up
-    */
+    for (int i = 0; i < numLines; i++)
+    {
+        juce::CodeDocument::Position lineStart{mainEditor->getDocument(), i, 0};
+        auto s = lineStart.getLineText();
+        const auto sizeOld = s.length() - 1; // disregard EOL
+        juce::CodeDocument::Position lineEnd{mainEditor->getDocument(), i, sizeOld};
 
-    /*
-    auto caretPos = mainEditor->getCaretPos();
+        s = s.trimEnd();
 
-    std::string s = mainEditor->getDocument().getAllContent().toStdString();
-    std::regex pattern("[ \t]+$");
-    std::string replacement = "";
-    std::string result = std::regex_replace(s, pattern, replacement);
-    mainEditor->getDocument().replaceAllContent(result);
-    mainEditor->moveCaretTo(caretPos, false);
-    */
+        const auto sizeNew = s.length();
+
+        if (i <= caretLine && sizeOld > sizeNew)
+        {
+            charsRemoved += sizeOld - sizeNew;
+
+            if (sizeOld - sizeNew > 0)
+            {
+                mainEditor->getDocument().replaceSection(lineStart.getPosition(),
+                                                         lineEnd.getPosition(), s);
+            }
+        }
+    }
+
+    mainEditor->moveCaretTo(caretPos.movedBy(-charsRemoved), false);
 }
 
 bool CodeEditorContainerWithApply::autoCompleteStringDeclaration(juce::String str)
@@ -931,7 +945,8 @@ void FormulaModulatorEditor::onSkinChanged()
 
 void FormulaModulatorEditor::applyCode()
 {
-    removeStringTrailsFromDocument();
+    removeTrailingWhitespaceFromDocument();
+
     editor->undoManager()->pushFormula(scene, lfo_id, *formulastorage);
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     storage->getPatch().isDirty = true;
@@ -1110,39 +1125,43 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
         juce::Rectangle<float> drawArea(axisSpaceX, 0, width - axisSpaceX, height);
         juce::Rectangle<float> vaxisArea(0, 0, axisSpaceX, height);
 
-        // auto primaryFont = skin->fontManager->getLatoAtSize(9, juce::Font::bold);
-        auto secondaryFont = skin->fontManager->getLatoAtSize(7);
+        auto font = skin->fontManager->getLatoAtSize(8);
 
         g.setColour(skin->getColor(Colors::MSEGEditor::Background));
         g.fillRect(drawArea);
 
         // Vertical axis
-        std::vector<std::string> txt = {"1.0", "0.0", "-1.0"};
-        g.setFont(secondaryFont);
-        g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
-        g.drawText(txt[0], vaxisArea.getX() - 3, 4, vaxisArea.getWidth(), 12,
-                   juce::Justification::topRight);
-        g.drawText(txt[1], vaxisArea.getX() - 3, middle - 12, vaxisArea.getWidth(), 12,
-                   juce::Justification::bottomRight);
-        g.drawText(txt[2], vaxisArea.getX() - 3, height - 14, vaxisArea.getWidth(), 12,
-                   juce::Justification::centredRight);
+        if (axisSpaceX > 0)
+        {
+            std::vector<std::string> txt = {"1.0", "0.0", "-1.0"};
+            g.setFont(font);
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
+            g.drawText(txt[0], vaxisArea.getX() - 3, 4, vaxisArea.getWidth(), 12,
+                       juce::Justification::topRight);
+            g.drawText(txt[1], vaxisArea.getX() - 3, middle - 12, vaxisArea.getWidth(), 12,
+                       juce::Justification::bottomRight);
+            g.drawText(txt[2], vaxisArea.getX() - 3, height - 14, vaxisArea.getWidth(), 12,
+                       juce::Justification::centredRight);
+        }
 
         if (mode == 0)
         {
             // Grid
             g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
+
             for (float y : {0.25f, 0.75f})
                 g.drawLine(drawArea.getX() - 8, height * y, width, height * y);
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
+
             for (float x : {0.25f, 0.5f, 0.75f})
                 g.drawLine(drawArea.getX() + drawArea.getWidth() * x, 0,
                            drawArea.getX() + drawArea.getWidth() * x, height);
 
             // Borders
             g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-            g.drawLine(4, 0, width, 0);
-            g.drawLine(4, height, width, height);
+            g.drawLine(0, 0, width, 0);
+            g.drawLine(0, height, width, height);
             g.drawLine(axisSpaceX, 0, axisSpaceX, height);
             g.drawLine(width, 0, width, height);
             g.drawLine(axisSpaceX, middle, width, middle);
@@ -1152,6 +1171,7 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             if (!points.empty())
             {
                 float dx = (width - axisSpaceX) / float(points.size() - 1);
+
                 for (int i = 0; i < points.size(); ++i)
                 {
                     float xp = dx * i;
@@ -1182,39 +1202,59 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                 g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
                 g.strokePath(p, juce::PathStrokeType(1.0));
             }
+
+            // Text
+            g.setFont(font);
+            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+            g.drawText(std::to_string(frameNumber), axisSpaceX + 4, 4, width - 8, height - 8,
+                       juce::Justification::topRight);
         }
         else
         {
             assert(mode == 1); // there are only two modes right now
-            // Grid
-            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
-            for (float y : {0.25f, 0.75f})
-                g.drawLine(drawArea.getX() - 8, height * y, width, height * y);
-
-            // Borders
-            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-            g.drawLine(4, 0, width, 0);
-            g.drawLine(4, height, width, height);
-            g.drawLine(axisSpaceX, 0, axisSpaceX, height);
-            g.drawLine(width, 0, width, height);
-            g.drawLine(axisSpaceX, middle, width, middle);
 
             auto gs = juce::Graphics::ScopedSaveState(g);
             g.reduceClipRegion(axisSpaceX, 0, width - axisSpaceX, height);
             auto xpos = startX;
 
             int idx{0};
+
             for (const auto &cpoint : fsPoints)
             {
                 g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-                g.drawVerticalLine(xpos + axisSpaceX, 0, height);
 
                 auto p = juce::Path();
                 auto pStroke = juce::Path();
+
+                // alternate checkerboard bg
+                auto bgColor = skin->getColor((Colors::MSEGEditor::Background));
+
+                constexpr double brightnessThresh = 0.1;
+                constexpr double brightnessDelta = 0.1;
+
+                if (idx % 2 == 1)
+                {
+                    if (bgColor.getBrightness() < brightnessThresh)
+                    {
+                        g.setColour(bgColor.brighter(brightnessDelta));
+                    }
+                    else
+                    {
+                        g.setColour(bgColor.darker(brightnessDelta * 2.0));
+                    }
+                }
+                else
+                {
+                    g.setColour(bgColor);
+                }
+
+                g.fillRect(xpos + axisSpaceX, 0, height, height);
+
                 if (!cpoint.empty())
                 {
                     float dx = (height) / float(cpoint.size() - 1);
                     float xp{0};
+
                     for (int i = 0; i < cpoint.size(); ++i)
                     {
                         xp = dx * i + xpos;
@@ -1253,19 +1293,24 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                     g.strokePath(pStroke, juce::PathStrokeType(1.0));
                 }
 
-                g.setFont(secondaryFont);
-                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-                g.drawText(std::to_string(idx + 1), xpos + axisSpaceX + 4, 2, height - 5,
-                           height - 5, juce::Justification::topLeft);
+                g.setFont(font);
+                g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+                g.drawText(std::to_string(idx + 1), xpos + axisSpaceX + 4, 4, height - 8,
+                           height - 8, juce::Justification::topRight);
                 idx++;
-
-                g.setColour(skin->getColor(Colors::MSEGEditor::Background));
-                g.fillRect(xpos + height + axisSpaceX, 0, fsGap, height);
 
                 g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
                 g.drawVerticalLine(xpos + height + axisSpaceX, 0, height);
+
                 xpos += height + fsGap;
             }
+
+            // Borders
+            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
+            g.drawLine(0, 0, width, 0);
+            g.drawLine(0, height, width, height);
+            g.drawLine(axisSpaceX, 0, axisSpaceX, height);
+            g.drawLine(width, 0, width, height);
         }
     }
 
@@ -1407,8 +1452,8 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
   private:
     int lastDrag;
     int startX{0};
-    static constexpr int fsGap{6};
-    static constexpr int axisSpaceX{18};
+    static constexpr int fsGap{0};
+    static constexpr int axisSpaceX{0};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetablePreviewComponent);
 };
@@ -1982,7 +2027,8 @@ void WavetableScriptEditor::setupEvaluator()
 
 void WavetableScriptEditor::applyCode()
 {
-    removeStringTrailsFromDocument();
+    removeTrailingWhitespaceFromDocument();
+
     osc->wavetable_formula = mainDocument->getAllContent().toStdString();
     osc->wavetable_formula_res_base = controlArea->resolutionN->getIntValue();
     osc->wavetable_formula_nframes = controlArea->framesN->getIntValue();

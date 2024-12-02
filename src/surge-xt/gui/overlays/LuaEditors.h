@@ -66,7 +66,7 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     void buttonClicked(juce::Button *button) override;
     void codeDocumentTextDeleted(int startIndex, int endIndex) override;
     void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override;
-    void removeStringTrailsFromDocument();
+    void removeTrailingWhitespaceFromDocument();
     bool autoCompleteStringDeclaration(juce::String str);
     bool keyPressed(const juce::KeyPress &key, Component *originatingComponent) override;
 
