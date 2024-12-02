@@ -35,6 +35,7 @@
 #include "widgets/MenuCustomComponents.h"
 #include <fmt/core.h>
 #include "widgets/OscillatorWaveformDisplay.h"
+#include <regex>
 
 namespace Surge
 {
@@ -60,6 +61,62 @@ struct SurgeCodeEditorComponent : public juce::CodeEditorComponent
             }
             c = c->getParentComponent();
         }
+    }
+
+    // Handles auto indentation
+
+    void handleReturnKey() override
+    {
+
+        auto pos = this->getCaretPos();
+        auto txt = pos.getLineText();
+        int tabs = 0;
+
+        for (int i = 0; i < txt.length(); i++)
+        {
+            if (txt.substring(i, i + 1) == " ")
+            {
+                tabs++;
+            }
+            else if (txt.substring(i, i + 1) == "\t")
+            {
+                tabs += this->getTabSize();
+            }
+            else
+            {
+                bool indent = false;
+                auto trimmedTxt = txt.trim();
+
+                if (txt.substring(i, i + 8) == "function")
+                {
+
+                    indent = true;
+                }
+                else if (txt.substring(i, i + 2) == "if" &&
+                         trimmedTxt.substring(trimmedTxt.length() - 4, trimmedTxt.length()) ==
+                             "then")
+                {
+                    indent = true;
+                }
+                else if (trimmedTxt.substring(0, 4) == "else")
+                {
+                    indent = true;
+                }
+                else if (trimmedTxt.substring(trimmedTxt.length() - 2, trimmedTxt.length()) ==
+                             "do" ||
+                         trimmedTxt.substring(0, 5) == "while")
+                {
+                    indent = true;
+                }
+
+                tabs += indent == true ? this->getTabSize() : 0;
+
+                break;
+            }
+        }
+
+        this->insertTextAtCaret("\n");
+        this->insertTextAtCaret(std::string(tabs, ' '));
     }
 };
 
@@ -164,7 +221,7 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
         }
         else
         {
-            mainEditor->indentSelection();
+            mainEditor->insertTabAtCaret();
         }
 
         return true;
@@ -225,10 +282,85 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
 
         return true;
     }
+    // search
+    else if (key.getModifiers().isCommandDown() && keyCode == 70)
+    {
+        /*
+            search for characters and use getCharacterBounds to get its screen position
+        */
+        return true;
+    }
+
+    // handle string completion
+
+    else if (keyCode == 50)
+    {
+        return this->autoCompleteStringDeclaration("\"");
+    }
+    else if (keyCode == 39)
+    {
+        return this->autoCompleteStringDeclaration("'");
+    }
     else
     {
         return Component::keyPressed(key);
     }
+}
+
+void CodeEditorContainerWithApply::removeStringTrailsFromDocument()
+{
+
+    /*
+       this needs some work as the caret position gets all screwed up after clean up
+    */
+
+    /*
+    auto caretPos = mainEditor->getCaretPos();
+
+    std::string s = mainEditor->getDocument().getAllContent().toStdString();
+    std::regex pattern("[ \t]+$");
+    std::string replacement = "";
+    std::string result = std::regex_replace(s, pattern, replacement);
+    mainEditor->getDocument().replaceAllContent(result);
+    mainEditor->moveCaretTo(caretPos, false);
+    */
+}
+
+bool CodeEditorContainerWithApply::autoCompleteStringDeclaration(juce::String str)
+{
+
+    auto pos = mainEditor->getCaretPos();
+    auto txt = pos.getLineText();
+
+    int ApostrCount = 0;
+
+    for (int i = 0; i < txt.length(); i++)
+    {
+        if (txt.substring(i, i + 1) == str)
+            ApostrCount++;
+    }
+
+    // Close string
+    if (ApostrCount % 2 == 0)
+    {
+
+        if (txt.substring(pos.getIndexInLine(), pos.getIndexInLine() + 1) != str)
+        {
+            mainEditor->insertTextAtCaret(str + str);
+            mainEditor->moveCaretLeft(false, false);
+        }
+
+        else
+        {
+            mainEditor->moveCaretRight(false, false);
+        }
+    }
+    else
+    {
+        mainEditor->insertTextAtCaret(str);
+    }
+    return true;
+    // sdfsd
 }
 
 void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
@@ -799,6 +931,7 @@ void FormulaModulatorEditor::onSkinChanged()
 
 void FormulaModulatorEditor::applyCode()
 {
+    removeStringTrailsFromDocument();
     editor->undoManager()->pushFormula(scene, lfo_id, *formulastorage);
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     storage->getPatch().isDirty = true;
@@ -1849,6 +1982,7 @@ void WavetableScriptEditor::setupEvaluator()
 
 void WavetableScriptEditor::applyCode()
 {
+    removeStringTrailsFromDocument();
     osc->wavetable_formula = mainDocument->getAllContent().toStdString();
     osc->wavetable_formula_res_base = controlArea->resolutionN->getIntValue();
     osc->wavetable_formula_nframes = controlArea->framesN->getIntValue();

@@ -75,7 +75,6 @@ struct LuaWTEvaluator::Details
         lua_getglobal(L, "init");
         if (!lua_isfunction(L, -1))
         {
-            lua_pop(L, -1);
             makeEmptyState(true);
         }
         else

@@ -315,10 +315,6 @@ Surge::LuaSupport::SGLD::~SGLD()
         {
             std::cout << "Guarded stack leak: [" << label << "] exit=" << nt << " enter=" << top
                       << std::endl;
-            for (int i = nt; i >= top; i--)
-            {
-                std::cout << "  " << i << " -> " << lua_typename(L, lua_type(L, i)) << std::endl;
-            }
         }
 #endif
     }
