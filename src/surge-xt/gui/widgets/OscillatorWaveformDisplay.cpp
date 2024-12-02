@@ -635,7 +635,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         }
     };
 
-    contextMenu.addItem(Surge::GUI::toOSCase("Change Wavetable Display Name..."), rnaction);
+    contextMenu.addItem(Surge::GUI::toOSCase("Rename Wavetable..."), rnaction);
 
     contextMenu.addSeparator();
 
@@ -643,10 +643,21 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     contextMenu.addItem(Surge::GUI::toOSCase("Load Wavetable from File..."), action);
 
     auto exportAction = [this]() {
-        int oscNum = this->oscInScene;
-        int scene = this->scene;
-        std::string baseName = storage->getPatch().name + "_osc" + std::to_string(oscNum + 1) +
-                               "_scene" + (scene == 0 ? "A" : "B");
+        int sc = this->scene;
+        int o = this->oscInScene;
+        std::string wtName = storage->getPatch().scene[sc].osc[o].wavetable_display_name;
+        std::string baseName = "";
+
+        if (wtName.compare(0, 6, "(Patch") == 0)
+        {
+            baseName = fmt::format("{} {}{}", storage->getPatch().name, (sc == 0 ? "A" : "B"),
+                                   std::to_string(o + 1));
+        }
+        else
+        {
+            baseName = wtName;
+        }
+
         auto fn = storage->export_wt_wav_portable(baseName, &(oscdata->wt));
 
         if (!fn.empty())
