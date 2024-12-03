@@ -665,10 +665,21 @@ TEST_CASE("Wavetable Script", "[formula]")
     {
         SurgeStorage storage;
         const std::string s = R"FN(
-function generate(config)
-    res = config.xs
-    for i,x in ipairs(config.xs) do
-        res[i] = math.sin(2 * math.pi * x * config.n)
+
+function init(wt)
+    -- wt will have frame_count and sample_count defined
+    wt.name = "Fourier Saw"
+    wt.phase = math.linspace(0.0, 1.0, wt.sample_count)
+    return wt
+end
+
+function generate(wt)
+    local res = {}
+
+    for i,x in ipairs(wt.phase) do
+        local lv = 0
+        lv = sin(2 * pi * wt.frame * x)
+        res[i] = lv
     end
     return res
 end

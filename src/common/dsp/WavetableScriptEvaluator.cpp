@@ -24,7 +24,8 @@
 #include "LuaSupport.h"
 #include "lua/LuaSources.h"
 
-#define LOG(...) std::cout << __FILE__ << ":" << __LINE__ << " " << __VA_ARGS__ << std::endl;
+// #define LOG(...) std::cout << __FILE__ << ":" << __LINE__ << " " << __VA_ARGS__ << std::endl;
+#define LOG(...)
 
 namespace Surge
 {
