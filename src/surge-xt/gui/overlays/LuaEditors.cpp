@@ -293,11 +293,11 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
 
     // handle string completion
 
-    else if (keyCode == 50)
+    else if (key.getTextCharacter() == 34)
     {
         return this->autoCompleteStringDeclaration("\"");
     }
-    else if (keyCode == 39)
+    else if (key.getTextCharacter() == 39)
     {
         return this->autoCompleteStringDeclaration("'");
     }
