@@ -43,20 +43,16 @@ struct LuaWTEvaluator
     void setResolution(size_t);
     void setFrameCount(size_t);
 
-    void prepare();
-
-    /*
-     * Unlike the LFO modulator this is called at render time of the wavetable
-     * not at the evaluation or synthesis time. As such I expect you call it from
-     * one thread at a time and just you know generally be careful.
-     */
-    std::optional<std::vector<float>> evaluateScriptAtFrame(size_t frame);
+    using validFrame_t = std::vector<float>;
+    using frame_t = std::optional<validFrame_t>;
 
     /*
      * Generate all the data required to call BuildWT. The wavdata here is data you
      * must free with delete[]
      */
-    bool constructWavetable(wt_header &wh, float **wavdata);
+    bool populateWavetable(wt_header &wh, float **wavdata);
+
+    frame_t getFrame(size_t frame);
 
     std::string getSuggestedWavetableName();
 
