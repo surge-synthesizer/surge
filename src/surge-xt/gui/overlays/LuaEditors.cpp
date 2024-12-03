@@ -1877,6 +1877,7 @@ struct WavetableScriptControlArea : public juce::Component,
         break;
         case tag_frames_value:
         {
+            /*
             int currentFrame = currentFrameN->getIntValue();
             int maxFrames = framesN->getIntValue();
             if (currentFrame > maxFrames)
@@ -1886,12 +1887,17 @@ struct WavetableScriptControlArea : public juce::Component,
             }
             overlay->osc->wavetable_formula_nframes = maxFrames;
             overlay->rerenderFromUIState();
+            */
+            overlay->setApplyEnabled(true);
         }
         break;
         case tag_res_value:
         {
+            /*
             overlay->osc->wavetable_formula_res_base = resolutionN->getIntValue();
             overlay->rerenderFromUIState();
+            */
+            overlay->setApplyEnabled(true);
         }
         break;
 
@@ -2018,11 +2024,10 @@ void WavetableScriptEditor::setupEvaluator()
     for (int i = 1; i < resi; ++i)
         respt *= 2;
 
+    evaluator->setStorage(storage);
     evaluator->setScript(mainDocument->getAllContent().toStdString());
     evaluator->setResolution(respt);
     evaluator->setFrameCount(controlArea->framesN->getIntValue());
-
-    evaluator->prepare();
 }
 
 void WavetableScriptEditor::applyCode()
@@ -2142,7 +2147,7 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     if (rm == 0)
     {
-        auto rs = evaluator->evaluateScriptAtFrame(cfr);
+        auto rs = evaluator->getFrame(cfr);
         if (rs.has_value())
         {
             rendererComponent->points = *rs;
@@ -2164,7 +2169,7 @@ void WavetableScriptEditor::rerenderFromUIState()
             }
             else
             {
-                auto rs = evaluator->evaluateScriptAtFrame(i);
+                auto rs = evaluator->getFrame(i);
                 if (rs.has_value())
                 {
                     rendererComponent->fsPoints.emplace_back(*rs);
@@ -2208,7 +2213,7 @@ void WavetableScriptEditor::generateWavetable()
     wt_header wh;
     float *wd = nullptr;
     setupEvaluator();
-    evaluator->constructWavetable(wh, &wd);
+    evaluator->populateWavetable(wh, &wd);
     storage->waveTableDataMutex.lock();
     osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
     osc->wavetable_display_name = evaluator->getSuggestedWavetableName();

@@ -24,6 +24,9 @@
 #include "LuaSupport.h"
 #include "lua/LuaSources.h"
 
+// #define LOG(...) std::cout << __FILE__ << ":" << __LINE__ << " " << __VA_ARGS__ << std::endl;
+#define LOG(...)
+
 namespace Surge
 {
 namespace WavetableScript
@@ -39,23 +42,18 @@ struct LuaWTEvaluator::Details
     size_t resolution{2048};
     size_t frameCount{10};
 
-    bool needsParse{false};
+    bool isValid{false};
+    std::vector<std::optional<frame_t>> frameCache;
+    std::string wtName{"Scripted Wavetable"};
+    void prepareIfInvalid();
 
     lua_State *L{nullptr};
 
-    void prepare()
+    void invalidate()
     {
-        if (L == nullptr)
-        {
-            L = lua_open();
-            luaL_openlibs(L);
-
-            auto wg = Surge::LuaSupport::SGLD("WavetableScript::prelude", L);
-
-            Surge::LuaSupport::loadSurgePrelude(L, Surge::LuaSources::wtse_prelude);
-        }
+        isValid = false;
+        frameCache.clear();
     }
-
     void makeEmptyState(bool pushToGlobal)
     {
         lua_createtable(L, 0, 10);
@@ -67,9 +65,134 @@ struct LuaWTEvaluator::Details
         if (pushToGlobal)
             lua_setglobal(L, statetable);
     }
+
+    LuaWTEvaluator::frame_t generateScriptAtFrame(size_t frame)
+    {
+        LOG("generateScriptAtFrame " << frame);
+        auto &eqn = script;
+
+        if (!makeValid())
+            return std::nullopt;
+
+        LuaWTEvaluator::frame_t res{std::nullopt};
+        auto values = std::vector<float>();
+
+        auto wgp = Surge::LuaSupport::SGLD("WavetableScript::evaluateInner", L);
+        lua_getglobal(L, "generate");
+        if (!lua_isfunction(L, -1))
+        {
+            if (storage)
+                storage->reportError("Unable to locate generate function",
+                                     "Wavetable Script Evaluator");
+            return std::nullopt;
+        }
+        Surge::LuaSupport::setSurgeFunctionEnvironment(L);
+
+        lua_createtable(L, 0, 10);
+
+        lua_getglobal(L, statetable);
+
+        lua_pushnil(L); /* first key */
+        assert(lua_istable(L, -2));
+        bool useLegacyNames{false};
+
+        while (lua_next(L, -2) != 0)
+        {
+            // stack is now new > global  > k > v but we want to see if k 'legacy_config' is
+            // true
+            if (lua_isstring(L, -2))
+            {
+                if (strcmp(lua_tostring(L, -2), "legacy_config") == 0)
+                {
+                    if (lua_isboolean(L, -1))
+                    {
+                        useLegacyNames = lua_toboolean(L, -1);
+                    }
+                }
+            }
+            // stack is now new > global > k > v
+            lua_pushvalue(L, -2);
+            // stack is now new > global > k > v > k
+            lua_insert(L, -2);
+            // stack is now new > global > k > k > v
+            lua_settable(L, -5);
+            // stack is now new > global > k and k/v is inserted into new so we can iterate
+        }
+        // pop the remaining key
+        lua_pop(L, 1);
+
+        if (useLegacyNames)
+        {
+            // xs is an array of the x locations in phase space
+            lua_createtable(L, resolution, 0);
+            double dp = 1.0 / (resolution - 1);
+            for (auto i = 0; i < resolution; ++i)
+            {
+                lua_pushinteger(L, i + 1); // lua has a 1 based index convention
+                lua_pushnumber(L, i * dp);
+                lua_settable(L, -3);
+            }
+            lua_setfield(L, -2, "xs");
+
+            lua_pushinteger(L, frame + 1);
+            lua_setfield(L, -2, "n");
+
+            lua_pushinteger(L, frameCount);
+            lua_setfield(L, -2, "nTables");
+        }
+
+        lua_pushinteger(L, frame + 1);
+        lua_setfield(L, -2, "frame");
+
+        lua_pushinteger(L, frameCount);
+        lua_setfield(L, -2, "frame_count");
+
+        lua_pushinteger(L, resolution);
+        lua_setfield(L, -2, "sample_count");
+
+        // So stack is now the table and the function
+        auto pcr = lua_pcall(L, 1, 1, 0);
+        if (pcr == LUA_OK)
+        {
+            if (lua_istable(L, -1))
+            {
+                bool gen{true};
+                for (auto i = 0; i < resolution && gen; ++i)
+                {
+                    lua_pushinteger(L, i + 1);
+                    lua_gettable(L, -2);
+                    if (lua_isnumber(L, -1))
+                    {
+                        values.push_back(lua_tonumber(L, -1));
+                    }
+                    else
+                    {
+                        values.push_back(0.f);
+                        gen = false;
+                    }
+                    lua_pop(L, 1);
+                }
+                if (gen)
+                    res = values;
+            }
+        }
+        else
+        {
+            // If pcr is not LUA_OK then lua pushes an error string onto the stack. Show this
+            // error
+            std::string luaerr = lua_tostring(L, -1);
+            if (storage)
+                storage->reportError(luaerr, "Wavetable Evaluator Runtime Error");
+            else
+                std::cerr << luaerr;
+        }
+        lua_pop(L, 1); // Error string or pcall result
+
+        return res;
+    }
     void callInitFn()
     {
-        prepare();
+        LOG("callInitFn");
         auto wg = Surge::LuaSupport::SGLD("WavetableScript::details::callInitFn", L);
 
         lua_getglobal(L, "init");
@@ -112,11 +235,25 @@ struct LuaWTEvaluator::Details
             }
         }
     }
-    bool parseIfNeeded()
+
+    bool makeValid()
     {
-        prepare();
-        if (needsParse)
+        if (L == nullptr)
         {
+            LOG("creating Lua State ");
+
+            L = lua_open();
+            luaL_openlibs(L);
+
+            auto wg = Surge::LuaSupport::SGLD("WavetableScript::prelude", L);
+
+            Surge::LuaSupport::loadSurgePrelude(L, Surge::LuaSources::wtse_prelude);
+        }
+
+        if (!isValid)
+        {
+            LOG("Validating");
+
             {
                 // Have a separate guard for this just to make sure I match
                 auto lwg = Surge::LuaSupport::SGLD("WavetableScript::details::clearGlobals", L);
@@ -126,9 +263,14 @@ struct LuaWTEvaluator::Details
                 lua_setglobal(L, "init");
                 lua_pushnil(L);
                 lua_setglobal(L, statetable);
+                wtName = "Scripted Wavetable";
+
+                frameCache.clear();
+                for (int i = 0; i < frameCount; ++i)
+                    frameCache.push_back(std::nullopt);
             }
 
-            auto wg = Surge::LuaSupport::SGLD("WavetableScript::details::parseIfNeeded", L);
+            auto wg = Surge::LuaSupport::SGLD("WavetableScript::details::makeValid", L);
             std::string emsg;
             auto res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
                 L, script, {"init", "generate"}, emsg);
@@ -141,14 +283,29 @@ struct LuaWTEvaluator::Details
 
             callInitFn();
 
-            needsParse = false;
+            {
+                auto wgn =
+                    Surge::LuaSupport::SGLD("WavetableScript::details::makeValid::wtName", L);
+                lua_getglobal(L, statetable);
+                if (lua_istable(L, -1))
+                {
+                    lua_getfield(L, -1, "name");
+                    if (lua_isstring(L, -1))
+                    {
+                        wtName = lua_tostring(L, -1);
+                    }
+
+                    lua_pop(L, -1);
+                }
+
+                lua_pop(L, -1);
+            }
+
+            isValid = true;
 
             return res;
         }
-        else
-        {
-            return true;
-        }
+        return true;
     }
 };
 #else
@@ -173,163 +330,60 @@ void LuaWTEvaluator::setScript(const std::string &e)
     if (e != details->script)
     {
         details->script = e;
-        details->needsParse = true;
+        details->invalidate();
     }
 #endif
 }
 void LuaWTEvaluator::setResolution(size_t r)
 {
 #if HAS_LUA
-    details->resolution = r;
+    if (r != details->resolution)
+    {
+        details->resolution = r;
+        details->invalidate();
+    }
 #endif
 }
 void LuaWTEvaluator::setFrameCount(size_t n)
 {
 #if HAS_LUA
-    details->frameCount = n;
+    if (n != details->frameCount)
+    {
+        details->invalidate();
+        details->frameCount = n;
+    }
 #endif
 }
 
-std::optional<std::vector<float>> LuaWTEvaluator::evaluateScriptAtFrame(size_t frame)
+LuaWTEvaluator::frame_t LuaWTEvaluator::getFrame(size_t frame)
 {
 #if HAS_LUA
-    auto storage = details->storage;
-    auto &eqn = details->script;
-    auto resolution = details->resolution;
-    auto nFrames = details->frameCount;
-
-    std::optional<std::vector<float>> res{std::nullopt};
-    auto values = std::vector<float>();
-
-    details->prepare();
-    auto L = details->L;
-
-    auto wg = Surge::LuaSupport::SGLD("WavetableScript::evaluate", L);
-
-    if (details->parseIfNeeded())
+    if (!details->makeValid())
+        return std::nullopt;
+    if (frame > details->frameCount)
+        return std::nullopt;
+    assert(frame < details->frameCache.size());
+    if (!details->frameCache[frame].has_value())
     {
-        auto wgp = Surge::LuaSupport::SGLD("WavetableScript::evaluateInner", L);
-        lua_getglobal(details->L, "generate");
-        if (!lua_isfunction(details->L, -1))
-        {
-            if (storage)
-                storage->reportError("Unable to locate generate function",
-                                     "Wavetable Script Evaluator");
-            return std::nullopt;
-        }
-        Surge::LuaSupport::setSurgeFunctionEnvironment(L);
-
-        lua_createtable(L, 0, 10);
-
-        lua_getglobal(L, statetable);
-
-        lua_pushnil(L); /* first key */
-        assert(lua_istable(L, -2));
-        bool useLegacyNames{true};
-
-        while (lua_next(L, -2) != 0)
-        {
-            // stack is now new > global  > k > v but we want to see if k 'legacy_config' is true
-            if (lua_isstring(L, -2))
-            {
-                if (strcmp(lua_tostring(L, -2), "legacy_config") == 0)
-                {
-                    if (lua_isboolean(L, -1))
-                    {
-                        useLegacyNames = lua_toboolean(L, -1);
-                    }
-                }
-            }
-            // stack is now new > global > k > v
-            lua_pushvalue(L, -2);
-            // stack is now new > global > k > v > k
-            lua_insert(L, -2);
-            // stack is now new > global > k > k > v
-            lua_settable(L, -5);
-            // stack is now new > global > k and k/v is inserted into new so we can iterate
-        }
-        // pop the remaining key
-        lua_pop(L, 1);
-
-        if (useLegacyNames)
-        {
-            // xs is an array of the x locations in phase space
-            lua_createtable(L, resolution, 0);
-            double dp = 1.0 / (resolution - 1);
-            for (auto i = 0; i < resolution; ++i)
-            {
-                lua_pushinteger(L, i + 1); // lua has a 1 based index convention
-                lua_pushnumber(L, i * dp);
-                lua_settable(L, -3);
-            }
-            lua_setfield(L, -2, "xs");
-
-            lua_pushinteger(L, frame + 1);
-            lua_setfield(L, -2, "n");
-
-            lua_pushinteger(L, nFrames);
-            lua_setfield(L, -2, "nTables");
-        }
-
-        lua_pushinteger(L, frame + 1);
-        lua_setfield(L, -2, "frame");
-
-        lua_pushinteger(L, nFrames);
-        lua_setfield(L, -2, "frame_count");
-
-        lua_pushinteger(L, resolution);
-        lua_setfield(L, -2, "sample_count");
-
-        // So stack is now the table and the function
-        auto pcr = lua_pcall(L, 1, 1, 0);
-        if (pcr == LUA_OK)
-        {
-            if (lua_istable(L, -1))
-            {
-                bool gen{true};
-                for (auto i = 0; i < resolution && gen; ++i)
-                {
-                    lua_pushinteger(L, i + 1);
-                    lua_gettable(L, -2);
-                    if (lua_isnumber(L, -1))
-                    {
-                        values.push_back(lua_tonumber(L, -1));
-                    }
-                    else
-                    {
-                        values.push_back(0.f);
-                        gen = false;
-                    }
-                    lua_pop(L, 1);
-                }
-                if (gen)
-                    res = values;
-            }
-        }
-        else
-        {
-            // If pcr is not LUA_OK then lua pushes an error string onto the stack. Show this error
-            std::string luaerr = lua_tostring(L, -1);
-            if (storage)
-                storage->reportError(luaerr, "Wavetable Evaluator Runtime Error");
-            else
-                std::cerr << luaerr;
-        }
-        lua_pop(L, 1); // Error string or pcall result
+        details->frameCache[frame] = details->generateScriptAtFrame(frame);
     }
-
-    return res;
+    if (details->frameCache[frame].has_value())
+    {
+        return *(details->frameCache[frame]);
+    }
+    return std::nullopt;
 
 #else
     return std::nullopt;
 #endif
 }
 
-bool LuaWTEvaluator::constructWavetable(wt_header &wh, float **wavdata)
+bool LuaWTEvaluator::populateWavetable(wt_header &wh, float **wavdata)
 {
 #if HAS_LUA
-    auto storage = details->storage;
-    auto &eqn = details->script;
+    if (!details->makeValid())
+        return false;
+
     auto resolution = details->resolution;
     auto frames = details->frameCount;
 
@@ -339,12 +393,9 @@ bool LuaWTEvaluator::constructWavetable(wt_header &wh, float **wavdata)
     wh.flags = 0;
     *wavdata = wd;
 
-    details->prepare();
-    details->parseIfNeeded();
-    details->callInitFn();
     for (int i = 0; i < frames; ++i)
     {
-        auto v = evaluateScriptAtFrame(i);
+        auto v = getFrame(i);
         if (v.has_value())
         {
             memcpy(&(wd[i * resolution]), &((*v)[0]), resolution * sizeof(float));
@@ -362,39 +413,11 @@ bool LuaWTEvaluator::constructWavetable(wt_header &wh, float **wavdata)
 
 std::string LuaWTEvaluator::getSuggestedWavetableName()
 {
-    std::string res = "Scripted Wavetable";
-
 #if HAS_LUA
-    details->prepare();
-    details->parseIfNeeded();
-    details->callInitFn();
-
-    auto L = details->L;
-    auto wgp = Surge::LuaSupport::SGLD("WavetableScript::evaluateInner", L);
-    lua_getglobal(L, statetable);
-    if (lua_istable(L, -1))
-    {
-        lua_getfield(L, -1, "name");
-        if (lua_isstring(L, -1))
-        {
-            res = lua_tostring(L, -1);
-        }
-
-        lua_pop(L, -1);
-    }
-
-    lua_pop(L, -1);
-#endif
-
-    return res;
-}
-
-void LuaWTEvaluator::prepare()
-{
-#if HAS_LUA
-    details->prepare();
-    details->parseIfNeeded();
-    details->callInitFn();
+    details->makeValid();
+    return details->wtName;
+#else
+    return "";
 #endif
 }
 
