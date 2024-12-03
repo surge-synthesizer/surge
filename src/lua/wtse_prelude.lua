@@ -44,7 +44,7 @@ function math.range(a, b)
 end
 
 
--- WTSE MATH FUNCTIONS - NON-FINAL AND WIP
+--- WTSE SPECIFIC MATH FUNCTIONS ---
 
 
 -- returns a table with the cumulative product of the elements in the input table
@@ -89,6 +89,16 @@ function math.logspace(start_point, end_point, num_points)
 end
 
 -- returns the maximum absolute value found in the input table
+function math.max_abs(t)
+    local o = 0
+    for i = 1, #t do
+            local a = math.abs(t[i])
+            if a > o then o = a end
+    end
+    return o
+end
+
+-- deprecated: use math.max_abs() instead
 function math.maxAbsFromTable(t)
     local o = 0
     for i = 1, #t do
