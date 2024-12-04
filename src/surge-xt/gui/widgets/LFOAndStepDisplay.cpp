@@ -452,33 +452,17 @@ bool LFOAndStepDisplay::paramsHasChanged()
 {
     bool hasChanged = false;
 
-    if (paramsFromLastDrawCall[lfodata->delay.param_id_in_scene].i != lfodata->delay.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->attack.param_id_in_scene].i != lfodata->attack.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->hold.param_id_in_scene].i != lfodata->hold.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->decay.param_id_in_scene].i != lfodata->decay.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->sustain.param_id_in_scene].i != lfodata->sustain.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->release.param_id_in_scene].i != lfodata->release.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->magnitude.param_id_in_scene].i != lfodata->magnitude.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->rate.param_id_in_scene].i != lfodata->rate.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->shape.param_id_in_scene].i != lfodata->shape.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->start_phase.param_id_in_scene].i !=
-        lfodata->start_phase.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->deform.param_id_in_scene].i != lfodata->deform.val.i)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->trigmode.param_id_in_scene].i != lm_keytrigger)
-        hasChanged = true;
-    if (paramsFromLastDrawCall[lfodata->shape.param_id_in_scene].i != lfodata->shape.val.i)
-        hasChanged = true;
+    auto *p = &lfodata->rate;      // look in the definition of LFOStorage for which param is first
+    while (p <= &lfodata->release) // and last
+    {
+
+        if (paramsFromLastDrawCall[p->param_id_in_scene].i != p->val.i)
+            hasChanged = true;
+
+        paramsFromLastDrawCall[p->param_id_in_scene].i = p->val.i;
+        ++p;
+    };
+
     if (lfoStorageFromLastDrawingCall != lfodata)
         hasChanged = true;
 
@@ -489,21 +473,6 @@ bool LFOAndStepDisplay::paramsHasChanged()
     }
 
     lfoStorageFromLastDrawingCall = lfodata;
-
-    paramsFromLastDrawCall[lfodata->delay.param_id_in_scene].i = lfodata->delay.val.i;
-    paramsFromLastDrawCall[lfodata->attack.param_id_in_scene].i = lfodata->attack.val.i;
-    paramsFromLastDrawCall[lfodata->hold.param_id_in_scene].i = lfodata->hold.val.i;
-    paramsFromLastDrawCall[lfodata->decay.param_id_in_scene].i = lfodata->decay.val.i;
-    paramsFromLastDrawCall[lfodata->sustain.param_id_in_scene].i = lfodata->sustain.val.i;
-    paramsFromLastDrawCall[lfodata->release.param_id_in_scene].i = lfodata->release.val.i;
-
-    paramsFromLastDrawCall[lfodata->magnitude.param_id_in_scene].i = lfodata->magnitude.val.i;
-    paramsFromLastDrawCall[lfodata->rate.param_id_in_scene].i = lfodata->rate.val.i;
-    paramsFromLastDrawCall[lfodata->shape.param_id_in_scene].i = lfodata->shape.val.i;
-    paramsFromLastDrawCall[lfodata->start_phase.param_id_in_scene].i = lfodata->start_phase.val.i;
-    paramsFromLastDrawCall[lfodata->deform.param_id_in_scene].i = lfodata->deform.val.i;
-    paramsFromLastDrawCall[lfodata->trigmode.param_id_in_scene].i = lm_keytrigger;
-    paramsFromLastDrawCall[lfodata->shape.param_id_in_scene].i = lfodata->shape.val.i;
 
     return hasChanged;
 }
