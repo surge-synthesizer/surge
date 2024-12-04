@@ -1388,14 +1388,17 @@ class alignas(16) SurgeStorage
 
     void load_wt(int id, Wavetable *wt, OscillatorStorage *);
     void load_wt(std::string filename, Wavetable *wt, OscillatorStorage *);
-    bool load_wt_wt(std::string filename, Wavetable *wt);
+    bool load_wt_wt(std::string filename, Wavetable *wt, std::string &metadata);
     bool load_wt_wt_mem(const char *data, const size_t dataSize, Wavetable *wt);
-    bool load_wt_wav_portable(std::string filename, Wavetable *wt);
+    bool load_wt_wav_portable(std::string filename, Wavetable *wt, std::string &metadata);
     std::string export_wt_wav_portable(const std::string &fbase, Wavetable *wt,
                                        const std::string &metadata);
     std::string export_wt_wav_portable(const fs::path &fpath, Wavetable *wt,
                                        const std::string &metadata);
     bool export_wt_wt_portable(const fs::path &fpath, Wavetable *wt, const std::string &metadata);
+
+    std::string make_wt_metadata(OscillatorStorage *);
+    bool parse_wt_metadata(const std::string &, OscillatorStorage *);
 
     void clipboard_copy(int type, int scene, int entry, modsources ms = ms_original);
     // this function is a bit of a hack to stop me having a reference to SurgeSynth here
@@ -1811,6 +1814,10 @@ bool isValidUTF8(const std::string &testThis);
 
 std::string findReplaceSubstring(std::string &source, const std::string &from,
                                  const std::string &to);
+
+bool is_base64(unsigned char c);
+std::string base64_encode(unsigned char const *bytes_to_encode, unsigned int in_len);
+std::string base64_decode(std::string const &encoded_string);
 
 } // namespace Storage
 } // namespace Surge
