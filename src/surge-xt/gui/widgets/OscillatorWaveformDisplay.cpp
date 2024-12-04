@@ -671,12 +671,13 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
             }
 
             auto nm = isWav ? "Export WAV Wavetable" : "Export WT Wavetable";
+            auto that = this; // i hate msvc
             sge->fileChooser =
                 std::make_unique<juce::FileChooser>(nm, juce::File(path.u8string().c_str()));
             sge->fileChooser->launchAsync(
                 juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
                     juce::FileBrowserComponent::warnAboutOverwriting,
-                [w = this, isWav](const juce::FileChooser &c) {
+                [w = that, isWav](const juce::FileChooser &c) {
                     auto result = c.getResults();
                     if (result.isEmpty() || result.size() > 1)
                     {
