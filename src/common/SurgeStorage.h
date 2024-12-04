@@ -1391,7 +1391,12 @@ class alignas(16) SurgeStorage
     bool load_wt_wt(std::string filename, Wavetable *wt);
     bool load_wt_wt_mem(const char *data, const size_t dataSize, Wavetable *wt);
     bool load_wt_wav_portable(std::string filename, Wavetable *wt);
-    std::string export_wt_wav_portable(std::string fbase, Wavetable *wt);
+    std::string export_wt_wav_portable(const std::string &fbase, Wavetable *wt,
+                                       const std::string &metadata);
+    std::string export_wt_wav_portable(const fs::path &fpath, Wavetable *wt,
+                                       const std::string &metadata);
+    bool export_wt_wt_portable(const fs::path &fpath, Wavetable *wt, const std::string &metadata);
+
     void clipboard_copy(int type, int scene, int entry, modsources ms = ms_original);
     // this function is a bit of a hack to stop me having a reference to SurgeSynth here
     // and also to stop me having to move all of isValidModulation and its buddies onto SurgeStorage
