@@ -642,32 +642,77 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     auto action = [this]() { this->loadWavetableFromFile(); };
     contextMenu.addItem(Surge::GUI::toOSCase("Load Wavetable from File..."), action);
 
-    auto exportAction = [this]() {
-        int sc = this->scene;
-        int o = this->oscInScene;
-        std::string wtName = storage->getPatch().scene[sc].osc[o].wavetable_display_name;
-        std::string baseName = "";
+    juce::PopupMenu xportMenu;
+    for (bool isWav : {true, false})
+    {
+        auto exportAction = [this, isWav]() {
+            int sc = this->scene;
+            int o = this->oscInScene;
+            std::string wtName = storage->getPatch().scene[sc].osc[o].wavetable_display_name;
+            std::string baseName = "";
 
-        if (wtName.compare(0, 6, "(Patch") == 0)
-        {
-            baseName = fmt::format("{} {}{}", storage->getPatch().name, (sc == 0 ? "A" : "B"),
-                                   std::to_string(o + 1));
-        }
+            if (wtName.compare(0, 6, "(Patch") == 0)
+            {
+                baseName = fmt::format("{} {}{}", storage->getPatch().name, (sc == 0 ? "A" : "B"),
+                                       std::to_string(o + 1));
+            }
+            else
+            {
+                baseName = wtName;
+            }
+            auto path = sge->synth->storage.userDataPath / "Wavetables" / "Exported";
+
+            try
+            {
+                fs::create_directories(path);
+            }
+            catch (const fs::filesystem_error &e)
+            {
+            }
+
+            auto nm = isWav ? "Export WAV Wavetable" : "Export WT Wavetable";
+            sge->fileChooser =
+                std::make_unique<juce::FileChooser>(nm, juce::File(path.u8string().c_str()));
+            sge->fileChooser->launchAsync(
+                juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
+                    juce::FileBrowserComponent::warnAboutOverwriting,
+                [w = this, isWav](const juce::FileChooser &c) {
+                    auto result = c.getResults();
+                    if (result.isEmpty() || result.size() > 1)
+                    {
+                        return;
+                    }
+                    auto fsp = fs::path{result[0].getFullPathName().toStdString()};
+
+                    std::string metadata{};
+                    if (isWav)
+                    {
+                        if (fsp.extension() != ".wav")
+                        {
+                            fsp = fsp.replace_extension(".wav");
+                        }
+                        auto fn = w->storage->export_wt_wav_portable(fsp, &(w->oscdata->wt), metadata);
+                    }
+                    else
+                    {
+                        if (fsp.extension() != ".wt")
+                        {
+                            fsp = fsp.replace_extension(".wt");
+                        }
+                        if (!w->storage->export_wt_wt_portable(fsp, &(w->oscdata->wt), metadata))
+                        {
+                            w->storage->reportError("Unable to save wt to " + fsp.u8string(), "WT Export");
+                        }
+                    }
+                    w->storage->refresh_wtlist();
+                });
+        };
+        if (isWav)
+            xportMenu.addItem(Surge::GUI::toOSCase("To RIFF/WAV Wavetable..."), exportAction);
         else
-        {
-            baseName = wtName;
-        }
-
-        auto fn = storage->export_wt_wav_portable(baseName, &(oscdata->wt));
-
-        if (!fn.empty())
-        {
-            sge->messageBox("Wavetable Export",
-                            "Wavetable was successfully exported to\n" + fn + "!");
-        }
-    };
-
-    contextMenu.addItem(Surge::GUI::toOSCase("Export Wavetable to File..."), exportAction);
+            xportMenu.addItem(Surge::GUI::toOSCase("To WT Format Wavetable..."), exportAction);
+    }
+    contextMenu.addSubMenu("Export Wavetable", xportMenu);
 
     contextMenu.addSeparator();
 

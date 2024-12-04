@@ -1379,6 +1379,10 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
         {
             osc->wavetable_display_name = fnnoext;
         }
+
+        //osc->wavetable_formula = {};
+        //osc->wavetable_formula_res_base = 5;
+        //osc->wavetable_formula_nframes = 10;
     }
 }
 
@@ -1509,6 +1513,59 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
     }
     return wasBuilt;
 }
+
+bool SurgeStorage::export_wt_wt_portable(const fs::path &fname, Wavetable *wt,
+                                         const std::string &metadata)
+{
+    std::string errorMessage{"Unkown error"};
+    std::filebuf wfp;
+
+    if (!wfp.open(fname, std::ios::binary | std::ios::out))
+    {
+        errorMessage = "Unable to open file " + fname.u8string() + "!";
+        errorMessage += std::strerror(errno);
+
+        reportError(errorMessage, "Wavetable Export");
+
+        return false;
+    }
+
+    wt_header wth;
+    wth.tag[0] = 'v';
+    wth.tag[1] = 'a';
+    wth.tag[2] = 'w';
+    wth.tag[3] = 't';
+
+    wth.n_samples = wt->size;
+    wth.n_tables = wt->n_tables;
+    wth.flags = wt->flags;
+    if (!metadata.empty())
+        wth.flags |= wtf_has_metadata;
+
+    wfp.sputn((const char*)&wth, 12);
+
+    bool is16 = (wt->flags & wtf_int16) || (wt->flags & wtf_int16_is_16);
+
+    if (is16)
+    {
+        for (int i=0; i<wt->n_tables; ++i)
+        {
+            wfp.sputn((const char *)&wt->TableI16WeakPointers[0][i][FIRoffsetI16], wt->size * sizeof(short));
+        }
+    }
+    else
+    {
+        for (int i=0; i<wt->n_tables; ++i)
+        {
+            wfp.sputn((const char *)&wt->TableF32WeakPointers[0][i][0], wt->size * sizeof(float));
+        }
+    }
+
+    wfp.close();
+
+    return true;
+}
+
 
 bool SurgeStorage::getOverrideDataHome(std::string &v)
 {

@@ -544,7 +544,7 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     return true;
 }
 
-std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
+std::string SurgeStorage::export_wt_wav_portable(const std::string &fbase, Wavetable *wt, const std::string &metadata)
 {
     auto path = userDataPath / "Wavetables" / "Exported";
     fs::create_directories(path);
@@ -559,7 +559,11 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
         fnamePre = fbase + "_" + std::to_string(fnum) + ".wav";
         fnum++;
     }
+    return export_wt_wav_portable(fname, wt, metadata);
+}
 
+std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetable *wt, const std::string &metadata)
+{
     std::string errorMessage = "Unknown error!";
 
     {
@@ -608,12 +612,10 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
 
         // OK so how much data do I have.
         unsigned int tableSize = nChannels * bitsPerSample / 8 * wt->n_tables * wt->size;
-        unsigned int dataSize = 4 +          // 'WAVE'
-                                4 + 4 + 18 + // fmt chunk
-                                4 + 4 + tableSize;
-
-        if (!isSample)
-            dataSize += 4 + 4 + 8; // srge chunk
+        unsigned int dataSize = 4 +                 // 'WAVE'
+                                4 + 4 + 18 +        // fmt chunk
+                                4 + 4 + tableSize + // data chunk
+                                4 + 4 + 8;          // srgo/srge chunk
 
         w4i(dataSize);
         wfp.sputn("WAVE", 4);

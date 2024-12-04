@@ -9,6 +9,10 @@ byte
               if set, wave data is in int16 format
         0008: if not set, a sample with 0 dBFS peak will end up having a peak of 2^14 (uses 15 bits, -6 dBFS peak)
               if set, int16 data uses the full 16-bit range
-12-end	wave data
-        float32 format: 4 * wave_size * wave_count bytes
-        int16 format:   2 * wave_size * wave_count bytes
+        0010: if set, there is a metadata block after the wave data
+12-(12+size)	wave data
+        float32 format: size = 4 * wave_size * wave_count bytes
+        int16 format:   sise = 2 * wave_size * wave_count bytes
+12+size+1-end   metadata (if flags & 0x10)
+        metadata is a null terminated XML string with the tag <wtmeta> as the root and application
+        dependent beyond that
