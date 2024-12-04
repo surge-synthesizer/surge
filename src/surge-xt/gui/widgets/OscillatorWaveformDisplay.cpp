@@ -670,10 +670,16 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
             {
             }
 
+            auto startNm = path / oscdata->wavetable_display_name;
+            if (isWav)
+                startNm = startNm.replace_extension(".wav");
+            else
+                startNm = startNm.replace_extension(".wt");
+
             auto nm = isWav ? "Export WAV Wavetable" : "Export WT Wavetable";
             auto that = this; // i hate msvc
             sge->fileChooser =
-                std::make_unique<juce::FileChooser>(nm, juce::File(path.u8string().c_str()));
+                std::make_unique<juce::FileChooser>(nm, juce::File(startNm.u8string().c_str()));
             sge->fileChooser->launchAsync(
                 juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
                     juce::FileBrowserComponent::warnAboutOverwriting,
@@ -685,7 +691,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
                     }
                     auto fsp = fs::path{result[0].getFullPathName().toStdString()};
 
-                    std::string metadata{};
+                    std::string metadata = w->storage->make_wt_metadata(w->oscdata);
                     if (isWav)
                     {
                         if (fsp.extension() != ".wav")
