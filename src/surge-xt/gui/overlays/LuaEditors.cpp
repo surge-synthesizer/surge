@@ -318,7 +318,13 @@ void CodeEditorContainerWithApply::removeTrailingWhitespaceFromDocument()
     {
         juce::CodeDocument::Position lineStart{mainEditor->getDocument(), i, 0};
         auto s = lineStart.getLineText();
-        const auto sizeOld = s.length() - 1; // disregard EOL
+
+        int eol = 1;
+        if (s.contains("\r\n"))
+        {
+            eol = 2;
+        }
+        const auto sizeOld = s.length() - eol; // disregard EOL
         juce::CodeDocument::Position lineEnd{mainEditor->getDocument(), i, sizeOld};
 
         s = s.trimEnd();
