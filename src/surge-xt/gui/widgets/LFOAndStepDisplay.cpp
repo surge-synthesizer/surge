@@ -63,6 +63,9 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
 
+    backingImage = std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, 50, 50, true);
+    waveformIsUpdated = true;
+
     typeLayer = std::make_unique<OverlayAsAccessibleContainer>("LFO Type");
     addAndMakeVisible(*typeLayer);
     for (int i = 0; i < n_lfo_types; ++i)
@@ -414,10 +417,79 @@ void LFOAndStepDisplay::paint(juce::Graphics &g)
     }
     else
     {
-        paintWaveform(g);
+
+        if (!paramsHasChanged())
+        {
+            g.drawImage(*backingImage, getLocalBounds().toFloat(),
+                        juce::RectanglePlacement::fillDestination);
+            paintTypeSelector(g);
+            return;
+        }
+        else
+        {
+            juce::Colour color =
+                juce::Colour((unsigned char)0, (unsigned char)0, (unsigned char)0, 0.f);
+
+            backingImage->clear(backingImage->getBounds());
+        }
+
+        juce::Graphics gr = juce::Graphics(*backingImage);
+        float zoomFloat = (float)zoomFactor / 100.f;
+
+        gr.addTransform(juce::AffineTransform().scale(zoomFloat * 2.f));
+
+        paintWaveform(gr);
+
+        g.drawImage(*backingImage, getLocalBounds().toFloat(),
+                    juce::RectanglePlacement::fillDestination);
+        waveformIsUpdated = false;
     }
 
     paintTypeSelector(g);
+}
+
+bool LFOAndStepDisplay::paramsHasChanged()
+{
+    bool hasChanged = false;
+
+    auto *p = &lfodata->rate;      // look in the definition of LFOStorage for which param is first
+    while (p <= &lfodata->release) // and last
+    {
+
+        if (paramsFromLastDrawCall[p->param_id_in_scene].i != p->val.i)
+            hasChanged = true;
+
+        paramsFromLastDrawCall[p->param_id_in_scene].i = p->val.i;
+        ++p;
+    };
+
+    if (lfoStorageFromLastDrawingCall != lfodata)
+        hasChanged = true;
+
+    if (forceRepaint)
+    {
+        hasChanged = true;
+        forceRepaint = false;
+    }
+
+    lfoStorageFromLastDrawingCall = lfodata;
+
+    return hasChanged;
+}
+
+void LFOAndStepDisplay::setZoomFactor(int zoom)
+{
+
+    if (zoomFactor != zoom)
+    {
+        float zoomFloat = (float)zoom / 100.f;
+        forceRepaint = true;
+        backingImage = std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB,
+                                                     outer.getWidth() * zoomFloat * 2,
+                                                     outer.getHeight() * zoomFloat * 2, true);
+    }
+
+    zoomFactor = zoom;
 }
 
 void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
@@ -2440,7 +2512,7 @@ void LFOAndStepDisplay::updateShapeTo(int i)
 
         sge->refresh_mod();
         sge->broadcastPluginAutomationChangeFor(&(lfodata->shape));
-
+        forceRepaint = true;
         repaint();
 
         sge->lfoShapeChanged(prior, i);

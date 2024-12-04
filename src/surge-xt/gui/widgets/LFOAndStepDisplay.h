@@ -56,6 +56,17 @@ struct LFOAndStepDisplay : public juce::Component,
     bool isFormula() { return lfodata->shape.val.i == lt_formula; }
     bool isUnipolar() { return lfodata->unipolar.val.b; }
 
+    void setZoomFactor(int);
+    int zoomFactor;
+    std::unique_ptr<juce::Image> backingImage;
+    bool waveformIsUpdated;
+    bool forceRepaint;
+    LFOStorage *lfoStorageFromLastDrawingCall;
+    pdata paramsFromLastDrawCall[n_scene_params];
+    int zoomFactorFromLastDrawCall;
+
+    bool paramsHasChanged();
+
     void repaintIfIdIsInRange(int id)
     {
         auto *firstLfoParam = &lfodata->rate;
@@ -83,6 +94,7 @@ struct LFOAndStepDisplay : public juce::Component,
     {
         if (isAnythingTemposynced())
         {
+            forceRepaint = true;
             repaint();
         }
     }
