@@ -398,7 +398,7 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
 
         g.setColour(isWtNameHovered ? fgtextHov : fgtext);
         g.setFont(skin->fontManager->getLatoAtSize(9));
-        g.drawText(wtn.c_str(), waveTableName, juce::Justification::centred);
+        g.drawText(juce::String(wtn), waveTableName, juce::Justification::centred);
     }
 
     if (supportsCustomEditor())

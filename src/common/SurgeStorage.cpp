@@ -1379,6 +1379,11 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
         {
             osc->wavetable_display_name = fnnoext;
         }
+
+        osc->wavetable_formula = {};
+        osc->wavetable_formula_res_base = 5;
+        osc->wavetable_formula_nframes = 10;
+        // std::cout << "PO2 is " << wt->size_po2 << std::endl;
     }
 }
 
