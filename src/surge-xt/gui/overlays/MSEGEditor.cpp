@@ -2791,6 +2791,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             storage->getPatch().isDirty = true;
             tagForUndo();
         }
+        this->sge->forceLfoDisplayRepaint();
         onModelChanged();
         repaint();
     }

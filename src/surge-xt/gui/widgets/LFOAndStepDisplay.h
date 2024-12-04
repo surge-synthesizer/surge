@@ -94,6 +94,7 @@ struct LFOAndStepDisplay : public juce::Component,
     {
         if (isAnythingTemposynced())
         {
+            forceRepaint = true;
             repaint();
         }
     }

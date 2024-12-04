@@ -261,7 +261,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     SurgeSynthesizer *synth = nullptr;
 
-    void updateAfterApplyCodeFromFormula();
+    void forceLfoDisplayRepaint();
 
   private:
     void openOrRecreateEditor();

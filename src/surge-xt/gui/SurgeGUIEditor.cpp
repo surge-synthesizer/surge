@@ -3013,7 +3013,7 @@ void SurgeGUIEditor::resizeWindow(float zf) { setZoomFactor(zf, true); }
    It is called before the draw call.
 */
 
-void SurgeGUIEditor::updateAfterApplyCodeFromFormula()
+void SurgeGUIEditor::forceLfoDisplayRepaint()
 {
     if (lfoDisplay)
         lfoDisplay->forceRepaint = true;
