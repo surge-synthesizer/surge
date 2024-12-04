@@ -3008,6 +3008,17 @@ void SurgeGUIEditor::moveTopLeftTo(float tx, float ty)
 
 void SurgeGUIEditor::resizeWindow(float zf) { setZoomFactor(zf, true); }
 
+/*
+   Called when compiling the lua code from formula editor.
+   It is called before the draw call.
+*/
+
+void SurgeGUIEditor::updateAfterApplyCodeFromFormula()
+{
+    if (lfoDisplay)
+        lfoDisplay->forceRepaint = true;
+}
+
 void SurgeGUIEditor::setZoomFactor(float zf) { setZoomFactor(zf, false); }
 
 void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
@@ -3042,6 +3053,9 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
 
     if (oscWaveform)
         oscWaveform->setZoomFactor(zoomFactor);
+
+    if (lfoDisplay)
+        lfoDisplay->setZoomFactor(zoomFactor);
 
     setBitmapZoomFactor(zoomFactor);
     rezoomOverlays();

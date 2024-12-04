@@ -261,6 +261,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     SurgeSynthesizer *synth = nullptr;
 
+    void updateAfterApplyCodeFromFormula();
+
   private:
     void openOrRecreateEditor();
     std::unique_ptr<Surge::Overlays::OverlayComponent> makeStorePatchDialog();

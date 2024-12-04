@@ -950,6 +950,7 @@ void FormulaModulatorEditor::applyCode()
     editor->undoManager()->pushFormula(scene, lfo_id, *formulastorage);
     formulastorage->setFormula(mainDocument->getAllContent().toStdString());
     storage->getPatch().isDirty = true;
+    editor->updateAfterApplyCodeFromFormula();
     updateDebuggerIfNeeded();
     editor->repaintFrame();
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
