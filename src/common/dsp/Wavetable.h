@@ -76,8 +76,8 @@ enum wtflags
 {
     wtf_is_sample = 1,
     wtf_loop_sample = 2,
-    wtf_int16 = 4,       // If this is set we have int16 in range 0-2^15
-    wtf_int16_is_16 = 8, // and in this case, range 0-2^16 if with above
+    wtf_int16 = 4,           // If this is set we have int16 in range 0-2^15
+    wtf_int16_is_16 = 8,     // and in this case, range 0-2^16 if with above
     wtf_has_metadata = 0x10, // null term xml at end of file
 };
 

@@ -544,7 +544,8 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     return true;
 }
 
-std::string SurgeStorage::export_wt_wav_portable(const std::string &fbase, Wavetable *wt, const std::string &metadata)
+std::string SurgeStorage::export_wt_wav_portable(const std::string &fbase, Wavetable *wt,
+                                                 const std::string &metadata)
 {
     auto path = userDataPath / "Wavetables" / "Exported";
     fs::create_directories(path);
@@ -562,7 +563,8 @@ std::string SurgeStorage::export_wt_wav_portable(const std::string &fbase, Wavet
     return export_wt_wav_portable(fname, wt, metadata);
 }
 
-std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetable *wt, const std::string &metadata)
+std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetable *wt,
+                                                 const std::string &metadata)
 {
     std::string errorMessage = "Unknown error!";
 

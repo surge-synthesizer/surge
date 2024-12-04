@@ -691,7 +691,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
                         {
                             fsp = fsp.replace_extension(".wav");
                         }
-                        auto fn = w->storage->export_wt_wav_portable(fsp, &(w->oscdata->wt), metadata);
+                        auto fn =
+                            w->storage->export_wt_wav_portable(fsp, &(w->oscdata->wt), metadata);
                     }
                     else
                     {
@@ -701,7 +702,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
                         }
                         if (!w->storage->export_wt_wt_portable(fsp, &(w->oscdata->wt), metadata))
                         {
-                            w->storage->reportError("Unable to save wt to " + fsp.u8string(), "WT Export");
+                            w->storage->reportError("Unable to save wt to " + fsp.u8string(),
+                                                    "WT Export");
                         }
                     }
                     w->storage->refresh_wtlist();

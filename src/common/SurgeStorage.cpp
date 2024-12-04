@@ -1380,9 +1380,9 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
             osc->wavetable_display_name = fnnoext;
         }
 
-        //osc->wavetable_formula = {};
-        //osc->wavetable_formula_res_base = 5;
-        //osc->wavetable_formula_nframes = 10;
+        // osc->wavetable_formula = {};
+        // osc->wavetable_formula_res_base = 5;
+        // osc->wavetable_formula_nframes = 10;
     }
 }
 
@@ -1542,20 +1542,21 @@ bool SurgeStorage::export_wt_wt_portable(const fs::path &fname, Wavetable *wt,
     if (!metadata.empty())
         wth.flags |= wtf_has_metadata;
 
-    wfp.sputn((const char*)&wth, 12);
+    wfp.sputn((const char *)&wth, 12);
 
     bool is16 = (wt->flags & wtf_int16) || (wt->flags & wtf_int16_is_16);
 
     if (is16)
     {
-        for (int i=0; i<wt->n_tables; ++i)
+        for (int i = 0; i < wt->n_tables; ++i)
         {
-            wfp.sputn((const char *)&wt->TableI16WeakPointers[0][i][FIRoffsetI16], wt->size * sizeof(short));
+            wfp.sputn((const char *)&wt->TableI16WeakPointers[0][i][FIRoffsetI16],
+                      wt->size * sizeof(short));
         }
     }
     else
     {
-        for (int i=0; i<wt->n_tables; ++i)
+        for (int i = 0; i < wt->n_tables; ++i)
         {
             wfp.sputn((const char *)&wt->TableF32WeakPointers[0][i][0], wt->size * sizeof(float));
         }
@@ -1565,7 +1566,6 @@ bool SurgeStorage::export_wt_wt_portable(const fs::path &fname, Wavetable *wt,
 
     return true;
 }
-
 
 bool SurgeStorage::getOverrideDataHome(std::string &v)
 {
