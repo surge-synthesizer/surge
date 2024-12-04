@@ -51,10 +51,12 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     auto surge = Surge::Headless::createSurge(44100);
     REQUIRE(surge.get());
 
+    std::string metadata;
+
     SECTION("Wavetable.wav")
     {
         auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
-        surge->storage.load_wt_wav_portable("resources/test-data/wav/Wavetable.wav", wt);
+        surge->storage.load_wt_wav_portable("resources/test-data/wav/Wavetable.wav", wt, metadata);
         REQUIRE(wt->size == 2048);
         REQUIRE(wt->n_tables == 256);
         REQUIRE((wt->flags & wtf_is_sample) == 0);
@@ -63,7 +65,7 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     SECTION("05_BELL.WAV")
     {
         auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
-        surge->storage.load_wt_wav_portable("resources/test-data/wav/05_BELL.WAV", wt);
+        surge->storage.load_wt_wav_portable("resources/test-data/wav/05_BELL.WAV", wt, metadata);
         REQUIRE(wt->size == 2048);
         REQUIRE(wt->n_tables == 33);
         REQUIRE((wt->flags & wtf_is_sample) == 0);
@@ -72,7 +74,7 @@ TEST_CASE("We Can Read Wavetables", "[io]")
     SECTION("pluckalgo.wav")
     {
         auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
-        surge->storage.load_wt_wav_portable("resources/test-data/wav/pluckalgo.wav", wt);
+        surge->storage.load_wt_wav_portable("resources/test-data/wav/pluckalgo.wav", wt, metadata);
         REQUIRE(wt->size == 2048);
         REQUIRE(wt->n_tables == 9);
         REQUIRE((wt->flags & wtf_is_sample) == 0);

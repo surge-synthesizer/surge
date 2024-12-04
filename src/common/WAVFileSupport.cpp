@@ -44,9 +44,11 @@ bool four_chars(char *v, char a, char b, char c, char d)
     return v[0] == a && v[1] == b && v[2] == c && v[3] == d;
 }
 
-bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
+bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt, std::string &metadata)
 {
     std::string uitag = "Wavetable Import Error";
+
+    metadata = {};
 
 #if WAV_STDOUT_INFO
     std::cout << "Loading wt_wav_portable" << std::endl;
@@ -278,6 +280,12 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
             datasz = cs;
             datasamples = cs * 8 / bitsPerSample / numChannels;
             wavdata = data;
+        }
+        else if (four_chars(chunkType, 'w', 't', 'm', 'd'))
+        {
+            datasz = cs;
+            metadata = std::string(data);
+            free(data);
         }
         else if (four_chars(chunkType, 's', 'm', 'p', 'l'))
         {
@@ -544,7 +552,8 @@ bool SurgeStorage::load_wt_wav_portable(std::string fn, Wavetable *wt)
     return true;
 }
 
-std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *wt)
+std::string SurgeStorage::export_wt_wav_portable(const std::string &fbase, Wavetable *wt,
+                                                 const std::string &metadata)
 {
     auto path = userDataPath / "Wavetables" / "Exported";
     fs::create_directories(path);
@@ -559,7 +568,12 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
         fnamePre = fbase + "_" + std::to_string(fnum) + ".wav";
         fnum++;
     }
+    return export_wt_wav_portable(fname, wt, metadata);
+}
 
+std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetable *wt,
+                                                 const std::string &metadata)
+{
     std::string errorMessage = "Unknown error!";
 
     {
@@ -608,12 +622,13 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
 
         // OK so how much data do I have.
         unsigned int tableSize = nChannels * bitsPerSample / 8 * wt->n_tables * wt->size;
-        unsigned int dataSize = 4 +          // 'WAVE'
-                                4 + 4 + 18 + // fmt chunk
-                                4 + 4 + tableSize;
+        unsigned int dataSize = 4 +                 // 'WAVE'
+                                4 + 4 + 18 +        // fmt chunk
+                                4 + 4 + tableSize + // data chunk
+                                4 + 4 + 8;          // srgo/srge chunk
 
-        if (!isSample)
-            dataSize += 4 + 4 + 8; // srge chunk
+        if (!metadata.empty())
+            dataSize += 4 + 4 + metadata.length() + 1; // null term
 
         w4i(dataSize);
         wfp.sputn("WAVE", 4);
@@ -650,6 +665,13 @@ std::string SurgeStorage::export_wt_wav_portable(std::string fbase, Wavetable *w
         {
             wfp.sputn(reinterpret_cast<char *>(wt->TableF32WeakPointers[0][i]),
                       wt->size * bitsPerSample / 8);
+        }
+
+        if (!metadata.empty())
+        {
+            wfp.sputn("wtmd", 4);
+            w4i(metadata.length() + 1);
+            wfp.sputn(metadata.c_str(), metadata.length() + 1);
         }
     }
 

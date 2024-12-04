@@ -438,7 +438,8 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 #else
     if (fs::exists(datapath / "windows.wt"))
     {
-        if (!load_wt_wt(path_to_string(datapath / "windows.wt"), &WindowWT))
+        std::string metadata;
+        if (!load_wt_wt(path_to_string(datapath / "windows.wt"), &WindowWT, metadata))
         {
             WindowWT.size = 0;
             std::ostringstream oss;
@@ -1353,14 +1354,15 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
     }
 
     bool loaded = false;
+    std::string metadata;
 
     if (extension.compare(".wt") == 0)
     {
-        loaded = load_wt_wt(filename, wt);
+        loaded = load_wt_wt(filename, wt, metadata);
     }
     else if (extension.compare(".wav") == 0)
     {
-        loaded = load_wt_wav_portable(filename, wt);
+        loaded = load_wt_wav_portable(filename, wt, metadata);
     }
     else
     {
@@ -1379,11 +1381,30 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
         {
             osc->wavetable_display_name = fnnoext;
         }
+
+        if (metadata.empty())
+        {
+            osc->wavetable_formula = {};
+            osc->wavetable_formula_res_base = 5;
+            osc->wavetable_formula_nframes = 10;
+        }
+        else
+        {
+            if (!parse_wt_metadata(metadata, osc))
+            {
+                reportError("Unable to parse metadata", "WaveTable Load");
+                std::cerr << metadata << std::endl;
+                osc->wavetable_formula = {};
+                osc->wavetable_formula_res_base = 5;
+                osc->wavetable_formula_nframes = 10;
+            }
+        }
     }
 }
 
-bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
+bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt, std::string &metadata)
 {
+    metadata = {};
     std::filebuf f;
 
     if (!f.open(string_to_path(filename), std::ios::binary | std::ios::in))
@@ -1430,6 +1451,21 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt)
         auto dpad = data.get() + read;
         auto drest = ds - read;
         memset(dpad, 0, drest);
+    }
+
+    if (mech::endian_read_int16LE(wh.flags) & wtf_has_metadata)
+    {
+        std::ostringstream xml;
+        char buffer[1024]; // Adjust buffer size as needed
+        std::streamsize bytesRead;
+
+        while ((bytesRead = f.sgetn(buffer, sizeof(buffer))))
+        {
+            // Process the data read into 'buffer'
+            xml.write(buffer, bytesRead);
+        }
+
+        metadata = xml.str();
     }
 
     waveTableDataMutex.lock();
@@ -1508,6 +1544,146 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
         reportError(oss.str(), "Wavetable Loading Error");
     }
     return wasBuilt;
+}
+
+bool SurgeStorage::export_wt_wt_portable(const fs::path &fname, Wavetable *wt,
+                                         const std::string &metadata)
+{
+    std::string errorMessage{"Unkown error"};
+    std::filebuf wfp;
+
+    if (!wfp.open(fname, std::ios::binary | std::ios::out))
+    {
+        errorMessage = "Unable to open file " + fname.u8string() + "!";
+        errorMessage += std::strerror(errno);
+
+        reportError(errorMessage, "Wavetable Export");
+
+        return false;
+    }
+
+    wt_header wth;
+    wth.tag[0] = 'v';
+    wth.tag[1] = 'a';
+    wth.tag[2] = 'w';
+    wth.tag[3] = 't';
+
+    wth.n_samples = wt->size;
+    wth.n_tables = wt->n_tables;
+    wth.flags = wt->flags;
+    if (!metadata.empty())
+        wth.flags |= wtf_has_metadata;
+
+    wfp.sputn((const char *)&wth, 12);
+
+    bool is16 = (wt->flags & wtf_int16) || (wt->flags & wtf_int16_is_16);
+
+    if (is16)
+    {
+        for (int i = 0; i < wt->n_tables; ++i)
+        {
+            wfp.sputn((const char *)&wt->TableI16WeakPointers[0][i][FIRoffsetI16],
+                      wt->size * sizeof(short));
+        }
+    }
+    else
+    {
+        for (int i = 0; i < wt->n_tables; ++i)
+        {
+            wfp.sputn((const char *)&wt->TableF32WeakPointers[0][i][0], wt->size * sizeof(float));
+        }
+    }
+
+    if (!metadata.empty())
+    {
+        wfp.sputn(metadata.c_str(), metadata.length() + 1); // include null term
+    }
+
+    wfp.close();
+
+    return true;
+}
+
+std::string SurgeStorage::make_wt_metadata(OscillatorStorage *oscdata)
+{
+    bool hasMeta{false};
+    TiXmlDocument doc("wtmeta");
+    TiXmlElement root("wtmeta");
+    TiXmlElement surge("surge");
+    if (!oscdata->wavetable_formula.empty())
+    {
+        TiXmlElement script("script");
+
+        auto wtfo = oscdata->wavetable_formula;
+        auto wtfol = wtfo.length();
+
+        script.SetAttribute(
+            "lua", Surge::Storage::base64_encode((unsigned const char *)wtfo.c_str(), wtfol));
+        script.SetAttribute("nframes", oscdata->wavetable_formula_nframes);
+        script.SetAttribute("res_base", oscdata->wavetable_formula_res_base);
+        surge.InsertEndChild(script);
+        hasMeta = true;
+    }
+
+    root.InsertEndChild(surge);
+    doc.InsertEndChild(root);
+    if (hasMeta)
+    {
+        std::string res;
+        res << doc;
+        return res;
+    }
+    return {};
+}
+bool SurgeStorage::parse_wt_metadata(const std::string &m, OscillatorStorage *oscdata)
+{
+    TiXmlDocument doc("wtmeta");
+    doc.Parse(m.c_str());
+
+    auto root = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wtmeta"));
+    if (!root)
+    {
+        std::cout << "NO ROOT" << std::endl;
+        return false;
+    }
+
+    auto surge = TINYXML_SAFE_TO_ELEMENT(root->FirstChildElement("surge"));
+    if (!surge)
+    {
+        std::cout << "NO SURGE" << std::endl;
+        return false;
+    }
+
+    auto script = TINYXML_SAFE_TO_ELEMENT(surge->FirstChildElement("script"));
+    if (!script)
+    {
+        std::cout << "NO SCRIPT" << std::endl;
+        return false;
+    }
+
+    int n, s;
+    if (script->QueryIntAttribute("nframes", &n) != TIXML_SUCCESS)
+    {
+        std::cout << "NO NFRAMES" << std::endl;
+        return false;
+    }
+    if (script->QueryIntAttribute("res_base", &s) != TIXML_SUCCESS)
+    {
+        std::cout << "NO RES_BASE" << std::endl;
+        return false;
+    }
+    auto bscript = script->Attribute("lua");
+    if (!bscript)
+    {
+        std::cout << "NO LUA" << std::endl;
+        return false;
+    }
+
+    oscdata->wavetable_formula = Surge::Storage::base64_decode(bscript);
+    oscdata->wavetable_formula_nframes = n;
+    oscdata->wavetable_formula_res_base = s;
+
+    return true;
 }
 
 bool SurgeStorage::getOverrideDataHome(std::string &v)
@@ -3193,6 +3369,100 @@ string findReplaceSubstring(string &source, const string &from, const string &to
     source.swap(newString);
 
     return newString;
+}
+
+// BASE 64 SUPPORT, THANKS TO:
+// https://renenyffenegger.ch/notes/development/Base64/Encoding-and-decoding-base-64-with-cpp
+static const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                        "abcdefghijklmnopqrstuvwxyz"
+                                        "0123456789+/";
+
+bool is_base64(unsigned char c) { return (isalnum(c) || (c == '+') || (c == '/')); }
+
+std::string base64_encode(unsigned char const *bytes_to_encode, unsigned int in_len)
+{
+    std::string ret;
+    int i = 0;
+    int j = 0;
+    unsigned char char_array_3[3];
+    unsigned char char_array_4[4];
+
+    while (in_len--)
+    {
+        char_array_3[i++] = *(bytes_to_encode++);
+        if (i == 3)
+        {
+            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+            char_array_4[3] = char_array_3[2] & 0x3f;
+
+            for (i = 0; (i < 4); i++)
+                ret += base64_chars[char_array_4[i]];
+            i = 0;
+        }
+    }
+
+    if (i)
+    {
+        for (j = i; j < 3; j++)
+            char_array_3[j] = '\0';
+
+        char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+
+        for (j = 0; (j < i + 1); j++)
+            ret += base64_chars[char_array_4[j]];
+
+        while ((i++ < 3))
+            ret += '=';
+    }
+
+    return ret;
+}
+
+std::string base64_decode(std::string const &encoded_string)
+{
+    int in_len = encoded_string.size();
+    int i = 0;
+    int j = 0;
+    int in_ = 0;
+    unsigned char char_array_4[4], char_array_3[3];
+    std::string ret;
+
+    while (in_len-- && (encoded_string[in_] != '=') && is_base64(encoded_string[in_]))
+    {
+        char_array_4[i++] = encoded_string[in_];
+        in_++;
+        if (i == 4)
+        {
+            for (i = 0; i < 4; i++)
+                char_array_4[i] = base64_chars.find(char_array_4[i]);
+
+            char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+            char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+            char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+            for (i = 0; (i < 3); i++)
+                ret += char_array_3[i];
+            i = 0;
+        }
+    }
+
+    if (i)
+    {
+        for (j = 0; j < i; j++)
+            char_array_4[j] = base64_chars.find(char_array_4[j]);
+
+        char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+        char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+
+        for (j = 0; (j < i - 1); j++)
+            ret += char_array_3[j];
+    }
+
+    return ret;
 }
 
 Surge::Storage::ScenesOutputData::ScenesOutputData()
