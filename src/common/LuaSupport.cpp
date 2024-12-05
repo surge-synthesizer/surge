@@ -186,7 +186,8 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     static constexpr std::initializer_list<const char *> sandboxWhitelist
                                                  {"pairs",    "ipairs",       "unpack",
                                                  "next",     "type",         "tostring",
-                                                 "tonumber", "setmetatable", "error"};
+                                                 "tonumber", "setmetatable", "pcall",
+                                                 "xpcall", "error"};
     // clang-format on
 
     for (const auto &f : sandboxWhitelist)
