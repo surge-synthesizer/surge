@@ -1226,8 +1226,15 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
             int idx{0};
 
-            for (const auto &cpoint : fsPoints)
+            for (int idx = 0; idx < frameCount; ++idx)
             {
+                if (xpos + height < axisSpaceX || xpos > width - axisSpaceX)
+                {
+                    // We are outside the clip window. Do nothing.
+                    xpos += height + fsGap;
+                    continue;
+                }
+
                 g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
 
                 auto p = juce::Path();
@@ -1256,6 +1263,15 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                 }
 
                 g.fillRect(xpos + axisSpaceX, 0, height, height);
+
+                auto cpointOpt = overlay->evaluator->getFrame(idx);
+                if (!cpointOpt.has_value())
+                {
+                    xpos += height + fsGap;
+                    continue;
+                }
+
+                const auto &cpoint = *cpointOpt;
 
                 if (!cpoint.empty())
                 {
@@ -1304,8 +1320,6 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                 g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
                 g.drawText(std::to_string(idx + 1), xpos + axisSpaceX + 4, 4, height - 8,
                            height - 8, juce::Justification::topRight);
-                idx++;
-
                 g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
                 g.drawVerticalLine(xpos + height + axisSpaceX, 0, height);
 
@@ -1394,8 +1408,7 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
     void adjustStartX(int delta)
     {
-        auto paintWidth =
-            (int)(fsPoints.size()) * (getHeight() + fsGap) - fsGap + 2 + axisSpaceX - getWidth();
+        auto paintWidth = frameCount * (getHeight() + fsGap) - fsGap + 2 + axisSpaceX - getWidth();
         if (paintWidth > 0)
         {
             startX += delta;
@@ -1452,7 +1465,7 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
     int frameNumber{1};
     std::vector<float> points;
-    std::vector<std::vector<float>> fsPoints;
+    int frameCount{1};
 
     int mode{1};
 
@@ -2166,28 +2179,7 @@ void WavetableScriptEditor::rerenderFromUIState()
     }
     else
     {
-        rendererComponent->fsPoints.clear();
-        bool hasFailed{false};
-        for (int i = 0; i < nfr; ++i)
-        {
-            if (hasFailed)
-            {
-                rendererComponent->fsPoints.emplace_back();
-            }
-            else
-            {
-                auto rs = evaluator->getFrame(i);
-                if (rs.has_value())
-                {
-                    rendererComponent->fsPoints.emplace_back(*rs);
-                }
-                else
-                {
-                    rendererComponent->fsPoints.emplace_back();
-                    hasFailed = true;
-                }
-            }
-        }
+        rendererComponent->frameCount = nfr;
         rendererComponent->adjustStartX(0);
     }
     rendererComponent->repaint();
