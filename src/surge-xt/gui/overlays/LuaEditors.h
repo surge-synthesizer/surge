@@ -70,7 +70,7 @@ class CodeEditorSearch : public juce::TextEditor,
     virtual void show();
     virtual void hide();
     virtual void resize();
-    virtual void textEditorTextChanged(juce::TextEditor &textEditor);
+    virtual void textEditorTextChanged(juce::TextEditor &textEditor) override;
     virtual void mouseDown(const juce::MouseEvent &event) override;
     virtual void focusLost(FocusChangeType) override;
 
