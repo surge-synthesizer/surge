@@ -492,7 +492,16 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
         }
         else
         {
-            mainEditor->insertTabAtCaret();
+            auto sel = mainEditor->getHighlightedRegion();
+
+            if (sel.getLength() == 0)
+            {
+                mainEditor->insertTabAtCaret();
+            }
+            else
+            {
+                mainEditor->indentSelection();
+            }
         }
 
         return true;
@@ -558,9 +567,6 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
     {
         search->show();
 
-        /*
-            search for characters and use getCharacterBounds to get its screen position
-        */
         return true;
     }
 
