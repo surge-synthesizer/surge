@@ -44,6 +44,59 @@ namespace Surge
 namespace Overlays
 {
 
+class CodeEditorSearch : public juce::TextEditor,
+                         public juce::TextEditor::Listener,
+                         public Surge::GUI::SkinConsumingComponent
+{
+  private:
+    virtual void setHighlightColors();
+    virtual void removeHighlightColors();
+    juce::CodeEditorComponent *ed;
+    bool active = false;
+    int result[128];
+    int resultCurrent;
+    int resultTotal;
+    bool saveCaretStartPositionLock;
+    Surge::GUI::Skin::ptr_t currentSkin;
+
+    std::unique_ptr<juce::Label> labelResult;
+
+    juce::CodeDocument::Position startCaretPosition;
+
+    virtual void search();
+
+  public:
+    virtual bool isActive();
+    virtual void show();
+    virtual void hide();
+    virtual void resize();
+    virtual void textEditorTextChanged(juce::TextEditor &textEditor) override;
+    virtual void mouseDown(const juce::MouseEvent &event) override;
+    virtual void focusLost(FocusChangeType) override;
+
+    CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
+    virtual void textEditorEscapeKeyPressed(TextEditor &) override;
+    virtual void textEditorReturnKeyPressed(TextEditor &) override;
+    virtual bool keyPressed(const juce::KeyPress &key) override;
+    virtual void saveCaretStartPosition(bool onlyReadCaretPosition);
+    virtual void showResult(int increase, bool moveCaret);
+    virtual void paint(juce::Graphics &g) override;
+};
+
+class SurgeCodeEditorComponent : public juce::CodeEditorComponent
+{
+  public:
+    virtual void handleEscapeKey() override;
+    virtual void handleReturnKey() override;
+    virtual void caretPositionMoved() override;
+
+    virtual void setSearch(CodeEditorSearch &s);
+    SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t);
+
+  private:
+    CodeEditorSearch *search;
+};
+
 /*
  * This is a base class that provides you an apply button, an editor, a document
  * a tokenizer, etc... which you need to layout with yoru other components by
@@ -60,9 +113,11 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     CodeEditorContainerWithApply(SurgeGUIEditor *ed, SurgeStorage *s, Surge::GUI::Skin::ptr_t sk,
                                  bool addComponents = false);
     std::unique_ptr<juce::CodeDocument> mainDocument;
-    std::unique_ptr<juce::CodeEditorComponent> mainEditor;
+    std::unique_ptr<SurgeCodeEditorComponent> mainEditor;
     std::unique_ptr<juce::Button> applyButton;
     std::unique_ptr<juce::LuaTokeniser> tokenizer;
+    std::unique_ptr<CodeEditorSearch> search;
+
     void buttonClicked(juce::Button *button) override;
     void codeDocumentTextDeleted(int startIndex, int endIndex) override;
     void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override;

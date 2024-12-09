@@ -41,83 +41,349 @@ namespace Surge
 namespace Overlays
 {
 
-struct SurgeCodeEditorComponent : public juce::CodeEditorComponent
+/*
+    ---------------------------------------
+    Search box
+    ---------------------------------------
+*/
+
+CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t skin)
+    : juce::TextEditor(), juce::TextEditor::Listener(), Surge::GUI::SkinConsumingComponent()
 {
-    SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t)
-        : juce::CodeEditorComponent(d, t)
+    ed = &editor;
+    currentSkin = skin;
+
+    juce::Rectangle boundsLabel = juce::Rectangle(95, 2, 50, 20);
+
+    labelResult = std::make_unique<juce::Label>();
+
+    labelResult->setBounds(boundsLabel);
+    labelResult->setFont(juce::FontOptions(10));
+    labelResult->setJustificationType(juce::Justification::right);
+    labelResult->setColour(juce::Label::textColourId, skin->getColor(Colors::Dialog::Button::Text));
+
+    addAndMakeVisible(*labelResult);
+
+    setBorder(juce::BorderSize(2, 5, 2, 5));
+    setFont(juce::FontOptions(12));
+    setColour(juce::TextEditor::ColourIds::textColourId,
+              skin->getColor(Colors::Dialog::Button::Text));
+    setColour(juce::TextEditor::backgroundColourId,
+              skin->getColor(Colors::Dialog::Button::Background));
+
+    setTitle("");
+    setText("");
+
+    setEscapeAndReturnKeysConsumed(true);
+
+    addListener(this);
+
+    juce::Rectangle bounds = juce::Rectangle(0, 0, 150, 20);
+    setBounds(bounds);
+
+    setVisible(false);
+}
+
+void CodeEditorSearch::paint(juce::Graphics &g)
+{
+    juce::TextEditor::paint(g);
+
+    // magnifying glass
+
+    if (associatedBitmapStore != nullptr)
     {
+        // auto magnifyingGlass = associatedBitmapStore->getImage(IDB_SEARCH_BUTTON);
+        // magnifyingGlass->drawAt(g, 0, 0, 1);
+        // g.drawImage(magnifyingGlass->asJuceImage(), 0, 0, 20, 20, 0, 0, 20, 20, false);
     }
 
-    void handleEscapeKey() override
+    // todo draw all matches
+}
+
+bool CodeEditorSearch::isActive() { return active; }
+
+void CodeEditorSearch::mouseDown(const juce::MouseEvent &event) { saveCaretStartPosition(true); }
+
+void CodeEditorSearch::saveCaretStartPosition(bool onlyReadCaretPosition)
+{
+
+    if (!saveCaretStartPositionLock &&
+        onlyReadCaretPosition == false) // prevent caretMoved feedback loop
     {
-        juce::Component *c = this;
-        while (c)
+        saveCaretStartPositionLock = true;
+        auto sel = ed->getHighlightedRegion();
+
+        if (sel.getEnd() - sel.getStart() != 0)
         {
-            if (auto fm = dynamic_cast<FormulaModulatorEditor *>(c))
+
+            // move caret to beginning of selected
+            if (ed->getCaretPosition() > sel.getStart())
             {
-                fm->escapeKeyPressed();
-                return;
+                juce::CodeDocument::Position pos =
+                    juce::CodeDocument::Position(ed->getDocument(), sel.getStart());
+                ed->moveCaretTo(pos, false);
             }
-            c = c->getParentComponent();
+        }
+        startCaretPosition = ed->getCaretPos();
+
+        saveCaretStartPositionLock = false;
+    }
+
+    if (onlyReadCaretPosition && !saveCaretStartPositionLock)
+    {
+        startCaretPosition = ed->getCaretPos();
+    }
+}
+
+void CodeEditorSearch::focusLost(FocusChangeType)
+{
+    removeHighlightColors();
+    ed->repaint();
+}
+
+void CodeEditorSearch::setHighlightColors()
+{
+    auto color = skin->getColor(Colors::FormulaEditor::Background);
+
+    ed->setColour(juce::CodeEditorComponent::highlightColourId,
+                  color.interpolatedWith(juce::Colour(108, 147, 25), 0.5));
+}
+
+void CodeEditorSearch::removeHighlightColors()
+{
+    ed->setColour(juce::CodeEditorComponent::highlightColourId,
+                  skin->getColor(Colors::FormulaEditor::Highlight));
+}
+
+void CodeEditorSearch::show()
+{
+    // set selected text as search query unless it includes a newline character
+    auto sel = ed->getHighlightedRegion();
+    juce::String txt = ed->getTextInRange(sel);
+
+    saveCaretStartPosition(false);
+
+    if (!txt.containsChar('\n') && sel.getLength() != 0)
+    {
+        setText(txt);
+    }
+
+    moveCaretToStartOfLine(false);
+    moveCaretToEndOfLine(true);
+
+    setVisible(true);
+    search();
+    grabKeyboardFocus();
+    ed->repaint(); // force update selection color
+}
+
+void CodeEditorSearch::textEditorEscapeKeyPressed(TextEditor &) { hide(); }
+void CodeEditorSearch::textEditorReturnKeyPressed(TextEditor &) {}
+
+bool CodeEditorSearch::keyPressed(const juce::KeyPress &key)
+{
+    juce::TextEditor::keyPressed(key);
+
+    if (key.getKeyCode() == key.returnKey)
+    {
+        if (key.getModifiers().isShiftDown())
+        {
+            showResult(-1, true);
+        }
+        else
+        {
+            showResult(1, true);
         }
     }
 
-    // Handles auto indentation
+    if (key.getKeyCode() == key.escapeKey)
+    {
+        hide();
+        return true;
+    }
 
-    void handleReturnKey() override
+    if (key.getModifiers().isCommandDown() && key.getKeyCode() == 70)
+    {
+        return true;
+    }
+
+    return true;
+}
+
+void CodeEditorSearch::hide()
+{
+    removeHighlightColors();
+    setVisible(false);
+}
+
+void CodeEditorSearch::textEditorTextChanged(juce::TextEditor &textEditor) { search(); }
+
+void CodeEditorSearch::showResult(int increment, bool moveCaret)
+{
+    int id = resultCurrent + 1;
+    if (resultTotal == 0)
+    {
+        removeHighlightColors();
+        id = 0;
+        setColour(juce::TextEditor::focusedOutlineColourId, juce::Colour(204, 70, 70));
+        setColour(juce::TextEditor::outlineColourId,
+                  skin->getColor(Colors::FormulaEditor::Debugger::Text));
+    }
+    else
+    {
+        setHighlightColors();
+        setColour(juce::TextEditor::focusedOutlineColourId,
+                  skin->getColor(Colors::FormulaEditor::Debugger::Text));
+        setColour(juce::TextEditor::outlineColourId,
+                  skin->getColor(Colors::FormulaEditor::Debugger::Text));
+    }
+
+    labelResult->setText(juce::String(std::to_string(id) + '/' + std::to_string(resultTotal)),
+                         juce::NotificationType::dontSendNotification);
+
+    repaint();
+
+    if (resultTotal == 0)
+        return;
+
+    resultCurrent = (resultCurrent + increment + resultTotal) % resultTotal;
+
+    saveCaretStartPositionLock = true;
+    ed->setHighlightedRegion(
+        juce::Range(result[resultCurrent], result[resultCurrent] + getTotalNumChars()));
+    saveCaretStartPositionLock = false;
+}
+
+void CodeEditorSearch::resize()
+{
+    juce::Rectangle bounds = juce::Rectangle(ed->getBounds().getWidth() - 150 - 10, 6, 150, 24);
+    setBounds(bounds);
+}
+
+void CodeEditorSearch::search()
+{
+    // move to start pos
+    saveCaretStartPositionLock = true;
+    ed->moveCaretTo(startCaretPosition, false);
+    saveCaretStartPositionLock = false;
+
+    auto caret = ed->getCaretPos();
+
+    int caretPos = caret.getPosition();
+
+    juce::String txt = ed->getDocument().getAllContent();
+    int pos = 0;
+    int count = 0;
+    int res = txt.indexOfIgnoreCase(pos, getText());
+    resultCurrent = 0;
+    bool firstFound = false;
+    while (res != -1 && count < 128)
     {
 
-        auto pos = this->getCaretPos();
-        auto txt = pos.getLineText();
-        int tabs = 0;
-
-        for (int i = 0; i < txt.length(); i++)
+        result[count] = res;
+        if (caretPos <= res && !firstFound)
         {
-            if (txt.substring(i, i + 1) == " ")
-            {
-                tabs++;
-            }
-            else if (txt.substring(i, i + 1) == "\t")
-            {
-                tabs += this->getTabSize();
-            }
-            else
-            {
-                bool indent = false;
-                auto trimmedTxt = txt.trim();
-
-                if (txt.substring(i, i + 8) == "function")
-                {
-
-                    indent = true;
-                }
-                else if (txt.substring(i, i + 2) == "if" &&
-                         trimmedTxt.substring(trimmedTxt.length() - 4, trimmedTxt.length()) ==
-                             "then")
-                {
-                    indent = true;
-                }
-                else if (trimmedTxt.substring(0, 4) == "else")
-                {
-                    indent = true;
-                }
-                else if (trimmedTxt.substring(trimmedTxt.length() - 2, trimmedTxt.length()) ==
-                             "do" ||
-                         trimmedTxt.substring(0, 5) == "while")
-                {
-                    indent = true;
-                }
-
-                tabs += indent == true ? this->getTabSize() : 0;
-
-                break;
-            }
+            resultCurrent = count;
+            firstFound = true;
         }
 
-        this->insertTextAtCaret("\n");
-        this->insertTextAtCaret(std::string(tabs, ' '));
+        pos = res + 1;
+        res = txt.indexOfIgnoreCase(pos, getText());
+
+        count++;
     }
-};
+
+    resultTotal = count;
+    showResult(0, true);
+}
+
+/*
+    ---------------------------------------
+    end search
+    ---------------------------------------
+*/
+
+SurgeCodeEditorComponent::SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t)
+    : juce::CodeEditorComponent(d, t)
+{
+}
+
+void SurgeCodeEditorComponent::setSearch(CodeEditorSearch &s) { search = &s; }
+
+void SurgeCodeEditorComponent::handleEscapeKey()
+{
+    if (search->isVisible())
+    {
+        search->hide();
+        return;
+    }
+    juce::Component *c = this;
+    while (c)
+    {
+        if (auto fm = dynamic_cast<FormulaModulatorEditor *>(c))
+        {
+            fm->escapeKeyPressed();
+            return;
+        }
+        c = c->getParentComponent();
+    }
+}
+
+void SurgeCodeEditorComponent::caretPositionMoved() { search->saveCaretStartPosition(true); }
+
+// Handles auto indentation
+
+void SurgeCodeEditorComponent::handleReturnKey()
+{
+
+    auto pos = this->getCaretPos();
+    auto txt = pos.getLineText();
+    int tabs = 0;
+
+    for (int i = 0; i < txt.length(); i++)
+    {
+        if (txt.substring(i, i + 1) == " ")
+        {
+            tabs++;
+        }
+        else if (txt.substring(i, i + 1) == "\t")
+        {
+            tabs += this->getTabSize();
+        }
+        else
+        {
+            bool indent = false;
+            auto trimmedTxt = txt.trim();
+
+            if (txt.substring(i, i + 8) == "function")
+            {
+
+                indent = true;
+            }
+            else if (txt.substring(i, i + 2) == "if" &&
+                     trimmedTxt.substring(trimmedTxt.length() - 4, trimmedTxt.length()) == "then")
+            {
+                indent = true;
+            }
+            else if (trimmedTxt.substring(0, 4) == "else")
+            {
+                indent = true;
+            }
+            else if (trimmedTxt.substring(trimmedTxt.length() - 2, trimmedTxt.length()) == "do" ||
+                     trimmedTxt.substring(0, 5) == "while")
+            {
+                indent = true;
+            }
+
+            tabs += indent == true ? this->getTabSize() : 0;
+
+            break;
+        }
+    }
+
+    this->insertTextAtCaret("\n");
+    this->insertTextAtCaret(std::string(tabs, ' '));
+}
 
 struct EditorColors
 {
@@ -171,12 +437,16 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
     mainEditor = std::make_unique<SurgeCodeEditorComponent>(*mainDocument, tokenizer.get());
     mainEditor->setTabSize(4, true);
     mainEditor->addKeyListener(this);
+
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
 
+    search = std::make_unique<CodeEditorSearch>(*mainEditor, skin);
+    mainEditor->setSearch(*search);
     if (addComponents)
     {
         addAndMakeVisible(applyButton.get());
         addAndMakeVisible(mainEditor.get());
+        addChildComponent(search.get());
     }
 
     applyButton->setEnabled(false);
@@ -193,6 +463,7 @@ void CodeEditorContainerWithApply::buttonClicked(juce::Button *button)
 void CodeEditorContainerWithApply::onSkinChanged()
 {
     mainEditor->setFont(skin->getFont(Fonts::LuaEditor::Code));
+    search->setSkin(skin);
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
 }
 
@@ -285,6 +556,8 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
     // search
     else if (key.getModifiers().isCommandDown() && keyCode == 70)
     {
+        search->show();
+
         /*
             search for characters and use getCharacterBounds to get its screen position
         */
@@ -909,6 +1182,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     controlArea = std::make_unique<FormulaControlArea>(this, editor);
     addAndMakeVisible(*controlArea);
     addAndMakeVisible(*mainEditor);
+    addChildComponent(*search);
     addChildComponent(*preludeDisplay);
 
     debugPanel = std::make_unique<ExpandingFormulaDebugger>(this);
@@ -1005,6 +1279,8 @@ void FormulaModulatorEditor::resized()
                               height - 4 - controlHeight);
     }
     controlArea->setBounds(0, height - controlHeight, width, controlHeight);
+
+    search->resize();
 }
 
 void FormulaModulatorEditor::showModulatorCode()
@@ -2002,6 +2278,8 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
     controlArea = std::make_unique<WavetableScriptControlArea>(this, editor);
     addAndMakeVisible(*controlArea);
     addAndMakeVisible(*mainEditor);
+    addChildComponent(*search);
+
     addChildComponent(*preludeDisplay);
 
     rendererComponent = std::make_unique<WavetablePreviewComponent>(this, editor, skin);
@@ -2103,6 +2381,7 @@ void WavetableScriptEditor::resized()
     rendererComponent->setBounds(2, height - rendererHeight - controlHeight - 2, width - 2,
                                  rendererHeight);
 
+    search->resize();
     rerenderFromUIState();
 }
 
