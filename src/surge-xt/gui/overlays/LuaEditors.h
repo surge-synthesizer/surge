@@ -44,8 +44,9 @@ namespace Surge
 namespace Overlays
 {
 
-class CodeEditorSearch : public juce::TextEditor,
+class CodeEditorSearch : public juce::Component,
                          public juce::TextEditor::Listener,
+                         public juce::KeyListener,
                          public Surge::GUI::SkinConsumingComponent
 {
   private:
@@ -59,6 +60,7 @@ class CodeEditorSearch : public juce::TextEditor,
     bool saveCaretStartPositionLock;
     Surge::GUI::Skin::ptr_t currentSkin;
 
+    std::unique_ptr<juce::TextEditor> textfield;
     std::unique_ptr<juce::Label> labelResult;
 
     juce::CodeDocument::Position startCaretPosition;
@@ -75,12 +77,13 @@ class CodeEditorSearch : public juce::TextEditor,
     virtual void focusLost(FocusChangeType) override;
 
     CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
-    virtual void textEditorEscapeKeyPressed(TextEditor &) override;
-    virtual void textEditorReturnKeyPressed(TextEditor &) override;
-    virtual bool keyPressed(const juce::KeyPress &key) override;
+    virtual void textEditorEscapeKeyPressed(juce::TextEditor &);
+    virtual void textEditorReturnKeyPressed(juce::TextEditor &);
+    virtual bool keyPressed(const juce::KeyPress &key,
+                            juce::Component *originatingComponent) override;
     virtual void saveCaretStartPosition(bool onlyReadCaretPosition);
     virtual void showResult(int increase, bool moveCaret);
-    virtual void paint(juce::Graphics &g) override;
+    virtual void paint(juce::Graphics &g);
 };
 
 class SurgeCodeEditorComponent : public juce::CodeEditorComponent
@@ -94,7 +97,7 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
     SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t);
 
   private:
-    CodeEditorSearch *search;
+    CodeEditorSearch *search = nullptr;
 };
 
 /*
