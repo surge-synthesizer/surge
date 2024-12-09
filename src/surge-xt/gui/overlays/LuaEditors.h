@@ -77,13 +77,13 @@ class CodeEditorSearch : public juce::Component,
     virtual void focusLost(FocusChangeType) override;
 
     CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
-    virtual void textEditorEscapeKeyPressed(juce::TextEditor &);
-    virtual void textEditorReturnKeyPressed(juce::TextEditor &);
+    virtual void textEditorEscapeKeyPressed(juce::TextEditor &) override;
+    virtual void textEditorReturnKeyPressed(juce::TextEditor &) override;
     virtual bool keyPressed(const juce::KeyPress &key,
                             juce::Component *originatingComponent) override;
     virtual void saveCaretStartPosition(bool onlyReadCaretPosition);
     virtual void showResult(int increase, bool moveCaret);
-    virtual void paint(juce::Graphics &g);
+    virtual void paint(juce::Graphics &g) override;
 };
 
 class SurgeCodeEditorComponent : public juce::CodeEditorComponent
