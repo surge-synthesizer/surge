@@ -48,12 +48,15 @@ namespace Overlays
 */
 
 CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t skin)
-    : juce::TextEditor(), juce::TextEditor::Listener(), Surge::GUI::SkinConsumingComponent()
+    : juce::Component(), juce::TextEditor::Listener(), juce::KeyListener(),
+      Surge::GUI::SkinConsumingComponent()
 {
     ed = &editor;
     currentSkin = skin;
 
-    juce::Rectangle boundsLabel = juce::Rectangle(95, 2, 50, 20);
+    juce::Rectangle boundsLabel = juce::Rectangle(95, 2, 80, 20);
+
+    textfield = std::make_unique<juce::TextEditor>();
 
     labelResult = std::make_unique<juce::Label>();
 
@@ -64,41 +67,31 @@ CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI
 
     addAndMakeVisible(*labelResult);
 
-    setBorder(juce::BorderSize(2, 5, 2, 5));
-    setFont(juce::FontOptions(12));
-    setColour(juce::TextEditor::ColourIds::textColourId,
-              skin->getColor(Colors::Dialog::Button::Text));
-    setColour(juce::TextEditor::backgroundColourId,
-              skin->getColor(Colors::Dialog::Button::Background));
+    textfield->setBorder(juce::BorderSize(2, 5, 2, 5));
+    textfield->setFont(juce::FontOptions(12));
+    textfield->setColour(juce::TextEditor::ColourIds::textColourId,
+                         skin->getColor(Colors::Dialog::Button::Text));
+    textfield->setColour(juce::TextEditor::backgroundColourId,
+                         skin->getColor(Colors::Dialog::Button::Background));
 
-    setTitle("");
-    setText("");
+    addAndMakeVisible(*textfield);
 
-    setEscapeAndReturnKeysConsumed(true);
+    textfield->setTitle("");
+    textfield->setText("");
 
-    addListener(this);
+    textfield->setEscapeAndReturnKeysConsumed(true);
+
+    textfield->addListener(this);
+    textfield->addKeyListener(this);
 
     juce::Rectangle bounds = juce::Rectangle(0, 0, 150, 20);
     setBounds(bounds);
 
     setVisible(false);
+    resize();
 }
 
-void CodeEditorSearch::paint(juce::Graphics &g)
-{
-    juce::TextEditor::paint(g);
-
-    // magnifying glass
-
-    if (associatedBitmapStore != nullptr)
-    {
-        // auto magnifyingGlass = associatedBitmapStore->getImage(IDB_SEARCH_BUTTON);
-        // magnifyingGlass->drawAt(g, 0, 0, 1);
-        // g.drawImage(magnifyingGlass->asJuceImage(), 0, 0, 20, 20, 0, 0, 20, 20, false);
-    }
-
-    // todo draw all matches
-}
+void CodeEditorSearch::paint(juce::Graphics &g) {}
 
 bool CodeEditorSearch::isActive() { return active; }
 
@@ -107,31 +100,34 @@ void CodeEditorSearch::mouseDown(const juce::MouseEvent &event) { saveCaretStart
 void CodeEditorSearch::saveCaretStartPosition(bool onlyReadCaretPosition)
 {
 
-    if (!saveCaretStartPositionLock &&
-        onlyReadCaretPosition == false) // prevent caretMoved feedback loop
+    if (!ed->isReadOnly())
     {
-        saveCaretStartPositionLock = true;
-        auto sel = ed->getHighlightedRegion();
-
-        if (sel.getEnd() - sel.getStart() != 0)
+        if (!saveCaretStartPositionLock &&
+            onlyReadCaretPosition == false) // prevent caretMoved feedback loop
         {
+            saveCaretStartPositionLock = true;
+            auto sel = ed->getHighlightedRegion();
 
-            // move caret to beginning of selected
-            if (ed->getCaretPosition() > sel.getStart())
+            if (sel.getEnd() - sel.getStart() != 0)
             {
-                juce::CodeDocument::Position pos =
-                    juce::CodeDocument::Position(ed->getDocument(), sel.getStart());
-                ed->moveCaretTo(pos, false);
+
+                // move caret to beginning of selected
+                if (ed->getCaretPosition() > sel.getStart())
+                {
+                    juce::CodeDocument::Position pos =
+                        juce::CodeDocument::Position(ed->getDocument(), sel.getStart());
+                    ed->moveCaretTo(pos, false);
+                }
             }
+            startCaretPosition = ed->getCaretPos();
+
+            saveCaretStartPositionLock = false;
         }
-        startCaretPosition = ed->getCaretPos();
 
-        saveCaretStartPositionLock = false;
-    }
-
-    if (onlyReadCaretPosition && !saveCaretStartPositionLock)
-    {
-        startCaretPosition = ed->getCaretPos();
+        if (onlyReadCaretPosition && !saveCaretStartPositionLock)
+        {
+            startCaretPosition = ed->getCaretPos();
+        }
     }
 }
 
@@ -165,24 +161,24 @@ void CodeEditorSearch::show()
 
     if (!txt.containsChar('\n') && sel.getLength() != 0)
     {
-        setText(txt);
+        textfield->setText(txt);
     }
 
-    moveCaretToStartOfLine(false);
-    moveCaretToEndOfLine(true);
+    textfield->moveCaretToStartOfLine(false);
+    textfield->moveCaretToEndOfLine(true);
 
     setVisible(true);
     search();
-    grabKeyboardFocus();
+    textfield->grabKeyboardFocus();
     ed->repaint(); // force update selection color
 }
 
-void CodeEditorSearch::textEditorEscapeKeyPressed(TextEditor &) { hide(); }
-void CodeEditorSearch::textEditorReturnKeyPressed(TextEditor &) {}
+void CodeEditorSearch::textEditorEscapeKeyPressed(juce::TextEditor &) { hide(); }
+void CodeEditorSearch::textEditorReturnKeyPressed(juce::TextEditor &) {}
 
-bool CodeEditorSearch::keyPressed(const juce::KeyPress &key)
+bool CodeEditorSearch::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
-    juce::TextEditor::keyPressed(key);
+    originatingComponent->keyPressed(key);
 
     if (key.getKeyCode() == key.returnKey)
     {
@@ -225,17 +221,17 @@ void CodeEditorSearch::showResult(int increment, bool moveCaret)
     {
         removeHighlightColors();
         id = 0;
-        setColour(juce::TextEditor::focusedOutlineColourId, juce::Colour(204, 70, 70));
-        setColour(juce::TextEditor::outlineColourId,
-                  skin->getColor(Colors::FormulaEditor::Debugger::Text));
+        textfield->setColour(juce::TextEditor::focusedOutlineColourId, juce::Colour(204, 70, 70));
+        textfield->setColour(juce::TextEditor::outlineColourId,
+                             skin->getColor(Colors::FormulaEditor::Debugger::Text));
     }
     else
     {
         setHighlightColors();
-        setColour(juce::TextEditor::focusedOutlineColourId,
-                  skin->getColor(Colors::FormulaEditor::Debugger::Text));
-        setColour(juce::TextEditor::outlineColourId,
-                  skin->getColor(Colors::FormulaEditor::Debugger::Text));
+        textfield->setColour(juce::TextEditor::focusedOutlineColourId,
+                             skin->getColor(Colors::FormulaEditor::Debugger::Text));
+        textfield->setColour(juce::TextEditor::outlineColourId,
+                             skin->getColor(Colors::FormulaEditor::Debugger::Text));
     }
 
     labelResult->setText(juce::String(std::to_string(id) + '/' + std::to_string(resultTotal)),
@@ -250,7 +246,7 @@ void CodeEditorSearch::showResult(int increment, bool moveCaret)
 
     saveCaretStartPositionLock = true;
     ed->setHighlightedRegion(
-        juce::Range(result[resultCurrent], result[resultCurrent] + getTotalNumChars()));
+        juce::Range(result[resultCurrent], result[resultCurrent] + textfield->getTotalNumChars()));
     saveCaretStartPositionLock = false;
 }
 
@@ -258,6 +254,7 @@ void CodeEditorSearch::resize()
 {
     juce::Rectangle bounds = juce::Rectangle(ed->getBounds().getWidth() - 150 - 10, 6, 150, 24);
     setBounds(bounds);
+    textfield->setBounds(0, 0, 150, 24);
 }
 
 void CodeEditorSearch::search()
@@ -274,7 +271,7 @@ void CodeEditorSearch::search()
     juce::String txt = ed->getDocument().getAllContent();
     int pos = 0;
     int count = 0;
-    int res = txt.indexOfIgnoreCase(pos, getText());
+    int res = txt.indexOfIgnoreCase(pos, textfield->getText());
     resultCurrent = 0;
     bool firstFound = false;
     while (res != -1 && count < 128)
@@ -288,7 +285,7 @@ void CodeEditorSearch::search()
         }
 
         pos = res + 1;
-        res = txt.indexOfIgnoreCase(pos, getText());
+        res = txt.indexOfIgnoreCase(pos, textfield->getText());
 
         count++;
     }
@@ -329,7 +326,12 @@ void SurgeCodeEditorComponent::handleEscapeKey()
     }
 }
 
-void SurgeCodeEditorComponent::caretPositionMoved() { search->saveCaretStartPosition(true); }
+void SurgeCodeEditorComponent::caretPositionMoved()
+{
+
+    if (search != nullptr)
+        search->saveCaretStartPosition(true);
+}
 
 // Handles auto indentation
 
@@ -441,6 +443,7 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
 
     search = std::make_unique<CodeEditorSearch>(*mainEditor, skin);
+
     mainEditor->setSearch(*search);
     if (addComponents)
     {
