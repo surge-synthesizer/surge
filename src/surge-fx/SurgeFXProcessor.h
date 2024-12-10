@@ -26,7 +26,7 @@
 #include "SurgeStorage.h"
 #include "Effect.h"
 #include "FXOpenSoundControl.h"
-
+#include <atomic>
 #include "sst/filters/HalfRateFilter.h"
 
 #include "juce_audio_processors/juce_audio_processors.h"
@@ -97,7 +97,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     bool initOSCIn(int port);
     bool changeOSCInPort(int newport);
     void initOSCError(int port, std::string outIP = "");
-    bool oscReceiving = false;
+    std::atomic<bool> oscReceiving{false};
 
     //==============================================================================
     const juce::String getName() const override;
