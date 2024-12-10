@@ -166,7 +166,7 @@ bool SurgefxAudioProcessor::initOSCIn(int port)
 
     auto state = oscHandler.initOSCIn(port);
 
-    oscReceiving = state;
+    oscReceiving.store(state);
     oscStartIn = true;
 
     return state;
@@ -174,7 +174,7 @@ bool SurgefxAudioProcessor::initOSCIn(int port)
 
 bool SurgefxAudioProcessor::changeOSCInPort(int new_port)
 {
-    oscReceiving = false;
+    oscReceiving.store(false);
     oscHandler.stopListening();
     return initOSCIn(new_port);
 }
@@ -470,7 +470,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         }
     }
 
-    if (oscReceiving)
+    if (oscReceiving.load())
         processBlockOSC();
 }
 

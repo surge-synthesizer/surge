@@ -589,7 +589,7 @@ juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
 {
     auto oscSubMenu = juce::PopupMenu();
 
-    if (processor.oscReceiving)
+    if (processor.oscReceiving.load())
     {
         oscSubMenu.addItem(Surge::GUI::toOSCase("Stop OSC Connections"),
                            [this]() { processor.oscHandler.stopListening(); });
