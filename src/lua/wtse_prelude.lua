@@ -197,7 +197,7 @@ end
 --- BUILT-IN MODULATORS ---
 
 
--- returns a table or multidimensional table with values from the input table,
+-- returns a table or two dimensional table with values from the input table,
 -- peak-normalized such that the maximum absolute value equals 1 (default) or the specified norm_factor
 function mod.normalize_peaks(t, norm_factor)
     norm_factor = norm_factor or 1
@@ -205,7 +205,7 @@ function mod.normalize_peaks(t, norm_factor)
     local o = {}
     if type(t[1]) == "table" then
         for _, frame in ipairs(t) do
-            max_val = math.max_abs(frame)
+            max_val = math.max(max_val, math.max_abs(frame))
         end
     else
         max_val = math.max_abs(t)
