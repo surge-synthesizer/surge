@@ -399,9 +399,11 @@ void CodeEditorSearch::setHighlightColors()
 {
     auto color = skin->getColor(Colors::FormulaEditor::Background);
 
-    ed->setColour(
-        juce::CodeEditorComponent::highlightColourId,
-        color.interpolatedWith(juce::Colour(COLOR_MATCH[0], COLOR_MATCH[1], COLOR_MATCH[3]), 0.6));
+    ed->setColour(juce::CodeEditorComponent::highlightColourId,
+                  color.interpolatedWith(juce::Colour(CodeEditorSearch::COLOR_MATCH[0],
+                                                      CodeEditorSearch::COLOR_MATCH[1],
+                                                      CodeEditorSearch::COLOR_MATCH[3]),
+                                         0.6));
 }
 
 void CodeEditorSearch::removeHighlightColors()
