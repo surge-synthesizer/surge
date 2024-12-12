@@ -42,47 +42,177 @@ namespace Overlays
 {
 
 /*
-    ---------------------------------------
-    Search box
-    ---------------------------------------
+    TextfieldPopup
+    Basic class that can be used for creating other textfield popups like the search
 */
+TextfieldButton::TextfieldButton(juce::String &svg) : juce::Component()
+{
 
-CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t skin)
+    xml = juce::XmlDocument::parse(svg);
+    // std::cout << "xml to string " << xml->toString() << "\n";
+
+    svgGraphics = juce::Drawable::createFromSVG(*xml);
+
+    // std::cout << "svg created : " << (svgGraphics == nullptr);
+    setBounds(juce::Rectangle(0, 0, TextfieldPopup::STYLE_BUTTON_SIZE,
+                              TextfieldPopup::STYLE_BUTTON_SIZE));
+
+    // svgGraphics->setBounds(juce::Rectangle(0, 0, 50, 50));
+
+    addAndMakeVisible(*svgGraphics);
+    const juce::Rectangle bounds =
+        juce::Rectangle(0.f, 0.f, (float)TextfieldPopup::STYLE_BUTTON_SIZE,
+                        (float)TextfieldPopup::STYLE_BUTTON_SIZE);
+
+    svgGraphics->setTransformToFit(bounds, juce::RectanglePlacement::yTop);
+    // setSelectable();
+}
+
+void TextfieldButton::paint(juce::Graphics &g)
+{
+
+    Component::paint(g);
+    auto bounds = getBounds();
+
+    float alpha = isMouseOver && enabled ? 0.2 : 0;
+
+    g.setFillType(juce::FillType(juce::Colour(255, 255, 255).withAlpha(alpha)));
+
+    g.fillRoundedRectangle(0, 0, TextfieldPopup::STYLE_BUTTON_SIZE,
+                           TextfieldPopup::STYLE_BUTTON_SIZE, 2);
+}
+
+void TextfieldButton::setEnabled(bool v)
+{
+    enabled = v;
+    updateGraphicState();
+    repaint();
+}
+
+void TextfieldButton::mouseEnter(const juce::MouseEvent &event)
+{
+    isMouseOver = true;
+    repaint();
+}
+
+void TextfieldButton::mouseExit(const juce::MouseEvent &event)
+{
+    isMouseOver = false;
+    repaint();
+}
+
+void TextfieldButton::mouseDown(const juce::MouseEvent &event) { isMouseDown = true; }
+
+void TextfieldButton::mouseUp(const juce::MouseEvent &event)
+{
+
+    if (isSelectable)
+    {
+        select(isSelected() == false ? true : false);
+    }
+
+    if (isMouseDown)
+    {
+        onClick();
+    }
+
+    isMouseDown = false;
+}
+
+void TextfieldButton::updateGraphicState()
+{
+    svgGraphics->setAlpha(enabled ? (isSelectable && selected) || (!isSelectable) ? 1 : 0.5 : 0.15);
+}
+
+void TextfieldButton::setSelectable()
+{
+    isSelectable = true;
+    updateGraphicState();
+    repaint();
+}
+
+void TextfieldButton::select(bool v)
+{
+    selected = v;
+    updateGraphicState();
+    repaint();
+}
+
+Textfield::Textfield() : juce::TextEditor() {}
+void Textfield::paint(juce::Graphics &g)
+{
+
+    juce::TextEditor::paint(g);
+
+    if (isEmpty())
+    {
+        // draw prefix text
+        g.setColour(colour.withAlpha(0.85f));
+
+        g.setFont(getFont());
+        auto bounds = getBounds();
+        int border = getBorder().getLeft();
+        auto textBounds =
+            juce::Rectangle(getLeftIndent() + border, 0, bounds.getWidth(), bounds.getHeight());
+
+        g.drawText(header, textBounds, juce::Justification::verticallyCentred, true);
+    }
+}
+
+void Textfield::setHeader(juce::String h) { header = h; }
+
+void Textfield::setColour(int colourID, juce::Colour newColour)
+{
+    Component::setColour(colourID, newColour);
+    colour = newColour;
+}
+
+TextfieldPopup::TextfieldPopup(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t skin)
     : juce::Component(), juce::TextEditor::Listener(), juce::KeyListener(),
       Surge::GUI::SkinConsumingComponent()
 {
+
     ed = &editor;
     currentSkin = skin;
 
     juce::Rectangle boundsLabel = juce::Rectangle(95, 2, 80, 20);
 
-    textfield = std::make_unique<juce::TextEditor>();
+    textfield = std::make_unique<Textfield>();
 
     labelResult = std::make_unique<juce::Label>();
 
     labelResult->setBounds(boundsLabel);
     labelResult->setFont(juce::FontOptions(10));
-    labelResult->setJustificationType(juce::Justification::right);
-    labelResult->setColour(juce::Label::textColourId, skin->getColor(Colors::Dialog::Button::Text));
+    labelResult->setJustificationType(juce::Justification::left);
+    // labelResult->setColour(juce::Label::textColourId,
+    // skin->getColor(Colors::Dialog::Button::Text));
+    labelResult->setColour(juce::Label::textColourId, juce::Colour(255, 255, 255));
 
     addAndMakeVisible(*labelResult);
 
-    textfield->setBorder(juce::BorderSize(2, 5, 2, 5));
+    textfield->setBorder(juce::BorderSize(0, 5, 0, 5));
     textfield->setFont(juce::FontOptions(12));
     textfield->setColour(juce::TextEditor::ColourIds::textColourId,
                          skin->getColor(Colors::Dialog::Button::Text));
     textfield->setColour(juce::TextEditor::backgroundColourId,
-                         skin->getColor(Colors::Dialog::Button::Background));
+                         skin->getColor(Colors::FormulaEditor::Background));
+
+    textfield->setColour(juce::TextEditor::focusedOutlineColourId,
+                         skin->getColor(Colors::FormulaEditor::Background).brighter(0.05));
+    textfield->setColour(juce::TextEditor::outlineColourId,
+                         skin->getColor(Colors::FormulaEditor::Background).brighter(0));
 
     addAndMakeVisible(*textfield);
 
-    textfield->setTitle("");
+    textfield->setHeader("Search...");
     textfield->setText("");
-
+    // textfield->setAlpha(0.5);
     textfield->setEscapeAndReturnKeysConsumed(true);
 
     textfield->addListener(this);
     textfield->addKeyListener(this);
+
+    setPaintingIsUnclipped(true);
 
     juce::Rectangle bounds = juce::Rectangle(0, 0, 150, 20);
     setBounds(bounds);
@@ -91,7 +221,135 @@ CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI
     resize();
 }
 
-void CodeEditorSearch::paint(juce::Graphics &g) {}
+void TextfieldPopup::paint(juce::Graphics &g)
+{
+
+    auto bounds = getBounds();
+    auto rect = juce::Rectangle(0, 0, bounds.getWidth(), bounds.getHeight());
+
+    auto c = skin->getColor(Colors::FormulaEditor::Background).darker(1.3);
+    auto col = juce::Colour(c.getRed(), c.getGreen(), c.getBlue());
+    g.setFillType(juce::FillType(col));
+    g.fillRect(rect);
+    juce::Component::paint(g);
+}
+void TextfieldPopup::onClick(std::unique_ptr<TextfieldButton> &btn)
+{
+    std::cout << "click button\n";
+}
+
+void TextfieldPopup::createButton(juce::String svg)
+{
+
+    button[buttonCount] = std::make_unique<TextfieldButton>(svg);
+    auto btn = &button[buttonCount];
+
+    auto callback = [this, btn]() { onClick(*btn); };
+    button[buttonCount]->onClick = callback;
+    addAndMakeVisible(*button[buttonCount]);
+
+    buttonCount++;
+}
+
+void TextfieldPopup::setTextWidth(int w) { textWidth = w; }
+
+void TextfieldPopup::setHeader(juce::String t) { textfield->setHeader(t); }
+
+void TextfieldPopup::resize()
+{
+
+    int totalWidth = STYLE_MARGIN + textWidth + STYLE_MARGIN +
+                     STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS + STYLE_MARGIN +
+                     (STYLE_BUTTON_SIZE + STYLE_BUTTON_MARGIN) * buttonCount + STYLE_MARGIN;
+    int totalHeight = STYLE_TEXT_HEIGHT + STYLE_MARGIN * 2;
+
+    juce::Rectangle bounds =
+        juce::Rectangle(ed->getWidth() - totalWidth + 2, 2, totalWidth, totalHeight);
+
+    setBounds(bounds);
+
+    auto boundsLabel = labelResult->getBounds();
+    labelResult->setBounds(STYLE_MARGIN + textWidth + STYLE_MARGIN,
+                           totalHeight * 0.5 - boundsLabel.getHeight() * 0.5,
+                           boundsLabel.getWidth(), boundsLabel.getHeight());
+
+    textfield->setBounds(STYLE_MARGIN,
+                         (STYLE_TEXT_HEIGHT + STYLE_MARGIN * 2) / 2 - STYLE_TEXT_HEIGHT * 0.5,
+                         textWidth, STYLE_TEXT_HEIGHT);
+
+    int buttonY = totalHeight / 2 - STYLE_BUTTON_SIZE * 0.5;
+
+    for (int i = 0; i < buttonCount; i++)
+    {
+        auto bounds = juce::Rectangle(STYLE_MARGIN + textWidth + STYLE_MARGIN +
+                                          STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS + STYLE_MARGIN +
+                                          (STYLE_BUTTON_SIZE + STYLE_BUTTON_MARGIN) * i,
+                                      buttonY, STYLE_BUTTON_SIZE, STYLE_BUTTON_SIZE);
+        button[i]->setBounds(bounds);
+    }
+}
+
+/*
+---------------------------------------
+Search box
+---------------------------------------
+*/
+
+CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t skin)
+    : TextfieldPopup(editor, skin)
+{
+
+    // Case sensitivity
+    createButton(
+        {R"(<svg width="24" height="24"><path fill="none" d="m 0.07087901,-959.94314 23.93899499,-0.002 v 23.939 l -23.85812279,-0.0801 z"/><path d="m 1.8073136,-940.43955 4.8158546,-12.84227 h 2.3057731 l 4.8158557,12.84227 h -2.218212 l -1.138293,-3.26893 H 5.1930054 l -1.1674799,3.26893 z m 4.0569928,-5.13691 h 3.8234969 l -1.8679682,-5.31203 H 7.7030875 Z m 11.5288646,5.42879 q -1.488537,0 -2.364147,-0.80264 -0.875609,-0.80265 -0.875609,-2.11606 0,-1.28424 1.006952,-2.11606 1.00695,-0.83183 2.583048,-0.83183 0.671301,0 1.313415,0.11675 0.642114,0.11675 1.109107,0.32105 v -0.35024 q 0,-0.84642 -0.598334,-1.37178 -0.598334,-0.52538 -1.590692,-0.52538 -0.671301,0 -1.225854,0.27729 -0.554552,0.27727 -0.963171,0.80264 l -1.371788,-1.02155 q 0.700487,-0.84643 1.590691,-1.25504 0.890203,-0.40862 1.999309,-0.40862 2.013903,0 3.006261,0.94858 0.992358,0.94858 0.992358,2.84573 v 5.19528 h -1.83878 v -1.07991 h -0.116749 q -0.408618,0.6713 -1.109106,1.02155 -0.700488,0.35024 -1.546911,0.35024 z m 0.350244,-1.5761 q 1.021546,0 1.736627,-0.70048 0.715081,-0.70049 0.715081,-1.63448 -0.408618,-0.2335 -0.977764,-0.36483 -0.569147,-0.13135 -1.123699,-0.13135 -0.933985,0 -1.45935,0.40862 -0.525367,0.40861 -0.525367,1.07992 0,0.58374 0.466992,0.96317 0.466993,0.37943 1.16748,0.37943 z" fill="#ffffff"/></svg>)"});
+    button[0]->setSelectable();
+
+    // whole word match
+    createButton(
+        {R"(<svg width="24" height="24" fill="#ffffff"><path fill="none" d="m 0.07087901,-959.94314 23.93899499,-0.002 v 23.939 l -23.85812279,-0.0801 z"/><path fill-rule="evenodd" clip-rule="evenodd" d="M 2.8719134,-956.14323 H 21.300668 v 1.31634 H 2.8719134 Z m 17.1124196,2.63268 h -1.316344 v 10.53071 h 1.316344 z m -3.590975,5.77477 a 3.0973468,3.0973468 0 0 0 -0.473887,-1.03464 2.2983286,2.2983286 0 0 0 -0.801647,-0.69765 2.411534,2.411534 0 0 0 -1.13995,-0.25406 c -0.260634,0 -0.500212,0.0316 -0.720037,0.096 a 2.3167574,2.3167574 0 0 0 -0.596307,0.26985 2.2693691,2.2693691 0 0 0 -0.480458,0.41859 l -0.23563,0.33962 v -4.15173 h -1.17549 v 9.76987 h 1.17549 v -0.7569 l 0.165858,0.23036 c 0.114521,0.13427 0.248787,0.2501 0.400168,0.3541 0.154011,0.10265 0.327767,0.18428 0.523907,0.24483 0.19613,0.0605 0.413325,0.0895 0.655533,0.0895 0.464671,0 0.876686,-0.0934 1.233415,-0.27906 0.358039,-0.18824 0.656852,-0.44493 0.897742,-0.77139 0.240888,-0.32908 0.422541,-0.71477 0.544961,-1.15706 0.122419,-0.44492 0.184293,-0.92538 0.184293,-1.44401 a 4.9441711,4.9441711 0 0 0 -0.157961,-1.26633 z m -1.946873,-0.79902 c 0.198769,0.0934 0.371215,0.23168 0.513379,0.41334 0.143475,0.18429 0.255366,0.41201 0.335664,0.68054 0.06714,0.22905 0.107943,0.48837 0.117151,0.7727 l -0.0092,0.16454 c 0,0.43044 -0.04344,0.81613 -0.131636,1.14389 a 2.4826162,2.4826162 0 0 1 -0.365945,0.80823 c -0.154011,0.21326 -0.342245,0.37517 -0.55418,0.48179 -0.423862,0.21325 -1.000415,0.21851 -1.407162,0.0198 a 1.6638531,1.6638531 0 0 1 -0.517327,-0.38963 1.6757001,1.6757001 0 0 1 -0.286958,-0.4831 c 0,0 -0.235621,-0.58841 -0.235621,-1.24658 0,-0.65816 0.235621,-1.31896 0.235621,-1.31896 0.08161,-0.233 0.179024,-0.41859 0.294864,-0.56603 0.150062,-0.18824 0.336976,-0.34094 0.558128,-0.45414 0.221144,-0.1132 0.480459,-0.16981 0.772685,-0.16981 0.250105,0 0.479147,0.0487 0.680546,0.14348 z m 6.854183,6.8713 H 2.8719134 v 1.31634 H 21.300668 Z M 5.2584357,-945.61252 4.30014,-942.93903 H 2.8719134 l 0.032911,-0.0948 3.2131816,-9.32758 h 1.238675 l 3.271106,9.42236 H 9.2035093 l -1.0241095,-2.67349 z m 1.4756227,-4.70986 h -0.028962 l -1.1912865,3.62387 h 2.4233823 z"/></svg>)"});
+    button[1]->setSelectable();
+
+    // arrow up
+    createButton(
+        {R"(<svg height="24" width="24" fill="#ffffff"><path fill="none" d="m 0.07087901,-959.94314 23.93899499,-0.002 v 23.939 l -23.85812279,-0.0801 z"/><path d="m 11.068654,-940.68461 v -12.05133 l -5.5431153,5.54312 -1.3857783,-1.41053 7.9187346,-7.91873 7.918733,7.91873 -1.385777,1.41053 -5.543114,-5.54312 v 12.05133 z"/></svg>)"});
+
+    // arrow down
+    createButton({R"(
+<svg height="24" width="24" fill="#FFFFFF"><path fill="none" d="m 0.07087901,-959.94314 23.93899499,-0.002 v 23.939 l -23.85812279,-0.0801 z"/><path d="m 11.120883,-955.82203 v 12.05132 l -5.5431141,-5.54311 -1.3857786,1.41052 7.9187347,7.91874 7.918734,-7.91874 -1.385778,-1.41052 -5.543114,5.54311 v -12.05132 z"/></svg>)"});
+
+    button[1]->setEnabled(false);
+    setHeader("Search..");
+    repaint();
+}
+
+void CodeEditorSearch::onClick(std::unique_ptr<TextfieldButton> &btn)
+{
+    // case sensitive
+    if (btn == button[0])
+    {
+        search();
+    }
+    // whole word
+    if (btn == button[1])
+    {
+        search();
+    }
+
+    if (btn == button[2])
+    {
+        showResult(1, true);
+    }
+
+    if (btn == button[3])
+    {
+        showResult(-1, true);
+    }
+}
+
+int *CodeEditorSearch::getResult() { return result; }
+int CodeEditorSearch::getResultTotal() { return resultTotal; }
+
+// void CodeEditorSearch::paint(juce::Graphics &g) {}
 
 bool CodeEditorSearch::isActive() { return active; }
 
@@ -141,8 +399,9 @@ void CodeEditorSearch::setHighlightColors()
 {
     auto color = skin->getColor(Colors::FormulaEditor::Background);
 
-    ed->setColour(juce::CodeEditorComponent::highlightColourId,
-                  color.interpolatedWith(juce::Colour(108, 147, 25), 0.5));
+    ed->setColour(
+        juce::CodeEditorComponent::highlightColourId,
+        color.interpolatedWith(juce::Colour(COLOR_MATCH[0], COLOR_MATCH[1], COLOR_MATCH[3]), 0.6));
 }
 
 void CodeEditorSearch::removeHighlightColors()
@@ -171,6 +430,13 @@ void CodeEditorSearch::show()
     search();
     textfield->grabKeyboardFocus();
     ed->repaint(); // force update selection color
+}
+
+void CodeEditorSearch::hide()
+{
+    removeHighlightColors();
+    setVisible(false);
+    ed->repaint();
 }
 
 void CodeEditorSearch::textEditorEscapeKeyPressed(juce::TextEditor &) { hide(); }
@@ -206,39 +472,30 @@ bool CodeEditorSearch::keyPressed(const juce::KeyPress &key, juce::Component *or
     return true;
 }
 
-void CodeEditorSearch::hide()
-{
-    removeHighlightColors();
-    setVisible(false);
-}
-
 void CodeEditorSearch::textEditorTextChanged(juce::TextEditor &textEditor) { search(); }
 
 void CodeEditorSearch::showResult(int increment, bool moveCaret)
 {
     int id = resultCurrent + 1;
+
+    button[2]->setEnabled(resultTotal < 2 ? false : true);
+    button[3]->setEnabled(resultTotal < 2 ? false : true);
+
     if (resultTotal == 0)
     {
         removeHighlightColors();
         id = 0;
-        textfield->setColour(juce::TextEditor::focusedOutlineColourId, juce::Colour(204, 70, 70));
-        textfield->setColour(juce::TextEditor::outlineColourId,
-                             skin->getColor(Colors::FormulaEditor::Debugger::Text));
     }
     else
     {
         setHighlightColors();
-        textfield->setColour(juce::TextEditor::focusedOutlineColourId,
-                             skin->getColor(Colors::FormulaEditor::Debugger::Text));
-        textfield->setColour(juce::TextEditor::outlineColourId,
-                             skin->getColor(Colors::FormulaEditor::Debugger::Text));
     }
 
     labelResult->setText(juce::String(std::to_string(id) + '/' + std::to_string(resultTotal)),
                          juce::NotificationType::dontSendNotification);
 
     repaint();
-
+    ed->repaint();
     if (resultTotal == 0)
         return;
 
@@ -248,14 +505,17 @@ void CodeEditorSearch::showResult(int increment, bool moveCaret)
     ed->setHighlightedRegion(
         juce::Range(result[resultCurrent], result[resultCurrent] + textfield->getTotalNumChars()));
     saveCaretStartPositionLock = false;
+
+    // std::cout << "show result " << resultTotal << "\n";
 }
 
+/*
 void CodeEditorSearch::resize()
 {
     juce::Rectangle bounds = juce::Rectangle(ed->getBounds().getWidth() - 150 - 10, 6, 150, 24);
     setBounds(bounds);
     textfield->setBounds(0, 0, 150, 24);
-}
+}*/
 
 void CodeEditorSearch::search()
 {
@@ -271,12 +531,16 @@ void CodeEditorSearch::search()
     juce::String txt = ed->getDocument().getAllContent();
     int pos = 0;
     int count = 0;
-    int res = txt.indexOfIgnoreCase(pos, textfield->getText());
+    int res = !button[0]->isSelected() ? txt.indexOfIgnoreCase(pos, textfield->getText())
+                                       : txt.indexOf(pos, textfield->getText());
     resultCurrent = 0;
     bool firstFound = false;
-    while (res != -1 && count < 128)
+    while (res != -1 && count < 512)
     {
-
+        // whole word
+        if (button[1]->isSelected())
+        {
+        }
         result[count] = res;
         if (caretPos <= res && !firstFound)
         {
@@ -285,7 +549,8 @@ void CodeEditorSearch::search()
         }
 
         pos = res + 1;
-        res = txt.indexOfIgnoreCase(pos, textfield->getText());
+        res = !button[0]->isSelected() ? txt.indexOfIgnoreCase(pos, textfield->getText())
+                                       : txt.indexOf(pos, textfield->getText());
 
         count++;
     }
@@ -293,6 +558,8 @@ void CodeEditorSearch::search()
     resultTotal = count;
     showResult(0, true);
 }
+
+juce::String CodeEditorSearch::getSearchQuery() { return textfield->getText(); }
 
 /*
     ---------------------------------------
@@ -306,6 +573,59 @@ SurgeCodeEditorComponent::SurgeCodeEditorComponent(juce::CodeDocument &d, juce::
 }
 
 void SurgeCodeEditorComponent::setSearch(CodeEditorSearch &s) { search = &s; }
+
+void SurgeCodeEditorComponent::paint(juce::Graphics &g)
+{
+    // draw background
+
+    juce::Colour bgColor = findColour(juce::CodeEditorComponent::backgroundColourId).withAlpha(1.f);
+
+    auto bounds = getBounds();
+    bounds.translate(0, -2);
+
+    g.setFillType(juce::FillType(bgColor));
+    g.fillRect(bounds);
+    // Draw search matches
+
+    if (search != nullptr && search->isVisible() && search->getResultTotal() > 0)
+    {
+        auto result = search->getResult();
+        int resultTotal = search->getResultTotal();
+
+        int firstLine = getFirstLineOnScreen();
+        int lastLine = firstLine + getNumLinesOnScreen();
+
+        auto highlightColor = bgColor.interpolatedWith(
+            juce::Colour(CodeEditorSearch::COLOR_MATCH[0], CodeEditorSearch::COLOR_MATCH[1],
+                         CodeEditorSearch::COLOR_MATCH[2]),
+            0.4);
+
+        for (int i = 0; i < resultTotal; i++)
+        {
+
+            auto pos = juce::CodeDocument::Position(getDocument(), result[i]);
+            auto line = pos.getLineNumber();
+
+            if (line >= firstLine && line <= lastLine)
+            {
+
+                auto posEnd = juce::CodeDocument::Position(
+                    getDocument(), result[i] + search->getSearchQuery().length());
+
+                auto bounds = getCharacterBounds(pos);
+                auto boundsEnd = getCharacterBounds(posEnd);
+
+                g.setFillType(juce::FillType(highlightColor));
+                int width = boundsEnd.getX() - bounds.getX();
+                int height = bounds.getHeight();
+
+                g.fillRect(bounds.getX(), bounds.getY(), width, height);
+            }
+        }
+    }
+
+    juce::CodeEditorComponent::paint(g);
+}
 
 void SurgeCodeEditorComponent::handleEscapeKey()
 {
@@ -408,7 +728,7 @@ struct EditorColors
         comp->setColourScheme(cs);
 
         comp->setColour(juce::CodeEditorComponent::backgroundColourId,
-                        skin->getColor(Colors::FormulaEditor::Background));
+                        skin->getColor(Colors::FormulaEditor::Background).withMultipliedAlpha(0));
         comp->setColour(juce::CodeEditorComponent::highlightColourId,
                         skin->getColor(Colors::FormulaEditor::Highlight));
         comp->setColour(juce::CodeEditorComponent::defaultTextColourId,

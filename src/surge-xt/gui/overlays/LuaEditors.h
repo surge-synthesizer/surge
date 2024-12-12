@@ -44,46 +44,141 @@ namespace Surge
 namespace Overlays
 {
 
-class CodeEditorSearch : public juce::Component,
-                         public juce::TextEditor::Listener,
-                         public juce::KeyListener,
-                         public Surge::GUI::SkinConsumingComponent
+class TextfieldButton : public juce::Component
+{
+
+  protected:
+    std::unique_ptr<juce::XmlElement> xml;
+    bool isSelectable = false;
+    bool selected = false;
+    bool isMouseDown = false;
+    bool isMouseOver = false;
+    bool enabled = true;
+    void (*callback)(TextfieldButton &f);
+
+  public:
+    // void setCallback(std::function<void(TextfieldButton &btn)> btn){callback = btn};
+    bool isSelected() { return selected; };
+    TextfieldButton(juce::String &svg);
+    void loadSVG(juce::String &svg);
+    void setSelectable();
+    void select(bool v);
+    void setEnabled(bool v);
+
+    void updateGraphicState();
+    void paint(juce::Graphics &g) override;
+    void mouseDown(const juce::MouseEvent &event) override;
+    void mouseUp(const juce::MouseEvent &event) override;
+    void mouseEnter(const juce::MouseEvent &event) override;
+    void mouseExit(const juce::MouseEvent &event) override;
+    // void onClick(TextfieldButton &btn);
+    std::function<void()> onClick;
+
+  private:
+    std::unique_ptr<juce::Drawable> svgGraphics;
+};
+
+class Textfield : public juce::TextEditor
+{
+
+  private:
+    juce::Colour colour;
+    juce::String header;
+
+  protected:
+    juce::String title;
+
+  public:
+    Textfield();
+    void paint(juce::Graphics &g) override;
+    void setColour(int colourID, juce::Colour newColour);
+    void setHeader(juce::String h);
+};
+
+class TextfieldPopup : public juce::Component,
+                       public juce::TextEditor::Listener,
+                       public juce::KeyListener,
+                       public Surge::GUI::SkinConsumingComponent
+{
+  public:
+    static inline int STYLE_MARGIN = 5;
+    static inline int STYLE_TEXT_HEIGHT = 20;
+    static inline int STYLE_BUTTON_MARGIN = 5;
+    static inline int STYLE_BUTTON_SIZE = 14;
+    static inline int STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 40;
+
+  protected:
+    juce::CodeEditorComponent *ed;
+    Surge::GUI::Skin::ptr_t currentSkin;
+    std::unique_ptr<Textfield> textfield;
+    std::unique_ptr<juce::Label> labelResult;
+    std::unique_ptr<TextfieldButton> button[8];
+    // TextfieldButton button[8];
+    juce::String header;
+    int buttonCount = 0;
+
+  private:
+    int textWidth = 120;
+
+  public:
+    void paint(juce::Graphics &g) override;
+    virtual void onClick(std::unique_ptr<TextfieldButton> &btn);
+    TextfieldPopup(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
+    void resize();
+    void setHeader(juce::String);
+    void createButton(juce::String svg);
+    void setTextWidth(int w);
+};
+
+class CodeEditorSearch : public TextfieldPopup
 {
   private:
     virtual void setHighlightColors();
     virtual void removeHighlightColors();
-    juce::CodeEditorComponent *ed;
+    // juce::CodeEditorComponent *ed;
     bool active = false;
-    int result[128];
-    int resultCurrent;
-    int resultTotal;
-    bool saveCaretStartPositionLock;
-    Surge::GUI::Skin::ptr_t currentSkin;
 
-    std::unique_ptr<juce::TextEditor> textfield;
-    std::unique_ptr<juce::Label> labelResult;
+    int result[512];
+    int resultCurrent = 0;
+    int resultTotal = 0;
+    bool saveCaretStartPositionLock;
+
+    // Surge::GUI::Skin::ptr_t currentSkin;
+
+    // std::unique_ptr<juce::TextEditor> textfield;
+    // std::unique_ptr<juce::Label> labelResult;
 
     juce::CodeDocument::Position startCaretPosition;
 
     virtual void search();
 
   public:
+    static constexpr int COLOR_MATCH[3] = {255, 98, 165};
+    static constexpr int COLOR_HIGHLIGHT[3] = {25, 187, 105};
+    static constexpr int COLOR_ALERT[3] = {255, 0, 1};
+
+    virtual juce::String getSearchQuery();
     virtual bool isActive();
     virtual void show();
     virtual void hide();
-    virtual void resize();
+    // virtual void resize();
+
+    virtual void onClick(std::unique_ptr<TextfieldButton> &btn) override;
     virtual void textEditorTextChanged(juce::TextEditor &textEditor) override;
     virtual void mouseDown(const juce::MouseEvent &event) override;
     virtual void focusLost(FocusChangeType) override;
-
-    CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
-    virtual void textEditorEscapeKeyPressed(juce::TextEditor &) override;
-    virtual void textEditorReturnKeyPressed(juce::TextEditor &) override;
     virtual bool keyPressed(const juce::KeyPress &key,
                             juce::Component *originatingComponent) override;
+    virtual void textEditorEscapeKeyPressed(juce::TextEditor &) override;
+    virtual void textEditorReturnKeyPressed(juce::TextEditor &) override;
+
+    CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
+
     virtual void saveCaretStartPosition(bool onlyReadCaretPosition);
     virtual void showResult(int increase, bool moveCaret);
-    virtual void paint(juce::Graphics &g) override;
+    // virtual void paint(juce::Graphics &g) override;
+    virtual int *getResult();
+    virtual int getResultTotal();
 };
 
 class SurgeCodeEditorComponent : public juce::CodeEditorComponent
@@ -93,6 +188,7 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
     virtual void handleReturnKey() override;
     virtual void caretPositionMoved() override;
 
+    virtual void paint(juce::Graphics &) override;
     virtual void setSearch(CodeEditorSearch &s);
     SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t);
 
