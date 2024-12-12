@@ -55,15 +55,15 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         switch (lerr)
         {
         case LUA_ERRSYNTAX:
-            oss << "Lua Syntax Error: ";
+            oss << "Lua syntax error: ";
             break;
         case LUA_ERRMEM:
-            oss << "Lua Memory Allocation Error: ";
+            oss << "Lua memory allocation error: ";
             break;
         default:
             // The default case should never get called unless the underlying Lua library source
             // gets modified, but we can handle it anyway
-            oss << "Lua Unknown Error: ";
+            oss << "Lua unknown error: ";
             break;
         }
         oss << lua_tostring(L, -1);
@@ -81,17 +81,17 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         switch (lerr)
         {
         case LUA_ERRRUN:
-            oss << "Lua Evaluation Error: ";
+            oss << "Lua evaluation error: ";
             break;
         case LUA_ERRMEM:
-            oss << "Lua Memory Allocation Error: ";
+            oss << "Lua memory allocation error: ";
             break;
         case LUA_ERRERR:
             // We're running pcall without an error function now but we might in the future
-            oss << "Lua Error Handler Function Error: ";
+            oss << "Lua error handler function error: ";
             break;
         default:
-            oss << "Lua Unknown Error: ";
+            oss << "Lua unknown error: ";
             break;
         }
         oss << lua_tostring(L, -1);
@@ -146,7 +146,7 @@ static int lua_sandboxPrint(lua_State *L)
     for (int i = 1; i <= n; i++)
     {
         if (!lua_isstring(L, i))
-            return luaL_error(L, "Error: 'print' only accepts strings or numbers");
+            return luaL_error(L, "Error: print() only accepts strings or numbers!");
         const char *s = lua_tostring(L, i); // get the string
         fputs(s, stdout);                   // print the string
     }
@@ -196,7 +196,7 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
         if (lua_isnil(L, -1)) // check if the global exists
         {
             lua_pop(L, 1);
-            std::cout << "Error: global not found [ " << f << " ]" << std::endl;
+            std::cout << "Error: Global not found! [ " << f << " ]" << std::endl;
             continue;
         }
         lua_setfield(L, -2, f); // stack: f>t
@@ -213,7 +213,7 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
         if (!lua_istable(L, gidx))
         {
             lua_pop(L, 1);
-            std::cout << "Error: not a table [ " << t << " ]" << std::endl;
+            std::cout << "Error: Not a table! [ " << t << " ]" << std::endl;
             continue;
         }
 
@@ -288,13 +288,14 @@ bool Surge::LuaSupport::loadSurgePrelude(lua_State *L, const std::string &lua_sc
     auto status = luaL_loadbuffer(L, lua_script.c_str(), lua_size, lua_script.c_str());
     if (status != 0)
     {
-        std::cout << "Error: Failed to load Lua file [ " << lua_script.c_str() << " ]" << std::endl;
+        std::cout << "Error: Failed to load Lua file! [ " << lua_script.c_str() << " ]"
+                  << std::endl;
         return false;
     }
     auto pcall = lua_pcall(L, 0, 1, 0);
     if (pcall != 0)
     {
-        std::cout << "Error: Failed to run Lua file [ " << lua_script.c_str() << " ]" << std::endl;
+        std::cout << "Error: Failed to run Lua file! [ " << lua_script.c_str() << " ]" << std::endl;
         return false;
     }
     lua_setglobal(L, surgeTableName);
