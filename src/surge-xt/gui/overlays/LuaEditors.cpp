@@ -319,6 +319,9 @@ CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI
 
     button[1]->setEnabled(false);
     setHeader("Search..");
+
+    COLOR_MATCH = skin->getColor(Colors::FormulaEditor::Lua::Keyword);
+
     repaint();
 }
 
@@ -400,10 +403,7 @@ void CodeEditorSearch::setHighlightColors()
     auto color = skin->getColor(Colors::FormulaEditor::Background);
 
     ed->setColour(juce::CodeEditorComponent::highlightColourId,
-                  color.interpolatedWith(juce::Colour(CodeEditorSearch::COLOR_MATCH[0],
-                                                      CodeEditorSearch::COLOR_MATCH[1],
-                                                      CodeEditorSearch::COLOR_MATCH[2]),
-                                         0.6));
+                  color.interpolatedWith(COLOR_MATCH, 0.6));
 }
 
 void CodeEditorSearch::removeHighlightColors()
@@ -511,14 +511,6 @@ void CodeEditorSearch::showResult(int increment, bool moveCaret)
     // std::cout << "show result " << resultTotal << "\n";
 }
 
-/*
-void CodeEditorSearch::resize()
-{
-    juce::Rectangle bounds = juce::Rectangle(ed->getBounds().getWidth() - 150 - 10, 6, 150, 24);
-    setBounds(bounds);
-    textfield->setBounds(0, 0, 150, 24);
-}*/
-
 void CodeEditorSearch::search()
 {
     // move to start pos
@@ -569,9 +561,11 @@ juce::String CodeEditorSearch::getSearchQuery() { return textfield->getText(); }
     ---------------------------------------
 */
 
-SurgeCodeEditorComponent::SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t)
+SurgeCodeEditorComponent::SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t,
+                                                   Surge::GUI::Skin::ptr_t &skin)
     : juce::CodeEditorComponent(d, t)
 {
+    currentSkin = &skin;
 }
 
 void SurgeCodeEditorComponent::setSearch(CodeEditorSearch &s) { search = &s; }
@@ -597,10 +591,7 @@ void SurgeCodeEditorComponent::paint(juce::Graphics &g)
         int firstLine = getFirstLineOnScreen();
         int lastLine = firstLine + getNumLinesOnScreen();
 
-        auto highlightColor = bgColor.interpolatedWith(
-            juce::Colour(CodeEditorSearch::COLOR_MATCH[0], CodeEditorSearch::COLOR_MATCH[1],
-                         CodeEditorSearch::COLOR_MATCH[2]),
-            0.4);
+        auto highlightColor = bgColor.interpolatedWith(search->COLOR_MATCH, 0.5);
 
         for (int i = 0; i < resultTotal; i++)
         {
@@ -618,10 +609,18 @@ void SurgeCodeEditorComponent::paint(juce::Graphics &g)
                 auto boundsEnd = getCharacterBounds(posEnd);
 
                 g.setFillType(juce::FillType(highlightColor));
+                // g.setFillType(juce::FillType())
+
                 int width = boundsEnd.getX() - bounds.getX();
                 int height = bounds.getHeight();
 
-                g.fillRect(bounds.getX(), bounds.getY(), width, height);
+                juce::Path path;
+                auto rect = juce::Rectangle(bounds.getX(), bounds.getY(), width, height);
+                path.addRectangle(rect);
+                juce::PathStrokeType strokeType(1.2f);
+                g.setColour(highlightColor);
+                g.strokePath(path, strokeType);
+                // g.drawRect(bounds.getX(), bounds.getY(), width, height);
             }
         }
     }
@@ -758,7 +757,7 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
     mainDocument->setNewLineCharacters("\n");
     tokenizer = std::make_unique<juce::LuaTokeniser>();
 
-    mainEditor = std::make_unique<SurgeCodeEditorComponent>(*mainDocument, tokenizer.get());
+    mainEditor = std::make_unique<SurgeCodeEditorComponent>(*mainDocument, tokenizer.get(), skin);
     mainEditor->setTabSize(4, true);
     mainEditor->addKeyListener(this);
 
@@ -1502,7 +1501,8 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     preludeDocument = std::make_unique<juce::CodeDocument>();
     preludeDocument->insertText(0, Surge::LuaSupport::getFormulaPrelude());
 
-    preludeDisplay = std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get());
+    preludeDisplay =
+        std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get(), skin);
     preludeDisplay->setTabSize(4, true);
     preludeDisplay->setReadOnly(true);
     preludeDisplay->setScrollbarThickness(8);
@@ -2598,7 +2598,8 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
     preludeDocument = std::make_unique<juce::CodeDocument>();
     preludeDocument->insertText(0, Surge::LuaSupport::getWTSEPrelude());
 
-    preludeDisplay = std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get());
+    preludeDisplay =
+        std::make_unique<SurgeCodeEditorComponent>(*preludeDocument, tokenizer.get(), skin);
     preludeDisplay->setTabSize(4, true);
     preludeDisplay->setReadOnly(true);
     preludeDisplay->setScrollbarThickness(8);

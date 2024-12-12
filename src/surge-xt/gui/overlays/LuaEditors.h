@@ -153,9 +153,7 @@ class CodeEditorSearch : public TextfieldPopup
     virtual void search();
 
   public:
-    static constexpr int COLOR_MATCH[3] = {255, 98, 165};
-    static constexpr int COLOR_HIGHLIGHT[3] = {25, 187, 105};
-    static constexpr int COLOR_ALERT[3] = {255, 0, 1};
+    juce::Colour COLOR_MATCH;
 
     virtual juce::String getSearchQuery();
     virtual bool isActive();
@@ -190,9 +188,11 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
 
     virtual void paint(juce::Graphics &) override;
     virtual void setSearch(CodeEditorSearch &s);
-    SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t);
+    SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t,
+                             Surge::GUI::Skin::ptr_t &skin);
 
   private:
+    Surge::GUI::Skin::ptr_t *currentSkin;
     CodeEditorSearch *search = nullptr;
 };
 
