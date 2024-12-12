@@ -402,7 +402,7 @@ void CodeEditorSearch::setHighlightColors()
     ed->setColour(juce::CodeEditorComponent::highlightColourId,
                   color.interpolatedWith(juce::Colour(CodeEditorSearch::COLOR_MATCH[0],
                                                       CodeEditorSearch::COLOR_MATCH[1],
-                                                      CodeEditorSearch::COLOR_MATCH[3]),
+                                                      CodeEditorSearch::COLOR_MATCH[2]),
                                          0.6));
 }
 
