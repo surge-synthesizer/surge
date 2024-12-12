@@ -8,6 +8,7 @@
 
 
 local surge = {}
+local mod = {}
 
 
 --- MATH FUNCTIONS ---
@@ -43,6 +44,34 @@ function math.range(a, b)
     return math.abs(a - b)
 end
 
+-- returns greatest common denominator between a and b
+-- use with integers only!
+function math.gcd(a, b)
+    local x = a
+    local y = b
+    local t
+
+    while y ~= 0 do
+        t = y
+        y = x % y
+        x = t
+    end
+
+    return x
+end
+
+-- returns least common multiple between a and b
+-- use with integers only!
+function math.lcm(a, b)
+    local t = a
+
+    while t % b ~= 0 do
+        t = t + a
+    end
+
+    return t
+end
+
 
 --- WTSE SPECIFIC MATH FUNCTIONS ---
 
@@ -69,6 +98,9 @@ end
 
 -- returns a table containing num_points linearly spaced numbers from start_point to end_point
 function math.linspace(start_point, end_point, num_points)
+    if num_points < 2 then
+        return {start_point}
+    end
     local t = {}
     local step = (end_point - start_point) / (num_points - 1)
     for i = 1, num_points do
@@ -79,6 +111,9 @@ end
 
 -- returns a table containing num_points logarithmically spaced numbers from 10^start_point to 10^end_point
 function math.logspace(start_point, end_point, num_points)
+    if num_points < 2 then
+        return {start_point}
+    end
     local t = {}
     local step = (end_point - start_point) / (num_points - 1)
     for i = 1, num_points do
@@ -86,6 +121,43 @@ function math.logspace(start_point, end_point, num_points)
         t[i] = 10 ^ exponent
     end
     return t
+end
+
+-- returns a table of length n, or a multidimensional table with {n, n, ..} dimensions all initialized with zeros
+function math.zeros(dimensions)
+    if type(dimensions) == "number" then
+        dimensions = {dimensions}
+    elseif type(dimensions) ~= "table" or #dimensions == 0 then
+        return {0}
+    end
+    local function create_array(dimensions, depth)
+        local size = dimensions[depth]
+        local t = {}
+        for i = 1, size do
+            if depth < #dimensions then
+                t[i] = create_array(dimensions, depth + 1)
+            else
+                t[i] = 0
+            end
+        end
+        return t
+    end
+    return create_array(dimensions, 1)
+end
+
+-- returns a table or multidimensional table with every numerical value in the input table offset by x
+function math.offset(t, x)
+    local o = {}
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            o[k] = math.offset(v, x)
+        elseif type(v) == "number" then
+            o[k] = v + x
+        else
+            o[k] = v
+        end
+    end
+    return o
 end
 
 -- returns the maximum absolute value found in the input table
@@ -122,7 +194,50 @@ function math.sinc(t)
 end
 
 
+--- BUILT-IN MODULATORS ---
+
+
+-- returns a table or two dimensional table with values from the input table,
+-- peak-normalized such that the maximum absolute value equals 1 (default) or the specified norm_factor
+function mod.normalize_peaks(t, norm_factor)
+    norm_factor = norm_factor or 1
+    local max_val = 0
+    local o = {}
+    if type(t[1]) == "table" then
+        for _, frame in ipairs(t) do
+            max_val = math.max(max_val, math.max_abs(frame))
+        end
+    else
+        max_val = math.max_abs(t)
+    end
+    if max_val > 0 then
+        local scale_factor = norm_factor / max_val
+        if type(t[1]) == "table" then
+            for i, frame in ipairs(t) do
+                o[i] = {}
+                for j, value in ipairs(frame) do
+                    o[i][j] = value * scale_factor
+                end
+            end
+        else
+            for i, value in ipairs(t) do
+                o[i] = value * scale_factor
+            end
+        end
+    else
+        if type(t[1]) == "table" then
+            o = math.zeros({#t, #t[1]})
+        else
+            o = math.zeros(#t)
+        end
+    end
+    return o
+end
+
+
 --- END ---
 
+
+surge.mod = mod
 
 return surge

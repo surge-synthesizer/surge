@@ -717,9 +717,9 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
                 });
         };
         if (isWav)
-            xportMenu.addItem(Surge::GUI::toOSCase("To RIFF/WAV Wavetable..."), exportAction);
+            xportMenu.addItem("To .WAV...", exportAction);
         else
-            xportMenu.addItem(Surge::GUI::toOSCase("To WT Format Wavetable..."), exportAction);
+            xportMenu.addItem("To .WT...", exportAction);
     }
     contextMenu.addSubMenu("Export Wavetable", xportMenu);
 

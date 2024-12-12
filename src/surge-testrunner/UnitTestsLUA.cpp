@@ -169,8 +169,8 @@ TEST_CASE("Surge Prelude", "[lua]")
         auto pcall = lua_pcall(L, 0, 1, 0);
         if (pcall != 0)
         {
-            std::cout << "Lua Error[" << pcall << "] " << lua_tostring(L, -1) << std::endl;
-            INFO("Lua Error " << pcall << " " << lua_tostring(L, -1));
+            std::cout << "Lua error [" << pcall << "] " << lua_tostring(L, -1) << std::endl;
+            INFO("Lua error " << pcall << " " << lua_tostring(L, -1));
         }
 
         REQUIRE(lua_isnumber(L, -1));
@@ -318,7 +318,7 @@ end
         REQUIRE(!res);
         REQUIRE(lua_gettop(L) == 1);
         REQUIRE(lua_isnil(L, -1));
-        REQUIRE(err == "Lua Syntax Error: [string \"lua-script\"]:7: 'end' expected (to close "
+        REQUIRE(err == "Lua syntax error: [string \"lua-script\"]:7: 'end' expected (to close "
                        "'function' at line 2) near '<eof>'");
         lua_pop(L, 1);
         lua_close(L);
@@ -341,7 +341,7 @@ error("I will parse but will not run")
         REQUIRE(lua_gettop(L) == 1);
         REQUIRE(lua_isnil(L, -1));
         REQUIRE(err ==
-                "Lua Evaluation Error: [string \"lua-script\"]:3: I will parse but will not run");
+                "Lua evaluation error: [string \"lua-script\"]:3: I will parse but will not run");
         lua_pop(L, 1);
         lua_close(L);
     }
