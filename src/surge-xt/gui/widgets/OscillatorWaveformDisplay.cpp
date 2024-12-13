@@ -36,9 +36,6 @@
 #include "UserDefaults.h"
 #include "fmt/core.h"
 
-// Change this to 0 to disable WTSE component, to disable for release: change value, test, and push
-#define INCLUDE_WT_SCRIPTING_EDITOR 1
-
 namespace Surge
 {
 namespace Widgets
@@ -605,10 +602,10 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 #if INCLUDE_WT_SCRIPTING_EDITOR
     auto owts = [this]() {
         if (sge)
-            sge->showOverlay(SurgeGUIEditor::WTSCRIPT_EDITOR);
+            sge->showOverlay(SurgeGUIEditor::WT_EDITOR);
     };
 
-    contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
+    contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Editor..."), owts);
     contextMenu.addSeparator();
 #endif
 
@@ -785,10 +782,10 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
 
             auto owts = [this]() {
                 if (sge)
-                    sge->showOverlay(SurgeGUIEditor::WTSCRIPT_EDITOR);
+                    sge->showOverlay(SurgeGUIEditor::WT_EDITOR);
             };
 
-            contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
+            contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Editor..."), owts);
             contextMenu.addSeparator();
 #endif
 
