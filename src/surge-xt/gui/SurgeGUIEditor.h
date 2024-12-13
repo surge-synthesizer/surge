@@ -54,6 +54,9 @@
 #include <bitset>
 #include "UndoManager.h"
 
+// Change this to 0 to disable WTSE component, to disable for release: change value, test, and push
+#define INCLUDE_WT_SCRIPTING_EDITOR 1
+
 class SurgeSynthEditor;
 
 #if SURGE_INCLUDE_MELATONIN_INSPECTOR
@@ -403,7 +406,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         PATCH_BROWSER,
         MODULATION_EDITOR,
         FORMULA_EDITOR,
-        WTSCRIPT_EDITOR, // This code is here but incomplete, and off in XT 1.0
+        WT_EDITOR,
         TUNING_EDITOR,
         WAVESHAPER_ANALYZER,
         FILTER_ANALYZER,

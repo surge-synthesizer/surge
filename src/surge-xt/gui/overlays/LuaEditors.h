@@ -57,7 +57,6 @@ class TextfieldButton : public juce::Component
     void (*callback)(TextfieldButton &f);
 
   public:
-    // void setCallback(std::function<void(TextfieldButton &btn)> btn){callback = btn};
     bool isSelected() { return selected; };
     TextfieldButton(juce::String &svg);
     void loadSVG(juce::String &svg);
@@ -71,7 +70,6 @@ class TextfieldButton : public juce::Component
     void mouseUp(const juce::MouseEvent &event) override;
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
-    // void onClick(TextfieldButton &btn);
     std::function<void()> onClick;
 
   private:
@@ -89,7 +87,6 @@ class Textfield : public juce::TextEditor
     juce::String title;
 
   public:
-    Textfield();
     void paint(juce::Graphics &g) override;
     void setColour(int colourID, juce::Colour newColour);
     void setHeader(juce::String h);
@@ -102,14 +99,13 @@ class TextfieldPopup : public juce::Component,
                        public Surge::GUI::SkinConsumingComponent
 {
   public:
-    static inline int STYLE_MARGIN = 5;
-    static inline int STYLE_TEXT_HEIGHT = 20;
-    static inline int STYLE_BUTTON_MARGIN = 5;
-    static inline int STYLE_BUTTON_SIZE = 14;
-    static inline int STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 40;
+    static constexpr int STYLE_MARGIN = 4;
+    static constexpr int STYLE_TEXT_HEIGHT = 20;
+    static constexpr int STYLE_BUTTON_MARGIN = 2;
+    static constexpr int STYLE_BUTTON_SIZE = 14;
+    static constexpr int STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 40;
 
   protected:
-    static TextfieldPopup *lastPopup;
     juce::CodeEditorComponent *ed;
     Surge::GUI::Skin::ptr_t currentSkin;
     std::unique_ptr<Textfield> textfield;
@@ -142,29 +138,21 @@ class CodeEditorSearch : public TextfieldPopup
   private:
     virtual void setHighlightColors();
     virtual void removeHighlightColors();
-    // juce::CodeEditorComponent *ed;
-    bool active = false;
 
+    bool active = false;
     int result[512];
     int resultCurrent = 0;
     int resultTotal = 0;
     bool saveCaretStartPositionLock;
 
-    // Surge::GUI::Skin::ptr_t currentSkin;
-
-    // std::unique_ptr<juce::TextEditor> textfield;
-    // std::unique_ptr<juce::Label> labelResult;
-
     juce::CodeDocument::Position startCaretPosition;
 
   public:
-    juce::Colour COLOR_MATCH;
     virtual void search(bool moveCaret);
     virtual juce::String getSearchQuery();
     virtual bool isActive();
     virtual void show() override;
     virtual void hide() override;
-    // virtual void resize();
 
     virtual void onClick(std::unique_ptr<TextfieldButton> &btn) override;
     virtual void textEditorTextChanged(juce::TextEditor &textEditor) override;
@@ -179,7 +167,6 @@ class CodeEditorSearch : public TextfieldPopup
 
     virtual void saveCaretStartPosition(bool onlyReadCaretPosition);
     virtual void showResult(int increase, bool moveCaret);
-    // virtual void paint(juce::Graphics &g) override;
     virtual int *getResult();
     virtual int getResultTotal();
 };
@@ -216,7 +203,7 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
                              Surge::GUI::Skin::ptr_t &skin);
 
   private:
-    Surge::GUI::Skin::ptr_t *currentSkin;
+    Surge::GUI::Skin::ptr_t currentSkin;
     CodeEditorSearch *search = nullptr;
     GotoLine *gotoLine = nullptr;
 };
