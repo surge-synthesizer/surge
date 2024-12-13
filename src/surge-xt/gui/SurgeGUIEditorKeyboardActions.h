@@ -60,6 +60,9 @@ enum KeyboardActions
 #endif
     SHOW_KEYBINDINGS_EDITOR,
     SHOW_LFO_EDITOR,
+#if INCLUDE_WT_SCRIPTING_EDITOR
+    SHOW_WT_EDITOR,
+#endif
     SHOW_MODLIST,
     SHOW_TUNING_EDITOR,
     TOGGLE_OSCILLOSCOPE,
@@ -142,6 +145,8 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "SHOW_KEYBINDINGS_EDITOR";
     case SHOW_LFO_EDITOR:
         return "SHOW_LFO_EDITOR";
+    case SHOW_WT_EDITOR:
+        return "SHOW_WT_EDITOR";
     case SHOW_MODLIST:
         return "SHOW_MODLIST";
     case SHOW_TUNING_EDITOR:
@@ -274,6 +279,11 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     case SHOW_LFO_EDITOR:
         desc = "LFO Editor (MSEG or Formula)";
         break;
+#if INCLUDE_WT_SCRIPTING_EDITOR
+    case SHOW_WT_EDITOR:
+        desc = "Wavetable Editor";
+        break;
+#endif
     case SHOW_MODLIST:
         desc = "Modulation List";
         break;

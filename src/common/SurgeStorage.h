@@ -136,7 +136,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                               added deform option for Release parameter of Filter/Amp EG, which only produces an open gate for the release stage
 // 23 -> 24 (XT 1.3.3 nightlies) added actually functioning extend mode to FM2 oscillator's M1/2 Offset parameter
 //                                     (old patches load with extend disabled even if they had it enabled)
-// 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Script Editor window state
+// 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Editor window state
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
 // clang-format on
 
