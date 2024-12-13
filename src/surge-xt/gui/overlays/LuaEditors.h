@@ -93,7 +93,7 @@ class Textfield : public juce::TextEditor
     void paint(juce::Graphics &g) override;
     void setColour(int colourID, juce::Colour newColour);
     void setHeader(juce::String h);
-    void setHeaderColor(juce::Colour &c);
+    void setHeaderColor(juce::Colour c);
 };
 
 class TextfieldPopup : public juce::Component,

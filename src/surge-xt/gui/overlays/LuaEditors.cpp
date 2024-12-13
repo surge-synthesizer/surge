@@ -162,7 +162,7 @@ void Textfield::paint(juce::Graphics &g)
 
 void Textfield::setHeader(juce::String h) { header = h; }
 
-void Textfield::setHeaderColor(juce::Colour &c) { colour = c; }
+void Textfield::setHeaderColor(juce::Colour c) { colour = c; }
 
 void Textfield::setColour(int colourID, juce::Colour newColour)
 {
