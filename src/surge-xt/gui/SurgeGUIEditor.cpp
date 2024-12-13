@@ -895,7 +895,7 @@ void SurgeGUIEditor::idle()
         {
             refreshOverlayWithOpenClose(MSEG_EDITOR);
             refreshOverlayWithOpenClose(FORMULA_EDITOR);
-            refreshOverlayWithOpenClose(WTSCRIPT_EDITOR);
+            refreshOverlayWithOpenClose(WT_EDITOR);
             refreshOverlayWithOpenClose(TUNING_EDITOR);
             refreshOverlayWithOpenClose(MODULATION_EDITOR);
         }
@@ -2040,7 +2040,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH_DIALOG:
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FORMULA_EDITOR_WINDOW:
-        case Surge::Skin::Connector::NonParameterConnection::WTSCRIPT_EDITOR_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::WT_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW:
@@ -5495,6 +5495,9 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(Surge::GUI::SHOW_KEYBINDINGS_EDITOR,
                               {keymap_t::Modifiers::ALT, (int)'B'});
     keyMapManager->addBinding(Surge::GUI::SHOW_LFO_EDITOR, {keymap_t::Modifiers::ALT, (int)'E'});
+#if INCLUDE_WT_SCRIPTING_EDITOR
+    keyMapManager->addBinding(Surge::GUI::SHOW_WT_EDITOR, {keymap_t::Modifiers::ALT, (int)'W'});
+#endif
     keyMapManager->addBinding(Surge::GUI::SHOW_MODLIST, {keymap_t::Modifiers::ALT, (int)'M'});
     keyMapManager->addBinding(Surge::GUI::SHOW_TUNING_EDITOR, {keymap_t::Modifiers::ALT, (int)'T'});
     keyMapManager->addBinding(Surge::GUI::TOGGLE_OSCILLOSCOPE,
@@ -5601,12 +5604,41 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             switch (action)
             {
             case Surge::GUI::UNDO:
-                undoManager()->undo();
-                return true;
-            case Surge::GUI::REDO:
-                undoManager()->redo();
-                return true;
+            {
+#if INCLUDE_WT_SCRIPTING_EDITOR
+                auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR);
 
+                if (ol)
+                {
+                    ol->mainDocument->undo();
+                }
+                else
+                {
+                    undoManager()->undo();
+                }
+#else
+                undoManager()->undo();
+#endif
+                return true;
+            }
+            case Surge::GUI::REDO:
+            {
+#if INCLUDE_WT_SCRIPTING_EDITOR
+                auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR);
+
+                if (ol)
+                {
+                    ol->mainDocument->redo();
+                }
+                else
+                {
+                    undoManager()->redo();
+                }
+#else
+                undoManager()->redo();
+#endif
+                return true;
+            }
             case Surge::GUI::SAVE_PATCH:
                 showOverlay(SurgeGUIEditor::SAVE_PATCH);
                 return true;
@@ -5712,6 +5744,12 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 }
 
                 return true;
+#if INCLUDE_WT_SCRIPTING_EDITOR
+            case Surge::GUI::SHOW_WT_EDITOR:
+                toggleOverlay(SurgeGUIEditor::WT_EDITOR);
+                frame->repaint();
+                return true;
+#endif
             case Surge::GUI::SHOW_MODLIST:
                 toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);
                 frame->repaint();
