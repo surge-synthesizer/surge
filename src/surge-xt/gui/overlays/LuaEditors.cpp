@@ -2794,6 +2794,7 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
     addAndMakeVisible(*controlArea);
     addAndMakeVisible(*mainEditor);
     addChildComponent(*search);
+    addChildComponent(*gotoLine);
 
     addChildComponent(*preludeDisplay);
 
@@ -2897,6 +2898,7 @@ void WavetableScriptEditor::resized()
                                  rendererHeight);
 
     search->resize();
+    gotoLine->resize();
     rerenderFromUIState();
 }
 
