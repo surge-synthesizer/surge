@@ -84,6 +84,7 @@ struct LuaWTEvaluator::Details
             if (storage)
                 storage->reportError("Unable to locate generate function",
                                      "Wavetable Script Evaluator");
+            lua_pop(L, 1); // pop the generate non-function
             return std::nullopt;
         }
         Surge::LuaSupport::setSurgeFunctionEnvironment(L);
