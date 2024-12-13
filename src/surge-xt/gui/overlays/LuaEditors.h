@@ -93,6 +93,7 @@ class Textfield : public juce::TextEditor
     void paint(juce::Graphics &g) override;
     void setColour(int colourID, juce::Colour newColour);
     void setHeader(juce::String h);
+    void setHeaderColor(juce::Colour &c);
 };
 
 class TextfieldPopup : public juce::Component,
@@ -108,12 +109,13 @@ class TextfieldPopup : public juce::Component,
     static inline int STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 40;
 
   protected:
+    static TextfieldPopup *lastPopup;
     juce::CodeEditorComponent *ed;
     Surge::GUI::Skin::ptr_t currentSkin;
     std::unique_ptr<Textfield> textfield;
     std::unique_ptr<juce::Label> labelResult;
     std::unique_ptr<TextfieldButton> button[8];
-    // TextfieldButton button[8];
+
     juce::String header;
     int buttonCount = 0;
 
@@ -121,13 +123,18 @@ class TextfieldPopup : public juce::Component,
     int textWidth = 120;
 
   public:
-    void paint(juce::Graphics &g) override;
+    virtual bool keyPressed(const juce::KeyPress &key,
+                            juce::Component *originatingComponent) override;
+    virtual void paint(juce::Graphics &g) override;
     virtual void onClick(std::unique_ptr<TextfieldButton> &btn);
     TextfieldPopup(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
+    virtual void textEditorEscapeKeyPressed(juce::TextEditor &) override;
     void resize();
     void setHeader(juce::String);
     void createButton(juce::String svg);
     void setTextWidth(int w);
+    virtual void show();
+    virtual void hide();
 };
 
 class CodeEditorSearch : public TextfieldPopup
@@ -150,15 +157,13 @@ class CodeEditorSearch : public TextfieldPopup
 
     juce::CodeDocument::Position startCaretPosition;
 
-    virtual void search();
-
   public:
     juce::Colour COLOR_MATCH;
-
+    virtual void search(bool moveCaret);
     virtual juce::String getSearchQuery();
     virtual bool isActive();
-    virtual void show();
-    virtual void hide();
+    virtual void show() override;
+    virtual void hide() override;
     // virtual void resize();
 
     virtual void onClick(std::unique_ptr<TextfieldButton> &btn) override;
@@ -179,21 +184,41 @@ class CodeEditorSearch : public TextfieldPopup
     virtual int getResultTotal();
 };
 
+class GotoLine : public TextfieldPopup
+{
+  public:
+    virtual bool keyPressed(const juce::KeyPress &key,
+                            juce::Component *originatingComponent) override;
+    GotoLine(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
+    virtual void show() override;
+    virtual void hide() override;
+    void focusLost(FocusChangeType) override;
+    int currentLine;
+    int getCurrentLine();
+
+  private:
+    int startScroll;
+    juce::CodeDocument::Position startCaretPosition;
+};
+
 class SurgeCodeEditorComponent : public juce::CodeEditorComponent
 {
   public:
+    bool keyPressed(const juce::KeyPress &key) override;
     virtual void handleEscapeKey() override;
     virtual void handleReturnKey() override;
     virtual void caretPositionMoved() override;
 
     virtual void paint(juce::Graphics &) override;
     virtual void setSearch(CodeEditorSearch &s);
+    virtual void setGotoLine(GotoLine &s);
     SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t,
                              Surge::GUI::Skin::ptr_t &skin);
 
   private:
     Surge::GUI::Skin::ptr_t *currentSkin;
     CodeEditorSearch *search = nullptr;
+    GotoLine *gotoLine = nullptr;
 };
 
 /*
@@ -216,6 +241,7 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     std::unique_ptr<juce::Button> applyButton;
     std::unique_ptr<juce::LuaTokeniser> tokenizer;
     std::unique_ptr<CodeEditorSearch> search;
+    std::unique_ptr<GotoLine> gotoLine;
 
     void buttonClicked(juce::Button *button) override;
     void codeDocumentTextDeleted(int startIndex, int endIndex) override;

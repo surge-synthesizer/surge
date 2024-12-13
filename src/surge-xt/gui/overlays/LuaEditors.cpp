@@ -85,6 +85,7 @@ void TextfieldButton::paint(juce::Graphics &g)
 void TextfieldButton::setEnabled(bool v)
 {
     enabled = v;
+
     updateGraphicState();
     repaint();
 }
@@ -147,7 +148,7 @@ void Textfield::paint(juce::Graphics &g)
     if (isEmpty())
     {
         // draw prefix text
-        g.setColour(colour.withAlpha(0.85f));
+        g.setColour(colour.withAlpha(0.5f));
 
         g.setFont(getFont());
         auto bounds = getBounds();
@@ -160,6 +161,8 @@ void Textfield::paint(juce::Graphics &g)
 }
 
 void Textfield::setHeader(juce::String h) { header = h; }
+
+void Textfield::setHeaderColor(juce::Colour &c) { colour = c; }
 
 void Textfield::setColour(int colourID, juce::Colour newColour)
 {
@@ -202,9 +205,11 @@ TextfieldPopup::TextfieldPopup(juce::CodeEditorComponent &editor, Surge::GUI::Sk
     textfield->setColour(juce::TextEditor::outlineColourId,
                          skin->getColor(Colors::FormulaEditor::Background).brighter(0));
 
+    textfield->setHeaderColor(skin->getColor(Colors::Dialog::Button::Text));
+
     addAndMakeVisible(*textfield);
 
-    textfield->setHeader("Search...");
+    // textfield->setHeader("Search...");
     textfield->setText("");
     // textfield->setAlpha(0.5);
     textfield->setEscapeAndReturnKeysConsumed(true);
@@ -227,12 +232,25 @@ void TextfieldPopup::paint(juce::Graphics &g)
     auto bounds = getBounds();
     auto rect = juce::Rectangle(0, 0, bounds.getWidth(), bounds.getHeight());
 
-    auto c = skin->getColor(Colors::FormulaEditor::Background).darker(1.3);
+    auto c = currentSkin->getColor(Colors::FormulaEditor::Background).darker(1.3);
     auto col = juce::Colour(c.getRed(), c.getGreen(), c.getBlue());
     g.setFillType(juce::FillType(col));
     g.fillRect(rect);
+
     juce::Component::paint(g);
 }
+
+void TextfieldPopup::show()
+{
+
+    setVisible(true);
+    textfield->grabKeyboardFocus();
+}
+
+void TextfieldPopup::hide() { setVisible(false); }
+
+void TextfieldPopup::textEditorEscapeKeyPressed(juce::TextEditor &) { hide(); }
+
 void TextfieldPopup::onClick(std::unique_ptr<TextfieldButton> &btn)
 {
     std::cout << "click button\n";
@@ -255,16 +273,26 @@ void TextfieldPopup::setTextWidth(int w) { textWidth = w; }
 
 void TextfieldPopup::setHeader(juce::String t) { textfield->setHeader(t); }
 
+bool TextfieldPopup::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
+{
+    return originatingComponent->keyPressed(key);
+    // return juce::KeyListener::keyPressed(key, originatingComponent);
+}
+
 void TextfieldPopup::resize()
 {
 
-    int totalWidth = STYLE_MARGIN + textWidth + STYLE_MARGIN +
-                     STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS + STYLE_MARGIN +
-                     (STYLE_BUTTON_SIZE + STYLE_BUTTON_MARGIN) * buttonCount + STYLE_MARGIN;
+    int marginBetweenTextAndButtons = buttonCount > 0 ? STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS : 0;
+
+    int totalWidth = STYLE_MARGIN + textWidth + marginBetweenTextAndButtons + STYLE_MARGIN +
+                     (STYLE_BUTTON_SIZE + STYLE_BUTTON_MARGIN) * buttonCount;
+
+    totalWidth += buttonCount > 0 ? STYLE_MARGIN * 2 : 0;
+
     int totalHeight = STYLE_TEXT_HEIGHT + STYLE_MARGIN * 2;
 
-    juce::Rectangle bounds =
-        juce::Rectangle(ed->getWidth() - totalWidth + 2, 2, totalWidth, totalHeight);
+    juce::Rectangle bounds = juce::Rectangle(
+        ed->getWidth() - totalWidth - ed->getScrollbarThickness() + 2, 2, totalWidth, totalHeight);
 
     setBounds(bounds);
 
@@ -281,13 +309,81 @@ void TextfieldPopup::resize()
 
     for (int i = 0; i < buttonCount; i++)
     {
-        auto bounds = juce::Rectangle(STYLE_MARGIN + textWidth + STYLE_MARGIN +
-                                          STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS + STYLE_MARGIN +
-                                          (STYLE_BUTTON_SIZE + STYLE_BUTTON_MARGIN) * i,
-                                      buttonY, STYLE_BUTTON_SIZE, STYLE_BUTTON_SIZE);
+        auto bounds =
+            juce::Rectangle(STYLE_MARGIN + textWidth + STYLE_MARGIN + marginBetweenTextAndButtons +
+                                STYLE_MARGIN + (STYLE_BUTTON_SIZE + STYLE_BUTTON_MARGIN) * i,
+                            buttonY, STYLE_BUTTON_SIZE, STYLE_BUTTON_SIZE);
         button[i]->setBounds(bounds);
     }
 }
+
+/*
+---------------------------------------
+Goto line
+---------------------------------------
+*/
+
+GotoLine::GotoLine(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t skin)
+    : TextfieldPopup(editor, skin)
+{
+    setHeader("Goto line");
+    setTextWidth(80);
+}
+
+bool GotoLine::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
+{
+    originatingComponent->keyPressed(key);
+    if (key.getKeyCode() == key.returnKey)
+    {
+        hide();
+        ed->grabKeyboardFocus();
+    }
+    else if (key.getKeyCode() == key.escapeKey)
+    {
+        hide();
+        ed->moveCaretTo(startCaretPosition, false);
+        ed->scrollToLine(startScroll);
+        ed->grabKeyboardFocus();
+    }
+
+    else
+    {
+
+        int line = std::max(0, textfield->getText().getIntValue() - 1);
+        line = std::min(ed->getDocument().getNumLines(), line);
+
+        int numLines = ed->getNumLinesOnScreen();
+        currentLine = line;
+
+        ed->scrollToLine(std::max(0, line - int(numLines * 0.5)));
+
+        auto textLineLength = ed->getDocument().getLine(line).length();
+        auto pos = juce::CodeDocument::Position(ed->getDocument(), line, textLineLength);
+        ed->moveCaretTo(pos, false);
+    }
+
+    ed->repaint();
+
+    return true;
+}
+
+void GotoLine::show()
+{
+    currentLine = ed->getCaretPos().getLineNumber();
+    textfield->setText("");
+    TextfieldPopup::show();
+    startCaretPosition = ed->getCaretPos();
+    startScroll = ed->getFirstLineOnScreen();
+}
+
+void GotoLine::hide()
+{
+    TextfieldPopup::hide();
+    ed->repaint();
+}
+
+void GotoLine::focusLost(FocusChangeType) { hide(); }
+int GotoLine::getCurrentLine() { return currentLine; }
 
 /*
 ---------------------------------------
@@ -317,7 +413,7 @@ CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI
     createButton({R"(
 <svg height="24" width="24" fill="#FFFFFF"><path fill="none" d="m 0.07087901,-959.94314 23.93899499,-0.002 v 23.939 l -23.85812279,-0.0801 z"/><path d="m 11.120883,-955.82203 v 12.05132 l -5.5431141,-5.54311 -1.3857786,1.41052 7.9187347,7.91874 7.918734,-7.91874 -1.385778,-1.41052 -5.543114,5.54311 v -12.05132 z"/></svg>)"});
 
-    button[1]->setEnabled(false);
+    // button[1]->setEnabled(false);
     setHeader("Search..");
 
     COLOR_MATCH = skin->getColor(Colors::FormulaEditor::Lua::Keyword);
@@ -330,22 +426,22 @@ void CodeEditorSearch::onClick(std::unique_ptr<TextfieldButton> &btn)
     // case sensitive
     if (btn == button[0])
     {
-        search();
+        search(true);
     }
     // whole word
     if (btn == button[1])
     {
-        search();
+        search(true);
     }
 
     if (btn == button[2])
     {
-        showResult(1, true);
+        showResult(-1, true);
     }
 
     if (btn == button[3])
     {
-        showResult(-1, true);
+        showResult(1, true);
     }
 }
 
@@ -414,6 +510,7 @@ void CodeEditorSearch::removeHighlightColors()
 
 void CodeEditorSearch::show()
 {
+    TextfieldPopup::show();
     // set selected text as search query unless it includes a newline character
     auto sel = ed->getHighlightedRegion();
     juce::String txt = ed->getTextInRange(sel);
@@ -428,16 +525,17 @@ void CodeEditorSearch::show()
     textfield->moveCaretToStartOfLine(false);
     textfield->moveCaretToEndOfLine(true);
 
-    setVisible(true);
-    search();
+    // setVisible(true);
+    search(true);
     textfield->grabKeyboardFocus();
     ed->repaint(); // force update selection color
 }
 
 void CodeEditorSearch::hide()
 {
+    TextfieldPopup::hide();
     removeHighlightColors();
-    setVisible(false);
+    // setVisible(false);
     ed->repaint();
 }
 
@@ -474,7 +572,7 @@ bool CodeEditorSearch::keyPressed(const juce::KeyPress &key, juce::Component *or
     return true;
 }
 
-void CodeEditorSearch::textEditorTextChanged(juce::TextEditor &textEditor) { search(); }
+void CodeEditorSearch::textEditorTextChanged(juce::TextEditor &textEditor) { search(true); }
 
 void CodeEditorSearch::showResult(int increment, bool moveCaret)
 {
@@ -504,18 +602,23 @@ void CodeEditorSearch::showResult(int increment, bool moveCaret)
     resultCurrent = (resultCurrent + increment + resultTotal) % resultTotal;
 
     saveCaretStartPositionLock = true;
-    ed->setHighlightedRegion(
-        juce::Range(result[resultCurrent], result[resultCurrent] + textfield->getTotalNumChars()));
+    if (moveCaret)
+    {
+        ed->setHighlightedRegion(juce::Range(
+            result[resultCurrent], result[resultCurrent] + textfield->getTotalNumChars()));
+    }
+
     saveCaretStartPositionLock = false;
 
     // std::cout << "show result " << resultTotal << "\n";
 }
 
-void CodeEditorSearch::search()
+void CodeEditorSearch::search(bool moveCaret)
 {
     // move to start pos
     saveCaretStartPositionLock = true;
-    ed->moveCaretTo(startCaretPosition, false);
+    if (moveCaret)
+        ed->moveCaretTo(startCaretPosition, false);
     saveCaretStartPositionLock = false;
 
     auto caret = ed->getCaretPos();
@@ -525,32 +628,54 @@ void CodeEditorSearch::search()
     juce::String txt = ed->getDocument().getAllContent();
     int pos = 0;
     int count = 0;
+
+    // case sensitivity
     int res = !button[0]->isSelected() ? txt.indexOfIgnoreCase(pos, textfield->getText())
                                        : txt.indexOf(pos, textfield->getText());
     resultCurrent = 0;
     bool firstFound = false;
+    bool skip = false;
     while (res != -1 && count < 512)
     {
-        // whole word
+        // whole word search
         if (button[1]->isSelected())
         {
+            auto posBefore = (std::max(0, res - 1));
+            auto posAfter = std::min(ed->getDocument().getNumCharacters() - 1,
+                                     res + textfield->getTotalNumChars());
+
+            auto strBefore = posBefore == 0 ? 0 : txt[posBefore];
+            auto strAfter = txt[posAfter];
+
+            if (!((strBefore >= 65 && strBefore <= 90) || !(strBefore >= 97 && strBefore <= 122)) ||
+                !((strAfter >= 65 && strAfter <= 90) || !(strAfter >= 97 && strAfter <= 122)))
+                skip = true;
+
+            // std::cout << "before: " << txt[posBefore] << " after: " << txt[posAfter]
+            //<< " skip:" << skip << "\n";
         }
-        result[count] = res;
-        if (caretPos <= res && !firstFound)
+
+        if (caretPos <= res && !firstFound && !skip)
         {
             resultCurrent = count;
             firstFound = true;
+        }
+
+        if (!skip)
+        {
+            result[count] = res;
+            count++;
         }
 
         pos = res + 1;
         res = !button[0]->isSelected() ? txt.indexOfIgnoreCase(pos, textfield->getText())
                                        : txt.indexOf(pos, textfield->getText());
 
-        count++;
+        skip = false;
     }
 
     resultTotal = count;
-    showResult(0, true);
+    showResult(0, moveCaret);
 }
 
 juce::String CodeEditorSearch::getSearchQuery() { return textfield->getText(); }
@@ -568,8 +693,23 @@ SurgeCodeEditorComponent::SurgeCodeEditorComponent(juce::CodeDocument &d, juce::
     currentSkin = &skin;
 }
 
-void SurgeCodeEditorComponent::setSearch(CodeEditorSearch &s) { search = &s; }
+bool SurgeCodeEditorComponent::keyPressed(const juce::KeyPress &key)
+{
 
+    bool code = CodeEditorComponent::keyPressed(key);
+
+    // update search results
+    if (search != nullptr)
+    {
+        if (search->isVisible())
+            search->search(false);
+    }
+
+    return code;
+}
+
+void SurgeCodeEditorComponent::setSearch(CodeEditorSearch &s) { search = &s; }
+void SurgeCodeEditorComponent::setGotoLine(GotoLine &s) { gotoLine = &s; }
 void SurgeCodeEditorComponent::paint(juce::Graphics &g)
 {
     // draw background
@@ -581,8 +721,25 @@ void SurgeCodeEditorComponent::paint(juce::Graphics &g)
 
     g.setFillType(juce::FillType(bgColor));
     g.fillRect(bounds);
-    // Draw search matches
 
+    // draw the current line for gotoLine module
+    if (gotoLine != nullptr && gotoLine->isVisible())
+    {
+        auto currentLine = gotoLine->getCurrentLine();
+        auto topLine = getFirstLineOnScreen();
+        auto numLines = getNumLinesOnScreen();
+        auto lineHeight = getLineHeight();
+
+        if (currentLine >= topLine && currentLine < topLine + numLines)
+        {
+            auto highlightColor = bgColor.interpolatedWith(search->COLOR_MATCH, 0.3);
+            auto y = (currentLine - topLine) * lineHeight;
+            g.setFillType(juce::FillType(highlightColor));
+            g.fillRect(0, y, getWidth() - getScrollbarThickness(), lineHeight);
+        }
+    }
+
+    // Draw search matches
     if (search != nullptr && search->isVisible() && search->getResultTotal() > 0)
     {
         auto result = search->getResult();
@@ -633,6 +790,12 @@ void SurgeCodeEditorComponent::handleEscapeKey()
     if (search->isVisible())
     {
         search->hide();
+        return;
+    }
+
+    if (gotoLine->isVisible())
+    {
+        gotoLine->hide();
         return;
     }
     juce::Component *c = this;
@@ -763,14 +926,19 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
 
     EditorColors::setColorsFromSkin(mainEditor.get(), skin);
 
+    // modules
+    gotoLine = std::make_unique<GotoLine>(*mainEditor, skin);
     search = std::make_unique<CodeEditorSearch>(*mainEditor, skin);
 
     mainEditor->setSearch(*search);
+    mainEditor->setGotoLine(*gotoLine);
+
     if (addComponents)
     {
         addAndMakeVisible(applyButton.get());
         addAndMakeVisible(mainEditor.get());
         addChildComponent(search.get());
+        addChildComponent(gotoLine.get());
     }
 
     applyButton->setEnabled(false);
@@ -889,8 +1057,21 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
     // search
     else if (key.getModifiers().isCommandDown() && keyCode == 70)
     {
+        gotoLine->hide();
         search->show();
 
+        return true;
+    }
+
+    // search
+    else if (key.getModifiers().isCommandDown() && keyCode == 71)
+    {
+
+        bool isgoto = (gotoLine == nullptr);
+
+        std::cout << "gotoLine " << isgoto << "\n";
+        search->hide();
+        gotoLine->show();
         return true;
     }
 
@@ -1514,6 +1695,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
     addAndMakeVisible(*controlArea);
     addAndMakeVisible(*mainEditor);
     addChildComponent(*search);
+    addChildComponent(*gotoLine);
     addChildComponent(*preludeDisplay);
 
     debugPanel = std::make_unique<ExpandingFormulaDebugger>(this);
@@ -1612,6 +1794,7 @@ void FormulaModulatorEditor::resized()
     controlArea->setBounds(0, height - controlHeight, width, controlHeight);
 
     search->resize();
+    gotoLine->resize();
 }
 
 void FormulaModulatorEditor::showModulatorCode()
