@@ -794,11 +794,8 @@ void SurgeCodeEditorComponent::caretPositionMoved()
 void SurgeCodeEditorComponent::mouseWheelMove(const juce::MouseEvent &e,
                                               const juce::MouseWheelDetails &wheel)
 {
-    auto modifiedMouseWheel = juce::MouseWheelDetails();
     juce::MouseWheelDetails w(wheel);
-    if (e.mods.isAltDown())
-        w.deltaY *= 4;
-
+    w.deltaY *= 4;
     CodeEditorComponent::mouseWheelMove(e, w);
 }
 
