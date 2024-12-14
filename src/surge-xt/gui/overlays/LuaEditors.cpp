@@ -791,15 +791,24 @@ void SurgeCodeEditorComponent::caretPositionMoved()
     }
 }
 
+void SurgeCodeEditorComponent::mouseWheelMove(const juce::MouseEvent &e,
+                                              const juce::MouseWheelDetails &wheel)
+{
+    juce::MouseWheelDetails w(wheel);
+    w.deltaY *= 4;
+    CodeEditorComponent::mouseWheelMove(e, w);
+}
+
 // Handles auto indentation
 
 void SurgeCodeEditorComponent::handleReturnKey()
 {
-
     auto pos = this->getCaretPos();
     auto txt = pos.getLineText();
     int tabs = 0;
-
+    int indexInLine = pos.getIndexInLine();
+    int actualCharactersBeforeCaret = 0;
+    bool indent = false;
     for (int i = 0; i < txt.length(); i++)
     {
         if (txt.substring(i, i + 1) == " ")
@@ -812,7 +821,7 @@ void SurgeCodeEditorComponent::handleReturnKey()
         }
         else
         {
-            bool indent = false;
+
             auto trimmedTxt = txt.trim();
 
             if (txt.substring(i, i + 8) == "function")
@@ -839,10 +848,17 @@ void SurgeCodeEditorComponent::handleReturnKey()
 
             break;
         }
+
+        if (i < indexInLine)
+        {
+            actualCharactersBeforeCaret = tabs;
+        }
     }
 
     this->insertTextAtCaret("\n");
-    this->insertTextAtCaret(std::string(tabs, ' '));
+    this->insertTextAtCaret(std::string(
+        std::min(actualCharactersBeforeCaret + (indent == true ? this->getTabSize() : 0), tabs),
+        ' '));
 }
 
 struct EditorColors
@@ -1135,7 +1151,6 @@ bool CodeEditorContainerWithApply::autoCompleteStringDeclaration(juce::String st
         mainEditor->insertTextAtCaret(str);
     }
     return true;
-    // sdfsd
 }
 
 void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
