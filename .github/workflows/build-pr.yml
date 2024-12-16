@@ -97,10 +97,7 @@ jobs:
       - name: Which package
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install libfreetype-dev
-          sudo apt-get install libfreetype6
-          sudo apt-get install libfontconfig1-dev
-
+          echo Doin Nuttin
 
       - name: Build pull request version
         run: |
