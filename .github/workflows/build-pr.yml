@@ -94,6 +94,12 @@ jobs:
         with:
           os: ${{ runner.os }}
 
+      - name: Which package
+        if: ${{ runner.os }} == 'Linux'
+        run: |
+          sudo apt-get install libfreetype-dev
+
+
       - name: Build pull request version
         run: |
           cmake -S . -B ./build ${{ matrix.cmakeConfig }} -DCMAKE_BUILD_TYPE=${{ matrix.cmakeOpt }}
