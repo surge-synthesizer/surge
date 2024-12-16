@@ -56,3 +56,6 @@
 [submodule "libs/luajitlib/cmake"]
 	path = libs/luajitlib/cmake
 	url = https://github.com/scikit-build/cmake-FindVcvars
+[submodule "libs/sst/sst-jucegui"]
+	path = libs/sst/sst-jucegui
+	url = git@github.com:surge-synthesizer/sst-jucegui.git
