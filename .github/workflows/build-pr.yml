@@ -98,6 +98,8 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install libfreetype-dev
+          sudo apt-get install libfreetype6
+          sudo apt-get install libfontconfig1-dev
 
 
       - name: Build pull request version
