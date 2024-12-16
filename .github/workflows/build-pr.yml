@@ -95,7 +95,7 @@ jobs:
           os: ${{ runner.os }}
 
       - name: Which package
-        if: ${{ runner.os }} == 'Linux'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get install libfreetype-dev
 
