@@ -68,6 +68,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   surge::surge-common
   surge-fx-binary
   surge-juce
+  sst-jucegui
   juce::juce_audio_utils
   juce::juce_audio_processors
   juce::juce_osc
