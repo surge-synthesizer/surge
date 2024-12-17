@@ -22,7 +22,7 @@ xcopy /e /i /h LuaJIT "%SD%\LuaJIT"
 copy /y msvcbuild.bat "%SD%\LuaJIT\src\"
 cd "%SD%\LuaJIT\src"
 
-call msvcbuild.bat static
+call msvcbuild.bat static amalg
 
 copy lua51.lib "%OD%"
 echo "%OD%"

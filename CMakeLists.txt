@@ -141,11 +141,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -faligned-allocation
         -fasm-blocks
       )
-
-      # LuaJit + XCode 16 goes blammo
-      add_link_options(
-        -Wl,-no_deduplicate
-      )
     endif()
   elseif(CMAKE_CXX_COMPILER_ID MATCHES "^GNU$")
     # GCC only
