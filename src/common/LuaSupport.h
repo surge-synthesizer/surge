@@ -41,6 +41,8 @@ extern "C"
 #include "luajit.h"
 
 #include "lj_arch.h"
+
+#include "pffft.h"
 }
 #else
 typedef int lua_State;
