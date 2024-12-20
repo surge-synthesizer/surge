@@ -159,8 +159,8 @@ static int lua_sandboxPrint(lua_State *L)
 // From pffft.h:
 // Transforms are not scaled: PFFFT_BACKWARD(PFFFT_FORWARD(x)) = N*x.
 // Typically you will want to scale the backward transform by 1/N.
-static int pffft_Transform(lua_State *L, pffft_direction_t direction, pffft_transform_t transform,
-                           bool unordered, const char *functionName)
+static int pffft_Transform(lua_State *L, int direction, int transform, bool unordered,
+                           const char *functionName)
 {
 #if HAS_LUA
     // Check for an input table
@@ -190,7 +190,7 @@ static int pffft_Transform(lua_State *L, pffft_direction_t direction, pffft_tran
                           functionName, transformLength);
 
     // Create PFFFT setup
-    PFFFT_Setup *setup = pffft_new_setup(transformLength, transform);
+    PFFFT_Setup *setup = pffft_new_setup(transformLength, (pffft_transform_t)transform);
     if (!setup)
         return luaL_error(L, "%s error: failed to create setup for %d elements", functionName,
                           transformLength);
@@ -213,9 +213,9 @@ static int pffft_Transform(lua_State *L, pffft_direction_t direction, pffft_tran
 
     // Perform the ordered or unordered transform
     if (unordered)
-        pffft_transform_ordered(setup, input, output, work, direction);
+        pffft_transform_ordered(setup, input, output, work, (pffft_direction_t)direction);
     else
-        pffft_transform(setup, input, output, work, direction);
+        pffft_transform(setup, input, output, work, (pffft_direction_t)direction);
 
     // Push the output back to Lua as a table
     lua_newtable(L);
@@ -238,7 +238,7 @@ static int pffft_Transform(lua_State *L, pffft_direction_t direction, pffft_tran
 static int pffft_ForwardReal(lua_State *L)
 {
 #if HAS_LUA
-    return pffft_Transform(L, PFFFT_FORWARD, PFFFT_REAL, false, "fft_real()");
+    return pffft_Transform(L, 0, 0, false, "fft_real()");
 #else
     return 0;
 #endif
@@ -247,7 +247,7 @@ static int pffft_ForwardReal(lua_State *L)
 static int pffft_ForwardComplex(lua_State *L)
 {
 #if HAS_LUA
-    return pffft_Transform(L, PFFFT_FORWARD, PFFFT_COMPLEX, false, "fft_complex()");
+    return pffft_Transform(L, 0, 1, false, "fft_complex()");
 #else
     return 0;
 #endif
@@ -256,7 +256,7 @@ static int pffft_ForwardComplex(lua_State *L)
 static int pffft_BackwardReal(lua_State *L)
 {
 #if HAS_LUA
-    return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_REAL, false, "ifft_real()");
+    return pffft_Transform(L, 1, 0, false, "ifft_real()");
 #else
     return 0;
 #endif
@@ -265,7 +265,7 @@ static int pffft_BackwardReal(lua_State *L)
 static int pffft_BackwardComplex(lua_State *L)
 {
 #if HAS_LUA
-    return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_COMPLEX, false, "ifft_complex()");
+    return pffft_Transform(L, 1, 1, false, "ifft_complex()");
 #else
     return 0;
 #endif
@@ -274,7 +274,7 @@ static int pffft_BackwardComplex(lua_State *L)
 static int pffft_ForwardRealUnordered(lua_State *L)
 {
 #if HAS_LUA
-    return pffft_Transform(L, PFFFT_FORWARD, PFFFT_REAL, true, "fft_real_unordered()");
+    return pffft_Transform(L, 0, 0, true, "fft_real_unordered()");
 #else
     return 0;
 #endif
@@ -283,7 +283,7 @@ static int pffft_ForwardRealUnordered(lua_State *L)
 static int pffft_ForwardComplexUnordered(lua_State *L)
 {
 #if HAS_LUA
-    return pffft_Transform(L, PFFFT_FORWARD, PFFFT_COMPLEX, true, "fft_complex_unordered()");
+    return pffft_Transform(L, 0, 1, true, "fft_complex_unordered()");
 #else
     return 0;
 #endif
@@ -292,7 +292,7 @@ static int pffft_ForwardComplexUnordered(lua_State *L)
 static int pffft_BackwardRealUnordered(lua_State *L)
 {
 #if HAS_LUA
-    return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_REAL, true, "ifft_real_unordered()");
+    return pffft_Transform(L, 1, 0, true, "ifft_real_unordered()");
 #else
     return 0;
 #endif
@@ -301,7 +301,7 @@ static int pffft_BackwardRealUnordered(lua_State *L)
 static int pffft_BackwardComplexUnordered(lua_State *L)
 {
 #if HAS_LUA
-    return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_COMPLEX, true, "ifft_complex_unordered()");
+    return pffft_Transform(L, 1, 1, true, "ifft_complex_unordered()");
 #else
     return 0;
 #endif
