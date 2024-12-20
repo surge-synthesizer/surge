@@ -237,42 +237,74 @@ static int pffft_Transform(lua_State *L, pffft_direction_t direction, pffft_tran
 // Different modes for pffft_Transform
 static int pffft_ForwardReal(lua_State *L)
 {
+#if HAS_LUA
     return pffft_Transform(L, PFFFT_FORWARD, PFFFT_REAL, false, "fft_real()");
+#else
+    return 0;
+#endif
 }
 
 static int pffft_ForwardComplex(lua_State *L)
 {
+#if HAS_LUA
     return pffft_Transform(L, PFFFT_FORWARD, PFFFT_COMPLEX, false, "fft_complex()");
+#else
+    return 0;
+#endif
 }
 
 static int pffft_BackwardReal(lua_State *L)
 {
+#if HAS_LUA
     return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_REAL, false, "ifft_real()");
+#else
+    return 0;
+#endif
 }
 
 static int pffft_BackwardComplex(lua_State *L)
 {
+#if HAS_LUA
     return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_COMPLEX, false, "ifft_complex()");
+#else
+    return 0;
+#endif
 }
 
 static int pffft_ForwardRealUnordered(lua_State *L)
 {
+#if HAS_LUA
     return pffft_Transform(L, PFFFT_FORWARD, PFFFT_REAL, true, "fft_real_unordered()");
+#else
+    return 0;
+#endif
 }
 
 static int pffft_ForwardComplexUnordered(lua_State *L)
 {
+#if HAS_LUA
     return pffft_Transform(L, PFFFT_FORWARD, PFFFT_COMPLEX, true, "fft_complex_unordered()");
+#else
+    return 0;
+#endif
 }
 
 static int pffft_BackwardRealUnordered(lua_State *L)
 {
+#if HAS_LUA
     return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_REAL, true, "ifft_real_unordered()");
+#else
+    return 0;
+#endif
 }
 
 static int pffft_BackwardComplexUnordered(lua_State *L)
 {
+#if HAS_LUA
     return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_COMPLEX, true, "ifft_complex_unordered()");
+#else
+    return 0;
+#endif
 }
 
 // Helper function to check if a feature is enabled
