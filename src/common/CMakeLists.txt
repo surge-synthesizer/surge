@@ -374,7 +374,6 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC
   fmt
   luajit-5.1
-  pffft
   surge::airwindows
   surge::eurorack
 
@@ -401,6 +400,11 @@ target_link_libraries(${PROJECT_NAME}
   PRIVATE
   juce::juce_dsp
 )
+
+# Disabling PFFFT on arm64ec for now
+if(NOT(MSVC AND ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec" OR "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64")))
+  target_link_libraries(${PROJECT_NAME} PUBLIC pffft)
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
   JUCE_STANDALONE_APPLICATION=0
