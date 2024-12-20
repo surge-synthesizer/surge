@@ -275,7 +275,13 @@ static int pffft_BackwardComplexUnordered(lua_State *L)
     return pffft_Transform(L, PFFFT_BACKWARD, PFFFT_COMPLEX, true, "ifft_complex_unordered()");
 }
 
-bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
+// Helper function to check if a feature is enabled
+constexpr bool hasFeature(uint64_t currentFeatures, Surge::LuaSupport::EnvironmentFeatures feature)
+{
+    return (currentFeatures & feature) != 0;
+}
+
+bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L, uint64_t features)
 {
 #if HAS_LUA
     if (!lua_isfunction(L, -1))
@@ -294,23 +300,26 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_pushcfunction(L, lua_sandboxPrint);
     lua_setfield(L, eidx, "print");
 
-    // FFT functions
-    lua_pushcfunction(L, pffft_ForwardReal);
-    lua_setfield(L, eidx, "fft_real");
-    lua_pushcfunction(L, pffft_ForwardComplex);
-    lua_setfield(L, eidx, "fft_complex");
-    lua_pushcfunction(L, pffft_BackwardReal);
-    lua_setfield(L, eidx, "ifft_real");
-    lua_pushcfunction(L, pffft_BackwardComplex);
-    lua_setfield(L, eidx, "ifft_complex");
-    lua_pushcfunction(L, pffft_ForwardRealUnordered);
-    lua_setfield(L, eidx, "fft_real_unordered");
-    lua_pushcfunction(L, pffft_ForwardComplexUnordered);
-    lua_setfield(L, eidx, "fft_complex_unordered");
-    lua_pushcfunction(L, pffft_BackwardRealUnordered);
-    lua_setfield(L, eidx, "ifft_real_unordered");
-    lua_pushcfunction(L, pffft_BackwardComplexUnordered);
-    lua_setfield(L, eidx, "ifft_complex_unordered");
+    // FFT feature
+    if (hasFeature(features, EnvironmentFeatures::HAS_FFT))
+    {
+        lua_pushcfunction(L, pffft_ForwardReal);
+        lua_setfield(L, eidx, "fft_real");
+        lua_pushcfunction(L, pffft_ForwardComplex);
+        lua_setfield(L, eidx, "fft_complex");
+        lua_pushcfunction(L, pffft_BackwardReal);
+        lua_setfield(L, eidx, "ifft_real");
+        lua_pushcfunction(L, pffft_BackwardComplex);
+        lua_setfield(L, eidx, "ifft_complex");
+        lua_pushcfunction(L, pffft_ForwardRealUnordered);
+        lua_setfield(L, eidx, "fft_real_unordered");
+        lua_pushcfunction(L, pffft_ForwardComplexUnordered);
+        lua_setfield(L, eidx, "fft_complex_unordered");
+        lua_pushcfunction(L, pffft_BackwardRealUnordered);
+        lua_setfield(L, eidx, "ifft_real_unordered");
+        lua_pushcfunction(L, pffft_BackwardComplexUnordered);
+        lua_setfield(L, eidx, "ifft_complex_unordered");
+    }
 
     // add global tables
     lua_getglobal(L, surgeTableName);

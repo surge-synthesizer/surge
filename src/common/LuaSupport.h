@@ -84,7 +84,7 @@ int parseStringDefiningMultipleFunctions(lua_State *s, const std::string &defini
  * surge environment (math imported, most things stripped, add
  * our C++ functions, etc...)
  */
-bool setSurgeFunctionEnvironment(lua_State *s);
+bool setSurgeFunctionEnvironment(lua_State *s, uint64_t features);
 
 /*
  * Call this function with a LUA state, the std::string at Surge::LuaSources and it will load the
@@ -101,6 +101,15 @@ std::string getFormulaPrelude();
  * Call this function to get a string representation of the WTSE prelude
  */
 std::string getWTSEPrelude();
+
+/*
+ * Define the EnvironmentFeatures enum class
+ */
+enum EnvironmentFeatures : uint64_t
+{
+    BASE = 0,
+    HAS_FFT = 1 << 1
+};
 
 /*
  * A little leak debugger. Make this on your stack and if you exit the

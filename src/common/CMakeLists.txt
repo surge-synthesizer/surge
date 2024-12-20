@@ -392,7 +392,6 @@ target_link_libraries(${PROJECT_NAME}
   surge::sqlite
   surge-common-binary
   tuning-library
-  pffft
   PRIVATE
   surge-lua-src
   surge-platform
@@ -401,6 +400,10 @@ target_link_libraries(${PROJECT_NAME}
   PRIVATE
   juce::juce_dsp
 )
+
+if(MSVC AND (NOT ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec" OR "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64")))
+  target_link_libraries(${PROJECT_NAME} PUBLIC pffft)
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
   JUCE_STANDALONE_APPLICATION=0
