@@ -402,7 +402,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # Disabling PFFFT on arm64ec for now
-if(NOT(MSVC AND "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec"))
+if(NOT(MSVC AND ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec" OR "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64")))
   target_link_libraries(${PROJECT_NAME} PUBLIC pffft)
 endif()
 
