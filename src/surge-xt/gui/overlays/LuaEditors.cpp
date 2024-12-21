@@ -1012,7 +1012,7 @@ void SurgeCodeEditorComponent::handleReturnKey()
     int indexInLine = pos.getIndexInLine();
     int actualCharactersBeforeCaret = 0;
     bool indent = false;
-    for (int i = 0; i < txt.length(); i++)
+    for (int i = 0; i < indexInLine; i++)
     {
         if (txt.substring(i, i + 1) == " ")
         {
