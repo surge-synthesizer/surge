@@ -45,9 +45,9 @@ namespace Overlays
     TextfieldPopup
     Base class that can be used for creating other textfield popups like the search
 */
-TextfieldButton::TextfieldButton(juce::String &svg, int r) : juce::Component()
+TextfieldButton::TextfieldButton(juce::String &svg, int rowToAddTo) : juce::Component()
 {
-    row = r;
+    row = rowToAddTo;
     xml = juce::XmlDocument::parse(svg);
 
     svgGraphics = juce::Drawable::createFromSVG(*xml);
@@ -236,16 +236,20 @@ void TextfieldPopup::createTextfield(int row)
 {
     textfield[textfieldCount] = std::make_unique<Textfield>(row);
 
-    textfield[textfieldCount]->setBorder(juce::BorderSize(-1, 4, 0, 4));
-    textfield[textfieldCount]->setFont(juce::FontOptions(12));
+    textfield[textfieldCount]->setBorder(juce::BorderSize(1, 4, 0, 4));
+
+    // textfield[textfieldCount]->setFont(juce::FontOptions(12));
+    textfield[textfieldCount]->setFont(currentSkin->getFont(Fonts::LuaEditor::Code));
+
     textfield[textfieldCount]->setColour(juce::TextEditor::ColourIds::textColourId,
                                          currentSkin->getColor(Colors::Dialog::Button::Text));
-    textfield[textfieldCount]->setColour(juce::TextEditor::backgroundColourId,
-                                         currentSkin->getColor(Colors::FormulaEditor::Background));
+    textfield[textfieldCount]->setColour(
+        juce::TextEditor::backgroundColourId,
+        currentSkin->getColor(Colors::FormulaEditor::Background).darker(0.4));
 
     textfield[textfieldCount]->setColour(
         juce::TextEditor::focusedOutlineColourId,
-        currentSkin->getColor(Colors::FormulaEditor::Background).brighter(0.05));
+        currentSkin->getColor(Colors::FormulaEditor::Background).brighter(0.03));
     textfield[textfieldCount]->setColour(
         juce::TextEditor::outlineColourId,
         currentSkin->getColor(Colors::FormulaEditor::Background).brighter(0));
@@ -858,6 +862,44 @@ SurgeCodeEditorComponent::SurgeCodeEditorComponent(juce::CodeDocument &d, juce::
     : juce::CodeEditorComponent(d, t)
 {
     currentSkin = skin;
+}
+
+void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
+                                                 const juce::MouseEvent *mouseClickEvent)
+{
+    juce::CodeEditorComponent::addPopupMenuItems(menuToAddTo, mouseClickEvent);
+
+#if MAC
+    std::string commandStr = "CMD";
+
+#else
+    std::string commandStr = "CTRL";
+#endif
+
+    auto find = juce::PopupMenu::Item("Find").setAction([this]() {
+        search->show();
+        search->showReplace(false);
+        gotoLine->hide();
+    });
+    find.shortcutKeyDescription = commandStr + "+F";
+
+    auto replace = juce::PopupMenu::Item("Replace").setAction([this]() {
+        search->show();
+        search->showReplace(true);
+        gotoLine->hide();
+    });
+    replace.shortcutKeyDescription = commandStr + "+H";
+
+    auto gotoline = juce::PopupMenu::Item("Go to line").setAction([this]() {
+        search->hide();
+        gotoLine->show();
+    });
+    gotoline.shortcutKeyDescription = commandStr + "+G";
+
+    menuToAddTo.addSeparator();
+    menuToAddTo.addItem(find);
+    menuToAddTo.addItem(replace);
+    menuToAddTo.addItem(gotoline);
 }
 
 bool SurgeCodeEditorComponent::keyPressed(const juce::KeyPress &key)

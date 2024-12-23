@@ -217,6 +217,9 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
     virtual void paint(juce::Graphics &) override;
     virtual void setSearch(CodeEditorSearch &s);
     virtual void setGotoLine(GotoLine &s);
+    virtual void addPopupMenuItems(juce::PopupMenu &menuToAddTo,
+                                   const juce::MouseEvent *mouseClickEvent) override;
+
     void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &d) override;
     SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t,
                              Surge::GUI::Skin::ptr_t &skin);
