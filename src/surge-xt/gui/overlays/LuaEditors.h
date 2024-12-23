@@ -58,7 +58,7 @@ class TextfieldButton : public juce::Component
 
   public:
     bool isSelected() { return selected; };
-    TextfieldButton(juce::String &svg);
+    TextfieldButton(juce::String &svg, int r);
     void loadSVG(juce::String &svg);
     void setSelectable();
     void select(bool v);
@@ -71,6 +71,7 @@ class TextfieldButton : public juce::Component
     void mouseEnter(const juce::MouseEvent &event) override;
     void mouseExit(const juce::MouseEvent &event) override;
     std::function<void()> onClick;
+    int row;
 
   private:
     std::unique_ptr<juce::Drawable> svgGraphics;
@@ -87,10 +88,12 @@ class Textfield : public juce::TextEditor
     juce::String title;
 
   public:
+    Textfield(int r);
     void paint(juce::Graphics &g) override;
     void setColour(int colourID, juce::Colour newColour);
     void setHeader(juce::String h);
     void setHeaderColor(juce::Colour c);
+    int row;
 };
 
 class TextfieldPopup : public juce::Component,
@@ -100,7 +103,10 @@ class TextfieldPopup : public juce::Component,
 {
   public:
     static constexpr int STYLE_MARGIN = 4;
-    static constexpr int STYLE_TEXT_HEIGHT = 20;
+
+    static constexpr int STYLE_ROW_MARGIN = 4;
+    static constexpr int STYLE_TEXT_HEIGHT = 19;
+
     static constexpr int STYLE_BUTTON_MARGIN = 2;
     static constexpr int STYLE_BUTTON_SIZE = 14;
     static constexpr int STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 40;
@@ -108,17 +114,22 @@ class TextfieldPopup : public juce::Component,
   protected:
     juce::CodeEditorComponent *ed;
     Surge::GUI::Skin::ptr_t currentSkin;
-    std::unique_ptr<Textfield> textfield;
+    // std::unique_ptr<Textfield> *textfield;
     std::unique_ptr<juce::Label> labelResult;
+
     std::unique_ptr<TextfieldButton> button[8];
+    std::unique_ptr<Textfield> textfield[8];
+    int buttonOffset[8] = {0};
 
     juce::String header;
     int buttonCount = 0;
+    int textfieldCount = 0;
 
   private:
     int textWidth = 120;
 
   public:
+    int rowsVisible = 1;
     virtual bool keyPressed(const juce::KeyPress &key,
                             juce::Component *originatingComponent) override;
     virtual void paint(juce::Graphics &g) override;
@@ -127,7 +138,11 @@ class TextfieldPopup : public juce::Component,
     virtual void textEditorEscapeKeyPressed(juce::TextEditor &) override;
     void resize();
     void setHeader(juce::String);
-    void createButton(juce::String svg);
+    void createButton(juce::String svg, int row);
+    void createTextfield(int row);
+    void showRows(int rows);
+    void setButtonOffsetAtRow(int row, int offset);
+
     void setTextWidth(int w);
     virtual void show();
     virtual void hide();
@@ -140,11 +155,11 @@ class CodeEditorSearch : public TextfieldPopup
     virtual void removeHighlightColors();
 
     bool active = false;
-    int result[512];
+    int result[512] = {0};
     int resultCurrent = 0;
     int resultTotal = 0;
     bool saveCaretStartPositionLock;
-
+    juce::String latestSearch;
     juce::CodeDocument::Position startCaretPosition;
 
   public:
@@ -162,6 +177,8 @@ class CodeEditorSearch : public TextfieldPopup
                             juce::Component *originatingComponent) override;
     virtual void textEditorEscapeKeyPressed(juce::TextEditor &) override;
     virtual void textEditorReturnKeyPressed(juce::TextEditor &) override;
+    virtual void replaceResults(bool all);
+    virtual void replaceCurrentResult(juce::String newText);
 
     CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
 
@@ -169,6 +186,7 @@ class CodeEditorSearch : public TextfieldPopup
     virtual void showResult(int increase, bool moveCaret);
     virtual int *getResult();
     virtual int getResultTotal();
+    virtual void showReplace(bool b);
 };
 
 class GotoLine : public TextfieldPopup
@@ -199,6 +217,9 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
     virtual void paint(juce::Graphics &) override;
     virtual void setSearch(CodeEditorSearch &s);
     virtual void setGotoLine(GotoLine &s);
+    virtual void addPopupMenuItems(juce::PopupMenu &menuToAddTo,
+                                   const juce::MouseEvent *mouseClickEvent) override;
+
     void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &d) override;
     SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t,
                              Surge::GUI::Skin::ptr_t &skin);
