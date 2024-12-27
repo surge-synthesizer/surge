@@ -138,18 +138,18 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         // auto k = std::make_unique<sst::jucegui::components::Knob>();
         // auto d = std::make_unique<SurgeFXContModParam>();
         // k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::FROM_ACTIVE);
-        // k->setEditingModulation(true);
-        // fxParamSliders[i] = sst::jucegui::components::Knob();
-        fxParamSliders[i].setModulationDisplay(
-            sst::jucegui::components::Knob::Modulatable::FROM_OTHER);
-        // fxParamSliders[i].setEditingModulation(true);
+        // // k->setEditingModulation(true);
+        // // fxParamSliders[i] = sst::jucegui::components::Knob();
+        // fxParamSliders[i].setModulationDisplay(
+        //     sst::jucegui::components::Knob::Modulatable::FROM_OTHER);
+        // // fxParamSliders[i].setEditingModulation(true);
 
-        // fxParamSources[i] = SurgeFXContModParam();
-        // fxParamSources[i].setValueFromGUI(0.5f);
-        fxParamSliders[i].setSource(&fxParamSources[i]);
+        // // fxParamSources[i] = SurgeFXContModParam();
+        // // fxParamSources[i].setValueFromGUI(0.5f);
+        // fxParamSliders[i].setSource(&fxParamSources[i]);
 
-        std::cout << fxParamSources[i].getLabel() << std::endl;
-        // fxParamSliders[i].setRange(0.0, 1.0, 0.0001);
+        // std::cout << fxParamSources[i].getLabel() << std::endl;
+        // // fxParamSliders[i].setRange(0.0, 1.0, 0.0001);
         // fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
         //                            juce::NotificationType::dontSendNotification);
         //
@@ -170,13 +170,29 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         // };
         // fxParamSliders[i].onDragEnd = [i, this]() {
         //     this->processor.setUserEditingFXParam(i, false);
-        // };
-        fxParamSliders[i].setTitle("Parameter " + std::to_string(i) + " Knob");
+        // // };
+        // fxParamSliders[i].setTitle("Parameter " + std::to_string(i) + " Knob");
 
-        fxParamSliders[i].onBeginEdit = [this, i]() { std::cout << "startEdit" << std::endl; };
-        fxParamSliders[i].onEndEdit = []() { DBGOUT("endEdit"); };
+        // fxParamSliders[i].onBeginEdit = [this, i]() { std::cout << "startEdit" << std::endl; };
+        // fxParamSliders[i].onEndEdit = []() { DBGOUT("endEdit"); };
         // addAndMakeVisibleRecordOrder(&(fxParamSliders[i]));
-        addAndMakeVisible(&(fxParamSliders[i]));
+
+        auto k = std::make_unique<sst::jucegui::components::Knob>();
+        auto d = std::make_unique<ConcreteCM>();
+
+        k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::FROM_ACTIVE);
+        k->setEditingModulation(true);
+
+        d->setValueFromGUI(1.0 * (rand() % 18502) / 18502.f);
+        k->setSource(d.get());
+        k->onBeginEdit = []() { DBGOUT("beginEdit"); };
+        k->onEndEdit = []() { DBGOUT("endEdit"); };
+        k->onPopupMenu = [](const auto &m) { DBGOUT("popupMenu"); };
+        addAndMakeVisible(*k);
+        knobs.push_back(std::move(k));
+        sources.push_back(std::move(d));
+
+        // addAndMakeVisible(&(fxParamSliders[i]));
 
         fxTempoSync[i].setOnOffImage(BinaryData::TS_Act_svg, BinaryData::TS_Act_svgSize,
                                      BinaryData::TS_Deact_svg, BinaryData::TS_Deact_svgSize);
@@ -315,8 +331,8 @@ void SurgefxAudioProcessorEditor::resetLabels()
 
         fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
         fxParamDisplay[i].setAppearsDeactivated(processor.getFXStorageAppearsDeactivated(i));
-        fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
-                                     !processor.getFXStorageAppearsDeactivated(i));
+        // fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
+        //                              !processor.getFXStorageAppearsDeactivated(i));
         st(fxParamSliders[i], nm + " Knob");
         // fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
 
@@ -413,8 +429,9 @@ void SurgefxAudioProcessorEditor::resized()
         juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + sliderOff,
                                       (i % 6) * rowHeight + ypos0, rowHeight - sliderOff,
                                       rowHeight - sliderOff};
-        fxParamSliders[i].setBounds(position);
-
+        // fxParamSliders[i].setBounds(position);
+        knobs.at(i).get()->setBounds(position);
+        // knobs.at(i).get()->setOpaque(true);
         int buttonSize = 19;
         if (getWidth() < baseWidth)
             buttonSize = 17;
