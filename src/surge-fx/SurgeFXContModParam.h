@@ -5,17 +5,12 @@
 #include <sst/jucegui/data/Discrete.h>
 #include <sst/jucegui/util/DebugHelpers.h>
 
-struct SurgeFXContModParam : sst::jucegui::data::ContinuousModulatable
+struct ConcreteCM : sst::jucegui::data::ContinuousModulatable
 {
-    SurgeFXContModParam(std::string label = "leo") { label = label; };
-
-    std::string label{"default"};
+    ConcreteCM() {};
+    std::string label{"A Knob"};
     std::string getLabel() const override { return label; }
-
     float value{0};
-    float min{0}, max{1};
-    float mv{0.2};
-
     float getValue() const override { return value; }
     float getDefaultValue() const override { return (getMax() - getMin()) / 2.0; }
     void setValueFromGUI(const float &f) override
@@ -33,9 +28,11 @@ struct SurgeFXContModParam : sst::jucegui::data::ContinuousModulatable
             l->dataChanged();
     }
 
+    float min{0}, max{1};
     float getMin() const override { return min; }
     float getMax() const override { return max; }
 
+    float mv{0.2};
     float getModulationValuePM1() const override { return mv; }
     void setModulationValuePM1(const float &f) override { mv = f; }
     bool isModulationBipolar() const override { return isBipolar(); } // sure why not

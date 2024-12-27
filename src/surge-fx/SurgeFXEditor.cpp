@@ -139,13 +139,16 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         // auto d = std::make_unique<SurgeFXContModParam>();
         // k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::FROM_ACTIVE);
         // k->setEditingModulation(true);
-
+        // fxParamSliders[i] = sst::jucegui::components::Knob();
         fxParamSliders[i].setModulationDisplay(
-            sst::jucegui::components::Knob::Modulatable::FROM_ACTIVE);
-        fxParamSliders[i].setEditingModulation(true);
+            sst::jucegui::components::Knob::Modulatable::FROM_OTHER);
+        // fxParamSliders[i].setEditingModulation(true);
 
-        fxParamSources[i].setValueFromGUI(0.5f);
+        // fxParamSources[i] = SurgeFXContModParam();
+        // fxParamSources[i].setValueFromGUI(0.5f);
         fxParamSliders[i].setSource(&fxParamSources[i]);
+
+        std::cout << fxParamSources[i].getLabel() << std::endl;
         // fxParamSliders[i].setRange(0.0, 1.0, 0.0001);
         // fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
         //                            juce::NotificationType::dontSendNotification);
@@ -169,7 +172,11 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         //     this->processor.setUserEditingFXParam(i, false);
         // };
         fxParamSliders[i].setTitle("Parameter " + std::to_string(i) + " Knob");
-        addAndMakeVisibleRecordOrder(&(fxParamSliders[i]));
+
+        fxParamSliders[i].onBeginEdit = [this, i]() { std::cout << "startEdit" << std::endl; };
+        fxParamSliders[i].onEndEdit = []() { DBGOUT("endEdit"); };
+        // addAndMakeVisibleRecordOrder(&(fxParamSliders[i]));
+        addAndMakeVisible(&(fxParamSliders[i]));
 
         fxTempoSync[i].setOnOffImage(BinaryData::TS_Act_svg, BinaryData::TS_Act_svgSize,
                                      BinaryData::TS_Deact_svg, BinaryData::TS_Deact_svgSize);
@@ -186,7 +193,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         };
 
         fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " TempoSync");
-        addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
+        // addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
 
         fxDeactivated[i].setOnOffImage(BinaryData::DE_Act_svg, BinaryData::DE_Act_svgSize,
                                        BinaryData::DE_Deact_svg, BinaryData::DE_Deact_svgSize);
@@ -202,7 +209,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, false);
         };
         fxDeactivated[i].setTitle("Parameter " + std::to_string(i) + " Deactivate");
-        addAndMakeVisibleRecordOrder(&(fxDeactivated[i]));
+        // addAndMakeVisibleRecordOrder(&(fxDeactivated[i]));
 
         fxExtended[i].setOnOffImage(BinaryData::EX_Act_svg, BinaryData::EX_Act_svgSize,
                                     BinaryData::EX_Deact_svg, BinaryData::EX_Deact_svgSize);
@@ -218,7 +225,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, false);
         };
         fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
-        addAndMakeVisibleRecordOrder(&(fxExtended[i]));
+        // addAndMakeVisibleRecordOrder(&(fxExtended[i]));
 
         fxAbsoluted[i].setOnOffImage(BinaryData::AB_Act_svg, BinaryData::AB_Act_svgSize,
                                      BinaryData::AB_Deact_svg, BinaryData::AB_Deact_svgSize);
@@ -229,13 +236,14 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, true);
             this->processor.setFXParamAbsolute(i, this->fxAbsoluted[i].getToggleState());
             this->processor.setFXStorageAbsolute(i, this->fxAbsoluted[i].getToggleState());
+
             // fxParamDisplay[i].setDisplay(
             //     processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
             this->processor.setUserEditingParamFeature(i, false);
         };
 
         fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absoluted");
-        addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
+        // addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
 
         processor.prepareParametersAbsentAudio();
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
@@ -246,14 +254,14 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             processor.setParameterByString(i, s);
         };
 
-        addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
+        // addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
     }
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
     fxNameLabel->setFont(juce::FontOptions(28));
     fxNameLabel->setColour(juce::Label::textColourId, juce::Colours::black);
     fxNameLabel->setJustificationType(juce::Justification::centredLeft);
-    addAndMakeVisibleRecordOrder(fxNameLabel.get());
+    // addAndMakeVisibleRecordOrder(fxNameLabel.get());
 
     this->processor.setParameterChangeListener([this]() { this->triggerAsyncUpdate(); });
 
@@ -366,6 +374,9 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
         {
             if (i < n_fx_params)
             {
+
+                // fxParamSources[i].setValueFromGUI(fv[i]);
+
                 // fxParamSliders[i].setValue(fv[i], juce::NotificationType::dontSendNotification);
                 fxParamDisplay[i].setDisplay(processor.getParamValueFor(i, fv[i]));
             }

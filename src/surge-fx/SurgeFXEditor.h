@@ -161,7 +161,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
         }
     };
     sst::jucegui::components::Knob fxParamSliders[n_fx_params];
-    SurgeFXContModParam fxParamSources[n_fx_params];
+    ConcreteCM fxParamSources[n_fx_params];
 
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
