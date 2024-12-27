@@ -134,6 +134,18 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     for (int i = 0; i < n_fx_params; ++i)
     {
+
+        // auto k = std::make_unique<sst::jucegui::components::Knob>();
+        // auto d = std::make_unique<SurgeFXContModParam>();
+        // k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::FROM_ACTIVE);
+        // k->setEditingModulation(true);
+
+        fxParamSliders[i].setModulationDisplay(
+            sst::jucegui::components::Knob::Modulatable::FROM_ACTIVE);
+        fxParamSliders[i].setEditingModulation(true);
+
+        fxParamSources[i].setValueFromGUI(0.5f);
+        fxParamSliders[i].setSource(&fxParamSources[i]);
         // fxParamSliders[i].setRange(0.0, 1.0, 0.0001);
         // fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
         //                            juce::NotificationType::dontSendNotification);

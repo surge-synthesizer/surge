@@ -25,6 +25,7 @@
 
 #include "SurgeFXProcessor.h"
 #include "SurgeLookAndFeel.h"
+#include "SurgeFXContModParam.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "sst/jucegui/components/Knob.h"
@@ -160,6 +161,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
         }
     };
     sst::jucegui::components::Knob fxParamSliders[n_fx_params];
+    SurgeFXContModParam fxParamSources[n_fx_params];
+
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
     SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
