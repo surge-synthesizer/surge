@@ -25,6 +25,11 @@ math(EXPR SURGE_BITNESS "${CMAKE_SIZEOF_VOID_P} * 8" OUTPUT_FORMAT DECIMAL)
 message(STATUS "Targeting ${SURGE_BITNESS}-bit configuration")
 # }}}
 
+if (APPLE)
+        enable_language(OBJC)
+        enable_language(OBJCXX)
+endif()
+
 # Make Sure the REpo is properly cloned {{{
 set(SURGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 if (NOT EXISTS "${SURGE_SOURCE_DIR}/libs/tuning-library/README.md")
