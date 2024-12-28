@@ -64,20 +64,29 @@ else()
   add_library(surge-common-binary INTERFACE)
   target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
 
-  add_library(juce_dsp_rack_sub STATIC
-    ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.cpp
-    ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
-  )
+  if (APPLE)
+    add_library(juce_dsp_rack_sub STATIC
+      ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.mm
+      ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
+    )
+  else()
+    add_library(juce_dsp_rack_sub STATIC
+      ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.cpp
+      ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
+    )
+  endif()
 
   if(APPLE)
     target_sources(juce_dsp_rack_sub PRIVATE
       ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.mm
       ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.mm
+      ${SURGE_JUCE_PATH}/modules/juce_core/juce_core_CompilationTime.cpp
     )
   else()
     target_sources(juce_dsp_rack_sub PRIVATE
       ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.cpp
       ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.cpp
+      ${SURGE_JUCE_PATH}/modules/juce_core/juce_core_CompilationTime.cpp
     )
   endif()
 
