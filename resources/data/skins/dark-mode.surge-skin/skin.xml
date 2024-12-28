@@ -107,9 +107,9 @@
         <color id="formulaeditor.linenumber.background" value="#2D2D2D"/>
         <color id="formulaeditor.linenumber.text" value="#808080"/>
 
-        <color id="formulaeditor.lua.bracket" value="#CCCCCC"/>
+        <color id="formulaeditor.lua.bracket" value="#dbb01c"/>
         <color id="formulaeditor.lua.comment" value="#808080"/>
-        <color id="formulaeditor.lua.identifier" value="#0090FF"/>
+        <color id="formulaeditor.lua.identifier" value="#9CDCFE"/>
         <color id="formulaeditor.lua.interpunction" value="#CCCCCC"/>
         <color id="formulaeditor.lua.keyword" value="#60E060"/>
         <color id="formulaeditor.lua.number" value="#A3A3FF"/>

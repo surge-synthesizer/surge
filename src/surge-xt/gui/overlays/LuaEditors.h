@@ -105,11 +105,11 @@ class TextfieldPopup : public juce::Component,
     static constexpr int STYLE_MARGIN = 4;
 
     static constexpr int STYLE_ROW_MARGIN = 4;
-    static constexpr int STYLE_TEXT_HEIGHT = 19;
+    static constexpr int STYLE_TEXT_HEIGHT = 17;
 
     static constexpr int STYLE_BUTTON_MARGIN = 2;
     static constexpr int STYLE_BUTTON_SIZE = 14;
-    static constexpr int STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 40;
+    int STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 40;
 
   protected:
     juce::CodeEditorComponent *ed;
@@ -163,6 +163,7 @@ class CodeEditorSearch : public TextfieldPopup
     juce::CodeDocument::Position startCaretPosition;
 
   public:
+    bool resultHasChanged = false;
     virtual void search(bool moveCaret);
     virtual juce::String getSearchQuery();
     virtual bool isActive();
@@ -200,6 +201,7 @@ class GotoLine : public TextfieldPopup
     void focusLost(FocusChangeType) override;
     int currentLine;
     int getCurrentLine();
+    virtual void onClick(std::unique_ptr<TextfieldButton> &btn) override;
 
   private:
     int startScroll;
@@ -215,6 +217,8 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
     virtual void caretPositionMoved() override;
 
     virtual void paint(juce::Graphics &) override;
+    virtual void paintOverChildren(juce::Graphics &g) override;
+
     virtual void setSearch(CodeEditorSearch &s);
     virtual void setGotoLine(GotoLine &s);
     virtual void addPopupMenuItems(juce::PopupMenu &menuToAddTo,
@@ -225,6 +229,7 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
                              Surge::GUI::Skin::ptr_t &skin);
 
   private:
+    std::unique_ptr<juce::Image> searchMapCache;
     Surge::GUI::Skin::ptr_t currentSkin;
     CodeEditorSearch *search = nullptr;
     GotoLine *gotoLine = nullptr;
@@ -256,7 +261,7 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     void codeDocumentTextDeleted(int startIndex, int endIndex) override;
     void codeDocumentTextInserted(const juce::String &newText, int insertIndex) override;
     void removeTrailingWhitespaceFromDocument();
-    bool autoCompleteStringDeclaration(juce::String str);
+    bool autoCompleteDeclaration(juce::KeyPress keypress, std::string start, std::string end);
     bool keyPressed(const juce::KeyPress &key, Component *originatingComponent) override;
 
     virtual void setApplyEnabled(bool) {}
@@ -294,7 +299,7 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
     void updateDebuggerIfNeeded();
 
     std::unique_ptr<juce::CodeDocument> preludeDocument;
-    std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
+    std::unique_ptr<SurgeCodeEditorComponent> preludeDisplay;
     std::unique_ptr<FormulaControlArea> controlArea;
 
     std::unique_ptr<ExpandingFormulaDebugger> debugPanel;
