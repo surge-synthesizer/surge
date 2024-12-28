@@ -1581,7 +1581,7 @@ bool CodeEditorContainerWithApply::autoCompleteDeclaration(juce::KeyPress key, s
     }
     // auto close
     else if ((charAfter != end && keyChar == start && count == 0) ||
-             charAfter == end && keyChar == start && count == 0)
+             (charAfter == end && keyChar == start && count == 0))
     {
         mainEditor->insertTextAtCaret(start + selectedText.toStdString() + end);
         auto pos = juce::CodeDocument::Position(*mainDocument, selectionStart);
