@@ -1420,9 +1420,9 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
         bool found = false;
         for (int i = 0; i < 5; i++)
         {
-            bool foundTemp = autoCompleteDeclaration(key, closure[i * 2], closure[i * 2 + 1]);
-            if (foundTemp)
-                found = true;
+            found = autoCompleteDeclaration(key, closure[i * 2], closure[i * 2 + 1]);
+            if (found)
+                break;
         }
 
         if (!found)
