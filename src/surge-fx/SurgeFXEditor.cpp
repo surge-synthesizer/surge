@@ -131,11 +131,19 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
-
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto k = std::make_unique<sst::jucegui::components::Knob>();
         auto d = std::make_unique<ConcreteCM>();
+        k->setStyle(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
+            sst::jucegui::style::StyleSheet::DARK));
+
+        k->setTransform(juce::AffineTransform().scaled(1.0));
+        auto ss = sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
+            sst::jucegui::style::StyleSheet::LIGHT);
+        ss->dumpStyleSheetTo(std::cout);
+        k->setSettings(std::make_shared<sst::jucegui::style::Settings>());
+        // w->setContentOwned(newt, false);
 
         k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::FROM_ACTIVE);
         k->setEditingModulation(true);
