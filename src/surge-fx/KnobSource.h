@@ -42,10 +42,10 @@ struct ConcreteCM : sst::jucegui::data::ContinuousModulatable
     bool isModulationBipolar() const override { return isBipolar(); } // sure why not
 };
 
-struct StyleSheetBuiltInImpl : public sst::jucegui::style::StyleSheet
+struct StyleSheetBuiltInImp : public sst::jucegui::style::StyleSheet
 {
-    StyleSheetBuiltInImpl() {}
-    ~StyleSheetBuiltInImpl() {}
+    StyleSheetBuiltInImp() {}
+    ~StyleSheetBuiltInImp() {}
 
     std::unordered_map<std::string, std::unordered_map<std::string, juce::Colour>> colours;
     std::unordered_map<std::string, std::unordered_map<std::string, juce::Font>> fonts;
@@ -55,6 +55,7 @@ struct StyleSheetBuiltInImpl : public sst::jucegui::style::StyleSheet
         jassert(isValidPair(c, p));
         colours[c.cname][p.pname] = col;
     }
+
     void setFont(const StyleSheet::Class &c, const StyleSheet::Property &p,
                  const juce::Font &f) override
     {
@@ -105,14 +106,14 @@ struct StyleSheetBuiltInImpl : public sst::jucegui::style::StyleSheet
         if (r.has_value())
             return *r;
 
-        std::cout << __FILE__ << ":" << __LINE__ << " COLOUR Missing : " << c.cname
+        std::cout << __FILE__ << ":" << __LINE__ << " VALUE Missing : " << c.cname
                   << "::" << p.pname << std::endl;
         return juce::Colours::red;
     }
 
     std::optional<juce::Colour> getColourOptional(const Class &c, const Property &p) const override
     {
-        assert(p.type == Property::COLOUR);
+
         auto byC = colours.find(c.cname);
         if (byC != colours.end())
         {
@@ -120,7 +121,6 @@ struct StyleSheetBuiltInImpl : public sst::jucegui::style::StyleSheet
             if (byP != byC->second.end())
             {
                 jassert(isValidPair(c, p));
-
                 return byP->second;
             }
         }
@@ -190,7 +190,7 @@ struct StyleSheetBuiltInImpl : public sst::jucegui::style::StyleSheet
     }
 };
 
-struct KnobStyleSheet : public StyleSheetBuiltInImpl
+struct KnobStyleSheet : public StyleSheetBuiltInImp
 {
     bool initialized{false};
     KnobStyleSheet() {}
@@ -254,13 +254,13 @@ struct KnobStyleSheet : public StyleSheetBuiltInImpl
         //     setColour(n::styleClass, n::jogbutton_hover, juce::Colour(0xFF, 0x90, 0x00));
         // }
 
-        // {
-        //     using n = sst::jucegui::components::base_styles::ValueBearing;
-        //     setColour(n::styleClass, n::value, juce::Colour(0xFF, 0x90, 0x00));
-        //     setColour(n::styleClass, n::value_hover, juce::Colour(0xFF, 0xA0, 0x30));
-        //     setColour(n::styleClass, n::valuelabel, juce::Colour(0x20, 0x10, 0x20));
-        //     setColour(n::styleClass, n::valuelabel_hover, juce::Colour(0x30, 0x20, 0x10));
-        // }
+        {
+            using n = sst::jucegui::components::base_styles::ValueBearing;
+            setColour(n::styleClass, n::value, juce::Colour(0xFF, 0x90, 0x00));
+            setColour(n::styleClass, n::value_hover, juce::Colour(0xFF, 0xA0, 0x30));
+            setColour(n::styleClass, n::valuelabel, juce::Colour(0x20, 0x10, 0x20));
+            setColour(n::styleClass, n::valuelabel_hover, juce::Colour(0x30, 0x20, 0x10));
+        }
 
         // {
         //     using n = sst::jucegui::components::MultiSwitch::Styles;
