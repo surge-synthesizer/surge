@@ -21,6 +21,7 @@ struct ConcreteCM : sst::jucegui::data::ContinuousModulatable
     {
         return (getMax() - getMin()) / 2.0;
     } // todo:: look into processor and grab deafult value
+
     void setValueFromGUI(const float &f) override
     {
         value = f;
