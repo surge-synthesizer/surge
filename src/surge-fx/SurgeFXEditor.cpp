@@ -119,9 +119,16 @@ struct Picker : public juce::Component
 
 //==============================================================================
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
-    : AudioProcessorEditor(&p), processor(p)
+    : AudioProcessorEditor(&p),
+      sst::jucegui::style::StyleConsumer(sst::jucegui::components::Knob::Styles::styleClass),
+      processor(p)
 {
     sst::jucegui::style::StyleSheet::initializeStyleSheets([]() {});
+
+    setTransform(juce::AffineTransform().scaled(1.0));
+
+    // setStyle(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
+    //     sst::jucegui::style::StyleSheet::DARK));
 
     processor.storage->addErrorListener(this);
     setAccessible(true);
@@ -137,11 +144,14 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     {
         auto k = std::make_unique<sst::jucegui::components::Knob>();
         auto d = std::make_unique<ConcreteCM>();
+        k->setStyle(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
+            sst::jucegui::style::StyleSheet::DARK));
+
         // k->setStyle(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
         //     sst::jucegui::style::StyleSheet::DARK));
-        auto style = std::make_shared<KnobStyleSheet>();
-        style->initialize();
-        k->setStyle(style);
+        // auto style = std::make_shared<KnobStyleSheet>();
+        // style->initialize();
+        // k->setStyle(style);
 
         // k->setTransform(juce::AffineTransform().scaled(1.0));
 
