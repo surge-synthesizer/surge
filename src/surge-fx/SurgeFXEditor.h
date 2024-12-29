@@ -29,6 +29,7 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "sst/jucegui/components/Knob.h"
+#include "sst/jucegui/components/WindowPanel.h"
 //==============================================================================
 /**
  */
@@ -204,6 +205,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
   public:
     std::vector<juce::Component *> accessibleOrderWeakRefs;
     std::shared_ptr<sst::jucegui::style::StyleSheet> styleSheet;
+    std::shared_ptr<sst::jucegui::style::Settings> settingsSheet;
 
   public:
     std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;

@@ -11,7 +11,8 @@
 
 struct ConcreteCM : sst::jucegui::data::ContinuousModulatable
 {
-    ConcreteCM() {};
+    ConcreteCM(SurgefxAudioProcessor &p, int i) : processor(p), id(i) {}
+
     std::string label{"A Knob"};
     std::string getLabel() const override { return label; }
     float value{0};
@@ -24,13 +25,20 @@ struct ConcreteCM : sst::jucegui::data::ContinuousModulatable
             l->dataChanged();
         for (auto *l : modellisteners)
             l->dataChanged();
+
+        this->processor.prepareParametersAbsentAudio();
+        this->processor.setFXParamValue01(id, value);
     }
+
     void setValueFromModel(const float &f) override
     {
         value = f;
         for (auto *l : guilisteners)
             l->dataChanged();
     }
+
+    SurgefxAudioProcessor &processor;
+    int id;
 
     float min{0}, max{1};
     float getMin() const override { return min; }

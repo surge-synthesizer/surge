@@ -127,12 +127,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 {
     sst::jucegui::style::StyleSheet::initializeStyleSheets([]() {});
 
-    setTransform(juce::AffineTransform().scaled(1.0));
-
-    // @ BP this compiles but causes a segfault on launc
-    // setStyle(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
-    //     sst::jucegui::style::StyleSheet::DARK));
-
     processor.storage->addErrorListener(this);
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
@@ -146,13 +140,13 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto k = std::make_unique<sst::jucegui::components::Knob>();
-        auto d = std::make_unique<ConcreteCM>();
+        auto d = std::make_unique<ConcreteCM>(processor, i);
         styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
                               sst::jucegui::components::Knob::Styles::value, juce::Colours::pink);
 
         k->setStyle(styleSheet);
 
-        k->setSettings(std::make_shared<sst::jucegui::style::Settings>());
+        k->setSettings(settingsSheet);
         k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
         k->setEditingModulation(true);
 
@@ -161,6 +155,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         k->onBeginEdit = []() { DBGOUT("beginEdit"); };
         k->onEndEdit = []() { DBGOUT("endEdit"); };
         k->onPopupMenu = [](const auto &m) { DBGOUT("popupMenu"); };
+        k->pathDrawMode = sst::jucegui::components::Knob::PathDrawMode::ALWAYS_FROM_MIN;
+
         addAndMakeVisible(*k);
         knobs.push_back(std::move(k));
         sources.push_back(std::move(d));
