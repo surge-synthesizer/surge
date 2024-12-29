@@ -150,7 +150,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
         k->setEditingModulation(true);
 
-        d->setValueFromGUI(1.0 * (rand() % 18502) / 18502.f);
+        d->setValueFromGUI(1.0 * (rand() % 18502) /
+                           18502.f); // todo - this should use the param defaults from processor
+
         k->setSource(d.get());
         k->onBeginEdit = []() { DBGOUT("beginEdit"); };
         k->onEndEdit = []() { DBGOUT("endEdit"); };

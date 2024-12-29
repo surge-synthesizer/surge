@@ -13,11 +13,14 @@ struct ConcreteCM : sst::jucegui::data::ContinuousModulatable
 {
     ConcreteCM(SurgefxAudioProcessor &p, int i) : processor(p), id(i) {}
 
-    std::string label{"A Knob"};
+    std::string label{"A Knob"}; // todo better name
     std::string getLabel() const override { return label; }
     float value{0};
     float getValue() const override { return value; }
-    float getDefaultValue() const override { return (getMax() - getMin()) / 2.0; }
+    float getDefaultValue() const override
+    {
+        return (getMax() - getMin()) / 2.0;
+    } // todo:: look into processor and grab deafult value
     void setValueFromGUI(const float &f) override
     {
         value = f;
