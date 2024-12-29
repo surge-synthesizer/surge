@@ -121,12 +121,15 @@ struct Picker : public juce::Component
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
     : AudioProcessorEditor(&p),
       sst::jucegui::style::StyleConsumer(sst::jucegui::components::Knob::Styles::styleClass),
+      styleSheet(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
+          sst::jucegui::style::StyleSheet::DARK)),
       processor(p)
 {
     sst::jucegui::style::StyleSheet::initializeStyleSheets([]() {});
 
     setTransform(juce::AffineTransform().scaled(1.0));
 
+    // @ BP this compiles but causes a segfault on launc
     // setStyle(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
     //     sst::jucegui::style::StyleSheet::DARK));
 
@@ -144,23 +147,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     {
         auto k = std::make_unique<sst::jucegui::components::Knob>();
         auto d = std::make_unique<ConcreteCM>();
-        k->setStyle(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
-            sst::jucegui::style::StyleSheet::DARK));
+        styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
+                              sst::jucegui::components::Knob::Styles::value, juce::Colours::pink);
 
-        // k->setStyle(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
-        //     sst::jucegui::style::StyleSheet::DARK));
-        // auto style = std::make_shared<KnobStyleSheet>();
-        // style->initialize();
-        // k->setStyle(style);
+        k->setStyle(styleSheet);
 
-        // k->setTransform(juce::AffineTransform().scaled(1.0));
-
-        // auto ss = sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
-        //     sst::jucegui::style::StyleSheet::LIGHT);
-        // ss->dumpStyleSheetTo(std::cout);
         k->setSettings(std::make_shared<sst::jucegui::style::Settings>());
-        // w->setContentOwned(newt, false);
-
         k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
         k->setEditingModulation(true);
 
