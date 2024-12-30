@@ -112,7 +112,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     static constexpr int baseWidth = 600, baseHeight = 55 * 6 + 80 + topSection;
 
     std::vector<std::unique_ptr<sst::jucegui::components::Knob>> knobs;
-    std::vector<std::unique_ptr<sst::jucegui::data::ContinuousModulatable>> sources;
+    std::vector<std::unique_ptr<sst::jucegui::data::Continuous>> sources;
 
   private:
     struct AccSlider : public juce::Slider

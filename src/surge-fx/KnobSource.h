@@ -5,7 +5,7 @@
 #include <sst/jucegui/data/Continuous.h>
 #include <sst/jucegui/util/DebugHelpers.h>
 
-struct KnobSource : sst::jucegui::data::ContinuousModulatable
+struct KnobSource : sst::jucegui::data::Continuous
 {
     KnobSource(SurgefxAudioProcessor &p, int i) : processor(p), id(i) {}
 
@@ -35,14 +35,5 @@ struct KnobSource : sst::jucegui::data::ContinuousModulatable
 
     SurgefxAudioProcessor &processor;
     int id;
-
-    float min{0}, max{1};
-    float getMin() const override { return min; }
-    float getMax() const override { return max; }
-
-    float mv{0.2};
-    float getModulationValuePM1() const override { return mv; }
-    void setModulationValuePM1(const float &f) override { mv = f; }
-    bool isModulationBipolar() const override { return isBipolar(); } // sure why not
 };
 #endif // SURGE_SRC_SURGE_FX_KNOBSOURCE_H

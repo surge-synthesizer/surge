@@ -153,16 +153,13 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         auto d = std::make_unique<KnobSource>(processor, i);
 
         k->setStyle(styleSheet);
-
         k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
         d->setValueFromGUI(d->getDefaultValue());
 
         k->setSource(d.get());
-        k->onBeginEdit = []() { DBGOUT("beginEdit"); };
-        k->onEndEdit = []() { DBGOUT("endEdit"); };
-        k->onPopupMenu = [](const auto &m) { DBGOUT("popupMenu"); };
-        k->pathDrawMode = sst::jucegui::components::Knob::PathDrawMode::ALWAYS_FROM_MIN;
+
+        // k->pathDrawMode = sst::jucegui::components::Knob::PathDrawMode::ALWAYS_FROM_MIN;
 
         addAndMakeVisible(*k);
         knobs.push_back(std::move(k));
@@ -177,8 +174,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, true);
             this->processor.setFXParamTempoSync(i, this->fxTempoSync[i].getToggleState());
             this->processor.setFXStorageTempoSync(i, this->fxTempoSync[i].getToggleState());
-            // fxParamDisplay[i].setDisplay(
-            //     processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            fxParamDisplay[i].setDisplay(
+                processor.getParamValueFromFloat(i, processor.getFXStorageValue01(i)));
             this->processor.setUserEditingParamFeature(i, false);
         };
 
@@ -210,8 +207,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, true);
             this->processor.setFXParamExtended(i, this->fxExtended[i].getToggleState());
             this->processor.setFXStorageExtended(i, this->fxExtended[i].getToggleState());
-            // fxParamDisplay[i].setDisplay(
-            //     processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            fxParamDisplay[i].setDisplay(
+                processor.getParamValueFromFloat(i, processor.getFXStorageDefaultValue01(i)));
             this->processor.setUserEditingParamFeature(i, false);
         };
         fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
@@ -227,8 +224,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setFXParamAbsolute(i, this->fxAbsoluted[i].getToggleState());
             this->processor.setFXStorageAbsolute(i, this->fxAbsoluted[i].getToggleState());
 
-            // fxParamDisplay[i].setDisplay(
-            //     processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            fxParamDisplay[i].setDisplay(
+                processor.getParamValueFromFloat(i, processor.getFXStorageValue01(i)));
             this->processor.setUserEditingParamFeature(i, false);
         };
 
@@ -296,7 +293,8 @@ void SurgefxAudioProcessorEditor::resetLabels()
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto nm = processor.getParamName(i) + " " + processor.getParamGroup(i);
-        // fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
+
+                // fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
         //                            juce::NotificationType::dontSendNotification);
         fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
