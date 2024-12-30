@@ -28,8 +28,10 @@
 #include "KnobSource.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
-#include "sst/jucegui/components/Knob.h"
-#include "sst/jucegui/components/WindowPanel.h"
+
+#include <sst/jucegui/style/StyleSheet.h>
+#include <sst/jucegui/components/Knob.h>
+
 //==============================================================================
 /**
  */

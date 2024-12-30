@@ -1,13 +1,9 @@
-#pragma once // this doesn't seem like the norm in this repo but still a wip
+#ifndef SURGE_SRC_SURGE_FX_KNOBSOURCE_H
+#define SURGE_SRC_SURGE_FX_KNOBSOURCE_H
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <sst/jucegui/data/Continuous.h>
-// #include <sst/jucegui/data/Discrete.h>
 #include <sst/jucegui/util/DebugHelpers.h>
-
-#include <sst/jucegui/style/StyleSheet.h>
-#include <sst/jucegui/components/Knob.h>
-#include <sst/jucegui/components/BaseStyles.h>
 
 struct KnobSource : sst::jucegui::data::ContinuousModulatable
 {
@@ -49,3 +45,4 @@ struct KnobSource : sst::jucegui::data::ContinuousModulatable
     void setModulationValuePM1(const float &f) override { mv = f; }
     bool isModulationBipolar() const override { return isBipolar(); } // sure why not
 };
+#endif // SURGE_SRC_SURGE_FX_KNOBSOURCE_H

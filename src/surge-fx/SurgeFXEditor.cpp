@@ -141,18 +141,11 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     auto backgroundColour = findColour(SurgeLookAndFeel::SurgeColourIds::componentBgStart);
     auto surgeOrange = findColour(SurgeLookAndFeel::SurgeColourIds::orange);
 
-    styleSheet->setColour(sst::jucegui::components::base_styles::GraphicalHandle::styleClass,
-                          sst::jucegui::components::base_styles::GraphicalHandle::handle,
-                          backgroundColour);
-
-    styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
-                          sst::jucegui::components::Knob::Styles::knobbase, backgroundColour);
-
-    styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
-                          sst::jucegui::components::Knob::Styles::value, surgeOrange);
-
-    styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
-                          sst::jucegui::components::Knob::Styles::value_hover, surgeOrange);
+    using knobStyle = sst::jucegui::components::Knob::Styles;
+    styleSheet->setColour(knobStyle::styleClass, knobStyle::handle, backgroundColour);
+    styleSheet->setColour(knobStyle::styleClass, knobStyle::knobbase, backgroundColour);
+    styleSheet->setColour(knobStyle::styleClass, knobStyle::value, surgeOrange);
+    styleSheet->setColour(knobStyle::styleClass, knobStyle::value_hover, surgeOrange);
 
     for (int i = 0; i < n_fx_params; ++i)
     {
