@@ -148,8 +148,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
         k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
-        k->setSettings(settingsSheet); // todo might be unneeded
-
         d->setValueFromGUI(1.0 * (rand() % 18502) /
                            18502.f); // todo - this should use the param defaults from processor
 
