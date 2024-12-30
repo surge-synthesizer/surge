@@ -149,21 +149,19 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        auto k = std::make_unique<sst::jucegui::components::Knob>();
-        auto d = std::make_unique<KnobSource>(processor, i);
+        auto knob = std::make_unique<sst::jucegui::components::Knob>();
+        auto knobSource = std::make_unique<KnobSource>(processor, i);
 
-        k->setStyle(styleSheet);
-        k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
+        knob->setStyle(styleSheet);
+        knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
-        d->setValueFromGUI(d->getDefaultValue());
+        knobSource->setValueFromGUI(knobSource->getDefaultValue());
 
-        k->setSource(d.get());
+        knob->setSource(knobSource.get());
 
-        // k->pathDrawMode = sst::jucegui::components::Knob::PathDrawMode::ALWAYS_FROM_MIN;
-
-        addAndMakeVisible(*k);
-        knobs.push_back(std::move(k));
-        sources.push_back(std::move(d));
+        addAndMakeVisible(*knob);
+        knobs.push_back(std::move(knob));
+        sources.push_back(std::move(knobSource));
 
         fxTempoSync[i].setOnOffImage(BinaryData::TS_Act_svg, BinaryData::TS_Act_svgSize,
                                      BinaryData::TS_Deact_svg, BinaryData::TS_Deact_svgSize);
@@ -208,7 +206,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setFXParamExtended(i, this->fxExtended[i].getToggleState());
             this->processor.setFXStorageExtended(i, this->fxExtended[i].getToggleState());
             fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, processor.getFXStorageDefaultValue01(i)));
+                processor.getParamValueFromFloat(i, processor.getFXStorageValue01(i)));
             this->processor.setUserEditingParamFeature(i, false);
         };
         fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
@@ -294,7 +292,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
     {
         auto nm = processor.getParamName(i) + " " + processor.getParamGroup(i);
 
-                // fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
+        // fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
         //                            juce::NotificationType::dontSendNotification);
         fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
