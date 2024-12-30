@@ -137,12 +137,27 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
+
+    auto backgroundColour = findColour(SurgeLookAndFeel::SurgeColourIds::componentBgStart);
+    auto surgeOrange = findColour(SurgeLookAndFeel::SurgeColourIds::orange);
+
+    styleSheet->setColour(sst::jucegui::components::base_styles::GraphicalHandle::styleClass,
+                          sst::jucegui::components::base_styles::GraphicalHandle::handle,
+                          backgroundColour);
+
+    styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
+                          sst::jucegui::components::Knob::Styles::knobbase, backgroundColour);
+
+    styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
+                          sst::jucegui::components::Knob::Styles::value, surgeOrange);
+
+    styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
+                          sst::jucegui::components::Knob::Styles::value_hover, surgeOrange);
+
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto k = std::make_unique<sst::jucegui::components::Knob>();
         auto d = std::make_unique<ConcreteCM>(processor, i);
-        styleSheet->setColour(sst::jucegui::components::Knob::Styles::styleClass,
-                              sst::jucegui::components::Knob::Styles::value, juce::Colours::pink);
 
         k->setStyle(styleSheet);
 
