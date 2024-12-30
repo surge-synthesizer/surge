@@ -9,18 +9,15 @@
 #include <sst/jucegui/components/Knob.h>
 #include <sst/jucegui/components/BaseStyles.h>
 
-struct ConcreteCM : sst::jucegui::data::ContinuousModulatable
+struct KnobSource : sst::jucegui::data::ContinuousModulatable
 {
-    ConcreteCM(SurgefxAudioProcessor &p, int i) : processor(p), id(i) {}
+    KnobSource(SurgefxAudioProcessor &p, int i) : processor(p), id(i) {}
 
-    std::string label{"A Knob"}; // todo better name
+    std::string label{"KnobSource"};
     std::string getLabel() const override { return label; }
     float value{0};
     float getValue() const override { return value; }
-    float getDefaultValue() const override
-    {
-        return (getMax() - getMin()) / 2.0;
-    } // todo:: look into processor and grab deafult value
+    float getDefaultValue() const override { return processor.getFXStorageDefaultValue01(id); }
 
     void setValueFromGUI(const float &f) override
     {
@@ -30,7 +27,6 @@ struct ConcreteCM : sst::jucegui::data::ContinuousModulatable
         for (auto *l : modellisteners)
             l->dataChanged();
 
-        this->processor.prepareParametersAbsentAudio();
         this->processor.setFXParamValue01(id, value);
     }
 

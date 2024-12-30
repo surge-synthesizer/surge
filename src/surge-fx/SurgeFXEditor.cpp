@@ -157,14 +157,13 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto k = std::make_unique<sst::jucegui::components::Knob>();
-        auto d = std::make_unique<ConcreteCM>(processor, i);
+        auto d = std::make_unique<KnobSource>(processor, i);
 
         k->setStyle(styleSheet);
 
         k->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
-        d->setValueFromGUI(1.0 * (rand() % 18502) /
-                           18502.f); // todo - this should use the param defaults from processor
+        d->setValueFromGUI(d->getDefaultValue());
 
         k->setSource(d.get());
         k->onBeginEdit = []() { DBGOUT("beginEdit"); };
