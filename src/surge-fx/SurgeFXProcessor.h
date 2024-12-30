@@ -106,6 +106,7 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
     bool producesMidi() const override;
     bool isMidiEffect() const override;
     double getTailLengthSeconds() const override;
+    void reset() override;
 
     //==============================================================================
     int getNumPrograms() override;
