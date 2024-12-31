@@ -155,7 +155,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         knob->setStyle(styleSheet);
         knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
+        auto paramName = processor.getParamName(i) + " " + processor.getParamGroup(i);
         knobSource->setValueFromGUI(knobSource->getDefaultValue());
+        knobSource->setLabel(paramName + " Knob");
 
         knob->setSource(knobSource.get());
 
@@ -292,8 +294,8 @@ void SurgefxAudioProcessorEditor::resetLabels()
     {
         auto nm = processor.getParamName(i) + " " + processor.getParamGroup(i);
 
-        // fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
-        //                            juce::NotificationType::dontSendNotification);
+        sources.at(i)->setValueFromGUI(sources.at(i)->getDefaultValue());
+
         fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
@@ -301,10 +303,8 @@ void SurgefxAudioProcessorEditor::resetLabels()
 
         fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
         fxParamDisplay[i].setAppearsDeactivated(processor.getFXStorageAppearsDeactivated(i));
-        // fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
-        //                              !processor.getFXStorageAppearsDeactivated(i));
-        // st(fxParamSliders[i], nm + " Knob");
-        // fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
+
+        sources.at(i)->setLabel(nm + "Knob");
 
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setAccessible(processor.canTempoSync(i));
@@ -360,10 +360,7 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
         {
             if (i < n_fx_params)
             {
-
-                // fxParamSources[i].setValueFromGUI(fv[i]);
-
-                // fxParamSliders[i].setValue(fv[i], juce::NotificationType::dontSendNotification);
+                sources.at(i)->setValueFromGUI(fv[i]);
                 fxParamDisplay[i].setDisplay(processor.getParamValueFor(i, fv[i]));
             }
             else
@@ -399,7 +396,9 @@ void SurgefxAudioProcessorEditor::resized()
         juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + sliderOff,
                                       (i % 6) * rowHeight + ypos0, rowHeight - sliderOff,
                                       rowHeight - sliderOff};
-        // fxParamSliders[i].setBounds(position);
+
+        position = position.reduced(position.getWidth() * 0.10, position.getHeight() * 0.10);
+
         knobs.at(i).get()->setBounds(position);
         // knobs.at(i).get()->setOpaque(true);
         int buttonSize = 19;

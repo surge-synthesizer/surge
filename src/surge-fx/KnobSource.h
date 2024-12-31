@@ -11,6 +11,7 @@ struct KnobSource : sst::jucegui::data::Continuous
 
     std::string label{"KnobSource"};
     std::string getLabel() const override { return label; }
+    void setLabel(std::string input) { label = input; }
     float value{0};
     float getValue() const override { return value; }
     float getDefaultValue() const override { return processor.getFXStorageDefaultValue01(id); }
