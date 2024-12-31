@@ -150,7 +150,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto knob = std::make_unique<sst::jucegui::components::Knob>();
-        auto knobSource = std::make_unique<KnobSource>(processor, i);
+        auto knobSource = std::make_unique<KnobSource>(processor, fxParamDisplay[i], i);
 
         knob->setStyle(styleSheet);
         knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
@@ -298,7 +298,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto knob = std::make_unique<sst::jucegui::components::Knob>();
-        auto knobSource = std::make_unique<KnobSource>(processor, i);
+        auto knobSource = std::make_unique<KnobSource>(processor, fxParamDisplay[i], i);
 
         knob->setStyle(styleSheet);
         knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);

@@ -7,7 +7,10 @@
 
 struct KnobSource : sst::jucegui::data::Continuous
 {
-    KnobSource(SurgefxAudioProcessor &p, int i) : processor(p), id(i) {}
+    KnobSource(SurgefxAudioProcessor &p, SurgeFXParamDisplay &d, int i)
+        : processor(p), display(d), id(i)
+    {
+    }
 
     std::string label{"KnobSource"};
     std::string getLabel() const override { return label; }
@@ -25,6 +28,7 @@ struct KnobSource : sst::jucegui::data::Continuous
             l->dataChanged();
 
         this->processor.setFXParamValue01(id, value);
+        display.setDisplay(std::to_string(value));
     }
 
     void setValueFromModel(const float &f) override
@@ -35,6 +39,7 @@ struct KnobSource : sst::jucegui::data::Continuous
     }
 
     SurgefxAudioProcessor &processor;
+    SurgeFXParamDisplay &display;
     int id;
 };
 #endif // SURGE_SRC_SURGE_FX_KNOBSOURCE_H
