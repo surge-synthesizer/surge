@@ -269,6 +269,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 5);
+    resized();
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
@@ -290,11 +291,28 @@ void SurgefxAudioProcessorEditor::resetLabels()
             handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         }
     };
+
+    knobs.clear();
+    sources.clear();
+
     for (int i = 0; i < n_fx_params; ++i)
     {
-        auto nm = processor.getParamName(i) + " " + processor.getParamGroup(i);
+        auto knob = std::make_unique<sst::jucegui::components::Knob>();
+        auto knobSource = std::make_unique<KnobSource>(processor, i);
 
-        sources.at(i)->setValueFromGUI(sources.at(i)->getDefaultValue());
+        knob->setStyle(styleSheet);
+        knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
+
+        auto paramName = processor.getParamName(i) + " " + processor.getParamGroup(i);
+        knobSource->setValueFromGUI(knobSource->getDefaultValue());
+        auto name = paramName + " Knob";
+        knobSource->setLabel(name);
+
+        knob->setSource(knobSource.get());
+
+        addAndMakeVisible(*knob);
+        knobs.push_back(std::move(knob));
+        sources.push_back(std::move(knobSource));
 
         fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
@@ -304,30 +322,28 @@ void SurgefxAudioProcessorEditor::resetLabels()
         fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
         fxParamDisplay[i].setAppearsDeactivated(processor.getFXStorageAppearsDeactivated(i));
 
-        sources.at(i)->setLabel(nm + "Knob");
-
         fxTempoSync[i].setEnabled(processor.canTempoSync(i));
         fxTempoSync[i].setAccessible(processor.canTempoSync(i));
         fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
                                       juce::NotificationType::dontSendNotification);
-        st(fxTempoSync[i], nm + " Tempo Synced");
+        st(fxTempoSync[i], name + " Tempo Synced");
         fxDeactivated[i].setEnabled(false);
 
         fxExtended[i].setEnabled(processor.canExtend(i));
         fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
                                      juce::NotificationType::dontSendNotification);
         fxExtended[i].setAccessible(processor.canExtend(i));
-        st(fxExtended[i], nm + " Extended");
+        st(fxExtended[i], name + " Extended");
         fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
         fxAbsoluted[i].setToggleState(processor.getFXStorageAbsolute(i),
                                       juce::NotificationType::dontSendNotification);
         fxAbsoluted[i].setAccessible(processor.canAbsolute(i));
-        st(fxAbsoluted[i], nm + " Absolute");
+        st(fxAbsoluted[i], name + " Absolute");
         fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
         fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
                                         juce::NotificationType::dontSendNotification);
         fxDeactivated[i].setAccessible(processor.canDeactitvate(i));
-        st(fxDeactivated[i], nm + " Deactivated");
+        st(fxDeactivated[i], name + " Deactivated");
     }
 
     picker->repaint();
@@ -338,6 +354,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
     {
         h->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
     }
+    resized();
 }
 
 void SurgefxAudioProcessorEditor::setEffectType(int i)
