@@ -400,7 +400,7 @@ void SurgefxAudioProcessorEditor::resized()
         position = position.reduced(position.getWidth() * 0.10, position.getHeight() * 0.10);
 
         knobs.at(i).get()->setBounds(position);
-        // knobs.at(i).get()->setOpaque(true);
+
         int buttonSize = 19;
         if (getWidth() < baseWidth)
             buttonSize = 17;

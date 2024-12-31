@@ -38,8 +38,7 @@
 class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
                                     juce::AsyncUpdater,
                                     SurgeStorage::ErrorListener,
-                                    sst::jucegui::style::StyleConsumer,
-                                    sst::jucegui::style::SettingsConsumer
+                                    sst::jucegui::style::StyleConsumer
 {
   public:
     SurgefxAudioProcessorEditor(SurgefxAudioProcessor &);
