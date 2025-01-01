@@ -309,6 +309,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
         knobSource->setLabel(name);
 
         knob->setSource(knobSource.get());
+        knob->setEnabled(processor.getParamEnabled(i));
 
         addAndMakeVisible(*knob);
         knobs.push_back(std::move(knob));
