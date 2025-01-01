@@ -28,7 +28,12 @@ struct KnobSource : sst::jucegui::data::Continuous
             l->dataChanged();
 
         this->processor.setFXParamValue01(id, value);
-        display.setDisplay(std::to_string(value));
+        display.setDisplay(getValueAsStringFor(value));
+    }
+
+    std::string getValueAsStringFor(float f) const override
+    {
+        return processor.getParamValue(id).c_str();
     }
 
     void setValueFromModel(const float &f) override
