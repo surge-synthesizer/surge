@@ -156,12 +156,12 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
         auto paramName = processor.getParamName(i) + " " + processor.getParamGroup(i);
-        knobSource->setValueFromGUI(knobSource->getDefaultValue());
+        knobSource->setValueFromGUI(processor.getFXStorageValue01(i));
         knobSource->setLabel(paramName + " Knob");
 
         knob->setSource(knobSource.get());
 
-        addAndMakeVisible(*knob);
+        addAndMakeVisible(knob.get());
         knobs.push_back(std::move(knob));
         sources.push_back(std::move(knobSource));
 
@@ -304,7 +304,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
         knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
         auto paramName = processor.getParamName(i) + " " + processor.getParamGroup(i);
-        knobSource->setValueFromGUI(knobSource->getDefaultValue());
+        knobSource->setValueFromGUI(processor.getFXStorageValue01(i));
         auto name = paramName + " Knob";
         knobSource->setLabel(name);
 

@@ -41,7 +41,6 @@ struct KnobSource : sst::jucegui::data::Continuous
         value = f;
         for (auto *l : guilisteners)
             l->dataChanged();
-        this->processor.setFXParamValue01(id, value);
         display.setDisplay(getValueAsStringFor(value));
     }
 
