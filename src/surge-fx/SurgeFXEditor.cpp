@@ -378,7 +378,7 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
         {
             if (i < n_fx_params)
             {
-                sources.at(i)->setValueFromGUI(fv[i]);
+                sources.at(i)->setValueFromModel(fv[i]);
                 fxParamDisplay[i].setDisplay(processor.getParamValueFor(i, fv[i]));
             }
             else
