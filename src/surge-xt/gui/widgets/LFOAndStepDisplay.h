@@ -63,6 +63,7 @@ struct LFOAndStepDisplay : public juce::Component,
     bool forceRepaint;
     LFOStorage *lfoStorageFromLastDrawingCall;
     pdata paramsFromLastDrawCall[n_scene_params];
+    pdata settingsFromLastDrawCall[8];
     int zoomFactorFromLastDrawCall;
 
     bool paramsHasChanged();
