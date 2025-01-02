@@ -114,7 +114,6 @@ class TextfieldPopup : public juce::Component,
   protected:
     juce::CodeEditorComponent *ed;
     Surge::GUI::Skin::ptr_t currentSkin;
-    // std::unique_ptr<Textfield> *textfield;
     std::unique_ptr<juce::Label> labelResult;
 
     std::unique_ptr<TextfieldButton> button[8];
