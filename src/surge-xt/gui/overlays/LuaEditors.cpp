@@ -342,13 +342,12 @@ void TextfieldPopup::resize()
 GotoLine::GotoLine(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t skin)
     : TextfieldPopup(editor, skin)
 {
-
     STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 0;
     // close
     createButton({R"(
 <svg height="24" width="24" fill="#FFFFFF"><path fill="none" d="m 0.07087901,-959.94314 23.93899499,-0.002 v 23.939 l -23.85812279,-0.0801 z"/><path d="m 8.2546475,-942.56172 -1.1099577,-1.10942 4.4397962,-4.44028 -4.4397962,-4.43942 1.1099577,-1.11028 4.4398655,4.44028 4.439762,-4.44028 1.110026,1.11028 -4.439848,4.43942 4.439848,4.44028 -1.110026,1.10942 -4.439762,-4.43942 z"/></svg>)"},
                  0);
-    setHeader("Go to line...");
+    setHeader("Go to line");
     setTextWidth(130);
 }
 
@@ -372,7 +371,6 @@ bool GotoLine::keyPressed(const juce::KeyPress &key, juce::Component *originatin
     }
     else
     {
-
         int line = std::max(0, textfield[0]->getText().getIntValue() - 1);
         line = std::min(ed->getDocument().getNumLines(), line);
 
@@ -395,6 +393,7 @@ void GotoLine::show()
 {
     currentLine = ed->getCaretPos().getLineNumber();
     textfield[0]->setText("");
+    textfield[0]->setInputRestrictions(4, "0123456789");
     TextfieldPopup::show();
     startCaretPosition = ed->getCaretPos();
     startScroll = ed->getFirstLineOnScreen();
@@ -407,9 +406,11 @@ void GotoLine::hide()
 }
 
 void GotoLine::focusLost(FocusChangeType) { hide(); }
+
 int GotoLine::getCurrentLine() { return currentLine; }
 
 void GotoLine::onClick(std::unique_ptr<TextfieldButton> &btn) { hide(); }
+
 /*
 ---------------------------------------
 Search box
@@ -419,7 +420,6 @@ Search box
 CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t skin)
     : TextfieldPopup(editor, skin)
 {
-
     setTextWidth(110);
     setButtonOffsetAtRow(1, -STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS);
 
@@ -459,10 +459,10 @@ CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI
 <svg height="24" width="24" fill="#FFFFFF"><path fill="none" d="m 0.07087901,-959.94314 23.93899499,-0.002 v 23.939 l -23.85812279,-0.0801 z"/><path d="m 8.2546475,-942.56172 -1.1099577,-1.10942 4.4397962,-4.44028 -4.4397962,-4.43942 1.1099577,-1.11028 4.4398655,4.44028 4.439762,-4.44028 1.110026,1.11028 -4.439848,4.43942 4.439848,4.44028 -1.110026,1.10942 -4.439762,-4.43942 z"/></svg>)"},
                  0);
 
-    setHeader("Find...");
+    setHeader("Find");
 
     createTextfield(1);
-    textfield[1]->setHeader("Replace..");
+    textfield[1]->setHeader("Replace");
 
     // showRows(2);
 
@@ -514,9 +514,8 @@ void CodeEditorSearch::onClick(std::unique_ptr<TextfieldButton> &btn)
 }
 
 int *CodeEditorSearch::getResult() { return result; }
-int CodeEditorSearch::getResultTotal() { return resultTotal; }
 
-// void CodeEditorSearch::paint(juce::Graphics &g) {}
+int CodeEditorSearch::getResultTotal() { return resultTotal; }
 
 bool CodeEditorSearch::isActive() { return active; }
 
@@ -524,7 +523,6 @@ void CodeEditorSearch::mouseDown(const juce::MouseEvent &event) { saveCaretStart
 
 void CodeEditorSearch::saveCaretStartPosition(bool onlyReadCaretPosition)
 {
-
     if (!ed->isReadOnly())
     {
         if (!saveCaretStartPositionLock &&
@@ -535,7 +533,6 @@ void CodeEditorSearch::saveCaretStartPosition(bool onlyReadCaretPosition)
 
             if (sel.getEnd() - sel.getStart() != 0)
             {
-
                 // move caret to beginning of selected
                 if (ed->getCaretPosition() > sel.getStart())
                 {
@@ -579,6 +576,7 @@ void CodeEditorSearch::removeHighlightColors()
 void CodeEditorSearch::show()
 {
     TextfieldPopup::show();
+
     // set selected text as search query unless it includes a newline character
     auto sel = ed->getHighlightedRegion();
     juce::String txt = ed->getTextInRange(sel);
@@ -606,11 +604,11 @@ void CodeEditorSearch::hide()
 }
 
 void CodeEditorSearch::textEditorEscapeKeyPressed(juce::TextEditor &) { hide(); }
+
 void CodeEditorSearch::textEditorReturnKeyPressed(juce::TextEditor &) {}
 
 bool CodeEditorSearch::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
-
     auto keyCode = key.getKeyCode();
 
     if (key.getKeyCode() == key.tabKey && rowsVisible > 1)
@@ -636,7 +634,6 @@ bool CodeEditorSearch::keyPressed(const juce::KeyPress &key, juce::Component *or
         // next / previous search
         if (originatingComponent == textfield[0].get())
         {
-
             if (key.getModifiers().isShiftDown())
             {
                 showResult(-1, true);
@@ -683,7 +680,6 @@ void CodeEditorSearch::replaceResults(bool all)
 
             while (resultTotal > 0)
             {
-
                 replaceCurrentResult(textfield[1]->getText());
             }
         }
@@ -696,7 +692,6 @@ void CodeEditorSearch::replaceResults(bool all)
 
 void CodeEditorSearch::replaceCurrentResult(juce::String txt)
 {
-
     if (resultTotal != 0)
     {
         ed->getDocument().replaceSection(
@@ -722,7 +717,6 @@ void CodeEditorSearch::replaceCurrentResult(juce::String txt)
 
 void CodeEditorSearch::textEditorTextChanged(juce::TextEditor &textEditor)
 {
-
     juce::TextEditor *other = dynamic_cast<juce::TextEditor *>(textfield[0].get());
 
     if (&textEditor == other)
@@ -743,7 +737,6 @@ void CodeEditorSearch::showResult(int increment, bool moveCaret)
 
     if (resultTotal == 0)
     {
-
         auto bgColor = currentSkin->getColor(Colors::FormulaEditor::Background).darker(1.3);
 
         labelResult->setColour(
@@ -857,7 +850,6 @@ juce::String CodeEditorSearch::getSearchQuery() { return textfield[0]->getText()
 
 void CodeEditorSearch::showReplace(bool showReplaceRow)
 {
-
     if (showReplaceRow)
     {
         showRows(2);
@@ -894,31 +886,32 @@ void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
     juce::CodeEditorComponent::addPopupMenuItems(menuToAddTo, mouseClickEvent);
 
 #if MAC
-    std::string commandStr = "CMD";
+    std::string commandStr = u8"\U00002318";
 
 #else
-    std::string commandStr = "CTRL";
+    std::string commandStr = "Ctrl";
 #endif
 
-    auto find = juce::PopupMenu::Item("Find").setAction([this]() {
+    auto find = juce::PopupMenu::Item("Find...").setAction([this]() {
         search->show();
         search->showReplace(false);
         gotoLine->hide();
     });
-    find.shortcutKeyDescription = commandStr + "+F";
+    find.shortcutKeyDescription = commandStr + " + F";
 
-    auto replace = juce::PopupMenu::Item("Replace").setAction([this]() {
+    auto replace = juce::PopupMenu::Item("Replace...").setAction([this]() {
         search->show();
         search->showReplace(true);
         gotoLine->hide();
     });
-    replace.shortcutKeyDescription = commandStr + "+H";
+    replace.shortcutKeyDescription = commandStr + " + H";
 
-    auto gotoline = juce::PopupMenu::Item("Go to line").setAction([this]() {
-        search->hide();
-        gotoLine->show();
-    });
-    gotoline.shortcutKeyDescription = commandStr + "+G";
+    auto gotoline =
+        juce::PopupMenu::Item(Surge::GUI::toOSCase("Go to Line...")).setAction([this]() {
+            search->hide();
+            gotoLine->show();
+        });
+    gotoline.shortcutKeyDescription = commandStr + " + G";
 
     menuToAddTo.addSeparator();
 
@@ -940,7 +933,6 @@ void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
 
 bool SurgeCodeEditorComponent::keyPressed(const juce::KeyPress &key)
 {
-
     bool code = CodeEditorComponent::keyPressed(key);
 
     // update search results
@@ -1003,13 +995,11 @@ void SurgeCodeEditorComponent::paint(juce::Graphics &g)
 
         for (int i = 0; i < resultTotal; i++)
         {
-
             auto pos = juce::CodeDocument::Position(getDocument(), result[i]);
             auto line = pos.getLineNumber();
 
             if (line >= firstLine && line <= lastLine)
             {
-
                 auto posEnd = juce::CodeDocument::Position(
                     getDocument(), result[i] + search->getSearchQuery().length());
 
@@ -1036,14 +1026,11 @@ void SurgeCodeEditorComponent::paint(juce::Graphics &g)
 
 void SurgeCodeEditorComponent::paintOverChildren(juce::Graphics &g)
 {
-
     // Draw search map on scrollbar only when result has changed and cache the result
     if (search != nullptr && search->isVisible())
     {
-
         if (search->resultHasChanged)
         {
-
             auto result = search->getResult();
             int resultTotal = search->getResultTotal();
 
@@ -1155,12 +1142,10 @@ void SurgeCodeEditorComponent::handleReturnKey()
         }
         else
         {
-
             auto trimmedTxt = txt.trim();
 
             if (txt.substring(i, i + 8) == "function")
             {
-
                 indent = true;
             }
             else if (txt.substring(i, i + 2) == "if" &&
@@ -1403,7 +1388,6 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
     // go to line
     else if (key.getModifiers().isCommandDown() && keyCode == 71)
     {
-
         bool isgoto = (gotoLine == nullptr);
 
         search->hide();
@@ -1453,7 +1437,6 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
     }
     else
     {
-
         return Component::keyPressed(key);
     }
 
@@ -1502,7 +1485,6 @@ void CodeEditorContainerWithApply::removeTrailingWhitespaceFromDocument()
 bool CodeEditorContainerWithApply::autoCompleteDeclaration(juce::KeyPress key, std::string start,
                                                            std::string end)
 {
-
     auto keyChar = juce::String::charToString((key.getTextCharacter())).toStdString();
 
     if (keyChar != start && keyChar != end && key.getKeyCode() != 8)
@@ -1527,7 +1509,6 @@ bool CodeEditorContainerWithApply::autoCompleteDeclaration(juce::KeyPress key, s
     // auto delete closure
     if (key.getKeyCode() == 8)
     {
-
         if (selection == 0)
         {
             auto charBefore = text.substring(caretPosition - 1, caretPosition).toStdString();
@@ -1556,7 +1537,6 @@ bool CodeEditorContainerWithApply::autoCompleteDeclaration(juce::KeyPress key, s
 
         if (start != end)
         {
-
             if (character == start)
                 count++;
             if (character == end)
