@@ -1,3 +1,4 @@
+#pragma once
 /*
  * Surge XT - a free and open source hybrid synthesizer,
  * built by Surge Synth Team
@@ -224,7 +225,7 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
                                        shouldDrawButtonAsDown);
     }
 
-    void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override{};
+    void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override {};
 
     void paintComponentBackground(juce::Graphics &g, int w, int h)
     {
