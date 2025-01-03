@@ -1118,20 +1118,28 @@ void SurgeCodeEditorComponent::mouseWheelMove(const juce::MouseEvent &e,
     juce::MouseWheelDetails w(wheel);
     w.deltaY *= 4;
 
+    enum
+    {
+        verticalScrollbar,
+        horizontalScrollbar
+    };
+
     // makes it possible to mouse wheel scroll and select text at the same time
     if (e.mods.isShiftDown())
     {
-        auto scrollbar = dynamic_cast<juce::ScrollBar *>(getChildren()[1]);
-        auto pos = scrollbar->getCurrentRange().getStart();
+        auto scrollbar = dynamic_cast<juce::ScrollBar *>(getChildren()[horizontalScrollbar]);
 
-        auto width = scrollbar->getCurrentRangeSize();
-        auto maxScroll = std::max((double)0, scrollbar->getMaximumRangeLimit() - width);
+        if (scrollbar != nullptr)
+        {
+            auto pos = scrollbar->getCurrentRange().getStart();
+            auto width = scrollbar->getCurrentRangeSize();
+            auto maxScroll = std::max((double)0, scrollbar->getMaximumRangeLimit() - width);
 
-        scrollToColumn(std::min((double)maxScroll, pos - w.deltaY * 10));
+            scrollToColumn(std::min((double)maxScroll, pos - w.deltaY * 10));
+        }
     }
     else
     {
-        auto scrollbar = dynamic_cast<juce::ScrollBar *>(getChildren()[0]);
         auto maxScroll = std::max(0, getDocument().getNumLines() - getNumLinesOnScreen());
         auto scrollPos = getFirstLineOnScreen();
 
