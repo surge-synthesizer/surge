@@ -463,6 +463,24 @@ bool LFOAndStepDisplay::paramsHasChanged()
         ++p;
     };
 
+    if (lfodata->rate.deactivated != settingsFromLastDrawCall[0].b)
+    {
+        settingsFromLastDrawCall[0].b = lfodata->rate.deactivated;
+        hasChanged = true;
+    }
+
+    if (lfodata->deform.deform_type != paramsFromLastDrawCall[1].i)
+    {
+        paramsFromLastDrawCall[1].i = lfodata->deform.deform_type;
+        hasChanged = true;
+    }
+
+    if (lfodata->rate.temposync != paramsFromLastDrawCall[2].b)
+    {
+        paramsFromLastDrawCall[2].b = lfodata->rate.temposync;
+        hasChanged = true;
+    }
+
     if (lfoStorageFromLastDrawingCall != lfodata)
         hasChanged = true;
 
@@ -1728,6 +1746,7 @@ void LFOAndStepDisplay::onSkinChanged()
     {
         return;
     }
+    forceRepaint = true;
     auto typesWithHover = skin->standardHoverAndHoverOnForIDB(IDB_LFO_TYPE, associatedBitmapStore);
     typeImg = typesWithHover[0];
     typeImgHover = typesWithHover[1];
