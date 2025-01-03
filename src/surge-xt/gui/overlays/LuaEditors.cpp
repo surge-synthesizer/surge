@@ -1117,7 +1117,18 @@ void SurgeCodeEditorComponent::mouseWheelMove(const juce::MouseEvent &e,
 {
     juce::MouseWheelDetails w(wheel);
     w.deltaY *= 4;
-    CodeEditorComponent::mouseWheelMove(e, w);
+
+    // makes it possible to mouse wheel scroll and select text at the same time
+    if (e.mods.isShiftDown())
+    {
+        auto scrollbar = dynamic_cast<juce::ScrollBar *>(getChildren()[1]);
+        auto pos = scrollbar->getCurrentRange().getStart();
+        scrollToColumn(pos - w.deltaY * 10);
+    }
+    else
+    {
+        scrollBy(-w.deltaY * 10);
+    }
 }
 
 // Handles auto indentation
