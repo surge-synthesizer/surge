@@ -1123,11 +1123,19 @@ void SurgeCodeEditorComponent::mouseWheelMove(const juce::MouseEvent &e,
     {
         auto scrollbar = dynamic_cast<juce::ScrollBar *>(getChildren()[1]);
         auto pos = scrollbar->getCurrentRange().getStart();
-        scrollToColumn(pos - w.deltaY * 10);
+
+        auto width = scrollbar->getCurrentRangeSize();
+        auto maxScroll = std::max((double)0, scrollbar->getMaximumRangeLimit() - width);
+
+        scrollToColumn(std::min((double)maxScroll, pos - w.deltaY * 10));
     }
     else
     {
-        scrollBy(-w.deltaY * 10);
+        auto scrollbar = dynamic_cast<juce::ScrollBar *>(getChildren()[0]);
+        auto maxScroll = std::max(0, getDocument().getNumLines() - getNumLinesOnScreen());
+        auto scrollPos = getFirstLineOnScreen();
+
+        scrollToLine(std::min((double)maxScroll, (double)scrollPos - w.deltaY * 10));
     }
 }
 
