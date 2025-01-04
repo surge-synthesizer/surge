@@ -138,8 +138,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
 
-    defaultKnobLayout = std::make_unique<SurgeFXDefaultEditor>(p);
-    addAndMakeVisibleRecordOrder(defaultKnobLayout.get());
+    deafultParameterPanel = std::make_unique<ParameterPanel>(p);
+    addAndMakeVisibleRecordOrder(deafultParameterPanel.get());
 
     auto backgroundColour = findColour(SurgeLookAndFeel::SurgeColourIds::componentBgStart);
     auto surgeOrange = findColour(SurgeLookAndFeel::SurgeColourIds::orange);
@@ -198,7 +198,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
         }
     };
 
-    defaultKnobLayout->reset();
+    deafultParameterPanel->reset();
     picker->repaint();
 
     int row = 0, col = 0;
@@ -230,8 +230,8 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
         {
             if (i < n_fx_params)
             {
-                defaultKnobLayout->sources.at(i)->setValueFromModel(fv[i]);
-                defaultKnobLayout->fxParamDisplay[i].setDisplay(
+                deafultParameterPanel->sources.at(i)->setValueFromModel(fv[i]);
+                deafultParameterPanel->fxParamDisplay[i].setDisplay(
                     processor.getParamValueFor(i, fv[i]));
             }
             else
@@ -267,7 +267,7 @@ void SurgefxAudioProcessorEditor::resized()
     fxNameLabel->setFont(juce::FontOptions(28));
     fxNameLabel->setBounds(bottomArea);
 
-    defaultKnobLayout->setBounds(bounds);
+    deafultParameterPanel->setBounds(bounds);
 }
 
 int SurgefxAudioProcessorEditor::findLargestFittingZoomBetween(

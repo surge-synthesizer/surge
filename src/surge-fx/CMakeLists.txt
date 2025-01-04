@@ -58,7 +58,7 @@ target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXEditor.cpp
   SurgeFXEditor.h
   SurgeFXProcessor.cpp
-  SurgeFXDefaultEditor.cpp
+  ParameterPanel.cpp
   SurgeFXProcessor.h
   SurgeLookAndFeel.h
   FXOpenSoundControl.cpp

@@ -19,12 +19,12 @@
 
 #include "juce_audio_processors/juce_audio_processors.h"
 
-class SurgeFXDefaultEditor : public juce::Component
+class ParameterPanel : public juce::Component
 {
   public:
-    SurgeFXDefaultEditor(SurgefxAudioProcessor &);
+    ParameterPanel(SurgefxAudioProcessor &);
 
-    ~SurgeFXDefaultEditor() override;
+    ~ParameterPanel() override;
 
     void paint(juce::Graphics &) override;
     void resized() override;
@@ -49,5 +49,5 @@ class SurgeFXDefaultEditor : public juce::Component
 
     juce::Font projectFont;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeFXDefaultEditor);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterPanel);
 };

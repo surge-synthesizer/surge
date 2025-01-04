@@ -24,7 +24,7 @@
 #define SURGE_SRC_SURGE_FX_SURGEFXEDITOR_H
 
 #include "SurgeFXProcessor.h"
-#include "SurgeFXDefaultEditor.h"
+#include "ParameterPanel.h"
 #include "SurgeLookAndFeel.h"
 #include "KnobSource.h"
 
@@ -58,7 +58,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     };
     std::vector<FxMenu> menu;
     std::unique_ptr<juce::Component> picker;
-    std::unique_ptr<SurgeFXDefaultEditor> defaultKnobLayout;
+    std::unique_ptr<ParameterPanel> deafultParameterPanel;
     static constexpr int topSection = 80;
 
     void makeMenu();

@@ -1,6 +1,6 @@
-#include "SurgeFXDefaultEditor.h"
+#include "ParameterPanel.h"
 
-SurgeFXDefaultEditor::SurgeFXDefaultEditor(SurgefxAudioProcessor &p) : processor(p)
+ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p) : processor(p)
 {
 
     for (int i = 0; i < n_fx_params; ++i)
@@ -101,11 +101,11 @@ SurgeFXDefaultEditor::SurgeFXDefaultEditor(SurgefxAudioProcessor &p) : processor
     }
 }
 
-SurgeFXDefaultEditor::~SurgeFXDefaultEditor() {}
+ParameterPanel::~ParameterPanel() {}
 
-void SurgeFXDefaultEditor::paint(juce::Graphics &g) { g.fillAll(juce::Colours::darkgrey); }
+void ParameterPanel::paint(juce::Graphics &g) { g.fillAll(juce::Colours::darkgrey); }
 
-void SurgeFXDefaultEditor::reset()
+void ParameterPanel::reset()
 {
     knobs.clear();
     sources.clear();
@@ -171,7 +171,7 @@ void SurgeFXDefaultEditor::reset()
         st(fxDeactivated[i], name + " Deactivated");
     }
 }
-void SurgeFXDefaultEditor::resized()
+void ParameterPanel::resized()
 {
     int ypos0 = topSection - 5;
     int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
