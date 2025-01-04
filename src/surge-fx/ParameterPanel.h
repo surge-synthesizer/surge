@@ -19,10 +19,11 @@
 
 #include "juce_audio_processors/juce_audio_processors.h"
 
-class ParameterPanel : public juce::Component
+class ParameterPanel : public juce::Component, sst::jucegui::style::StyleConsumer
 {
   public:
-    ParameterPanel(SurgefxAudioProcessor &);
+    ParameterPanel(SurgefxAudioProcessor &,
+                   std::shared_ptr<sst::jucegui::style::StyleSheet> styleSheet);
 
     ~ParameterPanel() override;
 

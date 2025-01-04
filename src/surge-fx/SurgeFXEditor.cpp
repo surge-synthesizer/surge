@@ -138,7 +138,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
 
-    deafultParameterPanel = std::make_unique<ParameterPanel>(p);
+    deafultParameterPanel = std::make_unique<ParameterPanel>(p, styleSheet);
     addAndMakeVisibleRecordOrder(deafultParameterPanel.get());
 
     auto backgroundColour = findColour(SurgeLookAndFeel::SurgeColourIds::componentBgStart);
@@ -256,7 +256,6 @@ void SurgefxAudioProcessorEditor::resized()
     auto bounds = getLocalBounds();
     int topAreaHeight =
         static_cast<int>((static_cast<float>(topSection) / baseHeight) * getHeight());
-    std::cout << topAreaHeight << std::endl;
     int bottomAreaHeight = static_cast<int>((static_cast<float>(40) / baseHeight) * getHeight());
 
     auto topArea = bounds.removeFromTop(topAreaHeight);

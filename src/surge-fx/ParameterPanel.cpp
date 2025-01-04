@@ -1,7 +1,13 @@
 #include "ParameterPanel.h"
 
-ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p) : processor(p)
+ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p,
+                               std::shared_ptr<sst::jucegui::style::StyleSheet> styleSheet)
+    : processor(p),
+      sst::jucegui::style::StyleConsumer(sst::jucegui::components::Knob::Styles::styleClass)
+
 {
+
+    setStyle(styleSheet);
 
     for (int i = 0; i < n_fx_params; ++i)
     {
