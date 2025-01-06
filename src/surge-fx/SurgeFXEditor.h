@@ -114,60 +114,6 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     std::vector<std::unique_ptr<KnobSource>> sources;
 
   private:
-    struct AccSlider : public juce::Slider
-    {
-        AccSlider() { setWantsKeyboardFocus(true); }
-        juce::String getTextFromValue(double v) override
-        {
-            // std::cout << "GTFV " << v << std::endl;
-            // return juce::Slider::getTextFromValue(v);
-            //  This is a bit of a hack to externalize this but
-            return tv;
-        }
-
-        juce::String tv;
-        void setTextValue(juce::String s)
-        {
-            tv = s;
-            if (auto *handler = getAccessibilityHandler())
-            {
-                handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
-            }
-        }
-        bool keyPressed(const juce::KeyPress &key) override
-        {
-            float amt = 0.05;
-            if (key.getModifiers().isShiftDown())
-                amt = 0.01;
-            if (key.getKeyCode() == juce::KeyPress::upKey)
-            {
-                setValue(std::clamp(getValue() + amt, 0., 1.),
-                         juce::NotificationType::sendNotification);
-                return true;
-            }
-
-            if (key.getKeyCode() == juce::KeyPress::downKey)
-            {
-                setValue(std::clamp(getValue() - amt, 0., 1.),
-                         juce::NotificationType::sendNotification);
-                return true;
-            }
-
-            if (key.getKeyCode() == juce::KeyPress::homeKey)
-            {
-                setValue(1., juce::NotificationType::sendNotification);
-                return true;
-            }
-
-            if (key.getKeyCode() == juce::KeyPress::endKey)
-            {
-                setValue(0., juce::NotificationType::sendNotification);
-                return true;
-            }
-            return false;
-        }
-    };
-
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
     SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
