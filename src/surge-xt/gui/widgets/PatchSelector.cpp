@@ -87,7 +87,7 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
         divider{juce::Colours::orchid};
 
     void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
-                       bool rowIsSelected)
+                       bool rowIsSelected) override
     {
         bool isMouseOver = selector->typeAhead->isRowMouseOver(searchIndex);
 
