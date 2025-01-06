@@ -51,11 +51,13 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
 {
     SurgeStorage *storage{nullptr};
     PatchSelector *selector{nullptr};
+
     PatchDBTypeAheadProvider(PatchSelector *s) : selector(s) {}
 
     std::vector<PatchStorage::PatchDB::patchRecord> lastSearchResult;
     std::vector<int> searchFor(const std::string &s) override
     {
+        std::cout << "search for " << s << "\n";
         lastSearchResult = storage->patchDB->queryFromQueryString(s);
         std::vector<int> res(lastSearchResult.size());
         std::iota(res.begin(), res.end(), 0);
@@ -76,8 +78,8 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
         return "<<ERROR>>";
     }
 
-    int getRowHeight() override { return 23; }
-    int getDisplayedRows() override { return 12; }
+    int getRowHeight() override { return 28; }
+    int getDisplayedRows() override { return 11; }
 
     juce::Colour rowBg{juce::Colours::white}, hlRowBg{juce::Colours::lightblue},
         rowText{juce::Colours::black}, hlRowText{juce::Colours::red},
@@ -87,56 +89,51 @@ struct PatchDBTypeAheadProvider : public TypeAheadDataProvider,
     void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
                        bool rowIsSelected) override
     {
+        bool isMouseOver = selector->typeAhead->isRowMouseOver(searchIndex);
+
         g.fillAll(rowBg);
         if (rowIsSelected)
         {
-            auto r = juce::Rectangle<int>(0, 0, width, height).reduced(2, 2);
+            auto r = juce::Rectangle<int>(0, 0, width, height - 0.5);
             g.setColour(hlRowBg);
             g.fillRect(r);
         }
+        else if (isMouseOver)
+        {
+            auto r = juce::Rectangle<int>(0, 0, width, height - 0.5);
+            g.setColour(hlRowBg.withAlpha(0.3f));
+            g.fillRect(r);
+        }
 
-        g.setFont(skin->fontManager->getLatoAtSize(12));
+        auto marginVertical = 3;
+
+        g.setFont(skin->fontManager->getLatoAtSize(11));
         if (searchIndex >= 0 && searchIndex < lastSearchResult.size())
         {
             auto pr = lastSearchResult[searchIndex];
-            auto r = juce::Rectangle<int>(4, 0, width - 8, height - 1);
+            auto r = juce::Rectangle<int>(4, marginVertical - 2, width - 8, height);
             if (rowIsSelected)
                 g.setColour(hlRowText);
             else
                 g.setColour(rowText);
-            g.drawText(pr.name, r, juce::Justification::centredTop);
+            g.drawText(pr.name, r, juce::Justification::topLeft);
 
             if (rowIsSelected)
-                g.setColour(hlRowSubText);
+                g.setColour(hlRowSubText.withAlpha(0.8f));
             else
-                g.setColour(rowSubText);
+                g.setColour(rowSubText.withAlpha(0.8f));
             g.setFont(skin->fontManager->getLatoAtSize(8));
-            g.drawText(pr.cat, r, juce::Justification::bottomLeft);
-            g.drawText(pr.author, r, juce::Justification::bottomRight);
+
+            auto rLower = juce::Rectangle<int>(4, 0, width - 8, height - marginVertical);
+            r.translate(0, -marginVertical * 2);
+            g.drawText(pr.cat, rLower, juce::Justification::bottomLeft);
+            g.drawText(pr.author, rLower, juce::Justification::bottomRight);
         }
-        g.setColour(divider);
-        g.drawLine(4, height - 1, width - 4, height - 1, 1);
+        g.setColour(divider.withAlpha(0.8f));
+        g.drawLine(0, height - 0.5, width, height - 0.5, 0.5);
     }
 
-    void paintOverChildren(juce::Graphics &g, const juce::Rectangle<int> &bounds) override
-    {
-        auto q = bounds.reduced(2, 2);
-        auto res = lastSearchResult.size();
-        std::string txt;
-
-        if (res <= 0)
-        {
-            txt = "No results";
-        }
-        else
-        {
-            txt = fmt::format("{:d} result{:s}", res, (res > 1 ? "s" : ""));
-        }
-
-        g.setColour(rowText.withAlpha(0.666f));
-        g.setFont(skin->fontManager->getLatoAtSize(7, juce::Font::bold));
-        g.drawText(txt, q, juce::Justification::topLeft);
-    }
+    void paintOverChildren(juce::Graphics &g, const juce::Rectangle<int> &bounds) override {}
 };
 
 struct PatchSelector::TB : juce::Component
@@ -294,7 +291,7 @@ void PatchSelector::paint(juce::Graphics &g)
         cat = cat.translated(0, getHeight() * 0.5);
         auth = auth.withTrimmedRight(3)
                    .withWidth(150)
-                   .translated(getWidth() - 150 - 3, 0)
+                   .translated(getWidth() - 180 - 3, 0)
                    .withTop(cat.getY())
                    .withHeight(cat.getHeight());
     }
@@ -392,6 +389,29 @@ void PatchSelector::paint(juce::Graphics &g)
         g.drawText((useCatAndBy ? "By: " : "") + author, auth,
                    skin->getVersion() >= 2 ? juce::Justification::centredRight
                                            : juce::Justification::centredLeft);
+
+        // search result text
+    }
+    if (typeAhead->lbox->isVisible())
+    {
+        auto res = patchDbProvider->lastSearchResult.size();
+        std::string txt;
+
+        if (res <= 0)
+        {
+            txt = "No results";
+        }
+        else
+        {
+            txt = fmt::format("{:d} result{:s}", res, (res > 1 ? "s" : ""));
+        }
+
+        auto tc = skin->getColor(Colors::PatchBrowser::Text);
+        g.setColour(tc);
+        g.setFont(skin->fontManager->displayFont);
+
+        auto rect = juce::Rectangle(20, -12, 70, 40);
+        g.drawText(txt, rect, juce::Justification::centredLeft);
     }
 }
 
@@ -412,7 +432,7 @@ void PatchSelector::resized()
                      .translated(2, 1);
     searchButton->setBounds(searchRect);
 
-    auto tad = getLocalBounds().reduced(fsize + 4, 0).translated(0, -2);
+    auto tad = getLocalBounds().reduced(fsize, 0).translated(0, -2);
 
     typeAhead->setBounds(tad);
 }
