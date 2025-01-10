@@ -2455,6 +2455,36 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         contextMenu.addSeparator();
 
+        const int detailedMode = Surge::Storage::getValueDispPrecision(storage) ? 6 : 2;
+
+        contextMenu.addItem(
+            fmt::format("Duration: {:.{}f}", ms->segments[tts].duration, detailedMode), false,
+            false, nullptr);
+        contextMenu.addItem(fmt::format("Value: {:.{}f}", ms->segments[tts].v0, detailedMode),
+                            false, false, nullptr);
+
+        const bool is2Dcp =
+            ms->segments[tts].type == type::QUAD_BEZIER || ms->segments[tts].type == type::BROWNIAN;
+
+        if (ms->segments[tts].type != type::HOLD)
+        {
+            auto curveStr = fmt::format(
+                "Control Point{}: {:.{}f}", is2Dcp ? " X" : "",
+                (is2Dcp ? ms->segments[tts].cpduration : ms->segments[tts].cpv), detailedMode);
+
+            contextMenu.addItem(curveStr, false, false, nullptr);
+        }
+
+        if (is2Dcp)
+        {
+            auto curveStrY =
+                fmt::format("Control Point Y: {:.{}f}", ms->segments[tts].cpv, detailedMode);
+
+            contextMenu.addItem(curveStrY, false, false, nullptr);
+        }
+
+        contextMenu.addSeparator();
+
         if (ms->editMode != MSEGStorage::LFO && ms->loopMode != MSEGStorage::LoopMode::ONESHOT)
         {
             if (tts <= ms->loop_end + 1 && tts != ms->loop_start)
