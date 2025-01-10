@@ -22,7 +22,7 @@
 class ParameterPanel : public juce::Component
 {
   public:
-    ParameterPanel(SurgefxAudioProcessor &);
+    ParameterPanel(SurgefxAudioProcessor &, std::vector<juce::Component *> &accessibleOrder);
 
     ~ParameterPanel() override;
 
@@ -50,8 +50,15 @@ class ParameterPanel : public juce::Component
 
     juce::Colour backgroundColour = juce::Colour(205, 206, 212);
     juce::Colour surgeOrange = juce::Colour(255, 144, 0);
+    std::vector<juce::Component *> &accessibleOrderWeakRefs; // Reference to the vector
 
     juce::Font projectFont;
+
+    void addAndMakeVisibleRecordOrder(juce::Component *c)
+    {
+        accessibleOrderWeakRefs.push_back(c);
+        addAndMakeVisible(c);
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterPanel);
 };

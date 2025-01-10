@@ -133,7 +133,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
 
-    deafultParameterPanel = std::make_unique<ParameterPanel>(p);
+    deafultParameterPanel = std::make_unique<ParameterPanel>(p, accessibleOrderWeakRefs);
     addAndMakeVisibleRecordOrder(deafultParameterPanel.get());
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");

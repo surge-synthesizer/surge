@@ -1,9 +1,10 @@
 #include "ParameterPanel.h"
 
-ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
+ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p,
+                               std::vector<juce::Component *> &accessibleOrder)
     : processor(p), styleSheet(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
-                        sst::jucegui::style::StyleSheet ::DARK))
-
+                        sst::jucegui::style::StyleSheet::DARK)),
+      accessibleOrderWeakRefs(accessibleOrder)
 {
     sst::jucegui::style ::StyleSheet::initializeStyleSheets([]() {});
 
@@ -28,7 +29,7 @@ ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
 
         knob->setSource(knobSource.get());
 
-        addAndMakeVisible(knob.get());
+        addAndMakeVisibleRecordOrder(knob.get());
         knobs.push_back(std::move(knob));
         sources.push_back(std::move(knobSource));
 
@@ -47,7 +48,7 @@ ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
         };
 
         fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " TempoSync");
-        addAndMakeVisible(&(fxTempoSync[i]));
+        addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
 
         fxDeactivated[i].setOnOffImage(BinaryData::DE_Act_svg, BinaryData::DE_Act_svgSize,
                                        BinaryData::DE_Deact_svg, BinaryData::DE_Deact_svgSize);
@@ -63,7 +64,7 @@ ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
             this->processor.setUserEditingParamFeature(i, false);
         };
         fxDeactivated[i].setTitle("Parameter " + std::to_string(i) + " Deactivate");
-        addAndMakeVisible(&(fxDeactivated[i]));
+        addAndMakeVisibleRecordOrder(&(fxDeactivated[i]));
 
         fxExtended[i].setOnOffImage(BinaryData::EX_Act_svg, BinaryData::EX_Act_svgSize,
                                     BinaryData::EX_Deact_svg, BinaryData::EX_Deact_svgSize);
@@ -79,7 +80,7 @@ ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
             this->processor.setUserEditingParamFeature(i, false);
         };
         fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
-        addAndMakeVisible(&(fxExtended[i]));
+        addAndMakeVisibleRecordOrder(&(fxExtended[i]));
 
         fxAbsoluted[i].setOnOffImage(BinaryData::AB_Act_svg, BinaryData::AB_Act_svgSize,
                                      BinaryData::AB_Deact_svg, BinaryData::AB_Deact_svgSize);
@@ -97,7 +98,7 @@ ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
         };
 
         fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absoluted");
-        addAndMakeVisible(&(fxAbsoluted[i]));
+        addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
 
         processor.prepareParametersAbsentAudio();
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
@@ -108,7 +109,7 @@ ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
             processor.setParameterByString(i, s);
         };
 
-        addAndMakeVisible(&(fxParamDisplay[i]));
+        addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
     }
 }
 
@@ -146,7 +147,7 @@ void ParameterPanel::reset()
         knob->setSource(knobSource.get());
         knob->setEnabled(processor.getParamEnabled(i));
 
-        addAndMakeVisible(*knob);
+        addAndMakeVisibleRecordOrder(knob.get());
         knobs.push_back(std::move(knob));
         sources.push_back(std::move(knobSource));
 
