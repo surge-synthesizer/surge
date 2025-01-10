@@ -1,4 +1,3 @@
-#pragma once
 /*
  * Surge XT - a free and open source hybrid synthesizer,
  * built by Surge Synth Team
@@ -21,6 +20,8 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#ifndef SURGE_SRC_SURGE_FX_SURGELOOKANDFEEL_H
+#define SURGE_SRC_SURGE_FX_SURGELOOKANDFEEL_H
 #include "version.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -505,3 +506,4 @@ class SurgeTempoSyncSwitch : public juce::ToggleButton
             g.fillRoundedRectangle(kbounds, controlRadius);
     }
 };
+#endif // SURGE_SRC_SURGE_FX_SURGELOOKANDFEEL_H

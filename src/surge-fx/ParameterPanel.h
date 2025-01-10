@@ -1,23 +1,12 @@
-#pragma once
-
-#include <memory> // Include memory header for std::unique_ptr
+#ifndef SURGE_SRC_SURGE_FX_PARAMETERPANEL_H
+#define SURGE_SRC_SURGE_FX_PARAMETERPANEL_H
 
 #include "SurgeFXProcessor.h"
 #include "SurgeLookAndFeel.h"
 #include "KnobSource.h"
 
-#include "juce_gui_basics/juce_gui_basics.h"
-
 #include <sst/jucegui/style/StyleSheet.h>
 #include <sst/jucegui/components/Knob.h>
-
-#include "SurgeStorage.h"
-#include "Effect.h"
-#include "FXOpenSoundControl.h"
-#include <atomic>
-#include "sst/filters/HalfRateFilter.h"
-
-#include "juce_audio_processors/juce_audio_processors.h"
 
 class ParameterPanel : public juce::Component
 {
@@ -62,3 +51,5 @@ class ParameterPanel : public juce::Component
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterPanel);
 };
+
+#endif // SURGE_SRC_SURGE_FX_PARAMETERPANEL_H
