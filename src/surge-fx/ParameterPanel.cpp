@@ -1,20 +1,27 @@
 #include "ParameterPanel.h"
 
-ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p,
-                               std::shared_ptr<sst::jucegui::style::StyleSheet> styleSheet)
-    : processor(p),
-      sst::jucegui::style::StyleConsumer(sst::jucegui::components::Knob::Styles::styleClass)
+ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
+    : processor(p), styleSheet(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
+                        sst::jucegui::style::StyleSheet::DARK))
 
 {
+    sst::jucegui::style::StyleSheet::initializeStyleSheets([]() {});
 
-    setStyle(styleSheet);
+    using knobStyle = sst::jucegui::components::Knob::Styles;
+    // auto backgroundColour = findColour(SurgeLookAndFeel::SurgeColourIds::componentBgStart);
+    // auto surgeOrange = findColour(SurgeLookAndFeel::SurgeColourIds::orange);
+
+    // // styleSheet->setColour(knobStyle::styleClass, knobStyle::handle, backgroundColour);
+    // // styleSheet->setColour(knobStyle::styleClass, knobStyle::knobbase, backgroundColour);
+    // // styleSheet->setColour(knobStyle::styleClass, knobStyle::value, surgeOrange);
+    // // styleSheet->setColour(knobStyle::styleClass, knobStyle::value_hover, surgeOrange);
 
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto knob = std::make_unique<sst::jucegui::components::Knob>();
         auto knobSource = std::make_unique<KnobSource>(processor, fxParamDisplay[i], i);
 
-        // knob->setStyle(styleSheet);
+        knob->setStyle(styleSheet);
         knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
         auto paramName = processor.getParamName(i) + " " + processor.getParamGroup(i);
@@ -130,7 +137,7 @@ void ParameterPanel::reset()
         auto knob = std::make_unique<sst::jucegui::components::Knob>();
         auto knobSource = std::make_unique<KnobSource>(processor, fxParamDisplay[i], i);
 
-        // knob->setStyle(styleSheet);
+        knob->setStyle(styleSheet);
         knob->setModulationDisplay(sst::jucegui::components::Knob::Modulatable::NONE);
 
         auto paramName = processor.getParamName(i) + " " + processor.getParamGroup(i);
@@ -176,6 +183,7 @@ void ParameterPanel::reset()
         fxDeactivated[i].setAccessible(processor.canDeactitvate(i));
         st(fxDeactivated[i], name + " Deactivated");
     }
+    resized();
 }
 void ParameterPanel::resized()
 {

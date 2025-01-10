@@ -38,8 +38,7 @@
  */
 class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
                                     juce::AsyncUpdater,
-                                    SurgeStorage::ErrorListener,
-                                    sst::jucegui::style::StyleConsumer
+                                    SurgeStorage::ErrorListener
 {
   public:
     SurgefxAudioProcessorEditor(SurgefxAudioProcessor &);
@@ -142,7 +141,6 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
   public:
     std::vector<juce::Component *> accessibleOrderWeakRefs;
-    std::shared_ptr<sst::jucegui::style::StyleSheet> styleSheet;
 
   public:
     std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;

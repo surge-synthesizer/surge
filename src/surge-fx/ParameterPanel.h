@@ -19,11 +19,10 @@
 
 #include "juce_audio_processors/juce_audio_processors.h"
 
-class ParameterPanel : public juce::Component, sst::jucegui::style::StyleConsumer
+class ParameterPanel : public juce::Component
 {
   public:
-    ParameterPanel(SurgefxAudioProcessor &,
-                   std::shared_ptr<sst::jucegui::style::StyleSheet> styleSheet);
+    ParameterPanel(SurgefxAudioProcessor &);
 
     ~ParameterPanel() override;
 
@@ -34,6 +33,7 @@ class ParameterPanel : public juce::Component, sst::jucegui::style::StyleConsume
 
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     std::vector<std::unique_ptr<KnobSource>> sources;
+    std::shared_ptr<sst::jucegui::style::StyleSheet> styleSheet;
 
   private:
     static constexpr int topSection = 80;

@@ -119,13 +119,8 @@ struct Picker : public juce::Component
 
 //==============================================================================
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
-    : AudioProcessorEditor(&p),
-      sst::jucegui::style::StyleConsumer(sst::jucegui::components::Knob::Styles::styleClass),
-      styleSheet(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
-          sst::jucegui::style::StyleSheet::DARK)),
-      processor(p)
+    : AudioProcessorEditor(&p), processor(p)
 {
-    sst::jucegui::style::StyleSheet::initializeStyleSheets([]() {});
 
     processor.storage->addErrorListener(this);
     setAccessible(true);
@@ -138,17 +133,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
 
-    deafultParameterPanel = std::make_unique<ParameterPanel>(p, styleSheet);
+    deafultParameterPanel = std::make_unique<ParameterPanel>(p);
     addAndMakeVisibleRecordOrder(deafultParameterPanel.get());
-
-    auto backgroundColour = findColour(SurgeLookAndFeel::SurgeColourIds::componentBgStart);
-    auto surgeOrange = findColour(SurgeLookAndFeel::SurgeColourIds::orange);
-
-    using knobStyle = sst::jucegui::components::Knob::Styles;
-    styleSheet->setColour(knobStyle::styleClass, knobStyle::handle, backgroundColour);
-    styleSheet->setColour(knobStyle::styleClass, knobStyle::knobbase, backgroundColour);
-    styleSheet->setColour(knobStyle::styleClass, knobStyle::value, surgeOrange);
-    styleSheet->setColour(knobStyle::styleClass, knobStyle::value_hover, surgeOrange);
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
     fxNameLabel->setFont(juce::FontOptions(28));
@@ -175,7 +161,6 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 5);
-    resized();
 }
 
 SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
@@ -253,6 +238,16 @@ void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
 
 void SurgefxAudioProcessorEditor::resized()
 {
+    // old
+    picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
+    int ypos0 = topSection - 5;
+    int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
+    int byoff = 7;
+
+    int sliderOff = 5;
+    if (getWidth() < baseWidth)
+        sliderOff = 2;
+
     auto bounds = getLocalBounds();
     int topAreaHeight =
         static_cast<int>((static_cast<float>(topSection) / baseHeight) * getHeight());
@@ -261,10 +256,10 @@ void SurgefxAudioProcessorEditor::resized()
     auto topArea = bounds.removeFromTop(topAreaHeight);
     auto bottomArea = bounds.removeFromBottom(bottomAreaHeight);
 
-    picker->setBounds(topArea);
+    // picker->setBounds(topArea);
 
     fxNameLabel->setFont(juce::FontOptions(28));
-    fxNameLabel->setBounds(bottomArea);
+    fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
 
     deafultParameterPanel->setBounds(bounds);
 }
