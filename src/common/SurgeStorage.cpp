@@ -3243,6 +3243,39 @@ float SurgeStorage::remapKeyInMidiOnlyMode(float res)
     return res;
 }
 
+Surge::Storage::ScenesOutputData::ScenesOutputData()
+{
+    for (int i = 0; i < n_scenes; i++)
+    {
+        for (int j = 0; j < N_OUTPUTS; j++)
+        {
+            std::shared_ptr<float> block(new float[BLOCK_SIZE], [](float *p) { delete[] p; });
+            memset(block.get(), 0, BLOCK_SIZE * sizeof(float));
+            sceneData[i][j] = block;
+        }
+    }
+}
+const std::shared_ptr<float> &Surge::Storage::ScenesOutputData::getSceneData(int scene,
+                                                                             int channel) const
+{
+    assert(scene < n_scenes && scene >= 0);
+    assert(channel < N_OUTPUTS && channel >= 0);
+    return sceneData[scene][channel];
+}
+bool Surge::Storage::ScenesOutputData::thereAreClients(int scene) const
+{
+    return std::any_of(std::begin(sceneData[scene]), std::end(sceneData[scene]),
+                       [](const auto &channel) { return channel.use_count() > 1; });
+}
+void Surge::Storage::ScenesOutputData::provideSceneData(int scene, int channel, float *data)
+{
+    if (scene < n_scenes && scene >= 0 && channel < N_OUTPUTS && channel >= 0 &&
+        sceneData[scene][channel].use_count() > 1) // we don't provide data if there are no clients
+    {
+        memcpy(sceneData[scene][channel].get(), data, BLOCK_SIZE * sizeof(float));
+    }
+}
+
 namespace Surge
 {
 namespace Storage
@@ -3465,37 +3498,14 @@ std::string base64_decode(std::string const &encoded_string)
     return ret;
 }
 
-Surge::Storage::ScenesOutputData::ScenesOutputData()
+bool getValueDispPrecision(SurgeStorage *storage)
 {
-    for (int i = 0; i < n_scenes; i++)
+    if (storage)
     {
-        for (int j = 0; j < N_OUTPUTS; j++)
-        {
-            std::shared_ptr<float> block(new float[BLOCK_SIZE], [](float *p) { delete[] p; });
-            memset(block.get(), 0, BLOCK_SIZE * sizeof(float));
-            sceneData[i][j] = block;
-        }
+        return getUserDefaultValue(storage, HighPrecisionReadouts, false);
     }
-}
-const std::shared_ptr<float> &Surge::Storage::ScenesOutputData::getSceneData(int scene,
-                                                                             int channel) const
-{
-    assert(scene < n_scenes && scene >= 0);
-    assert(channel < N_OUTPUTS && channel >= 0);
-    return sceneData[scene][channel];
-}
-bool Surge::Storage::ScenesOutputData::thereAreClients(int scene) const
-{
-    return std::any_of(std::begin(sceneData[scene]), std::end(sceneData[scene]),
-                       [](const auto &channel) { return channel.use_count() > 1; });
-}
-void Surge::Storage::ScenesOutputData::provideSceneData(int scene, int channel, float *data)
-{
-    if (scene < n_scenes && scene >= 0 && channel < N_OUTPUTS && channel >= 0 &&
-        sceneData[scene][channel].use_count() > 1) // we don't provide data if there are no clients
-    {
-        memcpy(sceneData[scene][channel].get(), data, BLOCK_SIZE * sizeof(float));
-    }
+
+    return false;
 }
 
 } // namespace Storage

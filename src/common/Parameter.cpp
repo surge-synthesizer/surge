@@ -2439,13 +2439,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 {
 #define ITXT_SIZE 1024
 
-    int detailedMode = false;
-
-    if (storage)
-    {
-        detailedMode =
-            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
-    }
+    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
 
     if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
     {
@@ -3286,8 +3280,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
         }
     }
 
-    int detailedMode =
-        Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
+    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
 
     txt[0] = 0;
     switch (ctrltype)
@@ -3454,13 +3447,7 @@ std::string Parameter::get_display(bool external, float ef) const
     float f;
     bool b;
 
-    int detailedMode = 0;
-
-    if (storage)
-    {
-        detailedMode =
-            Surge::Storage::getUserDefaultValue(storage, Surge::Storage::HighPrecisionReadouts, 0);
-    }
+    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
 
     if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
     {
@@ -3591,7 +3578,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 {
                     dval *= 1000.f;
                     u = "ms";
-                    dec = detailedMode ? 2 : 1;
+                    dec = detailedMode ? 3 : 1;
                 }
             }
 

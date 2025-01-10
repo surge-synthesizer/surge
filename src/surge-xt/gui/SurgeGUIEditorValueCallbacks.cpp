@@ -936,8 +936,8 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
             bool cancellearn = false;
             int ccid = 0;
-            int detailedMode = Surge::Storage::getUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::HighPrecisionReadouts, 0);
+            const bool detailedMode =
+                Surge::Storage::getValueDispPrecision(&(this->synth->storage));
 
             // should start at 0, but it started at 1 before
             // there might be a reason but I don't remember why
