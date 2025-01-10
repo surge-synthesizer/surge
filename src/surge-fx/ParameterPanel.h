@@ -48,6 +48,9 @@ class ParameterPanel : public juce::Component
 
     std::vector<std::unique_ptr<sst::jucegui::components::Knob>> knobs;
 
+    juce::Colour backgroundColour = juce::Colour(205, 206, 212);
+    juce::Colour surgeOrange = juce::Colour(255, 144, 0);
+
     juce::Font projectFont;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterPanel);

@@ -2,19 +2,17 @@
 
 ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
     : processor(p), styleSheet(sst::jucegui::style::StyleSheet::getBuiltInStyleSheet(
-                        sst::jucegui::style::StyleSheet::DARK))
+                        sst::jucegui::style::StyleSheet ::DARK))
 
 {
-    sst::jucegui::style::StyleSheet::initializeStyleSheets([]() {});
+    sst::jucegui::style ::StyleSheet::initializeStyleSheets([]() {});
 
     using knobStyle = sst::jucegui::components::Knob::Styles;
-    // auto backgroundColour = findColour(SurgeLookAndFeel::SurgeColourIds::componentBgStart);
-    // auto surgeOrange = findColour(SurgeLookAndFeel::SurgeColourIds::orange);
 
-    // // styleSheet->setColour(knobStyle::styleClass, knobStyle::handle, backgroundColour);
-    // // styleSheet->setColour(knobStyle::styleClass, knobStyle::knobbase, backgroundColour);
-    // // styleSheet->setColour(knobStyle::styleClass, knobStyle::value, surgeOrange);
-    // // styleSheet->setColour(knobStyle::styleClass, knobStyle::value_hover, surgeOrange);
+    styleSheet->setColour(knobStyle::styleClass, knobStyle::handle, backgroundColour);
+    styleSheet->setColour(knobStyle::styleClass, knobStyle::knobbase, backgroundColour);
+    styleSheet->setColour(knobStyle::styleClass, knobStyle::value, surgeOrange);
+    styleSheet->setColour(knobStyle::styleClass, knobStyle::value_hover, surgeOrange);
 
     for (int i = 0; i < n_fx_params; ++i)
     {
@@ -116,7 +114,7 @@ ParameterPanel::ParameterPanel(SurgefxAudioProcessor &p)
 
 ParameterPanel::~ParameterPanel() {}
 
-void ParameterPanel::paint(juce::Graphics &g) { g.fillAll(juce::Colours::darkgrey); }
+void ParameterPanel::paint(juce::Graphics &g) { g.fillAll(backgroundColour); }
 
 void ParameterPanel::reset()
 {
@@ -187,8 +185,8 @@ void ParameterPanel::reset()
 }
 void ParameterPanel::resized()
 {
-    int ypos0 = topSection - 5;
-    int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
+    int ypos0 = 5;
+    int rowHeight = getHeight() / 6.0;
     int byoff = 7;
 
     int sliderOff = 5;
