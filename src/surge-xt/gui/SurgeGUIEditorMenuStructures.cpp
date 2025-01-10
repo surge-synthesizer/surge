@@ -1140,14 +1140,13 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
 {
     auto dispDefMenu = juce::PopupMenu();
 
-    bool precReadout = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::HighPrecisionReadouts, false);
+    const bool detailedMode = Surge::Storage::getValueDispPrecision(&(this->synth->storage));
 
-    dispDefMenu.addItem(Surge::GUI::toOSCase("High Precision Value Readouts"), true, precReadout,
-                        [this, precReadout]() {
+    dispDefMenu.addItem(Surge::GUI::toOSCase("High Precision Value Readouts"), true, detailedMode,
+                        [this, detailedMode]() {
                             Surge::Storage::updateUserDefaultValue(
                                 &(this->synth->storage), Surge::Storage::HighPrecisionReadouts,
-                                !precReadout);
+                                !detailedMode);
                         });
 
     // modulation value readout shows bounds

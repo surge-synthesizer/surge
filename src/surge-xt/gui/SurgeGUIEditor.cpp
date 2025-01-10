@@ -3435,8 +3435,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     }
     else
     {
-        int detailedMode = Surge::Storage::getUserDefaultValue(
-            &(this->synth->storage), Surge::Storage::HighPrecisionReadouts, 0);
+        const bool detailedMode = Surge::Storage::getValueDispPrecision(&(this->synth->storage));
         auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                         .scene[current_scene]
                         .modsources[ms]);

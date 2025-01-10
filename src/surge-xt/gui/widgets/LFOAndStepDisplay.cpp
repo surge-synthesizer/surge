@@ -1461,22 +1461,11 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
     // Finally draw the drag label
     if (dragMode == VALUES && draggedStep >= 0 && draggedStep < n_stepseqsteps)
     {
-        int prec = 2;
-
-        if (storage)
-        {
-            int detailedMode = Surge::Storage::getUserDefaultValue(
-                storage, Surge::Storage::HighPrecisionReadouts, 0);
-
-            if (detailedMode)
-            {
-                prec = 6;
-            }
-        }
+        const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
 
         g.setFont(skin->fontManager->lfoTypeFont);
 
-        std::string txt = fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, prec);
+        std::string txt = fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, detailedMode);
 
         int sw = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt);
 
@@ -2672,15 +2661,10 @@ void LFOAndStepDisplay::showStepRMB(int i)
 
     contextMenu.addSeparator();
 
-    int decimals = 2;
+    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
 
-    if (storage)
-    {
-        decimals = 2 + (4 * Surge::Storage::getUserDefaultValue(
-                                storage, Surge::Storage::HighPrecisionReadouts, 0));
-    }
-
-    auto msg = fmt::format("Edit Step {} Value: {:.{}f} %", i + 1, ss->steps[i] * 100.f, decimals);
+    auto msg =
+        fmt::format("Edit Step {} Value: {:.{}f} %", i + 1, ss->steps[i] * 100.f, detailedMode);
 
     contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false, [this, i]() { showStepTypein(i); });
 
@@ -2689,13 +2673,7 @@ void LFOAndStepDisplay::showStepRMB(int i)
 
 void LFOAndStepDisplay::showStepTypein(int i)
 {
-    int decimals = 2;
-
-    if (storage)
-    {
-        decimals = 2 + (4 * Surge::Storage::getUserDefaultValue(
-                                storage, Surge::Storage::HighPrecisionReadouts, 0));
-    }
+    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
 
     auto handleTypein = [this, i](const std::string &s) {
         auto divPos = s.find('/');
@@ -2735,10 +2713,10 @@ void LFOAndStepDisplay::showStepTypein(int i)
 
     stepEditor->callback = handleTypein;
     stepEditor->setMainLabel(fmt::format("Edit Step {} Value", std::to_string(i + 1)));
-    stepEditor->setValueLabels(fmt::format("current: {:.{}f} %", ss->steps[i] * 100.f, decimals),
-                               "");
+    stepEditor->setValueLabels(
+        fmt::format("current: {:.{}f} %", ss->steps[i] * 100.f, detailedMode), "");
     stepEditor->setSkin(skin, associatedBitmapStore);
-    stepEditor->setEditableText(fmt::format("{:.{}f} %", ss->steps[i] * 100.f, decimals));
+    stepEditor->setEditableText(fmt::format("{:.{}f} %", ss->steps[i] * 100.f, detailedMode));
     stepEditor->setReturnFocusTarget(stepSliderOverlays[i].get());
 
     auto topOfControl = getY();

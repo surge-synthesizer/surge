@@ -1547,24 +1547,16 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         g.fillRect(r);
                     };
 
-                    int prec = 2;
-
-                    if (storage)
-                    {
-                        if (Surge::Storage::getUserDefaultValue(
-                                storage, Surge::Storage::HighPrecisionReadouts, 0))
-                        {
-                            prec = 6;
-                        }
-                    }
+                    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
+                    const int dp = detailedMode ? 6 : 2;
 
                     g.setFont(skin->fontManager->lfoTypeFont);
 
                     float val = h.specialEndpoint ? ms->segments[h.associatedSegment].nv1
                                                   : ms->segments[h.associatedSegment].v0;
 
-                    std::string txt = fmt::format("X: {:.{}f}", pxt(cx), prec),
-                                txt2 = fmt::format("Y: {:.{}f}", val, prec);
+                    std::string txt = fmt::format("X: {:.{}f}", pxt(cx), dp),
+                                txt2 = fmt::format("Y: {:.{}f}", val, dp);
 
                     int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt),
                         sw2 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt2);
