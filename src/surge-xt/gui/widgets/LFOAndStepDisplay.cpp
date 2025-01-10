@@ -2680,7 +2680,7 @@ void LFOAndStepDisplay::showStepRMB(int i)
                                 storage, Surge::Storage::HighPrecisionReadouts, 0));
     }
 
-    auto msg = fmt::format("Edit Step {}: {:.{}f} %", i + 1, ss->steps[i] * 100.f, decimals);
+    auto msg = fmt::format("Edit Step {} Value: {:.{}f} %", i + 1, ss->steps[i] * 100.f, decimals);
 
     contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false, [this, i]() { showStepTypein(i); });
 
@@ -2734,7 +2734,7 @@ void LFOAndStepDisplay::showStepTypein(int i)
     }
 
     stepEditor->callback = handleTypein;
-    stepEditor->setMainLabel("Edit Step " + std::to_string(i + 1));
+    stepEditor->setMainLabel(fmt::format("Edit Step {} Value", std::to_string(i + 1)));
     stepEditor->setValueLabels(fmt::format("current: {:.{}f} %", ss->steps[i] * 100.f, decimals),
                                "");
     stepEditor->setSkin(skin, associatedBitmapStore);
