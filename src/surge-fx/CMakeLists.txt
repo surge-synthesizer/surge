@@ -56,13 +56,13 @@ juce_add_plugin(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXEditor.cpp
-  SurgeFXEditor.h
+  # SurgeFXEditor.h
   SurgeFXProcessor.cpp
   ParameterPanel.cpp
-  SurgeFXProcessor.h
-  SurgeLookAndFeel.h
+  # SurgeFXProcessor.h
+  # SurgeLookAndFeel.h
   FXOpenSoundControl.cpp
-  FXOpenSoundControl.h
+  # FXOpenSoundControl.h
   )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

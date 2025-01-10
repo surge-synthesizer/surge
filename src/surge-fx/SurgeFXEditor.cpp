@@ -238,7 +238,6 @@ void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
 
 void SurgefxAudioProcessorEditor::resized()
 {
-    // old
     picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
     int ypos0 = topSection - 5;
     int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
@@ -253,10 +252,8 @@ void SurgefxAudioProcessorEditor::resized()
         static_cast<int>((static_cast<float>(topSection) / baseHeight) * getHeight());
     int bottomAreaHeight = static_cast<int>((static_cast<float>(40) / baseHeight) * getHeight());
 
-    auto topArea = bounds.removeFromTop(topAreaHeight);
-    auto bottomArea = bounds.removeFromBottom(bottomAreaHeight);
-
-    // picker->setBounds(topArea);
+    bounds.removeFromTop(topAreaHeight);
+    bounds.removeFromBottom(bottomAreaHeight);
 
     fxNameLabel->setFont(juce::FontOptions(28));
     fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
