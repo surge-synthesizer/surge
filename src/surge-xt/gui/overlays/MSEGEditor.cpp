@@ -116,7 +116,6 @@ struct MSEGControlRegion : public juce::Component,
     std::unique_ptr<Surge::Widgets::Switch> hSnapButton, vSnapButton;
     std::unique_ptr<Surge::Widgets::MultiSwitch> loopMode, editMode, movementMode;
     std::unique_ptr<Surge::Widgets::NumberField> hSnapSize, vSnapSize;
-    std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinSnap;
     std::vector<std::unique_ptr<juce::Label>> labels;
 
     void hvSnapTypein(bool isH);
@@ -149,6 +148,16 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         setTitle("MSEG Display and Edit Canvas");
         setDescription("MSEG Display and Edit Canvas");
     };
+
+    enum SegmentProps
+    {
+        duration,
+        value,
+        cp_duration,
+        cp_value,
+    };
+
+    std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
 
     /*
     ** We make a list of hotzones when we draw so we don't have to recalculate the
@@ -1547,16 +1556,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         g.fillRect(r);
                     };
 
-                    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
-                    const int dp = detailedMode ? 6 : 2;
+                    const int detailedMode = Surge::Storage::getValueDispPrecision(storage) ? 6 : 2;
 
                     g.setFont(skin->fontManager->lfoTypeFont);
 
                     float val = h.specialEndpoint ? ms->segments[h.associatedSegment].nv1
                                                   : ms->segments[h.associatedSegment].v0;
 
-                    std::string txt = fmt::format("X: {:.{}f}", pxt(cx), dp),
-                                txt2 = fmt::format("Y: {:.{}f}", val, dp);
+                    std::string txt = fmt::format("X: {:.{}f}", pxt(cx), detailedMode),
+                                txt2 = fmt::format("Y: {:.{}f}", val, detailedMode);
 
                     int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt),
                         sw2 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt2);
@@ -2428,6 +2436,98 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     // OR, we break compatibility in a major version update and have all LFOs in a block
     bool isSceneMSEG() const { return lfodata->shape.ctrlgroup_entry >= ms_slfo1; }
 
+    void showSegmentTypein(int i, SegmentProps prop, const juce::Point<int> at)
+    {
+        using type = MSEGStorage::segment::Type;
+
+        const bool is2Dcp =
+            ms->segments[i].type == type::QUAD_BEZIER || ms->segments[i].type == type::BROWNIAN;
+
+        float *propValue = nullptr;
+        std::string propName;
+
+        switch (prop)
+        {
+        case SegmentProps::duration:
+            propValue = &ms->segments[i].duration;
+            propName = "Duration";
+            break;
+        case SegmentProps::value:
+            propValue = &ms->segments[i].v0;
+            propName = "Value";
+            break;
+        case SegmentProps::cp_duration:
+            propValue = &ms->segments[i].cpduration;
+            propName = "Control Point X";
+            break;
+        case SegmentProps::cp_value:
+            propValue = &ms->segments[i].cpv;
+            propName = fmt::format("Control Point{}", is2Dcp ? " Y" : "");
+            break;
+
+        default:
+            return;
+        }
+
+        const int detailedMode = Surge::Storage::getValueDispPrecision(storage) ? 6 : 2;
+
+        auto handleTypein = [this, i, prop, propValue, propName](const std::string &s) {
+            auto divPos = s.find('/');
+            float v = 0.f;
+
+            if (divPos != std::string::npos)
+            {
+                auto n = s.substr(0, divPos);
+                auto d = s.substr(divPos + 1);
+                auto nv = std::atof(n.c_str());
+                auto dv = std::atof(d.c_str());
+
+                if (dv == 0)
+                {
+                    return false;
+                }
+
+                v = (nv / dv);
+            }
+            else
+            {
+                v = std::atof(s.c_str());
+            }
+
+            const float lowClamp =
+                (prop == SegmentProps::duration || prop == SegmentProps::cp_duration) ? 0.f : -1.f;
+            const float highClamp = (prop == SegmentProps::duration) ? 1000.f : 1.f;
+
+            *propValue = std::clamp(v, lowClamp, highClamp);
+
+            pushToUndo();
+            modelChanged();
+            repaint();
+
+            return true;
+        };
+
+        if (!typeinEditor)
+        {
+            typeinEditor = std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
+            getParentComponent()->addChildComponent(*typeinEditor);
+        }
+
+        typeinEditor->callback = handleTypein;
+        typeinEditor->setMainLabel(
+            fmt::format("Edit Segment {} {}", std::to_string(i + 1), propName));
+        typeinEditor->setValueLabels(fmt::format("current: {:.{}f}", *propValue, detailedMode), "");
+        typeinEditor->setSkin(skin, associatedBitmapStore);
+        typeinEditor->setEditableText(fmt::format("{:.{}f}", *propValue, detailedMode));
+        typeinEditor->setReturnFocusTarget(this);
+
+        auto r = typeinEditor->getRequiredSize();
+        typeinEditor->setBounds(r.withCentre(at));
+
+        typeinEditor->setVisible(true);
+        typeinEditor->grabFocus();
+    }
+
     void openPopup(const juce::Point<float> &iw)
     {
         using type = MSEGStorage::segment::Type;
@@ -2458,29 +2558,33 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         const int detailedMode = Surge::Storage::getValueDispPrecision(storage) ? 6 : 2;
 
         contextMenu.addItem(
-            fmt::format("Duration: {:.{}f}", ms->segments[tts].duration, detailedMode), false,
-            false, nullptr);
-        contextMenu.addItem(fmt::format("Value: {:.{}f}", ms->segments[tts].v0, detailedMode),
-                            false, false, nullptr);
+            fmt::format("Duration: {:.{}f}", ms->segments[tts].duration, detailedMode), true, false,
+            [this, iw, tts]() { showSegmentTypein(tts, SegmentProps::duration, iw.toInt()); });
+        contextMenu.addItem(
+            fmt::format("Value: {:.{}f}", ms->segments[tts].v0, detailedMode), true, false,
+            [this, iw, tts]() { showSegmentTypein(tts, SegmentProps::value, iw.toInt()); });
 
         const bool is2Dcp =
             ms->segments[tts].type == type::QUAD_BEZIER || ms->segments[tts].type == type::BROWNIAN;
 
         if (ms->segments[tts].type != type::HOLD)
         {
-            auto curveStr = fmt::format(
-                "Control Point{}: {:.{}f}", is2Dcp ? " X" : "",
-                (is2Dcp ? ms->segments[tts].cpduration : ms->segments[tts].cpv), detailedMode);
+            if (is2Dcp)
+            {
+                auto curveStr = fmt::format("Control Point X: {:.{}f}",
+                                            ms->segments[tts].cpduration, detailedMode);
 
-            contextMenu.addItem(curveStr, false, false, nullptr);
-        }
+                contextMenu.addItem(curveStr, true, false, [this, iw, tts]() {
+                    showSegmentTypein(tts, SegmentProps::cp_duration, iw.toInt());
+                });
+            }
 
-        if (is2Dcp)
-        {
-            auto curveStrY =
-                fmt::format("Control Point Y: {:.{}f}", ms->segments[tts].cpv, detailedMode);
+            auto curveStr = fmt::format("Control Point{}: {:.{}f}", is2Dcp ? " Y" : "",
+                                        ms->segments[tts].cpv, detailedMode);
 
-            contextMenu.addItem(curveStrY, false, false, nullptr);
+            contextMenu.addItem(curveStr, true, false, [this, iw, tts]() {
+                showSegmentTypein(tts, SegmentProps::cp_value, iw.toInt());
+            });
         }
 
         contextMenu.addSeparator();
