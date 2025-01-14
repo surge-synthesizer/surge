@@ -57,6 +57,9 @@ std::string defaultKeyToString(DefaultKey k)
     case MPEPitchBendRange:
         r = "mpePitchBendRange";
         break;
+    case MPETimbreIsUnipolar:
+        r = "mpeTimbreIsUnipolar";
+        break;
     case UseCh2Ch3ToPlayScenesIndividually:
         r = "useCh2Ch3ToPlayScenesIndividually";
         break;

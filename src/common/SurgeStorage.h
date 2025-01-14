@@ -984,6 +984,7 @@ struct DAWExtraStateStorage
 
     bool mpeEnabled = false;
     int mpePitchBendRange = -1;
+    bool mpeTimbreIsUnipolar = false;
 
     bool hasScale = false;
     std::string scaleContents = "";
@@ -1683,7 +1684,9 @@ class alignas(16) SurgeStorage
 
     Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::LEGACY;
     Modulator::SmoothingMode pitchSmoothingMode = Modulator::SmoothingMode::LEGACY;
+
     float mpePitchBendRange = -1.0f;
+    bool mpeTimbreIsUnipolar = false;
 
     std::atomic<int> otherscene_clients;
 
