@@ -216,8 +216,6 @@ void SurgeGUIEditor::makeMpeTimbreMenu(juce::PopupMenu &menu, const bool asSubMe
     auto setter = [this, storage](bool value) {
         synth->mpeTimbreIsUnipolar = true;
         updateUserDefaultValue(storage, MPETimbreIsUnipolar, true);
-        refresh_mod();
-        synth->refresh_editor = true;
     };
 
     if (asSubMenu)

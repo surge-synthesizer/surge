@@ -3498,7 +3498,7 @@ bool SurgeSynthesizer::isBipolarModulation(modsources tms) const
     }
     if (tms == ms_keytrack || tms == ms_lowest_key || tms == ms_highest_key ||
         tms == ms_latest_key || tms == ms_pitchbend || tms == ms_random_bipolar ||
-        tms == ms_alternate_bipolar || (tms == ms_timbre && !mpeTimbreIsUnipolar))
+        tms == ms_alternate_bipolar || tms == ms_timbre)
         return true;
     else
         return false;
