@@ -511,6 +511,7 @@ class alignas(16) SurgeSynthesizer
     bool &mpeEnabled;
     int mpeVoices = 0;
     int mpeGlobalPitchBendRange = 0;
+    bool mpeTimbreIsUnipolar = false;
 
     std::bitset<128> disallowedLearnCCs{0};
     std::array<uint64_t, 128> midiKeyPressedForScene[n_scenes];

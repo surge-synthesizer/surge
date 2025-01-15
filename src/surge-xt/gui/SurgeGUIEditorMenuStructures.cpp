@@ -205,10 +205,38 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
     return lfoSubMenu;
 }
 
+void SurgeGUIEditor::makeMpeTimbreMenu(juce::PopupMenu &menu, const bool asSubMenu)
+{
+    using namespace Surge::Storage;
+
+    auto storage = &(synth->storage);
+    const bool mpeTimbreUnipolar =
+        getUserDefaultValue(&(synth->storage), MPETimbreIsUnipolar, false);
+
+    auto setter = [this, storage](bool value) {
+        synth->mpeTimbreIsUnipolar = true;
+        updateUserDefaultValue(storage, MPETimbreIsUnipolar, true);
+    };
+
+    if (asSubMenu)
+    {
+        auto entries = asSubMenu ? juce::PopupMenu() : menu;
+
+        entries.addItem("Unipolar", true, mpeTimbreUnipolar, [setter]() { setter(true); });
+        entries.addItem("Bipolar", true, !mpeTimbreUnipolar, [setter]() { setter(false); });
+
+        menu.addSubMenu(Surge::GUI::toOSCase("MPE Timbre Value Range"), entries);
+    }
+    else
+    {
+        menu.addItem("Unipolar", true, mpeTimbreUnipolar, [setter]() { setter(true); });
+        menu.addItem("Bipolar", true, !mpeTimbreUnipolar, [setter]() { setter(false); });
+    }
+}
+
 juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool showhelp)
 {
     auto mpeSubMenu = juce::PopupMenu();
-
     auto hu = helpURLForSpecial("mpe-menu");
 
     if (hu != "" && showhelp)
@@ -219,22 +247,15 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
         mpeSubMenu.addSeparator();
     }
 
-    std::string endis = "Enable MPE";
-
-    if (synth->mpeEnabled)
-    {
-        endis = "Disable MPE";
-    }
-
-    mpeSubMenu.addItem(endis.c_str(), [this]() { toggleMPE(); });
+    mpeSubMenu.addItem(fmt::format("{}able MPE", synth->mpeEnabled ? "En" : "Dis"),
+                       [this]() { toggleMPE(); });
 
     mpeSubMenu.addSeparator();
 
-    std::ostringstream oss;
-    oss << "Change MPE Pitch Bend Range (Current: " << synth->storage.mpePitchBendRange
-        << " Semitones)";
+    auto str = fmt::format("Change MPE Pitch Bend Range (Current: {} Semitones)",
+                           synth->storage.mpePitchBendRange);
 
-    mpeSubMenu.addItem(Surge::GUI::toOSCase(oss.str().c_str()), [this, where]() {
+    mpeSubMenu.addItem(Surge::GUI::toOSCase(str), [this, where]() {
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
         promptForMiniEdit(
             c, "Enter a new value:", "MPE Pitch Bend Range", where,
@@ -245,12 +266,11 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
             mpeStatus);
     });
 
-    std::ostringstream oss2;
-    int def = Surge::Storage::getUserDefaultValue(&(synth->storage),
-                                                  Surge::Storage::MPEPitchBendRange, 48);
-    oss2 << "Change Default MPE Pitch Bend Range (Current: " << def << " Semitones)";
+    const int def = Surge::Storage::getUserDefaultValue(&(synth->storage),
+                                                        Surge::Storage::MPEPitchBendRange, 48);
+    str = fmt::format("Change Default MPE Pitch Bend Range (Current: {} Semitones)", def);
 
-    mpeSubMenu.addItem(Surge::GUI::toOSCase(oss2.str().c_str()), [this, where]() {
+    mpeSubMenu.addItem(Surge::GUI::toOSCase(str), [this, where]() {
         const auto c{std::to_string(int(synth->storage.mpePitchBendRange))};
         promptForMiniEdit(
             c, "Enter a default value:", "Default MPE Pitch Bend Range", where,
@@ -268,6 +288,10 @@ juce::PopupMenu SurgeGUIEditor::makeMpeMenu(const juce::Point<int> &where, bool 
                                      [this](auto md) { this->resetPitchSmoothing(md); });
 
     mpeSubMenu.addSubMenu(Surge::GUI::toOSCase("MPE Pitch Bend Smoothing"), smoothMenu);
+
+    mpeSubMenu.addSeparator();
+
+    makeMpeTimbreMenu(mpeSubMenu, true);
 
     return mpeSubMenu;
 }

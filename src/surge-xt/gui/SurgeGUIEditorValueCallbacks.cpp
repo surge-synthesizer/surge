@@ -917,17 +917,30 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             }
 
             auto lurl = hu;
+
             if (lurl != "")
+            {
                 lurl = fullyResolvedHelpURL(lurl);
+            }
+
             auto hmen = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>(
                 ModulatorName::modulatorNameWithIndex(&synth->storage, current_scene, modsource,
                                                       modsource_index, false, false),
                 lurl);
             hmen->setSkin(currentSkin, bitmapStore);
+
             auto hment = hmen->getTitle();
+
             contextMenu.addCustomItem(-1, std::move(hmen), nullptr, hment);
 
             contextMenu.addSeparator();
+
+            if (modsource == ms_timbre && synth->mpeEnabled)
+            {
+                makeMpeTimbreMenu(contextMenu, false);
+
+                contextMenu.addSeparator();
+            }
 
             int n_total_md = synth->storage.getPatch().param_ptr.size();
             const int max_md = 4096;
@@ -1220,6 +1233,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                               pm.get() ? std::move(pm) : nullptr, at);
                 }
             }
+
             int sc = limit_range(synth->storage.getPatch().scene_active.val.i, 0, n_scenes - 1);
 
             // for macros only
