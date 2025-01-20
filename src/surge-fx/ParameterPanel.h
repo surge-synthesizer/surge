@@ -41,8 +41,6 @@ class ParameterPanel : public juce::Component
     juce::Colour surgeOrange = juce::Colour(255, 144, 0);
     std::vector<juce::Component *> &accessibleOrderWeakRefs; // Reference to the vector
 
-    juce::Font projectFont;
-
     void addAndMakeVisibleRecordOrder(juce::Component *c)
     {
         accessibleOrderWeakRefs.push_back(c);
