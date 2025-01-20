@@ -17,7 +17,6 @@ class ParameterPanel : public juce::Component
 
     void paint(juce::Graphics &) override;
     void resized() override;
-    void setProjectFont(juce::Font font) { projectFont = font; }
     void reset();
 
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
