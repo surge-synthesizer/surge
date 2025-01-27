@@ -3435,12 +3435,13 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
     }
     else
     {
-        const bool detailedMode = Surge::Storage::getValueDispPrecision(&(this->synth->storage));
+        const int displayPrecision =
+            Surge::Storage::getValueDisplayPrecision(&(this->synth->storage));
         auto cms = ((ControllerModulationSource *)synth->storage.getPatch()
                         .scene[current_scene]
                         .modsources[ms]);
 
-        ptxt3 = fmt::format("{:.{}f} %", 100.0 * cms->get_output(0), (detailedMode ? 6 : 2));
+        ptxt3 = fmt::format("{:.{}f} %", 100.0 * cms->get_output(0), displayPrecision);
         strncpy(txt, ptxt3.c_str(), TXT_SIZE - 1);
         ptxt1 = fmt::format("current: {:s}", txt);
     }

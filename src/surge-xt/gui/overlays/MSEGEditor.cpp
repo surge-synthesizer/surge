@@ -1556,7 +1556,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         g.fillRect(r);
                     };
 
-                    const int detailedMode = Surge::Storage::getValueDispPrecision(storage) ? 6 : 2;
+                    const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
 
                     g.setFont(skin->fontManager->lfoTypeFont);
 
@@ -2469,7 +2469,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             return;
         }
 
-        const int detailedMode = Surge::Storage::getValueDispPrecision(storage) ? 6 : 2;
+        const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
 
         auto handleTypein = [this, i, prop, propValue, propName](const std::string &s) {
             auto divPos = s.find('/');
@@ -2555,7 +2555,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         contextMenu.addSeparator();
 
-        const int detailedMode = Surge::Storage::getValueDispPrecision(storage) ? 6 : 2;
+        const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
 
         contextMenu.addItem(
             fmt::format("Duration: {:.{}f}", ms->segments[tts].duration, detailedMode), true, false,

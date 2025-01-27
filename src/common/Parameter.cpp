@@ -2439,12 +2439,13 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
 {
 #define ITXT_SIZE 1024
 
-    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
+    const auto isHighPrecision = Surge::Storage::getValueDisplayIsHighPrecision(storage);
+    const auto displayPrecision = Surge::Storage::getValueDisplayPrecision(storage);
 
     if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
     {
         auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
-                      .withHighPrecision(detailedMode)
+                      .withHighPrecision(displayPrecision)
                       .withTemposync(can_temposync() && temposync)
                       .withAbsolute(can_be_absolute() && absolute)
                       .withExtended(can_extend_range() && extend_range);
@@ -2485,7 +2486,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         }
     }
 
-    int dp = (detailedMode ? 6 : displayInfo.decimals);
+    int dp = (isHighPrecision ? 6 : displayInfo.decimals);
 
     const char *lowersep = "<", *uppersep = ">";
 
@@ -2592,7 +2593,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     {
         if (temposync)
         {
-            dp = (detailedMode ? 6 : 2);
+            dp = (isHighPrecision ? 6 : 2);
 
             switch (displaymode)
             {
@@ -2660,7 +2661,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
                 {
                     dval *= 1000.f;
                     vu = "ms";
-                    vdp = detailedMode ? 2 : 1;
+                    vdp = isHighPrecision ? 2 : 1;
                     dmp *= 1000.f;
                     dmn *= 1000.f;
                     diffFac = 1000.f;
@@ -2870,7 +2871,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
             auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
             auto frequp = 440.0 * pow(2.0, (noteup - 69.0) / 12);
             auto freqdn = 440.0 * pow(2.0, (notedn - 69.0) / 12);
-            int dp = (detailedMode ? 6 : 2);
+            int dp = (isHighPrecision ? 6 : 2);
 
             switch (displaymode)
             {
@@ -2921,7 +2922,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
         }
 
         float exmf = qq;
-        int dp = (detailedMode ? 6 : 2);
+        int dp = (isHighPrecision ? 6 : 2);
 
         switch (displaymode)
         {
@@ -3038,7 +3039,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     {
         if (temposync)
         {
-            dp = (detailedMode ? 6 : 2);
+            dp = (isHighPrecision ? 6 : 2);
 
             auto mp = modulationDepth;
             auto mn = -modulationDepth;
@@ -3280,7 +3281,8 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
         }
     }
 
-    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
+    const auto isHighPrecision = Surge::Storage::getValueDisplayIsHighPrecision(storage);
+    const auto displayPrecision = Surge::Storage::getValueDisplayPrecision(storage);
 
     txt[0] = 0;
     switch (ctrltype)
@@ -3290,7 +3292,7 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
     {
         float f = val.f;
         float fInv = 0.f;
-        int dec = detailedMode ? 6 : displayInfo.decimals;
+        int dec = isHighPrecision ? 6 : displayInfo.decimals;
         std::string u = "s";
 
         fInv = 1.f / (displayInfo.a * powf(2.0f, f * displayInfo.b));
@@ -3447,7 +3449,8 @@ std::string Parameter::get_display(bool external, float ef) const
     float f;
     bool b;
 
-    const bool detailedMode = Surge::Storage::getValueDispPrecision(storage);
+    const auto isHighPrecision = Surge::Storage::getValueDisplayIsHighPrecision(storage);
+    const auto displayPrecision = Surge::Storage::getValueDisplayPrecision(storage);
 
     if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
     {
@@ -3460,7 +3463,7 @@ std::string Parameter::get_display(bool external, float ef) const
             bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
 
         auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
-                      .withHighPrecision(detailedMode)
+                      .withHighPrecision(displayPrecision)
                       .withTemposync(can_temposync() && temposync)
                       .withAbsolute(can_be_absolute() && absolute)
                       .withExtended(can_extend_range() && extend_range);
@@ -3529,7 +3532,7 @@ std::string Parameter::get_display(bool external, float ef) const
             }
 
             txt = fmt::format("{:.{}f} {:s}", displayInfo.scale * f,
-                              (detailedMode ? 6 : displayInfo.decimals), u);
+                              (isHighPrecision ? 6 : displayInfo.decimals), u);
 
             if (f >= val_max.f &&
                 (displayInfo.customFeatures & ParamDisplayFeatures::kHasCustomMaxString))
@@ -3570,7 +3573,7 @@ std::string Parameter::get_display(bool external, float ef) const
             getSemitonesOrKeys(u);
 
             float dval = displayInfo.a * powf(2.0f, f * displayInfo.b);
-            int dec = detailedMode ? 6 : displayInfo.decimals;
+            int dec = isHighPrecision ? 6 : displayInfo.decimals;
 
             if (displayInfo.customFeatures & ParamDisplayFeatures::kSwitchesFromSecToMillisec)
             {
@@ -3578,7 +3581,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 {
                     dval *= 1000.f;
                     u = "ms";
-                    dec = detailedMode ? 3 : 1;
+                    dec = isHighPrecision ? 3 : 1;
                 }
             }
 
@@ -3622,7 +3625,7 @@ std::string Parameter::get_display(bool external, float ef) const
             }
             else
             {
-                txt = fmt::format("{:.{}f} dB", amp_to_db(f), (detailedMode ? 6 : 2));
+                txt = fmt::format("{:.{}f} dB", amp_to_db(f), (isHighPrecision ? 6 : 2));
             }
 
             return txt;
@@ -3640,7 +3643,7 @@ std::string Parameter::get_display(bool external, float ef) const
                 auto note = 69 + 69 * bpv;
                 auto freq = 440.0 * pow(2.0, (note - 69.0) / 12);
 
-                txt = fmt::format("{:.{}f} Hz", freq, (detailedMode ? 6 : 2));
+                txt = fmt::format("{:.{}f} Hz", freq, (isHighPrecision ? 6 : 2));
             }
             else
             {
@@ -3648,18 +3651,19 @@ std::string Parameter::get_display(bool external, float ef) const
 
                 if (extend_range && q < 0)
                 {
-                    txt = fmt::format("C : 1 / {:.{}f}", -get_extended(f), (detailedMode ? 6 : 2));
+                    txt =
+                        fmt::format("C : 1 / {:.{}f}", -get_extended(f), (isHighPrecision ? 6 : 2));
                 }
                 else
                 {
-                    txt = fmt::format("C : {:.{}f}", get_extended(f), (detailedMode ? 6 : 2));
+                    txt = fmt::format("C : {:.{}f}", get_extended(f), (isHighPrecision ? 6 : 2));
                 }
             }
             break;
         }
         case ct_chow_ratio:
         {
-            txt = fmt::format("1 : {:.{}f}", f, (detailedMode ? 6 : 2));
+            txt = fmt::format("1 : {:.{}f}", f, (isHighPrecision ? 6 : 2));
             break;
         }
         case ct_float_toggle:
@@ -3668,7 +3672,7 @@ std::string Parameter::get_display(bool external, float ef) const
             break;
         }
         default:
-            txt = fmt::format("{:.{}f}", f, (detailedMode ? 6 : 2));
+            txt = fmt::format("{:.{}f}", f, (isHighPrecision ? 6 : 2));
             break;
         }
         break;
