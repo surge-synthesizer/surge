@@ -3498,14 +3498,20 @@ std::string base64_decode(std::string const &encoded_string)
     return ret;
 }
 
-bool getValueDispPrecision(SurgeStorage *storage)
+int getValueDisplayPrecision(SurgeStorage *storage)
 {
+    return getValueDisplayIsHighPrecision(storage) ? 6 : 2;
+}
+
+bool getValueDisplayIsHighPrecision(SurgeStorage *storage)
+{
+    bool isHigh{false};
     if (storage)
     {
-        return getUserDefaultValue(storage, HighPrecisionReadouts, false);
+        isHigh = getUserDefaultValue(storage, HighPrecisionReadouts, false);
     }
-
-    return false;
+    return isHigh;
+    ;
 }
 
 } // namespace Storage

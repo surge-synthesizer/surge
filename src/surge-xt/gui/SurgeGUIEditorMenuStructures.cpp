@@ -1164,7 +1164,8 @@ juce::PopupMenu SurgeGUIEditor::makeValueDisplaysMenu(const juce::Point<int> &wh
 {
     auto dispDefMenu = juce::PopupMenu();
 
-    const bool detailedMode = Surge::Storage::getValueDispPrecision(&(this->synth->storage));
+    const bool detailedMode =
+        Surge::Storage::getValueDisplayIsHighPrecision(&(this->synth->storage));
 
     dispDefMenu.addItem(Surge::GUI::toOSCase("High Precision Value Readouts"), true, detailedMode,
                         [this, detailedMode]() {
