@@ -288,10 +288,13 @@ void PatchSelector::paint(juce::Graphics &g)
 
     if (skin->getVersion() >= 2)
     {
+        const int authMargin = 3;
+        const int maxAuthWidth = 180;
+
         cat = cat.translated(0, getHeight() * 0.5);
-        auth = auth.withTrimmedRight(3)
-                   .withWidth(150)
-                   .translated(getWidth() - 180 - 3, 0)
+        auth = auth.withTrimmedRight(authMargin)
+                   .withWidth(maxAuthWidth)
+                   .translated(getWidth() - maxAuthWidth - authMargin, 0)
                    .withTop(cat.getY())
                    .withHeight(cat.getHeight());
     }
@@ -389,9 +392,9 @@ void PatchSelector::paint(juce::Graphics &g)
         g.drawText((useCatAndBy ? "By: " : "") + author, auth,
                    skin->getVersion() >= 2 ? juce::Justification::centredRight
                                            : juce::Justification::centredLeft);
-
-        // search result text
     }
+
+    // search result text
     if (typeAhead->lbox->isVisible())
     {
         auto res = patchDbProvider->lastSearchResult.size();
