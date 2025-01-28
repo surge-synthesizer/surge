@@ -146,7 +146,7 @@ static int lua_sandboxPrint(lua_State *L)
     for (int i = 1; i <= n; i++)
     {
         if (!lua_isstring(L, i))
-            return luaL_error(L, "Error: print() only accepts strings or numbers!");
+            return luaL_error(L, "print() error: only accepts strings or numbers!");
         const char *s = lua_tostring(L, i); // get the string
         fputs(s, stdout);                   // print the string
     }
@@ -155,7 +155,165 @@ static int lua_sandboxPrint(lua_State *L)
     return 0;
 }
 
-bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
+// Wrapper function for PFFFT submodule
+// From pffft.h:
+// Transforms are not scaled: PFFFT_BACKWARD(PFFFT_FORWARD(x)) = N*x.
+// Typically you will want to scale the backward transform by 1/N.
+static int pffft_Transform(lua_State *L, int direction, int transform, bool unordered,
+                           const char *functionName)
+{
+#if HAS_LUA
+    // Check for an input table
+    if (lua_istable(L, 1) != 1)
+        return luaL_error(L, "%s error: table expected", functionName);
+
+    int tableLength = lua_objlen(L, 1);
+
+    // Check if we're doing a complex transformation, if so, the FFT size is determined by only one
+    // set of numbers but we still need the full array length to iterate and allocate buffers
+    int transformLength = tableLength;
+    if (transform == PFFFT_COMPLEX)
+        transformLength /= 2;
+
+    // Enforce size constraints: minimum 32 FFT size, maximum 524,288 table size
+    if (transformLength < 32 || tableLength > (1 << 19))
+        return luaL_error(
+            L, "%s error: table must contain between 32 and 524,288 elements, received %d elements",
+            functionName, transformLength);
+
+    // PFFFT supports sizes in the form N=(2^a)*(3^b)*(5^c) where a >= 5, b >=0, c >= 0 but a
+    // size like 180 seems to result in undefined behaviour so restricting N to a power of two is
+    // the safe option
+    if ((tableLength & (tableLength - 1)) != 0)
+        return luaL_error(L,
+                          "%s error: input table length must be a power of 2, received %d elements",
+                          functionName, transformLength);
+
+    // Create PFFFT setup
+    PFFFT_Setup *setup = pffft_new_setup(transformLength, (pffft_transform_t)transform);
+    if (!setup)
+        return luaL_error(L, "%s error: failed to create setup for %d elements", functionName,
+                          transformLength);
+
+    // Allocate memory for aligned buffers for SIMD
+    // TODO: Consider whether the temporary buffers should be managed as static objects or
+    // alternatively, a state table with an initialization step, followed by calls to a
+    // type-specific API
+    float *input = (float *)pffft_aligned_malloc(tableLength * sizeof(float));
+    float *output = (float *)pffft_aligned_malloc(tableLength * sizeof(float));
+    float *work = (float *)pffft_aligned_malloc(tableLength * sizeof(float));
+
+    // Populate the input buffer from the Lua table
+    for (int i = 0; i < tableLength; i++)
+    {
+        lua_rawgeti(L, 1, i + 1);
+        input[i] = luaL_checknumber(L, -1);
+        lua_pop(L, 1);
+    }
+
+    // Perform the ordered or unordered transform
+    if (unordered)
+        pffft_transform_ordered(setup, input, output, work, (pffft_direction_t)direction);
+    else
+        pffft_transform(setup, input, output, work, (pffft_direction_t)direction);
+
+    // Push the output back to Lua as a table
+    lua_newtable(L);
+    for (int i = 0; i < tableLength; i++)
+    {
+        lua_pushnumber(L, output[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+
+    // Clean up
+    pffft_aligned_free(input);
+    pffft_aligned_free(output);
+    pffft_aligned_free(work);
+    pffft_destroy_setup(setup);
+#endif
+    return 1;
+}
+
+// Different modes for pffft_Transform
+static int pffft_ForwardReal(lua_State *L)
+{
+#if HAS_LUA
+    return pffft_Transform(L, 0, 0, false, "fft_real()");
+#else
+    return 0;
+#endif
+}
+
+static int pffft_ForwardComplex(lua_State *L)
+{
+#if HAS_LUA
+    return pffft_Transform(L, 0, 1, false, "fft_complex()");
+#else
+    return 0;
+#endif
+}
+
+static int pffft_BackwardReal(lua_State *L)
+{
+#if HAS_LUA
+    return pffft_Transform(L, 1, 0, false, "ifft_real()");
+#else
+    return 0;
+#endif
+}
+
+static int pffft_BackwardComplex(lua_State *L)
+{
+#if HAS_LUA
+    return pffft_Transform(L, 1, 1, false, "ifft_complex()");
+#else
+    return 0;
+#endif
+}
+
+static int pffft_ForwardRealUnordered(lua_State *L)
+{
+#if HAS_LUA
+    return pffft_Transform(L, 0, 0, true, "fft_real_unordered()");
+#else
+    return 0;
+#endif
+}
+
+static int pffft_ForwardComplexUnordered(lua_State *L)
+{
+#if HAS_LUA
+    return pffft_Transform(L, 0, 1, true, "fft_complex_unordered()");
+#else
+    return 0;
+#endif
+}
+
+static int pffft_BackwardRealUnordered(lua_State *L)
+{
+#if HAS_LUA
+    return pffft_Transform(L, 1, 0, true, "ifft_real_unordered()");
+#else
+    return 0;
+#endif
+}
+
+static int pffft_BackwardComplexUnordered(lua_State *L)
+{
+#if HAS_LUA
+    return pffft_Transform(L, 1, 1, true, "ifft_complex_unordered()");
+#else
+    return 0;
+#endif
+}
+
+// Helper function to check if a feature is enabled
+constexpr bool hasFeature(uint64_t currentFeatures, Surge::LuaSupport::EnvironmentFeatures feature)
+{
+    return (currentFeatures & feature) != 0;
+}
+
+bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L, uint64_t features)
 {
 #if HAS_LUA
     if (!lua_isfunction(L, -1))
@@ -173,6 +331,27 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_setfield(L, eidx, "clamp");
     lua_pushcfunction(L, lua_sandboxPrint);
     lua_setfield(L, eidx, "print");
+
+    // FFT feature
+    if (hasFeature(features, EnvironmentFeatures::HAS_FFT))
+    {
+        lua_pushcfunction(L, pffft_ForwardReal);
+        lua_setfield(L, eidx, "fft_real");
+        lua_pushcfunction(L, pffft_ForwardComplex);
+        lua_setfield(L, eidx, "fft_complex");
+        lua_pushcfunction(L, pffft_BackwardReal);
+        lua_setfield(L, eidx, "ifft_real");
+        lua_pushcfunction(L, pffft_BackwardComplex);
+        lua_setfield(L, eidx, "ifft_complex");
+        lua_pushcfunction(L, pffft_ForwardRealUnordered);
+        lua_setfield(L, eidx, "fft_real_unordered");
+        lua_pushcfunction(L, pffft_ForwardComplexUnordered);
+        lua_setfield(L, eidx, "fft_complex_unordered");
+        lua_pushcfunction(L, pffft_BackwardRealUnordered);
+        lua_setfield(L, eidx, "ifft_real_unordered");
+        lua_pushcfunction(L, pffft_BackwardComplexUnordered);
+        lua_setfield(L, eidx, "ifft_complex_unordered");
+    }
 
     // add global tables
     lua_getglobal(L, surgeTableName);
