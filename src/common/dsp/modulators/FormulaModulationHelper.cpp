@@ -220,6 +220,11 @@ end
                 lua_setfield(s.L, -2, q);
             };
 
+            auto addi = [&s](const char *q, float f) {
+                lua_pushinteger(s.L, f);
+                lua_setfield(s.L, -2, q);
+            };
+
             auto addb = [&s](const char *q, bool f) {
                 lua_pushboolean(s.L, f);
                 lua_setfield(s.L, -2, q);
@@ -240,6 +245,14 @@ end
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
             addb("released", s.released);
+
+            if (s.isVoice)
+            {
+                addi("channel", s.channel);
+                addi("key", s.key);
+                addi("velocity", s.velocity);
+                addi("voice_id", storage->activeVoiceCount);
+            }
 
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
@@ -486,7 +499,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     };
 
     auto addi = [s](const char *q, int i) {
-        lua_pushnumber(s->L, i);
+        lua_pushinteger(s->L, i);
         lua_setfield(s->L, -2, q);
     };
 
