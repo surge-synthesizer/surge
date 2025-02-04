@@ -3411,7 +3411,7 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     if (rm == 0)
     {
-        auto rs = evaluator->getFrame(cfr);
+        auto rs = evaluator->getFrame(cfr - 1);
         if (rs.has_value())
         {
             rendererComponent->points = *rs;
