@@ -2478,7 +2478,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                 .filterblock_configuration.val.i == fc_wide)
                         {
                             contextMenu.addSeparator();
-                            auto dt = p->deform_type;
+                            auto dt = p->deform_type & 0x1;
 
                             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
                                 contextMenu, "NOISE GENERATOR MODE");
@@ -2486,19 +2486,41 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             contextMenu.addItem(
                                 "Mono", true, dt == NoiseColorChannels::MONO, [this, p]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
-                                    update_deform_type(p, NoiseColorChannels::MONO);
+                                    update_deform_type_bit(p, NoiseColorChannels::MONO, 0);
                                     synth->storage.getPatch().isDirty = true;
                                     frame->repaint();
                                 });
                             contextMenu.addItem(
                                 "Stereo", true, dt == NoiseColorChannels::STEREO, [this, p]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
-                                    update_deform_type(p, NoiseColorChannels::STEREO);
+                                    update_deform_type_bit(p, NoiseColorChannels::STEREO, 0);
                                     synth->storage.getPatch().isDirty = true;
                                     frame->repaint();
                                 });
                         }
+                        {
+                            contextMenu.addSeparator();
+                            auto dt = (p->deform_type & 0x2) >> 1;
 
+                            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                                contextMenu, "NOISE GENERATOR COLOR TYPE");
+
+                            contextMenu.addItem(
+                                "Legacy (Pre-XT 1.4)", true, dt == NoiseColorValue::LEGACY,
+                                [this, p]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+                                    update_deform_type_bit(p, NoiseColorValue::LEGACY, 1);
+                                    synth->storage.getPatch().isDirty = true;
+                                    frame->repaint();
+                                });
+                            contextMenu.addItem(
+                                "Tilt", true, dt == NoiseColorValue::TILT, [this, p]() {
+                                    undoManager()->pushParameterChange(p->id, p, p->val);
+                                    update_deform_type_bit(p, NoiseColorValue::TILT, 1);
+                                    synth->storage.getPatch().isDirty = true;
+                                    frame->repaint();
+                                });
+                        }
                         break;
                     }
                     case ct_amplitude_ringmod:
@@ -3365,6 +3387,14 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 void SurgeGUIEditor::update_deform_type(Parameter *p, int type)
 {
     p->deform_type = type;
+    juceEditor->processor.paramChangeToListeners(p, true, juceEditor->processor.SCT_EX_DEFORM,
+                                                 (float)type, .0, .0, "");
+}
+
+void SurgeGUIEditor::update_deform_type_bit(Parameter *p, int type, int bit)
+{
+    int old = p->deform_type & ~(1 << bit);
+    p->deform_type = old | (type << bit);
     juceEditor->processor.paramChangeToListeners(p, true, juceEditor->processor.SCT_EX_DEFORM,
                                                  (float)type, .0, .0, "");
 }

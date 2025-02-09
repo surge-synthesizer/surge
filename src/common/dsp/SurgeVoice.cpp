@@ -170,6 +170,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     this->host_note_id = host_nid;
     this->originating_host_key = host_key;
     this->originating_host_channel = host_chan;
+    this->tilt_noise.s = this;
     this->paramModulationCount = 0;
     assert(storage);
     assert(oscene);
@@ -1215,36 +1216,16 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
     if (noise)
     {
-        float noisecol = limit_range(localcopy[scene->noise_colour.param_id_in_scene].f, -1.f, 1.f);
-        auto is_stereo_noise = scene->noise_colour.deform_type == NoiseColorChannels::STEREO;
-        for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
+        bool stereo =
+            ((scene->noise_colour.deform_type & 0x1) == NoiseColorChannels::STEREO) && is_wide;
+        int type = scene->noise_colour.deform_type & 0x2;
+        if (type)
         {
-            ((float *)tblock)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
-                noisegenL[0], noisegenL[1], noisecol, storage->rand_pm1());
-            ((float *)tblock)[i + 1] = ((float *)tblock)[i];
-            if (is_wide)
-            {
-                if (is_stereo_noise)
-                {
-                    ((float *)tblockR)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
-                        noisegenR[0], noisegenR[1], noisecol, storage->rand_pm1());
-                    ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
-                }
-                else
-                {
-                    ((float *)tblockR)[i] = ((float *)tblock)[i];
-                    ((float *)tblockR)[i + 1] = ((float *)tblock)[i + 1];
-                }
-            }
-        }
-
-        if (is_wide)
-        {
-            osclevels[le_noise].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
+            generate_tilt_noise(is_wide, stereo, tblock, tblockR);
         }
         else
         {
-            osclevels[le_noise].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
+            generate_legacy_noise(is_wide, stereo, tblock, tblockR);
         }
 
         if (route[5] < 2)
@@ -1739,4 +1720,146 @@ bool SurgeVoice::matchesChannelKeyId(int16_t channel, int16_t key, int32_t nid)
         nidMatch = (host_note_id == nid);
 
     return chanMatch && keyMatch && nidMatch;
+}
+
+void SurgeVoice::generate_legacy_noise(bool wide, bool stereo, float *blockL, float *blockR)
+{
+    float noisecol = limit_range(localcopy[scene->noise_colour.param_id_in_scene].f, -1.f, 1.f);
+    for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
+    {
+        (blockL)[i] = sdsp::correlated_noise_o2mk2_supplied_value(noisegenL[0], noisegenL[1],
+                                                                  noisecol, storage->rand_pm1());
+        (blockL)[i + 1] = (blockL)[i];
+        if (wide)
+        {
+            if (stereo)
+            {
+                (blockR)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
+                    noisegenR[0], noisegenR[1], noisecol, storage->rand_pm1());
+                (blockR)[i + 1] = (blockR)[i];
+            }
+            else
+            {
+                (blockR)[i] = (blockL)[i];
+                (blockR)[i + 1] = (blockL)[i + 1];
+            }
+        }
+    }
+    if (wide)
+    {
+        osclevels[le_noise].multiply_2_blocks(blockL, blockR, BLOCK_SIZE_OS_QUAD);
+    }
+    else
+    {
+        osclevels[le_noise].multiply_block(blockL, BLOCK_SIZE_OS_QUAD);
+    }
+}
+
+void SurgeVoice::generate_tilt_noise(bool wide, bool stereo, float *blockL, float *blockR)
+{
+    if (wide && stereo)
+    {
+        tilt_noise.processStereo(nullptr, nullptr, blockL, blockR, 0.f);
+    }
+    else
+    {
+        tilt_noise.processMonoToMono(nullptr, blockL, 0.f);
+        if (wide)
+        {
+            std::copy(blockL, blockL + BLOCK_SIZE_OS, blockR);
+        }
+    }
+}
+
+// Methods for adapting sst-effects TiltNoise
+// -----------------------------------------------
+float SurgeVoice::TiltNoiseAdapter::getFloatParam(const StorageContainer *o, size_t index)
+{
+    using TN = sst::voice_effects::generator::TiltNoise<SurgeVoice::TiltNoiseAdapter>;
+
+    // Multiple float parameters.
+    switch (index)
+    {
+    case TN::fpLevel:
+        // TiltNoise expects it in dB, converts to linear internally.
+        return o->s->localcopy[o->s->lag_id[le_noise]].f;
+    case TN::fpTilt:
+    {
+        // TiltNoise scale is -6 to +6; our slider is -1 to +1.
+        int id = o->s->scene->noise_colour.param_id_in_scene;
+        float col = limit_range(o->s->localcopy[id].f, -1.f, 1.f);
+        return col * 6.f;
+        break;
+    }
+    case TN::fpStereoWidth:
+        return 1.f;
+    default:
+        std::cout << "Attempted to access an undefined float parameter # " << index
+                  << " in SurgeVoice::TiltNoiseAdapter!" << std::endl;
+        return 0.f;
+    }
+    return 0.f;
+}
+
+int SurgeVoice::TiltNoiseAdapter::getIntParam(const StorageContainer *o, size_t index)
+{
+    // TiltNoise only has a single int param, stereo.
+    int id = o->s->scene->noise_colour.param_id_in_scene;
+    bool is_wide = o->s->scene->filterblock_configuration.val.i == fc_wide;
+    // Inverted from the deform bit.
+    if ((id & 1) && is_wide)
+    {
+        return 0;
+    }
+    return 1;
+}
+
+float SurgeVoice::TiltNoiseAdapter::dbToLinear(const StorageContainer *o, float db)
+{
+    return o->s->storage->db_to_linear(db);
+}
+
+float SurgeVoice::TiltNoiseAdapter::equalNoteToPitch(const StorageContainer *o, float f)
+{
+    return o->s->storage->note_to_pitch(f);
+}
+
+float SurgeVoice::TiltNoiseAdapter::getSampleRate(const StorageContainer *o)
+{
+    return o->s->storage->samplerate;
+}
+float SurgeVoice::TiltNoiseAdapter::getSampleRateInv(const StorageContainer *o)
+{
+    return 1.0 / o->s->storage->samplerate;
+}
+
+void SurgeVoice::TiltNoiseAdapter::setFloatParam(StorageContainer *o, size_t index, float val)
+{
+    std::cout << "Unsupported attempt to set a float parameter in SurgeVoice::TiltNoiseAdapter."
+              << std::endl;
+}
+
+void SurgeVoice::TiltNoiseAdapter::setIntParam(StorageContainer *o, size_t index, int val)
+{
+    std::cout << "Unsupported attempt to set an int parameter in SurgeVoice::TiltNoiseAdapter."
+              << std::endl;
+}
+
+void SurgeVoice::TiltNoiseAdapter::preReservePool(StorageContainer *o, size_t size)
+{
+    std::cout << "Unsupported attempt to call preReservePool in SurgeVoice::TiltNoiseAdapter."
+              << std::endl;
+}
+
+uint8_t *SurgeVoice::TiltNoiseAdapter::checkoutBlock(StorageContainer *o, size_t size)
+{
+    std::cout << "Unsupported attempt to call checkoutBlock in SurgeVoice::TiltNoiseAdapter."
+              << std::endl;
+    return NULL;
+}
+
+void SurgeVoice::TiltNoiseAdapter::returnBlock(StorageContainer *o, uint8_t *b, size_t size)
+{
+    std::cout << "Unsupported attempt to call returnBlock in SurgeVoice::TiltNoiseAdapter."
+              << std::endl;
 }

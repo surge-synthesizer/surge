@@ -27,6 +27,7 @@
 #include "SurgeVoiceState.h"
 #include "ADSRModulationSource.h"
 #include "LFOModulationSource.h"
+#include <sst/voice-effects/generator/TiltNoise.h>
 #include <vembertech/lipol.h>
 #include "QuadFilterChain.h"
 #include <array>
@@ -297,6 +298,47 @@ class alignas(16) SurgeVoice
 
     // MPE special cases
     bool mpeEnabled;
+
+  private:
+    // Adapter for sst-effects TiltNoise to allow it to be used directly from SurgeVoice.
+    struct TiltNoiseAdapter
+    {
+        // Simple wrapper that holds the SurgeVoice storage and params. Be VERY CAREFUL with
+        // lifetime here. These are raw pointers! They're only valid for when they're valid in
+        // SurgeVoice.
+        struct StorageContainer
+        {
+            SurgeVoice const *s;
+
+            StorageContainer() = default;
+            StorageContainer(const StorageContainer &) = delete;
+            StorageContainer(StorageContainer &&) = delete;
+        };
+
+        static constexpr uint16_t blockSize{BLOCK_SIZE_OS};
+        using BaseClass = StorageContainer;
+
+        static inline float getFloatParam(const StorageContainer *o, size_t index);
+        static inline int getIntParam(const StorageContainer *o, size_t index);
+        static inline float dbToLinear(const StorageContainer *o, float db);
+        static inline float equalNoteToPitch(const StorageContainer *o, float f);
+        static inline float getSampleRate(const StorageContainer *o);
+        static inline float getSampleRateInv(const StorageContainer *o);
+
+        // None of these are used by TiltNoise and will print errors to the console if they are
+        // called.
+        static inline void setFloatParam(StorageContainer *o, size_t index, float val);
+        static inline void setIntParam(StorageContainer *o, size_t index, int val);
+        static inline void preReservePool(StorageContainer *o, size_t size);
+        static inline uint8_t *checkoutBlock(StorageContainer *o, size_t size);
+        static inline void returnBlock(StorageContainer *o, uint8_t *b, size_t size);
+    };
+    friend class TiltNoiseAdapter;
+    // Single per-voice instance.
+    sst::voice_effects::generator::TiltNoise<TiltNoiseAdapter> tilt_noise;
+    // Helper functions for doing noise generations.
+    void generate_legacy_noise(bool wide, bool stereo, float *blockL, float *blockR);
+    void generate_tilt_noise(bool wide, bool stereo, float *blockL, float *blockR);
 };
 
 void all_ring_modes_block(float *__restrict src1_l, float *__restrict src2_l,

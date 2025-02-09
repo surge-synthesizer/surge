@@ -284,6 +284,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void adjustSize(float &width, float &height) const;
 
     void update_deform_type(Parameter *p, int type);
+    // Only updates a single bitfield. Does not check values.
+    void update_deform_type_bit(Parameter *p, int type, int bit);
 
     struct patchdata
     {
