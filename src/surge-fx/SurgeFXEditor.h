@@ -24,6 +24,7 @@
 #define SURGE_SRC_SURGE_FX_SURGEFXEDITOR_H
 
 #include "SurgeFXProcessor.h"
+#include "ParameterPanel.h"
 #include "SurgeLookAndFeel.h"
 #include "KnobSource.h"
 
@@ -37,8 +38,7 @@
  */
 class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
                                     juce::AsyncUpdater,
-                                    SurgeStorage::ErrorListener,
-                                    sst::jucegui::style::StyleConsumer
+                                    SurgeStorage::ErrorListener
 {
   public:
     SurgefxAudioProcessorEditor(SurgefxAudioProcessor &);
@@ -57,7 +57,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     };
     std::vector<FxMenu> menu;
     std::unique_ptr<juce::Component> picker;
-
+    std::unique_ptr<ParameterPanel> deafultParameterPanel;
     static constexpr int topSection = 80;
 
     void makeMenu();
@@ -110,16 +110,7 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
     static constexpr int baseWidth = 600, baseHeight = 55 * 6 + 80 + topSection;
 
-    std::vector<std::unique_ptr<sst::jucegui::components::Knob>> knobs;
-    std::vector<std::unique_ptr<KnobSource>> sources;
-
   private:
-    SurgeFXParamDisplay fxParamDisplay[n_fx_params];
-    SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
-    SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
-    SurgeTempoSyncSwitch fxExtended[n_fx_params];
-    SurgeTempoSyncSwitch fxAbsoluted[n_fx_params];
-
     void blastToggleState(int i);
     void resetLabels();
 
@@ -150,7 +141,6 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
 
   public:
     std::vector<juce::Component *> accessibleOrderWeakRefs;
-    std::shared_ptr<sst::jucegui::style::StyleSheet> styleSheet;
 
   public:
     std::unique_ptr<juce::ComponentTraverser> createFocusTraverser() override;
