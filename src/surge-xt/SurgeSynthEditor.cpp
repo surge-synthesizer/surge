@@ -742,10 +742,14 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
                 case Surge::GUI::VKB_OCTAVE_DOWN:
                     midiKeyboardOctave = std::clamp(midiKeyboardOctave - 1, 0, 9);
                     keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
+                    // sometimes a note off command get lost
+                    processor.midiKeyboardState.allNotesOff(keyboard->getMidiChannel() );
                     return true;
                 case Surge::GUI::VKB_OCTAVE_UP:
                     midiKeyboardOctave = std::clamp(midiKeyboardOctave + 1, 0, 9);
                     keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
+                    // sometimes a note off command get lost
+                    processor.midiKeyboardState.allNotesOff(keyboard->getMidiChannel() );
                     return true;
                 case Surge::GUI::VKB_VELOCITY_DOWN_10PCT:
                     midiKeyboardVelocity = std::clamp(midiKeyboardVelocity - 0.1f, 0.f, 1.f);
