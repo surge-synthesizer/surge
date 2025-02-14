@@ -155,6 +155,8 @@ add_library(${PROJECT_NAME}
   dsp/SurgeVoice.cpp
   dsp/SurgeVoice.h
   dsp/SurgeVoiceState.h
+  dsp/TiltNoiseAdapter.cpp
+  dsp/TiltNoiseAdapter.h
   dsp/Wavetable.cpp
   dsp/Wavetable.h
   dsp/WavetableScriptEvaluator.cpp

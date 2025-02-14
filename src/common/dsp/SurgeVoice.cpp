@@ -39,17 +39,6 @@ using namespace std;
 namespace mech = sst::basic_blocks::mechanics;
 namespace sdsp = sst::basic_blocks::dsp;
 
-enum lag_entries
-{
-    le_osc1,
-    le_osc2,
-    le_osc3,
-    le_noise,
-    le_ring12,
-    le_ring23,
-    le_pfg,
-};
-
 inline void set1f(SIMD_M128 &m, int i, float f) { *((float *)&m + i) = f; }
 
 inline void set1i(SIMD_M128 &m, int e, int i) { *((int *)&m + e) = i; }
@@ -1769,97 +1758,4 @@ void SurgeVoice::generate_tilt_noise(bool wide, bool stereo, float *blockL, floa
             std::copy(blockL, blockL + BLOCK_SIZE_OS, blockR);
         }
     }
-}
-
-// Methods for adapting sst-effects TiltNoise
-// -----------------------------------------------
-float SurgeVoice::TiltNoiseAdapter::getFloatParam(const StorageContainer *o, size_t index)
-{
-    using TN = sst::voice_effects::generator::TiltNoise<SurgeVoice::TiltNoiseAdapter>;
-
-    // Multiple float parameters.
-    switch (index)
-    {
-    case TN::fpLevel:
-        // TiltNoise expects it in dB, converts to linear internally.
-        return o->s->localcopy[o->s->lag_id[le_noise]].f;
-    case TN::fpTilt:
-    {
-        // TiltNoise scale is -6 to +6; our slider is -1 to +1.
-        int id = o->s->scene->noise_colour.param_id_in_scene;
-        float col = limit_range(o->s->localcopy[id].f, -1.f, 1.f);
-        return col * 6.f;
-        break;
-    }
-    case TN::fpStereoWidth:
-        return 1.f;
-    default:
-        std::cout << "Attempted to access an undefined float parameter # " << index
-                  << " in SurgeVoice::TiltNoiseAdapter!" << std::endl;
-        return 0.f;
-    }
-    return 0.f;
-}
-
-int SurgeVoice::TiltNoiseAdapter::getIntParam(const StorageContainer *o, size_t index)
-{
-    // TiltNoise only has a single int param, stereo.
-    int id = o->s->scene->noise_colour.param_id_in_scene;
-    bool is_wide = o->s->scene->filterblock_configuration.val.i == fc_wide;
-    // Inverted from the deform bit.
-    if ((id & 1) && is_wide)
-    {
-        return 0;
-    }
-    return 1;
-}
-
-float SurgeVoice::TiltNoiseAdapter::dbToLinear(const StorageContainer *o, float db)
-{
-    return o->s->storage->db_to_linear(db);
-}
-
-float SurgeVoice::TiltNoiseAdapter::equalNoteToPitch(const StorageContainer *o, float f)
-{
-    return o->s->storage->note_to_pitch(f);
-}
-
-float SurgeVoice::TiltNoiseAdapter::getSampleRate(const StorageContainer *o)
-{
-    return o->s->storage->samplerate;
-}
-float SurgeVoice::TiltNoiseAdapter::getSampleRateInv(const StorageContainer *o)
-{
-    return 1.0 / o->s->storage->samplerate;
-}
-
-void SurgeVoice::TiltNoiseAdapter::setFloatParam(StorageContainer *o, size_t index, float val)
-{
-    std::cout << "Unsupported attempt to set a float parameter in SurgeVoice::TiltNoiseAdapter."
-              << std::endl;
-}
-
-void SurgeVoice::TiltNoiseAdapter::setIntParam(StorageContainer *o, size_t index, int val)
-{
-    std::cout << "Unsupported attempt to set an int parameter in SurgeVoice::TiltNoiseAdapter."
-              << std::endl;
-}
-
-void SurgeVoice::TiltNoiseAdapter::preReservePool(StorageContainer *o, size_t size)
-{
-    std::cout << "Unsupported attempt to call preReservePool in SurgeVoice::TiltNoiseAdapter."
-              << std::endl;
-}
-
-uint8_t *SurgeVoice::TiltNoiseAdapter::checkoutBlock(StorageContainer *o, size_t size)
-{
-    std::cout << "Unsupported attempt to call checkoutBlock in SurgeVoice::TiltNoiseAdapter."
-              << std::endl;
-    return NULL;
-}
-
-void SurgeVoice::TiltNoiseAdapter::returnBlock(StorageContainer *o, uint8_t *b, size_t size)
-{
-    std::cout << "Unsupported attempt to call returnBlock in SurgeVoice::TiltNoiseAdapter."
-              << std::endl;
 }
