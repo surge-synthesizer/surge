@@ -61,4 +61,4 @@ struct VoiceTiltNoiseAdapter
     static void returnBlock(StorageContainer *o, uint8_t *b, size_t size);
 };
 
-#endif  // SURGE_SRC_COMMON_DSP_TILTNOISEADAPTER_H
+#endif // SURGE_SRC_COMMON_DSP_TILTNOISEADAPTER_H

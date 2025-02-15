@@ -104,13 +104,11 @@ void VoiceTiltNoiseAdapter::preReservePool(StorageContainer *o, size_t size)
 
 uint8_t *VoiceTiltNoiseAdapter::checkoutBlock(StorageContainer *o, size_t size)
 {
-    std::cout << "Unsupported attempt to call checkoutBlock in VoiceTiltNoiseAdapter."
-              << std::endl;
+    std::cout << "Unsupported attempt to call checkoutBlock in VoiceTiltNoiseAdapter." << std::endl;
     return NULL;
 }
 
 void VoiceTiltNoiseAdapter::returnBlock(StorageContainer *o, uint8_t *b, size_t size)
 {
-    std::cout << "Unsupported attempt to call returnBlock in VoiceTiltNoiseAdapter."
-              << std::endl;
+    std::cout << "Unsupported attempt to call returnBlock in VoiceTiltNoiseAdapter." << std::endl;
 }
