@@ -210,6 +210,12 @@ enum NoiseColorChannels
     MONO = 1
 };
 
+enum NoiseColorValue
+{
+    LEGACY = 0,
+    TILT = 1,
+};
+
 enum CombinatorMode
 {
     cxm_ring = 0,
