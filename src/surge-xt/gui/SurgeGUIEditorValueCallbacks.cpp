@@ -2503,10 +2503,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                             auto dt = (p->deform_type & 0x2) >> 1;
 
                             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
-                                contextMenu, "NOISE GENERATOR COLOR TYPE");
+                                contextMenu, "NOISE GENERATOR TYPE");
 
                             contextMenu.addItem(
-                                "Legacy (Pre-XT 1.4)", true, dt == NoiseColorValue::LEGACY,
+                                "Legacy (<XT 1.4)", true, dt == NoiseColorValue::LEGACY,
                                 [this, p]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
                                     update_deform_type_bit(p, NoiseColorValue::LEGACY, 1);
@@ -2514,7 +2514,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                                     frame->repaint();
                                 });
                             contextMenu.addItem(
-                                "Tilt", true, dt == NoiseColorValue::TILT, [this, p]() {
+                                "Tilt Filter", true, dt == NoiseColorValue::TILT, [this, p]() {
                                     undoManager()->pushParameterChange(p->id, p, p->val);
                                     update_deform_type_bit(p, NoiseColorValue::TILT, 1);
                                     synth->storage.getPatch().isDirty = true;
