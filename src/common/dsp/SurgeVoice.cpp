@@ -221,6 +221,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     noisegenL[1] = 0.f;
     noisegenR[1] = 0.f;
 
+    tilt_noise.initVoiceEffect();
+
     // set states & variables
     state.gate = true;
     state.keep_playing = true;
