@@ -60,9 +60,9 @@ int VoiceTiltNoiseAdapter::getIntParam(const StorageContainer *o, size_t index)
     // Inverted from the deform bit.
     if ((id & 1) && is_wide)
     {
-        return 0;
+        return 1;
     }
-    return 1;
+    return 0;
 }
 
 float VoiceTiltNoiseAdapter::dbToLinear(const StorageContainer *o, float db)
