@@ -104,6 +104,8 @@ void removeFunctionsAssociatedWith(SurgeStorage *,
 bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, EvaluatorState &s,
                           bool is_display);
 
+bool isUserDefined(std::string);
+
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sceneIndex);
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v);
 
@@ -125,9 +127,30 @@ struct DebugRow
     std::string label;
     bool hasValue{true};
     bool isInternal{false};
+    bool isUserDefined{false};
+    bool isHeader{false};
+    int filterFlag = -1;
+    int headerFlag = -1;
+
+    enum
+    {
+        User,
+        System
+    };
+
+    enum
+    {
+        Ignore,
+        Found,
+        Child
+    };
     std::variant<float, std::string> value;
 };
-std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &s);
+
+void setUserDefined(DebugRow &row, int depth, bool parent);
+
+std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &s, std::string filter,
+                                                bool showUser, bool showSystem);
 std::string createDebugViewOfModState(const EvaluatorState &s);
 
 /*
