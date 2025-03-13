@@ -1787,7 +1787,6 @@ struct ExpandingFormulaDebugger : public juce::Component,
                 }
             }
             onClick();
-            std::cout << "showUser:" << showUser << " showSystem" << showSystem << "\n";
         }
 
         void paintRowBackground(juce::Graphics &g, int rowNumber, int width, int height,
@@ -1989,7 +1988,8 @@ struct ExpandingFormulaDebugger : public juce::Component,
             int margin = 0;
 
             // debugTable->setBounds(getLocalBounds().reduced(margin));
-            debugTable->setBounds(getLocalBounds().translated(0.0, 9.5).reduced(0.0, 9.5));
+
+            debugTable->setBounds(getLocalBounds().translated(0, 9).reduced(0, 9));
             auto w = getLocalBounds().reduced(margin).getWidth() - 10;
             debugTable->getHeader().setColumnWidth(1, w / 2);
             debugTable->getHeader().setColumnWidth(2, w / 2);
