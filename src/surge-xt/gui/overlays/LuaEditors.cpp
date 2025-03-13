@@ -1650,7 +1650,7 @@ struct ExpandingFormulaDebugger : public juce::Component,
 
     pdata tp[n_scene_params];
 
-    virtual void textEditorTextChanged(juce::TextEditor &)
+    void textEditorTextChanged(juce::TextEditor &) override
     {
         // std::cout << "text editor changed" << searchfield->getText() << "\n";
         updateDebuggerWithOptionalStep(false);
@@ -1770,7 +1770,7 @@ struct ExpandingFormulaDebugger : public juce::Component,
         void setRows(const std::vector<Surge::Formula::DebugRow> &r) { rows = r; }
         int getNumRows() override { return rows.size(); }
 
-        void cellClicked(int rowNumber, int columnId, const juce::MouseEvent &)
+        void cellClicked(int rowNumber, int columnId, const juce::MouseEvent &) override
         {
 
             const auto &r = rows[rowNumber];
@@ -1989,7 +1989,7 @@ struct ExpandingFormulaDebugger : public juce::Component,
             int margin = 0;
 
             // debugTable->setBounds(getLocalBounds().reduced(margin));
-            debugTable->setBounds(getLocalBounds().translated(0, 9.5).reduced(0, 9.5));
+            debugTable->setBounds(getLocalBounds().translated(0.0, 9.5).reduced(0.0, 9.5));
             auto w = getLocalBounds().reduced(margin).getWidth() - 10;
             debugTable->getHeader().setColumnWidth(1, w / 2);
             debugTable->getHeader().setColumnWidth(2, w / 2);
