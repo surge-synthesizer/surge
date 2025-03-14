@@ -1609,13 +1609,23 @@ bool CodeEditorContainerWithApply::autoCompleteDeclaration(juce::KeyPress key, s
 
 void CodeEditorContainerWithApply::paint(juce::Graphics &g) { g.fillAll(juce::Colours::black); }
 
-struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::SkinConsumingComponent
+struct ExpandingFormulaDebugger : public juce::Component,
+                                  public Surge::GUI::SkinConsumingComponent,
+                                  juce::TextEditor::Listener
 {
     bool isOpen{false};
+
+    bool showUser = true;
+    bool showSystem = true;
+
+    std::unique_ptr<Textfield> searchfield;
 
     ExpandingFormulaDebugger(FormulaModulatorEditor *ed) : editor(ed)
     {
         debugTableDataModel = std::make_unique<DebugDataModel>();
+
+        debugTableDataModel.get()->onClick = [this]() { refreshDebuggerView(); };
+
         debugTable = std::make_unique<juce::TableListBox>("Debug", debugTableDataModel.get());
         debugTable->getHeader().addColumn("key", 1, 50);
         debugTable->getHeader().addColumn("value", 2, 50);
@@ -1623,11 +1633,28 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         debugTable->getHeader().setVisible(false);
         debugTable->setRowHeight(14);
         addAndMakeVisible(*debugTable);
+
+        searchfield = std::make_unique<Textfield>(0);
+
+        searchfield->setHeader("Filter");
+
+        searchfield->addListener(this);
+        addAndMakeVisible(*searchfield);
+
+        // searchfield = std::make_unique<Textfield>(0);
+
+        // searchfield->setBorder(juce::BorderSize(-1, 4, 0, 4));
     }
 
     FormulaModulatorEditor *editor{nullptr};
 
     pdata tp[n_scene_params];
+
+    void textEditorTextChanged(juce::TextEditor &) override
+    {
+        // std::cout << "text editor changed" << searchfield->getText() << "\n";
+        updateDebuggerWithOptionalStep(false);
+    }
 
     void initializeLfoDebugger()
     {
@@ -1688,6 +1715,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
         }
         else
         {
+
             auto &formulastate = lfoDebugger->formulastate;
             auto &localcopy = tp;
             auto lfodata = editor->lfos;
@@ -1704,10 +1732,18 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
                                                     editor->storage->getPatch(), editor->scene);
             float out[Surge::Formula::max_formula_outputs];
             Surge::Formula::valueAt(lfoDebugger->getIntPhase(), lfoDebugger->getPhase(), storage,
-                                    lfoDebugger->fs, &formulastate, out, true);
+                                    lfoDebugger->fs, &formulastate, out, false);
         }
 
-        auto st = Surge::Formula::createDebugDataOfModState(lfoDebugger->formulastate);
+        if (debugTableDataModel && debugTable)
+        {
+            showUser = debugTableDataModel.get()->showUser;
+            showSystem = debugTableDataModel.get()->showSystem;
+        }
+
+        auto f = searchfield->getText();
+        auto st = Surge::Formula::createDebugDataOfModState(
+            lfoDebugger->formulastate, searchfield->getText().toStdString(), showUser, showSystem);
 
         if (debugTableDataModel && debugTable)
         {
@@ -1721,20 +1757,50 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
     }
 
     std::unique_ptr<juce::TableListBox> debugTable;
+
     struct DebugDataModel : public juce::TableListBoxModel,
                             public Surge::GUI::SkinConsumingComponent
     {
+
+        bool showUser = true;
+        bool showSystem = true;
+        std::function<void()> onClick;
+
         std::vector<Surge::Formula::DebugRow> rows;
         void setRows(const std::vector<Surge::Formula::DebugRow> &r) { rows = r; }
         int getNumRows() override { return rows.size(); }
 
+        void cellClicked(int rowNumber, int columnId, const juce::MouseEvent &) override
+        {
+
+            const auto &r = rows[rowNumber];
+
+            if (r.isHeader == true)
+            {
+                if (r.headerFlag == Surge::Formula::DebugRow::User)
+                {
+                    showUser = showUser == false;
+                }
+                else
+                {
+                    showSystem = showSystem == false;
+                }
+            }
+            onClick();
+        }
+
         void paintRowBackground(juce::Graphics &g, int rowNumber, int width, int height,
                                 bool rowIsSelected) override
         {
-            if (rowNumber % 2 == 0)
-                g.fillAll(skin->getColor(Colors::FormulaEditor::Debugger::LightRow));
-            else
-                g.fillAll(skin->getColor(Colors::FormulaEditor::Debugger::Row));
+            const auto &r = rows[rowNumber];
+
+            auto color = rowNumber % 2 == 0 ? Colors ::FormulaEditor::Debugger::LightRow
+                                            : Colors::FormulaEditor::Debugger::Row;
+
+            auto interpolateStrength = r.isHeader ? 0.15 : r.isUserDefined ? 0.0 : 0;
+
+            g.fillAll(skin->getColor(color).interpolatedWith(
+                skin->getColor(Colors ::FormulaEditor::Lua::Identifier), interpolateStrength));
         }
 
         std::string getText(int rowNumber, int columnId)
@@ -1762,27 +1828,76 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             }
             return "";
         }
+
         void paintCell(juce::Graphics &g, int rowNumber, int columnId, int w, int h,
                        bool rowIsSelected) override
         {
             if (rowNumber < 0 || rowNumber >= rows.size())
                 return;
 
-            const auto &r = rows[rowNumber];
             auto b = juce::Rectangle<int>(0, 0, w, h);
-            g.setFont(skin->fontManager->getFiraMonoAtSize(9));
+
+            const auto &r = rows[rowNumber];
+
+            g.setFont(skin->fontManager->getFiraMonoAtSize(8.5));
+            b = b.withTrimmedLeft(4);
+
+            float alpha = 1;
+
+            if (r.filterFlag == Surge::Formula::DebugRow::Ignore)
+                alpha = 0.5;
+
             if (r.isInternal)
                 g.setColour(skin->getColor(Colors::FormulaEditor::Debugger::InternalText));
             else
-                g.setColour(skin->getColor(Colors::FormulaEditor::Debugger::Text));
+                g.setColour(skin->getColor(Colors::FormulaEditor::Debugger::Text).withAlpha(alpha));
 
-            if (columnId == 1)
+            if (r.isHeader && columnId == 1)
+            {
+
+                g.setFont(skin->fontManager->getFiraMonoAtSize(8.5, juce::Font::bold));
+                g.drawText(getText(rowNumber, columnId), b, juce::Justification::centredLeft);
+
+                // draw arrow
+
+                auto path = juce::Path();
+                auto size = 4;
+                auto arrowMarginX = 4.5;
+                auto arrowMarginY = h * 0.5;
+
+                path.startNewSubPath(0, -size * 0.4);
+                path.lineTo(-size * 0.5, size * 0.4);
+                path.lineTo(size * 0.5, size * 0.4);
+
+                float arrowRotation = 0;
+
+                if (r.isHeader && r.headerFlag == Surge::Formula::DebugRow::User)
+                {
+                    arrowRotation = showUser ? M_PI : 0;
+                }
+
+                if (r.isHeader && r.headerFlag == Surge::Formula::DebugRow::System)
+                {
+                    arrowRotation = showSystem ? M_PI : 0;
+                }
+
+                path.applyTransform(juce::AffineTransform()
+                                        .rotated(arrowRotation)
+                                        .translated(arrowMarginX, arrowMarginY));
+
+                g.setFillType(
+                    juce::FillType(skin->getColor(Colors::FormulaEditor::Debugger::Text)));
+
+                g.fillPath(path);
+            }
+            else if (columnId == 1)
             {
                 b = b.withTrimmedLeft(r.depth * 10);
                 g.drawText(getText(rowNumber, columnId), b, juce::Justification::centredLeft);
             }
             else if (columnId == 2)
             {
+                b = b.withTrimmedRight(2);
                 g.drawText(getText(rowNumber, columnId), b, juce::Justification::centredRight);
             }
             else
@@ -1794,6 +1909,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
 
         struct DebugCell : juce::Label
         {
+
             int row{0}, col{0};
             DebugDataModel *model{nullptr};
             DebugCell(DebugDataModel *m) : model(m) {}
@@ -1829,7 +1945,7 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
             cell->row = rowNumber;
             cell->col = columnId;
             cell->updateAccessibility();
-
+            cell->setInterceptsMouseClicks(false, true);
             return cell;
         }
     };
@@ -1840,7 +1956,22 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
 
     void paint(juce::Graphics &g) override { g.fillAll(skin->getColor(Colors::MSEGEditor::Panel)); }
 
-    void onSkinChanged() override { debugTableDataModel->setSkin(skin, associatedBitmapStore); }
+    void onSkinChanged() override
+    {
+
+        searchfield->setFont(skin->fontManager->getLatoAtSize(9.5, juce::Font::plain));
+        searchfield->setColour(juce::TextEditor::ColourIds::textColourId,
+                               skin->getColor(Colors::Dialog::Button::Text));
+        searchfield->setColour(juce::TextEditor::backgroundColourId,
+                               skin->getColor(Colors::FormulaEditor::Background).darker(0.4));
+        searchfield->setColour(juce::TextEditor::focusedOutlineColourId,
+                               skin->getColor(Colors::FormulaEditor::Background).brighter(0.08));
+        searchfield->setColour(juce::TextEditor::outlineColourId,
+                               skin->getColor(Colors::FormulaEditor::Background).brighter(0));
+        searchfield->setHeaderColor(skin->getColor(Colors::Dialog::Button::Text));
+
+        debugTableDataModel->setSkin(skin, associatedBitmapStore);
+    }
 
     void setOpen(bool b)
     {
@@ -1854,12 +1985,16 @@ struct ExpandingFormulaDebugger : public juce::Component, public Surge::GUI::Ski
     {
         if (isOpen)
         {
-            int margin = 4;
+            int margin = 0;
 
-            debugTable->setBounds(getLocalBounds().reduced(margin));
+            // debugTable->setBounds(getLocalBounds().reduced(margin));
+
+            debugTable->setBounds(getLocalBounds().translated(0, 9).reduced(0, 9));
             auto w = getLocalBounds().reduced(margin).getWidth() - 10;
             debugTable->getHeader().setColumnWidth(1, w / 2);
             debugTable->getHeader().setColumnWidth(2, w / 2);
+
+            searchfield->setBounds(getLocalBounds().withHeight(18));
         }
     }
 
@@ -2194,6 +2329,9 @@ void FormulaModulatorEditor::applyCode()
     juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
     setApplyEnabled(false);
     mainEditor->grabKeyboardFocus();
+
+    if (debugPanel->isOpen)
+        debugPanel->initializeLfoDebugger();
 }
 
 void FormulaModulatorEditor::forceRefresh()
