@@ -1527,7 +1527,18 @@ void Parameter::set_type(int ctrltype)
     case ct_freq_ringmod:
         displayType = ATwoToTheBx;
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "Hz");
-        displayInfo.a = (ctrltype == ct_freq_ringmod) ? 8.175798 : 440.0;
+        if (ctrltype == ct_freq_ringmod)
+        {
+            displayInfo.a = 8.175798;
+        }
+        else if (ctrltype == ct_freq_audible_fm3_extendable)
+        {
+            displayInfo.a = 440 * pow(2.f, -9.f / 12.f);
+        }
+        else
+        {
+            displayInfo.a = 440.0;
+        }
         displayInfo.b = 1.0f / 12.0f;
         displayInfo.decimals = 2;
         displayInfo.modulationCap = 880.f * powf(2.0, (val_max.f) / 12.0f);
