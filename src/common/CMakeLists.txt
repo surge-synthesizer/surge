@@ -27,9 +27,9 @@ else()
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=0)
 endif()
 
+surge_add_lib_subdirectory(sst/sst-cpputils)
 set(SST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES ON CACHE BOOL "No Native Aliases for SCXT") # Makes ARM64EC use neon basically
 surge_add_lib_subdirectory(sst/sst-basic-blocks)
-surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
 surge_add_lib_subdirectory(sst/sst-waveshapers)
