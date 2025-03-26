@@ -3320,7 +3320,20 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
             f = 69 * ((f - 16.0) / 16.0);
         }
 
-        int i_value = round(f) + ((ctrltype != ct_freq_ringmod) ? 69 : 0);
+        int i_value = round(f);
+        if (ctrltype == ct_freq_ringmod)
+        {
+            i_value += 0;
+        }
+        else if (ctrltype == ct_freq_audible_fm3_extendable)
+        {
+            i_value += 60;
+        }
+        else
+        {
+            i_value += 69;
+        }
+
         int oct_offset = 1;
 
         if (storage)
