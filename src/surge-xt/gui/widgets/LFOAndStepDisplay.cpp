@@ -2709,6 +2709,10 @@ void LFOAndStepDisplay::showStepTypein(int i)
     if (!stepEditor)
     {
         stepEditor = std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
+    }
+
+    if (getParentComponent()->getIndexOfChildComponent(stepEditor.get()) < 0)
+    {
         getParentComponent()->addChildComponent(*stepEditor);
     }
 
