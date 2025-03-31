@@ -138,6 +138,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                                     (old patches load with extend disabled even if they had it enabled)
 // 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Editor window state
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
+//                               changed how extend-to-bipolar works for LFO Amplitude parameter
 // clang-format on
 
 const int ff_revision = 26;
