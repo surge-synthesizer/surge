@@ -124,7 +124,7 @@ if [[ -d $INDIR/$APP ]]; then
 fi
 
 if [[ -d $INDIR/$FXAPP ]]; then
-    build_flavor "FXAPP" "$FXAPP" "org.surge-synth-team.surge-xt-fx.app.pkg" "/tmp/SXT"
+    build_flavor "FXAPP" "$FXAPP" "org.surge-synth-team.surge-xt-fx.app.pkg" "/tmp/SXT" "--entitlements ${SOURCEDIR}/scripts/installer_mac/Resources/entitlements.plist"
 fi
 
 # Build the resources pagkage
