@@ -2213,6 +2213,11 @@ void Parameter::set_extend_range(bool er)
         }
         break;
         case ct_dly_fb_clippingmodes:
+        case ct_lfoamplitude:
+        {
+            val_min.f = 0.f;
+        }
+        break;
         case ct_lfophaseshuffle:
         {
             val_default.f = 0.f;
@@ -2266,6 +2271,11 @@ void Parameter::set_extend_range(bool er)
         }
         break;
         case ct_dly_fb_clippingmodes:
+        case ct_lfoamplitude:
+        {
+            val_min.f = -1.f;
+        }
+        break;
         case ct_lfophaseshuffle:
         {
             val_default.f = 0.5f;
@@ -2316,8 +2326,6 @@ float Parameter::get_extended(float f) const
     case ct_filter_feedback:
     case ct_osc_feedback_negative:
         return 4.f * f;
-    case ct_lfoamplitude:
-        return (2.f * f) - 1.f;
     case ct_lfophaseshuffle:
     {
         return (2.f * f) - 1.f;
