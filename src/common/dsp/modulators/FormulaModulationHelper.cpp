@@ -558,6 +558,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
     addb("released", s->released);
     addb("is_rendering_to_ui", s->is_display);
+    addb("mpe_enabled", s->mpeenabled);
 
     addnil("retrigger_AEG");
     addnil("retrigger_FEG");
@@ -747,7 +748,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
 bool isUserDefined(std::string str)
 {
-    static std::array<std::string, 50> keywords = {
+    static std::array<std::string, 51> keywords = {
         "amplitude",     "attack",       "block_size",
         "cc_breath",     "cc_expr",      "cc_mw",
         "cc_sus",        "chan_at",      "channel",
@@ -756,15 +757,15 @@ bool isUserDefined(std::string str)
         "hold",          "intphase",     "is_rendering_to_ui",
         "is_voice",      "key",          "latest_key",
         "lowest_key",    "macros",       "mpe_bend",
-        "mpe_bendrange", "mpe_pressure", "mpe_timbre",
-        "output",        "pb",           "pb_range_dn",
-        "pb_range_up",   "phase",        "play_mode",
-        "poly_at",       "poly_limit",   "rate",
-        "rel_velocity",  "release",      "released",
-        "samplerate",    "scene_mode",   "songpos",
-        "split_point",   "startphase",   "sustain",
-        "tempo",         "velocity",     "voice_count",
-        "voice_id",      "subscriptions"};
+        "mpe_bendrange", "mpe_enabled",  "mpe_pressure",
+        "mpe_timbre",    "output",       "pb",
+        "pb_range_dn",   "pb_range_up",  "phase",
+        "play_mode",     "poly_at",      "poly_limit",
+        "rate",          "rel_velocity", "release",
+        "released",      "samplerate",   "scene_mode",
+        "songpos",       "split_point",  "startphase",
+        "sustain",       "tempo",        "velocity",
+        "voice_count",   "voice_id",     "subscriptions"};
 
     auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();
     // std::cout << "isCustom " << str << " = " << foundInList << "\n";
@@ -1085,6 +1086,8 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sce
     s.pbrange_up = (float)scene.pbrange_up.val.i * (scene.pbrange_up.extend_range ? 0.01f : 1.f);
     s.pbrange_dn = (float)scene.pbrange_dn.val.i * (scene.pbrange_dn.extend_range ? 0.01f : 1.f);
 
+    s.mpeenabled = patch.storage->mpeEnabled;
+
     s.aftertouch = scene.modsources[ms_aftertouch]->get_output(0);
     s.modwheel = scene.modsources[ms_modwheel]->get_output(0);
     s.breath = scene.modsources[ms_breath]->get_output(0);
@@ -1097,7 +1100,6 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sce
     s.polylimit = patch.polylimit.val.i;
     s.scenemode = patch.scenemode.val.i;
     s.polymode = patch.scene[sceneIndex].polymode.val.i;
-
     s.splitpoint = patch.splitpoint.val.i;
     if (s.scenemode == sm_chsplit)
         s.splitpoint = (int)(s.splitpoint / 8 + 1);
