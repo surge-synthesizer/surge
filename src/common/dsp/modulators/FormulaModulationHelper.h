@@ -68,7 +68,7 @@ struct EvaluatorState
     bool is_display = false;
 
     // voice features
-    bool isVoice;
+    bool isVoice, mpeenabled;
     int key{60}, channel{0}, velocity{0}, releasevelocity{0}, mpebendrange{24};
     int64_t voiceOrderAtCreate{1L};
     float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0};

@@ -136,7 +136,8 @@ static int lua_limitRange(lua_State *L)
     return 1;
 }
 
-// custom print that outputs limited amount of arguments and restricts use to strings and numbers
+// custom print that outputs limited amount of arguments and restricts use to strings, numbers,
+// booleans and nil
 static int lua_sandboxPrint(lua_State *L)
 {
 #if HAS_LUA
@@ -145,10 +146,24 @@ static int lua_sandboxPrint(lua_State *L)
         n = 20;
     for (int i = 1; i <= n; i++)
     {
-        if (!lua_isstring(L, i))
-            return luaL_error(L, "Error: print() only accepts strings or numbers!");
-        const char *s = lua_tostring(L, i); // get the string
-        fputs(s, stdout);                   // print the string
+        if (lua_isstring(L, i) || lua_isnumber(L, i))
+        {
+            const char *s = lua_tostring(L, i); // get the string or number as string
+            fputs(s, stdout);                   // print the string
+        }
+        else if (lua_isboolean(L, i))
+        {
+            int b = lua_toboolean(L, i);
+            fputs(b ? "true" : "false", stdout);
+        }
+        else if (lua_isnil(L, i))
+        {
+            fputs("nil", stdout);
+        }
+        else
+        {
+            return luaL_error(L, "Error: print() only accepts strings, numbers, booleans or nil!");
+        }
     }
     fputs("\n", stdout);
 #endif

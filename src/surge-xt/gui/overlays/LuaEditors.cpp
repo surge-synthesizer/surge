@@ -2326,7 +2326,7 @@ void FormulaModulatorEditor::applyCode()
     editor->forceLfoDisplayRepaint();
     updateDebuggerIfNeeded();
     editor->repaintFrame();
-    juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
+    // juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
     setApplyEnabled(false);
     mainEditor->grabKeyboardFocus();
 
