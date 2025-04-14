@@ -10,6 +10,10 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 
+if(NOT ENABLE_LTO)
+  option(ENABLE_LTO "Turns on link-time optimization for release builds" ON)
+endif()
+
 if(NOT BUILD_TESTING)
   option(BUILD_TESTING "" OFF)
 endif()
@@ -73,9 +77,12 @@ endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
 
-if(CMAKE_BUILD_TYPE MATCHES "Release")
+# Enable LTO if unspecified, for release builds.
+if(CMAKE_BUILD_TYPE MATCHES "Release" AND ENABLE_LTO)
   message(STATUS "Enabling link-time optimization for release builds.")
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+  message(STATUS "Link-time optimization is disabled.")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND UNIX AND NOT APPLE AND NOT SURGE_SKIP_PIE_CHANGE)
