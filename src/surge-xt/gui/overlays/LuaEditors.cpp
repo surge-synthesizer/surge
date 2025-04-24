@@ -1842,7 +1842,6 @@ void CodeEditorContainerWithApply::loadState()
     if (selected)
     {
 
-        std::cout << " selecting " << state->selectStart << " , " << state->selectEnd << "\n";
         auto selectStart =
             juce::CodeDocument::Position(mainEditor->getDocument(), state->selectStart);
 
@@ -1939,8 +1938,6 @@ struct ExpandingFormulaDebugger : public juce::Component,
 
         searchfield->addListener(this);
         addAndMakeVisible(*searchfield);
-
-        std::cout << "debugger filter text:" << editor->getEditState().debuggerFilterText << "\n";
 
         searchfield->setText(editor->getEditState().debuggerFilterText);
 
