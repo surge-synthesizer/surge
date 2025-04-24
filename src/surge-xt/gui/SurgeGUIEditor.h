@@ -284,6 +284,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void adjustSize(float &width, float &height) const;
 
     void update_deform_type(Parameter *p, int type);
+    // Only updates a single bitfield. Does not check values.
+    void update_deform_type_bit(Parameter *p, int type, int bit);
 
     struct patchdata
     {
@@ -813,6 +815,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
                                    const Surge::Storage::DefaultKey &key, int defaultValue,
                                    std::function<void(Modulator::SmoothingMode)> setSmooth);
 
+    void makeMpeTimbreMenu(juce::PopupMenu &menu, const bool asSubMenu);
     juce::PopupMenu makeMpeMenu(const juce::Point<int> &rect, bool showhelp);
     juce::PopupMenu makeTuningMenu(const juce::Point<int> &rect, bool showhelp);
     juce::PopupMenu makeZoomMenu(const juce::Point<int> &rect, bool showhelp);

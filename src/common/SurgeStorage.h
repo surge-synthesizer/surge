@@ -210,6 +210,12 @@ enum NoiseColorChannels
     MONO = 1
 };
 
+enum NoiseColorValue
+{
+    LEGACY = 0,
+    TILT = 1,
+};
+
 enum CombinatorMode
 {
     cxm_ring = 0,
@@ -984,6 +990,7 @@ struct DAWExtraStateStorage
 
     bool mpeEnabled = false;
     int mpePitchBendRange = -1;
+    bool mpeTimbreIsUnipolar = false;
 
     bool hasScale = false;
     std::string scaleContents = "";
@@ -1683,7 +1690,9 @@ class alignas(16) SurgeStorage
 
     Modulator::SmoothingMode smoothingMode = Modulator::SmoothingMode::LEGACY;
     Modulator::SmoothingMode pitchSmoothingMode = Modulator::SmoothingMode::LEGACY;
+
     float mpePitchBendRange = -1.0f;
+    bool mpeTimbreIsUnipolar = false;
 
     std::atomic<int> otherscene_clients;
 
@@ -1818,6 +1827,9 @@ std::string findReplaceSubstring(std::string &source, const std::string &from,
 bool is_base64(unsigned char c);
 std::string base64_encode(unsigned char const *bytes_to_encode, unsigned int in_len);
 std::string base64_decode(std::string const &encoded_string);
+
+int getValueDisplayPrecision(SurgeStorage *storage);
+bool getValueDisplayIsHighPrecision(SurgeStorage *storage);
 
 } // namespace Storage
 } // namespace Surge

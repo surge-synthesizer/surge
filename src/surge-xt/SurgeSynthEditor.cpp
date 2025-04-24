@@ -303,7 +303,16 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
                     continue;
                 }
             }
+#if JUCE_LINUX
+            // See issue #7604
+            if (i < 128)
+            {
+                keyboard->setKeyPressForNote((juce::KeyPress)i, n);
+            }
+#else
             keyboard->setKeyPressForNote((juce::KeyPress)i, n);
+#endif
+
             n++;
         }
     }

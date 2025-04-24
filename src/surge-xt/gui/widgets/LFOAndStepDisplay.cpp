@@ -463,6 +463,24 @@ bool LFOAndStepDisplay::paramsHasChanged()
         ++p;
     };
 
+    if (lfodata->rate.deactivated != settingsFromLastDrawCall[0].b)
+    {
+        settingsFromLastDrawCall[0].b = lfodata->rate.deactivated;
+        hasChanged = true;
+    }
+
+    if (lfodata->deform.deform_type != paramsFromLastDrawCall[1].i)
+    {
+        paramsFromLastDrawCall[1].i = lfodata->deform.deform_type;
+        hasChanged = true;
+    }
+
+    if (lfodata->rate.temposync != paramsFromLastDrawCall[2].b)
+    {
+        paramsFromLastDrawCall[2].b = lfodata->rate.temposync;
+        hasChanged = true;
+    }
+
     if (lfoStorageFromLastDrawingCall != lfodata)
         hasChanged = true;
 
@@ -1443,22 +1461,12 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
     // Finally draw the drag label
     if (dragMode == VALUES && draggedStep >= 0 && draggedStep < n_stepseqsteps)
     {
-        int prec = 2;
-
-        if (storage)
-        {
-            int detailedMode = Surge::Storage::getUserDefaultValue(
-                storage, Surge::Storage::HighPrecisionReadouts, 0);
-
-            if (detailedMode)
-            {
-                prec = 6;
-            }
-        }
+        const int displayPrecision = Surge::Storage::getValueDisplayPrecision(storage);
 
         g.setFont(skin->fontManager->lfoTypeFont);
 
-        std::string txt = fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, prec);
+        std::string txt =
+            fmt::format("{:.{}f} %", ss->steps[draggedStep] * 100.f, displayPrecision);
 
         int sw = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt);
 
@@ -1728,6 +1736,7 @@ void LFOAndStepDisplay::onSkinChanged()
     {
         return;
     }
+    forceRepaint = true;
     auto typesWithHover = skin->standardHoverAndHoverOnForIDB(IDB_LFO_TYPE, associatedBitmapStore);
     typeImg = typesWithHover[0];
     typeImgHover = typesWithHover[1];
@@ -2653,15 +2662,9 @@ void LFOAndStepDisplay::showStepRMB(int i)
 
     contextMenu.addSeparator();
 
-    int decimals = 2;
+    const int precision = Surge::Storage::getValueDisplayPrecision(storage);
 
-    if (storage)
-    {
-        decimals = 2 + (4 * Surge::Storage::getUserDefaultValue(
-                                storage, Surge::Storage::HighPrecisionReadouts, 0));
-    }
-
-    auto msg = fmt::format("Edit Step {}: {:.{}f} %", i + 1, ss->steps[i] * 100.f, decimals);
+    auto msg = fmt::format("Edit Step {} Value: {:.{}f} %", i + 1, ss->steps[i] * 100.f, precision);
 
     contextMenu.addItem(Surge::GUI::toOSCase(msg), true, false, [this, i]() { showStepTypein(i); });
 
@@ -2670,13 +2673,8 @@ void LFOAndStepDisplay::showStepRMB(int i)
 
 void LFOAndStepDisplay::showStepTypein(int i)
 {
-    int decimals = 2;
-
-    if (storage)
-    {
-        decimals = 2 + (4 * Surge::Storage::getUserDefaultValue(
-                                storage, Surge::Storage::HighPrecisionReadouts, 0));
-    }
+    const bool isDetailed = Surge::Storage::getValueDisplayIsHighPrecision(storage);
+    const int precision = Surge::Storage::getValueDisplayPrecision(storage);
 
     auto handleTypein = [this, i](const std::string &s) {
         auto divPos = s.find('/');
@@ -2711,15 +2709,19 @@ void LFOAndStepDisplay::showStepTypein(int i)
     if (!stepEditor)
     {
         stepEditor = std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
+    }
+
+    if (getParentComponent()->getIndexOfChildComponent(stepEditor.get()) < 0)
+    {
         getParentComponent()->addChildComponent(*stepEditor);
     }
 
     stepEditor->callback = handleTypein;
-    stepEditor->setMainLabel("Edit Step " + std::to_string(i + 1));
-    stepEditor->setValueLabels(fmt::format("current: {:.{}f} %", ss->steps[i] * 100.f, decimals),
+    stepEditor->setMainLabel(fmt::format("Edit Step {} Value", std::to_string(i + 1)));
+    stepEditor->setValueLabels(fmt::format("current: {:.{}f} %", ss->steps[i] * 100.f, precision),
                                "");
     stepEditor->setSkin(skin, associatedBitmapStore);
-    stepEditor->setEditableText(fmt::format("{:.{}f} %", ss->steps[i] * 100.f, decimals));
+    stepEditor->setEditableText(fmt::format("{:.{}f} %", ss->steps[i] * 100.f, precision));
     stepEditor->setReturnFocusTarget(stepSliderOverlays[i].get());
 
     auto topOfControl = getY();

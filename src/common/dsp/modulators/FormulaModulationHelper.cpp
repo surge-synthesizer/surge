@@ -220,6 +220,11 @@ end
                 lua_setfield(s.L, -2, q);
             };
 
+            auto addi = [&s](const char *q, float f) {
+                lua_pushinteger(s.L, f);
+                lua_setfield(s.L, -2, q);
+            };
+
             auto addb = [&s](const char *q, bool f) {
                 lua_pushboolean(s.L, f);
                 lua_setfield(s.L, -2, q);
@@ -240,6 +245,14 @@ end
             addn("tempo", s.tempo);
             addn("songpos", s.songpos);
             addb("released", s.released);
+
+            if (s.isVoice)
+            {
+                addi("channel", s.channel);
+                addi("key", s.key);
+                addi("velocity", s.velocity);
+                addi("voice_id", storage->activeVoiceCount);
+            }
 
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
@@ -486,7 +499,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     };
 
     auto addi = [s](const char *q, int i) {
-        lua_pushnumber(s->L, i);
+        lua_pushinteger(s->L, i);
         lua_setfield(s->L, -2, q);
     };
 
@@ -545,6 +558,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 
     addb("released", s->released);
     addb("is_rendering_to_ui", s->is_display);
+    addb("mpe_enabled", s->mpeenabled);
 
     addnil("retrigger_AEG");
     addnil("retrigger_FEG");
@@ -732,14 +746,49 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 #endif
 }
 
-std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
+bool isUserDefined(std::string str)
+{
+    static std::array<std::string, 51> keywords = {
+        "amplitude",     "attack",       "block_size",
+        "cc_breath",     "cc_expr",      "cc_mw",
+        "cc_sus",        "chan_at",      "channel",
+        "clamp_output",  "cycle",        "decay",
+        "deform",        "delay",        "highest_key",
+        "hold",          "intphase",     "is_rendering_to_ui",
+        "is_voice",      "key",          "latest_key",
+        "lowest_key",    "macros",       "mpe_bend",
+        "mpe_bendrange", "mpe_enabled",  "mpe_pressure",
+        "mpe_timbre",    "output",       "pb",
+        "pb_range_dn",   "pb_range_up",  "phase",
+        "play_mode",     "poly_at",      "poly_limit",
+        "rate",          "rel_velocity", "release",
+        "released",      "samplerate",   "scene_mode",
+        "songpos",       "split_point",  "startphase",
+        "sustain",       "tempo",        "velocity",
+        "voice_count",   "voice_id",     "subscriptions"};
+
+    auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();
+    // std::cout << "isCustom " << str << " = " << foundInList << "\n";
+    return !foundInList;
+}
+
+void setUserDefined(DebugRow &row, int depth, bool custom)
+{
+
+    if ((isUserDefined(row.label) && depth == 0) || custom == true)
+        row.isUserDefined = true;
+}
+
+std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::string filter,
+                                                bool showUser, bool showSystem)
 {
 #if HAS_LUA
     std::vector<DebugRow> rows;
     Surge::LuaSupport::SGLD guard("debugViewGuard", es.L);
 
-    std::function<void(const int, bool)> rec;
-    rec = [&rows, &es, &rec](const int depth, bool internal) {
+    std::function<void(const int, bool, bool, std::string)> rec;
+    rec = [&rows, &es, &rec](const int depth, bool internal, bool parentIsUser,
+                             std::string filter) {
         Surge::LuaSupport::SGLD guardR("rec[" + std::to_string(depth) + "]", es.L);
 
         if (lua_istable(es.L, -1))
@@ -758,7 +807,8 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
                 }
                 else if (lua_isstring(es.L, -2))
                 {
-                    skeys.push_back(lua_tostring(es.L, -2));
+                    skeys.insert(skeys.begin(), lua_tostring(es.L, -2));
+                    // skeys.push_back(lua_tostring(es.L, -2));
                 }
                 lua_pop(es.L, 1);
             }
@@ -769,8 +819,19 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
                         return false;
                     if (b == "subscriptions")
                         return true;
+
+                    if (isUserDefined(a) && !isUserDefined(b))
+                        return true;
+
+                    if (!isUserDefined(a) && isUserDefined(b))
+                        return false;
+
+                    if (isUserDefined(a) && isUserDefined(b))
+                        return a < b;
+
                     return a < b;
                 });
+
             if (!ikeys.empty())
                 std::sort(ikeys.begin(), ikeys.end());
 
@@ -778,36 +839,58 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
                 if (lua_isnumber(es.L, -1))
                 {
                     rows.emplace_back(depth, lab, lua_tonumber(es.L, -1));
+                    setUserDefined(rows.back(), depth, parentIsUser);
                 }
                 else if (lua_isstring(es.L, -1))
                 {
                     rows.emplace_back(depth, lab, lua_tostring(es.L, -1));
+                    setUserDefined(rows.back(), depth, parentIsUser);
                 }
                 else if (lua_isboolean(es.L, -1))
                 {
                     rows.emplace_back(depth, lab, (lua_toboolean(es.L, -1) ? "true" : "false"));
+                    setUserDefined(rows.back(), depth, parentIsUser);
                 }
                 else if (lua_istable(es.L, -1))
                 {
-                    rows.emplace_back(depth, lab);
-                    internal = internal || (lab == "subscriptions");
-                    rows.back().isInternal = internal;
-                    rec(depth + 1, internal);
+
+                    int maxDepth = parentIsUser || (isUserDefined(lab) && depth == 0) ? 2 : 2;
+
+                    if (depth < maxDepth)
+                    {
+                        rows.emplace_back(depth, lab);
+                        internal = internal || (lab == "subscriptions");
+
+                        rows.back().isInternal = internal;
+                        setUserDefined(rows.back(), depth, parentIsUser);
+                        rec(depth + 1, internal, rows.back().isUserDefined, "");
+                    }
+                    else
+                    {
+                        rows.emplace_back(depth, lab, "(table)");
+                        setUserDefined(rows.back(), depth, parentIsUser);
+                    }
                 }
                 else if (lua_isfunction(es.L, -1))
                 {
-                    rows.emplace_back(depth, lab, "(function)");
-                    rows.back().isInternal = internal;
+                    if (depth == 0)
+                    {
+                        rows.emplace_back(depth, lab, "(function)");
+                        rows.back().isInternal = internal;
+                        setUserDefined(rows.back(), depth, parentIsUser);
+                    }
                 }
                 else if (lua_isnil(es.L, -1))
                 {
                     rows.emplace_back(depth, lab, "(nil)");
                     rows.back().isInternal = internal;
+                    setUserDefined(rows.back(), depth, parentIsUser);
                 }
                 else
                 {
                     rows.emplace_back(depth, lab, "(unknown)");
                     rows.back().isInternal = internal;
+                    setUserDefined(rows.back(), depth, parentIsUser);
                 }
             };
 
@@ -830,6 +913,10 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
         }
     };
 
+    rows.emplace_back(0, " User variables", "");
+    rows.back().isHeader = true;
+    rows.back().headerFlag = DebugRow::User;
+
     for (const auto &t : {es.stateName, sharedTableName})
     {
         lua_getglobal(es.L, t);
@@ -839,8 +926,99 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
             rows.emplace_back(0, "Error", "Not a table");
             continue;
         }
-        rec(0, false);
+        rec(0, false, false, filter);
+
         lua_pop(es.L, -1);
+    }
+
+    for (int i = 1; i < rows.size(); i++)
+    {
+        if (!rows[i].isUserDefined)
+        {
+            auto header = DebugRow(0, " Built-in variables");
+            header.headerFlag = DebugRow::System;
+            header.isHeader = true;
+            rows.insert(rows.begin() + i, header);
+
+            break;
+        }
+    }
+
+    // maximize/minimize groups
+
+    for (int i = rows.size() - 1; i > -1; i--)
+    {
+        if (((showUser == false && rows[i].isUserDefined) ||
+             (showSystem == false && !rows[i].isUserDefined)) &&
+            !rows[i].isHeader)
+        {
+            rows.erase(rows.begin() + i);
+        }
+    }
+
+    // filtering
+
+    if (filter != "")
+    {
+        for (int i = 0; i < rows.size(); i++)
+        {
+            auto search = rows[i].label.find(filter, 0);
+            if ((search != std::string::npos))
+            {
+                rows[i].filterFlag = DebugRow::Found;
+
+                // tag all of its children
+                for (int k = i + 1; k < rows.size(); k++)
+                {
+                    if (rows[k].depth > rows[i].depth)
+                        rows[k].filterFlag = DebugRow::Child;
+
+                    if (rows[k].depth == rows[i].depth)
+                        break;
+                }
+            }
+        }
+
+        for (int i = rows.size() - 1; i > -1; i--)
+        {
+
+            if (rows[i].filterFlag == DebugRow::Found)
+            {
+
+                // found
+                // iterate through its parent objects until it reaches .state
+
+                int currentDepth = rows[i].depth;
+
+                if (currentDepth > 0)
+                {
+                    for (int k = i - 1; k > -1; k--)
+                    {
+
+                        if (rows[k].depth < currentDepth)
+                        {
+                            // parent found
+                            // tag as ignore
+
+                            currentDepth = rows[k].depth;
+                            rows[k].filterFlag = DebugRow::Ignore;
+
+                            if (currentDepth == 0)
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = rows.size() - 1; i > -1; i--)
+        {
+            if (rows[i].filterFlag != DebugRow::Found && rows[i].filterFlag != DebugRow::Ignore &&
+                rows[i].filterFlag != DebugRow::Child && !rows[i].isHeader)
+            {
+                rows.erase(rows.begin() + i);
+            }
+        }
     }
 
     return rows;
@@ -851,7 +1029,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es)
 
 std::string createDebugViewOfModState(const EvaluatorState &es)
 {
-    auto r = createDebugDataOfModState(es);
+    auto r = createDebugDataOfModState(es, "", true, true);
     std::ostringstream oss;
     for (const auto d : r)
     {
@@ -908,6 +1086,8 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sce
     s.pbrange_up = (float)scene.pbrange_up.val.i * (scene.pbrange_up.extend_range ? 0.01f : 1.f);
     s.pbrange_dn = (float)scene.pbrange_dn.val.i * (scene.pbrange_dn.extend_range ? 0.01f : 1.f);
 
+    s.mpeenabled = patch.storage->mpeEnabled;
+
     s.aftertouch = scene.modsources[ms_aftertouch]->get_output(0);
     s.modwheel = scene.modsources[ms_modwheel]->get_output(0);
     s.breath = scene.modsources[ms_breath]->get_output(0);
@@ -920,7 +1100,6 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sce
     s.polylimit = patch.polylimit.val.i;
     s.scenemode = patch.scenemode.val.i;
     s.polymode = patch.scene[sceneIndex].polymode.val.i;
-
     s.splitpoint = patch.splitpoint.val.i;
     if (s.scenemode == sm_chsplit)
         s.splitpoint = (int)(s.splitpoint / 8 + 1);

@@ -320,6 +320,10 @@ int main(int argc, char **argv)
     bool mpeEnable{false};
     app.add_flag("--mpe-enable", mpeEnable, "Enable MPE mode on this instance of Surge XT CLI");
 
+    int mpeBendRange{0};
+    app.add_flag("--mpe-pitch-bend-range", mpeBendRange,
+                 "MPE Pitch Bend Range in semitones; 0 for default");
+
     CLI11_PARSE(app, argc, argv);
 
     if (listDevices)
@@ -352,6 +356,12 @@ int main(int argc, char **argv)
     {
         LOG(BASIC, "MPE Status          : Enabled");
         engine->proc->surge->mpeEnabled = true;
+
+        if (mpeBendRange > 0)
+        {
+            LOG(BASIC, "MPE Bend Range      : " << mpeBendRange);
+            engine->proc->surge->storage.mpePitchBendRange = mpeBendRange;
+        }
     }
     else
     {

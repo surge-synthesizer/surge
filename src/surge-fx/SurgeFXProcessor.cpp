@@ -216,6 +216,14 @@ void SurgefxAudioProcessor::releaseResources()
     // spare memory, etc.
 }
 
+void SurgefxAudioProcessor::reset()
+{
+    if (surge_effect)
+    {
+        surge_effect->init();
+    }
+}
+
 bool SurgefxAudioProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
 {
     bool inputValid = layouts.getMainInputChannelSet() == juce::AudioChannelSet::mono() ||

@@ -88,6 +88,7 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
     std::unique_ptr<juce::ListBox> lbox;
     std::unique_ptr<TypeAheadListBoxModel> lboxmodel;
 
+    bool isRowMouseOver(int row);
     void searchAndShowLBox();
     void showLbox();
     void parentHierarchyChanged() override;

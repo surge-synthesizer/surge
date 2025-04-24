@@ -2890,6 +2890,13 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 dawExtraState.mpeEnabled = ival;
             }
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("mpeTimbreIsUnipolar"));
+
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+            {
+                dawExtraState.mpeTimbreIsUnipolar = ival;
+            }
+
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oscPortIn"));
 
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
@@ -3706,6 +3713,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement mpe("mpeEnabled");
         mpe.SetAttribute("v", dawExtraState.mpeEnabled ? 1 : 0);
         dawExtraXML.InsertEndChild(mpe);
+
+        TiXmlElement mpeTimbreUni("mpeTimbreIsUnipolar");
+        mpeTimbreUni.SetAttribute("v", dawExtraState.mpeTimbreIsUnipolar ? 1 : 0);
+        dawExtraXML.InsertEndChild(mpeTimbreUni);
 
         TiXmlElement oscPortIn("oscPortIn");
         oscPortIn.SetAttribute("v", dawExtraState.oscPortIn);

@@ -140,7 +140,8 @@ struct ClipboardCopyButton : public juce::TextButton, Surge::GUI::SkinConsumingC
         }
 
         g.setFont(skin->fontManager->getLatoAtSize(10));
-        g.drawText("Copy Info to Clipboard", getLocalBounds(), juce::Justification::centred, false);
+        g.drawText("Copy Info to Clipboard", getLocalBounds(), juce::Justification::centredLeft,
+                   false);
     }
 };
 
@@ -271,7 +272,7 @@ void AboutScreen::resized()
 
         copyButton = std::make_unique<ClipboardCopyButton>();
         copyButton->setSkin(skin, associatedBitmapStore);
-        copyButton->setBounds(margin + 4, h0 - lHeight - 4, 100, 16);
+        copyButton->setBounds(margin + 4, h0 - lHeight - 4, 112, 16);
         copyButton->addListener(this);
 
         addAndMakeVisible(*copyButton);

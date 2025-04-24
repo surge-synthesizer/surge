@@ -27,9 +27,9 @@ else()
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=0)
 endif()
 
+surge_add_lib_subdirectory(sst/sst-cpputils)
 set(SST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES ON CACHE BOOL "No Native Aliases for SCXT") # Makes ARM64EC use neon basically
 surge_add_lib_subdirectory(sst/sst-basic-blocks)
-surge_add_lib_subdirectory(sst/sst-cpputils)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
 surge_add_lib_subdirectory(sst/sst-waveshapers)
@@ -64,20 +64,29 @@ else()
   add_library(surge-common-binary INTERFACE)
   target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
 
-  add_library(juce_dsp_rack_sub STATIC
-    ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.cpp
-    ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
-  )
+  if (APPLE)
+    add_library(juce_dsp_rack_sub STATIC
+      ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.mm
+      ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
+    )
+  else()
+    add_library(juce_dsp_rack_sub STATIC
+      ${SURGE_JUCE_PATH}/modules/juce_audio_basics/juce_audio_basics.cpp
+      ${SURGE_JUCE_PATH}/modules/juce_dsp/juce_dsp.cpp
+    )
+  endif()
 
   if(APPLE)
     target_sources(juce_dsp_rack_sub PRIVATE
       ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.mm
       ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.mm
+      ${SURGE_JUCE_PATH}/modules/juce_core/juce_core_CompilationTime.cpp
     )
   else()
     target_sources(juce_dsp_rack_sub PRIVATE
       ${SURGE_JUCE_PATH}/modules/juce_core/juce_core.cpp
       ${SURGE_JUCE_PATH}/modules/juce_audio_formats/juce_audio_formats.cpp
+      ${SURGE_JUCE_PATH}/modules/juce_core/juce_core_CompilationTime.cpp
     )
   endif()
 
@@ -146,6 +155,8 @@ add_library(${PROJECT_NAME}
   dsp/SurgeVoice.cpp
   dsp/SurgeVoice.h
   dsp/SurgeVoiceState.h
+  dsp/TiltNoiseAdapter.cpp
+  dsp/TiltNoiseAdapter.h
   dsp/Wavetable.cpp
   dsp/Wavetable.h
   dsp/WavetableScriptEvaluator.cpp

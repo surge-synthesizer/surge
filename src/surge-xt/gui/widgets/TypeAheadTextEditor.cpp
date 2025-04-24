@@ -52,10 +52,14 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
     TypeAheadDataProvider *provider;
     std::vector<int> search;
     TypeAhead *ta{nullptr};
+    int rowIsMouseOver = 0;
+
     TypeAheadListBoxModel(TypeAhead *t, TypeAheadDataProvider *p) : ta(t), provider(p) {}
 
     void setSearch(const std::string &t) { search = provider->searchFor(t); }
     int getNumRows() override { return search.size(); }
+
+    int isRowMouseOver(int row) { return rowIsMouseOver == row; };
 
     void paintListBoxItem(int rowNumber, juce::Graphics &g, int width, int height,
                           bool rowIsSelected) override
@@ -109,6 +113,8 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
     {
         int row{0};
         bool isSelected{false};
+        bool isMouseOver{false};
+
         TypeAheadListBoxModel *model{nullptr};
         TARow(TypeAheadListBoxModel *m) : model(m) { setWantsKeyboardFocus(true); }
 
@@ -152,6 +158,20 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
         }
 
         void mouseDown(const juce::MouseEvent &e) override { model->returnKeyPressed(row); }
+
+        void mouseEnter(const juce::MouseEvent &event) override
+        {
+            isMouseOver = true;
+            model->rowIsMouseOver = row;
+            repaint();
+        }
+
+        void mouseExit(const juce::MouseEvent &event) override
+        {
+            model->rowIsMouseOver = -1;
+            isMouseOver = false;
+            repaint();
+        }
 
         void mouseDoubleClick(const juce::MouseEvent &e) override { model->escapeKeyPressed(); }
 
@@ -204,6 +224,7 @@ struct TypeAheadListBox : public juce::ListBox
 
     void paintOverChildren(juce::Graphics &graphics) override
     {
+
         juce::ListBox::paintOverChildren(graphics);
 
         if (auto m = dynamic_cast<TypeAheadListBoxModel *>(getListBoxModel()))
@@ -253,6 +274,8 @@ TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
 }
 
 TypeAhead::~TypeAhead() = default;
+
+bool TypeAhead::isRowMouseOver(int row) { return lboxmodel->rowIsMouseOver == row; }
 
 void TypeAhead::dismissWithValue(int providerIdx, const std::string &s,
                                  const juce::ModifierKeys &mod)
@@ -364,6 +387,7 @@ void TypeAhead::searchAndShowLBox()
 
 void TypeAhead::showLbox()
 {
+
     auto p = getParentComponent();
 
     while (p && !dynamic_cast<Surge::Widgets::MainFrame *>(p))
@@ -375,7 +399,7 @@ void TypeAhead::showLbox()
         getLocalBounds()
             .translated(0, getHeight())
             .withHeight(
-                lboxmodel->provider->getRowHeight() * lboxmodel->provider->getDisplayedRows() + 4);
+                lboxmodel->provider->getRowHeight() * lboxmodel->provider->getDisplayedRows() + 2);
 
     if (p)
     {

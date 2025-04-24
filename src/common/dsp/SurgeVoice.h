@@ -25,13 +25,26 @@
 #include "SurgeStorage.h"
 #include "Oscillator.h"
 #include "SurgeVoiceState.h"
+#include "TiltNoiseAdapter.h"
 #include "ADSRModulationSource.h"
 #include "LFOModulationSource.h"
+#include <sst/voice-effects/generator/TiltNoise.h>
 #include <vembertech/lipol.h>
 #include "QuadFilterChain.h"
 #include <array>
 
 struct QuadFilterChainState;
+
+enum lag_entries
+{
+    le_osc1,
+    le_osc2,
+    le_osc3,
+    le_noise,
+    le_ring12,
+    le_ring23,
+    le_pfg,
+};
 
 class alignas(16) SurgeVoice
 {
@@ -297,6 +310,14 @@ class alignas(16) SurgeVoice
 
     // MPE special cases
     bool mpeEnabled;
+
+  private:
+    friend class VoiceTiltNoiseAdapter;
+    // Single per-voice instance.
+    sst::voice_effects::generator::TiltNoise<VoiceTiltNoiseAdapter> tilt_noise;
+    // Helper functions for doing noise generations.
+    void generate_legacy_noise(bool wide, bool stereo, float *blockL, float *blockR);
+    void generate_tilt_noise(bool wide, bool stereo, float *blockL, float *blockR);
 };
 
 void all_ring_modes_block(float *__restrict src1_l, float *__restrict src2_l,

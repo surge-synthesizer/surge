@@ -508,6 +508,7 @@ void SurgeSynthesizer::playNote(char channel, char key, char velocity, char detu
     ** and right now it doesn't
     */
     bool noHold = !channelState[channel].hold;
+
     if (mpeEnabled)
         noHold = noHold && !channelState[0].hold;
 
@@ -2116,7 +2117,7 @@ float int7ToBipolarFloat(int x)
         return (x - 64) * (1.f / 64.f);
     }
 
-    return 0;
+    return 0.f;
 }
 
 void SurgeSynthesizer::channelController(char channel, int cc, int value)
@@ -2244,7 +2245,8 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
     {
         if (mpeEnabled)
         {
-            channelState[channel].timbre = int7ToBipolarFloat(value);
+            channelState[channel].timbre =
+                mpeTimbreIsUnipolar ? (value / 127.f) : int7ToBipolarFloat(value);
             return;
         }
         break;
@@ -5080,6 +5082,7 @@ void SurgeSynthesizer::populateDawExtraState()
 
     des.mpeEnabled = mpeEnabled;
     des.mpePitchBendRange = storage.mpePitchBendRange;
+    des.mpeTimbreIsUnipolar = mpeTimbreIsUnipolar;
 
     des.isDirty = storage.getPatch().isDirty;
 
@@ -5149,6 +5152,8 @@ void SurgeSynthesizer::loadFromDawExtraState()
     {
         storage.mpePitchBendRange = des.mpePitchBendRange;
     }
+
+    mpeTimbreIsUnipolar = des.mpeTimbreIsUnipolar;
 
     storage.getPatch().isDirty = des.isDirty;
 

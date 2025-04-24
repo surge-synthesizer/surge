@@ -39,17 +39,6 @@ using namespace std;
 namespace mech = sst::basic_blocks::mechanics;
 namespace sdsp = sst::basic_blocks::dsp;
 
-enum lag_entries
-{
-    le_osc1,
-    le_osc2,
-    le_osc3,
-    le_noise,
-    le_ring12,
-    le_ring23,
-    le_pfg,
-};
-
 inline void set1f(SIMD_M128 &m, int i, float f) { *((float *)&m + i) = f; }
 
 inline void set1i(SIMD_M128 &m, int e, int i) { *((int *)&m + e) = i; }
@@ -170,6 +159,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     this->host_note_id = host_nid;
     this->originating_host_key = host_key;
     this->originating_host_channel = host_chan;
+    this->tilt_noise.s = this;
     this->paramModulationCount = 0;
     assert(storage);
     assert(oscene);
@@ -230,6 +220,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     noisegenR[0] = 0.f;
     noisegenL[1] = 0.f;
     noisegenR[1] = 0.f;
+
+    tilt_noise.initVoiceEffect();
 
     // set states & variables
     state.gate = true;
@@ -1215,36 +1207,16 @@ bool SurgeVoice::process_block(QuadFilterChainState &Q, int Qe)
 
     if (noise)
     {
-        float noisecol = limit_range(localcopy[scene->noise_colour.param_id_in_scene].f, -1.f, 1.f);
-        auto is_stereo_noise = scene->noise_colour.deform_type == NoiseColorChannels::STEREO;
-        for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
+        bool stereo =
+            ((scene->noise_colour.deform_type & 0x1) == NoiseColorChannels::STEREO) && is_wide;
+        int type = scene->noise_colour.deform_type & 0x2;
+        if (type)
         {
-            ((float *)tblock)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
-                noisegenL[0], noisegenL[1], noisecol, storage->rand_pm1());
-            ((float *)tblock)[i + 1] = ((float *)tblock)[i];
-            if (is_wide)
-            {
-                if (is_stereo_noise)
-                {
-                    ((float *)tblockR)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
-                        noisegenR[0], noisegenR[1], noisecol, storage->rand_pm1());
-                    ((float *)tblockR)[i + 1] = ((float *)tblockR)[i];
-                }
-                else
-                {
-                    ((float *)tblockR)[i] = ((float *)tblock)[i];
-                    ((float *)tblockR)[i + 1] = ((float *)tblock)[i + 1];
-                }
-            }
-        }
-
-        if (is_wide)
-        {
-            osclevels[le_noise].multiply_2_blocks(tblock, tblockR, BLOCK_SIZE_OS_QUAD);
+            generate_tilt_noise(is_wide, stereo, tblock, tblockR);
         }
         else
         {
-            osclevels[le_noise].multiply_block(tblock, BLOCK_SIZE_OS_QUAD);
+            generate_legacy_noise(is_wide, stereo, tblock, tblockR);
         }
 
         if (route[5] < 2)
@@ -1739,4 +1711,53 @@ bool SurgeVoice::matchesChannelKeyId(int16_t channel, int16_t key, int32_t nid)
         nidMatch = (host_note_id == nid);
 
     return chanMatch && keyMatch && nidMatch;
+}
+
+void SurgeVoice::generate_legacy_noise(bool wide, bool stereo, float *blockL, float *blockR)
+{
+    float noisecol = limit_range(localcopy[scene->noise_colour.param_id_in_scene].f, -1.f, 1.f);
+    for (int i = 0; i < BLOCK_SIZE_OS; i += 2)
+    {
+        (blockL)[i] = sdsp::correlated_noise_o2mk2_supplied_value(noisegenL[0], noisegenL[1],
+                                                                  noisecol, storage->rand_pm1());
+        (blockL)[i + 1] = (blockL)[i];
+        if (wide)
+        {
+            if (stereo)
+            {
+                (blockR)[i] = sdsp::correlated_noise_o2mk2_supplied_value(
+                    noisegenR[0], noisegenR[1], noisecol, storage->rand_pm1());
+                (blockR)[i + 1] = (blockR)[i];
+            }
+            else
+            {
+                (blockR)[i] = (blockL)[i];
+                (blockR)[i + 1] = (blockL)[i + 1];
+            }
+        }
+    }
+    if (wide)
+    {
+        osclevels[le_noise].multiply_2_blocks(blockL, blockR, BLOCK_SIZE_OS_QUAD);
+    }
+    else
+    {
+        osclevels[le_noise].multiply_block(blockL, BLOCK_SIZE_OS_QUAD);
+    }
+}
+
+void SurgeVoice::generate_tilt_noise(bool wide, bool stereo, float *blockL, float *blockR)
+{
+    if (wide && stereo)
+    {
+        tilt_noise.processStereo(nullptr, nullptr, blockL, blockR, 0.f);
+    }
+    else
+    {
+        tilt_noise.processMonoToMono(nullptr, blockL, 0.f);
+        if (wide)
+        {
+            std::copy(blockL, blockL + BLOCK_SIZE_OS, blockR);
+        }
+    }
 }

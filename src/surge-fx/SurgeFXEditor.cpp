@@ -121,6 +121,7 @@ struct Picker : public juce::Component
 SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &p)
     : AudioProcessorEditor(&p), processor(p)
 {
+
     processor.storage->addErrorListener(this);
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
@@ -132,109 +133,8 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
 
-    for (int i = 0; i < n_fx_params; ++i)
-    {
-        fxParamSliders[i].setRange(0.0, 1.0, 0.0001);
-        fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
-                                   juce::NotificationType::dontSendNotification);
-        fxParamSliders[i].setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
-        fxParamSliders[i].setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0,
-                                          0);
-        fxParamSliders[i].setChangeNotificationOnlyOnRelease(false);
-        fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
-        fxParamSliders[i].onValueChange = [i, this]() {
-            this->processor.prepareParametersAbsentAudio();
-            this->processor.setFXParamValue01(i, this->fxParamSliders[i].getValue());
-            fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
-            fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
-        };
-        fxParamSliders[i].onDragStart = [i, this]() {
-            this->processor.setUserEditingFXParam(i, true);
-        };
-        fxParamSliders[i].onDragEnd = [i, this]() {
-            this->processor.setUserEditingFXParam(i, false);
-        };
-        fxParamSliders[i].setTitle("Parameter " + std::to_string(i) + " Knob");
-        addAndMakeVisibleRecordOrder(&(fxParamSliders[i]));
-
-        fxTempoSync[i].setOnOffImage(BinaryData::TS_Act_svg, BinaryData::TS_Act_svgSize,
-                                     BinaryData::TS_Deact_svg, BinaryData::TS_Deact_svgSize);
-        fxTempoSync[i].setEnabled(processor.canTempoSync(i));
-        fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
-                                      juce::NotificationType::dontSendNotification);
-        fxTempoSync[i].onClick = [i, this]() {
-            this->processor.setUserEditingParamFeature(i, true);
-            this->processor.setFXParamTempoSync(i, this->fxTempoSync[i].getToggleState());
-            this->processor.setFXStorageTempoSync(i, this->fxTempoSync[i].getToggleState());
-            fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
-            this->processor.setUserEditingParamFeature(i, false);
-        };
-
-        fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " TempoSync");
-        addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
-
-        fxDeactivated[i].setOnOffImage(BinaryData::DE_Act_svg, BinaryData::DE_Act_svgSize,
-                                       BinaryData::DE_Deact_svg, BinaryData::DE_Deact_svgSize);
-        fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
-        fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
-                                        juce::NotificationType::dontSendNotification);
-        fxDeactivated[i].onClick = [i, this]() {
-            this->processor.setUserEditingParamFeature(i, true);
-            this->processor.setFXParamDeactivated(i, this->fxDeactivated[i].getToggleState());
-            this->processor.setFXStorageDeactivated(i, this->fxDeactivated[i].getToggleState());
-            // Special case - coupled dectivation
-            this->resetLabels();
-            this->processor.setUserEditingParamFeature(i, false);
-        };
-        fxDeactivated[i].setTitle("Parameter " + std::to_string(i) + " Deactivate");
-        addAndMakeVisibleRecordOrder(&(fxDeactivated[i]));
-
-        fxExtended[i].setOnOffImage(BinaryData::EX_Act_svg, BinaryData::EX_Act_svgSize,
-                                    BinaryData::EX_Deact_svg, BinaryData::EX_Deact_svgSize);
-        fxExtended[i].setEnabled(processor.canExtend(i));
-        fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
-                                     juce::NotificationType::dontSendNotification);
-        fxExtended[i].onClick = [i, this]() {
-            this->processor.setUserEditingParamFeature(i, true);
-            this->processor.setFXParamExtended(i, this->fxExtended[i].getToggleState());
-            this->processor.setFXStorageExtended(i, this->fxExtended[i].getToggleState());
-            fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
-            this->processor.setUserEditingParamFeature(i, false);
-        };
-        fxExtended[i].setTitle("Parameter " + std::to_string(i) + " Extended");
-        addAndMakeVisibleRecordOrder(&(fxExtended[i]));
-
-        fxAbsoluted[i].setOnOffImage(BinaryData::AB_Act_svg, BinaryData::AB_Act_svgSize,
-                                     BinaryData::AB_Deact_svg, BinaryData::AB_Deact_svgSize);
-        fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
-        fxAbsoluted[i].setToggleState(processor.getFXParamAbsolute(i),
-                                      juce::NotificationType::dontSendNotification);
-        fxAbsoluted[i].onClick = [i, this]() {
-            this->processor.setUserEditingParamFeature(i, true);
-            this->processor.setFXParamAbsolute(i, this->fxAbsoluted[i].getToggleState());
-            this->processor.setFXStorageAbsolute(i, this->fxAbsoluted[i].getToggleState());
-            fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
-            this->processor.setUserEditingParamFeature(i, false);
-        };
-
-        fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absoluted");
-        addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
-
-        processor.prepareParametersAbsentAudio();
-        fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
-        fxParamDisplay[i].setName(processor.getParamName(i).c_str());
-        fxParamDisplay[i].setDisplay(processor.getParamValue(i));
-        fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
-        fxParamDisplay[i].onOverlayEntered = [i, this](const std::string &s) {
-            processor.setParameterByString(i, s);
-        };
-
-        addAndMakeVisibleRecordOrder(&(fxParamDisplay[i]));
-    }
+    deafultParameterPanel = std::make_unique<ParameterPanel>(p, accessibleOrderWeakRefs);
+    addAndMakeVisibleRecordOrder(deafultParameterPanel.get());
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
     fxNameLabel->setFont(juce::FontOptions(28));
@@ -282,47 +182,8 @@ void SurgefxAudioProcessorEditor::resetLabels()
             handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         }
     };
-    for (int i = 0; i < n_fx_params; ++i)
-    {
-        auto nm = processor.getParamName(i) + " " + processor.getParamGroup(i);
-        fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
-                                   juce::NotificationType::dontSendNotification);
-        fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
-        fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
-        fxParamDisplay[i].setName(processor.getParamName(i).c_str());
-        fxParamDisplay[i].allowsTypein = processor.canSetParameterByString(i);
 
-        fxParamDisplay[i].setEnabled(processor.getParamEnabled(i));
-        fxParamDisplay[i].setAppearsDeactivated(processor.getFXStorageAppearsDeactivated(i));
-        fxParamSliders[i].setEnabled(processor.getParamEnabled(i) &&
-                                     !processor.getFXStorageAppearsDeactivated(i));
-        st(fxParamSliders[i], nm + " Knob");
-        fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
-
-        fxTempoSync[i].setEnabled(processor.canTempoSync(i));
-        fxTempoSync[i].setAccessible(processor.canTempoSync(i));
-        fxTempoSync[i].setToggleState(processor.getFXStorageTempoSync(i),
-                                      juce::NotificationType::dontSendNotification);
-        st(fxTempoSync[i], nm + " Tempo Synced");
-        fxDeactivated[i].setEnabled(false);
-
-        fxExtended[i].setEnabled(processor.canExtend(i));
-        fxExtended[i].setToggleState(processor.getFXStorageExtended(i),
-                                     juce::NotificationType::dontSendNotification);
-        fxExtended[i].setAccessible(processor.canExtend(i));
-        st(fxExtended[i], nm + " Extended");
-        fxAbsoluted[i].setEnabled(processor.canAbsolute(i));
-        fxAbsoluted[i].setToggleState(processor.getFXStorageAbsolute(i),
-                                      juce::NotificationType::dontSendNotification);
-        fxAbsoluted[i].setAccessible(processor.canAbsolute(i));
-        st(fxAbsoluted[i], nm + " Absolute");
-        fxDeactivated[i].setEnabled(processor.canDeactitvate(i));
-        fxDeactivated[i].setToggleState(processor.getFXStorageDeactivated(i),
-                                        juce::NotificationType::dontSendNotification);
-        fxDeactivated[i].setAccessible(processor.canDeactitvate(i));
-        st(fxDeactivated[i], nm + " Deactivated");
-    }
-
+    deafultParameterPanel->reset();
     picker->repaint();
 
     int row = 0, col = 0;
@@ -331,6 +192,7 @@ void SurgefxAudioProcessorEditor::resetLabels()
     {
         h->notifyAccessibilityEvent(juce::AccessibilityEvent::structureChanged);
     }
+    resized();
 }
 
 void SurgefxAudioProcessorEditor::setEffectType(int i)
@@ -353,8 +215,9 @@ void SurgefxAudioProcessorEditor::paramsChangedCallback()
         {
             if (i < n_fx_params)
             {
-                fxParamSliders[i].setValue(fv[i], juce::NotificationType::dontSendNotification);
-                fxParamDisplay[i].setDisplay(processor.getParamValueFor(i, fv[i]));
+                deafultParameterPanel->sources.at(i)->setValueFromModel(fv[i]);
+                deafultParameterPanel->fxParamDisplay[i].setDisplay(
+                    processor.getParamValueFor(i, fv[i]));
             }
             else
             {
@@ -376,7 +239,6 @@ void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
 void SurgefxAudioProcessorEditor::resized()
 {
     picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
-
     int ypos0 = topSection - 5;
     int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
     int byoff = 7;
@@ -384,49 +246,19 @@ void SurgefxAudioProcessorEditor::resized()
     int sliderOff = 5;
     if (getWidth() < baseWidth)
         sliderOff = 2;
-    for (int i = 0; i < n_fx_params; ++i)
-    {
-        juce::Rectangle<int> position{(i / 6) * getWidth() / 2 + sliderOff,
-                                      (i % 6) * rowHeight + ypos0, rowHeight - sliderOff,
-                                      rowHeight - sliderOff};
-        fxParamSliders[i].setBounds(position);
 
-        int buttonSize = 19;
-        if (getWidth() < baseWidth)
-            buttonSize = 17;
-        int buttonMargin = 1;
-        juce::Rectangle<int> tsPos{(i / 6) * getWidth() / 2 + 2 + rowHeight - 5,
-                                   (i % 6) * rowHeight + ypos0 + byoff + buttonMargin, buttonSize,
-                                   buttonSize};
-        fxTempoSync[i].setBounds(tsPos);
+    auto bounds = getLocalBounds();
+    int topAreaHeight =
+        static_cast<int>((static_cast<float>(topSection) / baseHeight) * getHeight());
+    int bottomAreaHeight = static_cast<int>((static_cast<float>(40) / baseHeight) * getHeight());
 
-        juce::Rectangle<int> daPos{(i / 6) * getWidth() / 2 + 2 + rowHeight - 5,
-                                   (i % 6) * rowHeight + ypos0 + byoff + 2 * buttonMargin +
-                                       buttonSize,
-                                   buttonSize, buttonSize};
-        fxDeactivated[i].setBounds(daPos);
-
-        juce::Rectangle<int> exPos{
-            (i / 6) * getWidth() / 2 + 2 + rowHeight - 5 + buttonMargin + buttonSize,
-            (i % 6) * rowHeight + ypos0 + byoff + 1 * buttonMargin + 0 * buttonSize, buttonSize,
-            buttonSize};
-        fxExtended[i].setBounds(exPos);
-
-        juce::Rectangle<int> abPos{
-            (i / 6) * getWidth() / 2 + 2 + rowHeight - 5 + buttonMargin + buttonSize,
-            (i % 6) * rowHeight + ypos0 + byoff + 2 * buttonMargin + 1 * buttonSize, buttonSize,
-            buttonSize};
-        fxAbsoluted[i].setBounds(abPos);
-
-        juce::Rectangle<int> dispPos{
-            (i / 6) * getWidth() / 2 + 4 + rowHeight - 5 + 2 * buttonMargin + 2 * buttonSize,
-            (i % 6) * rowHeight + ypos0,
-            getWidth() / 2 - rowHeight - 8 - 2 * buttonMargin - 2 * buttonSize, rowHeight - 5};
-        fxParamDisplay[i].setBounds(dispPos);
-    }
+    bounds.removeFromTop(topAreaHeight);
+    bounds.removeFromBottom(bottomAreaHeight);
 
     fxNameLabel->setFont(juce::FontOptions(28));
     fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
+
+    deafultParameterPanel->setBounds(bounds);
 }
 
 int SurgefxAudioProcessorEditor::findLargestFittingZoomBetween(

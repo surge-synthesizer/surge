@@ -58,4 +58,4 @@
 	url = https://github.com/scikit-build/cmake-FindVcvars
 [submodule "libs/sst/sst-jucegui"]
 	path = libs/sst/sst-jucegui
-	url = git@github.com:surge-synthesizer/sst-jucegui.git
+	url = https://github.com/surge-synthesizer/sst-jucegui.git

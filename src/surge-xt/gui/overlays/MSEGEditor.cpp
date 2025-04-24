@@ -116,7 +116,6 @@ struct MSEGControlRegion : public juce::Component,
     std::unique_ptr<Surge::Widgets::Switch> hSnapButton, vSnapButton;
     std::unique_ptr<Surge::Widgets::MultiSwitch> loopMode, editMode, movementMode;
     std::unique_ptr<Surge::Widgets::NumberField> hSnapSize, vSnapSize;
-    std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinSnap;
     std::vector<std::unique_ptr<juce::Label>> labels;
 
     void hvSnapTypein(bool isH);
@@ -149,6 +148,16 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         setTitle("MSEG Display and Edit Canvas");
         setDescription("MSEG Display and Edit Canvas");
     };
+
+    enum SegmentProps
+    {
+        duration,
+        value,
+        cp_duration,
+        cp_value,
+    };
+
+    std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
 
     /*
     ** We make a list of hotzones when we draw so we don't have to recalculate the
@@ -567,22 +576,22 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     tLocation =
                         ms->segments[i].cpduration * ms->segments[i].duration + ms->segmentStart[i];
 
-                // std::cout << _D(i) << _D(ms->segments[i].type) << _D(ms->segments[i].cpv) <<
-                // _D(ms->segments[i].cpduration) << _D(verticalMotion) << _D(verticalScaleByValues)
-                // << _D(horizontalMotion) << _D(vLocation ) << _D(tLocation) <<
-                // _D(ms->segmentStart[i] ) << std::endl;
-
                 float t = tpx(tLocation);
                 float v = valpx(vLocation);
                 auto h = hotzone();
+
                 h.rect =
                     juce::Rectangle<float>(juce::Point<float>(t - handleRadius, v - handleRadius),
                                            juce::Point<float>(t + handleRadius, v + handleRadius));
                 h.type = hotzone::Type::MOUSABLE_NODE;
+
                 if (h.rect.contains(where.getX(), where.getY()))
+                {
                     h.active = true;
+                }
 
                 h.useDrawRect = false;
+
                 if ((verticalMotion && !horizontalMotion &&
                      (ms->segments[i].type != MSEGStorage::segment::LINEAR &&
                       ms->segments[i].type != MSEGStorage::segment::BUMP)) ||
@@ -590,6 +599,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 {
                     float t = tpx(0.5 * ms->segments[i].duration + ms->segmentStart[i]);
                     float v = valpx(0.5 * (ms->segments[i].nv1 + ms->segments[i].v0));
+
                     h.drawRect = juce::Rectangle<float>(
                         juce::Point<float>(t - handleRadius, v - handleRadius),
                         juce::Point<float>(t + handleRadius, v + handleRadius));
@@ -606,6 +616,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     if (verticalMotion)
                     {
                         float dv = 0;
+
                         if (verticalScaleByValues)
                         {
                             if (segdx == 0)
@@ -652,13 +663,19 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                         ms->segments[i].cpv += dv;
                     }
+
                     if (horizontalMotion)
+                    {
                         ms->segments[i].cpduration += dx / tscale / segdt;
+                    }
+
                     Surge::MSEG::constrainControlPointAt(ms, i);
                     modelChanged(i);
                 };
+
                 h.associatedSegment = i;
                 h.zoneSubType = hotzone::SEGMENT_CONTROL;
+
                 if (verticalMotion && horizontalMotion)
                     h.segmentDirection = hotzone::BOTH_DIRECTIONS;
                 else if (horizontalMotion)
@@ -680,8 +697,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 rectForPoint(
                     tpx(ms->totalDuration),
-                    ms->segments[ms->n_activeSegments - 1]
-                        .nv1, /* which is [0].v0 in lock mode only */
+                    ms->segments[ms->n_activeSegments - 1].nv1, // which is [0].v0 in lock mode only
                     hotzone::SEGMENT_ENDPOINT,
                     [this, vscale, tscale, unipolarFactor](float dx, float dy,
                                                            const juce::Point<float> &where) {
@@ -690,7 +706,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                             float d = -2 * dy / vscale;
                             float snapResolution = ms->vSnap * unipolarFactor;
                             int idx = ms->n_activeSegments - 1;
+
                             offsetValue(ms->segments[idx].dragv1, d);
+
                             if (snapResolution <= 0)
                                 ms->segments[idx].nv1 = ms->segments[idx].dragv1;
                             else
@@ -698,6 +716,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                 float q = ms->segments[idx].dragv1 + 1;
                                 float pos = round(q / snapResolution) * snapResolution;
                                 float adj = pos - 1.0;
+
                                 ms->segments[idx].nv1 = limit_range(adj, -1.f, 1.f);
                             }
                         }
@@ -705,6 +724,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         {
                             adjustValue(0, false, -2 * dy / vscale, ms->vSnap);
                         }
+
                         // We need to deal with the cpduration also
                         auto cpv = this->ms->segments[ms->n_activeSegments - 1].cpduration /
                                    this->ms->segments[ms->n_activeSegments - 1].duration;
@@ -715,6 +735,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                             if (!this->getLocalBounds().contains(where.toInt()))
                             {
                                 auto howFar = where.x - this->getLocalBounds().getRight();
+
                                 if (howFar > 0)
                                     dx *= howFar * 0.1; // this is really just a speedup as our axes
                                                         // shrinks. Just a fudge
@@ -724,6 +745,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                 ms, ms->n_activeSegments - 1, dx / tscale, ms->hSnap, longestMSEG);
                         }
                     });
+
                 hotzones.back().specialEndpoint = true;
             }
         }
@@ -1534,24 +1556,15 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                         g.fillRect(r);
                     };
 
-                    int prec = 2;
-
-                    if (storage)
-                    {
-                        if (Surge::Storage::getUserDefaultValue(
-                                storage, Surge::Storage::HighPrecisionReadouts, 0))
-                        {
-                            prec = 6;
-                        }
-                    }
+                    const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
 
                     g.setFont(skin->fontManager->lfoTypeFont);
 
                     float val = h.specialEndpoint ? ms->segments[h.associatedSegment].nv1
                                                   : ms->segments[h.associatedSegment].v0;
 
-                    std::string txt = fmt::format("X: {:.{}f}", pxt(cx), prec),
-                                txt2 = fmt::format("Y: {:.{}f}", val, prec);
+                    std::string txt = fmt::format("X: {:.{}f}", pxt(cx), detailedMode),
+                                txt2 = fmt::format("Y: {:.{}f}", val, detailedMode);
 
                     int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt),
                         sw2 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt2);
@@ -2423,10 +2436,103 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     // OR, we break compatibility in a major version update and have all LFOs in a block
     bool isSceneMSEG() const { return lfodata->shape.ctrlgroup_entry >= ms_slfo1; }
 
+    void showSegmentTypein(int i, SegmentProps prop, const juce::Point<int> at)
+    {
+        using type = MSEGStorage::segment::Type;
+
+        const bool is2Dcp =
+            ms->segments[i].type == type::QUAD_BEZIER || ms->segments[i].type == type::BROWNIAN;
+
+        float *propValue = nullptr;
+        std::string propName;
+
+        switch (prop)
+        {
+        case SegmentProps::duration:
+            propValue = &ms->segments[i].duration;
+            propName = "Duration";
+            break;
+        case SegmentProps::value:
+            propValue = &ms->segments[i].v0;
+            propName = "Value";
+            break;
+        case SegmentProps::cp_duration:
+            propValue = &ms->segments[i].cpduration;
+            propName = "Control Point X";
+            break;
+        case SegmentProps::cp_value:
+            propValue = &ms->segments[i].cpv;
+            propName = fmt::format("Control Point{}", is2Dcp ? " Y" : "");
+            break;
+
+        default:
+            return;
+        }
+
+        const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
+
+        auto handleTypein = [this, i, prop, propValue, propName](const std::string &s) {
+            auto divPos = s.find('/');
+            float v = 0.f;
+
+            if (divPos != std::string::npos)
+            {
+                auto n = s.substr(0, divPos);
+                auto d = s.substr(divPos + 1);
+                auto nv = std::atof(n.c_str());
+                auto dv = std::atof(d.c_str());
+
+                if (dv == 0)
+                {
+                    return false;
+                }
+
+                v = (nv / dv);
+            }
+            else
+            {
+                v = std::atof(s.c_str());
+            }
+
+            const float lowClamp =
+                (prop == SegmentProps::duration || prop == SegmentProps::cp_duration) ? 0.f : -1.f;
+            const float highClamp = (prop == SegmentProps::duration) ? 1000.f : 1.f;
+
+            *propValue = std::clamp(v, lowClamp, highClamp);
+
+            pushToUndo();
+            modelChanged();
+            repaint();
+
+            return true;
+        };
+
+        if (!typeinEditor)
+        {
+            typeinEditor = std::make_unique<Surge::Overlays::TypeinLambdaEditor>(handleTypein);
+            getParentComponent()->addChildComponent(*typeinEditor);
+        }
+
+        typeinEditor->callback = handleTypein;
+        typeinEditor->setMainLabel(
+            fmt::format("Edit Segment {} {}", std::to_string(i + 1), propName));
+        typeinEditor->setValueLabels(fmt::format("current: {:.{}f}", *propValue, detailedMode), "");
+        typeinEditor->setSkin(skin, associatedBitmapStore);
+        typeinEditor->setEditableText(fmt::format("{:.{}f}", *propValue, detailedMode));
+        typeinEditor->setReturnFocusTarget(this);
+
+        auto r = typeinEditor->getRequiredSize();
+        typeinEditor->setBounds(r.withCentre(at));
+
+        typeinEditor->setVisible(true);
+        typeinEditor->grabFocus();
+    }
+
     void openPopup(const juce::Point<float> &iw)
     {
-        auto contextMenu = juce::PopupMenu();
+        using type = MSEGStorage::segment::Type;
 
+        auto contextMenu = juce::PopupMenu();
         auto tf = pxToTime();
         auto t = tf(iw.x);
         auto tts = Surge::MSEG::timeToSegment(ms, t);
@@ -2446,6 +2552,40 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         auto hment = tcomp->getTitle();
 
         contextMenu.addCustomItem(-1, std::move(tcomp), nullptr, hment);
+
+        contextMenu.addSeparator();
+
+        const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
+
+        contextMenu.addItem(
+            fmt::format("Duration: {:.{}f}", ms->segments[tts].duration, detailedMode), true, false,
+            [this, iw, tts]() { showSegmentTypein(tts, SegmentProps::duration, iw.toInt()); });
+        contextMenu.addItem(
+            fmt::format("Value: {:.{}f}", ms->segments[tts].v0, detailedMode), true, false,
+            [this, iw, tts]() { showSegmentTypein(tts, SegmentProps::value, iw.toInt()); });
+
+        const bool is2Dcp =
+            ms->segments[tts].type == type::QUAD_BEZIER || ms->segments[tts].type == type::BROWNIAN;
+
+        if (ms->segments[tts].type != type::HOLD)
+        {
+            if (is2Dcp)
+            {
+                auto curveStr = fmt::format("Control Point X: {:.{}f}",
+                                            ms->segments[tts].cpduration, detailedMode);
+
+                contextMenu.addItem(curveStr, true, false, [this, iw, tts]() {
+                    showSegmentTypein(tts, SegmentProps::cp_duration, iw.toInt());
+                });
+            }
+
+            auto curveStr = fmt::format("Control Point{}: {:.{}f}", is2Dcp ? " Y" : "",
+                                        ms->segments[tts].cpv, detailedMode);
+
+            contextMenu.addItem(curveStr, true, false, [this, iw, tts]() {
+                showSegmentTypein(tts, SegmentProps::cp_value, iw.toInt());
+            });
+        }
 
         contextMenu.addSeparator();
 
@@ -2733,7 +2873,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                                        MSEGStorage::segment::Type type) {
                 contextMenu.addItem(
                     n, true, (tts >= 0 && this->ms->segments[tts].type == type), [this, t, type]() {
-                        // ADJUST HERE HERE
+                        // ADJUST HERE
                         Surge::MSEG::changeTypeAt(this->ms, t, type);
 
                         for (auto &h : hotzones)
@@ -2745,30 +2885,30 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                                 this->ms->segments[h.associatedSegment].type = type;
                             }
                         }
+
                         pushToUndo();
                         modelChanged();
                     });
             };
 
-            typeTo("Hold", MSEGStorage::segment::Type::HOLD);
-            typeTo("Linear", MSEGStorage::segment::Type::LINEAR);
-            typeTo(Surge::GUI::toOSCase("S-Curve"), MSEGStorage::segment::Type::SCURVE);
-            typeTo("Bezier", MSEGStorage::segment::Type::QUAD_BEZIER);
+            typeTo("Hold", type::HOLD);
+            typeTo("Linear", type::LINEAR);
+            typeTo(Surge::GUI::toOSCase("S-Curve"), type::SCURVE);
+            typeTo("Bezier", type::QUAD_BEZIER);
 
             contextMenu.addSeparator();
 
-            typeTo("Sine", MSEGStorage::segment::Type::SINE);
-            typeTo("Triangle", MSEGStorage::segment::Type::TRIANGLE);
-            typeTo("Sawtooth", MSEGStorage::segment::Type::SAWTOOTH);
-            typeTo("Square", MSEGStorage::segment::Type::SQUARE);
+            typeTo("Sine", type::SINE);
+            typeTo("Triangle", type::TRIANGLE);
+            typeTo("Sawtooth", type::SAWTOOTH);
+            typeTo("Square", type::SQUARE);
 
             contextMenu.addSeparator();
 
-            typeTo("Bump", MSEGStorage::segment::Type::BUMP);
-            typeTo("Stairs", MSEGStorage::segment::Type::STAIRS);
-            typeTo(Surge::GUI::toOSCase("Smooth Stairs"),
-                   MSEGStorage::segment::Type::SMOOTH_STAIRS);
-            typeTo(Surge::GUI::toOSCase("Brownian Bridge"), MSEGStorage::segment::Type::BROWNIAN);
+            typeTo("Bump", type::BUMP);
+            typeTo("Stairs", type::STAIRS);
+            typeTo(Surge::GUI::toOSCase("Smooth Stairs"), type::SMOOTH_STAIRS);
+            typeTo(Surge::GUI::toOSCase("Brownian Bridge"), type::BROWNIAN);
 
             contextMenu.showMenuAsync(sge->popupMenuOptions());
         }

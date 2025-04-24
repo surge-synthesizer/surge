@@ -134,14 +134,8 @@ class alignas(16) AirWindowsEffect : public Effect
                         fx->airwin->setParameter(idx, value);
                     }
 
-                    if (fx->storage)
-                    {
-                        auto detailedMode = Surge::Storage::getUserDefaultValue(
-                            fx->storage, Surge::Storage::HighPrecisionReadouts, 0);
-
-                        fx->airwin->displayPrecision = (detailedMode ? 6 : 2);
-                    }
-
+                    fx->airwin->displayPrecision =
+                        Surge::Storage::getValueDisplayPrecision(fx->storage);
                     fx->airwin->getParameterLabel(idx, lab);
                     fx->airwin->getParameterDisplay(idx, dis, value, true);
                 }

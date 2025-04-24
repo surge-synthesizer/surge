@@ -379,35 +379,10 @@ template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool st
 
                 // Sum
                 int iWin alignas(16)[4], iWaveP1 alignas(16)[4], iWave alignas(16)[4];
-#if MAC
-                // this should be very fast on C2D/C1D (and there are no macs with K8's)
-                iWin[0] = SIMD_MM(cvtsi128_si32)(Win);
-                iWin[1] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(Win, SIMD_MM_SHUFFLE(1, 1, 1, 1)));
-                iWin[2] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(Win, SIMD_MM_SHUFFLE(2, 2, 2, 2)));
-                iWin[3] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(Win, SIMD_MM_SHUFFLE(3, 3, 3, 3)));
-                iWave[0] = SIMD_MM(cvtsi128_si32)(Wave);
-                iWave[1] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(Wave, SIMD_MM_SHUFFLE(1, 1, 1, 1)));
-                iWave[2] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(Wave, SIMD_MM_SHUFFLE(2, 2, 2, 2)));
-                iWave[3] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(Wave, SIMD_MM_SHUFFLE(3, 3, 3, 3)));
-                iWaveP1[0] = SIMD_MM(cvtsi128_si32)(WaveP1);
-                iWaveP1[1] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(WaveP1, SIMD_MM_SHUFFLE(1, 1, 1, 1)));
-                iWaveP1[2] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(WaveP1, SIMD_MM_SHUFFLE(2, 2, 2, 2)));
-                iWaveP1[3] = SIMD_MM(cvtsi128_si32)(
-                    SIMD_MM(shuffle_epi32)(WaveP1, SIMD_MM_SHUFFLE(3, 3, 3, 3)));
 
-#else
                 SIMD_MM(store_si128)((SIMD_M128I *)&iWin, Win);
                 SIMD_MM(store_si128)((SIMD_M128I *)&iWave, Wave);
                 SIMD_MM(store_si128)((SIMD_M128I *)&iWaveP1, WaveP1);
-#endif
 
                 iWin[0] = (iWin[0] + iWin[1] + iWin[2] + iWin[3]) >> 13;
                 iWave[0] = (iWave[0] + iWave[1] + iWave[2] + iWave[3]) >> (13 + (Full16 ? 1 : 0));

@@ -94,6 +94,7 @@ enum DefaultKey
     VirtualKeyboardLayout,
 
     MPEPitchBendRange,
+    MPETimbreIsUnipolar,
     PitchSmoothingMode,
     UseCh2Ch3ToPlayScenesIndividually,
     MenuBasedMIDILearnChannel,

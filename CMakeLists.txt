@@ -10,6 +10,10 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 endif()
 
+if(NOT ENABLE_LTO)
+  option(ENABLE_LTO "Turns on link-time optimization for release builds" ON)
+endif()
+
 if(NOT BUILD_TESTING)
   option(BUILD_TESTING "" OFF)
 endif()
@@ -24,6 +28,11 @@ message(STATUS "Compiler version is ${CMAKE_CXX_COMPILER_VERSION}")
 math(EXPR SURGE_BITNESS "${CMAKE_SIZEOF_VOID_P} * 8" OUTPUT_FORMAT DECIMAL)
 message(STATUS "Targeting ${SURGE_BITNESS}-bit configuration")
 # }}}
+
+if (APPLE)
+        enable_language(OBJC)
+        enable_language(OBJCXX)
+endif()
 
 # Make Sure the REpo is properly cloned {{{
 set(SURGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -63,6 +72,14 @@ endif()
 # Global compiler/linker settings {{{
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
+
+# Enable LTO if unspecified, for release builds.
+if(CMAKE_BUILD_TYPE MATCHES "Release" AND ENABLE_LTO)
+  message(STATUS "Enabling LTO for Release build.")
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+  message(STATUS "LTO is disabled.")
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND UNIX AND NOT APPLE AND NOT SURGE_SKIP_PIE_CHANGE)
   message(STATUS "Setting -no-pie on EXE flags; use SURGE_SKIP_PIE_CHANGE=TRUE to avoid" )
