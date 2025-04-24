@@ -138,9 +138,11 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                                     (old patches load with extend disabled even if they had it enabled)
 // 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Editor window state
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
+// 26 -> 27 (XT 1.4.* nightlies) added to formulaEditState and wavetable: debuggerUserVariablesOpen, debuggerBuiltInVariablesOpen, debuggerFilterText, scroll, caretPosition, selectStart, selectEnd
+//                               popupOpen, popupType, popupCaseSensitive, popupWholeWord, popupText1, popupText2, popupCurrentResult. ( for saving the state of code editors )
 // clang-format on
 
-const int ff_revision = 26;
+const int ff_revision = 27;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -926,11 +928,105 @@ struct DAWExtraStateStorage
          * codeOrPrelude: Code editor selected tab
          * debuggerOpen: Debug panel toggle
          */
+
+        struct CodeEditorState
+        {
+            int scroll{0};
+            int caretPosition{0};
+            int selectStart{0};
+            int selectEnd{0};
+
+            bool popupOpen{false};
+            int popupType{0};
+            bool popupCaseSensitive{false};
+            bool popupWholeWord{false};
+            int popupCurrentResult{0};
+
+            std ::string popupText1{""};
+            std ::string popupText2{""};
+        };
+
         struct FormulaEditState
         {
             int codeOrPrelude{0};
+
             bool debuggerOpen{false};
+            bool debuggerUserVariablesOpen{true};
+            bool debuggerBuiltInVariablesOpen{true};
+            std::string debuggerFilterText{""};
+            CodeEditorState codeEditor;
+
         } formulaEditState[n_scenes][n_lfos];
+
+        FormulaEditState originalState;
+
+        void clearCodeEditorState(CodeEditorState &codeEditor)
+        {
+
+            codeEditor.scroll = originalState.codeEditor.scroll;
+            codeEditor.caretPosition = originalState.codeEditor.caretPosition;
+
+            codeEditor.selectStart = originalState.codeEditor.selectStart;
+            codeEditor.selectEnd = originalState.codeEditor.selectEnd;
+
+            codeEditor.popupOpen = originalState.codeEditor.popupOpen;
+            codeEditor.popupType = originalState.codeEditor.popupType;
+            codeEditor.popupCaseSensitive = originalState.codeEditor.popupCaseSensitive;
+            codeEditor.popupWholeWord = originalState.codeEditor.popupWholeWord;
+            codeEditor.popupText1 = originalState.codeEditor.popupText1;
+            codeEditor.popupCurrentResult = originalState.codeEditor.popupCurrentResult;
+            codeEditor.popupText2 = originalState.codeEditor.popupText2;
+        }
+
+        void clearAllFormulaStatesInScene(int sc)
+        {
+            for (int i = 0; i < n_lfos; i++)
+            {
+                clearFormulaStateInScene(sc, i);
+            }
+        }
+
+        void clearFormulaStateInScene(int sc, int id)
+        {
+            formulaEditState[sc][id].debuggerFilterText = originalState.debuggerFilterText;
+            formulaEditState[sc][id].debuggerBuiltInVariablesOpen =
+                originalState.debuggerBuiltInVariablesOpen;
+            formulaEditState[sc][id].debuggerUserVariablesOpen =
+                originalState.debuggerUserVariablesOpen;
+            // formulaEditState[sc][id].debuggerOpen = originalState.debuggerOpen;
+
+            clearCodeEditorState(formulaEditState[sc][id].codeEditor);
+        }
+
+        void clearAllFormulaStates()
+        {
+            for (int i = 0; i < n_scenes; i++)
+            {
+                clearAllFormulaStatesInScene(i);
+            }
+        }
+        // wte
+        void clearAllWTEStateInScene(int sc)
+        {
+            for (int i = 0; i < n_oscs; i++)
+            {
+                clearWTEStateInScene(sc, i);
+            }
+        }
+
+        void clearWTEStateInScene(int sc, int i)
+        {
+
+            clearCodeEditorState(wavetableScriptEditState[sc][i].codeEditor);
+        }
+
+        void clearAllWTEStates()
+        {
+            for (int i = 0; i < n_scenes; i++)
+            {
+                clearAllWTEStateInScene(i);
+            }
+        }
 
         struct
         {
@@ -944,6 +1040,7 @@ struct DAWExtraStateStorage
         struct WavetableScriptEditState
         {
             int codeOrPrelude{0};
+            CodeEditorState codeEditor;
         } wavetableScriptEditState[n_scenes][n_oscs];
 
         struct OverlayState
