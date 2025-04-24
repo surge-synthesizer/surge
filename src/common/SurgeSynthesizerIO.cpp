@@ -194,6 +194,9 @@ void SurgeSynthesizer::selectRandomPatch()
 
 void SurgeSynthesizer::loadPatch(int id)
 {
+    storage.getPatch().dawExtraState.editor.clearAllFormulaStates();
+    storage.getPatch().dawExtraState.editor.clearAllWTEStates();
+
     if (id < 0)
         id = 0;
     if (id >= storage.patch_list.size())
@@ -209,6 +212,8 @@ void SurgeSynthesizer::loadPatch(int id)
 bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName,
                                        bool forceIsPreset)
 {
+    storage.getPatch().dawExtraState.editor.clearAllFormulaStates();
+
     using namespace sst::io;
 
     std::filebuf f;

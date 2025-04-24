@@ -2763,6 +2763,71 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         }
                     }
 
+                    auto loadCodeEditorState =
+                        [this](TiXmlElement *fss,
+                               DAWExtraStateStorage::EditorState::CodeEditorState &q) {
+                            int i;
+                            bool b;
+                            std::string s;
+
+                            if (fss->QueryIntAttribute("scroll", &i) == TIXML_SUCCESS)
+                            {
+                                q.scroll = i;
+                            }
+
+                            if (fss->QueryIntAttribute("caretPosition", &i) == TIXML_SUCCESS)
+                            {
+                                q.caretPosition = i;
+                            }
+
+                            if (fss->QueryIntAttribute("selectStart", &i) == TIXML_SUCCESS)
+                            {
+                                q.selectStart = i;
+                            }
+
+                            if (fss->QueryIntAttribute("selectEnd", &i) == TIXML_SUCCESS)
+                            {
+                                q.selectEnd = i;
+                            }
+
+                            // popup ( find&replace,goto line etc )
+
+                            if (fss->QueryBoolAttribute("popupOpen", &b) == TIXML_SUCCESS)
+                            {
+                                q.popupOpen = b;
+                            }
+
+                            if (fss->QueryIntAttribute("popupType", &i) == TIXML_SUCCESS)
+                            {
+                                q.popupType = i;
+                            }
+
+                            if (fss->QueryBoolAttribute("popupCaseSensitive", &b) == TIXML_SUCCESS)
+                            {
+                                q.popupCaseSensitive = b;
+                            }
+
+                            if (fss->QueryBoolAttribute("popupWholeWord", &b) == TIXML_SUCCESS)
+                            {
+                                q.popupWholeWord = b;
+                            }
+
+                            if (fss->QueryStringAttribute("popupText1", &s) == TIXML_SUCCESS)
+                            {
+                                q.popupText1 = s;
+                            }
+
+                            if (fss->QueryStringAttribute("popupText2", &s) == TIXML_SUCCESS)
+                            {
+                                q.popupText2 = s;
+                            }
+
+                            if (fss->QueryIntAttribute("popupCurrentResult", &i) == TIXML_SUCCESS)
+                            {
+                                q.popupCurrentResult = i;
+                            }
+                        };
+
                     for (int lf = 0; lf < n_lfos; ++lf)
                     {
                         std::string fsns =
@@ -2772,20 +2837,47 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         if (fss)
                         {
                             auto q = &(dawExtraState.editor.formulaEditState[sc][lf]);
-                            int vv;
+
+                            int i;
+                            bool b;
+                            std::string s;
 
                             q->codeOrPrelude = 0;
                             q->debuggerOpen = false;
 
-                            if (fss->QueryIntAttribute("codeOrPrelude", &vv) == TIXML_SUCCESS)
+                            // debugger
+
+                            if (fss->QueryIntAttribute("codeOrPrelude", &i) == TIXML_SUCCESS)
                             {
-                                q->codeOrPrelude = vv;
+                                q->codeOrPrelude = i;
                             }
 
-                            if (fss->QueryIntAttribute("debuggerOpen", &vv) == TIXML_SUCCESS)
+                            if (fss->QueryIntAttribute("debuggerOpen", &i) == TIXML_SUCCESS)
                             {
-                                q->debuggerOpen = vv;
+                                q->debuggerOpen = i;
                             }
+
+                            if (fss->QueryBoolAttribute("debuggerBuiltInVariablesOpen", &b) ==
+                                TIXML_SUCCESS)
+                            {
+                                q->debuggerBuiltInVariablesOpen = b;
+                            }
+
+                            if (fss->QueryBoolAttribute("debuggerUserVariablesOpen", &b) ==
+                                TIXML_SUCCESS)
+                            {
+                                q->debuggerUserVariablesOpen = b;
+                            }
+
+                            if (fss->QueryStringAttribute("debuggerFilterText", &s) ==
+                                TIXML_SUCCESS)
+                            {
+                                q->debuggerFilterText = s;
+                            }
+
+                            // code editor
+
+                            loadCodeEditorState(fss, q->codeEditor);
                         }
                     }
 
@@ -2798,14 +2890,18 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         if (wss)
                         {
                             auto q = &(dawExtraState.editor.wavetableScriptEditState[sc][osc]);
-                            int vv;
+                            int i;
+                            bool b;
+                            std::string s;
 
                             q->codeOrPrelude = 0;
 
-                            if (wss->QueryIntAttribute("codeOrPrelude", &vv) == TIXML_SUCCESS)
+                            if (wss->QueryIntAttribute("codeOrPrelude", &i) == TIXML_SUCCESS)
                             {
-                                q->codeOrPrelude = vv;
+                                q->codeOrPrelude = i;
                             }
+
+                            loadCodeEditorState(wss, q->codeEditor);
                         }
                     }
                 } // end of scene loop
@@ -3622,6 +3718,24 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         }
         eds.InsertEndChild(over);
 
+        auto saveCodeEditorState = [this](TiXmlElement *fss,
+                                          DAWExtraStateStorage::EditorState::CodeEditorState &q) {
+            // document editor
+            fss->SetAttribute("scroll", q.scroll);
+            fss->SetAttribute("caretPosition", q.caretPosition);
+            fss->SetAttribute("selectStart", q.selectStart);
+            fss->SetAttribute("selectEnd", q.selectEnd);
+
+            // popup
+            fss->SetAttribute("popupOpen", q.popupOpen);
+            fss->SetAttribute("popupType", q.popupType);
+            fss->SetAttribute("popupCaseSensitive", q.popupCaseSensitive);
+            fss->SetAttribute("popupWholeWord", q.popupWholeWord);
+            fss->SetAttribute("popupText1", q.popupText1);
+            fss->SetAttribute("popupText2", q.popupText2);
+            fss->SetAttribute("popupCurrentResult", q.popupCurrentResult);
+        };
+
         for (int sc = 0; sc < n_scenes; sc++)
         {
             std::string con = "current_osc_" + std::to_string(sc);
@@ -3654,8 +3768,15 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                 std::string fsns = "formula_state_" + std::to_string(sc) + "_" + std::to_string(lf);
                 TiXmlElement fss(fsns);
 
+                // debugger
                 fss.SetAttribute("codeOrPrelude", q->codeOrPrelude);
                 fss.SetAttribute("debuggerOpen", q->debuggerOpen);
+                fss.SetAttribute("debuggerBuiltInVariablesOpen", q->debuggerBuiltInVariablesOpen);
+                fss.SetAttribute("debuggerUserVariablesOpen", q->debuggerUserVariablesOpen);
+                fss.SetAttribute("debuggerFilterText", q->debuggerFilterText);
+
+                // code editor state
+                saveCodeEditorState(&fss, q->codeEditor);
 
                 eds.InsertEndChild(fss);
             }
@@ -3667,6 +3788,9 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                 TiXmlElement wss(wsns);
 
                 wss.SetAttribute("codeOrPrelude", q->codeOrPrelude);
+
+                // code editor state
+                saveCodeEditorState(&wss, q->codeEditor);
 
                 eds.InsertEndChild(wss);
             }

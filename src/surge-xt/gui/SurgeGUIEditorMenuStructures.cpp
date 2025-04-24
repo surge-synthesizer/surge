@@ -110,6 +110,12 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
         for (const auto &p : cat.presets)
         {
             auto action = [this, p, currentLfoId]() {
+                SurgeGUIEditor::forceLfoDisplayRepaint();
+
+                // clear state for current formula
+                this->synth->storage.getPatch().dawExtraState.editor.clearFormulaStateInScene(
+                    current_scene, currentLfoId);
+
                 undoManager()->pushFullLFO(current_scene, currentLfoId);
                 this->synth->storage.modulatorPreset->loadPresetFrom(
                     p.path, &(this->synth->storage), current_scene, currentLfoId);

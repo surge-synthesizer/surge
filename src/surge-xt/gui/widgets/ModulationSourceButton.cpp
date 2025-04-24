@@ -406,7 +406,8 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
             if (this->modlistIndex != idx || !addedToModbuttonContextMenu)
             {
                 bool ticked = !addedToModbuttonContextMenu && this->modlistIndex == idx;
-                menu.addItem(modName, true, ticked, [this, idx]() {
+                menu.addItem(modName, true, ticked, [this, sge, idx]() {
+                    sge->forceLfoDisplayRepaint();
                     this->modlistIndex = idx;
                     mouseMode = HAMBURGER;
                     notifyValueChanged();
