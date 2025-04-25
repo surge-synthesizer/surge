@@ -933,7 +933,7 @@ struct DAWExtraStateStorage
         {
             for (int s = 0; s < n_scenes; s++)
             {
-                for (int o = 0; o < n_oscs; o++)
+                for (int o = 0; o < n_lfos; o++)
                 {
                     modulationSourceButtonState[s][o].index = 0;
                 }
