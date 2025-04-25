@@ -138,11 +138,12 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                                     (old patches load with extend disabled even if they had it enabled)
 // 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Editor window state
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
-// 26 -> 27 (XT 1.4.* nightlies) added to formulaEditState and wavetable: debuggerUserVariablesOpen, debuggerBuiltInVariablesOpen, debuggerFilterText, scroll, caretPosition, selectStart, selectEnd
+//                               (dawExtraState) added to formulaEditState and wavetable: debuggerUserVariablesOpen, debuggerBuiltInVariablesOpen, debuggerFilterText, scroll, caretPosition, selectStart, selectEnd
 //                               popupOpen, popupType, popupCaseSensitive, popupWholeWord, popupText1, popupText2, popupCurrentResult. ( for saving the state of code editors )
+//                               (dawExtraState) modulationSourceButtonState - index
 // clang-format on
 
-const int ff_revision = 27;
+const int ff_revision = 26;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
@@ -922,6 +923,22 @@ struct DAWExtraStateStorage
         {
             int timeEditMode = 0;
         } msegEditState[n_scenes][n_lfos];
+
+        struct ModulationSourceButtonState
+        {
+            int index{0};
+        } modulationSourceButtonState[n_scenes][n_lfos];
+
+        void clearAllModulationSourceButtonStates()
+        {
+            for (int s = 0; s < n_scenes; s++)
+            {
+                for (int o = 0; o < n_oscs; o++)
+                {
+                    modulationSourceButtonState[s][o].index = 0;
+                }
+            }
+        }
 
         /*
          * Window state parameters for Formula Editor overlay

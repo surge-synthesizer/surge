@@ -84,8 +84,19 @@ struct ModulationSourceButton : public juce::Component,
     int modlistIndex{0};
     void setModList(const modlist_t &m)
     {
-        modlistIndex = limit_range(modlistIndex, 0, (int)(m.size() - 1));
         modlist = m;
+        modlistIndex = 0;
+
+        auto sge = firstListenerOfType<SurgeGUIEditor>();
+        int lfo_id = getCurrentModSource() - ms_lfo1;
+        auto scene = sge->current_scene;
+
+        modlistIndex =
+            storage->getPatch()
+                .dawExtraState.editor.modulationSourceButtonState[sge->current_scene][lfo_id]
+                .index;
+        modlistIndex = limit_range(modlistIndex, 0, (int)(m.size() - 1));
+
         setAccessibleLabel(getCurrentModLabel());
         selectAccButton->setVisible(true);
         if (isLFO())
