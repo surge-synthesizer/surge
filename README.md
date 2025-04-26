@@ -214,7 +214,7 @@ sudo cmake --install ignore/sxt
 
 and you should get a working install in `/usr/bin`, `/usr/share` and `/usr/lib`.
 
-## Platform Specific Choices
+## Platform-specific Choices
 
 ### Building 32- vs 64-bit on Windows
 
@@ -313,10 +313,9 @@ read the associated README.
 
 You need to install the following:
 
-* [Visual Studio 2017, 2019, or later(version 15.5 or newer)](https://visualstudio.microsoft.com/downloads/)
 * Install [Git](https://git-scm.com/downloads)
-  , [Visual Studio 2017 or newer](https://visualstudio.microsoft.com/downloads/)
-* When you install Visual Studio, make sure to include CLI tools and CMake, which are included in
+* Install [Visual Studio 2017, 2019, or later (version 15.5 or newer)](https://visualstudio.microsoft.com/downloads/)
+     * When installing Visual Studio, make sure to include CLI tools and CMake, which are included in
   'Optional CLI support' and 'Toolset for desktop' install bundles.
 
 ## macOS
@@ -343,7 +342,7 @@ older than 7 or so and clangs after 9 or 10. You will also need to install a set
 sudo apt install build-essential libcairo-dev libxkbcommon-x11-dev libxkbcommon-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-util-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libjack-jackd2-dev
 ```
 
-*You can find more info about Surge XT on Linux and other Unix-like distros in* [this document](https://github.com/surge-synthesizer/surge/blob/main/doc/Linux%20and%20Other%20Unix-like%20Distributions.md).
+*You can find more info about Surge XT on Linux and other Unix-like distros in [this document](https://github.com/surge-synthesizer/surge/blob/main/doc/Linux%20and%20Other%20Unix-like%20Distributions.md).*
 
 # Continuous Integration
 
