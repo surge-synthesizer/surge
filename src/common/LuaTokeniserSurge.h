@@ -28,8 +28,7 @@
 
 namespace Surge
 {
-namespace Overlays
-{
+
 class LuaTokeniserSurge : public juce::CodeTokeniser
 {
   public:
@@ -57,7 +56,6 @@ class LuaTokeniserSurge : public juce::CodeTokeniser
     };
 };
 
-} // namespace Overlays
 } // namespace Surge
 
 #endif

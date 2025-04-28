@@ -25,8 +25,6 @@
 
 namespace Surge
 {
-namespace Overlays
-{
 
 struct LuaTokeniserSurgeFunctions
 {
@@ -293,6 +291,5 @@ juce::CodeEditorComponent::ColourScheme LuaTokeniserSurge::getDefaultColourSchem
 
     return cs;
 }
-} // namespace Overlays
 
 } // namespace Surge
