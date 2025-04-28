@@ -123,6 +123,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/KeyBindingsOverlay.cpp
   gui/overlays/LuaEditors.cpp
   gui/overlays/LuaEditors.h
+  gui/overlays/LuaTokeniserSurge.cpp
+  gui/overlays/LuaTokeniserSurge.h
   gui/overlays/MSEGEditor.cpp
   gui/overlays/MSEGEditor.h
   gui/overlays/MiniEdit.cpp
