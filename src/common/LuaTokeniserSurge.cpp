@@ -35,7 +35,7 @@ struct LuaTokeniserSurgeFunctions
 
         static const char *const keywords3Char[] = {"and", "end", "for", "nil", "not", nullptr};
 
-        static const char *const keywords4Char[] = {"then", "true", "else", nullptr};
+        static const char *const keywords4Char[] = {"then", "true", "else", "goto", nullptr};
 
         static const char *const keywords5Char[] = {"false", "local", "until",
                                                     "while", "break", nullptr};
