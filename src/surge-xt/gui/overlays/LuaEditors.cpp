@@ -35,7 +35,7 @@
 #include "widgets/MenuCustomComponents.h"
 #include <fmt/core.h>
 #include "widgets/OscillatorWaveformDisplay.h"
-#include "LuaTokeniserSurge.h"
+#include "util/LuaTokeniserSurge.h"
 
 namespace Surge
 {

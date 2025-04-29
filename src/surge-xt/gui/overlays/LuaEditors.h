@@ -36,7 +36,7 @@
 
 #include "OverlayComponent.h"
 #include "RefreshableOverlay.h"
-#include "LuaTokeniserSurge.h"
+#include "util/LuaTokeniserSurge.h"
 
 class SurgeGUIEditor;
 
