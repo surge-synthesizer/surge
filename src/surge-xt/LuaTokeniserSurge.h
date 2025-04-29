@@ -21,8 +21,8 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#ifndef SURGE_SRC_SURGE_XT_GUI_OVERLAYS_LUATOKENISERSURGE_H
-#define SURGE_SRC_SURGE_XT_GUI_OVERLAYS_LUATOKENISERSURGE_H
+#ifndef SURGE_SRC_SURGE_XT_UTIL_LUATOKENISERSURGE_H
+#define SURGE_SRC_SURGE_XT_UTIL_LUATOKENISERSURGE_H
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
