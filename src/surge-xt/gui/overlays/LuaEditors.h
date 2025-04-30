@@ -36,6 +36,7 @@
 
 #include "OverlayComponent.h"
 #include "RefreshableOverlay.h"
+#include "util/LuaTokeniserSurge.h"
 
 class SurgeGUIEditor;
 
@@ -271,7 +272,7 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     std::unique_ptr<juce::CodeDocument> mainDocument;
     std::unique_ptr<SurgeCodeEditorComponent> mainEditor;
     std::unique_ptr<juce::Button> applyButton;
-    std::unique_ptr<juce::LuaTokeniser> tokenizer;
+    std::unique_ptr<LuaTokeniserSurge> tokenizer;
     std::unique_ptr<CodeEditorSearch> search;
     std::unique_ptr<GotoLine> gotoLine;
 

@@ -35,6 +35,7 @@
 #include "widgets/MenuCustomComponents.h"
 #include <fmt/core.h>
 #include "widgets/OscillatorWaveformDisplay.h"
+#include "util/LuaTokeniserSurge.h"
 
 namespace Surge
 {
@@ -42,8 +43,8 @@ namespace Overlays
 {
 
 /*
-    TextfieldPopup
-    Base class that can be used for creating other textfield popups like the search
+TextfieldPopup
+Base class that can be used for creating other textfield popups like the search
 */
 TextfieldButton::TextfieldButton(juce::String &svg, int rowToAddTo) : juce::Component()
 {
@@ -1351,7 +1352,7 @@ CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, S
     mainDocument = std::make_unique<juce::CodeDocument>();
     mainDocument->addListener(this);
     mainDocument->setNewLineCharacters("\n");
-    tokenizer = std::make_unique<juce::LuaTokeniser>();
+    tokenizer = std::make_unique<LuaTokeniserSurge>();
 
     mainEditor = std::make_unique<SurgeCodeEditorComponent>(*mainDocument, tokenizer.get(), skin);
     mainEditor->setTabSize(4, true);
