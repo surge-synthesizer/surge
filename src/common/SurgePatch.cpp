@@ -2875,6 +2875,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                                 q->debuggerFilterText = s;
                             }
 
+                            if (fss->QueryIntAttribute("debuggerGroupState", &i) == TIXML_SUCCESS)
+                            {
+                                for (int c = 0; c < 8; c++)
+                                {
+                                    q->debuggerGroupState[c] = (i & (1 << c)) > 0;
+                                }
+                            }
+
                             // code editor
 
                             loadCodeEditorState(fss, q->codeEditor);
@@ -3773,7 +3781,14 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                 fss.SetAttribute("debuggerOpen", q->debuggerOpen);
                 fss.SetAttribute("debuggerBuiltInVariablesOpen", q->debuggerBuiltInVariablesOpen);
                 fss.SetAttribute("debuggerUserVariablesOpen", q->debuggerUserVariablesOpen);
-                fss.SetAttribute("debuggerFilterText", q->debuggerFilterText);
+
+                int groupStates = 0;
+                for (int i = 0; i < 8; i++)
+                {
+                    groupStates += ((q->debuggerGroupState[i] ? 1 : 0) << i);
+                }
+
+                fss.SetAttribute("debuggerGroupState", groupStates);
 
                 // code editor state
                 saveCodeEditorState(&fss, q->codeEditor);

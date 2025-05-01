@@ -130,7 +130,7 @@ struct DebugRow
     bool isUserDefined{false};
     bool isHeader{false};
     int filterFlag = -1;
-    int headerFlag = -1;
+    int group = -1;
 
     enum
     {
@@ -150,7 +150,7 @@ struct DebugRow
 void setUserDefined(DebugRow &row, int depth, bool parent);
 
 std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &s, std::string filter,
-                                                bool showUser, bool showSystem);
+                                                bool state[8]);
 std::string createDebugViewOfModState(const EvaluatorState &s);
 
 /*
