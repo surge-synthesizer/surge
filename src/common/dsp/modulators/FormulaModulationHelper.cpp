@@ -746,6 +746,13 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
 #endif
 }
 
+enum showFilter
+{
+    SHOW_ALL,
+    SHOW_USER,
+    SHOW_SYSTEM
+};
+
 bool isUserDefined(std::string str)
 {
     static std::array<std::string, 51> keywords = {
@@ -780,15 +787,15 @@ void setUserDefined(DebugRow &row, int depth, bool custom)
 }
 
 std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::string filter,
-                                                bool showUser, bool showSystem)
+                                                bool state[8])
 {
 #if HAS_LUA
     std::vector<DebugRow> rows;
     Surge::LuaSupport::SGLD guard("debugViewGuard", es.L);
 
-    std::function<void(const int, bool, bool, std::string)> rec;
-    rec = [&rows, &es, &rec](const int depth, bool internal, bool parentIsUser,
-                             std::string filter) {
+    std::function<void(const int, bool, bool, std::string, showFilter, int)> rec;
+    rec = [&rows, &es, &rec](const int depth, bool internal, bool parentIsUser, std::string filter,
+                             showFilter show, int g) {
         Surge::LuaSupport::SGLD guardR("rec[" + std::to_string(depth) + "]", es.L);
 
         if (lua_istable(es.L, -1))
@@ -819,16 +826,6 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                         return false;
                     if (b == "subscriptions")
                         return true;
-
-                    if (isUserDefined(a) && !isUserDefined(b))
-                        return true;
-
-                    if (!isUserDefined(a) && isUserDefined(b))
-                        return false;
-
-                    if (isUserDefined(a) && isUserDefined(b))
-                        return a < b;
-
                     return a < b;
                 });
 
@@ -839,17 +836,17 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                 if (lua_isnumber(es.L, -1))
                 {
                     rows.emplace_back(depth, lab, lua_tonumber(es.L, -1));
-                    setUserDefined(rows.back(), depth, parentIsUser);
+                    rows.back().group = g;
                 }
                 else if (lua_isstring(es.L, -1))
                 {
                     rows.emplace_back(depth, lab, lua_tostring(es.L, -1));
-                    setUserDefined(rows.back(), depth, parentIsUser);
+                    rows.back().group = g;
                 }
                 else if (lua_isboolean(es.L, -1))
                 {
                     rows.emplace_back(depth, lab, (lua_toboolean(es.L, -1) ? "true" : "false"));
-                    setUserDefined(rows.back(), depth, parentIsUser);
+                    rows.back().group = g;
                 }
                 else if (lua_istable(es.L, -1))
                 {
@@ -862,13 +859,13 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                         internal = internal || (lab == "subscriptions");
 
                         rows.back().isInternal = internal;
-                        setUserDefined(rows.back(), depth, parentIsUser);
-                        rec(depth + 1, internal, rows.back().isUserDefined, "");
+                        rows.back().group = g;
+                        rec(depth + 1, internal, rows.back().isUserDefined, "", show, g);
                     }
                     else
                     {
                         rows.emplace_back(depth, lab, "(table)");
-                        setUserDefined(rows.back(), depth, parentIsUser);
+                        rows.back().group = g;
                     }
                 }
                 else if (lua_isfunction(es.L, -1))
@@ -877,20 +874,17 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                     {
                         rows.emplace_back(depth, lab, "(function)");
                         rows.back().isInternal = internal;
-                        setUserDefined(rows.back(), depth, parentIsUser);
                     }
                 }
                 else if (lua_isnil(es.L, -1))
                 {
                     rows.emplace_back(depth, lab, "(nil)");
                     rows.back().isInternal = internal;
-                    setUserDefined(rows.back(), depth, parentIsUser);
                 }
                 else
                 {
                     rows.emplace_back(depth, lab, "(unknown)");
                     rows.back().isInternal = internal;
-                    setUserDefined(rows.back(), depth, parentIsUser);
                 }
             };
 
@@ -898,61 +892,79 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
             {
                 std::ostringstream oss;
                 oss << "." << k;
+                auto label = oss.str();
+
                 lua_pushinteger(es.L, k);
                 lua_gettable(es.L, -2);
-                guts(oss.str());
+                guts(label);
                 lua_pop(es.L, 1);
             }
 
             for (auto s : skeys)
             {
-                lua_getfield(es.L, -1, s.c_str());
-                guts(s);
-                lua_pop(es.L, 1);
+                if (show == SHOW_ALL || (show == SHOW_USER && isUserDefined(s)) ||
+                    (show == SHOW_SYSTEM && !isUserDefined(s)))
+                {
+                    lua_getfield(es.L, -1, s.c_str());
+                    guts(s);
+                    lua_pop(es.L, 1);
+                }
             }
         }
     };
 
-    rows.emplace_back(0, " User variables", "");
-    rows.back().isHeader = true;
-    rows.back().headerFlag = DebugRow::User;
-
-    for (const auto &t : {es.stateName, sharedTableName})
+    struct
     {
-        lua_getglobal(es.L, t);
+        const char *var;
+        std::string label;
+        int id = 0;
+        showFilter show;
+    } groups[3];
+
+    // Groups
+
+    groups[0] = {es.stateName, "User variables", 0, SHOW_USER};
+    groups[1] = {sharedTableName, "Shared", 1, SHOW_ALL};
+    groups[2] = {es.stateName, "Built-in variables", 2, SHOW_SYSTEM};
+
+    int i = 0;
+    for (const auto &t : groups)
+    {
+        lua_getglobal(es.L, t.var);
         if (!lua_istable(es.L, -1))
         {
             lua_pop(es.L, -1);
             rows.emplace_back(0, "Error", "Not a table");
             continue;
         }
-        rec(0, false, false, filter);
+
+        // create header
+
+        rows.emplace_back(0, " " + groups[i].label, "");
+        rows.back().isHeader = true;
+        rows.back().group = groups[i].id;
+
+        rec(0, false, false, filter, groups[i].show, groups[i].id);
 
         lua_pop(es.L, -1);
-    }
 
-    for (int i = 1; i < rows.size(); i++)
-    {
-        if (!rows[i].isUserDefined)
-        {
-            auto header = DebugRow(0, " Built-in variables");
-            header.headerFlag = DebugRow::System;
-            header.isHeader = true;
-            rows.insert(rows.begin() + i, header);
-
-            break;
-        }
+        i++;
     }
 
     // maximize/minimize groups
 
+    int amountOfGroups = (sizeof(groups) / sizeof(*groups));
+
     for (int i = rows.size() - 1; i > -1; i--)
     {
-        if (((showUser == false && rows[i].isUserDefined) ||
-             (showSystem == false && !rows[i].isUserDefined)) &&
-            !rows[i].isHeader)
+
+        for (int g = 0; g < amountOfGroups; g++)
         {
-            rows.erase(rows.begin() + i);
+            if ((state[g] == false && rows[i].group == g) && (!rows[i].isHeader))
+            {
+                rows.erase(rows.begin() + i);
+                break;
+            }
         }
     }
 
@@ -1029,7 +1041,9 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
 
 std::string createDebugViewOfModState(const EvaluatorState &es)
 {
-    auto r = createDebugDataOfModState(es, "", true, true);
+
+    bool groupState[8] = {true, true, true, true, true, true, true, true};
+    auto r = createDebugDataOfModState(es, "", groupState);
     std::ostringstream oss;
     for (const auto d : r)
     {
