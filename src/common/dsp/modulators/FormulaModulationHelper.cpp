@@ -194,15 +194,9 @@ end
         lua_getglobal(s.L, s.funcNameInit);
         lua_createtable(s.L, 0, 10);
 
-        // add subscription hooks
-        lua_createtable(s.L, 0, 5);                   // subscriptions
-        lua_createtable(s.L, n_customcontrollers, 0); // macros
-        for (int i = 0; i < n_customcontrollers; ++i)
-        {
-            lua_pushnumber(s.L, i + 1);
-            lua_pushboolean(s.L, false);
-            lua_settable(s.L, -3);
-        }
+        // Legacy tables for deprecated macro subscriptions
+        lua_createtable(s.L, 0, 0);
+        lua_createtable(s.L, 0, 0);
         lua_setfield(s.L, -2, "macros");
         lua_setfield(s.L, -2, "subscriptions");
 
@@ -257,6 +251,16 @@ end
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
 
+            // Load the macros
+            lua_createtable(s.L, n_customcontrollers, 0);
+            for (int i = 0; i < n_customcontrollers; ++i)
+            {
+                lua_pushinteger(s.L, i + 1);
+                lua_pushnumber(s.L, s.macrovalues[i]);
+                lua_settable(s.L, -3);
+            }
+            lua_setfield(s.L, -2, "macros");
+
             auto cres = lua_pcall(s.L, 1, 1, 0);
             if (cres == LUA_OK)
             {
@@ -308,45 +312,7 @@ end
                     }
                     lua_pop(s.L, 1);
                 }
-
-                // now let's read off those subscriptions
-                lua_getfield(s.L, -1, "subscriptions");
-
-                auto gv = [&s](const char *k) -> bool {
-                    auto gv =
-                        Surge::LuaSupport::SGLD("prepareForEvaluation::subscriptions::gv", s.L);
-
-                    auto res = false;
-                    lua_getfield(s.L, -1, k);
-                    if (lua_isboolean(s.L, -1))
-                    {
-                        res = lua_toboolean(s.L, -1);
-                    }
-                    lua_pop(s.L, 1);
-                    return res;
-                };
-
-                lua_getfield(s.L, -1, "macros");
-                if (lua_isboolean(s.L, -1))
-                {
-                    auto b = lua_toboolean(s.L, -1);
-                    s.subAnyMacro = b;
-                    for (int i = 0; i < n_customcontrollers; ++i)
-                        s.subMacros[i] = b;
-                }
-                else if (lua_istable(s.L, -1))
-                {
-                    for (int i = 0; i < n_customcontrollers; ++i)
-                    {
-                        lua_pushnumber(s.L, i + 1);
-                        lua_gettable(s.L, -2);
-                        const bool res = (lua_isboolean(s.L, -1)) ? lua_toboolean(s.L, -1) : false;
-                        lua_pop(s.L, 1);
-                        s.subAnyMacro = s.subAnyMacro || res;
-                        s.subMacros[i] = res;
-                    }
-                }
-                lua_pop(s.L, 3); // pop the macros, subscriptions, and modulator state
+                lua_pop(s.L, 1); // pop the modulator state
             }
         }
     }
@@ -587,21 +553,15 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addb("is_voice", false);
     }
 
-    if (s->subAnyMacro)
+    // Load the macros
+    lua_createtable(s->L, n_customcontrollers, 0);
+    for (int i = 0; i < n_customcontrollers; ++i)
     {
-        // load the macros
-        lua_createtable(s->L, n_customcontrollers, 0);
-        for (int i = 0; i < n_customcontrollers; ++i)
-        {
-            if (s->subMacros[i])
-            {
-                lua_pushinteger(s->L, i + 1);
-                lua_pushnumber(s->L, s->macrovalues[i]);
-                lua_settable(s->L, -3);
-            }
-        }
-        lua_setfield(s->L, -2, "macros");
+        lua_pushinteger(s->L, i + 1);
+        lua_pushnumber(s->L, s->macrovalues[i]);
+        lua_settable(s->L, -3);
     }
+    lua_setfield(s->L, -2, "macros");
 
     if (justSetup)
     {

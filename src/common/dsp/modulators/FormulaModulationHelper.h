@@ -57,8 +57,6 @@ struct EvaluatorState
     bool useEnvelope = true;
     bool isFinite = true;
 
-    bool subMacros[n_customcontrollers], subAnyMacro{false};
-
     float del, a, h, dec, s, r;
     float rate, amp, phase, deform;
     float tempo, songpos;
