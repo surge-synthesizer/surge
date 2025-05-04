@@ -68,7 +68,7 @@ struct EvaluatorState
     bool is_display = false;
 
     // voice features
-    bool isVoice;
+    bool isVoice, mpeenabled;
     int key{60}, channel{0}, velocity{0}, releasevelocity{0}, mpebendrange{24};
     int64_t voiceOrderAtCreate{1L};
     float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0};
@@ -130,7 +130,7 @@ struct DebugRow
     bool isUserDefined{false};
     bool isHeader{false};
     int filterFlag = -1;
-    int headerFlag = -1;
+    int group = -1;
 
     enum
     {
@@ -150,7 +150,7 @@ struct DebugRow
 void setUserDefined(DebugRow &row, int depth, bool parent);
 
 std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &s, std::string filter,
-                                                bool showUser, bool showSystem);
+                                                bool state[8]);
 std::string createDebugViewOfModState(const EvaluatorState &s);
 
 /*

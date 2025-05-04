@@ -209,6 +209,10 @@ void SurgeSynthesizer::loadPatch(int id)
 bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, const char *patchName,
                                        bool forceIsPreset)
 {
+    storage.getPatch().dawExtraState.editor.clearAllFormulaStates();
+    storage.getPatch().dawExtraState.editor.clearAllWTEStates();
+    storage.getPatch().dawExtraState.editor.clearAllModulationSourceButtonStates();
+
     using namespace sst::io;
 
     std::filebuf f;

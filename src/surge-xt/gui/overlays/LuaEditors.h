@@ -36,6 +36,7 @@
 
 #include "OverlayComponent.h"
 #include "RefreshableOverlay.h"
+#include "util/LuaTokeniserSurge.h"
 
 class SurgeGUIEditor;
 
@@ -89,11 +90,13 @@ class Textfield : public juce::TextEditor
 
   public:
     Textfield(int r);
+    virtual void focusLost(FocusChangeType) override;
     void paint(juce::Graphics &g) override;
     void setColour(int colourID, juce::Colour newColour);
     void setHeader(juce::String h);
     void setHeaderColor(juce::Colour c);
     int row;
+    std::function<void()> onFocusLost;
 };
 
 class TextfieldPopup : public juce::Component,
@@ -110,6 +113,7 @@ class TextfieldPopup : public juce::Component,
     static constexpr int STYLE_BUTTON_MARGIN = 2;
     static constexpr int STYLE_BUTTON_SIZE = 14;
     int STYLE_MARGIN_BETWEEN_TEXT_AND_BUTTONS = 40;
+    std::function<void()> onFocusLost;
 
   protected:
     juce::CodeEditorComponent *ed;
@@ -138,6 +142,11 @@ class TextfieldPopup : public juce::Component,
     void resize();
     void setHeader(juce::String);
     void createButton(juce::String svg, int row);
+    bool getButtonSelected(int row) { return button[row]->isSelected(); }
+    void setButtonSelected(int row, bool value) { button[row]->select(value); }
+
+    void setText(int id, std ::string str);
+    juce::String getText(int id);
     void createTextfield(int row);
     void showRows(int rows);
     void setButtonOffsetAtRow(int row, int offset);
@@ -170,6 +179,7 @@ class CodeEditorSearch : public TextfieldPopup
     virtual void hide() override;
 
     virtual void onClick(std::unique_ptr<TextfieldButton> &btn) override;
+
     virtual void textEditorTextChanged(juce::TextEditor &textEditor) override;
     virtual void mouseDown(const juce::MouseEvent &event) override;
     virtual void focusLost(FocusChangeType) override;
@@ -184,6 +194,8 @@ class CodeEditorSearch : public TextfieldPopup
 
     virtual void saveCaretStartPosition(bool onlyReadCaretPosition);
     virtual void showResult(int increase, bool moveCaret);
+    virtual void setCurrentResult(int res);
+    int getCurrentResult() { return resultCurrent; };
     virtual int *getResult();
     virtual int getResultTotal();
     virtual void showReplace(bool b);
@@ -223,9 +235,16 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
     virtual void addPopupMenuItems(juce::PopupMenu &menuToAddTo,
                                    const juce::MouseEvent *mouseClickEvent) override;
 
+    void focusLost(juce::Component::FocusChangeType e) override;
+    std::function<void()> onFocusLost;
+
     void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &d) override;
     SurgeCodeEditorComponent(juce::CodeDocument &d, juce::CodeTokeniser *t,
                              Surge::GUI::Skin::ptr_t &skin);
+
+    void mouseDoubleClick(const juce::MouseEvent &event) override;
+    void findWordAt(juce ::CodeDocument::Position &pos, juce ::CodeDocument::Position &from,
+                    juce::CodeDocument::Position &to);
 
   private:
     std::unique_ptr<juce::Image> searchMapCache;
@@ -249,10 +268,11 @@ class CodeEditorContainerWithApply : public OverlayComponent,
   public:
     CodeEditorContainerWithApply(SurgeGUIEditor *ed, SurgeStorage *s, Surge::GUI::Skin::ptr_t sk,
                                  bool addComponents = false);
+    ~CodeEditorContainerWithApply();
     std::unique_ptr<juce::CodeDocument> mainDocument;
     std::unique_ptr<SurgeCodeEditorComponent> mainEditor;
     std::unique_ptr<juce::Button> applyButton;
-    std::unique_ptr<juce::LuaTokeniser> tokenizer;
+    std::unique_ptr<LuaTokeniserSurge> tokenizer;
     std::unique_ptr<CodeEditorSearch> search;
     std::unique_ptr<GotoLine> gotoLine;
 
@@ -262,6 +282,12 @@ class CodeEditorContainerWithApply : public OverlayComponent,
     void removeTrailingWhitespaceFromDocument();
     bool autoCompleteDeclaration(juce::KeyPress keypress, std::string start, std::string end);
     bool keyPressed(const juce::KeyPress &key, Component *originatingComponent) override;
+
+    DAWExtraStateStorage::EditorState::CodeEditorState *state;
+
+    void initState(DAWExtraStateStorage::EditorState::CodeEditorState &state);
+    void saveState();
+    void loadState();
 
     virtual void setApplyEnabled(bool) {}
 

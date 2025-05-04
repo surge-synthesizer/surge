@@ -139,6 +139,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Editor window state
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
 //                               changed how extend-to-bipolar works for LFO Amplitude parameter
+//                               added DAWExtraState members for saving the state of Lua code editors, and variable group states in debugger
 // clang-format on
 
 const int ff_revision = 26;
@@ -922,16 +923,131 @@ struct DAWExtraStateStorage
             int timeEditMode = 0;
         } msegEditState[n_scenes][n_lfos];
 
+        struct ModulationSourceButtonState
+        {
+            int index{0};
+        } modulationSourceButtonState[n_scenes][n_lfos];
+
+        void clearAllModulationSourceButtonStates()
+        {
+            for (int s = 0; s < n_scenes; s++)
+            {
+                for (int o = 0; o < n_lfos; o++)
+                {
+                    modulationSourceButtonState[s][o].index = 0;
+                }
+            }
+        }
+
         /*
          * Window state parameters for Formula Editor overlay
          * codeOrPrelude: Code editor selected tab
          * debuggerOpen: Debug panel toggle
          */
+
+        struct CodeEditorState
+        {
+            int scroll{0};
+            int caretPosition{0};
+            int selectStart{0};
+            int selectEnd{0};
+
+            bool popupOpen{false};
+            int popupType{0};
+            bool popupCaseSensitive{false};
+            bool popupWholeWord{false};
+            int popupCurrentResult{0};
+
+            std ::string popupText1{""};
+            std ::string popupText2{""};
+        };
+
         struct FormulaEditState
         {
             int codeOrPrelude{0};
+
             bool debuggerOpen{false};
+            bool debuggerUserVariablesOpen{true};
+            bool debuggerBuiltInVariablesOpen{true};
+            bool debuggerGroupState[8]{true, true, true, true, true, true, true, true};
+            std::string debuggerFilterText{""};
+            CodeEditorState codeEditor;
+
         } formulaEditState[n_scenes][n_lfos];
+
+        FormulaEditState originalState;
+
+        void clearCodeEditorState(CodeEditorState &codeEditor)
+        {
+            codeEditor.scroll = originalState.codeEditor.scroll;
+            codeEditor.caretPosition = originalState.codeEditor.caretPosition;
+
+            codeEditor.selectStart = originalState.codeEditor.selectStart;
+            codeEditor.selectEnd = originalState.codeEditor.selectEnd;
+
+            codeEditor.popupOpen = originalState.codeEditor.popupOpen;
+            codeEditor.popupType = originalState.codeEditor.popupType;
+            codeEditor.popupCaseSensitive = originalState.codeEditor.popupCaseSensitive;
+            codeEditor.popupWholeWord = originalState.codeEditor.popupWholeWord;
+            codeEditor.popupText1 = originalState.codeEditor.popupText1;
+            codeEditor.popupCurrentResult = originalState.codeEditor.popupCurrentResult;
+            codeEditor.popupText2 = originalState.codeEditor.popupText2;
+        }
+
+        void clearAllFormulaStatesInScene(int sc)
+        {
+            for (int i = 0; i < n_lfos; i++)
+            {
+                clearFormulaStateInScene(sc, i);
+            }
+        }
+
+        void clearFormulaStateInScene(int sc, int id)
+        {
+            formulaEditState[sc][id].debuggerFilterText = originalState.debuggerFilterText;
+            formulaEditState[sc][id].debuggerBuiltInVariablesOpen =
+                originalState.debuggerBuiltInVariablesOpen;
+            formulaEditState[sc][id].debuggerUserVariablesOpen =
+                originalState.debuggerUserVariablesOpen;
+
+            for (int i = 0; i < 8; i++)
+            {
+                formulaEditState[sc][id].debuggerGroupState[i] = true;
+            }
+            formulaEditState[sc][id].debuggerOpen = originalState.debuggerOpen;
+
+            clearCodeEditorState(formulaEditState[sc][id].codeEditor);
+        }
+
+        void clearAllFormulaStates()
+        {
+            for (int i = 0; i < n_scenes; i++)
+            {
+                clearAllFormulaStatesInScene(i);
+            }
+        }
+        // wte
+        void clearAllWTEStateInScene(int sc)
+        {
+            for (int i = 0; i < n_oscs; i++)
+            {
+                clearWTEStateInScene(sc, i);
+            }
+        }
+
+        void clearWTEStateInScene(int sc, int i)
+        {
+
+            clearCodeEditorState(wavetableScriptEditState[sc][i].codeEditor);
+        }
+
+        void clearAllWTEStates()
+        {
+            for (int i = 0; i < n_scenes; i++)
+            {
+                clearAllWTEStateInScene(i);
+            }
+        }
 
         struct
         {
@@ -945,6 +1061,7 @@ struct DAWExtraStateStorage
         struct WavetableScriptEditState
         {
             int codeOrPrelude{0};
+            CodeEditorState codeEditor;
         } wavetableScriptEditState[n_scenes][n_oscs];
 
         struct OverlayState

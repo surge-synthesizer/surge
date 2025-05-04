@@ -15,8 +15,7 @@ team at https://surge-synth-team.org/ or connect with us
 on [Discord](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/src/assets/includes/discord_invite_link)
 .
 
-If you would also like to participate in discussions, testing and design of Surge XT, we have details below and also in
-the [contributors section of the Surge XT website](https://surge-synthesizer.github.io/#contributors).
+If you would also like to participate in discussions, testing and design of Surge XT, we have details below.
 
 This readme serves as the root of developer documentation for Surge XT.
 
@@ -215,7 +214,7 @@ sudo cmake --install ignore/sxt
 
 and you should get a working install in `/usr/bin`, `/usr/share` and `/usr/lib`.
 
-## Platform Specific Choices
+## Platform-specific Choices
 
 ### Building 32- vs 64-bit on Windows
 
@@ -314,10 +313,9 @@ read the associated README.
 
 You need to install the following:
 
-* [Visual Studio 2017, 2019, or later(version 15.5 or newer)](https://visualstudio.microsoft.com/downloads/)
 * Install [Git](https://git-scm.com/downloads)
-  , [Visual Studio 2017 or newer](https://visualstudio.microsoft.com/downloads/)
-* When you install Visual Studio, make sure to include CLI tools and CMake, which are included in
+* Install [Visual Studio 2017, 2019, or later (version 15.5 or newer)](https://visualstudio.microsoft.com/downloads/)
+     * When installing Visual Studio, make sure to include CLI tools and CMake, which are included in
   'Optional CLI support' and 'Toolset for desktop' install bundles.
 
 ## macOS
@@ -344,7 +342,7 @@ older than 7 or so and clangs after 9 or 10. You will also need to install a set
 sudo apt install build-essential libcairo-dev libxkbcommon-x11-dev libxkbcommon-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-util-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libjack-jackd2-dev
 ```
 
-*You can find more info about Surge XT on Linux and other Unix-like distros in* [this document](doc/Linux-and-other-Unix-like-distributions.md).
+*You can find more info about Surge XT on Linux and other Unix-like distros in [this document](doc/Linux%20and%20Other%20Unix-like%20Distributions.md).*
 
 # Continuous Integration
 
@@ -357,5 +355,5 @@ server. We are grateful to Microsoft for providing Azure pipelines for free to t
 # References
 
 * Most Surge XT-related conversation happens on the Surge Synthesizer Discord server. You can join
-  via [this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/_includes/discord_invite_link).
+  via [this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/src/assets/includes/discord_invite_link).
 * Discussion at KvR forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922).

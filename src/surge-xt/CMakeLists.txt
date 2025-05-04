@@ -85,6 +85,9 @@ target_sources(${PROJECT_NAME} PRIVATE
 
   SurgeCLAPPresetDiscovery.cpp
 
+  util/LuaTokeniserSurge.cpp
+  util/LuaTokeniserSurge.h
+
   util/LockFreeStack.h
 
   gui/AccessibleHelpers.h

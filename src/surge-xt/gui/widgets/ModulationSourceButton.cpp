@@ -39,6 +39,7 @@ namespace Widgets
 ModulationSourceButton::ModulationSourceButton()
     : juce::Component(), WidgetBaseMixin<ModulationSourceButton>(this)
 {
+
     setDescription("Modulator");
     setAccessible(true);
     setFocusContainerType(FocusContainerType::focusContainer);
@@ -406,8 +407,16 @@ void ModulationSourceButton::buildHamburgerMenu(juce::PopupMenu &menu,
             if (this->modlistIndex != idx || !addedToModbuttonContextMenu)
             {
                 bool ticked = !addedToModbuttonContextMenu && this->modlistIndex == idx;
-                menu.addItem(modName, true, ticked, [this, idx]() {
+                menu.addItem(modName, true, ticked, [this, sge, idx]() {
+                    sge->forceLfoDisplayRepaint();
                     this->modlistIndex = idx;
+
+                    int lfo_id = getCurrentModSource() - ms_lfo1;
+                    storage->getPatch()
+                        .dawExtraState.editor
+                        .modulationSourceButtonState[sge->current_scene][lfo_id]
+                        .index = this->modlistIndex;
+
                     mouseMode = HAMBURGER;
                     notifyValueChanged();
                     mouseMode = NONE;
@@ -657,7 +666,7 @@ void ModulationSourceButton::onSkinChanged()
 void ModulationSourceButton::mouseUp(const juce::MouseEvent &event)
 {
     mouseUpLongHold(event);
-
+    setAlpha(1);
     setMouseCursor(juce::MouseCursor::NormalCursor);
 
     transientArmed = false;
@@ -756,7 +765,12 @@ void ModulationSourceButton::mouseDrag(const juce::MouseEvent &event)
 
     if (event.getDistanceFromDragStart() < 4)
     {
+        setBounds(mouseDownBounds);
         return;
+    }
+    else
+    {
+        setAlpha(0.7);
     }
 
     auto sge = firstListenerOfType<SurgeGUIEditor>();
