@@ -195,6 +195,7 @@ end
         lua_createtable(s.L, 0, 10);
 
         // Legacy tables for deprecated macro subscriptions
+        // TODO: remove in XT2
         lua_createtable(s.L, 0, 0);
         lua_createtable(s.L, 0, 0);
         lua_setfield(s.L, -2, "macros");
