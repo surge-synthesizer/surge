@@ -759,11 +759,6 @@ TEST_CASE("Voice Features And Flags", "[formula]")
         surge->setModDepth01(pitchId, ms_slfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
-function init(state)
-   state.subscriptions["voice"] = true
-   return state
-end
-
 function process(state)
     state.output = (state.phase * 2 - 1)
     return state
@@ -792,7 +787,7 @@ end)FN");
 
         auto cs = Surge::Formula::extractModStateKeyForTesting("is_voice", sms->formulastate);
         auto sval = std::get_if<float>(&cs);
-        REQUIRE(sval); // a change - we don't even set is_voice if not voice subscribed
+        REQUIRE(sval); // Since 1.3.0 we no longer need to subscribe for is_voice to be set
         REQUIRE((bool)(*sval) == false);
     }
 
@@ -807,11 +802,6 @@ end)FN");
         surge->setModDepth01(pitchId, ms_slfo1, 0, 0, 0.1);
 
         surge->storage.getPatch().formulamods[0][0].setFormula(R"FN(
-function init(state)
-   state.subscriptions["voice"] = true
-   return state
-end
-
 function process(state)
     state.output = (state.phase * 2 - 1)
     return state

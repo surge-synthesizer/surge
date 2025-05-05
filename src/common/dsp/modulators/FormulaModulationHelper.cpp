@@ -178,8 +178,7 @@ end
         else
         {
             s.adderror("Unable to determine process() or init() function : " + emsg);
-            lua_pop(s.L, 1); // process
-            lua_pop(s.L, 1); // process
+            lua_pop(s.L, 2); // Pop process and init (or nil)
             stateData.knownBadFunctions.insert(s.funcName);
         }
 
@@ -194,15 +193,10 @@ end
         lua_getglobal(s.L, s.funcNameInit);
         lua_createtable(s.L, 0, 10);
 
-        // add subscription hooks
-        lua_createtable(s.L, 0, 5);                   // subscriptions
-        lua_createtable(s.L, n_customcontrollers, 0); // macros
-        for (int i = 0; i < n_customcontrollers; ++i)
-        {
-            lua_pushnumber(s.L, i + 1);
-            lua_pushboolean(s.L, false);
-            lua_settable(s.L, -3);
-        }
+        // Legacy tables for deprecated macro subscriptions
+        // TODO: Remove in XT2
+        lua_createtable(s.L, 0, 0);
+        lua_createtable(s.L, 0, 0);
         lua_setfield(s.L, -2, "macros");
         lua_setfield(s.L, -2, "subscriptions");
 
@@ -257,6 +251,16 @@ end
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
 
+            // Load the macros
+            lua_createtable(s.L, n_customcontrollers, 0);
+            for (int i = 0; i < n_customcontrollers; ++i)
+            {
+                lua_pushinteger(s.L, i + 1);
+                lua_pushnumber(s.L, s.macrovalues[i]);
+                lua_settable(s.L, -3);
+            }
+            lua_setfield(s.L, -2, "macros");
+
             auto cres = lua_pcall(s.L, 1, 1, 0);
             if (cres == LUA_OK)
             {
@@ -283,7 +287,7 @@ end
         lua_setglobal(s.L, s.stateName);
 
         // the modulator state which is now bound to the state name
-        lua_pop(s.L, -1);
+        lua_settop(s.L, 0); // Clear all elements from the stack
 
         s.useEnvelope = true;
 
@@ -293,7 +297,7 @@ end
             lua_getglobal(s.L, s.stateName);
             if (!lua_istable(s.L, -1))
             {
-                lua_pop(s.L, -1);
+                lua_pop(s.L, 1); // Pop non-table
                 std::cout << "Not a table!" << std::endl;
             }
             else
@@ -306,47 +310,9 @@ end
                     {
                         s.useEnvelope = lua_toboolean(s.L, -1);
                     }
-                    lua_pop(s.L, 1);
+                    lua_pop(s.L, 1); // Pop use_envelope
                 }
-
-                // now let's read off those subscriptions
-                lua_getfield(s.L, -1, "subscriptions");
-
-                auto gv = [&s](const char *k) -> bool {
-                    auto gv =
-                        Surge::LuaSupport::SGLD("prepareForEvaluation::subscriptions::gv", s.L);
-
-                    auto res = false;
-                    lua_getfield(s.L, -1, k);
-                    if (lua_isboolean(s.L, -1))
-                    {
-                        res = lua_toboolean(s.L, -1);
-                    }
-                    lua_pop(s.L, 1);
-                    return res;
-                };
-
-                lua_getfield(s.L, -1, "macros");
-                if (lua_isboolean(s.L, -1))
-                {
-                    auto b = lua_toboolean(s.L, -1);
-                    s.subAnyMacro = b;
-                    for (int i = 0; i < n_customcontrollers; ++i)
-                        s.subMacros[i] = b;
-                }
-                else if (lua_istable(s.L, -1))
-                {
-                    for (int i = 0; i < n_customcontrollers; ++i)
-                    {
-                        lua_pushnumber(s.L, i + 1);
-                        lua_gettable(s.L, -2);
-                        const bool res = (lua_isboolean(s.L, -1)) ? lua_toboolean(s.L, -1) : false;
-                        lua_pop(s.L, 1);
-                        s.subAnyMacro = s.subAnyMacro || res;
-                        s.subMacros[i] = res;
-                    }
-                }
-                lua_pop(s.L, 3); // pop the macros, subscriptions, and modulator state
+                lua_pop(s.L, 1); // Pop the modulator state
             }
         }
     }
@@ -356,20 +322,18 @@ end
         // Move to support
         auto dg = Surge::LuaSupport::SGLD("set RNG", s.L);
         // Seed the RNG
-        lua_getglobal(s.L, "math");
-        // > math
+        lua_getglobal(s.L, "math"); // > math
         if (lua_isnil(s.L, -1))
         {
             std::cout << "NIL MATH " << std::endl;
         }
         else
         {
-            lua_getfield(s.L, -1, "randomseed");
-            // > math > randomseed
+            lua_getfield(s.L, -1, "randomseed"); // > math > randomseed
             if (lua_isnil(s.L, -1))
             {
                 std::cout << "NUL randomseed" << std::endl;
-                lua_pop(s.L, -1);
+                lua_pop(s.L, 1); // Pop nil
             }
             else
             {
@@ -377,8 +341,7 @@ end
                 lua_pcall(s.L, 1, 0, 0);
             }
         }
-        // math or nil so
-        lua_pop(s.L, 1);
+        lua_pop(s.L, 1); // Pop math (or nil)
     }
 
     s.del = 0;
@@ -587,21 +550,15 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addb("is_voice", false);
     }
 
-    if (s->subAnyMacro)
+    // Load the macros
+    lua_createtable(s->L, n_customcontrollers, 0);
+    for (int i = 0; i < n_customcontrollers; ++i)
     {
-        // load the macros
-        lua_createtable(s->L, n_customcontrollers, 0);
-        for (int i = 0; i < n_customcontrollers; ++i)
-        {
-            if (s->subMacros[i])
-            {
-                lua_pushinteger(s->L, i + 1);
-                lua_pushnumber(s->L, s->macrovalues[i]);
-                lua_settable(s->L, -3);
-            }
-        }
-        lua_setfield(s->L, -2, "macros");
+        lua_pushinteger(s->L, i + 1);
+        lua_pushnumber(s->L, s->macrovalues[i]);
+        lua_settable(s->L, -3);
     }
+    lua_setfield(s->L, -2, "macros");
 
     if (justSetup)
     {
@@ -954,7 +911,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                 rec(0, false, false, filter, groups[i].show, groups[i].id);
             }
         }
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1); // Pop global (table or non-table)
         i++;
     }
 
@@ -1141,9 +1098,10 @@ std::variant<float, std::string, bool> runOverModStateForTesting(const std::stri
     }
 
     lua_getglobal(es.L, es.stateName);
+
     if (!lua_istable(es.L, -1))
     {
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1);
         return false;
     }
 
@@ -1152,24 +1110,24 @@ std::variant<float, std::string, bool> runOverModStateForTesting(const std::stri
     if (lua_isnumber(es.L, -1))
     {
         auto res = lua_tonumber(es.L, -1);
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1);
         return (float)res;
     }
 
     if (lua_isboolean(es.L, -1))
     {
         auto res = lua_toboolean(es.L, -1);
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1);
         return (float)res;
     }
 
     if (lua_isstring(es.L, -1))
     {
         auto res = lua_tostring(es.L, -1);
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1);
         return res;
     }
-    lua_pop(es.L, -1);
+    lua_pop(es.L, 1); // Pop evaluator state
 #endif
     return false;
 }
