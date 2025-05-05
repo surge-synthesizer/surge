@@ -931,12 +931,6 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
     for (const auto &t : groups)
     {
         lua_getglobal(es.L, t.var);
-        if (!lua_istable(es.L, -1))
-        {
-            lua_pop(es.L, -1);
-            rows.emplace_back(0, "Error", "Not a table");
-            continue;
-        }
 
         // create header
 
@@ -944,28 +938,24 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
         rows.back().isHeader = true;
         rows.back().group = groups[i].id;
 
-        rec(0, false, false, filter, groups[i].show, groups[i].id);
-
-        lua_pop(es.L, -1);
-
-        i++;
-    }
-
-    // maximize/minimize groups
-
-    int amountOfGroups = (sizeof(groups) / sizeof(*groups));
-
-    for (int i = rows.size() - 1; i > -1; i--)
-    {
-
-        for (int g = 0; g < amountOfGroups; g++)
+        if (!lua_istable(es.L, -1))
         {
-            if ((state[g] == false && rows[i].group == g) && (!rows[i].isHeader))
+            if (state[i] == true)
             {
-                rows.erase(rows.begin() + i);
-                break;
+
+                rows.emplace_back(0, "Error", "Not a table");
+                rows.back().group = groups[i].id;
             }
         }
+        else
+        {
+            if (state[i] == true)
+            {
+                rec(0, false, false, filter, groups[i].show, groups[i].id);
+            }
+        }
+        lua_pop(es.L, -1);
+        i++;
     }
 
     // filtering
