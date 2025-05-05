@@ -178,8 +178,7 @@ end
         else
         {
             s.adderror("Unable to determine process() or init() function : " + emsg);
-            lua_pop(s.L, 1); // process
-            lua_pop(s.L, 1); // process
+            lua_pop(s.L, 2); // Pop process and init (or nil)
             stateData.knownBadFunctions.insert(s.funcName);
         }
 
@@ -195,7 +194,7 @@ end
         lua_createtable(s.L, 0, 10);
 
         // Legacy tables for deprecated macro subscriptions
-        // TODO: remove in XT2
+        // TODO: Remove in XT2
         lua_createtable(s.L, 0, 0);
         lua_createtable(s.L, 0, 0);
         lua_setfield(s.L, -2, "macros");
@@ -288,7 +287,7 @@ end
         lua_setglobal(s.L, s.stateName);
 
         // the modulator state which is now bound to the state name
-        lua_pop(s.L, -1);
+        lua_settop(s.L, 0); // Clear all elements from the stack
 
         s.useEnvelope = true;
 
@@ -298,7 +297,7 @@ end
             lua_getglobal(s.L, s.stateName);
             if (!lua_istable(s.L, -1))
             {
-                lua_pop(s.L, -1);
+                lua_pop(s.L, 1); // Pop non-table
                 std::cout << "Not a table!" << std::endl;
             }
             else
@@ -311,9 +310,9 @@ end
                     {
                         s.useEnvelope = lua_toboolean(s.L, -1);
                     }
-                    lua_pop(s.L, 1);
+                    lua_pop(s.L, 1); // Pop use_envelope
                 }
-                lua_pop(s.L, 1); // pop the modulator state
+                lua_pop(s.L, 1); // Pop the modulator state
             }
         }
     }
@@ -323,20 +322,18 @@ end
         // Move to support
         auto dg = Surge::LuaSupport::SGLD("set RNG", s.L);
         // Seed the RNG
-        lua_getglobal(s.L, "math");
-        // > math
+        lua_getglobal(s.L, "math"); // > math
         if (lua_isnil(s.L, -1))
         {
             std::cout << "NIL MATH " << std::endl;
         }
         else
         {
-            lua_getfield(s.L, -1, "randomseed");
-            // > math > randomseed
+            lua_getfield(s.L, -1, "randomseed"); // > math > randomseed
             if (lua_isnil(s.L, -1))
             {
                 std::cout << "NUL randomseed" << std::endl;
-                lua_pop(s.L, -1);
+                lua_pop(s.L, 1); // Pop nil
             }
             else
             {
@@ -344,8 +341,7 @@ end
                 lua_pcall(s.L, 1, 0, 0);
             }
         }
-        // math or nil so
-        lua_pop(s.L, 1);
+        lua_pop(s.L, 1); // Pop math (or nil)
     }
 
     s.del = 0;
@@ -915,7 +911,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                 rec(0, false, false, filter, groups[i].show, groups[i].id);
             }
         }
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1); // Pop global (table or non-table)
         i++;
     }
 
@@ -1102,9 +1098,10 @@ std::variant<float, std::string, bool> runOverModStateForTesting(const std::stri
     }
 
     lua_getglobal(es.L, es.stateName);
+
     if (!lua_istable(es.L, -1))
     {
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1);
         return false;
     }
 
@@ -1113,24 +1110,24 @@ std::variant<float, std::string, bool> runOverModStateForTesting(const std::stri
     if (lua_isnumber(es.L, -1))
     {
         auto res = lua_tonumber(es.L, -1);
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1);
         return (float)res;
     }
 
     if (lua_isboolean(es.L, -1))
     {
         auto res = lua_toboolean(es.L, -1);
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1);
         return (float)res;
     }
 
     if (lua_isstring(es.L, -1))
     {
         auto res = lua_tostring(es.L, -1);
-        lua_pop(es.L, -1);
+        lua_pop(es.L, 1);
         return res;
     }
-    lua_pop(es.L, -1);
+    lua_pop(es.L, 1); // Pop evaluator state
 #endif
     return false;
 }
