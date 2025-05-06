@@ -2196,6 +2196,21 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
+    if (revision <= 25)
+    {
+        for (auto &sc : scene)
+        {
+            for (auto &lfo : sc.lfo)
+            {
+                if (lfo.magnitude.extend_range)
+                {
+                    lfo.magnitude.val.f *= 2.f;
+                    lfo.magnitude.val.f -= 1.f;
+                }
+            }
+        }
+    }
+
     // ensure that filter subtype is a valid value
     for (auto &sc : scene)
     {

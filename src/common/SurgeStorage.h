@@ -138,10 +138,8 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                                     (old patches load with extend disabled even if they had it enabled)
 // 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Editor window state
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
-//                               (dawExtraState) added to formulaEditState and wavetable: debuggerUserVariablesOpen, debuggerBuiltInVariablesOpen, debuggerFilterText, scroll, caretPosition, selectStart, selectEnd
-//                               popupOpen, popupType, popupCaseSensitive, popupWholeWord, popupText1, popupText2, popupCurrentResult. ( for saving the state of code editors )
-//                               (dawExtraState) modulationSourceButtonState - index
-//                               (in dawExtraState,FormulaEditState) debuggerGroupState - for group states in debugger
+//                               changed how extend-to-bipolar works for LFO Amplitude parameter
+//                               added DAWExtraState members for saving the state of Lua code editors, and variable group states in debugger
 // clang-format on
 
 const int ff_revision = 26;
