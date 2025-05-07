@@ -43,16 +43,16 @@ struct EvaluatorState
     float lastOutput = 0;
     // 6 is NOT the number of LFOs, but number of MSEG state elements!
     // TODO: replace 6 with a constexpr!
-    float msegState[6] = {0};
+    float msegState[6] = {0, 0, 0, 0, 0, 0};
     bool released = false, retrigger_FEG = false, retrigger_AEG = false, has_triggered = false;
     enum LoopState
     {
         PLAYING,
         RELEASING
     } loopState = PLAYING;
-    double releaseStartPhase;
-    double timeAlongSegment;
-    float releaseStartValue;
+    double releaseStartPhase{0};
+    double timeAlongSegment{0};
+    float releaseStartValue{0};
     std::minstd_rand gen;
     std::uniform_real_distribution<float> urd;
 

@@ -36,7 +36,7 @@ struct SurgeVoiceState
     int key, velocity, channel, scene_id, releasevelocity, polylimit, scenemode, polymode,
         splitpoint;
     float portasrc_key, portaphase;
-    bool porta_doretrigger;
+    bool porta_doretrigger{false};
 
     // These items support the tuning-snap mode in MTS mode
     float keyRetuning;
