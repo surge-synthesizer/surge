@@ -168,10 +168,11 @@ struct PresetProvider
         }
 
         std::vector<char> xmlData;
-        xmlData.resize(xmlSz);
-        stream.read(xmlData.data(), xmlData.size());
+        xmlData.resize(xmlSz + 1);
+        stream.read(xmlData.data(), xmlData.size() - 1);
         if (!stream)
             return bail("Unable to read XML data");
+        xmlData[xmlSz] = 0;
 
         TiXmlDocument doc;
         doc.Parse(xmlData.data(), nullptr, TIXML_ENCODING_LEGACY);

@@ -63,6 +63,9 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
 
+    memset(paramsFromLastDrawCall, 0, sizeof(paramsFromLastDrawCall));
+    memset(settingsFromLastDrawCall, 0, sizeof(settingsFromLastDrawCall));
+
     backingImage = std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, 50, 50, true);
     waveformIsUpdated = true;
 

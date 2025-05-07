@@ -57,14 +57,14 @@ struct LFOAndStepDisplay : public juce::Component,
     bool isUnipolar() { return lfodata->unipolar.val.b; }
 
     void setZoomFactor(int);
-    int zoomFactor;
+    int zoomFactor{100};
     std::unique_ptr<juce::Image> backingImage;
-    bool waveformIsUpdated;
-    bool forceRepaint;
-    LFOStorage *lfoStorageFromLastDrawingCall;
+    bool waveformIsUpdated{false};
+    bool forceRepaint{false};
+    LFOStorage *lfoStorageFromLastDrawingCall{nullptr};
     pdata paramsFromLastDrawCall[n_scene_params];
     pdata settingsFromLastDrawCall[8];
-    int zoomFactorFromLastDrawCall;
+    int zoomFactorFromLastDrawCall{-1};
 
     bool paramsHasChanged();
 
