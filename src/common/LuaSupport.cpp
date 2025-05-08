@@ -66,6 +66,7 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
             oss << "Lua unknown error: ";
             break;
         }
+        oss << lua_tostring(L, -1);
         errorMessage = oss.str();
         lua_pop(L, 1);
         for (const auto &f : functions)

@@ -318,8 +318,10 @@ end
         REQUIRE(!res);
         REQUIRE(lua_gettop(L) == 1);
         REQUIRE(lua_isnil(L, -1));
-        REQUIRE(err == "Lua syntax error: [string \"lua-script\"]:7: 'end' expected (to close "
-                       "'function' at line 2) near '<eof>'");
+        // clang-format off
+        REQUIRE(err == 
+            "Lua syntax error: [string \"lua-script\"]:7: 'end' expected (to close 'function' at line 2) near '<eof>'");
+        // clang-format on
         lua_pop(L, 1);
         lua_close(L);
     }
