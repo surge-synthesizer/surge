@@ -196,14 +196,14 @@ struct PatchSelector::TB : juce::Component
 PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelector>(this)
 {
     patchDbProvider = std::make_unique<PatchDBTypeAheadProvider>(this);
-    typeAhead = std::make_unique<Surge::Widgets::TypeAhead>("patch select", patchDbProvider.get());
+    typeAhead = std::make_unique<Surge::Widgets::TypeAhead>("Patch select", patchDbProvider.get());
     typeAhead->setVisible(false);
     typeAhead->addTypeAheadListener(this);
     typeAhead->setToElementZeroOnReturn = true;
 
     addChildComponent(*typeAhead);
 
-    searchButton = std::make_unique<TB>("Open Search DB");
+    searchButton = std::make_unique<TB>("Open patch search");
     searchButton->onEnterExit = [w = juce::Component::SafePointer(this)](bool b) {
         if (w)
         {
@@ -219,7 +219,7 @@ PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelecto
             {
                 auto sge = w->firstListenerOfType<SurgeGUIEditor>();
                 if (sge)
-                    sge->messageBox("Search is not available without a writable user dir",
+                    sge->messageBox("Search is not available without a writable user folder!",
                                     "Search Not Available");
             }
             else
@@ -248,7 +248,7 @@ PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelecto
             {
                 auto sge = w->firstListenerOfType<SurgeGUIEditor>();
                 if (sge)
-                    sge->messageBox("Favorites are not available without a writable user dir",
+                    sge->messageBox("Favorites are not available without a writable user folder!",
                                     "Favorites Not Available");
             }
             else
@@ -639,9 +639,9 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
         // get just the category name and not the path leading to it
         std::string menuName = storage->patch_category[rightMouseCategory].name;
 
-        if (menuName.find_last_of(PATH_SEPARATOR) != std::string::npos)
+        if (menuName.find_last_of("\\/") != std::string::npos)
         {
-            menuName = menuName.substr(menuName.find_last_of(PATH_SEPARATOR) + 1);
+            menuName = menuName.substr(menuName.find_last_of("\\/") + 1);
         }
 
         std::transform(menuName.begin(), menuName.end(), menuName.begin(), ::toupper);
