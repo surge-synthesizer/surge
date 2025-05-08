@@ -901,8 +901,8 @@ struct DAWExtraStateStorage
      * 1. Add it here with a reasonable default.
      * 2. In the SurgeGUIEditor constructor, read off the value
      * 3. In SurgeGUIEditor::populateDawExtraState write it
-     * 4. In SurgeGUIEditor::loadDawExtraState read it (this will probably be pretty similar to
-     *    the constructor code in step 4, but this is the step when restoring, as opposed to
+     * 4. In SurgeGUIEditor::loadFromDawExtraState read it (this will probably be pretty similar to
+     *    the constructor code in step 2, but this is the step when restoring, as opposed to
      *    creating an object).
      * 5. In SurgePatch load_xml()/save_xml() read and write it
      *

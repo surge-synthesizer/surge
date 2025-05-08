@@ -45,7 +45,7 @@ TEST_CASE("Lua Hello World", "[lua]")
 {
     SECTION("Hello World")
     {
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         luaL_openlibs(L);
 
@@ -61,7 +61,7 @@ TEST_CASE("Lua Sample Operations", "[lua]")
 {
     SECTION("Math")
     {
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         luaL_openlibs(L);
 
@@ -110,7 +110,7 @@ end
                 return -1.0;
         };
 
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         luaL_openlibs(L);
 
@@ -155,7 +155,7 @@ TEST_CASE("Surge Prelude", "[lua]")
 {
     SECTION("Test The Prelude")
     {
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         luaL_openlibs(L);
 
@@ -184,7 +184,7 @@ TEST_CASE("Lua Table API", "[lua]")
 {
     SECTION("Push And Get Element")
     {
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         luaL_openlibs(L);
 
@@ -239,7 +239,7 @@ function plus_one(x)
     return x + 1
 end
 )FN";
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         REQUIRE(lua_gettop(L) == 0);
         luaL_openlibs(L);
@@ -264,7 +264,7 @@ end
         auto fn = R"FN(
 shazbot = 13
 )FN";
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         REQUIRE(lua_gettop(L) == 0);
         luaL_openlibs(L);
@@ -285,7 +285,7 @@ function double(x)
     return x * 2
 end
 )FN";
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         REQUIRE(lua_gettop(L) == 0);
         luaL_openlibs(L);
@@ -308,7 +308,7 @@ function double(x)
     else
 end
 )FN";
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         REQUIRE(lua_gettop(L) == 0);
         luaL_openlibs(L);
@@ -318,8 +318,10 @@ end
         REQUIRE(!res);
         REQUIRE(lua_gettop(L) == 1);
         REQUIRE(lua_isnil(L, -1));
-        REQUIRE(err == "Lua syntax error: [string \"lua-script\"]:7: 'end' expected (to close "
-                       "'function' at line 2) near '<eof>'");
+        // clang-format off
+        REQUIRE(err == 
+            "Lua syntax error: [string \"lua-script\"]:7: 'end' expected (to close 'function' at line 2) near '<eof>'");
+        // clang-format on
         lua_pop(L, 1);
         lua_close(L);
     }
@@ -330,7 +332,7 @@ end
 -- A bit of a contrived case but that's OK
 error("I will parse but will not run")
 )FN";
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         REQUIRE(lua_gettop(L) == 0);
         luaL_openlibs(L);
@@ -360,7 +362,7 @@ function plus_two(x)
     return x + 2
 end
 )FN";
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         REQUIRE(lua_gettop(L) == 0);
         luaL_openlibs(L);
@@ -396,7 +398,7 @@ function plus_two(x)
     return x + 2
 end
 )FN";
-        lua_State *L = lua_open();
+        lua_State *L = luaL_newstate();
         REQUIRE(L);
         REQUIRE(lua_gettop(L) == 0);
         luaL_openlibs(L);
