@@ -179,9 +179,12 @@ struct LuaWTEvaluator::Details
         }
         else
         {
-            // If pcr is not LUA_OK then lua pushes an error string onto the stack. Show this
-            // error
-            std::string luaerr = lua_tostring(L, -1);
+            // If pcr is not LUA_OK then lua pushes an error string onto the stack. Show this error
+            const char *err = lua_tostring(L, -1);
+
+            // Fallback if error(nil)
+            std::string luaerr = err ? err : "Lua error: Value is nil";
+
             if (storage)
                 storage->reportError(luaerr, "Wavetable Evaluator Runtime Error");
             else
@@ -225,7 +228,11 @@ struct LuaWTEvaluator::Details
             }
             else
             {
-                std::string luaerr = lua_tostring(L, -1);
+                const char *err = lua_tostring(L, -1);
+
+                // Fallback if error(nil)
+                std::string luaerr = err ? err : "Lua error: Value is nil";
+
                 if (storage)
                     storage->reportError(luaerr, "Wavetable Evaluator Init Error");
                 else
@@ -243,7 +250,7 @@ struct LuaWTEvaluator::Details
         {
             LOG("creating Lua State ");
 
-            L = lua_open();
+            L = luaL_newstate();
             luaL_openlibs(L);
 
             auto wg = Surge::LuaSupport::SGLD("WavetableScript::prelude", L);

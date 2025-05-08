@@ -614,7 +614,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     catch (fs::filesystem_error &e)
     {
-        reportError(e.what(), "Error Scnning Modulator Presets");
+        reportError(e.what(), "Error Scanning Modulator Presets");
     }
     memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }

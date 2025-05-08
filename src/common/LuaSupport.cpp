@@ -55,18 +55,17 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         switch (lerr)
         {
         case LUA_ERRSYNTAX:
-            oss << "Lua syntax error: ";
+            oss << "Lua syntax error";
             break;
         case LUA_ERRMEM:
-            oss << "Lua memory allocation error: ";
+            oss << "Lua memory allocation error";
             break;
         default:
             // The default case should never get called unless the underlying Lua library source
             // gets modified, but we can handle it anyway
-            oss << "Lua unknown error: ";
+            oss << "Lua unknown error";
             break;
         }
-        oss << lua_tostring(L, -1);
         errorMessage = oss.str();
         lua_pop(L, 1);
         for (const auto &f : functions)
@@ -81,17 +80,17 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
         switch (lerr)
         {
         case LUA_ERRRUN:
-            oss << "Lua evaluation error: ";
+            oss << "Lua evaluation error";
             break;
         case LUA_ERRMEM:
-            oss << "Lua memory allocation error: ";
+            oss << "Lua memory allocation error";
             break;
         case LUA_ERRERR:
             // We're running pcall without an error function now but we might in the future
-            oss << "Lua error handler function error: ";
+            oss << "Lua error handler function error";
             break;
         default:
-            oss << "Lua unknown error: ";
+            oss << "Lua unknown error";
             break;
         }
         oss << lua_tostring(L, -1);

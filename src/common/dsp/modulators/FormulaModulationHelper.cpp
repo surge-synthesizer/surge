@@ -47,7 +47,7 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
         if (stateData.audioState == nullptr)
         {
 #if HAS_LUA
-            stateData.audioState = lua_open();
+            stateData.audioState = luaL_newstate();
             luaL_openlibs((lua_State *)(stateData.audioState));
 #endif
             firstTimeThrough = true;
@@ -64,7 +64,7 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
         if (stateData.displayState == nullptr)
         {
 #if HAS_LUA
-            stateData.displayState = lua_open();
+            stateData.displayState = luaL_newstate();
             luaL_openlibs((lua_State *)(stateData.displayState));
 #endif
             firstTimeThrough = true;
@@ -177,7 +177,7 @@ end
         }
         else
         {
-            s.adderror("Unable to determine process() or init() function : " + emsg);
+            s.adderror("Unable to determine process() or init() function: " + emsg);
             lua_pop(s.L, 2); // Pop process and init (or nil)
             stateData.knownBadFunctions.insert(s.funcName);
         }
@@ -245,7 +245,7 @@ end
                 addi("channel", s.channel);
                 addi("key", s.key);
                 addi("velocity", s.velocity);
-                addi("voice_id", storage->activeVoiceCount);
+                addi("voice_id", s.voiceOrderAtCreate);
             }
 
             addb("is_rendering_to_ui", s.is_display);
@@ -277,8 +277,13 @@ end
             {
                 s.isvalid = false;
                 std::ostringstream oss;
-                oss << "Failed to evaluate init() function! " << lua_tostring(s.L, -1);
+                const char *err = lua_tostring(s.L, -1);
+                // Fallback if error(nil)
+                if (!err)
+                    err = "Lua error: Value is nil";
+                oss << "Failed to evaluate init() function! " << err;
                 s.adderror(oss.str());
+                lua_pop(s.L, 1); // Pop error
                 stateData.knownBadFunctions.insert(s.funcName);
             }
         }
@@ -695,7 +700,11 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     {
         s->isvalid = false;
         std::ostringstream oss;
-        oss << "Failed to evaluate the process() function!" << lua_tostring(s->L, -1);
+        const char *err = lua_tostring(s->L, -1);
+        // Fallback if error(nil)
+        if (!err)
+            err = "Lua error: Value is nil";
+        oss << "Failed to evaluate the process() function! " << err;
         s->adderror(oss.str());
         lua_pop(s->L, 1);
         return;
