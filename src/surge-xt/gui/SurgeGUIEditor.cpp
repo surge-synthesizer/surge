@@ -844,16 +844,27 @@ void SurgeGUIEditor::idle()
             {
                 fxPresetName[i] = "";
             }
-        }
 
-        if (patchChanged)
-        {
             if (!firstTimePatchLoad)
             {
                 std::ostringstream oss;
-                oss << synth->storage.getPatch().name << " from category "
-                    << synth->storage.getPatch().category << " by "
-                    << synth->storage.getPatch().author;
+                auto &patch = synth->storage.getPatch();
+
+                // get just the category name and not the path leading to it
+                std::string cat = patch.category;
+
+                if (cat.find_last_of("\\/") != std::string::npos)
+                {
+                    cat = cat.substr(cat.find_last_of("\\/") + 1);
+                }
+
+                // clang-format off
+                oss << patch.name
+                    << " from category " << cat
+                    << " by " << patch.author
+                    << (patch.patchTuning.tuningStoredInPatch ? ", tuning stored in patch" : "");
+                // clang-format on
+
                 enqueueAccessibleAnnouncement(oss.str());
             }
 
