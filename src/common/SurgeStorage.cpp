@@ -217,7 +217,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
         while (datapath.empty() && cp.has_parent_path() && cp != cp.parent_path())
         {
-            auto portable = cp / L"SurgeXTData";
+            auto portable = cp / "SurgeXTData";
 
             if (fs::is_directory(portable))
             {
@@ -259,7 +259,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
     while (userDataPath.empty() && up.has_parent_path() && up != up.parent_path())
     {
-        auto portable = up / L"SurgeXTUserData";
+        auto portable = up / "SurgeXTUserData";
 
         if (fs::is_directory(portable))
         {
@@ -268,7 +268,10 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
         up = up.parent_path();
     }
-    userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
+    if (userDataPath.empty())
+    {
+        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
+    }
 
 #elif WINDOWS
     const auto installPath = sst::plugininfra::paths::sharedLibraryBinaryPath().parent_path();
