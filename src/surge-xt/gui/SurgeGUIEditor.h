@@ -136,14 +136,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     std::unique_ptr<Surge::Widgets::MainFrame> frame;
 
-    /*
-     * Dummy component used to make sure the scale of the menus visually matches
-     * the scale of the rest of the interface. Using `juceEditor` results in the
-     * scale being set only once, and using `frame` results in the scale being
-     * too big.
-     */
-    std::unique_ptr<juce::Component> menu_scaler;
-
     std::atomic<int> errorItemCount{0};
     std::deque<std::tuple<std::string, std::string, SurgeStorage::ErrorType>> errorItems;
     std::mutex errorItemsMutex;

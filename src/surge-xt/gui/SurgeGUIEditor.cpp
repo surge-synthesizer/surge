@@ -2424,9 +2424,6 @@ bool SurgeGUIEditor::open(void *parent)
     frame->setBounds(0, 0, currentSkin->getWindowSizeX(), currentSkin->getWindowSizeY());
     frame->setSurgeGUIEditor(this);
 
-    menu_scaler = std::make_unique<juce::Component>();
-    juceEditor->addChildComponent(*menu_scaler);
-
     // Comment this in to always start with focus debugger
     // debugFocus = true;
     // y-frame->debugFocus = true;
@@ -2892,7 +2889,7 @@ void SurgeGUIEditor::toggleMPE()
 juce::PopupMenu::Options SurgeGUIEditor::popupMenuOptions(const juce::Point<int> &where)
 {
     auto o = juce::PopupMenu::Options();
-    o = o.withTargetComponent(*menu_scaler);
+    o = o.withTargetComponent(juceEditor);
     if (where.x > 0 && where.y > 0)
     {
         auto r = juce::Rectangle<int>().withWidth(1).withHeight(1).withPosition(
@@ -3063,12 +3060,6 @@ void SurgeGUIEditor::setZoomFactor(float zf, bool resizeWindow)
     if (frame)
     {
         frame->setTransform(juce::AffineTransform().scaled(zff));
-    }
-
-    if (menu_scaler)
-    {
-        // 0.75 scales the menus so that they match the rest of the UI.
-        menu_scaler->setTransform(juce::AffineTransform().scaled(zff * 0.75));
     }
 
     if (oscWaveform)
