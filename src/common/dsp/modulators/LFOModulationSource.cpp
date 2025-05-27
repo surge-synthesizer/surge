@@ -1214,7 +1214,7 @@ void LFOModulationSource::process_block()
 
         formulastate.isVoice = isVoice;
 
-        float tmpout[Surge::Formula::max_formula_outputs] = {0, 0, 0, 0, 0, 0, 0, 0};
+        float tmpout[Surge::Formula::max_formula_outputs] = {0};
 
         Surge::Formula::valueAt(unwrappedphase_intpart, phase, storage, fs, &formulastate, tmpout);
 

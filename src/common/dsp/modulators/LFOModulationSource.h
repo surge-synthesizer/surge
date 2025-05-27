@@ -111,7 +111,7 @@ class LFOModulationSource : public ModulationSource
     FormulaModulatorStorage *fs;
 
   private:
-    float output_multi[Surge::Formula::max_formula_outputs];
+    float output_multi[Surge::Formula::max_formula_outputs] = {0};
 
   public:
     Surge::MSEG::EvaluatorState msegstate;
