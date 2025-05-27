@@ -663,7 +663,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
                     "float array!");
             stateData.knownBadFunctions.insert(s->funcName);
             s->isvalid = false;
-        };
+        }
         // pop the result and the function
         lua_pop(s->L, 1);
 
