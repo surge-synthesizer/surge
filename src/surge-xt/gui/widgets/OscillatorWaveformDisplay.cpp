@@ -1555,7 +1555,7 @@ struct WaveTable3DEditor : public juce::Component,
 
             // draw the wavetable position (morph)
             // do not use cache for a smoother motion
-            float pos = morphValue;
+            float pos = limit_range(morphValue, 0.f, 1.f);
             int position = pos * (128 - 1);
 
             drawWaveform(g, position, 128, skin->getColor(Colors::Osc::Display::WaveCurrent3D),
