@@ -76,9 +76,9 @@ Name: VST3; Description: {#MyAppName} VST3 (32-bit); Types: full compact custom;
 Name: EffectsVST3; Description: {#MyAppName} Effects VST3 (32-bit); Types: full custom; Flags: checkablealone
 Name: SA; Description: {#MyAppName} Standalone (32-bit); Types: full custom; Flags: checkablealone
 Name: EffectsSA; Description: {#MyAppName} Effects Standalone (32-bit); Types: full custom; Flags: checkablealone
-Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed
-Name: Patches; Description: Patches; Types: full compact custom; Flags: checkablealone
-Name: Wavetables; Description: Wavetables; Types: full custom; Flags: checkablealone
+Name: Data; Description: Data Files; Types: full compact custom; Flags: fixed disablenouninstallwarning
+Name: Patches; Description: Patches; Types: full compact custom; Flags: checkablealone disablenouninstallwarning
+Name: Wavetables; Description: Wavetables; Types: full custom; Flags: checkablealone disablenouninstallwarning
 
 [Files]
 Source: {#SURGE_SRC}\resources\data\fx_presets\*; DestDir: {commonappdata}\{#MyAppName}\fx_presets\; Components: Data; Flags: recursesubdirs
@@ -153,7 +153,7 @@ begin
 
   Result := Result + 'Installation Locations:' + NewLine
   Result := Result + Space + 'Data Files: ' + AppData + '\' + AppName + NewLine
-  
+
   if IsSelected('clap') or IsSelected('effectsclap') then
     Result := Result + Space + 'CLAP: ' + CF + '\CLAP\' + AppPublisher + '\' + NewLine;
 
@@ -167,7 +167,7 @@ begin
     Result := Result + Space + 'Portable Junctions:' + NewLine
   else
     Result := Result + Space + 'Portable Junction:' + NewLine;
-  
+
   if IsSelected('clap') or IsSelected('effectsclap') then
     Result := Result + Space + Space + 'CLAP: ' + CF + '\CLAP\' + AppPublisher + '\' + AppNameCondensed + 'Data' + NewLine;
 
