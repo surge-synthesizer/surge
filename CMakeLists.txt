@@ -183,6 +183,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 endif()
 
 if(MSVC)
+  message(STATUS "MSVC build with generat = ${CMAKE_GENERATOR_PLATFORM}")
   if(("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec") OR("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64"))
     message(STATUS "Skipping warning as error (-WX) on arm64ec for now.")
   else()
