@@ -23,7 +23,7 @@
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
 #include <juce_audio_devices/juce_audio_devices.h>
-#if defined(_M_ARM64EC)
+#if defined(_M_ARM64EC) || defined(_M_ARM64)
 #include <juce_gui_extra/juce_gui_extra.h>
 #endif
 
