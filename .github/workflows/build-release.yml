@@ -58,9 +58,9 @@ jobs:
             name: windows-arm64ec
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64ec -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
 
-          #- os: windows-latest
-          #  name: windows-arm64
-          #  cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
+          - os: windows-latest
+            name: windows-arm64
+            cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
 
           - os: macos-latest
             name: macos
