@@ -36,7 +36,7 @@ jobs:
 
           - name: "windows msvc arm64 regular"
             os: windows-latest
-            target: surge-xt_Standalone
+            target: surge-xt_Standalone surge-fx_VST3
             cmakeConfig: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
             cmakeOpt: DEBUG
             runTests: false

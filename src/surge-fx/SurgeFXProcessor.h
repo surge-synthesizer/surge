@@ -23,6 +23,9 @@
 #ifndef SURGE_SRC_SURGE_FX_SURGEFXPROCESSOR_H
 #define SURGE_SRC_SURGE_FX_SURGEFXPROCESSOR_H
 
+// Header ordering ARM
+#include <juce_gui_extra/juce_gui_extra.h>
+
 #include "SurgeStorage.h"
 #include "Effect.h"
 #include "FXOpenSoundControl.h"
