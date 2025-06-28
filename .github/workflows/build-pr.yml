@@ -94,7 +94,8 @@ jobs:
           - name: "windows test runner"
             os: windows-latest
             target: surge-testrunner
-            cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+            cmakeConfig: -G"Visual Studio 17 2022" -A x64
+            #cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
             cmakeOpt: RELEASE
             runTests: true
 
