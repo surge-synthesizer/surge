@@ -167,7 +167,7 @@ struct ModulationSourceButton : public juce::Component,
             repaint();
     }
 
-    juce::Font font{juce::FontOptions()};
+    juce::Font font{SST_JUCE_EMPTY_FONT};
 
     void setFont(const juce::Font &f)
     {

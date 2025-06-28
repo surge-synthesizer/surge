@@ -36,6 +36,7 @@
 #include "globals.h"
 
 #include "juce_graphics/juce_graphics.h"
+#include "juce/JuceAPICope.h"
 
 #include "SkinModel.h"
 #include "SkinColors.h"

@@ -37,7 +37,7 @@ struct ParameterInfowindow : public juce::Component, public Surge::GUI::SkinCons
     ParameterInfowindow();
     ~ParameterInfowindow();
 
-    juce::Font font{juce::FontOptions()};
+    juce::Font font{SST_JUCE_EMPTY_FONT};
     void setFont(const juce::Font &f)
     {
         font = f;

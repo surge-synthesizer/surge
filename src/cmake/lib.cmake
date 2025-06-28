@@ -173,15 +173,24 @@ function(surge_make_installers)
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${SURGE_PRODUCT_DIR}/Surge XT.vst3" "${portsst}/Surge XT.vst3"
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${SURGE_PRODUCT_DIR}/Surge XT Effects.vst3" "${portsst}/Surge XT Effects.vst3"
 
-            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}${WINARCH}-${SXTVER}-pluginsonly.zip "${portsst}/*"
+            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}${SURGE_EXTRA_ZIP_NAME}${WINARCH}-${SXTVER}-pluginsonly.zip "${portsst}/*"
+      )
+      if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec" OR
+              "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64" OR
+      (NOT "${SURGE_EXTRA_ZIP_NAME}" STREQUAL ""))
+        message(STATUS "Not making portable zip with resources for arm or win7")
+      else()
+        add_custom_command(TARGET surge-xt-distribution
+            POST_BUILD
 
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/resources/surge-shared/README_Portable.txt" "${SURGE_PORTABLE_DIR}/README.txt"
 
             COMMAND ${CMAKE_COMMAND} -E make_directory "${portsst}/SurgeXTData"
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/resources/data" "${portsst}/SurgeXTData"
 
-            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}${WINARCH}-${SXTVER}-portable-install.zip "${SURGE_PORTABLE_DIR}/*"
+            COMMAND 7z a -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-win${SURGE_BITNESS}${SURGE_EXTRA_ZIP_NAME}${WINARCH}-${SXTVER}-portable-install.zip "${SURGE_PORTABLE_DIR}/*"
             )
+        endif()
     else()
       add_custom_command(TARGET surge-xt-distribution
         POST_BUILD
@@ -189,8 +198,9 @@ function(surge_make_installers)
       )
     endif()
     if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec" OR
-        "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64")
-      message(STATUS "Not making installer for arm64ec")
+        "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64" OR
+        (NOT "${SURGE_EXTRA_ZIP_NAME}" STREQUAL ""))
+      message(STATUS "Not making installer for arm or juce7")
     else()
       find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
       if(SURGE_NUGET_EXE)

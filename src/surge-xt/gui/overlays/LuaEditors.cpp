@@ -186,7 +186,7 @@ TextfieldPopup::TextfieldPopup(juce::CodeEditorComponent &editor, Surge::GUI::Sk
     labelResult = std::make_unique<juce::Label>();
 
     labelResult->setBounds(boundsLabel);
-    labelResult->setFont(juce::FontOptions(10));
+    labelResult->setFont(SST_JUCE_FONT_OPTIONS(10));
     labelResult->setJustificationType(juce::Justification::left);
     labelResult->setColour(juce::Label::textColourId, juce::Colour(255, 255, 255));
 

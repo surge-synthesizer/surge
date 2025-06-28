@@ -280,6 +280,7 @@ struct TearOutWindow : public juce::DocumentWindow, public Surge::GUI::SkinConsu
         repaint();
     }
 
+#if JUCE_VERSION > 0x080000
     WindowControlKind findControlAtPoint(juce::Point<float> point) const override
     {
         // See issue 7805 for this temporary fix
@@ -288,6 +289,7 @@ struct TearOutWindow : public juce::DocumentWindow, public Surge::GUI::SkinConsu
             return WindowControlKind::client;
         return res;
     }
+#endif
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {

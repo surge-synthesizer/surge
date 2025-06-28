@@ -137,7 +137,7 @@ struct MultiSwitch : public juce::Component,
 struct MultiSwitchSelfDraw : public MultiSwitch
 {
     MultiSwitchSelfDraw() : MultiSwitch() {}
-    juce::Font font{juce::FontOptions{36}};
+    juce::Font font{SST_JUCE_FONT_OPTIONS(36)};
     void paint(juce::Graphics &g) override;
 
     std::vector<std::string> labels;

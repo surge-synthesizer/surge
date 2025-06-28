@@ -27,6 +27,7 @@
 #include "widgets/TypeAheadTextEditor.h"
 #include "widgets/SurgeTextButton.h"
 #include "AccessibleHelpers.h"
+#include "juce/JuceAPICope.h"
 
 namespace Surge
 {
@@ -106,7 +107,7 @@ struct PatchStoreDialogCategoryProvider : public Surge::Widgets::TypeAheadDataPr
         return res;
     }
 
-    juce::Font font{juce::FontOptions{12}};
+    juce::Font font{SST_JUCE_FONT_OPTIONS(12)};
     juce::Colour hl, hlbg, txt, bg;
 
     void paintDataItem(int searchIndex, juce::Graphics &g, int width, int height,
