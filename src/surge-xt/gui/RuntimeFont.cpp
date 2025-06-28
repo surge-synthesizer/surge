@@ -77,11 +77,15 @@ juce::Font FontManager::getLatoAtSize(float size, juce::Font::FontStyleFlags sty
 {
     if (hasLatoOverride)
     {
-        return juce::Font(juce::FontOptions(latoOverride)).withPointHeight(size).withStyle(style);
+        return juce::Font(SST_JUCE_FONT_OPTIONS(latoOverride))
+            .withPointHeight(size)
+            .withStyle(style);
     }
     else if (useOSLato)
     {
-        return juce::Font(juce::FontOptions("Lato", 10, 0)).withPointHeight(size).withStyle(style);
+        return juce::Font(SST_JUCE_FONT_OPTIONS("Lato", 10, 0))
+            .withPointHeight(size)
+            .withStyle(style);
     }
     else
     {
@@ -98,13 +102,13 @@ juce::Font FontManager::getLatoAtSize(float size, juce::Font::FontStyleFlags sty
         {
             tf = latoItalicTypeface;
         }
-        return juce::Font(juce::FontOptions(tf)).withPointHeight(size).withStyle(style);
+        return juce::Font(SST_JUCE_FONT_OPTIONS(tf)).withPointHeight(size).withStyle(style);
     }
 }
 
 juce::Font FontManager::getFiraMonoAtSize(float size, juce::Font::FontStyleFlags style) const
 {
-    return juce::Font(juce::FontOptions(firaMonoRegularTypeface))
+    return juce::Font(SST_JUCE_FONT_OPTIONS(firaMonoRegularTypeface))
         .withPointHeight(size)
         .withStyle(style);
 }

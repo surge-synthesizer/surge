@@ -23,6 +23,7 @@
 #define SURGE_SRC_SURGE_XT_GUI_RUNTIMEFONT_H
 
 #include "juce_graphics/juce_graphics.h"
+#include "juce/JuceAPICope.h"
 
 namespace Surge
 {
@@ -45,10 +46,10 @@ struct FontManager
 
     bool useOSLato{false};
 
-    juce::Font displayFont{juce::FontOptions()};
-    juce::Font patchNameFont{juce::FontOptions()};
-    juce::Font lfoTypeFont{juce::FontOptions()};
-    juce::Font aboutFont{juce::FontOptions()};
+    juce::Font displayFont{SST_JUCE_EMPTY_FONT};
+    juce::Font patchNameFont{SST_JUCE_EMPTY_FONT};
+    juce::Font lfoTypeFont{SST_JUCE_EMPTY_FONT};
+    juce::Font aboutFont{SST_JUCE_EMPTY_FONT};
     void setupFontMembers();
 
     juce::ReferenceCountedObjectPtr<juce::Typeface> latoRegularTypeface, latoBoldTypeface,

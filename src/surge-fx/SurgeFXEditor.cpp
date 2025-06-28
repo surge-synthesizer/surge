@@ -46,7 +46,7 @@ struct Picker : public juce::Component
         g.setColour(edge);
         g.drawRoundedRectangle(bounds, 5, 1);
         g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
-        g.setFont(juce::FontOptions(28));
+        g.setFont(SST_JUCE_FONT_OPTIONS(28));
         g.drawText(fx_type_names[editor->processor.getEffectType()], bounds.reduced(8, 3),
                    juce::Justification::centred);
 
@@ -137,7 +137,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     addAndMakeVisibleRecordOrder(deafultParameterPanel.get());
 
     fxNameLabel = std::make_unique<juce::Label>("fxlabel", "Surge XT Effects");
-    fxNameLabel->setFont(juce::FontOptions(28));
+    fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(28));
     fxNameLabel->setColour(juce::Label::textColourId, juce::Colours::black);
     fxNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisibleRecordOrder(fxNameLabel.get());
@@ -255,7 +255,7 @@ void SurgefxAudioProcessorEditor::resized()
     bounds.removeFromTop(topAreaHeight);
     bounds.removeFromBottom(bottomAreaHeight);
 
-    fxNameLabel->setFont(juce::FontOptions(28));
+    fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(28));
     fxNameLabel->setBounds(40, getHeight() - 40, 350, 38);
 
     deafultParameterPanel->setBounds(bounds);
@@ -508,7 +508,7 @@ struct SurgefxAudioProcessorEditor::PromptOverlay : juce::Component, juce::TextE
     PromptOverlay()
     {
         ed = std::make_unique<juce::TextEditor>();
-        ed->setFont(juce::FontOptions(28));
+        ed->setFont(SST_JUCE_FONT_OPTIONS(28));
         ed->setColour(juce::TextEditor::ColourIds::textColourId, juce::Colours::white);
         ed->setJustification(juce::Justification::centred);
         ed->addListener(this);
@@ -520,7 +520,7 @@ struct SurgefxAudioProcessorEditor::PromptOverlay : juce::Component, juce::TextE
     {
         ed->clear();
         ed->setText(s, juce::NotificationType::dontSendNotification);
-        ed->applyFontToAllText(juce::FontOptions(28));
+        ed->applyFontToAllText(SST_JUCE_FONT_OPTIONS(28));
         ed->applyColourToAllText(juce::Colours::white);
         ed->repaint();
     }
@@ -536,7 +536,7 @@ struct SurgefxAudioProcessorEditor::PromptOverlay : juce::Component, juce::TextE
     {
         g.fillAll(juce::Colours::black.withAlpha(0.9f));
         g.setColour(juce::Colours::white);
-        g.setFont(juce::FontOptions(28));
+        g.setFont(SST_JUCE_FONT_OPTIONS(28));
         g.drawMultiLineText(prompt, 0, 50, getWidth(), juce::Justification::centred);
     }
 
@@ -718,13 +718,13 @@ void SurgefxAudioProcessorEditor::idle()
         priorValid = processor.m_audioValid;
         if (!processor.m_audioValid)
         {
-            fxNameLabel->setFont(juce::FontOptions(18));
+            fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(18));
             fxNameLabel->setText(processor.m_audioValidMessage,
                                  juce::NotificationType::dontSendNotification);
         }
         else
         {
-            fxNameLabel->setFont(juce::FontOptions(28));
+            fxNameLabel->setFont(SST_JUCE_FONT_OPTIONS(28));
             fxNameLabel->setText("Surge XT Effects", juce::NotificationType::dontSendNotification);
         }
     }

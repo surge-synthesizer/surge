@@ -20,6 +20,14 @@ jobs:
             cmakeOpt: DEBUG
             runTests: false
 
+          - name: "windows msvc juce 7"
+            os: windows-latest
+            target: surge-xt_Standalone surge-fx_Standalone
+            cmakeConfig: -A x64
+            cmakeOpt: DEBUG
+            runTests: false
+            revertJuce: true
+
           - name: "windows msvc surgepy"
             os: windows-latest
             target: surgepy
@@ -95,6 +103,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+
+      - name: Revert Juce
+        if: ${{ matrix.revertJuce }}
+        run: |
+          cd libs/JUCE
+          git fetch origin 
+          git fetch origin -t
+          git checkout surge_7.0.12
 
       - name: Prepare for JUCE
         uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main

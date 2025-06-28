@@ -20,8 +20,8 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#ifndef SURGE_SRC_SURGE_XT_GUI_OVERLAYS_OpenSoundControlSettings_H
-#define SURGE_SRC_SURGE_XT_GUI_OVERLAYS_OpenSoundControlSettings_H
+#ifndef SURGE_SRC_SURGE_XT_GUI_OVERLAYS_OPENSOUNDCONTROLSETTINGS_H
+#define SURGE_SRC_SURGE_XT_GUI_OVERLAYS_OPENSOUNDCONTROLSETTINGS_H
 
 #include "SkinSupport.h"
 #include "SurgeStorage.h"

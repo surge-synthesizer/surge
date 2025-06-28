@@ -1141,8 +1141,9 @@ juce::Font Skin::getFont(const Surge::Skin::FontDesc &d)
     {
         auto fo = fontOverrides[d.id];
         if (typeFaces.find(fo.family) != typeFaces.end())
-            return juce::Font(juce::FontOptions(typeFaces[fo.family])).withPointHeight(fo.size);
-        return juce::Font(juce::FontOptions(fo.family, fo.size, juce::Font::FontStyleFlags::plain));
+            return juce::Font(SST_JUCE_FONT_OPTIONS(typeFaces[fo.family])).withPointHeight(fo.size);
+        return juce::Font(
+            SST_JUCE_FONT_OPTIONS(fo.family, fo.size, juce::Font::FontStyleFlags::plain));
     }
 
     if (d.hasParent)

@@ -77,7 +77,7 @@ struct KeyBindingsListRow : public juce::Component
         std::string desc = "";
         keyDesc = std::make_unique<juce::Label>("Key Binding", desc);
         keyDesc->setAccessible(true);
-        keyDesc->setFont(juce::Font(juce::FontOptions(10)));
+        keyDesc->setFont(juce::Font(SST_JUCE_FONT_OPTIONS(10)));
         addAndMakeVisible(*keyDesc);
 
         reset = std::make_unique<Surge::Widgets::SelfDrawButton>("Reset");
