@@ -111,7 +111,7 @@ jobs:
           cd libs/JUCE
           git fetch origin 
           git fetch origin -t
-          git checkout surge_7.0.12
+          git checkout surge-7.0.12
 
       - name: Prepare for JUCE
         uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
