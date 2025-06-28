@@ -49,12 +49,12 @@ jobs:
             cmakeOpt: DEBUG
             runTests: false
 
-          - name: "windows clang"
-            os: windows-latest
-            target: surge-xt_Standalone
-            cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
-            cmakeOpt: DEBUG
-            runTests: false
+          #- name: "windows clang"
+          #  os: windows-latest
+          #  target: surge-xt_Standalone
+          #  cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+          #  cmakeOpt: DEBUG
+          #  runTests: false
 
           - name: "ubuntu standalone"
             os: ubuntu-latest
