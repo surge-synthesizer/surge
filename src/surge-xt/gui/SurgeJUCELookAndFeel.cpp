@@ -45,7 +45,7 @@ void SurgeJUCELookAndFeel::onSkinChanged()
     setColour(TextButton::buttonColourId, Colour(32, 32, 32));
     setColour(CaretComponent::caretColourId, skin->getColor(Colors::Dialog::Entry::Caret));
     setColour(TextEditor::backgroundColourId, Colour(32, 32, 32));
-    setColour(ListBox::backgroundColourId, Colour(32, 32, 32));
+    setColour(TextEditor::highlightColourId, Colour(96, 96, 96));
     setColour(ListBox::backgroundColourId, Colour(32, 32, 32));
     setColour(ScrollBar::thumbColourId, Colour(212, 212, 212));
     setColour(ScrollBar::trackColourId, Colour(128, 128, 128));
