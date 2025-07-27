@@ -123,7 +123,28 @@ struct PresetProvider
     bool get_metadata(uint32_t location_kind, const char *location,
                       const clap_preset_discovery_metadata_receiver_t *rcv)
     {
+        if (!rcv)
+        {
+            // we need to send it somewhere. And we can't do on_error without it so
+            // just silently fail.
+            return false;
+        }
 
+        if (location_kind != CLAP_PRESET_DISCOVERY_LOCATION_FILE)
+        {
+            // we only support files
+            rcv->on_error(
+                rcv, 0,
+                "get_metadata called with non FILE kind despite init only returning files.");
+            return false;
+        }
+        if (!location)
+        {
+            // files must have locations
+            rcv->on_error(rcv, 0,
+                          "get_metadata called with null location which is an invalid file.");
+            return false;
+        }
         namespace mech = sst::basic_blocks::mechanics;
 
         auto bail = [rcv, location](const std::string &s) {
