@@ -659,10 +659,18 @@ struct ArbitraryBlockStorage
     std::uint32_t data_size;
     std::unique_ptr<std::uint8_t[]> data;
 
+    template <typename T> T *as() { return static_cast<const T *>(data.get()); }
+
+    // Provides the length of the array, if using the given type.
     template <typename T>
-    const T *const as()
+    std::size_t len()
     {
-        return static_cast<const T *>(data.get());
+        std::size_t s = data_size / sizeof(T);
+        // Sanity check, zeroing out the length is the safest option that isn't
+        // exiting the process immediately.
+        if (data_size % sizeof(T))
+            s = 0;
+        return s;
     }
 };
 
@@ -732,7 +740,7 @@ struct LFOStorage
     } lfoExtraAmplitude{UNSCALED};
 };
 
-struct FxStorage : public CountedSetUserData
+struct FxStorage
 {
     // Just a heads up: if you change this, please go look at reorderFx in SurgeSynthesizer too!
     FxStorage(fxslot_positions slot) : fxslot(slot) {}
@@ -752,9 +760,6 @@ struct FxStorage : public CountedSetUserData
 
     std::size_t n_user_datas;
     std::unique_ptr<ArbitraryBlockStorage[]> user_data;
-
-    // CountedSetUserData implementation.
-    int getCountedSetSize() const override { return num_user_datas; }
 };
 
 struct SurgeSceneStorage
