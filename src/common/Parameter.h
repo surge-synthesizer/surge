@@ -258,39 +258,6 @@ struct CountedSetUserData : public ParamUserData
     virtual int getCountedSetSize() const = 0; // A constant time answer to the count of the set
 };
 
-// Block storage used in FxStorage for storing .wav files for the convolution
-// FX. Can be used to store any kind of arbitrary data.
-//
-// Data is owned by the class, so ensure that any getData() caller's lifetime
-// is shorter than the lifetime of this class.
-#pragma pack(push, 1)
-struct FxBlockStorageHeader
-{
-    // Number of datas, associated with the fx slot.
-    std::uint16_t num_datas[n_fx_slots];
-    std::uint32_t overall_size;
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-struct FxBlockStorageItemHeader
-{
-    std::uint32_t data_size;
-};
-#pragma pack(pop)
-
-struct ArbitraryBlockStorage
-{
-    std::uint32_t data_size;
-    std::unique_ptr<std::uint8_t[]> data;
-
-    template <typename T>
-    const T *const as()
-    {
-        return static_cast<const T *>(data.get());
-    }
-};
-
 class Parameter;
 
 struct ParameterExternalFormatter : public ParamUserData

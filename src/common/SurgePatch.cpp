@@ -45,6 +45,22 @@ namespace mech = sst::basic_blocks::mechanics;
 using namespace std;
 using namespace Surge::ParamConfig;
 
+#pragma pack(push, 1)
+struct ArbitraryBlockStorageHeader
+{
+    std::uint16_t num_datas;
+    std::uint32_t overall_size;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct ArbitraryBlockStorageItemHeader
+{
+    std::uint16_t id;
+    std::uint32_t data_size;
+};
+#pragma pack(pop)
+
 SurgePatch::SurgePatch(SurgeStorage *storage)
 {
     this->storage = storage;
@@ -103,6 +119,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         param_ptr.push_back(this->fx[fx].type.assign(
             p_id.next(), 0, "type", "FX Type", fmt::format("{}/type", fxslot_shortoscname[fx]),
             ct_fxtype, Surge::Skin::FX::fx_type, 0, cg_FX, fx, false, kHorizontal));
+
         for (int p = 0; p < n_fx_params; p++)
         {
             auto conn = Surge::Skin::Connector::connectorByID("fx.param_" + std::to_string(p + 1));
@@ -1063,6 +1080,11 @@ void SurgePatch::copy_globaldata(pdata *d)
 }
 // pdata scenedata[n_scenes][n_scene_params];
 
+std::uint16_t SurgePatch::next_block_id()
+{
+    return block_id++;
+}
+
 void SurgePatch::update_controls(
     bool init,
     void *init_osc,     // init_osc is the pointer to the data structure of a particular osc to init
@@ -1192,34 +1214,7 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 }
             }
         }
-        // Next section is fx user data.
-        FxBlockStorageHeader *fx_hdr = dr;
-        dr += sizeof(fx_hdr);
-        for (int i = 0; i < n_fx_slots; i++)
-        {
-            fx_hdr->num_datas[i] = mech::endian_read_int16LE(fx_hdr->num_datas[i]);
-        }
-        fx_hdr->data_size = mech::endian_read_int32LE(fx_hdr->data_size);
-        for (int fx = 0; i < n_fx_slots; fx++)
-        {
-            this->fx[fx].n_user_datas = fx_hdr->num_datas[fx];
-            if (this->fx[fx].n_user_datas)
-            {
-                this->fx[fx].user_data =
-                    std::make_unique<ArbitraryBlockStorage[]>(this->fx[fx].n_user_datas);
-            }
-            for (int i = 0; i < this->fx[fx].n_user_datas; i++)
-            {
-                FxBlockStorageItemHeader *hdr = dr;
-                this->fx[fx].user_data[i].data_size = mech::endian_read_int32LE(hdr->data_size);
-                dr += sizeof(FxBlockStorageItemHeader);
-                this->fx[fx].user_data[i].data =
-                    std::make_unique<std::uint8_t[]>(this->fx[fx].user_data[i].data_size);
-                memcpy(this->fx[fx].user_data[i].data.get(), dr,
-                       this->fx[fx].user_data[i].data_size);
-                dr += this->fx[fx].user_data[i].data_size;
-            }
-        }
+        dr += load_arbitrary_block_storage(dr);
     }
     else
     {
@@ -1261,16 +1256,20 @@ unsigned int SurgePatch::save_patch(void **data)
                 header.wtsize[sc][osc] = 0;
         }
     }
+    psize += sizeof(ArbitraryBlockStorageHeader);
+    std::uint16_t arb_blocks = 0;
+    std::uint32_t arb_size;
     // FX user data
-    psize += sizeof(FxBlockStorageHeader);
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
+        arb_blocks += this->fx[fx].n_user_datas;
         for (int i = 0; i < this->fx[fx].n_user_datas; i++)
         {
-            psize += sizeof(FxBlockStorageItemHeader);
-            psize += this->fx[fx].user_data[i].data_size;
+            arb_size += this->fx[fx].user_data[i].data_size;
         }
     }
+    arb_size += arb_blocks * sizeof(ArbitraryBlockStorageItemHeader);
+    psize += arb_size;
     psize += xmlsize + sizeof(patch_header);
     if (patchptr)
         free(patchptr);
@@ -1311,36 +1310,68 @@ unsigned int SurgePatch::save_patch(void **data)
             }
         }
     }
-    // Fx user data. Calculate overall data size.
-    FxBlockStorageHeader fx_hdr;
-    fx_hdr.overall_size = 0;
-    for (int fx = 0; fx < n_fx_slots; fx++)
-    {
-        fx_hdr.num_datas[fx] = mech::endian_write_int16LE(this->fx[fx].n_user_datas);
-        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
-        {
-            fx_hdr.overall_size += sizeof(FxBlockStorageItemHeader);
-            fx_hdr.overall_size += this->fx[fx].user_data[i].data_size;
-        }
-    }
-    fx_hdr.overall_size = mech::endian_write_int32LE(fx_hdr.overall_size);
-    memcpy(dw, &fx_hdr, sizeof(fx_hdr));
-    dw += sizeof(fx_hdr);
+    save_arbitrary_block_storage(dw, arb_blocks, arb_size);
+    return psize;
+}
+
+void SurgePatch::save_arbitrary_block_storage(void *pos, std::uint16_t arb_blocks, std::uint32_t arb_size)
+{
+    ArbitraryBlockStorageHeader hdr;
+    hdr.num_datas = mech::endian_write_int16LE(arb_blocks);
+    hdr.overall_size = mech::endian_write_int32LE(arb_size);
+    memcpy(dw, &hdr, sizeof(hdr));
+    dw += sizeof(hdr);
+
     // Fx user data. Individual datums.
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
         for (int i = 0; i < this->fx[fx].n_user_datas; i++)
         {
             std::uint32_t sz = this->fx[fx].user_data[i].data_size;
-            FxBlockStorageItemHeader hdr;
-            hdr.data_size = mech::endian_write_int32LE(sz);
-            memcpy(dw, &hdr, sizeof(hdr));
-            dw += sizeof(hdr);
+            ArbitraryBlockStorageItemHeader ihdr;
+            ihdr.id = mech::endian_write_int16LE(this->fx[fx].user_data[i].id);
+            ihdr.data_size = mech::endian_write_int32LE(sz);
+            memcpy(dw, &ihdr, sizeof(ihdr));
+            dw += sizeof(ihdr);
             memcpy(dw, this->fx[fx].user_data[i].data.get(), sz);
             dw += sz;
         }
     }
-    return psize;
+}
+
+// fixme: update to the new system, this was something I wrote in an earlier
+// revision, it doesn't match the current code & needs some sanity checks to
+// make sure we aren't loading evil data that overwrites memory.
+unsigned int SurgePatch::load_arbitrary_block_storage(char *pos)
+{
+    // Next section is fx user data.
+    FxBlockStorageHeader *fx_hdr = dr;
+    dr += sizeof(fx_hdr);
+    for (int i = 0; i < n_fx_slots; i++)
+    {
+        fx_hdr->num_datas[i] = mech::endian_read_int16LE(fx_hdr->num_datas[i]);
+    }
+    fx_hdr->data_size = mech::endian_read_int32LE(fx_hdr->data_size);
+    for (int fx = 0; i < n_fx_slots; fx++)
+    {
+        this->fx[fx].n_user_datas = fx_hdr->num_datas[fx];
+        if (this->fx[fx].n_user_datas)
+        {
+            this->fx[fx].user_data =
+                std::make_unique<ArbitraryBlockStorage[]>(this->fx[fx].n_user_datas);
+        }
+        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
+        {
+            FxBlockStorageItemHeader *hdr = dr;
+            this->fx[fx].user_data[i].data_size = mech::endian_read_int32LE(hdr->data_size);
+            dr += sizeof(FxBlockStorageItemHeader);
+            this->fx[fx].user_data[i].data =
+                std::make_unique<std::uint8_t[]>(this->fx[fx].user_data[i].data_size);
+            memcpy(this->fx[fx].user_data[i].data.get(), dr,
+                   this->fx[fx].user_data[i].data_size);
+            dr += this->fx[fx].user_data[i].data_size;
+        }
+    }
 }
 
 Parameter *SurgePatch::parameterFromOSCName(std::string oscName)
@@ -2782,6 +2813,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         storage->unstreamedTempo = -1.f;
     }
 
+    TiXmlElement *nextBlockId = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("nextBlockId"));
+    std::uint16_t id = 0;
+    if (nextBlockId)
+    {
+        nextBlockId->QueryAttribute("v", &id);
+    }
+    block_id.store(id);
+
     dawExtraState.isPopulated = false;
     TiXmlElement *de = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("dawExtraState"));
 
@@ -3715,6 +3754,24 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     }
     patch.InsertEndChild(eod);
 
+    TiXmlElement efd("extrafxdata");
+    for (int fx = 0; fx < n_fx_slots; fx++)
+    {
+        std::string streaming_name = "fx" + std::to_string(fx);
+        TiXmlElement fxe(streaming_name);
+        fxe.SetAttribute("slot", fx);
+        fxe.SetAttribute("nUserDatas", this->fx[fx].n_user_datas);
+        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
+        {
+            TiXmlElement ud("userData");
+            ud.SetAttribute("id", this->fx[fx].user_data[i].id);
+            ud.SetAttribute("dataSize", this->fx[fx].user_data[i].data_size);
+            fxe.InsertEndChild(ud);
+        }
+        efd.InsertEndChild(fxe);
+    }
+    patch.InsertEndChild(efd);
+
     TiXmlElement ss("stepsequences");
     for (int sc = 0; sc < n_scenes; sc++)
     {
@@ -3872,6 +3929,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     TiXmlElement tempoOnSave("tempoOnSave");
     tempoOnSave.SetDoubleAttribute("v", storage->temposyncratio * 120.0);
     patch.InsertEndChild(tempoOnSave);
+
+    TiXmlElement nextBlockId("nextBlockId");
+    nextBlockId.SetAttribute("id", next_block.load());
+    patch.InsertEndChild(nextBlockId);
 
     TiXmlElement dawExtraXML("dawExtraState");
     dawExtraXML.SetAttribute("populated", dawExtraState.isPopulated ? 1 : 0);
