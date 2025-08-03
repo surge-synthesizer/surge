@@ -711,7 +711,7 @@ struct LFOStorage
     } lfoExtraAmplitude{UNSCALED};
 };
 
-struct FxStorage
+struct FxStorage : public CountedSetUserData
 {
     // Just a heads up: if you change this, please go look at reorderFx in SurgeSynthesizer too!
     FxStorage(fxslot_positions slot) : fxslot(slot) {}
@@ -728,6 +728,12 @@ struct FxStorage
 
     // like this one!
     fxslot_positions fxslot;
+
+    std::size_t n_user_datas;
+    std::unique_ptr<ArbitraryBlockStorage[]> user_data;
+
+    // CountedSetUserData implementation.
+    int getCountedSetSize() const override { return num_user_datas; }
 };
 
 struct SurgeSceneStorage
