@@ -1233,6 +1233,15 @@ unsigned int SurgePatch::save_patch(void **data)
                 header.wtsize[sc][osc] = 0;
         }
     }
+    // FX user data
+    for (int fx = 0; fx < n_fx_slots; fx++)
+    {
+        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
+        {
+            psize += sizeof(ArbitraryBlockStorageHeader);
+            psize += this->fx[fx].user_data[i].data_size;
+        }
+    }
     psize += xmlsize + sizeof(patch_header);
     if (patchptr)
         free(patchptr);
@@ -1271,6 +1280,19 @@ unsigned int SurgePatch::save_patch(void **data)
                 }
                 dw += wtsize;
             }
+        }
+    }
+    for (int fx = 0; fx < n_fx_slots; fx++)
+    {
+        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
+        {
+            std::uint32_t sz = this->fx[fx].user_data[i].data_size;
+            ArbitraryBlockStorageHeader hdr;
+            hdr.data_size = mech::endian_write_int32LE(sz);
+            memcpy(dw, &hdr, sizeof(hdr));
+            dw += sizeof(hdr);
+            memcpy(dw, this->fx[fx].user_data[i].data.get(), sz);
+            dw += sz;
         }
     }
     return psize;
