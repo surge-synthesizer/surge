@@ -264,7 +264,16 @@ struct CountedSetUserData : public ParamUserData
 // Data is owned by the class, so ensure that any getData() caller's lifetime
 // is shorter than the lifetime of this class.
 #pragma pack(push, 1)
-struct ArbitraryBlockStorageHeader
+struct FxBlockStorageHeader
+{
+    // Number of datas, associated with the fx slot.
+    std::uint16_t num_datas[n_fx_slots];
+    std::uint32_t overall_size;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct FxBlockStorageItemHeader
 {
     std::uint32_t data_size;
 };

@@ -1192,6 +1192,34 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 }
             }
         }
+        // Next section is fx user data.
+        FxBlockStorageHeader *fx_hdr = dr;
+        dr += sizeof(fx_hdr);
+        for (int i = 0; i < n_fx_slots; i++)
+        {
+            fx_hdr->num_datas[i] = mech::endian_read_int16LE(fx_hdr->num_datas[i]);
+        }
+        fx_hdr->data_size = mech::endian_read_int32LE(fx_hdr->data_size);
+        for (int fx = 0; i < n_fx_slots; fx++)
+        {
+            this->fx[fx].n_user_datas = fx_hdr->num_datas[fx];
+            if (this->fx[fx].n_user_datas)
+            {
+                this->fx[fx].user_data =
+                    std::make_unique<ArbitraryBlockStorage[]>(this->fx[fx].n_user_datas);
+            }
+            for (int i = 0; i < this->fx[fx].n_user_datas; i++)
+            {
+                FxBlockStorageItemHeader *hdr = dr;
+                this->fx[fx].user_data[i].data_size = mech::endian_read_int32LE(hdr->data_size);
+                dr += sizeof(FxBlockStorageItemHeader);
+                this->fx[fx].user_data[i].data =
+                    std::make_unique<std::uint8_t[]>(this->fx[fx].user_data[i].data_size);
+                memcpy(this->fx[fx].user_data[i].data.get(), dr,
+                       this->fx[fx].user_data[i].data_size);
+                dr += this->fx[fx].user_data[i].data_size;
+            }
+        }
     }
     else
     {
@@ -1234,11 +1262,12 @@ unsigned int SurgePatch::save_patch(void **data)
         }
     }
     // FX user data
+    psize += sizeof(FxBlockStorageHeader);
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
         for (int i = 0; i < this->fx[fx].n_user_datas; i++)
         {
-            psize += sizeof(ArbitraryBlockStorageHeader);
+            psize += sizeof(FxBlockStorageItemHeader);
             psize += this->fx[fx].user_data[i].data_size;
         }
     }
@@ -1282,12 +1311,28 @@ unsigned int SurgePatch::save_patch(void **data)
             }
         }
     }
+    // Fx user data. Calculate overall data size.
+    FxBlockStorageHeader fx_hdr;
+    fx_hdr.overall_size = 0;
+    for (int fx = 0; fx < n_fx_slots; fx++)
+    {
+        fx_hdr.num_datas[fx] = mech::endian_write_int16LE(this->fx[fx].n_user_datas);
+        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
+        {
+            fx_hdr.overall_size += sizeof(FxBlockStorageItemHeader);
+            fx_hdr.overall_size += this->fx[fx].user_data[i].data_size;
+        }
+    }
+    fx_hdr.overall_size = mech::endian_write_int32LE(fx_hdr.overall_size);
+    memcpy(dw, &fx_hdr, sizeof(fx_hdr));
+    dw += sizeof(fx_hdr);
+    // Fx user data. Individual datums.
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
         for (int i = 0; i < this->fx[fx].n_user_datas; i++)
         {
             std::uint32_t sz = this->fx[fx].user_data[i].data_size;
-            ArbitraryBlockStorageHeader hdr;
+            FxBlockStorageItemHeader hdr;
             hdr.data_size = mech::endian_write_int32LE(sz);
             memcpy(dw, &hdr, sizeof(hdr));
             dw += sizeof(hdr);
