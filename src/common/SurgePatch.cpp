@@ -37,6 +37,7 @@
 #include <fmt/format.h>
 #include "UnitConversions.h"
 
+#include "binn/binn.h"
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 #include "PatchFileHeaderStructs.h"
 
@@ -44,22 +45,6 @@ namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
 using namespace Surge::ParamConfig;
-
-#pragma pack(push, 1)
-struct ArbitraryBlockStorageHeader
-{
-    std::uint16_t num_datas;
-    std::uint32_t overall_size;
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-struct ArbitraryBlockStorageItemHeader
-{
-    std::uint16_t id;
-    std::uint32_t data_size;
-};
-#pragma pack(pop)
 
 SurgePatch::SurgePatch(SurgeStorage *storage)
 {
@@ -1230,6 +1215,7 @@ unsigned int SurgePatch::save_patch(void **data)
     // void **xmldata = new void*();
     void *xmldata = 0;
     patch_header header;
+    binn_map *arbdata;
 
     memcpy(header.tag, "sub3", 4);
     size_t xmlsize = save_xml(&xmldata);
@@ -1256,21 +1242,9 @@ unsigned int SurgePatch::save_patch(void **data)
                 header.wtsize[sc][osc] = 0;
         }
     }
-    psize += sizeof(ArbitraryBlockStorageHeader);
-    std::uint16_t arb_blocks = 0;
-    std::uint32_t arb_size;
-    // FX user data
-    for (int fx = 0; fx < n_fx_slots; fx++)
-    {
-        arb_blocks += this->fx[fx].n_user_datas;
-        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
-        {
-            arb_size += this->fx[fx].user_data[i].data_size;
-        }
-    }
-    arb_size += arb_blocks * sizeof(ArbitraryBlockStorageItemHeader);
-    psize += arb_size;
     psize += xmlsize + sizeof(patch_header);
+    arbdata = static_cast<binn_map *>(save_arbitrary_block_storage(dw, arb_blocks, arb_size));
+    psize += binn_size(arbdata);
     if (patchptr)
         free(patchptr);
     patchptr = malloc(psize);
@@ -1310,33 +1284,26 @@ unsigned int SurgePatch::save_patch(void **data)
             }
         }
     }
-    save_arbitrary_block_storage(dw, arb_blocks, arb_size);
+    // Append the arbitrary data.
+    memcpy(dw, binn_ptr(arbdata), binn_size(arbdata));
+    binn_free(arbdata);
+
     return psize;
 }
 
-void SurgePatch::save_arbitrary_block_storage(void *pos, std::uint16_t arb_blocks, std::uint32_t arb_size)
+// Returned as a void* to hide the binn type from SurgeStorage.h.
+void *SurgePatch::save_arbitrary_block_storage(void *pos, std::uint16_t arb_blocks, std::uint32_t arb_size)
 {
-    ArbitraryBlockStorageHeader hdr;
-    hdr.num_datas = mech::endian_write_int16LE(arb_blocks);
-    hdr.overall_size = mech::endian_write_int32LE(arb_size);
-    memcpy(dw, &hdr, sizeof(hdr));
-    dw += sizeof(hdr);
-
-    // Fx user data. Individual datums.
+    binn *map = binn_map();
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
         for (int i = 0; i < this->fx[fx].n_user_datas; i++)
         {
-            std::uint32_t sz = this->fx[fx].user_data[i].data_size;
-            ArbitraryBlockStorageItemHeader ihdr;
-            ihdr.id = mech::endian_write_int16LE(this->fx[fx].user_data[i].id);
-            ihdr.data_size = mech::endian_write_int32LE(sz);
-            memcpy(dw, &ihdr, sizeof(ihdr));
-            dw += sizeof(ihdr);
-            memcpy(dw, this->fx[fx].user_data[i].data.get(), sz);
-            dw += sz;
+            binn_map_set_blob(this->fx[fx].user_data[i].id, this->fx[fx].user_data[i].data.get(),
+                             this->fx[fx].user_data[i].data_size);
         }
     }
+    return map;
 }
 
 // fixme: update to the new system, this was something I wrote in an earlier
