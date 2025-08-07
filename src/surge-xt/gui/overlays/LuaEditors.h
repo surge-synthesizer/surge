@@ -242,7 +242,7 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
     virtual void addPopupMenuItems(juce::PopupMenu &menuToAddTo,
                                    const juce::MouseEvent *mouseClickEvent) override;
 
-    virtual void performPopupMenuAction(int menuItemID);
+    virtual void performPopupMenuAction(int menuItemID) override;
     void focusLost(juce::Component::FocusChangeType e) override;
     std::function<void()> onFocusLost;
 
