@@ -488,6 +488,73 @@ CodeEditorSearch::CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI
     repaint();
 }
 
+int *CodeEditorSearch::getSelectionsOnScreen()
+{
+
+    auto sel = ed->getHighlightedRegion();
+    juce::String txt = ed->getTextInRange(sel);
+
+    if (lastSelectionStart == sel.getStart() && lastSelectionEnd == sel.getEnd())
+    {
+        return selectionMatches;
+    }
+
+    lastSelectionStart = sel.getStart();
+    lastSelectionEnd = sel.getEnd();
+
+    if (this->ed->getSelectionStart().getPosition() - this->ed->getSelectionEnd().getPosition() ==
+            0 ||
+        txt.trim() == "" || txt.indexOf("\n") != -1)
+    {
+        //
+        selectionMatches[0] = -1;
+    }
+    else
+    {
+
+        auto fromLine = this->ed->getFirstLineOnScreen();
+        auto linesOnScreen = this->ed->getNumLinesOnScreen();
+
+        int id = 0;
+        int found[100];
+        int counter = 0;
+
+        for (int i = fromLine; i < fromLine + linesOnScreen; i++)
+        {
+            int lineNumber = i;
+            auto line = ed->getDocument().getLine(lineNumber);
+            int index = 0;
+            int result = line.indexOf(index, txt);
+
+            while (result != -1)
+            {
+
+                auto pos = juce::CodeDocument::Position(ed->getDocument(), lineNumber, result);
+                auto range = juce::Range(pos.getPosition(), pos.getPosition() + sel.getLength());
+
+                if (range.getStart() != sel.getStart() && range.getEnd() != sel.getEnd())
+                {
+
+                    if (counter < 100)
+                    {
+                        selectionMatches[counter] = range.getStart();
+                        counter++;
+                    }
+                }
+
+                index = result + 1;
+
+                result = line.indexOf(index, txt);
+            }
+        }
+
+        counter = std::min(98, counter);
+        selectionMatches[counter] = -1;
+    }
+
+    return this->selectionMatches;
+}
+
 void CodeEditorSearch::onClick(std::unique_ptr<TextfieldButton> &btn)
 {
     // case sensitive
@@ -914,6 +981,13 @@ void SurgeCodeEditorComponent::focusLost(juce::Component::FocusChangeType e)
     }
 }
 
+void SurgeCodeEditorComponent::mouseDown(const juce::MouseEvent &e)
+{
+
+    juce::CodeEditorComponent::mouseDown(e);
+    repaint();
+}
+
 void SurgeCodeEditorComponent::mouseDoubleClick(const juce::MouseEvent &e)
 {
 
@@ -931,6 +1005,45 @@ void SurgeCodeEditorComponent::mouseDoubleClick(const juce::MouseEvent &e)
         findWordAt(tokenStart, tokenStart, tokenEnd);
         selectRegion(tokenStart, tokenEnd);
     }
+
+    repaint();
+}
+
+void SurgeCodeEditorComponent::mouseDrag(const juce::MouseEvent &event)
+{
+
+    juce::CodeEditorComponent::mouseDrag(event);
+    repaint();
+}
+
+bool SurgeCodeEditorComponent::keyPressed(const juce::KeyPress &key)
+{
+
+    // update search results
+    if (search != nullptr)
+    {
+        if (search->isVisible())
+        {
+            search->search(false);
+        }
+        else
+        {
+            // force repaint when selecting
+
+            auto sel = getHighlightedRegion();
+            auto keyCode = key.getKeyCode();
+
+            if (!sel.isEmpty() || (keyCode == key.upKey || keyCode == key.downKey ||
+                                   keyCode == key.leftKey || keyCode == key.rightKey))
+            {
+                repaint();
+            }
+        }
+    }
+
+    bool code = CodeEditorComponent::keyPressed(key);
+
+    return code;
 }
 
 void SurgeCodeEditorComponent::findWordAt(juce ::CodeDocument::Position &pos,
@@ -962,6 +1075,19 @@ void SurgeCodeEditorComponent::findWordAt(juce ::CodeDocument::Position &pos,
 
     from.setPosition(linePos.getPosition() + indexFrom);
     to.setPosition(linePos.getPosition() + indexTo);
+}
+
+void SurgeCodeEditorComponent::performPopupMenuAction(int menuItemID)
+{
+    auto sel = getHighlightedRegion();
+    // cut 4099 , paste 4101 , delete 4098
+    // force repaint for selections ( cut,delete and paste with selection )
+    if (!sel.isEmpty() && (menuItemID == 4098 || menuItemID == 4099 || menuItemID == 4101))
+    {
+        repaint();
+    }
+
+    juce::CodeEditorComponent::performPopupMenuAction(menuItemID);
 }
 
 void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
@@ -1015,28 +1141,13 @@ void SurgeCodeEditorComponent::addPopupMenuItems(juce::PopupMenu &menuToAddTo,
     menuToAddTo.addItem(gotoline);
 }
 
-bool SurgeCodeEditorComponent::keyPressed(const juce::KeyPress &key)
-{
-    bool code = CodeEditorComponent::keyPressed(key);
-
-    // update search results
-    if (search != nullptr)
-    {
-        if (search->isVisible())
-        {
-            search->search(false);
-        }
-    }
-
-    return code;
-}
-
 void SurgeCodeEditorComponent::setSearch(CodeEditorSearch &s) { search = &s; }
 
 void SurgeCodeEditorComponent::setGotoLine(GotoLine &s) { gotoLine = &s; }
 
 void SurgeCodeEditorComponent::paint(juce::Graphics &g)
 {
+
     juce::Colour bgColor = findColour(juce::CodeEditorComponent::backgroundColourId).withAlpha(1.f);
 
     auto bounds = getBounds();
@@ -1067,6 +1178,7 @@ void SurgeCodeEditorComponent::paint(juce::Graphics &g)
     // Draw search matches
     if (search != nullptr && search->isVisible() && search->getResultTotal() > 0)
     {
+
         auto result = search->getResult();
         int resultTotal = search->getResultTotal();
 
@@ -1102,6 +1214,73 @@ void SurgeCodeEditorComponent::paint(juce::Graphics &g)
                 g.setColour(highlightColor);
                 g.strokePath(path, strokeType);
             }
+        }
+    }
+
+    auto c = Colors::FormulaEditor::Highlight;
+    auto highlightColor = currentSkin->getColor(c).withAlpha(0.85f);
+
+    // highlight duplicates of current selection
+    if (search != nullptr && !search->isVisible())
+    {
+
+        auto bounds = getBounds();
+
+        // make sure that the entire screen is redrawn
+        bounds.setWidth(getWidth());
+        bounds.setHeight(getHeight());
+
+        bounds.setX(2);
+        bounds.setY(2);
+        auto results = search->getSelectionsOnScreen();
+        auto selectionLength = getSelectionEnd().getPosition() - getSelectionStart().getPosition();
+
+        for (int i = 0; i < 100; i++)
+        {
+            if (results[i] == -1)
+                break;
+
+            auto pos = juce::CodeDocument::Position(getDocument(), results[i]);
+            auto posEnd = juce::CodeDocument::Position(getDocument(), results[i] + selectionLength);
+
+            auto boundsStart = getCharacterBounds(pos);
+            auto boundsEnd = getCharacterBounds(posEnd);
+
+            g.setFillType(juce::FillType(highlightColor));
+
+            int width = boundsEnd.getX() - boundsStart.getX();
+            int height = boundsStart.getHeight();
+
+            juce::Path path;
+            auto rect = juce::Rectangle(boundsStart.getX() - 1, boundsStart.getY(), width, height);
+            path.addRectangle(rect);
+            juce::PathStrokeType strokeType(1.2f);
+            g.setFillType(juce::FillType(highlightColor));
+            g.fillPath(path);
+        }
+    }
+
+    // highlight current line
+
+    auto highlight = getHighlightedRegion();
+    auto pos = juce::CodeDocument::Position(getDocument(), highlight.getStart());
+    auto line = pos.getLineNumber();
+    int firstLine = getFirstLineOnScreen();
+
+    int lineHeight = getLineHeight();
+
+    if (highlight.isEmpty())
+    {
+        if (line >= firstLine && line < firstLine + getNumLinesOnScreen())
+        {
+            auto y = lineHeight * (line - firstLine);
+
+            juce::Path path;
+            auto rect = juce::Rectangle(0, y, getWidth(), lineHeight);
+            path.addRectangle(rect);
+
+            g.setFillType(juce::FillType(highlightColor.withAlpha(0.5f)));
+            g.fillPath(path);
         }
     }
 
