@@ -162,6 +162,9 @@ class CodeEditorSearch : public TextfieldPopup
     virtual void setHighlightColors();
     virtual void removeHighlightColors();
 
+    int lastSelectionStart = -1;
+    int lastSelectionEnd = -1;
+
     bool active = false;
     int result[512] = {0};
     int resultCurrent = 0;
@@ -169,6 +172,8 @@ class CodeEditorSearch : public TextfieldPopup
     bool saveCaretStartPositionLock;
     juce::String latestSearch;
     juce::CodeDocument::Position startCaretPosition;
+
+    int selectionMatches[100];
 
   public:
     bool resultHasChanged = false;
@@ -189,6 +194,8 @@ class CodeEditorSearch : public TextfieldPopup
     virtual void textEditorReturnKeyPressed(juce::TextEditor &) override;
     virtual void replaceResults(bool all);
     virtual void replaceCurrentResult(juce::String newText);
+
+    int *getSelectionsOnScreen();
 
     CodeEditorSearch(juce::CodeEditorComponent &editor, Surge::GUI::Skin::ptr_t);
 
@@ -235,6 +242,7 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
     virtual void addPopupMenuItems(juce::PopupMenu &menuToAddTo,
                                    const juce::MouseEvent *mouseClickEvent) override;
 
+    virtual void performPopupMenuAction(int menuItemID) override;
     void focusLost(juce::Component::FocusChangeType e) override;
     std::function<void()> onFocusLost;
 
@@ -243,6 +251,9 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
                              Surge::GUI::Skin::ptr_t &skin);
 
     void mouseDoubleClick(const juce::MouseEvent &event) override;
+    void mouseDown(const juce::MouseEvent &event) override;
+    void mouseDrag(const juce::MouseEvent &event) override;
+
     void findWordAt(juce ::CodeDocument::Position &pos, juce ::CodeDocument::Position &from,
                     juce::CodeDocument::Position &to);
 
