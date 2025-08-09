@@ -1306,39 +1306,26 @@ void *SurgePatch::save_arbitrary_block_storage(void *pos, std::uint16_t arb_bloc
     return map;
 }
 
-// fixme: update to the new system, this was something I wrote in an earlier
-// revision, it doesn't match the current code & needs some sanity checks to
-// make sure we aren't loading evil data that overwrites memory.
-unsigned int SurgePatch::load_arbitrary_block_storage(char *pos)
+unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
 {
-    // Next section is fx user data.
-    FxBlockStorageHeader *fx_hdr = dr;
-    dr += sizeof(fx_hdr);
-    for (int i = 0; i < n_fx_slots; i++)
+    if (!binn_is_struct(data))
     {
-        fx_hdr->num_datas[i] = mech::endian_read_int16LE(fx_hdr->num_datas[i]);
+        storage->reportError("Failed to allocate FX data.", "Patch Load Error");
     }
-    fx_hdr->data_size = mech::endian_read_int32LE(fx_hdr->data_size);
-    for (int fx = 0; i < n_fx_slots; fx++)
+
+    for (int fx = 0; fx < n_fx_slots; fx++)
     {
-        this->fx[fx].n_user_datas = fx_hdr->num_datas[fx];
-        if (this->fx[fx].n_user_datas)
+        for (std::size_t i = 0; i < this->fx[fx].n_user_datas; i++)
         {
-            this->fx[fx].user_data =
-                std::make_unique<ArbitraryBlockStorage[]>(this->fx[fx].n_user_datas);
-        }
-        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
-        {
-            FxBlockStorageItemHeader *hdr = dr;
-            this->fx[fx].user_data[i].data_size = mech::endian_read_int32LE(hdr->data_size);
-            dr += sizeof(FxBlockStorageItemHeader);
-            this->fx[fx].user_data[i].data =
-                std::make_unique<std::uint8_t[]>(this->fx[fx].user_data[i].data_size);
-            memcpy(this->fx[fx].user_data[i].data.get(), dr,
-                   this->fx[fx].user_data[i].data_size);
-            dr += this->fx[fx].user_data[i].data_size;
+            ArbitraryBlockStorage *s = this->fx[fx].user_data[i];
+            bool success = binn_map_get_blob(data, s->id, s->data.get(), s->data_size);
+            if (!success)
+            {
+                storage->reportError("Failed to load FX data.", "Patch Load Error");
+            }
         }
     }
+    return binn_size(data);
 }
 
 Parameter *SurgePatch::parameterFromOSCName(std::string oscName)
@@ -2462,6 +2449,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
+    load_arbitrary_block_storage(patch);
+
     // reset stepsequences first
     for (auto &stepsequence : stepsequences)
     {
@@ -3487,6 +3476,53 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 }
 
+// Allocates the arbitrary data slots as specified in the patch.
+void SurgePatch::load_arbitrary_block_storage_xml(const TiXmlElement *patch)
+{
+    // FX arbitrary data.
+    TiXmlElement *efxd = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("extrafxdata"));
+    if (efxd)
+    {
+        for (const TiXmlElement *i = efxd->FirstChild(); i; i = i->NextSibling())
+        {
+            int slot = std::atoi(i->Attribute("slot"));
+            std::size_t num = static_cast<std::size_t>(std::stoul(i->Attribute("nUserDatas")));
+            if (slot < 0 || slot >= n_fx_slots)
+            {
+                storage->reportError("Invalid value for fx slot",
+                                     "Patch Load Error");
+            }
+            else
+            {
+                fx[slot].n_user_datas = num;
+                fx[slot].user_data = std::make_unique<ArbitraryBlockStorage[]>(num);
+                // Initialize them all to an invalid reference in case the patch is corrupted or
+                // something.
+                for (std::size_t j = 0; j < num; j++)
+                {
+                    fx[slot].user_data[j].id = UINT16_MAX;
+                }
+                std::size_t count = 0;
+                for (const TiXmlElement *j = i->FirstChild(); j; j = j->NextSibling())
+                {
+                    if (count > num)
+                    {
+                        storage->reportError("Patch specified more FX elements than its count.",
+                                             "Patch Load Error");
+                        break;
+                    }
+                    fx[slot].user_data[count].id =
+                        static_cast<std::uint16_t>(std::stoul(j->Attribute("id")));
+                    fx[slot].user_data[count].data_size =
+                        static_cast<std::uint32_t>(std::stoul(j->Attribute("dataSize")));
+                    fx[slot].user_data[count].data = std::make_unique<std::uint8_t[]>(fx[slot].user_data[count].data_size);
+                    count++;
+                }
+            }
+        }
+    }
+}
+
 struct srge_header
 {
     int revision;
@@ -3724,8 +3760,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     TiXmlElement efd("extrafxdata");
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
-        std::string streaming_name = "fx" + std::to_string(fx);
-        TiXmlElement fxe(streaming_name);
+        TiXmlElement fxe("fx");
         fxe.SetAttribute("slot", fx);
         fxe.SetAttribute("nUserDatas", this->fx[fx].n_user_datas);
         for (int i = 0; i < this->fx[fx].n_user_datas; i++)
