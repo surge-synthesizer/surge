@@ -188,6 +188,8 @@ on Windows, run `sys.path.append("ignore/bpy/src/surge-python/Debug")` instead, 
 The CMake target `surge-xt-distribution` builds an install image on your platform at the end of the build process. On
 Mac and Linux, the installer generator is built into the platform; on Windows, our CMake file uses NuGet to download
 InnoSetup, so you will need the [nuget.exe CLI](https://nuget.org/) in your path.
+Windows also requires the installation of [7-Zip](https://7-zip.org/) and the location of its `7z.exe` file in your
+path (which is normally `C:\Program Files\7-Zip`).
 
 ## Using CMake on the Command Line for More
 
@@ -317,6 +319,7 @@ You need to install the following:
 * Install [Visual Studio 2017, 2019, or later (version 15.5 or newer)](https://visualstudio.microsoft.com/downloads/)
      * When installing Visual Studio, make sure to include CLI tools and CMake, which are included in
   'Optional CLI support' and 'Toolset for desktop' install bundles.
+  This is normally as simple as going to Visual Studio Installer and installing 'Desktop development with C++' from the 'Workloads' tab.
 
 ## macOS
 
@@ -339,7 +342,7 @@ Most Linux systems have CMake, Git and a modern C++ compiler installed. Make sur
 older than 7 or so and clangs after 9 or 10. You will also need to install a set of dependencies. If you use `apt`, do:
 
 ```bash
-sudo apt install build-essential libcairo-dev libxkbcommon-x11-dev libxkbcommon-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-util-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libjack-jackd2-dev
+sudo apt install build-essential git cmake libcairo-dev libxkbcommon-x11-dev libxkbcommon-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-util-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libjack-jackd2-dev
 ```
 
 *You can find more info about Surge XT on Linux and other Unix-like distros in [this document](doc/Linux%20and%20Other%20Unix-like%20Distributions.md).*
