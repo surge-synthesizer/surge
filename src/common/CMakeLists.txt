@@ -2,6 +2,7 @@
 project(surge-common)
 
 surge_add_lib_subdirectory(airwindows)
+surge_add_lib_subdirectory(binn)
 surge_add_lib_subdirectory(eurorack)
 surge_add_lib_subdirectory(fmt)
 
@@ -337,6 +338,7 @@ target_link_libraries(${PROJECT_NAME}
   fmt
   luajit-5.1
   surge::airwindows
+  surge::binn
   surge::eurorack
 
   sst-cpputils

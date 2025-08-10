@@ -1215,7 +1215,7 @@ unsigned int SurgePatch::save_patch(void **data)
     // void **xmldata = new void*();
     void *xmldata = 0;
     patch_header header;
-    binn_map *arbdata;
+    binn *arbdata;
 
     memcpy(header.tag, "sub3", 4);
     size_t xmlsize = save_xml(&xmldata);
@@ -1243,7 +1243,7 @@ unsigned int SurgePatch::save_patch(void **data)
         }
     }
     psize += xmlsize + sizeof(patch_header);
-    arbdata = static_cast<binn_map *>(save_arbitrary_block_storage(dw, arb_blocks, arb_size));
+    arbdata = static_cast<binn *>(save_arbitrary_block_storage());
     psize += binn_size(arbdata);
     if (patchptr)
         free(patchptr);
@@ -1292,15 +1292,14 @@ unsigned int SurgePatch::save_patch(void **data)
 }
 
 // Returned as a void* to hide the binn type from SurgeStorage.h.
-void *SurgePatch::save_arbitrary_block_storage(void *pos, std::uint16_t arb_blocks, std::uint32_t arb_size)
+void *SurgePatch::save_arbitrary_block_storage()
 {
     binn *map = binn_map();
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
         for (int i = 0; i < this->fx[fx].n_user_datas; i++)
         {
-            binn_map_set_blob(this->fx[fx].user_data[i].id, this->fx[fx].user_data[i].data.get(),
-                             this->fx[fx].user_data[i].data_size);
+            binn_map_set_blob(map, this->fx[fx].user_data[i].id, this->fx[fx].user_data[i].data.get(), this->fx[fx].user_data[i].data_size);
         }
     }
     return map;
@@ -1317,12 +1316,16 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
     {
         for (std::size_t i = 0; i < this->fx[fx].n_user_datas; i++)
         {
-            ArbitraryBlockStorage *s = this->fx[fx].user_data[i];
-            bool success = binn_map_get_blob(data, s->id, s->data.get(), s->data_size);
+            ArbitraryBlockStorage &s = this->fx[fx].user_data[i];
+            void *pos;
+            int sz;
+            bool success = binn_map_get_blob(data, s.id, &pos, &sz);
             if (!success)
             {
                 storage->reportError("Failed to load FX data.", "Patch Load Error");
             }
+            s.data_size = sz;
+            memcpy(s.data.get(), pos, sz);
         }
     }
     return binn_size(data);
@@ -2773,7 +2776,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     std::uint16_t id = 0;
     if (nextBlockId)
     {
-        nextBlockId->QueryAttribute("v", &id);
+        id = static_cast<std::uint16_t>(std::stoul(nextBlockId->Attribute("v")));
     }
     block_id.store(id);
 
@@ -3480,10 +3483,10 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 void SurgePatch::load_arbitrary_block_storage_xml(const TiXmlElement *patch)
 {
     // FX arbitrary data.
-    TiXmlElement *efxd = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("extrafxdata"));
+    const TiXmlElement *efxd = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("extrafxdata"));
     if (efxd)
     {
-        for (const TiXmlElement *i = efxd->FirstChild(); i; i = i->NextSibling())
+        for (const TiXmlElement *i = TINYXML_SAFE_TO_ELEMENT(efxd->FirstChild()); i; i = TINYXML_SAFE_TO_ELEMENT(i->NextSibling()))
         {
             int slot = std::atoi(i->Attribute("slot"));
             std::size_t num = static_cast<std::size_t>(std::stoul(i->Attribute("nUserDatas")));
@@ -3503,7 +3506,7 @@ void SurgePatch::load_arbitrary_block_storage_xml(const TiXmlElement *patch)
                     fx[slot].user_data[j].id = UINT16_MAX;
                 }
                 std::size_t count = 0;
-                for (const TiXmlElement *j = i->FirstChild(); j; j = j->NextSibling())
+                for (const TiXmlElement *j = TINYXML_SAFE_TO_ELEMENT(i->FirstChild()); j; j = TINYXML_SAFE_TO_ELEMENT(j->NextSibling()))
                 {
                     if (count > num)
                     {
@@ -3933,7 +3936,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     patch.InsertEndChild(tempoOnSave);
 
     TiXmlElement nextBlockId("nextBlockId");
-    nextBlockId.SetAttribute("id", next_block.load());
+    nextBlockId.SetAttribute("id", block_id.load());
     patch.InsertEndChild(nextBlockId);
 
     TiXmlElement dawExtraXML("dawExtraState");

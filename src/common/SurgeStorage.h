@@ -672,6 +672,15 @@ struct ArbitraryBlockStorage
             s = 0;
         return s;
     }
+
+    ArbitraryBlockStorage &operator=(const ArbitraryBlockStorage &that)
+    {
+        id = that.id;
+        data_size = that.data_size;
+        data = std::make_unique<std::uint8_t[]>(data_size);
+        std::copy_n(that.data.get(), data_size, data.get());
+        return *this;
+    }
 };
 
 // I have used the ordering here in SurgeGUIEditor to iterate. Be careful if type or retrigger move
@@ -760,6 +769,21 @@ struct FxStorage
 
     std::size_t n_user_datas;
     std::unique_ptr<ArbitraryBlockStorage[]> user_data;
+
+    // Have to treat copy/assignment specially thanks to the block storage.
+    FxStorage(const FxStorage &that) { *this = that; }
+
+    FxStorage &operator=(const FxStorage &that)
+    {
+        type = that.type;
+        return_level = that.return_level;
+        std::copy_n(that.p, n_fx_params, p);
+        fxslot = that.fxslot;
+        n_user_datas = that.n_user_datas;
+        user_data = std::make_unique<ArbitraryBlockStorage[]>(n_user_datas);
+        std::copy_n(that.user_data.get(), n_user_datas, user_data.get());
+        return *this;
+    }
 };
 
 struct SurgeSceneStorage
@@ -1217,7 +1241,7 @@ class SurgePatch
     unsigned int load_arbitrary_block_storage(const void *data);
     void load_arbitrary_block_storage_xml(const TiXmlElement *patch);
     unsigned int save_patch(void **data);
-    void save_arbitrary_block_storage(char *pos, std::uint16_t arb_blocks, std::uint32_t arb_size);
+    void *save_arbitrary_block_storage();
     Parameter *parameterFromOSCName(std::string stName);
 
     // data
