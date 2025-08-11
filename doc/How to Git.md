@@ -12,7 +12,7 @@ or in GitHub issues, put in once place, for your help.
 If you think there's a better way to do things in this document, that's cool! Do them! If you think the document would be
 better by having them included in this document, that's cool! This document literally tells you how to change it and make
 a pull request. If you would like to share feedback about how your way is better and this is, in some sense, the Worst Git Guide Ever,
-hey ,maybe use that energy to close a bug instead! And with that said, onwards!
+hey, maybe use that energy to close a bug instead! And with that said, onwards!
 
 ## Before you read this document, do a build!
 
@@ -37,7 +37,7 @@ Your fork will live at this URL: http://github.com/example-user/surge
 
 The .git file that you can clone, if you so choose, is http://github.com/example-user/surge.git.
 
-However, since you have already cloned the `surge-synthesizer/surge` onto your device, you can just add it as a remote. So type in `git remote add example-user https://github.com/example-user/surge.git` - again, please be sure to **replace** the `example-user` in both portions of that command line entry with **your** username. After this, you can do a `git remote -vv` and, if you like type `git fetch example-user` (again remembering to **replace** `example-user` with **your** username.
+However, since you have already cloned the `surge-synthesizer/surge` onto your device, you can just add it as a remote. So type in `git remote add example-user https://github.com/example-user/surge.git` - again, please be sure to **replace** the `example-user` in both portions of that command line entry with **your** username. After this, you can do a `git remote -vv` and, if you like type `git fetch example-user` (again remembering to **replace** `example-user` with **your** username).
 
 ## Update your fork with main branch
 
@@ -136,7 +136,6 @@ git checkout example-user/example-branch
 This will give you a 'detached HEAD' message. Don't worry about that, it's beyond the scope of this exercise.
 Of course, to go back to your version you can just type `git checkout main`.
 
-
 ### I broke the golden rule and developed in main. Help me fix it!
 
 Sigh. OK, be careful. You are about to lose all your changes in main. Back them up somehow.
@@ -175,7 +174,6 @@ message with the default being the union of commit messages. Rewrite and save as
 Then `git push origin my-branch --force` will send your newly based branch up to GitHub. Do a pull request and you
 should see one commit with your lovely new message.
 
-
 ### An explicit example: Squashing commits for code review feedback
 
 Let's say you have developed a branch and pushed it up and made a pull request and you get code review feedback.
@@ -212,7 +210,6 @@ and would have two commits in it. Continuous integration would run its course an
 squash those commits and rewrite your commit message, so you may want to squash down to one commit. Here's how you do it.
 
 First rebase interactively with `git rebase -i main`. You will see an editor which looks like this:
-
 
 ```
 pick 452b43d Add a section on code review rebase
