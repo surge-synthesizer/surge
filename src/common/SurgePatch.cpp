@@ -1492,6 +1492,8 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 {
                     param_ptr[i]->val.f = param_ptr[i]->val_default.f;
                 }
+
+                param_ptr[i]->miditakeover_status = sts_waiting_for_first_look;
             }
             else
             {
