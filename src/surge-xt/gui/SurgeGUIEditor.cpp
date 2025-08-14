@@ -5108,7 +5108,7 @@ void SurgeGUIEditor::enqueueFXChainClear(int fxchain)
 void SurgeGUIEditor::swapFX(int source, int target, SurgeSynthesizer::FXReorderMode m)
 {
     if (source < 0 || source >= n_fx_slots || target < 0 || target >= n_fx_slots ||
-        source == target)
+        (source == target && m != SurgeSynthesizer::FXReorderMode::NONE))
     {
         return;
     }
