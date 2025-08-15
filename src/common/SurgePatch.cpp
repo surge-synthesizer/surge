@@ -2213,6 +2213,30 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
+    if (revision <= 26)
+    {
+        for (auto &sc : scene)
+        {
+            for (auto &u : sc.filterunit)
+            {
+                if (u.type.val.i == sst::filters::FilterType::fut_obxd_4pole &&
+                    u.subtype.val.i == sst::filters::FilterSubType::st_obxd4pole_24db)
+                {
+                    u.subtype.val.i = sst::filters::FilterSubType::st_obxd4pole_broken24db;
+                }
+                if (u.type.val.i == sst::filters::FilterType::fut_bp12 &&
+                    u.subtype.val.i == sst::filters::FilterSubType::st_Clean)
+                {
+                    u.subtype.val.i = sst::filters::FilterSubType::st_bp12_LegacyClean;
+                }
+                if (u.type.val.i == sst::filters::FilterType::fut_bp12 &&
+                    u.subtype.val.i == sst::filters::FilterSubType::st_Driven)
+                {
+                    u.subtype.val.i = sst::filters::FilterSubType::st_bp12_LegacyDriven;
+                }
+            }
+        }
+    }
     // ensure that filter subtype is a valid value
     for (auto &sc : scene)
     {

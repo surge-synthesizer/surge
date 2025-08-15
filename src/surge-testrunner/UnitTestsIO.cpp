@@ -570,13 +570,37 @@ TEST_CASE("Patch Version Builder", "[io]")
             surge->process();
             auto ft = surge->storage.getPatch().scene[0].filterunit[0].type.val.i;
             auto st = surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i;
+            auto lft = ft;
+            auto lst = st;
+            if (ff_revision >= 27)
+            {
+                // If the engiunue is later than revision 27 in the code this should lift
+                if (ft == sst::filters::FilterType::fut_obxd_4pole)
+                {
+                    if (st == sst::filters::FilterSubType::st_obxd4pole_24db)
+                    {
+                        lst = sst::filters::FilterSubType::st_obxd4pole_broken24db;
+                    }
+                }
+                if (ft == sst::filters::FilterType::fut_bp12)
+                {
+                    if (st == sst::filters::FilterSubType::st_Driven)
+                    {
+                        lst = sst::filters::FilterSubType::st_bp12_LegacyDriven;
+                    }
+                    if (st == sst::filters::FilterSubType::st_Clean)
+                    {
+                        lst = sst::filters::FilterSubType::st_bp12_LegacyClean;
+                    }
+                }
+            }
             for (int s = 0; s < n_scenes; ++s)
             {
                 for (int fu = 0; fu < n_filterunits_per_scene; ++fu)
                 {
-                    INFO(path_to_string(ent) << " " << ft << " " << st << " " << s << " " << fu);
-                    REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].type.val.i == ft);
-                    REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i == st);
+                    INFO(path_to_string(ent) << " " << lft << " " << lst << " " << s << " " << fu);
+                    REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].type.val.i == lft);
+                    REQUIRE(surge->storage.getPatch().scene[s].filterunit[fu].subtype.val.i == lst);
                 }
             }
 
@@ -604,7 +628,6 @@ TEST_CASE("Patch Version Builder", "[io]")
                 case FilterType::fut_hp24:
                 case FilterType::fut_SNH:
                 case FilterType::fut_vintageladder:
-                case FilterType::fut_obxd_4pole:
                 case FilterType::fut_k35_lp:
                 case FilterType::fut_k35_hp:
                 case FilterType::fut_diode:
@@ -616,6 +639,15 @@ TEST_CASE("Patch Version Builder", "[io]")
                     // These types were unchanged
                     break;
                     // These are the types which changed 14 -> 15
+                case FilterType::fut_obxd_4pole:
+                    if (ff_revision >= 27)
+                    {
+                        if (lst == sst::filters::FilterSubType::st_obxd4pole_broken24db)
+                        {
+                            fnst = sst::filters::FilterSubType::st_obxd4pole_24db;
+                        }
+                    }
+                    break;
                 case FilterType::fut_comb_pos:
                     fnft = fut_14_comb;
                     fnst = st;
@@ -642,7 +674,6 @@ TEST_CASE("Patch Version Builder", "[io]")
                     break;
                 case FilterType::fut_notch12:
                     fnft = fut_14_notch12;
-                    fnst = st;
                     break;
                 case FilterType::fut_notch24:
                     fnft = fut_14_notch12;
@@ -650,7 +681,17 @@ TEST_CASE("Patch Version Builder", "[io]")
                     break;
                 case FilterType::fut_bp12:
                     fnft = fut_14_bp12;
-                    fnst = st;
+                    if (ff_revision < 27)
+                    {
+                        fnst = lst;
+                    }
+                    else
+                    {
+                        if (lst == sst::filters::FilterSubType::st_bp12_LegacyDriven)
+                            fnst = sst::filters::FilterSubType::st_Driven;
+                        if (lst == sst::filters::FilterSubType::st_bp12_LegacyClean)
+                            fnst = sst::filters::FilterSubType::st_Clean;
+                    }
                     break;
                 case FilterType::fut_bp24:
                     fnft = fut_14_bp12;
@@ -678,6 +719,31 @@ TEST_CASE("Patch Version Builder", "[io]")
             surge->process();
             auto ft = surge->storage.getPatch().scene[0].filterunit[0].type.val.i;
             auto st = surge->storage.getPatch().scene[0].filterunit[0].subtype.val.i;
+
+            auto lft = ft;
+            auto lst = st;
+            if (ff_revision >= 27)
+            {
+                // If the engiunue is later than revision 27 in the code this should lift
+                if (ft == sst::filters::FilterType::fut_obxd_4pole)
+                {
+                    if (st == sst::filters::FilterSubType::st_obxd4pole_broken24db)
+                    {
+                        lst = sst::filters::FilterSubType::st_obxd4pole_24db;
+                    }
+                }
+                if (ft == sst::filters::FilterType::fut_bp12)
+                {
+                    if (st == sst::filters::FilterSubType::st_bp12_LegacyDriven)
+                    {
+                        lst = sst::filters::FilterSubType::st_Driven;
+                    }
+                    if (st == sst::filters::FilterSubType::st_bp12_LegacyClean)
+                    {
+                        lst = sst::filters::FilterSubType::st_Clean;
+                    }
+                }
+            }
             for (int s = 0; s < n_scenes; ++s)
             {
                 for (int fu = 0; fu < n_filterunits_per_scene; ++fu)
@@ -689,7 +755,7 @@ TEST_CASE("Patch Version Builder", "[io]")
             }
 
             std::ostringstream cand_fn;
-            cand_fn << "filt_" << ft << "_" << st << ".fxp";
+            cand_fn << "filt_" << lft << "_" << lst << ".fxp";
             auto entfn = path_to_string(ent.path().filename());
             REQUIRE(entfn == cand_fn.str());
         }

@@ -140,9 +140,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
 //                               changed how extend-to-bipolar works for LFO Amplitude parameter
 //                               added DAWExtraState members for saving the state of Lua code editors, and variable group states in debugger
+// 26 -> 27 (XT 1.4* filters)    fix OBXD and BP12 legacy streaming for sst-filters upgrade
 // clang-format on
 
-const int ff_revision = 26;
+const int ff_revision = 27;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
