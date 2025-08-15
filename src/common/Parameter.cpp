@@ -3867,12 +3867,14 @@ std::string Parameter::get_display(bool external, float ef) const
                             case FilterType::fut_none:
                             case FilterType::fut_lp12:
                             case FilterType::fut_lp24:
-                            case FilterType::fut_bp12:
                             case FilterType::fut_bp24:
                             case FilterType::fut_hp12:
                             case FilterType::fut_hp24:
                             case FilterType::fut_SNH:
                                 txt = sst::filters::fut_def_subtypes[i];
+                                break;
+                            case FilterType::fut_bp12:
+                                txt = sst::filters::fut_bp12_subtypes[i];
                                 break;
                             case FilterType::fut_tripole:
                                 // "i & 3" selects the lower two bits that represent the filter mode
