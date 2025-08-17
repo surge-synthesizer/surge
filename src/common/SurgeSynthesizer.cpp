@@ -24,6 +24,7 @@
 #include <fmt/core.h>
 #include "DSPUtils.h"
 #include <ctime>
+#include "TCPControl/SurgeTCPController.h"
 
 #include "SurgeParamConfig.h"
 
@@ -299,6 +300,9 @@ SurgeSynthesizer::SurgeSynthesizer(PluginLayer *parent, const std::string &suppl
 
     patchid_queue = -1;
     has_patchid_file = false;
+    
+    // Initialize TCP control
+    initializeTCPControl();
 }
 
 SurgeSynthesizer::~SurgeSynthesizer()
@@ -311,6 +315,11 @@ SurgeSynthesizer::~SurgeSynthesizer()
         std::lock_guard<std::mutex> mg(patchLoadSpawnMutex);
         if (patchLoadThread)
             patchLoadThread->join();
+    }
+
+    // Stop TCP control
+    if (tcpController) {
+        tcpController->stop();
     }
 
     stopSound();
@@ -5586,4 +5595,53 @@ void SurgeSynthesizer::reclaimVoiceFor(SurgeVoice *v, char key, char channel, ch
     }
     if (endHostVoice)
         notifyEndedNote(priorNoteId, priorKey, priorChannel, false);
+}
+
+void SurgeSynthesizer::initializeTCPControl() {
+    tcpController = std::make_unique<Surge::TCPControl::TCPController>();
+    
+    // Hook up preset loading
+    tcpController->setPresetLoadCallback([this](const std::string& presetName) -> bool {
+        // Search through factory and user presets
+        for (const auto& patch : storage.patch_list) {
+            if (patch.name == presetName) {
+                // Load the preset
+                patchid_queue = patch.id;
+                processAudioThreadOpsWhenAudioEngineUnavailable(true);
+                return true;
+            }
+        }
+        
+        // Try direct file path if not found by name
+        if (fs::exists(fs::path(presetName))) {
+            loadPatchByPath(presetName.c_str(), -1, "");
+            return true;
+        }
+        
+        return false;
+    });
+    
+    // Hook up parameter setting
+    tcpController->setParamSetCallback([this](int paramId, float value) -> bool {
+        if (paramId >= 0 && paramId < n_total_params) {
+            // Set parameter through Surge's automation system
+            setParameter01(paramId, value, true);
+            return true;
+        }
+        return false;
+    });
+    
+    // Hook up preset listing
+    tcpController->setPresetListCallback([this]() -> std::vector<std::string> {
+        std::vector<std::string> presetNames;
+        
+        for (const auto& patch : storage.patch_list) {
+            presetNames.push_back(patch.name);
+        }
+        
+        return presetNames;
+    });
+    
+    // Start the TCP listener
+    tcpController->start(7833);
 }

@@ -28,8 +28,15 @@
 #include "BiquadFilter.h"
 #include <set>
 #include <sst/filters/HalfRateFilter.h>
+#include <memory>
 
 struct QuadFilterChainState;
+
+namespace Surge {
+namespace TCPControl {
+class TCPController;
+}
+}
 
 #include <list>
 #include <utility>
@@ -579,8 +586,10 @@ class alignas(16) SurgeSynthesizer
     // these have to be thread-safe, so keep them private
   private:
     PluginLayer *_parent = nullptr;
+    std::unique_ptr<Surge::TCPControl::TCPController> tcpController;
 
     void switch_toggled();
+    void initializeTCPControl();
 
     // MIDI control interpolators
     static constexpr int num_controlinterpolators = 128;

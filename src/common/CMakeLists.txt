@@ -141,6 +141,8 @@ add_library(${PROJECT_NAME}
   SurgeSynthesizer.cpp
   SurgeSynthesizer.h
   SurgeSynthesizerIO.cpp
+  TCPControl/SurgeTCPController.cpp
+  TCPControl/SurgeTCPController.h
   UnitConversions.h
   UserDefaults.cpp
   UserDefaults.h
