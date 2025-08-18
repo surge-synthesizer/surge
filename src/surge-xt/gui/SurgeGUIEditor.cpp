@@ -6504,7 +6504,7 @@ bool SurgeGUIEditor::promptForOKCancelWithDontAskAgain(
     alert->setWindowTitle(title);
     addAndMakeVisibleWithTracking(frame.get(), *alert);
     alert->setLabel(msg);
-    alert->addToggleButtonAndSetText(ynMessage);
+    alert->addDontAskAgainButtonAndSetText(ynMessage);
     alert->setOkCancelButtonTexts("OK", "Cancel");
     alert->onOkForToggleState = [this, dontAskAgainKey, okCallback](bool dontAskAgain) {
         if (dontAskAgain)
