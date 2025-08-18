@@ -902,6 +902,8 @@ void SurgePatch::init_default_values()
             scene[sc].filterunit[i].type.deactivated = false;
         }
 
+        scene[sc].wsunit.type.deactivated = false;
+
         for (int i = 0; i < n_egs; i++)
         {
             scene[sc].adsr[i].a.val.f = scene[sc].adsr[i].a.val_min.f;
