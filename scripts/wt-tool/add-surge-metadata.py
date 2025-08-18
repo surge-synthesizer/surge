@@ -66,8 +66,8 @@ def add_surge_chunk(bdata, version, tablesize):
     for i in range(len(newck)):
         newdata.insert(finalpos, newck[len(newck) - 1 - i])
 
-    # Finally update the size of the file
-    ns = int.to_bytes(len(newdata), 4, 'little')
+    # Finally update the size of the file, minus 8 bytes according to RIFF specification
+    ns = int.to_bytes(len(newdata) - 8, 4, 'little')
     for i in range(4):
         newdata[i + 4] = ns[i]
 
