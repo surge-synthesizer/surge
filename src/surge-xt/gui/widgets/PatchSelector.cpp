@@ -199,7 +199,6 @@ PatchSelector::PatchSelector() : juce::Component(), WidgetBaseMixin<PatchSelecto
     typeAhead = std::make_unique<Surge::Widgets::TypeAhead>("Patch select", patchDbProvider.get());
     typeAhead->setVisible(false);
     typeAhead->addTypeAheadListener(this);
-    typeAhead->setToElementZeroOnReturn = true;
 
     addChildComponent(*typeAhead);
 
@@ -1291,11 +1290,14 @@ int PatchSelector::getCurrentPatchId() const { return current_patch; }
 
 int PatchSelector::getCurrentCategoryId() const { return current_category; }
 
-void PatchSelector::itemSelected(int providerIndex)
+void PatchSelector::itemSelected(int providerIndex, bool dontCloseTypeAhead)
 {
     auto sr = patchDbProvider->lastSearchResult[providerIndex];
     auto sge = firstListenerOfType<SurgeGUIEditor>();
-    toggleTypeAheadSearch(false);
+
+    if (dontCloseTypeAhead)
+        toggleTypeAheadSearch(false);
+
     if (sge)
     {
         sge->queuePatchFileLoad(sr.file);

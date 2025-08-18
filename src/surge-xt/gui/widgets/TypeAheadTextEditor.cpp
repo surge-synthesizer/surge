@@ -181,7 +181,9 @@ struct TypeAheadListBoxModel : public juce::ListBoxModel
     void selectedRowsChanged(int lastRowSelected) override
     {
         if (lastRowSelected >= 0 && lastRowSelected < search.size())
+        {
             ta->updateSelected(search[lastRowSelected]);
+        }
     }
 
     juce::Component *refreshComponentForRow(int rowNumber, bool isRowSelected,
@@ -300,6 +302,7 @@ void TypeAhead::dismissWithValue(int providerIdx, const std::string &s,
 
     lbox->selectRow(providerIdx);
     lbox->repaint();
+
     for (auto l : taList)
     {
         l->itemSelected(providerIdx);
@@ -324,6 +327,7 @@ void TypeAhead::updateSelected(int providerIdx)
     for (auto l : taList)
     {
         l->itemFocused(providerIdx);
+        l->itemSelected(providerIdx);
     }
 }
 

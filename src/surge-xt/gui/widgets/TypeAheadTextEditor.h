@@ -71,7 +71,7 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
     {
         virtual ~TypeAheadListener() = default;
         virtual void itemFocused(int providerIndex) {}
-        virtual void itemSelected(int providerIndex) = 0;
+        virtual void itemSelected(int providerIndex, bool dontCloseTypeAhead = false) = 0;
         virtual void typeaheadCanceled() = 0;
     };
 
