@@ -109,7 +109,7 @@ struct PatchSelector : public juce::Component,
     void setTags(const std::vector<SurgePatch::Tag> &itag) { tags = itag; }
 
     /// TypeAhead API
-    void itemSelected(int providerIndex) override;
+    void itemSelected(int providerIndex, bool dontCloseTypeAhead) override;
     void itemFocused(int providerIndex) override;
     void typeaheadCanceled() override;
 
@@ -210,7 +210,7 @@ struct PatchSelector : public juce::Component,
 struct PatchSelectorCommentTooltip : public juce::Component,
                                      public Surge::GUI::SkinConsumingComponent
 {
-    PatchSelectorCommentTooltip(){};
+    PatchSelectorCommentTooltip() {}
     void paint(juce::Graphics &g) override;
 
     std::string comment;
