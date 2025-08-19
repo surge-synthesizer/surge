@@ -273,6 +273,8 @@ TypeAhead::TypeAhead(const std::string &l, TypeAheadDataProvider *p)
     setColour(ColourIds::borderid, juce::Colours::black);
     setColour(ColourIds::emptyBackgroundId, juce::Colours::white);
     fixupJuceTextEditorAccessibility(*this);
+
+    lastSelectedRow.clear();
 }
 
 TypeAhead::~TypeAhead() = default;
@@ -292,6 +294,7 @@ void TypeAhead::dismissWithValue(int providerIdx, const std::string &s,
 
     if (doDismiss)
     {
+        lastSelectedRow = lbox->getSelectedRows();
         lbox->setVisible(false);
 
         if (isVisible())
@@ -326,6 +329,7 @@ void TypeAhead::updateSelected(int providerIdx)
 {
     for (auto l : taList)
     {
+        lastSelectedRow = lbox->getSelectedRows();
         l->itemFocused(providerIdx);
         l->itemSelected(providerIdx);
     }
@@ -391,7 +395,6 @@ void TypeAhead::searchAndShowLBox()
 
 void TypeAhead::showLbox()
 {
-
     auto p = getParentComponent();
 
     while (p && !dynamic_cast<Surge::Widgets::MainFrame *>(p))
@@ -418,19 +421,25 @@ void TypeAhead::textEditorTextChanged(TextEditor &editor)
 {
     lastSearch = editor.getText().toStdString();
     lboxmodel->setSearch(editor.getText().toStdString());
+    lastSelectedRow.clear();
 
     if (!lbox->isVisible())
     {
         showLbox();
     }
 
+    lbox->setSelectedRows(lastSelectedRow);
     lbox->updateContent();
     lbox->repaint();
 }
 
 bool TypeAhead::keyPressed(const juce::KeyPress &press)
 {
-    if (press.isKeyCode(juce::KeyPress::downKey))
+    using kp = juce::KeyPress;
+
+    const int key = press.isKeyCode(kp::downKey) ? 1 : press.isKeyCode(kp::upKey) ? -1 : 0;
+
+    if (key != 0)
     {
         if (!lbox->isVisible())
         {
@@ -442,9 +451,27 @@ bool TypeAhead::keyPressed(const juce::KeyPress &press)
             lbox->repaint();
         }
 
-        juce::SparseSet<int> r;
-        r.addRange({0, 1});
-        lbox->setSelectedRows(r);
+        const auto numRows = lboxmodel->getNumRows();
+
+        // if we're opening a new search, select the first entry when pressing the up or down arrow
+        if (lbox->getSelectedRows().isEmpty())
+        {
+            lastSelectedRow.clear();
+            lastSelectedRow.addRange({0, 1});
+
+            lbox->setSelectedRows(lastSelectedRow);
+        }
+        else // select previous or next entry based on last selected row
+        {
+            auto nextRowIdx =
+                std::clamp(lastSelectedRow.getRange(0).getStart() + key, 0, numRows - 1);
+
+            lastSelectedRow.clear();
+            lastSelectedRow.addRange({nextRowIdx, nextRowIdx + 1});
+
+            lbox->setSelectedRows(lastSelectedRow);
+        }
+
         lbox->grabKeyboardFocus();
 
         return true;

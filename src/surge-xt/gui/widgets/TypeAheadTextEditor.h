@@ -101,6 +101,8 @@ struct TypeAhead : public juce::TextEditor, juce::TextEditor::Listener
     void textEditorEscapeKeyPressed(juce::TextEditor &editor) override;
 
     bool keyPressed(const juce::KeyPress &press) override;
+
+    juce::SparseSet<int> lastSelectedRow;
 };
 
 } // namespace Widgets
