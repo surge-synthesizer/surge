@@ -210,7 +210,7 @@ struct PatchSelector : public juce::Component,
 struct PatchSelectorCommentTooltip : public juce::Component,
                                      public Surge::GUI::SkinConsumingComponent
 {
-    PatchSelectorCommentTooltip() {};
+    PatchSelectorCommentTooltip() {}
     void paint(juce::Graphics &g) override;
 
     std::string comment;
