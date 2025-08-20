@@ -3556,6 +3556,8 @@ struct WavetableScriptControlArea : public juce::Component,
 
         std::vector<std::pair<std::string, float>> options;
         bool hasTypein = false;
+        int minValue = 0;
+        int maxValue = 1;
         std::string menuName;
 
         switch (tag)
@@ -3563,30 +3565,58 @@ struct WavetableScriptControlArea : public juce::Component,
         case tag_select_tab:
         case tag_code_apply:
         case tag_current_frame:
-        case tag_res_value:
         case tag_generate_wt:
+        case tag_select_rendermode:
         {
             auto contextMenu = juce::PopupMenu();
 
             auto msurl = editor->helpURLForSpecial("wtse-editor");
             auto hurl = editor->fullyResolvedHelpURL(msurl);
 
-            editor->addHelpHeaderTo("WTSE Editor", hurl, contextMenu);
+            editor->addHelpHeaderTo("Wavetable Script Editor", hurl, contextMenu);
 
             contextMenu.showMenuAsync(editor->popupMenuOptions(this, false),
                                       Surge::GUI::makeEndHoverCallback(pControl));
         }
         break;
+        case tag_res_value:
+        {
+            menuName = "Samples Per Wavetable Frame";
+            minValue = 1;
+            maxValue = 8;
+
+            auto addStop = [&options, minValue, maxValue](int v, int iv) {
+                options.push_back(std::make_pair(
+                    std::to_string(v), Parameter::intScaledToFloat(iv, maxValue, minValue)));
+            };
+
+            addStop(32, 1);
+            addStop(64, 2);
+            addStop(128, 3);
+            addStop(256, 4);
+            addStop(512, 5);
+            addStop(1024, 6);
+            addStop(2048, 7);
+            addStop(4096, 8);
+
+            break;
+        }
         case tag_frames_value:
         {
             hasTypein = true;
-            menuName = "WTSE Wavetable Frame Amount";
+            menuName = "Wavetable Frame Count";
+            minValue = 1;
+            maxValue = 256;
 
-            auto addStop = [&options](int v) {
-                options.push_back(
-                    std::make_pair(std::to_string(v), Parameter::intScaledToFloat(v, 256, 1)));
+            auto addStop = [&options, minValue, maxValue](int v) {
+                options.push_back(std::make_pair(
+                    std::to_string(v), Parameter::intScaledToFloat(v, maxValue, minValue)));
             };
 
+            addStop(2);
+            addStop(4);
+            addStop(5);
+            addStop(8);
             addStop(10);
             addStop(16);
             addStop(20);
@@ -3642,12 +3672,12 @@ struct WavetableScriptControlArea : public juce::Component,
 
                 auto c = pControl->asJuceComponent();
 
-                auto handleTypein = [c, pControl, this](const std::string &s) {
+                auto handleTypein = [c, pControl, minValue, maxValue, this](const std::string &s) {
                     auto i = std::atoi(s.c_str());
 
-                    if (i >= 1 && i <= 256)
+                    if (i >= minValue && i <= maxValue)
                     {
-                        pControl->setValue(Parameter::intScaledToFloat(i, 256, 1));
+                        pControl->setValue(Parameter::intScaledToFloat(i, maxValue, minValue));
                         valueChanged(pControl);
 
                         if (c)
@@ -3660,8 +3690,8 @@ struct WavetableScriptControlArea : public juce::Component,
                     return false;
                 };
 
-                auto val =
-                    std::to_string(Parameter::intUnscaledFromFloat(pControl->getValue(), 256, 1));
+                auto val = std::to_string(
+                    Parameter::intUnscaledFromFloat(pControl->getValue(), maxValue, minValue));
 
                 auto showTypein = [this, c, handleTypein, menuName, pControl, val]() {
                     if (!typeinEditor)
@@ -3694,6 +3724,7 @@ struct WavetableScriptControlArea : public juce::Component,
                 contextMenu.addItem(Surge::GUI::toOSCase("Edit Value: ") + val, true, false,
                                     showTypein);
             }
+
             contextMenu.showMenuAsync(editor->popupMenuOptions(),
                                       Surge::GUI::makeEndHoverCallback(pControl));
         }
