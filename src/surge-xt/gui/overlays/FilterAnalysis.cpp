@@ -185,7 +185,7 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
     g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
 
-    const auto lb = getLocalBounds().transformedBy(getTransform().inverted());
+    const auto lb = getLocalBounds();
     const auto dRect = lb.withTrimmedTop(18).reduced(4);
     const auto width = dRect.getWidth();
     const auto height = dRect.getHeight();
@@ -339,6 +339,10 @@ void FilterAnalysis::paint(juce::Graphics &g)
         g.strokePath(plotPath, juce::PathStrokeType(1.f, juce::PathStrokeType::JointStyle::curved));
     }
 
+    const double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
+    const double res = evaluator->resonance;
+
+    // draw the crosshair and the cursor
     {
         auto gs = juce::Graphics::ScopedSaveState(g);
 
@@ -346,9 +350,8 @@ void FilterAnalysis::paint(juce::Graphics &g)
 
         // draws the ruler and a point to show the position of cutoff frequency and resonance
         {
-            const double freq = std::pow(2, (evaluator->cutoff) / 12) * 440.0;
             const auto xPos = freqToX(std::min(freq, 25000.0), width);
-            const int yPos = height - evaluator->resonance * height;
+            const int yPos = height - res * height;
             const float r = width * 0.0175f;
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Curve).withMultipliedAlpha(0.666));
@@ -360,7 +363,68 @@ void FilterAnalysis::paint(juce::Graphics &g)
             g.setColour(skin->getColor(isPressed ? Colors::MSEGEditor::CurveHighlight
                                                  : Colors::MSEGEditor::Curve));
             g.fillEllipse(hotzone);
+
+            hotzone.translate(dRect.getX(), dRect.getY());
         }
+    }
+
+    // draw the tooltip
+    if (isPressed)
+    {
+        auto fillr = [&g](juce::Rectangle<float> r, juce::Colour c) {
+            g.setColour(c);
+            g.fillRect(r);
+        };
+
+        const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
+
+        g.setFont(skin->fontManager->lfoTypeFont);
+
+        std::string txt1 = fmt::format("Cut: {:.{}f} Hz", freq, detailedMode),
+                    txt2 = fmt::format("Res: {:.{}f} %", res * 100.f, detailedMode);
+
+        int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt1),
+            sw2 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt2);
+
+        float dragX = hotzone.getRight() + 1, dragY = hotzone.getBottom() + 1;
+        float dragW = 6 + std::max(sw1, sw2), dragH = 22;
+
+        // reposition the display if we've reached right or bottom edge of drawArea
+        if (dragX + dragW > dRect.getRight())
+        {
+            dragX -= int(dragX + dragW + 2) % dRect.getRight();
+        }
+
+        if (dragY + dragH > dRect.getBottom())
+        {
+            dragY -= int(dragY + dragH + 4) % dRect.getBottom();
+        }
+
+        auto readout = juce::Rectangle<float>(dragX, dragY, dragW, dragH);
+
+        // if the readout intersects with the cursor rect, shift it so that they don't
+        // (this only happens in bottom right corner)
+        auto overlap = hotzone.getIntersection(readout);
+
+        if (!overlap.isEmpty())
+        {
+            readout = readout.withRightX(hotzone.getX() - 1).withBottomY(hotzone.getY() - 1);
+        }
+
+        fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Border));
+
+        readout.reduce(1, 1);
+
+        fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Background));
+
+        readout = readout.withTrimmedLeft(2).withHeight(10);
+
+        g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
+        g.drawText(txt1, readout, juce::Justification::centredLeft);
+
+        readout = readout.translated(0, 10);
+
+        g.drawText(txt2, readout, juce::Justification::centredLeft);
     }
 
     const auto txtr = lb.withHeight(15);
@@ -461,13 +525,13 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
     mousePoint.setX(std::clamp(mousePoint.getX(), rx0, rx1));
     mousePoint.setY(std::clamp(mousePoint.getY(), ry0, ry1));
 
-    if (event.mods.isLeftButtonDown() && dRect.contains(mousePoint.toInt()))
+    if (isPressed && dRect.contains(mousePoint.toInt()))
     {
         auto &ss = editor->getPatch().scene[editor->current_scene];
         auto &fs = ss.filterunit[whichFilter];
 
-        auto width = dRect.getWidth();
-        auto height = dRect.getHeight();
+        auto width = dRect.getWidth() - 1;
+        auto height = dRect.getHeight() - 1;
 
         auto xNorm = mousePoint.x / (float)width;
         auto freq = std::pow(GRAPH_MAX_FREQ / GRAPH_MIN_FREQ, xNorm) * GRAPH_MIN_FREQ;
@@ -513,14 +577,14 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 // just by clicking anywhere in the graph, no mouse movement required
 void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 {
-    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
+    const auto lb = getLocalBounds().transformedBy(getTransform().inverted());
+    auto dRect = lb.withTrimmedTop(18).reduced(4);
     auto where = event.position;
-    const bool withinHotzone = hotzone.contains(where.translated(-dRect.getX(), -dRect.getY()));
 
     if (dRect.contains(where.toInt()))
     {
-
         isPressed = true;
+
         hideCursor(where.toInt());
         editor->filterCutoffSlider[whichFilter]->asControlValueInterface();
 
@@ -545,18 +609,15 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 
 void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
 {
-    auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
+    auto dRect = getLocalBounds();
 
     setMouseCursor(juce::MouseCursor::NormalCursor);
 
-    if (dRect.contains(event.position.toInt()))
-    {
-        isPressed = false;
-    }
+    isPressed = false;
 
     if (cursorHidden)
     {
-        showCursorAt(hotzone.getCentre().translated(dRect.getX(), dRect.getY()).toInt());
+        showCursorAt(hotzone.getCentre());
     }
 
     guaranteeCursorShown();

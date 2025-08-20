@@ -1587,14 +1587,17 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                     // if the readout intersects with a node rect, shift it up
                     // (this only happens in bottom right corner)
-                    if (readout.intersectRectangles(dragX, dragY, dragW, dragH, r.getX(), r.getY(),
-                                                    r.getWidth(), r.getHeight()))
+                    auto overlap = r.getIntersection(readout);
+
+                    if (!overlap.isEmpty())
                     {
-                        readout.translate(-(r.getHeight() / 2), -(r.getHeight() / 2));
+                        readout = readout.withRightX(r.getX()).withBottomY(r.getY());
                     }
 
                     fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Border));
-                    readout = readout.reduced(1, 1);
+
+                    readout.reduce(1, 1);
+
                     fillr(readout, skin->getColor(Colors::LFO::StepSeq::InfoWindow::Background));
 
                     readout = readout.withTrimmedLeft(2).withHeight(10);
