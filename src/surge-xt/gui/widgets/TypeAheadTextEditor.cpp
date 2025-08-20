@@ -383,17 +383,19 @@ void TypeAhead::parentHierarchyChanged()
     }
 }
 
-void TypeAhead::searchAndShowLBox()
+void TypeAhead::searchAndShowListBox()
 {
     lboxmodel->setSearch(getText().toStdString());
 
-    showLbox();
+    showListBox();
 
     lbox->updateContent();
     lbox->repaint();
 }
 
-void TypeAhead::showLbox()
+void TypeAhead::closeListBox() { lbox->setVisible(false); }
+
+void TypeAhead::showListBox()
 {
     auto p = getParentComponent();
 
@@ -425,7 +427,7 @@ void TypeAhead::textEditorTextChanged(TextEditor &editor)
 
     if (!lbox->isVisible())
     {
-        showLbox();
+        showListBox();
     }
 
     lbox->setSelectedRows(lastSelectedRow);
@@ -445,7 +447,7 @@ bool TypeAhead::keyPressed(const juce::KeyPress &press)
         {
             lastSearch = "";
             lboxmodel->setSearch("");
-            showLbox();
+            showListBox();
 
             lbox->updateContent();
             lbox->repaint();
@@ -506,7 +508,7 @@ void TypeAhead::focusLost(juce::Component::FocusChangeType type)
         return;
     }
 
-    lbox->setVisible(false);
+    closeListBox();
 
     for (auto l : taList)
     {
