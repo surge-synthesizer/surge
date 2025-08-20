@@ -1414,13 +1414,17 @@ void PatchSelector::toggleTypeAheadSearch(bool b)
         }
         else
         {
-            typeAhead->searchAndShowLBox();
+            typeAhead->searchAndShowListBox();
         }
     }
     else
     {
         if (typeAhead->isVisible() && sge)
+        {
             sge->vkbForward--;
+        }
+
+        typeAhead->closeListBox();
         typeAhead->setVisible(false);
     }
     repaint();
@@ -1458,7 +1462,7 @@ void PatchSelector::enableTypeAheadIfReady()
     {
         typeAhead->grabKeyboardFocus();
         typeAhead->selectAll();
-        typeAhead->searchAndShowLBox();
+        typeAhead->searchAndShowListBox();
     }
     else
     {
