@@ -1,4 +1,4 @@
-# Read the raw chunk names from a wav file
+# Read the raw chunk names from a WAV file
 
 from optparse import OptionParser
 import random
