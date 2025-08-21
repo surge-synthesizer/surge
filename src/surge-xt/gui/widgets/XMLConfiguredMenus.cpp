@@ -543,7 +543,7 @@ template <typename T> struct XMLMenuAH : public juce::AccessibilityHandler
 
         bool isReadOnly() const override { return true; }
         juce::String getCurrentValueAsString() const override { return XMLValue<T>::value(comp); }
-        void setValueAsString(const juce::String &newValue) override{};
+        void setValueAsString(const juce::String &newValue) override {}
     };
 
     explicit XMLMenuAH(T *s)
