@@ -165,6 +165,9 @@ void XMLMenuPopulator::populate()
                 delete c;
         }
 
+        SurgeStorage *storage{nullptr};
+        void setStorage(SurgeStorage *s) { storage = s; }
+
         std::string name;
         std::vector<std::string> fullPath;
         int idx = -1;
@@ -181,6 +184,7 @@ void XMLMenuPopulator::populate()
             {
                 auto t = new Tree();
 
+                t->setStorage(storage);
                 t->name = i.name;
                 t->idx = idx;
                 t->fullPath = i.pathElements;
@@ -207,6 +211,7 @@ void XMLMenuPopulator::populate()
                 if (!addToThis)
                 {
                     addToThis = new Tree();
+                    addToThis->setStorage(storage);
                     addToThis->name = i.pathElements[depth];
                     addToThis->fullPath = std::vector<std::string>(
                         i.pathElements.begin(), i.pathElements.begin() + depth + 1);
@@ -263,12 +268,59 @@ void XMLMenuPopulator::populate()
             for (auto c : children)
             {
                 // std::cout << c->type << " " << c->name << std::endl;
+
+                // this is so damn ugly. I apologize!
+                // but showing checkboxes for selected menu entry is nice!
+                bool isChecked = false;
+
+                for (int i = 0; i < n_osc_types; i++)
+                {
+                    if (c->name.compare(osc_type_names[i]) == 0)
+                    {
+                        if (storage)
+                        {
+                            auto &des = storage->getPatch().dawExtraState;
+                            const auto sc = des.editor.current_scene;
+                            const auto o = des.editor.current_osc[sc];
+
+                            if (storage->getPatch().scene[sc].osc[o].type.val.i == i)
+                            {
+                                isChecked = true;
+                            }
+                        }
+                    }
+                }
+
+                for (int i = 0; i < n_fx_slots; i++)
+                {
+                    if (storage)
+                    {
+                        auto &des = storage->getPatch().dawExtraState;
+                        const auto idx = des.editor.current_fx;
+
+                        if (fxslot_order[i] == idx)
+                        {
+                            for (int j = 0; j < n_fx_types; j++)
+                            {
+                                if (c->name.compare(fx_type_names[j]) == 0)
+                                {
+                                    if (storage->getPatch().fx[idx].type.val.i == j)
+                                    {
+                                        isChecked = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 switch (c->type)
                 {
                 case FACPS:
                 {
                     auto idx = c->idx;
-                    m.addItem(c->name, [host, idx, n = c->name]() { host->loadByIndex(n, idx); });
+                    m.addItem(c->name, true, isChecked,
+                              [host, idx, n = c->name]() { host->loadByIndex(n, idx); });
                 }
                 break;
                 case USPS:
@@ -300,7 +352,7 @@ void XMLMenuPopulator::populate()
                 {
                     auto subM = juce::PopupMenu();
                     c->buildJuceMenu(subM, host);
-                    m.addSubMenu(c->name, subM);
+                    m.addSubMenu(c->name, subM, true, nullptr, isChecked);
                 }
                 break;
                 }
@@ -319,6 +371,8 @@ void XMLMenuPopulator::populate()
 
     rootTree->updateFacUserFlag();
     menu = juce::PopupMenu();
+
+    rootTree->setStorage(storage);
 
     rootTree->buildJuceMenu(menu, this);
 
@@ -543,7 +597,7 @@ template <typename T> struct XMLMenuAH : public juce::AccessibilityHandler
 
         bool isReadOnly() const override { return true; }
         juce::String getCurrentValueAsString() const override { return XMLValue<T>::value(comp); }
-        void setValueAsString(const juce::String &newValue) override{};
+        void setValueAsString(const juce::String &newValue) override {};
     };
 
     explicit XMLMenuAH(T *s)

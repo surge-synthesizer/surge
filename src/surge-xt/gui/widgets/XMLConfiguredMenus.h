@@ -51,7 +51,7 @@ struct XMLMenuPopulator
     virtual Surge::GUI::IComponentTagValue::Listener *getControlListener() = 0;
 
     virtual void populate();
-    virtual void loadSnapshot(int type, TiXmlElement *e, int idx){};
+    virtual void loadSnapshot(int type, TiXmlElement *e, int idx) {};
 
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
