@@ -132,6 +132,7 @@ void ResonatorEffect::process(float *dataL, float *dataR)
     case rm_bandpass_n:
     {
         type = fut_bp12;
+        subtype = sst::filters::FilterSubType::st_bp12_LegacyDriven;
         break;
     }
     case rm_highpass:
