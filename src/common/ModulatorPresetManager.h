@@ -61,11 +61,20 @@ struct ModulatorPreset
         std::vector<Preset> presets;
     };
 
-    std::vector<Category> getPresets(SurgeStorage *s);
+    enum class PresetScanMode
+    {
+        FactoryOnly,
+        UserOnly
+    };
+
+    std::vector<Category> getPresets(SurgeStorage *s, PresetScanMode mode);
     void forcePresetRescan();
 
-    std::vector<Category> scanedPresets;
-    bool haveScanedPresets{false};
+    std::vector<Category> scannedUserPresets;
+    bool haveScannedUser{false};
+
+    std::vector<Category> scannedFactoryPresets;
+    bool haveScannedFactory{false};
 };
 } // namespace Storage
 } // namespace Surge
