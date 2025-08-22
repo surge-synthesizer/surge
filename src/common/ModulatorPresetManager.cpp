@@ -291,18 +291,15 @@ std::vector<ModulatorPreset::Category> ModulatorPreset::getPresets(SurgeStorage 
     if (mode == PresetScanMode::FactoryOnly && haveScannedFactory)
         return scannedFactoryPresets;
 
-    auto factoryPath = s->datapath / fs::path{"modulator_presets"};
-    auto userPath = s->userDataPath / fs::path{PresetDir};
+    std::vector<fs::path> scanTargets;
+    if (mode == PresetScanMode::UserOnly)
+        scanTargets.push_back(s->userDataPath / fs::path{PresetDir});
+    if (mode == PresetScanMode::FactoryOnly)
+        scanTargets.push_back(s->datapath / fs::path{"modulator_presets"});
 
     std::map<std::string, Category> resMap; // handy it is sorted!
 
-    std::vector<std::pair<fs::path, bool>> scanTargets;
-    if (mode == PresetScanMode::FactoryOnly)
-        scanTargets.emplace_back(factoryPath, false);
-    if (mode == PresetScanMode::UserOnly)
-        scanTargets.emplace_back(userPath, true);
-
-    for (auto &[p, isU] : scanTargets)
+    for (const auto &p : scanTargets)
     {
         try
         {
