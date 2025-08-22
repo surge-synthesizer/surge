@@ -107,7 +107,7 @@
         <color id="formulaeditor.linenumber.background" value="#2D2D2D"/>
         <color id="formulaeditor.linenumber.text" value="#808080"/>
 
-        <color id="formulaeditor.lua.bracket" value="#dbb01c"/>
+        <color id="formulaeditor.lua.bracket" value="#DBB01C"/>
         <color id="formulaeditor.lua.comment" value="#808080"/>
         <color id="formulaeditor.lua.identifier" value="#9CDCFE"/>
         <color id="formulaeditor.lua.interpunction" value="#CCCCCC"/>
@@ -464,6 +464,6 @@
         <control ui_identifier="modlist.window" x="149" y="56" w="600" h="513"/>
         <control ui_identifier="filter.filter_analysis.window" x="298" y="261" h="211"/>
         <control ui_identifier="filter.waveshaper_analysis.window" x="449" y="238"/>
-        <control ui_identifier="oscilloscope.window" y="57" w="748"/>
+        <control ui_identifier="oscilloscope.window" x="149" y="56" w="600" h="343"/>
     </controls>
 </surge-skin>
