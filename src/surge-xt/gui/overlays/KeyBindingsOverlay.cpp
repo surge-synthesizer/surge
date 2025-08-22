@@ -143,36 +143,7 @@ struct KeyBindingsListRow : public juce::Component
 
         reset->setDeactivated(binding == dbinding);
 
-        int flags = juce::ModifierKeys::noModifiers;
-
-        if (binding.modifier & SurgeGUIEditor::keymap_t::SHIFT)
-            flags |= juce::ModifierKeys::shiftModifier;
-        if (binding.modifier & SurgeGUIEditor::keymap_t::COMMAND)
-            flags |= juce::ModifierKeys::commandModifier;
-        if (binding.modifier & SurgeGUIEditor::keymap_t::CONTROL)
-            flags |= juce::ModifierKeys::ctrlModifier;
-        if (binding.modifier & SurgeGUIEditor::keymap_t::ALT)
-            flags |= juce::ModifierKeys::altModifier;
-
-        auto kp = juce::KeyPress(binding.keyCode, flags, binding.keyCode);
-
-        if (binding.type == SurgeGUIEditor::keymap_t::Binding::TEXTCHAR)
-        {
-            kp = juce::KeyPress(binding.textChar, flags, binding.textChar);
-        }
-
-        auto desc = kp.getTextDescription().toStdString();
-
-#if MAC
-        Surge::Storage::findReplaceSubstring(desc, "command", u8"\U00002318");
-        Surge::Storage::findReplaceSubstring(desc, "option", u8"\U00002325");
-        Surge::Storage::findReplaceSubstring(desc, "shift", u8"\U000021E7");
-        Surge::Storage::findReplaceSubstring(desc, "ctrl", u8"\U00002303");
-#else
-        Surge::Storage::findReplaceSubstring(desc, "ctrl", "Ctrl");
-        Surge::Storage::findReplaceSubstring(desc, "alt", "Alt");
-        Surge::Storage::findReplaceSubstring(desc, "shift", "Shift");
-#endif
+        auto desc = editor->showShortcutDescription(action);
 
         keyDesc->setText(desc, juce::dontSendNotification);
         learn->setValue(0);

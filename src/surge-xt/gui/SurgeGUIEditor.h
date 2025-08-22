@@ -182,9 +182,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void setupKeymapManager();
     bool keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent) override;
-    std::string showShortcutDescription(const std::string &shortcutDesc,
-                                        const std::string &shortcutDescMac);
-    std::string showShortcutDescription(const std::string &shortcutDesc);
+    std::string showShortcutDescription(const Surge::GUI::KeyboardActions action);
 
     bool debugFocus{false};
     void globalFocusChanged(juce::Component *fc) override;
