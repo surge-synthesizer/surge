@@ -55,16 +55,19 @@ enum KeyboardActions
     TOGGLE_SCENE,
     TOGGLE_MODULATOR_ARM,
 
+#if INCLUDE_PATCH_BROWSER
+    TOGGLE_PATCH_BRWOSER,
+#endif
 #if WINDOWS
     TOGGLE_DEBUG_CONSOLE,
 #endif
-    SHOW_KEYBINDINGS_EDITOR,
-    SHOW_LFO_EDITOR,
+    TOGGLE_KEYBIND_EDITOR,
+    TOGGLE_LFO_EDITOR,
 #if INCLUDE_WT_SCRIPTING_EDITOR
-    SHOW_WT_EDITOR,
+    TOGGLE_WT_EDITOR,
 #endif
-    SHOW_MODLIST,
-    SHOW_TUNING_EDITOR,
+    TOGGLE_MODLIST,
+    TOGGLE_TUNING_EDITOR,
     TOGGLE_OSCILLOSCOPE,
     TOGGLE_VIRTUAL_KEYBOARD,
 
@@ -137,19 +140,25 @@ inline std::string keyboardActionName(KeyboardActions a)
     case TOGGLE_MODULATOR_ARM:
         return "TOGGLE_MODULATOR_ARM";
 
+#if INCLUDE_PATCH_BROWSER
+    case TOGGLE_PATCH_BROWSER:
+        return "TOGGLE_PATCH_BROWSER";
+#endif
+
 #if WINDOWS
     case TOGGLE_DEBUG_CONSOLE:
         return "TOGGLE_DEBUG_CONSOLE";
 #endif
-    case SHOW_KEYBINDINGS_EDITOR:
+
+    case TOGGLE_KEYBIND_EDITOR:
         return "SHOW_KEYBINDINGS_EDITOR";
-    case SHOW_LFO_EDITOR:
+    case TOGGLE_LFO_EDITOR:
         return "SHOW_LFO_EDITOR";
-    case SHOW_WT_EDITOR:
+    case TOGGLE_WT_EDITOR:
         return "SHOW_WT_EDITOR";
-    case SHOW_MODLIST:
+    case TOGGLE_MODLIST:
         return "SHOW_MODLIST";
-    case SHOW_TUNING_EDITOR:
+    case TOGGLE_TUNING_EDITOR:
         return "SHOW_TUNING_EDITOR";
     case TOGGLE_VIRTUAL_KEYBOARD:
         return "TOGGLE_VIRTUAL_KEYBOARD";
@@ -273,21 +282,21 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         desc = "Debug Console";
         break;
 #endif
-    case SHOW_KEYBINDINGS_EDITOR:
+    case TOGGLE_KEYBIND_EDITOR:
         desc = "Keyboard Shortcut Editor";
         break;
-    case SHOW_LFO_EDITOR:
+    case TOGGLE_LFO_EDITOR:
         desc = "LFO Editor (MSEG or Formula)";
         break;
 #if INCLUDE_WT_SCRIPTING_EDITOR
-    case SHOW_WT_EDITOR:
+    case TOGGLE_WT_EDITOR:
         desc = "Wavetable Editor";
         break;
 #endif
-    case SHOW_MODLIST:
+    case TOGGLE_MODLIST:
         desc = "Modulation List";
         break;
-    case SHOW_TUNING_EDITOR:
+    case TOGGLE_TUNING_EDITOR:
         desc = "Tuning Editor";
         break;
     case TOGGLE_VIRTUAL_KEYBOARD:
