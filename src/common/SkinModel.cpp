@@ -598,16 +598,16 @@ Connector status_zoom =
 Connector vu_meter =
     Connector("controls.vu_meter", 767, 15, 123, 13, Components::VuMeter, Connector::MAIN_VU_METER);
 
-Connector mseg_editor = Connector("msegeditor.window", 0, 58, 750, 365, Components::Custom,
+Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 366, Components::Custom,
                                   Connector::MSEG_EDITOR_WINDOW);
 
-Connector formula_editor = Connector("formulaeditor.window", 0, 58, 750, 365, Components::Custom,
+Connector formula_editor = Connector("formulaeditor.window", 0, 57, 750, 366, Components::Custom,
                                      Connector::FORMULA_EDITOR_WINDOW);
 
-Connector wt_editor = Connector("wteditor.window", 148, 57, 765, 512, Components::Custom,
+Connector wt_editor = Connector("wteditor.window", 150, 57, 756, 512, Components::Custom,
                                 Connector::WT_EDITOR_WINDOW);
 
-Connector tuning_editor = Connector("tuningeditor.window", 0, 58, 750, 511, Components::Custom,
+Connector tuning_editor = Connector("tuningeditor.window", 0, 57, 750, 512, Components::Custom,
                                     Connector::TUNING_EDITOR_WINDOW);
 
 Connector mod_list =
@@ -616,7 +616,7 @@ Connector mod_list =
 Connector filter_analysis = Connector("filter.filter_analysis.window", 300, 263, 450, 212,
                                       Components::Custom, Connector::FILTER_ANALYSIS_WINDOW);
 
-Connector oscilloscope = Connector("oscilloscope.window", 0, 58, 750, 365, Components::Custom,
+Connector oscilloscope = Connector("oscilloscope.window", 150, 57, 600, 340, Components::Custom,
                                    Connector::OSCILLOSCOPE_WINDOW);
 
 Connector ws_analysis = Connector("filter.waveshaper_analysis.window", 450, 237, 300, 160,
