@@ -160,7 +160,6 @@ void ModulatorPreset::loadPresetFrom(const fs::path &location, SurgeStorage *s, 
                                      int lfoid)
 {
     auto lfo = &(s->getPatch().scene[scene].lfo[lfoid]);
-    // ToDo: Inverse of above
     TiXmlDocument doc;
     doc.LoadFile(location);
     auto lfox = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("lfo"));
@@ -284,31 +283,32 @@ void ModulatorPreset::loadPresetFrom(const fs::path &location, SurgeStorage *s, 
 /*
  * Note: Clients rely on this being sorted by category path if you change it
  */
-std::vector<ModulatorPreset::Category> ModulatorPreset::getPresets(SurgeStorage *s)
+std::vector<ModulatorPreset::Category> ModulatorPreset::getPresets(SurgeStorage *s,
+                                                                   PresetScanMode mode)
 {
-    if (haveScanedPresets)
-        return scanedPresets;
+    if (mode == PresetScanMode::UserOnly && haveScannedUser)
+        return scannedUserPresets;
+    if (mode == PresetScanMode::FactoryOnly && haveScannedFactory)
+        return scannedFactoryPresets;
 
-    // Do a dual directory traversal of factory and user data with the fs::directory_iterator stuff
-    // looking for .lfopreset
-    auto factoryPath = s->datapath / fs::path{"modulator_presets"};
-    auto userPath = s->userDataPath / fs::path{PresetDir};
+    std::vector<fs::path> scanTargets;
+    if (mode == PresetScanMode::UserOnly)
+        scanTargets.push_back(s->userDataPath / fs::path{PresetDir});
+    if (mode == PresetScanMode::FactoryOnly)
+        scanTargets.push_back(s->datapath / fs::path{"modulator_presets"});
 
     std::map<std::string, Category> resMap; // handy it is sorted!
 
-    for (int i = 0; i < 2; ++i)
+    for (const auto &p : scanTargets)
     {
-        auto p = (i ? userPath : factoryPath);
-        bool isU = i;
         try
         {
-            Category currentCategory;
             for (auto &d : fs::recursive_directory_iterator(p))
             {
                 auto dp = fs::path(d);
                 auto base = dp.stem();
                 auto ext = dp.extension();
-                if (path_to_string(ext) != ".modpreset")
+                if (path_to_string(ext) != PresetXtn)
                 {
                     continue;
                 }
@@ -381,15 +381,28 @@ std::vector<ModulatorPreset::Category> ModulatorPreset::getPresets(SurgeStorage 
 
         res.push_back(m.second);
     }
-    scanedPresets = res;
-    haveScanedPresets = true;
+
+    if (mode == PresetScanMode::UserOnly)
+    {
+        scannedUserPresets = res;
+        haveScannedUser = true;
+    }
+    if (mode == PresetScanMode::FactoryOnly)
+    {
+        scannedFactoryPresets = res;
+        haveScannedFactory = true;
+    }
+
     return res;
 }
 
 void ModulatorPreset::forcePresetRescan()
 {
-    haveScanedPresets = false;
-    scanedPresets.clear();
+    haveScannedUser = false;
+    scannedUserPresets.clear();
+
+    haveScannedFactory = false;
+    scannedFactoryPresets.clear();
 }
 } // namespace Storage
 } // namespace Surge
