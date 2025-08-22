@@ -206,6 +206,8 @@ end
         lua_pushnumber(s.L, BLOCK_SIZE);
         lua_setfield(s.L, -2, "block_size");
 
+        s.is_display = is_display;
+
         if (lua_isfunction(s.L, -2))
         {
             // CALL HERE
@@ -247,6 +249,12 @@ end
                 addi("velocity", s.velocity);
                 addi("voice_id", s.voiceOrderAtCreate);
             }
+
+            // Fake a voice count of one for display calls
+            int voiceCount = storage->activeVoiceCount;
+            if (voiceCount == 0 && s.is_display)
+                voiceCount = 1;
+            addi("voice_count", voiceCount);
 
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
@@ -361,9 +369,6 @@ end
     s.amp = 0;
     s.deform = 0;
     s.tempo = 120;
-
-    if (is_display)
-        s.is_display = true;
 
     if (s.raisedError)
         std::cout << "Error: " << *(s.error) << std::endl;
