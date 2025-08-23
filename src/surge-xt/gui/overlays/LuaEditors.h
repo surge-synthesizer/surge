@@ -164,6 +164,7 @@ class CodeEditorSearch : public TextfieldPopup
 
     int lastSelectionStart = -1;
     int lastSelectionEnd = -1;
+    int lastScroll = -1;
 
     bool active = false;
     int result[512] = {0};

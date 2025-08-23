@@ -493,14 +493,17 @@ int *CodeEditorSearch::getSelectionsOnScreen()
 
     auto sel = ed->getHighlightedRegion();
     juce::String txt = ed->getTextInRange(sel);
+    auto firstLineOnScreen = ed->getFirstLineOnScreen();
 
-    if (lastSelectionStart == sel.getStart() && lastSelectionEnd == sel.getEnd())
+    if (lastSelectionStart == sel.getStart() && lastSelectionEnd == sel.getEnd() &&
+        lastScroll == firstLineOnScreen)
     {
         return selectionMatches;
     }
 
     lastSelectionStart = sel.getStart();
     lastSelectionEnd = sel.getEnd();
+    lastScroll = firstLineOnScreen;
 
     if (this->ed->getSelectionStart().getPosition() - this->ed->getSelectionEnd().getPosition() ==
             0 ||
@@ -1055,7 +1058,7 @@ void SurgeCodeEditorComponent::findWordAt(juce ::CodeDocument::Position &pos,
     auto indexFrom = pos.getIndexInLine();
 
     auto currentChar = lineText.substring(indexFrom, indexFrom + 1)[0];
-    while ((isalpha(currentChar) || isdigit(currentChar)) && indexFrom > 0)
+    while ((isalpha(currentChar) || isdigit(currentChar) || currentChar == 95) && indexFrom > 0)
     {
         indexFrom--;
         currentChar = lineText.substring(indexFrom, indexFrom + 1)[0];
@@ -1064,7 +1067,8 @@ void SurgeCodeEditorComponent::findWordAt(juce ::CodeDocument::Position &pos,
         indexFrom++;
     auto indexTo = pos.getIndexInLine();
     currentChar = lineText.substring(indexTo, indexTo + 1)[0];
-    while ((isalpha(currentChar) || isdigit(currentChar)) && indexTo < lineText.length())
+    while ((isalpha(currentChar) || isdigit(currentChar) || currentChar == 95) &&
+           indexTo < lineText.length())
     {
 
         indexTo++;
