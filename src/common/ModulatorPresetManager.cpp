@@ -56,9 +56,33 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
         else
             containingPath = containingPath / fs::path{"LFO"};
 
-        fs::create_directories(containingPath);
+        // validate location before using
+        if (!location.is_relative())
+        {
+            s->reportError(
+                "Please use relative paths when saving presets. Referring to drive names directly "
+                "and using absolute paths is not allowed!",
+                "Relative Path Required");
+            return;
+        }
+
+        auto comppath = containingPath;
         auto fullLocation =
-            fs::path({containingPath / location}).replace_extension(fs::path{PresetXtn});
+            (containingPath / location).lexically_normal().replace_extension(PresetXtn);
+
+        // make sure your category isnt "../../../etc/config"
+        auto [_, compIt] = std::mismatch(fullLocation.begin(), fullLocation.end(), comppath.begin(),
+                                         comppath.end());
+        if (compIt != comppath.end())
+        {
+            s->reportError("Your save path is not a directory inside the user presets directory. "
+                           "This usually means you are doing something like trying to use ../"
+                           " in your preset name.",
+                           "Invalid Save Path");
+            return;
+        }
+
+        fs::create_directories(fullLocation.parent_path());
 
         TiXmlDeclaration decl("1.0", "UTF-8", "yes");
 
@@ -149,7 +173,13 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
     }
     catch (const fs::filesystem_error &e)
     {
-        s->reportError(e.what(), "Unable to save LFO Preset");
+
+        std::ostringstream oss;
+        oss << "Exception occurred while attempting to write the preset! Most likely, "
+               "invalid characters or a reserved name was used to name the preset. "
+               "Please try again with a different name!\n"
+            << "Details " << e.what();
+        s->reportError(oss.str(), "Preset Write Error");
     }
 }
 

@@ -557,7 +557,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
             storage.reportError(
                 "Please use relative paths when saving patches. Referring to drive names directly "
                 "and using absolute paths is not allowed!",
-                "Error");
+                "Relative Path Required");
             return;
         }
 
@@ -568,27 +568,28 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
         savepath = savepath.lexically_normal();
 
         // make sure your category isnt "../../../etc/config"
-
         auto [_, compIt] =
             std::mismatch(savepath.begin(), savepath.end(), comppath.begin(), comppath.end());
         if (compIt != comppath.end())
         {
             storage.reportError(
-                "Your save path is not a directory below the user patches directory. "
-                "This usually means you are doing something like trying to use too many ../"
+                "Your save path is not a directory inside the user patches directory. "
+                "This usually means you are doing something like trying to use ../"
                 " in your category name.",
-                "Save Path not below user path");
+                "Invalid Save Path");
             return;
         }
 
         create_directories(savepath);
     }
-    catch (...)
+    catch (const fs::filesystem_error &e)
     {
-        storage.reportError(
-            "Exception occurred while creating category folder! Most likely, invalid characters "
-            "were used to name the category. Please remove suspicious characters and try again!",
-            "Error");
+        std::ostringstream oss;
+        oss << "Exception occurred while creating category folder! Most likely, invalid characters "
+               "were used to name the category. Please remove suspicious characters and try "
+               "again!\n"
+            << "Details " << e.what();
+        storage.reportError(oss.str(), "Path Create Error");
         return;
     }
 
@@ -616,12 +617,14 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
             savePatchToPath(filename);
         }
     }
-    catch (...)
+    catch (const fs::filesystem_error &e)
     {
-        storage.reportError("Exception occurred while attempting to write the patch! Most likely, "
-                            "invalid characters or a reserved name was used to name the patch. "
-                            "Please try again with a different name!",
-                            "Error");
+        std::ostringstream oss;
+        oss << "Exception occurred while attempting to write the patch! Most likely, "
+               "invalid characters or a reserved name was used to name the patch. "
+               "Please try again with a different name!\n"
+            << "Details " << e.what();
+        storage.reportError(oss.str(), "Patch Write Error");
         return;
     }
 
