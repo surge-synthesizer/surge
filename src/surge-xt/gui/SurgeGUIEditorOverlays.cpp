@@ -581,7 +581,15 @@ void SurgeGUIEditor::closeOverlay(OverlayTags olt)
 
     if (isAnyOverlayPresent(olt))
     {
-        dismissEditorOfType(olt);
+        if (olt == FORMULA_EDITOR || olt == WT_EDITOR)
+        {
+            // Run the chickenbox path
+            olw->onClose();
+        }
+        else
+        {
+            dismissEditorOfType(olt);
+        }
     }
 
     switch (olt)
