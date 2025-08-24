@@ -3925,17 +3925,36 @@ void WavetableScriptEditor::onSkinChanged()
     rendererComponent->setSkin(skin, associatedBitmapStore);
 }
 
-void WavetableScriptEditor::setupEvaluator()
+void WavetableScriptEditor::setupEvaluator(bool loadingPreset)
 {
-    auto resi = controlArea->resolutionN->getIntValue();
+    int resi;
+    int nfr;
+    std::string script;
+
+    if (loadingPreset)
+    {
+        resi = osc->wavetable_formula_res_base;
+        nfr = osc->wavetable_formula_nframes;
+        script = osc->wavetable_formula;
+    }
+    else
+    {
+        resi = controlArea->resolutionN->getIntValue();
+        nfr = controlArea->framesN->getIntValue();
+        script = mainDocument->getAllContent().toStdString();
+    }
+
+    if (script == "")
+        script = evaluator->defaultWavetableScript();
+
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
         respt *= 2;
 
     evaluator->setStorage(storage);
-    evaluator->setScript(mainDocument->getAllContent().toStdString());
+    evaluator->setScript(script);
     evaluator->setResolution(respt);
-    evaluator->setFrameCount(controlArea->framesN->getIntValue());
+    evaluator->setFrameCount(nfr);
 }
 
 void WavetableScriptEditor::applyCode()
@@ -4090,10 +4109,22 @@ void WavetableScriptEditor::setCurrentFrame(int value)
     controlArea->currentFrameN->setIntValue(frameNumber);
 }
 
-void WavetableScriptEditor::generateWavetable()
+void WavetableScriptEditor::generateWavetable(bool loadingPreset)
 {
-    auto resi = controlArea->resolutionN->getIntValue();
-    auto nfr = controlArea->framesN->getIntValue();
+    int resi;
+    int nfr;
+
+    if (loadingPreset)
+    {
+        resi = osc->wavetable_formula_res_base;
+        nfr = osc->wavetable_formula_nframes;
+    }
+    else
+    {
+        resi = controlArea->resolutionN->getIntValue();
+        nfr = controlArea->framesN->getIntValue();
+    }
+
     auto respt = 32;
 
     for (int i = 1; i < resi; ++i)
@@ -4101,7 +4132,7 @@ void WavetableScriptEditor::generateWavetable()
 
     wt_header wh;
     float *wd = nullptr;
-    setupEvaluator();
+    setupEvaluator(loadingPreset);
     evaluator->populateWavetable(wh, &wd);
     storage->waveTableDataMutex.lock();
     osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
@@ -4109,6 +4140,7 @@ void WavetableScriptEditor::generateWavetable()
     storage->waveTableDataMutex.unlock();
 
     delete[] wd;
+
     editor->oscWaveform->repaintForceForWT();
     editor->repaintFrame();
 }

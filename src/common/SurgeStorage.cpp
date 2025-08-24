@@ -49,6 +49,7 @@
 #endif
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"
+#include "WavetableScriptPresetManager.h"
 #include "SurgeMemoryPools.h"
 #include "sst/basic-blocks/tables/SincTableProvider.h"
 
@@ -380,6 +381,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userFXPath = userDataPath / "FX Presets";
     userMidiMappingsPath = userDataPath / "MIDI Mappings";
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
+    userWavetableScriptPath = userDataPath / "Wavetable Script Presets";
     userSkinsPath = userDataPath / "Skins";
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
     extraUserWavetablesPath = config.extraUsersWavetablesPath;
@@ -619,6 +621,15 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     {
         reportError(e.what(), "Error Scanning Modulator Presets");
     }
+    try
+    {
+        wavetableScriptPreset = std::make_unique<Surge::Storage::WavetableScriptPreset>();
+        wavetableScriptPreset->forcePresetRescan();
+    }
+    catch (fs::filesystem_error &e)
+    {
+        reportError(e.what(), "Error Scanning Wavetable Script Presets");
+    }
     memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }
 
@@ -637,7 +648,7 @@ void SurgeStorage::createUserDirectory()
         {
             for (auto &s : {userDataPath, userDefaultFilePath, userPatchesPath, userWavetablesPath,
                             userModulatorSettingsPath, userFXPath, userWavetablesExportPath,
-                            userSkinsPath, userMidiMappingsPath})
+                            userWavetableScriptPath, userSkinsPath, userMidiMappingsPath})
                 fs::create_directories(s);
 
             userDataPathValid = true;

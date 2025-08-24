@@ -113,6 +113,11 @@ struct OscillatorWaveformDisplay : public juce::Component,
     void createWTMenuItems(juce::PopupMenu &contextMenu, bool centered = false,
                            bool add2D3Dswitch = false);
 
+    void createWTLoadMenu(juce::PopupMenu &contextMenu);
+    void createWTExportMenu(juce::PopupMenu &contextMenu);
+    void populateWTScriptMenu(juce::PopupMenu &contextMenu);
+    void createWTScriptMenu(juce::PopupMenu &contextMenu, bool singleCategory = false);
+
     void createAliasOptionsMenu(const bool useComponentBounds = false,
                                 const bool onlyHelpEntry = false);
 

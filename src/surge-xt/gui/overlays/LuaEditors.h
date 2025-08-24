@@ -377,13 +377,13 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void showPreludeCode();
     void escapeKeyPressed();
 
-    void generateWavetable();
+    void generateWavetable(bool loadingPreset = false);
     void rerenderFromUIState();
     void setCurrentFrame(int value);
 
     int lastRes{-1}, lastFrames{-1}, lastFrame{-1}, lastRm{-1};
 
-    void setupEvaluator();
+    void setupEvaluator(bool loadingPreset = false);
 
     std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     std::unique_ptr<juce::CodeDocument> preludeDocument;
@@ -393,8 +393,10 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     std::unique_ptr<WavetablePreviewComponent> rendererComponent;
 
     OscillatorStorage *osc;
-    SurgeGUIEditor *editor{nullptr};
     int osc_id, scene;
+
+    SurgeGUIEditor *editor{nullptr};
+    void setSurgeGUIEditor(SurgeGUIEditor *s) { editor = s; }
 
     DAWExtraStateStorage::EditorState::WavetableScriptEditState &getEditState();
 

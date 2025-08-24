@@ -1178,6 +1178,8 @@ class SurgePatch
     void stepSeqFromXmlElement(StepSequencerStorage *ss, TiXmlElement *parent) const;
     void formulaToXMLElement(FormulaModulatorStorage *ms, TiXmlElement &parent) const;
     void formulaFromXMLElement(FormulaModulatorStorage *ms, TiXmlElement *parent) const;
+    void wtsToXMLElement(OscillatorStorage *osc, TiXmlElement &parent) const;
+    void wtsFromXMLElement(OscillatorStorage *osc, TiXmlElement *parent) const;
 
     void load_patch(const void *data, int size, bool preset);
     unsigned int save_patch(void **data);
@@ -1331,6 +1333,7 @@ struct ScenesOutputData
 
 struct FxUserPreset;
 struct ModulatorPreset;
+struct WavetableScriptPreset;
 } // namespace Storage
 namespace Memory
 {
@@ -1560,6 +1563,7 @@ class alignas(16) SurgeStorage
 
     std::unique_ptr<Surge::Storage::FxUserPreset> fxUserPreset;
     std::unique_ptr<Surge::Storage::ModulatorPreset> modulatorPreset;
+    std::unique_ptr<Surge::Storage::WavetableScriptPreset> wavetableScriptPreset;
 
     bool datapathOverriden{false};
     fs::path datapath;
@@ -1571,6 +1575,7 @@ class alignas(16) SurgeStorage
     fs::path userModulatorSettingsPath;
     fs::path userFXPath;
     fs::path userWavetablesExportPath;
+    fs::path userWavetableScriptPath;
     fs::path userSkinsPath;
     fs::path userMidiMappingsPath;
     fs::path extraThirdPartyWavetablesPath; // used by rack
