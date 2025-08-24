@@ -145,6 +145,8 @@ add_library(${PROJECT_NAME}
   UserDefaults.cpp
   UserDefaults.h
   WAVFileSupport.cpp
+  WavetableScriptPresetManager.cpp
+  WavetableScriptPresetManager.h
   dsp/DSPExternalAdapterUtils.cpp
   dsp/Effect.cpp
   dsp/Effect.h

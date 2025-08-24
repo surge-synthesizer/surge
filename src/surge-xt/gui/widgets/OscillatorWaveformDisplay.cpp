@@ -34,6 +34,8 @@
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
 #include "UserDefaults.h"
+#include "WavetableScriptPresetManager.h"
+#include "overlays/LuaEditors.h"
 #include "fmt/core.h"
 
 namespace Surge
@@ -557,6 +559,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         {
             if (idx == storage->firstThirdPartyWTCategory)
             {
+                contextMenu.addColumnBreak();
                 Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
                     contextMenu, "3RD PARTY WAVETABLES");
             }
@@ -564,6 +567,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
             if (idx == storage->firstUserWTCategory &&
                 storage->firstUserWTCategory != storage->wt_category.size())
             {
+                contextMenu.addColumnBreak();
                 addUserLabel = true;
             }
 
@@ -599,16 +603,6 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     contextMenu.addSeparator();
 
-#if INCLUDE_WT_SCRIPTING_EDITOR
-    auto owts = [this]() {
-        if (sge)
-            sge->showOverlay(SurgeGUIEditor::WT_EDITOR);
-    };
-
-    contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Editor..."), owts);
-    contextMenu.addSeparator();
-#endif
-
     // add this option only if we have any wavetables in the list
     if (idx > 0)
     {
@@ -636,9 +630,102 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     contextMenu.addSeparator();
 
+    createWTLoadMenu(contextMenu);
+
+    createWTExportMenu(contextMenu);
+    contextMenu.addSeparator();
+
+#if INCLUDE_WT_SCRIPTING_EDITOR
+    createWTScriptMenu(contextMenu, false);
+    contextMenu.addSeparator();
+#endif
+
+    createWTMenuItems(contextMenu);
+}
+
+void OscillatorWaveformDisplay::createWTMenu(const bool useComponentBounds = true)
+{
+    bool usesWT = uses_wavetabledata(oscdata->type.val.i);
+
+    if (usesWT)
+    {
+        auto contextMenu = juce::PopupMenu();
+
+        createWTMenuItems(contextMenu, true, true);
+
+        contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
+    }
+}
+
+void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, bool centered,
+                                                  bool add2D3Dswitch)
+{
+    if (sge)
+    {
+        auto hu = sge->helpURLForSpecial("wavetables");
+
+        if (hu != "")
+        {
+            auto lurl = sge->fullyResolvedHelpURL(hu);
+            auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Wavetables", lurl);
+
+            tc->setSkin(skin, associatedBitmapStore);
+            tc->setCentered(centered);
+
+            auto hment = tc->getTitle();
+
+            contextMenu.addCustomItem(-1, std::move(tc), nullptr, hment);
+        }
+
+        if (add2D3Dswitch)
+        {
+            contextMenu.addSeparator();
+
+            auto action = [this]() {
+                toggleCustomEditor();
+
+                if (!customEditor)
+                {
+                    Surge::Storage::updateUserDefaultValue(
+                        storage, Surge::Storage::Use3DWavetableView, false);
+                }
+            };
+
+            auto text = fmt::format("Switch to {} Display", (customEditor) ? "2D" : "3D");
+            contextMenu.addItem(Surge::GUI::toOSCase(text), action);
+            contextMenu.addSeparator();
+
+            createWTLoadMenu(contextMenu);
+
+            createWTExportMenu(contextMenu);
+            contextMenu.addSeparator();
+
+#if INCLUDE_WT_SCRIPTING_EDITOR
+            createWTScriptMenu(contextMenu, true);
+            contextMenu.addSeparator();
+#endif
+
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "INFO");
+
+            // These are enabled simply so they show up in the screen reader
+            contextMenu.addItem(
+                Surge::GUI::toOSCase(fmt::format("Number of Frames: {}", oscdata->wt.n_tables)),
+                true, false, nullptr);
+            contextMenu.addItem(
+                Surge::GUI::toOSCase(fmt::format("Frame Length: {} samples", oscdata->wt.size)),
+                true, false, nullptr);
+        }
+    }
+}
+
+void OscillatorWaveformDisplay::createWTLoadMenu(juce::PopupMenu &contextMenu)
+{
     auto action = [this]() { this->loadWavetableFromFile(); };
     contextMenu.addItem(Surge::GUI::toOSCase("Load Wavetable from File..."), action);
+}
 
+void OscillatorWaveformDisplay::createWTExportMenu(juce::PopupMenu &contextMenu)
+{
     juce::PopupMenu xportMenu;
     for (bool isWav : {true, false})
     {
@@ -719,89 +806,172 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
             xportMenu.addItem("To .WT...", exportAction);
     }
     contextMenu.addSubMenu("Export Wavetable", xportMenu);
-
-    contextMenu.addSeparator();
-
-    createWTMenuItems(contextMenu);
 }
 
-void OscillatorWaveformDisplay::createWTMenu(const bool useComponentBounds = true)
+void OscillatorWaveformDisplay::createWTScriptMenu(juce::PopupMenu &contextMenu,
+                                                   bool singleCategory)
 {
-    bool usesWT = uses_wavetabledata(oscdata->type.val.i);
-
-    if (usesWT)
+    if (singleCategory)
     {
-        auto contextMenu = juce::PopupMenu();
-
-        createWTMenuItems(contextMenu, true, true);
-
-        contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
+        juce::PopupMenu wtsMenu;
+        populateWTScriptMenu(wtsMenu);
+        contextMenu.addSubMenu(Surge::GUI::toOSCase("Wavetable Script"), wtsMenu);
+    }
+    else
+    {
+        contextMenu.addColumnBreak();
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                        "WAVETABLE SCRIPTS");
+        populateWTScriptMenu(contextMenu);
     }
 }
 
-void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, bool centered,
-                                                  bool add2D3Dswitch)
+void OscillatorWaveformDisplay::populateWTScriptMenu(juce::PopupMenu &contextMenu)
 {
-    if (sge)
+
+    auto owts = [this]() {
+        if (sge)
+
+            sge->showOverlay(SurgeGUIEditor::WT_EDITOR);
+    };
+    contextMenu.addItem(Surge::GUI::toOSCase("Open Wavetable Editor..."), owts);
+    contextMenu.addSeparator();
+
+    auto swp = [this]() {
+        if (!sge)
+            return;
+        sge->promptForMiniEdit(
+            "", "Enter the preset name:", "Wavetable Script Preset Name", juce::Point<int>{},
+            [this](const std::string &s) {
+                this->storage->wavetableScriptPreset->savePresetToUser(
+                    string_to_path(s), this->storage, scene, oscInScene);
+            },
+            this);
+    };
+    contextMenu.addItem(Surge::GUI::toOSCase("Save Preset As..."), swp);
+    contextMenu.addSeparator();
+
+    // Recursive category traversal
+    std::function<void(juce::PopupMenu &, const Surge::Storage::WavetableScriptPreset::Category &,
+                       const std::vector<Surge::Storage::WavetableScriptPreset::Category> &)>
+        recurseCat;
+
+    recurseCat = [this, &recurseCat](
+                     juce::PopupMenu &m, const Surge::Storage::WavetableScriptPreset::Category &cat,
+                     const std::vector<Surge::Storage::WavetableScriptPreset::Category> &categories)
+
     {
-        auto hu = sge->helpURLForSpecial("wavetables");
-
-        if (hu != "")
+        for (const auto &p : cat.presets)
         {
-            auto lurl = sge->fullyResolvedHelpURL(hu);
-            auto tc = std::make_unique<Surge::Widgets::MenuTitleHelpComponent>("Wavetables", lurl);
+            auto action = [this, p]() {
+                // TODO: Add undo for WTS
+                sge->undoManager()->pushWavetable(scene, oscInScene);
 
-            tc->setSkin(skin, associatedBitmapStore);
-            tc->setCentered(centered);
+                this->storage->wavetableScriptPreset->loadPresetFrom(p.path, this->storage, scene,
+                                                                     oscInScene);
 
-            auto hment = tc->getTitle();
+                auto *os = &this->storage->getPatch().scene[scene].osc[oscInScene];
+                auto wtse = std::make_unique<Surge::Overlays::WavetableScriptEditor>(
+                    sge, this->storage, os, oscInScene, scene, skin);
 
-            contextMenu.addCustomItem(-1, std::move(tc), nullptr, hment);
-        }
-
-        if (add2D3Dswitch)
-        {
-            contextMenu.addSeparator();
-
-            auto action = [this]() {
-                toggleCustomEditor();
-
-                if (!customEditor)
+                if (wtse)
                 {
-                    Surge::Storage::updateUserDefaultValue(
-                        storage, Surge::Storage::Use3DWavetableView, false);
+                    wtse->generateWavetable(true);
+                }
+
+                auto ov = SurgeGUIEditor::WT_EDITOR;
+                if (sge->isAnyOverlayPresent(ov))
+                {
+                    bool tornOut = false;
+                    juce::Point<int> tearOutPos;
+
+                    auto olw = sge->getOverlayWrapperIfOpen(ov);
+
+                    if (olw && olw->isTornOut())
+                    {
+                        tornOut = true;
+                        tearOutPos = olw->currentTearOutLocation();
+                    }
+
+                    sge->closeOverlay(ov);
+                    sge->showOverlay(ov);
+
+                    if (tornOut)
+                    {
+                        auto olw = sge->getOverlayWrapperIfOpen(ov);
+
+                        if (olw)
+                        {
+                            olw->doTearOut(tearOutPos);
+                        }
+                    }
                 }
             };
 
-            auto text = fmt::format("Switch to {} Display", (customEditor) ? "2D" : "3D");
-
-            contextMenu.addItem(Surge::GUI::toOSCase(text), action);
-
-#if INCLUDE_WT_SCRIPTING_EDITOR
-            contextMenu.addSeparator();
-
-            auto owts = [this]() {
-                if (sge)
-                    sge->showOverlay(SurgeGUIEditor::WT_EDITOR);
-            };
-
-            contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Editor..."), owts);
-            contextMenu.addSeparator();
-#endif
-
-            contextMenu.addSeparator();
-
-            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "INFO");
-
-            // These are enabled simply so they show up in the screen reader
-            contextMenu.addItem(
-                Surge::GUI::toOSCase(fmt::format("Number of Frames: {}", oscdata->wt.n_tables)),
-                true, false, nullptr);
-            contextMenu.addItem(
-                Surge::GUI::toOSCase(fmt::format("Frame Length: {} samples", oscdata->wt.size)),
-                true, false, nullptr);
+            m.addItem(p.name, action);
         }
-    }
+
+        bool haveD = false;
+
+        if (cat.path.empty())
+        {
+            // This is a preset in the root
+        }
+        else
+        {
+            for (const auto &sc : categories)
+            {
+                if (sc.parentPath == cat.path)
+                {
+                    if (!haveD)
+                        m.addSeparator();
+                    haveD = true;
+                    juce::PopupMenu subMenu;
+                    recurseCat(subMenu, sc, categories);
+                    m.addSubMenu(sc.name, subMenu);
+                }
+            }
+        }
+    };
+
+    // Helper to add a list of categories to the menu
+    auto addCategoryList =
+        [&](juce::PopupMenu &menu,
+            const std::vector<Surge::Storage::WavetableScriptPreset::Category> &categories) {
+            if (categories.empty())
+                return;
+
+            menu.addSeparator();
+
+            for (auto &tlc : categories)
+            {
+                if (tlc.path.empty())
+                {
+                    recurseCat(menu, tlc, categories);
+                    menu.addSeparator();
+                }
+                else if (tlc.parentPath.empty())
+                {
+                    juce::PopupMenu sm;
+                    recurseCat(sm, tlc, categories);
+                    menu.addSubMenu(tlc.name, sm);
+                }
+            }
+        };
+
+    // Add user and factory preset folders in that order
+    auto userPresetCategories = this->storage->wavetableScriptPreset->getPresets(
+        this->storage, Surge::Storage::WavetableScriptPreset::PresetScanMode::UserOnly);
+    addCategoryList(contextMenu, userPresetCategories);
+
+    auto factoryPresetCategories = this->storage->wavetableScriptPreset->getPresets(
+        this->storage, Surge::Storage::WavetableScriptPreset::PresetScanMode::FactoryOnly);
+    addCategoryList(contextMenu, factoryPresetCategories);
+
+    contextMenu.addSeparator();
+
+    // Refresh presets option
+    contextMenu.addItem(Surge::GUI::toOSCase("Refresh Wavetable Scripts"), owts);
 }
 
 void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBounds,
