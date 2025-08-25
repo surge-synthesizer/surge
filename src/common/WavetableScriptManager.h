@@ -20,8 +20,8 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#ifndef SURGE_SRC_COMMON_WAVETABLESCRIPTPRESETMANAGER_H
-#define SURGE_SRC_COMMON_WAVETABLESCRIPTPRESETMANAGER_H
+#ifndef SURGE_SRC_COMMON_WAVETABLESCRIPTMANAGER_H
+#define SURGE_SRC_COMMON_WAVETABLESCRIPTMANAGER_H
 
 #include "filesystem/import.h"
 #include <vector>
@@ -31,23 +31,23 @@ namespace Surge
 {
 namespace Storage
 {
-struct WavetableScriptPreset
+struct WavetableScriptManager
 {
     /*
-     * Given a storage, scene, and LFO, stream stream it to a file relative to the location
-     * in the user directory LFO presets area
+     * Given a storage, scene, and OSC, stream it to a file relative to the location
+     * in the user directory wavetable script area
      */
-    void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int lfo);
+    void saveScriptToUser(const fs::path &location, SurgeStorage *s, int scene, int oscid);
 
     /*
-     * Given a completed path, load the preset into our storage
+     * Given a completed path, load the script into our storage
      */
-    void loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene, int lfo);
+    void loadScriptFrom(const fs::path &location, SurgeStorage *s, int scene, int oscid);
 
     /*
-     * What are the presets we have? In some form of category order
+     * What are the scripts we have? In some form of category order
      */
-    struct Preset
+    struct Script
     {
         std::string name;
         fs::path path;
@@ -58,24 +58,24 @@ struct WavetableScriptPreset
         std::string name;
         std::string path;
         std::string parentPath;
-        std::vector<Preset> presets;
+        std::vector<Script> scripts;
     };
 
-    enum class PresetScanMode
+    enum class ScriptScanMode
     {
         FactoryOnly,
         UserOnly
     };
 
-    std::vector<Category> getPresets(SurgeStorage *s, PresetScanMode mode);
-    void forcePresetRescan();
+    std::vector<Category> getScripts(SurgeStorage *s, ScriptScanMode scanMode);
+    void forceScriptRefresh();
 
-    std::vector<Category> scannedUserPresets;
+    std::vector<Category> scannedUserScripts;
     bool haveScannedUser{false};
 
-    std::vector<Category> scannedFactoryPresets;
+    std::vector<Category> scannedFactoryScripts;
     bool haveScannedFactory{false};
 };
 } // namespace Storage
 } // namespace Surge
-#endif // SURGE_SRC_COMMON_WAVETABLESCRIPTPRESETMANAGER_H
+#endif // SURGE_SRC_COMMON_WAVETABLESCRIPTMANAGER_H

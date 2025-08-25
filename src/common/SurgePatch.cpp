@@ -4312,13 +4312,13 @@ void SurgePatch::formulaFromXMLElement(FormulaModulatorStorage *fs, TiXmlElement
 void SurgePatch::wtsToXMLElement(OscillatorStorage *osc, TiXmlElement &parent) const
 {
     parent.SetAttribute(
-        "wavetable_formula",
+        "wavetable_script",
         Surge::Storage::base64_encode((unsigned const char *)osc->wavetable_formula.c_str(),
                                       osc->wavetable_formula.length()));
 }
 
 void SurgePatch::wtsFromXMLElement(OscillatorStorage *osc, TiXmlElement *parent) const
 {
-    auto fb64 = parent->Attribute("wavetable_formula");
+    auto fb64 = parent->Attribute("wavetable_script");
     osc->wavetable_formula = Surge::Storage::base64_decode(fb64);
 }

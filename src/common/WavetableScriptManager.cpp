@@ -20,7 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#include "WavetableScriptPresetManager.h"
+#include "WavetableScriptManager.h"
 #include <iostream>
 #include "DebugHelpers.h"
 #include "SurgeStorage.h"
@@ -32,24 +32,22 @@ namespace Surge
 namespace Storage
 {
 
-const static std::string PresetDir = "Wavetable Script Presets";
-const static std::string PresetXtn = ".wtspreset";
+const static std::string ScriptDir = "Wavetable Scripts";
+const static std::string ScriptExt = ".wtscript";
 
-void WavetableScriptPreset::savePresetToUser(const fs::path &location, SurgeStorage *s, int scene,
-                                             int oscid)
+void WavetableScriptManager::saveScriptToUser(const fs::path &location, SurgeStorage *s, int scene,
+                                              int oscid)
 {
     try
     {
         auto osc = &(s->getPatch().scene[scene].osc[oscid]);
-        std::string script = osc->wavetable_formula;
-
-        auto containingPath = s->userDataPath / fs::path{PresetDir};
+        auto containingPath = s->userDataPath / fs::path{ScriptDir};
 
         // validate location before using
         if (!location.is_relative())
         {
             s->reportError(
-                "Please use relative paths when saving presets. Referring to drive names directly "
+                "Please use relative paths when saving scripts. Referring to drive names directly "
                 "and using absolute paths is not allowed!",
                 "Relative Path Required");
             return;
@@ -57,16 +55,15 @@ void WavetableScriptPreset::savePresetToUser(const fs::path &location, SurgeStor
 
         auto comppath = containingPath;
         auto fullLocation =
-            (containingPath / location).lexically_normal().replace_extension(PresetXtn);
+            (containingPath / location).lexically_normal().replace_extension(ScriptExt);
 
         // make sure your category isnt "../../../etc/config"
         auto [_, compIt] = std::mismatch(fullLocation.begin(), fullLocation.end(), comppath.begin(),
                                          comppath.end());
         if (compIt != comppath.end())
         {
-            s->reportError("Your save path is not a directory inside the user presets directory. "
-                           "This usually means you are doing something like trying to use ../"
-                           " in your preset name.",
+            s->reportError("Your save path is not a directory inside the user scripts directory. "
+                           "This usually means you are trying to use ../ in your script name.",
                            "Invalid Save Path");
             return;
         }
@@ -81,13 +78,13 @@ void WavetableScriptPreset::savePresetToUser(const fs::path &location, SurgeStor
         TiXmlElement wts("wts");
 
         TiXmlElement params("params");
-        params.SetAttribute("nframes", osc->wavetable_formula_nframes);
-        params.SetAttribute("res_base", osc->wavetable_formula_res_base);
+        params.SetAttribute("frames", osc->wavetable_formula_nframes);
+        params.SetAttribute("samples", osc->wavetable_formula_res_base);
         wts.InsertEndChild(params);
 
-        TiXmlElement fm("wavetable_formula");
-        s->getPatch().wtsToXMLElement(&(s->getPatch().scene[scene].osc[oscid]), fm);
-        wts.InsertEndChild(fm);
+        TiXmlElement sc("wavetable_script");
+        s->getPatch().wtsToXMLElement(&(s->getPatch().scene[scene].osc[oscid]), sc);
+        wts.InsertEndChild(sc);
 
         doc.InsertEndChild(wts);
 
@@ -97,24 +94,24 @@ void WavetableScriptPreset::savePresetToUser(const fs::path &location, SurgeStor
             std::cout << "Could not save" << std::endl;
         }
 
-        forcePresetRescan();
+        forceScriptRefresh();
     }
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Exception occurred while attempting to write the preset! Most likely, "
-               "invalid characters or a reserved name was used to name the preset. "
-               "Please try again with a different name!\n"
+        oss << "Exception occurred while attempting to write the wavetable script! "
+               "Most likely, invalid characters or a reserved name was used to name "
+               "the script. Please try again with a different name!\n"
             << "Details " << e.what();
-        s->reportError(oss.str(), "Preset Write Error");
+        s->reportError(oss.str(), "Script Write Error");
     }
 }
 
 /*
- * Given a completed path, load the preset into our storage
+ * Given a completed path, load the script into our storage
  */
-void WavetableScriptPreset::loadPresetFrom(const fs::path &location, SurgeStorage *s, int scene,
-                                           int oscid)
+void WavetableScriptManager::loadScriptFrom(const fs::path &location, SurgeStorage *s, int scene,
+                                            int oscid)
 {
     auto osc = &(s->getPatch().scene[scene].osc[oscid]);
 
@@ -135,34 +132,34 @@ void WavetableScriptPreset::loadPresetFrom(const fs::path &location, SurgeStorag
     }
 
     int nframes = 0;
-    if (params->QueryIntAttribute("nframes", &nframes) == TIXML_SUCCESS)
+    if (params->QueryIntAttribute("frames", &nframes) == TIXML_SUCCESS)
         osc->wavetable_formula_nframes = nframes;
 
     int res_base = 0;
-    if (params->QueryIntAttribute("res_base", &res_base) == TIXML_SUCCESS)
+    if (params->QueryIntAttribute("samples", &res_base) == TIXML_SUCCESS)
         osc->wavetable_formula_res_base = res_base;
 
-    auto frm = wts->FirstChildElement("wavetable_formula");
-    if (frm)
-        s->getPatch().wtsFromXMLElement(&(s->getPatch().scene[scene].osc[oscid]), frm);
+    auto sc = wts->FirstChildElement("wavetable_script");
+    if (sc)
+        s->getPatch().wtsFromXMLElement(&(s->getPatch().scene[scene].osc[oscid]), sc);
 }
 
 /*
  * Note: Clients rely on this being sorted by category path if you change it
  */
-std::vector<WavetableScriptPreset::Category> WavetableScriptPreset::getPresets(SurgeStorage *s,
-                                                                               PresetScanMode mode)
+std::vector<WavetableScriptManager::Category>
+WavetableScriptManager::getScripts(SurgeStorage *s, ScriptScanMode scanMode)
 {
-    if (mode == PresetScanMode::UserOnly && haveScannedUser)
-        return scannedUserPresets;
-    if (mode == PresetScanMode::FactoryOnly && haveScannedFactory)
-        return scannedFactoryPresets;
+    if (scanMode == ScriptScanMode::UserOnly && haveScannedUser)
+        return scannedUserScripts;
+    if (scanMode == ScriptScanMode::FactoryOnly && haveScannedFactory)
+        return scannedFactoryScripts;
 
     std::vector<fs::path> scanTargets;
-    if (mode == PresetScanMode::UserOnly)
-        scanTargets.push_back(s->userDataPath / fs::path{PresetDir});
-    if (mode == PresetScanMode::FactoryOnly)
-        scanTargets.push_back(s->datapath / fs::path{"wavetable_script_presets"});
+    if (scanMode == ScriptScanMode::UserOnly)
+        scanTargets.push_back(s->userDataPath / fs::path{ScriptDir});
+    if (scanMode == ScriptScanMode::FactoryOnly)
+        scanTargets.push_back(s->datapath / fs::path{"wavetable_scripts"});
 
     std::map<std::string, Category> resMap; // handy it is sorted!
 
@@ -175,7 +172,7 @@ std::vector<WavetableScriptPreset::Category> WavetableScriptPreset::getPresets(S
                 auto dp = fs::path(d);
                 auto base = dp.stem();
                 auto ext = dp.extension();
-                if (path_to_string(ext) != PresetXtn)
+                if (path_to_string(ext) != ScriptExt)
                 {
                     continue;
                 }
@@ -199,7 +196,7 @@ std::vector<WavetableScriptPreset::Category> WavetableScriptPreset::getPresets(S
                     resMap[rd].path = rd;
 
                     /*
-                     * We only create categories if we find a preset. So that means parent
+                     * We only create categories if we find a script. So that means parent
                      * directories with just subdirs need categories made. This recurses up as far
                      * as we need to go
                      */
@@ -226,10 +223,10 @@ std::vector<WavetableScriptPreset::Category> WavetableScriptPreset::getPresets(S
                     }
                 }
 
-                Preset prs;
+                Script prs;
                 prs.name = path_to_string(base);
                 prs.path = fs::path(d);
-                resMap[rd].presets.push_back(prs);
+                resMap[rd].scripts.push_back(prs);
             }
         }
         catch (const fs::filesystem_error &e)
@@ -241,35 +238,35 @@ std::vector<WavetableScriptPreset::Category> WavetableScriptPreset::getPresets(S
     std::vector<Category> res;
     for (auto &m : resMap)
     {
-        std::sort(m.second.presets.begin(), m.second.presets.end(),
-                  [](const Preset &a, const Preset &b) {
+        std::sort(m.second.scripts.begin(), m.second.scripts.end(),
+                  [](const Script &a, const Script &b) {
                       return strnatcasecmp(a.name.c_str(), b.name.c_str()) < 0;
                   });
 
         res.push_back(m.second);
     }
 
-    if (mode == PresetScanMode::UserOnly)
+    if (scanMode == ScriptScanMode::UserOnly)
     {
-        scannedUserPresets = res;
+        scannedUserScripts = res;
         haveScannedUser = true;
     }
-    if (mode == PresetScanMode::FactoryOnly)
+    if (scanMode == ScriptScanMode::FactoryOnly)
     {
-        scannedFactoryPresets = res;
+        scannedFactoryScripts = res;
         haveScannedFactory = true;
     }
 
     return res;
 }
 
-void WavetableScriptPreset::forcePresetRescan()
+void WavetableScriptManager::forceScriptRefresh()
 {
     haveScannedUser = false;
-    scannedUserPresets.clear();
+    scannedUserScripts.clear();
 
     haveScannedFactory = false;
-    scannedFactoryPresets.clear();
+    scannedFactoryScripts.clear();
 }
 } // namespace Storage
 } // namespace Surge

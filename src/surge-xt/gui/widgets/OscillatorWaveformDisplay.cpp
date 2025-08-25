@@ -34,7 +34,7 @@
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
 #include "UserDefaults.h"
-#include "WavetableScriptPresetManager.h"
+#include "WavetableScriptManager.h"
 #include "overlays/LuaEditors.h"
 #include "fmt/core.h"
 
@@ -601,19 +601,45 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         }
     }
 
-    contextMenu.addSeparator();
-
-    // add this option only if we have any wavetables in the list
-    if (idx > 0)
+#if INCLUDE_WT_SCRIPTING_EDITOR
+    if (!singleCategory)
     {
-        auto refresh = [this]() { this->storage->refresh_wtlist(); };
-
-        contextMenu.addItem(Surge::GUI::toOSCase("Refresh Wavetable List"), refresh);
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
+                                                                        "WAVETABLE SCRIPTS");
+        createWavetableScriptsMenu(contextMenu, false);
     }
+#endif
+
+    if (!singleCategory)
+    {
+        contextMenu.addColumnBreak();
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "FUNCTIONS");
+    }
+
+    createWTLoadMenu(contextMenu);
+    createWTExportMenu(contextMenu);
+
+#if INCLUDE_WT_SCRIPTING_EDITOR
+    if (oscdata->wavetable_formula != "")
+    {
+        auto swp = [this]() {
+            if (!sge)
+                return;
+            sge->promptForMiniEdit(
+                "", "Enter the file name:", "Wavetable Script File Name", juce::Point<int>{},
+                [this](const std::string &s) {
+                    this->storage->wavetableScriptManager->saveScriptToUser(
+                        string_to_path(s), this->storage, scene, oscInScene);
+                },
+                this);
+        };
+        contextMenu.addItem(Surge::GUI::toOSCase("Save Wavetable Script As..."), swp);
+        contextMenu.addSeparator();
+    }
+#endif
 
     auto rnaction = [this]() {
         auto c = this->oscdata->wavetable_display_name;
-
         if (sge)
         {
             sge->promptForMiniEdit(
@@ -625,20 +651,14 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
                 this);
         }
     };
+    refreshWavetablesMenu(contextMenu);
+    contextMenu.addSeparator();
 
     contextMenu.addItem(Surge::GUI::toOSCase("Rename Wavetable..."), rnaction);
-
     contextMenu.addSeparator();
 
-    createWTLoadMenu(contextMenu);
-
-    createWTExportMenu(contextMenu);
+    createOpenScriptEditorMenu(contextMenu);
     contextMenu.addSeparator();
-
-#if INCLUDE_WT_SCRIPTING_EDITOR
-    createWTScriptMenu(contextMenu, false);
-    contextMenu.addSeparator();
-#endif
 
     createWTMenuItems(contextMenu);
 }
@@ -701,7 +721,9 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
             contextMenu.addSeparator();
 
 #if INCLUDE_WT_SCRIPTING_EDITOR
-            createWTScriptMenu(contextMenu, true);
+            createOpenScriptEditorMenu(contextMenu);
+            contextMenu.addSeparator();
+            createWavetableScriptsMenu(contextMenu, true);
             contextMenu.addSeparator();
 #endif
 
@@ -805,70 +827,55 @@ void OscillatorWaveformDisplay::createWTExportMenu(juce::PopupMenu &contextMenu)
         else
             xportMenu.addItem("To .WT...", exportAction);
     }
-    contextMenu.addSubMenu("Export Wavetable", xportMenu);
+    contextMenu.addSubMenu(Surge::GUI::toOSCase("Export Wavetable"), xportMenu);
 }
 
-void OscillatorWaveformDisplay::createWTScriptMenu(juce::PopupMenu &contextMenu,
-                                                   bool singleCategory)
+void OscillatorWaveformDisplay::createOpenScriptEditorMenu(juce::PopupMenu &contextMenu)
 {
-    if (singleCategory)
-    {
-        juce::PopupMenu wtsMenu;
-        populateWTScriptMenu(wtsMenu);
-        contextMenu.addSubMenu(Surge::GUI::toOSCase("Wavetable Script"), wtsMenu);
-    }
-    else
-    {
-        contextMenu.addColumnBreak();
-        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu,
-                                                                        "WAVETABLE SCRIPTS");
-        populateWTScriptMenu(contextMenu);
-    }
-}
-
-void OscillatorWaveformDisplay::populateWTScriptMenu(juce::PopupMenu &contextMenu)
-{
-
     auto owts = [this]() {
         if (sge)
 
             sge->showOverlay(SurgeGUIEditor::WT_EDITOR);
     };
-    contextMenu.addItem(Surge::GUI::toOSCase("Open Wavetable Editor..."), owts);
+    contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
     contextMenu.addSeparator();
+}
 
-    auto swp = [this]() {
-        if (!sge)
-            return;
-        sge->promptForMiniEdit(
-            "", "Enter the preset name:", "Wavetable Script Preset Name", juce::Point<int>{},
-            [this](const std::string &s) {
-                this->storage->wavetableScriptPreset->savePresetToUser(
-                    string_to_path(s), this->storage, scene, oscInScene);
-            },
-            this);
-    };
-    contextMenu.addItem(Surge::GUI::toOSCase("Save Preset As..."), swp);
-    contextMenu.addSeparator();
+void OscillatorWaveformDisplay::createWavetableScriptsMenu(juce::PopupMenu &contextMenu,
+                                                           bool singleCategory)
+{
+    if (singleCategory)
+    {
+        juce::PopupMenu wtsMenu;
+        populateWavetableScriptsMenu(wtsMenu);
+        contextMenu.addSubMenu(Surge::GUI::toOSCase("Wavetable Script"), wtsMenu);
+    }
+    else
+    {
+        populateWavetableScriptsMenu(contextMenu);
+    }
+}
 
-    // Recursive category traversal
-    std::function<void(juce::PopupMenu &, const Surge::Storage::WavetableScriptPreset::Category &,
-                       const std::vector<Surge::Storage::WavetableScriptPreset::Category> &)>
+void OscillatorWaveformDisplay::populateWavetableScriptsMenu(juce::PopupMenu &contextMenu)
+{
+    std::function<void(juce::PopupMenu &, const Surge::Storage::WavetableScriptManager::Category &,
+                       const std::vector<Surge::Storage::WavetableScriptManager::Category> &)>
         recurseCat;
 
-    recurseCat = [this, &recurseCat](
-                     juce::PopupMenu &m, const Surge::Storage::WavetableScriptPreset::Category &cat,
-                     const std::vector<Surge::Storage::WavetableScriptPreset::Category> &categories)
+    recurseCat =
+        [this, &recurseCat](
+            juce::PopupMenu &m, const Surge::Storage::WavetableScriptManager::Category &cat,
+            const std::vector<Surge::Storage::WavetableScriptManager::Category> &categories)
 
     {
-        for (const auto &p : cat.presets)
+        for (const auto &p : cat.scripts)
         {
             auto action = [this, p]() {
                 // TODO: Add undo for WTS
                 sge->undoManager()->pushWavetable(scene, oscInScene);
 
-                this->storage->wavetableScriptPreset->loadPresetFrom(p.path, this->storage, scene,
-                                                                     oscInScene);
+                this->storage->wavetableScriptManager->loadScriptFrom(p.path, this->storage, scene,
+                                                                      oscInScene);
 
                 auto *os = &this->storage->getPatch().scene[scene].osc[oscInScene];
                 auto wtse = std::make_unique<Surge::Overlays::WavetableScriptEditor>(
@@ -915,7 +922,7 @@ void OscillatorWaveformDisplay::populateWTScriptMenu(juce::PopupMenu &contextMen
 
         if (cat.path.empty())
         {
-            // This is a preset in the root
+            // This is a script in the root
         }
         else
         {
@@ -934,14 +941,13 @@ void OscillatorWaveformDisplay::populateWTScriptMenu(juce::PopupMenu &contextMen
         }
     };
 
-    // Helper to add a list of categories to the menu
     auto addCategoryList =
         [&](juce::PopupMenu &menu,
-            const std::vector<Surge::Storage::WavetableScriptPreset::Category> &categories) {
+            const std::vector<Surge::Storage::WavetableScriptManager::Category> &categories) {
             if (categories.empty())
                 return;
 
-            menu.addSeparator();
+            // menu.addSeparator();
 
             for (auto &tlc : categories)
             {
@@ -959,19 +965,24 @@ void OscillatorWaveformDisplay::populateWTScriptMenu(juce::PopupMenu &contextMen
             }
         };
 
-    // Add user and factory preset folders in that order
-    auto userPresetCategories = this->storage->wavetableScriptPreset->getPresets(
-        this->storage, Surge::Storage::WavetableScriptPreset::PresetScanMode::UserOnly);
-    addCategoryList(contextMenu, userPresetCategories);
+    auto userScriptCategories = this->storage->wavetableScriptManager->getScripts(
+        this->storage, Surge::Storage::WavetableScriptManager::ScriptScanMode::UserOnly);
+    addCategoryList(contextMenu, userScriptCategories);
 
-    auto factoryPresetCategories = this->storage->wavetableScriptPreset->getPresets(
-        this->storage, Surge::Storage::WavetableScriptPreset::PresetScanMode::FactoryOnly);
-    addCategoryList(contextMenu, factoryPresetCategories);
+    auto factoryScriptCategories = this->storage->wavetableScriptManager->getScripts(
+        this->storage, Surge::Storage::WavetableScriptManager::ScriptScanMode::FactoryOnly);
+    addCategoryList(contextMenu, factoryScriptCategories);
+}
 
-    contextMenu.addSeparator();
-
-    // Refresh presets option
-    contextMenu.addItem(Surge::GUI::toOSCase("Refresh Wavetable Scripts"), owts);
+void OscillatorWaveformDisplay::refreshWavetablesMenu(juce::PopupMenu &contextMenu)
+{
+    auto refresh = [this]() {
+        this->storage->refresh_wtlist();
+#if INCLUDE_WT_SCRIPTING_EDITOR
+        this->storage->wavetableScriptManager->forceScriptRefresh();
+#endif
+    };
+    contextMenu.addItem(Surge::GUI::toOSCase("Refresh Wavetable List"), refresh);
 }
 
 void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBounds,

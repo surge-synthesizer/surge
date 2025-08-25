@@ -49,7 +49,7 @@
 #endif
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"
-#include "WavetableScriptPresetManager.h"
+#include "WavetableScriptManager.h"
 #include "SurgeMemoryPools.h"
 #include "sst/basic-blocks/tables/SincTableProvider.h"
 
@@ -381,7 +381,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userFXPath = userDataPath / "FX Presets";
     userMidiMappingsPath = userDataPath / "MIDI Mappings";
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
-    userWavetableScriptPath = userDataPath / "Wavetable Script Presets";
+    userWavetableScriptPath = userDataPath / "Wavetable Scripts";
     userSkinsPath = userDataPath / "Skins";
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
     extraUserWavetablesPath = config.extraUsersWavetablesPath;
@@ -623,12 +623,12 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     try
     {
-        wavetableScriptPreset = std::make_unique<Surge::Storage::WavetableScriptPreset>();
-        wavetableScriptPreset->forcePresetRescan();
+        wavetableScriptManager = std::make_unique<Surge::Storage::WavetableScriptManager>();
+        wavetableScriptManager->forceScriptRefresh();
     }
     catch (fs::filesystem_error &e)
     {
-        reportError(e.what(), "Error Scanning Wavetable Script Presets");
+        reportError(e.what(), "Error Scanning Wavetable Scripts");
     }
     memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }
