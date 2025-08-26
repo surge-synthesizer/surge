@@ -2464,7 +2464,7 @@ void Parameter::get_display_of_modulation_depth(char *txt, float modulationDepth
     if (basicBlocksParamMetaData.has_value() && basicBlocksParamMetaData->supportsStringConversion)
     {
         auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
-                      .withHighPrecision(displayPrecision)
+                      .withHighPrecision(isHighPrecision)
                       .withTemposync(can_temposync() && temposync)
                       .withAbsolute(can_be_absolute() && absolute)
                       .withExtended(can_extend_range() && extend_range);
@@ -3495,7 +3495,7 @@ std::string Parameter::get_display(bool external, float ef) const
             bbf = basicBlocksParamMetaData->normalized01ToNatural(ef);
 
         auto fs = sst::basic_blocks::params::ParamMetaData::FeatureState()
-                      .withHighPrecision(displayPrecision)
+                      .withHighPrecision(isHighPrecision)
                       .withTemposync(can_temposync() && temposync)
                       .withAbsolute(can_be_absolute() && absolute)
                       .withExtended(can_extend_range() && extend_range);
