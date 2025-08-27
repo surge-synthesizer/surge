@@ -2227,9 +2227,9 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             for (auto &u : sc.filterunit)
             {
                 if (u.type.val.i == sst::filters::FilterType::fut_obxd_4pole &&
-                    u.subtype.val.i == sst::filters::FilterSubType::st_obxd4pole_24db)
+                    u.subtype.val.i == sst::filters::FilterSubType::st_obxd4pole_24dB)
                 {
-                    u.subtype.val.i = sst::filters::FilterSubType::st_obxd4pole_broken24db;
+                    u.subtype.val.i = sst::filters::FilterSubType::st_obxd4pole_broken24dB;
                 }
                 if (u.type.val.i == sst::filters::FilterType::fut_bp12 &&
                     u.subtype.val.i == sst::filters::FilterSubType::st_Clean)

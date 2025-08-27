@@ -80,7 +80,7 @@ void NeuronEffect::process(float *dataL, float *dataR)
     // scale width
     float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];
 
-    applyWidth(dataL, dataR, width);
+    applyStereoWidth(dataL, dataR, width);
     outgain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
     modLFO.post_process();
 }

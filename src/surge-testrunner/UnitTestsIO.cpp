@@ -577,9 +577,9 @@ TEST_CASE("Patch Version Builder", "[io]")
                 // If the engiunue is later than revision 27 in the code this should lift
                 if (ft == sst::filters::FilterType::fut_obxd_4pole)
                 {
-                    if (st == sst::filters::FilterSubType::st_obxd4pole_24db)
+                    if (st == sst::filters::FilterSubType::st_obxd4pole_24dB)
                     {
-                        lst = sst::filters::FilterSubType::st_obxd4pole_broken24db;
+                        lst = sst::filters::FilterSubType::st_obxd4pole_broken24dB;
                     }
                 }
                 if (ft == sst::filters::FilterType::fut_bp12)
@@ -642,9 +642,9 @@ TEST_CASE("Patch Version Builder", "[io]")
                 case FilterType::fut_obxd_4pole:
                     if (ff_revision >= 27)
                     {
-                        if (lst == sst::filters::FilterSubType::st_obxd4pole_broken24db)
+                        if (lst == sst::filters::FilterSubType::st_obxd4pole_broken24dB)
                         {
-                            fnst = sst::filters::FilterSubType::st_obxd4pole_24db;
+                            fnst = sst::filters::FilterSubType::st_obxd4pole_24dB;
                         }
                     }
                     break;
@@ -727,9 +727,9 @@ TEST_CASE("Patch Version Builder", "[io]")
                 // If the engiunue is later than revision 27 in the code this should lift
                 if (ft == sst::filters::FilterType::fut_obxd_4pole)
                 {
-                    if (st == sst::filters::FilterSubType::st_obxd4pole_broken24db)
+                    if (st == sst::filters::FilterSubType::st_obxd4pole_broken24dB)
                     {
-                        lst = sst::filters::FilterSubType::st_obxd4pole_24db;
+                        lst = sst::filters::FilterSubType::st_obxd4pole_24dB;
                     }
                 }
                 if (ft == sst::filters::FilterType::fut_bp12)

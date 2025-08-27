@@ -241,7 +241,7 @@ void AudioInputEffect::process(float *dataL, float *dataR)
 
     // Adjust width of wet signal
     width.set_target_smoothed(outputWidth);
-    applyWidth(wetL, wetR, width);
+    applyStereoWidth(wetL, wetR, width);
 
     // Mix dry and wet signal according to outputMix
     mix.set_target_smoothed(outputMix);
