@@ -3884,7 +3884,7 @@ std::string Parameter::get_display(bool external, float ef) const
                                     "{:s}, {:s}", sst::filters::fut_tripole_subtypes[i & 3],
                                     sst::filters::fut_tripole_output_stage[(i >> 2) & 3]);
                                 break;
-                            case FilterType::fut_cytomicsvf:
+                            case FilterType::fut_cytomic_svf:
                                 return sst::filters::fut_cytomic_subtypes[i];
                             case FilterType::fut_obxd_xpander:
                                 return sst::filters::fut_obxd_xpander_subtypes[i];

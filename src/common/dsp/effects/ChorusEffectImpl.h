@@ -182,7 +182,7 @@ template <int v> void ChorusEffect<v>::process(float *dataL, float *dataR)
                 buffer[k]; // copy buffer so FIR-core doesn't have to wrap
 
     // scale width
-    applyWidth(tbufferL, tbufferR, width);
+    applyStereoWidth(tbufferL, tbufferR, width);
 
     mix.fade_2_blocks_inplace(dataL, tbufferL, dataR, tbufferR, BLOCK_SIZE_QUAD);
 

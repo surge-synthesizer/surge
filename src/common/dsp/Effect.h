@@ -53,13 +53,13 @@ class alignas(16) Effect
 
     virtual const char *get_effectname() { return 0; }
 
-    virtual void init(){};
+    virtual void init() {};
     virtual void init_ctrltypes();
-    virtual void init_default_values(){};
+    virtual void init_default_values() {};
 
     // No matter what path is used to reload (whether created anew or what not) this is called after
     // the loading state of an item has changed
-    virtual void updateAfterReload(){};
+    virtual void updateAfterReload() {};
     virtual Surge::ParamConfig::VUType vu_type(int id) { return Surge::ParamConfig::vut_off; };
     virtual int vu_ypos(int id) { return id; }; // in 'half-hslider' heights
     virtual const char *group_label(int id) { return 0; };
@@ -113,7 +113,7 @@ class alignas(16) Effect
         return x;
     }
 
-    inline void applyWidth(float *__restrict L, float *__restrict R, lipol_ps_blocksz &width)
+    inline void applyStereoWidth(float *__restrict L, float *__restrict R, lipol_ps_blocksz &width)
     {
         namespace sdsp = sst::basic_blocks::dsp;
         float M alignas(16)[BLOCK_SIZE], S alignas(16)[BLOCK_SIZE];

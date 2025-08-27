@@ -1696,9 +1696,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         }
 
                         max = sst::filters::fut_subcount[ftype] - 1;
-                        if (ftype == sst::filters::FilterType::fut_cytomicsvf)
+
+                        if (ftype == sst::filters::FilterType::fut_cytomic_svf)
                         {
-                            max = sst::filters::FilterSubType::st_cytomic_all + 1;
+                            max = sst::filters::FilterSubType::st_cytomic_allpass;
                         }
                     }
 
@@ -3708,9 +3709,9 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         int nn = sst::filters::fut_subcount
             [synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i];
         if (synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i ==
-            sst::filters::FilterType::fut_cytomicsvf)
+            sst::filters::FilterType::fut_cytomic_svf)
         {
-            nn = sst::filters::FilterSubType::st_cytomic_all + 1;
+            nn = sst::filters::FilterSubType::st_cytomic_allpass;
         }
         if (a >= nn)
             a = 0;

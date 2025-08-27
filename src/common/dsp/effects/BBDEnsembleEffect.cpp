@@ -448,7 +448,7 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
     // scale width
     width.set_target_smoothed(clamp1bp(*pd_float[ens_width]));
 
-    applyWidth(L, R, width);
+    applyStereoWidth(L, R, width);
 
     mix.set_target_smoothed(clamp1bp(*pd_float[ens_mix]));
     mix.fade_2_blocks_inplace(dataL, L, dataR, R, BLOCK_SIZE_QUAD);
