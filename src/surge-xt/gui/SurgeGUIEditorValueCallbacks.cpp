@@ -1696,6 +1696,10 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         }
 
                         max = sst::filters::fut_subcount[ftype] - 1;
+                        if (ftype == sst::filters::FilterType::fut_cytomicsvf)
+                        {
+                            max = sst::filters::FilterSubType::st_cytomic_all + 1;
+                        }
                     }
 
                     auto dm = dynamic_cast<ParameterDiscreteIndexRemapper *>(p->user_data);
@@ -3703,6 +3707,11 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         int t = synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i;
         int nn = sst::filters::fut_subcount
             [synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i];
+        if (synth->storage.getPatch().scene[current_scene].filterunit[idx].type.val.i ==
+            sst::filters::FilterType::fut_cytomicsvf)
+        {
+            nn = sst::filters::FilterSubType::st_cytomic_all + 1;
+        }
         if (a >= nn)
             a = 0;
         if (a < 0)

@@ -2859,6 +2859,10 @@ bool SurgeSynthesizer::setParameter01(long index, float value, bool external, bo
                 auto subp = storage.getPatch().param_ptr[index];
                 auto filterType = storage.getPatch().param_ptr[index - 1]->val.i;
                 auto maxIVal = sst::filters::fut_subcount[filterType];
+                if (filterType == sst::filters::FilterType::fut_cytomicsvf)
+                {
+                    maxIVal = sst::filters::FilterSubType::st_cytomic_all + 1;
+                }
                 if (maxIVal == 0)
                     subp->val.i = 0;
                 else

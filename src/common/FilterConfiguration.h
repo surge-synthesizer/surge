@@ -125,6 +125,8 @@ struct FilterSelectorMapper : public ParameterDiscreteIndexRemapper
         p(FilterType::fut_resonancewarp_n, "Notch");
 
         p(FilterType::fut_tripole, "Multi");
+        p(FilterType::fut_obxd_xpander, "Multi");
+        p(FilterType::fut_cytomicsvf, "Multi");
 
         p(FilterType::fut_apf, "Effect");
         p(FilterType::fut_cutoffwarp_ap, "Effect");
