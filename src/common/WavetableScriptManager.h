@@ -23,8 +23,11 @@
 #ifndef SURGE_SRC_COMMON_WAVETABLESCRIPTMANAGER_H
 #define SURGE_SRC_COMMON_WAVETABLESCRIPTMANAGER_H
 
+#include "SurgeStorage.h"
+#include "WavetableScriptEvaluator.h"
 #include "filesystem/import.h"
 #include <vector>
+
 class SurgeStorage;
 
 namespace Surge
@@ -34,47 +37,16 @@ namespace Storage
 struct WavetableScriptManager
 {
     /*
-     * Given a storage, scene, and OSC, stream it to a file relative to the location
+     * Given a storage, scene, and OSC, stream to a file relative to the location
      * in the user directory wavetable script area
      */
     void saveScriptToUser(const fs::path &location, SurgeStorage *s, int scene, int oscid);
 
     /*
-     * Given a completed path, load the script into our storage
+     * Given a completed path, load a .wtscript file and generate the wavetable
      */
-    void loadScriptFrom(const fs::path &location, SurgeStorage *s, int scene, int oscid);
-
-    /*
-     * What are the scripts we have? In some form of category order
-     */
-    struct Script
-    {
-        std::string name;
-        fs::path path;
-    };
-
-    struct Category
-    {
-        std::string name;
-        std::string path;
-        std::string parentPath;
-        std::vector<Script> scripts;
-    };
-
-    enum class ScriptScanMode
-    {
-        FactoryOnly,
-        UserOnly
-    };
-
-    std::vector<Category> getScripts(SurgeStorage *s, ScriptScanMode scanMode);
-    void forceScriptRefresh();
-
-    std::vector<Category> scannedUserScripts;
-    bool haveScannedUser{false};
-
-    std::vector<Category> scannedFactoryScripts;
-    bool haveScannedFactory{false};
+    bool loadScriptFrom(const fs::path &filename, SurgeStorage *s, OscillatorStorage *osc);
+    std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
 };
 } // namespace Storage
 } // namespace Surge

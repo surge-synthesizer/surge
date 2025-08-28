@@ -63,7 +63,7 @@ enum KeyboardActions
 #endif
     TOGGLE_KEYBIND_EDITOR,
     TOGGLE_LFO_EDITOR,
-#if INCLUDE_WT_SCRIPTING_EDITOR
+#if HAS_LUA
     TOGGLE_WT_EDITOR,
 #endif
     TOGGLE_MODLIST,
@@ -288,7 +288,7 @@ inline std::string keyboardActionDescription(KeyboardActions a)
     case TOGGLE_LFO_EDITOR:
         desc = "LFO Editor (MSEG or Formula)";
         break;
-#if INCLUDE_WT_SCRIPTING_EDITOR
+#if HAS_LUA
     case TOGGLE_WT_EDITOR:
         desc = "Wavetable Editor";
         break;

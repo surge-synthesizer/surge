@@ -378,10 +378,10 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userPatchesMidiProgramChangePath = userPatchesPath / midiProgramChangePatchesSubdir;
     userWavetablesPath = userDataPath / "Wavetables";
     userWavetablesExportPath = userWavetablesPath / "Exported";
+    userWavetableScriptsPath = userWavetablesPath / "Scripted";
     userFXPath = userDataPath / "FX Presets";
     userMidiMappingsPath = userDataPath / "MIDI Mappings";
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
-    userWavetableScriptPath = userDataPath / "Wavetable Scripts";
     userSkinsPath = userDataPath / "Skins";
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
     extraUserWavetablesPath = config.extraUsersWavetablesPath;
@@ -621,15 +621,6 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     {
         reportError(e.what(), "Error Scanning Modulator Presets");
     }
-    try
-    {
-        wavetableScriptManager = std::make_unique<Surge::Storage::WavetableScriptManager>();
-        wavetableScriptManager->forceScriptRefresh();
-    }
-    catch (fs::filesystem_error &e)
-    {
-        reportError(e.what(), "Error Scanning Wavetable Scripts");
-    }
     memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }
 
@@ -648,7 +639,7 @@ void SurgeStorage::createUserDirectory()
         {
             for (auto &s : {userDataPath, userDefaultFilePath, userPatchesPath, userWavetablesPath,
                             userModulatorSettingsPath, userFXPath, userWavetablesExportPath,
-                            userWavetableScriptPath, userSkinsPath, userMidiMappingsPath})
+                            userWavetableScriptsPath, userSkinsPath, userMidiMappingsPath})
                 fs::create_directories(s);
 
             userDataPathValid = true;
@@ -1258,6 +1249,9 @@ void SurgeStorage::refresh_wtlistFrom(bool isUser, const fs::path &p, const std:
     std::vector<std::string> supportedTableFileTypes;
     supportedTableFileTypes.push_back(".wt");
     supportedTableFileTypes.push_back(".wav");
+#if HAS_LUA
+    supportedTableFileTypes.push_back(".wtscript");
+#endif
 
     refreshPatchOrWTListAddDir(
         isUser, p, subdir,
@@ -1378,11 +1372,17 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
     {
         loaded = load_wt_wav_portable(filename, wt, metadata);
     }
+    else if (extension.compare(".wtscript") == 0)
+    {
+        if (!wavetableScriptManager)
+            wavetableScriptManager = std::make_unique<Surge::Storage::WavetableScriptManager>();
+        loaded = wavetableScriptManager->loadScriptFrom(filename, this, osc);
+    }
     else
     {
         std::ostringstream oss;
         oss << "Unable to load file with extension " << extension
-            << "! Surge XT only supports .wav and .wt wavetable files!";
+            << "! Surge XT only supports .wav, .wt and .wtscript wavetable files!";
         reportError(oss.str(), "Error");
     }
 
@@ -1391,12 +1391,16 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
         auto fn = filename.substr(filename.find_last_of(PATH_SEPARATOR) + 1, filename.npos);
         std::string fnnoext = fn.substr(0, fn.find_last_of('.'));
 
-        if (fnnoext.length() > 0)
+        if (fnnoext.length() > 0 && extension.compare(".wtscript") != 0)
         {
             osc->wavetable_display_name = fnnoext;
         }
 
-        if (metadata.empty())
+        if (extension.compare(".wtscript") == 0)
+        {
+            // Keep osc->wavetable_formula as set by loadScriptFrom()
+        }
+        else if (metadata.empty())
         {
             osc->wavetable_formula = {};
             osc->wavetable_formula_res_base = 5;

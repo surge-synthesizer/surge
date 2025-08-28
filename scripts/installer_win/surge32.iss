@@ -55,7 +55,6 @@ Type: filesandordirs; Name: "{commonappdata}\{#MyAppName}\skins"
 Type: filesandordirs; Name: "{commonappdata}\{#MyAppName}\tuning_library"
 Type: filesandordirs; Name: "{commonappdata}\{#MyAppName}\wavetables"
 Type: filesandordirs; Name: "{commonappdata}\{#MyAppName}\wavetables_3rdparty"
-Type: filesandordirs; Name: "{commonappdata}\{#MyAppName}\wavetable_scripts"
 ; clean up the mess from Surge XT 1.0 nightlies prior to PR #5727
 Type: filesandordirs; Name: "{commoncf32}\VST3\{#MyAppPublisher}\Contents"
 Type: filesandordirs; Name: "{commoncf32}\VST3\{#MyAppPublisher}\desktop.ini"
@@ -92,7 +91,6 @@ Source: {#SURGE_SRC}\resources\data\patches_factory\*; DestDir: {commonappdata}\
 Source: {#SURGE_SRC}\resources\data\patches_3rdparty\*; DestDir: {commonappdata}\{#MyAppName}\patches_3rdparty\; Components: Patches; Flags: recursesubdirs
 Source: {#SURGE_SRC}\resources\data\wavetables\*; DestDir: {commonappdata}\{#MyAppName}\wavetables\; Components: Wavetables; Flags: recursesubdirs
 Source: {#SURGE_SRC}\resources\data\wavetables_3rdparty\*; DestDir: {commonappdata}\{#MyAppName}\wavetables_3rdparty\; Components: Wavetables; Flags: recursesubdirs
-Source: {#SURGE_SRC}\resources\data\wavetable_scripts\*; DestDir: {commonappdata}\{#MyAppName}\wavetable_script_presets\; Components: Data; Flags: recursesubdirs
 Source: {#SURGE_SRC}\resources\fonts\FiraMono-Regular.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Fira Mono"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: {#SURGE_SRC}\resources\fonts\IndieFlower.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Indie Flower"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: {#SURGE_SRC}\resources\fonts\Lato-Regular.ttf; DestDir: "{autofonts}"; Components: Data; FontInstall: "Lato"; Flags: onlyifdoesntexist uninsneveruninstall

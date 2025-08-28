@@ -24,6 +24,7 @@
 #include <iostream>
 #include "DebugHelpers.h"
 #include "SurgeStorage.h"
+#include "WavetableScriptEvaluator.h"
 #include "tinyxml/tinyxml.h"
 #include "sst/plugininfra/strnatcmp.h"
 
@@ -32,16 +33,21 @@ namespace Surge
 namespace Storage
 {
 
-const static std::string ScriptDir = "Wavetable Scripts";
-const static std::string ScriptExt = ".wtscript";
+const static fs::path ScriptDir = "Wavetables/Scripted";
+const static fs::path ScriptExt = ".wtscript";
 
+/*
+ * Given a storage, scene, and OSC, stream to a .wtscript file relative to the location
+ * in the user directory wavetable script area
+ */
 void WavetableScriptManager::saveScriptToUser(const fs::path &location, SurgeStorage *s, int scene,
                                               int oscid)
 {
     try
     {
         auto osc = &(s->getPatch().scene[scene].osc[oscid]);
-        auto containingPath = s->userDataPath / fs::path{ScriptDir};
+
+        auto containingPath = s->userDataPath / ScriptDir;
 
         // validate location before using
         if (!location.is_relative())
@@ -71,30 +77,33 @@ void WavetableScriptManager::saveScriptToUser(const fs::path &location, SurgeSto
         fs::create_directories(fullLocation.parent_path());
 
         TiXmlDeclaration decl("1.0", "UTF-8", "yes");
-
         TiXmlDocument doc;
         doc.InsertEndChild(decl);
-
-        TiXmlElement wts("wts");
-
+        TiXmlElement wtscript("wtscript");
         TiXmlElement params("params");
-        params.SetAttribute("frames", osc->wavetable_formula_nframes);
-        params.SetAttribute("samples", osc->wavetable_formula_res_base);
-        wts.InsertEndChild(params);
+        TiXmlElement script("wavetable_script");
 
-        TiXmlElement sc("wavetable_script");
-        s->getPatch().wtsToXMLElement(&(s->getPatch().scene[scene].osc[oscid]), sc);
-        wts.InsertEndChild(sc);
-
-        doc.InsertEndChild(wts);
-
-        if (!doc.SaveFile(fullLocation))
+        if (!osc->wavetable_formula.empty())
         {
-            // uhh ... do something I guess?
-            std::cout << "Could not save" << std::endl;
+            params.SetAttribute("frames", osc->wavetable_formula_nframes);
+            params.SetAttribute("samples", osc->wavetable_formula_res_base);
+
+            auto wtfo = osc->wavetable_formula;
+            auto wtfol = wtfo.length();
+
+            script.SetAttribute(
+                "lua", Surge::Storage::base64_encode((unsigned const char *)wtfo.c_str(), wtfol));
         }
 
-        forceScriptRefresh();
+        wtscript.InsertEndChild(params);
+        wtscript.InsertEndChild(script);
+        doc.InsertEndChild(wtscript);
+        if (!doc.SaveFile(fullLocation))
+        {
+            s->reportError("Failed to save XML file.", "XML Save Error");
+        }
+
+        s->refresh_wtlist();
     }
     catch (const fs::filesystem_error &e)
     {
@@ -108,165 +117,90 @@ void WavetableScriptManager::saveScriptToUser(const fs::path &location, SurgeSto
 }
 
 /*
- * Given a completed path, load the script into our storage
+ * Given a completed path, load the script and generate the wavetable
  */
-void WavetableScriptManager::loadScriptFrom(const fs::path &location, SurgeStorage *s, int scene,
-                                            int oscid)
+bool WavetableScriptManager::loadScriptFrom(const fs::path &filename, SurgeStorage *s,
+                                            OscillatorStorage *osc)
 {
-    auto osc = &(s->getPatch().scene[scene].osc[oscid]);
-
     TiXmlDocument doc;
-    doc.LoadFile(location);
-    auto wts = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wts"));
-    if (!wts)
+    if (!doc.LoadFile(filename))
     {
-        std::cout << "Unable to find wts node in document" << std::endl;
-        return;
+        s->reportError("Failed to load XML file", "XML Load Error");
+        return false;
     }
 
-    auto params = TINYXML_SAFE_TO_ELEMENT(wts->FirstChildElement("params"));
+    auto wtscript = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wtscript"));
+    if (!wtscript)
+    {
+        s->reportError("No root <wtscript> element found", "XML Load Error");
+        return false;
+    }
+
+    auto params = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("params"));
     if (!params)
     {
-        std::cout << "NO PARAMS" << std::endl;
-        return;
+        s->reportError("No <params> element found", "XML Load Error");
+        return false;
     }
 
     int nframes = 0;
-    if (params->QueryIntAttribute("frames", &nframes) == TIXML_SUCCESS)
-        osc->wavetable_formula_nframes = nframes;
+    if (params->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS)
+    {
+        s->reportError("Missing or invalid frames attribute", "XML Load Error");
+        return false;
+    }
 
     int res_base = 0;
-    if (params->QueryIntAttribute("samples", &res_base) == TIXML_SUCCESS)
-        osc->wavetable_formula_res_base = res_base;
-
-    auto sc = wts->FirstChildElement("wavetable_script");
-    if (sc)
-        s->getPatch().wtsFromXMLElement(&(s->getPatch().scene[scene].osc[oscid]), sc);
-}
-
-/*
- * Note: Clients rely on this being sorted by category path if you change it
- */
-std::vector<WavetableScriptManager::Category>
-WavetableScriptManager::getScripts(SurgeStorage *s, ScriptScanMode scanMode)
-{
-    if (scanMode == ScriptScanMode::UserOnly && haveScannedUser)
-        return scannedUserScripts;
-    if (scanMode == ScriptScanMode::FactoryOnly && haveScannedFactory)
-        return scannedFactoryScripts;
-
-    std::vector<fs::path> scanTargets;
-    if (scanMode == ScriptScanMode::UserOnly)
-        scanTargets.push_back(s->userDataPath / fs::path{ScriptDir});
-    if (scanMode == ScriptScanMode::FactoryOnly)
-        scanTargets.push_back(s->datapath / fs::path{"wavetable_scripts"});
-
-    std::map<std::string, Category> resMap; // handy it is sorted!
-
-    for (const auto &p : scanTargets)
+    if (params->QueryIntAttribute("samples", &res_base) != TIXML_SUCCESS)
     {
-        try
-        {
-            for (auto &d : fs::recursive_directory_iterator(p))
-            {
-                auto dp = fs::path(d);
-                auto base = dp.stem();
-                auto ext = dp.extension();
-                if (path_to_string(ext) != ScriptExt)
-                {
-                    continue;
-                }
-                auto rd = path_to_string(dp.replace_filename(fs::path()));
-                rd = rd.substr(path_to_string(p).length() + 1);
-                rd = rd.substr(0, rd.length() - 1);
-
-                auto catName = rd;
-                auto ppos = rd.rfind(fs::path::preferred_separator);
-                auto pd = std::string();
-                if (ppos != std::string::npos)
-                {
-                    pd = rd.substr(0, ppos);
-                    catName = rd.substr(ppos + 1);
-                }
-                if (resMap.find(rd) == resMap.end())
-                {
-                    resMap[rd] = Category();
-                    resMap[rd].name = catName;
-                    resMap[rd].parentPath = pd;
-                    resMap[rd].path = rd;
-
-                    /*
-                     * We only create categories if we find a script. So that means parent
-                     * directories with just subdirs need categories made. This recurses up as far
-                     * as we need to go
-                     */
-                    while (pd != "" && resMap.find(pd) == resMap.end())
-                    {
-                        auto cd = pd;
-                        catName = cd;
-                        ppos = cd.rfind(fs::path::preferred_separator);
-
-                        if (ppos != std::string::npos)
-                        {
-                            pd = cd.substr(0, ppos);
-                            catName = cd.substr(ppos + 1);
-                        }
-                        else
-                        {
-                            pd = "";
-                        }
-
-                        resMap[cd] = Category();
-                        resMap[cd].name = catName;
-                        resMap[cd].parentPath = pd;
-                        resMap[cd].path = cd;
-                    }
-                }
-
-                Script prs;
-                prs.name = path_to_string(base);
-                prs.path = fs::path(d);
-                resMap[rd].scripts.push_back(prs);
-            }
-        }
-        catch (const fs::filesystem_error &e)
-        {
-            // That's OK!
-        }
+        s->reportError("Missing or invalid samples attribute", "XML Load Error");
+        return false;
     }
 
-    std::vector<Category> res;
-    for (auto &m : resMap)
+    auto wavetable_script =
+        TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("wavetable_script"));
+    if (!wavetable_script)
     {
-        std::sort(m.second.scripts.begin(), m.second.scripts.end(),
-                  [](const Script &a, const Script &b) {
-                      return strnatcasecmp(a.name.c_str(), b.name.c_str()) < 0;
-                  });
-
-        res.push_back(m.second);
+        s->reportError("No <wavetable_script> element found", "XML Load Error");
+        return false;
     }
 
-    if (scanMode == ScriptScanMode::UserOnly)
+    auto bscript = wavetable_script->Attribute("lua");
+    if (!bscript)
     {
-        scannedUserScripts = res;
-        haveScannedUser = true;
-    }
-    if (scanMode == ScriptScanMode::FactoryOnly)
-    {
-        scannedFactoryScripts = res;
-        haveScannedFactory = true;
+        s->reportError("No lua attribute found in <wavetable_script>", "XML Load Error");
+        return false;
     }
 
-    return res;
-}
+    osc->wavetable_formula_nframes = nframes;
+    osc->wavetable_formula_res_base = res_base;
+    auto script = Surge::Storage::base64_decode(bscript);
+    osc->wavetable_formula = script;
 
-void WavetableScriptManager::forceScriptRefresh()
-{
-    haveScannedUser = false;
-    scannedUserScripts.clear();
+    auto respt = 32;
 
-    haveScannedFactory = false;
-    scannedFactoryScripts.clear();
+    for (int i = 1; i < res_base; ++i)
+        respt *= 2;
+
+    if (!evaluator)
+        evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+
+    evaluator->setStorage(s);
+    evaluator->setScript(script);
+    evaluator->setResolution(respt);
+    evaluator->setFrameCount(nframes);
+
+    wt_header wh;
+    float *wd = nullptr;
+    evaluator->populateWavetable(wh, &wd);
+    s->waveTableDataMutex.lock();
+    bool wasBuilt = osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
+    osc->wavetable_display_name = evaluator->getSuggestedWavetableName();
+    s->waveTableDataMutex.unlock();
+
+    delete[] wd;
+
+    return wasBuilt;
 }
 } // namespace Storage
 } // namespace Surge
