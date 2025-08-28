@@ -5512,7 +5512,7 @@ void SurgeGUIEditor::setupKeymapManager()
                               {keymap_t::Modifiers::ALT, (int)'B'});
     keyMapManager->addBinding(KeyboardActions::TOGGLE_LFO_EDITOR,
                               {keymap_t::Modifiers::ALT, (int)'E'});
-#if HAS_LUA
+#if INCLUDE_WT_SCRIPTING_EDITOR
     keyMapManager->addBinding(KeyboardActions::TOGGLE_WT_EDITOR,
                               {keymap_t::Modifiers::ALT, (int)'W'});
 #endif
@@ -5629,7 +5629,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             {
             case KeyboardActions::UNDO:
             {
-#if HAS_LUA
+#if INCLUDE_WT_SCRIPTING_EDITOR
                 auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR);
 
                 if (ol)
@@ -5647,7 +5647,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             }
             case KeyboardActions::REDO:
             {
-#if HAS_LUA
+#if INCLUDE_WT_SCRIPTING_EDITOR
                 auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR);
 
                 if (ol)
@@ -5768,7 +5768,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 }
 
                 return true;
-#if HAS_LUA
+#if INCLUDE_WT_SCRIPTING_EDITOR
             case KeyboardActions::TOGGLE_WT_EDITOR:
                 toggleOverlay(SurgeGUIEditor::WT_EDITOR);
                 frame->repaint();

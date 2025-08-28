@@ -1249,7 +1249,7 @@ void SurgeStorage::refresh_wtlistFrom(bool isUser, const fs::path &p, const std:
     std::vector<std::string> supportedTableFileTypes;
     supportedTableFileTypes.push_back(".wt");
     supportedTableFileTypes.push_back(".wav");
-#if HAS_LUA
+#if INCLUDE_WT_SCRIPTING_EDITOR
     supportedTableFileTypes.push_back(".wtscript");
 #endif
 
