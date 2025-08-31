@@ -49,7 +49,6 @@
 #endif
 #include "FxPresetAndClipboardManager.h"
 #include "ModulatorPresetManager.h"
-#include "WavetableScriptManager.h"
 #include "SurgeMemoryPools.h"
 #include "sst/basic-blocks/tables/SincTableProvider.h"
 
@@ -1249,7 +1248,7 @@ void SurgeStorage::refresh_wtlistFrom(bool isUser, const fs::path &p, const std:
     std::vector<std::string> supportedTableFileTypes;
     supportedTableFileTypes.push_back(".wt");
     supportedTableFileTypes.push_back(".wav");
-#if INCLUDE_WT_SCRIPTING_EDITOR
+#if HAS_LUA
     supportedTableFileTypes.push_back(".wtscript");
 #endif
 
@@ -1281,7 +1280,7 @@ void SurgeStorage::perform_queued_wtloads()
                     patch.isDirty = true;
                 load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
-                patch.scene[sc].osc[o].wt.is_dnd_imported = false;
+                patch.scene[sc].osc[o].wt.force_refresh_display = false;
                 patch.scene[sc].osc[o].wt.refresh_display = true;
             }
             else if (patch.scene[sc].osc[o].wt.queue_filename[0])
@@ -1303,7 +1302,7 @@ void SurgeStorage::perform_queued_wtloads()
                 patch.scene[sc].osc[o].wt.current_id = wtidx;
                 load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
-                patch.scene[sc].osc[o].wt.is_dnd_imported = true;
+                patch.scene[sc].osc[o].wt.force_refresh_display = true;
                 patch.scene[sc].osc[o].wt.refresh_display = true;
                 if (patch.scene[sc].osc[o].wt.everBuilt)
                     patch.isDirty = true;
@@ -1372,12 +1371,6 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
     {
         loaded = load_wt_wav_portable(filename, wt, metadata);
     }
-    else if (extension.compare(".wtscript") == 0)
-    {
-        if (!wavetableScriptManager)
-            wavetableScriptManager = std::make_unique<Surge::Storage::WavetableScriptManager>();
-        loaded = wavetableScriptManager->loadScriptFrom(filename, this, osc);
-    }
     else
     {
         std::ostringstream oss;
@@ -1391,16 +1384,12 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
         auto fn = filename.substr(filename.find_last_of(PATH_SEPARATOR) + 1, filename.npos);
         std::string fnnoext = fn.substr(0, fn.find_last_of('.'));
 
-        if (fnnoext.length() > 0 && extension.compare(".wtscript") != 0)
+        if (fnnoext.length() > 0)
         {
             osc->wavetable_display_name = fnnoext;
         }
 
-        if (extension.compare(".wtscript") == 0)
-        {
-            // Keep osc->wavetable_formula as set by loadScriptFrom()
-        }
-        else if (metadata.empty())
+        if (metadata.empty())
         {
             osc->wavetable_formula = {};
             osc->wavetable_formula_res_base = 5;

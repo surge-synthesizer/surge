@@ -3925,19 +3925,6 @@ void WavetableScriptEditor::onSkinChanged()
     rendererComponent->setSkin(skin, associatedBitmapStore);
 }
 
-void WavetableScriptEditor::setupEvaluator()
-{
-    auto resi = controlArea->resolutionN->getIntValue();
-    auto respt = 32;
-    for (int i = 1; i < resi; ++i)
-        respt *= 2;
-
-    evaluator->setStorage(storage);
-    evaluator->setScript(mainDocument->getAllContent().toStdString());
-    evaluator->setResolution(respt);
-    evaluator->setFrameCount(controlArea->framesN->getIntValue());
-}
-
 void WavetableScriptEditor::applyCode()
 {
     removeTrailingWhitespaceFromDocument();
@@ -4090,25 +4077,24 @@ void WavetableScriptEditor::setCurrentFrame(int value)
     controlArea->currentFrameN->setIntValue(frameNumber);
 }
 
-void WavetableScriptEditor::generateWavetable()
+void WavetableScriptEditor::setupEvaluator()
 {
     auto resi = controlArea->resolutionN->getIntValue();
-    auto nfr = controlArea->framesN->getIntValue();
     auto respt = 32;
-
     for (int i = 1; i < resi; ++i)
         respt *= 2;
 
-    wt_header wh;
-    float *wd = nullptr;
-    setupEvaluator();
-    evaluator->populateWavetable(wh, &wd);
-    storage->waveTableDataMutex.lock();
-    osc->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
-    osc->wavetable_display_name = evaluator->getSuggestedWavetableName();
-    storage->waveTableDataMutex.unlock();
+    evaluator->setStorage(storage);
+    evaluator->setScript(mainDocument->getAllContent().toStdString());
+    evaluator->setResolution(respt);
+    evaluator->setFrameCount(controlArea->framesN->getIntValue());
+}
 
-    delete[] wd;
+void WavetableScriptEditor::generateWavetable()
+{
+    setupEvaluator();
+    evaluator->generateWavetable(storage, osc);
+
     editor->oscWaveform->repaintForceForWT();
     editor->repaintFrame();
 }

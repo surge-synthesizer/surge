@@ -34,7 +34,7 @@
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
 #include "UserDefaults.h"
-#include "WavetableScriptManager.h"
+#include "WavetableScriptEvaluator.h"
 #include "fmt/core.h"
 
 namespace Surge
@@ -622,8 +622,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
             sge->promptForMiniEdit(
                 "", "Enter the file name:", "Wavetable Script File Name", juce::Point<int>{},
                 [this](const std::string &s) {
-                    this->storage->wavetableScriptManager->saveScriptToUser(
-                        string_to_path(s), this->storage, scene, oscInScene);
+                    saveWavetableScript(string_to_path(s), this->storage, this->oscdata);
                 },
                 this);
         };
@@ -1120,7 +1119,16 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
             announce += storage->wt_list[id].name;
             sge->enqueueAccessibleAnnouncement(announce);
         }
-        oscdata->wt.queue_id = id;
+
+        if (storage->wt_list[id].path.extension() == ".wtscript")
+        {
+            loadWavetableScript(storage->wt_list[id].path, storage, oscdata);
+        }
+        else
+        {
+            oscdata->wt.queue_id = id;
+        }
+
         auto new_name = storage->getCurrentWavetableName(oscdata);
 
         SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
@@ -1159,7 +1167,14 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
 
-            this->oscdata->wt.queue_filename = rString;
+            if (res.hasFileExtension(".wtscript"))
+            {
+                loadWavetableScript(fs::path(rString), storage, oscdata);
+            }
+            else
+            {
+                this->oscdata->wt.queue_filename = rString;
+            }
 
             auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
 
@@ -1169,6 +1184,92 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
                                                       dir);
             }
         });
+}
+
+void OscillatorWaveformDisplay::loadWavetableScript(fs::path &location, SurgeStorage *storage,
+                                                    OscillatorStorage *oscdata)
+{
+    if (!evaluator)
+        evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+
+    evaluator->loadWtscript(location, storage, oscdata);
+
+    oscdata->wt.refresh_display = true;
+    oscdata->wt.force_refresh_display = true;
+    oscdata->wt.refresh_script_editor = true;
+}
+
+void OscillatorWaveformDisplay::saveWavetableScript(fs::path &location, SurgeStorage *storage,
+                                                    OscillatorStorage *oscdata)
+{
+    try
+    {
+        auto containingPath = storage->userDataPath / "Wavetables/Scripted";
+
+        // validate location before using
+        if (!location.is_relative())
+        {
+            storage->reportError(
+                "Please use relative paths when saving scripts. Referring to drive names directly "
+                "and using absolute paths is not allowed!",
+                "Relative Path Required");
+            return;
+        }
+
+        auto comppath = containingPath;
+        auto fullLocation =
+            (containingPath / location).lexically_normal().replace_extension(".wtscript");
+
+        // make sure your category isnt "../../../etc/config"
+        auto [_, compIt] = std::mismatch(fullLocation.begin(), fullLocation.end(), comppath.begin(),
+                                         comppath.end());
+        if (compIt != comppath.end())
+        {
+            storage->reportError(
+                "Your save path is not a directory inside the user scripts directory. "
+                "This usually means you are trying to use ../ in your script name.",
+                "Invalid Save Path");
+            return;
+        }
+
+        fs::create_directories(fullLocation.parent_path());
+
+        TiXmlDeclaration decl("1.0", "UTF-8", "yes");
+        TiXmlDocument doc;
+        doc.InsertEndChild(decl);
+        TiXmlElement wtscript("wtscript");
+        TiXmlElement script("script");
+
+        if (!oscdata->wavetable_formula.empty())
+        {
+            auto wtfo = oscdata->wavetable_formula;
+            auto wtfol = wtfo.length();
+
+            script.SetAttribute(
+                "lua", Surge::Storage::base64_encode((unsigned const char *)wtfo.c_str(), wtfol));
+
+            script.SetAttribute("frames", oscdata->wavetable_formula_nframes);
+            script.SetAttribute("samples", oscdata->wavetable_formula_res_base);
+        }
+
+        wtscript.InsertEndChild(script);
+        doc.InsertEndChild(wtscript);
+        if (!doc.SaveFile(fullLocation))
+        {
+            storage->reportError("Failed to save XML file.", "XML Save Error");
+        }
+
+        storage->refresh_wtlist();
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        std::ostringstream oss;
+        oss << "Exception occurred while attempting to write the wavetable script! "
+               "Most likely, invalid characters or a reserved name was used to name "
+               "the script. Please try again with a different name!\n"
+            << "Details " << e.what();
+        storage->reportError(oss.str(), "Script Write Error");
+    }
 }
 
 void OscillatorWaveformDisplay::showWavetableMenu(bool singleCategory)

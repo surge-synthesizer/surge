@@ -1333,7 +1333,6 @@ struct ScenesOutputData
 
 struct FxUserPreset;
 struct ModulatorPreset;
-struct WavetableScriptManager;
 } // namespace Storage
 namespace Memory
 {
@@ -1563,7 +1562,6 @@ class alignas(16) SurgeStorage
 
     std::unique_ptr<Surge::Storage::FxUserPreset> fxUserPreset;
     std::unique_ptr<Surge::Storage::ModulatorPreset> modulatorPreset;
-    std::unique_ptr<Surge::Storage::WavetableScriptManager> wavetableScriptManager;
 
     bool datapathOverriden{false};
     fs::path datapath;

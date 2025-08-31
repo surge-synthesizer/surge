@@ -144,8 +144,6 @@ add_library(${PROJECT_NAME}
   UnitConversions.h
   UserDefaults.cpp
   UserDefaults.h
-  WavetableScriptManager.cpp
-  WavetableScriptManager.h
   WAVFileSupport.cpp
   dsp/DSPExternalAdapterUtils.cpp
   dsp/Effect.cpp
