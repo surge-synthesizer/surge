@@ -107,8 +107,10 @@ struct OscillatorWaveformDisplay : public juce::Component,
     void loadWavetable(int id);
     void loadWavetableFromFile();
 
-    void loadWavetableScript(fs::path &location, SurgeStorage *storage, OscillatorStorage *oscdata);
-    void saveWavetableScript(fs::path &location, SurgeStorage *storage, OscillatorStorage *oscdata);
+    void loadWavetableScript(const fs::path &location, SurgeStorage *storage,
+                             OscillatorStorage *oscdata);
+    void saveWavetableScript(const fs::path &location, SurgeStorage *storage,
+                             OscillatorStorage *oscdata);
 
     void populateMenu(juce::PopupMenu &m, int selectedItem, bool singleCategory = false);
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem,

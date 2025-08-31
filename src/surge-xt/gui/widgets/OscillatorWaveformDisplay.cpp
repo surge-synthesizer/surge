@@ -1186,7 +1186,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
         });
 }
 
-void OscillatorWaveformDisplay::loadWavetableScript(fs::path &location, SurgeStorage *storage,
+void OscillatorWaveformDisplay::loadWavetableScript(const fs::path &location, SurgeStorage *storage,
                                                     OscillatorStorage *oscdata)
 {
     if (!evaluator)
@@ -1199,7 +1199,7 @@ void OscillatorWaveformDisplay::loadWavetableScript(fs::path &location, SurgeSto
     oscdata->wt.refresh_script_editor = true;
 }
 
-void OscillatorWaveformDisplay::saveWavetableScript(fs::path &location, SurgeStorage *storage,
+void OscillatorWaveformDisplay::saveWavetableScript(const fs::path &location, SurgeStorage *storage,
                                                     OscillatorStorage *oscdata)
 {
     try
