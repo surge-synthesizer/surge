@@ -1178,8 +1178,6 @@ class SurgePatch
     void stepSeqFromXmlElement(StepSequencerStorage *ss, TiXmlElement *parent) const;
     void formulaToXMLElement(FormulaModulatorStorage *ms, TiXmlElement &parent) const;
     void formulaFromXMLElement(FormulaModulatorStorage *ms, TiXmlElement *parent) const;
-    void wtsToXMLElement(OscillatorStorage *osc, TiXmlElement &parent) const;
-    void wtsFromXMLElement(OscillatorStorage *osc, TiXmlElement *parent) const;
 
     void load_patch(const void *data, int size, bool preset);
     unsigned int save_patch(void **data);
