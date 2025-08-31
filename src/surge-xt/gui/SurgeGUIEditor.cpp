@@ -800,20 +800,9 @@ void SurgeGUIEditor::idle()
         {
             wt->refresh_script_editor = false;
 
-            auto WTEditorOverlay = SurgeGUIEditor::WT_EDITOR;
-            if (isAnyOverlayPresent(WTEditorOverlay))
+            if (auto olw = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR))
             {
-                auto olw = getOverlayWrapperIfOpen(WTEditorOverlay);
-
-                if (olw && olw->isTornOut())
-                {
-                    olw->doTearOut(olw->currentTearOutLocation());
-                }
-                else if (olw)
-                {
-                    closeOverlay(WTEditorOverlay);
-                    showOverlay(WTEditorOverlay);
-                }
+                olw->forceRefresh();
             }
         }
 
