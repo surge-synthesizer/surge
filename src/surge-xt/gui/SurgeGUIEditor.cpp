@@ -2954,6 +2954,7 @@ void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
 
     evaluator->loadWtscript(fs::path(fn), &synth->storage, oscdata);
 
+    oscdata->wt.current_id = -1;
     oscdata->wt.refresh_display = true;
     oscdata->wt.force_refresh_display = true;
     oscdata->wt.refresh_script_editor = true;

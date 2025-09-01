@@ -72,7 +72,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             announce += storage->wt_list[id].name;
             sge->enqueueAccessibleAnnouncement(announce);
 
-            oscdata->wt.queue_id = id;
+            handleWavetableLoad(id);
         }
     };
     ol->onReturnKey = [ov = ol.get()](OscillatorWaveformDisplay *d) {
@@ -98,7 +98,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             announce += storage->wt_list[id].name;
             sge->enqueueAccessibleAnnouncement(announce);
 
-            oscdata->wt.queue_id = id;
+            handleWavetableLoad(id);
             auto new_name = storage->getCurrentWavetableName(oscdata);
 
             SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
@@ -624,8 +624,12 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         auto swp = [this]() {
             if (!sge)
                 return;
+            std::string defaultFilename = oscdata->wavetable_display_name;
+            if (defaultFilename.empty())
+                defaultFilename = "Untitled";
             sge->promptForMiniEdit(
-                "", "Enter the file name:", "Wavetable Script File Name", juce::Point<int>{},
+                defaultFilename, "Enter the file name:", "Wavetable Script File Name",
+                juce::Point<int>{},
                 [this](const std::string &s) {
                     saveWavetableScript(string_to_path(s), this->storage, this->oscdata);
                 },
@@ -1136,6 +1140,18 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
     return selected;
 }
 
+void OscillatorWaveformDisplay::handleWavetableLoad(int id)
+{
+    if (storage->wt_list[id].path.extension() == ".wtscript")
+    {
+        loadWavetableScript(id, storage->wt_list[id].path, storage, oscdata);
+    }
+    else
+    {
+        oscdata->wt.queue_id = id;
+    }
+}
+
 void OscillatorWaveformDisplay::loadWavetable(int id)
 {
     if (id >= 0 && (id < storage->wt_list.size()))
@@ -1148,14 +1164,7 @@ void OscillatorWaveformDisplay::loadWavetable(int id)
             sge->enqueueAccessibleAnnouncement(announce);
         }
 
-        if (storage->wt_list[id].path.extension() == ".wtscript")
-        {
-            loadWavetableScript(storage->wt_list[id].path, storage, oscdata);
-        }
-        else
-        {
-            oscdata->wt.queue_id = id;
-        }
+        handleWavetableLoad(id);
 
         auto new_name = storage->getCurrentWavetableName(oscdata);
 
@@ -1197,7 +1206,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
 
             if (res.hasFileExtension(".wtscript"))
             {
-                loadWavetableScript(fs::path(rString), storage, oscdata);
+                loadWavetableScript(-1, fs::path(rString), storage, oscdata);
             }
             else
             {
@@ -1214,7 +1223,8 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
         });
 }
 
-void OscillatorWaveformDisplay::loadWavetableScript(const fs::path &location, SurgeStorage *storage,
+void OscillatorWaveformDisplay::loadWavetableScript(int id, const fs::path &location,
+                                                    SurgeStorage *storage,
                                                     OscillatorStorage *oscdata)
 {
     if (!evaluator)
@@ -1222,6 +1232,7 @@ void OscillatorWaveformDisplay::loadWavetableScript(const fs::path &location, Su
 
     evaluator->loadWtscript(location, storage, oscdata);
 
+    oscdata->wt.current_id = id;
     oscdata->wt.refresh_display = true;
     oscdata->wt.force_refresh_display = true;
     oscdata->wt.refresh_script_editor = true;
@@ -1262,32 +1273,52 @@ void OscillatorWaveformDisplay::saveWavetableScript(const fs::path &location, Su
 
         fs::create_directories(fullLocation.parent_path());
 
-        TiXmlDeclaration decl("1.0", "UTF-8", "yes");
-        TiXmlDocument doc;
-        doc.InsertEndChild(decl);
-        TiXmlElement wtscript("wtscript");
-        TiXmlElement script("script");
+        auto doSave = [fullLocation, storage, oscdata]() {
+            TiXmlDeclaration decl("1.0", "UTF-8", "yes");
+            TiXmlDocument doc;
+            doc.InsertEndChild(decl);
+            TiXmlElement wtscript("wtscript");
+            TiXmlElement script("script");
 
-        if (!oscdata->wavetable_formula.empty())
+            if (!oscdata->wavetable_formula.empty())
+            {
+                auto wtfo = oscdata->wavetable_formula;
+                auto wtfol = wtfo.length();
+
+                script.SetAttribute("lua", Surge::Storage::base64_encode(
+                                               (unsigned const char *)wtfo.c_str(), wtfol));
+
+                script.SetAttribute("frames", oscdata->wavetable_formula_nframes);
+                script.SetAttribute("samples", oscdata->wavetable_formula_res_base);
+            }
+
+            wtscript.InsertEndChild(script);
+            doc.InsertEndChild(wtscript);
+            if (!doc.SaveFile(fullLocation))
+            {
+                storage->reportError("Failed to save XML file.", "XML Save Error");
+            }
+
+            storage->refresh_wtlist();
+        };
+
+        if (fs::exists(fullLocation))
         {
-            auto wtfo = oscdata->wavetable_formula;
-            auto wtfol = wtfo.length();
-
-            script.SetAttribute(
-                "lua", Surge::Storage::base64_encode((unsigned const char *)wtfo.c_str(), wtfol));
-
-            script.SetAttribute("frames", oscdata->wavetable_formula_nframes);
-            script.SetAttribute("samples", oscdata->wavetable_formula_res_base);
+            storage->okCancelProvider("The wavetable script '" + location.string() +
+                                          "' already exists. "
+                                          "Are you sure you want to overwrite it?",
+                                      "Overwrite Wavetable Script", SurgeStorage::OK,
+                                      [doSave](SurgeStorage::OkCancel okc) {
+                                          if (okc == SurgeStorage::OK)
+                                          {
+                                              doSave();
+                                          }
+                                      });
         }
-
-        wtscript.InsertEndChild(script);
-        doc.InsertEndChild(wtscript);
-        if (!doc.SaveFile(fullLocation))
+        else
         {
-            storage->reportError("Failed to save XML file.", "XML Save Error");
+            doSave();
         }
-
-        storage->refresh_wtlist();
     }
     catch (const fs::filesystem_error &e)
     {
@@ -1352,7 +1383,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
                         sge->enqueueAccessibleAnnouncement(announce);
                     }
 
-                    oscdata->wt.queue_id = id;
+                    handleWavetableLoad(id);
                     auto new_name = storage->getCurrentWavetableName(oscdata);
                     SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
                     ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,
@@ -1382,7 +1413,7 @@ void OscillatorWaveformDisplay::mouseDown(const juce::MouseEvent &event)
                         sge->enqueueAccessibleAnnouncement(announce);
                     }
 
-                    oscdata->wt.queue_id = id;
+                    handleWavetableLoad(id);
                     auto new_name = storage->getCurrentWavetableName(oscdata);
                     SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
                     ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene,

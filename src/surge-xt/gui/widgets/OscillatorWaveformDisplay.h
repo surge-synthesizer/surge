@@ -105,10 +105,11 @@ struct OscillatorWaveformDisplay : public juce::Component,
 
     bool keyPressed(const juce::KeyPress &key) override;
 
+    void handleWavetableLoad(int id);
     void loadWavetable(int id);
     void loadWavetableFromFile();
 
-    void loadWavetableScript(const fs::path &location, SurgeStorage *storage,
+    void loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
                              OscillatorStorage *oscdata);
     void saveWavetableScript(const fs::path &location, SurgeStorage *storage,
                              OscillatorStorage *oscdata);
