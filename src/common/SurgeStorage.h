@@ -1571,6 +1571,7 @@ class alignas(16) SurgeStorage
     fs::path userModulatorSettingsPath;
     fs::path userFXPath;
     fs::path userWavetablesExportPath;
+    fs::path userWavetableScriptsPath;
     fs::path userSkinsPath;
     fs::path userMidiMappingsPath;
     fs::path extraThirdPartyWavetablesPath; // used by rack

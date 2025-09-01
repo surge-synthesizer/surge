@@ -173,7 +173,6 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
     }
     catch (const fs::filesystem_error &e)
     {
-
         std::ostringstream oss;
         oss << "Exception occurred while attempting to write the preset! Most likely, "
                "invalid characters or a reserved name was used to name the preset. "

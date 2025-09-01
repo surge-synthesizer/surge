@@ -26,6 +26,7 @@
 #include "Parameter.h"
 #include "SurgeSynthProcessor.h"
 #include "SurgeStorage.h"
+#include "WavetableScriptEvaluator.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -851,7 +852,22 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
             // Select the new waveform (invalid ids are ignored)
             new_id = (int)(message[0].getFloat32());
         }
-        oscdata->wt.queue_id = new_id;
+
+        if (synth->storage.wt_list[new_id].path.extension() == ".wtscript")
+        {
+            if (!evaluator)
+                evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+
+            evaluator->loadWtscript(synth->storage.wt_list[new_id].path, &synth->storage, oscdata);
+
+            oscdata->wt.refresh_display = true;
+            oscdata->wt.force_refresh_display = true;
+            oscdata->wt.refresh_script_editor = true;
+        }
+        else
+        {
+            oscdata->wt.queue_id = new_id;
+        }
     }
 
     // Patch changing

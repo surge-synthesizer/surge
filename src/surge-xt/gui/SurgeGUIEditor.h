@@ -44,6 +44,7 @@
 #include "overlays/OverlayWrapper.h" // This needs to be concrete for inline functions for now
 #include "overlays/TuningOverlays.h"
 #include "widgets/ModulatableControlInterface.h"
+#include "WavetableScriptEvaluator.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -351,6 +352,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void toggleTuning();
     void scaleFileDropped(const std::string &fn);
     void mappingFileDropped(const std::string &fn);
+    std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
+    void wtscriptFileDropped(const std::string &fn);
     std::string tuningToHtml();
     void tuningChanged();
 

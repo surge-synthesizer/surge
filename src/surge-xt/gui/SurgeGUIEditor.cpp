@@ -38,6 +38,7 @@
 #include "StringOps.h"
 #include "ModulatorPresetManager.h"
 #include "ModulationSource.h"
+#include "WavetableScriptEvaluator.h"
 
 #include "SurgeSynthEditor.h"
 #include "SurgeJUCELookAndFeel.h"
@@ -788,11 +789,20 @@ void SurgeGUIEditor::idle()
 
             if (oscWaveform)
             {
-                if (wt->is_dnd_imported)
+                if (wt->force_refresh_display)
                 {
                     oscWaveform->repaintForceForWT();
                 }
                 oscWaveform->repaint();
+            }
+        }
+        if (wt->refresh_script_editor)
+        {
+            wt->refresh_script_editor = false;
+
+            if (auto olw = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR))
+            {
+                olw->forceRefresh();
             }
         }
 
@@ -2933,6 +2943,22 @@ void SurgeGUIEditor::toggleTuning()
     this->synth->refresh_editor = true;
 }
 
+void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
+{
+    undoManager()->pushWavetable(current_scene, current_osc[current_scene]);
+    OscillatorStorage *oscdata =
+        &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+
+    if (!evaluator)
+        evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+
+    evaluator->loadWtscript(fs::path(fn), &synth->storage, oscdata);
+
+    oscdata->wt.refresh_display = true;
+    oscdata->wt.force_refresh_display = true;
+    oscdata->wt.refresh_script_editor = true;
+}
+
 void SurgeGUIEditor::scaleFileDropped(const string &fn)
 {
     undoManager()->pushTuning(synth->storage.currentTuning);
@@ -4933,6 +4959,7 @@ bool SurgeGUIEditor::canDropTarget(const std::string &fname)
         extensions.insert(".kbm");
         extensions.insert(".wav");
         extensions.insert(".wt");
+        extensions.insert(".wtscript");
         extensions.insert(".fxp");
         extensions.insert(".surge-skin");
         extensions.insert(".zip");
@@ -4960,6 +4987,10 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
             .scene[current_scene]
             .osc[current_osc[current_scene]]
             .wt.queue_filename = fname;
+    }
+    else if (fExt == ".wtscript")
+    {
+        wtscriptFileDropped(fname);
     }
     else if (fExt == ".scl")
     {

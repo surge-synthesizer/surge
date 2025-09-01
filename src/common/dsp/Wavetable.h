@@ -66,7 +66,8 @@ class Wavetable
 
     int current_id, queue_id;
     bool refresh_display;
-    bool is_dnd_imported;
+    bool force_refresh_display;
+    bool refresh_script_editor;
     std::string queue_filename;
     std::string current_filename;
     int frame_size_if_absent{-1};

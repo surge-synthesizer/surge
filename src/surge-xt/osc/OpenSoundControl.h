@@ -39,6 +39,7 @@
 #include "juce_osc/juce_osc.h"
 #include "SurgeSynthesizer.h"
 #include "SurgeStorage.h"
+#include "WavetableScriptEvaluator.h"
 #include <fmt/core.h>
 #include <fmt/format.h>
 
@@ -69,6 +70,7 @@ class OpenSoundControl : public juce::OSCReceiver,
     bool listening = false;
     bool sendingOSC = false;
 
+    std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     void oscMessageReceived(const juce::OSCMessage &message) override;
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
 

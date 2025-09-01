@@ -377,13 +377,13 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void showPreludeCode();
     void escapeKeyPressed();
 
+    void setupEvaluator();
     void generateWavetable();
+
     void rerenderFromUIState();
     void setCurrentFrame(int value);
 
     int lastRes{-1}, lastFrames{-1}, lastFrame{-1}, lastRm{-1};
-
-    void setupEvaluator();
 
     std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     std::unique_ptr<juce::CodeDocument> preludeDocument;

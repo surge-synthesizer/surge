@@ -377,6 +377,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userPatchesMidiProgramChangePath = userPatchesPath / midiProgramChangePatchesSubdir;
     userWavetablesPath = userDataPath / "Wavetables";
     userWavetablesExportPath = userWavetablesPath / "Exported";
+    userWavetableScriptsPath = userWavetablesPath / "Scripted";
     userFXPath = userDataPath / "FX Presets";
     userMidiMappingsPath = userDataPath / "MIDI Mappings";
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
@@ -637,7 +638,7 @@ void SurgeStorage::createUserDirectory()
         {
             for (auto &s : {userDataPath, userDefaultFilePath, userPatchesPath, userWavetablesPath,
                             userModulatorSettingsPath, userFXPath, userWavetablesExportPath,
-                            userSkinsPath, userMidiMappingsPath})
+                            userWavetableScriptsPath, userSkinsPath, userMidiMappingsPath})
                 fs::create_directories(s);
 
             userDataPathValid = true;
@@ -1247,6 +1248,9 @@ void SurgeStorage::refresh_wtlistFrom(bool isUser, const fs::path &p, const std:
     std::vector<std::string> supportedTableFileTypes;
     supportedTableFileTypes.push_back(".wt");
     supportedTableFileTypes.push_back(".wav");
+#if HAS_LUA
+    supportedTableFileTypes.push_back(".wtscript");
+#endif
 
     refreshPatchOrWTListAddDir(
         isUser, p, subdir,
@@ -1276,7 +1280,7 @@ void SurgeStorage::perform_queued_wtloads()
                     patch.isDirty = true;
                 load_wt(patch.scene[sc].osc[o].wt.queue_id, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
-                patch.scene[sc].osc[o].wt.is_dnd_imported = false;
+                patch.scene[sc].osc[o].wt.force_refresh_display = false;
                 patch.scene[sc].osc[o].wt.refresh_display = true;
             }
             else if (patch.scene[sc].osc[o].wt.queue_filename[0])
@@ -1298,7 +1302,7 @@ void SurgeStorage::perform_queued_wtloads()
                 patch.scene[sc].osc[o].wt.current_id = wtidx;
                 load_wt(patch.scene[sc].osc[o].wt.queue_filename, &patch.scene[sc].osc[o].wt,
                         &patch.scene[sc].osc[o]);
-                patch.scene[sc].osc[o].wt.is_dnd_imported = true;
+                patch.scene[sc].osc[o].wt.force_refresh_display = true;
                 patch.scene[sc].osc[o].wt.refresh_display = true;
                 if (patch.scene[sc].osc[o].wt.everBuilt)
                     patch.isDirty = true;
@@ -1371,7 +1375,7 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
     {
         std::ostringstream oss;
         oss << "Unable to load file with extension " << extension
-            << "! Surge XT only supports .wav and .wt wavetable files!";
+            << "! Surge XT only supports .wav, .wt and .wtscript wavetable files!";
         reportError(oss.str(), "Error");
     }
 
