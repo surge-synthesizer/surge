@@ -3947,6 +3947,10 @@ void WavetableScriptEditor::forceRefresh()
 {
     mainDocument->replaceAllContent(osc->wavetable_formula);
     editor->repaintFrame();
+    setApplyEnabled(false);
+
+    setupEvaluator();
+    rerenderFromUIState();
 }
 
 void WavetableScriptEditor::setApplyEnabled(bool b)
