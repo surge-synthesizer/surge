@@ -559,6 +559,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
 
     if (selectedItem >= 0 && selectedItem < storage->wt_list.size() && singleCategory)
     {
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "WAVETABLES");
         populateMenuForCategory(contextMenu, storage->wt_list[selectedItem].category, selectedItem,
                                 true);
     }
@@ -610,15 +611,8 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
         }
     }
 
-    if (!singleCategory)
-    {
-        contextMenu.addColumnBreak();
-        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "FUNCTIONS");
-    }
-    else
-    {
-        contextMenu.addSeparator();
-    }
+    contextMenu.addColumnBreak();
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "FUNCTIONS");
 
     createWTLoadMenu(contextMenu);
     createWTExportMenu(contextMenu);
@@ -1075,6 +1069,11 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
             if (sub != 0 && sub % 24 == 0)
             {
                 subMenu->addColumnBreak();
+
+                if (intoTop)
+                {
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
+                }
             }
         }
     }
