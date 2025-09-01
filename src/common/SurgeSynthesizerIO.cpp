@@ -527,7 +527,7 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
 {
     if (storage.getPatch().category.empty())
     {
-        storage.getPatch().category = "Default";
+        storage.getPatch().category = "Unsorted";
     }
 
     fs::path savepath = storage.userPatchesPath;

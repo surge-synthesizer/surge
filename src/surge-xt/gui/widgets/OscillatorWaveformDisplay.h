@@ -50,6 +50,7 @@ struct OscillatorWaveformDisplay : public juce::Component,
                                    public Surge::Widgets::LongHoldMixin<OscillatorWaveformDisplay>,
                                    public Surge::GUI::Hoverable
 {
+  public:
     OscillatorWaveformDisplay();
     ~OscillatorWaveformDisplay();
 
@@ -151,6 +152,10 @@ struct OscillatorWaveformDisplay : public juce::Component,
     int lastWavetableId{-1};
     std::string lastWavetableFilename;
     std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
+
+  private:
+    std::unique_ptr<juce::Drawable> wtFileIcon;
+    std::unique_ptr<juce::Drawable> wtScriptIcon;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };

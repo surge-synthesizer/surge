@@ -751,9 +751,9 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
 
     if (sge)
     {
-        Surge::GUI::addMenuWithShortcut(
+        Surge::GUI::addMenuItemWithShortcut(
             contextMenu, Surge::GUI::toOSCase("Save Patch"),
-            sge->showShortcutDescription(Surge::GUI::KeyboardActions::SAVE_PATCH),
+            sge->getShortcutDescription(Surge::GUI::KeyboardActions::SAVE_PATCH),
             [this, sge]() { sge->showOverlay(SurgeGUIEditor::SAVE_PATCH); });
 
         contextMenu.addItem(Surge::GUI::toOSCase("Load Patch from File..."), [this, sge]() {
@@ -851,9 +851,9 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
         contextMenu.addSeparator();
 
 #if INCLUDE_PATCH_BROWSER
-        Surge::GUI::addMenuWithShortcut(
+        Surge::GUI::addMenuItemWithShortcut(
             contextMenu, Surge::GUI::toOSCase("Patch Database..."),
-            sge->showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_PATCH_BROWSER),
+            sge->getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_PATCH_BROWSER),
             [this, sge]() { sge->showOverlay(SurgeGUIEditor::PATCH_BROWSER); });
 #endif
     }

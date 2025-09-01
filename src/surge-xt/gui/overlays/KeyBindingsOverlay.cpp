@@ -143,7 +143,7 @@ struct KeyBindingsListRow : public juce::Component
 
         reset->setDeactivated(binding == dbinding);
 
-        auto desc = editor->showShortcutDescription(action);
+        auto desc = editor->getShortcutDescription(action);
 
         keyDesc->setText(desc, juce::dontSendNotification);
         learn->setValue(0);

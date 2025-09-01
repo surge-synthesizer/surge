@@ -422,9 +422,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         std::string openname = isAnyOverlayPresent(TUNING_EDITOR) ? "Close " : "Open ";
 
-        Surge::GUI::addMenuWithShortcut(
+        Surge::GUI::addMenuItemWithShortcut(
             tuningSubMenu, Surge::GUI::toOSCase(openname + "Tuning Visualizer..."),
-            showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_TUNING_EDITOR),
+            getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_TUNING_EDITOR),
             [this]() { this->toggleOverlay(TUNING_EDITOR); });
 
         tuningSubMenu.addSeparator();
@@ -464,9 +464,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         std::string openname = isAnyOverlayPresent(TUNING_EDITOR) ? "Close " : "Open ";
 
-        Surge::GUI::addMenuWithShortcut(
+        Surge::GUI::addMenuItemWithShortcut(
             tuningSubMenu, Surge::GUI::toOSCase(openname + "Tuning Editor..."),
-            showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_TUNING_EDITOR),
+            getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_TUNING_EDITOR),
             [this]() { this->toggleOverlay(TUNING_EDITOR); });
 
         tuningSubMenu.addSeparator();
@@ -851,10 +851,10 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
         // These are somewhat arbitrary reasonable defaults also
         std::vector<int> jog = {-25, -10, 10, 25};
-        std::vector<std::string> sdesc = {showShortcutDescription(KeyboardActions::ZOOM_MINUS_25),
-                                          showShortcutDescription(KeyboardActions::ZOOM_MINUS_10),
-                                          showShortcutDescription(KeyboardActions::ZOOM_PLUS_10),
-                                          showShortcutDescription(KeyboardActions::ZOOM_PLUS_25)};
+        std::vector<std::string> sdesc = {getShortcutDescription(KeyboardActions::ZOOM_MINUS_25),
+                                          getShortcutDescription(KeyboardActions::ZOOM_MINUS_10),
+                                          getShortcutDescription(KeyboardActions::ZOOM_PLUS_10),
+                                          getShortcutDescription(KeyboardActions::ZOOM_PLUS_25)};
 
         for (int i = 0; i < jog.size(); i++)
         {
@@ -867,7 +867,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
                 lab = fmt::format("Shrink by {:d}%", -jog[i]);
             }
 
-            Surge::GUI::addMenuWithShortcut(zoomSubMenu, lab, sdesc[i], [this, jog, i]() {
+            Surge::GUI::addMenuItemWithShortcut(zoomSubMenu, lab, sdesc[i], [this, jog, i]() {
                 resizeWindow(getZoomFactor() + jog[i]);
             });
         }
@@ -893,9 +893,9 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
         {
             lab = fmt::format("Zoom to Default ({:d}%)", dzf);
 
-            Surge::GUI::addMenuWithShortcut(
+            Surge::GUI::addMenuItemWithShortcut(
                 zoomSubMenu, Surge::GUI::toOSCase(lab),
-                showShortcutDescription(Surge::GUI::KeyboardActions::ZOOM_TO_DEFAULT),
+                getShortcutDescription(Surge::GUI::KeyboardActions::ZOOM_TO_DEFAULT),
                 [this, dzf]() { resizeWindow(dzf); });
         }
 
@@ -938,7 +938,7 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
 
                 if (cdw->isFullScreen())
                 {
-                    Surge::GUI::addMenuWithShortcut(
+                    Surge::GUI::addMenuItemWithShortcut(
                         zoomSubMenu, Surge::GUI::toOSCase("Exit Fullscreen Mode"),
                         showShortcutDescription(Surge::GUI::KeyboardActions::ZOOM_FULLSCREEN),
                         [this, w = juce::Component::SafePointer(cdw)]() {
@@ -950,9 +950,9 @@ juce::PopupMenu SurgeGUIEditor::makeZoomMenu(const juce::Point<int> &where, bool
                 }
                 else
                 {
-                    Surge::GUI::addMenuWithShortcut(
+                    Surge::GUI::addMenuItemWithShortcut(
                         zoomSubMenu, Surge::GUI::toOSCase("Enter Fullscreen Mode"),
-                        showShortcutDescription(Surge::GUI::KeyboardActions::ZOOM_FULLSCREEN),
+                        getShortcutDescription(Surge::GUI::KeyboardActions::ZOOM_FULLSCREEN),
                         [this, w = juce::Component::SafePointer(cdw)]() {
                             if (w)
                             {
@@ -1361,9 +1361,9 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     wfMenu.addItem(Surge::GUI::toOSCase("Use Keyboard Shortcuts"), true, kbShortcuts,
                    [this]() { toggleUseKeyboardShortcuts(); });
-    Surge::GUI::addMenuWithShortcut(
+    Surge::GUI::addMenuItemWithShortcut(
         wfMenu, Surge::GUI::toOSCase("Edit Keyboard Shortcuts..."),
-        showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_KEYBIND_EDITOR), true, false,
+        getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_KEYBIND_EDITOR), true, false,
         [this]() { toggleOverlay(KEYBINDINGS_EDITOR); });
 
     bool knMode = Surge::Storage::getUserDefaultValue(
@@ -1391,9 +1391,9 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
 
-    Surge::GUI::addMenuWithShortcut(
+    Surge::GUI::addMenuItemWithShortcut(
         wfMenu, Surge::GUI::toOSCase("Virtual Keyboard"),
-        showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_VIRTUAL_KEYBOARD), true,
+        getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_VIRTUAL_KEYBOARD), true,
         showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
 
     makeScopeEntry(wfMenu);
@@ -1562,9 +1562,9 @@ juce::PopupMenu SurgeGUIEditor::makeSkinMenu(const juce::Point<int> &where)
         skinSubMenu.addSeparator();
     }
 
-    Surge::GUI::addMenuWithShortcut(
+    Surge::GUI::addMenuItemWithShortcut(
         skinSubMenu, Surge::GUI::toOSCase("Reload Current Skin"),
-        showShortcutDescription(Surge::GUI::KeyboardActions::REFRESH_SKIN),
+        getShortcutDescription(Surge::GUI::KeyboardActions::REFRESH_SKIN),
         [this]() { refreshSkin(); });
 
     skinSubMenu.addItem(Surge::GUI::toOSCase("Rescan Skins"), [this]() {
@@ -1887,9 +1887,9 @@ juce::PopupMenu SurgeGUIEditor::makeDevMenu(const juce::Point<int> &where)
     auto devSubMenu = juce::PopupMenu();
 
 #if WINDOWS
-    Surge::GUI::addMenuWithShortcut(
+    Surge::GUI::addMenuItemWithShortcut(
         devSubMenu, Surge::GUI::toOSCase("Show Debug Console..."),
-        showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_DEBUG_CONSOLE),
+        getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_DEBUG_CONSOLE),
         []() { Surge::Debug::toggleConsole(); });
 #endif
 
@@ -2041,9 +2041,9 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
         juce::URL(fmt::format("{}skin-library", stringWebsite)).launchInDefaultBrowser();
     });
 
-    Surge::GUI::addMenuWithShortcut(
+    Surge::GUI::addMenuItemWithShortcut(
         settingsMenu, Surge::GUI::toOSCase("Surge XT Manual..."),
-        showShortcutDescription(Surge::GUI::KeyboardActions::OPEN_MANUAL),
+        getShortcutDescription(Surge::GUI::KeyboardActions::OPEN_MANUAL),
         []() { juce::URL(stringManual).launchInDefaultBrowser(); });
 
     settingsMenu.addItem(Surge::GUI::toOSCase("Surge XT Website..."),
@@ -2051,9 +2051,9 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
 
     settingsMenu.addSeparator();
 
-    Surge::GUI::addMenuWithShortcut(
+    Surge::GUI::addMenuItemWithShortcut(
         settingsMenu, "About Surge XT",
-        showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_ABOUT),
+        getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_ABOUT),
         [this]() { this->showAboutScreen(); });
 
     settingsMenu.showMenuAsync(popupMenuOptions(where),

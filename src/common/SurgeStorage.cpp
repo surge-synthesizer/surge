@@ -1009,7 +1009,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &init
         for (auto &p : alldirs)
         {
             PatchCategory c;
-            auto name = std::string("_Unsorted");
+            auto name = std::string("Unsorted");
             auto pn = path_to_string(p);
             if (pn.size() > patchpathSubstrLength)
                 name = pn.substr(patchpathSubstrLength);
