@@ -29,6 +29,7 @@
 #include "RuntimeFont.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeJuceHelpers.h"
 #include "SurgeXTBinary.h"
 #include "StringOscillator.h"
 #include "AliasOscillator.h"
@@ -839,7 +840,11 @@ void OscillatorWaveformDisplay::createOpenScriptEditorMenu(juce::PopupMenu &cont
 
             sge->showOverlay(SurgeGUIEditor::WT_EDITOR);
     };
-    contextMenu.addItem(Surge::GUI::toOSCase("Wavetable Script Editor..."), owts);
+
+    Surge::GUI::addMenuItemWithShortcut(
+        contextMenu, Surge::GUI::toOSCase("Wavetable Script Editor..."),
+        sge->getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_WT_EDITOR), owts);
+
     contextMenu.addSeparator();
 }
 

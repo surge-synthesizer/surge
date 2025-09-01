@@ -2419,9 +2419,9 @@ void LFOAndStepDisplay::showLFODisplayPopupMenu(SurgeGUIEditor::OverlayTags tag)
 
     std::string openname = (sge->isAnyOverlayPresent(tag)) ? "Close " : "Open ";
 
-    Surge::GUI::addMenuWithShortcut(
+    Surge::GUI::addMenuItemWithShortcut(
         contextMenu, Surge::GUI::toOSCase(openname + olname + "..."),
-        sge->showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_LFO_EDITOR),
+        sge->getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_LFO_EDITOR),
         [this, sge, tag]() {
             if (sge)
             {

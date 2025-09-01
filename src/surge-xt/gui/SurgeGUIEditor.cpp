@@ -3137,9 +3137,9 @@ void SurgeGUIEditor::makeScopeEntry(juce::PopupMenu &menu)
 {
     bool showOscilloscope = isAnyOverlayPresent(OSCILLOSCOPE);
 
-    Surge::GUI::addMenuWithShortcut(
+    Surge::GUI::addMenuItemWithShortcut(
         menu, Surge::GUI::toOSCase("Oscilloscope..."),
-        showShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_OSCILLOSCOPE), true,
+        getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_OSCILLOSCOPE), true,
         showOscilloscope, [this]() { toggleOverlay(OSCILLOSCOPE); });
 }
 
@@ -6171,7 +6171,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
     return false;
 }
 
-std::string SurgeGUIEditor::showShortcutDescription(const Surge::GUI::KeyboardActions action)
+std::string SurgeGUIEditor::getShortcutDescription(const Surge::GUI::KeyboardActions action)
 {
     if (getUseKeyboardShortcuts())
     {
