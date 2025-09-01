@@ -29,7 +29,7 @@
 #include "RuntimeFont.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
-#include "SurgeJuceHelpers.h"
+#include "SurgeJUCEHelpers.h"
 #include "SurgeXTBinary.h"
 #include "StringOscillator.h"
 #include "AliasOscillator.h"
