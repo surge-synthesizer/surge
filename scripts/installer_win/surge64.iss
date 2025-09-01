@@ -16,8 +16,8 @@
 #define BANNER_PATH SURGE_SRC + "\scripts\installer_win\assets\banner"
 
 [Setup]
-ArchitecturesInstallIn64BitMode=x64
-ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed=x64compatible
 AppId={#MyID}
 AppName="{#MyAppName} {#MyAppVersion}"
 AppVersion={#MyAppVersion}
