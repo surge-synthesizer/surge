@@ -29,6 +29,7 @@
 #include "RuntimeFont.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeXTBinary.h"
 #include "StringOscillator.h"
 #include "AliasOscillator.h"
 #include "widgets/MenuCustomComponents.h"
@@ -104,6 +105,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
                                         (float)oscInScene, (float)id, new_name);
         }
     };
+
     ol->onReturnKey = [ov = ol.get()](OscillatorWaveformDisplay *d) {
         ov->onPress(d);
         return true;
@@ -114,6 +116,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     ol = std::make_unique<OverlayAsAccessibleButton<OscillatorWaveformDisplay>>(
         this, customEditor ? "Close Custom Editor" : "Open Custom Editor",
         juce::AccessibilityRole::button);
+
     ol->setWantsKeyboardFocus(true);
     addChildComponent(*ol);
 
@@ -131,6 +134,7 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
             d->customEditorAccOverlay->setTitle("Open Custom Editor");
         }
     };
+
     ol->onReturnKey = [this](OscillatorWaveformDisplay *d) {
         if (customEditor)
         {
@@ -148,6 +152,12 @@ OscillatorWaveformDisplay::OscillatorWaveformDisplay()
     };
 
     customEditorAccOverlay = std::move(ol);
+
+    auto xml1 = juce::parseXML(SurgeXTBinary::wtfile_icon_svg);
+    auto xml2 = juce::parseXML(SurgeXTBinary::wtscript_icon_svg);
+
+    wtFileIcon = juce::Drawable::createFromSVG(*xml1);
+    wtScriptIcon = juce::Drawable::createFromSVG(*xml2);
 }
 
 OscillatorWaveformDisplay::~OscillatorWaveformDisplay() = default;
@@ -1044,11 +1054,25 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
                 selected = true;
             }
 
-            subMenu->addItem(storage->wt_list[p].name, true, checked, action);
+            bool isWTS = storage->wt_list[p].path.extension() == ".wtscript";
+            auto item = new juce::PopupMenu::Item(storage->wt_list[p].name);
+
+            wtFileIcon.get()->replaceColour(juce::Colours::white,
+                                            skin->getColor(Colors::PopupMenu::Text));
+            wtScriptIcon.get()->replaceColour(juce::Colours::white,
+                                              skin->getColor(Colors::PopupMenu::Text));
+
+            item->setEnabled(true);
+            item->setTicked(checked);
+            item->setAction(action);
+            item->setImage(isWTS ? wtScriptIcon.get()->createCopy()
+                                 : wtFileIcon.get()->createCopy());
+
+            subMenu->addItem(*item);
 
             sub++;
 
-            if (sub != 0 && sub % 16 == 0)
+            if (sub != 0 && sub % 24 == 0)
             {
                 subMenu->addColumnBreak();
             }
