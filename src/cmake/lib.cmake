@@ -202,17 +202,19 @@ function(surge_make_installers)
         (NOT "${SURGE_EXTRA_ZIP_NAME}" STREQUAL ""))
       message(STATUS "Not making installer for arm or juce7")
     else()
-      find_program(SURGE_NUGET_EXE nuget.exe PATHS ENV "PATH")
-      if(SURGE_NUGET_EXE)
-        message(STATUS "Using NUGET from ${SURGE_NUGET_EXE}")
+      find_program(INNOSETUP_COMPILER_EXE iscc)
+      if(NOT INNOSETUP_COMPILER_EXE)
+        file(DOWNLOAD "https://files.jrsoftware.org/is/6/innosetup-6.5.1.exe" "${CMAKE_BINARY_DIR}/innosetup-6.5.1.exe" EXPECTED_HASH SHA256=3622FFDAD7B2534239370099149C33ADB85B90054799D901CB8EC844DF7A0E41)
+        execute_process(COMMAND "${CMAKE_BINARY_DIR}/innosetup-6.5.1.exe" /VERYSILENT /CURRENTUSER /DIR=innosetup-6.5.1)
+        find_program(INNOSETUP_COMPILER_EXE iscc PATHS ${CMAKE_BINARY_DIR}/innosetup-6.5.1)
+      endif()
+      if(INNOSETUP_COMPILER_EXE)
+        message(STATUS "Using Inno Setup Compiler from ${INNOSETUP_COMPILER_EXE}")
         add_custom_command(TARGET surge-xt-distribution
           POST_BUILD
           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-          COMMAND ${SURGE_NUGET_EXE} install Tools.InnoSetup -version 6.1.2
-          COMMAND Tools.InnoSetup.6.1.2/tools/iscc.exe /O"${SURGE_XT_DIST_OUTPUT_DIR}" /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge${SURGE_BITNESS}.iss"
-          )
-      else()
-        message(STATUS "NuGet not found, not creating InnoSetup installer")
+          COMMAND ${INNOSETUP_COMPILER_EXE} /O"${SURGE_XT_DIST_OUTPUT_DIR}" /DSURGE_SRC="${CMAKE_SOURCE_DIR}" /DSURGE_BIN="${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/scripts/installer_win/surge${SURGE_BITNESS}.iss"
+        )
       endif()
     endif()
   endif()
