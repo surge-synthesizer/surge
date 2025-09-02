@@ -239,7 +239,6 @@ struct LuaWTEvaluator::Details
             {
                 storage->reportError(emsg, "Wavetable Parse Error");
             }
-
             lua_pop(L, 2); // remove the 2 functions added in the global state
 
             lua_getglobal(L, "generate");
@@ -251,7 +250,7 @@ struct LuaWTEvaluator::Details
                 lua_pop(L, 1); // pop the generate non-function
                 return false;
             }
-            lua_pop(L, 2); // pop generate
+            lua_pop(L, 1); // pop generate
 
             callInitFn();
 
