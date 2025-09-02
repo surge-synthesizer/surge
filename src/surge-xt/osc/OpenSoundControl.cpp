@@ -860,7 +860,7 @@ void OpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
             evaluator->loadWtscript(synth->storage.wt_list[new_id].path, &synth->storage, oscdata);
 
-            oscdata->wt.current_id = -1;
+            oscdata->wt.current_id = new_id;
             oscdata->wt.refresh_display = true;
             oscdata->wt.force_refresh_display = true;
             oscdata->wt.refresh_script_editor = true;
