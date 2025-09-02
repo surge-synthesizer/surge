@@ -186,10 +186,9 @@ on Windows, run `sys.path.append("ignore/bpy/src/surge-python/Debug")` instead, 
 ## Building an Installer
 
 The CMake target `surge-xt-distribution` builds an install image on your platform at the end of the build process. On
-Mac and Linux, the installer generator is built into the platform; on Windows, our CMake file uses NuGet to download
-InnoSetup, so you will need the [nuget.exe CLI](https://nuget.org/) in your path.
-Windows also requires the installation of [7-Zip](https://7-zip.org/) and the location of its `7z.exe` file in your
-path (which is normally `C:\Program Files\7-Zip`).
+Mac and Linux, the installer generator is built into the platform; on Windows, our CMake file will download
+InnoSetup from the official website. On Windows we also require [7-Zip](https://7-zip.org/), so location of `7z.exe` should be in
+the PATH (which is normally `C:\Program Files\7-Zip`).
 
 ## Using CMake on the Command Line for More
 
