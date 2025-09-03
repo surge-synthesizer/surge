@@ -3110,8 +3110,7 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                 auto cpointOpt = overlay->evaluator->getFrame(idx);
                 if (!cpointOpt.has_value())
                 {
-                    xpos += height + fsGap;
-                    continue;
+                    break; // Exit loop on invalid frame to prevent repeating Lua script errors
                 }
 
                 const auto &cpoint = *cpointOpt;
@@ -3946,6 +3945,9 @@ void WavetableScriptEditor::applyCode()
 void WavetableScriptEditor::forceRefresh()
 {
     mainDocument->replaceAllContent(osc->wavetable_formula);
+    controlArea->resolutionN->setIntValue(osc->wavetable_formula_res_base);
+    controlArea->framesN->setIntValue(osc->wavetable_formula_nframes);
+
     editor->repaintFrame();
     setApplyEnabled(false);
 
