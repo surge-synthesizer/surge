@@ -92,6 +92,11 @@ jobs:
           p12-file-base64: ${{ secrets.MAC_CERTS_P12 }}
           p12-password: ${{ secrets.CERT_PWD }}
 
+      - uses: surge-synthesizer/sst-githubactions/install-innosetup@main
+        if: runner.os == 'Windows'
+        with:
+          version: "6.5.1"
+
       - name: Prepare for JUCE
         uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
         with:
