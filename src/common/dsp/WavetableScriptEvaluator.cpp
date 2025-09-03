@@ -143,15 +143,17 @@ struct LuaWTEvaluator::Details
         else
         {
             // If pcr is not LUA_OK then lua pushes an error string onto the stack. Show this error
+            std::ostringstream oss;
             const char *err = lua_tostring(L, -1);
-
             // Fallback if error(nil)
-            std::string luaerr = err ? err : "Lua error: Value is nil";
+            if (!err)
+                err = "Lua error: Value is nil.";
+            oss << "Failed to evaluate the generate() function!\n" << err;
 
             if (storage)
-                storage->reportError(luaerr, "Wavetable Evaluator Runtime Error");
+                storage->reportError(oss.str(), "Wavetable Evaluator Runtime Error");
             else
-                std::cerr << luaerr;
+                std::cerr << oss.str();
         }
         lua_pop(L, 1); // Error string or pcall result
 
@@ -184,22 +186,23 @@ struct LuaWTEvaluator::Details
                 else
                 {
                     if (storage)
-                        storage->reportError("Init function returned a non-table",
+                        storage->reportError("Init function returned a non-table.",
                                              "Wavetable Script Evaluator");
                     makeEmptyState(true);
                 }
             }
             else
             {
+                std::ostringstream oss;
                 const char *err = lua_tostring(L, -1);
-
                 // Fallback if error(nil)
-                std::string luaerr = err ? err : "Lua error: Value is nil";
-
+                if (!err)
+                    err = "Lua error: Value is nil.";
+                oss << "Failed to evaluate init() function!\n" << err;
                 if (storage)
-                    storage->reportError(luaerr, "Wavetable Evaluator Init Error");
+                    storage->reportError(oss.str(), "Wavetable Evaluator Init Error");
                 else
-                    std::cerr << luaerr;
+                    std::cerr << oss.str();
                 lua_pop(L, -1);
 
                 makeEmptyState(true);
@@ -245,27 +248,18 @@ struct LuaWTEvaluator::Details
             std::string emsg;
             auto res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
                 L, script, {"init", "generate"}, emsg);
-            if (!res && !emsg.empty())
+            if (!res)
             {
                 if (storage)
                 {
-                    storage->reportError(emsg, "Wavetable Parse Error");
+                    std::ostringstream oss;
+                    oss << "Unable to determine generate() or init() function!";
+                    if (!emsg.empty())
+                        oss << "\n" << emsg;
+                    storage->reportError(oss.str(), "Wavetable Script Parse Error");
                 }
             }
-            else
-            {
-                lua_pop(L, 2); // remove the 2 functions added in the global state
-
-                // After parse errors we still need an error if generate function can't be found so
-                lua_getglobal(L, "generate");
-                if (!lua_isfunction(L, -1))
-                {
-                    if (storage)
-                        storage->reportError("Unable to locate generate function",
-                                             "Wavetable Script Evaluator");
-                }
-                lua_pop(L, 1); // pop function
-            }
+            lua_pop(L, 2); // remove the 2 functions added in the global state
 
             callInitFn();
 
@@ -435,28 +429,28 @@ void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storag
     TiXmlDocument doc;
     if (!doc.LoadFile(filename))
     {
-        storage->reportError("Failed to load XML file", "XML Load Error");
+        storage->reportError("Failed to load XML file.", "XML Load Error");
         return;
     }
 
     auto wtscript = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wtscript"));
     if (!wtscript)
     {
-        storage->reportError("No root <wtscript> element found", "XML Load Error");
+        storage->reportError("No root <wtscript> element found.", "XML Load Error");
         return;
     }
 
     auto wavetable_script = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("script"));
     if (!wavetable_script)
     {
-        storage->reportError("No <wavetable_script> element found", "XML Load Error");
+        storage->reportError("No <wavetable_script> element found.", "XML Load Error");
         return;
     }
 
     auto b64script = wavetable_script->Attribute("lua");
     if (!b64script || std::strlen(b64script) == 0)
     {
-        storage->reportError("Empty or missing lua attribute in <wavetable_script>",
+        storage->reportError("Empty or missing lua attribute in <wavetable_script>.",
                              "XML Load Error");
         return;
     }
@@ -464,14 +458,14 @@ void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storag
     int nframes = 0;
     if (wavetable_script->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS)
     {
-        storage->reportError("Missing or invalid frames attribute", "XML Load Error");
+        storage->reportError("Missing or invalid frames attribute.", "XML Load Error");
         return;
     }
 
     int res_base = 0;
     if (wavetable_script->QueryIntAttribute("samples", &res_base) != TIXML_SUCCESS)
     {
-        storage->reportError("Missing or invalid samples attribute", "XML Load Error");
+        storage->reportError("Missing or invalid samples attribute.", "XML Load Error");
         return;
     }
 
@@ -507,11 +501,10 @@ std::string LuaWTEvaluator::defaultWavetableScript()
 -- The for loops iterate over an array of sample values (phase) and a frame number (n) and generate the result for the n-th
 -- frame. This example uses additive synthesis, a technique that adds sine waves to create waveshapes. The initial frame
 -- starts with a single sine wave, and additional sine waves are added in subsequent frames. This process creates a Fourier
--- series sawtooth wave defined by the formula: sum 2 / pi n * sin n x. See the tutorial patches for more info.
+-- series sawtooth wave defined by the formula: sum 2 / pi n * sin n x. See the tutorial scripts for more info.
 --
--- The first time the script is loaded, the engine will call the 'init' function and the resulting
--- state it provides will be available in every subsequent call as the variables provided in the
--- wt structure
+-- The first time the script is loaded, the engine will call the 'init' function and the resulting state it provides
+-- will be available in every subsequent call as the variables provided in the wt table.
 
 function init(wt)
     -- wt will have frame_count and sample_count defined
@@ -521,7 +514,6 @@ function init(wt)
 end
 
 function generate(wt)
-
     -- wt will have frame_count, sample_count, frame, and any item from init defined
     local res = {}
 

@@ -177,7 +177,12 @@ end
         }
         else
         {
-            s.adderror("Unable to determine process() or init() function: " + emsg);
+
+            std::ostringstream oss;
+            oss << "Unable to determine process() or init() function!";
+            if (!emsg.empty())
+                oss << "\n" << emsg;
+            s.adderror(oss.str());
             lua_pop(s.L, 2); // Pop process and init (or nil)
             stateData.knownBadFunctions.insert(s.funcName);
         }
@@ -288,8 +293,8 @@ end
                 const char *err = lua_tostring(s.L, -1);
                 // Fallback if error(nil)
                 if (!err)
-                    err = "Lua error: Value is nil";
-                oss << "Failed to evaluate init() function! " << err;
+                    err = "Lua error: Value is nil.";
+                oss << "Failed to evaluate init() function!\n" << err;
                 s.adderror(oss.str());
                 lua_pop(s.L, 1); // Pop error
                 stateData.knownBadFunctions.insert(s.funcName);
@@ -601,9 +606,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         }
         if (!lua_istable(s->L, -1))
         {
-            s->adderror("The return of your Lua function must be a number or table!\nJust return "
-                        "input with "
-                        "output set.");
+            s->adderror("The return of your Lua function must be a number or table!\n"
+                        "Just return input with output set.");
             s->isvalid = false;
             lua_pop(s->L, 1);
             return;
@@ -708,8 +712,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         const char *err = lua_tostring(s->L, -1);
         // Fallback if error(nil)
         if (!err)
-            err = "Lua error: Value is nil";
-        oss << "Failed to evaluate the process() function! " << err;
+            err = "Lua error: Value is nil.";
+        oss << "Failed to evaluate the process() function!\n" << err;
         s->adderror(oss.str());
         lua_pop(s->L, 1);
         return;
