@@ -686,6 +686,14 @@ juce::PopupMenu SurgeSynthEditor::modifyHostMenu(juce::PopupMenu menu)
 
 juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 {
+    if (sge)
+    {
+        if (sge->synth->hostProgram.compare("Unknown") == 0)
+        {
+            return juce::PopupMenu();
+        }
+    }
+
     auto par = processor.paramsByID[processor.surge->idForParameter(p)];
 
     if (auto *c = getHostContext())
@@ -705,6 +713,14 @@ juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 
 juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 {
+    if (sge)
+    {
+        if (sge->synth->hostProgram.compare("Unknown") == 0)
+        {
+            return juce::PopupMenu();
+        }
+    }
+
     auto par = processor.macrosById[macro];
 
     if (auto *c = getHostContext())
