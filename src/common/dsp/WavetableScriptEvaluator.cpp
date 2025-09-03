@@ -89,20 +89,30 @@ struct LuaWTEvaluator::Details
         Surge::LuaSupport::setSurgeFunctionEnvironment(L);
 
         lua_createtable(L, 0, 10);
-
+        int tidx = lua_gettop(L); // Get the global table
         lua_getglobal(L, statetable);
-
-        lua_pushnil(L); /* first key */
-        assert(lua_istable(L, -2));
-
+        if (!lua_istable(L, -1))
+        {
+            lua_pop(L, 2); // pop tables
+            return std::nullopt;
+        }
+        // Copy all key-value pairs
+        lua_pushnil(L);
+        while (lua_next(L, -2) != 0)
+        {
+            // Stack: new table, global table, key, value
+            lua_pushvalue(L, -2);  // Duplicate key
+            lua_pushvalue(L, -2);  // Duplicate value
+            lua_settable(L, tidx); // New table[key] = value
+            lua_pop(L, 1);         // Pop original value, keep key for next iteration
+        }
+        lua_pop(L, 1); // pop global table
         lua_pushinteger(L, frame + 1);
-        lua_setfield(L, -2, "frame");
-
+        lua_setfield(L, tidx, "frame");
         lua_pushinteger(L, frameCount);
-        lua_setfield(L, -2, "frame_count");
-
+        lua_setfield(L, tidx, "frame_count");
         lua_pushinteger(L, resolution);
-        lua_setfield(L, -2, "sample_count");
+        lua_setfield(L, tidx, "sample_count");
 
         // So stack is now the table and the function
         auto pcr = lua_pcall(L, 1, 1, 0);
@@ -235,22 +245,27 @@ struct LuaWTEvaluator::Details
             std::string emsg;
             auto res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
                 L, script, {"init", "generate"}, emsg);
-            if (!res && storage)
-            {
-                storage->reportError(emsg, "Wavetable Parse Error");
-            }
-            lua_pop(L, 2); // remove the 2 functions added in the global state
-
-            lua_getglobal(L, "generate");
-            if (!lua_isfunction(L, -1))
+            if (!res && !emsg.empty())
             {
                 if (storage)
-                    storage->reportError("Unable to locate generate function",
-                                         "Wavetable Script Evaluator");
-                lua_pop(L, 1); // pop the generate non-function
-                return false;
+                {
+                    storage->reportError(emsg, "Wavetable Parse Error");
+                }
             }
-            lua_pop(L, 1); // pop generate
+            else
+            {
+                lua_pop(L, 2); // remove the 2 functions added in the global state
+
+                // After parse errors we still need an error if generate function can't be found so
+                lua_getglobal(L, "generate");
+                if (!lua_isfunction(L, -1))
+                {
+                    if (storage)
+                        storage->reportError("Unable to locate generate function",
+                                             "Wavetable Script Evaluator");
+                }
+                lua_pop(L, 1); // pop function
+            }
 
             callInitFn();
 
