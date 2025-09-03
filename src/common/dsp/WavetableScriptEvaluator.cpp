@@ -89,7 +89,7 @@ struct LuaWTEvaluator::Details
         Surge::LuaSupport::setSurgeFunctionEnvironment(L);
 
         lua_createtable(L, 0, 10);
-        int tidx = lua_gettop(L); // Get the global table
+        int tidx = lua_gettop(L); // Get the index of the new table
         lua_getglobal(L, statetable);
         if (!lua_istable(L, -1))
         {
@@ -107,10 +107,13 @@ struct LuaWTEvaluator::Details
             lua_pop(L, 1);         // Pop original value, keep key for next iteration
         }
         lua_pop(L, 1); // pop global table
+
         lua_pushinteger(L, frame + 1);
         lua_setfield(L, tidx, "frame");
+
         lua_pushinteger(L, frameCount);
         lua_setfield(L, tidx, "frame_count");
+
         lua_pushinteger(L, resolution);
         lua_setfield(L, tidx, "sample_count");
 
