@@ -15,10 +15,8 @@ endif()
 
 # Load cmake-FindVcvars
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_LIST_DIR}/cmake")
-set(cmd_wrapper)
 if(WIN32 AND NOT MINGW)
   find_package(Vcvars REQUIRED)
-  set(cmd_wrapper ${Vcvars_LAUNCHER})
 endif()
 
 # Debug info
@@ -76,22 +74,12 @@ if(NOT EXISTS "${LUAJIT_LIBRARY}")
       OUTPUT_VARIABLE LUAJIT_OUTPUT
       ERROR_VARIABLE LUAJIT_ERROR)
   elseif(WIN32)
-    # Don't use FindVcvars locally because the wrapper breaks on spaces in paths - TODO: Fix this
-    if(DEFINED ENV{GITHUB_ACTIONS} OR DEFINED ENV{TF_BUILD})
-      message(STATUS "Running ${cmd_wrapper} build-msvc-luajit.bat \"${LUAJIT_BUILD_DIR}\" in ${CMAKE_CURRENT_LIST_DIR}")
-      execute_process(WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
-        COMMAND ${cmd_wrapper} build-msvc-luajit.bat "${LUAJIT_BUILD_DIR}"
-        RESULT_VARIABLE LUAJIT_RESULT
-        OUTPUT_VARIABLE LUAJIT_OUTPUT
-        ERROR_VARIABLE LUAJIT_ERROR)
-    else()
-      message(STATUS "Running cmd.exe /c build-msvc-luajit.bat \"${LUAJIT_BUILD_DIR}\" in ${CMAKE_CURRENT_LIST_DIR}")
-      execute_process(WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
-        COMMAND cmd.exe /c build-msvc-luajit.bat "${LUAJIT_BUILD_DIR}"
-        RESULT_VARIABLE LUAJIT_RESULT
-        OUTPUT_VARIABLE LUAJIT_OUTPUT
-        ERROR_VARIABLE LUAJIT_ERROR)
-    endif()
+    message(STATUS "Running build-msvc-luajit.bat \"${LUAJIT_BUILD_DIR}\" in ${CMAKE_CURRENT_LIST_DIR}")
+    execute_process(WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
+      COMMAND build-msvc-luajit.bat "${LUAJIT_BUILD_DIR}"
+      RESULT_VARIABLE LUAJIT_RESULT
+      OUTPUT_VARIABLE LUAJIT_OUTPUT
+      ERROR_VARIABLE LUAJIT_ERROR)
   else()
     # Unsupported platform or architecture
     handle_error("Failed to build LuaJIT: Unsupported platform or architecture!")
