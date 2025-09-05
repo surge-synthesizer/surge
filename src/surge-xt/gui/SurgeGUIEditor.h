@@ -214,6 +214,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void changeSelectedOsc(int value);
     void changeSelectedScene(int value);
+    void closeOrRefreshWTSEditor();
 
     void refreshSkin();
 

@@ -290,7 +290,7 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         break;
 #if INCLUDE_WT_SCRIPTING_EDITOR
     case TOGGLE_WT_EDITOR:
-        desc = "Wavetable Editor";
+        desc = "Wavetable Script Editor";
         break;
 #endif
     case TOGGLE_MODLIST:

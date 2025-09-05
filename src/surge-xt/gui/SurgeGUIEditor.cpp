@@ -800,9 +800,9 @@ void SurgeGUIEditor::idle()
         {
             wt->refresh_script_editor = false;
 
-            if (auto olw = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR))
+            if (auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR))
             {
-                olw->forceRefresh();
+                ol->forceRefresh();
             }
         }
 
@@ -915,8 +915,6 @@ void SurgeGUIEditor::idle()
         if (patchChanged)
         {
             refreshOverlayWithOpenClose(MSEG_EDITOR);
-            refreshOverlayWithOpenClose(FORMULA_EDITOR);
-            refreshOverlayWithOpenClose(WT_EDITOR);
             refreshOverlayWithOpenClose(TUNING_EDITOR);
             refreshOverlayWithOpenClose(MODULATION_EDITOR);
         }
@@ -2335,8 +2333,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         showMSEGEditorOnNextIdleOrOpen = false;
     }
 
-    // We need this here in case we rebuild when opening a new patch.
-    // closeMSEGEditor() does nothing if the MSEG editor isn't open
+    // Close editor overlays if applicable when opening a new patch.
     auto lfoidx = modsource_editor[current_scene] - ms_lfo1;
 
     if (lfoidx >= 0 && lfoidx <= n_lfos)
@@ -2361,6 +2358,19 @@ void SurgeGUIEditor::openOrRecreateEditor()
             {
                 closeOverlay(SurgeGUIEditor::FORMULA_EDITOR);
             }
+        }
+    }
+
+    // Like above for the wavetable script editor
+    auto &oscdata = synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+
+    if (oscdata.type.val.i != ot_wavetable)
+    {
+        auto olc = getOverlayWrapperIfOpen(WT_EDITOR);
+
+        if (olc && !olc->isTornOut())
+        {
+            closeOverlay(SurgeGUIEditor::WT_EDITOR);
         }
     }
 
@@ -5802,9 +5812,16 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
                 return true;
 #if INCLUDE_WT_SCRIPTING_EDITOR
             case KeyboardActions::TOGGLE_WT_EDITOR:
-                toggleOverlay(SurgeGUIEditor::WT_EDITOR);
-                frame->repaint();
+            {
+                auto &oscdata =
+                    synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+                if (oscdata.type.val.i == ot_wavetable)
+                {
+                    toggleOverlay(SurgeGUIEditor::WT_EDITOR);
+                    frame->repaint();
+                }
                 return true;
+            }
 #endif
             case KeyboardActions::TOGGLE_MODLIST:
                 toggleOverlay(SurgeGUIEditor::MODULATION_EDITOR);

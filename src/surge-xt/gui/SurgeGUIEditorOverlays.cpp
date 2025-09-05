@@ -294,7 +294,8 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
             this, &(this->synth->storage), os, current_osc[current_scene], current_scene,
             currentSkin);
 
-        std::string title = fmt::format("Osc {} Wavetable Editor", current_osc[current_scene] + 1);
+        std::string title =
+            fmt::format("Osc {} Wavetable Script Editor", current_osc[current_scene] + 1);
 
         wtse->setSkin(currentSkin, bitmapStore);
         wtse->setEnclosingParentTitle(title);
@@ -822,6 +823,7 @@ bool SurgeGUIEditor::updateOverlayContentIfPresent(OverlayTags tag)
     case TUNING_EDITOR:
     {
         auto tunol = dynamic_cast<Surge::Overlays::TuningOverlay *>(getOverlayIfOpen(tag));
+
         if (tunol)
         {
             tunol->setTuning(synth->storage.currentTuning);
@@ -838,16 +840,38 @@ bool SurgeGUIEditor::updateOverlayContentIfPresent(OverlayTags tag)
         }
         break;
     }
-    case WAVESHAPER_ANALYZER:
+    case FORMULA_EDITOR:
     {
-        updateWaveshaperOverlay();
+        auto feol = dynamic_cast<Surge::Overlays::FormulaModulatorEditor *>(getOverlayIfOpen(tag));
+
+        if (feol)
+        {
+            feol->forceRefresh();
+        }
+        break;
+    }
+    case WT_EDITOR:
+    {
+        auto wtsol = dynamic_cast<Surge::Overlays::WavetableScriptEditor *>(getOverlayIfOpen(tag));
+
+        if (wtsol)
+        {
+            wtsol->forceRefresh();
+        }
         break;
     }
     case FILTER_ANALYZER:
     {
         auto f = getOverlayIfOpen(tag);
         if (f)
+        {
             f->repaint();
+        }
+        break;
+    }
+    case WAVESHAPER_ANALYZER:
+    {
+        updateWaveshaperOverlay();
         break;
     }
     default:

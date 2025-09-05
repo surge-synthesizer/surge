@@ -404,6 +404,8 @@ void SurgeGUIEditor::changeSelectedOsc(int value)
         }
     }
 
+    closeOrRefreshWTSEditor();
+
     queue_refresh = true;
 }
 
@@ -448,9 +450,57 @@ void SurgeGUIEditor::changeSelectedScene(int value)
         }
     }
 
+    closeOrRefreshWTSEditor();
+
     refresh_mod();
 
     queue_refresh = true;
+}
+
+void SurgeGUIEditor::closeOrRefreshWTSEditor()
+{
+    bool hadExtendedOverlay = false;
+    bool wasTornOut = false;
+    juce::Point<int> tearOutLoc;
+    auto otag = WT_EDITOR;
+
+    if (isAnyOverlayPresent(otag))
+    {
+        auto c = getOverlayWrapperIfOpen(otag);
+        if (c)
+        {
+            wasTornOut = c->isTornOut();
+            tearOutLoc = c->currentTearOutLocation();
+        }
+        if (!wasTornOut)
+        {
+            closeOverlay(otag);
+        }
+        hadExtendedOverlay = true;
+    }
+
+    if (hadExtendedOverlay)
+    {
+        auto &oscdata =
+            synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+
+        if (oscdata.type.val.i == ot_wavetable)
+        {
+            if (wasTornOut)
+            {
+                closeOverlay(otag);
+            }
+            showOverlay(otag);
+            if (wasTornOut)
+            {
+                auto c = getOverlayWrapperIfOpen(otag);
+                if (c)
+                {
+                    c->doTearOut(tearOutLoc);
+                }
+            }
+        }
+    }
 }
 
 void SurgeGUIEditor::refreshSkin()
