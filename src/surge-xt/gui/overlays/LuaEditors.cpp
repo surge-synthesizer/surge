@@ -2807,6 +2807,7 @@ void FormulaModulatorEditor::applyCode()
 void FormulaModulatorEditor::forceRefresh()
 {
     mainDocument->replaceAllContent(formulastorage->formulaString);
+    setApplyEnabled(false);
     editor->repaintFrame();
 }
 
@@ -3770,26 +3771,11 @@ struct WavetableScriptControlArea : public juce::Component,
         break;
         case tag_frames_value:
         {
-            /*
-            int currentFrame = currentFrameN->getIntValue();
-            int maxFrames = framesN->getIntValue();
-            if (currentFrame > maxFrames)
-            {
-                currentFrameN->setIntValue(maxFrames);
-                overlay->rendererComponent->frameNumber = maxFrames;
-            }
-            overlay->osc->wavetable_formula_nframes = maxFrames;
-            overlay->rerenderFromUIState();
-            */
             overlay->setApplyEnabled(true);
         }
         break;
         case tag_res_value:
         {
-            /*
-            overlay->osc->wavetable_formula_res_base = resolutionN->getIntValue();
-            overlay->rerenderFromUIState();
-            */
             overlay->setApplyEnabled(true);
         }
         break;
@@ -3852,7 +3838,7 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
     mainEditor->setDescription("Wavetable Code");
     mainEditor->onFocusLost = [this]() { this->saveState(); };
 
-    if (osc->wavetable_formula == "")
+    if (osc->wavetable_formula.empty())
     {
         mainDocument->insertText(0,
                                  Surge::WavetableScript::LuaWTEvaluator::defaultWavetableScript());
@@ -3944,7 +3930,16 @@ void WavetableScriptEditor::applyCode()
 
 void WavetableScriptEditor::forceRefresh()
 {
-    mainDocument->replaceAllContent(osc->wavetable_formula);
+    if (osc->wavetable_formula.empty())
+    {
+        mainDocument->replaceAllContent(
+            Surge::WavetableScript::LuaWTEvaluator::defaultWavetableScript());
+    }
+    else
+    {
+        mainDocument->replaceAllContent(osc->wavetable_formula);
+    }
+
     controlArea->resolutionN->setIntValue(osc->wavetable_formula_res_base);
     controlArea->framesN->setIntValue(osc->wavetable_formula_nframes);
 
@@ -4110,8 +4105,8 @@ WavetableScriptEditor::getPreCloseChickenBoxMessage()
 {
     if (controlArea->applyS->isEnabled())
     {
-        return std::make_pair("Close Wavetable Editor",
-                              "Do you really want to close the wavetable editor? Any "
+        return std::make_pair("Close Wavetable Script Editor",
+                              "Do you really want to close the script editor? Any "
                               "changes that were not applied will be lost!");
     }
     return std::nullopt;

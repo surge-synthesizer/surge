@@ -1791,6 +1791,11 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         {
             clipboard_wt[0].Copy(&getPatch().scene[scene].osc[entry].wt);
             clipboard_wt_names[0] = getPatch().scene[scene].osc[entry].wavetable_display_name;
+            clipboard_wavetable_formula[0] = getPatch().scene[scene].osc[entry].wavetable_formula;
+            clipboard_wavetable_formula_nframes[0] =
+                getPatch().scene[scene].osc[entry].wavetable_formula_nframes;
+            clipboard_wavetable_formula_res_base[0] =
+                getPatch().scene[scene].osc[entry].wavetable_formula_res_base;
         }
 
         clipboard_extraconfig[0] = getPatch().scene[scene].osc[entry].extraConfig;
@@ -1848,6 +1853,11 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
             clipboard_wt_names[i] = getPatch().scene[scene].osc[i].wavetable_display_name;
             clipboard_extraconfig[i] = getPatch().scene[scene].osc[i].extraConfig;
+            clipboard_wavetable_formula[i] = getPatch().scene[scene].osc[i].wavetable_formula;
+            clipboard_wavetable_formula_res_base[i] =
+                getPatch().scene[scene].osc[i].wavetable_formula_res_base;
+            clipboard_wavetable_formula_nframes[i] =
+                getPatch().scene[scene].osc[i].wavetable_formula_nframes;
         }
 
         auto fxOffset = 0;
@@ -2111,6 +2121,11 @@ void SurgeStorage::clipboard_paste(
             getPatch().scene[scene].osc[i].extraConfig = clipboard_extraconfig[i];
             getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
             getPatch().scene[scene].osc[i].wavetable_display_name = clipboard_wt_names[i];
+            getPatch().scene[scene].osc[i].wavetable_formula = clipboard_wavetable_formula[i];
+            getPatch().scene[scene].osc[i].wavetable_formula_res_base =
+                clipboard_wavetable_formula_res_base[i];
+            getPatch().scene[scene].osc[i].wavetable_formula_nframes =
+                clipboard_wavetable_formula_nframes[i];
         }
 
         auto fxOffset = 0;
@@ -2210,6 +2225,12 @@ void SurgeStorage::clipboard_paste(
             {
                 getPatch().scene[scene].osc[entry].wt.Copy(&clipboard_wt[0]);
                 getPatch().scene[scene].osc[entry].wavetable_display_name = clipboard_wt_names[0];
+                getPatch().scene[scene].osc[entry].wavetable_formula =
+                    clipboard_wavetable_formula[0];
+                getPatch().scene[scene].osc[entry].wavetable_formula_res_base =
+                    clipboard_wavetable_formula_res_base[0];
+                getPatch().scene[scene].osc[entry].wavetable_formula_nframes =
+                    clipboard_wavetable_formula_nframes[0];
             }
 
             // copy modroutings

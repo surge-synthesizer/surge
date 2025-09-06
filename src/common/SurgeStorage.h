@@ -136,7 +136,7 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                               added deform option for Release parameter of Filter/Amp EG, which only produces an open gate for the release stage
 // 23 -> 24 (XT 1.3.3 nightlies) added actually functioning extend mode to FM2 oscillator's M1/2 Offset parameter
 //                                     (old patches load with extend disabled even if they had it enabled)
-// 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Editor window state
+// 24 -> 25 (XT 1.3.4 nightlies) added storing of Wavetable Script Editor window state
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
 //                               changed how extend-to-bipolar works for LFO Amplitude parameter
 //                               added DAWExtraState members for saving the state of Lua code editors, and variable group states in debugger
@@ -1841,6 +1841,10 @@ class alignas(16) SurgeStorage
         clipboard_modulation_global;
     Wavetable clipboard_wt[n_oscs];
     std::array<std::string, n_oscs> clipboard_wt_names;
+    std::array<std::string, n_oscs> clipboard_wavetable_formula;
+    std::array<int, n_oscs> clipboard_wavetable_formula_res_base;
+    std::array<int, n_oscs> clipboard_wavetable_formula_nframes;
+
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;
     MonoVoiceEnvelopeMode clipboard_envmode = RESTART_FROM_ZERO;
