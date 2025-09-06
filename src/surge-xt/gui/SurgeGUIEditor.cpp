@@ -914,7 +914,6 @@ void SurgeGUIEditor::idle()
 
         if (patchChanged)
         {
-            refreshOverlayWithOpenClose(MSEG_EDITOR);
             refreshOverlayWithOpenClose(TUNING_EDITOR);
             refreshOverlayWithOpenClose(MODULATION_EDITOR);
         }

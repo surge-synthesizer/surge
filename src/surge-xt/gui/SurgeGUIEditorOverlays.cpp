@@ -840,6 +840,16 @@ bool SurgeGUIEditor::updateOverlayContentIfPresent(OverlayTags tag)
         }
         break;
     }
+    case MSEG_EDITOR:
+    {
+        auto mseol = dynamic_cast<Surge::Overlays::MSEGEditor *>(getOverlayIfOpen(tag));
+
+        if (mseol)
+        {
+            mseol->forceRefresh();
+        }
+    }
+
     case FORMULA_EDITOR:
     {
         auto feol = dynamic_cast<Surge::Overlays::FormulaModulatorEditor *>(getOverlayIfOpen(tag));
