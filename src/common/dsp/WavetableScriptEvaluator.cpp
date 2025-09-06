@@ -21,7 +21,6 @@
  */
 
 #include "WavetableScriptEvaluator.h"
-#include "LuaSupport.h"
 #include "lua/LuaSources.h"
 #include "tinyxml/tinyxml.h"
 
@@ -86,7 +85,8 @@ struct LuaWTEvaluator::Details
             lua_pop(L, 1); // pop the generate non-function
             return std::nullopt;
         }
-        Surge::LuaSupport::setSurgeFunctionEnvironment(L);
+
+        Surge::LuaSupport::setSurgeFunctionEnvironment(L, wtsefeatures);
 
         lua_createtable(L, 0, 10);
         int tidx = lua_gettop(L); // Get the index of the new table
@@ -175,8 +175,7 @@ struct LuaWTEvaluator::Details
         }
         else
         {
-            Surge::LuaSupport::setSurgeFunctionEnvironment(L);
-
+            Surge::LuaSupport::setSurgeFunctionEnvironment(L, wtsefeatures);
             makeEmptyState(false);
 
             auto res = lua_pcall(L, 1, 1, 0);
