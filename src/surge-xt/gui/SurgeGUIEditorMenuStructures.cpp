@@ -36,6 +36,9 @@
 
 #include "fmt/core.h"
 
+#include "overlays/LuaEditors.h"
+#include "overlays/MSEGEditor.h"
+
 #include "widgets/MenuCustomComponents.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/PatchSelector.h"
@@ -108,37 +111,29 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
                                     .lfo[currentLfoId]
                                     .shape.val.i;
 
-                for (const auto &ov : {MSEG_EDITOR, FORMULA_EDITOR})
+                if (auto ol = getOverlayIfOpenAs<Surge::Overlays::MSEGEditor>(
+                        SurgeGUIEditor::MSEG_EDITOR))
                 {
-                    if (isAnyOverlayPresent(ov))
+                    if (newshape == lt_mseg)
                     {
-                        bool tornOut = false;
-                        juce::Point<int> tearOutPos;
+                        ol->forceRefresh();
+                    }
+                    else
+                    {
+                        closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
+                    }
+                }
 
-                        auto olw = getOverlayWrapperIfOpen(ov);
-
-                        if (olw && olw->isTornOut())
-                        {
-                            tornOut = true;
-                            tearOutPos = olw->currentTearOutLocation();
-                        }
-
-                        closeOverlay(ov);
-
-                        if (newshape == lt_mseg || newshape == lt_formula)
-                        {
-                            showOverlay(ov);
-
-                            if (tornOut)
-                            {
-                                auto olw = getOverlayWrapperIfOpen(ov);
-
-                                if (olw)
-                                {
-                                    olw->doTearOut(tearOutPos);
-                                }
-                            }
-                        }
+                if (auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(
+                        SurgeGUIEditor::FORMULA_EDITOR))
+                {
+                    if (newshape == lt_formula)
+                    {
+                        ol->forceRefresh();
+                    }
+                    else
+                    {
+                        closeOverlay(SurgeGUIEditor::FORMULA_EDITOR);
                     }
                 }
 
