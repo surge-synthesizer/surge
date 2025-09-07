@@ -164,7 +164,9 @@ TEST_CASE("Surge Prelude", "[lua]")
         std::string emsg;
         REQUIRE(Surge::LuaSupport::parseStringDefiningFunction(
             L, Surge::LuaSources::formula_prelude_test, "test", emsg));
-        Surge::LuaSupport::setSurgeFunctionEnvironment(L);
+
+        static constexpr uint64_t formulafeatures = Surge::LuaSupport::EnvironmentFeatures::BASE;
+        Surge::LuaSupport::setSurgeFunctionEnvironment(L, formulafeatures);
 
         auto pcall = lua_pcall(L, 0, 1, 0);
         if (pcall != 0)

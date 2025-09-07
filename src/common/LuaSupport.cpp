@@ -136,16 +136,17 @@ static int lua_limitRange(lua_State *L)
     return 1;
 }
 
-// custom print that outputs limited amount of arguments and restricts use to strings, numbers,
-// booleans and nil
+// Custom print which accepts multiple arguments of type string, number, boolean, or nil
 static int lua_sandboxPrint(lua_State *L)
 {
 #if HAS_LUA
     int n = lua_gettop(L); // number of arguments
-    if (n > 20)
-        n = 20;
     for (int i = 1; i <= n; i++)
     {
+        if (i > 1)
+        {
+            fputs(" ", stdout); // Add a space between arguments
+        }
         if (lua_isstring(L, i) || lua_isnumber(L, i))
         {
             const char *s = lua_tostring(L, i); // get the string or number as string
@@ -162,7 +163,7 @@ static int lua_sandboxPrint(lua_State *L)
         }
         else
         {
-            return luaL_error(L, "Error: print() only accepts strings, numbers, booleans or nil!");
+            return luaL_error(L, "Error: print() only accepts strings, numbers, booleans or nil.");
         }
     }
     fputs("\n", stdout);
@@ -170,7 +171,162 @@ static int lua_sandboxPrint(lua_State *L)
     return 0;
 }
 
-bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
+// Wrapper function for PFFFT submodule
+using Surge::LuaSupport::FFTDirection;
+using Surge::LuaSupport::FFTTransform;
+
+static int pffftTransform(lua_State *L, FFTTransform transform, FFTDirection direction,
+                          const char *functionName)
+{
+#if HAS_LUA
+
+    pffft_direction_t pffftDir =
+        (direction == FFTDirection::Forward) ? PFFFT_FORWARD : PFFFT_BACKWARD;
+
+    pffft_transform_t pffftTrans = (transform == FFTTransform::Real) ? PFFFT_REAL : PFFFT_COMPLEX;
+
+    // Check for an input table
+    if (!lua_istable(L, 1))
+    {
+        return luaL_error(L, "%s error: Table expected.", functionName);
+    }
+
+    int tableLength = lua_objlen(L, 1);
+
+    if (tableLength == 0)
+    {
+        return luaL_error(L, "%s error: Table is empty.", functionName);
+    }
+
+    // For complex transforms the input contains real/imaginary pairs so the FFT size N is half the
+    // table length
+    int N = tableLength;
+    if (pffftTrans == PFFFT_COMPLEX)
+    {
+        N /= 2;
+    }
+
+    // Enforce size constraints: minimum of 32, maximum of 524,288 table entries
+    if (tableLength < 32 || tableLength > (1 << 19))
+    {
+        return luaL_error(
+            L,
+            "%s error: Table must contain between 32 and 524,288 elements, received %d elements.",
+            functionName, tableLength);
+    }
+
+    // Ensure power-of-two table length
+    if ((tableLength & (tableLength - 1)) != 0)
+    {
+        return luaL_error(
+            L, "%s error: Input table length must be a power of 2, received %d elements.",
+            functionName, tableLength);
+    }
+
+    PFFFT_Setup *setup = pffft_new_setup(N, pffftTrans);
+    if (!setup)
+    {
+        return luaL_error(L, "%s error: Failed to create setup for %d elements.", functionName,
+                          tableLength);
+    }
+
+    // Allocate aligned buffers, these must be freed with pffft_aligned_free()
+    float *input = (float *)pffft_aligned_malloc(tableLength * sizeof(float));
+    float *output = (float *)pffft_aligned_malloc(tableLength * sizeof(float));
+    float *work = (float *)pffft_aligned_malloc(tableLength * sizeof(float));
+    if (!input || !output || !work)
+    {
+        pffft_aligned_free(input);
+        pffft_aligned_free(output);
+        pffft_aligned_free(work);
+        pffft_destroy_setup(setup);
+        return luaL_error(L, "%s error: Out of memory!", functionName);
+    }
+
+    for (int i = 0; i < tableLength; i++)
+    {
+        lua_rawgeti(L, 1, i + 1);
+        if (!lua_isnumber(L, -1))
+        {
+            pffft_aligned_free(input);
+            pffft_aligned_free(output);
+            pffft_aligned_free(work);
+            pffft_destroy_setup(setup);
+            lua_pop(L, 1); // Pop non-number
+            return luaL_error(L, "%s error: table element %d is not a number.", functionName,
+                              i + 1);
+        }
+        input[i] = lua_tonumber(L, -1);
+        lua_pop(L, 1); // Pop number
+    }
+    pffft_transform_ordered(setup, input, output, work, pffftDir);
+
+    lua_newtable(L);
+    for (int i = 0; i < tableLength; i++)
+    {
+        lua_pushnumber(L, output[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+
+    // Clean up allocated buffers and PFFFT_Setup
+    pffft_aligned_free(input);
+    pffft_aligned_free(output);
+    pffft_aligned_free(work);
+    pffft_destroy_setup(setup);
+
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+// Real-to-real forward FFT
+static int pffftRealForward(lua_State *L)
+{
+#if HAS_LUA
+    return pffftTransform(L, FFTTransform::Real, FFTDirection::Forward, "fft_real()");
+#else
+    return 0;
+#endif
+}
+
+// Complex-to-complex forward FFT
+static int pffftComplexForward(lua_State *L)
+{
+#if HAS_LUA
+    return pffftTransform(L, FFTTransform::Complex, FFTDirection::Forward, "fft_complex()");
+#else
+    return 0;
+#endif
+}
+
+// Real-to-real backward FFT
+static int pffftRealBackward(lua_State *L)
+{
+#if HAS_LUA
+    return pffftTransform(L, FFTTransform::Real, FFTDirection::Backward, "ifft_real()");
+#else
+    return 0;
+#endif
+}
+
+// Complex-to-complex backward FFT
+static int pffftComplexBackward(lua_State *L)
+{
+#if HAS_LUA
+    return pffftTransform(L, FFTTransform::Complex, FFTDirection::Backward, "ifft_complex()");
+#else
+    return 0;
+#endif
+}
+
+// Helper to check if environment feature is enabled
+constexpr bool hasFeature(uint64_t currentFeatures, Surge::LuaSupport::EnvironmentFeatures feature)
+{
+    return (currentFeatures & feature) != 0;
+}
+
+bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L, uint64_t features)
 {
 #if HAS_LUA
     if (!lua_isfunction(L, -1))
@@ -188,6 +344,19 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L)
     lua_setfield(L, eidx, "clamp");
     lua_pushcfunction(L, lua_sandboxPrint);
     lua_setfield(L, eidx, "print");
+
+    // PFFFT functions
+    if (hasFeature(features, EnvironmentFeatures::HAS_FFT))
+    {
+        lua_pushcfunction(L, pffftRealForward);
+        lua_setfield(L, eidx, "real_fft");
+        lua_pushcfunction(L, pffftComplexForward);
+        lua_setfield(L, eidx, "complex_fft");
+        lua_pushcfunction(L, pffftRealBackward);
+        lua_setfield(L, eidx, "real_ifft");
+        lua_pushcfunction(L, pffftComplexBackward);
+        lua_setfield(L, eidx, "complex_ifft");
+    }
 
     // add global tables
     lua_getglobal(L, surgeTableName);

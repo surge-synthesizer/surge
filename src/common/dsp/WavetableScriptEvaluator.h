@@ -26,6 +26,7 @@
 #include "SurgeStorage.h"
 #include "StringOps.h"
 #include "Wavetable.h"
+#include "LuaSupport.h"
 
 namespace Surge
 {
@@ -37,6 +38,9 @@ struct LuaWTEvaluator
     std::unique_ptr<Details> details;
     LuaWTEvaluator();
     ~LuaWTEvaluator();
+
+    static constexpr uint64_t wtsFeatures = Surge::LuaSupport::EnvironmentFeatures::BASE |
+                                            Surge::LuaSupport::EnvironmentFeatures::HAS_FFT;
 
     void setStorage(SurgeStorage *);
     void setScript(const std::string &);
