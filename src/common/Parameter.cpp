@@ -3405,6 +3405,18 @@ void Parameter::get_display_alt(char *txt, bool external, float ef) const
 
         break;
     }
+    case ct_floaty_delay_playrate:
+    {
+        int dec = isHighPrecision ? 6 : displayInfo.decimals;
+
+        if (val.f == 0.f)
+            snprintf(txt, TXT_SIZE, "N/A");
+        else
+            snprintf(txt, TXT_SIZE, "%.*f semitones", dec,
+                     -12.f * std::log2f(1.f / std::abs(val.f)));
+
+        break;
+    }
     case ct_countedset_percent:
     case ct_countedset_percent_extendable:
     case ct_countedset_percent_extendable_wtdeform:
