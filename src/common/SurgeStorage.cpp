@@ -1406,6 +1406,7 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
                 osc->wavetable_formula_nframes = 10;
             }
         }
+        osc->wt.refresh_script_editor = true;
     }
 }
 

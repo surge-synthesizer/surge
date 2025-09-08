@@ -2955,18 +2955,16 @@ void SurgeGUIEditor::toggleTuning()
 void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
 {
     undoManager()->pushWavetable(current_scene, current_osc[current_scene]);
-    OscillatorStorage *oscdata =
-        &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
 
     if (!evaluator)
         evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
 
+    OscillatorStorage *oscdata =
+        &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
     evaluator->loadWtscript(fs::path(fn), &synth->storage, oscdata);
 
     oscdata->wt.current_id = -1;
-    oscdata->wt.refresh_display = true;
-    oscdata->wt.force_refresh_display = true;
-    oscdata->wt.refresh_script_editor = true;
+    oscdata->queue_type = ot_wavetable; // Setting queue_type also handles OWD/editor refresh
 }
 
 void SurgeGUIEditor::scaleFileDropped(const string &fn)

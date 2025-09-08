@@ -114,6 +114,10 @@ struct UndoManagerImpl
         std::shared_ptr<Wavetable> wt;
 
         std::string displayName;
+
+        std::string wavetable_formula = "";
+        int wavetable_formula_res_base = 5, // 32 * 2^this
+            wavetable_formula_nframes = 10;
     };
     struct UndoOscillatorExtraConfig
     {
@@ -579,10 +583,23 @@ struct UndoManagerImpl
         r.current_id = os->wt.current_id;
 
         r.wt = nullptr;
-        if (r.current_id < 0)
+        bool isWTS = false;
+
+        if (r.current_id >= 0)
+        {
+            isWTS = synth->storage.wt_list[r.current_id].path.extension() == ".wtscript";
+        }
+
+        if (r.current_id < 0 || isWTS)
         {
             r.wt = std::make_shared<Wavetable>();
             r.wt->Copy(&(os->wt));
+            if (!os->wavetable_formula.empty())
+            {
+                r.wavetable_formula = os->wavetable_formula;
+                r.wavetable_formula_res_base = os->wavetable_formula_res_base;
+                r.wavetable_formula_nframes = os->wavetable_formula_nframes;
+            }
         }
 
         r.scene = scene;
@@ -911,7 +928,14 @@ struct UndoManagerImpl
             {
                 os->wavetable_display_name = p->displayName;
             }
+
+            bool isWTS = false;
             if (p->current_id >= 0)
+            {
+                isWTS = synth->storage.wt_list[p->current_id].path.extension() == ".wtscript";
+            }
+
+            if (p->current_id >= 0 && !isWTS)
             {
                 os->wt.queue_id = p->current_id;
             }
@@ -919,6 +943,11 @@ struct UndoManagerImpl
             {
                 os->wt.Copy(p->wt.get());
                 synth->refresh_editor = true;
+
+                os->wavetable_formula = p->wavetable_formula;
+                os->wavetable_formula_res_base = p->wavetable_formula_res_base;
+                os->wavetable_formula_nframes = p->wavetable_formula_nframes;
+                os->wt.refresh_script_editor = true;
             }
             else
             {
