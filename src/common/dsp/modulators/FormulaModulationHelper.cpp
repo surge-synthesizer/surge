@@ -158,7 +158,7 @@ end
 
             // Then get it and set its env
             lua_getglobal(s.L, s.funcName);
-            Surge::LuaSupport::setSurgeFunctionEnvironment(s.L);
+            Surge::LuaSupport::setSurgeFunctionEnvironment(s.L, formulaFeatures);
             lua_pop(s.L, 1);
 
             lua_setglobal(s.L, s.funcNameInit);
@@ -167,7 +167,7 @@ end
 
             // Then get it and set its env
             lua_getglobal(s.L, s.funcNameInit);
-            Surge::LuaSupport::setSurgeFunctionEnvironment(s.L);
+            Surge::LuaSupport::setSurgeFunctionEnvironment(s.L, formulaFeatures);
             lua_pop(s.L, 1);
 
             stateData.functionsPerFMS[fs].insert(s.funcName);

@@ -170,16 +170,6 @@ function math.max_abs(t)
     return o
 end
 
--- deprecated: use math.max_abs() instead
-function math.maxAbsFromTable(t)
-    local o = 0
-    for i = 1, #t do
-            local a = math.abs(t[i])
-            if a > o then o = a end
-    end
-    return o
-end
-
 -- returns the normalized sinc function for a table of input values
 function math.sinc(t)
     local o = {}
@@ -230,6 +220,57 @@ function mod.normalize_peaks(t, norm_factor)
         else
             o = math.zeros(#t)
         end
+    end
+    return o
+end
+
+
+--- FFT HELPER FUNCTIONS ---
+
+
+-- convert a real signal to an interleaved complex signal
+-- returns a table of length 2N (real/imaginary pairs)
+function math.real_to_complex(t)
+    local N = #t
+    local o = {}
+    for i = 1, N do
+        o[2 * i - 1] = t[i]
+        o[2 * i] = 0
+    end
+    return o
+end
+
+-- convert an interleaved complex signal to a real signal
+-- returns a table containing only the real parts (length N)
+function math.complex_to_real(t)
+    local N = #t / 2
+    local o = {}
+    for i = 1, N do
+        o[i] = t[2 * i - 1]
+    end
+    return o
+end
+
+-- backward transforms are not normalized: real_ifft(real_fft(x)) = N*x
+-- returns a table scaled by 1/N to recover the original amplitude
+function math.scale_real(t)
+    local N = #t
+    local scale = 1 / N
+    local o = {}
+    for i = 1, N do
+        o[i] = t[i] * scale
+    end
+    return o
+end
+
+-- for interleaved complex arrays the FFT size N is doubled so scale by (1/N)*2
+-- returns a table scaled by (1/N)*2 to recover the original amplitude
+function math.scale_complex(t)
+    local N = #t
+    local scale = 2 / N
+    local o = {}
+    for i = 1, N do
+        o[i] = t[i] * scale
     end
     return o
 end

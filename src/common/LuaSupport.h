@@ -39,8 +39,9 @@ extern "C"
 #include "lauxlib.h"
 #include "lualib.h"
 #include "luajit.h"
-
 #include "lj_arch.h"
+
+#include "pffft.h"
 }
 #else
 typedef int lua_State;
@@ -82,7 +83,7 @@ int parseStringDefiningMultipleFunctions(lua_State *s, const std::string &defini
  * surge environment (math imported, most things stripped, add
  * our C++ functions, etc...)
  */
-bool setSurgeFunctionEnvironment(lua_State *s);
+bool setSurgeFunctionEnvironment(lua_State *s, uint64_t features);
 
 /*
  * Call this function with a LUA state, the std::string at Surge::LuaSources and it will load the
@@ -99,6 +100,31 @@ std::string getFormulaPrelude();
  * Call this function to get a string representation of the WTSE prelude
  */
 std::string getWTSEPrelude();
+
+/*
+ * Flags representing optional features that can be enabled in the Lua sandbox environment
+ */
+enum EnvironmentFeatures : uint64_t
+{
+    BASE = 0,
+    HAS_FFT = 1 << 1
+};
+
+/*
+ * Additional enum classes for PFFFT, since we're not using the library on ARM64EC it lacks the
+ * included definitions
+ */
+enum class FFTDirection
+{
+    Forward,
+    Backward
+};
+
+enum class FFTTransform
+{
+    Real,
+    Complex
+};
 
 /*
  * A little leak debugger. Make this on your stack and if you exit the
