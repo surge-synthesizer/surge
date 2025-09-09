@@ -880,11 +880,13 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
 
     if (!onlyHelpEntry)
     {
+        const auto num_partials = AliasOscillator::n_additive_partials;
+
         {
             auto action = [this]() {
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
                 }
@@ -900,7 +902,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             auto action = [this]() {
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
 
@@ -921,7 +923,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             auto action = [this]() {
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
                 }
@@ -937,7 +939,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             auto action = [this]() {
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
                 }
@@ -953,7 +955,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             auto action = [this]() {
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = storage->rand_pm1();
                 }
@@ -971,7 +973,120 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             auto action = [this]() {
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                for (int qq = 0; qq < num_partials - 1; ++qq)
+                {
+                    std::swap(oscdata->extraConfig.data[qq + 1], oscdata->extraConfig.data[qq]);
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Shift Left", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < num_partials - 1; ++qq)
+                {
+                    std::swap(oscdata->extraConfig.data[num_partials - 2 - qq],
+                              oscdata->extraConfig.data[num_partials - 1 - qq]);
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Shift Right", action);
+        }
+
+        contextMenu.addSeparator();
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < num_partials; ++qq)
+                {
+                    if (oscdata->extraConfig.data[qq] < 0)
+                    {
+                        oscdata->extraConfig.data[qq] = 0;
+                    }
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Keep Positive", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < num_partials; ++qq)
+                {
+                    if (oscdata->extraConfig.data[qq] > 0)
+                    {
+                        oscdata->extraConfig.data[qq] = 0;
+                    }
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Keep Negative", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < num_partials; ++qq)
+                {
+                    if (qq > 0 && qq % 2 == 0)
+                    {
+                        oscdata->extraConfig.data[qq] = 0;
+                    }
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Keep Even Harmonics", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < num_partials; ++qq)
+                {
+                    if (qq > 0 && qq % 2 == 1)
+                    {
+                        oscdata->extraConfig.data[qq] = 0;
+                    }
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Keep Odd Harmonics", action);
+        }
+
+        contextMenu.addSeparator();
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     if (oscdata->extraConfig.data[qq] < 0)
                     {
@@ -990,7 +1105,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             auto action = [this]() {
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
                 }
@@ -1005,24 +1120,81 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
         {
             auto action = [this]() {
                 sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < num_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = (qq > 0 && qq % 2 == 0)
+                                                        ? -oscdata->extraConfig.data[qq]
+                                                        : oscdata->extraConfig.data[qq];
+                }
                 storage->getPatch().isDirty = true;
 
-                float pdata[AliasOscillator::n_additive_partials];
+                repaint();
+            };
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+            contextMenu.addItem("Invert Even Harmonics", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                for (int qq = 0; qq < num_partials; ++qq)
+                {
+                    oscdata->extraConfig.data[qq] = (qq > 0 && qq % 2 == 1)
+                                                        ? -oscdata->extraConfig.data[qq]
+                                                        : oscdata->extraConfig.data[qq];
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Invert Odd Harmonics", action);
+        }
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                float pdata[num_partials];
+
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     pdata[qq] = oscdata->extraConfig.data[qq];
                 }
 
-                for (int qq = 0; qq < AliasOscillator::n_additive_partials; ++qq)
+                for (int qq = 0; qq < num_partials; ++qq)
                 {
                     oscdata->extraConfig.data[15 - qq] = pdata[qq];
                 }
+                storage->getPatch().isDirty = true;
 
                 repaint();
             };
 
             contextMenu.addItem("Reverse", action);
+        }
+
+        contextMenu.addSeparator();
+
+        {
+            auto action = [this]() {
+                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+                float average = 0;
+
+                for (int qq = 0; qq < num_partials; ++qq)
+                {
+                    average = average + ((oscdata->extraConfig.data[qq] - average) / 2);
+                    oscdata->extraConfig.data[qq] = average;
+                }
+                storage->getPatch().isDirty = true;
+
+                repaint();
+            };
+
+            contextMenu.addItem("Soften", action);
         }
     }
 
@@ -1514,7 +1686,7 @@ std::string OscillatorWaveformDisplay::customEditorActionLabel(bool isActionToOp
     if (oscdata->type.val.i == ot_alias &&
         oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_additive)
     {
-        return isActionToOpen ? "EDIT" : "CLOSE";
+        return isActionToOpen ? "ADDITIVE EDITOR" : "CLOSE";
     }
 
     return "";
@@ -2033,6 +2205,11 @@ struct AliasAdditiveEditor : public juce::Component,
                 auto pos = (event.position.y - topTrim) / sliders[clickedSlider].getHeight();
                 auto d = (-1.f * pos + 0.5) * 2 * (!event.mods.isCommandDown());
 
+                if (event.mods.isAltDown())
+                {
+                    d = -oscdata->extraConfig.data[clickedSlider];
+                }
+
                 oscdata->extraConfig.data[clickedSlider] = limitpm1(d);
 
                 repaint();
@@ -2133,6 +2310,11 @@ struct AliasAdditiveEditor : public juce::Component,
 
             auto pos = (event.position.y - topTrim) / sliders[draggedSlider].getHeight();
             auto d = (-1.f * pos + 0.5) * 2 * (!event.mods.isCommandDown());
+
+            if (event.mods.isAltDown())
+            {
+                d = -oscdata->extraConfig.data[draggedSlider];
+            }
 
             oscdata->extraConfig.data[draggedSlider] = limitpm1(d);
 
@@ -2293,7 +2475,7 @@ void OscillatorWaveformDisplay::drawEditorBox(juce::Graphics &g, const std::stri
 {
     customEditorBox = getLocalBounds()
                           .withTop(getHeight() - wtbheight)
-                          .withRight(60)
+                          .withRight(141)
                           .withTrimmedBottom(1)
                           .toFloat();
 
