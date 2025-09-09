@@ -1343,34 +1343,6 @@ void SurgeCodeEditorComponent::paintOverChildren(juce::Graphics &g)
     }
 }
 
-void SurgeCodeEditorComponent::handleEscapeKey()
-{
-    if (search->isVisible())
-    {
-        search->hide();
-        return;
-    }
-
-    if (gotoLine->isVisible())
-    {
-        gotoLine->hide();
-        return;
-    }
-
-    juce::Component *c = this;
-
-    while (c)
-    {
-        if (auto fm = dynamic_cast<FormulaModulatorEditor *>(c))
-        {
-            fm->escapeKeyPressed();
-            return;
-        }
-
-        c = c->getParentComponent();
-    }
-}
-
 void SurgeCodeEditorComponent::caretPositionMoved()
 {
     if (search != nullptr)
@@ -1780,6 +1752,33 @@ bool CodeEditorContainerWithApply::keyPressed(const juce::KeyPress &key, juce::C
         //   return Component ::keyPressed(key);
 
         return true;
+    }
+    else if (keyCode == juce::KeyPress::escapeKey)
+    {
+        if (search->isVisible())
+        {
+            search->hide();
+            return true;
+        }
+
+        if (gotoLine->isVisible())
+        {
+            gotoLine->hide();
+            return true;
+        }
+
+        if (auto *olw = findParentComponentOfClass<OverlayWrapper>())
+        {
+            if (auto *k = getCurrentlyFocusedComponent())
+            {
+                k->giveAwayKeyboardFocus();
+                olw->grabKeyboardFocus();
+                return true;
+            }
+
+            olw->onClose();
+            return true;
+        }
     }
     // auto complete closure
     else if (key.getTextCharacter() == 40 || key.getTextCharacter() == 41)
@@ -2863,20 +2862,6 @@ void FormulaModulatorEditor::showPreludeCode()
     preludeDisplay->setVisible(true);
     mainEditor->setVisible(false);
     getEditState().codeOrPrelude = 1;
-}
-
-void FormulaModulatorEditor::escapeKeyPressed()
-{
-    auto c = getParentComponent();
-    while (c)
-    {
-        if (auto olw = dynamic_cast<OverlayWrapper *>(c))
-        {
-            olw->onClose();
-            return;
-        }
-        c = c->getParentComponent();
-    }
 }
 
 void FormulaModulatorEditor::updateDebuggerIfNeeded()
@@ -3996,20 +3981,6 @@ void WavetableScriptEditor::showPreludeCode()
     preludeDisplay->setVisible(true);
     mainEditor->setVisible(false);
     getEditState().codeOrPrelude = 1;
-}
-
-void WavetableScriptEditor::escapeKeyPressed()
-{
-    auto c = getParentComponent();
-    while (c)
-    {
-        if (auto olw = dynamic_cast<OverlayWrapper *>(c))
-        {
-            olw->onClose();
-            return;
-        }
-        c = c->getParentComponent();
-    }
 }
 
 void WavetableScriptEditor::rerenderFromUIState()
