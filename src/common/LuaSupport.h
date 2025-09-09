@@ -29,6 +29,7 @@
 #ifndef SURGE_SRC_COMMON_LUASUPPORT_H
 #define SURGE_SRC_COMMON_LUASUPPORT_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
