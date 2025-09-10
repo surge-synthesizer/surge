@@ -231,7 +231,6 @@ class SurgeCodeEditorComponent : public juce::CodeEditorComponent
 {
   public:
     bool keyPressed(const juce::KeyPress &key) override;
-    virtual void handleEscapeKey() override;
     virtual void handleReturnKey() override;
     virtual void caretPositionMoved() override;
 
@@ -331,7 +330,6 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
     void setApplyEnabled(bool b) override;
     void showModulatorCode();
     void showPreludeCode();
-    void escapeKeyPressed();
 
     void updateDebuggerIfNeeded();
 
@@ -375,7 +373,6 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void setApplyEnabled(bool b) override;
     void showModulatorCode();
     void showPreludeCode();
-    void escapeKeyPressed();
 
     void setupEvaluator();
     void generateWavetable();
