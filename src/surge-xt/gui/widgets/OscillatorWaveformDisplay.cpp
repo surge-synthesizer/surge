@@ -1166,7 +1166,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             for (int qq = 0; qq < num_partials; ++qq)
             {
                 oscdata->extraConfig.data[qq] *=
-                    std::cosf(static_cast<float>(qq) / static_cast<float>(num_partials));
+                    std::cos(static_cast<float>(qq) / static_cast<float>(num_partials));
             }
 
             storage->getPatch().isDirty = true;
