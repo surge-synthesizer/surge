@@ -184,6 +184,7 @@ endif()
 
 if(MSVC)
   message(STATUS "MSVC build with generat = ${CMAKE_GENERATOR_PLATFORM}")
+
   if(("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec") OR("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64"))
     message(STATUS "Skipping warning as error (-WX) on arm64ec for now.")
   else()
@@ -211,7 +212,7 @@ if(MSVC)
 
     # /arch:AVX
 
-    # Build with Multiple Processes (Clang-cl builds use Ninja instead)
+    # Build with multiple processes (clang-cl builds use Ninja instead)
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 
     # Set source and executable charsets to UTF-8
@@ -220,7 +221,7 @@ if(MSVC)
     # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
     $<$<COMPILE_LANGUAGE:CXX>:/Zc:char8_t->
 
-    # make MSVC define __cplulsplus properly
+    # make MSVC define __cplusplus properly
     $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>
 
     # standards-conforming lambda grammar and processing
