@@ -1,4 +1,4 @@
-name: Build Release or Nightly Installer
+name: "Build release or nightly installer"
 on:
   workflow_dispatch:
   push:
@@ -13,22 +13,22 @@ defaults:
 
 jobs:
   surge_version:
-    name: Set up surge version
+    name: "Set up Surge XT version"
     runs-on: ubuntu-latest
     outputs:
       surge_version: ${{ steps.vers.outputs.surge_version}}
       surge_is_nightly: ${{ steps.vers.outputs.surge_is_nightly}}
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v4
 
-      - name: calculate version
+      - name: "Calculate version"
         id: vers
         run: |
           ref=${{ github.ref }}
-          
+
           echo "## Creating version from '${ref}'" >> $GITHUB_STEP_SUMMARY
-          
+
           if [[ "$ref" == "refs/heads/main" ]]; then
             echo "Generating Nightly Version" >> $GITHUB_STEP_SUMMARY
             export SURGE_VERSION="NIGHTLY-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
@@ -39,50 +39,50 @@ jobs:
             export SURGE_VERSION=${tagv}
             echo "surge_is_nightly=0" >> "$GITHUB_OUTPUT"
           fi
-          
+
           echo "SURGE_VERSION=${SURGE_VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "surge_version=${SURGE_VERSION}" >> "$GITHUB_OUTPUT"
 
   build_plugin:
-    name: Release Build - ${{ matrix.name }}
+    name: Release - ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     needs: [ surge_version ]
     strategy:
       matrix:
         include:
           - os: windows-latest
-            name: windows-64bit
+            name: "Windows 64-bit"
             # cmakeArgs: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
             cmakeArgs: -G"Visual Studio 17 2022" -A x64
 
           - os: windows-latest
-            name: "windows msvc juce 7"
+            name: "Windows MSVC JUCE 7"
             cmakeArgs: -G"Visual Studio 17 2022" -A x64 -DSURGE_EXTRA_ZIP_NAME="-juce7"
             revertJuce: true
 
           - os: windows-latest
-            name: windows-arm64ec
+            name: "Windows ARM64EC"
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64ec -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
 
           - os: windows-latest
-            name: windows-arm64
+            name: "Windows ARM64"
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
 
           - os: macos-latest
-            name: macos
+            name: "macOS"
             cmakeArgs: -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
 
-      - name: Revert Juce
+      - name: "Revert JUCE"
         if: ${{ matrix.revertJuce }}
         run: |
           cd libs/JUCE
-          git fetch origin 
+          git fetch origin
           git fetch origin -t
           git checkout surge-7.0.12
 
@@ -97,49 +97,49 @@ jobs:
         with:
           version: "6.5.1"
 
-      - name: Prepare for JUCE
+      - name: "Prepare for JUCE"
         uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
         with:
           os: ${{ runner.os }}
 
 
-      - name: Build release version
+      - name: "Build release version"
         run: |
-          
+
           export MAC_SIGNING_CERT="${{ secrets.MAC_SIGNING_CERT_NAME }}"
           export MAC_INSTALLING_CERT="${{ secrets.MAC_INSTALLING_CERT_NAME }}"
-          
+
           export MAC_SIGNING_ID="${{ secrets.MAC_SIGNING_ID }}"
           export MAC_SIGNING_1UPW="${{ secrets.MAC_SIGNING_1UPW }}"
           export MAC_SIGNING_TEAM="${{ secrets.MAC_SIGNING_TEAM }}"
-          
+
           export SURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}"
-          
+
           cmake -S . -B ./build -DAZURE_PIPELINE=1 -DSURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}" -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmakeArgs }}
           cmake --build ./build --config Release --target surge-xt-distribution --parallel 3
 
-      - name: Show Installer Directory
+      - name: "Show installer directory"
         run: |
           ls -l ./build/surge-xt-dist
 
-      - name: Upload artifact
+      - name: "Upload artifact"
         uses: actions/upload-artifact@v4
         with:
           path: build/surge-xt-dist
           name: build-${{ matrix.name }}
 
   build_plugin_docker:
-    name: Docker Build Ubuntu18
+    name: "Ubuntu 18 Docker"
     runs-on: ubuntu-latest
     needs: [ surge_version ]
 
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Build in Docker
+      - name: "Build in Docker"
         uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
         with:
           image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu20_gcc11:main
@@ -149,23 +149,23 @@ jobs:
           target: surge-xt-distribution
 
 
-      - name: Show Installer Directory
+      - name: "Show installer directory"
         run: |
           ls -l ./build/surge-xt-dist
 
-      - name: Upload artifact
+      - name: "Upload artifact"
         uses: actions/upload-artifact@v4
         with:
           path: build/surge-xt-dist
           name: build-docker
 
   publish-surge-nightly:
-    name: Publish Surge Nightly
+    name: "Publish Surge XT nightly"
     if: ${{ github.ref == 'refs/heads/main' && github.repository_owner == 'surge-synthesizer' }}
     runs-on: ubuntu-latest
     needs: [ build_plugin, build_plugin_docker ]
     steps:
-      - name: Upload to Nightly
+      - name: "Upload to nightly"
         uses: surge-synthesizer/sst-githubactions/upload-to-release@main
         with:
           tag: Nightly
@@ -174,7 +174,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           release_blurb_file: resources/NightlyBlurb.md
 
-      - name: Post to Discord
+      - name: "Post to Discord"
         uses: surge-synthesizer/sst-githubactions/discord-release-notify@main
         with:
           webhook: ${{ secrets.DISCORD_SURGE_WEBHOOK }}
@@ -183,12 +183,12 @@ jobs:
 
 
   publish-surge-release:
-    name: Publish Surge Release
+    name: "Publish Surge XT release"
     if: startsWith(github.ref, 'refs/tags/v') && github.repository_owner == 'surge-synthesizer'
     runs-on: ubuntu-latest
     needs: [ build_plugin, build_plugin_docker ]
     steps:
-      - name: Upload to Release
+      - name: "Upload to release"
         uses: surge-synthesizer/sst-githubactions/upload-to-release@main
         with:
           tag: ${{ github.ref_name }}
@@ -196,7 +196,7 @@ jobs:
           create_tag: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Post to Discord
+      - name: "Post to Discord"
         uses: surge-synthesizer/sst-githubactions/discord-release-notify@main
         with:
           webhook: ${{ secrets.DISCORD_SURGE_WEBHOOK }}
@@ -205,48 +205,47 @@ jobs:
           subtitle: "Release ${{ github.ref_name }}"
 
   create_web_links:
-    name: Create Website Links
+    name: "Create website links"
     runs-on: ubuntu-latest
     needs: [ surge_version, build_plugin, build_plugin_docker ]
     steps:
-      - name: checkout for git info
+      - name: "Checkout for git info"
         uses: actions/checkout@v4
         if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
         with:
           path: surge
           fetch-depth: 5
 
-      - name: Checkout web
+      - name: "Checkout web"
         uses: actions/checkout@v4
         with:
           path: web
           repository: surge-synthesizer/surge-synthesizer.github.io
           token: ${{ secrets.SURGE_GITHUB_IO_TOKEN }}
 
-      - name: make nightly git info
+      - name: "Make nightly git info"
         if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
         run: |
           mkdir -p stage_git/git_info
           pushd surge
-          
+
           git log -1 --pretty=format:'%h : %s - %an' > ../stage_git/git_info/git_nightly_xt_log_display
           git log -1 --pretty=format:'%h : %s%n%aD%n%an%n%n%B' > ../stage_git/git_info/git_nightly_xt_log_long_display
           git log -5 --pretty=format:'%h : %s - %an' > ../stage_git/git_info/git_nightly_xt_recent_five
           git log -1 --pretty=format:'%h' > ../stage_git/git_info/git_nightly_xt_log_hash
-          
+
           popd
-          
+
           cat stage_git/git_info/*
 
-
-      - name: make nightly links
+      - name: "Make nightly links"
         if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
         run: |
           # change this to cd website
           cd web
-          
+
           SURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}"
-          
+
           echo $(date "+%Y-%m-%d %H:%M:%S %Z") > src/assets/includes/latest_xt_build_time
           echo $SURGE_VERSION > src/assets/includes/latest_xt_version
           cp ../stage_git/git_info/* src/assets/includes
@@ -256,23 +255,23 @@ jobs:
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win32-$SURGE_VERSION-setup.exe > src/assets/includes/latest_xt_win_x86_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win32-$SURGE_VERSION-pluginsonly.zip > src/assets/includes/latest_xt_win_x86_zip_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-linux-x64-$SURGE_VERSION.deb > src/assets/includes/latest_xt_linux_x64_url
-          
+
           cat src/assets/includes/*
-          
+
           git config user.email "paul@baconpaul.org"
           git config user.name "baconpaul"
-          
+
           git add .
           git commit -m "Update surge links for ${SURGE_VERSION} from github action"
           git push origin master
 
-      - name: make release links
+      - name: "Make release links"
         if: ${{ needs.surge_version.outputs.surge_is_nightly == 0 }}
         run: |
           mkdir -p src/assets/includes
-          
+
           SURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}"
-          
+
           echo $(date "+%Y-%m-%d %H:%M:%S %Z") > src/assets/includes/stable_xt_build_time
           echo $SURGE_VERSION > src/assets/includes/stable_xt_version
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-macOS-$SURGE_VERSION.dmg > src/assets/includes/stable_xt_macos_url
@@ -282,5 +281,3 @@ jobs:
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-win32-$SURGE_VERSION-pluginsonly.zip > src/assets/includes/stable_xt_win_x86_zip_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-linux-x64-$SURGE_VERSION.deb > src/assets/includes/stable_xt_linux_x64_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/tag/$SURGE_VERSION > src/assets/includes/stable_xt_other.url
-
-

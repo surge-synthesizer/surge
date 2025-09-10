@@ -1,4 +1,4 @@
-name: Build Pull Request
+name: "Build pull request"
 on:
   pull_request:
 
@@ -13,14 +13,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: "windows msvc common only"
+          - name: "Windows MSVC surge-common only"
             os: windows-latest
             target: surge-common
             cmakeConfig: -A x64
             cmakeOpt: DEBUG
             runTests: false
 
-          - name: "windows msvc juce 7"
+          - name: "Windows MSVC JUCE 7"
             os: windows-latest
             target: surge-xt_Standalone surge-fx_Standalone
             cmakeConfig: -A x64
@@ -28,70 +28,70 @@ jobs:
             runTests: false
             revertJuce: true
 
-          - name: "windows msvc surgepy"
+          - name: "Windows MSVC SurgePy"
             os: windows-latest
             target: surgepy
             cmakeConfig: -A x64 -DSURGE_BUILD_PYTHON_BINDINGS=TRUE
             cmakeOpt: DEBUG
             runTests: false
 
-          - name: "windows msvc arm64ec"
+          - name: "Windows MSVC ARM64EC"
             os: windows-latest
             target: surge-xt_Standalone
             cmakeConfig: -G"Visual Studio 17 2022" -A arm64ec -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
             cmakeOpt: DEBUG
             runTests: false
 
-          - name: "windows msvc arm64 regular"
+          - name: "Windows MSVC ARM64"
             os: windows-latest
             target: surge-xt-distribution
             cmakeConfig: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
             cmakeOpt: DEBUG
             runTests: false
 
-          #- name: "windows clang"
+          #- name: "Windows Clang"
           #  os: windows-latest
           #  target: surge-xt_Standalone
           #  cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
           #  cmakeOpt: DEBUG
           #  runTests: false
 
-          - name: "ubuntu standalone"
+          - name: "Ubuntu standalone"
             os: ubuntu-latest
             target: surge-xt_Standalone
             cmakeConfig: -GNinja
             cmakeOpt: DEBUG
             runTests: false
 
-          - name: "ubuntu latest surgepy"
+          - name: "Ubuntu (latest) SurgePy"
             os: ubuntu-latest
             target: surgepy
             cmakeConfig: -GNinja -DSURGE_BUILD_PYTHON_BINDINGS=TRUE
             cmakeOpt: DEBUG
             runTests: false
 
-          - name: "macos standalone"
+          - name: "macOS standalone"
             os: macos-latest
             target: surge-xt_Standalone
             cmakeConfig: -GNinja -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
             cmakeOpt: DEBUG
             runTests: false
 
-          - name: "mac test runner"
+          - name: "macOS test runner"
             os: macos-latest
             target: surge-testrunner
             cmakeConfig: -GNinja
             cmakeOpt: RELEASE
             runTests: true
 
-          - name: "linux test runner"
+          - name: "Linux test runner"
             os: ubuntu-latest
             target: surge-testrunner
             cmakeConfig: -GNinja
             cmakeOpt: RELEASE
             runTests: true
 
-          - name: "windows test runner"
+          - name: "Windows test runner"
             os: windows-latest
             target: surge-testrunner
             cmakeConfig: -G"Visual Studio 17 2022" -A x64
@@ -100,31 +100,31 @@ jobs:
             runTests: true
 
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
 
-      - name: Revert Juce
+      - name: "Revert JUCE"
         if: ${{ matrix.revertJuce }}
         run: |
           cd libs/JUCE
-          git fetch origin 
+          git fetch origin
           git fetch origin -t
           git checkout surge-7.0.12
 
-      - name: Prepare for JUCE
+      - name: "Prepare for JUCE"
         uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
         with:
           os: ${{ runner.os }}
 
-      - name: Build pull request version
+      - name: "Build pull request version"
         run: |
           cmake -S . -B ./build ${{ matrix.cmakeConfig }} -DCMAKE_BUILD_TYPE=${{ matrix.cmakeOpt }}
           cmake --build ./build --config ${{ matrix.cmakeOpt }} --target ${{ matrix.target }} --parallel 3
 
-      - name: Run Tests
+      - name: Run tests
         if: ${{ matrix.runTests }}
         run: |
           set -e
@@ -133,15 +133,15 @@ jobs:
           ctest -j 4 || ctest --rerun-failed --output-on-failure
 
   build_plugin_lindoc:
-    name: PR - U20 Docker
+    name: "PR - Ubuntu 20 Docker"
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: "Checkout code"
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Build in Docker
+      - name: "Build in Docker"
         uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
         with:
           image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu20_gcc11:main
