@@ -220,8 +220,11 @@ if(MSVC)
     # Do *not* use the new, breaking char8_t UTF-8 bits in C++20.
     $<$<COMPILE_LANGUAGE:CXX>:/Zc:char8_t->
 
-    # amke msvc define __cplulsplus properly
+    # make MSVC define __cplulsplus properly
     $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>
+
+    # standards-conforming lambda grammar and processing
+    $<$<COMPILE_LANGUAGE:CXX>:/Zc:lambda>
   )
   add_compile_definitions(_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 endif()
