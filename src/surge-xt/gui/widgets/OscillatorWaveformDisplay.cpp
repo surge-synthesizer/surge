@@ -889,6 +889,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             {
                 oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -906,6 +907,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                     oscdata->extraConfig.data[qq] *= -1.f;
                 }
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -918,6 +920,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             {
                 oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -930,6 +933,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             {
                 oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -942,6 +946,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             {
                 oscdata->extraConfig.data[qq] = storage->rand_pm1();
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -956,6 +961,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             {
                 std::swap(oscdata->extraConfig.data[qq + 1], oscdata->extraConfig.data[qq]);
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -969,6 +975,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                 std::swap(oscdata->extraConfig.data[num_partials - 2 - qq],
                           oscdata->extraConfig.data[num_partials - 1 - qq]);
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -986,6 +993,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                     oscdata->extraConfig.data[qq] = 0;
                 }
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1001,6 +1009,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                     oscdata->extraConfig.data[qq] = 0;
                 }
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1016,6 +1025,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                     oscdata->extraConfig.data[qq] = 0;
                 }
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1031,6 +1041,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                     oscdata->extraConfig.data[qq] = 0;
                 }
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1048,6 +1059,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                     oscdata->extraConfig.data[qq] *= -1;
                 }
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1060,6 +1072,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             {
                 oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1074,6 +1087,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                                                     ? -oscdata->extraConfig.data[qq]
                                                     : oscdata->extraConfig.data[qq];
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1088,6 +1102,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                                                     ? -oscdata->extraConfig.data[qq]
                                                     : oscdata->extraConfig.data[qq];
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1107,6 +1122,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
             {
                 oscdata->extraConfig.data[15 - qq] = pdata[qq];
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
@@ -1124,6 +1140,7 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
                 average = average + ((oscdata->extraConfig.data[qq] - average) / 2);
                 oscdata->extraConfig.data[qq] = average;
             }
+
             storage->getPatch().isDirty = true;
 
             repaint();
