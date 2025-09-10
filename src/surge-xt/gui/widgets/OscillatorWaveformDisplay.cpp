@@ -880,322 +880,271 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
 
     if (!onlyHelpEntry)
     {
-        const auto num_partials = AliasOscillator::n_additive_partials;
+        constexpr int num_partials = AliasOscillator::n_additive_partials;
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Sine", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
+            }
+
+            storage->getPatch().isDirty = true;
+
+            repaint();
+        });
+
+        contextMenu.addItem("Triangle", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
+
+                if (qq % 4 == 2)
                 {
-                    oscdata->extraConfig.data[qq] = (qq == 0) ? 1 : 0;
+                    oscdata->extraConfig.data[qq] *= -1.f;
                 }
-                storage->getPatch().isDirty = true;
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Sine", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Sawtooth", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / ((qq + 1) * (qq + 1));
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
+            }
 
-                    if (qq % 4 == 2)
-                    {
-                        oscdata->extraConfig.data[qq] *= -1.f;
-                    }
-                }
-                storage->getPatch().isDirty = true;
+            storage->getPatch().isDirty = true;
 
-                repaint();
-            };
+            repaint();
+        });
 
-            contextMenu.addItem("Triangle", action);
-        }
+        contextMenu.addItem("Square", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
+            }
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = 1.f / (qq + 1);
-                }
-                storage->getPatch().isDirty = true;
+            storage->getPatch().isDirty = true;
 
-                repaint();
-            };
+            repaint();
+        });
 
-            contextMenu.addItem("Sawtooth", action);
-        }
+        contextMenu.addItem("Random", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] = storage->rand_pm1();
+            }
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = (qq % 2 == 0) * 1.f / (qq + 1);
-                }
-                storage->getPatch().isDirty = true;
+            storage->getPatch().isDirty = true;
 
-                repaint();
-            };
-
-            contextMenu.addItem("Square", action);
-        }
-
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
-
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = storage->rand_pm1();
-                }
-                storage->getPatch().isDirty = true;
-
-                repaint();
-            };
-
-            contextMenu.addItem("Random", action);
-        }
+            repaint();
+        });
 
         contextMenu.addSeparator();
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Shift Left", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials - 1; ++qq)
-                {
-                    std::swap(oscdata->extraConfig.data[qq + 1], oscdata->extraConfig.data[qq]);
-                }
-                storage->getPatch().isDirty = true;
+            for (int qq = 0; qq < num_partials - 1; ++qq)
+            {
+                std::swap(oscdata->extraConfig.data[qq + 1], oscdata->extraConfig.data[qq]);
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Shift Left", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Shift Right", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials - 1; ++qq)
-                {
-                    std::swap(oscdata->extraConfig.data[num_partials - 2 - qq],
-                              oscdata->extraConfig.data[num_partials - 1 - qq]);
-                }
-                storage->getPatch().isDirty = true;
+            for (int qq = 0; qq < num_partials - 1; ++qq)
+            {
+                std::swap(oscdata->extraConfig.data[num_partials - 2 - qq],
+                          oscdata->extraConfig.data[num_partials - 1 - qq]);
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Shift Right", action);
-        }
+            repaint();
+        });
 
         contextMenu.addSeparator();
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Keep Positive", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                if (oscdata->extraConfig.data[qq] < 0)
                 {
-                    if (oscdata->extraConfig.data[qq] < 0)
-                    {
-                        oscdata->extraConfig.data[qq] = 0;
-                    }
+                    oscdata->extraConfig.data[qq] = 0;
                 }
-                storage->getPatch().isDirty = true;
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Keep Positive", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Keep Negative", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                if (oscdata->extraConfig.data[qq] > 0)
                 {
-                    if (oscdata->extraConfig.data[qq] > 0)
-                    {
-                        oscdata->extraConfig.data[qq] = 0;
-                    }
+                    oscdata->extraConfig.data[qq] = 0;
                 }
-                storage->getPatch().isDirty = true;
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Keep Negative", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Keep Even Harmonics", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                if (qq > 0 && qq % 2 == 0)
                 {
-                    if (qq > 0 && qq % 2 == 0)
-                    {
-                        oscdata->extraConfig.data[qq] = 0;
-                    }
+                    oscdata->extraConfig.data[qq] = 0;
                 }
-                storage->getPatch().isDirty = true;
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Keep Even Harmonics", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Keep Odd Harmonics", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                if (qq > 0 && qq % 2 == 1)
                 {
-                    if (qq > 0 && qq % 2 == 1)
-                    {
-                        oscdata->extraConfig.data[qq] = 0;
-                    }
+                    oscdata->extraConfig.data[qq] = 0;
                 }
-                storage->getPatch().isDirty = true;
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Keep Odd Harmonics", action);
-        }
+            repaint();
+        });
 
         contextMenu.addSeparator();
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Absolute", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                if (oscdata->extraConfig.data[qq] < 0)
                 {
-                    if (oscdata->extraConfig.data[qq] < 0)
-                    {
-                        oscdata->extraConfig.data[qq] *= -1;
-                    }
+                    oscdata->extraConfig.data[qq] *= -1;
                 }
-                storage->getPatch().isDirty = true;
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Absolute", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Invert", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
-                }
-                storage->getPatch().isDirty = true;
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] = -oscdata->extraConfig.data[qq];
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Invert", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Invert Even Harmonics", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = (qq > 0 && qq % 2 == 0)
-                                                        ? -oscdata->extraConfig.data[qq]
-                                                        : oscdata->extraConfig.data[qq];
-                }
-                storage->getPatch().isDirty = true;
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] = (qq > 0 && qq % 2 == 0)
+                                                    ? -oscdata->extraConfig.data[qq]
+                                                    : oscdata->extraConfig.data[qq];
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Invert Even Harmonics", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Invert Odd Harmonics", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[qq] = (qq > 0 && qq % 2 == 1)
-                                                        ? -oscdata->extraConfig.data[qq]
-                                                        : oscdata->extraConfig.data[qq];
-                }
-                storage->getPatch().isDirty = true;
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] = (qq > 0 && qq % 2 == 1)
+                                                    ? -oscdata->extraConfig.data[qq]
+                                                    : oscdata->extraConfig.data[qq];
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Invert Odd Harmonics", action);
-        }
+            repaint();
+        });
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Reverse", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                float pdata[num_partials];
+            float pdata[num_partials];
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    pdata[qq] = oscdata->extraConfig.data[qq];
-                }
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                pdata[qq] = oscdata->extraConfig.data[qq];
+            }
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    oscdata->extraConfig.data[15 - qq] = pdata[qq];
-                }
-                storage->getPatch().isDirty = true;
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[15 - qq] = pdata[qq];
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Reverse", action);
-        }
+            repaint();
+        });
 
         contextMenu.addSeparator();
 
-        {
-            auto action = [this]() {
-                sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+        contextMenu.addItem("Soften", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
 
-                float average = 0;
+            float average = 0;
 
-                for (int qq = 0; qq < num_partials; ++qq)
-                {
-                    average = average + ((oscdata->extraConfig.data[qq] - average) / 2);
-                    oscdata->extraConfig.data[qq] = average;
-                }
-                storage->getPatch().isDirty = true;
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                average = average + ((oscdata->extraConfig.data[qq] - average) / 2);
+                oscdata->extraConfig.data[qq] = average;
+            }
 
-                repaint();
-            };
+            storage->getPatch().isDirty = true;
 
-            contextMenu.addItem("Soften", action);
-        }
+            repaint();
+        });
     }
 
     contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
