@@ -1145,6 +1145,34 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
 
             repaint();
         });
+
+        contextMenu.addItem("Window (Linear)", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] *=
+                    static_cast<float>(num_partials - qq) / static_cast<float>(num_partials);
+            }
+
+            storage->getPatch().isDirty = true;
+
+            repaint();
+        });
+
+        contextMenu.addItem("Window (Cosine)", [this]() {
+            sge->undoManager()->pushOscillatorExtraConfig(scene, oscInScene);
+
+            for (int qq = 0; qq < num_partials; ++qq)
+            {
+                oscdata->extraConfig.data[qq] *=
+                    std::cosf(static_cast<float>(qq) / static_cast<float>(num_partials));
+            }
+
+            storage->getPatch().isDirty = true;
+
+            repaint();
+        });
     }
 
     contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
