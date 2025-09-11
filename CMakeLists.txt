@@ -75,7 +75,7 @@ endif()
 
 # Global compiler/linker settings {{{
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # Enable LTO if unspecified, for release builds.
 if(CMAKE_BUILD_TYPE MATCHES "Release" AND ENABLE_LTO)
