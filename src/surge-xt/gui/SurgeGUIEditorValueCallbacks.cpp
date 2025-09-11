@@ -395,12 +395,14 @@ void SurgeGUIEditor::changeSelectedOsc(int value)
     if (tabPosMem)
     {
         current_osc[current_scene] = value;
+        this->synth->storage.getPatch().dawExtraState.editor.current_osc[current_scene] = value;
     }
     else
     {
         for (int i = 0; i < n_scenes; i++)
         {
             current_osc[i] = value;
+            this->synth->storage.getPatch().dawExtraState.editor.current_osc[i] = value;
         }
     }
 
@@ -412,6 +414,7 @@ void SurgeGUIEditor::changeSelectedOsc(int value)
 void SurgeGUIEditor::changeSelectedScene(int value)
 {
     current_scene = value;
+    this->synth->storage.getPatch().dawExtraState.editor.current_scene = value;
 
     synth->release_if_latched[synth->storage.getPatch().scene_active.val.i] = true;
     synth->storage.getPatch().scene_active.val.i = current_scene;
