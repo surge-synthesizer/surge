@@ -1806,7 +1806,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             auto oscswitch = layoutComponentForSkin(skinCtrl, tag_osc_select);
             oscswitch->setValue((float)current_osc[current_scene] / 2.0f);
             setAccessibilityInformationByTitleAndAction(oscswitch->asJuceComponent(),
-                                                        "Oscillator Number", "Select");
+                                                        "Oscillator Select", "Select");
 
             break;
         }
