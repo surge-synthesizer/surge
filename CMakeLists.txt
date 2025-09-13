@@ -202,6 +202,7 @@ if(MSVC)
     /wd4065 # standalone default in a switch with no case
     /wd4702 # unreachable code. I generally do if( a ) return foo else return bar; return nullptr so don't warn on that
     /wd4005 # macro redefinition. Thanks NOMINMAX
+    /wd5105 # defined operator in macro expansion; used in some JUCE dependencies and works okay on all of our compilers
 
     # Clang-cl-only warnings
     $<$<CXX_COMPILER_ID:Clang>:-Wno-microsoft-exception-spec>
