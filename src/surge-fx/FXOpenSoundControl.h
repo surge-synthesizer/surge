@@ -82,7 +82,8 @@ class FXOpenSoundControl : public juce::OSCReceiver,
 // Makes sure that decimal *points* are used, not commas
 inline std::string float_to_clocalestr_wprec(float value, int precision)
 {
-    return fmt::format(std::locale::classic(), "{:." + std::to_string(precision) + "Lf}", value);
+    return fmt::vformat(std::locale::classic(), "{:." + std::to_string(precision) + "Lf}",
+                        fmt::make_format_args(value));
 }
 
 } // namespace FxOSC
