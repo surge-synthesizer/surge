@@ -753,9 +753,9 @@ void OscillatorWaveformDisplay::createWTExportMenu(juce::PopupMenu &contextMenu)
                            [this]() { exportWavetableAs(ExportFormat::SERUM); });
         exportMenu.addItem("Export for VCV Rack...",
                            [this]() { exportWavetableAs(ExportFormat::VCVRACK); });
-
-        contextMenu.addSubMenu(Surge::GUI::toOSCase("Export Wavetable"), exportMenu);
     }
+
+    contextMenu.addSubMenu(Surge::GUI::toOSCase("Export Wavetable"), exportMenu);
 }
 
 void OscillatorWaveformDisplay::exportWavetableAs(ExportFormat exportFormat)
