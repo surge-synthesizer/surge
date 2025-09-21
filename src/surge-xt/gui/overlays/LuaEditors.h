@@ -360,6 +360,14 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 struct WavetablePreviewComponent;
 struct WavetableScriptControlArea;
 
+enum ExportFormat
+{
+    WAV,
+    WT,
+    SERUM,
+    VCVRACK
+};
+
 struct WavetableScriptEditor : public CodeEditorContainerWithApply, public RefreshableOverlay
 {
     WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s, OscillatorStorage *os, int oscid,
@@ -380,13 +388,30 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void rerenderFromUIState();
     void setCurrentFrame(int value);
 
+    void createMenu(juce::PopupMenu &menu);
+    void loadWavetableScript();
+    static void loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
+                                    OscillatorStorage *oscdata,
+                                    Surge::WavetableScript::LuaWTEvaluator *evaluator);
+    void saveWavetableScript();
+    static void saveWavetableScript(const fs::path &location, SurgeStorage *storage,
+                                    OscillatorStorage *oscdata);
+
+    enum ExportFormat
+    {
+        WAV,
+        WT,
+        SERUM,
+        VCVRACK
+    };
+    void exportWavetableAs(ExportFormat exportFormat);
+
     int lastRes{-1}, lastFrames{-1}, lastFrame{-1}, lastRm{-1};
 
     std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     std::unique_ptr<juce::CodeDocument> preludeDocument;
     std::unique_ptr<juce::CodeEditorComponent> preludeDisplay;
     std::unique_ptr<WavetableScriptControlArea> controlArea;
-
     std::unique_ptr<WavetablePreviewComponent> rendererComponent;
 
     OscillatorStorage *osc;
