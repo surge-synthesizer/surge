@@ -394,7 +394,8 @@ bool LuaWTEvaluator::populateWavetable(wt_header &wh, float **wavdata)
 #endif
 }
 
-void LuaWTEvaluator::generateWavetable(SurgeStorage *storage, OscillatorStorage *oscdata)
+void LuaWTEvaluator::generateWavetable(SurgeStorage *storage, OscillatorStorage *oscdata,
+                                       Wavetable *wt, bool exportMode)
 {
 #if HAS_LUA
     auto res_base = oscdata->wavetable_formula_res_base;
@@ -415,10 +416,18 @@ void LuaWTEvaluator::generateWavetable(SurgeStorage *storage, OscillatorStorage 
 
     if (populateWavetable(wh, &wd))
     {
-        storage->waveTableDataMutex.lock();
-        oscdata->wt.BuildWT(wd, wh, wh.flags & wtf_is_sample);
-        oscdata->wavetable_display_name = getSuggestedWavetableName();
-        storage->waveTableDataMutex.unlock();
+        if (!exportMode)
+        {
+            storage->waveTableDataMutex.lock();
+        }
+
+        wt->BuildWT(wd, wh, wh.flags & wtf_is_sample);
+
+        if (!exportMode)
+        {
+            oscdata->wavetable_display_name = getSuggestedWavetableName();
+            storage->waveTableDataMutex.unlock();
+        }
 
         delete[] wd;
     }
@@ -476,7 +485,7 @@ void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storag
     oscdata->wavetable_formula_res_base = res_base;
     oscdata->wavetable_formula = Surge::Storage::base64_decode(b64script);
 
-    generateWavetable(storage, oscdata);
+    generateWavetable(storage, oscdata, &oscdata->wt);
 #endif
 }
 

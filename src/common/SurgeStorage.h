@@ -1520,7 +1520,7 @@ class alignas(16) SurgeStorage
     std::string export_wt_wav_portable(const std::string &fbase, Wavetable *wt,
                                        const std::string &metadata);
     std::string export_wt_wav_portable(const fs::path &fpath, Wavetable *wt,
-                                       const std::string &metadata);
+                                       const std::string &metadata, bool exportForSerum = false);
     bool export_wt_wt_portable(const fs::path &fpath, Wavetable *wt, const std::string &metadata);
 
     std::string make_wt_metadata(OscillatorStorage *);

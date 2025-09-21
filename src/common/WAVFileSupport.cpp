@@ -572,9 +572,10 @@ std::string SurgeStorage::export_wt_wav_portable(const std::string &fbase, Wavet
 }
 
 std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetable *wt,
-                                                 const std::string &metadata)
+                                                 const std::string &metadata, bool exportForSerum)
 {
     std::string errorMessage = "Unknown error!";
+    std::string clm_string;
 
     {
         std::filebuf wfp;
@@ -627,6 +628,18 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
                                 4 + 4 + tableSize + // data chunk
                                 4 + 4 + 8;          // srgo/srge chunk
 
+        // Serum's clm chunk description:
+        // https://www.kvraudio.com/forum/viewtopic.php?p=7266103&sid=708f193e517d29fe94c1c974e911af97#p7266103
+        if (exportForSerum)
+        {
+            std::ostringstream clm_string_stream;
+            clm_string_stream
+                << "<!>" << wt->size << " 10000000" // Flag set for linear interpolation
+                << " wavetable Surge-XT"; // No space and hyphen to keep string length even
+            clm_string = clm_string_stream.str();
+            dataSize += 4 + 4 + clm_string.length() + 1; // null term
+        }
+
         if (!metadata.empty())
             dataSize += 4 + 4 + metadata.length() + 1; // null term
 
@@ -656,6 +669,13 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
             w4i(8);
             w4i(1);
             w4i(wt->size);
+        }
+
+        if (exportForSerum)
+        {
+            wfp.sputn("clm ", 4);
+            w4i(clm_string.length() + 1);
+            wfp.sputn(clm_string.c_str(), clm_string.length() + 1);
         }
 
         wfp.sputn("data", 4);

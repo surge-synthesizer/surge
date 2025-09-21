@@ -25,10 +25,12 @@
 #include "RuntimeFont.h"
 #include "SkinSupport.h"
 #include "SkinColors.h"
+#include "SurgeXTBinary.h"
 #include "WavetableScriptEvaluator.h"
 #include "LuaSupport.h"
 #include "SurgeImage.h"
 #include "SurgeImageStore.h"
+#include "widgets/MenuButtonFromIcon.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/NumberField.h"
 #include "overlays/TypeinParamEditor.h"
@@ -3354,20 +3356,38 @@ struct WavetableScriptControlArea : public juce::Component,
             int numfieldHeight = 12;
 
             int margin = 2;
-            int xpos = 10;
+            int xpos = margin * 3;
             int ypos = 1 + labelHeight + margin;
-            int marginPos = xpos + margin;
+
+            auto xml = juce::parseXML(SurgeXTBinary::menu_icon_svg);
+            auto icon = juce::Drawable::createFromSVG(*xml);
+            menuB = std::make_unique<Surge::Widgets::MenuButtonFromIcon>(
+                [] { return juce::PopupMenu(); }, std::move(icon));
+            auto btnrect = juce::Rectangle<int>(xpos, ypos - 1, 12, buttonHeight);
+            menuB->setBounds(btnrect);
+            menuB->setSkin(skin, associatedBitmapStore);
+            menuB->setTitle("File Menu");
+            menuB->setDescription("File Menu");
+            menuB->menuFactory = [w = juce::Component::SafePointer(this)] {
+                juce::PopupMenu menu;
+                w->overlay->createMenu(menu);
+                return menu;
+            };
+            addAndMakeVisible(*menuB);
 
             codeL = newL("Code");
+            xpos += 12 + margin;
             codeL->setBounds(xpos, 1, 100, labelHeight);
             addAndMakeVisible(*codeL);
 
             renderModeL = newL("Display Mode");
-            renderModeL->setBounds(xpos + btnWidth + 5, 1, 100, labelHeight);
+            xpos += btnWidth + 4;
+            renderModeL->setBounds(xpos, 1, 100, labelHeight);
             addAndMakeVisible(*renderModeL);
 
             codeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-            auto btnrect = juce::Rectangle<int>(marginPos, ypos - 1, btnWidth, buttonHeight);
+            xpos = 22 + margin;
+            btnrect = juce::Rectangle(xpos, ypos - 1, btnWidth, buttonHeight);
             codeS->setBounds(btnrect);
             codeS->setStorage(overlay->storage);
             codeS->setTitle("Code Selection");
@@ -3384,8 +3404,8 @@ struct WavetableScriptControlArea : public juce::Component,
             addAndMakeVisible(*codeS);
 
             renderModeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-            btnrect =
-                juce::Rectangle<int>(marginPos + btnWidth + 5, ypos - 1, btnWidth, buttonHeight);
+            xpos += btnWidth + 7;
+            btnrect = juce::Rectangle(xpos, ypos - 1, btnWidth, buttonHeight);
             renderModeS->setBounds(btnrect);
             renderModeS->setStorage(overlay->storage);
             renderModeS->setTitle("Display Mode");
@@ -3402,10 +3422,10 @@ struct WavetableScriptControlArea : public juce::Component,
             renderModeS->setAccessible(false);
             addAndMakeVisible(*renderModeS);
 
-            btnWidth = 60;
-
             applyS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-            btnrect = juce::Rectangle<int>(getWidth() / 2 - 30, ypos - 1, btnWidth, buttonHeight);
+            xpos = static_cast<int>(getWidth() / 2 - 30);
+            btnWidth = 60;
+            btnrect = juce::Rectangle(xpos, ypos - 1, btnWidth, buttonHeight);
             applyS->setBounds(btnrect);
             applyS->setStorage(overlay->storage);
             applyS->setTitle("Apply");
@@ -3421,15 +3441,16 @@ struct WavetableScriptControlArea : public juce::Component,
             applyS->setEnabled(false);
             addAndMakeVisible(*applyS);
 
-            int bpos = getWidth() - marginPos - numfieldWidth * 3 - btnWidth - 10;
             auto images = skin->standardHoverAndHoverOnForIDB(IDB_MSEG_SNAPVALUE_NUMFIELD,
                                                               associatedBitmapStore);
-
             currentFrameL = newL("View");
-            currentFrameL->setBounds(bpos - 3, 1, 100, labelHeight);
+            xpos = static_cast<int>(getWidth() - (numfieldWidth * 3) - btnWidth - 26);
+            currentFrameL->setBounds(xpos - 2, 1, 100, labelHeight);
             addAndMakeVisible(*currentFrameL);
 
             currentFrameN = std::make_unique<Surge::Widgets::NumberField>();
+            xpos += 2;
+            btnrect = juce::Rectangle(xpos, ypos, numfieldWidth, numfieldHeight);
             currentFrameN->setControlMode(Surge::Skin::Parameters::WTSE_FRAMES);
             currentFrameN->setIntValue(1);
             currentFrameN->addListener(this);
@@ -3438,7 +3459,6 @@ struct WavetableScriptControlArea : public juce::Component,
             currentFrameN->setTitle("Current Frame");
             currentFrameN->setDescription("Current Frame");
             currentFrameN->setSkin(skin, associatedBitmapStore);
-            btnrect = juce::Rectangle<int>(bpos, ypos, numfieldWidth, numfieldHeight);
             currentFrameN->setBounds(btnrect);
             currentFrameN->setBackgroundDrawable(images[0]);
             currentFrameN->setHoverBackgroundDrawable(images[1]);
@@ -3447,13 +3467,20 @@ struct WavetableScriptControlArea : public juce::Component,
                 skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
             addAndMakeVisible(*currentFrameN);
 
-            bpos += numfieldWidth + 5;
+            if (overlay->rendererComponent->mode == 1)
+            {
+                currentFrameL->setVisible(false);
+                currentFrameN->setVisible(false);
+            }
 
             framesL = newL("Frames");
-            framesL->setBounds(bpos - 3, 1, 100, labelHeight);
+            xpos += numfieldWidth + margin * 3;
+            framesL->setBounds(xpos - 4, 1, 100, labelHeight);
             addAndMakeVisible(*framesL);
 
             framesN = std::make_unique<Surge::Widgets::NumberField>();
+            btnrect = juce::Rectangle(xpos, ypos, numfieldWidth, numfieldHeight);
+            framesN->setBounds(btnrect);
             framesN->setControlMode(Surge::Skin::Parameters::WTSE_FRAMES);
             framesN->setIntValue(overlay->osc->wavetable_formula_nframes);
             framesN->addListener(this);
@@ -3462,8 +3489,6 @@ struct WavetableScriptControlArea : public juce::Component,
             framesN->setTitle("Max Frame");
             framesN->setDescription("Max Frame");
             framesN->setSkin(skin, associatedBitmapStore);
-            btnrect = juce::Rectangle<int>(bpos, ypos, numfieldWidth, numfieldHeight);
-            framesN->setBounds(btnrect);
             framesN->setBackgroundDrawable(images[0]);
             framesN->setHoverBackgroundDrawable(images[1]);
             framesN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
@@ -3478,13 +3503,14 @@ struct WavetableScriptControlArea : public juce::Component,
             };
             addAndMakeVisible(*framesN);
 
-            bpos += numfieldWidth + 5;
-
             resolutionL = newL("Samples");
-            resolutionL->setBounds(bpos - 3, 1, 100, labelHeight);
+            xpos += numfieldWidth + margin * 3;
+            resolutionL->setBounds(xpos - 4, 1, 100, labelHeight);
             addAndMakeVisible(*resolutionL);
 
             resolutionN = std::make_unique<Surge::Widgets::NumberField>();
+            btnrect = juce::Rectangle(xpos, ypos, numfieldWidth, numfieldHeight);
+            resolutionN->setBounds(btnrect);
             resolutionN->setControlMode(Surge::Skin::Parameters::WTSE_RESOLUTION);
             resolutionN->setIntValue(overlay->osc->wavetable_formula_res_base);
             resolutionN->addListener(this);
@@ -3493,8 +3519,6 @@ struct WavetableScriptControlArea : public juce::Component,
             resolutionN->setTitle("Samples");
             resolutionN->setDescription("Samples");
             resolutionN->setSkin(skin, associatedBitmapStore);
-            btnrect = juce::Rectangle<int>(bpos, ypos, numfieldWidth, numfieldHeight);
-            resolutionN->setBounds(btnrect);
             resolutionN->setBackgroundDrawable(images[0]);
             resolutionN->setHoverBackgroundDrawable(images[1]);
             resolutionN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
@@ -3502,10 +3526,9 @@ struct WavetableScriptControlArea : public juce::Component,
                 skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
             addAndMakeVisible(*resolutionN);
 
-            bpos += numfieldWidth + 5;
-
             generateS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
-            btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
+            xpos += numfieldWidth + margin * 3;
+            btnrect = juce::Rectangle(xpos, ypos - 1, btnWidth, buttonHeight);
             generateS->setBounds(btnrect);
             generateS->setStorage(overlay->storage);
             generateS->setTitle("Generate");
@@ -3520,12 +3543,6 @@ struct WavetableScriptControlArea : public juce::Component,
             generateS->setSkin(skin, associatedBitmapStore);
             generateS->setEnabled(true);
             addAndMakeVisible(*generateS);
-
-            if (overlay->rendererComponent->mode == 1)
-            {
-                currentFrameL->setVisible(false);
-                currentFrameN->setVisible(false);
-            }
         }
     }
 
@@ -3799,6 +3816,7 @@ struct WavetableScriptControlArea : public juce::Component,
     }
 
     std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
+    std::unique_ptr<Surge::Widgets::MenuButtonFromIcon> menuB;
     std::unique_ptr<juce::Label> codeL, renderModeL, currentFrameL, framesL, resolutionL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> codeS, renderModeS, applyS, generateS;
     std::unique_ptr<Surge::Widgets::NumberField> currentFrameN, framesN, resolutionN;
@@ -4065,10 +4083,277 @@ void WavetableScriptEditor::setupEvaluator()
 void WavetableScriptEditor::generateWavetable()
 {
     setupEvaluator();
-    evaluator->generateWavetable(storage, osc);
+    evaluator->generateWavetable(storage, osc, &osc->wt);
 
     editor->oscWaveform->repaintForceForWT();
     editor->repaintFrame();
+}
+
+void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
+{
+    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FUNCTIONS");
+
+    menu.addItem(Surge::GUI::toOSCase("Load .wtscript..."), [this]() { loadWavetableScript(); });
+
+    if (!osc->wavetable_formula.empty())
+    {
+        menu.addItem(Surge::GUI::toOSCase("Save as .wtscript..."),
+                     [this]() { saveWavetableScript(); });
+        menu.addSeparator();
+
+        menu.addItem(Surge::GUI::toOSCase("Export as .wav..."),
+                     [this]() { exportWavetableAs(ExportFormat::WAV); });
+        menu.addItem(Surge::GUI::toOSCase("Export as .wt..."),
+                     [this]() { exportWavetableAs(ExportFormat::WT); });
+        menu.addSeparator();
+
+        menu.addItem("Export for Serum...", [this]() { exportWavetableAs(ExportFormat::SERUM); });
+        menu.addItem("Export for VCV Rack...",
+                     [this]() { exportWavetableAs(ExportFormat::VCVRACK); });
+    }
+    menu.addSeparator();
+
+    auto msurl = editor->helpURLForSpecial("wtse-editor");
+    auto hurl = editor->fullyResolvedHelpURL(msurl);
+
+    editor->addHelpHeaderTo("Wavetable Script Editor", hurl, menu);
+}
+
+void WavetableScriptEditor::loadWavetableScript()
+{
+    auto wtPath = storage->userWavetablesPath / "Scripted";
+    wtPath = Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastWavetablePath, wtPath);
+
+    juce::String fileTypes = "*.wtscript";
+
+    editor->fileChooser = std::make_unique<juce::FileChooser>(
+        "Select Wavetable script", juce::File(path_to_string(wtPath)), fileTypes);
+    editor->fileChooser->launchAsync(
+        juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        [this, wtPath](const juce::FileChooser &c) {
+            auto ress = c.getResults();
+
+            if (ress.size() != 1)
+            {
+                return;
+            }
+
+            auto res = c.getResult();
+            auto rString = res.getFullPathName().toStdString();
+
+            if (res.hasFileExtension(".wtscript"))
+            {
+                loadWavetableScript(-1, fs::path(rString), storage, osc, evaluator.get());
+            }
+
+            auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+
+            if (dir != wtPath)
+            {
+                Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastWavetablePath,
+                                                      dir);
+            }
+        });
+}
+
+void WavetableScriptEditor::loadWavetableScript(int id, const fs::path &location,
+                                                SurgeStorage *storage, OscillatorStorage *oscdata,
+                                                Surge::WavetableScript::LuaWTEvaluator *evaluator)
+{
+    evaluator->loadWtscript(location, storage, oscdata);
+
+    oscdata->wt.current_id = id;
+    oscdata->wt.refresh_display = true;
+    oscdata->wt.force_refresh_display = true;
+    oscdata->wt.refresh_script_editor = true;
+}
+
+void WavetableScriptEditor::saveWavetableScript()
+{
+    std::string defaultFilename = osc->wavetable_display_name;
+    if (defaultFilename.empty())
+        defaultFilename = "Untitled";
+    editor->promptForMiniEdit(
+        defaultFilename, "Enter the file name:", "Wavetable Script File Name", juce::Point<int>{},
+        [this](const std::string &s) {
+            this->saveWavetableScript(string_to_path(s), this->storage, this->osc);
+        },
+        this);
+}
+
+void WavetableScriptEditor::saveWavetableScript(const fs::path &location, SurgeStorage *storage,
+                                                OscillatorStorage *oscdata)
+{
+    try
+    {
+        auto containingPath = storage->userWavetablesPath / "Scripted";
+
+        // validate location before using
+        if (!location.is_relative())
+        {
+            storage->reportError(
+                "Please use relative paths when saving scripts. Referring to drive names directly "
+                "and using absolute paths is not allowed!",
+                "Relative Path Required");
+            return;
+        }
+
+        auto comppath = containingPath;
+        auto fullLocation =
+            (containingPath / location).lexically_normal().replace_extension(".wtscript");
+
+        // make sure your category isnt "../../../etc/config"
+        auto [_, compIt] = std::mismatch(fullLocation.begin(), fullLocation.end(), comppath.begin(),
+                                         comppath.end());
+        if (compIt != comppath.end())
+        {
+            storage->reportError(
+                "Your save path is not a directory inside the user scripts directory. "
+                "This usually means you are trying to use ../ in your script name.",
+                "Invalid Save Path");
+            return;
+        }
+
+        fs::create_directories(fullLocation.parent_path());
+
+        auto doSave = [fullLocation, storage, oscdata]() {
+            TiXmlDeclaration decl("1.0", "UTF-8", "yes");
+            TiXmlDocument doc;
+            doc.InsertEndChild(decl);
+            TiXmlElement wtscript("wtscript");
+            TiXmlElement script("script");
+
+            if (!oscdata->wavetable_formula.empty())
+            {
+                auto wtfo = oscdata->wavetable_formula;
+                auto wtfol = wtfo.length();
+
+                script.SetAttribute("lua", Surge::Storage::base64_encode(
+                                               (unsigned const char *)wtfo.c_str(), wtfol));
+
+                script.SetAttribute("frames", oscdata->wavetable_formula_nframes);
+                script.SetAttribute("samples", oscdata->wavetable_formula_res_base);
+            }
+
+            wtscript.InsertEndChild(script);
+            doc.InsertEndChild(wtscript);
+            if (!doc.SaveFile(fullLocation))
+            {
+                storage->reportError("Failed to save XML file.", "XML Save Error");
+            }
+
+            storage->refresh_wtlist();
+        };
+
+        if (fs::exists(fullLocation))
+        {
+            storage->okCancelProvider("The wavetable script '" + location.string() +
+                                          "' already exists. "
+                                          "Are you sure you want to overwrite it?",
+                                      "Overwrite Wavetable Script", SurgeStorage::OK,
+                                      [doSave](SurgeStorage::OkCancel okc) {
+                                          if (okc == SurgeStorage::OK)
+                                          {
+                                              doSave();
+                                          }
+                                      });
+        }
+        else
+        {
+            doSave();
+        }
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        std::ostringstream oss;
+        oss << "Exception occurred while attempting to write the wavetable script! "
+               "Most likely, invalid characters or a reserved name was used to name "
+               "the script. Please try again with a different name!\n"
+            << "Details " << e.what();
+        storage->reportError(oss.str(), "Script Write Error");
+    }
+}
+
+void WavetableScriptEditor::exportWavetableAs(ExportFormat exportFormat)
+{
+    auto path = editor->synth->storage.userDataPath / "Wavetables" / "Exported";
+    try
+    {
+        fs::create_directories(path);
+    }
+    catch (const fs::filesystem_error &e)
+    {
+    }
+
+    auto defaultFilename = path / osc->wavetable_display_name;
+    if (exportFormat == WT)
+    {
+        defaultFilename = defaultFilename.replace_extension(".wt");
+    }
+    else
+    {
+        defaultFilename = defaultFilename.replace_extension(".wav");
+    }
+
+    editor->fileChooser = std::make_unique<juce::FileChooser>(
+        "Export Wavetable", juce::File(defaultFilename.u8string().c_str()));
+    editor->fileChooser->launchAsync(
+        juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
+            juce::FileBrowserComponent::warnAboutOverwriting,
+        [this, exportFormat](const juce::FileChooser &c) {
+            auto result = c.getResults();
+            if (result.isEmpty() || result.size() > 1)
+            {
+                return;
+            }
+
+            auto fsp = fs::path{result[0].getFullPathName().toStdString()};
+            if (exportFormat != WT && fsp.extension() != ".wav")
+            {
+                fsp.replace_extension(".wav");
+            }
+            else if (exportFormat == WT && fsp.extension() != ".wt")
+            {
+                fsp.replace_extension(".wt");
+            }
+
+            switch (exportFormat)
+            {
+            case WAV:
+            {
+                std::string metadata = storage->make_wt_metadata(osc);
+                evaluator->generateWavetable(storage, osc, &osc->wt);
+                storage->export_wt_wav_portable(fsp, &osc->wt, metadata);
+                break;
+            }
+            case WT:
+            {
+                std::string metadata = storage->make_wt_metadata(osc);
+                evaluator->generateWavetable(storage, osc, &osc->wt);
+                if (!storage->export_wt_wt_portable(fsp, &osc->wt, metadata))
+                {
+                    storage->reportError("Unable to save wt to " + fsp.u8string(),
+                                         "Wavetable Export");
+                }
+                break;
+            }
+            case SERUM:
+            case VCVRACK:
+            {
+                int oldres = osc->wavetable_formula_res_base;
+                osc->wavetable_formula_res_base = (exportFormat == SERUM ? 7 : 4);
+                Wavetable wt;
+                evaluator->generateWavetable(storage, osc, &wt, true);
+                osc->wavetable_formula_res_base = oldres;
+
+                std::string metadata = storage->make_wt_metadata(osc);
+                bool exportForSerum = (exportFormat == SERUM);
+                storage->export_wt_wav_portable(fsp, &wt, metadata, exportForSerum);
+                break;
+            }
+            }
+            storage->refresh_wtlist();
+        });
 }
 
 std::optional<std::pair<std::string, std::string>>

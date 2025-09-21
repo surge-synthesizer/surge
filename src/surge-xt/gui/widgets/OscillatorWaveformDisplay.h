@@ -109,11 +109,6 @@ struct OscillatorWaveformDisplay : public juce::Component,
     void loadWavetable(int id);
     void loadWavetableFromFile();
 
-    void loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
-                             OscillatorStorage *oscdata);
-    void saveWavetableScript(const fs::path &location, SurgeStorage *storage,
-                             OscillatorStorage *oscdata);
-
     void populateMenu(juce::PopupMenu &m, int selectedItem, bool singleCategory = false);
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem,
                                  bool intoTop = false);
@@ -124,6 +119,15 @@ struct OscillatorWaveformDisplay : public juce::Component,
 
     void createWTLoadMenu(juce::PopupMenu &contextMenu);
     void createWTExportMenu(juce::PopupMenu &contextMenu);
+
+    enum ExportFormat
+    {
+        WAV,
+        WT,
+        SERUM,
+        VCVRACK
+    };
+    void exportWavetableAs(ExportFormat exportFormat);
     void createWTRenameMenu(juce::PopupMenu &contextMenu);
     void createOpenScriptEditorMenu(juce::PopupMenu &contextMenu);
     void refreshWavetablesMenu(juce::PopupMenu &contextMenu);
