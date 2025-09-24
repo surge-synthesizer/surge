@@ -21,23 +21,29 @@
  */
 
 #include "LuaEditors.h"
-#include "SurgeGUIEditor.h"
-#include "RuntimeFont.h"
-#include "SkinSupport.h"
-#include "SkinColors.h"
-#include "SurgeXTBinary.h"
-#include "WavetableScriptEvaluator.h"
+
 #include "LuaSupport.h"
+#include "RuntimeFont.h"
+#include "SkinColors.h"
+#include "SkinSupport.h"
 #include "SurgeImage.h"
 #include "SurgeImageStore.h"
+#include "SurgeJUCEHelpers.h"
+#include "SurgeGUIEditor.h"
+#include "SurgeXTBinary.h"
+#include "WavetableScriptEvaluator.h"
+
+#include "overlays/TypeinParamEditor.h"
+
 #include "widgets/MenuButtonFromIcon.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/NumberField.h"
-#include "overlays/TypeinParamEditor.h"
 #include "widgets/MenuCustomComponents.h"
-#include <fmt/core.h>
 #include "widgets/OscillatorWaveformDisplay.h"
+
 #include "util/LuaTokeniserSurge.h"
+
+#include <fmt/core.h>
 
 namespace Surge
 {
@@ -71,7 +77,7 @@ void TextfieldButton::paint(juce::Graphics &g)
     Component::paint(g);
     auto bounds = getBounds();
 
-    float alpha = isMouseOver && enabled ? 0.2 : 0;
+    float alpha = isMouseOver && enabled ? 0.2f : 0.f;
 
     g.setFillType(juce::FillType(juce::Colours::white.withAlpha(alpha)));
 
@@ -118,7 +124,8 @@ void TextfieldButton::mouseUp(const juce::MouseEvent &event)
 
 void TextfieldButton::updateGraphicState()
 {
-    svgGraphics->setAlpha(enabled ? (isSelectable && selected) || (!isSelectable) ? 1 : 0.5 : 0.15);
+    svgGraphics->setAlpha(enabled ? (isSelectable && selected) || (!isSelectable) ? 1.f : 0.5f
+                                  : 0.15f);
 }
 
 void TextfieldButton::setSelectable()
@@ -211,7 +218,7 @@ void TextfieldPopup::paint(juce::Graphics &g)
     const auto bounds = getBounds();
     const auto rect = juce::Rectangle(0, 0, bounds.getWidth(), bounds.getHeight());
 
-    const auto color = currentSkin->getColor(Colors::FormulaEditor::Background).darker(1.3);
+    const auto color = currentSkin->getColor(Colors::FormulaEditor::Background).darker(1.3f);
 
     g.setFillType(juce::FillType(color));
     g.fillRect(rect);
@@ -259,14 +266,13 @@ void TextfieldPopup::createTextfield(int row)
 
     textfield[textfieldCount]->setColour(
         juce::TextEditor::backgroundColourId,
-        currentSkin->getColor(Colors::FormulaEditor::Background).darker(0.4));
+        currentSkin->getColor(Colors::FormulaEditor::Background).darker(0.4f));
 
     textfield[textfieldCount]->setColour(
         juce::TextEditor::focusedOutlineColourId,
-        currentSkin->getColor(Colors::FormulaEditor::Background).brighter(0.08));
-    textfield[textfieldCount]->setColour(
-        juce::TextEditor::outlineColourId,
-        currentSkin->getColor(Colors::FormulaEditor::Background).brighter(0));
+        currentSkin->getColor(Colors::FormulaEditor::Background).brighter(0.08f));
+    textfield[textfieldCount]->setColour(juce::TextEditor::outlineColourId,
+                                         currentSkin->getColor(Colors::FormulaEditor::Background));
 
     textfield[textfieldCount]->setHeaderColor(currentSkin->getColor(Colors::Dialog::Button::Text));
 
@@ -835,11 +841,11 @@ void CodeEditorSearch::showResult(int increment, bool moveCaret)
 
     if (resultTotal == 0)
     {
-        auto bgColor = currentSkin->getColor(Colors::FormulaEditor::Background).darker(1.3);
+        auto bgColor = currentSkin->getColor(Colors::FormulaEditor::Background).darker(1.3f);
 
         labelResult->setColour(
             juce::Label::textColourId,
-            currentSkin->getColor(Colors::FormulaEditor::Text).interpolatedWith(bgColor, 0.5));
+            currentSkin->getColor(Colors::FormulaEditor::Text).interpolatedWith(bgColor, 0.5f));
 
         removeHighlightColors();
         id = 0;
@@ -2423,11 +2429,11 @@ struct ExpandingFormulaDebugger : public juce::Component,
         searchfield->setColour(juce::TextEditor::ColourIds::textColourId,
                                skin->getColor(Colors::Dialog::Button::Text));
         searchfield->setColour(juce::TextEditor::backgroundColourId,
-                               skin->getColor(Colors::FormulaEditor::Background).darker(0.4));
+                               skin->getColor(Colors::FormulaEditor::Background).darker(0.4f));
         searchfield->setColour(juce::TextEditor::focusedOutlineColourId,
-                               skin->getColor(Colors::FormulaEditor::Background).brighter(0.08));
+                               skin->getColor(Colors::FormulaEditor::Background).brighter(0.08f));
         searchfield->setColour(juce::TextEditor::outlineColourId,
-                               skin->getColor(Colors::FormulaEditor::Background).brighter(0));
+                               skin->getColor(Colors::FormulaEditor::Background));
 
         searchfield->setText(searchfield->getText());
         searchfield->setHeaderColor(skin->getColor(Colors::Dialog::Button::Text));
@@ -2557,7 +2563,7 @@ struct FormulaControlArea : public juce::Component,
         // Debugger Controls from the left
         {
             debugL = newL("Debugger");
-            debugL->setBounds(getWidth() - 10 - 100, 1, 100, labelHeight);
+            debugL->setBounds(getWidth() - 24 - 100, 1, 100, labelHeight);
             debugL->setJustificationType(juce::Justification::centredRight);
             addAndMakeVisible(*debugL);
 
@@ -2797,7 +2803,6 @@ void FormulaModulatorEditor::applyCode()
     editor->forceLfoDisplayRepaint();
     updateDebuggerIfNeeded();
     editor->repaintFrame();
-    // juce::SystemClipboard::copyTextToClipboard(formulastorage->formulaString);
     setApplyEnabled(false);
     mainEditor->grabKeyboardFocus();
 
@@ -2958,75 +2963,59 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
     {
         auto height = getHeight();
         auto width = getWidth();
-        auto middle = height * 0.5;
+        auto middle = height * 0.5f;
 
-        juce::Rectangle<float> drawArea(axisSpaceX, 0, width - axisSpaceX, height);
-        juce::Rectangle<float> vaxisArea(0, 0, axisSpaceX, height);
-
-        auto font = skin->fontManager->getLatoAtSize(8);
-
+        juce::Rectangle<float> drawArea(0.f, 0.f, width, height);
         g.setColour(skin->getColor(Colors::MSEGEditor::Background));
         g.fillRect(drawArea);
 
-        // Vertical axis
-        if (axisSpaceX > 0)
-        {
-            std::vector<std::string> txt = {"1.0", "0.0", "-1.0"};
-            g.setFont(font);
-            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::SecondaryText));
-            g.drawText(txt[0], vaxisArea.getX() - 3, 4, vaxisArea.getWidth(), 12,
-                       juce::Justification::topRight);
-            g.drawText(txt[1], vaxisArea.getX() - 3, middle - 12, vaxisArea.getWidth(), 12,
-                       juce::Justification::bottomRight);
-            g.drawText(txt[2], vaxisArea.getX() - 3, height - 14, vaxisArea.getWidth(), 12,
-                       juce::Justification::centredRight);
-        }
+        auto font = skin->fontManager->getLatoAtSize(8);
 
         if (mode == 0)
         {
             // Grid
             g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
-
             for (float y : {0.25f, 0.75f})
                 g.drawLine(drawArea.getX() - 8, height * y, width, height * y);
 
             g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryVertical));
-
             for (float x : {0.25f, 0.5f, 0.75f})
-                g.drawLine(drawArea.getX() + drawArea.getWidth() * x, 0,
+                g.drawLine(drawArea.getX() + drawArea.getWidth() * x, 0.f,
                            drawArea.getX() + drawArea.getWidth() * x, height);
 
-            // Borders
             g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-            g.drawLine(0, 0, width, 0);
-            g.drawLine(0, height, width, height);
-            g.drawLine(axisSpaceX, 0, axisSpaceX, height);
-            g.drawLine(width, 0, width, height);
-            g.drawLine(axisSpaceX, middle, width, middle);
+            g.drawLine(0.f, middle, width, middle);
 
             // Graph
-            auto p = juce::Path();
+            auto pGradient = juce::Path();
+            auto pStroke = juce::Path();
+
             if (!points.empty())
             {
-                float dx = (width - axisSpaceX) / float(points.size() - 1);
+                float dx = width / float(points.size() - 1);
 
                 for (int i = 0; i < points.size(); ++i)
                 {
                     float xp = dx * i;
                     float yp = 0.5f * (1 - points[i]) * height;
 
-                    if (yp < 0.0f) // clamp to vertical bounds
-                        yp = 0.0f;
-                    else if (yp > height)
-                        yp = height;
+                    // Clamp to 1px within vertical bounds
+                    yp = limit_range(yp, 1.f, float(height - 1));
 
                     if (i == 0)
-                        p.startNewSubPath(xp + axisSpaceX, middle);
-
-                    p.lineTo(xp + axisSpaceX, yp);
+                    {
+                        pGradient.startNewSubPath(xp, middle);
+                        pGradient.lineTo(xp, yp);
+                        pStroke.startNewSubPath(xp, yp);
+                    }
+                    else
+                    {
+                        pGradient.lineTo(xp, yp);
+                        pStroke.lineTo(xp, yp);
+                    }
 
                     if (i == points.size() - 1)
-                        p.lineTo(xp + axisSpaceX, middle);
+                        pGradient.lineTo(xp, middle);
                 }
 
                 auto cg = juce::ColourGradient::vertical(
@@ -3035,16 +3024,16 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                 cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
 
                 g.setGradientFill(cg);
-                g.fillPath(p);
+                g.fillPath(pGradient);
 
                 g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
-                g.strokePath(p, juce::PathStrokeType(1.0));
+                g.strokePath(pStroke, juce::PathStrokeType(1.0));
             }
 
             // Text
             g.setFont(font);
             g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
-            g.drawText(std::to_string(frameNumber), axisSpaceX + 4, 4, width - 8, height - 8,
+            g.drawText(std::to_string(frameNumber), 4, 4, width - 8, height - 8,
                        juce::Justification::topRight);
         }
         else
@@ -3052,48 +3041,35 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             assert(mode == 1); // there are only two modes right now
 
             auto gs = juce::Graphics::ScopedSaveState(g);
-            g.reduceClipRegion(axisSpaceX, 0, width - axisSpaceX, height);
-            auto xpos = startX;
+            g.reduceClipRegion(0, 0, width, height);
 
-            int idx{0};
+            float frameWidth = float(width) / 6.f;
 
+            // alternate checkerboard bg
             for (int idx = 0; idx < frameCount; ++idx)
             {
-                if (xpos + height < axisSpaceX || xpos > width - axisSpaceX)
+                float xpos = idx * frameWidth - startX;
+
+                auto bg1 = skin->getColor(Colors::MSEGEditor::Background);
+                auto bg2 = skin->getColor(Colors::MSEGEditor::Background).darker(0.2f);
+                g.setColour((idx % 2 == 0) ? bg1 : bg2);
+                g.fillRect(int(xpos), 0, int(frameWidth), height);
+            }
+
+            // Graph
+            for (int idx = 0; idx < frameCount; ++idx)
+            {
+                float xpos = idx * frameWidth - startX;
+
+                if (xpos < -frameWidth || xpos >= width)
                 {
                     // We are outside the clip window. Do nothing.
-                    xpos += height + fsGap;
+                    // std::cout << "idx: " << idx << " xpos: " << xpos << std::endl;
                     continue;
                 }
 
-                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-
-                auto p = juce::Path();
+                auto pGradient = juce::Path();
                 auto pStroke = juce::Path();
-
-                // alternate checkerboard bg
-                auto bgColor = skin->getColor((Colors::MSEGEditor::Background));
-
-                constexpr double brightnessThresh = 0.1;
-                constexpr double brightnessDelta = 0.1;
-
-                if (idx % 2 == 1)
-                {
-                    if (bgColor.getBrightness() < brightnessThresh)
-                    {
-                        g.setColour(bgColor.brighter(brightnessDelta));
-                    }
-                    else
-                    {
-                        g.setColour(bgColor.darker(brightnessDelta * 2.0));
-                    }
-                }
-                else
-                {
-                    g.setColour(bgColor);
-                }
-
-                g.fillRect(xpos + axisSpaceX, 0, height, height);
 
                 auto cpointOpt = overlay->evaluator->getFrame(idx);
                 if (!cpointOpt.has_value())
@@ -3102,36 +3078,33 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                 }
 
                 const auto &cpoint = *cpointOpt;
-
                 if (!cpoint.empty())
                 {
-                    float dx = (height) / float(cpoint.size() - 1);
+                    float dx = frameWidth / float(cpoint.size() - 1);
                     float xp{0};
 
                     for (int i = 0; i < cpoint.size(); ++i)
                     {
                         xp = dx * i + xpos;
-                        float yp = 0.5f * (1 - cpoint[i]) * height;
+                        float yp = 0.5f * (1.f - cpoint[i]) * height;
 
-                        if (yp < 0.0f) // clamp to vertical bounds
-                            yp = 0.0f;
-                        else if (yp > height)
-                            yp = height;
+                        // Clamp to 1px within vertical bounds
+                        yp = limit_range(yp, 1.f, float(height - 1));
 
                         if (i == 0)
                         {
-                            p.startNewSubPath(xp + axisSpaceX, middle);
-                            p.lineTo(xp + axisSpaceX, yp);
-                            pStroke.startNewSubPath(xp + axisSpaceX, yp);
+                            pGradient.startNewSubPath(xp, middle);
+                            pGradient.lineTo(xp, yp);
+                            pStroke.startNewSubPath(xp, yp);
                         }
                         else
                         {
-                            p.lineTo(xp + axisSpaceX, yp);
-                            pStroke.lineTo(xp + axisSpaceX, yp);
+                            pGradient.lineTo(xp, yp);
+                            pStroke.lineTo(xp, yp);
                         }
 
                         if (i == cpoint.size() - 1)
-                            p.lineTo(xp + axisSpaceX, middle);
+                            pGradient.lineTo(xp, middle);
                     }
 
                     auto cg = juce::ColourGradient::vertical(
@@ -3140,36 +3113,82 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                     cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
 
                     g.setGradientFill(cg);
-                    g.fillPath(p);
+                    g.fillPath(pGradient);
 
                     g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
                     g.strokePath(pStroke, juce::PathStrokeType(1.0));
                 }
 
+                // Text
                 g.setFont(font);
                 g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
-                g.drawText(std::to_string(idx + 1), xpos + axisSpaceX + 4, 4, height - 8,
-                           height - 8, juce::Justification::topRight);
-                g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-                g.drawVerticalLine(xpos + height + axisSpaceX, 0, height);
-
-                xpos += height + fsGap;
+                g.drawText(std::to_string(idx + 1), xpos + 4, 4, height - 8, height - 8,
+                           juce::Justification::topRight);
             }
-
-            // Borders
-            g.setColour(skin->getColor(Colors::MSEGEditor::Grid::Primary));
-            g.drawLine(0, 0, width, 0);
-            g.drawLine(0, height, width, height);
-            g.drawLine(axisSpaceX, 0, axisSpaceX, height);
-            g.drawLine(width, 0, width, height);
         }
     }
 
-    void resized() override {}
-    bool isHandMove{false};
+    void adjustStartX(int value)
+    {
+        float frameWidth = getWidth() / 6.f;
+        float paintWidth = frameCount * frameWidth - getWidth();
+        int scale = std::max(1, frameCount * 12 / 256);
+
+        if (paintWidth > 0)
+        {
+            startX += value * 31.125f * scale;
+            startX = limit_range(startX, 0.f, paintWidth);
+        }
+        else
+        {
+            startX = 0.f;
+        }
+    }
+
+    void mouseDrag(const juce::MouseEvent &event) override
+    {
+        int currentDrag = event.getPosition().x + -event.getPosition().y;
+        int delta = currentDrag - lastDrag;
+        lastDrag = currentDrag;
+
+        int value = (delta < 0) ? 1 : (delta > 0 ? -1 : 0);
+
+        if (value != 0)
+        {
+            if (mode == 0)
+            {
+                overlay->setCurrentFrame(value);
+            }
+            else
+            {
+                adjustStartX(value);
+                repaint();
+            }
+        }
+    }
+
+    void mouseWheelMove(const juce::MouseEvent &event,
+                        const juce::MouseWheelDetails &wheel) override
+    {
+        int dir = wheelAccumulationHelper.accumulate(wheel, false, true);
+
+        if (dir != 0)
+        {
+            if (mode == 0)
+            {
+                overlay->setCurrentFrame(-dir);
+            }
+            else
+            {
+                adjustStartX(-dir);
+                repaint();
+            }
+        }
+    }
+
     void mouseEnter(const juce::MouseEvent &event) override
     {
-        if (event.x > axisSpaceX)
+        if (event.x > 0)
         {
             setMouseCursor(juce::MouseCursor::DraggingHandCursor);
             isHandMove = true;
@@ -3179,9 +3198,10 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             isHandMove = false;
         }
     }
+
     void mouseMove(const juce::MouseEvent &event) override
     {
-        if (event.x > axisSpaceX)
+        if (event.x > 0)
         {
             if (!isHandMove)
                 setMouseCursor(juce::MouseCursor::DraggingHandCursor);
@@ -3194,84 +3214,22 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             isHandMove = false;
         }
     }
+
     void mouseExit(const juce::MouseEvent &event) override
     {
         setMouseCursor(juce::MouseCursor::NormalCursor);
         isHandMove = false;
     }
+
     void mouseDown(const juce::MouseEvent &event) override
     {
-        lastDrag = event.getPosition().x + -event.getPosition().y;
+        lastDrag = event.getPosition().x + event.getPosition().y;
         setMouseCursor(juce::MouseCursor::DraggingHandCursor);
     }
 
-    void mouseDrag(const juce::MouseEvent &event) override
-    {
-        if (mode == 0)
-        {
-            int currentDrag = event.getPosition().x + -event.getPosition().y;
-            int delta = (currentDrag - lastDrag) * 2;
-            lastDrag = currentDrag;
-
-            int value = 0;
-            if (delta > 0)
-                value = 1;
-            else if (delta < 0)
-                value = -1;
-
-            overlay->setCurrentFrame(value);
-            repaint();
-        }
-        else
-        {
-            int currentDrag = event.getPosition().x + -event.getPosition().y;
-            int delta = (currentDrag - lastDrag) * 2;
-            lastDrag = currentDrag;
-
-            if (delta != 0)
-            {
-                adjustStartX(delta);
-                repaint();
-            }
-        }
-    }
-
-    void adjustStartX(int delta)
-    {
-        auto paintWidth = frameCount * (getHeight() + fsGap) - fsGap + 2 + axisSpaceX - getWidth();
-        if (paintWidth > 0)
-        {
-            startX += delta;
-            startX = std::min(0, startX);
-            startX = std::max(-paintWidth, startX);
-        }
-        else
-        {
-            startX = 0;
-        }
-    }
-
-    float accum{0.f};
-    void mouseWheelMove(const juce::MouseEvent &event,
-                        const juce::MouseWheelDetails &wheel) override
-    {
-        accum += wheel.deltaX * 400;
-        while (accum > 1)
-        {
-            accum -= 1;
-            adjustStartX(1);
-            repaint();
-        }
-        while (accum < -1)
-        {
-            accum += 1;
-            adjustStartX(-1);
-            repaint();
-        }
-    }
     void mouseUp(const juce::MouseEvent &event) override
     {
-        if (event.x < axisSpaceX)
+        if (event.x < 0)
         {
             isHandMove = false;
             setMouseCursor(juce::MouseCursor::NormalCursor);
@@ -3284,26 +3242,30 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
-        if (mode == 1)
+        if (mode == 0)
         {
-            startX = 0;
+            overlay->setCurrentFrame(-256);
+        }
+        else
+        {
+            startX = 0.f;
             repaint();
         }
     }
 
+    void resized() override {}
     void onSkinChanged() override { repaint(); }
 
     int frameNumber{1};
     std::vector<float> points;
     int frameCount{1};
-
     int mode{1};
 
   private:
+    Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
+    float startX{0.f};
     int lastDrag;
-    int startX{0};
-    static constexpr int fsGap{0};
-    static constexpr int axisSpaceX{0};
+    bool isHandMove{false};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WavetablePreviewComponent);
 };
@@ -3377,12 +3339,12 @@ struct WavetableScriptControlArea : public juce::Component,
 
             codeL = newL("Code");
             xpos += 12 + margin;
-            codeL->setBounds(xpos, 1, 100, labelHeight);
+            codeL->setBounds(xpos + 4, 1, 100, labelHeight);
             addAndMakeVisible(*codeL);
 
             renderModeL = newL("Display Mode");
             xpos += btnWidth + 4;
-            renderModeL->setBounds(xpos, 1, 100, labelHeight);
+            renderModeL->setBounds(xpos + 6, 1, 100, labelHeight);
             addAndMakeVisible(*renderModeL);
 
             codeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -3475,7 +3437,7 @@ struct WavetableScriptControlArea : public juce::Component,
 
             framesL = newL("Frames");
             xpos += numfieldWidth + margin * 3;
-            framesL->setBounds(xpos - 4, 1, 100, labelHeight);
+            framesL->setBounds(xpos - 2, 1, 100, labelHeight);
             addAndMakeVisible(*framesL);
 
             framesN = std::make_unique<Surge::Widgets::NumberField>();
@@ -3505,7 +3467,7 @@ struct WavetableScriptControlArea : public juce::Component,
 
             resolutionL = newL("Samples");
             xpos += numfieldWidth + margin * 3;
-            resolutionL->setBounds(xpos - 4, 1, 100, labelHeight);
+            resolutionL->setBounds(xpos - 2, 1, 100, labelHeight);
             addAndMakeVisible(*resolutionL);
 
             resolutionN = std::make_unique<Surge::Widgets::NumberField>();
@@ -3619,6 +3581,7 @@ struct WavetableScriptControlArea : public juce::Component,
                     std::to_string(v), Parameter::intScaledToFloat(v, maxValue, minValue)));
             };
 
+            addStop(1);
             addStop(2);
             addStop(4);
             addStop(5);
@@ -3921,6 +3884,14 @@ void WavetableScriptEditor::applyCode()
     osc->wavetable_formula_res_base = controlArea->resolutionN->getIntValue();
     osc->wavetable_formula_nframes = controlArea->framesN->getIntValue();
 
+    int currentFrame = rendererComponent->frameNumber;
+    int maxFrames = controlArea->framesN->getIntValue();
+    if (currentFrame > maxFrames)
+    {
+        rendererComponent->frameNumber = maxFrames;
+        controlArea->currentFrameN->setIntValue(maxFrames);
+    }
+
     lastFrames = -1;
     setupEvaluator();
     rerenderFromUIState();
@@ -3969,8 +3940,6 @@ void WavetableScriptEditor::resized()
     auto height = getHeight();
     t.transformPoint(width, height);
 
-    int itemWidth = 100;
-    int topHeight = 20;
     int controlHeight = 35;
     int rendererHeight = 125;
 
@@ -3978,8 +3947,9 @@ void WavetableScriptEditor::resized()
         juce::Rectangle<int>(2, 2, width - 4, height - controlHeight - rendererHeight - 6);
     mainEditor->setBounds(edRect);
     preludeDisplay->setBounds(edRect);
-    controlArea->setBounds(0, height - controlHeight, width, controlHeight + rendererHeight);
-    rendererComponent->setBounds(2, height - rendererHeight - controlHeight - 2, width - 2,
+
+    controlArea->setBounds(2, height - controlHeight, width - 4, controlHeight + rendererHeight);
+    rendererComponent->setBounds(2, height - rendererHeight - controlHeight - 2, width - 4,
                                  rendererHeight);
 
     search->resize();
@@ -4057,11 +4027,7 @@ void WavetableScriptEditor::setCurrentFrame(int value)
     int frameNumber = rendererComponent->frameNumber;
     int maxFrames = controlArea->framesN->getIntValue();
     frameNumber += value;
-
-    if (frameNumber < 1)
-        frameNumber = 1;
-    else if (frameNumber > maxFrames)
-        frameNumber = maxFrames;
+    frameNumber = limit_range(frameNumber, 1, maxFrames);
 
     rendererComponent->frameNumber = frameNumber;
     controlArea->currentFrameN->setIntValue(frameNumber);

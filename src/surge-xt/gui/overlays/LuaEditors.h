@@ -29,13 +29,12 @@
 
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#include "WavetableScriptEvaluator.h"
-
-#include "SurgeStorage.h"
-#include "SkinSupport.h"
-
 #include "OverlayComponent.h"
 #include "RefreshableOverlay.h"
+#include "SkinSupport.h"
+#include "SurgeStorage.h"
+#include "WavetableScriptEvaluator.h"
+
 #include "util/LuaTokeniserSurge.h"
 
 class SurgeGUIEditor;
@@ -359,14 +358,6 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 
 struct WavetablePreviewComponent;
 struct WavetableScriptControlArea;
-
-enum ExportFormat
-{
-    WAV,
-    WT,
-    SERUM,
-    VCVRACK
-};
 
 struct WavetableScriptEditor : public CodeEditorContainerWithApply, public RefreshableOverlay
 {

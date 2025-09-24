@@ -23,10 +23,10 @@
 #ifndef SURGE_SRC_COMMON_DSP_WAVETABLESCRIPTEVALUATOR_H
 #define SURGE_SRC_COMMON_DSP_WAVETABLESCRIPTEVALUATOR_H
 
-#include "SurgeStorage.h"
-#include "StringOps.h"
-#include "Wavetable.h"
 #include "LuaSupport.h"
+#include "StringOps.h"
+#include "SurgeStorage.h"
+#include "Wavetable.h"
 
 namespace Surge
 {

@@ -21,9 +21,12 @@
  */
 
 #include "WavetableScriptEvaluator.h"
+
 #include "LuaSupport.h"
+
 #include "lua/LuaSources.h"
-#include "tinyxml/tinyxml.h"
+
+#include <tinyxml/tinyxml.h>
 
 // #define LOG(...) std::cout << __FILE__ << ":" << __LINE__ << " " << __VA_ARGS__ << std::endl;
 #define LOG(...)
@@ -55,6 +58,7 @@ struct LuaWTEvaluator::Details
         isValid = false;
         frameCache.clear();
     }
+
     void makeEmptyState(bool pushToGlobal)
     {
         lua_createtable(L, 0, 10);
@@ -162,6 +166,7 @@ struct LuaWTEvaluator::Details
 
         return res;
     }
+
     void callInitFn()
     {
         LOG("callInitFn");
@@ -307,6 +312,7 @@ void LuaWTEvaluator::setStorage(SurgeStorage *s)
     details->storage = s;
 #endif
 }
+
 void LuaWTEvaluator::setScript(const std::string &e)
 {
 #if HAS_LUA
@@ -317,6 +323,7 @@ void LuaWTEvaluator::setScript(const std::string &e)
     }
 #endif
 }
+
 void LuaWTEvaluator::setResolution(size_t r)
 {
 #if HAS_LUA
@@ -327,6 +334,7 @@ void LuaWTEvaluator::setResolution(size_t r)
     }
 #endif
 }
+
 void LuaWTEvaluator::setFrameCount(size_t n)
 {
 #if HAS_LUA
@@ -534,7 +542,7 @@ function generate(wt)
         for q = 1,(wt.frame) do
             lv = lv + 2 * sin(2 * pi * q * x) / (pi * q)
         end
-        res[i] = lv
+        res[i] = lv * 0.8
     end
     return res
 end

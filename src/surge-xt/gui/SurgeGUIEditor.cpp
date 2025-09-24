@@ -2363,7 +2363,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
     // Like above for the wavetable script editor
     auto &oscdata = synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
 
-    if (oscdata.type.val.i != ot_wavetable)
+    if (!uses_wavetabledata(oscdata.type.val.i))
     {
         auto olc = getOverlayWrapperIfOpen(WT_EDITOR);
 
@@ -5812,7 +5812,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             {
                 auto &oscdata =
                     synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
-                if (oscdata.type.val.i == ot_wavetable)
+                if (uses_wavetabledata(oscdata.type.val.i))
                 {
                     toggleOverlay(SurgeGUIEditor::WT_EDITOR);
                     frame->repaint();
