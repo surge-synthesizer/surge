@@ -487,7 +487,7 @@ void SurgeGUIEditor::closeOrRefreshWTSEditor()
         auto &oscdata =
             synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
 
-        if (oscdata.type.val.i == ot_wavetable)
+        if (uses_wavetabledata(oscdata.type.val.i))
         {
             if (wasTornOut)
             {

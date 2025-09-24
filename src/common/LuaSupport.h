@@ -29,24 +29,24 @@
 #ifndef SURGE_SRC_COMMON_LUASUPPORT_H
 #define SURGE_SRC_COMMON_LUASUPPORT_H
 
-#include <cstdint>
-#include <string>
-#include <vector>
-
 #if HAS_LUA
 extern "C"
 {
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-#include "luajit.h"
-#include "lj_arch.h"
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+#include <luajit.h>
+#include <lj_arch.h>
 
-#include "pffft.h"
+#include <pffft.h>
 }
 #else
 typedef int lua_State;
 #endif
+
+#include <cstdint>
+#include <string>
+#include <vector>
 
 namespace Surge
 {

@@ -695,7 +695,5 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
         }
     }
 
-    refresh_wtlist();
-
     return path_to_string(fname);
 }
