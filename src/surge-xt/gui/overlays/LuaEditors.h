@@ -380,22 +380,6 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void setCurrentFrame(int value);
 
     void createMenu(juce::PopupMenu &menu);
-    void loadWavetableScript();
-    static void loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
-                                    OscillatorStorage *oscdata,
-                                    Surge::WavetableScript::LuaWTEvaluator *evaluator);
-    void saveWavetableScript();
-    static void saveWavetableScript(const fs::path &location, SurgeStorage *storage,
-                                    OscillatorStorage *oscdata);
-
-    enum ExportFormat
-    {
-        WAV,
-        WT,
-        SERUM,
-        VCVRACK
-    };
-    void exportWavetableAs(ExportFormat exportFormat);
 
     int lastRes{-1}, lastFrames{-1}, lastFrame{-1}, lastRm{-1};
 

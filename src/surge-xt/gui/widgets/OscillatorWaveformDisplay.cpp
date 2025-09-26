@@ -36,8 +36,6 @@
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
 #include "UserDefaults.h"
-#include "WavetableScriptEvaluator.h"
-#include "overlays/LuaEditors.h"
 #include "fmt/core.h"
 
 namespace Surge
@@ -620,24 +618,10 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     createWTExportMenu(contextMenu);
 
 #if INCLUDE_WT_SCRIPTING_EDITOR
-    if (!oscdata->wavetable_formula.empty())
+    if (!oscdata->wavetable_script.empty())
     {
-        auto swp = [this]() {
-            if (!sge)
-                return;
-            std::string defaultFilename = oscdata->wavetable_display_name;
-            if (defaultFilename.empty())
-                defaultFilename = "Untitled";
-            sge->promptForMiniEdit(
-                defaultFilename, "Enter the file name:", "Wavetable Script File Name",
-                juce::Point<int>{},
-                [this](const std::string &s) {
-                    Surge::Overlays::WavetableScriptEditor::saveWavetableScript(
-                        string_to_path(s), this->storage, this->oscdata);
-                },
-                this);
-        };
-        contextMenu.addItem(Surge::GUI::toOSCase("Save Wavetable Script As..."), swp);
+        contextMenu.addItem(Surge::GUI::toOSCase("Save as .wtscript..."),
+                            [this]() { this->sge->saveWavetableScript(); });
         contextMenu.addSeparator();
     }
 #endif
@@ -740,111 +724,26 @@ void OscillatorWaveformDisplay::createWTExportMenu(juce::PopupMenu &contextMenu)
 {
     juce::PopupMenu exportMenu;
 
-    exportMenu.addItem(Surge::GUI::toOSCase("Export as .wav..."),
-                       [this]() { exportWavetableAs(ExportFormat::WAV); });
-    exportMenu.addItem(Surge::GUI::toOSCase("Export as .wt..."),
-                       [this]() { exportWavetableAs(ExportFormat::WT); });
+    exportMenu.addItem(Surge::GUI::toOSCase("Export as .wav..."), [this]() {
+        this->sge->exportWavetableAs(SurgeGUIEditor::WTExportFormat::WAV);
+    });
+    exportMenu.addItem(Surge::GUI::toOSCase("Export as .wt..."), [this]() {
+        this->sge->exportWavetableAs(SurgeGUIEditor::WTExportFormat::WT);
+    });
 
-    if (!oscdata->wavetable_formula.empty())
+    if (!oscdata->wavetable_script.empty())
     {
         exportMenu.addSeparator();
 
-        exportMenu.addItem("Export for Serum...",
-                           [this]() { exportWavetableAs(ExportFormat::SERUM); });
-        exportMenu.addItem("Export for VCV Rack...",
-                           [this]() { exportWavetableAs(ExportFormat::VCVRACK); });
+        exportMenu.addItem("Export for Serum...", [this]() {
+            this->sge->exportWavetableAs(SurgeGUIEditor::WTExportFormat::SERUM);
+        });
+        exportMenu.addItem("Export for VCV Rack...", [this]() {
+            this->sge->exportWavetableAs(SurgeGUIEditor::WTExportFormat::VCVRACK);
+        });
     }
 
     contextMenu.addSubMenu(Surge::GUI::toOSCase("Export Wavetable"), exportMenu);
-}
-
-void OscillatorWaveformDisplay::exportWavetableAs(ExportFormat exportFormat)
-{
-    if (!sge)
-    {
-        return;
-    }
-
-    auto path = storage->userWavetablesPath / "Exported";
-    try
-    {
-        fs::create_directories(path);
-    }
-    catch (const fs::filesystem_error &e)
-    {
-    }
-
-    auto defaultFilename = path / oscdata->wavetable_display_name;
-    if (exportFormat == WT)
-    {
-        defaultFilename = defaultFilename.replace_extension(".wt");
-    }
-    else
-    {
-        defaultFilename = defaultFilename.replace_extension(".wav");
-    }
-
-    sge->fileChooser = std::make_unique<juce::FileChooser>(
-        "Export Wavetable", juce::File(defaultFilename.u8string().c_str()));
-    sge->fileChooser->launchAsync(
-        juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
-            juce::FileBrowserComponent::warnAboutOverwriting,
-        [this, exportFormat](const juce::FileChooser &c) {
-            auto result = c.getResults();
-            if (result.isEmpty() || result.size() > 1)
-            {
-                return;
-            }
-
-            auto fsp = fs::path{result[0].getFullPathName().toStdString()};
-            if (exportFormat != WT && fsp.extension() != ".wav")
-            {
-                fsp.replace_extension(".wav");
-            }
-            else if (exportFormat == WT && fsp.extension() != ".wt")
-            {
-                fsp.replace_extension(".wt");
-            }
-
-            switch (exportFormat)
-            {
-            case WAV:
-            {
-                std::string metadata = storage->make_wt_metadata(oscdata);
-                auto fn = storage->export_wt_wav_portable(fsp, &oscdata->wt, metadata);
-                break;
-            }
-            case WT:
-            {
-                std::string metadata = storage->make_wt_metadata(oscdata);
-                if (!storage->export_wt_wt_portable(fsp, &oscdata->wt, metadata))
-                {
-                    storage->reportError("Unable to save wt to " + fsp.u8string(), "WT Export");
-                }
-                break;
-            }
-            case SERUM:
-            case VCVRACK:
-            {
-                int oldres = oscdata->wavetable_formula_res_base;
-                oscdata->wavetable_formula_res_base = (exportFormat == SERUM ? 7 : 4);
-
-                if (!evaluator)
-                {
-                    evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-                }
-                Wavetable wt;
-                evaluator->generateWavetable(storage, oscdata, &wt, true);
-                oscdata->wavetable_formula_res_base = oldres;
-
-                std::string metadata = storage->make_wt_metadata(oscdata);
-                bool exportForSerum = (exportFormat == SERUM);
-                storage->export_wt_wav_portable(fsp, &wt, metadata, exportForSerum);
-                break;
-            }
-            }
-            storage->refresh_wtlist();
-        });
 }
 
 void OscillatorWaveformDisplay::createWTRenameMenu(juce::PopupMenu &contextMenu)
@@ -870,12 +769,12 @@ void OscillatorWaveformDisplay::createOpenScriptEditorMenu(juce::PopupMenu &cont
 {
     auto owts = [this]() {
         if (sge)
-            sge->showOverlay(SurgeGUIEditor::WT_EDITOR);
+            sge->showOverlay(SurgeGUIEditor::WTS_EDITOR);
     };
 
     Surge::GUI::addMenuItemWithShortcut(
         contextMenu, Surge::GUI::toOSCase("Wavetable Script Editor..."),
-        sge->getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_WT_EDITOR), owts);
+        sge->getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_WTS_EDITOR), owts);
 
     contextMenu.addSeparator();
 }
@@ -1325,8 +1224,8 @@ void OscillatorWaveformDisplay::handleWavetableLoad(int id)
         {
             evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
         }
-        Surge::Overlays::WavetableScriptEditor::loadWavetableScript(
-            id, storage->wt_list[id].path, storage, oscdata, evaluator.get());
+        this->sge->loadWavetableScript(id, storage->wt_list[id].path, storage, oscdata,
+                                       evaluator.get());
     }
     else
     {
@@ -1392,8 +1291,8 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
                 {
                     evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
                 }
-                Surge::Overlays::WavetableScriptEditor::loadWavetableScript(
-                    -1, fs::path(rString), storage, oscdata, evaluator.get());
+                this->sge->loadWavetableScript(-1, fs::path(rString), storage, oscdata,
+                                               evaluator.get());
             }
             else
             {

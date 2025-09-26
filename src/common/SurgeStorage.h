@@ -654,9 +654,9 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     Wavetable wt;
 
     std::string wavetable_display_name;
-    std::string wavetable_formula = "";
-    int wavetable_formula_res_base = 5, // 32 * 2^this
-        wavetable_formula_nframes = 10;
+    std::string wavetable_script = "";
+    int wavetable_script_res_base = 5, // 32 * 2^this
+        wavetable_script_nframes = 10;
 
     void *queue_xmldata;
     int queue_type;
@@ -1841,9 +1841,9 @@ class alignas(16) SurgeStorage
         clipboard_modulation_global;
     Wavetable clipboard_wt[n_oscs];
     std::array<std::string, n_oscs> clipboard_wt_names;
-    std::array<std::string, n_oscs> clipboard_wavetable_formula;
-    std::array<int, n_oscs> clipboard_wavetable_formula_res_base;
-    std::array<int, n_oscs> clipboard_wavetable_formula_nframes;
+    std::array<std::string, n_oscs> clipboard_wavetable_script;
+    std::array<int, n_oscs> clipboard_wavetable_script_res_base;
+    std::array<int, n_oscs> clipboard_wavetable_script_nframes;
 
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;

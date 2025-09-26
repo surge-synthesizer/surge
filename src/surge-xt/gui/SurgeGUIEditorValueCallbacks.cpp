@@ -465,7 +465,7 @@ void SurgeGUIEditor::closeOrRefreshWTSEditor()
     bool hadExtendedOverlay = false;
     bool wasTornOut = false;
     juce::Point<int> tearOutLoc;
-    auto otag = WT_EDITOR;
+    auto otag = WTS_EDITOR;
 
     if (isAnyOverlayPresent(otag))
     {

@@ -33,7 +33,7 @@ namespace Storage
 {
 
 const static std::string PresetDir = "Modulator Presets";
-const static std::string PresetXtn = ".modpreset";
+const static std::string PresetExt = ".modpreset";
 
 void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s, int scene,
                                        int lfoid)
@@ -68,7 +68,7 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
 
         auto comppath = containingPath;
         auto fullLocation =
-            (containingPath / location).lexically_normal().replace_extension(PresetXtn);
+            (containingPath / location).lexically_normal().replace_extension(PresetExt);
 
         // make sure your category isnt "../../../etc/config"
         auto [_, compIt] = std::mismatch(fullLocation.begin(), fullLocation.end(), comppath.begin(),
@@ -337,7 +337,7 @@ std::vector<ModulatorPreset::Category> ModulatorPreset::getPresets(SurgeStorage 
                 auto dp = fs::path(d);
                 auto base = dp.stem();
                 auto ext = dp.extension();
-                if (path_to_string(ext) != PresetXtn)
+                if (path_to_string(ext) != PresetExt)
                 {
                     continue;
                 }

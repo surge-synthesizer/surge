@@ -800,7 +800,7 @@ void SurgeGUIEditor::idle()
         {
             wt->refresh_script_editor = false;
 
-            if (auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR))
+            if (auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WTS_EDITOR))
             {
                 ol->forceRefresh();
             }
@@ -2058,7 +2058,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::SAVE_PATCH_DIALOG:
         case Surge::Skin::Connector::NonParameterConnection::MSEG_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FORMULA_EDITOR_WINDOW:
-        case Surge::Skin::Connector::NonParameterConnection::WT_EDITOR_WINDOW:
+        case Surge::Skin::Connector::NonParameterConnection::WTS_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::TUNING_EDITOR_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::MOD_LIST_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::FILTER_ANALYSIS_WINDOW:
@@ -2365,11 +2365,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     if (!uses_wavetabledata(oscdata.type.val.i))
     {
-        auto olc = getOverlayWrapperIfOpen(WT_EDITOR);
+        auto olc = getOverlayWrapperIfOpen(WTS_EDITOR);
 
         if (olc && !olc->isTornOut())
         {
-            closeOverlay(SurgeGUIEditor::WT_EDITOR);
+            closeOverlay(SurgeGUIEditor::WTS_EDITOR);
         }
     }
 
@@ -5552,7 +5552,7 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(KeyboardActions::TOGGLE_LFO_EDITOR,
                               {keymap_t::Modifiers::ALT, (int)'E'});
 #if INCLUDE_WT_SCRIPTING_EDITOR
-    keyMapManager->addBinding(KeyboardActions::TOGGLE_WT_EDITOR,
+    keyMapManager->addBinding(KeyboardActions::TOGGLE_WTS_EDITOR,
                               {keymap_t::Modifiers::ALT, (int)'W'});
 #endif
     keyMapManager->addBinding(KeyboardActions::TOGGLE_MODLIST,
@@ -5669,7 +5669,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case KeyboardActions::UNDO:
             {
 #if INCLUDE_WT_SCRIPTING_EDITOR
-                auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR);
+                auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WTS_EDITOR);
 
                 if (ol)
                 {
@@ -5687,7 +5687,7 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
             case KeyboardActions::REDO:
             {
 #if INCLUDE_WT_SCRIPTING_EDITOR
-                auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WT_EDITOR);
+                auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WTS_EDITOR);
 
                 if (ol)
                 {
@@ -5808,13 +5808,13 @@ bool SurgeGUIEditor::keyPressed(const juce::KeyPress &key, juce::Component *orig
 
                 return true;
 #if INCLUDE_WT_SCRIPTING_EDITOR
-            case KeyboardActions::TOGGLE_WT_EDITOR:
+            case KeyboardActions::TOGGLE_WTS_EDITOR:
             {
                 auto &oscdata =
                     synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
                 if (uses_wavetabledata(oscdata.type.val.i))
                 {
-                    toggleOverlay(SurgeGUIEditor::WT_EDITOR);
+                    toggleOverlay(SurgeGUIEditor::WTS_EDITOR);
                     frame->repaint();
                 }
                 return true;
@@ -6655,4 +6655,259 @@ void SurgeGUIEditor::releaseNote(char key, char vel)
     auto &proc = ed->processor;
 
     proc.midiFromGUI.push(SurgeSynthProcessor::midiR(0, key, vel, false));
+}
+
+void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
+{
+    auto path = this->synth->storage.userDataPath / "Wavetables" / "Exported";
+    try
+    {
+        fs::create_directories(path);
+    }
+    catch (const fs::filesystem_error &e)
+    {
+    }
+
+    auto &oscdata = synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+
+    auto defaultFilename = path / oscdata.wavetable_display_name;
+    if (exportFormat == WT)
+    {
+        defaultFilename = defaultFilename.replace_extension(".wt");
+    }
+    else
+    {
+        defaultFilename = defaultFilename.replace_extension(".wav");
+    }
+
+    fileChooser = std::make_unique<juce::FileChooser>(
+        "Export Wavetable", juce::File(defaultFilename.u8string().c_str()));
+    fileChooser->launchAsync(
+        juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
+            juce::FileBrowserComponent::warnAboutOverwriting,
+        [this, &oscdata, exportFormat](const juce::FileChooser &c) {
+            auto result = c.getResults();
+            if (result.isEmpty() || result.size() > 1)
+            {
+                return;
+            }
+
+            auto fsp = fs::path{result[0].getFullPathName().toStdString()};
+            if (exportFormat != WT && fsp.extension() != ".wav")
+            {
+                fsp.replace_extension(".wav");
+            }
+            else if (exportFormat == WT && fsp.extension() != ".wt")
+            {
+                fsp.replace_extension(".wt");
+            }
+
+            if (!evaluator)
+            {
+                evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+            }
+
+            switch (exportFormat)
+            {
+            case WAV:
+            {
+                std::string metadata = this->synth->storage.make_wt_metadata(&oscdata);
+                evaluator->generateWavetable(&this->synth->storage, &oscdata, &oscdata.wt);
+                this->synth->storage.export_wt_wav_portable(fsp, &oscdata.wt, metadata);
+                break;
+            }
+            case WT:
+            {
+                std::string metadata = this->synth->storage.make_wt_metadata(&oscdata);
+                evaluator->generateWavetable(&this->synth->storage, &oscdata, &oscdata.wt);
+                if (!this->synth->storage.export_wt_wt_portable(fsp, &oscdata.wt, metadata))
+                {
+                    this->synth->storage.reportError("Unable to save wt to " + fsp.u8string(),
+                                                     "Wavetable Export");
+                }
+                break;
+            }
+            case SERUM:
+            case VCVRACK:
+            {
+                int oldres = oscdata.wavetable_script_res_base;
+                oscdata.wavetable_script_res_base = (exportFormat == SERUM ? 7 : 4);
+                Wavetable wt;
+                evaluator->generateWavetable(&this->synth->storage, &oscdata, &wt, true);
+                oscdata.wavetable_script_res_base = oldres;
+
+                std::string metadata = this->synth->storage.make_wt_metadata(&oscdata);
+                bool exportForSerum = (exportFormat == SERUM);
+                this->synth->storage.export_wt_wav_portable(fsp, &wt, metadata, exportForSerum);
+                break;
+            }
+            }
+            this->synth->storage.refresh_wtlist();
+        });
+}
+
+void SurgeGUIEditor::loadWavetableScript()
+{
+    auto wtPath = this->synth->storage.userWavetablesPath / "Scripted";
+    wtPath = Surge::Storage::getUserDefaultPath(&this->synth->storage,
+                                                Surge::Storage::LastWavetablePath, wtPath);
+
+    juce::String fileTypes = "*.wtscript";
+
+    auto &oscdata = synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+
+    if (!evaluator)
+    {
+        evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+    }
+
+    fileChooser = std::make_unique<juce::FileChooser>(
+        "Select Wavetable script", juce::File(path_to_string(wtPath)), fileTypes);
+    fileChooser->launchAsync(
+        juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        [this, &oscdata, wtPath](const juce::FileChooser &c) {
+            auto ress = c.getResults();
+
+            if (ress.size() != 1)
+            {
+                return;
+            }
+
+            auto res = c.getResult();
+            auto rString = res.getFullPathName().toStdString();
+
+            if (res.hasFileExtension(".wtscript"))
+            {
+                loadWavetableScript(-1, fs::path(rString), &this->synth->storage, &oscdata,
+                                    this->evaluator.get());
+            }
+
+            auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+
+            if (dir != wtPath)
+            {
+                Surge::Storage::updateUserDefaultPath(&this->synth->storage,
+                                                      Surge::Storage::LastWavetablePath, dir);
+            }
+        });
+}
+
+void SurgeGUIEditor::loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
+                                         OscillatorStorage *oscdata,
+                                         Surge::WavetableScript::LuaWTEvaluator *evaluator)
+{
+    evaluator->loadWtscript(location, storage, oscdata);
+
+    oscdata->wt.current_id = id;
+    oscdata->wt.refresh_display = true;
+    oscdata->wt.force_refresh_display = true;
+    oscdata->wt.refresh_script_editor = true;
+}
+
+void SurgeGUIEditor::saveWavetableScript()
+{
+    auto &oscdata = synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
+
+    std::string defaultFilename = oscdata.wavetable_display_name;
+    if (defaultFilename.empty())
+        defaultFilename = "Untitled";
+    this->promptForMiniEdit(
+        defaultFilename, "Enter the file name:", "Save Wavetable Script", juce::Point<int>{},
+        [this, &oscdata](const std::string &s) {
+            this->saveWavetableScript(string_to_path(s), &this->synth->storage, &oscdata);
+        },
+        nullptr);
+}
+
+void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage *storage,
+                                         OscillatorStorage *oscdata)
+{
+    try
+    {
+        auto containingPath = storage->userWavetablesPath / "Scripted";
+
+        // validate location before using
+        if (!location.is_relative())
+        {
+            storage->reportError(
+                "Please use relative paths when saving scripts. Referring to drive names directly "
+                "and using absolute paths is not allowed!",
+                "Relative Path Required");
+            return;
+        }
+
+        auto comppath = containingPath;
+        auto fullLocation =
+            (containingPath / location).lexically_normal().replace_extension(".wtscript");
+
+        // make sure your category isnt "../../../etc/config"
+        auto [_, compIt] = std::mismatch(fullLocation.begin(), fullLocation.end(), comppath.begin(),
+                                         comppath.end());
+        if (compIt != comppath.end())
+        {
+            storage->reportError(
+                "Your save path is not a directory inside the user scripts directory. "
+                "This usually means you are trying to use ../ in your script name.",
+                "Invalid Save Path");
+            return;
+        }
+
+        fs::create_directories(fullLocation.parent_path());
+
+        auto doSave = [fullLocation, storage, oscdata]() {
+            TiXmlDeclaration decl("1.0", "UTF-8", "yes");
+            TiXmlDocument doc;
+            doc.InsertEndChild(decl);
+            TiXmlElement wtscript("wtscript");
+            TiXmlElement script("script");
+
+            if (!oscdata->wavetable_script.empty())
+            {
+                auto wtfo = oscdata->wavetable_script;
+                auto wtfol = wtfo.length();
+
+                script.SetAttribute("lua", Surge::Storage::base64_encode(
+                                               (unsigned const char *)wtfo.c_str(), wtfol));
+
+                script.SetAttribute("frames", oscdata->wavetable_script_nframes);
+                script.SetAttribute("samples", oscdata->wavetable_script_res_base);
+            }
+
+            wtscript.InsertEndChild(script);
+            doc.InsertEndChild(wtscript);
+            if (!doc.SaveFile(fullLocation))
+            {
+                storage->reportError("Failed to save XML file.", "XML Save Error");
+            }
+
+            storage->refresh_wtlist();
+        };
+
+        if (fs::exists(fullLocation))
+        {
+            storage->okCancelProvider("The wavetable script '" + location.string() +
+                                          "' already exists. "
+                                          "Are you sure you want to overwrite it?",
+                                      "Overwrite Wavetable Script", SurgeStorage::OK,
+                                      [doSave](SurgeStorage::OkCancel okc) {
+                                          if (okc == SurgeStorage::OK)
+                                          {
+                                              doSave();
+                                          }
+                                      });
+        }
+        else
+        {
+            doSave();
+        }
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        std::ostringstream oss;
+        oss << "Exception occurred while attempting to write the wavetable script! "
+               "Most likely, invalid characters or a reserved name was used to name "
+               "the script. Please try again with a different name!\n"
+            << "Details " << e.what();
+        storage->reportError(oss.str(), "Script Write Error");
+    }
 }
