@@ -9,7 +9,8 @@ option(SURGE_INCLUDE_MELATONIN_INSPECTOR "Include melatonin inspector" OFF)
 
 # Currently the JUCE LV2 build crashes in our CI pipeline, so leave it for users to self build
 option(SURGE_BUILD_LV2 "Build Surge as an LV2" OFF)
-if (NOT SURGE_COMPILE_BLOCK_SIZE)
+
+if(NOT SURGE_COMPILE_BLOCK_SIZE)
   set(SURGE_COMPILE_BLOCK_SIZE 32)
 endif()
 
@@ -18,10 +19,11 @@ set(SURGE_JUCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../libs/JUCE" CACHE STRING "Pat
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(cmake/lib.cmake)
 
-if (NOT SURGE_SKIP_JUCE_FOR_RACK)
+if(NOT SURGE_SKIP_JUCE_FOR_RACK)
   message(STATUS "Using JUCE from ${SURGE_JUCE_PATH}")
   add_subdirectory(${SURGE_JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
-  if (SURGE_INCLUDE_MELATONIN_INSPECTOR)
+
+  if(SURGE_INCLUDE_MELATONIN_INSPECTOR)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../libs/melatonin_inspector" ${CMAKE_BINARY_DIR}/melatonin_inspector EXCLUDE_FROM_ALL)
   endif()
 endif()
@@ -75,10 +77,10 @@ target_compile_definitions(surge-juce INTERFACE
   JUCE_DIRECTSOUND=$<IF:$<NOT:$<BOOL:${SURGE_SKIP_STANDALONE}>>,1,0>
 
   JUCE_CATCH_UNHANDLED_EXCEPTIONS=0
-  )
+)
 
-if (NOT SURGE_SKIP_JUCE_FOR_RACK)
-  if (SURGE_INCLUDE_MELATONIN_INSPECTOR)
+if(NOT SURGE_SKIP_JUCE_FOR_RACK)
+  if(SURGE_INCLUDE_MELATONIN_INSPECTOR)
     target_link_libraries(surge-juce INTERFACE melatonin_inspector)
     target_compile_definitions(surge-juce INTERFACE SURGE_INCLUDE_MELATONIN_INSPECTOR=1)
   endif()
@@ -101,11 +103,12 @@ if(SURGE_XT_BUILD_AUV3)
   list(APPEND SURGE_JUCE_FORMATS AUv3)
 endif()
 
-if(DEFINED ENV{VST2SDK_DIR})
+if(DEFINED ENV{VST2SDK_DIR} AND NOT SURGE_BUILD_PYTHON_BINDINGS)
   file(TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" JUCE_VST2_DIR)
   juce_set_vst2_sdk_path(${JUCE_VST2_DIR})
   list(APPEND SURGE_JUCE_FORMATS VST)
   message(STATUS "VST2 SDK path is $ENV{VST2SDK_DIR}")
+
   # VST2 headers are invalid UTF-8
   add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/wd4828>)
 endif()
@@ -114,7 +117,6 @@ if(SURGE_BUILD_LV2)
   list(APPEND SURGE_JUCE_FORMATS LV2)
   message(STATUS "Including JUCE7 LV2 support.")
 endif()
-
 
 if(DEFINED ENV{ASIOSDK_DIR} OR BUILD_USING_MY_ASIO_LICENSE)
   if(BUILD_USING_MY_ASIO_LICENSE)
