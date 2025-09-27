@@ -23,7 +23,6 @@
 #include "AboutScreen.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeStorage.h"
-#include "version.h"
 #include "RuntimeFont.h"
 #include "SurgeImage.h"
 #include "sst/plugininfra/paths.h"
@@ -37,8 +36,9 @@ namespace Overlays
 
 struct ClickURLImage : public juce::Component
 {
-    ClickURLImage(SurgeImage *img, int offset, const std::string &URL, const std::string &title)
-        : url(URL), offset(offset), img(img)
+    ClickURLImage(SurgeImage *img, int offset, const std::string &URL, const std::string &title,
+                  juce::Label *tooltip)
+        : url(URL), offset(offset), img(img), tooltip(tooltip)
     {
         setAccessible(true);
         setTitle(title);
@@ -62,12 +62,14 @@ struct ClickURLImage : public juce::Component
     void mouseEnter(const juce::MouseEvent &e) override
     {
         isHovered = true;
+        tooltip->setVisible(true);
         repaint();
     }
 
     void mouseExit(const juce::MouseEvent &e) override
     {
         isHovered = false;
+        tooltip->setVisible(false);
         repaint();
     }
 
@@ -86,9 +88,11 @@ struct ClickURLImage : public juce::Component
     }
 
     bool isHovered{false};
-    int offset, imgsz = 36;
+    int offset;
+    const int imgsz = 36;
     std::string url;
     SurgeImage *img;
+    juce::Label *tooltip;
 };
 
 struct HyperlinkLabel : public juce::Label, public Surge::GUI::SkinConsumingComponent
@@ -153,6 +157,13 @@ AboutScreen::AboutScreen()
     std::string version = std::string("About Surge XT ") + Surge::Build::FullVersionStr;
     setTitle(version);
     setDescription(version);
+
+    for (auto idx : iconOrder)
+    {
+        iconTooltips[idx] = std::make_unique<juce::Label>();
+        iconTooltips[idx].get()->setText(iconLabels[idx], juce::dontSendNotification);
+        addChildComponent(iconTooltips[idx].get());
+    }
 }
 
 AboutScreen::~AboutScreen() noexcept = default;
@@ -446,29 +457,26 @@ void AboutScreen::resized()
                  600);
 
         auto img = associatedBitmapStore->getImage(IDB_ABOUT_LOGOS);
-        auto idxes = {0, 4, 3, 6, 1, 2, 5};
 
-        std::vector<std::string> urls = {
-            stringRepository,
-            "https://www.steinberg.net/en/company/technologies/vst3.html",
-            "https://developer.apple.com/documentation/audiounit",
-            "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
-            "https://discord.gg/aFQDdMV",
-            "https://juce.com",
-            "https://cleveraudio.org"};
+        int x = iconOrder.size();
 
-        std::vector<std::string> urllabels = {
-            "Surge XT GitHub Repository", "Steinberg VST3", "Apple Audio Units",  "GNU GPL3",
-            "Join our Discord!",          "JUCE Framework", "CLever Audio Plugin"};
-
-        int x = idxes.size();
-
-        for (auto idx : idxes)
+        for (auto idx : iconOrder)
         {
-            auto bt = std::make_unique<ClickURLImage>(img, idx, urls[idx], urllabels[idx]);
+            auto bt = std::make_unique<ClickURLImage>(img, idx, urls[idx], iconLabels[idx],
+                                                      iconTooltips[idx].get());
 
-            bt->setBounds(getWidth() - (margin / 2) - (x * 42), margin, 36, 36);
+            bt->setBounds(getWidth() - (margin / 2) - (x * 42) - 30, margin, 36, 36);
+
+            auto tooltip = iconTooltips[idx].get();
+
+            tooltip->setBounds(bt->getBounds().expanded(30, 0).translated(0, 38).withHeight(10));
+            tooltip->setFont(skin->fontManager->getLatoAtSize(8));
+            tooltip->setColour(juce::Label::ColourIds::textColourId,
+                               skin->getColor(Colors::AboutPage::LinkHover));
+            tooltip->setJustificationType(juce::Justification::centredTop);
+
             addAndMakeVisible(*bt);
+
             icons.push_back(std::move(bt));
 
             x--;
