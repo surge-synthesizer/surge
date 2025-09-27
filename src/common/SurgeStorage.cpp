@@ -1391,9 +1391,9 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
 
         if (metadata.empty())
         {
-            osc->wavetable_formula = {};
-            osc->wavetable_formula_res_base = 5;
-            osc->wavetable_formula_nframes = 10;
+            osc->wavetable_script = {};
+            osc->wavetable_script_res_base = 5;
+            osc->wavetable_script_nframes = 10;
         }
         else
         {
@@ -1401,9 +1401,9 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
             {
                 reportError("Unable to parse metadata", "WaveTable Load");
                 std::cerr << metadata << std::endl;
-                osc->wavetable_formula = {};
-                osc->wavetable_formula_res_base = 5;
-                osc->wavetable_formula_nframes = 10;
+                osc->wavetable_script = {};
+                osc->wavetable_script_res_base = 5;
+                osc->wavetable_script_nframes = 10;
             }
         }
         osc->wt.refresh_script_editor = true;
@@ -1618,17 +1618,17 @@ std::string SurgeStorage::make_wt_metadata(OscillatorStorage *oscdata)
     TiXmlDocument doc("wtmeta");
     TiXmlElement root("wtmeta");
     TiXmlElement surge("surge");
-    if (!oscdata->wavetable_formula.empty())
+    if (!oscdata->wavetable_script.empty())
     {
         TiXmlElement script("script");
 
-        auto wtfo = oscdata->wavetable_formula;
+        auto wtfo = oscdata->wavetable_script;
         auto wtfol = wtfo.length();
 
         script.SetAttribute(
             "lua", Surge::Storage::base64_encode((unsigned const char *)wtfo.c_str(), wtfol));
-        script.SetAttribute("nframes", oscdata->wavetable_formula_nframes);
-        script.SetAttribute("res_base", oscdata->wavetable_formula_res_base);
+        script.SetAttribute("nframes", oscdata->wavetable_script_nframes);
+        script.SetAttribute("res_base", oscdata->wavetable_script_res_base);
         surge.InsertEndChild(script);
         hasMeta = true;
     }
@@ -1687,9 +1687,9 @@ bool SurgeStorage::parse_wt_metadata(const std::string &m, OscillatorStorage *os
         return false;
     }
 
-    oscdata->wavetable_formula = Surge::Storage::base64_decode(bscript);
-    oscdata->wavetable_formula_nframes = n;
-    oscdata->wavetable_formula_res_base = s;
+    oscdata->wavetable_script = Surge::Storage::base64_decode(bscript);
+    oscdata->wavetable_script_nframes = n;
+    oscdata->wavetable_script_res_base = s;
 
     return true;
 }
@@ -1792,11 +1792,11 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         {
             clipboard_wt[0].Copy(&getPatch().scene[scene].osc[entry].wt);
             clipboard_wt_names[0] = getPatch().scene[scene].osc[entry].wavetable_display_name;
-            clipboard_wavetable_formula[0] = getPatch().scene[scene].osc[entry].wavetable_formula;
-            clipboard_wavetable_formula_nframes[0] =
-                getPatch().scene[scene].osc[entry].wavetable_formula_nframes;
-            clipboard_wavetable_formula_res_base[0] =
-                getPatch().scene[scene].osc[entry].wavetable_formula_res_base;
+            clipboard_wavetable_script[0] = getPatch().scene[scene].osc[entry].wavetable_script;
+            clipboard_wavetable_script_nframes[0] =
+                getPatch().scene[scene].osc[entry].wavetable_script_nframes;
+            clipboard_wavetable_script_res_base[0] =
+                getPatch().scene[scene].osc[entry].wavetable_script_res_base;
         }
 
         clipboard_extraconfig[0] = getPatch().scene[scene].osc[entry].extraConfig;
@@ -1854,11 +1854,11 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             clipboard_wt[i].Copy(&getPatch().scene[scene].osc[i].wt);
             clipboard_wt_names[i] = getPatch().scene[scene].osc[i].wavetable_display_name;
             clipboard_extraconfig[i] = getPatch().scene[scene].osc[i].extraConfig;
-            clipboard_wavetable_formula[i] = getPatch().scene[scene].osc[i].wavetable_formula;
-            clipboard_wavetable_formula_res_base[i] =
-                getPatch().scene[scene].osc[i].wavetable_formula_res_base;
-            clipboard_wavetable_formula_nframes[i] =
-                getPatch().scene[scene].osc[i].wavetable_formula_nframes;
+            clipboard_wavetable_script[i] = getPatch().scene[scene].osc[i].wavetable_script;
+            clipboard_wavetable_script_res_base[i] =
+                getPatch().scene[scene].osc[i].wavetable_script_res_base;
+            clipboard_wavetable_script_nframes[i] =
+                getPatch().scene[scene].osc[i].wavetable_script_nframes;
         }
 
         auto fxOffset = 0;
@@ -2122,11 +2122,11 @@ void SurgeStorage::clipboard_paste(
             getPatch().scene[scene].osc[i].extraConfig = clipboard_extraconfig[i];
             getPatch().scene[scene].osc[i].wt.Copy(&clipboard_wt[i]);
             getPatch().scene[scene].osc[i].wavetable_display_name = clipboard_wt_names[i];
-            getPatch().scene[scene].osc[i].wavetable_formula = clipboard_wavetable_formula[i];
-            getPatch().scene[scene].osc[i].wavetable_formula_res_base =
-                clipboard_wavetable_formula_res_base[i];
-            getPatch().scene[scene].osc[i].wavetable_formula_nframes =
-                clipboard_wavetable_formula_nframes[i];
+            getPatch().scene[scene].osc[i].wavetable_script = clipboard_wavetable_script[i];
+            getPatch().scene[scene].osc[i].wavetable_script_res_base =
+                clipboard_wavetable_script_res_base[i];
+            getPatch().scene[scene].osc[i].wavetable_script_nframes =
+                clipboard_wavetable_script_nframes[i];
         }
 
         auto fxOffset = 0;
@@ -2226,12 +2226,11 @@ void SurgeStorage::clipboard_paste(
             {
                 getPatch().scene[scene].osc[entry].wt.Copy(&clipboard_wt[0]);
                 getPatch().scene[scene].osc[entry].wavetable_display_name = clipboard_wt_names[0];
-                getPatch().scene[scene].osc[entry].wavetable_formula =
-                    clipboard_wavetable_formula[0];
-                getPatch().scene[scene].osc[entry].wavetable_formula_res_base =
-                    clipboard_wavetable_formula_res_base[0];
-                getPatch().scene[scene].osc[entry].wavetable_formula_nframes =
-                    clipboard_wavetable_formula_nframes[0];
+                getPatch().scene[scene].osc[entry].wavetable_script = clipboard_wavetable_script[0];
+                getPatch().scene[scene].osc[entry].wavetable_script_res_base =
+                    clipboard_wavetable_script_res_base[0];
+                getPatch().scene[scene].osc[entry].wavetable_script_nframes =
+                    clipboard_wavetable_script_nframes[0];
             }
 
             // copy modroutings

@@ -604,8 +604,8 @@ Connector mseg_editor = Connector("msegeditor.window", 0, 57, 750, 366, Componen
 Connector formula_editor = Connector("formulaeditor.window", 0, 57, 750, 366, Components::Custom,
                                      Connector::FORMULA_EDITOR_WINDOW);
 
-Connector wt_editor = Connector("wteditor.window", 150, 57, 756, 512, Components::Custom,
-                                Connector::WT_EDITOR_WINDOW);
+Connector wts_editor = Connector("wtseditor.window", 150, 57, 756, 512, Components::Custom,
+                                 Connector::WTS_EDITOR_WINDOW);
 
 Connector tuning_editor = Connector("tuningeditor.window", 0, 57, 750, 512, Components::Custom,
                                     Connector::TUNING_EDITOR_WINDOW);

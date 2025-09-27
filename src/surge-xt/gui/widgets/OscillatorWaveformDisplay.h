@@ -119,15 +119,6 @@ struct OscillatorWaveformDisplay : public juce::Component,
 
     void createWTLoadMenu(juce::PopupMenu &contextMenu);
     void createWTExportMenu(juce::PopupMenu &contextMenu);
-
-    enum ExportFormat
-    {
-        WAV,
-        WT,
-        SERUM,
-        VCVRACK
-    };
-    void exportWavetableAs(ExportFormat exportFormat);
     void createWTRenameMenu(juce::PopupMenu &contextMenu);
     void createOpenScriptEditorMenu(juce::PopupMenu &contextMenu);
     void refreshWavetablesMenu(juce::PopupMenu &contextMenu);

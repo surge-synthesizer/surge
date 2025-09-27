@@ -280,7 +280,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
         return fme;
     }
 
-    case WT_EDITOR:
+    case WTS_EDITOR:
     {
 
         auto os = &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
@@ -304,7 +304,7 @@ std::unique_ptr<Surge::Overlays::OverlayComponent> SurgeGUIEditor::createOverlay
                              Surge::Storage::WTScriptOverlayTearOutAlwaysOnTop_Plugin});
         wtse->setCanTearOutResize({true, Surge::Storage::WTScriptOverlaySizeTearOut});
         wtse->setMinimumSize(500, 400);
-        locationGet(wtse.get(), Surge::Skin::Connector::NonParameterConnection::WT_EDITOR_WINDOW,
+        locationGet(wtse.get(), Surge::Skin::Connector::NonParameterConnection::WTS_EDITOR_WINDOW,
                     Surge::Storage::WTScriptOverlayLocation);
 
         return wtse;
@@ -582,7 +582,7 @@ void SurgeGUIEditor::closeOverlay(OverlayTags olt)
 
     if (isAnyOverlayPresent(olt))
     {
-        if (olt == FORMULA_EDITOR || olt == WT_EDITOR)
+        if (olt == FORMULA_EDITOR || olt == WTS_EDITOR)
         {
             // Run the chickenbox path
             olw->onClose();
@@ -860,7 +860,7 @@ bool SurgeGUIEditor::updateOverlayContentIfPresent(OverlayTags tag)
         }
         break;
     }
-    case WT_EDITOR:
+    case WTS_EDITOR:
     {
         auto wtsol = dynamic_cast<Surge::Overlays::WavetableScriptEditor *>(getOverlayIfOpen(tag));
 

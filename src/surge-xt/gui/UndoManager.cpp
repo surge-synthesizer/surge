@@ -115,9 +115,9 @@ struct UndoManagerImpl
 
         std::string displayName;
 
-        std::string wavetable_formula = "";
-        int wavetable_formula_res_base = 5, // 32 * 2^this
-            wavetable_formula_nframes = 10;
+        std::string wavetable_script = "";
+        int wavetable_script_res_base = 5, // 32 * 2^this
+            wavetable_script_nframes = 10;
     };
     struct UndoOscillatorExtraConfig
     {
@@ -594,11 +594,11 @@ struct UndoManagerImpl
         {
             r.wt = std::make_shared<Wavetable>();
             r.wt->Copy(&(os->wt));
-            if (!os->wavetable_formula.empty())
+            if (!os->wavetable_script.empty())
             {
-                r.wavetable_formula = os->wavetable_formula;
-                r.wavetable_formula_res_base = os->wavetable_formula_res_base;
-                r.wavetable_formula_nframes = os->wavetable_formula_nframes;
+                r.wavetable_script = os->wavetable_script;
+                r.wavetable_script_res_base = os->wavetable_script_res_base;
+                r.wavetable_script_nframes = os->wavetable_script_nframes;
             }
         }
 
@@ -944,9 +944,9 @@ struct UndoManagerImpl
                 os->wt.Copy(p->wt.get());
                 synth->refresh_editor = true;
 
-                os->wavetable_formula = p->wavetable_formula;
-                os->wavetable_formula_res_base = p->wavetable_formula_res_base;
-                os->wavetable_formula_nframes = p->wavetable_formula_nframes;
+                os->wavetable_script = p->wavetable_script;
+                os->wavetable_script_res_base = p->wavetable_script_res_base;
+                os->wavetable_script_nframes = p->wavetable_script_nframes;
                 os->wt.refresh_script_editor = true;
             }
             else

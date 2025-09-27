@@ -410,7 +410,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         PATCH_BROWSER,
         MODULATION_EDITOR,
         FORMULA_EDITOR,
-        WT_EDITOR,
+        WTS_EDITOR,
         TUNING_EDITOR,
         WAVESHAPER_ANALYZER,
         FILTER_ANALYZER,
@@ -554,6 +554,22 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void playNote(char key, char vel);
     void releaseNote(char key, char vel);
+
+    enum WTExportFormat
+    {
+        WAV,
+        WT,
+        SERUM,
+        VCVRACK
+    };
+    void exportWavetableAs(WTExportFormat exportFormat);
+    void loadWavetableScript();
+    void loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
+                             OscillatorStorage *oscdata,
+                             Surge::WavetableScript::LuaWTEvaluator *evaluator);
+    void saveWavetableScript();
+    void saveWavetableScript(const fs::path &location, SurgeStorage *storage,
+                             OscillatorStorage *oscdata);
 
   private:
     juce::Rectangle<int> positionForModulationGrid(modsources entry);
