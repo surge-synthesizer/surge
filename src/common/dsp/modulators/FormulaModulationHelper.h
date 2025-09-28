@@ -70,7 +70,7 @@ struct EvaluatorState
     bool isVoice, mpeenabled;
     int key{60}, channel{0}, velocity{0}, releasevelocity{0}, mpebendrange{24};
     int64_t voiceOrderAtCreate{1L};
-    float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0};
+    float polyat{0}, mpebend{0}, mpetimbre{0}, mpepressure{0}, tunedkey{0};
 
     // scene features
     int polylimit{1}, scenemode{0}, polymode{0}, splitpoint{0};
@@ -106,7 +106,7 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
 bool isUserDefined(std::string);
 
 void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sceneIndex);
-void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v);
+void setupEvaluatorStateFrom(EvaluatorState &s, SurgeVoice *v);
 
 void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *, FormulaModulatorStorage *fs,
              EvaluatorState *state, float output[max_formula_outputs], bool justSetup = false);
