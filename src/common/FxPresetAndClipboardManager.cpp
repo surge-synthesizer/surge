@@ -275,73 +275,100 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
 
         fs::create_directories(storagePath);
 
-        std::ofstream pfile(outputPath, std::ios::out);
-        if (!pfile.is_open())
-        {
-            storage->reportError(std::string("Unable to open FX preset file '") +
-                                     path_to_string(outputPath) + "' for writing!",
-                                 "Error");
-            return;
-        }
-
-        // this used to say streaming_versio before (was a typo)
-        // make sure both variants are checked when checking sv in the future on patch load
-        pfile << "<single-fx streaming_version=\"" << ff_revision << "\">\n";
-
-        // take care of 5 special XML characters
-        std::string fxNameSub(path_to_string(fnp));
-        Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
-        Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
-        Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
-        Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""), std::string("&quot;"));
-        Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"), std::string("&apos;"));
-
-        pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\"\n";
-
-        pfile << "     type=\"" << fx->type.val.i << "\"\n";
-        for (int i = 0; i < n_fx_params; ++i)
-        {
-            if (fx->p[i].ctrltype != ct_none)
+        auto doSave = [this, outputPath, storage, fx, fnp]() {
+            std::ofstream pfile(outputPath, std::ios::out);
+            if (!pfile.is_open())
             {
-                switch (fx->p[i].valtype)
-                {
-                case vt_float:
-                    pfile << "     p" << i << "=\"" << fx->p[i].val.f << "\"\n";
-                    break;
-                case vt_int:
-                    pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
-                    break;
-                }
+                storage->reportError(std::string("Unable to open FX preset file '") +
+                                         path_to_string(outputPath) + "' for writing!",
+                                     "Error");
+                return;
+            }
 
-                if (fx->p[i].can_temposync() && fx->p[i].temposync)
-                {
-                    pfile << "     p" << i << "_temposync=\"1\"\n";
-                }
-                if (fx->p[i].can_extend_range() && fx->p[i].extend_range)
-                {
-                    pfile << "     p" << i << "_extend_range=\"1\"\n";
-                }
-                if (fx->p[i].can_deactivate() && fx->p[i].deactivated)
-                {
-                    pfile << "     p" << i << "_deactivated=\"1\"\n";
-                }
+            // this used to say streaming_versio before (was a typo)
+            // make sure both variants are checked when checking sv in the future on patch load
+            pfile << "<single-fx streaming_version=\"" << ff_revision << "\">\n";
 
-                if (fx->p[i].has_deformoptions())
+            // take care of 5 special XML characters
+            std::string fxNameSub(path_to_string(fnp));
+            Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
+            Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
+            Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
+            Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""),
+                                                 std::string("&quot;"));
+            Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"),
+                                                 std::string("&apos;"));
+
+            pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\"\n";
+
+            pfile << "     type=\"" << fx->type.val.i << "\"\n";
+            for (int i = 0; i < n_fx_params; ++i)
+            {
+                if (fx->p[i].ctrltype != ct_none)
                 {
-                    pfile << "     p" << i << "_deform_type=\"" << fx->p[i].deform_type << "\"\n";
+                    switch (fx->p[i].valtype)
+                    {
+                    case vt_float:
+                        pfile << "     p" << i << "=\"" << fx->p[i].val.f << "\"\n";
+                        break;
+                    case vt_int:
+                        pfile << "     p" << i << "=\"" << fx->p[i].val.i << "\"\n";
+                        break;
+                    }
+
+                    if (fx->p[i].can_temposync() && fx->p[i].temposync)
+                    {
+                        pfile << "     p" << i << "_temposync=\"1\"\n";
+                    }
+                    if (fx->p[i].can_extend_range() && fx->p[i].extend_range)
+                    {
+                        pfile << "     p" << i << "_extend_range=\"1\"\n";
+                    }
+                    if (fx->p[i].can_deactivate() && fx->p[i].deactivated)
+                    {
+                        pfile << "     p" << i << "_deactivated=\"1\"\n";
+                    }
+
+                    if (fx->p[i].has_deformoptions())
+                    {
+                        pfile << "     p" << i << "_deform_type=\"" << fx->p[i].deform_type
+                              << "\"\n";
+                    }
                 }
             }
+
+            pfile << "  />\n";
+            pfile << "</single-fx>\n";
+            pfile.close();
+
+            doPresetRescan(storage, true);
+        };
+
+        if (fs::exists(outputPath))
+        {
+            storage->okCancelProvider(
+                "The FX preset '" + outputPath.string() +
+                    "' already exists. Are you sure you want to overwrite it?",
+                "Overwrite FX Preset", SurgeStorage::OK, [doSave](SurgeStorage::OkCancel okc) {
+                    if (okc == SurgeStorage::OK)
+                    {
+                        doSave();
+                    }
+                });
         }
-
-        pfile << "  />\n";
-        pfile << "</single-fx>\n";
-        pfile.close();
-
-        doPresetRescan(storage, true);
+        else
+        {
+            doSave();
+        }
     }
     catch (const fs::filesystem_error &e)
     {
-        storage->reportError(e.what(), "Unable to save FX Preset");
+        std::ostringstream oss;
+        oss << "Exception occurred while attempting to write the preset! Most likely, "
+               "invalid characters or a reserved name was used to name the preset. "
+               "Please try again with a different name!\n"
+            << "Details " << e.what();
+        storage->reportError(oss.str(), "Preset Write Error");
     }
 }
 

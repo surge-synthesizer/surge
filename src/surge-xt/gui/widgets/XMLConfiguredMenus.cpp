@@ -949,9 +949,12 @@ void FxMenu::saveFX()
             "", "Enter the preset name:", "Save FX Preset", juce::Point<int>{},
             [this](const std::string &s) {
                 this->storage->fxUserPreset->saveFxIn(this->storage, fx, s);
+                /*
+                // TODO: queueRebuildUI() nukes the okCancelProvider() box so remove this later
                 auto *sge = firstListenerOfType<SurgeGUIEditor>();
                 if (sge)
                     sge->queueRebuildUI();
+                */
             },
             this);
     }
