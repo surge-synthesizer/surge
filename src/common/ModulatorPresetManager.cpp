@@ -44,17 +44,20 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
         int lfotype = lfo->shape.val.i;
 
         auto containingPath = s->userDataPath / fs::path{PresetDir};
+        std::string what;
 
         if (lfotype == lt_mseg)
-            containingPath = containingPath / fs::path{"MSEG"};
+            what = "MSEG";
         else if (lfotype == lt_stepseq)
-            containingPath = containingPath / fs::path{"Step Seq"};
+            what = "Step Seq";
         else if (lfotype == lt_envelope)
-            containingPath = containingPath / fs::path{"Envelope"};
+            what = "Envelope";
         else if (lfotype == lt_formula)
-            containingPath = containingPath / fs::path{"Formula"};
+            what = "Formula";
         else
-            containingPath = containingPath / fs::path{"LFO"};
+            what = "LFO";
+
+        containingPath /= fs::path{what};
 
         // validate location before using
         if (!location.is_relative())
@@ -84,92 +87,108 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
 
         fs::create_directories(fullLocation.parent_path());
 
-        TiXmlDeclaration decl("1.0", "UTF-8", "yes");
+        auto doSave = [this, fullLocation, s, lfo, lfotype, lfoid, scene]() {
+            TiXmlDeclaration decl("1.0", "UTF-8", "yes");
 
-        TiXmlDocument doc;
-        doc.InsertEndChild(decl);
+            TiXmlDocument doc;
+            doc.InsertEndChild(decl);
 
-        TiXmlElement lfox("lfo");
-        lfox.SetAttribute("shape", lfotype);
+            TiXmlElement lfox("lfo");
+            lfox.SetAttribute("shape", lfotype);
 
-        TiXmlElement params("params");
-        for (auto curr = &(lfo->rate); curr <= &(lfo->release); ++curr)
-        {
-            // shape is odd
-            if (curr == &(lfo->shape))
+            TiXmlElement params("params");
+            for (auto curr = &(lfo->rate); curr <= &(lfo->release); ++curr)
             {
-                continue;
-            }
-
-            // OK the internal name has "lfo7_" at the top or what not. We need this
-            // loadable into any LFO so...
-            std::string in(curr->get_internal_name());
-            auto p = in.find('_');
-            in = in.substr(p + 1);
-            TiXmlElement pn(in);
-
-            if (curr->valtype == vt_float)
-                pn.SetDoubleAttribute("v", curr->val.f);
-            else
-                pn.SetAttribute("i", curr->val.i);
-            pn.SetAttribute("temposync", curr->temposync);
-            pn.SetAttribute("deform_type", curr->deform_type);
-            pn.SetAttribute("extend_range", curr->extend_range);
-            pn.SetAttribute("deactivated", curr->deactivated);
-
-            params.InsertEndChild(pn);
-        }
-        lfox.InsertEndChild(params);
-
-        if (lfotype == lt_mseg)
-        {
-            TiXmlElement ms("mseg");
-            s->getPatch().msegToXMLElement(&(s->getPatch().msegs[scene][lfoid]), ms);
-            lfox.InsertEndChild(ms);
-        }
-        if (lfotype == lt_stepseq)
-        {
-            TiXmlElement ss("sequence");
-            s->getPatch().stepSeqToXmlElement(&(s->getPatch().stepsequences[scene][lfoid]), ss,
-                                              true);
-            lfox.InsertEndChild(ss);
-        }
-        if (lfotype == lt_formula)
-        {
-            TiXmlElement fm("formula");
-            s->getPatch().formulaToXMLElement(&(s->getPatch().formulamods[scene][lfoid]), fm);
-            lfox.InsertEndChild(fm);
-        }
-
-        if (lfotype == lt_formula)
-        {
-            TiXmlElement xtraName("indexNames");
-            bool hasAny{false};
-            for (int i = 0; i < max_lfo_indices; ++i)
-            {
-                if (s->getPatch().LFOBankLabel[scene][lfoid][i][0] != 0)
+                // shape is odd
+                if (curr == &(lfo->shape))
                 {
-                    hasAny = true;
-                    TiXmlElement xn("name");
-                    xn.SetAttribute("index", i);
-                    xn.SetAttribute("name", s->getPatch().LFOBankLabel[scene][lfoid][i]);
-                    xtraName.InsertEndChild(xn);
+                    continue;
+                }
+
+                // OK the internal name has "lfo7_" at the top or what not. We need this
+                // loadable into any LFO so...
+                std::string in(curr->get_internal_name());
+                auto p = in.find('_');
+                in = in.substr(p + 1);
+                TiXmlElement pn(in);
+
+                if (curr->valtype == vt_float)
+                    pn.SetDoubleAttribute("v", curr->val.f);
+                else
+                    pn.SetAttribute("i", curr->val.i);
+                pn.SetAttribute("temposync", curr->temposync);
+                pn.SetAttribute("deform_type", curr->deform_type);
+                pn.SetAttribute("extend_range", curr->extend_range);
+                pn.SetAttribute("deactivated", curr->deactivated);
+
+                params.InsertEndChild(pn);
+            }
+            lfox.InsertEndChild(params);
+
+            if (lfotype == lt_mseg)
+            {
+                TiXmlElement ms("mseg");
+                s->getPatch().msegToXMLElement(&(s->getPatch().msegs[scene][lfoid]), ms);
+                lfox.InsertEndChild(ms);
+            }
+            if (lfotype == lt_stepseq)
+            {
+                TiXmlElement ss("sequence");
+                s->getPatch().stepSeqToXmlElement(&(s->getPatch().stepsequences[scene][lfoid]), ss,
+                                                  true);
+                lfox.InsertEndChild(ss);
+            }
+            if (lfotype == lt_formula)
+            {
+                TiXmlElement fm("formula");
+                s->getPatch().formulaToXMLElement(&(s->getPatch().formulamods[scene][lfoid]), fm);
+                lfox.InsertEndChild(fm);
+
+                TiXmlElement xtraName("indexNames");
+                bool hasAny{false};
+                for (int i = 0; i < max_lfo_indices; ++i)
+                {
+                    if (s->getPatch().LFOBankLabel[scene][lfoid][i][0] != 0)
+                    {
+                        hasAny = true;
+                        TiXmlElement xn("name");
+                        xn.SetAttribute("index", i);
+                        xn.SetAttribute("name", s->getPatch().LFOBankLabel[scene][lfoid][i]);
+                        xtraName.InsertEndChild(xn);
+                    }
+                }
+                if (hasAny)
+                {
+                    lfox.InsertEndChild(xtraName);
                 }
             }
-            if (hasAny)
+            doc.InsertEndChild(lfox);
+
+            if (!doc.SaveFile(fullLocation))
             {
-                lfox.InsertEndChild(xtraName);
+                // uhh ... do something I guess?
+                std::cout << "Could not save preset" << std::endl;
             }
-        }
-        doc.InsertEndChild(lfox);
 
-        if (!doc.SaveFile(fullLocation))
+            forcePresetRescan();
+        };
+
+        if (fs::exists(fullLocation))
         {
-            // uhh ... do something I guess?
-            std::cout << "Could not save" << std::endl;
+            s->okCancelProvider("The " + what + " preset '" + location.string() +
+                                    "' already exists. Are you sure you want to overwrite it?",
+                                "Overwrite " + what + " Preset", SurgeStorage::OK,
+                                [doSave](SurgeStorage::OkCancel okc) {
+                                    if (okc == SurgeStorage::OK)
+                                    {
+                                        doSave();
+                                    }
+                                });
         }
-
-        forcePresetRescan();
+        else
+        {
+            doSave();
+        }
     }
     catch (const fs::filesystem_error &e)
     {

@@ -6885,16 +6885,16 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
 
         if (fs::exists(fullLocation))
         {
-            storage->okCancelProvider("The wavetable script '" + location.string() +
-                                          "' already exists. "
-                                          "Are you sure you want to overwrite it?",
-                                      "Overwrite Wavetable Script", SurgeStorage::OK,
-                                      [doSave](SurgeStorage::OkCancel okc) {
-                                          if (okc == SurgeStorage::OK)
-                                          {
-                                              doSave();
-                                          }
-                                      });
+            storage->okCancelProvider(
+                "The wavetable script '" + location.string() +
+                    "' already exists. Are you sure you want to overwrite it?",
+                "Overwrite Wavetable Script", SurgeStorage::OK,
+                [doSave](SurgeStorage::OkCancel okc) {
+                    if (okc == SurgeStorage::OK)
+                    {
+                        doSave();
+                    }
+                });
         }
         else
         {
