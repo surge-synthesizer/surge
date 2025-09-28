@@ -253,6 +253,7 @@ end
                 addi("key", s.key);
                 addi("velocity", s.velocity);
                 addi("voice_id", s.voiceOrderAtCreate);
+                addn("tuned_key", s.tunedkey);
             }
 
             // Fake a voice count of one for display calls
@@ -263,8 +264,10 @@ end
 
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
+            addb("use_envelope", true);
 
-            // Load the macros
+            // Legacy tables for deprecated macro subscriptions
+            // TODO: Remove in XT2
             lua_createtable(s.L, n_customcontrollers, 0);
             for (int i = 0; i < n_customcontrollers; ++i)
             {
@@ -548,6 +551,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addi("rel_velocity", s->releasevelocity);
         addi("channel", s->channel);
 
+        addn("tuned_key", s->tunedkey);
         addn("poly_at", s->polyat);
         addn("mpe_bend", s->mpebend);
         addn("mpe_bendrange", s->mpebendrange);
@@ -730,7 +734,7 @@ enum showFilter
 
 bool isUserDefined(std::string str)
 {
-    static std::array<std::string, 51> keywords = {
+    static std::array<std::string, 53> keywords = {
         "amplitude",     "attack",       "block_size",
         "cc_breath",     "cc_expr",      "cc_mw",
         "cc_sus",        "chan_at",      "channel",
@@ -746,8 +750,9 @@ bool isUserDefined(std::string str)
         "rate",          "rel_velocity", "release",
         "released",      "samplerate",   "scene_mode",
         "songpos",       "split_point",  "startphase",
-        "sustain",       "tempo",        "velocity",
-        "voice_count",   "voice_id",     "subscriptions"};
+        "sustain",       "tempo",        "tuned_key",
+        "use_envelope",  "velocity",     "voice_count",
+        "voice_id",      "subscriptions"};
 
     auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();
     // std::cout << "isCustom " << str << " = " << foundInList << "\n";
@@ -1084,7 +1089,7 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgePatch &patch, int sce
         s.splitpoint = (int)(s.splitpoint / 8 + 1);
 }
 
-void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
+void setupEvaluatorStateFrom(EvaluatorState &s, SurgeVoice *v)
 {
     s.key = v->state.key;
     s.channel = v->state.channel;
@@ -1100,6 +1105,8 @@ void setupEvaluatorStateFrom(EvaluatorState &s, const SurgeVoice *v)
     s.mpetimbre = (v->state.mpeEnabled ? v->timbreSource.get_output(0) : 0);
     s.mpepressure = (v->state.mpeEnabled ? v->monoAftertouchSource.get_output(0) : 0);
     s.mpebendrange = (v->state.mpeEnabled ? v->state.mpePitchBendRange : 0);
+
+    s.tunedkey = v->state.getPitch(v->storage);
 }
 
 std::variant<float, std::string, bool> runOverModStateForTesting(const std::string &query,

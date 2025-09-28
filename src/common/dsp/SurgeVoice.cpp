@@ -204,6 +204,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.mpePitchBend.set_samplerate(storage->samplerate, storage->samplerate_inv);
     state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
 
+    state.tunedkey = state.getPitch(storage);
+
 #ifndef SURGE_SKIP_ODDSOUND_MTS
     const bool isCh23Mode = Surge::Storage::getUserDefaultValue(
         storage, Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true, false);

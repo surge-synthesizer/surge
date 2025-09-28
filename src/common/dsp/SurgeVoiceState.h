@@ -29,7 +29,7 @@ struct SurgeVoiceState
 {
     bool gate;
     bool keep_playing, uberrelease;
-    float pitch, scenepbpitch, fvel, pkey, priorpkey, detune, freleasevel;
+    float pitch, scenepbpitch, fvel, pkey, priorpkey, detune, freleasevel, tunedkey;
     MidiKeyState *keyState;
     MidiChannelState *mainChannelState;
     MidiChannelState *voiceChannelState;
