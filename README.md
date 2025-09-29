@@ -188,7 +188,7 @@ on Windows, run `sys.path.append("ignore/bpy/src/surge-python/Debug")` instead, 
 The CMake target `surge-xt-distribution` builds an install image on your platform at the end of the build process. On
 Mac and Linux, the installer generator is built into the platform; on Windows, [Inno Setup](https://jrsoftware.org/isinfo.php)
 and [7-Zip](https://7-zip.org/) should be on your PATH. The directory containing `7z.exe` (normally `C:\Program Files\7-Zip`)
-and the directory containing `ISCC.exe` (normally `C:\Program Files (x86)\Inno Setup 6\ISCC.exe`) must be in your
+and the directory containing `ISCC.exe` (normally `C:\Program Files (x86)\Inno Setup 6`) must be in your
 PATH environment variable.
 
 ## Using CMake on the Command Line for More
