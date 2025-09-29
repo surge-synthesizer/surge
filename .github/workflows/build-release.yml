@@ -95,7 +95,7 @@ jobs:
       - uses: surge-synthesizer/sst-githubactions/install-innosetup@main
         if: runner.os == 'Windows'
         with:
-          version: "6.5.1"
+          version: "6.5.4"
 
       - name: "Prepare for JUCE"
         uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
