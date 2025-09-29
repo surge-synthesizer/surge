@@ -63,7 +63,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         {
             keyRetuningForKey = key;
             keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key + mpeBend,
-                                                  mtsUseChannelWhenRetuning ? 0 : channel);
+                                                  mtsUseChannelWhenRetuning ? channel : -1);
         }
         auto rkey = keyRetuning;
 
@@ -212,7 +212,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     const bool isChSplitMode = storage->getPatch().scenemode.val.i == sm_chsplit;
 
     state.mtsUseChannelWhenRetuning =
-        (mpeEnabled || isChSplitMode || isCh23Mode || storage->mapChannelToOctave);
+        !(mpeEnabled || isChSplitMode || isCh23Mode || storage->mapChannelToOctave);
 #endif
 
     resetPortamentoFrom(storage->last_key[scene_id], channel);
