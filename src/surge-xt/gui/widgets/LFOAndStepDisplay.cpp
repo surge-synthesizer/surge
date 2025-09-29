@@ -66,9 +66,6 @@ LFOAndStepDisplay::LFOAndStepDisplay(SurgeGUIEditor *e)
     memset(paramsFromLastDrawCall, 0, sizeof(paramsFromLastDrawCall));
     memset(settingsFromLastDrawCall, 0, sizeof(settingsFromLastDrawCall));
 
-    backingImage = std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB, 50, 50, true);
-    waveformIsUpdated = true;
-
     typeLayer = std::make_unique<OverlayAsAccessibleContainer>("LFO Type");
     addAndMakeVisible(*typeLayer);
     for (int i = 0; i < n_lfo_types; ++i)
@@ -352,6 +349,9 @@ void LFOAndStepDisplay::resized()
     typeLayer->setBounds(getLocalBounds());
     stepLayer->setBounds(getLocalBounds());
 
+    backingImage = std::make_unique<juce::Image>(juce::Image::PixelFormat::ARGB,
+                                                 outer.getWidth() * 2, outer.getHeight() * 2, true);
+
     for (int i = 0; i < n_lfo_types; ++i)
     {
         int xp = (i % 2) * 25 + left_panel.getX();
@@ -445,7 +445,6 @@ void LFOAndStepDisplay::paint(juce::Graphics &g)
 
         g.drawImage(*backingImage, getLocalBounds().toFloat(),
                     juce::RectanglePlacement::fillDestination);
-        waveformIsUpdated = false;
     }
 
     paintTypeSelector(g);
