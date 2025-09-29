@@ -59,7 +59,6 @@ struct LFOAndStepDisplay : public juce::Component,
     void setZoomFactor(int);
     int zoomFactor{100};
     std::unique_ptr<juce::Image> backingImage;
-    bool waveformIsUpdated{false};
     bool forceRepaint{false};
     LFOStorage *lfoStorageFromLastDrawingCall{nullptr};
     pdata paramsFromLastDrawCall[n_scene_params];
