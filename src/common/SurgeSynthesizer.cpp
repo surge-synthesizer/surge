@@ -880,7 +880,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             }
             else if (storage.mapChannelToOctave)
             {
-                auto keyadj = SurgeVoice::channelKeyEquvialent(key, channel, mpeEnabled, &storage);
+                auto keyadj = SurgeVoice::channelKeyEquivalent(key, channel, &storage);
 
                 for (int k = lowkey; k < hikey; ++k)
                 {
@@ -888,8 +888,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     {
                         if (channelState[ch].keyState[k].keystate)
                         {
-                            auto kadj =
-                                SurgeVoice::channelKeyEquvialent(k, ch, mpeEnabled, &storage);
+                            auto kadj = SurgeVoice::channelKeyEquivalent(k, ch, &storage);
 
                             if (primode == ALWAYS_HIGHEST && kadj > keyadj)
                                 createVoice = false;
@@ -1042,7 +1041,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
             }
             else if (storage.mapChannelToOctave)
             {
-                auto keyadj = SurgeVoice::channelKeyEquvialent(key, channel, mpeEnabled, &storage);
+                auto keyadj = SurgeVoice::channelKeyEquivalent(key, channel, &storage);
 
                 for (int k = lowkey; k < hikey; ++k)
                 {
@@ -1050,8 +1049,7 @@ void SurgeSynthesizer::playVoice(int scene, char channel, char key, char velocit
                     {
                         if (channelState[ch].keyState[k].keystate)
                         {
-                            auto kadj =
-                                SurgeVoice::channelKeyEquvialent(k, ch, mpeEnabled, &storage);
+                            auto kadj = SurgeVoice::channelKeyEquivalent(k, ch, &storage);
 
                             if (primode == ALWAYS_HIGHEST && kadj > keyadj)
                                 createVoice = false;
@@ -1434,8 +1432,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                     }
                     else if (!mpeEnabled && storage.mapChannelToOctave)
                     {
-                        auto keyadj =
-                            SurgeVoice::channelKeyEquvialent(key, channel, mpeEnabled, &storage);
+                        auto keyadj = SurgeVoice::channelKeyEquivalent(key, channel, &storage);
 
                         int highest = -1, lowest = 128, latest = -1;
                         int highestadj = -100, lowestadj = 1000;
@@ -1448,8 +1445,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                             {
                                 if (channelState[ch].keyState[k].keystate)
                                 {
-                                    auto kadj = SurgeVoice::channelKeyEquvialent(k, ch, mpeEnabled,
-                                                                                 &storage);
+                                    auto kadj = SurgeVoice::channelKeyEquivalent(k, ch, &storage);
                                     if (kadj >= highestadj)
                                     {
                                         /*
@@ -1659,8 +1655,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                     }
                     else if (!mpeEnabled && storage.mapChannelToOctave)
                     {
-                        auto keyadj =
-                            SurgeVoice::channelKeyEquvialent(key, channel, mpeEnabled, &storage);
+                        auto keyadj = SurgeVoice::channelKeyEquivalent(key, channel, &storage);
 
                         int highest = -1, lowest = 128, latest = -1;
                         int highestadj = -1000, lowestadj = 1000;
@@ -1673,8 +1668,7 @@ void SurgeSynthesizer::releaseNotePostHoldCheck(int scene, char channel, char ke
                             {
                                 if (channelState[ch].keyState[k].keystate)
                                 {
-                                    auto kadj = SurgeVoice::channelKeyEquvialent(k, ch, mpeEnabled,
-                                                                                 &storage);
+                                    auto kadj = SurgeVoice::channelKeyEquivalent(k, ch, &storage);
 
                                     if (kadj >= highestadj)
                                     {
