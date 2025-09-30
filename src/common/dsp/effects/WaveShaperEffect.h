@@ -49,6 +49,9 @@ class WaveShaperEffect : public Effect
 
     virtual int get_ringout_decay() override { return -1; }
 
+    virtual void handleStreamingMismatches(int streamingRevision,
+                                           int currentSynthStreamingRevision) override;
+
     enum wsfx_params
     {
         ws_prelowcut,

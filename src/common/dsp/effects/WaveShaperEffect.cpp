@@ -28,8 +28,6 @@
 #include "sst/basic-blocks/mechanics/simd-ops.h"
 namespace mech = sst::basic_blocks::mechanics;
 
-// http://recherche.ircam.fr/pub/dafx11/Papers/66_e.pdf
-
 WaveShaperEffect::WaveShaperEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), halfbandIN(6, true), halfbandOUT(6, true), lpPre(storage),
       hpPre(storage), lpPost(storage), hpPost(storage)
@@ -69,7 +67,7 @@ void WaveShaperEffect::setvars(bool init)
         mix.instantize();
         boost.instantize();
 
-        drive.newValue(db_to_amp(*pd_float[ws_drive]));
+        drive.newValue(db_to_amp(fxdata->p[ws_drive].get_extended(fxdata->p[ws_drive].val.f)));
         bias.newValue(clamp1bp(*pd_float[ws_bias]));
 
         bias.instantize();
@@ -82,7 +80,8 @@ void WaveShaperEffect::setvars(bool init)
 void WaveShaperEffect::process(float *dataL, float *dataR)
 {
     mix.set_target_smoothed(clamp01(*pd_float[ws_mix]));
-    boost.set_target_smoothed(db_to_amp(*pd_float[ws_postboost]));
+    boost.set_target_smoothed(
+        db_to_amp(fxdata->p[ws_postboost].get_extended(fxdata->p[ws_postboost].val.f)));
 
     /*
      * OK so what's all this? Well the network of halfbands and so on
@@ -100,7 +99,7 @@ void WaveShaperEffect::process(float *dataL, float *dataR)
      */
     const auto scalef = 3.f, oscalef = 1.f / 3.f, hbfComp = 2.f;
 
-    auto x = scalef * *pd_float[ws_drive];
+    auto x = scalef * fxdata->p[ws_drive].get_extended(fxdata->p[ws_drive].val.f);
     auto dnv = limit_range(powf(2.f, x / 18.f), 0.f, 8.f);
     drive.newValue(dnv);
     bias.newValue(clamp1bp(*pd_float[ws_bias]));
@@ -280,6 +279,7 @@ void WaveShaperEffect::init_default_values()
     fxdata->p[ws_shaper].val.i = 0;
     fxdata->p[ws_bias].val.f = 0;
     fxdata->p[ws_drive].val.f = fxdata->p[ws_drive].val_default.f;
+    fxdata->p[ws_drive].extend_range = false;
 
     fxdata->p[ws_postlowcut].val.f = fxdata->p[ws_postlowcut].val_min.f;
     fxdata->p[ws_postlowcut].deactivated = false;
@@ -287,5 +287,16 @@ void WaveShaperEffect::init_default_values()
     fxdata->p[ws_posthighcut].deactivated = false;
 
     fxdata->p[ws_postboost].val.f = fxdata->p[ws_drive].val_default.f;
+    fxdata->p[ws_postboost].extend_range = false;
     fxdata->p[ws_mix].val.f = 1.f;
+}
+
+void WaveShaperEffect::handleStreamingMismatches(int streamingRevision,
+                                                 int currentSynthStreamingRevision)
+{
+    if (streamingRevision < 27)
+    {
+        fxdata->p[ws_drive].set_extend_range(false);
+        fxdata->p[ws_postboost].set_extend_range(false);
+    }
 }
