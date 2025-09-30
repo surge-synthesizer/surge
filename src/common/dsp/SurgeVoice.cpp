@@ -63,7 +63,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         {
             keyRetuningForKey = key;
             keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key + mpeBend,
-                                                  mtsUseChannelWhenRetuning ? 0 : channel);
+                                                  mtsUseChannelWhenRetuning ? channel : -1);
         }
         auto rkey = keyRetuning;
 
@@ -77,49 +77,54 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
         res = storage->remapKeyInMidiOnlyMode(res);
     }
 
-    res = SurgeVoice::channelKeyEquvialent(res, channel, mpeEnabled, storage, false);
+    if (!mpeEnabled && storage->mapChannelToOctave)
+    {
+        res = SurgeVoice::channelKeyEquivalent(res, channel, storage, false);
+    }
 
     return res;
 }
 
-float SurgeVoice::channelKeyEquvialent(float key, int channel, bool isMpeEnabled,
-                                       SurgeStorage *storage, bool remapKeyForTuning)
+float SurgeVoice::channelKeyEquivalent(float key, int channel, SurgeStorage *storage,
+                                       bool remapKeyForTuning)
 {
     float res = key;
-    if (storage->mapChannelToOctave && !isMpeEnabled)
-    {
-        if (remapKeyForTuning)
-        {
-            res = storage->remapKeyInMidiOnlyMode(res);
-        }
 
-        float shift;
-        if (channel > 7)
-        {
-            shift = channel - 16;
-        }
-        else
-        {
-            shift = channel;
-        }
-        if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
-        {
-            // keys are in scale space so move scale.count
-            res += storage->currentScale.count * shift;
-        }
-        else
-        {
-            // keys are in tuning space so move cents worth of keys
-            // We don't know the period in MTS-ESP so default to octave for now
-            if (storage->isStandardTuning || storage->oddsound_mts_active_as_client)
-                res += 12 * shift;
-            else
-            {
-                auto ct = storage->currentScale.tones[storage->currentScale.count - 1].cents;
-                res += ct / 100 * shift;
-            }
-        }
+    if (remapKeyForTuning)
+    {
+        res = storage->remapKeyInMidiOnlyMode(res);
     }
+
+    float shift;
+    if (channel > 7)
+    {
+        shift = channel - 16;
+    }
+    else
+    {
+        shift = channel;
+    }
+
+    if (storage->isStandardTuning)
+    {
+        res += 12 * shift;
+    }
+    else if (storage->oddsound_mts_active_as_client)
+    {
+        res += MTS_GetMapSize(storage->oddsound_mts_client) * shift;
+    }
+    else if (storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
+    {
+        // keys are in scale space so move scale.count
+        res += storage->currentScale.count * shift;
+    }
+    else
+    {
+        // keys are in tuning space so move cents worth of keys
+        auto ct = storage->currentScale.tones[storage->currentScale.count - 1].cents;
+        res += ct / 100 * shift;
+    }
+
     return res;
 }
 
@@ -204,16 +209,16 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     state.mpePitchBend.set_samplerate(storage->samplerate, storage->samplerate_inv);
     state.mpePitchBend.init(voiceChannelState->pitchBend / 8192.f);
 
-    state.tunedkey = state.getPitch(storage);
-
 #ifndef SURGE_SKIP_ODDSOUND_MTS
     const bool isCh23Mode = Surge::Storage::getUserDefaultValue(
         storage, Surge::Storage::UseCh2Ch3ToPlayScenesIndividually, true, false);
     const bool isChSplitMode = storage->getPatch().scenemode.val.i == sm_chsplit;
 
     state.mtsUseChannelWhenRetuning =
-        (mpeEnabled || isChSplitMode || isCh23Mode || storage->mapChannelToOctave);
+        !(mpeEnabled || isChSplitMode || isCh23Mode || storage->mapChannelToOctave);
 #endif
+
+    state.tunedkey = state.getPitch(storage);
 
     resetPortamentoFrom(storage->last_key[scene_id], channel);
 
@@ -1654,8 +1659,7 @@ void SurgeVoice::resetPortamentoFrom(int key, int channel)
 #endif
         {
             if (storage->mapChannelToOctave && !mpeEnabled)
-                state.portasrc_key =
-                    channelKeyEquvialent(lk, state.channel, mpeEnabled, storage, true);
+                state.portasrc_key = channelKeyEquivalent(lk, state.channel, storage, true);
             else
                 state.portasrc_key = storage->remapKeyInMidiOnlyMode(lk);
         }
