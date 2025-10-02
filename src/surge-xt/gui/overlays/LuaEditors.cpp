@@ -229,7 +229,10 @@ void TextfieldPopup::paint(juce::Graphics &g)
 void TextfieldPopup::show()
 {
     setVisible(true);
-    textfield[0]->grabKeyboardFocus();
+    if (textfield[0]->isShowing())
+    {
+        textfield[0]->grabKeyboardFocus();
+    }
 }
 
 void TextfieldPopup::hide() { setVisible(false); }
@@ -690,7 +693,10 @@ void CodeEditorSearch::show()
     textfield[0]->moveCaretToEndOfLine(true);
 
     search(true);
-    textfield[0]->grabKeyboardFocus();
+    if (textfield[0]->isShowing())
+    {
+        textfield[0]->grabKeyboardFocus();
+    }
     ed->repaint(); // force update selection color
 }
 
@@ -957,7 +963,11 @@ void CodeEditorSearch::showReplace(bool showReplaceRow)
     if (showReplaceRow)
     {
         showRows(2);
-        textfield[1]->grabKeyboardFocus();
+        if (textfield[1]->isShowing())
+        {
+            textfield[1]->grabKeyboardFocus();
+        }
+
         textfield[1]->moveCaretToStartOfLine(false);
         textfield[1]->moveCaretToEndOfLine(true);
 
@@ -966,7 +976,11 @@ void CodeEditorSearch::showReplace(bool showReplaceRow)
     else
     {
         showRows(1);
-        textfield[0]->grabKeyboardFocus();
+        if (textfield[0]->isShowing())
+        {
+            textfield[0]->grabKeyboardFocus();
+        }
+
         textfield[0]->moveCaretToStartOfLine(false);
         textfield[0]->moveCaretToEndOfLine(true);
 
