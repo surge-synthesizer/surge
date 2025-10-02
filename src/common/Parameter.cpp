@@ -1365,29 +1365,29 @@ void Parameter::set_type(int ctrltype)
     case ct_bonsai_sat_filter:
         valtype = vt_int;
         val_min.i = 0;
-        val_default.i = 0;
         val_max.i = 1;
+        val_default.i = 0;
         break;
 
     case ct_bonsai_sat_mode:
         valtype = vt_int;
         val_min.i = 0;
-        val_default.i = 1;
         val_max.i = 3;
+        val_default.i = 1;
         break;
 
     case ct_bonsai_noise_mode:
         valtype = vt_int;
         val_min.i = 0;
-        val_default.i = 0;
         val_max.i = 1;
+        val_default.i = 0;
         break;
 
     case ct_floaty_delay_playrate:
         valtype = vt_float;
         val_min.f = -5.f;
-        val_default.f = 1.f;
         val_max.f = 5.f;
+        val_default.f = 1.f;
         break;
 
     case ct_none:
@@ -2186,8 +2186,8 @@ void Parameter::set_extend_range(bool er)
             displayType = LinearWithScale;
             snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "semitones");
             displayInfo.supportsNoteName = false;
-            displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys;
-            displayInfo.customFeatures |= kAllowsTuningFractionTypein;
+            displayInfo.customFeatures = ParamDisplayFeatures::kUnitsAreSemitonesOrKeys |
+                                         ParamDisplayFeatures::kAllowsTuningFractionTypein;
         }
         break;
         case ct_freq_audible_fm3_extendable:
@@ -4856,7 +4856,34 @@ bool Parameter::set_value_from_string_onto(const std::string &s, pdata &ontoThis
     }
     case LinearWithScale:
     {
-        if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsLinearFractionTypein)
+        {
+            // Check for a fraction
+            if (s.find('/') != std::string::npos)
+            {
+                auto slashPos = s.find('/');
+                float nom, den;
+
+                if (slashPos == std::string::npos)
+                {
+                    nom = atoll(s.c_str());
+                    den = 1;
+                }
+                else
+                {
+                    nom = atoll(s.substr(0, slashPos).c_str());
+                    den = atoll(s.substr(slashPos + 1).c_str());
+                }
+
+                if (nom == 0 || den == 0)
+                {
+                    return false;
+                }
+
+                nv = nom / den;
+            }
+        }
+        else if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
         {
             // Check for a fraction
             if (s.find('/') != std::string::npos)
@@ -5163,7 +5190,34 @@ float Parameter::calculate_modulation_value_from_string(const std::string &s, st
     case DelegatedToFormatter:
     case LinearWithScale:
     {
-        if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
+        if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsLinearFractionTypein)
+        {
+            // Check for a fraction
+            if (s.find('/') != std::string::npos)
+            {
+                auto slashPos = s.find('/');
+                float nom, den;
+
+                if (slashPos == std::string::npos)
+                {
+                    nom = atoll(s.c_str());
+                    den = 1;
+                }
+                else
+                {
+                    nom = atoll(s.substr(0, slashPos).c_str());
+                    den = atoll(s.substr(slashPos + 1).c_str());
+                }
+
+                if (nom == 0 || den == 0)
+                {
+                    return false;
+                }
+
+                mv = nom / den;
+            }
+        }
+        else if (displayInfo.customFeatures & ParamDisplayFeatures::kAllowsTuningFractionTypein)
         {
             // Check for a fraction
             if (s.find('/') != std::string::npos)
