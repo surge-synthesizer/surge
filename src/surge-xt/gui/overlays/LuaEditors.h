@@ -377,6 +377,7 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void generateWavetable();
 
     void rerenderFromUIState();
+    void adjustCurrentFrame(int value);
     void setCurrentFrame(int value);
 
     void createMenu(juce::PopupMenu &menu);
