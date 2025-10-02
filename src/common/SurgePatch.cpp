@@ -2776,7 +2776,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     std::uint16_t id = 0;
     if (nextBlockId)
     {
-        id = static_cast<std::uint16_t>(std::stoul(nextBlockId->Attribute("v")));
+        id = static_cast<std::uint16_t>(std::stoul(nextBlockId->Attribute("id")));
     }
     block_id.store(id);
 
@@ -3518,6 +3518,16 @@ void SurgePatch::load_arbitrary_block_storage_xml(const TiXmlElement *patch)
                         static_cast<std::uint16_t>(std::stoul(j->Attribute("id")));
                     fx[slot].user_data[count].data_size =
                         static_cast<std::uint32_t>(std::stoul(j->Attribute("dataSize")));
+                    if (j->Attribute("name"))
+                    {
+                        std::cout << "success branch" << std::endl;
+                        fx[slot].user_data[count].name = j->Attribute("name");
+                    }
+                    else
+                    {
+                        std::cout << "else branch" << std::endl;
+                        fx[slot].user_data[count].name = "";
+                    }
                     fx[slot].user_data[count].data = std::make_unique<std::uint8_t[]>(fx[slot].user_data[count].data_size);
                     count++;
                 }
@@ -3771,6 +3781,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
             TiXmlElement ud("userData");
             ud.SetAttribute("id", this->fx[fx].user_data[i].id);
             ud.SetAttribute("dataSize", this->fx[fx].user_data[i].data_size);
+            ud.SetAttribute("name", this->fx[fx].user_data[i].name);
             fxe.InsertEndChild(ud);
         }
         efd.InsertEndChild(fxe);

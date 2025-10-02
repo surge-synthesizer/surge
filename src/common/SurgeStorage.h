@@ -658,6 +658,7 @@ struct ArbitraryBlockStorage
     std::uint16_t id;
     std::uint32_t data_size;
     std::unique_ptr<std::uint8_t[]> data;
+    std::string name;
 
     template <typename T> T *as() { return static_cast<const T *>(data.get()); }
 
