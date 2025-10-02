@@ -1299,7 +1299,7 @@ void RadialScaleGraph::paint(juce::Graphics &g)
                 auto irsf = 1.0 / rsf;
                 g.addTransform(juce::AffineTransform::scale(rsf, rsf));
 
-                if (notesOn[i])
+                if (i < notesOn.size() && notesOn[i])
                 {
                     g.setColour(juce::Colour(255, 255, 255));
                 }
