@@ -123,6 +123,8 @@ add_library(${PROJECT_NAME}
   dsp/effects/CombulatorEffect.h
   dsp/effects/ConditionerEffect.cpp
   dsp/effects/ConditionerEffect.h
+  dsp/effects/ConvolutionEffect.cpp
+  dsp/effects/ConvolutionEffect.h
   dsp/effects/DelayEffect.cpp
   dsp/effects/DelayEffect.h
   dsp/effects/DistortionEffect.cpp
