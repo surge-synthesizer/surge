@@ -663,52 +663,6 @@ end)FN");
         REQUIRE(outOfBounds > 0);
     }
 }
-TEST_CASE("Wavetable Script", "[formula]")
-{
-    SECTION("Just The Sines")
-    {
-        SurgeStorage storage;
-        const std::string s = R"FN(
-
-function init(wt)
-    -- wt will have frame_count and sample_count defined
-    wt.name = "Fourier Saw"
-    wt.phase = math.linspace(0.0, 1.0, wt.sample_count)
-    return wt
-end
-
-function generate(wt)
-    local res = {}
-
-    for i,x in ipairs(wt.phase) do
-        local lv = 0
-        lv = sin(2 * pi * wt.frame * x)
-        res[i] = lv
-    end
-    return res
-end
-        )FN";
-        auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-        la->setResolution(512);
-        la->setStorage(nullptr);
-        la->setFrameCount(4);
-        la->setScript(s);
-
-        for (int fno = 0; fno < 4; ++fno)
-        {
-            auto fr = la->getFrame(fno);
-            REQUIRE(fr.has_value());
-            REQUIRE(fr->size() == 512);
-            auto dp = 1.0 / (512 - 1);
-            for (int i = 0; i < 512; ++i)
-            {
-                auto x = i * dp;
-                auto r = sin(2 * M_PI * x * (fno + 1));
-                REQUIRE(r == Approx((*fr)[i]));
-            }
-        }
-    }
-}
 
 TEST_CASE("Simple Used Formula Modulator", "[formula]")
 {
@@ -978,6 +932,120 @@ TEST_CASE("Two Surge XTs", "[formula]")
         {
             s1->process();
             s2->process();
+        }
+    }
+}
+
+TEST_CASE("Bitops Module", "[formula]")
+{
+    SECTION("Bit Operation")
+    {
+        SurgeStorage storage;
+        FormulaModulatorStorage fs;
+        fs.setFormula(R"FN(
+function process(state)
+    state.output = bit.tobit(0xffffffff)
+    return state
+end)FN");
+        auto runIt = runFormula(&storage, &fs, 0.0321, 5);
+        for (auto c : runIt)
+        {
+            REQUIRE(c.v == -1);
+        }
+    }
+}
+
+TEST_CASE("Wavetable Script", "[wts]")
+{
+    SECTION("Just the Sines")
+    {
+        SurgeStorage storage;
+        const std::string s = R"FN(
+
+function init(wt)
+    -- wt will have frame_count and sample_count defined
+    wt.name = "Sine Series"
+    wt.phase = math.linspace(0.0, 1.0, wt.sample_count)
+    return wt
+end
+
+function generate(wt)
+    local res = {}
+
+    for i,x in ipairs(wt.phase) do
+        local lv = 0
+        lv = sin(2 * pi * wt.frame * x)
+        res[i] = lv
+    end
+    return res
+end
+        )FN";
+        auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+        la->setResolution(512);
+        la->setStorage(nullptr);
+        la->setFrameCount(4);
+        la->setScript(s);
+
+        for (int fno = 0; fno < 4; ++fno)
+        {
+            auto fr = la->getFrame(fno);
+            REQUIRE(fr.has_value());
+            REQUIRE(fr->size() == 512);
+            auto dp = 1.0 / (512 - 1);
+            for (int i = 0; i < 512; ++i)
+            {
+                auto x = i * dp;
+                auto r = sin(2 * M_PI * x * (fno + 1));
+                REQUIRE(r == Approx((*fr)[i]));
+            }
+        }
+    }
+}
+
+TEST_CASE("PFFFT Wrapper", "[wts]")
+{
+    SECTION("Round-Trip FFT")
+    {
+        SurgeStorage storage;
+        const std::string s = R"FN(
+
+function init(wt)
+    -- wt will have frame_count and sample_count defined
+    wt.name = "Sine"
+    wt.phase = math.linspace(0.0, 1.0, wt.sample_count)
+    return wt
+end
+
+function generate(wt)
+    local res = {}
+    local fft = {}
+
+    for i,x in ipairs(wt.phase) do
+        local lv = 0
+        lv = sin(2 * pi * x)
+        res[i] = lv
+    end
+    fft = real_fft(res)
+    fft = real_ifft(fft)
+    fft = scale_real(fft)
+    return fft
+end
+        )FN";
+        auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+        la->setResolution(512);
+        la->setStorage(nullptr);
+        la->setFrameCount(1);
+        la->setScript(s);
+
+        auto fr = la->getFrame(0);
+        REQUIRE(fr.has_value());
+        REQUIRE(fr->size() == 512);
+        auto dp = 1.0 / (512 - 1);
+        for (int i = 0; i < 512; ++i)
+        {
+            auto x = i * dp;
+            auto r = sin(2 * M_PI * x);
+            REQUIRE(r == Approx((*fr)[i]).margin(1e-6));
         }
     }
 }
