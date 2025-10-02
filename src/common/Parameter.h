@@ -556,9 +556,10 @@ class Parameter
         kHasCustomMaxValue = 1U << 4U,
         kUnitsAreSemitonesOrKeys = 1U << 5U,
         kScaleBasedOnIsBiPolar = 1U << 6U,
-        kAllowsTuningFractionTypein = 1U << 7U,
+        kAllowsTuningFractionTypein = 1U << 7U, // disallows kAllowsLinearFractionTypein
         kAllowsModulationsInNotesAndCents = 1U << 8U,
         kSwitchesFromSecToMillisec = 1U << 9U,
+        kAllowsLinearFractionTypein = 1U << 10U, // disallows kAllowsTuningFractionTypein
     };
 
 #define DISPLAYINFO_TXT_SIZE 128
