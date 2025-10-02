@@ -2956,8 +2956,8 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
         setSkin(skin);
     }
 
-    void setSingleFrame() { mode = 0; }
-    void setFilmstrip() { mode = 1; }
+    void setFilmstrip() { mode = 0; }
+    void setSingleFrame() { mode = 1; }
 
     void paint(juce::Graphics &g) override
     {
@@ -2971,8 +2971,101 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
         auto font = skin->fontManager->getLatoAtSize(8);
 
-        if (mode == 0)
+        if (mode == 0) // Filmstrip mode
         {
+            auto gs = juce::Graphics::ScopedSaveState(g);
+            g.reduceClipRegion(0, 0, width, height);
+
+            float frameWidth = float(width) / 6.f;
+            float paintWidth = frameCount * frameWidth - getWidth();
+            float startX = (frameNumber - 1) * frameWidth;
+            startX = limit_range(startX, 0.f, paintWidth);
+
+            // alternate checkerboard bg
+            for (int idx = 0; idx < frameCount; ++idx)
+            {
+                float xpos = idx * frameWidth - startX;
+
+                auto bg1 = skin->getColor(Colors::MSEGEditor::Background);
+                auto bg2 = skin->getColor(Colors::MSEGEditor::Background).darker(0.2f);
+                g.setColour((idx % 2 == 0) ? bg1 : bg2);
+                g.fillRect(int(xpos), 0, int(frameWidth), height);
+            }
+
+            // Graph
+            for (int idx = 0; idx < frameCount; ++idx)
+            {
+                float xpos = idx * frameWidth - startX;
+
+                if (xpos < -frameWidth || xpos >= width)
+                {
+                    // We are outside the clip window. Do nothing.
+                    // std::cout << "idx: " << idx << " xpos: " << xpos << std::endl;
+                    continue;
+                }
+
+                auto pGradient = juce::Path();
+                auto pStroke = juce::Path();
+
+                auto pointsOpt = overlay->evaluator->getFrame(idx);
+                if (!pointsOpt.has_value())
+                {
+                    break; // Exit loop on invalid frame to prevent repeating Lua script errors
+                }
+
+                const auto &points = *pointsOpt;
+                if (!points.empty())
+                {
+                    float dx = frameWidth / float(points.size() - 1);
+                    float xp{0};
+
+                    for (int i = 0; i < points.size(); ++i)
+                    {
+                        xp = dx * i + xpos;
+                        float yp = 0.5f * (1.f - points[i]) * height;
+
+                        // Clamp to 1px within vertical bounds
+                        yp = limit_range(yp, 1.f, float(height - 1));
+
+                        if (i == 0)
+                        {
+                            pGradient.startNewSubPath(xp, middle);
+                            pGradient.lineTo(xp, yp);
+                            pStroke.startNewSubPath(xp, yp);
+                        }
+                        else
+                        {
+                            pGradient.lineTo(xp, yp);
+                            pStroke.lineTo(xp, yp);
+                        }
+
+                        if (i == points.size() - 1)
+                            pGradient.lineTo(xp, middle);
+                    }
+
+                    auto cg = juce::ColourGradient::vertical(
+                        skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
+                        skin->getColor(Colors::MSEGEditor::GradientFill::StartColor), drawArea);
+                    cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
+
+                    g.setGradientFill(cg);
+                    g.fillPath(pGradient);
+
+                    g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
+                    g.strokePath(pStroke, juce::PathStrokeType(1.0));
+                }
+
+                // Text
+                g.setFont(font);
+                g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+                g.drawText(std::to_string(idx + 1), xpos + 4, 4, height - 8, height - 8,
+                           juce::Justification::topRight);
+            }
+        }
+        else // Single mode
+        {
+            assert(mode == 1); // there are only two modes right now
+
             // Grid
             g.setColour(skin->getColor(Colors::MSEGEditor::Grid::SecondaryHorizontal));
             for (float y : {0.25f, 0.75f})
@@ -2989,6 +3082,9 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             // Graph
             auto pGradient = juce::Path();
             auto pStroke = juce::Path();
+
+            auto pointsOpt = overlay->evaluator->getFrame(frameNumber - 1);
+            const auto &points = *pointsOpt;
 
             if (!points.empty())
             {
@@ -3036,113 +3132,6 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             g.drawText(std::to_string(frameNumber), 4, 4, width - 8, height - 8,
                        juce::Justification::topRight);
         }
-        else
-        {
-            assert(mode == 1); // there are only two modes right now
-
-            auto gs = juce::Graphics::ScopedSaveState(g);
-            g.reduceClipRegion(0, 0, width, height);
-
-            float frameWidth = float(width) / 6.f;
-
-            // alternate checkerboard bg
-            for (int idx = 0; idx < frameCount; ++idx)
-            {
-                float xpos = idx * frameWidth - startX;
-
-                auto bg1 = skin->getColor(Colors::MSEGEditor::Background);
-                auto bg2 = skin->getColor(Colors::MSEGEditor::Background).darker(0.2f);
-                g.setColour((idx % 2 == 0) ? bg1 : bg2);
-                g.fillRect(int(xpos), 0, int(frameWidth), height);
-            }
-
-            // Graph
-            for (int idx = 0; idx < frameCount; ++idx)
-            {
-                float xpos = idx * frameWidth - startX;
-
-                if (xpos < -frameWidth || xpos >= width)
-                {
-                    // We are outside the clip window. Do nothing.
-                    // std::cout << "idx: " << idx << " xpos: " << xpos << std::endl;
-                    continue;
-                }
-
-                auto pGradient = juce::Path();
-                auto pStroke = juce::Path();
-
-                auto cpointOpt = overlay->evaluator->getFrame(idx);
-                if (!cpointOpt.has_value())
-                {
-                    break; // Exit loop on invalid frame to prevent repeating Lua script errors
-                }
-
-                const auto &cpoint = *cpointOpt;
-                if (!cpoint.empty())
-                {
-                    float dx = frameWidth / float(cpoint.size() - 1);
-                    float xp{0};
-
-                    for (int i = 0; i < cpoint.size(); ++i)
-                    {
-                        xp = dx * i + xpos;
-                        float yp = 0.5f * (1.f - cpoint[i]) * height;
-
-                        // Clamp to 1px within vertical bounds
-                        yp = limit_range(yp, 1.f, float(height - 1));
-
-                        if (i == 0)
-                        {
-                            pGradient.startNewSubPath(xp, middle);
-                            pGradient.lineTo(xp, yp);
-                            pStroke.startNewSubPath(xp, yp);
-                        }
-                        else
-                        {
-                            pGradient.lineTo(xp, yp);
-                            pStroke.lineTo(xp, yp);
-                        }
-
-                        if (i == cpoint.size() - 1)
-                            pGradient.lineTo(xp, middle);
-                    }
-
-                    auto cg = juce::ColourGradient::vertical(
-                        skin->getColor(Colors::MSEGEditor::GradientFill::StartColor),
-                        skin->getColor(Colors::MSEGEditor::GradientFill::StartColor), drawArea);
-                    cg.addColour(0.5, skin->getColor(Colors::MSEGEditor::GradientFill::EndColor));
-
-                    g.setGradientFill(cg);
-                    g.fillPath(pGradient);
-
-                    g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
-                    g.strokePath(pStroke, juce::PathStrokeType(1.0));
-                }
-
-                // Text
-                g.setFont(font);
-                g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
-                g.drawText(std::to_string(idx + 1), xpos + 4, 4, height - 8, height - 8,
-                           juce::Justification::topRight);
-            }
-        }
-    }
-
-    void adjustStartX(int value)
-    {
-        float frameWidth = getWidth() / 6.f;
-        float paintWidth = frameCount * frameWidth - getWidth();
-        int scale = std::max(1, frameCount * 12 / 256);
-
-        if (paintWidth > 0)
-        {
-            startX += value * 31.125f * scale;
-            startX = limit_range(startX, 0.f, paintWidth);
-        }
-        else
-        {
-            startX = 0.f;
-        }
     }
 
     void mouseDrag(const juce::MouseEvent &event) override
@@ -3150,20 +3139,13 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
         int currentDrag = event.getPosition().x + -event.getPosition().y;
         int delta = currentDrag - lastDrag;
         lastDrag = currentDrag;
+        int val = (delta < 0) ? 1 : (delta > 0 ? -1 : 0);
 
-        int value = (delta < 0) ? 1 : (delta > 0 ? -1 : 0);
-
-        if (value != 0)
+        if (val != 0)
         {
-            if (mode == 0)
-            {
-                overlay->setCurrentFrame(value);
-            }
-            else
-            {
-                adjustStartX(value);
-                repaint();
-            }
+            int scale = std::max(1, frameCount * 6 / 256);
+            overlay->adjustCurrentFrame(val * scale);
+            overlay->rendererComponent->repaint();
         }
     }
 
@@ -3174,15 +3156,8 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
         if (dir != 0)
         {
-            if (mode == 0)
-            {
-                overlay->setCurrentFrame(-dir);
-            }
-            else
-            {
-                adjustStartX(-dir);
-                repaint();
-            }
+            overlay->adjustCurrentFrame(-dir);
+            overlay->rendererComponent->repaint();
         }
     }
 
@@ -3242,28 +3217,19 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
-        if (mode == 0)
-        {
-            overlay->setCurrentFrame(-256);
-        }
-        else
-        {
-            startX = 0.f;
-            repaint();
-        }
+        overlay->setCurrentFrame(1);
+        overlay->rendererComponent->repaint();
     }
 
     void resized() override {}
     void onSkinChanged() override { repaint(); }
 
     int frameNumber{1};
-    std::vector<float> points;
     int frameCount{1};
-    int mode{1};
+    int mode{0};
 
   private:
     Surge::GUI::WheelAccumulationHelper wheelAccumulationHelper;
-    float startX{0.f};
     int lastDrag;
     bool isHandMove{false};
 
@@ -3372,7 +3338,7 @@ struct WavetableScriptControlArea : public juce::Component,
             renderModeS->setStorage(overlay->storage);
             renderModeS->setTitle("Display Mode");
             renderModeS->setDescription("Display Mode");
-            renderModeS->setLabels({"Single", "Filmstrip"});
+            renderModeS->setLabels({"Filmstrip", "Single"});
             renderModeS->addListener(this);
             renderModeS->setTag(tag_select_rendermode);
             renderModeS->setHeightOfOneImage(buttonHeight);
@@ -3428,12 +3394,6 @@ struct WavetableScriptControlArea : public juce::Component,
             currentFrameN->setHoverTextColour(
                 skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
             addAndMakeVisible(*currentFrameN);
-
-            if (overlay->rendererComponent->mode == 1)
-            {
-                currentFrameL->setVisible(false);
-                currentFrameN->setVisible(false);
-            }
 
             framesL = newL("Frames");
             xpos += numfieldWidth + margin * 3;
@@ -3731,7 +3691,7 @@ struct WavetableScriptControlArea : public juce::Component,
                 currentFrameN->setIntValue(currentFrame);
             }
             overlay->rendererComponent->frameNumber = currentFrame;
-            overlay->rerenderFromUIState();
+            overlay->rendererComponent->repaint();
         }
         break;
         case tag_frames_value:
@@ -3753,22 +3713,16 @@ struct WavetableScriptControlArea : public juce::Component,
         case tag_select_rendermode:
         {
             auto rm = renderModeS->getIntegerValue();
-            if (rm == 1)
+            if (rm == 0)
             {
-                // FILMSTRIP
-                currentFrameN->setVisible(false);
-                currentFrameL->setVisible(false);
-
+                // Filmstrip mode
                 overlay->rerenderFromUIState();
                 overlay->rendererComponent->setFilmstrip();
             }
             else
             {
-                assert(rm == 0);
-                // Frame
-                currentFrameN->setVisible(true);
-                currentFrameL->setVisible(true);
-
+                assert(rm == 1);
+                // Single mode
                 overlay->rerenderFromUIState();
                 overlay->rendererComponent->setSingleFrame();
             }
@@ -3893,7 +3847,6 @@ void WavetableScriptEditor::applyCode()
     }
 
     lastFrames = -1;
-    setupEvaluator();
     rerenderFromUIState();
     editor->repaintFrame();
     setApplyEnabled(false);
@@ -3919,8 +3872,8 @@ void WavetableScriptEditor::forceRefresh()
 
     editor->repaintFrame();
     setApplyEnabled(false);
+    setCurrentFrame(1);
 
-    setupEvaluator();
     rerenderFromUIState();
 }
 
@@ -3980,12 +3933,11 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     if (rm == lastRm)
     {
-        if (rm == 0 && resi == lastRes && nfr == lastFrames && cfr == lastFrame)
+        if (rm == 0 && resi == lastRes && nfr == lastFrames)
         {
             return;
         }
-
-        if (rm == 1 && resi == lastRes && nfr == lastFrames)
+        if (rm == 1 && resi == lastRes && nfr == lastFrames && cfr == lastFrame)
         {
             return;
         }
@@ -4002,35 +3954,21 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     setupEvaluator();
 
-    if (rm == 0)
-    {
-        auto rs = evaluator->getFrame(cfr - 1);
-        if (rs.has_value())
-        {
-            rendererComponent->points = *rs;
-        }
-        else
-        {
-            rendererComponent->points.clear();
-        }
-    }
-    else
-    {
-        rendererComponent->frameCount = nfr;
-        rendererComponent->adjustStartX(0);
-    }
+    rendererComponent->frameCount = nfr;
     rendererComponent->repaint();
 }
 
-void WavetableScriptEditor::setCurrentFrame(int value)
+void WavetableScriptEditor::adjustCurrentFrame(int val)
 {
-    int frameNumber = rendererComponent->frameNumber;
-    int maxFrames = controlArea->framesN->getIntValue();
-    frameNumber += value;
-    frameNumber = limit_range(frameNumber, 1, maxFrames);
+    val += rendererComponent->frameNumber;
+    setCurrentFrame(val);
+}
 
-    rendererComponent->frameNumber = frameNumber;
-    controlArea->currentFrameN->setIntValue(frameNumber);
+void WavetableScriptEditor::setCurrentFrame(int val)
+{
+    int maxFrames = controlArea->framesN->getIntValue();
+    val = limit_range(val, 1, maxFrames);
+    controlArea->currentFrameN->setIntValue(val);
 }
 
 void WavetableScriptEditor::setupEvaluator()
