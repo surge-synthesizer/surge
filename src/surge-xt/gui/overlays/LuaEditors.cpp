@@ -2585,15 +2585,17 @@ struct FormulaControlArea : public juce::Component,
             int bpos = getWidth() - 10 - btnWidth;
             int ypos = 1 + labelHeight + margin;
 
-            auto ma = [&](const std::string &l, tags t) {
+            auto ma = [&](const std::string &label, const std::string title, tags tag) {
                 auto res = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
                 auto btnrect = juce::Rectangle<int>(bpos, ypos - 1, btnWidth, buttonHeight);
 
                 res->setBounds(btnrect);
                 res->setStorage(overlay->storage);
-                res->setLabels({l});
+                res->setTitle(title);
+                res->setDescription(title);
+                res->setLabels({label});
                 res->addListener(this);
-                res->setTag(t);
+                res->setTag(tag);
                 res->setHeightOfOneImage(buttonHeight);
                 res->setRows(1);
                 res->setColumns(1);
@@ -2604,16 +2606,17 @@ struct FormulaControlArea : public juce::Component,
             };
 
             auto isOpen = overlay->debugPanel->isOpen;
-            showS = ma(isOpen ? "Hide" : "Show", tag_debugger_show);
+            showS = ma(isOpen ? "Hide" : "Show", isOpen ? "Hide Debugger" : "Show Debugger",
+                       tag_debugger_show);
             addAndMakeVisible(*showS);
             bpos -= btnWidth + margin;
 
-            stepS = ma("Step", tag_debugger_step);
+            stepS = ma("Step", "Step Debugger", tag_debugger_step);
             stepS->setVisible(isOpen);
             addChildComponent(*stepS);
             bpos -= btnWidth + margin;
 
-            initS = ma("Init", tag_debugger_init);
+            initS = ma("Init", "Init Debugger", tag_debugger_init);
             initS->setVisible(isOpen);
             addChildComponent(*initS);
             bpos -= btnWidth + margin;
@@ -3315,6 +3318,7 @@ struct WavetableScriptControlArea : public juce::Component,
                 w->overlay->createMenu(menu);
                 return menu;
             };
+            menuB->setExplicitFocusOrder(10);
             addAndMakeVisible(*menuB);
 
             codeL = newL("Code");
@@ -3343,6 +3347,7 @@ struct WavetableScriptControlArea : public juce::Component,
             codeS->setDraggable(true);
             codeS->setValue(overlay->getEditState().codeOrPrelude);
             codeS->setSkin(skin, associatedBitmapStore);
+            codeS->setExplicitFocusOrder(20);
             addAndMakeVisible(*codeS);
 
             renderModeS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -3350,8 +3355,8 @@ struct WavetableScriptControlArea : public juce::Component,
             btnrect = juce::Rectangle(xpos, ypos - 1, btnWidth, buttonHeight);
             renderModeS->setBounds(btnrect);
             renderModeS->setStorage(overlay->storage);
-            renderModeS->setTitle("Display Mode");
-            renderModeS->setDescription("Display Mode");
+            renderModeS->setTitle("Preview Mode");
+            renderModeS->setDescription("Preview Mode");
             renderModeS->setLabels({"Filmstrip", "Single"});
             renderModeS->addListener(this);
             renderModeS->setTag(tag_select_rendermode);
@@ -3362,6 +3367,7 @@ struct WavetableScriptControlArea : public juce::Component,
             renderModeS->setValue(overlay->rendererComponent->mode);
             renderModeS->setSkin(skin, associatedBitmapStore);
             renderModeS->setAccessible(false);
+            renderModeS->setExplicitFocusOrder(30);
             addAndMakeVisible(*renderModeS);
 
             applyS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -3381,6 +3387,7 @@ struct WavetableScriptControlArea : public juce::Component,
             applyS->setDraggable(true);
             applyS->setSkin(skin, associatedBitmapStore);
             applyS->setEnabled(false);
+            applyS->setExplicitFocusOrder(40);
             addAndMakeVisible(*applyS);
 
             auto images = skin->standardHoverAndHoverOnForIDB(IDB_MSEG_SNAPVALUE_NUMFIELD,
@@ -3398,8 +3405,8 @@ struct WavetableScriptControlArea : public juce::Component,
             currentFrameN->addListener(this);
             currentFrameN->setTag(tag_current_frame);
             currentFrameN->setStorage(overlay->storage);
-            currentFrameN->setTitle("Current Frame");
-            currentFrameN->setDescription("Current Frame");
+            currentFrameN->setTitle("Preview Frame");
+            currentFrameN->setDescription("Preview Frame");
             currentFrameN->setSkin(skin, associatedBitmapStore);
             currentFrameN->setBounds(btnrect);
             currentFrameN->setBackgroundDrawable(images[0]);
@@ -3407,6 +3414,8 @@ struct WavetableScriptControlArea : public juce::Component,
             currentFrameN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
             currentFrameN->setHoverTextColour(
                 skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
+            renderModeS->setAccessible(false);
+            currentFrameN->setExplicitFocusOrder(50);
             addAndMakeVisible(*currentFrameN);
 
             framesL = newL("Frames");
@@ -3422,8 +3431,8 @@ struct WavetableScriptControlArea : public juce::Component,
             framesN->addListener(this);
             framesN->setTag(tag_frames_value);
             framesN->setStorage(overlay->storage);
-            framesN->setTitle("Max Frame");
-            framesN->setDescription("Max Frame");
+            framesN->setTitle("Frames");
+            framesN->setDescription("Frames");
             framesN->setSkin(skin, associatedBitmapStore);
             framesN->setBackgroundDrawable(images[0]);
             framesN->setHoverBackgroundDrawable(images[1]);
@@ -3437,6 +3446,7 @@ struct WavetableScriptControlArea : public juce::Component,
                 }
                 return false;
             };
+            framesN->setExplicitFocusOrder(60);
             addAndMakeVisible(*framesN);
 
             resolutionL = newL("Samples");
@@ -3460,6 +3470,7 @@ struct WavetableScriptControlArea : public juce::Component,
             resolutionN->setTextColour(skin->getColor(Colors::MSEGEditor::NumberField::Text));
             resolutionN->setHoverTextColour(
                 skin->getColor(Colors::MSEGEditor::NumberField::TextHover));
+            resolutionN->setExplicitFocusOrder(70);
             addAndMakeVisible(*resolutionN);
 
             generateS = std::make_unique<Surge::Widgets::MultiSwitchSelfDraw>();
@@ -3478,6 +3489,7 @@ struct WavetableScriptControlArea : public juce::Component,
             generateS->setDraggable(false);
             generateS->setSkin(skin, associatedBitmapStore);
             generateS->setEnabled(true);
+            generateS->setExplicitFocusOrder(80);
             addAndMakeVisible(*generateS);
         }
     }

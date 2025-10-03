@@ -198,5 +198,17 @@ bool MenuButtonFromIcon::keyPressed(const juce::KeyPress &key)
     return false;
 }
 
+void MenuButtonFromIcon::focusGained(juce::Component::FocusChangeType cause)
+{
+    isActive = true;
+    repaint();
+}
+
+void MenuButtonFromIcon::focusLost(juce::Component::FocusChangeType cause)
+{
+    isActive = false;
+    repaint();
+}
+
 } // namespace Widgets
 } // namespace Surge
