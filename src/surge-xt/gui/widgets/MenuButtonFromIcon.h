@@ -53,6 +53,8 @@ struct MenuButtonFromIcon : public juce::Component,
     void mouseExit(const juce::MouseEvent &) override;
     void mouseDown(const juce::MouseEvent &e) override;
     bool keyPressed(const juce::KeyPress &key) override;
+    void focusGained(juce::Component::FocusChangeType cause) override;
+    void focusLost(juce::Component::FocusChangeType cause) override;
 
     std::function<juce::PopupMenu()> menuFactory;
     std::unique_ptr<juce::Drawable> baseIcon;

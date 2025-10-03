@@ -3457,6 +3457,7 @@ void MSEGControlRegion::rebuild()
         {
             movementMode->setValue(eds->timeEditMode / 2.f);
         }
+        movementMode->setExplicitFocusOrder(10);
         addAndMakeVisible(*movementMode);
         // this value centers the loop mode and snap sections against the MSEG editor width
         // if more controls are to be added to that center section, reduce this value
@@ -3499,6 +3500,7 @@ void MSEGControlRegion::rebuild()
         editMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
         editMode->setValue(ms->editMode);
+        editMode->setExplicitFocusOrder(20);
         addAndMakeVisible(*editMode);
 
         xpos += segWidth;
@@ -3539,6 +3541,7 @@ void MSEGControlRegion::rebuild()
         loopMode->setHoverOnSwitchDrawable(std::get<2>(dbl));
 
         loopMode->setValue((ms->loopMode - 1) / 2.f);
+        loopMode->setExplicitFocusOrder(30);
         addAndMakeVisible(*loopMode);
 
         xpos += segWidth;
@@ -3575,6 +3578,7 @@ void MSEGControlRegion::rebuild()
             nullptr, dynamic_cast<SurgeImage *>(hsbmp), associatedBitmapStore,
             Surge::GUI::Skin::HoverType::HOVER);
         hSnapButton->setHoverSwitchDrawable(hoverBmp);
+        hSnapButton->setExplicitFocusOrder(40);
         addAndMakeVisible(*hSnapButton);
 
         svt = fmt::format("{:d}", (int)round(1.f / ms->hSnapDefault));
@@ -3601,6 +3605,7 @@ void MSEGControlRegion::rebuild()
             }
             return false;
         };
+        hSnapSize->setExplicitFocusOrder(50);
         addAndMakeVisible(*hSnapSize);
 
         xpos += segWidth;
@@ -3617,6 +3622,7 @@ void MSEGControlRegion::rebuild()
         hoverBmp = skin->hoverBitmapOverlayForBackgroundBitmap(
             nullptr, vsbmp, associatedBitmapStore, Surge::GUI::Skin::HoverType::HOVER);
         vSnapButton->setHoverSwitchDrawable(hoverBmp);
+        vSnapButton->setExplicitFocusOrder(60);
         addAndMakeVisible(*vSnapButton);
 
         svt = fmt::format("{:d}", (int)round(1.f / ms->vSnapDefault));
@@ -3643,6 +3649,7 @@ void MSEGControlRegion::rebuild()
             }
             return false;
         };
+        vSnapSize->setExplicitFocusOrder(70);
         addAndMakeVisible(*vSnapSize);
     }
 }
