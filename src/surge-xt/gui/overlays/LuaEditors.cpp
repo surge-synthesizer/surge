@@ -2978,6 +2978,8 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
     void paint(juce::Graphics &g) override
     {
+        constexpr size_t minWtFrameSize = 32;
+
         auto height = getHeight();
         auto width = getWidth();
         auto middle = height * 0.5f;
@@ -3014,32 +3016,28 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             {
                 float xpos = idx * frameWidth - startX;
 
-                if (xpos < -frameWidth || xpos >= width)
+                if (xpos < 0 || xpos >= width)
                 {
                     // We are outside the clip window. Do nothing.
                     // std::cout << "idx: " << idx << " xpos: " << xpos << std::endl;
                     continue;
                 }
 
-                auto pGradient = juce::Path();
-                auto pStroke = juce::Path();
-
                 auto pointsOpt = overlay->evaluator->getFrame(idx);
-                if (!pointsOpt.has_value())
-                {
-                    break; // Exit loop on invalid frame to prevent repeating Lua script errors
-                }
 
-                const auto &points = *pointsOpt;
-                if (!points.empty())
+                if (pointsOpt && pointsOpt->size() >= minWtFrameSize)
                 {
+                    const auto &points = *pointsOpt;
+
+                    auto pGradient = juce::Path();
+                    auto pStroke = juce::Path();
+
                     float dx = frameWidth / float(points.size() - 1);
-                    float xp{0};
 
                     for (int i = 0; i < points.size(); ++i)
                     {
-                        xp = dx * i + xpos;
-                        float yp = 0.5f * (1.f - points[i]) * height;
+                        float xp = dx * i + xpos;
+                        float yp = 0.5f * (1.f - (points[i] * 0.98f)) * height;
 
                         // Clamp to 1px within vertical bounds
                         yp = limit_range(yp, 1.f, float(height - 1));
@@ -3057,7 +3055,9 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                         }
 
                         if (i == points.size() - 1)
+                        {
                             pGradient.lineTo(xp, middle);
+                        }
                     }
 
                     auto cg = juce::ColourGradient::vertical(
@@ -3070,13 +3070,17 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
                     g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
                     g.strokePath(pStroke, juce::PathStrokeType(1.0));
-                }
 
-                // Text
-                g.setFont(font);
-                g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
-                g.drawText(std::to_string(idx + 1), xpos + 4, 4, height - 8, height - 8,
-                           juce::Justification::topRight);
+                    // Text
+                    g.setFont(font);
+                    g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+                    g.drawText(std::to_string(idx + 1), xpos + 4, 4, height - 8, height - 8,
+                               juce::Justification::topRight);
+                }
+                else
+                {
+                    break; // Exit loop on invalid frame to prevent repeating Lua script errors
+                }
             }
         }
         else // Single mode
@@ -3097,20 +3101,21 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             g.drawLine(0.f, middle, width, middle);
 
             // Graph
-            auto pGradient = juce::Path();
-            auto pStroke = juce::Path();
-
             auto pointsOpt = overlay->evaluator->getFrame(frameNumber - 1);
-            const auto &points = *pointsOpt;
 
-            if (!points.empty())
+            if (pointsOpt && pointsOpt->size() >= minWtFrameSize)
             {
+                const auto &points = *pointsOpt;
+
+                auto pGradient = juce::Path();
+                auto pStroke = juce::Path();
+
                 float dx = width / float(points.size() - 1);
 
                 for (int i = 0; i < points.size(); ++i)
                 {
                     float xp = dx * i;
-                    float yp = 0.5f * (1 - points[i]) * height;
+                    float yp = 0.5f * (1.f - (points[i] * 0.98f)) * height;
 
                     // Clamp to 1px within vertical bounds
                     yp = limit_range(yp, 1.f, float(height - 1));
@@ -3128,7 +3133,9 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
                     }
 
                     if (i == points.size() - 1)
+                    {
                         pGradient.lineTo(xp, middle);
+                    }
                 }
 
                 auto cg = juce::ColourGradient::vertical(
@@ -3141,13 +3148,13 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
 
                 g.setColour(skin->getColor(Colors::MSEGEditor::Curve));
                 g.strokePath(pStroke, juce::PathStrokeType(1.0));
-            }
 
-            // Text
-            g.setFont(font);
-            g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
-            g.drawText(std::to_string(frameNumber), 4, 4, width - 8, height - 8,
-                       juce::Justification::topRight);
+                // Text
+                g.setFont(font);
+                g.setColour(skin->getColor(Colors::MSEGEditor::Axis::Text));
+                g.drawText(std::to_string(frameNumber), 4, 4, width - 8, height - 8,
+                           juce::Justification::topRight);
+            }
         }
     }
 

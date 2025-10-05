@@ -529,7 +529,7 @@ std::string LuaWTEvaluator::defaultWavetableScript()
 function init(wt)
     -- wt will have frame_count and sample_count defined
     wt.name = "Fourier Saw"
-    wt.phase = math.linspace(0.0, 1.0, wt.sample_count)
+    wt.phase = math.linspace(0, 1, wt.sample_count)
     return wt
 end
 
@@ -537,12 +537,12 @@ function generate(wt)
     -- wt will have frame_count, sample_count, frame, and any item from init defined
     local res = {}
 
-    for i,x in ipairs(wt.phase) do
-        local lv = 0
-        for q = 1,(wt.frame) do
-            lv = lv + 2 * sin(2 * pi * q * x) / (pi * q)
+    for i, x in ipairs(wt.phase) do
+        local val = 0
+        for n = 1, wt.frame do
+            val = val + 2 * sin(2 * pi * n * x) / (pi * n)
         end
-        res[i] = lv * 0.8
+        res[i] = val * 0.8
     end
     return res
 end
