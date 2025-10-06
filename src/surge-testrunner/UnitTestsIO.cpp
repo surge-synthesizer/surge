@@ -111,7 +111,7 @@ TEST_CASE("All Factory .wtscript Files Validate", "[io]")
     REQUIRE(surge.get());
 
     auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-    auto oscdata = surge->storage.getPatch().scene[0].osc[0];
+    auto oscdata = &(surge->storage.getPatch().scene[0].osc[0]);
 
     for (auto p : surge->storage.wt_list)
     {
@@ -120,11 +120,12 @@ TEST_CASE("All Factory .wtscript Files Validate", "[io]")
         {
             continue;
         }
+        INFO("Loading wtscript " << p.path);
 
-        oscdata.wavetable_display_name = "";
-        la->loadWtscriptForTesting(p.path, &surge->storage, &oscdata);
+        oscdata->wavetable_display_name = "";
+        la->loadWtscriptForTesting(p.path, &surge->storage, oscdata);
 
-        REQUIRE(oscdata.wavetable_display_name != "");
+        REQUIRE(oscdata->wavetable_display_name != "");
     }
 }
 #endif
