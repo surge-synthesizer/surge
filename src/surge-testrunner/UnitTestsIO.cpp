@@ -30,6 +30,8 @@
 #include "catch2/catch_amalgamated.hpp"
 
 #include "UnitTestUtilities.h"
+#include "WavetableScriptEvaluator.h"
+
 #include <chrono>
 #include <thread>
 
@@ -101,6 +103,30 @@ TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
         REQUIRE(wt->n_tables > 0);
     }
 }
+
+#if HAS_LUA
+TEST_CASE("All Factory .wtscript Files Validate", "[io]")
+{
+    auto surge = Surge::Headless::createSurge(44100, true);
+    REQUIRE(surge.get());
+    for (auto p : surge->storage.wt_list)
+    {
+        // Skip non .wtscript files
+        if (p.path.extension() != ".wtscript")
+        {
+            continue;
+        }
+
+        auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+        auto oscdata = surge->storage.getPatch().scene[0].osc[0];
+
+        oscdata.wavetable_display_name = "";
+        la->loadWtscriptForTesting(p.path, &surge->storage, &oscdata);
+
+        REQUIRE(oscdata.wavetable_display_name != "");
+    }
+}
+#endif
 
 TEST_CASE("All Patches Are Loadable", "[io]")
 {

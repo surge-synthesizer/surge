@@ -57,7 +57,10 @@ struct LuaWTEvaluator
     bool populateWavetable(wt_header &wh, float **wavdata);
     void generateWavetable(SurgeStorage *storage, OscillatorStorage *oscdata, Wavetable *wt,
                            bool exportMode = false);
+
     void loadWtscript(const fs::path &filename, SurgeStorage *storage, OscillatorStorage *oscdata);
+    void loadWtscriptForTesting(const fs::path &filename, SurgeStorage *storage,
+                                OscillatorStorage *oscdata);
 
     frame_t getFrame(size_t frame);
 
