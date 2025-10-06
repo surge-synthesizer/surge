@@ -548,12 +548,7 @@ void LuaWTEvaluator::loadWtscriptForTesting(const fs::path &filename, SurgeStora
     oscdata->wavetable_script_res_base = res_base;
     oscdata->wavetable_script = Surge::Storage::base64_decode(b64script);
 
-    // generateWavetable(storage, oscdata, &oscdata->wt);
-
-    auto res_base = oscdata->wavetable_script_res_base;
-    auto nframes = oscdata->wavetable_script_nframes;
     auto script = oscdata->wavetable_script;
-
     auto respt = 32;
     for (int i = 1; i < res_base; ++i)
         respt *= 2;
