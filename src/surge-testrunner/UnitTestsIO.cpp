@@ -87,6 +87,11 @@ TEST_CASE("All Factory Wavetables Are Loadable", "[io]")
     REQUIRE(surge.get());
     for (auto p : surge->storage.wt_list)
     {
+        // Skip .wtscript files
+        if (p.path.extension() == ".wtscript")
+        {
+            continue;
+        }
         auto wt = &(surge->storage.getPatch().scene[0].osc[0].wt);
         wt->size = -1;
         wt->n_tables = -1;
@@ -359,7 +364,12 @@ TEST_CASE("Stream Wavetable Names", "[io]")
 
         for (int i = 0; i < 40; ++i)
         {
-            int wti = rand() % surge->storage.wt_list.size();
+            int wti;
+            // Exclude .wtscript files
+            do
+            {
+                wti = rand() % surge->storage.wt_list.size();
+            } while (surge->storage.wt_list[wti].path.extension() == ".wtscript");
             INFO("Loading random wavetable " << wti << " at run " << i);
 
             surge->storage.load_wt(wti, &patch->scene[0].osc[0].wt, &patch->scene[0].osc[0]);
@@ -409,7 +419,14 @@ TEST_CASE("Stream Wavetable Names", "[io]")
                         patch->scene[s].osc[o].type.val.i = ot_wavetable;
                         for (int i = 0; i < 2; ++i)
                             surgeS->process();
-                        int wti = rand() % surgeS->storage.wt_list.size();
+
+                        int wti;
+                        // Exclude .wtscript files
+                        do
+                        {
+                            wti = rand() % surgeS->storage.wt_list.size();
+                        } while (surgeS->storage.wt_list[wti].path.extension() == ".wtscript");
+
                         surgeS->storage.load_wt(wti, &patch->scene[s].osc[o].wt,
                                                 &patch->scene[s].osc[o]);
                         REQUIRE(std::string(patch->scene[s].osc[o].wavetable_display_name) ==
