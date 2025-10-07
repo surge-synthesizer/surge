@@ -67,6 +67,15 @@ struct LuaWTEvaluator
     std::string getSuggestedWavetableName();
 
     static std::string defaultWavetableScript();
+
+  private:
+    struct WtscriptData
+    {
+        std::string script;
+        int nframes = 0;
+        int res_base = 0;
+    };
+    std::optional<WtscriptData> parseWtscript(const fs::path &filename, SurgeStorage *storage);
 };
 
 } // namespace WavetableScript

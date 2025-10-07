@@ -412,7 +412,9 @@ void LuaWTEvaluator::generateWavetable(SurgeStorage *storage, OscillatorStorage 
 
     auto respt = 32;
     for (int i = 1; i < res_base; ++i)
+    {
         respt *= 2;
+    }
 
     setStorage(storage);
     setScript(script);
@@ -442,29 +444,29 @@ void LuaWTEvaluator::generateWavetable(SurgeStorage *storage, OscillatorStorage 
 #endif
 }
 
-void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storage,
-                                  OscillatorStorage *oscdata)
+std::optional<LuaWTEvaluator::WtscriptData> LuaWTEvaluator::parseWtscript(const fs::path &filename,
+                                                                          SurgeStorage *storage)
 {
 #if HAS_LUA
     TiXmlDocument doc;
     if (!doc.LoadFile(filename))
     {
         storage->reportError("Failed to load XML file.", "XML Load Error");
-        return;
+        return std::nullopt;
     }
 
     auto wtscript = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wtscript"));
     if (!wtscript)
     {
         storage->reportError("No root <wtscript> element found.", "XML Load Error");
-        return;
+        return std::nullopt;
     }
 
     auto wavetable_script = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("script"));
     if (!wavetable_script)
     {
         storage->reportError("No <wavetable_script> element found.", "XML Load Error");
-        return;
+        return std::nullopt;
     }
 
     auto b64script = wavetable_script->Attribute("lua");
@@ -472,26 +474,47 @@ void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storag
     {
         storage->reportError("Empty or missing lua attribute in <wavetable_script>.",
                              "XML Load Error");
-        return;
+        return std::nullopt;
     }
 
     int nframes = 0;
     if (wavetable_script->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS)
     {
         storage->reportError("Missing or invalid frames attribute.", "XML Load Error");
-        return;
+        return std::nullopt;
     }
 
     int res_base = 0;
     if (wavetable_script->QueryIntAttribute("samples", &res_base) != TIXML_SUCCESS)
     {
         storage->reportError("Missing or invalid samples attribute.", "XML Load Error");
+        return std::nullopt;
+    }
+
+    LuaWTEvaluator::WtscriptData data;
+    data.script = Surge::Storage::base64_decode(b64script);
+    data.nframes = nframes;
+    data.res_base = res_base;
+
+    return data;
+#else
+    return std::nullopt;
+#endif
+}
+
+void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storage,
+                                  OscillatorStorage *oscdata)
+{
+#if HAS_LUA
+    auto data = parseWtscript(filename, storage);
+    if (!data)
+    {
         return;
     }
 
-    oscdata->wavetable_script_nframes = nframes;
-    oscdata->wavetable_script_res_base = res_base;
-    oscdata->wavetable_script = Surge::Storage::base64_decode(b64script);
+    oscdata->wavetable_script_nframes = data->nframes;
+    oscdata->wavetable_script_res_base = data->res_base;
+    oscdata->wavetable_script = data->script;
 
     generateWavetable(storage, oscdata, &oscdata->wt);
 #endif
@@ -501,58 +524,22 @@ void LuaWTEvaluator::loadWtscriptForTesting(const fs::path &filename, SurgeStora
                                             OscillatorStorage *oscdata)
 {
 #if HAS_LUA
-    TiXmlDocument doc;
-    if (!doc.LoadFile(filename))
+    auto data = parseWtscript(filename, storage);
+    if (!data)
     {
-        storage->reportError("Failed to load XML file.", "XML Load Error");
         return;
     }
 
-    auto wtscript = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wtscript"));
-    if (!wtscript)
-    {
-        storage->reportError("No root <wtscript> element found.", "XML Load Error");
-        return;
-    }
-
-    auto wavetable_script = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("script"));
-    if (!wavetable_script)
-    {
-        storage->reportError("No <wavetable_script> element found.", "XML Load Error");
-        return;
-    }
-
-    auto b64script = wavetable_script->Attribute("lua");
-    if (!b64script || std::strlen(b64script) == 0)
-    {
-        storage->reportError("Empty or missing lua attribute in <wavetable_script>.",
-                             "XML Load Error");
-        return;
-    }
-
-    int nframes = 0;
-    if (wavetable_script->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS)
-    {
-        storage->reportError("Missing or invalid frames attribute.", "XML Load Error");
-        return;
-    }
-
-    int res_base = 0;
-    if (wavetable_script->QueryIntAttribute("samples", &res_base) != TIXML_SUCCESS)
-    {
-        storage->reportError("Missing or invalid samples attribute.", "XML Load Error");
-        return;
-    }
-
-    auto script = Surge::Storage::base64_decode(b64script);
     auto respt = 32;
-    for (int i = 1; i < res_base; ++i)
+    for (int i = 1; i < data->res_base; ++i)
+    {
         respt *= 2;
+    }
 
     setStorage(storage);
-    setScript(script);
+    setScript(data->script);
     setResolution(respt);
-    setFrameCount(nframes);
+    setFrameCount(data->nframes);
 
     oscdata->wavetable_display_name = getSuggestedWavetableName();
 #endif

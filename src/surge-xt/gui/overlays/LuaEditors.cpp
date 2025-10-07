@@ -2996,7 +2996,7 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
             g.reduceClipRegion(0, 0, width, height);
 
             float frameWidth = float(width) / 6.f;
-            float paintWidth = frameCount * frameWidth - getWidth();
+            float paintWidth = std::max(0.f, frameCount * frameWidth - getWidth());
             float startX = (frameNumber - 1) * frameWidth;
             startX = limit_range(startX, 0.f, paintWidth);
 
@@ -3242,7 +3242,7 @@ struct WavetablePreviewComponent : public juce::Component, public Surge::GUI::Sk
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
         overlay->setCurrentFrame(1);
-        overlay->rendererComponent->repaint();
+        repaint();
     }
 
     void resized() override {}
