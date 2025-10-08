@@ -2345,44 +2345,33 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
             if (midiSoftTakeover && p->miditakeover_status != sts_locked)
             {
                 const auto pval = p->get_value_f01();
-                /*
-                std::cout << "Takeover " << p->get_full_name() << " " << pval << " " << fval
-                          << " " << p->miditakeover_status
-                          << std::endl;
-                          */
-
-                static constexpr float buffer = {1.5f / 127.f}; // 1.5 midi CCs away
+                static constexpr float buffer = {1.5f / 127.f}; // 1.5 MIDI CCs away
 
                 switch (p->miditakeover_status)
                 {
                 case sts_waiting_for_first_look:
                     if (fval < pval - buffer)
                     {
-                        // printf("wait for val below\n");
                         p->miditakeover_status = sts_waiting_below;
                     }
                     else if (fval > pval + buffer)
                     {
-                        // printf("wait for val above\n");
                         p->miditakeover_status = sts_waiting_above;
                     }
                     else
                     {
-                        // printf("wait for val locked\n");
                         p->miditakeover_status = sts_locked;
                     }
                     break;
                 case sts_waiting_below:
                     if (fval > pval - buffer)
                     {
-                        // printf("waiting below locked\n");
                         p->miditakeover_status = sts_locked;
                     }
                     break;
                 case sts_waiting_above:
                     if (fval < pval + buffer)
                     {
-                        // printf("waiting above locked\n");
                         p->miditakeover_status = sts_locked;
                     }
                     break;
@@ -2392,19 +2381,16 @@ void SurgeSynthesizer::channelController(char channel, int cc, int value)
 
                 if (p->miditakeover_status != sts_locked)
                 {
-                    // printf("not locked\n");
                     applyControl = false;
                 }
             }
 
             if (applyControl)
             {
-                // std::cout << "About to set parameter to " << fval << std::endl;
-
                 this->setParameterSmoothed(i, fval);
 
                 // Notify audio thread param change listeners (OSC, e.g.)
-                // (which run on juce messenger thread)
+                // (which run on JUCE messenger thread)
                 for (const auto &it : audioThreadParamListeners)
                     (it.second)(storage.getPatch().param_ptr[i]->oscName, fval, "");
 

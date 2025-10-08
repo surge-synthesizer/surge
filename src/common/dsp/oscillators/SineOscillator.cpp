@@ -53,23 +53,23 @@ namespace mech = sst::basic_blocks::mechanics;
  *
  *   SIMD_M128 valueFromSineAndCosForMode<mode>(SIMD_M128 s, SIMD_M128 c, int maxc  )
  *
- * The default impleementation of this function calls
+ * The default implementation of this function calls
  *
  *    float valueForSineAndCosForModeAsScalar<mode>(s, c)
  *
  * on each SSE point in an unrolled SSE loop. But we also specialize it for many of the modes.
  *
- * The the original api point SineOscillator::valueFromSineAndCos (which is now only called by
+ * The original API point SineOscillator::valueFromSineAndCos (which is now only called by
  * external APIs) calls into the appropriately templated function. Since our loop doesn't use that
- * though we end up with our switch compile time inlined.
+ * though, we end up with our switch compile time inlined.
  *
  * So if you want to add a mode what does this mean? Well go update Parameter.cpp to extend the
- * max of mode of course. But then you come back here and do the following
+ * max of mode of course. But then you come back here and do the following:
  *
  * 1. Assume that you know how to write your new mode as a scalar function. After the
  * declaration of valueFromSineAndCosForMode as a template, specialize and put your scalar
- * implementation in there. Add your mode to th switch statement in valueFromSinAndCos
- * and into the DOCASE switch statement in process_block. Compile, run, test.
+ * implementation in there. Add your mode to the switch statement in valueFromSinAndCos()
+ * and into the DOCASE switch statement in process_block(). Compile, run, test.
  *
  * 2. Then if that works, and you can code up your mode as an SSE function, remove that
  * specialization and instead specialize the mode in the SSE-named function.
@@ -227,10 +227,10 @@ inline SIMD_M128 valueFromSinAndCosForMode<1>(SIMD_M128 svaluesse, SIMD_M128 cva
     /*
     switch (quadrant)
     {
-    case 1:  pvalue = 1 - cosx;
-    case 2: pvalue = 1 + cosx;
-    case 3: pvalue = -1 - cosx;
-     case 4: pvalue = -1 + cosx;
+        case 1: pvalue = 1 - cosx;
+        case 2: pvalue = 1 + cosx;
+        case 3: pvalue = -1 - cosx;
+        case 4: pvalue = -1 + cosx;
     }
      */
     const auto mz = SIMD_MM(setzero_ps)();
