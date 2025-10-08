@@ -1513,9 +1513,7 @@ struct EditorColors
     }
 };
 
-CodeEditorContainerWithApply::~CodeEditorContainerWithApply()
-{ // saveState();
-}
+CodeEditorContainerWithApply::~CodeEditorContainerWithApply() {}
 
 CodeEditorContainerWithApply::CodeEditorContainerWithApply(SurgeGUIEditor *ed, SurgeStorage *s,
                                                            Surge::GUI::Skin::ptr_t skin,
@@ -1992,7 +1990,6 @@ void CodeEditorContainerWithApply::initState(DAWExtraStateStorage::EditorState::
 
 void CodeEditorContainerWithApply::saveState()
 {
-
     auto documentScroll = mainEditor->getFirstLineOnScreen();
     auto caretPos = mainEditor->getCaretPosition();
     auto selectStart = mainEditor->getSelectionStart().getPosition();
@@ -2034,11 +2031,7 @@ void CodeEditorContainerWithApply::saveState()
 
 void CodeEditorContainerWithApply::loadState()
 {
-
-    // auto &state = getEditState();
-
     // restore code editor
-
     auto pos = juce::CodeDocument::Position(mainEditor->getDocument(), state->caretPosition);
     bool selected = state->selectStart - state->selectEnd == 0 ? false : true;
 
@@ -2046,7 +2039,6 @@ void CodeEditorContainerWithApply::loadState()
 
     if (selected)
     {
-
         auto selectStart =
             juce::CodeDocument::Position(mainEditor->getDocument(), state->selectStart);
 
@@ -2054,7 +2046,6 @@ void CodeEditorContainerWithApply::loadState()
 
         if (pos.getPosition() > selectStart.getPosition())
         {
-
             mainEditor->moveCaretTo(selectStart, false);
             mainEditor->moveCaretTo(selectEnd, true);
         }
@@ -2070,7 +2061,6 @@ void CodeEditorContainerWithApply::loadState()
     }
 
     // restore popup
-
     if (state->popupOpen)
     {
         switch (state->popupType)
@@ -2111,7 +2101,6 @@ struct ExpandingFormulaDebugger : public juce::Component,
 
     ExpandingFormulaDebugger(FormulaModulatorEditor *ed) : editor(ed)
     {
-
         debugTableDataModel = std::make_unique<DebugDataModel>();
 
         debugTableDataModel->setEditor(editor);
@@ -2213,7 +2202,6 @@ struct ExpandingFormulaDebugger : public juce::Component,
         }
         else
         {
-
             auto &formulastate = lfoDebugger->formulastate;
             auto &localcopy = tp;
             auto lfodata = editor->lfos;
@@ -2347,7 +2335,6 @@ struct ExpandingFormulaDebugger : public juce::Component,
                 g.drawText(getText(rowNumber, columnId), b, juce::Justification::centredLeft);
 
                 // draw arrow
-
                 auto path = juce::Path();
                 auto size = 4;
                 auto arrowMarginX = 4.5;
