@@ -210,7 +210,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
                                        bool forceIsPreset)
 {
     storage.getPatch().dawExtraState.editor.clearAllFormulaStates();
-    storage.getPatch().dawExtraState.editor.clearAllWTEStates();
+    storage.getPatch().dawExtraState.editor.clearAllWTSEStates();
     storage.getPatch().dawExtraState.editor.clearAllModulationSourceButtonStates();
 
     using namespace sst::io;

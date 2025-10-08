@@ -800,6 +800,9 @@ void SurgeGUIEditor::idle()
         {
             wt->refresh_script_editor = false;
 
+            this->synth->storage.getPatch().dawExtraState.editor.clearWTSEStateInScene(
+                current_scene, current_osc[current_scene]);
+
             if (auto ol = getOverlayIfOpenAs<Surge::Overlays::WavetableScriptEditor>(WTS_EDITOR))
             {
                 ol->forceRefresh();

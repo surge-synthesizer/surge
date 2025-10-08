@@ -1028,26 +1028,25 @@ struct DAWExtraStateStorage
                 clearAllFormulaStatesInScene(i);
             }
         }
-        // wte
-        void clearAllWTEStateInScene(int sc)
+
+        void clearAllWTSEStateInScene(int sc)
         {
             for (int i = 0; i < n_oscs; i++)
             {
-                clearWTEStateInScene(sc, i);
+                clearWTSEStateInScene(sc, i);
             }
         }
 
-        void clearWTEStateInScene(int sc, int i)
+        void clearWTSEStateInScene(int sc, int i)
         {
-
             clearCodeEditorState(wavetableScriptEditState[sc][i].codeEditor);
         }
 
-        void clearAllWTEStates()
+        void clearAllWTSEStates()
         {
             for (int i = 0; i < n_scenes; i++)
             {
-                clearAllWTEStateInScene(i);
+                clearAllWTSEStateInScene(i);
             }
         }
 
