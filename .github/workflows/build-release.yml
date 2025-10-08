@@ -232,6 +232,7 @@ jobs:
           git log -1 --pretty=format:'%h : %s - %an' > ../stage_git/git_info/git_nightly_xt_log_display
           git log -1 --pretty=format:'%h : %s%n%aD%n%an%n%n%B' > ../stage_git/git_info/git_nightly_xt_log_long_display
           git log -5 --pretty=format:'[%h](https://github.com/surge-synthesizer/surge/commit/%H): %s - %an' > ../stage_git/git_info/git_nightly_xt_recent_five
+          git log -5 --pretty=format:'- [%h](https://github.com/surge-synthesizer/surge/commit/%H): %s - %an' > ../stage_git/git_info/git_nightly_xt_recent_five.mdx
           git log -1 --pretty=format:'%h' > ../stage_git/git_info/git_nightly_xt_log_hash
 
           popd
