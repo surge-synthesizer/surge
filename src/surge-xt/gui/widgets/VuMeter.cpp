@@ -54,6 +54,10 @@ void VuMeter::mouseDown(const juce::MouseEvent &event)
     mouseDownLongHold(event);
 }
 
+void VuMeter::mouseUp(const juce::MouseEvent &event) { mouseUpLongHold(event); }
+
+void VuMeter::mouseMove(const juce::MouseEvent &event) { mouseMoveLongHold(event); }
+
 void VuMeter::paint(juce::Graphics &g)
 {
     juce::Graphics::ScopedSaveState gs(g);

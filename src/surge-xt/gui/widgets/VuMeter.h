@@ -59,7 +59,9 @@ struct VuMeter : public juce::Component,
 
     void paint(juce::Graphics &g) override;
 
+    void mouseUp(const juce::MouseEvent &event) override;
     void mouseDown(const juce::MouseEvent &event) override;
+    void mouseMove(const juce::MouseEvent &event) override;
 
     bool isAudioActive{true};
     void setIsAudioActive(bool isIn)

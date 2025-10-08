@@ -61,6 +61,8 @@ void Switch::paint(juce::Graphics &g)
     }
 }
 
+void Switch::mouseUp(const juce::MouseEvent &event) { mouseUpLongHold(event); }
+
 void Switch::mouseDown(const juce::MouseEvent &event)
 {
     if (forwardedMainFrameMouseDowns(event))
