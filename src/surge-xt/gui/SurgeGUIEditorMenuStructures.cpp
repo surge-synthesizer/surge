@@ -1382,6 +1382,22 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
 
     wfMenu.addSubMenu(str, kbfMenu);
 
+#if WINDOWS
+    wfMenu.addSeparator();
+
+    auto swr = Surge::Storage::getUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::UseSoftwareRenderer, false);
+
+    wfMenu.addItem("Use software renderer", true, swr, [this, swr]() {
+        Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                               Surge::Storage::UseSoftwareRenderer, !swr);
+        juce::AlertWindow::showMessageBoxAsync(
+            juce::AlertWindow::WarningIcon, "Graphics Renderer Change",
+            fmt::format("Graphics renderer will change to {} after reloading the plugin!",
+                        swr ? "Direct2D" : "software"));
+    });
+#endif
+
     wfMenu.addSeparator();
 
     bool showVirtualKeyboard = getShowVirtualKeyboard();
