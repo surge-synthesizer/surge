@@ -282,3 +282,19 @@ jobs:
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-win32-$SURGE_VERSION-pluginsonly.zip > src/assets/includes/stable_xt_win_x86_zip_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-linux-x64-$SURGE_VERSION.deb > src/assets/includes/stable_xt_linux_x64_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/tag/$SURGE_VERSION > src/assets/includes/stable_xt_other.url
+
+      - name: "Notify surge-synthesizer.github.io"
+        env:
+          GH_TOKEN: ${{ secrets.WEB }}
+        run: |
+          gh api repos/surge-synthesizer/surge-synthesizer.github.io/dispatches \
+          --method POST \
+          --field event_type=surge-build-release
+
+      - name: "Notify surge-synth-team.org"
+        env:
+          GH_TOKEN: ${{ secrets.WEB }}
+        run: |
+          gh api repos/surge-synthesizer/surge-synth-team.org/dispatches \
+          --method POST \
+          --field event_type=surge-build-release
