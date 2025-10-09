@@ -92,6 +92,7 @@ enum DefaultKey
     ShowVirtualKeyboard_Plugin,
     ShowVirtualKeyboard_Standalone,
     VirtualKeyboardLayout,
+    UseSoftwareRenderer,
 
     MPEPitchBendRange,
     MPETimbreIsUnipolar,

@@ -556,7 +556,24 @@ void SurgeSynthEditor::resized()
     }
 }
 
-void SurgeSynthEditor::parentHierarchyChanged() { reapplySurgeComponentColours(); }
+void SurgeSynthEditor::parentHierarchyChanged()
+{
+    reapplySurgeComponentColours();
+
+#if WINDOWS
+    auto swr = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
+                                                   Surge::Storage::UseSoftwareRenderer, false);
+
+    if (swr)
+    {
+        if (auto peer = getPeer())
+        {
+            // 0 for software mode, 1 for Direct2D mode
+            peer->setCurrentRenderingEngine(0);
+        }
+    }
+#endif
+}
 
 void SurgeSynthEditor::IdleTimer::timerCallback() { ed->idle(); }
 
