@@ -1500,6 +1500,11 @@ class alignas(16) SurgeStorage
     bool getOverrideDataHome(std::string &value);
     void createUserDirectory();
 
+    // Methods for handling user data path override stored in a separate file
+    // This returns path.empty() if there's no override
+    fs::path getOverridenUserPath() const;
+    void setOverridenUserPath(const fs::path *path);
+
     void refresh_wtlist();
     void refresh_wtlistAddDir(bool userDir, const std::string &subdir);
     void refresh_wtlistFrom(bool isUser, const fs::path &from, const std::string &subdir);
@@ -1566,6 +1571,7 @@ class alignas(16) SurgeStorage
     fs::path datapath;
     fs::path userDefaultFilePath;
     fs::path userDataPath;
+    fs::path localAppDataPath; // Path for storing app-level config like user data path override
     fs::path userPatchesPath;
     fs::path userPatchesMidiProgramChangePath;
     fs::path userWavetablesPath;

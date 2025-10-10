@@ -184,6 +184,11 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     std::string sxt = "Surge XT";
     std::string sxtlower = "surge-xt";
 
+    // Set up the local app data path for storing app-level config
+    localAppDataPath = sst::plugininfra::paths::bestLibrarySharedVendorFolderPathFor(
+        "Surge Synth Team", "Surge XT", true);
+    userDataPath = getOverridenUserPath();
+
 #if MAC
     if (!hasSuppliedDataPath)
     {
@@ -200,7 +205,10 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         datapath = fs::path{suppliedDataPath};
     }
 
-    userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
+    if (userDataPath.empty())
+    {
+        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
+    }
 
     // These are how I test a broken windows install for documents
     // userDataPath = fs::path{"/good/luck/bozo"};
@@ -364,13 +372,6 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userDefaultsProvider = std::make_unique<Surge::Storage::UserDefaultsProvider>(
         userDataPath, "SurgeXT", Surge::Storage::defaultKeyToString,
         [this](auto &a, auto &b) { reportError(a, b); });
-
-    std::string userSpecifiedDataPath =
-        Surge::Storage::getUserDefaultValue(this, Surge::Storage::UserDataPath, "UNSPEC");
-    if (userSpecifiedDataPath != "UNSPEC")
-    {
-        userDataPath = fs::path{userSpecifiedDataPath};
-    }
 
     // append separator if not present
     userPatchesPath = userDataPath / "Patches";
@@ -675,6 +676,103 @@ void SurgeStorage::createUserDirectory()
                 userDataPathValid = false;
             }
         }
+    }
+}
+
+fs::path SurgeStorage::getOverridenUserPath() const
+{
+    // Read the user data path override from surgeUserDirectoryLocation.xml
+    auto overrideFile = localAppDataPath / "surgeUserDirectoryLocation.xml";
+
+    if (!fs::exists(overrideFile))
+    {
+        return {}; // Return empty path if file doesn't exist
+    }
+
+    try
+    {
+        TiXmlDocument doc;
+        if (!doc.LoadFile(path_to_string(overrideFile)))
+        {
+            return {};
+        }
+
+        auto root = doc.FirstChildElement("surge-user-directory");
+        if (!root)
+        {
+            return {};
+        }
+
+        auto pathElement = root->FirstChildElement("path");
+        if (!pathElement || !pathElement->GetText())
+        {
+            return {};
+        }
+
+        fs::path userPath{pathElement->GetText()};
+
+        // Verify the path exists before returning it
+        if (fs::exists(userPath) && fs::is_directory(userPath))
+        {
+            return userPath;
+        }
+    }
+    catch (...)
+    {
+        // If anything goes wrong, return empty path
+    }
+
+    return {};
+}
+
+void SurgeStorage::setOverridenUserPath(const fs::path *path)
+{
+    // Write the user data path override to surgeUserDirectoryLocation.xml
+    try
+    {
+        // Create the directory if it doesn't exist
+        if (!fs::exists(localAppDataPath))
+        {
+            fs::create_directories(localAppDataPath);
+        }
+
+        auto overrideFile = localAppDataPath / "surgeUserDirectoryLocation.xml";
+
+        if (path == nullptr || path->empty())
+        {
+            // Remove the override file if path is null or empty
+            if (fs::exists(overrideFile))
+            {
+                fs::remove(overrideFile);
+            }
+            return;
+        }
+
+        // Create XML document
+        TiXmlDocument doc;
+        auto decl = new TiXmlDeclaration("1.0", "UTF-8", "yes");
+        doc.LinkEndChild(decl);
+
+        auto root = new TiXmlElement("surge-user-directory");
+        doc.LinkEndChild(root);
+
+        auto pathElement = new TiXmlElement("path");
+        root->LinkEndChild(pathElement);
+
+        auto pathText = new TiXmlText(path_to_string(*path));
+        pathElement->LinkEndChild(pathText);
+
+        // Save the file
+        doc.SaveFile(path_to_string(overrideFile));
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        reportError(std::string() + "Unable to save user directory override: " + e.what(),
+                    "Error Saving Override");
+    }
+    catch (...)
+    {
+        reportError("Unable to save user directory override", "Error Saving Override");
     }
 }
 

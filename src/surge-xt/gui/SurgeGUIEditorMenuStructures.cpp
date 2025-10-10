@@ -1641,23 +1641,25 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
     dataSubMenu.addItem(Surge::GUI::toOSCase("Set Custom User Data Folder..."), [this]() {
         fileChooser = std::make_unique<juce::FileChooser>(
             "Set Custom User Data Folder", juce::File(path_to_string(synth->storage.userDataPath)));
-        fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
-            [this](const juce::FileChooser &f) {
-                auto r = f.getResult();
-                if (!r.isDirectory())
-                    return;
-                auto s = f.getResult().getFullPathName().toStdString();
+        fileChooser->launchAsync(juce::FileBrowserComponent::openMode |
+                                     juce::FileBrowserComponent::canSelectDirectories,
+                                 [this](const juce::FileChooser &f) {
+                                     auto r = f.getResult();
+                                     if (!r.isDirectory())
+                                         return;
+                                     auto s = f.getResult().getFullPathName().toStdString();
 
-                Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                       Surge::Storage::UserDataPath, s);
+                                     // Use the new file-based approach to store user data path
+                                     // override
+                                     fs::path newPath(s);
+                                     this->synth->storage.setOverridenUserPath(&newPath);
 
-                this->synth->storage.userDataPath = s;
-                synth->storage.createUserDirectory();
+                                     this->synth->storage.userDataPath = s;
+                                     synth->storage.createUserDirectory();
 
-                this->synth->storage.refresh_wtlist();
-                this->synth->storage.refresh_patchlist();
-            });
+                                     this->synth->storage.refresh_wtlist();
+                                     this->synth->storage.refresh_patchlist();
+                                 });
     });
 
     dataSubMenu.addSeparator();
