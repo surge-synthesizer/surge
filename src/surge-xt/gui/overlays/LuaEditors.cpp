@@ -4040,22 +4040,23 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
         {
             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
                                                                             "FACTORY SCRIPTS");
-            populateMenuForCategory(menu, c, selectedItem);
+            populateMenuForCategory(menu, c, selectedItem, true);
             menu.addColumnBreak();
         }
-        else if (idx == 1)
+        else if (idx == 1 && cat.isFactory)
         {
             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
                                                                             "3RD PARTY SCRIPTS");
-            populateMenuForCategory(menu, c, selectedItem);
+            populateMenuForCategory(menu, c, selectedItem, true);
             menu.addColumnBreak();
         }
         else
         {
             Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "USER SCRIPTS");
-            populateMenuForCategory(menu, c, selectedItem);
+            populateMenuForCategory(menu, c, selectedItem, true);
             menu.addColumnBreak();
         }
+
         idx++;
     }
 
@@ -4145,6 +4146,33 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
         subMenu = &contextMenu;
     }
 
+    for (auto child : cat.children)
+    {
+        if (child.numberOfPatchesInCategoryAndChildren > 0)
+        {
+            // this isn't the best approach but it works
+            int cidx = 0;
+
+            for (auto &cc : storage->wt_category)
+            {
+                if (cc.name == child.name)
+                {
+                    break;
+                }
+
+                cidx++;
+            }
+
+            bool childHasWTS = populateMenuForCategory(*subMenu, cidx, selectedItem, false);
+
+            if (childHasWTS)
+            {
+                hasAnyWTS = true;
+                selected = selected || childHasWTS;
+            }
+        }
+    }
+
     for (auto p : storage->wtOrdering)
     {
         if (storage->wt_list[p].category == categoryId)
@@ -4188,33 +4216,6 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
                 {
                     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
                 }
-            }
-        }
-    }
-
-    for (auto child : cat.children)
-    {
-        if (child.numberOfPatchesInCategoryAndChildren > 0)
-        {
-            // this isn't the best approach but it works
-            int cidx = 0;
-
-            for (auto &cc : storage->wt_category)
-            {
-                if (cc.name == child.name)
-                {
-                    break;
-                }
-
-                cidx++;
-            }
-
-            bool childHasWTS = populateMenuForCategory(*subMenu, cidx, selectedItem);
-
-            if (childHasWTS)
-            {
-                hasAnyWTS = true;
-                selected = selected || childHasWTS;
             }
         }
     }
