@@ -33,6 +33,9 @@
 #include "SurgeXTBinary.h"
 #include "WavetableScriptEvaluator.h"
 
+#include "SurgeSynthProcessor.h"
+#include "SurgeSynthEditor.h"
+
 #include "overlays/TypeinParamEditor.h"
 
 #include "widgets/MenuButtonFromIcon.h"
@@ -2720,7 +2723,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
                                                FormulaModulatorStorage *fs, int lid, int scene,
                                                Surge::GUI::Skin::ptr_t skin)
     : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), scene(scene), formulastorage(fs),
-      lfo_id(lid), editor(ed)
+      lfo_id(lid), sge(ed)
 {
     mainEditor->setScrollbarThickness(8);
     mainEditor->setTitle("Formula Modulator Code");
@@ -3770,8 +3773,7 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
                                              OscillatorStorage *os, int oid, int scene,
                                              Surge::GUI::Skin::ptr_t skin)
 
-    : CodeEditorContainerWithApply(ed, s, skin, false), osc(os), osc_id(oid), scene(scene),
-      editor(ed)
+    : CodeEditorContainerWithApply(ed, s, skin, false), sge(ed), osc(os), osc_id(oid), scene(scene)
 {
     mainEditor->setScrollbarThickness(8);
     mainEditor->setTitle("Wavetable Code");
@@ -3829,6 +3831,9 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
 
     evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
     evaluator->setStorage(storage);
+
+    auto xml = juce::parseXML(SurgeXTBinary::wtscript_icon_svg);
+    wtScriptIcon = juce::Drawable::createFromSVG(*xml);
 
     initState(getEditState().codeEditor);
     loadState();
@@ -4015,6 +4020,46 @@ void WavetableScriptEditor::generateWavetable()
 
 void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
 {
+    int idx = 0;
+    int selectedItem = osc->wt.current_id;
+
+    for (auto c : storage->wtCategoryOrdering)
+    {
+        PatchCategory cat = storage->wt_category[c];
+
+        if (cat.numberOfPatchesInCategoryAndChildren == 0 || !cat.isRoot)
+        {
+            continue;
+        }
+
+        if (!categoryHasWtscript(c))
+        {
+            continue;
+        }
+
+        if (idx == 0)
+        {
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
+                                                                            "FACTORY SCRIPTS");
+            populateMenuForCategory(menu, c, selectedItem);
+            menu.addColumnBreak();
+        }
+        else if (idx == 1)
+        {
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
+                                                                            "3RD PARTY SCRIPTS");
+            populateMenuForCategory(menu, c, selectedItem);
+            menu.addColumnBreak();
+        }
+        else
+        {
+            Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "USER SCRIPTS");
+            populateMenuForCategory(menu, c, selectedItem);
+            menu.addColumnBreak();
+        }
+        idx++;
+    }
+
     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FUNCTIONS");
 
     menu.addItem(Surge::GUI::toOSCase("Load .wtscript..."),
@@ -4047,6 +4092,186 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
     auto hurl = editor->fullyResolvedHelpURL(msurl);
 
     editor->addHelpHeaderTo("Wavetable Script Editor", hurl, menu);
+}
+
+bool WavetableScriptEditor::categoryHasWtscript(int categoryId) const
+{
+    const auto &cat = storage->wt_category[categoryId];
+
+    for (auto p : storage->wtOrdering)
+    {
+        const auto &wt = storage->wt_list[p];
+        if (wt.category == categoryId && wt.path.extension() == ".wtscript")
+        {
+            return true;
+        }
+    }
+
+    for (const auto &child : cat.children)
+    {
+        int cidx = 0;
+        for (auto &cc : storage->wt_category)
+        {
+            if (cc.name == child.name)
+                break;
+            cidx++;
+        }
+
+        if (categoryHasWtscript(cidx))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId,
+                                                    int selectedItem, bool intoTop)
+{
+    // Modified from OscillatorWaveformDisplay::populateMenuForCategory
+    int sub = 0;
+    bool selected = false;
+    bool hasAnyWTS = false;
+    juce::PopupMenu subMenuLocal;
+    juce::PopupMenu *subMenu = &subMenuLocal;
+    PatchCategory cat = storage->wt_category[categoryId];
+
+    if (intoTop)
+    {
+        subMenu = &contextMenu;
+    }
+
+    for (auto p : storage->wtOrdering)
+    {
+        if (storage->wt_list[p].category == categoryId)
+        {
+            auto &wt = storage->wt_list[p];
+            if (wt.path.extension() != ".wtscript")
+            {
+                continue;
+            }
+
+            hasAnyWTS = true;
+
+            auto action = [this, p]() { this->loadWavetableScript(p); };
+            bool checked = false;
+
+            if (p == selectedItem)
+            {
+                checked = true;
+                selected = true;
+            }
+
+            auto item = new juce::PopupMenu::Item(storage->wt_list[p].name);
+
+            wtScriptIcon.get()->replaceColour(juce::Colours::white,
+                                              skin->getColor(Colors::PopupMenu::Text));
+
+            item->setEnabled(true);
+            item->setTicked(checked);
+            item->setAction(action);
+            item->setImage(wtScriptIcon.get()->createCopy());
+
+            subMenu->addItem(*item);
+
+            sub++;
+
+            if (sub != 0 && sub % 24 == 0)
+            {
+                subMenu->addColumnBreak();
+
+                if (intoTop)
+                {
+                    Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
+                }
+            }
+        }
+    }
+
+    for (auto child : cat.children)
+    {
+        if (child.numberOfPatchesInCategoryAndChildren > 0)
+        {
+            // this isn't the best approach but it works
+            int cidx = 0;
+
+            for (auto &cc : storage->wt_category)
+            {
+                if (cc.name == child.name)
+                {
+                    break;
+                }
+
+                cidx++;
+            }
+
+            bool childHasWTS = populateMenuForCategory(*subMenu, cidx, selectedItem);
+
+            if (childHasWTS)
+            {
+                hasAnyWTS = true;
+                selected = selected || childHasWTS;
+            }
+        }
+    }
+
+    if (!hasAnyWTS)
+    {
+        return false;
+    }
+
+    std::string name;
+
+    if (!cat.isRoot)
+    {
+        std::string catName = storage->wt_category[categoryId].name;
+        std::size_t sepPos = catName.find_last_of(PATH_SEPARATOR);
+
+        if (sepPos != std::string::npos)
+        {
+            catName = catName.substr(sepPos + 1);
+        }
+
+        name = catName;
+    }
+    else
+    {
+        name = storage->wt_category[categoryId].name;
+    }
+
+    if (!intoTop)
+    {
+        contextMenu.addSubMenu(name, *subMenu, true, nullptr, selected);
+    }
+
+    return hasAnyWTS;
+}
+
+void WavetableScriptEditor::loadWavetableScript(int id)
+{
+    if (storage->wt_list[id].path.extension() != ".wtscript")
+    {
+        return;
+    }
+
+    if (id >= 0 && (id < storage->wt_list.size()))
+    {
+        if (sge)
+        {
+            sge->undoManager()->pushWavetable(scene, osc_id);
+            std::string announce = "Loaded Wavetable ";
+            announce += storage->wt_list[id].name;
+            sge->enqueueAccessibleAnnouncement(announce);
+        }
+
+        this->sge->loadWavetableScript(id, storage->wt_list[id].path, storage, osc);
+
+        auto new_name = storage->getCurrentWavetableName(osc);
+
+        SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
+        ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene, (float)osc_id,
+                                    (float)id, new_name);
+    }
 }
 
 std::optional<std::pair<std::string, std::string>>

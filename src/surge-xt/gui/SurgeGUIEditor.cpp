@@ -6759,11 +6759,6 @@ void SurgeGUIEditor::loadWavetableScript()
 
     auto &oscdata = synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
 
-    if (!evaluator)
-    {
-        evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-    }
-
     fileChooser = std::make_unique<juce::FileChooser>(
         "Select Wavetable script", juce::File(path_to_string(wtPath)), fileTypes);
     fileChooser->launchAsync(
@@ -6781,8 +6776,7 @@ void SurgeGUIEditor::loadWavetableScript()
 
             if (res.hasFileExtension(".wtscript"))
             {
-                loadWavetableScript(-1, fs::path(rString), &this->synth->storage, &oscdata,
-                                    this->evaluator.get());
+                loadWavetableScript(-1, fs::path(rString), &this->synth->storage, &oscdata);
             }
 
             auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
@@ -6796,9 +6790,13 @@ void SurgeGUIEditor::loadWavetableScript()
 }
 
 void SurgeGUIEditor::loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
-                                         OscillatorStorage *oscdata,
-                                         Surge::WavetableScript::LuaWTEvaluator *evaluator)
+                                         OscillatorStorage *oscdata)
 {
+    if (!evaluator)
+    {
+        evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
+    }
+
     evaluator->loadWtscript(location, storage, oscdata);
 
     oscdata->wt.current_id = id;

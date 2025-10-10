@@ -340,7 +340,7 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
-    SurgeGUIEditor *editor{nullptr};
+    SurgeGUIEditor *sge{nullptr};
     int lfo_id, scene;
     int32_t updateDebuggerCounter{0};
 
@@ -380,7 +380,12 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void adjustCurrentFrame(int value);
     void setCurrentFrame(int value);
 
+    std::unique_ptr<juce::Drawable> wtScriptIcon;
     void createMenu(juce::PopupMenu &menu);
+    bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem,
+                                 bool intoTop = false);
+    bool categoryHasWtscript(int categoryId) const;
+    void loadWavetableScript(int id);
 
     int lastRes{-1}, lastFrames{-1}, lastFrame{-1}, lastRm{-1};
 
@@ -391,7 +396,8 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     std::unique_ptr<WavetablePreviewComponent> rendererComponent;
 
     OscillatorStorage *osc;
-    SurgeGUIEditor *editor{nullptr};
+    SurgeGUIEditor *sge{nullptr};
+    void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
     int osc_id, scene;
 
     DAWExtraStateStorage::EditorState::WavetableScriptEditState &getEditState();
