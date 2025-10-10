@@ -284,3 +284,55 @@ TEST_CASE("Template Patches are Rational", "[infra]")
     }
     REQUIRE(tested);
 }
+
+TEST_CASE("User Data Path Override", "[infra]")
+{
+    SECTION("Set and Get User Data Path Override")
+    {
+        auto surge = Surge::Headless::createSurge(48000, false);
+        REQUIRE(surge);
+
+        // Get the original user data path
+        auto originalPath = surge->storage.userDataPath;
+
+        // Test setting a custom path
+        fs::path testPath = surge->storage.localAppDataPath / "test_user_data";
+        surge->storage.setOverridenUserPath(&testPath);
+
+        // Verify the override file was created
+        auto overrideFile = surge->storage.localAppDataPath / "surgeUserDirectoryLocation.xml";
+        REQUIRE(fs::exists(overrideFile));
+
+        // Read back the overridden path
+        auto overriddenPath = surge->storage.getOverridenUserPath();
+
+        // Note: getOverridenUserPath returns empty if the path doesn't exist
+        // So we just verify the file was written
+        INFO("Override file created at: " << overrideFile.u8string());
+
+        // Test clearing the override
+        surge->storage.setOverridenUserPath(nullptr);
+        REQUIRE(!fs::exists(overrideFile));
+
+        // Verify getting override returns empty when file is removed
+        auto clearedPath = surge->storage.getOverridenUserPath();
+        REQUIRE(clearedPath.empty());
+    }
+
+    SECTION("Override Path With Existing Directory")
+    {
+        auto surge = Surge::Headless::createSurge(48000, false);
+        REQUIRE(surge);
+
+        // Use a path that exists (the local app data path itself)
+        fs::path existingPath = surge->storage.localAppDataPath;
+        surge->storage.setOverridenUserPath(&existingPath);
+
+        // Read it back - should return the path since it exists
+        auto retrievedPath = surge->storage.getOverridenUserPath();
+        REQUIRE(retrievedPath == existingPath);
+
+        // Clean up
+        surge->storage.setOverridenUserPath(nullptr);
+    }
+}
