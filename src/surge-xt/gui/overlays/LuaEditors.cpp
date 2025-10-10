@@ -30,11 +30,10 @@
 #include "SurgeImageStore.h"
 #include "SurgeJUCEHelpers.h"
 #include "SurgeGUIEditor.h"
-#include "SurgeXTBinary.h"
-#include "WavetableScriptEvaluator.h"
-
 #include "SurgeSynthProcessor.h"
 #include "SurgeSynthEditor.h"
+#include "SurgeXTBinary.h"
+#include "WavetableScriptEvaluator.h"
 
 #include "overlays/TypeinParamEditor.h"
 
@@ -4101,6 +4100,7 @@ bool WavetableScriptEditor::categoryHasWtscript(int categoryId) const
     for (auto p : storage->wtOrdering)
     {
         const auto &wt = storage->wt_list[p];
+
         if (wt.category == categoryId && wt.path.extension() == ".wtscript")
         {
             return true;
@@ -4110,10 +4110,13 @@ bool WavetableScriptEditor::categoryHasWtscript(int categoryId) const
     for (const auto &child : cat.children)
     {
         int cidx = 0;
+
         for (auto &cc : storage->wt_category)
         {
             if (cc.name == child.name)
+            {
                 break;
+            }
             cidx++;
         }
 
@@ -4122,13 +4125,14 @@ bool WavetableScriptEditor::categoryHasWtscript(int categoryId) const
             return true;
         }
     }
+
     return false;
 }
 
+// Modified from OscillatorWaveformDisplay::populateMenuForCategory
 bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId,
                                                     int selectedItem, bool intoTop)
 {
-    // Modified from OscillatorWaveformDisplay::populateMenuForCategory
     int sub = 0;
     bool selected = false;
     bool hasAnyWTS = false;
