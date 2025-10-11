@@ -26,7 +26,6 @@
 #include "SkinSupport.h"
 #include "Parameter.h"
 #include "SurgeStorage.h"
-#include "WavetableScriptEvaluator.h"
 #include "WidgetBaseMixin.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -147,7 +146,6 @@ struct OscillatorWaveformDisplay : public juce::Component,
     std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
     int lastWavetableId{-1};
     std::string lastWavetableFilename;
-    std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
 
   private:
     std::unique_ptr<juce::Drawable> wtFileIcon;

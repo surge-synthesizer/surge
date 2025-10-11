@@ -1120,6 +1120,32 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         subMenu = &contextMenu;
     }
 
+    for (auto child : cat.children)
+    {
+        if (child.numberOfPatchesInCategoryAndChildren > 0)
+        {
+            // this isn't the best approach but it works
+            int cidx = 0;
+
+            for (auto &cc : storage->wt_category)
+            {
+                if (cc.name == child.name)
+                {
+                    break;
+                }
+
+                cidx++;
+            }
+
+            bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem);
+
+            if (checked)
+            {
+                selected = true;
+            }
+        }
+    }
+
     for (auto p : storage->wtOrdering)
     {
         if (storage->wt_list[p].category == categoryId)
@@ -1163,32 +1189,6 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         }
     }
 
-    for (auto child : cat.children)
-    {
-        if (child.numberOfPatchesInCategoryAndChildren > 0)
-        {
-            // this isn't the best approach but it works
-            int cidx = 0;
-
-            for (auto &cc : storage->wt_category)
-            {
-                if (cc.name == child.name)
-                {
-                    break;
-                }
-
-                cidx++;
-            }
-
-            bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem);
-
-            if (checked)
-            {
-                selected = true;
-            }
-        }
-    }
-
     std::string name;
 
     if (!cat.isRoot)
@@ -1220,12 +1220,7 @@ void OscillatorWaveformDisplay::handleWavetableLoad(int id)
 {
     if (storage->wt_list[id].path.extension() == ".wtscript")
     {
-        if (!evaluator)
-        {
-            evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-        }
-        this->sge->loadWavetableScript(id, storage->wt_list[id].path, storage, oscdata,
-                                       evaluator.get());
+        this->sge->loadWavetableScript(id, storage->wt_list[id].path, storage, oscdata);
     }
     else
     {
@@ -1287,12 +1282,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
 
             if (res.hasFileExtension(".wtscript"))
             {
-                if (!evaluator)
-                {
-                    evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-                }
-                this->sge->loadWavetableScript(-1, fs::path(rString), storage, oscdata,
-                                               evaluator.get());
+                this->sge->loadWavetableScript(-1, fs::path(rString), storage, oscdata);
             }
             else
             {
