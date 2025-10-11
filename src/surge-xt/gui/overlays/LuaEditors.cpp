@@ -2722,7 +2722,7 @@ FormulaModulatorEditor::FormulaModulatorEditor(SurgeGUIEditor *ed, SurgeStorage 
                                                FormulaModulatorStorage *fs, int lid, int scene,
                                                Surge::GUI::Skin::ptr_t skin)
     : CodeEditorContainerWithApply(ed, s, skin, false), lfos(ls), scene(scene), formulastorage(fs),
-      lfo_id(lid), sge(ed)
+      lfo_id(lid), editor(ed)
 {
     mainEditor->setScrollbarThickness(8);
     mainEditor->setTitle("Formula Modulator Code");
@@ -3772,7 +3772,8 @@ WavetableScriptEditor::WavetableScriptEditor(SurgeGUIEditor *ed, SurgeStorage *s
                                              OscillatorStorage *os, int oid, int scene,
                                              Surge::GUI::Skin::ptr_t skin)
 
-    : CodeEditorContainerWithApply(ed, s, skin, false), sge(ed), osc(os), osc_id(oid), scene(scene)
+    : CodeEditorContainerWithApply(ed, s, skin, false), osc(os), osc_id(oid), scene(scene),
+      editor(ed)
 {
     mainEditor->setScrollbarThickness(8);
     mainEditor->setTitle("Wavetable Code");
@@ -4261,19 +4262,19 @@ void WavetableScriptEditor::loadWavetableScript(int id)
 
     if (id >= 0 && (id < storage->wt_list.size()))
     {
-        if (sge)
+        if (editor)
         {
-            sge->undoManager()->pushWavetable(scene, osc_id);
+            editor->undoManager()->pushWavetable(scene, osc_id);
             std::string announce = "Loaded Wavetable ";
             announce += storage->wt_list[id].name;
-            sge->enqueueAccessibleAnnouncement(announce);
+            editor->enqueueAccessibleAnnouncement(announce);
         }
 
-        this->sge->loadWavetableScript(id, storage->wt_list[id].path, storage, osc);
+        this->editor->loadWavetableScript(id, storage->wt_list[id].path, storage, osc);
 
         auto new_name = storage->getCurrentWavetableName(osc);
 
-        SurgeSynthProcessor *ssp = &sge->juceEditor->processor;
+        SurgeSynthProcessor *ssp = &editor->juceEditor->processor;
         ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene, (float)osc_id,
                                     (float)id, new_name);
     }

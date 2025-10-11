@@ -340,7 +340,7 @@ struct FormulaModulatorEditor : public CodeEditorContainerWithApply, public Refr
 
     LFOStorage *lfos{nullptr};
     FormulaModulatorStorage *formulastorage{nullptr};
-    SurgeGUIEditor *sge{nullptr};
+    SurgeGUIEditor *editor{nullptr};
     int lfo_id, scene;
     int32_t updateDebuggerCounter{0};
 
@@ -396,8 +396,8 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     std::unique_ptr<WavetablePreviewComponent> rendererComponent;
 
     OscillatorStorage *osc;
-    SurgeGUIEditor *sge{nullptr};
-    void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
+    SurgeGUIEditor *editor{nullptr};
+    void setSurgeGUIEditor(SurgeGUIEditor *s) { editor = s; }
     int osc_id, scene;
 
     DAWExtraStateStorage::EditorState::WavetableScriptEditState &getEditState();
