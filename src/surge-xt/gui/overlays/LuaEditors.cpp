@@ -4012,6 +4012,7 @@ void WavetableScriptEditor::setupEvaluator()
 void WavetableScriptEditor::generateWavetable()
 {
     setupEvaluator();
+    evaluator->forceInvalidate();
     evaluator->generateWavetable(storage, osc, &osc->wt);
 
     editor->oscWaveform->repaintForceForWT();

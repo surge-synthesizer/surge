@@ -46,6 +46,7 @@ struct LuaWTEvaluator
     void setScript(const std::string &);
     void setResolution(size_t);
     void setFrameCount(size_t);
+    void forceInvalidate();
 
     using validFrame_t = std::vector<float>;
     using frame_t = std::optional<validFrame_t>;
