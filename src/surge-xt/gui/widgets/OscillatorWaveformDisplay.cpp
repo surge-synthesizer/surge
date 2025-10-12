@@ -1120,32 +1120,6 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         subMenu = &contextMenu;
     }
 
-    for (auto child : cat.children)
-    {
-        if (child.numberOfPatchesInCategoryAndChildren > 0)
-        {
-            // this isn't the best approach but it works
-            int cidx = 0;
-
-            for (auto &cc : storage->wt_category)
-            {
-                if (cc.name == child.name)
-                {
-                    break;
-                }
-
-                cidx++;
-            }
-
-            bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem);
-
-            if (checked)
-            {
-                selected = true;
-            }
-        }
-    }
-
     for (auto p : storage->wtOrdering)
     {
         if (storage->wt_list[p].category == categoryId)
@@ -1185,6 +1159,32 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
                 {
                     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
                 }
+            }
+        }
+    }
+
+    for (auto child : cat.children)
+    {
+        if (child.numberOfPatchesInCategoryAndChildren > 0)
+        {
+            // this isn't the best approach but it works
+            int cidx = 0;
+
+            for (auto &cc : storage->wt_category)
+            {
+                if (cc.name == child.name)
+                {
+                    break;
+                }
+
+                cidx++;
+            }
+
+            bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem);
+
+            if (checked)
+            {
+                selected = true;
             }
         }
     }
