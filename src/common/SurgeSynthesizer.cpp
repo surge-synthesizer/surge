@@ -4552,10 +4552,6 @@ void SurgeSynthesizer::process()
 #endif
     processRunning = 0;
 
-#if DEBUG
-    memset(endedHostNoteIds, 0, 512 * sizeof(int32_t));
-#endif
-
     auto process_start = std::chrono::high_resolution_clock::now();
 
     if (hostNoteEndedToPushToNextBlock)
