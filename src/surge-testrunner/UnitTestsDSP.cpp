@@ -19,6 +19,7 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+
 #include <iostream>
 #include <algorithm>
 
@@ -34,6 +35,7 @@
 #include "sst/basic-blocks/mechanics/simd-ops.h"
 
 #include "sst/plugininfra/cpufeatures.h"
+#include "dsp/effects/chowdsp/shared/chowdsp_DelayLine.h"
 
 using namespace Surge::Test;
 
@@ -744,6 +746,33 @@ TEST_CASE("Oscillator Onset", "[dsp]") // See issue 7570
                "
                       << (continueChecking ? "Unknown" : std::to_string(itUntilBigger))
                       << std::endl;*/
+        }
+    }
+}
+
+TEST_CASE("Chow DSP Delay", "[dsp]")
+{
+    chowdsp::DelayLine<float> floatDelay(1024);
+    floatDelay.prepare({48000, 16, 2});
+    floatDelay.setDelay(128);
+    for (int i = 0; i < 1024; ++i)
+    {
+        auto dL = floatDelay.popSample(0);
+        auto dR = floatDelay.popSample(1);
+        floatDelay.pushSample(0, i / 1024.);
+        floatDelay.pushSample(1, 1 - i / 1024.);
+        if (i >= 128)
+        {
+            INFO("I = " << i);
+            auto ni = i - 128;
+            REQUIRE(dL == ni / 1024.);
+            REQUIRE(dR == 1 - ni / 1024.);
+        }
+        else
+        {
+            INFO("i = " << i);
+            REQUIRE(dL == 0.f);
+            REQUIRE(dR == 0.f);
         }
     }
 }

@@ -30,6 +30,7 @@
 
 #include "ReflectionNetwork.h"
 #include "SchroederAllpass.h"
+#include "juce_dsp/juce_dsp.h"
 
 namespace chowdsp
 {

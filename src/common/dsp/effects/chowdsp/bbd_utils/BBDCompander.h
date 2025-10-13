@@ -22,8 +22,6 @@
 #ifndef SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_BBD_UTILS_BBDCOMPANDER_H
 #define SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_BBD_UTILS_BBDCOMPANDER_H
 
-#include "juce_core/juce_core.h"
-
 /**
  * Signal averager used for BBD companding.
  * Borrowed from Fig. 11, from Huovilainen's DAFx-05 paper

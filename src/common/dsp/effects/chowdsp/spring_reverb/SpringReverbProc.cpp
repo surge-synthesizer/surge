@@ -19,10 +19,12 @@
  * All source for Surge XT is available at
  * https://github.com/surge-synthesizer/surge
  */
+
 #include <random>
 
 #include "SpringReverbProc.h"
 #include "sst/basic-blocks/dsp/FastMath.h"
+#include <cstdint>
 
 namespace
 {
@@ -44,7 +46,7 @@ void SpringReverbProc::prepare(float sampleRate, int samplesPerBlock)
 {
     fs = sampleRate;
 
-    delay.prepare({sampleRate, (juce::uint32)samplesPerBlock, 2});
+    delay.prepare({sampleRate, (size_t)samplesPerBlock, 2});
 
     dcBlocker.prepare(sampleRate, 2);
     dcBlocker.setCutoffFrequency(40.0f);

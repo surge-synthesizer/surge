@@ -24,6 +24,7 @@
 #define SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_SPRING_REVERB_REFLECTIONNETWORK_H
 
 #include <array>
+#include <cstdint>
 
 #include "globals.h"
 #include "UnitConversions.h"
@@ -44,7 +45,7 @@ class ReflectionNetwork
         fs = sampleRate;
 
         for (auto &d : delays)
-            d.prepare({sampleRate, (juce::uint32)samplesPerBlock, 2});
+            d.prepare({sampleRate, (size_t)samplesPerBlock, 2});
 
         shelfFilter.reset();
     }
