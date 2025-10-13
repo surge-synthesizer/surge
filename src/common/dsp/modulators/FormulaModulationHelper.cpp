@@ -77,7 +77,6 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
     }
 
 #if HAS_LUA
-
     auto lg = Surge::LuaSupport::SGLD("prepareForEvaluation", s.L);
 
     if (firstTimeThrough)
@@ -265,6 +264,8 @@ end
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
             addb("use_envelope", true);
+            addb("retrigger_AEG", false);
+            addb("retrigger_FEG", false);
 
             // Legacy tables for deprecated macro subscriptions
             // TODO: Remove in XT2
@@ -331,6 +332,11 @@ end
                     {
                         s.useEnvelope = lua_toboolean(s.L, -1);
                     }
+                    else if (lua_isnumber(s.L, -1))
+                    {
+                        s.useEnvelope = (lua_tonumber(s.L, -1) != 0.0);
+                    }
+
                     lua_pop(s.L, 1); // Pop use_envelope
                 }
                 lua_pop(s.L, 1); // Pop the modulator state
@@ -395,14 +401,6 @@ void removeFunctionsAssociatedWith(SurgeStorage *storage, FormulaModulatorStorag
         return;
     if (stateData.functionsPerFMS.find(fs) == stateData.functionsPerFMS.end())
         return;
-
-#if 0
-    for (const auto &fn : functionsPerFMS[fs])
-    {
-        lua_pushnil(S);
-        lua_setglobal(S, fn.c_str());
-    }
-#endif
 
     stateData.functionsPerFMS.erase(fs);
 #endif
@@ -541,8 +539,8 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addb("is_rendering_to_ui", s->is_display);
     addb("mpe_enabled", s->mpeenabled);
 
-    addnil("retrigger_AEG");
-    addnil("retrigger_FEG");
+    addb("retrigger_AEG", false);
+    addb("retrigger_FEG", false);
 
     if (s->isVoice)
     {
@@ -616,13 +614,14 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
             lua_pop(s->L, 1);
             return;
         }
+
         // Store the value and keep it on top of the stack
         lua_setglobal(s->L, s->stateName);
         lua_getglobal(s->L, s->stateName);
 
         lua_getfield(s->L, -1, "output");
         // top of stack is now the result
-        float res = 0.0;
+
         if (lua_isnumber(s->L, -1))
         {
             output[0] = checkFinite(lua_tonumber(s->L, -1));
@@ -677,25 +676,32 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
             stateData.knownBadFunctions.insert(s->funcName);
             s->isvalid = false;
         }
+
         // pop the result and the function
         lua_pop(s->L, 1);
 
-        auto getBoolDefault = [s](const char *n, bool def) -> bool {
+        auto getBoolOrNumberDefault = [s](const char *n, bool def) -> bool {
             auto res = def;
             lua_getfield(s->L, -1, n);
+
             if (lua_isboolean(s->L, -1))
             {
                 res = lua_toboolean(s->L, -1);
             }
+            else if (lua_isnumber(s->L, -1))
+            {
+                res = (lua_tonumber(s->L, -1) != 0.0);
+            }
+
             lua_pop(s->L, 1);
             return res;
         };
 
-        s->useEnvelope = getBoolDefault("use_envelope", true);
-        s->retrigger_AEG = getBoolDefault("retrigger_AEG", false);
-        s->retrigger_FEG = getBoolDefault("retrigger_FEG", false);
+        s->useEnvelope = getBoolOrNumberDefault("use_envelope", true);
+        s->retrigger_AEG = getBoolOrNumberDefault("retrigger_AEG", false);
+        s->retrigger_FEG = getBoolOrNumberDefault("retrigger_FEG", false);
 
-        auto doClamp = getBoolDefault("clamp_output", true);
+        auto doClamp = getBoolOrNumberDefault("clamp_output", true);
         if (doClamp)
         {
             for (int i = 0; i < 8; ++i)
@@ -734,25 +740,26 @@ enum showFilter
 
 bool isUserDefined(std::string str)
 {
-    static std::array<std::string, 53> keywords = {
-        "amplitude",     "attack",       "block_size",
-        "cc_breath",     "cc_expr",      "cc_mw",
-        "cc_sus",        "chan_at",      "channel",
-        "clamp_output",  "cycle",        "decay",
-        "deform",        "delay",        "highest_key",
-        "hold",          "intphase",     "is_rendering_to_ui",
-        "is_voice",      "key",          "latest_key",
-        "lowest_key",    "macros",       "mpe_bend",
-        "mpe_bendrange", "mpe_enabled",  "mpe_pressure",
-        "mpe_timbre",    "output",       "pb",
-        "pb_range_dn",   "pb_range_up",  "phase",
-        "play_mode",     "poly_at",      "poly_limit",
-        "rate",          "rel_velocity", "release",
-        "released",      "samplerate",   "scene_mode",
-        "songpos",       "split_point",  "startphase",
-        "sustain",       "tempo",        "tuned_key",
-        "use_envelope",  "velocity",     "voice_count",
-        "voice_id",      "subscriptions"};
+    static constexpr std::array<std::string_view, 55> keywords = {
+        "amplitude",     "attack",        "block_size",
+        "cc_breath",     "cc_expr",       "cc_mw",
+        "cc_sus",        "chan_at",       "channel",
+        "clamp_output",  "cycle",         "decay",
+        "deform",        "delay",         "highest_key",
+        "hold",          "intphase",      "is_rendering_to_ui",
+        "is_voice",      "key",           "latest_key",
+        "lowest_key",    "macros",        "mpe_bend",
+        "mpe_bendrange", "mpe_enabled",   "mpe_pressure",
+        "mpe_timbre",    "output",        "pb",
+        "pb_range_dn",   "pb_range_up",   "phase",
+        "play_mode",     "poly_at",       "poly_limit",
+        "rate",          "rel_velocity",  "release",
+        "released",      "retrigger_AEG", "retrigger_FEG",
+        "samplerate",    "scene_mode",    "songpos",
+        "split_point",   "startphase",    "sustain",
+        "tempo",         "tuned_key",     "use_envelope",
+        "velocity",      "voice_count",   "voice_id",
+        "subscriptions"};
 
     auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();
     // std::cout << "isCustom " << str << " = " << foundInList << "\n";
@@ -761,7 +768,6 @@ bool isUserDefined(std::string str)
 
 void setUserDefined(DebugRow &row, int depth, bool custom)
 {
-
     if ((isUserDefined(row.label) && depth == 0) || custom == true)
         row.isUserDefined = true;
 }
@@ -902,7 +908,6 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
     } groups[3];
 
     // Groups
-
     groups[0] = {es.stateName, "User variables", 0, SHOW_USER};
     groups[1] = {sharedTableName, "Shared", 1, SHOW_ALL};
     groups[2] = {es.stateName, "Built-in variables", 2, SHOW_SYSTEM};
@@ -913,7 +918,6 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
         lua_getglobal(es.L, t.var);
 
         // create header
-
         rows.emplace_back(0, " " + groups[i].label, "");
         rows.back().isHeader = true;
         rows.back().group = groups[i].id;
@@ -939,7 +943,6 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
     }
 
     // filtering
-
     if (filter != "")
     {
         for (int i = 0; i < rows.size(); i++)
@@ -1011,7 +1014,6 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
 
 std::string createDebugViewOfModState(const EvaluatorState &es)
 {
-
     bool groupState[8] = {true, true, true, true, true, true, true, true};
     auto r = createDebugDataOfModState(es, "", groupState);
     std::ostringstream oss;
@@ -1152,6 +1154,7 @@ std::variant<float, std::string, bool> runOverModStateForTesting(const std::stri
         lua_pop(es.L, 1);
         return res;
     }
+
     lua_pop(es.L, 1); // Pop evaluator state
 #endif
     return false;
