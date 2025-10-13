@@ -24,6 +24,7 @@
 #include "SurgeGUIEditor.h"
 #include "SurgeGUICallbackInterfaces.h"
 #include "AccessibleHelpers.h"
+#include "CurrentFxDisplay.h"
 #include "MultiSwitch.h"
 #include "SurgeGUIEditorTags.h"
 #include <version.h>
@@ -126,8 +127,6 @@ juce::Component *MainFrame::getControlGroupLayer(ControlGroup cg)
     if (!cgOverlays[cg])
     {
         auto ol = std::make_unique<OverlayComponent>();
-        ol->setBounds(getLocalBounds());
-        ol->setInterceptsMouseClicks(false, true);
         auto t = "Group " + std::to_string((int)cg);
         switch (cg)
         {
@@ -151,11 +150,20 @@ juce::Component *MainFrame::getControlGroupLayer(ControlGroup cg)
             break;
         case cg_FX:
             t = "FX Controls";
+            // Special case: we have an overlay component just for this.
+            ol = std::make_unique<CurrentFxDisplay>();
+            {
+                CurrentFxDisplay *a = dynamic_cast<CurrentFxDisplay*>(ol.get());
+                // Careful -- do these values ever need to be updated?
+                a->setSurgeGUIEditor(editor);
+            }
             break;
         default:
             t = "Unknown Controls";
             break;
         }
+        ol->setBounds(getLocalBounds());
+        ol->setInterceptsMouseClicks(false, true);
         ol->setDescription(t);
         ol->setTitle(t);
         ol->getProperties().set("ControlGroup", (int)cg + 1000);

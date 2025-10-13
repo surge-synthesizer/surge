@@ -57,6 +57,7 @@
 #include "overlays/OverlayWrapper.h"
 #include "overlays/FilterAnalysis.h"
 
+#include "widgets/CurrentFxDisplay.h"
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
 #include "widgets/LFOAndStepDisplay.h"
@@ -1856,9 +1857,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
         {
-            auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
-            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "FX Preset", "Jog");
-
+            // Handled in the CurrentFxDisplay component.
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_MPE:
@@ -1967,23 +1966,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
         case Surge::Skin::Connector::NonParameterConnection::FXPRESET_LABEL:
         {
-            // Room for improvement, obviously
-            if (!fxPresetLabel)
-            {
-                fxPresetLabel = std::make_unique<juce::Label>("FX Preset Name");
-            }
-
-            fxPresetLabel->setColour(juce::Label::textColourId,
-                                     currentSkin->getColor(Colors::Effect::Preset::Name));
-            fxPresetLabel->setFont(currentSkin->fontManager->displayFont);
-            fxPresetLabel->setJustificationType(juce::Justification::centredRight);
-
-            fxPresetLabel->setText(fxPresetName[current_fx], juce::dontSendNotification);
-            fxPresetLabel->setBounds(skinCtrl->getRect());
-            setAccessibilityInformationByTitleAndAction(fxPresetLabel.get(), "FX Preset", "Show");
-
-            addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_FX), *fxPresetLabel);
-
+            // Handled in the CurrentFxDisplay component.
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
@@ -2013,30 +1996,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
         }
         case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
         {
-            // FIXOWN
-            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, effectChooser);
-
-            effectChooser->addListener(this);
-            effectChooser->setStorage(&(synth->storage));
-            effectChooser->setBounds(skinCtrl->getRect());
-            effectChooser->setTag(tag_fx_select);
-            effectChooser->setSkin(currentSkin, bitmapStore);
-            effectChooser->setBackgroundDrawable(bitmapStore->getImage(IDB_FX_GRID));
-            effectChooser->setCurrentEffect(current_fx);
-
-            for (int fxi = 0; fxi < n_fx_slots; fxi++)
-            {
-                effectChooser->setEffectType(fxi, synth->storage.getPatch().fx[fxi].type.val.i);
-            }
-
-            effectChooser->setBypass(synth->storage.getPatch().fx_bypass.val.i);
-            effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
-
-            addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_FX), *effectChooser);
-
-            setAccessibilityInformationByTitleAndAction(effectChooser->asJuceComponent(),
-                                                        "FX Slots", "Select");
-
+            // Handled in the CurrentFxDisplay component.
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER:
@@ -2117,6 +2077,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                   .mode.val.i == emt_digital);
             }
 
+            // FX controls are sent to their own component post-refactor.
+            if (p->ctrlgroup == cg_FX)
+            {
+                addControl = false;
+            }
+
             if (addControl)
             {
                 auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
@@ -2158,6 +2124,11 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
         i++;
     }
+
+    // Update the FX display window.
+    Surge::Widgets::CurrentFxDisplay *disp = dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(frame->getControlGroupLayer(cg_FX));
+    disp->updateCurrentFx(current_fx);
+    uiidToSliderLabel.insert(disp->uiidToSliderLabel.begin(), disp->uiidToSliderLabel.end());
 
     // resonance link mode
     if (synth->storage.getPatch().scene[current_scene].f2_link_resonance.val.b)
@@ -2252,6 +2223,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             mtext = ctext;
         }
+
+        std::cout << "Label with text " << *mtext << std::endl;
 
         if (mtext.has_value())
         {

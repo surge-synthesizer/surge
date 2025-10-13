@@ -86,6 +86,7 @@ struct Switch;
 struct VerticalLabel;
 struct VuMeter;
 
+struct CurrentFxDisplay;
 struct MainFrame;
 
 struct WaveShaperSelector;
@@ -929,6 +930,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
      * the add remove handlers
      */
     friend class Surge::Widgets::MainFrame;
+    friend class Surge::Widgets::CurrentFxDisplay;
     std::unordered_map<juce::Component *, juce::Component *> containedComponents;
     void addComponentWithTracking(juce::Component *target, juce::Component &source);
     void addAndMakeVisibleWithTracking(juce::Component *target, juce::Component &source);
