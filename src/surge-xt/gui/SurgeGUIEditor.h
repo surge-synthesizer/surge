@@ -565,8 +565,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void exportWavetableAs(WTExportFormat exportFormat);
     void loadWavetableScript();
     void loadWavetableScript(int id, const fs::path &location, SurgeStorage *storage,
-                             OscillatorStorage *oscdata,
-                             Surge::WavetableScript::LuaWTEvaluator *evaluator);
+                             OscillatorStorage *oscdata);
     void saveWavetableScript();
     void saveWavetableScript(const fs::path &location, SurgeStorage *storage,
                              OscillatorStorage *oscdata);

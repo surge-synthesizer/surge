@@ -346,6 +346,13 @@ void LuaWTEvaluator::setFrameCount(size_t n)
 #endif
 }
 
+void LuaWTEvaluator::forceInvalidate()
+{
+#if HAS_LUA
+    details->invalidate();
+#endif
+}
+
 LuaWTEvaluator::frame_t LuaWTEvaluator::getFrame(size_t frame)
 {
 #if HAS_LUA
@@ -515,6 +522,7 @@ void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storag
     oscdata->wavetable_script_nframes = data->nframes;
     oscdata->wavetable_script_res_base = data->res_base;
     oscdata->wavetable_script = data->script;
+    details->invalidate();
 
     generateWavetable(storage, oscdata, &oscdata->wt);
 #endif

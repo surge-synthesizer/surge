@@ -1220,12 +1220,7 @@ void OscillatorWaveformDisplay::handleWavetableLoad(int id)
 {
     if (storage->wt_list[id].path.extension() == ".wtscript")
     {
-        if (!evaluator)
-        {
-            evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-        }
-        this->sge->loadWavetableScript(id, storage->wt_list[id].path, storage, oscdata,
-                                       evaluator.get());
+        this->sge->loadWavetableScript(id, storage->wt_list[id].path, storage, oscdata);
     }
     else
     {
@@ -1287,12 +1282,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
 
             if (res.hasFileExtension(".wtscript"))
             {
-                if (!evaluator)
-                {
-                    evaluator = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
-                }
-                this->sge->loadWavetableScript(-1, fs::path(rString), storage, oscdata,
-                                               evaluator.get());
+                this->sge->loadWavetableScript(-1, fs::path(rString), storage, oscdata);
             }
             else
             {
