@@ -23,7 +23,6 @@
 #ifndef SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_SHARED_CHOWDSP_DELAYLINE_H
 #define SURGE_SRC_COMMON_DSP_EFFECTS_CHOWDSP_SHARED_CHOWDSP_DELAYLINE_H
 
-#include "juce_dsp/juce_dsp.h"
 #include "chowdsp_DelayInterpolation.h"
 
 namespace chowdsp
@@ -53,7 +52,13 @@ template <typename SampleType> class DelayLineBase
     virtual void setDelay(NumericType /* newDelayInSamples */) = 0;
     virtual NumericType getDelay() const = 0;
 
-    virtual void prepare(const juce::dsp::ProcessSpec & /* spec */) = 0;
+    struct PrepareInfo
+    {
+        double sampleRate;
+        size_t blockSize;
+        size_t numChannels;
+    };
+    virtual void prepare(const PrepareInfo & /* spec */) = 0;
     virtual void reset() = 0;
 
     virtual void pushSample(int /* channel */, SampleType /* sample */) noexcept = 0;
@@ -68,7 +73,7 @@ template <typename SampleType> class DelayLineBase
         const auto numSamples = other.bufferData.getNumSamples();
         if (numChannels != bufferData.getNumChannels() || numSamples != bufferData.getNumSamples())
         {
-            bufferData = juce::dsp::AudioBlock<SampleType>(dataBlock, numChannels, numSamples);
+            bufferData = AudioBlock(numChannels, numSamples);
         }
 
         bufferData.copyFrom(other.bufferData);
@@ -81,9 +86,26 @@ template <typename SampleType> class DelayLineBase
         std::copy(other.readPos.begin(), other.readPos.end(), readPos.begin());
     }
 
+    struct AudioBlock
+    {
+        std::vector<uint8_t> dataBlock;
+        int numChannels{0}, numSamples{0};
+        AudioBlock() = default;
+        AudioBlock(int numChannels, int numSamples)
+            : numChannels(numChannels), numSamples(numSamples)
+        {
+            dataBlock.resize(numChannels * numSamples * sizeof(SampleType));
+        }
+        SampleType *getChannelPointer(int channel)
+        {
+            return (SampleType *)(dataBlock.data() + channel * numSamples * sizeof(SampleType));
+        }
+        void clear() { memset(dataBlock.data(), 0, dataBlock.size()); }
+    };
+
   protected:
-    juce::HeapBlock<char> dataBlock;
-    juce::dsp::AudioBlock<SampleType> bufferData;
+    // used to be the j u c e::dsp::AudioBlock<SampleType> bufferData;
+    AudioBlock bufferData;
     std::vector<SampleType> v;
     std::vector<int> writePos, readPos;
 };
@@ -125,7 +147,7 @@ class DelayLine : public DelayLineBase<SampleType>
 
     //==============================================================================
     /** Initialises the processor. */
-    void prepare(const juce::dsp::ProcessSpec &spec) final;
+    void prepare(const typename DelayLineBase<SampleType>::PrepareInfo &spec) final;
 
     /** Resets the internal state variables of the processor. */
     void reset() final;
@@ -261,8 +283,6 @@ class DelayLine : public DelayLineBase<SampleType>
     std::vector<SampleType *> bufferPtrs;
     NumericType delay = 0.0, delayFrac = 0.0;
     int delayInt = 0, totalSize = 4;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DelayLine)
 };
 
 } // namespace chowdsp
