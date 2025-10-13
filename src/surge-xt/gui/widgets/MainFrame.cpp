@@ -153,7 +153,7 @@ juce::Component *MainFrame::getControlGroupLayer(ControlGroup cg)
             // Special case: we have an overlay component just for this.
             ol = std::make_unique<CurrentFxDisplay>();
             {
-                CurrentFxDisplay *a = dynamic_cast<CurrentFxDisplay*>(ol.get());
+                CurrentFxDisplay *a = dynamic_cast<CurrentFxDisplay *>(ol.get());
                 // Careful -- do these values ever need to be updated?
                 a->setSurgeGUIEditor(editor);
             }

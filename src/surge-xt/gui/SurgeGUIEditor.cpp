@@ -2126,7 +2126,8 @@ void SurgeGUIEditor::openOrRecreateEditor()
     }
 
     // Update the FX display window.
-    Surge::Widgets::CurrentFxDisplay *disp = dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(frame->getControlGroupLayer(cg_FX));
+    Surge::Widgets::CurrentFxDisplay *disp =
+        dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(frame->getControlGroupLayer(cg_FX));
     disp->updateCurrentFx(current_fx);
     uiidToSliderLabel.insert(disp->uiidToSliderLabel.begin(), disp->uiidToSliderLabel.end());
 
@@ -2223,8 +2224,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             mtext = ctext;
         }
-
-        std::cout << "Label with text " << *mtext << std::endl;
 
         if (mtext.has_value())
         {

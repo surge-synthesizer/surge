@@ -59,8 +59,7 @@ void CurrentFxDisplay::updateCurrentFx(int current_fx)
     auto makeParameter = [this, &currentSkin](int n) {
         Parameter *p = editor_->synth->storage.getPatch().param_ptr[n];
         Surge::Skin::Connector conn = Surge::Skin::Connector::connectorByID(p->ui_identifier);
-        if (p->hasSkinConnector &&
-            conn.payload->defaultComponent != Surge::Skin::Components::None)
+        if (p->hasSkinConnector && conn.payload->defaultComponent != Surge::Skin::Components::None)
         {
             auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
             currentSkin->resolveBaseParentOffsets(skinCtrl);
@@ -68,10 +67,13 @@ void CurrentFxDisplay::updateCurrentFx(int current_fx)
                 editor_->layoutComponentForSkin(skinCtrl, p->id + start_paramtags, n, p,
                                                 p->ctrlstyle | conn.payload->controlStyleFlags);
             uiidToSliderLabel[p->ui_identifier] = p->get_name();
-            if (p->id == editor_->synth->learn_param_from_cc || p->id == editor_->synth->learn_param_from_note)
+            if (p->id == editor_->synth->learn_param_from_cc ||
+                p->id == editor_->synth->learn_param_from_note)
             {
-                editor_->showMidiLearnOverlay(
-                    editor_->param[p->id]->asControlValueInterface()->asJuceComponent()->getBounds());
+                editor_->showMidiLearnOverlay(editor_->param[p->id]
+                                                  ->asControlValueInterface()
+                                                  ->asJuceComponent()
+                                                  ->getBounds());
             }
         }
     };
@@ -112,16 +114,19 @@ void CurrentFxDisplay::layoutFxSelector()
 
     for (int fxi = 0; fxi < n_fx_slots; fxi++)
     {
-        editor_->effectChooser->setEffectType(fxi, editor_->synth->storage.getPatch().fx[fxi].type.val.i);
+        editor_->effectChooser->setEffectType(
+            fxi, editor_->synth->storage.getPatch().fx[fxi].type.val.i);
     }
 
     editor_->effectChooser->setBypass(editor_->synth->storage.getPatch().fx_bypass.val.i);
-    editor_->effectChooser->setDeactivatedBitmask(editor_->synth->storage.getPatch().fx_disable.val.i);
+    editor_->effectChooser->setDeactivatedBitmask(
+        editor_->synth->storage.getPatch().fx_disable.val.i);
 
-    editor_->addAndMakeVisibleWithTracking(editor_->frame->getControlGroupLayer(cg_FX), *editor_->effectChooser);
+    editor_->addAndMakeVisibleWithTracking(editor_->frame->getControlGroupLayer(cg_FX),
+                                           *editor_->effectChooser);
 
     editor_->setAccessibilityInformationByTitleAndAction(editor_->effectChooser->asJuceComponent(),
-                                                "FX Slots", "Select");
+                                                         "FX Slots", "Select");
 }
 
 void CurrentFxDisplay::layoutFxPresetLabel()
@@ -136,13 +141,14 @@ void CurrentFxDisplay::layoutFxPresetLabel()
     }
 
     editor_->fxPresetLabel->setColour(juce::Label::textColourId,
-                             editor_->currentSkin->getColor(Colors::Effect::Preset::Name));
+                                      editor_->currentSkin->getColor(Colors::Effect::Preset::Name));
     editor_->fxPresetLabel->setFont(editor_->currentSkin->fontManager->displayFont);
     editor_->fxPresetLabel->setJustificationType(juce::Justification::centredRight);
 
     editor_->fxPresetLabel->setText(editor_->fxPresetName[current_fx_], juce::dontSendNotification);
     editor_->fxPresetLabel->setBounds(skinCtrl->getRect());
-    editor_->setAccessibilityInformationByTitleAndAction(editor_->fxPresetLabel.get(), "FX Preset", "Show");
+    editor_->setAccessibilityInformationByTitleAndAction(editor_->fxPresetLabel.get(), "FX Preset",
+                                                         "Show");
 
     editor_->addAndMakeVisibleWithTracking(this, *editor_->fxPresetLabel);
 }
