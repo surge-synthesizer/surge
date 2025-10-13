@@ -89,6 +89,7 @@ struct ModulationSourceButton : public juce::Component,
 
         auto sge = firstListenerOfType<SurgeGUIEditor>();
         int lfo_id = getCurrentModSource() - ms_lfo1;
+        lfo_id = std::clamp(lfo_id, 0, n_lfos - 1);
         auto scene = sge->current_scene;
 
         modlistIndex =

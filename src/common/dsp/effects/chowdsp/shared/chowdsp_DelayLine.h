@@ -90,15 +90,18 @@ template <typename SampleType> class DelayLineBase
     {
         std::vector<uint8_t> dataBlock;
         int numChannels{0}, numSamples{0};
+
+        static constexpr size_t samplePad{4};
         AudioBlock() = default;
         AudioBlock(int numChannels, int numSamples)
             : numChannels(numChannels), numSamples(numSamples)
         {
-            dataBlock.resize(numChannels * numSamples * sizeof(SampleType));
+            dataBlock.resize(numChannels * (numSamples + samplePad) * sizeof(SampleType));
         }
         SampleType *getChannelPointer(int channel)
         {
-            return (SampleType *)(dataBlock.data() + channel * numSamples * sizeof(SampleType));
+            return (SampleType *)(dataBlock.data() +
+                                  channel * (numSamples + samplePad) * sizeof(SampleType));
         }
         void clear() { memset(dataBlock.data(), 0, dataBlock.size()); }
     };

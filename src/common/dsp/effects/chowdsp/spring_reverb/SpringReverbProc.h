@@ -30,7 +30,9 @@
 
 #include "ReflectionNetwork.h"
 #include "SchroederAllpass.h"
-#include "juce_dsp/juce_dsp.h"
+
+#include "sst/basic-blocks/simd/setup.h"
+#include "sst/basic-blocks/simd/wrap_simd_f32x4.h"
 
 namespace chowdsp
 {
@@ -61,7 +63,7 @@ class SpringReverbProc
     StateVariableFilter<float> dcBlocker;
 
     static constexpr int allpassStages = 16;
-    using VecType = juce::dsp::SIMDRegister<float>;
+    using VecType = sst::basic_blocks::simd::F32x4;
     using APFCascade = std::array<SchroederAllpass<VecType, 2>, allpassStages>;
     APFCascade vecAPFs;
 

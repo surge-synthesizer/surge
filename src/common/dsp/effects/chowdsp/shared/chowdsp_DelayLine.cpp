@@ -45,7 +45,7 @@ void DelayLine<SampleType, InterpolationType>::setDelay(
     DelayLine<SampleType, InterpolationType>::NumericType newDelayInSamples)
 {
     auto upperLimit = (NumericType)(totalSize - 1);
-    assert(newDelayInSamples > 0 && newDelayInSamples < upperLimit);
+    assert(newDelayInSamples >= 0 && newDelayInSamples < upperLimit);
 
     delay = std::clamp(newDelayInSamples, (NumericType)0, upperLimit);
     delayInt = static_cast<int>(std::floor(delay));

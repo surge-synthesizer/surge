@@ -232,6 +232,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   juce::juce_audio_plugin_client
   juce::juce_osc
   juce::juce_gui_basics
+  juce::juce_dsp
   surge-xt-binary
   sst-filters-extras
 )
