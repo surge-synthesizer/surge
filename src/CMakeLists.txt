@@ -41,11 +41,32 @@ if(SURGE_BUILD_CLAP)
   add_subdirectory(../libs/clap-juce-extensions clap-extensions EXCLUDE_FROM_ALL)
 endif()
 
+# We only enable jack and alsa on unix-not-apple.
+# you can change this and self build if you want a mac/win jack
+# build but our build machines aren't set up for that
 if(SURGE_SKIP_STANDALONE OR SURGE_SKIP_ALSA)
   set(SURGE_USE_ALSA FALSE)
 else()
-  set(SURGE_USE_ALSA TRUE)
+  if (UNIX AND NOT APPLE)
+    set(SURGE_USE_ALSA TRUE)
+  else()
+    set(SURGE_USE_ALSA FALSE)
+  endif()
 endif()
+
+
+if(SURGE_SKIP_STANDALONE OR SURGE_SKIP_JACK)
+  set(SURGE_USE_JACK FALSE)
+else()
+  if (UNIX AND NOT APPLE)
+    set(SURGE_USE_JACK TRUE)
+  else()
+    set(SURGE_USE_JACK FALSE)
+  endif()
+endif()
+
+message(STATUS "ALSA/JACK : ALSA=${SURGE_USE_ALSA}  JACK=${SURGE_USE_JACK}")
+
 
 set(SURGE_SIMDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../libs/simde" CACHE STRING "Path to simde library source tree")
 add_library(simde INTERFACE)
@@ -71,7 +92,7 @@ target_compile_definitions(surge-juce INTERFACE
   JUCE_COREGRAPHICS_DRAW_ASYNC=1
 
   JUCE_ALSA=$<IF:$<BOOL:${SURGE_USE_ALSA}>,1,0>
-  JUCE_JACK=$<IF:$<NOT:$<BOOL:${SURGE_SKIP_STANDALONE}>>,1,0>
+  JUCE_JACK=$<IF:$<BOOL:${SURGE_USE_JACK}>,1,0>
 
   JUCE_WASAPI=$<IF:$<NOT:$<BOOL:${SURGE_SKIP_STANDALONE}>>,1,0>
   JUCE_DIRECTSOUND=$<IF:$<NOT:$<BOOL:${SURGE_SKIP_STANDALONE}>>,1,0>
