@@ -26,6 +26,7 @@
 #include "SurgeSynthEditor.h"
 #include "Oscillator.h"
 #include "OscillatorBase.h"
+#include "WavetableOscillator.h"
 #include "RuntimeFont.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
@@ -1562,7 +1563,7 @@ struct WaveTable3DEditor : public juce::Component,
     int wt_size = 0;
     int wt_nframes = 64;
     int rendered_frames = 40;
-    int rendered_samples = 60;
+    int rendered_samples = WavetableOscillator::SAMPLES_FOR_DISPLAY;
     float paddingX = 0.017679932260795936;
     float paddingY = 0.2127688399661304;
     float skew = 0.3;

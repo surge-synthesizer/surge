@@ -31,6 +31,12 @@ using namespace std;
 
 const float hpf_cycle_loss = 0.99f;
 
+double WavetableOscillator::skewHPhaseResponse[WavetableOscillator::SAMPLES_FOR_DISPLAY] = {
+    0.00, 0.00, 0.01, 0.02, 0.03, 0.03, 0.04, 0.05, 0.06, 0.07, 0.07, 0.08, 0.09, 0.10, 0.11,
+    0.11, 0.12, 0.13, 0.14, 0.15, 0.15, 0.16, 0.17, 0.18, 0.19, 0.19, 0.20, 0.21, 0.22, 0.23,
+    0.23, 0.24, 0.25, 0.26, 0.27, 0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.32, 0.33, 0.34, 0.35,
+    0.36, 0.37, 0.38, 0.39, 0.40, 0.41, 0.43, 0.44, 0.46, 0.49, 0.54, 0.70, 0.84, 0.92, 0.97};
+
 WavetableOscillator::WavetableOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                          pdata *localcopy, pdata *localcopyUnmod)
     : AbstractBlitOscillator(storage, oscdata, localcopy)
@@ -44,6 +50,7 @@ void WavetableOscillator::init(float pitch, bool is_display, bool nonzero_init_d
 {
     assert(storage);
     readDeformType();
+
     first_run = true;
     osc_out = SIMD_MM(set1_ps)(0.f);
     osc_outR = SIMD_MM(set1_ps)(0.f);
@@ -211,43 +218,46 @@ void WavetableOscillator::processSamplesForDisplay(float *samples, int size, boo
             }
         }
 
-        // skewX
-        /*
-            TODO
-            this is not even close to the correct inplementation of skewx.
-        */
-        /*
-        float samplePos = 0.f;
+        // skewH hard coded phase response
 
-        float mul = 1.f / (float)size;
-        float fsize = (float)size;
+        float skewH = pow(abs(oscdata->p[wt_skewh].val.f), 0.8);
 
-        float tempSamples[64];
-
-        float hskew = -oscdata->p[wt_skewh].val.f;
-        float taylorscale = sqrtf(27.f / 4);
-
-        for (int i = 0; i < size; i++)
+        if (skewH != 0)
         {
-            float xt = (i + 0.5) * mul;
-            xt = 1 + hskew * 4 * xt * (xt - 1) * (2 * xt - 1) * taylorscale;
-            samplePos = (samplePos + xt);
-            if (samplePos > fsize - 1.f)
-                samplePos -= fsize;
+            float samplesTemp[SAMPLES_FOR_DISPLAY];
+            for (int i = 0; i < size; i++)
+            {
+                samplesTemp[i] = samples[i];
+            }
 
-            int from = ((int)samplePos + size * 2) % size;
-            float proc = samplePos - from;
-            int to = (from + 1) % size;
+            for (int i = 0; i < size; i++)
+            {
 
-            // interpolate samples
-            tempSamples[i] = samples[from] * (1.f - proc) + samples[to] * proc;
+                float from = i;
+                float to = WavetableOscillator::skewHPhaseResponse[i] * (SAMPLES_FOR_DISPLAY - 1);
+
+                if (oscdata->p[wt_skewh].val.f < 0)
+                {
+                    to = (
+
+                        (float)(SAMPLES_FOR_DISPLAY - 1) -
+                        WavetableOscillator::skewHPhaseResponse[(SAMPLES_FOR_DISPLAY - 1) - i] *
+                            (SAMPLES_FOR_DISPLAY - 1));
+                }
+
+                float fromSampleF = (float)from * (1.0 - skewH) + (float)to * skewH;
+
+                // interpolate
+                int fromSample = fromSampleF;
+                int toSample = limit_range(fromSample + 1, 0, size - 1);
+                float percSample = fromSampleF - fromSample;
+
+                float sample = samplesTemp[fromSample] * (1 - percSample) +
+                               samplesTemp[toSample] * (percSample);
+
+                samples[i] = sample;
+            }
         }
-
-        for (int i = 0; i < size; i++)
-        {
-            samples[i] = tempSamples[i];
-        }
-        */
     }
     else
     {

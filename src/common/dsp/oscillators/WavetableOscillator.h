@@ -63,6 +63,9 @@ class WavetableOscillator : public AbstractBlitOscillator
 
     void processSamplesForDisplay(float *samples, int size, bool real) override;
 
+    static const int SAMPLES_FOR_DISPLAY = 60;
+    static double skewHPhaseResponse[SAMPLES_FOR_DISPLAY];
+
   private:
     void convolute(int voice, bool FM, bool stereo);
     template <bool is_init> void update_lagvals();
@@ -89,6 +92,7 @@ class WavetableOscillator : public AbstractBlitOscillator
     int nointerp;
     float FMmul_inv;
     int sampleloop;
+
     pdata *unmodulatedLocalcopy;
     FeatureDeform deformType;
 };
