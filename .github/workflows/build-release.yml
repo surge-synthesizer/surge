@@ -283,6 +283,18 @@ jobs:
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-linux-x64-$SURGE_VERSION.deb > src/assets/includes/stable_xt_linux_x64_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/tag/$SURGE_VERSION > src/assets/includes/stable_xt_other.url
 
+          cat src/assets/includes/*
+
+          git config user.email "paul@baconpaul.org"
+          git config user.name "baconpaul"
+
+          git diff
+          git add .
+          git status
+          
+          git commit -m "Update surge links for ${SURGE_VERSION} from github action"
+          # git push origin master
+
       - name: "Notify surge-synthesizer.github.io"
         env:
           GH_TOKEN: ${{ secrets.WEB }}
