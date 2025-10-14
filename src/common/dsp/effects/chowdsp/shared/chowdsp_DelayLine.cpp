@@ -68,8 +68,8 @@ void DelayLine<SampleType, InterpolationType>::prepare(
 {
     assert(spec.numChannels > 0);
 
-    this->bufferData =
-        typename DelayLineBase<SampleType>::AudioBlock(spec.numChannels, 2 * (size_t)totalSize);
+    this->bufferData = typename DelayLineBase<SampleType>::AudioBlock(
+        this->dataBlock, spec.numChannels, 2 * (size_t)totalSize);
 
     this->writePos.resize(spec.numChannels);
     this->readPos.resize(spec.numChannels);
