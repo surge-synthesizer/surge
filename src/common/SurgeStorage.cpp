@@ -207,7 +207,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
     if (userDataPath.empty())
     {
-        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
+        userDataPath = calculateStandardUserDataPath();
     }
 
     // These are how I test a broken windows install for documents
@@ -278,7 +278,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     if (userDataPath.empty())
     {
-        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
+        userDataPath = calculateStandardUserDataPath();
     }
 
 #elif WINDOWS
@@ -335,7 +335,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     {
         try
         {
-            userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
+            userDataPath = calculateStandardUserDataPath();
         }
         catch (const std::runtime_error &e)
         {
@@ -677,6 +677,23 @@ void SurgeStorage::createUserDirectory()
             }
         }
     }
+}
+
+fs::path SurgeStorage::calculateStandardUserDataPath() const
+{
+    auto res = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
+
+    try
+    {
+        auto candPath = sst::plugininfra::paths::bestDocumentsVendorFolderPathFor(
+            "Surge Synth Team", "Surge XT");
+        if (!fs::exists(res))
+            return candPath;
+    }
+    catch (fs::filesystem_error &e)
+    {
+    }
+    return res;
 }
 
 fs::path SurgeStorage::getOverridenUserPath() const

@@ -457,11 +457,11 @@ struct UndoManagerImpl
 
         r.val = val;
 
-        if (p->ctrltype == vt_float)
+        if (p->valtype == vt_float)
         {
             txt = p->get_display(true, val.f);
         }
-        else if (p->ctrltype == vt_int)
+        else if (p->valtype == vt_int)
         {
             txt = p->get_display(true,
                                  Parameter::intScaledToFloat(val.i, p->val_max.i, p->val_min.i));
