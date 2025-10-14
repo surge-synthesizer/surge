@@ -136,7 +136,7 @@ jobs:
           name: build-${{ matrix.name }}
 
   build_plugin_docker:
-    name: "Ubuntu 18 Docker"
+    name: "Ubuntu 20 Docker"
     runs-on: ubuntu-latest
     needs: [ surge_version ]
 
