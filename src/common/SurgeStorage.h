@@ -142,9 +142,10 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 //                               added DAWExtraState members for saving the state of Lua code editors, and variable group states in debugger
 // 26 -> 27 (XT 1.4.* nightlies) fix OBXD and BP12 legacy streaming for sst-filters upgrade
 //                               fix extendable parameters not extending in Waveshaper effect
+// 27 -> 28 (XT 1.4.* nightlies) Add corrected TX shapes to sine proc
 // clang-format on
 
-const int ff_revision = 27;
+const int ff_revision = 28;
 
 const int n_scene_params = 273;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
