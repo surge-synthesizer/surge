@@ -46,7 +46,7 @@ template <typename SampleType> class DelayLineBase
     using NumericType = typename SampleTypeHelpers::ElementType<SampleType>::Type;
 
   public:
-    DelayLineBase() = default;
+    DelayLineBase() : bufferData(dataBlock) {}
     virtual ~DelayLineBase() = default;
 
     virtual void setDelay(NumericType /* newDelayInSamples */) = 0;
@@ -88,15 +88,29 @@ template <typename SampleType> class DelayLineBase
 
     struct AudioBlock
     {
-        std::vector<uint8_t> dataBlock;
+        std::vector<uint8_t> &dataBlock;
         int numChannels{0}, numSamples{0};
 
         static constexpr size_t samplePad{4};
-        AudioBlock() = default;
-        AudioBlock(int numChannels, int numSamples)
-            : numChannels(numChannels), numSamples(numSamples)
+        // AudioBlock() = default;
+        AudioBlock(std::vector<uint8_t> &db) : dataBlock(db) {}
+        AudioBlock(std::vector<uint8_t> &db, int numChannels, int numSamples)
+            : dataBlock(db), numChannels(numChannels), numSamples(numSamples)
         {
             dataBlock.resize(numChannels * (numSamples + samplePad) * sizeof(SampleType));
+        }
+        AudioBlock(const AudioBlock &other)
+            : dataBlock(other.dataBlock), numChannels(other.numChannels),
+              numSamples(other.numSamples)
+        {
+        }
+
+        AudioBlock &operator=(const AudioBlock &other)
+        {
+            dataBlock = other.dataBlock;
+            numChannels = other.numChannels;
+            numSamples = other.numSamples;
+            return *this;
         }
         SampleType *getChannelPointer(int channel)
         {
@@ -109,6 +123,8 @@ template <typename SampleType> class DelayLineBase
   protected:
     // used to be the j u c e::dsp::AudioBlock<SampleType> bufferData;
     AudioBlock bufferData;
+    std::vector<uint8_t> dataBlock;
+
     std::vector<SampleType> v;
     std::vector<int> writePos, readPos;
 };
