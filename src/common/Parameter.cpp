@@ -1086,13 +1086,13 @@ void Parameter::set_type(int ctrltype)
         break;
     case ct_sineoscmode:
         val_min.i = 0;
-        val_max.i = 27;
+        val_max.i = 27 + 4; // In surge 1.4 added 4 corrected shapes
         valtype = vt_int;
         val_default.i = 0;
         break;
     case ct_ringmod_sineoscmode:
         val_min.i = 0;
-        val_max.i = 28; // above sineosc + 1 for audio in
+        val_max.i = 28 + 4; // above sineosc + 1 for audio in
         valtype = vt_int;
         val_default.i = 0;
         break;
@@ -3998,7 +3998,13 @@ std::string Parameter::get_display(bool external, float ef) const
             case 7:
                 txt = fmt::format("Wave {:d} (TX {:d})", i + 1, i + 1);
                 break;
-            case 28: // only hit in ringmod_sineoscmode
+            case 28:
+            case 29:
+            case 30:
+            case 31:
+                txt = fmt::format("Wave {:d} (Legacy TX {:d})", i + 1, (i - 27) * 2);
+                break;
+            case 32: // only hit in ringmod_sineoscmode
                 txt = "Audio In";
                 break;
             default:

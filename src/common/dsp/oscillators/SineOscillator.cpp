@@ -224,27 +224,22 @@ inline SIMD_M128 valueFromSinAndCosForMode<0>(SIMD_M128 svaluesse, SIMD_M128 cva
 template <>
 inline SIMD_M128 valueFromSinAndCosForMode<1>(SIMD_M128 svaluesse, SIMD_M128 cvaluesse, int maxc)
 {
-    /*
-    switch (quadrant)
-    {
-        case 1: pvalue = 1 - cosx;
-        case 2: pvalue = 1 + cosx;
-        case 3: pvalue = -1 - cosx;
-        case 4: pvalue = -1 + cosx;
-    }
-     */
     const auto mz = SIMD_MM(setzero_ps)();
+    const auto m2 = SIMD_MM(set1_ps)(2);
     const auto m1 = SIMD_MM(set1_ps)(1);
-    const auto mm1 = SIMD_MM(set1_ps)(-1);
+    const auto mp5 = SIMD_MM(set1_ps)(0.5);
 
     auto h1 = SIMD_MM(cmpge_ps)(svaluesse, mz);
-    auto sw = SIMD_MM(sub_ps)(SIMD_MM(and_ps)(h1, m1),
-                              SIMD_MM(andnot_ps)(h1, m1)); // this is now 1 1 -1 -1
 
-    auto q24 = SIMD_MM(cmplt_ps)(SIMD_MM(mul_ps)(svaluesse, cvaluesse), mz);
-    auto pm =
-        SIMD_MM(sub_ps)(SIMD_MM(and_ps)(q24, m1), SIMD_MM(andnot_ps)(q24, m1)); // this is -1 1 -1 1
-    return SIMD_MM(add_ps)(sw, SIMD_MM(mul_ps)(pm, cvaluesse));
+    auto c2x = SIMD_MM(sub_ps)(m1, SIMD_MM(mul_ps)(m2, SIMD_MM(mul_ps)(svaluesse, svaluesse)));
+
+    auto uh = SIMD_MM(mul_ps)(mp5, SIMD_MM(sub_ps)(m1, c2x));
+    auto lh = SIMD_MM(mul_ps)(mp5, SIMD_MM(sub_ps)(c2x, m1));
+    ;
+
+    auto res = SIMD_MM(add_ps)(SIMD_MM(and_ps)(h1, uh), SIMD_MM(andnot_ps)(h1, lh));
+
+    return res;
 }
 
 template <>
@@ -258,22 +253,18 @@ inline SIMD_M128 valueFromSinAndCosForMode<2>(SIMD_M128 svaluesse, SIMD_M128 cva
 template <>
 inline SIMD_M128 valueFromSinAndCosForMode<3>(SIMD_M128 svaluesse, SIMD_M128 cvaluesse, int maxc)
 {
-    // 1 -/+ cosx in first half only
     const auto mz = SIMD_MM(setzero_ps)();
-    const auto m1 = SIMD_MM(set1_ps)(1);
-    const auto mm1 = SIMD_MM(set1_ps)(-1);
     const auto m2 = SIMD_MM(set1_ps)(2);
+    const auto m1 = SIMD_MM(set1_ps)(1);
+    const auto mp5 = SIMD_MM(set1_ps)(0.5);
 
     auto h1 = SIMD_MM(cmpge_ps)(svaluesse, mz);
-    auto q2 = SIMD_MM(and_ps)(h1, SIMD_MM(cmple_ps)(cvaluesse, mz));
+    auto c2x = SIMD_MM(sub_ps)(m1, SIMD_MM(mul_ps)(m2, SIMD_MM(mul_ps)(svaluesse, svaluesse)));
+    auto uh = SIMD_MM(mul_ps)(mp5, SIMD_MM(sub_ps)(m1, c2x));
 
-    auto fh = SIMD_MM(and_ps)(h1, m1);
-    auto cx = SIMD_MM(mul_ps)(
-        fh, SIMD_MM(mul_ps)(cvaluesse,
-                            SIMD_MM(add_ps)(mm1, SIMD_MM(mul_ps)(m2, SIMD_MM(and_ps)(q2, m1)))));
+    auto res = SIMD_MM(and_ps)(h1, uh);
 
-    // return SIMD_MM(and_ps)(svaluesse, SIMD_MM(cmpge_ps)(svaluesse, mz));
-    return SIMD_MM(add_ps)(fh, cx);
+    return res;
 }
 
 template <>
@@ -592,6 +583,74 @@ inline SIMD_M128 valueFromSinAndCosForMode<27>(SIMD_M128 svaluesse, SIMD_M128 cv
     auto s2x = SIMD_MM(mul_ps)(m2, SIMD_MM(mul_ps)(svaluesse, cvaluesse));
     auto qv = calcquadrantSSE(svaluesse, cvaluesse);
     return SIMD_MM(div_ps)(s2x, qv);
+}
+
+template <>
+inline SIMD_M128 valueFromSinAndCosForMode<28>(SIMD_M128 svaluesse, SIMD_M128 cvaluesse, int maxc)
+{
+    /*
+    switch (quadrant)
+    {
+        case 1: pvalue = 1 - cosx;
+        case 2: pvalue = 1 + cosx;
+        case 3: pvalue = -1 - cosx;
+        case 4: pvalue = -1 + cosx;
+    }
+     */
+    const auto mz = SIMD_MM(setzero_ps)();
+    const auto m1 = SIMD_MM(set1_ps)(1);
+    const auto mm1 = SIMD_MM(set1_ps)(-1);
+
+    auto h1 = SIMD_MM(cmpge_ps)(svaluesse, mz);
+    auto sw = SIMD_MM(sub_ps)(SIMD_MM(and_ps)(h1, m1),
+                              SIMD_MM(andnot_ps)(h1, m1)); // this is now 1 1 -1 -1
+
+    auto q24 = SIMD_MM(cmplt_ps)(SIMD_MM(mul_ps)(svaluesse, cvaluesse), mz);
+    auto pm =
+        SIMD_MM(sub_ps)(SIMD_MM(and_ps)(q24, m1), SIMD_MM(andnot_ps)(q24, m1)); // this is -1 1 -1 1
+    return SIMD_MM(add_ps)(sw, SIMD_MM(mul_ps)(pm, cvaluesse));
+}
+
+template <>
+inline SIMD_M128 valueFromSinAndCosForMode<29>(SIMD_M128 svaluesse, SIMD_M128 cvaluesse, int maxc)
+{
+    // 1 -/+ cosx in first half only
+    const auto mz = SIMD_MM(setzero_ps)();
+    const auto m1 = SIMD_MM(set1_ps)(1);
+    const auto mm1 = SIMD_MM(set1_ps)(-1);
+    const auto m2 = SIMD_MM(set1_ps)(2);
+
+    auto h1 = SIMD_MM(cmpge_ps)(svaluesse, mz);
+    auto q2 = SIMD_MM(and_ps)(h1, SIMD_MM(cmple_ps)(cvaluesse, mz));
+
+    auto fh = SIMD_MM(and_ps)(h1, m1);
+    auto cx = SIMD_MM(mul_ps)(
+        fh, SIMD_MM(mul_ps)(cvaluesse,
+                            SIMD_MM(add_ps)(mm1, SIMD_MM(mul_ps)(m2, SIMD_MM(and_ps)(q2, m1)))));
+
+    // return SIMD_MM(and_ps)(svaluesse, SIMD_MM(cmpge_ps)(svaluesse, mz));
+    return SIMD_MM(add_ps)(fh, cx);
+}
+
+template <>
+inline SIMD_M128 valueFromSinAndCosForMode<30>(SIMD_M128 svaluesse, SIMD_M128 cvaluesse, int maxc)
+{
+    // This is basically a double frequency shape 0 in the first half only
+    const auto mz = SIMD_MM(setzero_ps)();
+    const auto m1 = SIMD_MM(set1_ps)(1);
+    const auto m2 = SIMD_MM(set1_ps)(2);
+
+    auto s2x = SIMD_MM(mul_ps)(m2, SIMD_MM(mul_ps)(svaluesse, cvaluesse));
+    auto c2x = SIMD_MM(sub_ps)(m1, SIMD_MM(mul_ps)(m2, SIMD_MM(mul_ps)(svaluesse, svaluesse)));
+
+    auto v1 = valueFromSinAndCosForMode<28>(s2x, c2x, maxc);
+    return SIMD_MM(and_ps)(SIMD_MM(cmpge_ps)(svaluesse, mz), v1);
+}
+
+template <>
+inline SIMD_M128 valueFromSinAndCosForMode<31>(SIMD_M128 svaluesse, SIMD_M128 cvaluesse, int maxc)
+{
+    return mech::abs_ps(valueFromSinAndCosForMode<30>(svaluesse, cvaluesse, maxc));
 }
 
 // This is used by the legacy apis
@@ -946,6 +1005,11 @@ void SineOscillator::process_block(float pitch, float drift, bool stereo, bool F
             DOCASE(25)
             DOCASE(26)
             DOCASE(27)
+
+            DOCASE(28)
+            DOCASE(29)
+            DOCASE(30)
+            DOCASE(31)
         }
 #undef DOCASE
         applyFilter();
@@ -1011,6 +1075,11 @@ void SineOscillator::process_block(float pitch, float drift, bool stereo, bool F
         DOCASE(25)
         DOCASE(26)
         DOCASE(27)
+
+        DOCASE(28)
+        DOCASE(29)
+        DOCASE(30)
+        DOCASE(31)
     }
 #undef DOCASE
 
@@ -1176,6 +1245,14 @@ float SineOscillator::valueFromSinAndCos(float sinx, float cosx, int wfMode)
         return singleValueFromSinAndCos<26>(sinx, cosx);
     case 27:
         return singleValueFromSinAndCos<27>(sinx, cosx);
+    case 28:
+        return singleValueFromSinAndCos<28>(sinx, cosx);
+    case 29:
+        return singleValueFromSinAndCos<29>(sinx, cosx);
+    case 30:
+        return singleValueFromSinAndCos<30>(sinx, cosx);
+    case 31:
+        return singleValueFromSinAndCos<31>(sinx, cosx);
     }
 
     return 0;

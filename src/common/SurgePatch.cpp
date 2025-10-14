@@ -2244,6 +2244,46 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             }
         }
     }
+
+    if (revision <= 27)
+    {
+        // Sine Osc adds waveforms
+        for (auto &sc : scene)
+        {
+            for (auto &o : sc.osc)
+            {
+                if (o.type.val.i == ot_sine)
+                {
+                    auto shp = o.p[0].val.i;
+                    if (shp >= 1 && shp <= 7)
+                    {
+                        if (shp % 2 == 1)
+                        {
+                            auto q = (shp - 1) / 2 + 28;
+                            o.p[0].val.i = q;
+                        }
+                    }
+                }
+            }
+        }
+        for (auto &f : fx)
+        {
+            if (f.type.val.i == fxt_ringmod)
+            {
+                auto sh = f.p[0].val.i;
+                if (sh == 28)
+                {
+                    sh = 33;
+                }
+                if (sh == 1 || sh == 3 || sh == 5 || sh == 7)
+                {
+                    sh = (sh - 1) / 2 + 28;
+                }
+                f.p[0].val.i = sh;
+            }
+        }
+    }
+
     // ensure that filter subtype is a valid value
     for (auto &sc : scene)
     {

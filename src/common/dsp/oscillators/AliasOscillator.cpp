@@ -67,7 +67,18 @@ void AliasOscillator::init(float pitch, bool is_display, bool nonzero_init_drift
             {
                 float c = std::cos(k * dPhase);
                 float s = std::sin(k * dPhase);
-                auto r = SineOscillator::valueFromSinAndCos(s, c, i + 1);
+
+                /*
+                 * Editoridal decision: Rather than add a slew
+                 * of shapes to alias, retain the pre-xt 1.4
+                 * shapes for the 'spiky' waveforms which will
+                 * sound better here anyway. Don't add the corrected
+                 * ones sinceosc has
+                 */
+                auto wf = i + 1;
+                if (i % 2 == 0)
+                    wf = i / 2 + 28;
+                auto r = SineOscillator::valueFromSinAndCos(s, c, wf);
                 auto r01 = (r + 1) * 0.5;
                 shaped_sinetable[i][k] = (uint8_t)(r01 * 0xFF);
             }
