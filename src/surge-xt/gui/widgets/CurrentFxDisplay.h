@@ -48,6 +48,11 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     std::unordered_map<std::string, std::string> uiidToSliderLabel;
 
   private:
+    // Individual FX layouts.
+    void defaultLayout();
+    void vocoderLayout();
+
+    // Generic layout helpers.
     void layoutFxSelector();
     void layoutFxPresetLabel();
     void layoutJogFx();

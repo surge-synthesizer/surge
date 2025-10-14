@@ -28,11 +28,25 @@ void CurrentFxDisplay::setSurgeGUIEditor(SurgeGUIEditor *e)
 void CurrentFxDisplay::updateCurrentFx(int current_fx)
 {
     std::lock_guard<std::mutex> g(editor_->synth->fxSpawnMutex);
-    std::unordered_map<int, int> paramToParamIndex;
     current_fx_ = current_fx;
     effect_ = editor_->synth->fx[current_fx].get();
+
+    switch (storage_->getPatch().fx[current_fx].type.val.i)
+    {
+    case fxt_vocoder:
+        vocoderLayout();
+        break;
+    default:
+        defaultLayout();
+        break;
+    };
+}
+
+void CurrentFxDisplay::defaultLayout()
+{
+    std::unordered_map<int, int> paramToParamIndex;
     Surge::GUI::Skin::ptr_t currentSkin = editor_->currentSkin;
-    FxStorage &fx = storage_->getPatch().fx[current_fx];
+    FxStorage &fx = storage_->getPatch().fx[current_fx_];
 
     // Sizing for the labels.
     auto panel_conn = currentSkin->getOrCreateControlForConnector("fx.param.panel");
@@ -96,47 +110,48 @@ void CurrentFxDisplay::updateCurrentFx(int current_fx)
     layoutJogFx();
 
     // Now the FX params.
-    for (i = 0; i < n_fx_params; i++)
+    if (effect_)
     {
-        // First, a new group?
-        const char *label = effect_->group_label(i);
-        if (label)
+        for (i = 0; i < n_fx_params; i++)
         {
-            auto vr =
-                label_rect.withTrimmedTop(-1).withTrimmedRight(-5).translated(5, -12).translated(
-                    0, yofs * effect_->group_label_ypos(i));
-
-            if (!labels_[i])
+            // First, a new group?
+            const char *label = effect_->group_label(i);
+            if (label)
             {
-                labels_[i] = std::make_unique<Surge::Widgets::EffectLabel>();
-            }
+                auto vr =
+                    label_rect.withTrimmedTop(-1).withTrimmedRight(-5).translated(5, -12).translated(
+                        0, yofs * effect_->group_label_ypos(i));
 
-            labels_[i]->setBounds(vr);
-            labels_[i]->setSkin(currentSkin, editor_->bitmapStore);
+                if (!labels_[i])
+                {
+                    labels_[i] = std::make_unique<Surge::Widgets::EffectLabel>();
+                }
 
-            // Vocoder-specific bits; split this into its own function.
-            if (i == 0 && fx.type.val.i == fxt_vocoder)
-            {
-                labels_[i]->setLabel(fmt::format("Input delayed {} samples", BLOCK_SIZE));
+                labels_[i]->setBounds(vr);
+                labels_[i]->setSkin(currentSkin, editor_->bitmapStore);
+                labels_[i]->setLabel(label);
+
+                editor_->addAndMakeVisibleWithTracking(this, *labels_[i]);
             }
             else
             {
-                labels_[i]->setLabel(label);
+                labels_[i].reset(nullptr);
             }
 
-            editor_->addAndMakeVisibleWithTracking(this, *labels_[i]);
-        }
-        else
-        {
-            labels_[i].reset(nullptr);
-        }
-
-        // Now the FX proper.
-        if (fx.p[i].ctrltype != ct_none)
-        {
-            makeParameter(paramToParamIndex[i]);
+            // Now the FX proper.
+            if (fx.p[i].ctrltype != ct_none)
+            {
+                makeParameter(paramToParamIndex[i]);
+            }
         }
     }
+}
+
+void CurrentFxDisplay::vocoderLayout()
+{
+    // For vocoder, the only change is in label #0.
+    defaultLayout();
+    labels_[0]->setLabel(fmt::format("Input delayed {} samples", BLOCK_SIZE));
 }
 
 void CurrentFxDisplay::layoutFxSelector()
