@@ -732,8 +732,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     /*
      * This is the JUCE component management
      */
-    std::array<std::unique_ptr<Surge::Widgets::EffectLabel>, 15> effectLabels;
-
     bool scanJuceSkinComponents{false};
     std::unordered_map<Surge::GUI::Skin::Control::sessionid_t, std::unique_ptr<juce::Component>>
         juceSkinComponents;

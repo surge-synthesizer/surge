@@ -5,6 +5,11 @@
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIEditorTags.h"
 
+namespace
+{
+const int yofs = 10;
+} // namespace
+
 namespace Surge
 {
 namespace Widgets
@@ -22,9 +27,16 @@ void CurrentFxDisplay::setSurgeGUIEditor(SurgeGUIEditor *e)
 
 void CurrentFxDisplay::updateCurrentFx(int current_fx)
 {
+    std::lock_guard<std::mutex> g(editor_->synth->fxSpawnMutex);
     std::unordered_map<int, int> paramToParamIndex;
     current_fx_ = current_fx;
+    effect_ = editor_->synth->fx[current_fx].get();
+    Surge::GUI::Skin::ptr_t currentSkin = editor_->currentSkin;
     FxStorage &fx = storage_->getPatch().fx[current_fx];
+
+    // Sizing for the labels.
+    auto panel_conn = currentSkin->getOrCreateControlForConnector("fx.param.panel");
+    auto label_rect = juce::Rectangle<int>(panel_conn->x, panel_conn->y, 123, 13);
 
     // This is kinda dumb, but we have to provide an absolute param index number
     // to layoutComponentForSkin, so figure it out here.
@@ -52,8 +64,6 @@ void CurrentFxDisplay::updateCurrentFx(int current_fx)
             }
         }
     }
-
-    Surge::GUI::Skin::ptr_t currentSkin = editor_->currentSkin;
 
     // Code to lay out the parameter and wire it up.
     auto makeParameter = [this, &currentSkin](int n) {
@@ -88,6 +98,40 @@ void CurrentFxDisplay::updateCurrentFx(int current_fx)
     // Now the FX params.
     for (i = 0; i < n_fx_params; i++)
     {
+        // First, a new group?
+        const char *label = effect_->group_label(i);
+        if (label)
+        {
+            auto vr =
+                label_rect.withTrimmedTop(-1).withTrimmedRight(-5).translated(5, -12).translated(
+                    0, yofs * effect_->group_label_ypos(i));
+
+            if (!labels_[i])
+            {
+                labels_[i] = std::make_unique<Surge::Widgets::EffectLabel>();
+            }
+
+            labels_[i]->setBounds(vr);
+            labels_[i]->setSkin(currentSkin, editor_->bitmapStore);
+
+            // Vocoder-specific bits; split this into its own function.
+            if (i == 0 && fx.type.val.i == fxt_vocoder)
+            {
+                labels_[i]->setLabel(fmt::format("Input delayed {} samples", BLOCK_SIZE));
+            }
+            else
+            {
+                labels_[i]->setLabel(label);
+            }
+
+            editor_->addAndMakeVisibleWithTracking(this, *labels_[i]);
+        }
+        else
+        {
+            labels_[i].reset(nullptr);
+        }
+
+        // Now the FX proper.
         if (fx.p[i].ctrltype != ct_none)
         {
             makeParameter(paramToParamIndex[i]);

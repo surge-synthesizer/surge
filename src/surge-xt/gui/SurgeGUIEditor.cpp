@@ -1705,41 +1705,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
                 {
                     vu[i + 1] = 0;
                 }
-
-                const char *label = synth->fx[current_fx]->group_label(i);
-
-                if (label)
-                {
-                    auto vr = fxRect.withTrimmedTop(-1)
-                                  .withTrimmedRight(-5)
-                                  .translated(5, -12)
-                                  .translated(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
-
-                    if (!effectLabels[i])
-                    {
-                        effectLabels[i] = std::make_unique<Surge::Widgets::EffectLabel>();
-                    }
-
-                    effectLabels[i]->setBounds(vr);
-                    effectLabels[i]->setSkin(currentSkin, bitmapStore);
-
-                    if (i == 0 &&
-                        synth->storage.getPatch().fx[current_fx].type.val.i == fxt_vocoder)
-                    {
-                        effectLabels[i]->setLabel(
-                            fmt::format("Input delayed {} samples", BLOCK_SIZE));
-                    }
-                    else
-                    {
-                        effectLabels[i]->setLabel(label);
-                    }
-
-                    addAndMakeVisibleWithTracking(frame.get(), *effectLabels[i]);
-                }
-                else
-                {
-                    effectLabels[i].reset(nullptr);
-                }
             }
         }
     }

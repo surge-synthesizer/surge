@@ -24,9 +24,11 @@
 #define SURGE_SRC_SURGE_XT_GUI_WIDGETS_CURRENTFXDISPLAY_H
 
 #include "Effect.h"
+#include "EffectLabel.h"
 #include "MainFrame.h"
 #include "SurgeStorage.h"
 
+#include <array>
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace Surge
@@ -49,11 +51,14 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     void layoutFxSelector();
     void layoutFxPresetLabel();
     void layoutJogFx();
+    void layoutSectionLabels();
 
     int current_fx_{-1};
+    Effect *effect_{nullptr};  // unique_ptr owned by synth.
     SurgeGUIEditor *editor_{nullptr};
     SurgeStorage *storage_{nullptr};
 
+    std::array<std::unique_ptr<Surge::Widgets::EffectLabel>, n_fx_params> labels_;
     // Note: Due to the existing code that refers to it, the effectChooser and
     // fxPresetLabel widgets are held in the SurgeGUIEditor class, rather than here.
     // If the code (callbacks) can end up localized here too, we can move the
