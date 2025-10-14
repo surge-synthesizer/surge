@@ -294,12 +294,11 @@ jobs:
           git config user.email "paul@baconpaul.org"
           git config user.name "baconpaul"
 
-          git diff
           git add .
           git status
           
           git commit -m "Update surge links for ${SURGE_VERSION} from github action"
-          # git push origin master
+          git push origin master
 
       - name: "Notify surge-synthesizer.github.io"
         env:
