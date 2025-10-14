@@ -41,6 +41,14 @@ jobs:
             cmakeOpt: DEBUG
             runTests: false
 
+          - name: "Windows MSVC JUCE 7"
+            os: windows-latest
+            target: surge-xt_Standalone surge-fx_Standalone
+            cmakeConfig: -A x64
+            cmakeOpt: DEBUG
+            runTests: false
+            revertJuce: true
+
           #- name: "Windows Clang"
           #  os: windows-latest
           #  target: surge-xt_Standalone

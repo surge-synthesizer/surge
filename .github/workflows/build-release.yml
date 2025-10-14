@@ -54,23 +54,29 @@ jobs:
             name: "Windows 64-bit"
             # cmakeArgs: -GNinja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
             cmakeArgs: -G"Visual Studio 17 2022" -A x64
+            uploadResult: true
 
           - os: windows-latest
             name: "Windows MSVC JUCE 7"
             cmakeArgs: -G"Visual Studio 17 2022" -A x64 -DSURGE_EXTRA_ZIP_NAME="-juce7"
             revertJuce: true
+            uploadResult: true
 
           - os: windows-latest
             name: "Windows ARM64EC"
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64ec -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
+            uploadResult: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
 
           - os: windows-latest
             name: "Windows ARM64"
             cmakeArgs: -G"Visual Studio 17 2022" -A arm64 -DCMAKE_SYSTEM_VERSION=10 -DSURGE_SKIP_LUA=TRUE
+            uploadResult: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
 
           - os: macos-latest
             name: "macOS"
             cmakeArgs: -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+            uploadResult: true
+
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
@@ -124,6 +130,7 @@ jobs:
 
       - name: "Upload artifact"
         uses: actions/upload-artifact@v4
+        if: ${{ matrix.uploadResult }}
         with:
           path: build/surge-xt-dist
           name: build-${{ matrix.name }}
@@ -282,6 +289,18 @@ jobs:
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-win32-$SURGE_VERSION-pluginsonly.zip > src/assets/includes/stable_xt_win_x86_zip_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-linux-x64-$SURGE_VERSION.deb > src/assets/includes/stable_xt_linux_x64_url
           echo ${{ github.server_url }}/${{ github.repository }}/releases/tag/$SURGE_VERSION > src/assets/includes/stable_xt_other.url
+
+          cat src/assets/includes/*
+
+          git config user.email "paul@baconpaul.org"
+          git config user.name "baconpaul"
+
+          git diff
+          git add .
+          git status
+          
+          git commit -m "Update surge links for ${SURGE_VERSION} from github action"
+          # git push origin master
 
       - name: "Notify surge-synthesizer.github.io"
         env:

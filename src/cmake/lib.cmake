@@ -154,10 +154,10 @@ function(surge_make_installers)
       set(SURGE_PORTABLE_DIR ${CMAKE_BINARY_DIR}/surge-xt-portable)
       set(portsst "${SURGE_PORTABLE_DIR}/Surge Synth Team")
       if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec")
-        set(WINARCH "-arm64ec-beta")
+        set(WINARCH "-arm64ec-beta-NO-LUA")
       endif()
       if ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64")
-        set(WINARCH "-arm64-beta")
+        set(WINARCH "-arm64-beta-NO_LUA")
       endif()
       add_custom_command(TARGET surge-xt-distribution
         POST_BUILD
