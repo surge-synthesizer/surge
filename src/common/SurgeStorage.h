@@ -1584,7 +1584,7 @@ class alignas(16) SurgeStorage
     fs::path extraThirdPartyWavetablesPath; // used by rack
     fs::path extraUserWavetablesPath;       // used by rack
 
-    fs::path calculateStandardUserDataPath() const;
+    fs::path calculateStandardUserDataPath(const std::string &sxt) const;
 
     std::atomic<bool> userDataPathValid{false};
 

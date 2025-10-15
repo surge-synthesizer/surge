@@ -32,6 +32,7 @@
 #include "SurgeMemoryPools.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
+#include "sst/plugininfra/misc_platform.h"
 #include "PatchFileHeaderStructs.h"
 
 namespace mech = sst::basic_blocks::mechanics;
@@ -218,7 +219,10 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
     std::filebuf f;
     if (!f.open(string_to_path(fxpPath), std::ios::binary | std::ios::in))
     {
-        storage.reportError(std::string() + "Unable to open file " + std::string(fxpPath),
+        auto msg = sst::plugininfra::misc_platform::getLastSystemError();
+
+        storage.reportError(std::string() + "Unable to open file '" + std::string(fxpPath) +
+                                "'. Error Is: " + msg,
                             "Unable to open file");
         return false;
     }
@@ -584,10 +588,13 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
     }
     catch (const fs::filesystem_error &e)
     {
+        auto msg = sst::plugininfra::misc_platform::getLastSystemError();
+
         std::ostringstream oss;
         oss << "Exception occurred while creating category folder! Most likely, invalid characters "
                "were used to name the category. Please remove suspicious characters and try "
-               "again!\n"
+               "again!\nErrMessage: "
+            << msg << "\n"
             << "Details " << e.what();
         storage.reportError(oss.str(), "Path Create Error");
         return;
@@ -639,9 +646,12 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename, bool refreshPatchList)
 
     if (!f)
     {
-        storage.reportError("Unable to save the patch to " + filename.u8string() +
-                                "! Maybe it contains invalid characters?",
+        auto msg = sst::plugininfra::misc_platform::getLastSystemError();
+
+        storage.reportError("Unable to save the patch to '" + filename.u8string() +
+                                "'. Error is: " + msg,
                             "Patch Save Error");
+
         return;
     }
 
