@@ -621,7 +621,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;
 
   private:
-    std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
+    std::unique_ptr<Surge::Widgets::VuMeter> vu;
+    //std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
     bool firstTimePatchLoad{true};
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::PatchSelectorCommentTooltip> patchSelectorComment;

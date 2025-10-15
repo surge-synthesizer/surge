@@ -1,9 +1,11 @@
+#include <algorithm>
 #include "CurrentFxDisplay.h"
 #include "EffectChooser.h"
 #include "RuntimeFont.h"
 #include "SkinModel.h"
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIEditorTags.h"
+#include "dsp/effects/ConditionerEffect.h"
 
 namespace
 {
@@ -15,7 +17,8 @@ namespace Surge
 namespace Widgets
 {
 
-CurrentFxDisplay::CurrentFxDisplay() {}
+CurrentFxDisplay::CurrentFxDisplay()
+{}
 
 CurrentFxDisplay::~CurrentFxDisplay() {}
 
@@ -23,6 +26,18 @@ void CurrentFxDisplay::setSurgeGUIEditor(SurgeGUIEditor *e)
 {
     editor_ = e;
     storage_ = e->getStorage();
+}
+
+void CurrentFxDisplay::renderCurrentFx()
+{
+    switch (storage_->getPatch().fx[current_fx_].type.val.i)
+    {
+    case fxt_conditioner:
+        conditionerRender();
+        break;
+    default:
+        break;
+    }
 }
 
 void CurrentFxDisplay::updateCurrentFx(int current_fx)
@@ -35,6 +50,9 @@ void CurrentFxDisplay::updateCurrentFx(int current_fx)
     {
     case fxt_vocoder:
         vocoderLayout();
+        break;
+    case fxt_conditioner:
+        conditionerLayout();
         break;
     default:
         defaultLayout();
@@ -49,8 +67,7 @@ void CurrentFxDisplay::defaultLayout()
     FxStorage &fx = storage_->getPatch().fx[current_fx_];
 
     // Sizing for the labels.
-    auto panel_conn = currentSkin->getOrCreateControlForConnector("fx.param.panel");
-    auto label_rect = juce::Rectangle<int>(panel_conn->x, panel_conn->y, 123, 13);
+    auto label_rect = fxRect();
 
     // This is kinda dumb, but we have to provide an absolute param index number
     // to layoutComponentForSkin, so figure it out here.
@@ -118,9 +135,10 @@ void CurrentFxDisplay::defaultLayout()
             const char *label = effect_->group_label(i);
             if (label)
             {
-                auto vr =
-                    label_rect.withTrimmedTop(-1).withTrimmedRight(-5).translated(5, -12).translated(
-                        0, yofs * effect_->group_label_ypos(i));
+                auto vr = label_rect.withTrimmedTop(-1)
+                              .withTrimmedRight(-5)
+                              .translated(5, -12)
+                              .translated(0, yofs * effect_->group_label_ypos(i));
 
                 if (!labels_[i])
                 {
@@ -144,6 +162,48 @@ void CurrentFxDisplay::defaultLayout()
                 makeParameter(paramToParamIndex[i]);
             }
         }
+    }
+
+    // Explicitly turn off the VUs, if they were on in a previous layout.
+    std::fill(std::begin(vus), std::end(vus), nullptr);
+}
+
+void CurrentFxDisplay::conditionerLayout()
+{
+    // For conditioner, default layout and then add the three VUs.
+    defaultLayout();
+    auto label_rect = fxRect();
+    ParamConfig::VUType t;
+    int ypos;
+    for (int i = 0; i < 3; i++)
+    {
+        if (!vus[i])
+            vus[i] = std::make_unique<Surge::Widgets::VuMeter>();
+        auto vr = label_rect.translated(6, yofs * ConditionerEffect::vu_ypos(i)).translated(0, -14);
+        vus[i]->setBounds(vr);
+        vus[i]->setSkin(editor_->currentSkin, editor_->bitmapStore);
+        vus[i]->setType(ConditionerEffect::vu_type(i));
+
+        editor_->addAndMakeVisibleWithTracking(this, *vus[i]);
+    }
+}
+
+void CurrentFxDisplay::conditionerRender()
+{
+    if (!editor_->synth->fx[current_fx_])
+        return;
+
+    // Set the current VUs to their values.
+    const ConditionerEffect& fx = dynamic_cast<ConditionerEffect &>(*editor_->synth->fx[current_fx_]);
+    for (int i = 0; i < 3; i++)
+    {
+        // Ensure the layout has actually happened by this point.
+        if (!vus[i])
+            continue;
+
+        vus[i]->setValue(fx.vu[i][0]);
+        vus[i]->setValueR(fx.vu[i][1]);
+        vus[i]->repaint();
     }
 }
 
@@ -223,6 +283,12 @@ void CurrentFxDisplay::layoutJogFx()
     // there, they own the component.
     auto q = editor_->layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
     editor_->setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "FX Preset", "Jog");
+}
+
+juce::Rectangle<int> CurrentFxDisplay::fxRect()
+{
+    auto fxpp = editor_->currentSkin->getOrCreateControlForConnector("fx.param.panel");
+    return juce::Rectangle<int>(fxpp->x, fxpp->y, 123, 13);
 }
 
 } // namespace Widgets

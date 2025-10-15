@@ -27,6 +27,7 @@
 #include "EffectLabel.h"
 #include "MainFrame.h"
 #include "SurgeStorage.h"
+#include "VuMeter.h"
 
 #include <array>
 #include <juce_gui_basics/juce_gui_basics.h>
@@ -43,6 +44,8 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     ~CurrentFxDisplay() override;
 
     void setSurgeGUIEditor(SurgeGUIEditor *e);
+
+    void renderCurrentFx();
     void updateCurrentFx(int current_fx);
 
     std::unordered_map<std::string, std::string> uiidToSliderLabel;
@@ -50,7 +53,11 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
   private:
     // Individual FX layouts.
     void defaultLayout();
+    void conditionerLayout();
     void vocoderLayout();
+
+    // Individual renders.
+    void conditionerRender();
 
     // Generic layout helpers.
     void layoutFxSelector();
@@ -58,12 +65,19 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     void layoutJogFx();
     void layoutSectionLabels();
 
+    // For laying out things roughly slider shaped (labels, VUs).
+    juce::Rectangle<int> fxRect();
+
     int current_fx_{-1};
-    Effect *effect_{nullptr};  // unique_ptr owned by synth.
+    Effect *effect_{nullptr}; // unique_ptr owned by synth.
     SurgeGUIEditor *editor_{nullptr};
     SurgeStorage *storage_{nullptr};
 
+    // Used by everything.
     std::array<std::unique_ptr<Surge::Widgets::EffectLabel>, n_fx_params> labels_;
+    // Used by the conditioner.
+    std::array<std::unique_ptr<Surge::Widgets::VuMeter>, 3> vus;
+
     // Note: Due to the existing code that refers to it, the effectChooser and
     // fxPresetLabel widgets are held in the SurgeGUIEditor class, rather than here.
     // If the code (callbacks) can end up localized here too, we can move the
