@@ -6725,8 +6725,8 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                 evaluator->generateWavetable(&this->synth->storage, &oscdata, &oscdata.wt);
                 if (!this->synth->storage.export_wt_wt_portable(fsp, &oscdata.wt, metadata))
                 {
-                    this->synth->storage.reportError("Unable to save wt to " + fsp.u8string(),
-                                                     "Wavetable Export");
+                    this->synth->storage.reportError(
+                        "Unable to save the wavetable to " + fsp.u8string(), "Wavetable Export");
                 }
                 break;
             }
