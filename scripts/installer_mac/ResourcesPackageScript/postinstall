@@ -6,3 +6,5 @@ chown -R $USER:staff "/Library/Application Support/Surge XT"
 chown -R $USER:staff "/Applications/Surge XT.app"
 chown -R $USER:staff "/Applications/Surge XT Effects.app"
 rm -rf "/tmp/SXT"
+
+killall -9 AudioComponentRegistrar
