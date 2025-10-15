@@ -639,9 +639,9 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename, bool refreshPatchList)
 
     if (!f)
     {
-        storage.reportError(
-            "Unable to save the patch to the specified path! Maybe it contains invalid characters?",
-            "Error");
+        storage.reportError("Unable to save the patch to " + filename.u8string() +
+                                "! Maybe it contains invalid characters?",
+                            "Patch Save Error");
         return;
     }
 

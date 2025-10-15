@@ -2836,7 +2836,9 @@ struct TuningControlArea : public juce::Component,
                     }
                     else
                     {
-                        overlay->storage->reportError("Unable to save SCL file", "SCL File Error");
+                        overlay->storage->reportError("Unable to save Scala file to " +
+                                                          fsp.u8string() + "!",
+                                                      "Scala Save Error");
                     }
                 });
         }

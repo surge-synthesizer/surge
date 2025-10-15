@@ -3206,7 +3206,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
     if (!doc.SaveFile(path_to_string(fn)))
     {
         std::ostringstream oss;
-        oss << "Unable to save MIDI settings to '" << fn << "'!";
+        oss << "Unable to save MIDI settings to '" << fn.u8string() << "'!";
         reportError(oss.str(), "Error");
     }
 }
