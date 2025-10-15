@@ -24,7 +24,7 @@ On Unix-like platforms (including macOS), the default is to use the `amalg` buil
 
 ### Windows + MSVC
 
-luajitlib uses a custom version of the `msvcbuild.bat` script included with LuaJIT to build with static linking using the compiler flag `/MT` instead of `/MD` and without the `/Zi` option to omit debug information. See [here](https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-170&viewFallbackFrom=vs-2019) and [here](https://learn.microsoft.com/en-us/cpp/build/reference/z7-zi-zi-debug-information-format?view=msvc-170) for more information.
+With MSVC luajitlib builds using `amalg` `static` `mixed` options and uses a custom version of the `msvcbuild.bat` script included with LuaJIT to build without the `/Zi` option to omit debug information. See [here](https://learn.microsoft.com/en-us/cpp/build/reference/z7-zi-zi-debug-information-format?view=msvc-170) for more information.
 
 ### MinGW
 
