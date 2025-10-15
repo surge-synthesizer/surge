@@ -187,7 +187,8 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     // Set up the local app data path for storing app-level config
     localAppDataPath = sst::plugininfra::paths::bestLibrarySharedVendorFolderPathFor(
         "Surge Synth Team", "Surge XT", true);
-    userDataPath = getOverridenUserPath();
+    // userDataPath = getOverridenUserPath();
+    userDataPath.clear();
 
 #if MAC
     if (!hasSuppliedDataPath)
