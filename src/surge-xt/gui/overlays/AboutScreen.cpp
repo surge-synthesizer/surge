@@ -394,9 +394,11 @@ void AboutScreen::resized()
 
         yp += lblvs;
 
-        addLabel("VST is a trademark of Steinberg Media Technologies GmbH; Audio Units is a "
-                 "trademark of Apple Inc.",
-                 600);
+        addLabel("ASIO and VST are trademarks of Steinberg Media Technologies GmbH", 600);
+
+        yp += lblvs;
+
+        addLabel("Audio Units is a trademark of Apple Inc.", 600);
 
         yp += lblvs;
 

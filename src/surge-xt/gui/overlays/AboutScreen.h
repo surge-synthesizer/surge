@@ -79,9 +79,9 @@ struct AboutScreen : public juce::Component,
 
     juce::Colour fillColour{juce::Colour(0, 0, 0).withAlpha(0.85f)};
 
-    static constexpr int NUM_ICONS = 7;
+    static constexpr int NUM_ICONS = 8;
 
-    std::array<int, NUM_ICONS> iconOrder = {0, 4, 3, 6, 1, 2, 5};
+    std::array<int, NUM_ICONS> iconOrder = {0, 4, 3, 6, 2, 1, 7, 5};
 
     std::array<std::string, NUM_ICONS> urls = {
         stringRepository,
@@ -90,10 +90,12 @@ struct AboutScreen : public juce::Component,
         "https://www.gnu.org/licenses/gpl-3.0-standalone.html",
         "https://discord.gg/aFQDdMV",
         "https://juce.com",
-        "https://cleveraudio.org"};
+        "https://cleveraudio.org",
+        "https://www.steinberg.net/technology/"};
 
     std::array<std::string, NUM_ICONS> iconLabels = {
-        "GitHub Repository", "VST3", "Audio Units", "GPL v3", "Our Discord", "JUCE", "CLAP"};
+        "GitHub Repository", "VST3", "Audio Units", "GPL v3",
+        "Our Discord",       "JUCE", "CLAP",        "ASIO"};
 
     std::array<std::unique_ptr<juce::Label>, NUM_ICONS> iconTooltips;
 
