@@ -81,7 +81,7 @@ struct AboutScreen : public juce::Component,
 
     static constexpr int NUM_ICONS = 8;
 
-    std::array<int, NUM_ICONS> iconOrder = {0, 4, 3, 6, 1, 2, 7, 5};
+    std::array<int, NUM_ICONS> iconOrder = {0, 4, 3, 6, 2, 1, 7, 5};
 
     std::array<std::string, NUM_ICONS> urls = {
         stringRepository,
