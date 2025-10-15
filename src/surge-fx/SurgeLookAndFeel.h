@@ -93,8 +93,7 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
         setColour(juce::Slider::trackColourId, fxStandaloneGray3);
         setColour(juce::Slider::backgroundColourId, juce::Colour((juce::uint8)255, 255, 255, 20.f));
 
-        setColour(SurgeColourIds::componentBgStart,
-                  surgeGrayBg.interpolatedWith(surgeOrangeMedium, 0.1));
+        setColour(SurgeColourIds::componentBgStart, juce::Colour(205, 206, 212));
         setColour(SurgeColourIds::componentBgEnd, surgeGrayBg);
         setColour(SurgeColourIds::orange, surgeOrange);
         setColour(SurgeColourIds::orangeDark, surgeOrangeDark);
@@ -354,7 +353,10 @@ class SurgeFXParamDisplay : public juce::Component
 
     void resized() override
     {
-        overlayEditor->setBounds(getLocalBounds().reduced(2, 3).withTrimmedTop(getHeight() - 28));
+        auto hScale = getHeight() / 55.0;
+
+        overlayEditor->setBounds(
+            getLocalBounds().reduced(2, 3).withTrimmedTop(getHeight() - 28 * hScale));
     }
 
     void mouseDoubleClick(const juce::MouseEvent &e) override
@@ -378,6 +380,8 @@ class SurgeFXParamDisplay : public juce::Component
         if (!allowsTypein)
             return;
 
+        auto hScale = getHeight() / 55.0;
+
         overlayEditor->setColour(juce::TextEditor::textColourId,
                                  findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
         overlayEditor->setColour(juce::TextEditor::outlineColourId,
@@ -387,7 +391,8 @@ class SurgeFXParamDisplay : public juce::Component
         overlayEditor->setColour(juce::TextEditor::ColourIds::highlightColourId,
                                  juce::Colour(0xFF775522));
         overlayEditor->setJustification(juce::Justification::bottomLeft);
-        overlayEditor->setFont(SST_JUCE_FONT_OPTIONS(20));
+        overlayEditor->setFont(SST_JUCE_FONT_OPTIONS(20 * hScale));
+        overlayEditor->applyFontToAllText(SST_JUCE_FONT_OPTIONS(20 * hScale), true);
         overlayEditor->setText(display, juce::dontSendNotification);
         overlayEditor->setVisible(true);
         overlayEditor->grabKeyboardFocus();
