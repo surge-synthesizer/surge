@@ -17,16 +17,13 @@ namespace Surge
 namespace Widgets
 {
 
-CurrentFxDisplay::CurrentFxDisplay()
-{}
-
-CurrentFxDisplay::~CurrentFxDisplay() {}
-
-void CurrentFxDisplay::setSurgeGUIEditor(SurgeGUIEditor *e)
+CurrentFxDisplay::CurrentFxDisplay(SurgeGUIEditor *e)
 {
     editor_ = e;
     storage_ = e->getStorage();
 }
+
+CurrentFxDisplay::~CurrentFxDisplay() {}
 
 void CurrentFxDisplay::renderCurrentFx()
 {
@@ -194,7 +191,8 @@ void CurrentFxDisplay::conditionerRender()
         return;
 
     // Set the current VUs to their values.
-    const ConditionerEffect& fx = dynamic_cast<ConditionerEffect &>(*editor_->synth->fx[current_fx_]);
+    const ConditionerEffect &fx =
+        dynamic_cast<ConditionerEffect &>(*editor_->synth->fx[current_fx_]);
     for (int i = 0; i < 3; i++)
     {
         // Ensure the layout has actually happened by this point.

@@ -949,7 +949,8 @@ void SurgeGUIEditor::idle()
             }
         }
 
-        dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(frame->getControlGroupLayer(cg_FX))->renderCurrentFx();
+        dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(frame->getControlGroupLayer(cg_FX))
+            ->renderCurrentFx();
 
         for (int i = 0; i < 8; i++)
         {
@@ -1773,11 +1774,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             break;
         }
-        case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
-        {
-            // Handled in the CurrentFxDisplay component.
-            break;
-        }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_MPE:
         {
             statusMPE = layoutComponentForSkin(skinCtrl, tag_status_mpe);
@@ -1882,11 +1878,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             break;
         }
 
-        case Surge::Skin::Connector::NonParameterConnection::FXPRESET_LABEL:
-        {
-            // Handled in the CurrentFxDisplay component.
-            break;
-        }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
         {
             componentForSkinSessionOwnedByMember(skinCtrl->sessionid, patchSelector);
@@ -1910,11 +1901,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             addAndMakeVisibleWithTracking(frame.get(), *patchSelector);
 
-            break;
-        }
-        case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
-        {
-            // Handled in the CurrentFxDisplay component.
             break;
         }
         case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER:
@@ -1943,6 +1929,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::OSCILLOSCOPE_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::WAVESHAPER_ANALYSIS_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
+        case Surge::Skin::Connector::NonParameterConnection::FXPRESET_LABEL:
+        case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
+        case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
             break;
         }
     }

@@ -68,7 +68,7 @@ class ConditionerEffect : public Effect
     float vu[3][2]; // stereo pairs, just use first only when mono
 
     static Surge::ParamConfig::VUType vu_type(int id);
-    static int vu_ypos(int id);  // In half-hslider amount.
+    static int vu_ypos(int id); // In half-hslider amount.
 
   private:
     BiquadFilter band1, band2, hp;

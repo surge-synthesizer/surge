@@ -40,10 +40,8 @@ namespace Widgets
 class CurrentFxDisplay : public MainFrame::OverlayComponent
 {
   public:
-    CurrentFxDisplay();
+    explicit CurrentFxDisplay(SurgeGUIEditor *e);
     ~CurrentFxDisplay() override;
-
-    void setSurgeGUIEditor(SurgeGUIEditor *e);
 
     void renderCurrentFx();
     void updateCurrentFx(int current_fx);

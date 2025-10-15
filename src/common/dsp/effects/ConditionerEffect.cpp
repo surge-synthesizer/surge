@@ -63,7 +63,7 @@ void ConditionerEffect::init()
     vu[0][0] = 0.f;
     vu[0][1] = 0.f;
     vu[1][0] = 1.f;
-    vu[1][1] = 0.f;  // unused, vu[1] is mono.
+    vu[1][1] = 0.f; // unused, vu[1] is mono.
     vu[2][0] = 0.f;
     vu[2][1] = 0.f;
 }
