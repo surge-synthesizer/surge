@@ -1,14 +1,16 @@
 @rem Script to build LuaJIT with MSVC.
-@rem Copyright (C) 2005-2023 Mike Pall. See Copyright Notice in luajit.h
+@rem Copyright (C) 2005-2025 Mike Pall. See Copyright Notice in luajit.h
 @rem
 @rem Open a "Visual Studio Command Prompt" (either x86 or x64).
 @rem Then cd to this directory and run this script. Use the following
 @rem options (in order), if needed. The default is a dynamic release build.
 @rem
-@rem   nogc64   disable LJ_GC64 mode for x64
-@rem   debug    emit debug symbols
-@rem   amalg    amalgamated build
-@rem   static   static linkage
+@rem   nogc64        disable LJ_GC64 mode for x64
+@rem   debug         emit debug symbols
+@rem   lua52compat   enable extra Lua 5.2 extensions
+@rem   amalg         amalgamated build
+@rem   static        create static lib to statically link into your project
+@rem   mixed         create static lib to build a DLL in your project
 
 @if not defined INCLUDE goto :FAIL
 
@@ -16,7 +18,7 @@
 @rem Add more debug flags here, e.g. DEBUGCFLAGS=/DLUA_USE_ASSERT
 @set DEBUGCFLAGS=
 @set LJCOMPILE=cl /nologo /c /O2 /W3 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_STDIO_INLINE=__declspec(dllexport)__inline
-@set LJDYNBUILD=/DLUA_BUILD_AS_DLL /MT
+@set LJDYNBUILD=/DLUA_BUILD_AS_DLL /MD
 @set LJDYNBUILD_DEBUG=/DLUA_BUILD_AS_DLL /MDd 
 @set LJCOMPILETARGET=
 @set LJLINKTYPE=/DEBUG /RELEASE
@@ -100,18 +102,24 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 @set LJDYNBUILD=%LJDYNBUILD_DEBUG%
 @set LJLINKTYPE=%LJLINKTYPE_DEBUG%
 :NODEBUG
+@if "%1" neq "lua52compat" goto :NOLUA52COMPAT
+@shift
+@set LJCOMPILE=%LJCOMPILE% /DLUAJIT_ENABLE_LUA52COMPAT
+:NOLUA52COMPAT
 @set LJCOMPILE=%LJCOMPILE% %LJCOMPILETARGET%
 @set LJLINK=%LJLINK% %LJLINKTYPE% %LJLINKTARGET%
 @if "%1"=="amalg" goto :AMALGDLL
 @if "%1"=="static" goto :STATIC
 %LJCOMPILE% %LJDYNBUILD% lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
+@if "%1"=="mixed" goto :STATICLIB
 %LJLINK% /DLL /OUT:%LJDLLNAME% lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :STATIC
 %LJCOMPILE% lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
+:STATICLIB
 %LJLIB% /OUT:%LJLIBNAME% lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
@@ -119,13 +127,15 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 @if "%2"=="static" goto :AMALGSTATIC
 %LJCOMPILE% %LJDYNBUILD% ljamalg.c
 @if errorlevel 1 goto :BAD
+@if "%2"=="mixed" goto :AMALGSTATICLIB
 %LJLINK% /DLL /OUT:%LJDLLNAME% ljamalg.obj lj_vm.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :AMALGSTATIC
 %LJCOMPILE% ljamalg.c
 @if errorlevel 1 goto :BAD
-%LJLINK% /OUT:%LJDLLNAME% ljamalg.obj lj_vm.obj
+:AMALGSTATICLIB
+%LJLIB% /OUT:%LJLIBNAME% ljamalg.obj lj_vm.obj
 @if errorlevel 1 goto :BAD
 :MTDLL
 if exist %LJDLLNAME%.manifest^

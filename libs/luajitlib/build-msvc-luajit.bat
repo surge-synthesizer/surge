@@ -46,7 +46,7 @@ echo Found vcvars64_wrapper.bat at "%VCVARS%"
 call "%VCVARS%"
 
 cd /d "%SD%\LuaJIT\src"
-call msvcbuild.bat static
+call msvcbuild.bat amalg static mixed
 
 copy lua51.lib "%OD%"
 echo "%OD%"
