@@ -104,21 +104,8 @@ process by modifying the value of `--parallel` argument.
 On Windows, building with ASIO is often preferred for Surge XT standalone, since it enables users to use the ASIO
 low-latency audio driver.
 
-Unfortunately, due to licensing conflicts, binaries of Surge XT that are built with ASIO **may not** be redistributed.
-However, you can build Surge XT with ASIO for your own personal use, provided you do not redistribute those builds.
-
-If you already have a copy of the ASIO SDK, simply set the following environment variable and you're good to go!
-
-```
-set ASIOSDK_DIR=c:\path\to\asio
-```
-
-If you DON'T have a copy of the ASIO SDK at hand, CMake can download it for you, and allow you to build with ASIO under your
-own personal license. To enable this functionality, run your CMake configuration command as follows:
-
-```
-cmake -Bbuild -DBUILD_USING_MY_ASIO_LICENSE=True
-```
+We are grateful to Steinberg Media Technologies for updating their licensing to include GPL3 as an option,
+which allows us to effortlessly provide ASIO support _out of the box_, without any special build procedures required.
 
 ## Building an LV2
 
@@ -130,7 +117,7 @@ environment by adding `-DSURGE_BUILD_LV2=TRUE` on your initial CMake build.
 
 Surge XT uses `pybind` to expose the innards of the synth to Python code for direct
 native access to all its features. This is a tool mostly useful for developers,
-and the [surge-python](https://github.com/surge-synthesizer/surge-python) 
+and the [surge-python](https://github.com/surge-synthesizer/surge-python)
 repository shows some uses.
 
 To use Surge XT in this manner, you need to build the Python extension. Here's
