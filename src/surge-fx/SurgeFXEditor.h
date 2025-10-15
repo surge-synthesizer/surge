@@ -69,6 +69,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     void paint(juce::Graphics &) override;
     void resized() override;
 
+    float getImpliedZoom() const { return getWidth() * 1.0 / baseWidth; }
+
     /**
      * findLargestFittingZoomBetween
      *

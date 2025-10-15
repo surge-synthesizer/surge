@@ -46,7 +46,7 @@ struct Picker : public juce::Component
         g.setColour(edge);
         g.drawRoundedRectangle(bounds, 5, 1);
         g.setColour(findColour(SurgeLookAndFeel::SurgeColourIds::paramDisplay));
-        g.setFont(SST_JUCE_FONT_OPTIONS(28));
+        g.setFont(SST_JUCE_FONT_OPTIONS(28 * editor->getImpliedZoom()));
         g.drawText(fx_type_names[editor->processor.getEffectType()], bounds.reduced(8, 3),
                    juce::Justification::centred);
 
@@ -238,7 +238,9 @@ void SurgefxAudioProcessorEditor::paint(juce::Graphics &g)
 
 void SurgefxAudioProcessorEditor::resized()
 {
-    picker->setBounds(100, 10, getWidth() - 200, topSection - 30);
+    auto impliedZoom = getImpliedZoom();
+
+    picker->setBounds(100, 10, getWidth() - 200, (topSection - 30) * impliedZoom);
     int ypos0 = topSection - 5;
     int rowHeight = (getHeight() - topSection - 40 - 10) / 6.0;
     int byoff = 7;
