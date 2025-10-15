@@ -187,7 +187,8 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     // Set up the local app data path for storing app-level config
     localAppDataPath = sst::plugininfra::paths::bestLibrarySharedVendorFolderPathFor(
         "Surge Synth Team", "Surge XT", true);
-    userDataPath = getOverridenUserPath();
+    // userDataPath = getOverridenUserPath();
+    userDataPath.clear();
 
 #if MAC
     if (!hasSuppliedDataPath)
@@ -207,7 +208,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
 
     if (userDataPath.empty())
     {
-        userDataPath = calculateStandardUserDataPath(sxt);
+        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor("Surge XT");
     }
 
     // These are how I test a broken windows install for documents
@@ -278,7 +279,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     if (userDataPath.empty())
     {
-        userDataPath = calculateStandardUserDataPath(sxt);
+        userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
     }
 
 #elif WINDOWS
@@ -335,7 +336,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     {
         try
         {
-            userDataPath = calculateStandardUserDataPath(sxt);
+            userDataPath = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
         }
         catch (const std::runtime_error &e)
         {
@@ -677,23 +678,6 @@ void SurgeStorage::createUserDirectory()
             }
         }
     }
-}
-
-fs::path SurgeStorage::calculateStandardUserDataPath(const std::string &sxt) const
-{
-    auto res = sst::plugininfra::paths::bestDocumentsFolderPathFor(sxt);
-
-    try
-    {
-        auto candPath =
-            sst::plugininfra::paths::bestDocumentsVendorFolderPathFor("Surge Synth Team", sxt);
-        if (!fs::is_directory(res))
-            return candPath;
-    }
-    catch (fs::filesystem_error &e)
-    {
-    }
-    return res;
 }
 
 fs::path SurgeStorage::getOverridenUserPath() const
@@ -3206,7 +3190,7 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
     if (!doc.SaveFile(path_to_string(fn)))
     {
         std::ostringstream oss;
-        oss << "Unable to save MIDI settings to '" << fn.u8string() << "'!";
+        oss << "Unable to save MIDI settings to '" << fn << "'!";
         reportError(oss.str(), "Error");
     }
 }
