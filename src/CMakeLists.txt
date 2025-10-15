@@ -139,30 +139,14 @@ if(SURGE_BUILD_LV2)
   message(STATUS "Including JUCE7 LV2 support.")
 endif()
 
-if(DEFINED ENV{ASIOSDK_DIR} OR BUILD_USING_MY_ASIO_LICENSE)
-  if(BUILD_USING_MY_ASIO_LICENSE)
-    message(STATUS "** BUILD USING OWN ASIO LICENSE **")
-    message(STATUS "The resulting Surge standalone executable is not licensed for distribution!")
-    message(STATUS "Fetching ASIO SDK...")
-
-    set(ASIOSDK_DIR ${CMAKE_BINARY_DIR}/asio/asiosdk)
-    add_custom_target(surge-get-local-asio)
-    add_custom_command(
-      TARGET surge-get-local-asio
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/asio
-      COMMAND ${CMAKE_COMMAND} -D ASIO_SDK_DESTINATION=${CMAKE_BINARY_DIR}/asio -P cmake/get-asio.cmake
-    )
-    add_dependencies(surge-juce surge-get-local-asio)
-  else()
-    file(TO_CMAKE_PATH "$ENV{ASIOSDK_DIR}" ASIOSDK_DIR)
-    message(STATUS "ASIO SDK found at ${ASIOSDK_DIR}")
-    message(STATUS "The resulting Surge standalone executable is not licensed for distribution!")
+set(SSTPI_ASIOSDK "${CMAKE_SOURCE_DIR}/libs/sst/sst-plugininfra/libs/asiosdk")
+if(EXISTS "${CMAKE_SOURCE_DIR}/libs/sst/sst-plugininfra/libs/asiosdk")
+  if (WIN32)
+    message(STATUS "ASIO SDK located in sst-plugininfra. Enabling")
+    target_compile_definitions(surge-juce INTERFACE JUCE_ASIO=1)
+    target_include_directories(surge-juce INTERFACE ${SSTPI_ASIOSDK}/common)
+    set(JUCE_ASIO_SUPPORT TRUE)
   endif()
-
-  target_compile_definitions(surge-juce INTERFACE JUCE_ASIO=1)
-  target_include_directories(surge-juce INTERFACE ${ASIOSDK_DIR}/common)
-  set(JUCE_ASIO_SUPPORT TRUE)
 endif()
 
 message(STATUS "Building Surge XT using the following JUCE wrappers: ${SURGE_JUCE_FORMATS}")
