@@ -300,18 +300,90 @@ jobs:
           git commit -m "Update surge links for ${SURGE_VERSION} from github action"
           git push origin master
 
-      - name: "Notify surge-synthesizer.github.io"
+  dispatch_websites:
+    name: "Dispatch to surge websites"
+    runs-on: ubuntu-latest
+    needs: [ surge_version, build_plugin, build_plugin_docker ]
+    steps:
+      - name: "Checkout for git info"
+        uses: actions/checkout@v5
+        if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
+        with:
+          path: surge
+          fetch-depth: 5
+
+      - name: "Dispatch nightly"
+        if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
         env:
           GH_TOKEN: ${{ secrets.WEB }}
         run: |
+          pushd surge
+
+          jq -n --arg version "${{ needs.surge_version.outputs.surge_version }}" \
+          --arg build_time "$(date "+%Y-%m-%d %H:%M:%S %Z")" \
+          --arg base_url "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly" \
+          --argjson commits "$(
+            git log -5 --pretty=format:'%h%x00%an%x00%aI%x00%s%x00' | \
+              jq -R -s '[split("\n")[:-1] | map(split("\u0000")) | .[] | {
+                "commit": .[0],
+                "author": .[1],
+                "date": .[2],
+                "message": .[3]
+              }]'
+          )" \
+          '{
+            event_type: "surge-build-nightly",
+            client_payload: {
+              version: $version,
+              build_time: $build_time,
+              downloads: {
+                macos: "\($base_url)/surge-xt-macOS-\$(version).dmg",
+                win64: "\($base_url)/surge-xt-win64-\$(version)-setup.exe",
+                win64zip: "\($base_url)/surge-xt-wind64-\$(version)-pluginsonly.zip",
+                linux64: "\($base_url)/surge-xt-linux-x64-\$(version).deb",
+              },
+              commits: $commits
+            }
+          }' > "../surge-build-nightly.json"
+
+          popd
+
           gh api repos/surge-synthesizer/surge-synthesizer.github.io/dispatches \
           --method POST \
-          --field event_type=surge-build-release
+          --input surge-build-nightly.json
 
-      - name: "Notify surge-synth-team.org"
+          gh api repos/surge-synthesizer/surge-synth-team.org/dispatches \
+          --method POST \
+          --input surge-build-nightly.json
+
+      - name: "Dispatch stable"
+        if: ${{ needs.surge_version.outputs.surge_is_nightly == 0 }}
         env:
           GH_TOKEN: ${{ secrets.WEB }}
         run: |
+          jq -n --arg version "${{ needs.surge_version.outputs.surge_version }}" \
+            --arg build_time "$(date "+%Y-%m-%d %H:%M:%S %Z")" \
+            --arg base_url "${{ github.server_url }}/${{ github.repository }}/releases/download" \
+            --arg tag_url "${{ github.server_url }}/${{ github.repository }}/releases/tag" \
+            '{
+              event_type: "surge-build-stable",
+              client_payload: {
+                version: $version,
+                build_time: $build_time,
+                downloads: {
+                  macos: "\($base_url)/surge-xt-macOS-\$(version).dmg",
+                  win64: "\($base_url)/surge-xt-win64-\$(version)-setup.exe",
+                  win64zip: "\($base_url)/surge-xt-wind64-\$(version)-pluginsonly.zip",
+                  linux64: "\($base_url)/surge-xt-linux-x64-\$(version).deb",
+                  other: "\($tag_url)/\($version)"
+                }
+              }
+            }' > "./surge-build-stable.json"
+
+          gh api repos/surge-synthesizer/surge-synthesizer.github.io/dispatches \
+          --method POST \
+          --input surge-build-stable.json
+
           gh api repos/surge-synthesizer/surge-synth-team.org/dispatches \
           --method POST \
-          --field event_type=surge-build-release
+          --input surge-build-stable.json
