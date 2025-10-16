@@ -337,10 +337,10 @@ jobs:
               version: $version,
               build_time: $build_time,
               downloads: {
-                macos: "\($base_url)/surge-xt-macOS-\$(version).dmg",
-                win64: "\($base_url)/surge-xt-win64-\$(version)-setup.exe",
-                win64zip: "\($base_url)/surge-xt-wind64-\$(version)-pluginsonly.zip",
-                linux64: "\($base_url)/surge-xt-linux-x64-\$(version).deb",
+                macos: "\($base_url)/surge-xt-macOS-\($version).dmg",
+                win64: "\($base_url)/surge-xt-win64-\($version)-setup.exe",
+                win64zip: "\($base_url)/surge-xt-win64-\($version)-pluginsonly.zip",
+                linux64: "\($base_url)/surge-xt-linux-x64-\($version).deb",
               },
               commits: $commits
             }
@@ -371,10 +371,10 @@ jobs:
                 version: $version,
                 build_time: $build_time,
                 downloads: {
-                  macos: "\($base_url)/surge-xt-macOS-\$(version).dmg",
-                  win64: "\($base_url)/surge-xt-win64-\$(version)-setup.exe",
-                  win64zip: "\($base_url)/surge-xt-wind64-\$(version)-pluginsonly.zip",
-                  linux64: "\($base_url)/surge-xt-linux-x64-\$(version).deb",
+                  macos: "\($base_url)/surge-xt-macOS-\($version).dmg",
+                  win64: "\($base_url)/surge-xt-win64-\($version)-setup.exe",
+                  win64zip: "\($base_url)/surge-xt-win64-\($version)-pluginsonly.zip",
+                  linux64: "\($base_url)/surge-xt-linux-x64-\($version).deb",
                   other: "\($tag_url)/\($version)"
                 }
               }
