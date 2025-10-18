@@ -154,6 +154,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/overlays/WaveShaperAnalysis.cpp
   gui/overlays/WaveShaperAnalysis.h
   gui/overlays/OpenSoundControlSettings.cpp
+  gui/widgets/CurrentFxDisplay.cpp
+  gui/widgets/CurrentFxDisplay.h
   gui/widgets/EffectChooser.cpp
   gui/widgets/EffectChooser.h
   gui/widgets/EffectLabel.h

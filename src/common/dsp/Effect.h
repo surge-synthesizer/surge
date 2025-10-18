@@ -61,9 +61,6 @@ class alignas(16) Effect
     // this is called after the loading state of an item that has changed
     virtual void updateAfterReload() {}
 
-    virtual Surge::ParamConfig::VUType vu_type(int id) { return Surge::ParamConfig::vut_off; }
-    virtual int vu_ypos(int id) { return id; } // in 'half-hslider' heights
-
     virtual const char *group_label(int id) { return 0; }
     virtual int group_label_ypos(int id) { return 0; }
 
@@ -97,7 +94,6 @@ class alignas(16) Effect
     // virtual void processSSE3(float *dataL, float *dataR){ return; }
     // virtual void processT<int architecture>(float *dataL, float *dataR){ return; }
     virtual void suspend() { return; }
-    float vu[KNumVuSlots]; // stereo pairs, just use every other when mono
 
     // Most of the fx read the sample rate at sample time but airwindows
     // keeps a cache so give loaded fx a notice when the sample rate changes

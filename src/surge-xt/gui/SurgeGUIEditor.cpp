@@ -57,6 +57,7 @@
 #include "overlays/OverlayWrapper.h"
 #include "overlays/FilterAnalysis.h"
 
+#include "widgets/CurrentFxDisplay.h"
 #include "widgets/EffectLabel.h"
 #include "widgets/EffectChooser.h"
 #include "widgets/LFOAndStepDisplay.h"
@@ -923,45 +924,36 @@ void SurgeGUIEditor::idle()
 
         bool vuInvalid = false;
 
-        if (vu[0])
+        if (vu)
         {
-            if (synth->vu_peak[0] != vu[0]->getValue())
+            if (synth->vu_peak[0] != vu->getValue())
             {
                 vuInvalid = true;
-                vu[0]->setValue(synth->vu_peak[0]);
+                vu->setValue(synth->vu_peak[0]);
             }
 
-            if (synth->vu_peak[1] != vu[0]->getValueR())
+            if (synth->vu_peak[1] != vu->getValueR())
             {
-                vu[0]->setValueR(synth->vu_peak[1]);
+                vu->setValueR(synth->vu_peak[1]);
                 vuInvalid = true;
             }
 
-            vu[0]->setIsAudioActive(synth->audio_processing_active);
+            vu->setIsAudioActive(synth->audio_processing_active);
 
-            if (synth->cpu_level != vu[0]->getCpuLevel())
+            if (synth->cpu_level != vu->getCpuLevel())
             {
-                vu[0]->setCpuLevel(synth->cpu_level);
+                vu->setCpuLevel(synth->cpu_level);
                 vuInvalid = true;
             }
 
             if (vuInvalid)
             {
-                vu[0]->repaint();
+                vu->repaint();
             }
         }
 
-        for (int i = 0; i < n_fx_slots; i++)
-        {
-            assert(i + 1 < Effect::KNumVuSlots);
-
-            if (vu[i + 1] && synth->fx[current_fx])
-            {
-                vu[i + 1]->setValue(synth->fx[current_fx]->vu[(i << 1)]);
-                vu[i + 1]->setValueR(synth->fx[current_fx]->vu[(i << 1) + 1]);
-                vu[i + 1]->repaint();
-            }
-        }
+        dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(frame->getControlGroupLayer(cg_FX))
+            ->renderCurrentFx();
 
         for (int i = 0; i < 8; i++)
         {
@@ -1674,78 +1666,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
     modOverviewLauncher->setSkin(currentSkin);
     addAndMakeVisibleWithTracking(frame->getModButtonLayer(), *modOverviewLauncher);
 
-    // FX VU meters and labels. This is all a bit hacky still
-    {
-        std::lock_guard<std::mutex> g(synth->fxSpawnMutex);
-
-        if (synth->fx[current_fx])
-        {
-            auto fxpp = currentSkin->getOrCreateControlForConnector("fx.param.panel");
-            auto fxRect = juce::Rectangle<int>(fxpp->x, fxpp->y, 123, 13);
-
-            for (int i = 0; i < 15; i++)
-            {
-                auto t = synth->fx[current_fx]->vu_type(i);
-
-                if (t)
-                {
-                    auto vr = fxRect.translated(6, yofs * synth->fx[current_fx]->vu_ypos(i))
-                                  .translated(0, -14);
-
-                    if (!vu[i + 1])
-                    {
-                        vu[i + 1] = std::make_unique<Surge::Widgets::VuMeter>();
-                    }
-
-                    vu[i + 1]->setBounds(vr);
-                    vu[i + 1]->setSkin(currentSkin, bitmapStore);
-                    vu[i + 1]->setType(t);
-
-                    addAndMakeVisibleWithTracking(frame.get(), *vu[i + 1]);
-                }
-                else
-                {
-                    vu[i + 1] = 0;
-                }
-
-                const char *label = synth->fx[current_fx]->group_label(i);
-
-                if (label)
-                {
-                    auto vr = fxRect.withTrimmedTop(-1)
-                                  .withTrimmedRight(-5)
-                                  .translated(5, -12)
-                                  .translated(0, yofs * synth->fx[current_fx]->group_label_ypos(i));
-
-                    if (!effectLabels[i])
-                    {
-                        effectLabels[i] = std::make_unique<Surge::Widgets::EffectLabel>();
-                    }
-
-                    effectLabels[i]->setBounds(vr);
-                    effectLabels[i]->setSkin(currentSkin, bitmapStore);
-
-                    if (i == 0 &&
-                        synth->storage.getPatch().fx[current_fx].type.val.i == fxt_vocoder)
-                    {
-                        effectLabels[i]->setLabel(
-                            fmt::format("Input delayed {} samples", BLOCK_SIZE));
-                    }
-                    else
-                    {
-                        effectLabels[i]->setLabel(label);
-                    }
-
-                    addAndMakeVisibleWithTracking(frame.get(), *effectLabels[i]);
-                }
-                else
-                {
-                    effectLabels[i].reset(nullptr);
-                }
-            }
-        }
-    }
-
     // Loop over the non-associated controls
     for (auto i = Surge::Skin::Connector::NonParameterConnection::PARAMETER_CONNECTED + 1;
          i < Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED; ++i)
@@ -1857,13 +1777,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             break;
         }
-        case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
-        {
-            auto q = layoutComponentForSkin(skinCtrl, tag_mp_jogfx);
-            setAccessibilityInformationByTitleAndAction(q->asJuceComponent(), "FX Preset", "Jog");
-
-            break;
-        }
         case Surge::Skin::Connector::NonParameterConnection::STATUS_MPE:
         {
             statusMPE = layoutComponentForSkin(skinCtrl, tag_status_mpe);
@@ -1968,27 +1881,6 @@ void SurgeGUIEditor::openOrRecreateEditor()
             break;
         }
 
-        case Surge::Skin::Connector::NonParameterConnection::FXPRESET_LABEL:
-        {
-            // Room for improvement, obviously
-            if (!fxPresetLabel)
-            {
-                fxPresetLabel = std::make_unique<juce::Label>("FX Preset Name");
-            }
-
-            fxPresetLabel->setColour(juce::Label::textColourId,
-                                     currentSkin->getColor(Colors::Effect::Preset::Name));
-            fxPresetLabel->setFont(currentSkin->fontManager->displayFont);
-            fxPresetLabel->setJustificationType(juce::Justification::centredRight);
-
-            fxPresetLabel->setText(fxPresetName[current_fx], juce::dontSendNotification);
-            fxPresetLabel->setBounds(skinCtrl->getRect());
-            setAccessibilityInformationByTitleAndAction(fxPresetLabel.get(), "FX Preset", "Show");
-
-            addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_FX), *fxPresetLabel);
-
-            break;
-        }
         case Surge::Skin::Connector::NonParameterConnection::PATCH_BROWSER:
         {
             componentForSkinSessionOwnedByMember(skinCtrl->sessionid, patchSelector);
@@ -2014,46 +1906,18 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
             break;
         }
-        case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
-        {
-            // FIXOWN
-            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, effectChooser);
-
-            effectChooser->addListener(this);
-            effectChooser->setStorage(&(synth->storage));
-            effectChooser->setBounds(skinCtrl->getRect());
-            effectChooser->setTag(tag_fx_select);
-            effectChooser->setSkin(currentSkin, bitmapStore);
-            effectChooser->setBackgroundDrawable(bitmapStore->getImage(IDB_FX_GRID));
-            effectChooser->setCurrentEffect(current_fx);
-
-            for (int fxi = 0; fxi < n_fx_slots; fxi++)
-            {
-                effectChooser->setEffectType(fxi, synth->storage.getPatch().fx[fxi].type.val.i);
-            }
-
-            effectChooser->setBypass(synth->storage.getPatch().fx_bypass.val.i);
-            effectChooser->setDeactivatedBitmask(synth->storage.getPatch().fx_disable.val.i);
-
-            addAndMakeVisibleWithTracking(frame->getControlGroupLayer(cg_FX), *effectChooser);
-
-            setAccessibilityInformationByTitleAndAction(effectChooser->asJuceComponent(),
-                                                        "FX Slots", "Select");
-
-            break;
-        }
         case Surge::Skin::Connector::NonParameterConnection::MAIN_VU_METER:
         {
-            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, vu[0]);
+            componentForSkinSessionOwnedByMember(skinCtrl->sessionid, vu);
 
-            vu[0]->setBounds(skinCtrl->getRect());
-            vu[0]->setSkin(currentSkin, bitmapStore);
-            vu[0]->setTag(tag_main_vu_meter);
-            vu[0]->addListener(this);
-            vu[0]->setType(Surge::ParamConfig::vut_vu_stereo);
-            vu[0]->setStorage(&(synth->storage));
+            vu->setBounds(skinCtrl->getRect());
+            vu->setSkin(currentSkin, bitmapStore);
+            vu->setTag(tag_main_vu_meter);
+            vu->addListener(this);
+            vu->setType(Surge::ParamConfig::vut_vu_stereo);
+            vu->setStorage(&(synth->storage));
 
-            addAndMakeVisibleWithTracking(frame.get(), *vu[0]);
+            addAndMakeVisibleWithTracking(frame.get(), *vu);
 
             break;
         }
@@ -2068,6 +1932,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
         case Surge::Skin::Connector::NonParameterConnection::OSCILLOSCOPE_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::WAVESHAPER_ANALYSIS_WINDOW:
         case Surge::Skin::Connector::NonParameterConnection::N_NONCONNECTED:
+        case Surge::Skin::Connector::NonParameterConnection::FXPRESET_LABEL:
+        case Surge::Skin::Connector::NonParameterConnection::FX_SELECTOR:
+        case Surge::Skin::Connector::NonParameterConnection::JOG_FX:
             break;
         }
     }
@@ -2120,6 +1987,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
                                   .mode.val.i == emt_digital);
             }
 
+            // FX controls are sent to their own component post-refactor.
+            if (p->ctrlgroup == cg_FX)
+            {
+                addControl = false;
+            }
+
             if (addControl)
             {
                 auto skinCtrl = currentSkin->getOrCreateControlForConnector(conn);
@@ -2161,6 +2034,12 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
         i++;
     }
+
+    // Update the FX display window.
+    Surge::Widgets::CurrentFxDisplay *disp =
+        dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(frame->getControlGroupLayer(cg_FX));
+    disp->updateCurrentFx(current_fx);
+    uiidToSliderLabel.insert(disp->uiidToSliderLabel.begin(), disp->uiidToSliderLabel.end());
 
     // resonance link mode
     if (synth->storage.getPatch().scene[current_scene].f2_link_resonance.val.b)

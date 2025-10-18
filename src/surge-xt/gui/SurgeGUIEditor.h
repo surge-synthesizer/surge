@@ -86,6 +86,7 @@ struct Switch;
 struct VerticalLabel;
 struct VuMeter;
 
+struct CurrentFxDisplay;
 struct MainFrame;
 
 struct WaveShaperSelector;
@@ -619,7 +620,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     std::unique_ptr<Surge::Widgets::FxMenu> fxMenu;
 
   private:
-    std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
+    std::unique_ptr<Surge::Widgets::VuMeter> vu;
+    // std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
     bool firstTimePatchLoad{true};
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
     std::unique_ptr<Surge::Widgets::PatchSelectorCommentTooltip> patchSelectorComment;
@@ -730,8 +732,6 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     /*
      * This is the JUCE component management
      */
-    std::array<std::unique_ptr<Surge::Widgets::EffectLabel>, 15> effectLabels;
-
     bool scanJuceSkinComponents{false};
     std::unordered_map<Surge::GUI::Skin::Control::sessionid_t, std::unique_ptr<juce::Component>>
         juceSkinComponents;
@@ -928,6 +928,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
      * the add remove handlers
      */
     friend class Surge::Widgets::MainFrame;
+    friend class Surge::Widgets::CurrentFxDisplay;
     std::unordered_map<juce::Component *, juce::Component *> containedComponents;
     void addComponentWithTracking(juce::Component *target, juce::Component &source);
     void addAndMakeVisibleWithTracking(juce::Component *target, juce::Component &source);

@@ -60,12 +60,12 @@ void ConditionerEffect::init()
     memset(delayed[0], 0, sizeof(float) * lookahead);
     memset(delayed[1], 0, sizeof(float) * lookahead);
 
-    vu[0] = 0.f;
-    vu[1] = 0.f;
-    vu[2] = 1.f;
-    vu[4] = 0.f;
-    vu[5] = 0.f;
-    assert(KNumVuSlots >= 5);
+    vu[0][0] = 0.f;
+    vu[0][1] = 0.f;
+    vu[1][0] = 1.f;
+    vu[1][1] = 0.f; // unused, vu[1] is mono.
+    vu[2][0] = 0.f;
+    vu[2][1] = 0.f;
 }
 
 void ConditionerEffect::setvars(bool init)
@@ -87,10 +87,10 @@ void ConditionerEffect::process_only_control()
     float release = 0.0001f * rm * rm;
 
     float a = storage->vu_falloff;
-    vu[0] = min(8.f, a * vu[0]);
-    vu[1] = min(8.f, a * vu[1]);
-    vu[4] = min(8.f, a * vu[4]);
-    vu[5] = min(8.f, a * vu[5]);
+    vu[0][0] = min(8.f, a * vu[0][0]);
+    vu[0][1] = min(8.f, a * vu[0][1]);
+    vu[2][0] = min(8.f, a * vu[2][0]);
+    vu[2][1] = min(8.f, a * vu[2][1]);
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
@@ -102,7 +102,7 @@ void ConditionerEffect::process_only_control()
         gain = 1.f / filtered_lamax2;
     }
 
-    vu[2] = gain;
+    vu[1][0] = gain;
 }
 
 void ConditionerEffect::process(float *dataL, float *dataR)
@@ -113,10 +113,10 @@ void ConditionerEffect::process(float *dataL, float *dataR)
     float release = 0.0001f * rm * rm;
 
     float a = storage->vu_falloff;
-    vu[0] = min(8.f, a * vu[0]);
-    vu[1] = min(8.f, a * vu[1]);
-    vu[4] = min(8.f, a * vu[4]);
-    vu[5] = min(8.f, a * vu[5]);
+    vu[0][0] = min(8.f, a * vu[0][0]);
+    vu[0][1] = min(8.f, a * vu[0][1]);
+    vu[2][0] = min(8.f, a * vu[2][0]);
+    vu[2][1] = min(8.f, a * vu[2][1]);
 
     setvars(false);
 
@@ -151,8 +151,8 @@ void ConditionerEffect::process(float *dataL, float *dataR)
     ampL.multiply_block(dataL, BLOCK_SIZE_QUAD);
     ampR.multiply_block(dataR, BLOCK_SIZE_QUAD);
 
-    vu[0] = max(vu[0], mech::blockAbsMax<BLOCK_SIZE>(dataL));
-    vu[1] = max(vu[1], mech::blockAbsMax<BLOCK_SIZE>(dataR));
+    vu[0][0] = max(vu[0][0], mech::blockAbsMax<BLOCK_SIZE>(dataL));
+    vu[0][1] = max(vu[0][1], mech::blockAbsMax<BLOCK_SIZE>(dataR));
 
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
@@ -193,10 +193,10 @@ void ConditionerEffect::process(float *dataL, float *dataR)
 
     postamp.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
 
-    vu[2] = gain;
+    vu[1][0] = gain;
 
-    vu[4] = max(vu[4], mech::blockAbsMax<BLOCK_SIZE>(dataL));
-    vu[5] = max(vu[5], mech::blockAbsMax<BLOCK_SIZE>(dataR));
+    vu[2][0] = max(vu[2][0], mech::blockAbsMax<BLOCK_SIZE>(dataL));
+    vu[2][1] = max(vu[2][1], mech::blockAbsMax<BLOCK_SIZE>(dataR));
 }
 
 Surge::ParamConfig::VUType ConditionerEffect::vu_type(int id)
