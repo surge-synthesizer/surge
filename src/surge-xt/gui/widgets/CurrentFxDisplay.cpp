@@ -295,5 +295,31 @@ juce::Rectangle<int> CurrentFxDisplay::fxRect()
     return juce::Rectangle<int>(fxpp->x, fxpp->y, 123, 13);
 }
 
+// File drag and drop for convolution reverb.
+bool CurrentFxDisplay::canDropTarget(const juce::String &file)
+{
+    std::cout << "Checking for file drag interest" << std::endl;
+    switch (storage_->getPatch().fx[current_fx_].type.val.i)
+    {
+    case fxt_convolution:
+        return file.endsWith(".wav");
+    default:
+        return false;
+    }
+}
+
+void CurrentFxDisplay::onDrop(const juce::String &file)
+{
+    switch (storage_->getPatch().fx[current_fx_].type.val.i)
+    {
+    case fxt_convolution:
+        std::cout << "We might try to drop something here." << std::endl;
+        if (!file.endsWith(".wav"))
+            return;
+        std::cout << "We dropped something here." << std::endl;
+        break;
+    }
+}
+
 } // namespace Widgets
 } // namespace Surge

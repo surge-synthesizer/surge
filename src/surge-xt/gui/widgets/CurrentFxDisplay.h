@@ -46,6 +46,10 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     void renderCurrentFx();
     void updateCurrentFx(int current_fx);
 
+    // For dropping files, right now only used in convolution reverb.
+    bool canDropTarget(const juce::String &file);
+    void onDrop(const juce::String &files);
+
     std::unordered_map<std::string, std::string> uiidToSliderLabel;
 
   private:
