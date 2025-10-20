@@ -283,6 +283,7 @@ jobs:
                 build_time: $build_time,
                 downloads: {
                   macos: "\($base_url)/surge-xt-macOS-\($version).dmg",
+                  win32: "\($base_url)/surge-xt-win32-\($version)-setup.exe",
                   win64: "\($base_url)/surge-xt-win64-\($version)-setup.exe",
                   win64zip: "\($base_url)/surge-xt-win64-\($version)-pluginsonly.zip",
                   linux64: "\($base_url)/surge-xt-linux-x64-\($version).deb",
