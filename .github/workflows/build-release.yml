@@ -211,95 +211,6 @@ jobs:
           title: "A New Surge Release is Available"
           subtitle: "Release ${{ github.ref_name }}"
 
-  create_web_links:
-    name: "Create website links"
-    runs-on: ubuntu-latest
-    needs: [ surge_version, build_plugin, build_plugin_docker ]
-    steps:
-      - name: "Checkout for git info"
-        uses: actions/checkout@v4
-        if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
-        with:
-          path: surge
-          fetch-depth: 5
-
-      - name: "Checkout web"
-        uses: actions/checkout@v4
-        with:
-          path: web
-          repository: surge-synthesizer/surge-synthesizer.github.io
-          token: ${{ secrets.SURGE_GITHUB_IO_TOKEN }}
-
-      - name: "Make nightly git info"
-        if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
-        run: |
-          mkdir -p stage_git/git_info
-          pushd surge
-
-          git log -1 --pretty=format:'%h : %s - %an' > ../stage_git/git_info/git_nightly_xt_log_display
-          git log -1 --pretty=format:'%h : %s%n%aD%n%an%n%n%B' > ../stage_git/git_info/git_nightly_xt_log_long_display
-          git log -5 --pretty=format:'[%h](https://github.com/surge-synthesizer/surge/commit/%H): %s - %an' > ../stage_git/git_info/git_nightly_xt_recent_five
-          git log -5 --pretty=format:'- %h %s - %an' > ../stage_git/git_info/git_nightly_xt_recent_five.mdx
-          git log -1 --pretty=format:'%h' > ../stage_git/git_info/git_nightly_xt_log_hash
-
-          popd
-
-          cat stage_git/git_info/*
-
-      - name: "Make nightly links"
-        if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
-        run: |
-          # change this to cd website
-          cd web
-
-          SURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}"
-
-          echo $(date "+%Y-%m-%d %H:%M:%S %Z") > src/assets/includes/latest_xt_build_time
-          echo $SURGE_VERSION > src/assets/includes/latest_xt_version
-          cp ../stage_git/git_info/* src/assets/includes
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-macOS-$SURGE_VERSION.dmg > src/assets/includes/latest_xt_macos_url
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-$SURGE_VERSION-setup.exe > src/assets/includes/latest_xt_win_x64_url
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-$SURGE_VERSION-pluginsonly.zip > src/assets/includes/latest_xt_win_x64_zip_url
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-linux-x64-$SURGE_VERSION.deb > src/assets/includes/latest_xt_linux_x64_url
-
-          cat src/assets/includes/*
-
-          git config user.email "paul@baconpaul.org"
-          git config user.name "baconpaul"
-
-          git add .
-          git commit -m "Update surge links for ${SURGE_VERSION} from github action"
-          git push origin master
-
-      - name: "Make release links"
-        if: ${{ needs.surge_version.outputs.surge_is_nightly == 0 }}
-        run: |
-          # change this to cd website
-          cd web
-          
-          mkdir -p src/assets/includes
-
-          SURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}"
-
-          echo $(date "+%Y-%m-%d %H:%M:%S %Z") > src/assets/includes/stable_xt_build_time
-          echo $SURGE_VERSION > src/assets/includes/stable_xt_version
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-macOS-$SURGE_VERSION.dmg > src/assets/includes/stable_xt_macos_url
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-win64-$SURGE_VERSION-setup.exe > src/assets/includes/stable_xt_win_x64_url
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-win64-$SURGE_VERSION-pluginsonly.zip > src/assets/includes/stable_xt_win_x64_zip_url
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/download/$SURGE_VERSION/surge-xt-linux-x64-$SURGE_VERSION.deb > src/assets/includes/stable_xt_linux_x64_url
-          echo ${{ github.server_url }}/${{ github.repository }}/releases/tag/$SURGE_VERSION > src/assets/includes/stable_xt_other.url
-
-          cat src/assets/includes/*
-
-          git config user.email "paul@baconpaul.org"
-          git config user.name "baconpaul"
-
-          git add .
-          git status
-          
-          git commit -m "Update surge links for ${SURGE_VERSION} from github action"
-          git push origin master
-
   dispatch_websites:
     name: "Dispatch to surge websites"
     runs-on: ubuntu-latest
@@ -372,6 +283,7 @@ jobs:
                 build_time: $build_time,
                 downloads: {
                   macos: "\($base_url)/surge-xt-macOS-\($version).dmg",
+                  win32: "\($base_url)/surge-xt-win32-\($version)-setup.exe",
                   win64: "\($base_url)/surge-xt-win64-\($version)-setup.exe",
                   win64zip: "\($base_url)/surge-xt-win64-\($version)-pluginsonly.zip",
                   linux64: "\($base_url)/surge-xt-linux-x64-\($version).deb",
