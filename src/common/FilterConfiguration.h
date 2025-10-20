@@ -219,6 +219,8 @@ const int fut_glyph_index[sst::filters::num_filter_types][2] = {
     {4, bprow},    // fut_resonancewarp_bp
     {0, fxrow},    // fut_resonancewarp_ap (also temporarily set to just use the regular AP glyph)
     {0, multirow}, // fut_tripole
+    {1, multirow}, // fut_cytomicsvf
+    {2, multirow}, // fut_obxd_xpander
 };
 
 const char wst_ui_names[(int)sst::waveshapers::WaveshaperType::n_ws_types][16] = {
