@@ -274,6 +274,10 @@ jobs:
         run: |
           jq -n --arg version "${{ needs.surge_version.outputs.surge_version }}" \
             --arg build_time "$(date "+%Y-%m-%d %H:%M:%S %Z")" \
+            --arg wavetables_count "$(find resources/data/wavetables -type f \( -name "*.wt*" -o -name "*.wav" \) | wc -l)" \
+            --arg wavetables_3rdparty_count "$(find resources/data/wavetables_3rdparty -type f \( -name "*.wt*" -o -name "*.wav" \) | wc -l)" \
+            --arg patches_factory_count "$(find resources/data/patches_factory -type f -name "*.fxp" | wc -l)" \
+            --arg patches_3rdparty_count "$(find resources/data/patches_3rdparty -type f -name "*.fxp" | wc -l)" \
             --arg base_url "${{ github.server_url }}/${{ github.repository }}/releases/download" \
             --arg tag_url "${{ github.server_url }}/${{ github.repository }}/releases/tag" \
             '{
@@ -281,6 +285,10 @@ jobs:
               client_payload: {
                 version: $version,
                 build_time: $build_time,
+                wavetables_count: $wavetables_count,
+                wavetables_3rdparty_count: $wavetables_3rdparty_count,
+                patches_factory_count: $patches_factory_count,
+                patches_3rdparty_count: $patches_3rdparty_count,
                 downloads: {
                   macos: "\($base_url)/surge-xt-macOS-\($version).dmg",
                   win32: "\($base_url)/surge-xt-win32-\($version)-setup.exe",
