@@ -10,6 +10,8 @@ option(SURGE_INCLUDE_MELATONIN_INSPECTOR "Include melatonin inspector" OFF)
 # Currently the JUCE LV2 build crashes in our CI pipeline, so leave it for users to self build
 option(SURGE_BUILD_LV2 "Build Surge as an LV2" OFF)
 
+option(SURGE_BUILD_CLAP "Build Surge as a CLAP" ON)
+
 if(NOT SURGE_COMPILE_BLOCK_SIZE)
   set(SURGE_COMPILE_BLOCK_SIZE 32)
 endif()
@@ -34,7 +36,6 @@ if(${CMAKE_VERSION} VERSION_LESS 3.21)
   set(SURGE_BUILD_CLAP FALSE)
 else()
   message(STATUS "CMake version ${CMAKE_VERSION} allows CLAP build")
-  set(SURGE_BUILD_CLAP TRUE)
 endif()
 
 if(SURGE_BUILD_CLAP)
