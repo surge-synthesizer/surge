@@ -286,10 +286,10 @@ jobs:
             }
           data: |
             {
-                "wavetables_count": ${{ steps.data.outputs.wavetables_count }}",
-                "wavetables_3rdparty_count": ${{ steps.data.outputs.wavetables_3rdparty_count }}",
-                "patches_factory_count": ${{ steps.data.outputs.patches_factory_count }}",
-                "patches_3rdparty_count": ${{ steps.data.outputs.patches_3rdparty_count }}"
+                "wavetables_count": "${{ steps.data.outputs.wavetables_count }}",
+                "wavetables_3rdparty_count": "${{ steps.data.outputs.wavetables_3rdparty_count }}",
+                "patches_factory_count": "${{ steps.data.outputs.patches_factory_count }}",
+                "patches_3rdparty_count": "${{ steps.data.outputs.patches_3rdparty_count }}"
             }
 
       - name: "Notify surge-synth-team.org"
@@ -312,8 +312,8 @@ jobs:
             }
           data: |
             {
-                "wavetables_count": ${{ steps.data.outputs.wavetables_count }}",
-                "wavetables_3rdparty_count": ${{ steps.data.outputs.wavetables_3rdparty_count }}",
-                "patches_factory_count": ${{ steps.data.outputs.patches_factory_count }}",
-                "patches_3rdparty_count": ${{ steps.data.outputs.patches_3rdparty_count }}"
+                "wavetables_count": "${{ steps.data.outputs.wavetables_count }}",
+                "wavetables_3rdparty_count": "${{ steps.data.outputs.wavetables_3rdparty_count }}",
+                "patches_factory_count": "${{ steps.data.outputs.patches_factory_count }}",
+                "patches_3rdparty_count": "${{ steps.data.outputs.patches_3rdparty_count }}"
             }
