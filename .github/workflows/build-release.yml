@@ -204,13 +204,11 @@ jobs:
           version: ${{ needs.surge_version.outputs.surge_version }}
           releases: |
             {
-                macos: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
-                win64: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
-                win64zip: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
-                linux64: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
+                "macos": "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
+                "win64": "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                "win64zip": "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
+                "linux64": "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
             }
-          data: |
-            {}
 
       - name: "Notify surge-synth-team.org"
         env:
@@ -223,13 +221,11 @@ jobs:
           version: ${{ needs.surge_version.outputs.surge_version }}
           releases: |
             {
-                macos: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
-                win64: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
-                win64zip: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
-                linux64: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
+                "macos": "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
+                "win64": "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                "win64zip": "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
+                "linux64": "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
             }
-          data: |
-            {}
 
   publish-surge-release:
     name: "Publish Surge XT release"
@@ -281,19 +277,19 @@ jobs:
           version: ${{ needs.surge_version.outputs.surge_version }}
           releases: |
             {
-                macos: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
-                win32: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win32-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
-                win64: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
-                win64zip: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
-                linux64: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
-                other: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/tag/${{ needs.surge_version.outputs.surge_version }}"
+                "macos": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
+                "win32": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win32-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                "win64": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                "win64zip": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
+                "linux64": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
+                "other": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/tag/${{ needs.surge_version.outputs.surge_version }}"
             }
           data: |
             {
-                wavetables_count: ${{ steps.data.outputs.wavetables_count }}",
-                wavetables_3rdparty_count: ${{ steps.data.outputs.wavetables_3rdparty_count }}",
-                patches_factory_count: ${{ steps.data.outputs.patches_factory_count }}",
-                patches_3rdparty_count: ${{ steps.data.outputs.patches_3rdparty_count }}",
+                "wavetables_count": ${{ steps.data.outputs.wavetables_count }}",
+                "wavetables_3rdparty_count": ${{ steps.data.outputs.wavetables_3rdparty_count }}",
+                "patches_factory_count": ${{ steps.data.outputs.patches_factory_count }}",
+                "patches_3rdparty_count": ${{ steps.data.outputs.patches_3rdparty_count }}",
             }
 
       - name: "Notify surge-synth-team.org"
@@ -307,17 +303,17 @@ jobs:
           version: ${{ needs.surge_version.outputs.surge_version }}
           releases: |
             {
-                macos: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
-                win32: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win32-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
-                win64: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
-                win64zip: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
-                linux64: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
-                other: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/tag/${{ needs.surge_version.outputs.surge_version }}"
+                "macos": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
+                "win32": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win32-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                "win64": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                "win64zip": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
+                "linux64": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
+                "other": "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/tag/${{ needs.surge_version.outputs.surge_version }}"
             }
           data: |
             {
-                wavetables_count: ${{ steps.data.outputs.wavetables_count }}",
-                wavetables_3rdparty_count: ${{ steps.data.outputs.wavetables_3rdparty_count }}",
-                patches_factory_count: ${{ steps.data.outputs.patches_factory_count }}",
-                patches_3rdparty_count: ${{ steps.data.outputs.patches_3rdparty_count }}",
+                "wavetables_count": ${{ steps.data.outputs.wavetables_count }}",
+                "wavetables_3rdparty_count": ${{ steps.data.outputs.wavetables_3rdparty_count }}",
+                "patches_factory_count": ${{ steps.data.outputs.patches_factory_count }}",
+                "patches_3rdparty_count": ${{ steps.data.outputs.patches_3rdparty_count }}",
             }
