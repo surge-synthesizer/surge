@@ -170,7 +170,7 @@ jobs:
     name: "Publish Surge XT nightly"
     if: ${{ github.ref == 'refs/heads/main' && github.repository_owner == 'surge-synthesizer' }}
     runs-on: ubuntu-latest
-    needs: [ build_plugin, build_plugin_docker ]
+    needs: [ surge_version, build_plugin, build_plugin_docker ]
     steps:
       - name: "Upload to nightly"
         uses: surge-synthesizer/sst-githubactions/upload-to-release@main
@@ -188,12 +188,54 @@ jobs:
           tag: Nightly
           title: "A New Surge Nightly is Available"
 
+      - name: "Checkout for git info"
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 5
+
+      - name: "Notify surge-synthesizer.github.io"
+        env:
+          GH_TOKEN: ${{ secrets.WEB }}
+        uses: surge-synthesizer/sst-githubactions/send-web-notification@main
+        with:
+          web_repo: "surge-synthesizer.github.io"
+          event_type: "surge-build-nightly"
+          name: "surge-xt"
+          version: ${{ needs.surge_version.outputs.surge_version }}
+          releases: |
+            {
+                macos: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
+                win64: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                win64zip: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
+                linux64: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
+            }
+          data: |
+            {}
+
+      - name: "Notify surge-synth-team.org"
+        env:
+          GH_TOKEN: ${{ secrets.WEB }}
+        uses: surge-synthesizer/sst-githubactions/send-web-notification@main
+        with:
+          web_repo: "surge-synth-team.org"
+          event_type: "surge-build-nightly"
+          name: "surge-xt"
+          version: ${{ needs.surge_version.outputs.surge_version }}
+          releases: |
+            {
+                macos: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
+                win64: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                win64zip: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
+                linux64: "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
+            }
+          data: |
+            {}
 
   publish-surge-release:
     name: "Publish Surge XT release"
     if: startsWith(github.ref, 'refs/tags/release_xt') && github.repository_owner == 'surge-synthesizer'
     runs-on: ubuntu-latest
-    needs: [ build_plugin, build_plugin_docker ]
+    needs: [ surge_version, build_plugin, build_plugin_docker ]
     steps:
       - name: "Upload to release"
         uses: surge-synthesizer/sst-githubactions/upload-to-release@main
@@ -211,99 +253,71 @@ jobs:
           title: "A New Surge Release is Available"
           subtitle: "Release ${{ github.ref_name }}"
 
-  dispatch_websites:
-    name: "Dispatch to surge websites"
-    runs-on: ubuntu-latest
-    needs: [ surge_version, build_plugin, build_plugin_docker ]
-    steps:
       - name: "Checkout for git info"
         uses: actions/checkout@v5
-        if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
         with:
-          path: surge
           fetch-depth: 5
 
-      - name: "Dispatch nightly"
-        if: ${{ needs.surge_version.outputs.surge_is_nightly == 1 }}
+      - id: data
+        run: |
+          wavetables_count=$(find resources/data/wavetables -type f \( -name "*.wt*" -o -name "*.wav" \) | wc -l)
+          wavetables_3rdparty_count=$(find resources/data/wavetables_3rdparty -type f \( -name "*.wt*" -o -name "*.wav" \) | wc -l)
+          patches_factory_count=$(find resources/data/patches_factory -type f -name "*.fxp" | wc -l)
+          patches_3rdparty_count=$(find resources/data/patches_3rdparty -type f -name "*.fxp" | wc -l)
+
+          echo "wavetables_count=$wavetables_count" >> $GITHUB_OUTPUT
+          echo "wavetables_3rdparty_count=$wavetables_3rdparty_count" >> $GITHUB_OUTPUT
+          echo "patches_factory_count=$patches_factory_count" >> $GITHUB_OUTPUT
+          echo "patches_3rdparty_count=$patches_3rdparty_count" >> $GITHUB_OUTPUT
+
+      - name: "Notify surge-synthesizer.github.io"
         env:
           GH_TOKEN: ${{ secrets.WEB }}
-        run: |
-          pushd surge
-
-          jq -n --arg version "${{ needs.surge_version.outputs.surge_version }}" \
-          --arg build_time "$(date "+%Y-%m-%d %H:%M:%S %Z")" \
-          --arg base_url "${{ github.server_url }}/${{ github.repository }}/releases/download/Nightly" \
-          --argjson commits "$(
-            git log -5 --pretty=format:'%h%x00%an%x00%aI%x00%s%x00' | \
-              jq -R -s '[split("\n")[:-1] | map(split("\u0000")) | .[] | {
-                "commit": .[0],
-                "author": .[1],
-                "date": .[2],
-                "message": .[3]
-              }]'
-          )" \
-          '{
-            event_type: "surge-build-nightly",
-            client_payload: {
-              version: $version,
-              build_time: $build_time,
-              downloads: {
-                macos: "\($base_url)/surge-xt-macOS-\($version).dmg",
-                win64: "\($base_url)/surge-xt-win64-\($version)-setup.exe",
-                win64zip: "\($base_url)/surge-xt-win64-\($version)-pluginsonly.zip",
-                linux64: "\($base_url)/surge-xt-linux-x64-\($version).deb",
-              },
-              commits: $commits
+        uses: surge-synthesizer/sst-githubactions/send-web-notification@main
+        with:
+          web_repo: "surge-synthesizer.github.io"
+          event_type: "surge-build-release"
+          name: "surge-xt"
+          version: ${{ needs.surge_version.outputs.surge_version }}
+          releases: |
+            {
+                macos: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
+                win32: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win32-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                win64: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                win64zip: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
+                linux64: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
+                other: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/tag/${{ needs.surge_version.outputs.surge_version }}"
             }
-          }' > "../surge-build-nightly.json"
+          data: |
+            {
+                wavetables_count: ${{ steps.data.outputs.wavetables_count }}",
+                wavetables_3rdparty_count: ${{ steps.data.outputs.wavetables_3rdparty_count }}",
+                patches_factory_count: ${{ steps.data.outputs.patches_factory_count }}",
+                patches_3rdparty_count: ${{ steps.data.outputs.patches_3rdparty_count }}",
+            }
 
-          popd
-
-          gh api repos/surge-synthesizer/surge-synthesizer.github.io/dispatches \
-          --method POST \
-          --input surge-build-nightly.json
-
-          gh api repos/surge-synthesizer/surge-synth-team.org/dispatches \
-          --method POST \
-          --input surge-build-nightly.json
-
-      - name: "Dispatch stable"
-        if: ${{ needs.surge_version.outputs.surge_is_nightly == 0 }}
+      - name: "Notify surge-synth-team.org"
         env:
           GH_TOKEN: ${{ secrets.WEB }}
-        run: |
-          jq -n --arg version "${{ needs.surge_version.outputs.surge_version }}" \
-            --arg build_time "$(date "+%Y-%m-%d %H:%M:%S %Z")" \
-            --arg wavetables_count "$(find resources/data/wavetables -type f \( -name "*.wt*" -o -name "*.wav" \) | wc -l)" \
-            --arg wavetables_3rdparty_count "$(find resources/data/wavetables_3rdparty -type f \( -name "*.wt*" -o -name "*.wav" \) | wc -l)" \
-            --arg patches_factory_count "$(find resources/data/patches_factory -type f -name "*.fxp" | wc -l)" \
-            --arg patches_3rdparty_count "$(find resources/data/patches_3rdparty -type f -name "*.fxp" | wc -l)" \
-            --arg base_url "${{ github.server_url }}/${{ github.repository }}/releases/download" \
-            --arg tag_url "${{ github.server_url }}/${{ github.repository }}/releases/tag" \
-            '{
-              event_type: "surge-build-stable",
-              client_payload: {
-                version: $version,
-                build_time: $build_time,
-                wavetables_count: $wavetables_count,
-                wavetables_3rdparty_count: $wavetables_3rdparty_count,
-                patches_factory_count: $patches_factory_count,
-                patches_3rdparty_count: $patches_3rdparty_count,
-                downloads: {
-                  macos: "\($base_url)/surge-xt-macOS-\($version).dmg",
-                  win32: "\($base_url)/surge-xt-win32-\($version)-setup.exe",
-                  win64: "\($base_url)/surge-xt-win64-\($version)-setup.exe",
-                  win64zip: "\($base_url)/surge-xt-win64-\($version)-pluginsonly.zip",
-                  linux64: "\($base_url)/surge-xt-linux-x64-\($version).deb",
-                  other: "\($tag_url)/\($version)"
-                }
-              }
-            }' > "./surge-build-stable.json"
-
-          gh api repos/surge-synthesizer/surge-synthesizer.github.io/dispatches \
-          --method POST \
-          --input surge-build-stable.json
-
-          gh api repos/surge-synthesizer/surge-synth-team.org/dispatches \
-          --method POST \
-          --input surge-build-stable.json
+        uses: surge-synthesizer/sst-githubactions/send-web-notification@main
+        with:
+          web_repo: "surge-synth-team.org"
+          event_type: "surge-build-release"
+          name: "surge-xt"
+          version: ${{ needs.surge_version.outputs.surge_version }}
+          releases: |
+            {
+                macos: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-macOS-${{ needs.surge_version.outputs.surge_version }}.dmg",
+                win32: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win32-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                win64: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-setup.exe",
+                win64zip: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-win64-${{ needs.surge_version.outputs.surge_version }}-pluginsonly.zip",
+                linux64: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/download/${{ needs.surge_version.outputs.surge_version }}/surge-xt-linux-x64-${{ needs.surge_version.outputs.surge_version }}.deb",
+                other: "${{ github.server_url }}/surge-synthesizer/releases-xt/releases/tag/${{ needs.surge_version.outputs.surge_version }}"
+            }
+          data: |
+            {
+                wavetables_count: ${{ steps.data.outputs.wavetables_count }}",
+                wavetables_3rdparty_count: ${{ steps.data.outputs.wavetables_3rdparty_count }}",
+                patches_factory_count: ${{ steps.data.outputs.patches_factory_count }}",
+                patches_3rdparty_count: ${{ steps.data.outputs.patches_3rdparty_count }}",
+            }
