@@ -41,6 +41,7 @@
 #include <functional>
 #include <unordered_map>
 #include <map>
+#include <span>
 #include <utility>
 #include <type_traits>
 #include <random>
@@ -658,30 +659,23 @@ struct MidiChannelState
 struct ArbitraryBlockStorage
 {
     std::uint16_t id;
-    std::uint32_t data_size;
-    std::unique_ptr<std::uint8_t[]> data;
+    // These are often used for SSE-based things, so align them now.
+    sst::cpputils::DynArray<std::uint8_t, sst::cpputils::AlignedAllocator<std::uint8_t, 16>> data;
     std::string name;
 
-    template <typename T> T *as() { return static_cast<const T *>(data.get()); }
-
-    // Provides the length of the array, if using the given type.
     template <typename T>
-    std::size_t len()
+    std::span<T> as()
     {
-        std::size_t s = data_size / sizeof(T);
-        // Sanity check, zeroing out the length is the safest option that isn't
-        // exiting the process immediately.
-        if (data_size % sizeof(T))
-            s = 0;
-        return s;
+        if (data.size() % sizeof(T))
+            return std::span<T>();
+        return std::span<T>(reinterpret_cast<T *>(data.data()), data.size() / sizeof(T));
     }
 
     ArbitraryBlockStorage &operator=(const ArbitraryBlockStorage &that)
     {
         id = that.id;
-        data_size = that.data_size;
-        data = std::make_unique<std::uint8_t[]>(data_size);
-        std::copy_n(that.data.get(), data_size, data.get());
+        data = that.data;
+        name = that.name;
         return *this;
     }
 };
@@ -770,8 +764,7 @@ struct FxStorage
     // like this one!
     fxslot_positions fxslot;
 
-    std::size_t n_user_datas;
-    std::unique_ptr<ArbitraryBlockStorage[]> user_data;
+    sst::cpputils::DynArray<ArbitraryBlockStorage> user_data;
 
     // Have to treat copy/assignment specially thanks to the block storage.
     FxStorage(const FxStorage &that) { *this = that; }
@@ -782,9 +775,7 @@ struct FxStorage
         return_level = that.return_level;
         std::copy_n(that.p, n_fx_params, p);
         fxslot = that.fxslot;
-        n_user_datas = that.n_user_datas;
-        user_data = std::make_unique<ArbitraryBlockStorage[]>(n_user_datas);
-        std::copy_n(that.user_data.get(), n_user_datas, user_data.get());
+        user_data = that.user_data;
         return *this;
     }
 };

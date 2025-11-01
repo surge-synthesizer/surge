@@ -1297,9 +1297,9 @@ void *SurgePatch::save_arbitrary_block_storage()
     binn *map = binn_map();
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
-        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
+        for (int i = 0; i < this->fx[fx].user_data.size(); i++)
         {
-            binn_map_set_blob(map, this->fx[fx].user_data[i].id, this->fx[fx].user_data[i].data.get(), this->fx[fx].user_data[i].data_size);
+            binn_map_set_blob(map, this->fx[fx].user_data[i].id, this->fx[fx].user_data[i].data.data(), this->fx[fx].user_data[i].data.size());
         }
     }
     return map;
@@ -1309,12 +1309,14 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
 {
     if (!binn_is_struct(data))
     {
-        storage->reportError("Failed to allocate FX data.", "Patch Load Error");
+        // Temporary for diagnostics. This will happen all the time for a patch
+        // that has no binn data in it.
+        std::cout << "Failed to allocate FX data." << std::endl;
     }
 
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
-        for (std::size_t i = 0; i < this->fx[fx].n_user_datas; i++)
+        for (std::size_t i = 0; i < this->fx[fx].user_data.size(); i++)
         {
             ArbitraryBlockStorage &s = this->fx[fx].user_data[i];
             void *pos;
@@ -1324,8 +1326,8 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
             {
                 storage->reportError("Failed to load FX data.", "Patch Load Error");
             }
-            s.data_size = sz;
-            memcpy(s.data.get(), pos, sz);
+            s.data.reset(sz);
+            memcpy(s.data.data(), pos, sz);
         }
     }
     return binn_size(data);
@@ -3497,8 +3499,7 @@ void SurgePatch::load_arbitrary_block_storage_xml(const TiXmlElement *patch)
             }
             else
             {
-                fx[slot].n_user_datas = num;
-                fx[slot].user_data = std::make_unique<ArbitraryBlockStorage[]>(num);
+                fx[slot].user_data.reset(num);
                 // Initialize them all to an invalid reference in case the patch is corrupted or
                 // something.
                 for (std::size_t j = 0; j < num; j++)
@@ -3516,8 +3517,8 @@ void SurgePatch::load_arbitrary_block_storage_xml(const TiXmlElement *patch)
                     }
                     fx[slot].user_data[count].id =
                         static_cast<std::uint16_t>(std::stoul(j->Attribute("id")));
-                    fx[slot].user_data[count].data_size =
-                        static_cast<std::uint32_t>(std::stoul(j->Attribute("dataSize")));
+                    //fx[slot].user_data[count].data.reset(
+                    //    static_cast<std::uint32_t>(std::stoul(j->Attribute("dataSize"))));
                     if (j->Attribute("name"))
                     {
                         std::cout << "success branch" << std::endl;
@@ -3528,7 +3529,6 @@ void SurgePatch::load_arbitrary_block_storage_xml(const TiXmlElement *patch)
                         std::cout << "else branch" << std::endl;
                         fx[slot].user_data[count].name = "";
                     }
-                    fx[slot].user_data[count].data = std::make_unique<std::uint8_t[]>(fx[slot].user_data[count].data_size);
                     count++;
                 }
             }
@@ -3775,12 +3775,12 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     {
         TiXmlElement fxe("fx");
         fxe.SetAttribute("slot", fx);
-        fxe.SetAttribute("nUserDatas", this->fx[fx].n_user_datas);
-        for (int i = 0; i < this->fx[fx].n_user_datas; i++)
+        fxe.SetAttribute("nUserDatas", this->fx[fx].user_data.size());
+        for (int i = 0; i < this->fx[fx].user_data.size(); i++)
         {
             TiXmlElement ud("userData");
             ud.SetAttribute("id", this->fx[fx].user_data[i].id);
-            ud.SetAttribute("dataSize", this->fx[fx].user_data[i].data_size);
+            //ud.SetAttribute("dataSize", this->fx[fx].user_data[i].data_size);
             ud.SetAttribute("name", this->fx[fx].user_data[i].name);
             fxe.InsertEndChild(ud);
         }
