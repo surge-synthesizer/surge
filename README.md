@@ -12,7 +12,7 @@ Surge XT is a free and open-source hybrid synthesizer, originally written and so
 Johanson at [Vember Audio](http://vemberaudio.se). In September 2018, Claes decided to release a partially completed
 version of Surge 1.6 under GPL3, and a group of developers have been improving it since. You can learn more about the
 team at https://surge-synth-team.org/ or connect with us
-on [Discord](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/src/assets/includes/discord_invite_link)
+on [Discord](https://discord.gg/spGANHw)
 .
 
 If you would also like to participate in discussions, testing and design of Surge XT, we have details below.
@@ -336,14 +336,13 @@ sudo apt install build-essential git cmake libcairo-dev libxkbcommon-x11-dev lib
 
 # Continuous Integration
 
-In addition to the build commands above, we use Azure pipelines for continuous integration. This means that each and
+In addition to the build commands above, we use GitHub Actions pipelines for continuous integration. This means that each and
 every pull request will be automatically built across all our environment,and a clean build on all platforms is an obvious
 pre-requisite. If you have questions about our CI tools, don't hesitate to ask on
-our [Discord](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/src/assets/includes/discord_invite_link)
+our [Discord](https://https://discord.gg/spGANHw)
 server. We are grateful to Microsoft for providing Azure pipelines for free to the open-source community!
 
 # References
 
-* Most Surge XT-related conversation happens on the Surge Synthesizer Discord server. You can join
-  via [this link](https://raw.githubusercontent.com/surge-synthesizer/surge-synthesizer.github.io/master/src/assets/includes/discord_invite_link).
-* Discussion at KvR forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922).
+* Most Surge XT-related conversation happens on the Surge Synthesizer Discord server. You can join via [this link](https://discord.gg/spGANHw).
+* Discussion at [KvR](https://www.kvraudio.com) forum [here](https://www.kvraudio.com/forum/viewtopic.php?f=1&t=511922).
