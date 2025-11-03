@@ -49,6 +49,9 @@ void DistortionEffect::init()
     bi = 0.f;
     L = 0.f;
     R = 0.f;
+
+    for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
+        wsState.R[i] = SIMD_MM(setzero_ps)();
 }
 
 void DistortionEffect::setvars(bool init)
@@ -62,16 +65,9 @@ void DistortionEffect::setvars(bool init)
                            fxdata->p[dist_preeq_bw].val.f, pregain);
         band2.coeff_peakEQ(band2.calc_omega(fxdata->p[dist_posteq_freq].val.f / 12.f),
                            fxdata->p[dist_posteq_bw].val.f, postgain);
-        auto dE =
-            storage->db_to_linear(fxdata->p[dist_drive].get_extended(fxdata->p[dist_drive].val.f));
+        auto dE = storage->db_to_linear(fxdata->p[dist_drive].get_extended(*pd_float[dist_drive]));
         drive.set_target_smoothed(dE);
         outgain.set_target_smoothed(storage->db_to_linear(*pd_float[dist_gain]));
-
-        for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
-        {
-            wsState.R[i] = SIMD_MM(setzero_ps)();
-            *(((unsigned int *)&wsState.init) + 1) = 0xFFFFFFFF;
-        }
     }
     else
     {
@@ -117,6 +113,8 @@ void DistortionEffect::process(float *dataL, float *dataR)
     float bR alignas(16)[BLOCK_SIZE << dist_OS_bits];
     assert(dist_OS_bits == 2);
 
+    drive.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
+
     // FX waveshapers have value at wst_soft for 0; so don't add wst_soft here (like we did in 1.9)
     bool useSSEShaper = (ws >= sst::waveshapers::WaveshaperType::wst_sine);
     auto wsop = sst::waveshapers::GetQuadWaveshaper(ws);
@@ -126,11 +124,6 @@ void DistortionEffect::process(float *dataL, float *dataR)
     if (useSSEShaper)
     {
         dD = (dE - dS) / (BLOCK_SIZE * dist_OS_bits);
-    }
-    else
-    {
-        // The lookup assumes a driven value
-        drive.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
     }
 
     for (int k = 0; k < BLOCK_SIZE; k++)
@@ -154,10 +147,10 @@ void DistortionEffect::process(float *dataL, float *dataR)
             if (useSSEShaper)
             {
                 float sb alignas(16)[4];
+                auto dInv = 1.f / dNow;
 
-                sb[0] =
-                    L; // since we only drive multiply if not see, we don't need to back out drive
-                sb[1] = R;
+                sb[0] = L * dInv;
+                sb[1] = R * dInv;
                 auto lr128 = SIMD_MM(load_ps)(sb);
                 auto wsres = wsop(&wsState, lr128, SIMD_MM(set1_ps)(dNow));
                 SIMD_MM(store_ps)(sb, wsres);
