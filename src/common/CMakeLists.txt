@@ -4,6 +4,7 @@ project(surge-common)
 surge_add_lib_subdirectory(airwindows)
 surge_add_lib_subdirectory(binn)
 surge_add_lib_subdirectory(eurorack)
+surge_add_lib_subdirectory(pffft)
 surge_add_lib_subdirectory(fmt)
 
 # Make MTS optional
@@ -15,7 +16,6 @@ else()
   add_library(surge::oddsound-mts ALIAS oddsound-mts)
 endif()
 
-surge_add_lib_subdirectory(pffft)
 surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 

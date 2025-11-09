@@ -1,4 +1,6 @@
 #include <algorithm>
+#include "juce_audio_formats/juce_audio_formats.h"
+
 #include "CurrentFxDisplay.h"
 #include "EffectChooser.h"
 #include "RuntimeFont.h"
@@ -50,6 +52,9 @@ void CurrentFxDisplay::updateCurrentFx(int current_fx)
         break;
     case fxt_conditioner:
         conditionerLayout();
+        break;
+    case fxt_convolution:
+        convolutionLayout();
         break;
     default:
         defaultLayout();
@@ -192,6 +197,12 @@ void CurrentFxDisplay::conditionerLayout()
     }
 }
 
+void CurrentFxDisplay::convolutionLayout()
+{
+    defaultLayout();
+    labels_[0]->setLabel(std::string("Drag and drop WAV here"));
+}
+
 void CurrentFxDisplay::conditionerRender()
 {
     if (!editor_->synth->fx[current_fx_])
@@ -295,6 +306,59 @@ juce::Rectangle<int> CurrentFxDisplay::fxRect()
     return juce::Rectangle<int>(fxpp->x, fxpp->y, 123, 13);
 }
 
+bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
+{
+    std::cout << "Loading wav file." << std::endl;
+    juce::WavAudioFormat format;
+    std::unique_ptr<juce::MemoryMappedAudioFormatReader> reader(
+        format.createMemoryMappedReader(file));
+    if (!reader)
+        return false;
+    if (reader->numChannels != 1 && reader->numChannels != 2)
+        return false;
+    if (!reader->mapEntireFile())
+        return false;
+
+    juce::AudioBuffer<float> buf(reader->numChannels, reader->lengthInSamples);
+    if (!reader->read(&buf, 0, reader->lengthInSamples, 0, true, true))
+        return false;
+
+    FxStorage &sync = editor_->synth->fxsync[current_fx_];
+
+    // Convolution only uses up to the first three ArbitraryBlockStorage.
+    std::string name = juce::File(file).getFileNameWithoutExtension().toStdString();
+    constexpr int sz = sizeof(float);
+    sync.user_data.reset(reader->numChannels + 1);
+
+    // First item: the sample rate.
+    sync.user_data[0].id = storage_->getPatch().next_block_id();
+    sync.user_data[0].name = fmt::format("{}_samplerate", name);
+    sync.user_data[0].data.reset(sizeof(std::uint64_t));
+    sync.user_data[0].as<std::uint64_t>()[0] = static_cast<std::uint64_t>(reader->sampleRate);
+
+    // Second item: mono channel or left channel.
+    sync.user_data[1].id = storage_->getPatch().next_block_id();
+    sync.user_data[1].name = fmt::format("{}_L", name);
+    sync.user_data[1].data.reset(sz * reader->lengthInSamples);
+    std::copy(buf.getReadPointer(0), buf.getReadPointer(0) + reader->lengthInSamples,
+              sync.user_data[1].as<float>().begin());
+
+    // Third item: right channel, if it exists.
+    if (reader->numChannels == 2)
+    {
+        sync.user_data[2].id = storage_->getPatch().next_block_id();
+        sync.user_data[2].name = fmt::format("{}_R", name);
+        sync.user_data[2].data.reset(sz * reader->lengthInSamples);
+        std::copy(buf.getReadPointer(1), buf.getReadPointer(1) + reader->lengthInSamples,
+                  sync.user_data[2].as<float>().begin());
+    }
+
+    editor_->synth->fx_reload[current_fx_] = true;
+    editor_->synth->load_fx_needed = true;
+    std::cout << "Reload set for " << current_fx_ << std::endl;
+    return true;
+}
+
 // File drag and drop for convolution reverb.
 bool CurrentFxDisplay::canDropTarget(const juce::String &file)
 {
@@ -313,10 +377,9 @@ void CurrentFxDisplay::onDrop(const juce::String &file)
     switch (storage_->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:
-        std::cout << "We might try to drop something here." << std::endl;
-        if (!file.endsWith(".wav"))
-            return;
-        std::cout << "We dropped something here." << std::endl;
+        if (file.endsWith(".wav"))
+            if (!loadWavForConvolution(file))
+                std::cout << "Failed to load IR from " << file << std::endl;
         break;
     }
 }

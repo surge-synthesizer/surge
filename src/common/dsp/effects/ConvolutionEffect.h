@@ -24,20 +24,48 @@
 #define SURGE_SRC_COMMON_DSP_EFFECTS_CONVOLUTIONEFFECT_H
 
 #include "Effect.h"
+#include <filters/BiquadFilter.h>
+#include <vembertech/lipol.h>
+
+#include <fft_convolve.hpp>
 
 class ConvolutionEffect : public Effect
 {
   public:
     enum convolution_params
     {
-        convolution_file = 0,
-        convolution_mix,
+        convolution_delay = 0,
+        convolution_size = 1,
+        convolution_tilt_center = 2,
+        convolution_tilt_slope = 3,
+        convolution_locut_freq = 4,
+        convolution_hicut_freq = 5,
+        convolution_mix = 6,
     };
 
     ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
 
-    virtual const char *get_effectname() override;
-    virtual void init_ctrltypes() override;
+    const char *get_effectname() override;
+    const char *group_label(int id) override;
+    int group_label_ypos(int id) override;
+    void init() override;
+    void init_ctrltypes() override;
+    void init_default_values() override;
+    void process(float *dataL, float *dataR) override;
+    void updateAfterReload() override;
+
+  private:
+    void set_params();
+
+    bool initialized_;
+    pffft::TwoStageConvolver convolverL_;
+    pffft::TwoStageConvolver convolverR_;
+    pffft::TwoStageConvolver xconvolver_L_;  // fade-in
+    pffft::TwoStageConvolver xconvolver_R_;  // fade-in
+    alignas(16) std::array<float, BLOCK_SIZE> workL_;
+    alignas(16) std::array<float, BLOCK_SIZE> workR_;
+    lipol_ps_blocksz mix_;
+    BiquadFilter lc_, hc_;
 };
 
 #endif  // SURGE_SRC_COMMON_DSP_EFFECTS_CONVOLUTIONEFFECT_H

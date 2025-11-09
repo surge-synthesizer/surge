@@ -56,6 +56,7 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     // Individual FX layouts.
     void defaultLayout();
     void conditionerLayout();
+    void convolutionLayout();
     void vocoderLayout();
 
     // Individual renders.
@@ -69,6 +70,9 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
 
     // For laying out things roughly slider shaped (labels, VUs).
     juce::Rectangle<int> fxRect();
+
+    // Convolution support.
+    bool loadWavForConvolution(const juce::String &file);
 
     int current_fx_{-1};
     Effect *effect_{nullptr}; // unique_ptr owned by synth.

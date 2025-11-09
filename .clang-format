@@ -27,6 +27,7 @@ BraceWrapping:
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
 ColumnLimit: 100
+IndentRequiresClause: true
 SortIncludes: false
 ---
 Language: ObjC
@@ -56,4 +57,3 @@ BraceWrapping:
 ColumnLimit: 100
 SortIncludes: false
 ---
-

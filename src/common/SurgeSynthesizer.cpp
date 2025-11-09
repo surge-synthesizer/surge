@@ -3018,6 +3018,9 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                           std::begin(storage.getPatch().fx[s].p));
             }
 
+            // TODO: Just change this entire thing to a single copy operation?
+            storage.getPatch().fx[s].user_data = fxsync[s].user_data;
+
             fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
                                      &storage.getPatch().fx[s], storage.getPatch().globaldata));
             if (fx[s])
