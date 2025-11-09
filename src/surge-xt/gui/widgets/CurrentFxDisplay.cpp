@@ -116,14 +116,15 @@ void CurrentFxDisplay::defaultLayout()
         }
     };
 
-    // First the FX Selector, type, preset, and jog.
-    layoutFxSelector();
-    // This one's a little weird: the construction is done in layoutComponentForSkin.
-    makeParameter(fx_type);
-    layoutFxPresetLabel();
+    // Start placing the various components.
     layoutJogFx();
+    layoutFxSelector();
+    layoutFxPresetLabel();
+    // FX menu. This one's a little weird: the construction is done in
+    // layoutComponentForSkin.
+    makeParameter(fx_type);
 
-    // Now the FX params.
+    // Now the actual FX labels and parameter.
     if (effect_)
     {
         for (i = 0; i < n_fx_params; i++)
@@ -146,14 +147,20 @@ void CurrentFxDisplay::defaultLayout()
                 labels_[i]->setSkin(currentSkin, editor_->bitmapStore);
                 labels_[i]->setLabel(label);
 
-                editor_->addAndMakeVisibleWithTracking(this, *labels_[i]);
+                // This looks weird: we're putting the label into the editor's
+                // MainFrame instead of our own component? That's because if we
+                // put it in ours, it messes with Surge's tab-focus ordering for
+                // accessibility. It was originally placed in the main frame
+                // before we moved everything to its own component, so keep
+                // doing that.
+                editor_->addAndMakeVisibleWithTracking(editor_->frame.get(), *labels_[i]);
             }
             else
             {
                 labels_[i].reset(nullptr);
             }
 
-            // Now the FX proper.
+            // Finally the FX parameters themselves.
             if (fx.p[i].ctrltype != ct_none)
             {
                 makeParameter(paramToParamIndex[i]);
@@ -239,8 +246,7 @@ void CurrentFxDisplay::layoutFxSelector()
     editor_->effectChooser->setDeactivatedBitmask(
         editor_->synth->storage.getPatch().fx_disable.val.i);
 
-    editor_->addAndMakeVisibleWithTracking(editor_->frame->getControlGroupLayer(cg_FX),
-                                           *editor_->effectChooser);
+    editor_->addAndMakeVisibleWithTracking(this, *editor_->effectChooser);
 
     editor_->setAccessibilityInformationByTitleAndAction(editor_->effectChooser->asJuceComponent(),
                                                          "FX Slots", "Select");
