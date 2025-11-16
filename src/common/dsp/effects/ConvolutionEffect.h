@@ -55,6 +55,7 @@ class ConvolutionEffect : public Effect
     void updateAfterReload() override;
 
   private:
+    void prep_ir();
     void set_params();
 
     bool initialized_;
@@ -66,6 +67,12 @@ class ConvolutionEffect : public Effect
     alignas(16) std::array<float, BLOCK_SIZE> workR_;
     lipol_ps_blocksz mix_;
     BiquadFilter lc_, hc_;
+
+    // Stored values.
+    sst::cpputils::DynArray<float, sst::cpputils::AlignedAllocator<float, 16>> irL_;
+    sst::cpputils::DynArray<float, sst::cpputils::AlignedAllocator<float, 16>> irR_;
+    float old_samplerate_;
+    float old_convolution_size_;
 };
 
 #endif  // SURGE_SRC_COMMON_DSP_EFFECTS_CONVOLUTIONEFFECT_H

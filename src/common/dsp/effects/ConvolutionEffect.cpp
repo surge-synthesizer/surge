@@ -21,8 +21,18 @@
  */
 #include "ConvolutionEffect.h"
 #include <iostream>
+#include <samplerate.h>
 
 static constexpr double Q = 0.707;
+
+static sst::cpputils::DynArray<uint8_t, sst::cpputils::AlignedAllocator<std::uint8_t, 16>>
+convertFromFloat(sst::cpputils::DynArray<float> &src)
+{
+    std::size_t size = src.size() * sizeof(float);
+    std::uint8_t *srcD = reinterpret_cast<std::uint8_t *>(src.data());
+    return sst::cpputils::DynArray<uint8_t, sst::cpputils::AlignedAllocator<std::uint8_t, 16>>(
+        srcD, srcD + size);
+}
 
 ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), initialized_(false), lc_(storage), hc_(storage)
@@ -35,7 +45,8 @@ const char *ConvolutionEffect::get_effectname() { return "convolution"; }
 
 const char *ConvolutionEffect::group_label(int id)
 {
-    switch (id) {
+    switch (id)
+    {
     case 0:
         return "Input";
     case 1:
@@ -63,20 +74,7 @@ void ConvolutionEffect::init()
     if (fxdata->user_data.size() < 2)
         return;
 
-    bool s = true;
-    // We're reloaded when we get a new IR.
-    std::span<float> data = fxdata->user_data[1].as<float>();
-    s = convolverL_.init(BLOCK_SIZE, 256, data);
-    if (!s)
-        std::cout << "Error initializing left convolver." << std::endl;
-    if (fxdata->user_data.size() > 2)
-        data = fxdata->user_data[2].as<float>();
-    s = convolverR_.init(BLOCK_SIZE, 256, data);
-    if (!s)
-        std::cout << "Error initializing right convolver." << std::endl;
-    initialized_ = s;
-    std::cout << "Convolver initialized; data was of length "
-              << fxdata->user_data[1].as<float>().size() << std::endl;
+    prep_ir();
 
     lc_.coeff_HP(lc_.calc_omega(*pd_float[convolution_locut_freq] / 12.0), Q);
     hc_.coeff_LP(lc_.calc_omega(*pd_float[convolution_hicut_freq] / 12.0), Q);
@@ -143,12 +141,13 @@ void ConvolutionEffect::init_default_values()
 void ConvolutionEffect::process(float *dataL, float *dataR)
 {
     // std::cout << "In process" << std::endl;
-    //  TODO: Need to match the sample rates between the impulse response and
-    //  the current sample rate. don't do that yet here.
     if (!initialized_)
         return;
 
     set_params();
+
+    if (!initialized_)
+        return;
 
     convolverL_.process(std::span<float>(dataL, BLOCK_SIZE), workL_);
     convolverR_.process(std::span<float>(dataR, BLOCK_SIZE), workR_);
@@ -159,11 +158,85 @@ void ConvolutionEffect::process(float *dataL, float *dataR)
     mix_.fade_2_blocks_inplace(dataL, workL_.data(), dataR, workR_.data(), BLOCK_SIZE_QUAD);
 }
 
+void ConvolutionEffect::prep_ir()
+{
+    bool s = true;
+    // Get the IR ready. Resample it to match the synth sample rate, and
+    // normalize it so the overall magnitude is 1.
+    const float inputRate = fxdata->user_data[0].as<float>()[0];
+    const float outputRate = storage->samplerate * fxdata->p[convolution_size].val.f;
+    const float ratio = outputRate / inputRate;
+    SRC_DATA rs;
+    rs.src_ratio = ratio;
+
+    initialized_ = false;
+
+    // Left channel (or mono).
+    auto L = fxdata->user_data[1].as<float>();
+    rs.data_in = L.data();
+    rs.input_frames = L.size();
+    irL_.reset(std::ceil(static_cast<float>(L.size()) * ratio));
+    rs.data_out = irL_.data();
+    rs.output_frames = irL_.size();
+    int rv = src_simple(&rs, SRC_SINC_BEST_QUALITY, 1);
+    if (rv != 0)
+    {
+        std::cout << "Error in sample rate conversion process, not running convolution. "
+                  << src_strerror(rv) << std::endl;
+        return;
+    }
+    s = convolverL_.init(BLOCK_SIZE, 256, irL_);
+    if (!s)
+    {
+        std::cout << "Error initializing left convolver, not running convolution." << std::endl;
+        return;
+    }
+
+    if (fxdata->user_data.size() > 2)
+    {
+        auto R = fxdata->user_data[2].as<float>();
+        rs.data_in = R.data();
+        rs.input_frames = R.size();
+        irR_.reset(std::ceil(static_cast<float>(R.size()) * ratio));
+        rs.data_out = irR_.data();
+        rs.output_frames = irR_.size();
+        rv = src_simple(&rs, SRC_SINC_BEST_QUALITY, 1);
+        if (rv != 0)
+        {
+            std::cout << "Error in sample rate conversion process for right channel, not running "
+                         "convolution. "
+                      << src_strerror(rv) << std::endl;
+            return;
+        }
+        s = convolverR_.init(BLOCK_SIZE, 256, irR_);
+        if (!s)
+        {
+            std::cout << "Error initializing right convolver, not running convolution."
+                      << std::endl;
+            return;
+        }
+    }
+
+    initialized_ = true;
+    std::cout << "Convolver initialized; data was of length "
+              << fxdata->user_data[1].as<float>().size() << std::endl;
+
+    old_samplerate_ = storage->samplerate;
+    old_convolution_size_ = fxdata->p[convolution_size].val.f;
+}
+
 void ConvolutionEffect::set_params()
 {
     lc_.coeff_HP(lc_.calc_omega(*pd_float[convolution_locut_freq] / 12.0), Q);
     hc_.coeff_LP(lc_.calc_omega(*pd_float[convolution_hicut_freq] / 12.0), Q);
     mix_.set_target_smoothed(*pd_float[convolution_mix]);
+
+    // Do we need a reload for non-modulatable parameter changes?
+    if (storage->samplerate != old_samplerate_ ||
+        fxdata->p[convolution_size].val.f != old_convolution_size_)
+    {
+        prep_ir();
+    }
 }
 
 void ConvolutionEffect::updateAfterReload() { std::cout << "In updateAfterReload " << std::endl; }
