@@ -4,7 +4,6 @@ project(surge-common)
 surge_add_lib_subdirectory(airwindows)
 surge_add_lib_subdirectory(binn)
 surge_add_lib_subdirectory(eurorack)
-surge_add_lib_subdirectory(pffft)
 surge_add_lib_subdirectory(fmt)
 
 # Make MTS optional
@@ -16,6 +15,12 @@ else()
   add_library(surge::oddsound-mts ALIAS oddsound-mts)
 endif()
 
+if(MINGW)
+  set(HAVE_VISIBILITY 0 CACHE INTERNAL "Force-disable libsamplerate's visibility check on MinGW")
+endif()
+
+surge_add_lib_subdirectory(libsamplerate)
+surge_add_lib_subdirectory(pffft)
 surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 
@@ -339,6 +344,7 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC
   fmt
   luajit-5.1
+  samplerate
   surge::airwindows
   surge::binn
   surge::eurorack
