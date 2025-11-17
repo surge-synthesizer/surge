@@ -38,14 +38,14 @@ struct VKeyboardWheel : public juce::Component
     bool unipolar{true};
     int range{127};
     int value{0};
-    void paint(juce::Graphics &g) override
+    void paint(juce::Graphics &graphics) override
     {
         auto wheelSz = getLocalBounds().reduced(2, 3);
 
-        g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBgId));
-        g.fillRect(wheelSz);
-        g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBorderId));
-        g.drawRect(wheelSz.expanded(1, 1));
+        graphics.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBgId));
+        graphics.fillRect(wheelSz);
+        graphics.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelBorderId));
+        graphics.drawRect(wheelSz.expanded(1, 1));
 
         float p = 1.0 * value / range;
 
@@ -60,8 +60,8 @@ struct VKeyboardWheel : public juce::Component
         float cp = wheelSz.getY() + p * (wheelSz.getHeight() - 4);
         auto r = wheelSz.withHeight(2).translated(0, cp - 2).reduced(1, 0);
 
-        g.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelValueId));
-        g.fillRect(r);
+        graphics.setColour(findColour(SurgeJUCELookAndFeel::SurgeColourIds::wheelValueId));
+        graphics.fillRect(r);
     }
 
     void valueFromY(float y)
