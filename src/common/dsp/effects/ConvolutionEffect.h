@@ -25,6 +25,7 @@
 
 #include "Effect.h"
 #include <filters/BiquadFilter.h>
+#include <sst/basic-blocks/dsp/SSESincDelayLine.h>
 #include <vembertech/lipol.h>
 
 #include <fft_convolve.hpp>
@@ -68,9 +69,15 @@ class ConvolutionEffect : public Effect
     lipol_ps_blocksz mix_;
     BiquadFilter lc_, hc_;
 
+    using delay_t = sst::basic_blocks::dsp::SSESincDelayLine<1 << 19>;
+    delay_t delayL_;
+    delay_t delayR_;
+    lag<float> delayTime_;
+
     // Stored values.
-    sst::cpputils::DynArray<float, sst::cpputils::AlignedAllocator<float, 16>> irL_;
-    sst::cpputils::DynArray<float, sst::cpputils::AlignedAllocator<float, 16>> irR_;
+    using ir_t = sst::cpputils::DynArray<float, sst::cpputils::AlignedAllocator<float, 16>>;
+    ir_t irL_;
+    ir_t irR_;
     float old_samplerate_;
     float old_convolution_size_;
 };

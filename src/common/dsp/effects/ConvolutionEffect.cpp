@@ -25,17 +25,9 @@
 
 static constexpr double Q = 0.707;
 
-static sst::cpputils::DynArray<uint8_t, sst::cpputils::AlignedAllocator<std::uint8_t, 16>>
-convertFromFloat(sst::cpputils::DynArray<float> &src)
-{
-    std::size_t size = src.size() * sizeof(float);
-    std::uint8_t *srcD = reinterpret_cast<std::uint8_t *>(src.data());
-    return sst::cpputils::DynArray<uint8_t, sst::cpputils::AlignedAllocator<std::uint8_t, 16>>(
-        srcD, srcD + size);
-}
-
 ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd), initialized_(false), lc_(storage), hc_(storage)
+    : Effect(storage, fxdata, pd), initialized_(false), lc_(storage), hc_(storage),
+      delayL_(storage->sinctable), delayR_(storage->sinctable), delayTime_(.001)
 {
     std::cout << "In constructor." << std::endl;
     mix_.set_blocksize(BLOCK_SIZE);
@@ -90,6 +82,8 @@ void ConvolutionEffect::init_ctrltypes()
 
     fxdata->p[convolution_delay].set_name("Delay");
     fxdata->p[convolution_delay].set_type(ct_envtime);
+    fxdata->p[convolution_delay].val_min.f = 0.f;
+    fxdata->p[convolution_delay].val_max.f = 1.f;
     fxdata->p[convolution_delay].posy_offset = 3;
 
     fxdata->p[convolution_size].set_name("Size");
@@ -149,6 +143,23 @@ void ConvolutionEffect::process(float *dataL, float *dataR)
     if (!initialized_)
         return;
 
+    for (std::size_t i = 0; i < BLOCK_SIZE; i++)
+    {
+        delayL_.write(dataL[i]);
+        delayR_.write(dataR[i]);
+    }
+
+    // Cut out some annoying non-SSEable moves if we can.
+    if (delayTime_.v != 0)
+    {
+        for (std::size_t i = 0; i < BLOCK_SIZE; i++)
+        {
+            delayTime_.process();
+            dataL[i] = delayL_.read(delayTime_.v);
+            dataR[i] = delayR_.read(delayTime_.v);
+        }
+    }
+
     convolverL_.process(std::span<float>(dataL, BLOCK_SIZE), workL_);
     convolverR_.process(std::span<float>(dataR, BLOCK_SIZE), workR_);
     if (!fxdata->p[convolution_locut_freq].deactivated)
@@ -167,6 +178,7 @@ void ConvolutionEffect::prep_ir()
     const float outputRate = storage->samplerate * fxdata->p[convolution_size].val.f;
     const float ratio = outputRate / inputRate;
     SRC_DATA rs;
+    std::cout << "Sample rate conversion ratio: " << ratio << std::endl;
     rs.src_ratio = ratio;
 
     initialized_ = false;
@@ -219,7 +231,7 @@ void ConvolutionEffect::prep_ir()
 
     initialized_ = true;
     std::cout << "Convolver initialized; data was of length "
-              << fxdata->user_data[1].as<float>().size() << std::endl;
+              << irL_.size() << std::endl;
 
     old_samplerate_ = storage->samplerate;
     old_convolution_size_ = fxdata->p[convolution_size].val.f;
@@ -230,6 +242,7 @@ void ConvolutionEffect::set_params()
     lc_.coeff_HP(lc_.calc_omega(*pd_float[convolution_locut_freq] / 12.0), Q);
     hc_.coeff_LP(lc_.calc_omega(*pd_float[convolution_hicut_freq] / 12.0), Q);
     mix_.set_target_smoothed(*pd_float[convolution_mix]);
+    delayTime_.newValue(storage->samplerate * *pd_float[convolution_delay]);
 
     // Do we need a reload for non-modulatable parameter changes?
     if (storage->samplerate != old_samplerate_ ||

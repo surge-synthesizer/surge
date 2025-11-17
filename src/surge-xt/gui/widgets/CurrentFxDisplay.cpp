@@ -333,8 +333,8 @@ bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
     // First item: the sample rate.
     sync.user_data[0].id = storage_->getPatch().next_block_id();
     sync.user_data[0].name = fmt::format("{}_samplerate", name);
-    sync.user_data[0].data.reset(sizeof(std::uint64_t));
-    sync.user_data[0].as<std::uint64_t>()[0] = static_cast<std::uint64_t>(reader->sampleRate);
+    sync.user_data[0].data.reset(sizeof(float));
+    sync.user_data[0].as<float>()[0] = static_cast<float>(reader->sampleRate);
 
     // Second item: mono channel or left channel.
     sync.user_data[1].id = storage_->getPatch().next_block_id();
