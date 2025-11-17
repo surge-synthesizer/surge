@@ -1,4 +1,5 @@
 /*
+ *
  * Surge XT - a free and open source hybrid synthesizer,
  * built by Surge Synth Team
  *
@@ -120,6 +121,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     friend class SurgeGUIEditor;
 
+
     // clang-format off
     std::forward_list<std::pair<std::string, std::vector<int>>> vkbLayouts =
     {
@@ -143,7 +145,6 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
   private:
     std::unique_ptr<SurgeGUIEditor> sge;
-    std::unique_ptr<juce::Drawable> logo;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthEditor)
 };
