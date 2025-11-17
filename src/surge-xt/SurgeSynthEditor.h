@@ -55,7 +55,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     int rezoomGuard{0};
     struct BlockRezoom
     {
-        BlockRezoom(SurgeSynthEditor *ed) : editor(ed) { editor->rezoomGuard++; }
+        BlockRezoom(SurgeSynthEditor *editor) : editor(editor) { editor->rezoomGuard++; }
         ~BlockRezoom() { editor->rezoomGuard--; }
         SurgeSynthEditor *editor{nullptr};
     };
@@ -67,8 +67,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
 
     void handleAsyncUpdate() override;
 
-    void populateForStreaming(SurgeSynthesizer *s);
-    void populateFromStreaming(SurgeSynthesizer *s);
+    void populateForStreaming(SurgeSynthesizer *synthesizer);
+    void populateFromStreaming(SurgeSynthesizer *synthesizer);
 
     void beginParameterEdit(Parameter *p);
     void endParameterEdit(Parameter *p);
@@ -144,7 +144,7 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     SurgeSynthProcessor &processor;
 
   private:
-    std::unique_ptr<SurgeGUIEditor> sge;
+    std::unique_ptr<SurgeGUIEditor> surgeEditor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SurgeSynthEditor)
 };

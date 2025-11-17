@@ -160,7 +160,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     topLevelContainer = std::make_unique<juce::Component>();
     addAndMakeVisible(*topLevelContainer);
 
-    sge = std::make_unique<SurgeGUIEditor>(this, processor.surge.get());
+    surgeEditor = std::make_unique<SurgeGUIEditor>(this, processor.surge.get());
 
     auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
                                                        Surge::Storage::MiddleC, 1);
@@ -203,7 +203,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     suspedal = std::move(sp);
 
     tempoTypein = std::make_unique<juce::TextEditor>("Tempo");
-    tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(9));
+    tempoTypein->setFont(surgeEditor->currentSkin->fontManager->getLatoAtSize(9));
     tempoTypein->setInputRestrictions(3, "0123456789");
     tempoTypein->setSelectAllWhenFocused(true);
     tempoTypein->onReturnKey = [this]() {
@@ -226,7 +226,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     topLevelContainer->addChildComponent(*sustainLabel);
     topLevelContainer->addChildComponent(*tempoTypein);
 
-    drawExtendedControls = sge->getShowVirtualKeyboard();
+    drawExtendedControls = surgeEditor->getShowVirtualKeyboard();
 
     bool addTempo = processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone;
     int yExtra = 0;
@@ -253,9 +253,9 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     // add the bottom right corner resizer only for VST2
     setResizable(true, processor.wrapperType == juce::AudioProcessor::wrapperType_VST);
 
-    sge->audioLatencyNotified = processor.inputIsLatent;
+    surgeEditor->audioLatencyNotified = processor.inputIsLatent;
     if (juce::Desktop::getInstance().isHeadless() == false)
-        sge->open(nullptr);
+        surgeEditor->open(nullptr);
 
     idleTimer = std::make_unique<IdleTimer>(this);
     idleTimer->startTimer(1000 / 60);
@@ -264,16 +264,16 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
 SurgeSynthEditor::~SurgeSynthEditor()
 {
     idleTimer->stopTimer();
-    sge->close();
+    surgeEditor->close();
 
-    if (sge->bitmapStore)
+    if (surgeEditor->bitmapStore)
     {
-        sge->bitmapStore->clearAllLoadedBitmaps();
+        surgeEditor->bitmapStore->clearAllLoadedBitmaps();
     }
 
     surgeLF->removeStorage(&(processor.surge->storage));
 
-    sge.reset(nullptr);
+    surgeEditor.reset(nullptr);
 }
 
 void SurgeSynthEditor::setVKBLayout(const std::string layout)
@@ -340,7 +340,7 @@ void SurgeSynthEditor::paint(juce::Graphics &g)
 
 void SurgeSynthEditor::idle()
 {
-    sge->idle();
+    surgeEditor->idle();
 
     if (processor.surge->refresh_vkb)
     {
@@ -400,12 +400,12 @@ void SurgeSynthEditor::reapplySurgeComponentColours()
 void SurgeSynthEditor::resized()
 {
     topLevelContainer->setBounds(getLocalBounds());
-    drawExtendedControls = sge->getShowVirtualKeyboard();
+    drawExtendedControls = surgeEditor->getShowVirtualKeyboard();
 
     auto w = getWidth();
     auto h =
         getHeight() -
-        (drawExtendedControls ? 0.01 * sge->getZoomFactor() * extraYSpaceForVirtualKeyboard : 0);
+        (drawExtendedControls ? 0.01 * surgeEditor->getZoomFactor() * extraYSpaceForVirtualKeyboard : 0);
 
     if (Surge::GUI::getIsStandalone())
     {
@@ -418,22 +418,22 @@ void SurgeSynthEditor::resized()
                 if (cdw->isFullScreen())
                 {
                     auto b = getLocalBounds();
-                    auto xw = 1.f * sge->getWindowSizeX() / b.getWidth();
+                    auto xw = 1.f * surgeEditor->getWindowSizeX() / b.getWidth();
                     auto xh = 1.f *
-                              (sge->getWindowSizeY() +
+                              (surgeEditor->getWindowSizeY() +
                                (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0)) /
                               b.getHeight();
 
                     auto nz = std::min(1.0 / xw, 1.0 / xh);
-                    auto snz = nz / sge->getZoomFactor() * 100.f;
+                    auto snz = nz / surgeEditor->getZoomFactor() * 100.f;
 
                     topLevelContainer->setTransform(juce::AffineTransform().scaled(snz));
 
                     // target width
-                    auto tw = sge->getWindowSizeX() * sge->getZoomFactor() * 0.01 * snz;
-                    auto th = (sge->getWindowSizeY() +
+                    auto tw = surgeEditor->getWindowSizeX() * surgeEditor->getZoomFactor() * 0.01 * snz;
+                    auto th = (surgeEditor->getWindowSizeY() +
                                (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0)) *
-                              sge->getZoomFactor() * 0.01 * snz;
+                              surgeEditor->getZoomFactor() * 0.01 * snz;
 
                     auto pw = (b.getWidth() - tw) / 2.0;
                     auto ph = (b.getHeight() - th) / 2.0;
@@ -442,7 +442,7 @@ void SurgeSynthEditor::resized()
                     if (getConstrainer())
                         getConstrainer()->setFixedAspectRatio(0.f);
 
-                    sge->moveTopLeftTo(std::round(pw / snz), std::round(ph / snz));
+                    surgeEditor->moveTopLeftTo(std::round(pw / snz), std::round(ph / snz));
                     return;
                 }
                 comp = nullptr;
@@ -453,17 +453,17 @@ void SurgeSynthEditor::resized()
             }
         }
 
-        sge->moveTopLeftTo(0, 0);
+        surgeEditor->moveTopLeftTo(0, 0);
     }
 
     topLevelContainer->setTransform(juce::AffineTransform());
 
     auto b = getLocalBounds();
-    auto wR = 1.0 * w / sge->getWindowSizeX();
-    auto hR = 1.0 * h / sge->getWindowSizeY();
+    auto wR = 1.0 * w / surgeEditor->getWindowSizeX();
+    auto hR = 1.0 * h / surgeEditor->getWindowSizeY();
 
-    auto ar = 1.f * sge->getWindowSizeX() /
-              (sge->getWindowSizeY() + (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0));
+    auto ar = 1.f * surgeEditor->getWindowSizeX() /
+              (surgeEditor->getWindowSizeY() + (drawExtendedControls ? extraYSpaceForVirtualKeyboard : 0));
     if (getConstrainer())
         getConstrainer()->setFixedAspectRatio(ar);
 
@@ -473,9 +473,9 @@ void SurgeSynthEditor::resized()
     if ((wR - 1) * (hR - 1) < 0)
         zfn = std::min(zfn, 1.0);
 
-    zfn = 100.0 * zfn / sge->getZoomFactor();
+    zfn = 100.0 * zfn / surgeEditor->getZoomFactor();
 
-    float applyZoomFactor = sge->getZoomFactor() * 0.01;
+    float applyZoomFactor = surgeEditor->getZoomFactor() * 0.01;
     if (!rezoomGuard)
         applyZoomFactor *= zfn;
 
@@ -483,7 +483,7 @@ void SurgeSynthEditor::resized()
 
     if (drawExtendedControls)
     {
-        auto y = sge->getWindowSizeY();
+        auto y = surgeEditor->getWindowSizeY();
         auto x = addTempo ? 50 : 0;
         auto wheels = 32;
         auto margin = 6;
@@ -493,7 +493,7 @@ void SurgeSynthEditor::resized()
 
         auto xf = juce::AffineTransform().scaled(applyZoomFactor);
         auto r = juce::Rectangle<int>(x + wheels + margin, y,
-                                      sge->getWindowSizeX() - x - wheels - margin,
+                                      surgeEditor->getWindowSizeX() - x - wheels - margin,
                                       extraYSpaceForVirtualKeyboard);
 
         keyboard->setBounds(r);
@@ -512,7 +512,7 @@ void SurgeSynthEditor::resized()
         if (addTempo)
         {
             tempoLabel->setBounds(4, y, x - 8, tempoHeight);
-            tempoLabel->setFont(sge->currentSkin->fontManager->getLatoAtSize(8, juce::Font::bold));
+            tempoLabel->setFont(surgeEditor->currentSkin->fontManager->getLatoAtSize(8, juce::Font::bold));
             tempoLabel->setJustificationType(juce::Justification::centred);
             tempoLabel->setTransform(xf);
             tempoLabel->setVisible(addTempo);
@@ -520,7 +520,7 @@ void SurgeSynthEditor::resized()
             tempoTypein->setBounds(4, y + tempoHeight, x - 8, typeinHeight);
             tempoTypein->setText(
                 std::to_string((int)(processor.surge->storage.temposyncratio * 120)));
-            tempoTypein->setFont(sge->currentSkin->fontManager->getLatoAtSize(9));
+            tempoTypein->setFont(surgeEditor->currentSkin->fontManager->getLatoAtSize(9));
             tempoTypein->setIndents(4, -1);
             tempoTypein->setJustification(juce::Justification::centred);
             tempoTypein->setTransform(xf);
@@ -530,7 +530,7 @@ void SurgeSynthEditor::resized()
         auto sml = juce::Rectangle<int>(4, y + tempoBlockHeight, x - 8, tempoHeight);
         sml.translate(0, addTempo ? 0 : noTempoSusYOffset);
         sustainLabel->setBounds(sml);
-        sustainLabel->setFont(sge->currentSkin->fontManager->getLatoAtSize(8, juce::Font::bold));
+        sustainLabel->setFont(surgeEditor->currentSkin->fontManager->getLatoAtSize(8, juce::Font::bold));
         sustainLabel->setJustificationType(juce::Justification::centred);
         sustainLabel->setTransform(xf);
         sustainLabel->setVisible(true);
@@ -552,7 +552,7 @@ void SurgeSynthEditor::resized()
     if (zfn != 1.0 && rezoomGuard == 0)
     {
         auto br = BlockRezoom(this);
-        sge->setZoomFactor(round(sge->getZoomFactor() * zfn), false);
+        surgeEditor->setZoomFactor(round(surgeEditor->getZoomFactor() * zfn), false);
     }
 }
 
@@ -577,16 +577,16 @@ void SurgeSynthEditor::parentHierarchyChanged()
 
 void SurgeSynthEditor::IdleTimer::timerCallback() { ed->idle(); }
 
-void SurgeSynthEditor::populateForStreaming(SurgeSynthesizer *s)
+void SurgeSynthEditor::populateForStreaming(SurgeSynthesizer *synthesizer)
 {
-    if (sge)
-        sge->populateDawExtraState(s);
+    if (surgeEditor)
+        surgeEditor->populateDawExtraState(synthesizer);
 }
 
-void SurgeSynthEditor::populateFromStreaming(SurgeSynthesizer *s)
+void SurgeSynthEditor::populateFromStreaming(SurgeSynthesizer *synthesizer)
 {
-    if (sge)
-        sge->loadFromDawExtraState(s);
+    if (surgeEditor)
+        surgeEditor->loadFromDawExtraState(synthesizer);
 }
 
 bool SurgeSynthEditor::isInterestedInFileDrag(const juce::StringArray &files)
@@ -596,7 +596,7 @@ bool SurgeSynthEditor::isInterestedInFileDrag(const juce::StringArray &files)
 
     for (auto i = files.begin(); i != files.end(); ++i)
     {
-        if (sge->canDropTarget(i->toStdString()))
+        if (surgeEditor->canDropTarget(i->toStdString()))
             return true;
     }
     return false;
@@ -609,26 +609,26 @@ void SurgeSynthEditor::filesDropped(const juce::StringArray &files, int x, int y
 
     for (auto i = files.begin(); i != files.end(); ++i)
     {
-        if (sge->canDropTarget(i->toStdString()))
-            sge->onDrop(i->toStdString());
+        if (surgeEditor->canDropTarget(i->toStdString()))
+            surgeEditor->onDrop(i->toStdString());
     }
 }
 
-void SurgeSynthEditor::beginParameterEdit(Parameter *p)
+void SurgeSynthEditor::beginParameterEdit(Parameter *parameter)
 {
     // std::cout << "BEGIN EDIT " << p->get_name() << std::endl;
-    auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+    auto par = processor.paramsByID[processor.surge->idForParameter(parameter)];
     par->inEditGesture = true;
     par->beginChangeGesture();
 }
 
-void SurgeSynthEditor::endParameterEdit(Parameter *p)
+void SurgeSynthEditor::endParameterEdit(Parameter *parameter)
 {
-    auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+    auto par = processor.paramsByID[processor.surge->idForParameter(parameter)];
     par->inEditGesture = false;
     par->endChangeGesture();
     if (fireListenersOnEndEdit)
-        processor.paramChangeToListeners(p);
+        processor.paramChangeToListeners(parameter);
 }
 
 void SurgeSynthEditor::beginMacroEdit(long macroNum)
@@ -701,17 +701,17 @@ juce::PopupMenu SurgeSynthEditor::modifyHostMenu(juce::PopupMenu menu)
     return menu;
 }
 
-juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
+juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *parameter)
 {
-    if (sge)
+    if (surgeEditor)
     {
-        if (sge->synth->hostProgram.compare("Unknown") == 0)
+        if (surgeEditor->synth->hostProgram.compare("Unknown") == 0)
         {
             return juce::PopupMenu();
         }
     }
 
-    auto par = processor.paramsByID[processor.surge->idForParameter(p)];
+    auto par = processor.paramsByID[processor.surge->idForParameter(parameter)];
 
     if (auto *c = getHostContext())
     {
@@ -730,9 +730,9 @@ juce::PopupMenu SurgeSynthEditor::hostMenuFor(Parameter *p)
 
 juce::PopupMenu SurgeSynthEditor::hostMenuForMacro(int macro)
 {
-    if (sge)
+    if (surgeEditor)
     {
-        if (sge->synth->hostProgram.compare("Unknown") == 0)
+        if (surgeEditor->synth->hostProgram.compare("Unknown") == 0)
         {
             return juce::PopupMenu();
         }
@@ -768,10 +768,10 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
      * keypress but only if the keypress is not in a text edit) but only forward keystate
      * false if I have sent at least one key through this fallthrough mechanism. So:
      */
-    if (sge->getShowVirtualKeyboard())
+    if (surgeEditor->getShowVirtualKeyboard())
     {
-        bool shortcutsUsed = sge->getUseKeyboardShortcuts();
-        auto mapMatch = sge->keyMapManager->matches(key);
+        bool shortcutsUsed = surgeEditor->getUseKeyboardShortcuts();
+        auto mapMatch = surgeEditor->keyMapManager->matches(key);
 
         if (mapMatch.has_value())
         {
@@ -818,7 +818,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
             return true;
         }
 
-        if (sge->shouldForwardKeysToVKB() && orig != keyboard.get())
+        if (surgeEditor->shouldForwardKeysToVKB() && orig != keyboard.get())
         {
             return keyboard->keyPressed(key);
         }
@@ -829,7 +829,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
 
 bool SurgeSynthEditor::keyStateChanged(bool isKeyDown, juce::Component *originatingComponent)
 {
-    if (sge->getShowVirtualKeyboard() && sge->shouldForwardKeysToVKB() &&
+    if (surgeEditor->getShowVirtualKeyboard() && surgeEditor->shouldForwardKeysToVKB() &&
         originatingComponent != keyboard.get())
     {
         return keyboard->keyStateChanged(isKeyDown);
@@ -838,7 +838,7 @@ bool SurgeSynthEditor::keyStateChanged(bool isKeyDown, juce::Component *originat
     return false;
 }
 
-void SurgeSynthEditor::setPitchModSustainGUI(int pitch, int mod, int sus)
+void SurgeSynthEditor::setPitchModSustainGUI(int pitch, int mod, int sustain)
 {
     auto pw = dynamic_cast<VKeyboardWheel *>(pitchwheel.get());
     if (pw)
@@ -855,7 +855,7 @@ void SurgeSynthEditor::setPitchModSustainGUI(int pitch, int mod, int sus)
     auto sw = dynamic_cast<VKeyboardSus *>(suspedal.get());
     if (sw)
     {
-        sw->isOn = sus > 64;
+        sw->isOn = sustain > 64;
         sw->repaint();
     }
 }
