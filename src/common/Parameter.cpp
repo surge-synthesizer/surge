@@ -484,7 +484,6 @@ bool Parameter::is_discrete_selection() const
     case ct_bonsai_sat_filter:
     case ct_bonsai_sat_mode:
     case ct_bonsai_noise_mode:
-    case ct_convolution_file:
         return true;
     default:
         break;
@@ -1391,11 +1390,11 @@ void Parameter::set_type(int ctrltype)
         val_default.f = 1.f;
         break;
 
-    case ct_convolution_file:
-        val_min.i = 0;
-        val_max.i = 1;
-        valtype = vt_int;
-        val_default.i = 0;
+    case ct_convolution_delay:
+        valtype = vt_float;
+        val_min.f = 0.f;
+        val_max.f = 1.f;
+        val_default.f = 0.f;
         break;
 
     case ct_none:
@@ -1747,6 +1746,13 @@ void Parameter::set_type(int ctrltype)
         snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "%%");
         snprintf(displayInfo.minLabel, DISPLAYINFO_TXT_SIZE, "Off");
         snprintf(displayInfo.maxLabel, DISPLAYINFO_TXT_SIZE, "On");
+        break;
+
+    case ct_convolution_delay:
+        displayType = LinearWithScale;
+        displayInfo.customFeatures |= ParamDisplayFeatures::kSwitchesFromSecToMillisec;
+        displayInfo.decimals = 2;
+        snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "s");
         break;
     }
 
@@ -4244,28 +4250,6 @@ std::string Parameter::get_display(bool external, float ef) const
             default: // 0b11
                 txt = "16k 8-bit Mono";
                 break;
-            }
-        }
-        break;
-        case ct_convolution_file:
-        {
-            // FIXME: Implement.
-            // If unloaded:
-            // 0 should be "None"
-            // 1 should be "Load"
-            // If loaded:
-            // 0 should be "Unload"
-            // 1 should be the name of the file / wtname.
-            // Gotta figure out a way to find loaded/unloaded.
-            // That's step 3, in Paul's 4-step he said:
-            // (4) In SurgeGUIEditorMenus or some such add the extra menu items you want
-            if (i == 0)
-            {
-                txt = "None";
-            }
-            else
-            {
-                txt = "Load";
             }
         }
         break;

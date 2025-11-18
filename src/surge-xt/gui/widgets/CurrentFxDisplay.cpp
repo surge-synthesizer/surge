@@ -353,6 +353,14 @@ bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
                   sync.user_data[2].as<float>().begin());
     }
 
+    // Copy existing parameters to the reload parameter storage, so when we
+    // reload everything doesn't jump.
+    sync.type = storage_->getPatch().fx[current_fx_].type;
+    sync.return_level = storage_->getPatch().fx[current_fx_].return_level;
+    for (std::size_t i = 0; i < n_fx_params; i++)
+    {
+        sync.p[i] = storage_->getPatch().fx[current_fx_].p[i];
+    }
     editor_->synth->fx_reload[current_fx_] = true;
     editor_->synth->load_fx_needed = true;
     std::cout << "Reload set for " << current_fx_ << std::endl;

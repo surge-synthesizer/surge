@@ -81,15 +81,17 @@ void ConvolutionEffect::init_ctrltypes()
     Effect::init_ctrltypes();
 
     fxdata->p[convolution_delay].set_name("Delay");
-    fxdata->p[convolution_delay].set_type(ct_envtime);
+    fxdata->p[convolution_delay].set_type(ct_convolution_delay);
     fxdata->p[convolution_delay].val_min.f = 0.f;
     fxdata->p[convolution_delay].val_max.f = 1.f;
+    fxdata->p[convolution_delay].val_default.f = 0.f;
     fxdata->p[convolution_delay].posy_offset = 3;
 
     fxdata->p[convolution_size].set_name("Size");
     fxdata->p[convolution_size].set_type(ct_percent);
     fxdata->p[convolution_size].val_min.f = 0.5f;
     fxdata->p[convolution_size].val_max.f = 2.f;
+    fxdata->p[convolution_size].val_default.f = 1.f;
     fxdata->p[convolution_size].posy_offset = 3;
 
     fxdata->p[convolution_tilt_center].set_name("Tilt Center");
@@ -100,6 +102,7 @@ void ConvolutionEffect::init_ctrltypes()
     fxdata->p[convolution_tilt_slope].set_type(ct_decibel_narrow_deactivatable);
     fxdata->p[convolution_tilt_slope].val_min.f = -18.;
     fxdata->p[convolution_tilt_slope].val_max.f = 18.;
+    fxdata->p[convolution_tilt_slope].val_default.f = 0.f;
     fxdata->p[convolution_tilt_slope].posy_offset = 3;
 
     fxdata->p[convolution_locut_freq].set_name("Low Cut");
@@ -111,6 +114,7 @@ void ConvolutionEffect::init_ctrltypes()
 
     fxdata->p[convolution_mix].set_name("Mix");
     fxdata->p[convolution_mix].set_type(ct_percent);
+    fxdata->p[convolution_mix].val_default.f = 1.f;
     fxdata->p[convolution_mix].posy_offset = 3;
 }
 
@@ -118,18 +122,15 @@ void ConvolutionEffect::init_default_values()
 {
     std::cout << "In init_default_values." << std::endl;
     fxdata->p[convolution_delay].val.f = 0.f;
-    fxdata->p[convolution_delay].val_default.f = 0.f;
     fxdata->p[convolution_size].val.f = 1.f;
-    fxdata->p[convolution_size].val_default.f = 1.f;
     fxdata->p[convolution_tilt_center].deactivated = true;
     fxdata->p[convolution_tilt_slope].val.f = 0.f;
-    fxdata->p[convolution_tilt_slope].val_default.f = 0.f;
     fxdata->p[convolution_tilt_slope].deactivated = true;
     fxdata->p[convolution_locut_freq].val.f = -3.f * 12.f;
     fxdata->p[convolution_locut_freq].deactivated = true;
     fxdata->p[convolution_hicut_freq].val.f = -3.f * 12.f;
     fxdata->p[convolution_hicut_freq].deactivated = true;
-    fxdata->p[convolution_mix].val.f = 0.f;
+    fxdata->p[convolution_mix].val.f = 1.f;
 }
 
 void ConvolutionEffect::process(float *dataL, float *dataR)

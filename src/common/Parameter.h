@@ -216,7 +216,7 @@ enum ctrltypes
     ct_floaty_warp_time,
     ct_floaty_delay_time,
     ct_floaty_delay_playrate,
-    ct_convolution_file,
+    ct_convolution_delay,
 
     num_ctrltypes,
 };

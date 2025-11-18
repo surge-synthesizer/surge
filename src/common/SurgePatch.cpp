@@ -1299,6 +1299,7 @@ void *SurgePatch::save_arbitrary_block_storage()
     {
         for (int i = 0; i < this->fx[fx].user_data.size(); i++)
         {
+            std::cout << "Setting blob id " << this->fx[fx].user_data[i].id << std::endl;
             binn_map_set_blob(map, this->fx[fx].user_data[i].id, this->fx[fx].user_data[i].data.data(), this->fx[fx].user_data[i].data.size());
         }
     }
@@ -1328,6 +1329,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
             }
             s.data.reset(sz);
             memcpy(s.data.data(), pos, sz);
+            std::cout << "Loaded blob id " << this->fx[fx].user_data[i].id << std::endl;
         }
     }
     return binn_size(data);
@@ -2454,7 +2456,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
-    load_arbitrary_block_storage(patch);
+    load_arbitrary_block_storage_xml(patch);
 
     // reset stepsequences first
     for (auto &stepsequence : stepsequences)
