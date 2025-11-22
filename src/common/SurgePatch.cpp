@@ -1199,7 +1199,19 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 }
             }
         }
-        dr += load_arbitrary_block_storage(dr);
+#if 0
+        if (dr < end)
+        {
+            dr += load_arbitrary_block_storage(dr);
+        }
+        else
+        {
+            for (int i = 0; i < n_fx_slots; i++)
+            {
+                this->fx[i].user_data.reset(0);
+            }
+        }
+#endif
     }
     else
     {
@@ -1299,7 +1311,6 @@ void *SurgePatch::save_arbitrary_block_storage()
     {
         for (int i = 0; i < this->fx[fx].user_data.size(); i++)
         {
-            std::cout << "Setting blob id " << this->fx[fx].user_data[i].id << std::endl;
             binn_map_set_blob(map, this->fx[fx].user_data[i].id, this->fx[fx].user_data[i].data.data(), this->fx[fx].user_data[i].data.size());
         }
     }
@@ -1313,6 +1324,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
         // Temporary for diagnostics. This will happen all the time for a patch
         // that has no binn data in it.
         std::cout << "Failed to allocate FX data." << std::endl;
+        return 0;
     }
 
     for (int fx = 0; fx < n_fx_slots; fx++)
@@ -1326,12 +1338,19 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
             if (!success)
             {
                 storage->reportError("Failed to load FX data.", "Patch Load Error");
+                sz = 0;
+            }
+            else
+            {
+                std::cout << "We have sz = " << sz << " with expected size " << s.data.size()
+                          << std::endl;
             }
             s.data.reset(sz);
             memcpy(s.data.data(), pos, sz);
             std::cout << "Loaded blob id " << this->fx[fx].user_data[i].id << std::endl;
         }
     }
+
     return binn_size(data);
 }
 
@@ -2456,7 +2475,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
-    load_arbitrary_block_storage_xml(patch);
+    //load_arbitrary_block_storage_xml(patch);
 
     // reset stepsequences first
     for (auto &stepsequence : stepsequences)

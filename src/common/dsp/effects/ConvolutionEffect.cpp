@@ -20,6 +20,7 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "ConvolutionEffect.h"
+#include <cmath>
 #include <iostream>
 #include <samplerate.h>
 
@@ -29,7 +30,6 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
     : Effect(storage, fxdata, pd), initialized_(false), lc_(storage), hc_(storage),
       delayL_(storage->sinctable), delayR_(storage->sinctable), delayTime_(.001)
 {
-    std::cout << "In constructor." << std::endl;
     mix_.set_blocksize(BLOCK_SIZE);
 }
 
@@ -62,7 +62,6 @@ int ConvolutionEffect::group_label_ypos(int id)
 
 void ConvolutionEffect::init()
 {
-    std::cout << "In init; n_user_datas = " << fxdata->user_data.size() << std::endl;
     if (fxdata->user_data.size() < 2)
         return;
 
@@ -77,7 +76,6 @@ void ConvolutionEffect::init()
 
 void ConvolutionEffect::init_ctrltypes()
 {
-    std::cout << "In init_ctrltypes." << std::endl;
     Effect::init_ctrltypes();
 
     fxdata->p[convolution_delay].set_name("Delay");
@@ -120,7 +118,6 @@ void ConvolutionEffect::init_ctrltypes()
 
 void ConvolutionEffect::init_default_values()
 {
-    std::cout << "In init_default_values." << std::endl;
     fxdata->p[convolution_delay].val.f = 0.f;
     fxdata->p[convolution_size].val.f = 1.f;
     fxdata->p[convolution_tilt_center].deactivated = true;
@@ -135,7 +132,6 @@ void ConvolutionEffect::init_default_values()
 
 void ConvolutionEffect::process(float *dataL, float *dataR)
 {
-    // std::cout << "In process" << std::endl;
     if (!initialized_)
         return;
 
@@ -155,19 +151,23 @@ void ConvolutionEffect::process(float *dataL, float *dataR)
     {
         for (std::size_t i = 0; i < BLOCK_SIZE; i++)
         {
-            delayTime_.process();
-            dataL[i] = delayL_.read(delayTime_.v);
-            dataR[i] = delayR_.read(delayTime_.v);
+            delayedL_[i] = delayL_.readLinear(delayTime_.v + (BLOCK_SIZE - 1 - i));
+            delayedR_[i] = delayR_.readLinear(delayTime_.v + (BLOCK_SIZE - 1 - i));
         }
     }
+    else
+    {
+        std::copy(dataL, dataL + BLOCK_SIZE, delayedL_.begin());
+        std::copy(dataR, dataR + BLOCK_SIZE, delayedR_.begin());
+    }
 
-    convolverL_.process(std::span<float>(dataL, BLOCK_SIZE), workL_);
-    convolverR_.process(std::span<float>(dataR, BLOCK_SIZE), workR_);
+    convolverL_.process(delayedL_, workL_);
+    convolverR_.process(delayedR_, workR_);
     if (!fxdata->p[convolution_locut_freq].deactivated)
         lc_.process_block(workL_.data(), workR_.data());
     if (!fxdata->p[convolution_hicut_freq].deactivated)
         hc_.process_block(workL_.data(), workR_.data());
-    mix_.fade_2_blocks_inplace(dataL, workL_.data(), dataR, workR_.data(), BLOCK_SIZE_QUAD);
+    mix_.fade_2_blocks_inplace(dataL, workL_.data(), dataR, workR_.data());
 }
 
 void ConvolutionEffect::prep_ir()
@@ -179,7 +179,6 @@ void ConvolutionEffect::prep_ir()
     const float outputRate = storage->samplerate * fxdata->p[convolution_size].val.f;
     const float ratio = outputRate / inputRate;
     SRC_DATA rs;
-    std::cout << "Sample rate conversion ratio: " << ratio << std::endl;
     rs.src_ratio = ratio;
 
     initialized_ = false;
@@ -196,12 +195,19 @@ void ConvolutionEffect::prep_ir()
     {
         std::cout << "Error in sample rate conversion process, not running convolution. "
                   << src_strerror(rv) << std::endl;
+        std::abort();
         return;
+    }
+    for (int i = 0; i < irL_.size(); i++)
+    {
+        // TODO: rescale IR
+        //irL_[i] /= sum2;
     }
     s = convolverL_.init(BLOCK_SIZE, 256, irL_);
     if (!s)
     {
         std::cout << "Error initializing left convolver, not running convolution." << std::endl;
+        std::abort();
         return;
     }
 
@@ -229,10 +235,17 @@ void ConvolutionEffect::prep_ir()
             return;
         }
     }
+    else
+    {
+        s = convolverR_.init(BLOCK_SIZE, 256, irL_);
+        if (!s)
+        {
+            std::cout << "Error initializing right convolver, not running convolution." << std::endl;
+            return;
+        }
+    }
 
     initialized_ = true;
-    std::cout << "Convolver initialized; data was of length "
-              << irL_.size() << std::endl;
 
     old_samplerate_ = storage->samplerate;
     old_convolution_size_ = fxdata->p[convolution_size].val.f;

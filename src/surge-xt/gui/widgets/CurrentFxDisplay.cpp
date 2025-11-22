@@ -308,7 +308,6 @@ juce::Rectangle<int> CurrentFxDisplay::fxRect()
 
 bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
 {
-    std::cout << "Loading wav file." << std::endl;
     juce::WavAudioFormat format;
     std::unique_ptr<juce::MemoryMappedAudioFormatReader> reader(
         format.createMemoryMappedReader(file));
@@ -363,14 +362,12 @@ bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
     }
     editor_->synth->fx_reload[current_fx_] = true;
     editor_->synth->load_fx_needed = true;
-    std::cout << "Reload set for " << current_fx_ << std::endl;
     return true;
 }
 
 // File drag and drop for convolution reverb.
 bool CurrentFxDisplay::canDropTarget(const juce::String &file)
 {
-    std::cout << "Checking for file drag interest" << std::endl;
     switch (storage_->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:

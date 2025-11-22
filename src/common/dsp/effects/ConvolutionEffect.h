@@ -62,10 +62,10 @@ class ConvolutionEffect : public Effect
     bool initialized_;
     pffft::TwoStageConvolver convolverL_;
     pffft::TwoStageConvolver convolverR_;
-    pffft::TwoStageConvolver xconvolver_L_;  // fade-in
-    pffft::TwoStageConvolver xconvolver_R_;  // fade-in
     alignas(16) std::array<float, BLOCK_SIZE> workL_;
     alignas(16) std::array<float, BLOCK_SIZE> workR_;
+    alignas(16) std::array<float, BLOCK_SIZE> delayedL_;
+    alignas(16) std::array<float, BLOCK_SIZE> delayedR_;
     lipol_ps_blocksz mix_;
     BiquadFilter lc_, hc_;
 
