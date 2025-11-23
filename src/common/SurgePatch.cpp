@@ -1199,10 +1199,9 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 }
             }
         }
-#if 0
         if (dr < end)
         {
-            dr += load_arbitrary_block_storage(dr);
+            dr += load_arbitrary_block_storage(dr, ((char *)end - dr));
         }
         else
         {
@@ -1211,7 +1210,6 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 this->fx[i].user_data.reset(0);
             }
         }
-#endif
     }
     else
     {
@@ -1317,15 +1315,39 @@ void *SurgePatch::save_arbitrary_block_storage()
     return map;
 }
 
-unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
+unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::size_t remainder)
 {
-    if (!binn_is_struct(data))
+    if (remainder < sizeof(binn_struct))
+    {
+        // temporary diagnostic
+        std::cout << "No binn in patch" << std::endl;
+        return 0;
+    }
+
+    // Patches can be arbitrarily sized, and binn needs the struct to start on
+    // the normal alignment.
+    sst::cpputils::DynArray<std::uint8_t> moved(remainder);
+    std::memcpy(moved.data(), data, remainder);
+    data = moved.data();
+
+    int sz = 0;
+    if (!binn_is_valid_ex(data, NULL, NULL, &sz))
     {
         // Temporary for diagnostics. This will happen all the time for a patch
         // that has no binn data in it.
         std::cout << "Failed to allocate FX data." << std::endl;
+
+        // If this happens, we need to wipe all the FX user data so no disasters
+        // happen.
+        for (int fx = 0; fx < n_fx_slots; fx++)
+        {
+            this->fx[fx].user_data.reset(0);
+        }
+
         return 0;
     }
+    std::cout << "Discovered sz is " << sz << std::endl;
+    binn *b = binn_open_ex(data, sz);
 
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
@@ -1334,7 +1356,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
             ArbitraryBlockStorage &s = this->fx[fx].user_data[i];
             void *pos;
             int sz;
-            bool success = binn_map_get_blob(data, s.id, &pos, &sz);
+            bool success = binn_map_get_blob(b, s.id, &pos, &sz);
             if (!success)
             {
                 storage->reportError("Failed to load FX data.", "Patch Load Error");
@@ -1351,7 +1373,8 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data)
         }
     }
 
-    return binn_size(data);
+    binn_free(b);
+    return sz;
 }
 
 Parameter *SurgePatch::parameterFromOSCName(std::string oscName)
@@ -2475,7 +2498,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
-    //load_arbitrary_block_storage_xml(patch);
+    load_arbitrary_block_storage_xml(patch);
 
     // reset stepsequences first
     for (auto &stepsequence : stepsequences)

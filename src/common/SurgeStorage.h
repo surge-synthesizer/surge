@@ -1232,7 +1232,7 @@ class SurgePatch
     void formulaFromXMLElement(FormulaModulatorStorage *ms, TiXmlElement *parent) const;
 
     void load_patch(const void *data, int size, bool preset);
-    unsigned int load_arbitrary_block_storage(const void *data);
+    unsigned int load_arbitrary_block_storage(const void *data, std::size_t remainder);
     void load_arbitrary_block_storage_xml(const TiXmlElement *patch);
     unsigned int save_patch(void **data);
     void *save_arbitrary_block_storage();
