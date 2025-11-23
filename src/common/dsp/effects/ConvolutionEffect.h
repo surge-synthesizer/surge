@@ -26,6 +26,7 @@
 #include "Effect.h"
 #include <filters/BiquadFilter.h>
 #include <sst/basic-blocks/dsp/SSESincDelayLine.h>
+#include <sst/filters/CytomicTilt.h>
 #include <vembertech/lipol.h>
 
 #include <fft_convolve.hpp>
@@ -67,6 +68,7 @@ class ConvolutionEffect : public Effect
     alignas(16) std::array<float, BLOCK_SIZE> delayedR_;
     lipol_ps_blocksz mix_;
     BiquadFilter lc_, hc_;
+    sst::filters::CytomicTilt tilt_;
 
     using delay_t = sst::basic_blocks::dsp::SSESincDelayLine<1 << 19>;
     delay_t delayL_;
