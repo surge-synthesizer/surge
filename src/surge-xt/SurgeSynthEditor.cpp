@@ -619,7 +619,8 @@ void SurgeSynthEditor::filesDropped(const juce::StringArray &files, int x, int y
 
     for (auto i = files.begin(); i != files.end(); ++i)
     {
-        if (fxw->canDropTarget(*i) && fxw->reallyContains(fxw->getLocalPoint(this, juce::Point<int>(x, y)), true))
+        if (fxw->canDropTarget(*i) &&
+            fxw->reallyContains(fxw->getLocalPoint(this, juce::Point<int>(x, y)), true))
             fxw->onDrop(*i);
         else if (sge->canDropTarget(i->toStdString()))
             sge->onDrop(i->toStdString());

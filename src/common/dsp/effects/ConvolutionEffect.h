@@ -83,4 +83,4 @@ class ConvolutionEffect : public Effect
     float old_convolution_size_;
 };
 
-#endif  // SURGE_SRC_COMMON_DSP_EFFECTS_CONVOLUTIONEFFECT_H
+#endif // SURGE_SRC_COMMON_DSP_EFFECTS_CONVOLUTIONEFFECT_H
