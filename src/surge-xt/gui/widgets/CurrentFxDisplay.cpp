@@ -327,29 +327,23 @@ bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
     // Convolution only uses up to the first three ArbitraryBlockStorage.
     std::string name = juce::File(file).getFileNameWithoutExtension().toStdString();
     constexpr int sz = sizeof(float);
-    sync.user_data.reset(reader->numChannels + 1);
+    sync.user_data.clear();
 
-    // First item: the sample rate.
-    sync.user_data[0].id = storage_->getPatch().next_block_id();
-    sync.user_data[0].name = fmt::format("{}_samplerate", name);
-    sync.user_data[0].data.reset(sizeof(float));
-    sync.user_data[0].as<float>()[0] = static_cast<float>(reader->sampleRate);
+    // Filename
+    sync.user_data.emplace("irname", ArbitraryBlockStorage::from_string(name));
 
-    // Second item: mono channel or left channel.
-    sync.user_data[1].id = storage_->getPatch().next_block_id();
-    sync.user_data[1].name = fmt::format("{}_L", name);
-    sync.user_data[1].data.reset(sz * reader->lengthInSamples);
-    std::copy(buf.getReadPointer(0), buf.getReadPointer(0) + reader->lengthInSamples,
-              sync.user_data[1].as<float>().begin());
+    // Sample rate.
+    sync.user_data.emplace("samplerate", ArbitraryBlockStorage::from_float(reader->sampleRate));
 
-    // Third item: right channel, if it exists.
+    // Left channel (or mono channel, if it's the only one)
+    sync.user_data.emplace("left", ArbitraryBlockStorage::from_floats(std::span<const float>(
+                                       buf.getReadPointer(0), reader->lengthInSamples)));
+
+    // Right channel, if it exists.
     if (reader->numChannels == 2)
     {
-        sync.user_data[2].id = storage_->getPatch().next_block_id();
-        sync.user_data[2].name = fmt::format("{}_R", name);
-        sync.user_data[2].data.reset(sz * reader->lengthInSamples);
-        std::copy(buf.getReadPointer(1), buf.getReadPointer(1) + reader->lengthInSamples,
-                  sync.user_data[2].as<float>().begin());
+        sync.user_data.emplace("right", ArbitraryBlockStorage::from_floats(std::span<const float>(
+                                            buf.getReadPointer(1), reader->lengthInSamples)));
     }
 
     // Copy existing parameters to the reload parameter storage, so when we

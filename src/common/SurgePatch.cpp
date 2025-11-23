@@ -20,11 +20,15 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include <iostream>
+#include <list>
+#include <locale>
+#include <regex>
+
 #include "SurgeStorage.h"
 #include "Oscillator.h"
 #include "SurgeParamConfig.h"
 #include "Effect.h"
-#include <list>
 #include "MSEGModulationHelper.h"
 #include "FormulaModulationHelper.h"
 #include "DebugHelpers.h"
@@ -33,7 +37,6 @@
 #include "UserDefaults.h"
 #include "version.h"
 #include "fmt/core.h"
-#include <locale>
 #include <fmt/format.h>
 #include "UnitConversions.h"
 
@@ -1065,11 +1068,6 @@ void SurgePatch::copy_globaldata(pdata *d)
 }
 // pdata scenedata[n_scenes][n_scene_params];
 
-std::uint16_t SurgePatch::next_block_id()
-{
-    return block_id++;
-}
-
 void SurgePatch::update_controls(
     bool init,
     void *init_osc,     // init_osc is the pointer to the data structure of a particular osc to init
@@ -1203,13 +1201,6 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
         {
             dr += load_arbitrary_block_storage(dr, ((char *)end - dr));
         }
-        else
-        {
-            for (int i = 0; i < n_fx_slots; i++)
-            {
-                this->fx[i].user_data.reset(0);
-            }
-        }
     }
     else
     {
@@ -1304,13 +1295,16 @@ unsigned int SurgePatch::save_patch(void **data)
 // Returned as a void* to hide the binn type from SurgeStorage.h.
 void *SurgePatch::save_arbitrary_block_storage()
 {
-    binn *map = binn_map();
+    binn *map = binn_object();
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
-        for (int i = 0; i < this->fx[fx].user_data.size(); i++)
+        binn *fxmap = binn_object();
+        for (auto &kv : this->fx[fx].user_data)
         {
-            binn_map_set_blob(map, this->fx[fx].user_data[i].id, this->fx[fx].user_data[i].data.data(), this->fx[fx].user_data[i].data.size());
+            binn_object_set_blob(fxmap, kv.first.c_str(), kv.second.data(), kv.second.size());
         }
+        std::string key = fmt::format("fx{}", fx);
+        binn_object_set_object(map, key.c_str(), fxmap);
     }
     return map;
 }
@@ -1319,8 +1313,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
 {
     if (remainder < sizeof(binn_struct))
     {
-        // temporary diagnostic
-        std::cout << "No binn in patch" << std::endl;
+        // Old patch, no block storage.
         return 0;
     }
 
@@ -1333,43 +1326,59 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
     int sz = 0;
     if (!binn_is_valid_ex(data, NULL, NULL, &sz))
     {
-        // Temporary for diagnostics. This will happen all the time for a patch
-        // that has no binn data in it.
-        std::cout << "Failed to allocate FX data." << std::endl;
-
-        // If this happens, we need to wipe all the FX user data so no disasters
-        // happen.
-        for (int fx = 0; fx < n_fx_slots; fx++)
-        {
-            this->fx[fx].user_data.reset(0);
-        }
-
+        std::cerr << "Invalid binn, possibly corrupted patch." << std::endl;
         return 0;
     }
-    std::cout << "Discovered sz is " << sz << std::endl;
     binn *b = binn_open_ex(data, sz);
 
-    for (int fx = 0; fx < n_fx_slots; fx++)
+    std::regex fx_regex("fx([0-9]+)");
+    binn_iter outer;
+    binn obj;
+    char key[256];
+    binn_iter_init(&outer, b, BINN_OBJECT);
+    while (binn_object_next(&outer, key, &obj))
     {
-        for (std::size_t i = 0; i < this->fx[fx].user_data.size(); i++)
+        if (obj.type != BINN_OBJECT)
         {
-            ArbitraryBlockStorage &s = this->fx[fx].user_data[i];
-            void *pos;
-            int sz;
-            bool success = binn_map_get_blob(b, s.id, &pos, &sz);
-            if (!success)
+            std::cerr << "Binn value not an object, possible patch corruption." << std::endl;
+            continue;
+        }
+
+        std::cmatch m;
+        // Try deserializing FX.
+        if (std::regex_match(key, m, fx_regex))
+        {
+            int id = -1;
+            try
             {
-                storage->reportError("Failed to load FX data.", "Patch Load Error");
-                sz = 0;
+                id = std::stoi(m[1].str());
             }
-            else
+            catch (std::invalid_argument const &ex)
             {
-                std::cout << "We have sz = " << sz << " with expected size " << s.data.size()
-                          << std::endl;
+                std::cerr << "Error deserializing " << key << std::endl;
+                continue;
             }
-            s.data.reset(sz);
-            memcpy(s.data.data(), pos, sz);
-            std::cout << "Loaded blob id " << this->fx[fx].user_data[i].id << std::endl;
+
+            // Deserialize the FX data.
+            std::unordered_map<std::string, std::vector<std::uint8_t>> &arb =
+                this->fx[id].user_data;
+            binn_iter inner;
+            binn data;
+            char fxkey[256];
+            binn_iter_init(&inner, &obj, BINN_OBJECT);
+            while (binn_object_next(&inner, fxkey, &data))
+            {
+                if (data.type != BINN_BLOB)
+                {
+                    std::cerr << "Binn value for " << fxkey
+                              << " is not a blob, possible patch corruption." << std::endl;
+                }
+
+                std::string converted = std::string(fxkey);
+                std::vector<std::uint8_t> &vdata = arb[converted];
+                vdata.resize(binn_size(&data));
+                std::memcpy(vdata.data(), data.ptr, binn_size(&data));
+            }
         }
     }
 
@@ -2498,8 +2507,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
-    load_arbitrary_block_storage_xml(patch);
-
     // reset stepsequences first
     for (auto &stepsequence : stepsequences)
     {
@@ -2817,14 +2824,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     {
         storage->unstreamedTempo = -1.f;
     }
-
-    TiXmlElement *nextBlockId = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("nextBlockId"));
-    std::uint16_t id = 0;
-    if (nextBlockId)
-    {
-        id = static_cast<std::uint16_t>(std::stoul(nextBlockId->Attribute("id")));
-    }
-    block_id.store(id);
 
     dawExtraState.isPopulated = false;
     TiXmlElement *de = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("dawExtraState"));
@@ -3525,61 +3524,6 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
     }
 }
 
-// Allocates the arbitrary data slots as specified in the patch.
-void SurgePatch::load_arbitrary_block_storage_xml(const TiXmlElement *patch)
-{
-    // FX arbitrary data.
-    const TiXmlElement *efxd = TINYXML_SAFE_TO_ELEMENT(patch->FirstChild("extrafxdata"));
-    if (efxd)
-    {
-        for (const TiXmlElement *i = TINYXML_SAFE_TO_ELEMENT(efxd->FirstChild()); i; i = TINYXML_SAFE_TO_ELEMENT(i->NextSibling()))
-        {
-            int slot = std::atoi(i->Attribute("slot"));
-            std::size_t num = static_cast<std::size_t>(std::stoul(i->Attribute("nUserDatas")));
-            if (slot < 0 || slot >= n_fx_slots)
-            {
-                storage->reportError("Invalid value for fx slot",
-                                     "Patch Load Error");
-            }
-            else
-            {
-                fx[slot].user_data.reset(num);
-                // Initialize them all to an invalid reference in case the patch is corrupted or
-                // something.
-                for (std::size_t j = 0; j < num; j++)
-                {
-                    fx[slot].user_data[j].id = UINT16_MAX;
-                }
-                std::size_t count = 0;
-                for (const TiXmlElement *j = TINYXML_SAFE_TO_ELEMENT(i->FirstChild()); j; j = TINYXML_SAFE_TO_ELEMENT(j->NextSibling()))
-                {
-                    if (count > num)
-                    {
-                        storage->reportError("Patch specified more FX elements than its count.",
-                                             "Patch Load Error");
-                        break;
-                    }
-                    fx[slot].user_data[count].id =
-                        static_cast<std::uint16_t>(std::stoul(j->Attribute("id")));
-                    //fx[slot].user_data[count].data.reset(
-                    //    static_cast<std::uint32_t>(std::stoul(j->Attribute("dataSize"))));
-                    if (j->Attribute("name"))
-                    {
-                        std::cout << "success branch" << std::endl;
-                        fx[slot].user_data[count].name = j->Attribute("name");
-                    }
-                    else
-                    {
-                        std::cout << "else branch" << std::endl;
-                        fx[slot].user_data[count].name = "";
-                    }
-                    count++;
-                }
-            }
-        }
-    }
-}
-
 struct srge_header
 {
     int revision;
@@ -3654,8 +3598,8 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                     {
                         if (r->at(b).destination_id == p_id)
                         {
-                            // if you add something here make sure to replicated it in the global
-                            // below
+                            // if you add something here make sure to replicated it in the
+                            // global below
                             TiXmlElement mr("modrouting");
                             mr.SetAttribute("source", r->at(b).source_id);
                             mr.SetAttribute("depth", float_to_clocalestr(r->at(b).depth));
@@ -3814,6 +3758,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     }
     patch.InsertEndChild(eod);
 
+#if 0
     TiXmlElement efd("extrafxdata");
     for (int fx = 0; fx < n_fx_slots; fx++)
     {
@@ -3831,6 +3776,7 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         efd.InsertEndChild(fxe);
     }
     patch.InsertEndChild(efd);
+#endif
 
     TiXmlElement ss("stepsequences");
     for (int sc = 0; sc < n_scenes; sc++)
@@ -3989,10 +3935,6 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
     TiXmlElement tempoOnSave("tempoOnSave");
     tempoOnSave.SetDoubleAttribute("v", storage->temposyncratio * 120.0);
     patch.InsertEndChild(tempoOnSave);
-
-    TiXmlElement nextBlockId("nextBlockId");
-    nextBlockId.SetAttribute("id", block_id.load());
-    patch.InsertEndChild(nextBlockId);
 
     TiXmlElement dawExtraXML("dawExtraState");
     dawExtraXML.SetAttribute("populated", dawExtraState.isPopulated ? 1 : 0);

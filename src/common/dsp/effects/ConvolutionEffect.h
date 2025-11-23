@@ -53,7 +53,6 @@ class ConvolutionEffect : public Effect
     void init_ctrltypes() override;
     void init_default_values() override;
     void process(float *dataL, float *dataR) override;
-    void updateAfterReload() override;
 
   private:
     void prep_ir();

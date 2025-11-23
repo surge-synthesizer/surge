@@ -62,7 +62,8 @@ int ConvolutionEffect::group_label_ypos(int id)
 
 void ConvolutionEffect::init()
 {
-    if (fxdata->user_data.size() < 2)
+    if (!(fxdata->user_data.contains("irname") && fxdata->user_data.contains("samplerate") &&
+          fxdata->user_data.contains("left")))
         return;
 
     prep_ir();
@@ -175,7 +176,7 @@ void ConvolutionEffect::prep_ir()
     bool s = true;
     // Get the IR ready. Resample it to match the synth sample rate, and
     // normalize it so the overall magnitude is 1.
-    const float inputRate = fxdata->user_data[0].as<float>()[0];
+    const float inputRate = fxdata->by_key("samplerate").to_float();
     const float outputRate = storage->samplerate * fxdata->p[convolution_size].val.f;
     const float ratio = outputRate / inputRate;
     SRC_DATA rs;
@@ -184,7 +185,7 @@ void ConvolutionEffect::prep_ir()
     initialized_ = false;
 
     // Left channel (or mono).
-    auto L = fxdata->user_data[1].as<float>();
+    auto L = fxdata->by_key("left").as<float>();
     rs.data_in = L.data();
     rs.input_frames = L.size();
     irL_.reset(std::ceil(static_cast<float>(L.size()) * ratio));
@@ -193,27 +194,25 @@ void ConvolutionEffect::prep_ir()
     int rv = src_simple(&rs, SRC_SINC_BEST_QUALITY, 1);
     if (rv != 0)
     {
-        std::cout << "Error in sample rate conversion process, not running convolution. "
+        std::cerr << "Error in sample rate conversion process, not running convolution. "
                   << src_strerror(rv) << std::endl;
-        std::abort();
         return;
     }
     for (int i = 0; i < irL_.size(); i++)
     {
         // TODO: rescale IR
-        //irL_[i] /= sum2;
+        // irL_[i] /= sum2;
     }
     s = convolverL_.init(BLOCK_SIZE, 256, irL_);
     if (!s)
     {
-        std::cout << "Error initializing left convolver, not running convolution." << std::endl;
-        std::abort();
+        std::cerr << "Error initializing left convolver, not running convolution." << std::endl;
         return;
     }
 
-    if (fxdata->user_data.size() > 2)
+    if (fxdata->user_data.contains("right"))
     {
-        auto R = fxdata->user_data[2].as<float>();
+        auto R = fxdata->by_key("right").as<float>();
         rs.data_in = R.data();
         rs.input_frames = R.size();
         irR_.reset(std::ceil(static_cast<float>(R.size()) * ratio));
@@ -222,7 +221,7 @@ void ConvolutionEffect::prep_ir()
         rv = src_simple(&rs, SRC_SINC_BEST_QUALITY, 1);
         if (rv != 0)
         {
-            std::cout << "Error in sample rate conversion process for right channel, not running "
+            std::cerr << "Error in sample rate conversion process for right channel, not running "
                          "convolution. "
                       << src_strerror(rv) << std::endl;
             return;
@@ -230,7 +229,7 @@ void ConvolutionEffect::prep_ir()
         s = convolverR_.init(BLOCK_SIZE, 256, irR_);
         if (!s)
         {
-            std::cout << "Error initializing right convolver, not running convolution."
+            std::cerr << "Error initializing right convolver, not running convolution."
                       << std::endl;
             return;
         }
@@ -240,7 +239,8 @@ void ConvolutionEffect::prep_ir()
         s = convolverR_.init(BLOCK_SIZE, 256, irL_);
         if (!s)
         {
-            std::cout << "Error initializing right convolver, not running convolution." << std::endl;
+            std::cerr << "Error initializing right convolver, not running convolution."
+                      << std::endl;
             return;
         }
     }
@@ -265,5 +265,3 @@ void ConvolutionEffect::set_params()
         prep_ir();
     }
 }
-
-void ConvolutionEffect::updateAfterReload() { std::cout << "In updateAfterReload " << std::endl; }

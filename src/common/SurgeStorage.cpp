@@ -3658,4 +3658,33 @@ bool getValueDisplayIsHighPrecision(SurgeStorage *storage)
 }
 
 } // namespace Storage
+
 } // namespace Surge
+
+// Arbitrary block storage helpers.
+std::vector<std::uint8_t> ArbitraryBlockStorage::from_float(const float f)
+{
+    std::vector<std::uint8_t> v(sizeof(float));
+    ArbitraryBlockStorage{v}.as<float>()[0] = f;
+    return v;
+}
+
+std::vector<std::uint8_t> ArbitraryBlockStorage::from_floats(std::span<const float> fs)
+{
+    std::vector<std::uint8_t> v(sizeof(float) * fs.size());
+    std::copy(fs.begin(), fs.end(), ArbitraryBlockStorage{v}.as<float>().begin());
+    return v;
+}
+
+std::vector<std::uint8_t> ArbitraryBlockStorage::from_string(const std::string &s)
+{
+    return std::vector<std::uint8_t>(s.begin(), s.end());
+}
+
+float ArbitraryBlockStorage::to_float()
+{
+    auto c = as<float>();
+    if (c.empty())
+        throw std::invalid_argument("Improperly sized data in to_float");
+    return c[0];
+}
