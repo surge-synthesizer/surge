@@ -280,9 +280,9 @@ class ModulationSource
     virtual const char *get_title() { return 0; }
     virtual int get_type() { return mst_undefined; }
     virtual void process_block() {}
-    virtual void attack(){};
-    virtual void release(){};
-    virtual void reset(){};
+    virtual void attack() {};
+    virtual void release() {};
+    virtual void reset() {};
 
     // override these if you support indices
     virtual void set_active_outputs(int ao) { active_outputs = ao; }

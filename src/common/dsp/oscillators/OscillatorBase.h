@@ -40,17 +40,17 @@ class alignas(16) Oscillator
 
     Oscillator(SurgeStorage *storage, OscillatorStorage *oscdata, pdata *localcopy);
     virtual ~Oscillator();
-    virtual void init(float pitch, bool is_display = false, bool nonzero_init_drift = true){};
+    virtual void init(float pitch, bool is_display = false, bool nonzero_init_drift = true) {};
     virtual void init_ctrltypes(int scene, int oscnum) { init_ctrltypes(); };
-    virtual void init_ctrltypes(){};
-    virtual void init_default_values(){};
+    virtual void init_ctrltypes() {};
+    virtual void init_default_values() {};
     virtual void init_extra_config() { oscdata->extraConfig.nData = 0; }
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f)
     {
     }
 
-    virtual void processSamplesForDisplay(float *samples, int size, bool real){};
+    virtual void processSamplesForDisplay(float *samples, int size, bool real) {};
 
     virtual void assign_fm(float *master_osc) { this->master_osc = master_osc; }
     virtual bool allow_display() { return true; }

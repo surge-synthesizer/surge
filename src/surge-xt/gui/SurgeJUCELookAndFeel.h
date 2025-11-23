@@ -71,7 +71,7 @@ class SurgeJUCELookAndFeel : public juce::LookAndFeel_V4, public Surge::GUI::Ski
                                                const juce::String &sectionName,
                                                const juce::PopupMenu::Options &options) override;
 
-    void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override{};
+    void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override {};
 
     void drawToggleButton(juce::Graphics &g, juce::ToggleButton &b,
                           bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;

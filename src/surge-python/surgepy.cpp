@@ -100,7 +100,7 @@ struct SurgePyControlGroup
     std::string name;
 
     SurgePyControlGroup() = default;
-    SurgePyControlGroup(ControlGroup id, std::string name) : id(id), name(std::move(name)){};
+    SurgePyControlGroup(ControlGroup id, std::string name) : id(id), name(std::move(name)) {};
 
     int getControlGroupId() const { return (int)id; }
     std::string getControlGroupName() const { return name; }
@@ -138,7 +138,7 @@ struct SurgePyModRouting
 class SurgePyPatchConverter
 {
   public:
-    explicit SurgePyPatchConverter(SurgeSynthesizer *synth) : synth(synth){};
+    explicit SurgePyPatchConverter(SurgeSynthesizer *synth) : synth(synth) {};
     ~SurgePyPatchConverter() = default;
 
     void addParam(py::dict &to, const std::string &at, const Parameter &from) const

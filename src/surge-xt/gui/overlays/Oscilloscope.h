@@ -216,7 +216,7 @@ class Oscilloscope : public OverlayComponent,
     void visibilityChanged() override;
     bool wantsInitialKeyboardFocus() const override { return false; }
 
-    void valueChanged(GUI::IComponentTagValue *p) override{};
+    void valueChanged(GUI::IComponentTagValue *p) override {};
     int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
                                    const juce::ModifierKeys &button,
                                    bool isDoubleClickEvent) override;
@@ -300,7 +300,7 @@ class Oscilloscope : public OverlayComponent,
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
         void resized() override;
-        void valueChanged(GUI::IComponentTagValue *p) override{};
+        void valueChanged(GUI::IComponentTagValue *p) override {};
         int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
                                        const juce::ModifierKeys &button,
                                        bool isDoubleClickEvent) override
@@ -340,7 +340,7 @@ class Oscilloscope : public OverlayComponent,
         void onSkinChanged() override;
         void paint(juce::Graphics &g) override;
         void resized() override;
-        void valueChanged(GUI::IComponentTagValue *p) override{};
+        void valueChanged(GUI::IComponentTagValue *p) override {};
         int32_t controlModifierClicked(Surge::GUI::IComponentTagValue *pControl,
                                        const juce::ModifierKeys &button,
                                        bool isDoubleClickEvent) override

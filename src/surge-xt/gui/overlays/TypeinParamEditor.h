@@ -114,7 +114,7 @@ struct TypeinParamEditor : public juce::Component,
 
 struct TypeinLambdaEditor : public TypeinParamEditor
 {
-    TypeinLambdaEditor(std::function<bool(const std::string &)> c) : callback(c){};
+    TypeinLambdaEditor(std::function<bool(const std::string &)> c) : callback(c) {};
     bool handleTypein(const std::string &value, std::string &errMsg) override
     {
         return callback(value);

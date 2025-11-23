@@ -259,10 +259,8 @@ pd_create(const struct clap_preset_discovery_factory *factory,
     return nullptr;
 }
 
-static const struct clap_preset_discovery_factory surgePresetDiscoveryFactory
-{
-    pd_count, pd_get_descriptor, pd_create
-};
+static const struct clap_preset_discovery_factory surgePresetDiscoveryFactory{
+    pd_count, pd_get_descriptor, pd_create};
 } // namespace sst::surge_xt::preset_discovery
 
 const void *SurgeSynthProcessor::getSurgePresetDiscoveryFactory()
