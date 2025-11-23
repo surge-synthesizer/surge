@@ -71,7 +71,7 @@ void FontManager::setupFontMembers()
     lfoTypeFont = getLatoAtSize(8);
     aboutFont = getLatoAtSize(10);
 }
-FontManager::~FontManager(){};
+FontManager::~FontManager() {};
 
 juce::Font FontManager::getLatoAtSize(float size, juce::Font::FontStyleFlags style) const
 {

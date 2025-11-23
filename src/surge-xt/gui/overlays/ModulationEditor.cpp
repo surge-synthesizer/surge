@@ -1720,7 +1720,7 @@ ModulationEditor::ModulationEditor(SurgeGUIEditor *ed, SurgeSynthesizer *s)
 
     struct IdleTimer : juce::Timer
     {
-        IdleTimer(ModulationEditor *ed) : moded(ed){};
+        IdleTimer(ModulationEditor *ed) : moded(ed) {};
         void timerCallback() override { moded->idle(); }
         ModulationEditor *moded;
     };

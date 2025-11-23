@@ -65,8 +65,8 @@ struct IComponentTagValue : public Hoverable
             return false;
         }
 
-        virtual void controlBeginEdit(IComponentTagValue *control){};
-        virtual void controlEndEdit(IComponentTagValue *control){};
+        virtual void controlBeginEdit(IComponentTagValue *control) {};
+        virtual void controlEndEdit(IComponentTagValue *control) {};
     };
 };
 } // namespace GUI
