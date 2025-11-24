@@ -30,8 +30,6 @@
 
 #include "UnitTestUtilities.h"
 
-#include "samplerate.h"
-
 #include "SSEComplex.h"
 #include <complex>
 #include "sst/basic-blocks/mechanics/simd-ops.h"
@@ -341,76 +339,6 @@ TEST_CASE("All Patches Have Bounded Output", "[dsp]")
     };
 
     // Surge::Headless::playOnNRandomPatches(surge, scale, 100, callBack);
-}
-
-TEST_CASE("libsamplerate Basics", "[dsp]")
-{
-    for (auto tsr : {44100, 48000}) // { 44100, 48000, 88200, 96000, 192000 })
-    {
-        for (auto ssr : {44100, 48000, 88200})
-        {
-            DYNAMIC_SECTION("libsamplerate from " << ssr << " to " << tsr)
-            {
-                int error;
-                auto state = src_new(SRC_SINC_FASTEST, 1, &error);
-                REQUIRE(state);
-                REQUIRE(error == 0);
-
-                static constexpr int buffer_size = 1024 * 100;
-                static constexpr int output_block = 64;
-
-                float input_data[buffer_size];
-                float copied_output[buffer_size];
-
-                int cwp = 0, irp = 0;
-                float output_data[output_block];
-
-                float dPhase = 440.0 / ssr * 2.0 * M_PI;
-                float phase = 0;
-                for (int i = 0; i < buffer_size; ++i)
-                {
-                    input_data[i] = std::sin(phase);
-                    phase += dPhase;
-                    if (phase >= 2.0 * M_PI)
-                        phase -= 2.0 * M_PI;
-                }
-
-                SRC_DATA sdata;
-                sdata.end_of_input = 0;
-                while (irp + output_block < buffer_size && cwp + output_block < buffer_size)
-                {
-                    sdata.data_in = &(input_data[irp]);
-                    sdata.data_out = output_data;
-                    sdata.input_frames = 64;
-                    sdata.output_frames = 64;
-                    sdata.src_ratio = 1.0 * tsr / ssr;
-
-                    auto res = src_process(state, &sdata);
-                    memcpy((void *)(copied_output + cwp), (void *)output_data,
-                           sdata.output_frames_gen * sizeof(float));
-                    irp += sdata.input_frames_used;
-                    cwp += sdata.output_frames_gen;
-                    REQUIRE(res == 0);
-                    REQUIRE(sdata.input_frames_used + sdata.output_frames_gen > 0);
-                }
-
-                state = src_delete(state);
-                REQUIRE(!state);
-
-                // At this point the output block should be a 440hz sine wave at the target rate
-                dPhase = 440.0 / tsr * 2.0 * M_PI;
-                phase = 0;
-                for (int i = 0; i < cwp; ++i)
-                {
-                    auto cw = std::sin(phase);
-                    REQUIRE(copied_output[i] == Approx(cw).margin(1e-2));
-                    phase += dPhase;
-                    if (phase >= 2.0 * M_PI)
-                        phase -= 2.0 * M_PI;
-                }
-            }
-        }
-    }
 }
 
 TEST_CASE("Every Oscillator Plays", "[dsp]")

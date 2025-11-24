@@ -10,9 +10,6 @@
 [submodule "libs/JUCE"]
 	path = libs/JUCE
 	url = https://github.com/surge-synthesizer/JUCE
-[submodule "libs/libsamplerate"]
-	path = libs/libsamplerate
-	url = https://github.com/libsndfile/libsamplerate.git
 [submodule "libs/luajitlib/LuaJIT"]
 	path = libs/luajitlib/LuaJIT
 	url = https://github.com/LuaJIT/LuaJIT.git
