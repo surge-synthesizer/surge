@@ -460,7 +460,7 @@ void AboutScreen::resized()
 
         yp += lblvs;
 
-        addLabel("Floaty Delay effect based on eponymous Reaper JS effect by Daniel Arena "
+        addLabel("Floaty Delay effect based on eponymous REAPER JS effect by Daniel Arena "
                  "(RemainCalm), licensed under GNU GPL v3 license",
                  600);
 
