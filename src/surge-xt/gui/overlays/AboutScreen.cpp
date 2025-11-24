@@ -458,6 +458,12 @@ void AboutScreen::resized()
                  "under GNU GPL v3 license",
                  600);
 
+        yp += lblvs;
+
+        addLabel("Floaty Delay effect based on eponymous Reaper JS effect by Daniel Arena "
+                 "(RemainCalm), licensed under GNU GPL v3 license",
+                 600);
+
         auto img = associatedBitmapStore->getImage(IDB_ABOUT_LOGOS);
 
         int x = iconOrder.size();
