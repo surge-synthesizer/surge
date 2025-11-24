@@ -65,3 +65,6 @@
 [submodule "libs/sst/sst-cmake"]
 	path = libs/sst/sst-cmake
 	url = https://github.com/surge-synthesizer/sst-cmake.git
+[submodule "libs/r8brain-free-src"]
+	path = libs/r8brain-free-src
+	url = https://github.com/avaneev/r8brain-free-src.git

@@ -339,6 +339,10 @@ endif()
 
 target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/geninclude/version.cpp)
 
+# r8brain isn't cmaked but it's just one file
+target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/libs/r8brain-free-src/r8bbase.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/libs/r8brain-free-src)
+
 add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}
   PUBLIC

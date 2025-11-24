@@ -20,9 +20,9 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "ConvolutionEffect.h"
-#include <cmath>
 #include <iostream>
-#include <samplerate.h>
+
+#include <CDSPResampler.h>
 
 static constexpr double Q = 0.707;
 
@@ -183,74 +183,43 @@ void ConvolutionEffect::prep_ir()
     const float inputRate = fxdata->by_key("samplerate").to_float();
     const float outputRate = storage->samplerate * fxdata->p[convolution_size].val.f;
     const float ratio = outputRate / inputRate;
-    SRC_DATA rs;
-    rs.src_ratio = ratio;
-
-    initialized_ = false;
 
     // Left channel (or mono).
     auto L = fxdata->by_key("left").as<float>();
-    rs.data_in = L.data();
-    rs.input_frames = L.size();
-    irL_.reset(std::ceil(static_cast<float>(L.size()) * ratio));
-    rs.data_out = irL_.data();
-    rs.output_frames = irL_.size();
-    int rv = src_simple(&rs, SRC_SINC_BEST_QUALITY, 1);
-    if (rv != 0)
-    {
-        std::cerr << "Error in sample rate conversion process, not running convolution. "
-                  << src_strerror(rv) << std::endl;
-        return;
-    }
-    for (int i = 0; i < irL_.size(); i++)
-    {
-        // TODO: rescale IR
-        // irL_[i] /= sum2;
-    }
-    s = convolverL_.init(BLOCK_SIZE, 256, irL_);
-    if (!s)
-    {
-        std::cerr << "Error initializing left convolver, not running convolution." << std::endl;
-        return;
-    }
 
+    r8b::CDSPResampler resampler(inputRate, outputRate, L.size());
+    irL_.reset(resampler.getMaxOutLen(0));
+    irR_.reset(resampler.getMaxOutLen(0));
+
+    // Resampler needs it in double-precision.
+    sst::cpputils::DynArray<double> in(L.size()), out(resampler.getMaxOutLen(0));
+    std::copy(L.begin(), L.end(), in.begin());
+
+    resampler.oneshot(in.data(), in.size(), out.data(), out.size());
+    std::copy(out.begin(), out.end(), irL_.begin());
+
+    irR_.reset(out.size());
     if (fxdata->user_data.contains("right"))
     {
         auto R = fxdata->by_key("right").as<float>();
-        rs.data_in = R.data();
-        rs.input_frames = R.size();
-        irR_.reset(std::ceil(static_cast<float>(R.size()) * ratio));
-        rs.data_out = irR_.data();
-        rs.output_frames = irR_.size();
-        rv = src_simple(&rs, SRC_SINC_BEST_QUALITY, 1);
-        if (rv != 0)
-        {
-            std::cerr << "Error in sample rate conversion process for right channel, not running "
-                         "convolution. "
-                      << src_strerror(rv) << std::endl;
-            return;
-        }
-        s = convolverR_.init(BLOCK_SIZE, 256, irR_);
-        if (!s)
-        {
-            std::cerr << "Error initializing right convolver, not running convolution."
-                      << std::endl;
-            return;
-        }
+        std::copy(R.begin(), R.end(), in.begin());
+        resampler.oneshot(in.data(), in.size(), out.data(), out.size());
+        std::copy(out.begin(), out.end(), irR_.begin());
     }
     else
     {
-        s = convolverR_.init(BLOCK_SIZE, 256, irL_);
-        if (!s)
-        {
-            std::cerr << "Error initializing right convolver, not running convolution."
-                      << std::endl;
-            return;
-        }
+        irR_ = irL_;
+    }
+
+    s = s && convolverL_.init(BLOCK_SIZE, 256, irL_);
+    s = s && convolverR_.init(BLOCK_SIZE, 256, irR_);
+    if (!s)
+    {
+        std::cerr << "Error initializing convolver, not running convolution." << std::endl;
+        return;
     }
 
     initialized_ = true;
-
     old_samplerate_ = storage->samplerate;
     old_convolution_size_ = fxdata->p[convolution_size].val.f;
 }
