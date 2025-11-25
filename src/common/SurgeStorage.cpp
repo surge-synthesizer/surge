@@ -3689,7 +3689,4 @@ float ArbitraryBlockStorage::to_float()
     return c[0];
 }
 
-std::string ArbitraryBlockStorage::to_string()
-{
-    return std::string(data.begin(), data.end());
-}
+std::string ArbitraryBlockStorage::to_string() { return std::string(data.begin(), data.end()); }
