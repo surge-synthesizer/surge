@@ -8,6 +8,7 @@
 #include "SurgeGUIEditor.h"
 #include "SurgeGUIEditorTags.h"
 #include "dsp/effects/ConditionerEffect.h"
+#include "dsp/effects/ConvolutionEffect.h"
 
 namespace
 {
@@ -200,7 +201,16 @@ void CurrentFxDisplay::conditionerLayout()
 void CurrentFxDisplay::convolutionLayout()
 {
     defaultLayout();
-    labels_[0]->setLabel(std::string("Drag and drop WAV here"));
+    const ConvolutionEffect &fx =
+        dynamic_cast<ConvolutionEffect &>(*editor_->synth->fx[current_fx_]);
+    if (fx.initialized)
+    {
+        labels_[0]->setLabel(storage_->getPatch().fx[current_fx_].by_key("irname").to_string());
+    }
+    else
+    {
+        labels_[0]->setLabel(std::string("No IR loaded."));
+    }
 }
 
 void CurrentFxDisplay::conditionerRender()

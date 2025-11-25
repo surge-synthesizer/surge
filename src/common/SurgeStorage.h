@@ -675,6 +675,7 @@ struct ArbitraryBlockStorage
 
     // These will all throw invalid_argument if there's an issue with size.
     float to_float();
+    std::string to_string();
 
     // Helpers for creating the vector v.
     static std::vector<std::uint8_t> from_float(const float f);

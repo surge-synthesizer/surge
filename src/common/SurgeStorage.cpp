@@ -3688,3 +3688,8 @@ float ArbitraryBlockStorage::to_float()
         throw std::invalid_argument("Improperly sized data in to_float");
     return c[0];
 }
+
+std::string ArbitraryBlockStorage::to_string()
+{
+    return std::string(data.begin(), data.end());
+}

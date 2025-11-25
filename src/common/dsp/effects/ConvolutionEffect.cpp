@@ -27,7 +27,7 @@
 static constexpr double Q = 0.707;
 
 ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
-    : Effect(storage, fxdata, pd), initialized_(false), lc_(storage), hc_(storage),
+    : Effect(storage, fxdata, pd), initialized(false), lc_(storage), hc_(storage),
       delayL_(storage->sinctable), delayR_(storage->sinctable), delayTime_(.001)
 {
     mix_.set_blocksize(BLOCK_SIZE);
@@ -53,9 +53,9 @@ int ConvolutionEffect::group_label_ypos(int id)
     switch (id)
     {
     case 0:
-        return 1;
+        return 2;
     case 1:
-        return 3;
+        return 4;
     }
     return 0;
 }
@@ -135,12 +135,12 @@ void ConvolutionEffect::init_default_values()
 
 void ConvolutionEffect::process(float *dataL, float *dataR)
 {
-    if (!initialized_)
+    if (!initialized)
         return;
 
     set_params();
 
-    if (!initialized_)
+    if (!initialized)
         return;
 
     for (std::size_t i = 0; i < BLOCK_SIZE; i++)
@@ -219,7 +219,7 @@ void ConvolutionEffect::prep_ir()
         return;
     }
 
-    initialized_ = true;
+    initialized = true;
     old_samplerate_ = storage->samplerate;
     old_convolution_size_ = fxdata->p[convolution_size].val.f;
 }

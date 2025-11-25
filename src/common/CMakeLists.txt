@@ -363,6 +363,7 @@ target_link_libraries(${PROJECT_NAME}
   surge::sqlite
   surge-common-binary
   tuning-library
+
   PRIVATE
   surge-lua-src
   surge-platform

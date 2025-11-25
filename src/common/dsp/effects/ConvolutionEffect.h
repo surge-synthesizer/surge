@@ -45,6 +45,8 @@ class ConvolutionEffect : public Effect
         convolution_mix = 6,
     };
 
+    bool initialized;
+
     ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
 
     const char *get_effectname() override;
@@ -59,7 +61,6 @@ class ConvolutionEffect : public Effect
     void prep_ir();
     void set_params();
 
-    bool initialized_;
     pffft::TwoStageConvolver convolverL_;
     pffft::TwoStageConvolver convolverR_;
     alignas(16) std::array<float, BLOCK_SIZE> workL_;
