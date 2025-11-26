@@ -316,6 +316,11 @@ void SurgefxAudioProcessorEditor::makeMenu()
                 c = c->NextSiblingElement();
                 continue;
             }
+            else if (t == fxt_convolution) // requires GUI work
+            {
+                c = c->NextSiblingElement();
+                continue;
+            }
         }
         else
         {
