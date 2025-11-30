@@ -5,6 +5,7 @@
 
 #include "AccessibleHelpers.h"
 #include "EffectChooser.h"
+#include "MenuCustomComponents.h"
 #include "RuntimeFont.h"
 #include "SkinModel.h"
 #include "SurgeGUIEditor.h"
@@ -39,6 +40,17 @@ struct ConvolutionButton : public juce::Component
     {
         fx = f;
         fxs = s;
+    }
+
+    void mouseDown(const juce::MouseEvent &event) override
+    {
+        if (event.mods.isMiddleButtonDown() && sge)
+        {
+            sge->frame->mouseDown(event);
+            return;
+        }
+
+        showIRMenu();
     }
 
     bool isMousedOver = false;
@@ -76,13 +88,179 @@ struct ConvolutionButton : public juce::Component
         {
             irname = fxs->by_key("irname").to_string();
         }
-        g.setColour(isMousedOver ? fgcolHov : fgcol);
+        bool focused = isMousedOver || hasKeyboardFocus(true);
+        g.setColour(focused ? fgcolHov : fgcol);
         g.fillRect(irr);
-        g.setColour(isMousedOver ? fgframeHov : fgframe);
+        g.setColour(focused ? fgframeHov : fgframe);
         g.drawRect(irr);
-        g.setColour(isMousedOver ? fgtextHov : fgtext);
+        g.setColour(focused ? fgtextHov : fgtext);
         g.setFont(skin->fontManager->getLatoAtSize(9));
         g.drawText(juce::String(irname), irr, juce::Justification::centred);
+    }
+
+    void showIRMenu()
+    {
+        std::cout << "Showing menu." << std::endl;
+
+        juce::PopupMenu menu;
+        bool addUserLabel = false;
+        int idx = 0;
+
+        for (auto c : storage->irCategoryOrdering)
+        {
+            if (idx == storage->firstThirdPartyIRCategory)
+            {
+                menu.addColumnBreak();
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
+                                                                                "3RD PARTY IRS");
+            }
+
+            if (idx == storage->firstUserIRCategory &&
+                storage->firstUserIRCategory != storage->ir_category.size())
+            {
+                menu.addColumnBreak();
+                addUserLabel = true;
+            }
+
+            idx++;
+
+            // only add this section header if we actually have any factory IRs installed
+            if (idx == 1)
+            {
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
+                                                                                "FACTORY IRS");
+            }
+
+            PatchCategory cat = storage->ir_category[c];
+            if (cat.numberOfPatchesInCategoryAndChildren == 0)
+            {
+                continue;
+            }
+
+            if (addUserLabel)
+            {
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "USER IRS");
+                addUserLabel = false;
+            }
+
+            if (cat.isRoot)
+            {
+                populateMenuForCategory(menu, c, 0);
+            }
+        }
+
+        menu.addColumnBreak();
+        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FUNCTIONS");
+        createIRLoadMenu(menu);
+
+        auto where = sge->frame->getLocalPoint(this, getBounds().getBottomLeft());
+        menu.showMenuAsync(sge->popupMenuOptions(getBounds().getBottomLeft()));
+    }
+
+    bool populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId, int selectedItem)
+    {
+        int sub = 0;
+        bool selected = false;
+        juce::PopupMenu subMenuLocal;
+        juce::PopupMenu *subMenu = &subMenuLocal;
+        PatchCategory cat = storage->wt_category[categoryId];
+
+        for (auto p : storage->irOrdering)
+        {
+            if (storage->ir_list[p].category == categoryId)
+            {
+                auto action = [this, p]() { this->loadIR(p); };
+                bool checked = false;
+
+                if (p == selectedItem)
+                {
+                    checked = true;
+                    selected = true;
+                }
+
+                auto item = new juce::PopupMenu::Item(storage->ir_list[p].name);
+
+                item->setEnabled(true);
+                item->setTicked(checked);
+                item->setAction(action);
+
+                subMenu->addItem(*item);
+
+                sub++;
+
+                if (sub != 0 && sub % 24 == 0)
+                {
+                    subMenu->addColumnBreak();
+                }
+            }
+        }
+
+        for (auto child : cat.children)
+        {
+            if (child.numberOfPatchesInCategoryAndChildren > 0)
+            {
+                // this isn't the best approach but it works
+                int cidx = 0;
+
+                for (auto &cc : storage->ir_category)
+                {
+                    if (cc.name == child.name)
+                    {
+                        break;
+                    }
+
+                    cidx++;
+                }
+
+                bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem);
+
+                if (checked)
+                {
+                    selected = true;
+                }
+            }
+        }
+
+        std::string name;
+
+        if (!cat.isRoot)
+        {
+            std::string catName = storage->ir_category[categoryId].name;
+            std::size_t sepPos = catName.find_last_of(PATH_SEPARATOR);
+
+            if (sepPos != std::string::npos)
+            {
+                catName = catName.substr(sepPos + 1);
+            }
+
+            name = catName;
+        }
+        else
+        {
+            name = storage->ir_category[categoryId].name;
+        }
+
+        contextMenu.addSubMenu(name, *subMenu, true, nullptr, selected);
+
+        return selected;
+    }
+
+    void createIRLoadMenu(juce::PopupMenu &contextMenu)
+    {
+        auto action = [this]() { this->loadIRFromFile(); };
+        contextMenu.addItem(Surge::GUI::toOSCase("Load IR from file..."), action);
+    }
+
+    void loadIR(int ir)
+    {
+        // FIXME: Implement
+        std::cout << "Load IR!" << std::endl;
+    }
+
+    void loadIRFromFile()
+    {
+        // FIXME: Implement
+        std::cout << "Load IR from file!" << std::endl;
     }
 };
 
@@ -244,6 +422,9 @@ void CurrentFxDisplay::defaultLayout()
 
     // Explicitly turn off the VUs, if they were on in a previous layout.
     std::fill(std::begin(vus), std::end(vus), nullptr);
+    // Also turn off specialized convolution components.
+    irbutton = nullptr;
+    menu = nullptr;
 }
 
 void CurrentFxDisplay::conditionerLayout()
@@ -268,14 +449,15 @@ void CurrentFxDisplay::conditionerLayout()
 
 void CurrentFxDisplay::convolutionLayout()
 {
+    defaultLayout();
+
     ConvolutionEffect &fx = dynamic_cast<ConvolutionEffect &>(*editor_->synth->fx[current_fx_]);
 
-    auto vr = fxRect().withTrimmedTop(-1)
-        .withTrimmedRight(-5)
-        .translated(5, -12)
-        .translated(0, yofs * 2);
+    auto vr =
+        fxRect().withTrimmedTop(-1).withTrimmedRight(-5).translated(5, -12).translated(0, yofs * 2);
 
     auto button = std::make_unique<ConvolutionButton>();
+    // button->setWantsKeyboardFocus(true);
     button->setStorage(storage);
     button->setSurgeGUIEditor(editor_);
     button->setEffect(&fx, &storage->getPatch().fx[current_fx_]);
@@ -283,7 +465,7 @@ void CurrentFxDisplay::convolutionLayout()
     auto ol = std::make_unique<OverlayAsAccessibleButton<ConvolutionButton>>(
         button.get(), "No IR loaded", juce::AccessibilityRole::button);
     irbutton = std::move(button);
-    addAndMakeVisible(*irbutton);
+    editor_->addAndMakeVisibleWithTracking(this, *irbutton);
 
     std::string irname("No IR loaded.");
     if (fx.initialized)
@@ -293,17 +475,15 @@ void CurrentFxDisplay::convolutionLayout()
     ol->setTitle(irname);
     ol->setDescription(irname);
 
-    ol->onPress = [this](ConvolutionButton *c) { showConvolutionMenu(); };
+    ol->onPress = [this](ConvolutionButton *c) { c->showIRMenu(); };
     ol->onMenuKey = [this](ConvolutionButton *c) {
-        showConvolutionMenu();
+        c->showIRMenu();
         return true;
     };
 
     menu = std::move(ol);
     menu->setBounds(vr);
-    addAndMakeVisible(*menu);
-
-    defaultLayout();
+    editor_->addAndMakeVisibleWithTracking(this, *menu);
 }
 
 void CurrentFxDisplay::conditionerRender()
@@ -324,11 +504,6 @@ void CurrentFxDisplay::conditionerRender()
         vus[i]->setValueR(fx.vu[i][1]);
         vus[i]->repaint();
     }
-}
-
-void CurrentFxDisplay::showConvolutionMenu()
-{
-    std::cout << "In showConvolutionMenu()" << std::endl;
 }
 
 void CurrentFxDisplay::vocoderLayout()

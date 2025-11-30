@@ -63,9 +63,6 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     // Individual renders.
     void conditionerRender();
 
-    // Menu rendering
-    void showConvolutionMenu();
-
     // Generic layout helpers.
     void layoutFxSelector();
     void layoutFxPresetLabel();

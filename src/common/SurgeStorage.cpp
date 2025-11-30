@@ -426,6 +426,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     patchDB = std::make_unique<Surge::PatchStorage::PatchDB>(this);
     if (loadWtAndPatch)
     {
+        refresh_irlist();
         refresh_wtlist();
         refresh_patchlist();
     }
@@ -1880,6 +1881,141 @@ std::string SurgeStorage::getCurrentWavetableName(OscillatorStorage *oscdata)
     waveTableDataMutex.unlock();
 
     return wttxt;
+}
+
+void SurgeStorage::refresh_irlist()
+{
+    ir_category.clear();
+    ir_list.clear();
+
+    refresh_irlistAddDir(false, "irs");
+
+    firstThirdPartyIRCategory = ir_category.size();
+    if (extraThirdPartyIRsPath.empty() ||
+        !fs::is_directory(extraThirdPartyIRsPath / "irs_3rdparty"))
+    {
+        refresh_irlistAddDir(false, "irs_3rdparty");
+    }
+    else
+    {
+        refresh_irlistFrom(false, extraThirdPartyIRsPath, "irs_3rdparty");
+    }
+    firstUserIRCategory = ir_category.size();
+    refresh_irlistAddDir(true, "irs");
+
+    if (!extraUserIRsPath.empty())
+    {
+        refresh_irlistFrom(true, extraUserIRsPath, "");
+    }
+
+    irCategoryOrdering = std::vector<int>(ir_category.size());
+    std::iota(irCategoryOrdering.begin(), irCategoryOrdering.end(), 0);
+
+    // This nonsense deals with the fact that \ < ' ' but ' ' < / and we want "foo bar/h" and
+    // "foo/bar" to sort consistently on mac and win. See #1218
+    auto categoryCompare = [this](const int &i1, const int &i2) -> bool {
+        auto n1 = ir_category[i1].name;
+        for (auto i = 0; i < n1.length(); ++i)
+            if (n1[i] == '\\')
+                n1[i] = '/';
+
+        auto n2 = ir_category[i2].name;
+        for (auto i = 0; i < n2.length(); ++i)
+            if (n2[i] == '\\')
+                n2[i] = '/';
+
+        // OK so now we need to split by path. Sigh.
+        // This is because "EMU VSCO/FOO comes after "EMU" but before "ENU/BAR"
+        auto split = [](const auto &q) {
+            std::vector<std::string> res;
+            size_t p = 0, np = 0;
+            while (np != std::string::npos)
+            {
+                np = q.find("/", p);
+                if (np == std::string::npos)
+                {
+                    res.push_back(q.substr(p));
+                }
+                else
+                {
+                    res.push_back(q.substr(p, np));
+                    p = np + 1;
+                }
+            }
+
+            return res;
+        };
+
+        auto v1 = split(n1);
+        auto v2 = split(n2);
+
+        auto sz = std::min(v1.size(), v2.size());
+        for (int i = 0; i < sz; ++i)
+        {
+            if (v1[i] != v2[i])
+                return strnatcasecmp(v1[i].c_str(), v2[i].c_str()) < 0;
+        }
+
+        return strnatcasecmp(n1.c_str(), n2.c_str()) < 0;
+    };
+
+    int groups[4] = {0, firstThirdPartyIRCategory, firstUserIRCategory, (int)ir_category.size()};
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::sort(std::next(irCategoryOrdering.begin(), groups[i]),
+                  std::next(irCategoryOrdering.begin(), groups[i + 1]), categoryCompare);
+    }
+
+    for (int i = 0; i < ir_category.size(); i++)
+        ir_category[irCategoryOrdering[i]].order = i;
+
+    irOrdering = std::vector<int>();
+
+    auto irCompare = [this](const int &i1, const int &i2) -> bool {
+        return strnatcasecmp(ir_list[i1].name.c_str(), ir_list[i2].name.c_str()) < 0;
+    };
+
+    // Sort IRs per category in the category order.
+    for (auto c : irCategoryOrdering)
+    {
+        int start = irOrdering.size();
+
+        for (int i = 0; i < ir_list.size(); i++)
+            if (ir_list[i].category == c)
+                irOrdering.push_back(i);
+
+        int end = irOrdering.size();
+
+        std::sort(std::next(irOrdering.begin(), start), std::next(irOrdering.begin(), end),
+                  irCompare);
+    }
+
+    for (int i = 0; i < ir_list.size(); i++)
+        ir_list[irOrdering[i]].order = i;
+}
+
+void SurgeStorage::refresh_irlistAddDir(bool userDir, const std::string &subdir)
+{
+    refresh_irlistFrom(userDir, userDir ? userDataPath : datapath, subdir);
+}
+
+void SurgeStorage::refresh_irlistFrom(bool isUser, const fs::path &p, const std::string &subdir)
+{
+    std::vector<std::string> supportedTableFileTypes;
+    supportedTableFileTypes.push_back(".wav");
+
+    refreshPatchOrWTListAddDir(
+        isUser, p, subdir,
+        [supportedTableFileTypes](std::string in) -> bool {
+            for (auto q : supportedTableFileTypes)
+            {
+                if (_stricmp(q.c_str(), in.c_str()) == 0)
+                    return true;
+            }
+            return false;
+        },
+        ir_list, ir_category);
 }
 
 void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)

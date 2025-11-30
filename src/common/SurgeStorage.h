@@ -1559,6 +1559,9 @@ class alignas(16) SurgeStorage
     void refresh_wtlist();
     void refresh_wtlistAddDir(bool userDir, const std::string &subdir);
     void refresh_wtlistFrom(bool isUser, const fs::path &from, const std::string &subdir);
+    void refresh_irlist();
+    void refresh_irlistAddDir(bool userDir, const std::string &subdir);
+    void refresh_irlistFrom(bool isUser, const fs::path &from, const std::string &subdir);
     void refresh_patchlist();
     void refreshPatchlistAddDir(bool userDir, std::string subdir);
 
@@ -1615,6 +1618,14 @@ class alignas(16) SurgeStorage
     std::vector<int> wtOrdering;
     std::vector<int> wtCategoryOrdering;
 
+    // The in-memory IR database
+    std::vector<Patch> ir_list;
+    std::vector<PatchCategory> ir_category;
+    int firstThirdPartyIRCategory;
+    int firstUserIRCategory;
+    std::vector<int> irOrdering;
+    std::vector<int> irCategoryOrdering;
+
     std::unique_ptr<Surge::Storage::FxUserPreset> fxUserPreset;
     std::unique_ptr<Surge::Storage::ModulatorPreset> modulatorPreset;
 
@@ -1634,6 +1645,8 @@ class alignas(16) SurgeStorage
     fs::path userMidiMappingsPath;
     fs::path extraThirdPartyWavetablesPath; // used by rack
     fs::path extraUserWavetablesPath;       // used by rack
+    fs::path extraThirdPartyIRsPath;
+    fs::path extraUserIRsPath;
 
     fs::path calculateStandardUserDataPath(const std::string &sxt) const;
 
