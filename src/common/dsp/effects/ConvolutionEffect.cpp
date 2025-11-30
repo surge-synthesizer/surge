@@ -35,31 +35,6 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
 
 const char *ConvolutionEffect::get_effectname() { return "convolution"; }
 
-const char *ConvolutionEffect::group_label(int id)
-{
-    switch (id)
-    {
-    case 0:
-        return "Input";
-    case 1:
-        return "Settings";
-    }
-
-    return nullptr;
-}
-
-int ConvolutionEffect::group_label_ypos(int id)
-{
-    switch (id)
-    {
-    case 0:
-        return 2;
-    case 1:
-        return 4;
-    }
-    return 0;
-}
-
 void ConvolutionEffect::init()
 {
     if (!(fxdata->user_data.contains("irname") && fxdata->user_data.contains("samplerate") &&

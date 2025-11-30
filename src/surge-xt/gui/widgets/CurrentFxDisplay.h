@@ -51,6 +51,7 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     void onDrop(const juce::String &files);
 
     std::unordered_map<std::string, std::string> uiidToSliderLabel;
+    SurgeStorage *storage{nullptr};
 
   private:
     // Individual FX layouts.
@@ -61,6 +62,9 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
 
     // Individual renders.
     void conditionerRender();
+
+    // Menu rendering
+    void showConvolutionMenu();
 
     // Generic layout helpers.
     void layoutFxSelector();
@@ -77,12 +81,15 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     int current_fx_{-1};
     Effect *effect_{nullptr}; // unique_ptr owned by synth.
     SurgeGUIEditor *editor_{nullptr};
-    SurgeStorage *storage_{nullptr};
 
     // Used by everything.
     std::array<std::unique_ptr<Surge::Widgets::EffectLabel>, n_fx_params> labels_;
     // Used by the conditioner.
     std::array<std::unique_ptr<Surge::Widgets::VuMeter>, 3> vus;
+
+    // Used by convolution.
+    std::unique_ptr<juce::Component> irbutton;
+    std::unique_ptr<juce::Component> menu;
 
     // Note: Due to the existing code that refers to it, the effectChooser and
     // fxPresetLabel widgets are held in the SurgeGUIEditor class, rather than here.

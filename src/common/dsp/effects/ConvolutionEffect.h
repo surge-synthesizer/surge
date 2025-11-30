@@ -50,8 +50,6 @@ class ConvolutionEffect : public Effect
     ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
 
     const char *get_effectname() override;
-    const char *group_label(int id) override;
-    int group_label_ypos(int id) override;
     void init() override;
     void init_ctrltypes() override;
     void init_default_values() override;

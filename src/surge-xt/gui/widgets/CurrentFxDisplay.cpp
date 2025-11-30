@@ -2,6 +2,8 @@
 #include "juce_audio_formats/juce_audio_formats.h"
 
 #include "CurrentFxDisplay.h"
+
+#include "AccessibleHelpers.h"
 #include "EffectChooser.h"
 #include "RuntimeFont.h"
 #include "SkinModel.h"
@@ -20,17 +22,83 @@ namespace Surge
 namespace Widgets
 {
 
+namespace
+{
+
+struct ConvolutionButton : public juce::Component
+{
+    SurgeStorage *storage{nullptr};
+    void setStorage(SurgeStorage *s) { storage = s; }
+
+    SurgeGUIEditor *sge{nullptr};
+    void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
+
+    ConvolutionEffect *fx{nullptr};
+    FxStorage *fxs{nullptr};
+    void setEffect(ConvolutionEffect *f, FxStorage *s)
+    {
+        fx = f;
+        fxs = s;
+    }
+
+    bool isMousedOver = false;
+
+    void mouseEnter(const juce::MouseEvent &event) override
+    {
+        isMousedOver = true;
+        repaint();
+    }
+    void mouseExit(const juce::MouseEvent &event) override
+    {
+        isMousedOver = false;
+        repaint();
+    }
+
+    void paint(juce::Graphics &g) override
+    {
+        if (!fx)
+            return;
+
+        auto skin = sge->currentSkin;
+
+        auto fgcol = skin->getColor(Colors::Effect::Grid::Scene::Background);
+        auto fgframe = skin->getColor(Colors::Effect::Grid::Scene::Border);
+        auto fgtext = skin->getColor(Colors::Effect::Grid::Scene::Text);
+
+        auto fgcolHov = skin->getColor(Colors::Effect::Grid::Scene::BackgroundHover);
+        auto fgframeHov = skin->getColor(Colors::Effect::Grid::Scene::BackgroundHover);
+        auto fgtextHov = skin->getColor(Colors::Effect::Grid::Scene::TextHover);
+
+        auto irr = getLocalBounds();
+
+        std::string irname("No IR loaded.");
+        if (fx->initialized)
+        {
+            irname = fxs->by_key("irname").to_string();
+        }
+        g.setColour(isMousedOver ? fgcolHov : fgcol);
+        g.fillRect(irr);
+        g.setColour(isMousedOver ? fgframeHov : fgframe);
+        g.drawRect(irr);
+        g.setColour(isMousedOver ? fgtextHov : fgtext);
+        g.setFont(skin->fontManager->getLatoAtSize(9));
+        g.drawText(juce::String(irname), irr, juce::Justification::centred);
+    }
+};
+
+} // namespace
+
 CurrentFxDisplay::CurrentFxDisplay(SurgeGUIEditor *e)
 {
     editor_ = e;
-    storage_ = e->getStorage();
+    storage = e->getStorage();
 }
 
 CurrentFxDisplay::~CurrentFxDisplay() {}
 
 void CurrentFxDisplay::renderCurrentFx()
 {
-    switch (storage_->getPatch().fx[current_fx_].type.val.i)
+    switch (storage->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_conditioner:
         conditionerRender();
@@ -46,7 +114,7 @@ void CurrentFxDisplay::updateCurrentFx(int current_fx)
     current_fx_ = current_fx;
     effect_ = editor_->synth->fx[current_fx].get();
 
-    switch (storage_->getPatch().fx[current_fx].type.val.i)
+    switch (storage->getPatch().fx[current_fx].type.val.i)
     {
     case fxt_vocoder:
         vocoderLayout();
@@ -67,7 +135,7 @@ void CurrentFxDisplay::defaultLayout()
 {
     std::unordered_map<int, int> paramToParamIndex;
     Surge::GUI::Skin::ptr_t currentSkin = editor_->currentSkin;
-    FxStorage &fx = storage_->getPatch().fx[current_fx_];
+    FxStorage &fx = storage->getPatch().fx[current_fx_];
 
     // Sizing for the labels.
     auto label_rect = fxRect();
@@ -200,17 +268,42 @@ void CurrentFxDisplay::conditionerLayout()
 
 void CurrentFxDisplay::convolutionLayout()
 {
-    defaultLayout();
-    const ConvolutionEffect &fx =
-        dynamic_cast<ConvolutionEffect &>(*editor_->synth->fx[current_fx_]);
+    ConvolutionEffect &fx = dynamic_cast<ConvolutionEffect &>(*editor_->synth->fx[current_fx_]);
+
+    auto vr = fxRect().withTrimmedTop(-1)
+        .withTrimmedRight(-5)
+        .translated(5, -12)
+        .translated(0, yofs * 2);
+
+    auto button = std::make_unique<ConvolutionButton>();
+    button->setStorage(storage);
+    button->setSurgeGUIEditor(editor_);
+    button->setEffect(&fx, &storage->getPatch().fx[current_fx_]);
+    button->setBounds(vr);
+    auto ol = std::make_unique<OverlayAsAccessibleButton<ConvolutionButton>>(
+        button.get(), "No IR loaded", juce::AccessibilityRole::button);
+    irbutton = std::move(button);
+    addAndMakeVisible(*irbutton);
+
+    std::string irname("No IR loaded.");
     if (fx.initialized)
     {
-        labels_[0]->setLabel(storage_->getPatch().fx[current_fx_].by_key("irname").to_string());
+        irname = storage->getPatch().fx[current_fx_].by_key("irname").to_string();
     }
-    else
-    {
-        labels_[0]->setLabel(std::string("No IR loaded."));
-    }
+    ol->setTitle(irname);
+    ol->setDescription(irname);
+
+    ol->onPress = [this](ConvolutionButton *c) { showConvolutionMenu(); };
+    ol->onMenuKey = [this](ConvolutionButton *c) {
+        showConvolutionMenu();
+        return true;
+    };
+
+    menu = std::move(ol);
+    menu->setBounds(vr);
+    addAndMakeVisible(*menu);
+
+    defaultLayout();
 }
 
 void CurrentFxDisplay::conditionerRender()
@@ -231,6 +324,11 @@ void CurrentFxDisplay::conditionerRender()
         vus[i]->setValueR(fx.vu[i][1]);
         vus[i]->repaint();
     }
+}
+
+void CurrentFxDisplay::showConvolutionMenu()
+{
+    std::cout << "In showConvolutionMenu()" << std::endl;
 }
 
 void CurrentFxDisplay::vocoderLayout()
@@ -358,11 +456,11 @@ bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
 
     // Copy existing parameters to the reload parameter storage, so when we
     // reload everything doesn't jump.
-    sync.type = storage_->getPatch().fx[current_fx_].type;
-    sync.return_level = storage_->getPatch().fx[current_fx_].return_level;
+    sync.type = storage->getPatch().fx[current_fx_].type;
+    sync.return_level = storage->getPatch().fx[current_fx_].return_level;
     for (std::size_t i = 0; i < n_fx_params; i++)
     {
-        sync.p[i] = storage_->getPatch().fx[current_fx_].p[i];
+        sync.p[i] = storage->getPatch().fx[current_fx_].p[i];
     }
     editor_->synth->fx_reload[current_fx_] = true;
     editor_->synth->load_fx_needed = true;
@@ -372,7 +470,7 @@ bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
 // File drag and drop for convolution reverb.
 bool CurrentFxDisplay::canDropTarget(const juce::String &file)
 {
-    switch (storage_->getPatch().fx[current_fx_].type.val.i)
+    switch (storage->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:
         return file.endsWith(".wav");
@@ -383,7 +481,7 @@ bool CurrentFxDisplay::canDropTarget(const juce::String &file)
 
 void CurrentFxDisplay::onDrop(const juce::String &file)
 {
-    switch (storage_->getPatch().fx[current_fx_].type.val.i)
+    switch (storage->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:
         if (file.endsWith(".wav"))
