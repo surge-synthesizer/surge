@@ -28,6 +28,13 @@ namespace
 
 struct ConvolutionButton : public juce::Component
 {
+    // We lock to make sure we don't update the current FX in the middle of
+    // loading a WAV, but if it does slip through the cracks (maybe the parent
+    // class swaps to a new FX) the worst thing that happens is some unusual
+    // userdata gets added to that FX and not the targeted one and that FX gets
+    // reloaded by the synth.
+    std::mutex loading;
+
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
 
@@ -36,10 +43,13 @@ struct ConvolutionButton : public juce::Component
 
     ConvolutionEffect *fx{nullptr};
     FxStorage *fxs{nullptr};
-    void setEffect(ConvolutionEffect *f, FxStorage *s)
+    int slot{-1};
+    void setEffect(ConvolutionEffect *f, FxStorage *s, int n)
     {
+        std::lock_guard l(loading);
         fx = f;
         fxs = s;
+        slot = n;
     }
 
     void mouseDown(const juce::MouseEvent &event) override
@@ -100,8 +110,6 @@ struct ConvolutionButton : public juce::Component
 
     void showIRMenu()
     {
-        std::cout << "Showing menu." << std::endl;
-
         juce::PopupMenu menu;
         bool addUserLabel = false;
         int idx = 0;
@@ -259,8 +267,91 @@ struct ConvolutionButton : public juce::Component
 
     void loadIRFromFile()
     {
-        // FIXME: Implement
-        std::cout << "Load IR from file!" << std::endl;
+        auto path = storage->userIRsPath;
+        path = Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastIRPath, path);
+
+        if (!sge)
+            return;
+
+        juce::String fileTypes = "*.wav";
+        sge->fileChooser = std::make_unique<juce::FileChooser>(
+            "Select IR to Load", juce::File(path_to_string(path)), fileTypes);
+        auto action = [this, path](const juce::FileChooser &c) {
+            auto ress = c.getResults();
+
+            if (ress.size() != 1)
+            {
+                return;
+            }
+
+            auto res = c.getResult();
+            auto rString = res.getFullPathName().toStdString();
+
+            this->loadWavForConvolution(rString);
+
+            auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+
+            if (dir != path)
+            {
+                Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastIRPath, dir);
+            }
+        };
+        sge->fileChooser->launchAsync(juce::FileBrowserComponent::openMode |
+                                          juce::FileBrowserComponent::canSelectFiles,
+                                      action);
+    }
+
+    bool loadWavForConvolution(const juce::String &file)
+    {
+        std::lock_guard l(loading);
+        juce::WavAudioFormat format;
+        std::unique_ptr<juce::MemoryMappedAudioFormatReader> reader(
+            format.createMemoryMappedReader(file));
+        if (!reader)
+            return false;
+        if (reader->numChannels != 1 && reader->numChannels != 2)
+            return false;
+        if (!reader->mapEntireFile())
+            return false;
+
+        juce::AudioBuffer<float> buf(reader->numChannels, reader->lengthInSamples);
+        if (!reader->read(&buf, 0, reader->lengthInSamples, 0, true, true))
+            return false;
+
+        FxStorage &sync = sge->synth->fxsync[slot];
+
+        std::string name = juce::File(file).getFileNameWithoutExtension().toStdString();
+        sync.user_data.clear();
+
+        // Filename
+        sync.user_data.emplace("irname", ArbitraryBlockStorage::from_string(name));
+
+        // Sample rate.
+        sync.user_data.emplace("samplerate", ArbitraryBlockStorage::from_float(reader->sampleRate));
+
+        // Left channel (or mono channel, if it's the only one)
+        sync.user_data.emplace("left", ArbitraryBlockStorage::from_floats(std::span<const float>(
+                                           buf.getReadPointer(0), reader->lengthInSamples)));
+
+        // Right channel, if it exists.
+        if (reader->numChannels == 2)
+        {
+            sync.user_data.emplace("right",
+                                   ArbitraryBlockStorage::from_floats(std::span<const float>(
+                                       buf.getReadPointer(1), reader->lengthInSamples)));
+        }
+
+        // Copy existing parameters to the reload parameter storage, so when we
+        // reload everything doesn't jump.
+        sync.type = fxs->type;
+        sync.return_level = fxs->return_level;
+        for (std::size_t i = 0; i < n_fx_params; i++)
+        {
+            sync.p[i] = fxs->p[i];
+        }
+        sge->synth->fx_reload[slot] = true;
+        sge->synth->load_fx_needed = true;
+        return true;
     }
 };
 
@@ -460,7 +551,7 @@ void CurrentFxDisplay::convolutionLayout()
     // button->setWantsKeyboardFocus(true);
     button->setStorage(storage);
     button->setSurgeGUIEditor(editor_);
-    button->setEffect(&fx, &storage->getPatch().fx[current_fx_]);
+    button->setEffect(&fx, &storage->getPatch().fx[current_fx_], current_fx_);
     button->setBounds(vr);
     auto ol = std::make_unique<OverlayAsAccessibleButton<ConvolutionButton>>(
         button.get(), "No IR loaded", juce::AccessibilityRole::button);
@@ -589,59 +680,6 @@ juce::Rectangle<int> CurrentFxDisplay::fxRect()
     return juce::Rectangle<int>(fxpp->x, fxpp->y, 123, 13);
 }
 
-bool CurrentFxDisplay::loadWavForConvolution(const juce::String &file)
-{
-    juce::WavAudioFormat format;
-    std::unique_ptr<juce::MemoryMappedAudioFormatReader> reader(
-        format.createMemoryMappedReader(file));
-    if (!reader)
-        return false;
-    if (reader->numChannels != 1 && reader->numChannels != 2)
-        return false;
-    if (!reader->mapEntireFile())
-        return false;
-
-    juce::AudioBuffer<float> buf(reader->numChannels, reader->lengthInSamples);
-    if (!reader->read(&buf, 0, reader->lengthInSamples, 0, true, true))
-        return false;
-
-    FxStorage &sync = editor_->synth->fxsync[current_fx_];
-
-    // Convolution only uses up to the first three ArbitraryBlockStorage.
-    std::string name = juce::File(file).getFileNameWithoutExtension().toStdString();
-    constexpr int sz = sizeof(float);
-    sync.user_data.clear();
-
-    // Filename
-    sync.user_data.emplace("irname", ArbitraryBlockStorage::from_string(name));
-
-    // Sample rate.
-    sync.user_data.emplace("samplerate", ArbitraryBlockStorage::from_float(reader->sampleRate));
-
-    // Left channel (or mono channel, if it's the only one)
-    sync.user_data.emplace("left", ArbitraryBlockStorage::from_floats(std::span<const float>(
-                                       buf.getReadPointer(0), reader->lengthInSamples)));
-
-    // Right channel, if it exists.
-    if (reader->numChannels == 2)
-    {
-        sync.user_data.emplace("right", ArbitraryBlockStorage::from_floats(std::span<const float>(
-                                            buf.getReadPointer(1), reader->lengthInSamples)));
-    }
-
-    // Copy existing parameters to the reload parameter storage, so when we
-    // reload everything doesn't jump.
-    sync.type = storage->getPatch().fx[current_fx_].type;
-    sync.return_level = storage->getPatch().fx[current_fx_].return_level;
-    for (std::size_t i = 0; i < n_fx_params; i++)
-    {
-        sync.p[i] = storage->getPatch().fx[current_fx_].p[i];
-    }
-    editor_->synth->fx_reload[current_fx_] = true;
-    editor_->synth->load_fx_needed = true;
-    return true;
-}
-
 // File drag and drop for convolution reverb.
 bool CurrentFxDisplay::canDropTarget(const juce::String &file)
 {
@@ -659,8 +697,8 @@ void CurrentFxDisplay::onDrop(const juce::String &file)
     switch (storage->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:
-        if (file.endsWith(".wav"))
-            if (!loadWavForConvolution(file))
+        if (file.endsWith(".wav") && irbutton)
+            if (!(dynamic_cast<ConvolutionButton *>(irbutton.get())->loadWavForConvolution(file)))
                 std::cout << "Failed to load IR from " << file << std::endl;
         break;
     }

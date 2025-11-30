@@ -1637,6 +1637,7 @@ class alignas(16) SurgeStorage
     fs::path userPatchesPath;
     fs::path userPatchesMidiProgramChangePath;
     fs::path userWavetablesPath;
+    fs::path userIRsPath;
     fs::path userModulatorSettingsPath;
     fs::path userFXPath;
     fs::path userWavetablesExportPath;

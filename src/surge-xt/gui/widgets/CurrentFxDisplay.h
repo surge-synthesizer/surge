@@ -72,9 +72,6 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     // For laying out things roughly slider shaped (labels, VUs).
     juce::Rectangle<int> fxRect();
 
-    // Convolution support.
-    bool loadWavForConvolution(const juce::String &file);
-
     int current_fx_{-1};
     Effect *effect_{nullptr}; // unique_ptr owned by synth.
     SurgeGUIEditor *editor_{nullptr};

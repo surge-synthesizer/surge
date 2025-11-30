@@ -377,6 +377,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userPatchesPath = userDataPath / "Patches";
     userPatchesMidiProgramChangePath = userPatchesPath / midiProgramChangePatchesSubdir;
     userWavetablesPath = userDataPath / "Wavetables";
+    userIRsPath = userDataPath / "IRs";
     userWavetablesExportPath = userWavetablesPath / "Exported";
     userWavetableScriptsPath = userWavetablesPath / "Scripted";
     userFXPath = userDataPath / "FX Presets";
