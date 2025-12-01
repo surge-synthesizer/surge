@@ -61,6 +61,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void parentHierarchyChanged() override;
     void resetWindowFromSkin();
 
+    void paramsChangedCallback();
+    void setEffectType(int i);
 
     void handleAsyncUpdate() override;
 
