@@ -1,5 +1,4 @@
 /*
- *
  * Surge XT - a free and open source hybrid synthesizer,
  * built by Surge Synth Team
  *
@@ -62,8 +61,6 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     void parentHierarchyChanged() override;
     void resetWindowFromSkin();
 
-    void paramsChangedCallback();
-    void setEffectType(int i);
 
     void handleAsyncUpdate() override;
 
@@ -120,7 +117,6 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
     juce::PopupMenu hostMenuForMacro(int macro);
 
     friend class SurgeGUIEditor;
-
 
     // clang-format off
     std::forward_list<std::pair<std::string, std::vector<int>>> vkbLayouts =
