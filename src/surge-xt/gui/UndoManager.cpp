@@ -131,6 +131,7 @@ struct UndoManagerImpl
         int type;
         std::vector<UndoParam> undoParamValues;
         std::vector<UndoModulation> undoModulations;
+        std::unordered_map<std::string, std::vector<std::uint8_t>> user_data;
     };
     struct UndoStep
     {
@@ -633,6 +634,7 @@ struct UndoManagerImpl
         auto r = UndoFX();
         r.fxslot = fxslot;
         r.type = fx->type.val.i;
+        r.user_data = fx->user_data;
 
         for (int i = 0; i < n_fx_params; ++i)
         {
@@ -1009,6 +1011,7 @@ struct UndoManagerImpl
             int cge = p->fxslot;
 
             synth->fxsync[cge].type.val.i = p->type;
+            synth->fxsync[cge].user_data = p->user_data;
             Effect *t_fx = spawn_effect(synth->fxsync[cge].type.val.i, &synth->storage,
                                         &synth->fxsync[cge], 0);
             if (t_fx)
