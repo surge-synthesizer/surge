@@ -255,6 +255,24 @@ struct ConvolutionButton : public juce::Component
     {
         auto action = [this]() { this->loadIRFromFile(); };
         contextMenu.addItem(Surge::GUI::toOSCase("Load IR from file..."), action);
+        auto clear = [this]() { this->clearIR(); };
+        contextMenu.addItem(Surge::GUI::toOSCase("Clear IR"), clear);
+    }
+
+    void clearIR()
+    {
+        FxStorage &sync = sge->synth->fxsync[slot];
+        sync.user_data.clear();
+        // Copy existing parameters to the reload parameter storage, so when we
+        // reload everything doesn't jump.
+        sync.type = fxs->type;
+        sync.return_level = fxs->return_level;
+        for (std::size_t i = 0; i < n_fx_params; i++)
+        {
+            sync.p[i] = fxs->p[i];
+        }
+        sge->synth->fx_reload[slot] = true;
+        sge->synth->load_fx_needed = true;
     }
 
     void loadIR(int ir)
