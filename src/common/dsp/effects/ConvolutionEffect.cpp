@@ -21,10 +21,38 @@
  */
 #include "ConvolutionEffect.h"
 #include <iostream>
+#include <numeric>
 
 #include <CDSPResampler.h>
 
+namespace
+{
+
 static constexpr double Q = 0.707;
+
+void normalize(std::span<float> L, std::span<float> R)
+{
+    float maxL = std::numeric_limits<float>().lowest();
+    float maxR = std::numeric_limits<float>().lowest();
+
+    auto F = [](float accum, float f) { return accum + (f * f); };
+    maxL = std::reduce(L.begin(), L.end(), 0.f, F);
+    maxR = std::reduce(R.begin(), R.end(), 0.f, F);
+
+    float scale = 1.f;
+    float max = std::max(maxL, maxR);
+    if (max > 1e-3f)
+    {
+        scale = std::sqrt(1.f / (2.f * max));
+        scale = std::min(scale, 2.f);
+        for (float &f : L)
+            f *= scale;
+        for (float &f : R)
+            f *= scale;
+    }
+}
+
+} // namespace
 
 ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd)
     : Effect(storage, fxdata, pd), initialized(false), lc_(storage), hc_(storage),
@@ -186,6 +214,7 @@ void ConvolutionEffect::prep_ir()
         irR_ = irL_;
     }
 
+    normalize(irL_, irR_);
     s = s && convolverL_.init(BLOCK_SIZE, 256, irL_);
     s = s && convolverR_.init(BLOCK_SIZE, 256, irR_);
     if (!s)
