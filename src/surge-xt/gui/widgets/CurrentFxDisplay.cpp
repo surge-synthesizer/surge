@@ -44,12 +44,15 @@ struct ConvolutionButton : public juce::Component
     ConvolutionEffect *fx{nullptr};
     FxStorage *fxs{nullptr};
     int slot{-1};
+    std::string irname{"No IR loaded"};
     void setEffect(ConvolutionEffect *f, FxStorage *s, int n)
     {
         std::lock_guard l(loading);
         fx = f;
         fxs = s;
         slot = n;
+        if (fxs->user_data.contains("irname"))
+            irname = fxs->by_key("irname").to_string();
     }
 
     void mouseDown(const juce::MouseEvent &event) override
@@ -93,11 +96,6 @@ struct ConvolutionButton : public juce::Component
 
         auto irr = getLocalBounds();
 
-        std::string irname("No IR loaded.");
-        if (fx->initialized)
-        {
-            irname = fxs->by_key("irname").to_string();
-        }
         bool focused = isMousedOver || hasKeyboardFocus(true);
         g.setColour(focused ? fgcolHov : fgcol);
         g.fillRect(irr);
