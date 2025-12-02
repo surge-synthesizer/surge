@@ -1902,7 +1902,7 @@ void SurgeStorage::refresh_irlist()
         refresh_irlistFrom(false, extraThirdPartyIRsPath, "irs_3rdparty");
     }
     firstUserIRCategory = ir_category.size();
-    refresh_irlistAddDir(true, "irs");
+    refresh_irlistAddDir(true, "IRs");
 
     if (!extraUserIRsPath.empty())
     {

@@ -151,7 +151,7 @@ struct ConvolutionButton : public juce::Component
 
             if (cat.isRoot)
             {
-                populateMenuForCategory(menu, c, 0);
+                populateMenuForCategory(menu, c, 0, false);
             }
         }
 
@@ -163,13 +163,18 @@ struct ConvolutionButton : public juce::Component
         menu.showMenuAsync(sge->popupMenuOptions(getBounds().getBottomLeft()));
     }
 
-    bool populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId, int selectedItem)
+    bool populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId, int selectedItem, bool intoTop)
     {
         int sub = 0;
         bool selected = false;
         juce::PopupMenu subMenuLocal;
         juce::PopupMenu *subMenu = &subMenuLocal;
-        PatchCategory cat = storage->wt_category[categoryId];
+        PatchCategory cat = storage->ir_category[categoryId];
+
+        if (intoTop)
+        {
+            subMenu = &contextMenu;
+        }
 
         for (auto p : storage->irOrdering)
         {
@@ -180,14 +185,15 @@ struct ConvolutionButton : public juce::Component
 
                 if (p == selectedItem)
                 {
-                    checked = true;
-                    selected = true;
+                    // This is currently bogus, we don't have a "checked" like we do w/ wavetables.
+                    //checked = true;
+                    //selected = true;
                 }
 
                 auto item = new juce::PopupMenu::Item(storage->ir_list[p].name);
 
                 item->setEnabled(true);
-                item->setTicked(checked);
+                //item->setTicked(checked);
                 item->setAction(action);
 
                 subMenu->addItem(*item);
@@ -197,6 +203,11 @@ struct ConvolutionButton : public juce::Component
                 if (sub != 0 && sub % 24 == 0)
                 {
                     subMenu->addColumnBreak();
+
+                    if (intoTop)
+                    {
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
+                    }
                 }
             }
         }
@@ -218,7 +229,7 @@ struct ConvolutionButton : public juce::Component
                     cidx++;
                 }
 
-                bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem);
+                bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem, false);
 
                 if (checked)
                 {
