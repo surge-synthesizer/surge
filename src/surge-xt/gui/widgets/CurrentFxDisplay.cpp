@@ -286,10 +286,17 @@ struct ConvolutionButton : public juce::Component
         sge->synth->load_fx_needed = true;
     }
 
-    void loadIR(int ir)
+    void loadIR(int id)
     {
-        // FIXME: Implement
-        std::cout << "Load IR!" << std::endl;
+        if (id >= 0 && id < storage->ir_list.size() && sge)
+        {
+            // TODO: Undo load like we do with wavetables?
+            std::string announce = "Loaded impulse response ";
+            announce += storage->ir_list[id].name;
+            sge->enqueueAccessibleAnnouncement(announce);
+        }
+
+        loadWavForConvolution(storage->ir_list[id].path.string());
     }
 
     void loadIRFromFile()
