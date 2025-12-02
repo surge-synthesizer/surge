@@ -163,7 +163,8 @@ struct ConvolutionButton : public juce::Component
         menu.showMenuAsync(sge->popupMenuOptions(getBounds().getBottomLeft()));
     }
 
-    bool populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId, int selectedItem, bool intoTop)
+    bool populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId, int selectedItem,
+                                 bool intoTop)
     {
         int sub = 0;
         bool selected = false;
@@ -186,14 +187,14 @@ struct ConvolutionButton : public juce::Component
                 if (p == selectedItem)
                 {
                     // This is currently bogus, we don't have a "checked" like we do w/ wavetables.
-                    //checked = true;
-                    //selected = true;
+                    // checked = true;
+                    // selected = true;
                 }
 
                 auto item = new juce::PopupMenu::Item(storage->ir_list[p].name);
 
                 item->setEnabled(true);
-                //item->setTicked(checked);
+                // item->setTicked(checked);
                 item->setAction(action);
 
                 subMenu->addItem(*item);
@@ -206,7 +207,8 @@ struct ConvolutionButton : public juce::Component
 
                     if (intoTop)
                     {
-                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu,
+                                                                                        "");
                     }
                 }
             }
