@@ -309,7 +309,7 @@ struct ConvolutionButton : public juce::Component
         if (!sge)
             return;
 
-        juce::String fileTypes = "*.wav";
+        juce::String fileTypes = "*.wav;*.flac";
         sge->fileChooser = std::make_unique<juce::FileChooser>(
             "Select IR to Load", juce::File(path_to_string(path)), fileTypes);
         auto action = [this, path](const juce::FileChooser &c) {
@@ -340,14 +340,13 @@ struct ConvolutionButton : public juce::Component
     bool loadWavForConvolution(const juce::String &file)
     {
         std::lock_guard l(loading);
-        juce::WavAudioFormat format;
-        std::unique_ptr<juce::MemoryMappedAudioFormatReader> reader(
-            format.createMemoryMappedReader(file));
+        juce::AudioFormatManager manager;
+        manager.registerBasicFormats();
+
+        auto reader = manager.createReaderFor(juce::File(file));
         if (!reader)
             return false;
         if (reader->numChannels != 1 && reader->numChannels != 2)
-            return false;
-        if (!reader->mapEntireFile())
             return false;
 
         juce::AudioBuffer<float> buf(reader->numChannels, reader->lengthInSamples);
@@ -722,7 +721,7 @@ bool CurrentFxDisplay::canDropTarget(const juce::String &file)
     switch (storage->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:
-        return file.endsWith(".wav");
+        return file.endsWith(".wav") || file.endsWith(".flac");
     default:
         return false;
     }
@@ -733,7 +732,7 @@ void CurrentFxDisplay::onDrop(const juce::String &file)
     switch (storage->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:
-        if (file.endsWith(".wav") && irbutton)
+        if ((file.endsWith(".wav") || file.endsWith(".flac")) && irbutton)
             if (!(dynamic_cast<ConvolutionButton *>(irbutton.get())->loadWavForConvolution(file)))
                 std::cout << "Failed to load IR from " << file << std::endl;
         break;

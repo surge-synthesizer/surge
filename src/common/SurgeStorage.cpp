@@ -2005,6 +2005,7 @@ void SurgeStorage::refresh_irlistFrom(bool isUser, const fs::path &p, const std:
 {
     std::vector<std::string> supportedTableFileTypes;
     supportedTableFileTypes.push_back(".wav");
+    supportedTableFileTypes.push_back(".flac");
 
     refreshPatchOrWTListAddDir(
         isUser, p, subdir,
