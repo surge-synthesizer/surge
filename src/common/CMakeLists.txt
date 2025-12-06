@@ -19,6 +19,10 @@ endif()
 surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
 
+set(ZSTD_BUILD_STATIC ON)
+set(ZSTD_BUILD_SHARED OFF)
+surge_add_lib_subdirectory(zstd)
+
 if(NOT SURGE_SKIP_LUA)
   surge_add_lib_subdirectory(luajitlib)
   target_compile_definitions(luajit-5.1 INTERFACE HAS_LUA=1)
@@ -344,6 +348,7 @@ target_link_libraries(${PROJECT_NAME}
   fmt
   luajit-5.1
   pffft
+  libzstd_static
   surge::airwindows
   surge::binn
   surge::eurorack

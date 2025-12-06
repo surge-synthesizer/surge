@@ -43,6 +43,7 @@
 #include "binn/binn.h"
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 #include "PatchFileHeaderStructs.h"
+#include "zstd.h"
 
 namespace mech = sst::basic_blocks::mechanics;
 
@@ -1216,7 +1217,7 @@ unsigned int SurgePatch::save_patch(void **data)
     // void **xmldata = new void*();
     void *xmldata = 0;
     patch_header header;
-    binn *arbdata;
+    std::vector<std::uint8_t> arbdata;
 
     memcpy(header.tag, "sub3", 4);
     size_t xmlsize = save_xml(&xmldata);
@@ -1244,8 +1245,8 @@ unsigned int SurgePatch::save_patch(void **data)
         }
     }
     psize += xmlsize + sizeof(patch_header);
-    arbdata = static_cast<binn *>(save_arbitrary_block_storage());
-    psize += binn_size(arbdata);
+    arbdata = save_arbitrary_block_storage();
+    psize += arbdata.size();
     if (patchptr)
         free(patchptr);
     patchptr = malloc(psize);
@@ -1286,14 +1287,12 @@ unsigned int SurgePatch::save_patch(void **data)
         }
     }
     // Append the arbitrary data.
-    memcpy(dw, binn_ptr(arbdata), binn_size(arbdata));
-    binn_free(arbdata);
+    memcpy(dw, arbdata.data(), arbdata.size());
 
     return psize;
 }
 
-// Returned as a void* to hide the binn type from SurgeStorage.h.
-void *SurgePatch::save_arbitrary_block_storage()
+std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
 {
     binn *map = binn_object();
     for (int fx = 0; fx < n_fx_slots; fx++)
@@ -1306,27 +1305,52 @@ void *SurgePatch::save_arbitrary_block_storage()
         std::string key = fmt::format("fx{}", fx);
         binn_object_set_object(map, key.c_str(), fxmap);
     }
-    return map;
+
+    // Now compress it with zstd
+    auto size = binn_size(map);
+    void *ptr = binn_ptr(map);
+    auto compressedSize = ZSTD_compressBound(size);
+    std::vector<std::uint8_t> buf(compressedSize);
+    compressedSize = ZSTD_compress(buf.data(), compressedSize, ptr, size, 3);
+    if (ZSTD_isError(compressedSize))
+    {
+        compressedSize = 0;
+    }
+    buf.resize(compressedSize);
+    binn_free(map);
+    return buf;
 }
 
 unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::size_t remainder)
 {
-    if (remainder < sizeof(binn_struct))
+    // This should be a zstd compressed block.
+    auto decompressedSize = ZSTD_getFrameContentSize(data, remainder);
+    if (decompressedSize == ZSTD_CONTENTSIZE_UNKNOWN || decompressedSize == ZSTD_CONTENTSIZE_ERROR)
     {
-        // Old patch, no block storage.
+        // Possibly old patch, possibly corrupted data, either way we can't.
+        // Same for the rest of these "return 0"s.
+        return 0;
+    }
+    sst::cpputils::DynArray<std::uint8_t> decompressed(decompressedSize);
+    decompressedSize = ZSTD_decompress(decompressed.data(), decompressedSize, data, remainder);
+    if (ZSTD_isError(decompressedSize))
+    {
+        std::cerr << "Failed to decompress arbdata; possibly corrupted patch." << std::endl;
         return 0;
     }
 
-    // Patches can be arbitrarily sized, and binn needs the struct to start on
-    // the normal alignment.
-    sst::cpputils::DynArray<std::uint8_t> moved(remainder);
-    std::memcpy(moved.data(), data, remainder);
-    data = moved.data();
+    if (decompressedSize < sizeof(binn_struct))
+    {
+        std::cerr << "Failed to create binn; possibly corrupted patch." << std::endl;
+        return 0;
+    }
+
+    data = decompressed.data();
 
     int sz = 0;
     if (!binn_is_valid_ex(data, NULL, NULL, &sz))
     {
-        std::cerr << "Invalid binn, possibly corrupted patch." << std::endl;
+        std::cerr << "Failed to find binn; possibly corrupted patch." << std::endl;
         return 0;
     }
     binn *b = binn_open_ex(data, sz);
@@ -1355,7 +1379,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             }
             catch (std::invalid_argument const &ex)
             {
-                std::cerr << "Error deserializing " << key << std::endl;
+                std::cerr << "Error deserializing " << key << "; possible patch corruption." << std::endl;
                 continue;
             }
 

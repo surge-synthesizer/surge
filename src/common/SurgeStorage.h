@@ -1232,7 +1232,7 @@ class SurgePatch
     unsigned int load_arbitrary_block_storage(const void *data, std::size_t remainder);
     void load_arbitrary_block_storage_xml(const TiXmlElement *patch);
     unsigned int save_patch(void **data);
-    void *save_arbitrary_block_storage();
+    std::vector<std::uint8_t> save_arbitrary_block_storage();
     Parameter *parameterFromOSCName(std::string stName);
 
     // data

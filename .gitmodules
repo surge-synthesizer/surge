@@ -65,3 +65,6 @@
 [submodule "libs/r8brain-free-src"]
 	path = libs/r8brain-free-src
 	url = https://github.com/avaneev/r8brain-free-src.git
+[submodule "libs/zstd"]
+	path = libs/zstd
+	url = https://github.com/facebook/zstd.git
