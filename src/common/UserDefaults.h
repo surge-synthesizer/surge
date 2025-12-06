@@ -113,6 +113,7 @@ enum DefaultKey
     LastSCLPath,
     LastKBMPath,
     LastWavetablePath,
+    LastIRPath,
     LastPatchPath,
 
     PromptToActivateShortcutsOnAccKeypress,

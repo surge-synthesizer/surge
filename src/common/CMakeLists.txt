@@ -2,7 +2,9 @@
 project(surge-common)
 
 surge_add_lib_subdirectory(airwindows)
+surge_add_lib_subdirectory(binn)
 surge_add_lib_subdirectory(eurorack)
+surge_add_lib_subdirectory(pffft)
 surge_add_lib_subdirectory(fmt)
 
 # Make MTS optional
@@ -14,9 +16,12 @@ else()
   add_library(surge::oddsound-mts ALIAS oddsound-mts)
 endif()
 
-surge_add_lib_subdirectory(pffft)
 surge_add_lib_subdirectory(tuning-library)
 surge_add_lib_subdirectory(sqlite-3.23.3)
+
+set(ZSTD_BUILD_STATIC ON)
+set(ZSTD_BUILD_SHARED OFF)
+surge_add_lib_subdirectory(zstd)
 
 if(NOT SURGE_SKIP_LUA)
   surge_add_lib_subdirectory(luajitlib)
@@ -122,6 +127,8 @@ add_library(${PROJECT_NAME}
   dsp/effects/CombulatorEffect.h
   dsp/effects/ConditionerEffect.cpp
   dsp/effects/ConditionerEffect.h
+  dsp/effects/ConvolutionEffect.cpp
+  dsp/effects/ConvolutionEffect.h
   dsp/effects/DelayEffect.cpp
   dsp/effects/DelayEffect.h
   dsp/effects/DistortionEffect.cpp
@@ -331,12 +338,19 @@ endif()
 
 target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/geninclude/version.cpp)
 
+# r8brain isn't cmaked but it's just one file
+target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/libs/r8brain-free-src/r8bbase.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/libs/r8brain-free-src)
+
 add_library(surge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
   fmt
   luajit-5.1
+  pffft
+  libzstd_static
   surge::airwindows
+  surge::binn
   surge::eurorack
 
   sst-cpputils
@@ -354,6 +368,7 @@ target_link_libraries(${PROJECT_NAME}
   surge::sqlite
   surge-common-binary
   tuning-library
+
   PRIVATE
   surge-lua-src
   surge-platform
@@ -369,11 +384,6 @@ if(SST_FILTERS_COMB_EXTENSION_FACTOR)
   message(STATUS "Overriding comb extension factor to ${SST_FILTERS_COMB_EXTENSION_FACTOR}")
   target_compile_definitions(${PROJECT_NAME} PUBLIC
     SST_FILTERS_COMB_EXTENSION_FACTOR=${SST_FILTERS_COMB_EXTENSION_FACTOR})
-endif()
-
-# Disabling PFFFT on arm64ec for now
-if(NOT(MSVC AND ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64ec" OR "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "arm64")))
-  target_link_libraries(${PROJECT_NAME} PUBLIC pffft)
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC

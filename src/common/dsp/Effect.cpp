@@ -28,6 +28,7 @@
 #include "ChorusEffectImpl.h"
 #include "CombulatorEffect.h"
 #include "ConditionerEffect.h"
+#include "ConvolutionEffect.h"
 #include "DistortionEffect.h"
 #include "DelayEffect.h"
 #include "FlangerEffect.h"
@@ -127,6 +128,8 @@ Effect *spawn_effect(int id, SurgeStorage *storage, FxStorage *fxdata, pdata *pd
         return new AudioInputEffect(storage, fxdata, pd);
     case fxt_floaty_delay:
         return new FloatyDelayEffect(storage, fxdata, pd);
+    case fxt_convolution:
+        return new ConvolutionEffect(storage, fxdata, pd);
 
     default:
         return 0;
