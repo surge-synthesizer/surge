@@ -20,7 +20,6 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "ConvolutionEffect.h"
-#include <iostream>
 #include <numeric>
 
 #include <CDSPResampler.h>
@@ -219,7 +218,8 @@ void ConvolutionEffect::prep_ir()
     s = s && convolverR_.init(BLOCK_SIZE, 256, irR_);
     if (!s)
     {
-        std::cerr << "Error initializing convolver, not running convolution." << std::endl;
+        storage->reportError("Error initializing the convolver, not running convolution effect",
+                             "FX Error");
         return;
     }
 
