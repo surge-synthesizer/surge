@@ -1379,7 +1379,8 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             }
             catch (std::invalid_argument const &ex)
             {
-                std::cerr << "Error deserializing " << key << "; possible patch corruption." << std::endl;
+                std::cerr << "Error deserializing " << key << "; possible patch corruption."
+                          << std::endl;
                 continue;
             }
 
