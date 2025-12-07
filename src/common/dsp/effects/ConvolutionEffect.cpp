@@ -202,8 +202,10 @@ void ConvolutionEffect::process(float *dataL, float *dataR)
     {
         for (std::size_t i = 0; i < BLOCK_SIZE; i++)
         {
-            delayedL_[i] = delayL_.readLinear(delayTime_.v + (BLOCK_SIZE - 1 - i));
-            delayedR_[i] = delayR_.readLinear(delayTime_.v + (BLOCK_SIZE - 1 - i));
+            delayedL_[i] = delayL_.read(delayTime_.v + (BLOCK_SIZE - 1 - i));
+            delayedR_[i] = delayR_.read(delayTime_.v + (BLOCK_SIZE - 1 - i));
+            if (i < BLOCK_SIZE - 1)
+                delayTime_.process();
         }
     }
     else
@@ -307,6 +309,7 @@ void ConvolutionEffect::set_params()
         storage->db_to_linear(*pd_float[convolution_tilt_slope] * 0.5f));
     mix_.set_target_smoothed(*pd_float[convolution_mix]);
     delayTime_.newValue(storage->samplerate * *pd_float[convolution_delay]);
+    delayTime_.process();
 
     // Do we need a reload for non-modulatable parameter changes?
     if (storage->samplerate != old_samplerate_ ||
