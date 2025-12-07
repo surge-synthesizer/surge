@@ -1397,6 +1397,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
                 {
                     std::cerr << "Binn value for " << fxkey
                               << " is not a blob, possible patch corruption." << std::endl;
+                    continue;
                 }
 
                 std::string converted = std::string(fxkey);
@@ -3782,26 +3783,6 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         }
     }
     patch.InsertEndChild(eod);
-
-#if 0
-    TiXmlElement efd("extrafxdata");
-    for (int fx = 0; fx < n_fx_slots; fx++)
-    {
-        TiXmlElement fxe("fx");
-        fxe.SetAttribute("slot", fx);
-        fxe.SetAttribute("nUserDatas", this->fx[fx].user_data.size());
-        for (int i = 0; i < this->fx[fx].user_data.size(); i++)
-        {
-            TiXmlElement ud("userData");
-            ud.SetAttribute("id", this->fx[fx].user_data[i].id);
-            //ud.SetAttribute("dataSize", this->fx[fx].user_data[i].data_size);
-            ud.SetAttribute("name", this->fx[fx].user_data[i].name);
-            fxe.InsertEndChild(ud);
-        }
-        efd.InsertEndChild(fxe);
-    }
-    patch.InsertEndChild(efd);
-#endif
 
     TiXmlElement ss("stepsequences");
     for (int sc = 0; sc < n_scenes; sc++)

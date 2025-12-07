@@ -3018,7 +3018,8 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                           std::begin(storage.getPatch().fx[s].p));
             }
 
-            // TODO: Just change this entire thing to a single copy operation?
+            // TODO: Just change this entire thing to a single copy operation? How about an atomic
+            // pointer swap or copy-on-write?
             storage.getPatch().fx[s].user_data = fxsync[s].user_data;
             // If we don't clear this out of the sync, it will hang around and pollute all FX data
             // even if the sync's type changes.
