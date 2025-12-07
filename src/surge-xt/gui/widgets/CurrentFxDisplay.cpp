@@ -117,8 +117,8 @@ struct ConvolutionButton : public juce::Component
             if (idx == storage->firstThirdPartyIRCategory)
             {
                 menu.addColumnBreak();
-                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
-                                                                                "3RD PARTY IMPULSES");
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                    menu, "3RD PARTY IMPULSES");
             }
 
             if (idx == storage->firstUserIRCategory &&
@@ -145,7 +145,8 @@ struct ConvolutionButton : public juce::Component
 
             if (addUserLabel)
             {
-                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "USER IMPULSES");
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
+                                                                                "USER IMPULSES");
                 addUserLabel = false;
             }
 
