@@ -274,6 +274,7 @@ struct ConvolutionButton : public juce::Component
 
     void clearIR()
     {
+        sge->undoManager()->pushFX(slot);
         FxStorage &sync = sge->synth->fxsync[slot];
         sync.user_data.clear();
         // Copy existing parameters to the reload parameter storage, so when we
@@ -292,7 +293,7 @@ struct ConvolutionButton : public juce::Component
     {
         if (id >= 0 && id < storage->ir_list.size() && sge)
         {
-            // TODO: Undo load like we do with wavetables?
+            sge->undoManager()->pushFX(slot);
             std::string announce = "Loaded impulse response ";
             announce += storage->ir_list[id].name;
             sge->enqueueAccessibleAnnouncement(announce);
