@@ -79,6 +79,7 @@
 
 #include "ModulationGridConfiguration.h"
 
+#include <cstring>
 #include <iostream>
 #include <iomanip>
 #include <sstream>

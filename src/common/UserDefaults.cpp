@@ -178,6 +178,9 @@ std::string defaultKeyToString(DefaultKey k)
     case LastWavetablePath:
         r = "lastWavetablePath";
         break;
+    case LastIRPath:
+        r = "lastIRPath";
+        break;
     // TODO: remove in XT2
     case TabKeyArmsModulators:
         r = "tabKeyArmsModulators";

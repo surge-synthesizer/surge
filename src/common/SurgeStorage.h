@@ -41,6 +41,7 @@
 #include <functional>
 #include <unordered_map>
 #include <map>
+#include <span>
 #include <utility>
 #include <type_traits>
 #include <random>
@@ -428,6 +429,7 @@ enum fx_type
     fxt_bonsai,
     fxt_audio_input,
     fxt_floaty_delay,
+    fxt_convolution,
 
     n_fx_types,
 };
@@ -462,20 +464,21 @@ const char fx_type_names[n_fx_types][32] = {"Off",
                                             "Spring Reverb",
                                             "Bonsai",
                                             "Audio Input",
-                                            "Floaty Delay"};
+                                            "Floaty Delay",
+                                            "Convolution"};
 
 const char fx_type_shortnames[n_fx_types][16] = {
-    "Off",         "Delay",      "Reverb 1",      "Phaser",        "Rotary",     "Distortion",
-    "EQ",          "Freq Shift", "Conditioner",   "Chorus",        "Vocoder",    "Reverb 2",
-    "Flanger",     "Ring Mod",   "Airwindows",    "Neuron",        "Graphic EQ", "Resonator",
-    "CHOW",        "Exciter",    "Ensemble",      "Combulator",    "Nimbus",     "Tape",
-    "Treemonster", "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Bonsai",     "Audio In",
-    "Floaty Delay"};
+    "Off",          "Delay",      "Reverb 1",      "Phaser",        "Rotary",     "Distortion",
+    "EQ",           "Freq Shift", "Conditioner",   "Chorus",        "Vocoder",    "Reverb 2",
+    "Flanger",      "Ring Mod",   "Airwindows",    "Neuron",        "Graphic EQ", "Resonator",
+    "CHOW",         "Exciter",    "Ensemble",      "Combulator",    "Nimbus",     "Tape",
+    "Treemonster",  "Waveshaper", "Mid-Side Tool", "Spring Reverb", "Bonsai",     "Audio In",
+    "Floaty Delay", "Convolution"};
 
 const char fx_type_acronyms[n_fx_types][8] = {
     "OFF", "DLY",  "RV1", "PH", "ROT", "DIST", "EQ",  "FRQ", "DYN", "CH",  "VOC",
     "RV2", "FL",   "RM",  "AW", "NEU", "GEQ",  "RES", "CHW", "XCT", "ENS", "CMB",
-    "NIM", "TAPE", "TM",  "WS", "M-S", "SRV",  "BON", "IN",  "FDL"};
+    "NIM", "TAPE", "TM",  "WS", "M-S", "SRV",  "BON", "IN",  "FDL", "IR"};
 
 enum fx_bypass
 {
@@ -645,6 +648,41 @@ struct MidiChannelState
     float timbre;
 };
 
+// Arbitrary block storage helpers.
+// Arbitrary block storage can be used to save/load arbitrary blocks from the
+// patch and is available in particular places like the FX storage. An arbitrary block storage is
+// a vector<uint8_t>. This class captures that vector and provides helpers for working with it.
+struct ArbitraryBlockStorage
+{
+    std::vector<std::uint8_t> &data;
+
+    ArbitraryBlockStorage(std::vector<std::uint8_t> &v) : data(v) {}
+
+    // These will return an empty span if T is invalid size for the vector.
+    template <typename T> std::span<T> as()
+    {
+        if (data.size() % sizeof(T))
+            return std::span<T>();
+        return std::span<T>(reinterpret_cast<T *>(data.data()), data.size() / sizeof(T));
+    }
+
+    template <typename T> static std::span<T> as(std::vector<std::uint8_t> &v)
+    {
+        if (v.size() % sizeof(T))
+            return std::span<T>();
+        return std::span<T>(reinterpret_cast<T *>(v.data()), v.size() / sizeof(T));
+    }
+
+    // These will all throw invalid_argument if there's an issue with size.
+    float to_float();
+    std::string to_string();
+
+    // Helpers for creating the vector v.
+    static std::vector<std::uint8_t> from_float(const float f);
+    static std::vector<std::uint8_t> from_floats(std::span<const float> fs);
+    static std::vector<std::uint8_t> from_string(const std::string &s);
+};
+
 // I have used the ordering here in SurgeGUIEditor to iterate. Be careful if type or retrigger move
 // from first/last position.
 struct OscillatorStorage : public CountedSetUserData // The counted set is the wavetables
@@ -728,6 +766,16 @@ struct FxStorage
 
     // like this one!
     fxslot_positions fxslot;
+
+    // Storage of arbitrary data for the FX. This storage should be considered
+    // read-only in realtime code (such as the audio thread), since
+    // modifications can result in allocations. This data is saved out as part
+    // of the patch. The string keys must be a maximum of 255 characters, for
+    // patch-saving purposes; otherwise, they will not be saved out.
+    std::unordered_map<std::string, std::vector<std::uint8_t>> user_data;
+
+    // Construct helper for a given user data key.
+    inline ArbitraryBlockStorage by_key(const std::string &key) { return user_data[key]; }
 };
 
 struct SurgeSceneStorage
@@ -1181,7 +1229,10 @@ class SurgePatch
     void formulaFromXMLElement(FormulaModulatorStorage *ms, TiXmlElement *parent) const;
 
     void load_patch(const void *data, int size, bool preset);
+    unsigned int load_arbitrary_block_storage(const void *data, std::size_t remainder);
+    void load_arbitrary_block_storage_xml(const TiXmlElement *patch);
     unsigned int save_patch(void **data);
+    std::vector<std::uint8_t> save_arbitrary_block_storage();
     Parameter *parameterFromOSCName(std::string stName);
 
     // data
@@ -1508,6 +1559,9 @@ class alignas(16) SurgeStorage
     void refresh_wtlist();
     void refresh_wtlistAddDir(bool userDir, const std::string &subdir);
     void refresh_wtlistFrom(bool isUser, const fs::path &from, const std::string &subdir);
+    void refresh_irlist();
+    void refresh_irlistAddDir(bool userDir, const std::string &subdir);
+    void refresh_irlistFrom(bool isUser, const fs::path &from, const std::string &subdir);
     void refresh_patchlist();
     void refreshPatchlistAddDir(bool userDir, std::string subdir);
 
@@ -1564,6 +1618,14 @@ class alignas(16) SurgeStorage
     std::vector<int> wtOrdering;
     std::vector<int> wtCategoryOrdering;
 
+    // The in-memory IR database
+    std::vector<Patch> ir_list;
+    std::vector<PatchCategory> ir_category;
+    int firstThirdPartyIRCategory;
+    int firstUserIRCategory;
+    std::vector<int> irOrdering;
+    std::vector<int> irCategoryOrdering;
+
     std::unique_ptr<Surge::Storage::FxUserPreset> fxUserPreset;
     std::unique_ptr<Surge::Storage::ModulatorPreset> modulatorPreset;
 
@@ -1575,6 +1637,7 @@ class alignas(16) SurgeStorage
     fs::path userPatchesPath;
     fs::path userPatchesMidiProgramChangePath;
     fs::path userWavetablesPath;
+    fs::path userIRsPath;
     fs::path userModulatorSettingsPath;
     fs::path userFXPath;
     fs::path userWavetablesExportPath;
@@ -1583,6 +1646,8 @@ class alignas(16) SurgeStorage
     fs::path userMidiMappingsPath;
     fs::path extraThirdPartyWavetablesPath; // used by rack
     fs::path extraUserWavetablesPath;       // used by rack
+    fs::path extraThirdPartyIRsPath;
+    fs::path extraUserIRsPath;
 
     fs::path calculateStandardUserDataPath(const std::string &sxt) const;
 

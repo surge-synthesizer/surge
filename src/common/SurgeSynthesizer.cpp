@@ -3018,6 +3018,13 @@ bool SurgeSynthesizer::loadFx(bool initp, bool force_reload_all)
                           std::begin(storage.getPatch().fx[s].p));
             }
 
+            // TODO: Just change this entire thing to a single copy operation? How about an atomic
+            // pointer swap or copy-on-write?
+            storage.getPatch().fx[s].user_data = fxsync[s].user_data;
+            // If we don't clear this out of the sync, it will hang around and pollute all FX data
+            // even if the sync's type changes.
+            fxsync[s].user_data.clear();
+
             fx[s].reset(spawn_effect(storage.getPatch().fx[s].type.val.i, &storage,
                                      &storage.getPatch().fx[s], storage.getPatch().globaldata));
             if (fx[s])
@@ -4317,6 +4324,7 @@ void SurgeSynthesizer::enqueueFXOff(int whichFX)
     // this can come from the UI thread. I don't think we need the spawn mutex but we might
     std::lock_guard<std::mutex> lg(fxSpawnMutex);
     fxsync[whichFX].type.val.i = fxt_off;
+    fxsync[whichFX].user_data.clear();
     load_fx_needed = true;
 }
 
@@ -5323,6 +5331,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     fxmodsync[target].clear();
 
     fxsync[target].type.val.i = so.type.val.i;
+    fxsync[target].user_data = so.user_data;
 
     Effect *t_fx = spawn_effect(fxsync[target].type.val.i, &storage, &fxsync[target], 0);
 
@@ -5347,11 +5356,13 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
     case FXReorderMode::MOVE:
     {
         fxsync[source].type.val.i = 0;
+        fxsync[source].user_data.clear();
     }
     break;
     case FXReorderMode::SWAP:
     {
         fxsync[source].type.val.i = to.type.val.i;
+        fxsync[source].user_data = to.user_data;
 
         t_fx = spawn_effect(fxsync[source].type.val.i, &storage, &fxsync[source], 0);
 

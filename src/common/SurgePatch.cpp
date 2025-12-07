@@ -20,11 +20,15 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+#include <iostream>
+#include <list>
+#include <locale>
+#include <regex>
+
 #include "SurgeStorage.h"
 #include "Oscillator.h"
 #include "SurgeParamConfig.h"
 #include "Effect.h"
-#include <list>
 #include "MSEGModulationHelper.h"
 #include "FormulaModulationHelper.h"
 #include "DebugHelpers.h"
@@ -33,12 +37,13 @@
 #include "UserDefaults.h"
 #include "version.h"
 #include "fmt/core.h"
-#include <locale>
 #include <fmt/format.h>
 #include "UnitConversions.h"
 
+#include "binn/binn.h"
 #include "sst/basic-blocks/mechanics/endian-ops.h"
 #include "PatchFileHeaderStructs.h"
+#include "zstd.h"
 
 namespace mech = sst::basic_blocks::mechanics;
 
@@ -103,6 +108,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
         param_ptr.push_back(this->fx[fx].type.assign(
             p_id.next(), 0, "type", "FX Type", fmt::format("{}/type", fxslot_shortoscname[fx]),
             ct_fxtype, Surge::Skin::FX::fx_type, 0, cg_FX, fx, false, kHorizontal));
+
         for (int p = 0; p < n_fx_params; p++)
         {
             auto conn = Surge::Skin::Connector::connectorByID("fx.param_" + std::to_string(p + 1));
@@ -1192,6 +1198,10 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 }
             }
         }
+        if (dr < end)
+        {
+            dr += load_arbitrary_block_storage(dr, ((char *)end - dr));
+        }
     }
     else
     {
@@ -1207,6 +1217,7 @@ unsigned int SurgePatch::save_patch(void **data)
     // void **xmldata = new void*();
     void *xmldata = 0;
     patch_header header;
+    std::vector<std::uint8_t> arbdata;
 
     memcpy(header.tag, "sub3", 4);
     size_t xmlsize = save_xml(&xmldata);
@@ -1234,6 +1245,8 @@ unsigned int SurgePatch::save_patch(void **data)
         }
     }
     psize += xmlsize + sizeof(patch_header);
+    arbdata = save_arbitrary_block_storage();
+    psize += arbdata.size();
     if (patchptr)
         free(patchptr);
     patchptr = malloc(psize);
@@ -1273,7 +1286,130 @@ unsigned int SurgePatch::save_patch(void **data)
             }
         }
     }
+    // Append the arbitrary data.
+    memcpy(dw, arbdata.data(), arbdata.size());
+
     return psize;
+}
+
+std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
+{
+    binn *map = binn_object();
+    for (int fx = 0; fx < n_fx_slots; fx++)
+    {
+        binn *fxmap = binn_object();
+        for (auto &kv : this->fx[fx].user_data)
+        {
+            binn_object_set_blob(fxmap, kv.first.c_str(), kv.second.data(), kv.second.size());
+        }
+        std::string key = fmt::format("fx{}", fx);
+        binn_object_set_object(map, key.c_str(), fxmap);
+    }
+
+    // Now compress it with zstd
+    auto size = binn_size(map);
+    void *ptr = binn_ptr(map);
+    auto compressedSize = ZSTD_compressBound(size);
+    std::vector<std::uint8_t> buf(compressedSize);
+    compressedSize = ZSTD_compress(buf.data(), compressedSize, ptr, size, 3);
+    if (ZSTD_isError(compressedSize))
+    {
+        compressedSize = 0;
+    }
+    buf.resize(compressedSize);
+    binn_free(map);
+    return buf;
+}
+
+unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::size_t remainder)
+{
+    // This should be a zstd compressed block.
+    auto decompressedSize = ZSTD_getFrameContentSize(data, remainder);
+    if (decompressedSize == ZSTD_CONTENTSIZE_UNKNOWN || decompressedSize == ZSTD_CONTENTSIZE_ERROR)
+    {
+        // Possibly old patch, possibly corrupted data, either way we can't.
+        // Same for the rest of these "return 0"s.
+        return 0;
+    }
+    sst::cpputils::DynArray<std::uint8_t> decompressed(decompressedSize);
+    decompressedSize = ZSTD_decompress(decompressed.data(), decompressedSize, data, remainder);
+    if (ZSTD_isError(decompressedSize))
+    {
+        std::cerr << "Failed to decompress arbdata; possibly corrupted patch." << std::endl;
+        return 0;
+    }
+
+    if (decompressedSize < sizeof(binn_struct))
+    {
+        std::cerr << "Failed to create binn; possibly corrupted patch." << std::endl;
+        return 0;
+    }
+
+    data = decompressed.data();
+
+    int sz = 0;
+    if (!binn_is_valid_ex(data, NULL, NULL, &sz))
+    {
+        std::cerr << "Failed to find binn; possibly corrupted patch." << std::endl;
+        return 0;
+    }
+    binn *b = binn_open_ex(data, sz);
+
+    std::regex fx_regex("fx([0-9]+)");
+    binn_iter outer;
+    binn obj;
+    char key[256];
+    binn_iter_init(&outer, b, BINN_OBJECT);
+    while (binn_object_next(&outer, key, &obj))
+    {
+        if (obj.type != BINN_OBJECT)
+        {
+            std::cerr << "Binn value not an object, possible patch corruption." << std::endl;
+            continue;
+        }
+
+        std::cmatch m;
+        // Try deserializing FX.
+        if (std::regex_match(key, m, fx_regex))
+        {
+            int id = -1;
+            try
+            {
+                id = std::stoi(m[1].str());
+            }
+            catch (std::invalid_argument const &ex)
+            {
+                std::cerr << "Error deserializing " << key << "; possible patch corruption."
+                          << std::endl;
+                continue;
+            }
+
+            // Deserialize the FX data.
+            std::unordered_map<std::string, std::vector<std::uint8_t>> &arb =
+                this->fx[id].user_data;
+            binn_iter inner;
+            binn data;
+            char fxkey[256];
+            binn_iter_init(&inner, &obj, BINN_OBJECT);
+            while (binn_object_next(&inner, fxkey, &data))
+            {
+                if (data.type != BINN_BLOB)
+                {
+                    std::cerr << "Binn value for " << fxkey
+                              << " is not a blob, possible patch corruption." << std::endl;
+                    continue;
+                }
+
+                std::string converted = std::string(fxkey);
+                std::vector<std::uint8_t> &vdata = arb[converted];
+                vdata.resize(binn_size(&data));
+                std::memcpy(vdata.data(), data.ptr, binn_size(&data));
+            }
+        }
+    }
+
+    binn_free(b);
+    return sz;
 }
 
 Parameter *SurgePatch::parameterFromOSCName(std::string oscName)
@@ -3488,8 +3624,8 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
                     {
                         if (r->at(b).destination_id == p_id)
                         {
-                            // if you add something here make sure to replicated it in the global
-                            // below
+                            // if you add something here make sure to replicated it in the
+                            // global below
                             TiXmlElement mr("modrouting");
                             mr.SetAttribute("source", r->at(b).source_id);
                             mr.SetAttribute("depth", float_to_clocalestr(r->at(b).depth));

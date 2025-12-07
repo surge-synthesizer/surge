@@ -29,6 +29,7 @@
 #include "RuntimeFont.h"
 #include "AccessibleHelpers.h"
 #include <version.h>
+#include "gui/widgets/CurrentFxDisplay.h"
 #include "gui/widgets/MainFrame.h"
 
 struct VKeyboardWheel : public juce::Component
@@ -594,8 +595,14 @@ bool SurgeSynthEditor::isInterestedInFileDrag(const juce::StringArray &files)
     if (files.size() != 1)
         return false;
 
+    auto *fxw =
+        dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(sge->frame->getControlGroupLayer(cg_FX));
+
     for (auto i = files.begin(); i != files.end(); ++i)
     {
+        if (fxw->canDropTarget(*i))
+            return true;
+
         if (sge->canDropTarget(i->toStdString()))
             return true;
     }
@@ -607,9 +614,15 @@ void SurgeSynthEditor::filesDropped(const juce::StringArray &files, int x, int y
     if (files.size() != 1)
         return;
 
+    auto *fxw =
+        dynamic_cast<Surge::Widgets::CurrentFxDisplay *>(sge->frame->getControlGroupLayer(cg_FX));
+
     for (auto i = files.begin(); i != files.end(); ++i)
     {
-        if (sge->canDropTarget(i->toStdString()))
+        if (fxw->canDropTarget(*i) &&
+            fxw->reallyContains(fxw->getLocalPoint(this, juce::Point<int>(x, y)), true))
+            fxw->onDrop(*i);
+        else if (sge->canDropTarget(i->toStdString()))
             sge->onDrop(i->toStdString());
     }
 }
