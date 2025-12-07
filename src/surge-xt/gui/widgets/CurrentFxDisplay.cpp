@@ -118,7 +118,7 @@ struct ConvolutionButton : public juce::Component
             {
                 menu.addColumnBreak();
                 Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
-                                                                                "3RD PARTY IRS");
+                                                                                "3RD PARTY IMPULSES");
             }
 
             if (idx == storage->firstUserIRCategory &&
@@ -134,7 +134,7 @@ struct ConvolutionButton : public juce::Component
             if (idx == 1)
             {
                 Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu,
-                                                                                "FACTORY IRS");
+                                                                                "FACTORY IMPULSES");
             }
 
             PatchCategory cat = storage->ir_category[c];
@@ -145,7 +145,7 @@ struct ConvolutionButton : public juce::Component
 
             if (addUserLabel)
             {
-                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "USER IRS");
+                Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "USER IMPULSES");
                 addUserLabel = false;
             }
 
