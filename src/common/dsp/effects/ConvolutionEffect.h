@@ -38,11 +38,13 @@ class ConvolutionEffect : public Effect
     {
         convolution_delay = 0,
         convolution_size = 1,
-        convolution_tilt_center = 2,
-        convolution_tilt_slope = 3,
-        convolution_locut_freq = 4,
-        convolution_hicut_freq = 5,
-        convolution_mix = 6,
+        convolution_start = 2,
+        convolution_reverse = 3,
+        convolution_tilt_center = 4,
+        convolution_tilt_slope = 5,
+        convolution_locut_freq = 6,
+        convolution_hicut_freq = 7,
+        convolution_mix = 8,
     };
 
     bool initialized;
@@ -50,6 +52,9 @@ class ConvolutionEffect : public Effect
     ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, pdata *pd);
 
     const char *get_effectname() override;
+    const char *group_label(int id) override;
+    int group_label_ypos(int id) override;
+
     void init() override;
     void init_ctrltypes() override;
     void init_default_values() override;
@@ -75,11 +80,11 @@ class ConvolutionEffect : public Effect
     lag<float> delayTime_;
 
     // Stored values.
-    using ir_t = sst::cpputils::DynArray<float, sst::cpputils::AlignedAllocator<float, 16>>;
-    ir_t irL_;
-    ir_t irR_;
     float old_samplerate_;
     float old_convolution_size_;
+    float old_start_;
+    float old_reverse_;
+    bool old_reverse_deactivated_;
 };
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_CONVOLUTIONEFFECT_H

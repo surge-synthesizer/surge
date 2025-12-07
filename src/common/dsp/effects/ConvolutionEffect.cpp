@@ -20,6 +20,8 @@
  * https://github.com/surge-synthesizer/surge
  */
 #include "ConvolutionEffect.h"
+#include <algorithm>
+#include <iterator>
 #include <numeric>
 
 #include <CDSPResampler.h>
@@ -62,6 +64,34 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
 
 const char *ConvolutionEffect::get_effectname() { return "convolution"; }
 
+const char *ConvolutionEffect::group_label(int id)
+{
+    switch (id)
+    {
+    case 0:
+        return "IR Modifications";
+    case 1:
+        return "Filtering";
+    case 2:
+        return "Output";
+    }
+    return 0;
+}
+
+int ConvolutionEffect::group_label_ypos(int id)
+{
+    switch (id)
+    {
+    case 0:
+        return 4;
+    case 1:
+        return 14;
+    case 2:
+        return 24;
+    }
+    return 0;
+}
+
 void ConvolutionEffect::init()
 {
     if (!(fxdata->user_data.contains("irname") && fxdata->user_data.contains("samplerate") &&
@@ -88,43 +118,59 @@ void ConvolutionEffect::init_ctrltypes()
     fxdata->p[convolution_delay].val_min.f = 0.f;
     fxdata->p[convolution_delay].val_max.f = 1.f;
     fxdata->p[convolution_delay].val_default.f = 0.f;
-    fxdata->p[convolution_delay].posy_offset = 3;
+    fxdata->p[convolution_delay].posy_offset = 4;
 
     fxdata->p[convolution_size].set_name("Size");
     fxdata->p[convolution_size].set_type(ct_percent);
     fxdata->p[convolution_size].val_min.f = 0.5f;
     fxdata->p[convolution_size].val_max.f = 2.f;
     fxdata->p[convolution_size].val_default.f = 1.f;
-    fxdata->p[convolution_size].posy_offset = 3;
+    fxdata->p[convolution_size].modulateable = false;
+    fxdata->p[convolution_size].posy_offset = 4;
+
+    fxdata->p[convolution_start].set_name("Start");
+    fxdata->p[convolution_start].set_type(ct_percent);
+    fxdata->p[convolution_start].val_default.f = 0.f;
+    fxdata->p[convolution_start].modulateable = false;
+    fxdata->p[convolution_start].posy_offset = 4;
+
+    fxdata->p[convolution_reverse].set_name("Reverse");
+    fxdata->p[convolution_reverse].set_type(ct_percent_deactivatable);
+    fxdata->p[convolution_reverse].val_default.f = 0.f;
+    fxdata->p[convolution_reverse].modulateable = false;
+    fxdata->p[convolution_reverse].posy_offset = 4;
 
     fxdata->p[convolution_tilt_center].set_name("Tilt Center");
     fxdata->p[convolution_tilt_center].set_type(ct_freq_audible_deactivatable);
     fxdata->p[convolution_tilt_center].set_extend_range(false);
-    fxdata->p[convolution_tilt_center].posy_offset = 3;
+    fxdata->p[convolution_tilt_center].posy_offset = 6;
+
     fxdata->p[convolution_tilt_slope].set_name("Tilt Slope");
     fxdata->p[convolution_tilt_slope].set_type(ct_decibel_narrow_deactivatable);
     fxdata->p[convolution_tilt_slope].val_min.f = -18.;
     fxdata->p[convolution_tilt_slope].val_max.f = 18.;
     fxdata->p[convolution_tilt_slope].val_default.f = 0.f;
-    fxdata->p[convolution_tilt_slope].posy_offset = 3;
+    fxdata->p[convolution_tilt_slope].posy_offset = 6;
 
     fxdata->p[convolution_locut_freq].set_name("Low Cut");
     fxdata->p[convolution_locut_freq].set_type(ct_freq_audible_deactivatable_hp);
-    fxdata->p[convolution_locut_freq].posy_offset = 3;
+    fxdata->p[convolution_locut_freq].posy_offset = 6;
     fxdata->p[convolution_hicut_freq].set_name("High Cut");
     fxdata->p[convolution_hicut_freq].set_type(ct_freq_audible_deactivatable_lp);
-    fxdata->p[convolution_hicut_freq].posy_offset = 3;
+    fxdata->p[convolution_hicut_freq].posy_offset = 6;
 
     fxdata->p[convolution_mix].set_name("Mix");
     fxdata->p[convolution_mix].set_type(ct_percent);
     fxdata->p[convolution_mix].val_default.f = 1.f;
-    fxdata->p[convolution_mix].posy_offset = 3;
+    fxdata->p[convolution_mix].posy_offset = 8;
 }
 
 void ConvolutionEffect::init_default_values()
 {
     fxdata->p[convolution_delay].val.f = 0.f;
     fxdata->p[convolution_size].val.f = 1.f;
+    fxdata->p[convolution_reverse].val.f = 0.f;
+    fxdata->p[convolution_reverse].deactivated = true;
     fxdata->p[convolution_tilt_center].deactivated = true;
     fxdata->p[convolution_tilt_slope].val.f = 0.f;
     fxdata->p[convolution_tilt_slope].deactivated = true;
@@ -190,32 +236,53 @@ void ConvolutionEffect::prep_ir()
     auto L = fxdata->by_key("left").as<float>();
 
     r8b::CDSPResampler resampler(inputRate, outputRate, L.size());
-    irL_.reset(resampler.getMaxOutLen(0));
-    irR_.reset(resampler.getMaxOutLen(0));
+
+    using ir_t = sst::cpputils::DynArray<float, sst::cpputils::AlignedAllocator<float, 16>>;
+    ir_t irL(resampler.getMaxOutLen(0));
+    ir_t irR(resampler.getMaxOutLen(0));
 
     // Resampler needs it in double-precision.
     sst::cpputils::DynArray<double> in(L.size()), out(resampler.getMaxOutLen(0));
     std::copy(L.begin(), L.end(), in.begin());
 
     resampler.oneshot(in.data(), in.size(), out.data(), out.size());
-    std::copy(out.begin(), out.end(), irL_.begin());
+    std::copy(out.begin(), out.end(), irL.begin());
 
-    irR_.reset(out.size());
     if (fxdata->user_data.contains("right"))
     {
         auto R = fxdata->by_key("right").as<float>();
         std::copy(R.begin(), R.end(), in.begin());
         resampler.oneshot(in.data(), in.size(), out.data(), out.size());
-        std::copy(out.begin(), out.end(), irR_.begin());
+        std::copy(out.begin(), out.end(), irR.begin());
     }
     else
     {
-        irR_ = irL_;
+        irR = irL;
     }
 
-    normalize(irL_, irR_);
-    s = s && convolverL_.init(BLOCK_SIZE, 256, irL_);
-    s = s && convolverR_.init(BLOCK_SIZE, 256, irR_);
+    std::span<float> irLsub = irL;
+    std::span<float> irRsub = irR;
+    if (!fxdata->p[convolution_reverse].deactivated)
+    {
+        irLsub = irLsub.subspan(
+            0, irLsub.size() - std::floor(irLsub.size() * fxdata->p[convolution_start].val.f));
+        irRsub = irRsub.subspan(
+            0, irRsub.size() - std::floor(irRsub.size() * fxdata->p[convolution_start].val.f));
+
+        std::size_t d = std::floor(std::distance(irLsub.begin(), irLsub.end()) *
+                                   fxdata->p[convolution_reverse].val.f);
+        std::reverse(irLsub.begin() + d, irLsub.end());
+        std::reverse(irRsub.begin() + d, irRsub.end());
+    }
+    else
+    {
+        irLsub = irLsub.subspan(std::floor(irLsub.size() * fxdata->p[convolution_start].val.f));
+        irRsub = irRsub.subspan(std::floor(irRsub.size() * fxdata->p[convolution_start].val.f));
+    }
+
+    normalize(irLsub, irRsub);
+    s = s && convolverL_.init(BLOCK_SIZE, 256, irLsub);
+    s = s && convolverR_.init(BLOCK_SIZE, 256, irRsub);
     if (!s)
     {
         storage->reportError("Error initializing the convolver, not running convolution effect",
@@ -226,6 +293,9 @@ void ConvolutionEffect::prep_ir()
     initialized = true;
     old_samplerate_ = storage->samplerate;
     old_convolution_size_ = fxdata->p[convolution_size].val.f;
+    old_start_ = fxdata->p[convolution_start].val.f;
+    old_reverse_ = fxdata->p[convolution_reverse].val.f;
+    old_reverse_deactivated_ = fxdata->p[convolution_reverse].deactivated;
 }
 
 void ConvolutionEffect::set_params()
@@ -240,7 +310,10 @@ void ConvolutionEffect::set_params()
 
     // Do we need a reload for non-modulatable parameter changes?
     if (storage->samplerate != old_samplerate_ ||
-        fxdata->p[convolution_size].val.f != old_convolution_size_)
+        fxdata->p[convolution_size].val.f != old_convolution_size_ ||
+        fxdata->p[convolution_start].val.f != old_start_ ||
+        fxdata->p[convolution_reverse].val.f != old_reverse_ ||
+        fxdata->p[convolution_reverse].deactivated != old_reverse_deactivated_)
     {
         prep_ir();
     }
