@@ -146,7 +146,7 @@ void ConvolutionEffect::init_ctrltypes()
     fxdata->p[convolution_tilt_center].posy_offset = 6;
 
     fxdata->p[convolution_tilt_slope].set_name("Tilt Slope");
-    fxdata->p[convolution_tilt_slope].set_type(ct_decibel_narrow_deactivatable);
+    fxdata->p[convolution_tilt_slope].set_type(ct_decibel_narrow);
     fxdata->p[convolution_tilt_slope].val_min.f = -18.;
     fxdata->p[convolution_tilt_slope].val_max.f = 18.;
     fxdata->p[convolution_tilt_slope].val_default.f = 0.f;
@@ -169,14 +169,14 @@ void ConvolutionEffect::init_default_values()
 {
     fxdata->p[convolution_delay].val.f = 0.f;
     fxdata->p[convolution_size].val.f = 1.f;
+    fxdata->p[convolution_start].val.f = 0.f;
     fxdata->p[convolution_reverse].val.f = 0.f;
     fxdata->p[convolution_reverse].deactivated = true;
     fxdata->p[convolution_tilt_center].deactivated = true;
     fxdata->p[convolution_tilt_slope].val.f = 0.f;
-    fxdata->p[convolution_tilt_slope].deactivated = true;
-    fxdata->p[convolution_locut_freq].val.f = -3.f * 12.f;
+    fxdata->p[convolution_locut_freq].val.f = fxdata->p[convolution_locut_freq].val_min.f;
     fxdata->p[convolution_locut_freq].deactivated = true;
-    fxdata->p[convolution_hicut_freq].val.f = -3.f * 12.f;
+    fxdata->p[convolution_hicut_freq].val.f = fxdata->p[convolution_hicut_freq].val_max.f;
     fxdata->p[convolution_hicut_freq].deactivated = true;
     fxdata->p[convolution_mix].val.f = 1.f;
 }
@@ -217,7 +217,7 @@ void ConvolutionEffect::process(float *dataL, float *dataR)
     convolverL_.process(delayedL_, workL_);
     convolverR_.process(delayedR_, workR_);
     if (!fxdata->p[convolution_tilt_center].deactivated)
-        tilt_.processBlock<BLOCK_SIZE>(workL_.data(), workR_.data());
+        tilt_.processBlock<BLOCK_SIZE>(workL_.data(), workR_.data(), workL_.data(), workR_.data());
     if (!fxdata->p[convolution_locut_freq].deactivated)
         lc_.process_block(workL_.data(), workR_.data());
     if (!fxdata->p[convolution_hicut_freq].deactivated)
@@ -283,8 +283,8 @@ void ConvolutionEffect::prep_ir()
     }
 
     normalize(irLsub, irRsub);
-    s = s && convolverL_.init(BLOCK_SIZE, 256, irLsub);
-    s = s && convolverR_.init(BLOCK_SIZE, 256, irRsub);
+    s = s && convolverL_.init(std::max(BLOCK_SIZE, 16), 256, irLsub);
+    s = s && convolverR_.init(std::max(BLOCK_SIZE, 16), 256, irRsub);
     if (!s)
     {
         storage->reportError("Error initializing the convolver, not running convolution effect",

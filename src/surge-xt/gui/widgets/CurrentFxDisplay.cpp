@@ -735,9 +735,15 @@ void CurrentFxDisplay::onDrop(const juce::String &file)
     {
     case fxt_convolution:
         if ((file.endsWith(".wav") || file.endsWith(".flac")) && irbutton)
+        {
+            auto f = juce::File(file);
+            Surge::Storage::updateUserDefaultPath(
+                storage, Surge::Storage::LastIRPath,
+                f.getParentDirectory().getFullPathName().toStdString());
             if (!(dynamic_cast<ConvolutionButton *>(irbutton.get())->loadWavForConvolution(file)))
                 storage->reportError(fmt::format("Failed to load IR from {}", file.toStdString()),
                                      "IR Load Error");
+        }
         break;
     }
 }

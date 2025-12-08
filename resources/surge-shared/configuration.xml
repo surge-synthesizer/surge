@@ -54,7 +54,7 @@
               p7="0.75" p8="0.793701" p9="1" p10="0" p11="1"/>
 </type>
 <type i="31" name="Convolution">
-    <snapshot name="Init" p3_deactivated="1" p4_deactivated="1" p5_deactivated="1" p6_deactivated="1" p7_deactivated="1" />
+    <snapshot name="Init" p3_deactivated="1" p4_deactivated="1" p6_deactivated="1" p7_deactivated="1" />
 </type>
 <sectionheader label="DISTORTION"/>
 <type i="28" name="Bonsai">
