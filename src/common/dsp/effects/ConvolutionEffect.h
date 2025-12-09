@@ -58,6 +58,7 @@ class ConvolutionEffect : public Effect
     void init() override;
     void init_ctrltypes() override;
     void init_default_values() override;
+    int get_ringout_decay() override;
     void process(float *dataL, float *dataR) override;
 
   private:
@@ -66,6 +67,7 @@ class ConvolutionEffect : public Effect
 
     pffft::TwoStageConvolver convolverL_;
     pffft::TwoStageConvolver convolverR_;
+    std::size_t irSize_;
     alignas(16) std::array<float, BLOCK_SIZE> workL_;
     alignas(16) std::array<float, BLOCK_SIZE> workR_;
     alignas(16) std::array<float, BLOCK_SIZE> delayedL_;
