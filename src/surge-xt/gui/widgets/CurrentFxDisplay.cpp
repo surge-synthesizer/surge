@@ -44,7 +44,7 @@ struct ConvolutionButton : public juce::Component
     ConvolutionEffect *fx{nullptr};
     FxStorage *fxs{nullptr};
     int slot{-1};
-    std::string irname{"No IR loaded"};
+    std::string irname{"No impulse response loaded!"};
     void setEffect(ConvolutionEffect *f, FxStorage *s, int n)
     {
         std::lock_guard l(loading);
@@ -268,9 +268,9 @@ struct ConvolutionButton : public juce::Component
     void createIRLoadMenu(juce::PopupMenu &contextMenu)
     {
         auto action = [this]() { this->loadIRFromFile(); };
-        contextMenu.addItem(Surge::GUI::toOSCase("Load IR from file..."), action);
+        contextMenu.addItem(Surge::GUI::toOSCase("Load Impulse Response..."), action);
         auto clear = [this]() { this->clearIR(); };
-        contextMenu.addItem(Surge::GUI::toOSCase("Clear IR"), clear);
+        contextMenu.addItem(Surge::GUI::toOSCase("Remove Impulse Response"), clear);
     }
 
     void clearIR()
@@ -313,7 +313,7 @@ struct ConvolutionButton : public juce::Component
 
         juce::String fileTypes = "*.wav;*.flac";
         sge->fileChooser = std::make_unique<juce::FileChooser>(
-            "Select IR to Load", juce::File(path_to_string(path)), fileTypes);
+            "Select Impulse Response to Load", juce::File(path_to_string(path)), fileTypes);
         auto action = [this, path](const juce::FileChooser &c) {
             auto ress = c.getResults();
 
@@ -581,8 +581,7 @@ void CurrentFxDisplay::convolutionLayout()
 
     ConvolutionEffect &fx = dynamic_cast<ConvolutionEffect &>(*editor_->synth->fx[current_fx_]);
 
-    auto vr =
-        fxRect().withTrimmedTop(-1).withTrimmedRight(-5).translated(5, -12).translated(0, yofs * 2);
+    auto vr = fxRect().withTrimmedTop(-1).withTrimmedRight(-5).translated(5, yofs * 1.8f);
 
     auto button = std::make_unique<ConvolutionButton>();
     // button->setWantsKeyboardFocus(true);
@@ -591,11 +590,11 @@ void CurrentFxDisplay::convolutionLayout()
     button->setEffect(&fx, &storage->getPatch().fx[current_fx_], current_fx_);
     button->setBounds(vr);
     auto ol = std::make_unique<OverlayAsAccessibleButton<ConvolutionButton>>(
-        button.get(), "No IR loaded", juce::AccessibilityRole::button);
+        button.get(), "No impulse response loaded!", juce::AccessibilityRole::button);
     irbutton = std::move(button);
     editor_->addAndMakeVisibleWithTracking(this, *irbutton);
 
-    std::string irname("No IR loaded.");
+    std::string irname("No impulse response loaded!");
     if (fx.initialized)
     {
         irname = storage->getPatch().fx[current_fx_].by_key("irname").to_string();
@@ -741,8 +740,9 @@ void CurrentFxDisplay::onDrop(const juce::String &file)
                 storage, Surge::Storage::LastIRPath,
                 f.getParentDirectory().getFullPathName().toStdString());
             if (!(dynamic_cast<ConvolutionButton *>(irbutton.get())->loadWavForConvolution(file)))
-                storage->reportError(fmt::format("Failed to load IR from {}", file.toStdString()),
-                                     "IR Load Error");
+                storage->reportError(
+                    fmt::format("Failed to load impulse response from {}!", file.toStdString()),
+                    "Impulse Response Load Error");
         }
         break;
     }

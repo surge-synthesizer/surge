@@ -377,7 +377,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     userPatchesPath = userDataPath / "Patches";
     userPatchesMidiProgramChangePath = userPatchesPath / midiProgramChangePatchesSubdir;
     userWavetablesPath = userDataPath / "Wavetables";
-    userIRsPath = userDataPath / "IRs";
+    userIRsPath = userDataPath / "Impulses";
     userWavetablesExportPath = userWavetablesPath / "Exported";
     userWavetableScriptsPath = userWavetablesPath / "Scripted";
     userFXPath = userDataPath / "FX Presets";
@@ -1889,20 +1889,20 @@ void SurgeStorage::refresh_irlist()
     ir_category.clear();
     ir_list.clear();
 
-    refresh_irlistAddDir(false, "irs");
+    refresh_irlistAddDir(false, "impulses_factory");
 
     firstThirdPartyIRCategory = ir_category.size();
     if (extraThirdPartyIRsPath.empty() ||
-        !fs::is_directory(extraThirdPartyIRsPath / "irs_3rdparty"))
+        !fs::is_directory(extraThirdPartyIRsPath / "impulses_3rdparty"))
     {
-        refresh_irlistAddDir(false, "irs_3rdparty");
+        refresh_irlistAddDir(false, "impulses_3rdparty");
     }
     else
     {
-        refresh_irlistFrom(false, extraThirdPartyIRsPath, "irs_3rdparty");
+        refresh_irlistFrom(false, extraThirdPartyIRsPath, "impulses_3rdparty");
     }
     firstUserIRCategory = ir_category.size();
-    refresh_irlistAddDir(true, "IRs");
+    refresh_irlistAddDir(true, "Impulses");
 
     if (!extraUserIRsPath.empty())
     {

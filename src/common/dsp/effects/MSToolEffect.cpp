@@ -196,7 +196,7 @@ void MSToolEffect::suspend() { init(); }
 void MSToolEffect::init_ctrltypes()
 {
     // using deactivation function from EQ3
-    static struct EQD : public ParameterDynamicDeactivationFunction
+    static struct MidSideDeactivator : public ParameterDynamicDeactivationFunction
     {
         bool getValue(const Parameter *p) const override
         {
