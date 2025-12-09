@@ -205,6 +205,14 @@ void ConvolutionEffect::init_default_values()
     fxdata->p[convolution_mix].val.f = 1.f;
 }
 
+int ConvolutionEffect::get_ringout_decay()
+{
+    if (!initialized)
+        return 0;
+
+    return std::ceil(static_cast<float>(irSize_ + delayTime_.v) / static_cast<float>(BLOCK_SIZE));
+}
+
 void ConvolutionEffect::process(float *dataL, float *dataR)
 {
     if (!initialized)
@@ -307,6 +315,7 @@ void ConvolutionEffect::prep_ir()
     }
 
     normalize(irLsub, irRsub);
+    irSize_ = irLsub.size();
     s = s && convolverL_.init(std::max(BLOCK_SIZE, 16), 256, irLsub);
     s = s && convolverR_.init(std::max(BLOCK_SIZE, 16), 256, irRsub);
     if (!s)
