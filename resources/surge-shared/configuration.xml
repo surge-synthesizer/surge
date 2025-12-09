@@ -53,9 +53,6 @@
     <snapshot name="Init" p0="-18.6305" p1="0.75" p2="0.793701" p3="8.03822" p4="0.75" p5="0.793701" p6="35.9013"
               p7="0.75" p8="0.793701" p9="1" p10="0" p11="1"/>
 </type>
-<type i="31" name="Convolution">
-    <snapshot name="Init" p3_deactivated="1" p4_deactivated="1" p6_deactivated="1" p7_deactivated="1" />
-</type>
 <sectionheader label="DISTORTION"/>
 <type i="28" name="Bonsai">
     <snapshot name="Init" p0="0" p1="-6" p2="¸0.25" p3="0" p4="0" p5="0.5" p6="0.5" p7="-0" p8="0.25" p9="0" p10="1"/>
@@ -122,6 +119,10 @@
     <snapshot name="Init" p0="0" p1="0" p2="0" p3="0.7" p4="0" p5="0" p6="0" p7="1"/>
 </type>
 <sectionheader label="TIME &amp; SPACE"/>
+<type i="31" name="Convolution">
+    <snapshot name="Init (Dry)" p0="0" p1="1" p2="0" p3="0" p3_deactivated="1" p4="3" p4_deactivated="1" p5="0" p6="-60" p6_deactivated="1" p7="70" p7_deactivated="1" p8="0.5" />
+    <snapshot name="Init (Send)" p0="0" p1="1" p2="0" p3="0" p3_deactivated="1" p4="3" p4_deactivated="1" p5="0" p6="-60" p6_deactivated="1" p7="70" p7_deactivated="1" p8="1" />
+</type>
 <type i="30" name="Floaty Delay">
     <snapshot name="Init" p0="-1.73699" p1="1.0"  p2="0.5" p3="20.0" p4="0.5" p5="0.0" p6="0.0" p7="0.0" p8="0.0" p9="-60.0"  p10="0.3"/>
 </type>
