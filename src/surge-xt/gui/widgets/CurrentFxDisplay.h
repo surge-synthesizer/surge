@@ -53,6 +53,13 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     std::unordered_map<std::string, std::string> uiidToSliderLabel;
     SurgeStorage *storage{nullptr};
 
+    // Okay, this one is a bit weird. We trigger off an FX reload with some
+    // operations (loading a new IR). When this happens, the original FX layout
+    // gets redone and we go through a new FX layout. Focus gets wiped if that
+    // happens, so we have to remind ourselves to refocus on where it had it
+    // last once we redo the layout.
+    bool had_focus;
+
   private:
     // Individual FX layouts.
     void defaultLayout();
