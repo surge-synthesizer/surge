@@ -41,6 +41,9 @@ struct ConvolutionButton : public juce::Component
     SurgeGUIEditor *sge{nullptr};
     void setSurgeGUIEditor(SurgeGUIEditor *s) { sge = s; }
 
+    CurrentFxDisplay *cfxd{nullptr};
+    void setCurrentFxDisplay(CurrentFxDisplay *p) { cfxd = p; }
+
     ConvolutionEffect *fx{nullptr};
     FxStorage *fxs{nullptr};
     int slot{-1};
@@ -388,6 +391,10 @@ struct ConvolutionButton : public juce::Component
         }
         sge->synth->fx_reload[slot] = true;
         sge->synth->load_fx_needed = true;
+
+        if (cfxd)
+            cfxd->had_focus = true;
+
         return true;
     }
 };
@@ -398,6 +405,7 @@ CurrentFxDisplay::CurrentFxDisplay(SurgeGUIEditor *e)
 {
     editor_ = e;
     storage = e->getStorage();
+    had_focus = false;
 }
 
 CurrentFxDisplay::~CurrentFxDisplay() {}
@@ -587,6 +595,7 @@ void CurrentFxDisplay::convolutionLayout()
     // button->setWantsKeyboardFocus(true);
     button->setStorage(storage);
     button->setSurgeGUIEditor(editor_);
+    button->setCurrentFxDisplay(this);
     button->setEffect(&fx, &storage->getPatch().fx[current_fx_], current_fx_);
     button->setBounds(vr);
     auto ol = std::make_unique<OverlayAsAccessibleButton<ConvolutionButton>>(
@@ -601,6 +610,7 @@ void CurrentFxDisplay::convolutionLayout()
     }
     ol->setTitle(irname);
     ol->setDescription(irname);
+    ol->setHelpText("Impulse Response Loader Menu");
 
     ol->onPress = [this](ConvolutionButton *c) { c->showIRMenu(); };
     ol->onMenuKey = [this](ConvolutionButton *c) {
@@ -611,6 +621,12 @@ void CurrentFxDisplay::convolutionLayout()
     menu = std::move(ol);
     menu->setBounds(vr);
     editor_->addAndMakeVisibleWithTracking(this, *menu);
+
+    if (had_focus)
+    {
+        menu->grabKeyboardFocus();
+        had_focus = false;
+    }
 }
 
 void CurrentFxDisplay::conditionerRender()
