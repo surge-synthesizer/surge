@@ -2016,6 +2016,18 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         });
                     }
                 }
+
+                // the vt_int from OSC need a midi handling. So that assinged
+                // midi controlls can be removed
+                std::unordered_set<int> grpForMidiHandling = {ctrltypes::ct_wt2window,
+                    ctrltypes::ct_sineoscmode, ctrltypes::ct_sinefmlegacy,
+                    ctrltypes::ct_stringosc_excitation_model,
+                    ctrltypes::ct_twist_engine, ctrltypes::ct_alias_wave};
+
+                if ( grpForMidiHandling.count(p->ctrltype) ){
+                    contextMenu.addSeparator();
+                    createMIDILearnMenuEntries(contextMenu, param_cc, p->id, control);
+                }
             }
 
             if (p->valtype == vt_float)
