@@ -228,6 +228,11 @@ bool FxUserPreset::readFromXMLSnapshot(Preset &preset, TiXmlElement *s)
             preset.dt[i] = (int)fl;
         }
     }
+
+    // Specially named attributes that go in the userdata.
+    if (s->Attribute("filename"))
+        preset.filename = s->Attribute("filename");
+
     return true;
 }
 
@@ -375,6 +380,9 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
 void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStorage *fxbuffer)
 {
     fxbuffer->type.val.i = p.type;
+    // Special userdata bits.
+    if (!p.filename.empty())
+        fxbuffer->user_data.emplace("filename", ArbitraryBlockStorage::from_string(p.filename));
 
     Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
 
