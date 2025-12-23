@@ -297,13 +297,8 @@ struct ConvolutionButton : public juce::Component
     {
         if (id >= 0 && id < storage->ir_list.size() && sge)
         {
-            sge->undoManager()->pushFX(slot);
-            std::string announce = "Loaded impulse response ";
-            announce += storage->ir_list[id].name;
-            sge->enqueueAccessibleAnnouncement(announce);
+            loadWavForConvolution(storage->ir_list[id].path.string());
         }
-
-        loadWavForConvolution(storage->ir_list[id].path.string());
     }
 
     void loadIRFromFile()
@@ -364,6 +359,7 @@ struct ConvolutionButton : public juce::Component
         sync.user_data.clear();
 
         // Filename
+        sync.user_data.emplace("filename", ArbitraryBlockStorage::from_string(file.toStdString()));
         sync.user_data.emplace("irname", ArbitraryBlockStorage::from_string(name));
 
         // Sample rate.
@@ -394,6 +390,11 @@ struct ConvolutionButton : public juce::Component
 
         if (cfxd)
             cfxd->had_focus = true;
+
+        sge->undoManager()->pushFX(slot);
+        std::string announce = "Loaded impulse response ";
+        announce += name;
+        sge->enqueueAccessibleAnnouncement(announce);
 
         return true;
     }

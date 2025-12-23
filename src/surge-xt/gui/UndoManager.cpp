@@ -131,7 +131,7 @@ struct UndoManagerImpl
         int type;
         std::vector<UndoParam> undoParamValues;
         std::vector<UndoModulation> undoModulations;
-        std::unordered_map<std::string, std::vector<std::uint8_t>> user_data;
+        std::unordered_map<std::string, std::shared_ptr<std::vector<std::uint8_t>>> user_data;
     };
     struct UndoStep
     {
@@ -215,6 +215,12 @@ struct UndoManagerImpl
         {
             res += pt->dataSz;
         }
+#if 0
+        if (auto pt = std::get_if<UndoFx>(&a))
+        {
+            res += FIXME;
+        }
+#endif
         return res;
     }
 

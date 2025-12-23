@@ -29,6 +29,7 @@
 #include "UserDefaults.h"
 #include "UnitConversions.h"
 #include <any>
+#include <vector>
 
 #if LINUX
 // getCurrentPosition is deprecated in J7
@@ -40,6 +41,37 @@
  * This is a bit odd but - this is an editor concept with the lifetime of the processor
  */
 #include "gui/UndoManager.h"
+
+namespace
+{
+
+// DI'd file loader.
+SurgeStorage::AudioFileInput loadAudioFile(std::string file)
+{
+    juce::AudioFormatManager manager;
+    manager.registerBasicFormats();
+
+    auto reader = manager.createReaderFor(juce::File(file));
+    if (!reader)
+        return {};
+
+    juce::AudioBuffer<float> buf(reader->numChannels, reader->lengthInSamples);
+    if (!reader->read(&buf, 0, reader->lengthInSamples, 0, true, true))
+        return {};
+
+    std::uint64_t sr = reader->sampleRate;
+    std::vector<std::vector<float>> channels(reader->numChannels);
+    for (int i = 0; i < reader->numChannels; i++)
+    {
+        channels[i].reserve(reader->lengthInSamples);
+        std::copy(buf.getReadPointer(i), buf.getReadPointer(i) + reader->lengthInSamples,
+                  channels[i].begin());
+    }
+
+    return std::make_tuple(sr, std::move(channels));
+}
+
+}  // namespace
 
 //==============================================================================
 SurgeSynthProcessor::SurgeSynthProcessor()
@@ -82,6 +114,8 @@ SurgeSynthProcessor::SurgeSynthProcessor()
         << "  - User Data    : " << surge->storage.userDataPath.u8string() << std::endl;
     DBG(oss.str());
 #endif
+
+    setupSurgeSynthesizerDI();
 
     auto parent = std::make_unique<juce::AudioProcessorParameterGroup>("Root", "Root", "|");
     auto macroG = std::make_unique<juce::AudioProcessorParameterGroup>("macros", "Macros", "|");
@@ -1437,6 +1471,13 @@ void SurgeSynthProcessor::applyMidi(const juce::MidiMessage &m)
     {
         // std::cout << "Ignoring message " << std::endl;
     }
+}
+
+void SurgeSynthProcessor::setupSurgeSynthesizerDI()
+{
+    // Not everything injected into SurgeStorage is done here, but the stuff
+    // that requires JUCE is.
+    surge->storage.load_audio_file = loadAudioFile;
 }
 
 //==============================================================================

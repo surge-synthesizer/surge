@@ -313,6 +313,9 @@ class SurgeSynthProcessor : public juce::AudioProcessor,
     void handleNoteOff(juce::MidiKeyboardState *source, int midiChannel, int midiNoteNumber,
                        float velocity) override;
 
+    // Dependency injection for the synth
+    void setupSurgeSynthesizerDI();
+
     //==============================================================================
     // Open Sound Control
     enum oscToAudio_type

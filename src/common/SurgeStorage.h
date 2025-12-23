@@ -666,6 +666,13 @@ struct ArbitraryBlockStorage
         return std::span<T>(reinterpret_cast<T *>(data.data()), data.size() / sizeof(T));
     }
 
+    template <typename T> std::span<const T> as() const
+    {
+        if (data.size() % sizeof(T))
+            return std::span<const T>();
+        return std::span<const T>(reinterpret_cast<T *>(data.data()), data.size() / sizeof(T));
+    }
+
     template <typename T> static std::span<T> as(std::vector<std::uint8_t> &v)
     {
         if (v.size() % sizeof(T))
@@ -673,14 +680,21 @@ struct ArbitraryBlockStorage
         return std::span<T>(reinterpret_cast<T *>(v.data()), v.size() / sizeof(T));
     }
 
-    // These will all throw invalid_argument if there's an issue with size.
-    float to_float();
-    std::string to_string();
+    template <typename T> static std::span<const T> as(const std::vector<std::uint8_t> &v)
+    {
+        if (v.size() % sizeof(T))
+            return std::span<const T>();
+        return std::span<const T>(reinterpret_cast<T *>(v.data()), v.size() / sizeof(T));
+    }
 
-    // Helpers for creating the vector v.
-    static std::vector<std::uint8_t> from_float(const float f);
-    static std::vector<std::uint8_t> from_floats(std::span<const float> fs);
-    static std::vector<std::uint8_t> from_string(const std::string &s);
+    // These will all throw invalid_argument if there's an issue with size.
+    float to_float() const;
+    std::string to_string() const;
+
+    // Helpers for creating the vector v for the map.
+    static std::shared_ptr<std::vector<std::uint8_t>> from_float(const float f);
+    static std::shared_ptr<std::vector<std::uint8_t>> from_floats(std::span<const float> fs);
+    static std::shared_ptr<std::vector<std::uint8_t>> from_string(const std::string &s);
 };
 
 // I have used the ordering here in SurgeGUIEditor to iterate. Be careful if type or retrigger move
@@ -772,10 +786,15 @@ struct FxStorage
     // modifications can result in allocations. This data is saved out as part
     // of the patch. The string keys must be a maximum of 255 characters, for
     // patch-saving purposes; otherwise, they will not be saved out.
-    std::unordered_map<std::string, std::vector<std::uint8_t>> user_data;
+    //
+    // The value of this map is shared, to make undo/redo significantly cheaper.
+    // This means that as a consumer you must be *very careful* about this and
+    // either (1) treat it as read-only, or (2) update a copy when changing, as
+    // appropriate.
+    std::unordered_map<std::string, std::shared_ptr<std::vector<std::uint8_t>>> user_data;
 
     // Construct helper for a given user data key.
-    inline ArbitraryBlockStorage by_key(const std::string &key) { return user_data[key]; }
+    inline const ArbitraryBlockStorage by_key(const std::string &key) { return *user_data[key]; }
 };
 
 struct SurgeSceneStorage
@@ -1585,6 +1604,11 @@ class alignas(16) SurgeStorage
 
     std::string make_wt_metadata(OscillatorStorage *);
     bool parse_wt_metadata(const std::string &, OscillatorStorage *);
+
+    // This allocates vectors, so be careful when/where you call it.
+    // Provided by the UI.
+    using AudioFileInput = std::tuple<std::int64_t, std::vector<std::vector<float>>>;
+    std::function<AudioFileInput(std::string)> load_audio_file{nullptr};
 
     void clipboard_copy(int type, int scene, int entry, modsources ms = ms_original);
     // this function is a bit of a hack to stop me having a reference to SurgeSynth here

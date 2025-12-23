@@ -3800,26 +3800,26 @@ bool getValueDisplayIsHighPrecision(SurgeStorage *storage)
 } // namespace Surge
 
 // Arbitrary block storage helpers.
-std::vector<std::uint8_t> ArbitraryBlockStorage::from_float(const float f)
+std::shared_ptr<std::vector<std::uint8_t>> ArbitraryBlockStorage::from_float(const float f)
 {
-    std::vector<std::uint8_t> v(sizeof(float));
-    ArbitraryBlockStorage{v}.as<float>()[0] = f;
+    auto v = std::make_shared<std::vector<std::uint8_t>>(sizeof(float));
+    ArbitraryBlockStorage{*v}.as<float>()[0] = f;
     return v;
 }
 
-std::vector<std::uint8_t> ArbitraryBlockStorage::from_floats(std::span<const float> fs)
+std::shared_ptr<std::vector<std::uint8_t>> ArbitraryBlockStorage::from_floats(std::span<const float> fs)
 {
-    std::vector<std::uint8_t> v(sizeof(float) * fs.size());
-    std::copy(fs.begin(), fs.end(), ArbitraryBlockStorage{v}.as<float>().begin());
+    auto v = std::make_shared<std::vector<std::uint8_t>>(sizeof(float) * fs.size());
+    std::copy(fs.begin(), fs.end(), ArbitraryBlockStorage{*v}.as<float>().begin());
     return v;
 }
 
-std::vector<std::uint8_t> ArbitraryBlockStorage::from_string(const std::string &s)
+std::shared_ptr<std::vector<std::uint8_t>> ArbitraryBlockStorage::from_string(const std::string &s)
 {
-    return std::vector<std::uint8_t>(s.begin(), s.end());
+    return std::make_shared<std::vector<std::uint8_t>>(s.begin(), s.end());
 }
 
-float ArbitraryBlockStorage::to_float()
+float ArbitraryBlockStorage::to_float() const
 {
     auto c = as<float>();
     if (c.empty())
@@ -3827,4 +3827,4 @@ float ArbitraryBlockStorage::to_float()
     return c[0];
 }
 
-std::string ArbitraryBlockStorage::to_string() { return std::string(data.begin(), data.end()); }
+std::string ArbitraryBlockStorage::to_string() const { return std::string(data.begin(), data.end()); }

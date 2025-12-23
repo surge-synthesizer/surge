@@ -60,6 +60,32 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
       delayL_(storage->sinctable), delayR_(storage->sinctable), delayTime_(.001)
 {
     mix_.set_blocksize(BLOCK_SIZE);
+
+    // If our userdata contains a filename but no actual channels, that means
+    // we should load it here. Keep in mind this operation could take time.
+    if (storage->load_audio_file)
+    {
+        if (fxdata->user_data.contains("filename") && !(fxdata->user_data.contains("left")))
+        {
+            auto t = storage->load_audio_file(fxdata->by_key("filename").to_string());
+            auto &v = std::get<1>(t);
+
+            if (v.empty())
+            {
+                storage->reportError("Error loading provided impulse response", "FX Error");
+            }
+            else
+            {
+                fxdata->user_data.emplace(
+                    "samplerate", ArbitraryBlockStorage::from_float(static_cast<float>(std::get<0>(t))));
+                fxdata->user_data.emplace("left", ArbitraryBlockStorage::from_floats(v[0]));
+                if (v.size() < 2)
+                    fxdata->user_data.emplace("right", fxdata->user_data["left"]);
+                else
+                    fxdata->user_data.emplace("right", ArbitraryBlockStorage::from_floats(v[1]));
+            }
+        }
+    }
 }
 
 const char *ConvolutionEffect::get_effectname() { return "convolution"; }
