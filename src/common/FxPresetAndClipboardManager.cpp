@@ -295,14 +295,15 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
             pfile << "<single-fx streaming_version=\"" << ff_revision << "\">\n";
 
             // take care of 5 special XML characters
+            auto fixupChars = [](std::string &s) {
+                Surge::Storage::findReplaceSubstring(s, std::string("&"), std::string("&amp;"));
+                Surge::Storage::findReplaceSubstring(s, std::string("<"), std::string("&lt;"));
+                Surge::Storage::findReplaceSubstring(s, std::string(">"), std::string("&gt;"));
+                Surge::Storage::findReplaceSubstring(s, std::string("\""), std::string("&quot;"));
+                Surge::Storage::findReplaceSubstring(s, std::string("'"), std::string("&apos;"));
+            };
             std::string fxNameSub(path_to_string(fnp));
-            Surge::Storage::findReplaceSubstring(fxNameSub, std::string("&"), std::string("&amp;"));
-            Surge::Storage::findReplaceSubstring(fxNameSub, std::string("<"), std::string("&lt;"));
-            Surge::Storage::findReplaceSubstring(fxNameSub, std::string(">"), std::string("&gt;"));
-            Surge::Storage::findReplaceSubstring(fxNameSub, std::string("\""),
-                                                 std::string("&quot;"));
-            Surge::Storage::findReplaceSubstring(fxNameSub, std::string("'"),
-                                                 std::string("&apos;"));
+            fixupChars(fxNameSub);
 
             pfile << "  <snapshot name=\"" << fxNameSub.c_str() << "\"\n";
 
@@ -340,6 +341,14 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
                               << "\"\n";
                     }
                 }
+            }
+
+            // Userdata bits.
+            if (fx->user_data.contains("filename"))
+            {
+                std::string filename = fx->by_key("filename").to_string();
+                fixupChars(filename);
+                pfile << "     filename=\"" << filename << "\"\n";
             }
 
             pfile << "  />\n";
@@ -381,6 +390,7 @@ void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStor
 {
     fxbuffer->type.val.i = p.type;
     // Special userdata bits.
+    fxbuffer->user_data.clear();
     if (!p.filename.empty())
         fxbuffer->user_data.emplace("filename", ArbitraryBlockStorage::from_string(p.filename));
 

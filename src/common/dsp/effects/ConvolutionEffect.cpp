@@ -67,7 +67,8 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
     {
         if (fxdata->user_data.contains("filename") && !(fxdata->user_data.contains("left")))
         {
-            auto t = storage->load_audio_file(fxdata->by_key("filename").to_string());
+            auto f = fxdata->by_key("filename").to_string();
+            auto t = storage->load_audio_file(f);
             auto &v = std::get<1>(t);
 
             if (v.empty())
@@ -76,6 +77,8 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
             }
             else
             {
+                fxdata->user_data.emplace(
+                    "irname", ArbitraryBlockStorage::from_string(string_to_path(f).stem()));
                 fxdata->user_data.emplace("samplerate", ArbitraryBlockStorage::from_float(
                                                             static_cast<float>(std::get<0>(t))));
                 fxdata->user_data.emplace("left", ArbitraryBlockStorage::from_floats(v[0]));
@@ -122,6 +125,8 @@ void ConvolutionEffect::init()
 {
     if (!(fxdata->user_data.contains("irname") && fxdata->user_data.contains("samplerate") &&
           fxdata->user_data.contains("left")))
+        return;
+    if (fxdata->user_data["left"]->size() == 0)
         return;
 
     prep_ir();

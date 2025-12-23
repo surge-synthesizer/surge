@@ -61,9 +61,10 @@ SurgeStorage::AudioFileInput loadAudioFile(std::string file)
 
     std::uint64_t sr = reader->sampleRate;
     std::vector<std::vector<float>> channels(reader->numChannels);
+
     for (int i = 0; i < reader->numChannels; i++)
     {
-        channels[i].reserve(reader->lengthInSamples);
+        channels[i].resize(reader->lengthInSamples);
         std::copy(buf.getReadPointer(i), buf.getReadPointer(i) + reader->lengthInSamples,
                   channels[i].begin());
     }
