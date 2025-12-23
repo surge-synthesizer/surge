@@ -71,7 +71,7 @@ SurgeStorage::AudioFileInput loadAudioFile(std::string file)
     return std::make_tuple(sr, std::move(channels));
 }
 
-}  // namespace
+} // namespace
 
 //==============================================================================
 SurgeSynthProcessor::SurgeSynthProcessor()

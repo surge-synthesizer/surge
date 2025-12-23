@@ -3807,7 +3807,8 @@ std::shared_ptr<std::vector<std::uint8_t>> ArbitraryBlockStorage::from_float(con
     return v;
 }
 
-std::shared_ptr<std::vector<std::uint8_t>> ArbitraryBlockStorage::from_floats(std::span<const float> fs)
+std::shared_ptr<std::vector<std::uint8_t>>
+ArbitraryBlockStorage::from_floats(std::span<const float> fs)
 {
     auto v = std::make_shared<std::vector<std::uint8_t>>(sizeof(float) * fs.size());
     std::copy(fs.begin(), fs.end(), ArbitraryBlockStorage{*v}.as<float>().begin());
@@ -3827,4 +3828,7 @@ float ArbitraryBlockStorage::to_float() const
     return c[0];
 }
 
-std::string ArbitraryBlockStorage::to_string() const { return std::string(data.begin(), data.end()); }
+std::string ArbitraryBlockStorage::to_string() const
+{
+    return std::string(data.begin(), data.end());
+}
