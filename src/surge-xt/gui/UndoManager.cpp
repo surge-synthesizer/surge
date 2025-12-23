@@ -35,8 +35,8 @@ namespace GUI
 {
 struct UndoManagerImpl
 {
-    static constexpr int maxUndoStackMem = 1024 * 1024 * 25;
-    static constexpr int maxRedoStackMem = 1024 * 1024 * 25;
+    static constexpr int maxUndoStackMem = 1024 * 1024 * 100;
+    static constexpr int maxRedoStackMem = 1024 * 1024 * 100;
     SurgeGUIEditor *editor;
     SurgeSynthesizer *synth;
     UndoManagerImpl(SurgeGUIEditor *ed, SurgeSynthesizer *s) : editor(ed), synth(s) {}
@@ -132,6 +132,25 @@ struct UndoManagerImpl
         std::vector<UndoParam> undoParamValues;
         std::vector<UndoModulation> undoModulations;
         std::unordered_map<std::string, std::shared_ptr<std::vector<std::uint8_t>>> user_data;
+        std::size_t estimateUserDataSize() const
+        {
+            std::size_t total = 0;
+            // This is an *estimate*. We get the size of the map (maybe, it's
+            // implementation dependent) and then we do not count the size of
+            // the map values if they have > 2 share count. There should always
+            // be more than 1 when we see it, because when we push an FX we copy
+            // what's already there before we make the change that requires the
+            // undo. This means the first push onto the undo stack will count
+            // against the stack size, but subsequents will not.
+            for (const auto &[key, ptr] : user_data)
+            {
+                total += key.size() + sizeof(std::string);
+                total += sizeof(ptr);
+                if (ptr.use_count() <= 2)
+                    total += sizeof(std::vector<std::uint8_t>) + ptr->size();
+            }
+            return total;
+        }
     };
     struct UndoStep
     {
@@ -215,12 +234,10 @@ struct UndoManagerImpl
         {
             res += pt->dataSz;
         }
-#if 0
-        if (auto pt = std::get_if<UndoFx>(&a))
+        if (auto pt = std::get_if<UndoFX>(&a))
         {
-            res += FIXME;
+            res += pt->estimateUserDataSize();
         }
-#endif
         return res;
     }
 
