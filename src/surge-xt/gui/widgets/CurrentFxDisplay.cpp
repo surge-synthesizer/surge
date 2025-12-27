@@ -363,11 +363,10 @@ struct ConvolutionButton : public juce::Component
         // Filename
         // Make it relative to the data directories with special tokens, if it's
         // already a child of one of them.
-        juce::File userDir(storage->userIRsPath.string());
-        juce::File extraUserDir(storage->extraUserIRsPath.string());
-        juce::File extra3pUserDir(storage->extraThirdPartyIRsPath.string());
-        juce::File sysDir(storage->datapath.string());
-        juce::String slash("/");
+        juce::File userDir(path_to_string(storage->userIRsPath));
+        juce::File extraUserDir(path_to_string(storage->extraUserIRsPath));
+        juce::File extra3pUserDir(path_to_string(storage->extraThirdPartyIRsPath));
+        juce::File sysDir(path_to_string(storage->datapath));
         if (f.isAChildOf(userDir))
         {
             file = juce::File::addTrailingSeparator(juce::String(std::string(pt_user_ir))) +
