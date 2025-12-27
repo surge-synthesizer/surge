@@ -98,6 +98,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   # Any Clang or any GCC
   add_compile_options(
     -Wno-multichar
+    -fno-math-errno
+    -fno-trapping-math
 
     # Targeting Windows with GCC/Clang is experimental
     $<$<NOT:$<OR:$<BOOL:${WIN32}>,$<BOOL:${SURGE_SKIP_WERROR}>>>:-Werror>
