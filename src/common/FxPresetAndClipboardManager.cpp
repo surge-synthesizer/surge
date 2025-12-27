@@ -392,7 +392,7 @@ void FxUserPreset::loadPresetOnto(const Preset &p, SurgeStorage *storage, FxStor
     // Special userdata bits.
     fxbuffer->user_data.clear();
     if (!p.filename.empty())
-        fxbuffer->user_data.emplace("filename", ArbitraryBlockStorage::from_string(p.filename));
+        fxbuffer->user_data.emplace("filename", ArbitraryBlockStorage::from_string(storage->resolvePathTokens(p.filename)));
 
     Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
 

@@ -566,6 +566,12 @@ const int lt_num_deforms[n_lfo_types] = {
     3, // lt_formula
 };
 
+// Special path tokens.
+constexpr std::string_view pt_user_ir("%UserIR%"); // Refers to userIRsPath
+constexpr std::string_view pt_extra_user_ir("%ExtraUserIR%"); // Refers to extraUserIRsPath
+constexpr std::string_view pt_extra_3p_user_ir("%Extra3pUserIR%"); // Refers to extraThirdPartyIRsPath
+constexpr std::string_view pt_sys_data("%SurgeData%"); // Refers to datapath
+
 /*
  * With 1.8 for compactness all the filter names and stuff went to a separate header
  */
@@ -1574,6 +1580,8 @@ class alignas(16) SurgeStorage
     // This returns path.empty() if there's no override
     fs::path getOverridenUserPath() const;
     void setOverridenUserPath(const fs::path *path);
+
+    fs::path resolvePathTokens(fs::path path);
 
     void refresh_wtlist();
     void refresh_wtlistAddDir(bool userDir, const std::string &subdir);

@@ -795,6 +795,22 @@ void SurgeStorage::setOverridenUserPath(const fs::path *path)
     }
 }
 
+fs::path SurgeStorage::resolvePathTokens(fs::path path)
+{
+    auto s = path.string();
+    std::size_t pos;
+    while ((pos = s.find(pt_user_ir)) != s.npos)
+        s.replace(pos, pt_user_ir.size(), userIRsPath);
+    while ((pos = s.find(pt_extra_user_ir)) != s.npos)
+        s.replace(pos, pt_extra_user_ir.size(), extraUserIRsPath);
+    while ((pos = s.find(pt_extra_3p_user_ir)) != s.npos)
+        s.replace(pos, pt_extra_3p_user_ir.size(), extraThirdPartyIRsPath);
+    while ((pos = s.find(pt_sys_data)) != s.npos)
+        s.replace(pos, pt_sys_data.size(), datapath);
+
+    return s;
+}
+
 void SurgeStorage::initializePatchDb(bool force)
 {
     if (patchDBInitialized && !force)

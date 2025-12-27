@@ -48,7 +48,8 @@ struct FxUserPreset
         int dt[n_fx_params];
 
         // Extra attributes that go in the userdata.
-        std::string filename;
+        std::string filename;  // special for convolver
+        std::string userdata;  // whole thing
 
         Preset()
         {

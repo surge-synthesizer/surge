@@ -321,7 +321,8 @@ struct ConvolutionButton : public juce::Component
             }
 
             auto res = c.getResult();
-            auto rString = res.getFullPathName().toStdString();
+            auto rString = res.getFullPathName();
+            rString = CopyIRToImported(rString);
 
             this->loadWavForConvolution(rString);
 
@@ -337,13 +338,14 @@ struct ConvolutionButton : public juce::Component
                                       action);
     }
 
-    bool loadWavForConvolution(const juce::String &file)
+    bool loadWavForConvolution(juce::String file)
     {
         std::lock_guard l(loading);
         juce::AudioFormatManager manager;
         manager.registerBasicFormats();
 
-        auto reader = manager.createReaderFor(juce::File(file));
+        juce::File f(file);
+        auto reader = manager.createReaderFor(f);
         if (!reader)
             return false;
         if (reader->numChannels != 1 && reader->numChannels != 2)
@@ -359,6 +361,34 @@ struct ConvolutionButton : public juce::Component
         sync.user_data.clear();
 
         // Filename
+        // Make it relative to the data directories with special tokens, if it's
+        // already a child of one of them.
+        juce::File userDir(storage->userIRsPath.string());
+        juce::File extraUserDir(storage->extraUserIRsPath.string());
+        juce::File extra3pUserDir(storage->extraThirdPartyIRsPath.string());
+        juce::File sysDir(storage->datapath.string());
+        juce::String slash("/");
+        if (f.isAChildOf(userDir))
+        {
+            file = juce::File::addTrailingSeparator(juce::String(std::string(pt_user_ir))) +
+                   f.getRelativePathFrom(userDir);
+        }
+        else if (f.isAChildOf(extraUserDir))
+        {
+            file = juce::File::addTrailingSeparator(juce::String(std::string(pt_extra_user_ir))) +
+                   f.getRelativePathFrom(extraUserDir);
+        }
+        else if (f.isAChildOf(extra3pUserDir))
+        {
+            file =
+                juce::File::addTrailingSeparator(juce::String(std::string(pt_extra_3p_user_ir))) +
+                f.getRelativePathFrom(extra3pUserDir);
+        }
+        else if (f.isAChildOf(sysDir))
+        {
+            file = juce::File::addTrailingSeparator(juce::String(std::string(pt_sys_data))) +
+                   f.getRelativePathFrom(sysDir);
+        }
         sync.user_data.emplace("filename", ArbitraryBlockStorage::from_string(file.toStdString()));
         sync.user_data.emplace("irname", ArbitraryBlockStorage::from_string(name));
 
@@ -397,6 +427,33 @@ struct ConvolutionButton : public juce::Component
         sge->enqueueAccessibleAnnouncement(announce);
 
         return true;
+    }
+
+    juce::String CopyIRToImported(juce::File source)
+    {
+        if (!source.existsAsFile())
+            return "";
+        fs::path destination = storage->userIRsPath / "IMPORTED";
+        if (!fs::exists(storage->userIRsPath))
+            if (!fs::create_directory(storage->userIRsPath))
+                return "";
+        if (!fs::exists(destination))
+            if (!fs::create_directory(destination))
+                return "";
+        if (!fs::is_directory(destination))
+            return "";
+        fs::path full = destination / source.getFileName().toStdString();
+        while (fs::exists(full))
+        {
+            if (source.hasIdenticalContentTo(juce::File(full.string())))
+                return full.string();
+            full = destination / (full.stem().string() + "0" + full.extension().string());
+        }
+
+        if (!source.copyFileTo(juce::File(full.string())))
+            return "";
+
+        return full.string();
     }
 };
 
@@ -756,10 +813,22 @@ void CurrentFxDisplay::onDrop(const juce::String &file)
             Surge::Storage::updateUserDefaultPath(
                 storage, Surge::Storage::LastIRPath,
                 f.getParentDirectory().getFullPathName().toStdString());
-            if (!(dynamic_cast<ConvolutionButton *>(irbutton.get())->loadWavForConvolution(file)))
+            ConvolutionButton *cb = dynamic_cast<ConvolutionButton *>(irbutton.get());
+            auto rString = cb->CopyIRToImported(f);
+            if (rString == "")
+            {
+                storage->reportError(
+                    fmt::format("Failed to copy impulse response from {}!", file.toStdString()),
+                    "Impulse Response Load Error");
+                return;
+            }
+            if (!cb->loadWavForConvolution(rString))
+            {
                 storage->reportError(
                     fmt::format("Failed to load impulse response from {}!", file.toStdString()),
                     "Impulse Response Load Error");
+                return;
+            }
         }
         break;
     }
