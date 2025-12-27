@@ -77,8 +77,8 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
             }
             else
             {
-                fxdata->user_data.emplace(
-                    "irname", ArbitraryBlockStorage::from_string(string_to_path(f).stem()));
+                fxdata->user_data.emplace("irname", ArbitraryBlockStorage::from_string(
+                                                        path_to_string(string_to_path(f).stem())));
                 fxdata->user_data.emplace("samplerate", ArbitraryBlockStorage::from_float(
                                                             static_cast<float>(std::get<0>(t))));
                 fxdata->user_data.emplace("left", ArbitraryBlockStorage::from_floats(v[0]));

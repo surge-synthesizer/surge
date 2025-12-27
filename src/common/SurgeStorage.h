@@ -567,9 +567,10 @@ const int lt_num_deforms[n_lfo_types] = {
 };
 
 // Special path tokens.
-constexpr std::string_view pt_user_ir("%UserIR%"); // Refers to userIRsPath
+constexpr std::string_view pt_user_ir("%UserIR%");            // Refers to userIRsPath
 constexpr std::string_view pt_extra_user_ir("%ExtraUserIR%"); // Refers to extraUserIRsPath
-constexpr std::string_view pt_extra_3p_user_ir("%Extra3pUserIR%"); // Refers to extraThirdPartyIRsPath
+constexpr std::string_view
+    pt_extra_3p_user_ir("%Extra3pUserIR%");            // Refers to extraThirdPartyIRsPath
 constexpr std::string_view pt_sys_data("%SurgeData%"); // Refers to datapath
 
 /*
