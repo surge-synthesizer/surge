@@ -1300,7 +1300,7 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
         binn *fxmap = binn_object();
         for (auto &kv : this->fx[fx].user_data)
         {
-            binn_object_set_blob(fxmap, kv.first.c_str(), kv.second.data(), kv.second.size());
+            binn_object_set_blob(fxmap, kv.first.c_str(), kv.second->data(), kv.second->size());
         }
         std::string key = fmt::format("fx{}", fx);
         binn_object_set_object(map, key.c_str(), fxmap);
@@ -1385,7 +1385,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             }
 
             // Deserialize the FX data.
-            std::unordered_map<std::string, std::vector<std::uint8_t>> &arb =
+            std::unordered_map<std::string, std::shared_ptr<std::vector<std::uint8_t>>> &arb =
                 this->fx[id].user_data;
             binn_iter inner;
             binn data;
@@ -1401,9 +1401,12 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
                 }
 
                 std::string converted = std::string(fxkey);
-                std::vector<std::uint8_t> &vdata = arb[converted];
-                vdata.resize(binn_size(&data));
-                std::memcpy(vdata.data(), data.ptr, binn_size(&data));
+                std::shared_ptr<std::vector<std::uint8_t>> &vdata = arb[converted];
+                if (!vdata)
+                    vdata = std::make_shared<std::vector<std::uint8_t>>(binn_size(&data));
+                else
+                    vdata->resize(binn_size(&data));
+                std::memcpy(vdata->data(), data.ptr, binn_size(&data));
             }
         }
     }

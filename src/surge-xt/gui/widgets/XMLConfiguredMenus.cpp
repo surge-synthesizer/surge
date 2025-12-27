@@ -987,6 +987,8 @@ void FxMenu::scanExtraPresets()
             auto alit = allPresets.begin();
             while (alit->itemType != tp.first && alit != allPresets.end())
                 alit++;
+            if (alit == allPresets.end())
+                continue;
             std::vector<std::string> rootPath;
             rootPath.push_back(alit->pathElements[0]);
 

@@ -795,6 +795,22 @@ void SurgeStorage::setOverridenUserPath(const fs::path *path)
     }
 }
 
+fs::path SurgeStorage::resolvePathTokens(fs::path path)
+{
+    auto s = path_to_string(path);
+    std::size_t pos;
+    while ((pos = s.find(pt_user_ir)) != s.npos)
+        s.replace(pos, pt_user_ir.size(), path_to_string(userIRsPath));
+    while ((pos = s.find(pt_extra_user_ir)) != s.npos)
+        s.replace(pos, pt_extra_user_ir.size(), path_to_string(extraUserIRsPath));
+    while ((pos = s.find(pt_extra_3p_user_ir)) != s.npos)
+        s.replace(pos, pt_extra_3p_user_ir.size(), path_to_string(extraThirdPartyIRsPath));
+    while ((pos = s.find(pt_sys_data)) != s.npos)
+        s.replace(pos, pt_sys_data.size(), path_to_string(datapath));
+
+    return string_to_path(s);
+}
+
 void SurgeStorage::initializePatchDb(bool force)
 {
     if (patchDBInitialized && !force)
@@ -3800,26 +3816,27 @@ bool getValueDisplayIsHighPrecision(SurgeStorage *storage)
 } // namespace Surge
 
 // Arbitrary block storage helpers.
-std::vector<std::uint8_t> ArbitraryBlockStorage::from_float(const float f)
+std::shared_ptr<std::vector<std::uint8_t>> ArbitraryBlockStorage::from_float(const float f)
 {
-    std::vector<std::uint8_t> v(sizeof(float));
-    ArbitraryBlockStorage{v}.as<float>()[0] = f;
+    auto v = std::make_shared<std::vector<std::uint8_t>>(sizeof(float));
+    ArbitraryBlockStorage{*v}.as<float>()[0] = f;
     return v;
 }
 
-std::vector<std::uint8_t> ArbitraryBlockStorage::from_floats(std::span<const float> fs)
+std::shared_ptr<std::vector<std::uint8_t>>
+ArbitraryBlockStorage::from_floats(std::span<const float> fs)
 {
-    std::vector<std::uint8_t> v(sizeof(float) * fs.size());
-    std::copy(fs.begin(), fs.end(), ArbitraryBlockStorage{v}.as<float>().begin());
+    auto v = std::make_shared<std::vector<std::uint8_t>>(sizeof(float) * fs.size());
+    std::copy(fs.begin(), fs.end(), ArbitraryBlockStorage{*v}.as<float>().begin());
     return v;
 }
 
-std::vector<std::uint8_t> ArbitraryBlockStorage::from_string(const std::string &s)
+std::shared_ptr<std::vector<std::uint8_t>> ArbitraryBlockStorage::from_string(const std::string &s)
 {
-    return std::vector<std::uint8_t>(s.begin(), s.end());
+    return std::make_shared<std::vector<std::uint8_t>>(s.begin(), s.end());
 }
 
-float ArbitraryBlockStorage::to_float()
+float ArbitraryBlockStorage::to_float() const
 {
     auto c = as<float>();
     if (c.empty())
@@ -3827,4 +3844,7 @@ float ArbitraryBlockStorage::to_float()
     return c[0];
 }
 
-std::string ArbitraryBlockStorage::to_string() { return std::string(data.begin(), data.end()); }
+std::string ArbitraryBlockStorage::to_string() const
+{
+    return std::string(data.begin(), data.end());
+}
