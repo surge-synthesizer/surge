@@ -57,7 +57,7 @@ if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     # things. We would happily merge that conditional compilation. The strategy is basically:
     # add an 'is 32-bit Linux' compile flag to Surge common, use that to make the SpringReverb
     # a nullptr in Effects.cpp and skipped code in the C++, test. etc... The branch where you
-    # can add this flag is where we add the -msse2 flag in the GNU/CLang branch below, to get
+    # can add this flag is where we add the -msse4.1 flag in the GNU/CLang branch below, to get
     # started
     message(WARNING "32-bit builds are only available on Windows.")
     message(WARNING "If you are building on an Raspberry Pi, install a 64-bit operating system!")
@@ -123,17 +123,16 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=undefined>
   )
 
-  # Enable SSE2 on x86-32 only. It's implied on x86-64 and N/A elsewhere.
-  if(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
-    include(CheckCXXSourceCompiles)
-    check_cxx_source_compiles("#ifndef __i386__
-    #error
-    #endif
-    int main() {}" SURGE_ARCH_I386)
-
-    if(SURGE_ARCH_I386)
-      add_compile_options(-msse2 -mfpmath=sse)
-    endif()
+  # Enable SSE4.1 on x86 platforms.
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles("
+#if defined(__i386__) || defined(__x86_64) || defined(_M_AMD64) || defined(_M_X64)
+#else
+#error
+#endif
+int main() {}" IS_X86)
+  if (IS_X86)
+    add_compile_options(-msse4.1 -mfpmath=sse)
   endif()
 
   # Add AVX support
