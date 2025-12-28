@@ -2016,6 +2016,9 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         });
                     }
                 }
+                // adds the menu to all vt_int controlls
+                contextMenu.addSeparator();
+                createMIDILearnMenuEntries(contextMenu, param_cc, p->id, control);
             }
 
             if (p->valtype == vt_float)
