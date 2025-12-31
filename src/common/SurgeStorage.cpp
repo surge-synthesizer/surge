@@ -3142,7 +3142,7 @@ void SurgeStorage::loadTuningFromSCL(const fs::path &p)
 {
     try
     {
-        retuneToScale(Tunings::readSCLFile(p.u8string()));
+        retuneToScale(Tunings::readSCLFile(p));
     }
     catch (Tunings::TuningError &e)
     {

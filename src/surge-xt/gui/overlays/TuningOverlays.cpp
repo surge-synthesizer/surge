@@ -3190,7 +3190,7 @@ void TuningOverlay::resetParentTitle()
     }
     else
     {
-        setEnclosingParentTitle("Tuning Editor - " + tuning.scale.description);
+        setEnclosingParentTitle("Tuning Editor - " + tuning.scale.name);
     }
     if (getParentComponent())
         getParentComponent()->repaint();
