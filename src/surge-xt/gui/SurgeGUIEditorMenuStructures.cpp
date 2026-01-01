@@ -53,6 +53,7 @@
 #include "SurgeSharedBinary.h"
 #endif
 
+#include <filesystem>
 #include <regex>
 
 /* MAKE */
@@ -502,17 +503,15 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
 
         tuningSubMenu.addItem(Surge::GUI::toOSCase("Load .scl Tuning..."), [this]() {
-            auto cb = [this](std::string sf) {
-                std::string sfx = ".scl";
-                if (sf.length() >= sfx.length())
+            auto cb = [this](const fs::path &sf) {
+                auto ext = sf.extension().string();
+                std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
+
+                if (!sf.has_extension() || ext != ".scl")
                 {
-                    if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
-                    {
-                        synth->storage.reportError("Please select only .scl files!",
-                                                   "Invalid Choice");
-                        std::cout << "FILE is [" << sf << "]" << std::endl;
-                        return;
-                    }
+                    synth->storage.reportError("Please select only .scl files!", "Invalid Choice");
+                    std::cout << "FILE is [" << sf << "]" << std::endl;
+                    return;
                 }
                 try
                 {
@@ -553,15 +552,18 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                     if (ress.size() != 1)
                         return;
                     auto res = ress.getFirst();
-                    auto rString = res.getFullPathName().toStdString();
-                    auto dir =
-                        string_to_path(res.getParentDirectory().getFullPathName().toStdString());
-                    cb(rString);
+                    auto fullPathName = res.getFullPathName();
+#if JUCE_WINDOWS
+                    fs::path fullPath = fullPathName.toWideCharPointer();
+#else
+                    fs::path fullPath = fs::u8path(fullPathName.toRawUTF8());
+#endif
+                    cb(fullPath);
 
-                    if (dir != scl_path)
+                    if (auto parent{fullPath.parent_path()}; parent != scl_path)
                     {
                         Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
-                                                              Surge::Storage::LastSCLPath, dir);
+                                                              Surge::Storage::LastSCLPath, parent);
                     }
                 });
         });
