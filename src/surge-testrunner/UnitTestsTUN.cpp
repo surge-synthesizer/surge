@@ -171,7 +171,7 @@ TEST_CASE("KBM File Parsing", "[tun]")
     SECTION("Parse A440 File")
     {
         auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-a440-constant.kbm");
-        REQUIRE(k.name == "resources/test-data/scl/mapping-a440-constant.kbm");
+        REQUIRE(k.name == "mapping-a440-constant");
         REQUIRE(k.count == 12);
         REQUIRE(k.firstMidi == 0);
         REQUIRE(k.lastMidi == 127);
@@ -186,7 +186,7 @@ TEST_CASE("KBM File Parsing", "[tun]")
     SECTION("Parse 7 to 12 Mapping File")
     {
         auto k = Tunings::readKBMFile("resources/test-data/scl/mapping-a442-7-to-12.kbm");
-        REQUIRE(k.name == "resources/test-data/scl/mapping-a442-7-to-12.kbm");
+        REQUIRE(k.name == "mapping-a442-7-to-12");
         REQUIRE(k.count == 12);
         REQUIRE(k.firstMidi == 0);
         REQUIRE(k.lastMidi == 127);
