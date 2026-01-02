@@ -3157,7 +3157,7 @@ void SurgeStorage::loadMappingFromKBM(const fs::path &p)
 {
     try
     {
-        remapToKeyboard(Tunings::readKBMFile(p.u8string()));
+        remapToKeyboard(Tunings::readKBMFile(p));
     }
     catch (Tunings::TuningError &e)
     {
