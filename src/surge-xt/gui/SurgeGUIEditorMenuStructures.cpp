@@ -53,7 +53,6 @@
 #include "SurgeSharedBinary.h"
 #endif
 
-#include <filesystem>
 #include <regex>
 
 /* MAKE */
@@ -569,17 +568,15 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         });
 
         tuningSubMenu.addItem(Surge::GUI::toOSCase("Load .kbm Keyboard Mapping..."), [this]() {
-            auto cb = [this](std::string sf) {
-                std::string sfx = ".kbm";
-                if (sf.length() >= sfx.length())
+            auto cb = [this](const fs::path &sf) {
+                auto ext = sf.extension().string();
+                std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
+
+                if (!sf.has_extension() || ext != ".kbm")
                 {
-                    if (sf.compare(sf.length() - sfx.length(), sfx.length(), sfx) != 0)
-                    {
-                        synth->storage.reportError("Please select only .kbm files!",
-                                                   "Invalid Choice");
-                        std::cout << "FILE is [" << sf << "]" << std::endl;
-                        return;
-                    }
+                    synth->storage.reportError("Please select only .kbm files!", "Invalid Choice");
+                    std::cout << "FILE is [" << sf << "]" << std::endl;
+                    return;
                 }
                 try
                 {
@@ -615,22 +612,24 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
             fileChooser->launchAsync(
                 juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
-                [this, cb, kbm_path](const juce::FileChooser &c)
-
-                {
+                [this, cb, kbm_path](const juce::FileChooser &c) {
                     auto ress = c.getResults();
                     if (ress.size() != 1)
                         return;
 
                     auto res = c.getResult();
-                    auto rString = res.getFullPathName().toStdString();
-                    auto dir =
-                        string_to_path(res.getParentDirectory().getFullPathName().toStdString());
-                    cb(rString);
-                    if (dir != kbm_path)
+                    auto fullPathName = res.getFullPathName();
+#if JUCE_WINDOWS
+                    fs::path fullPath = fullPathName.toWideCharPointer();
+#else
+                    fs::path fullPath = fs::u8path(fullPathName.toRawUTF8());
+#endif
+                    cb(fullPath);
+
+                    if (auto parent{fullPath.parent_path()}; parent != kbm_path)
                     {
                         Surge::Storage::updateUserDefaultPath(&(this->synth->storage),
-                                                              Surge::Storage::LastKBMPath, dir);
+                                                              Surge::Storage::LastKBMPath, parent);
                     }
                 });
         });
