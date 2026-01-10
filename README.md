@@ -50,6 +50,12 @@ cmake --build build --config Release --target surge-staged-assets
 This will build all the Surge XT binary assets in the directory `build/surge_xt_products` and is often enough of a formula
 to do a build.
 
+> [!TIP]
+> To only build the VST3, replace the above final command with this:
+```bash
+cmake --build build --config Release --target surge-xt_VST3
+```
+
 ## Developing from your own fork
 
 Our [Git How To](doc/How%20to%20Git.md) explains how we are using Git. If you want to develop from your own fork, please
