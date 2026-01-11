@@ -352,8 +352,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void toggleMPE();
     void toggleTuning();
-    void scaleFileDropped(const std::string &fn);
-    void mappingFileDropped(const std::string &fn);
+    void scaleFileDropped(const juce::String &fname);
+    void mappingFileDropped(const juce::String &fname);
     std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
     void wtscriptFileDropped(const std::string &fn);
     std::string tuningToHtml();
@@ -530,8 +530,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     int oscilatorMenuIndex[n_scenes][n_oscs] = {0};
 
   public:
-    bool canDropTarget(const std::string &fname); // these come as const char* from vstgui
-    bool onDrop(const std::string &fname);
+    bool canDropTarget(const juce::String &fname);
+    bool onDrop(const juce::String &fname);
 
     const std::unique_ptr<Surge::GUI::UndoManager> &undoManager();
     void setParamFromUndo(int paramId, pdata val);
