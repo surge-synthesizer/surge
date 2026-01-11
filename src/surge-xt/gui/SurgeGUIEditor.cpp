@@ -92,6 +92,7 @@
 #include <string_view>
 #include <algorithm>
 #include <cctype>
+#include <ranges>
 #include "version.h"
 #include "ModernOscillator.h"
 #ifndef SURGE_SKIP_ODDSOUND_MTS
@@ -4873,7 +4874,7 @@ bool SurgeGUIEditor::canDropTarget(const juce::String &fname)
     std::ranges::transform(ext, ext.begin(),
                            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
-    return std::ranges::contains(allowedExtensions, ext);
+    return std::ranges::find(allowedExtensions, ext) != allowedExtensions.end();
 }
 
 bool SurgeGUIEditor::onDrop(const juce::String &fname)
