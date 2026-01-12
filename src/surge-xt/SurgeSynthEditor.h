@@ -129,7 +129,8 @@ class SurgeSynthEditor : public juce::AudioProcessorEditor,
         {"AZERTY",          {'q', 'z', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k', 'o', 'l', 'p', 'm'}},
         {"Dvorak",          {'a', ',', 'o', '.', 'e', 'u', 'y', 'i', 'f', 'd', 'g', 'h', 't', 'r', 'n', 'l', 's', 191, 189, 187}},
         {"Colemak",         {'a', 'w', 'r', 'f', 's', 't', 'g', 'd', 'j', 'h', 'l', 'n', 'e', 'y', 'i', 186, 'o', 219, 222, 221}},
-        {"Workman",         {'a', 'd', 's', 'r', 'h', 't', 'b', 'g', 'j', 'y', 'f', 'n', 'e', 'p', 'o', 186, 'i', 219, 222, 221}}
+        {"Workman",         {'a', 'd', 's', 'r', 'h', 't', 'b', 'g', 'j', 'y', 'f', 'n', 'e', 'p', 'o', 186, 'i', 219, 222, 221}},
+        {"QWERTY 2 Octave", {'z', 's', 'x', 'd', 'c', 'v', 'g', 'b', 'h', 'n', 'j', 'm', 'q', '2', 'w', '3', 'e', 'r', '5', 't', '6', 'y', '7', 'u', 'i', '9', 'o', '0', 'p', 219, 187, 221}}
     };
     // clang-format on
     std::string currentVKBLayout;
