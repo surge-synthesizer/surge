@@ -134,6 +134,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
                 case sst::filters::fut_diode:
                     subtypeMemory[s][fu][t] = 3;
                     break;
+                case sst::filters::fut_vintageladder:
+                    subtypeMemory[s][fu][t] = sst::filters::st_vintage_type3;
+                    break;
                 default:
                     subtypeMemory[s][fu][t] = 0;
                     break;

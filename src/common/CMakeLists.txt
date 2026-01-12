@@ -36,8 +36,6 @@ surge_add_lib_subdirectory(sst/sst-cpputils)
 set(SST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES ON CACHE BOOL "No Native Aliases for SCXT") # Makes ARM64EC use neon basically
 surge_add_lib_subdirectory(sst/sst-basic-blocks)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
-# Turn this on to include expanded vintage ladder model.
-# set(SST_FILTERS_HAS_HUOV_2010 TRUE)
 surge_add_lib_subdirectory(sst/sst-filters)
 surge_add_lib_subdirectory(sst/sst-waveshapers)
 
