@@ -148,7 +148,7 @@ jobs:
       - name: "Build in Docker"
         uses: surge-synthesizer/sst-githubactions/cmake-in-docker@main
         with:
-          image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu20_gcc11:main
+          image: ghcr.io/surge-synthesizer/sst-dockerimages/ubuntu22_gcc12:main
           username: ${{ github.actor }}
           token: ${{ secrets.GITHUB_TOKEN }}
           cmakeArgs: -DAZURE_PIPELINE=1  -DSURGE_BUILD_LV2=TRUE -DSURGE_VERSION="${{ needs.surge_version.outputs.surge_version }}" -DCMAKE_BUILD_TYPE=Release -GNinja
