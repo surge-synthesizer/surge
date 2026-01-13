@@ -853,6 +853,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void setRecommendedAccessibility();
 
+    fs::path juceFileToFSPath(const juce::File &f);
+    fs::path juceStringToFSPath(const juce::String &f);
+
   public:
     void addHelpHeaderTo(const std::string &lab, const std::string &hu, juce::PopupMenu &m) const;
 

@@ -551,12 +551,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                     if (ress.size() != 1)
                         return;
                     auto res = ress.getFirst();
-                    auto fullPathName = res.getFullPathName();
-#if JUCE_WINDOWS
-                    fs::path fullPath = fullPathName.toWideCharPointer();
-#else
-                    fs::path fullPath = fs::u8path(fullPathName.toRawUTF8());
-#endif
+
+                    auto fullPath = juceFileToFSPath(res);
+
                     cb(fullPath);
 
                     if (auto parent{fullPath.parent_path()}; parent != scl_path)
@@ -618,12 +615,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                         return;
 
                     auto res = c.getResult();
-                    auto fullPathName = res.getFullPathName();
-#if JUCE_WINDOWS
-                    fs::path fullPath = fullPathName.toWideCharPointer();
-#else
-                    fs::path fullPath = fs::u8path(fullPathName.toRawUTF8());
-#endif
+
+                    auto fullPath = juceFileToFSPath(res);
+
                     cb(fullPath);
 
                     if (auto parent{fullPath.parent_path()}; parent != kbm_path)
