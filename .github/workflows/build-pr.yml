@@ -56,10 +56,10 @@ jobs:
           #  cmakeOpt: DEBUG
           #  runTests: false
 
-          - name: "Ubuntu standalone"
+          - name: "Ubuntu standalone gcc13"
             os: ubuntu-latest
             target: surge-xt_Standalone
-            cmakeConfig: -GNinja
+            cmakeConfig: -GNinja -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_C_COMPILER=gcc-13
             cmakeOpt: DEBUG
             runTests: false
 
