@@ -2859,11 +2859,7 @@ void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
 void SurgeGUIEditor::scaleFileDropped(const juce::String &fname)
 {
     undoManager()->pushTuning(synth->storage.currentTuning);
-#if JUCE_WINDOWS
-    fs::path fullPath = fname.toWideCharPointer();
-#else
-    fs::path fullPath = fs::u8path(fname.toRawUTF8());
-#endif
+    auto fullPath = juceStringToFSPath(fname);
     synth->storage.loadTuningFromSCL(fullPath);
     tuningChanged();
 }
@@ -2871,11 +2867,7 @@ void SurgeGUIEditor::scaleFileDropped(const juce::String &fname)
 void SurgeGUIEditor::mappingFileDropped(const juce::String &fname)
 {
     undoManager()->pushTuning(synth->storage.currentTuning);
-#if JUCE_WINDOWS
-    fs::path fullPath = fname.toWideCharPointer();
-#else
-    fs::path fullPath = fs::u8path(fname.toRawUTF8());
-#endif
+    auto fullPath = juceStringToFSPath(fname);
     synth->storage.loadMappingFromKBM(fullPath);
     tuningChanged();
 }
@@ -4860,11 +4852,7 @@ bool SurgeGUIEditor::canDropTarget(const juce::String &fname)
 {
     using namespace std::string_view_literals;
 
-#if JUCE_WINDOWS
-    fs::path fullPath = fname.toWideCharPointer();
-#else
-    fs::path fullPath = fs::u8path(fname.toRawUTF8());
-#endif
+    auto fullPath = juceStringToFSPath(fname);
 
     constexpr std::array<std::string_view, 8> allowedExtensions{
         ".scl"sv, ".kbm"sv, ".wav"sv, ".wt"sv, ".wtscript"sv, ".fxp"sv, ".surge-skin"sv, ".zip"sv};
@@ -4879,11 +4867,7 @@ bool SurgeGUIEditor::canDropTarget(const juce::String &fname)
 
 bool SurgeGUIEditor::onDrop(const juce::String &fname)
 {
-#if JUCE_WINDOWS
-    fs::path fullPath = fname.toWideCharPointer();
-#else
-    fs::path fullPath = fs::u8path(fname.toRawUTF8());
-#endif
+    auto fullPath = juceStringToFSPath(fname);
 
     std::string ext = fullPath.extension().u8string();
 
@@ -6809,4 +6793,29 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             << "Details " << e.what();
         storage->reportError(oss.str(), "Script Write Error");
     }
+}
+
+fs::path SurgeGUIEditor::juceFileToFSPath(const juce::File &f)
+{
+    auto fullPathName = f.getFullPathName();
+    return juceStringToFSPath(fullPathName);
+}
+
+fs::path SurgeGUIEditor::juceStringToFSPath(const juce::String &fullPathName)
+{
+#if JUCE_WINDOWS
+    fs::path fullPath = fullPathName.toWideCharPointer();
+#else
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+    fs::path fullPath = fs::u8path(fullPathName.toRawUTF8());
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
+#endif
+    return fullPath;
 }
