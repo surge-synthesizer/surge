@@ -87,6 +87,12 @@
 #include <numeric>
 #include <unordered_map>
 #include <codecvt>
+#include <array>
+#include <string>
+#include <string_view>
+#include <algorithm>
+#include <cctype>
+#include <ranges>
 #include "version.h"
 #include "ModernOscillator.h"
 #ifndef SURGE_SKIP_ODDSOUND_MTS
@@ -248,7 +254,7 @@ class DroppedUserDataHandler
     }
 
   public:
-    bool init(const std::string &fname)
+    bool init(const juce::String &fname)
     {
         juce::File file(fname);
         zipFile = std::make_unique<juce::ZipFile>(file);
@@ -2850,17 +2856,27 @@ void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
     oscdata->queue_type = ot_wavetable; // Setting queue_type also handles OWD/editor refresh
 }
 
-void SurgeGUIEditor::scaleFileDropped(const string &fn)
+void SurgeGUIEditor::scaleFileDropped(const juce::String &fname)
 {
     undoManager()->pushTuning(synth->storage.currentTuning);
-    synth->storage.loadTuningFromSCL(fn);
+#if JUCE_WINDOWS
+    fs::path fullPath = fname.toWideCharPointer();
+#else
+    fs::path fullPath = fs::u8path(fname.toRawUTF8());
+#endif
+    synth->storage.loadTuningFromSCL(fullPath);
     tuningChanged();
 }
 
-void SurgeGUIEditor::mappingFileDropped(const string &fn)
+void SurgeGUIEditor::mappingFileDropped(const juce::String &fname)
 {
     undoManager()->pushTuning(synth->storage.currentTuning);
-    synth->storage.loadMappingFromKBM(fn);
+#if JUCE_WINDOWS
+    fs::path fullPath = fname.toWideCharPointer();
+#else
+    fs::path fullPath = fs::u8path(fname.toRawUTF8());
+#endif
+    synth->storage.loadMappingFromKBM(fullPath);
     tuningChanged();
 }
 
@@ -4840,69 +4856,71 @@ SurgeGUIEditor::layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control
     return nullptr;
 }
 
-bool SurgeGUIEditor::canDropTarget(const std::string &fname)
+bool SurgeGUIEditor::canDropTarget(const juce::String &fname)
 {
-    static std::unordered_set<std::string> extensions;
+    using namespace std::string_view_literals;
 
-    if (extensions.empty())
-    {
-        extensions.insert(".scl");
-        extensions.insert(".kbm");
-        extensions.insert(".wav");
-        extensions.insert(".wt");
-        extensions.insert(".wtscript");
-        extensions.insert(".fxp");
-        extensions.insert(".surge-skin");
-        extensions.insert(".zip");
-    }
+#if JUCE_WINDOWS
+    fs::path fullPath = fname.toWideCharPointer();
+#else
+    fs::path fullPath = fs::u8path(fname.toRawUTF8());
+#endif
 
-    fs::path fPath(fname);
-    std::string fExt(path_to_string(fPath.extension()));
-    std::transform(fExt.begin(), fExt.end(), fExt.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
-    if (extensions.find(fExt) != extensions.end())
-        return true;
-    return false;
+    constexpr std::array<std::string_view, 8> allowedExtensions{
+        ".scl"sv, ".kbm"sv, ".wav"sv, ".wt"sv, ".wtscript"sv, ".fxp"sv, ".surge-skin"sv, ".zip"sv};
+
+    std::string ext = fullPath.extension().u8string();
+
+    std::ranges::transform(ext, ext.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    return std::ranges::find(allowedExtensions, ext) != allowedExtensions.end();
 }
 
-bool SurgeGUIEditor::onDrop(const std::string &fname)
+bool SurgeGUIEditor::onDrop(const juce::String &fname)
 {
-    fs::path fPath(fname);
-    std::string fExt(path_to_string(fPath.extension()));
-    std::transform(fExt.begin(), fExt.end(), fExt.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+#if JUCE_WINDOWS
+    fs::path fullPath = fname.toWideCharPointer();
+#else
+    fs::path fullPath = fs::u8path(fname.toRawUTF8());
+#endif
 
-    if (fExt == ".wav" || fExt == ".wt")
+    std::string ext = fullPath.extension().u8string();
+
+    std::ranges::transform(ext, ext.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    if (ext == ".wav" || ext == ".wt")
     {
         synth->storage.getPatch()
             .scene[current_scene]
             .osc[current_osc[current_scene]]
-            .wt.queue_filename = fname;
+            .wt.queue_filename = fullPath.u8string();
     }
-    else if (fExt == ".wtscript")
+    else if (ext == ".wtscript")
     {
-        wtscriptFileDropped(fname);
+        wtscriptFileDropped(fullPath.u8string());
     }
-    else if (fExt == ".scl")
+    else if (ext == ".scl")
     {
-        scaleFileDropped(fname);
+        scaleFileDropped(fullPath.u8string());
     }
-    else if (fExt == ".kbm")
+    else if (ext == ".kbm")
     {
-        mappingFileDropped(fname);
+        mappingFileDropped(fullPath.u8string());
     }
-    else if (fExt == ".fxp")
+    else if (ext == ".fxp")
     {
-        queuePatchFileLoad(fname);
+        queuePatchFileLoad(fullPath.u8string());
     }
-    else if (fExt == ".surge-skin")
+    else if (ext == ".surge-skin")
     {
         std::ostringstream oss;
         oss << "Would you like to install the skin from\n"
             << fname << "\ninto Surge XT user folder?";
-        auto cb = [this, fPath]() {
+        auto cb = [this, fullPath]() {
             auto db = Surge::GUI::SkinDB::get();
-            auto me = db->installSkinFromPathToUserDirectory(&(this->synth->storage), fPath);
+            auto me = db->installSkinFromPathToUserDirectory(&(this->synth->storage), fullPath);
             if (me.has_value())
             {
                 this->setupSkinFromEntry(*me);
@@ -4914,7 +4932,7 @@ bool SurgeGUIEditor::onDrop(const std::string &fname)
         };
         alertYesNo("Install Skin", oss.str(), cb);
     }
-    else if (fExt == ".zip")
+    else if (ext == ".zip")
     {
         std::ostringstream oss;
         std::shared_ptr<DroppedUserDataHandler> zipHandler =
