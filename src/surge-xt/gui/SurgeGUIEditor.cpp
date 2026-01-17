@@ -5462,7 +5462,7 @@ void SurgeGUIEditor::setupKeymapManager()
     keyMapManager->addBinding(KeyboardActions::VKB_VELOCITY_096, {(int)'6'});
     keyMapManager->addBinding(KeyboardActions::VKB_VELOCITY_112, {(int)'7'});
     keyMapManager->addBinding(KeyboardActions::VKB_VELOCITY_127, {(int)'8'});
-    
+
     keyMapManager->addBinding(KeyboardActions::ZOOM_TO_DEFAULT, {keymap_t::Modifiers::SHIFT, '/'});
     keyMapManager->addBinding(KeyboardActions::ZOOM_PLUS_10, {keymap_t::Modifiers::NONE, '+'});
     keyMapManager->addBinding(KeyboardActions::ZOOM_PLUS_25, {keymap_t::Modifiers::SHIFT, '+'});
