@@ -40,8 +40,8 @@ bool getLineIntersection(float p0_x, float p0_y, float p1_x, float p1_y, float p
 void constrainPointOnLineWithinRectangle(const juce::Rectangle<float> rect,
                                          const juce::Line<float> l, juce::Point<float> &p);
 
-void openFileOrFolder(const std::string &f);
-inline void openFileOrFolder(const fs::path &f) { openFileOrFolder(path_to_string(f)); }
+bool openFileOrFolder(const std::string &f);
+inline bool openFileOrFolder(const fs::path &f) { return openFileOrFolder(path_to_string(f)); }
 
 // Are we standalone exe vs a plugin (clap, vst, au, etc...)
 void setIsStandalone(bool);
