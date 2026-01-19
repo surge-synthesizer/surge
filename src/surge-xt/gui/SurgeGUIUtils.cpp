@@ -142,9 +142,14 @@ void constrainPointOnLineWithinRectangle(const juce::Rectangle<float> rect,
     }
 }
 
-void openFileOrFolder(const std::string &f)
+bool openFileOrFolder(const std::string &f)
 {
     auto path = juce::File(f);
+
+    if (!path.exists())
+    {
+        return false;
+    }
 
     if (path.isDirectory())
     {
@@ -166,6 +171,8 @@ void openFileOrFolder(const std::string &f)
     {
         path.revealToUser();
     }
+
+    return true;
 }
 
 } // namespace GUI

@@ -639,7 +639,15 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
 
         tuningSubMenu.addItem(Surge::GUI::toOSCase("Factory Tuning Library..."), [this]() {
             auto path = this->synth->storage.datapath / "tuning_library";
-            Surge::GUI::openFileOrFolder(path);
+            if (!Surge::GUI::openFileOrFolder(path))
+            {
+                synth->storage.reportError(
+                    "The folder " + path_to_string(path) +
+                        " does not exist. It seems that your Surge factory data folder is "
+                        "missing.\n\n"
+                        "Please run the Surge installer to set up the factory data.",
+                    "Factory Tuning Library Folder Not Found");
+            }
         });
 
         tuningSubMenu.addSeparator();
@@ -1640,8 +1648,16 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
 {
     auto dataSubMenu = juce::PopupMenu();
 
-    dataSubMenu.addItem(Surge::GUI::toOSCase("Open Factory Data Folder..."),
-                        [this]() { Surge::GUI::openFileOrFolder(this->synth->storage.datapath); });
+    dataSubMenu.addItem(Surge::GUI::toOSCase("Open Factory Data Folder..."), [this]() {
+        if (!Surge::GUI::openFileOrFolder(this->synth->storage.datapath))
+        {
+            synth->storage.reportError(
+                "The folder " + path_to_string(this->synth->storage.datapath) +
+                    " does not exist. It seems that your Surge factory data folder is missing.\n\n"
+                    "Please run the Surge installer to set up the factory data.",
+                "Factory Data Folder Not Found");
+        }
+    });
 
     dataSubMenu.addItem(Surge::GUI::toOSCase("Open User Data Folder..."), [this]() {
         // make it if it isn't there
