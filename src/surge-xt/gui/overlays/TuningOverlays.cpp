@@ -2846,7 +2846,15 @@ struct TuningControlArea : public juce::Component,
         case tag_open_library:
         {
             auto path = overlay->storage->datapath / "tuning_library";
-            Surge::GUI::openFileOrFolder(path);
+            if (!Surge::GUI::openFileOrFolder(path))
+            {
+                overlay->storage->reportError(
+                    "The folder " + path_to_string(path) +
+                        " does not exist. It seems that your Surge factory data folder is "
+                        "missing.\n\n"
+                        "Please run the Surge installer to set up the factory data.",
+                    "Tuning Library Folder Not Found");
+            }
         }
         break;
         case tag_export_html:
