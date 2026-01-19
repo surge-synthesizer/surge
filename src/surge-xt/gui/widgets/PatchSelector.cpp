@@ -874,10 +874,28 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
 
     contextMenu.addItem(Surge::GUI::toOSCase("Open Factory Patches Folder..."), [this]() {
         Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_factory");
+
+        if (!Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_factory"))
+        {
+            storage->reportError(
+                "The folder " + path_to_string(storage->datapath) +
+                    " does not exist. It seems that your Surge factory patches folder is "
+                    "missing.\n\n"
+                    "Please run the Surge installer to set up the factory patches.",
+                "Factory Patches Folder Not Found");
+        }
     });
 
     contextMenu.addItem(Surge::GUI::toOSCase("Open Third Party Patches Folder..."), [this]() {
-        Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_3rdparty");
+        if (!Surge::GUI::openFileOrFolder(this->storage->datapath / "patches_3rdparty"))
+        {
+            storage->reportError(
+                "The folder " + path_to_string(storage->datapath) +
+                    " does not exist. It seems that your Surge third party patches folder is "
+                    "missing.\n\n"
+                    "Please run the Surge installer to set up the third party patches.",
+                "Third Party Patches Folder Not Found");
+        }
     });
 
     contextMenu.addSeparator();
