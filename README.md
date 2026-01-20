@@ -43,9 +43,11 @@ on all platforms is:
 git clone https://github.com/surge-synthesizer/surge.git
 cd surge
 git submodule update --init --recursive
-cmake -Bbuild
+cmake -Bbuild -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release --target surge-staged-assets
 ```
+
+(Replace `Release` with `Debug` or `RelWithDebInfo` consistently in both lines as you need.)
 
 This will build all the Surge XT binary assets in the directory `build/surge_xt_products` and is often enough of a formula
 to do a build.
