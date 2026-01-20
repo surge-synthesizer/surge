@@ -362,12 +362,11 @@ void KeyBindingsOverlay::changeVKBLayout(const std::string layout)
 {
     if (layout == "QWERTY 2 Octave")
     {
-        juce::AlertWindow::AlertWindow::showMessageBoxAsync(
-            juce::AlertWindow::WarningIcon, "QWERTY 2 Octave Layout Warning",
-            fmt::format(
-                "The QWERTY 2 Octave layout has conflicts with the default keyboard shortcuts.\n"
-                "Be sure to change X to Shift+X and C to Shift+C or keys of your choice.\n\n"),
-            "OK");
+        storage->reportError(
+            "The QWERTY 2 Octave layout has conflicts with the default keyboard shortcuts.\n"
+            "Be sure to change any conflicting shortcuts like X to Shift+X and C to Shift+C or "
+            "other keys of your choice.",
+            "QWERTY 2 Octave Layout Warning");
     }
     Surge::Storage::updateUserDefaultValue(editor->getStorage(),
                                            Surge::Storage::VirtualKeyboardLayout, layout);
