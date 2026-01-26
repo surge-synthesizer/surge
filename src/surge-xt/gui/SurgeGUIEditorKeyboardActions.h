@@ -76,6 +76,15 @@ enum KeyboardActions
     VKB_VELOCITY_DOWN_10PCT,
     VKB_VELOCITY_UP_10PCT,
 
+    VKB_VELOCITY_016,
+    VKB_VELOCITY_032,
+    VKB_VELOCITY_048,
+    VKB_VELOCITY_064,
+    VKB_VELOCITY_080,
+    VKB_VELOCITY_096,
+    VKB_VELOCITY_112,
+    VKB_VELOCITY_127,
+
     ZOOM_TO_DEFAULT,
     ZOOM_PLUS_10,
     ZOOM_PLUS_25,
@@ -173,6 +182,23 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "VKB_VELOCITY_DOWN_10%";
     case VKB_VELOCITY_UP_10PCT:
         return "VKB_VELOCITY_UP_10%";
+
+    case VKB_VELOCITY_016:
+        return "VKB_VELOCITY_016";
+    case VKB_VELOCITY_032:
+        return "VKB_VELOCITY_032";
+    case VKB_VELOCITY_048:
+        return "VKB_VELOCITY_048";
+    case VKB_VELOCITY_064:
+        return "VKB_VELOCITY_064";
+    case VKB_VELOCITY_080:
+        return "VKB_VELOCITY_080";
+    case VKB_VELOCITY_096:
+        return "VKB_VELOCITY_096";
+    case VKB_VELOCITY_112:
+        return "VKB_VELOCITY_112";
+    case VKB_VELOCITY_127:
+        return "VKB_VELOCITY_127";
 
     case ZOOM_TO_DEFAULT:
         return "ZOOM_TO_DEFAULT";
@@ -321,6 +347,39 @@ inline std::string keyboardActionDescription(KeyboardActions a)
         break;
     case VKB_VELOCITY_UP_10PCT:
         desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity Up 10%");
+        skipOSCase = true;
+        break;
+
+    case VKB_VELOCITY_016:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity 16");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_032:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity 32");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_048:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity 48");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_064:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity 64");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_080:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity 80");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_096:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity 96");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_112:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity 112");
+        skipOSCase = true;
+        break;
+    case VKB_VELOCITY_127:
+        desc = Surge::GUI::toOSCase("Virtual Keyboard: ") + Surge::GUI::toOSCase("Velocity 127");
         skipOSCase = true;
         break;
 
