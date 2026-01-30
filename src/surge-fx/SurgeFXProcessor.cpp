@@ -84,7 +84,13 @@ SurgefxAudioProcessor::SurgefxAudioProcessor()
     fxType->getTextHandler = [this](float f, int len) -> juce::String {
         auto i = 1 + (int)round(f * (n_fx_types - 2));
         if (i >= 1 && i < n_fx_types)
+        {
+            if (i == fxt_convolution)
+            {
+                return "Convolution (Unimplemented)";
+            }
             return fx_type_names[i];
+        }
         return "";
     };
 
@@ -333,7 +339,7 @@ void SurgefxAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     // FIXME: Check: has type changed?
     int pt = *fxType;
 
-    if (effectNum != pt)
+    if (effectNum != pt && pt != fxt_convolution)
     {
         effectNum = pt;
         resetFxType(effectNum);
