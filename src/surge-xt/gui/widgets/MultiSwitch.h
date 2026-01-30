@@ -26,6 +26,7 @@
 #include "SurgeJUCEHelpers.h"
 #include "WidgetBaseMixin.h"
 #include "AccessibleHelpers.h"
+#include "ModulatableControlInterface.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
 
@@ -43,13 +44,17 @@ namespace Widgets
 struct MultiSwitch : public juce::Component,
                      public WidgetBaseMixin<MultiSwitch>,
                      public LongHoldMixin<MultiSwitch>,
-                     public Surge::Widgets::HasAccessibleSubComponentForFocus
+                     public Surge::Widgets::HasAccessibleSubComponentForFocus,
+                     public ModulatableControlInterface
 {
     MultiSwitch();
     ~MultiSwitch();
 
     SurgeStorage *storage{nullptr};
     void setStorage(SurgeStorage *s) { storage = s; }
+
+    Surge::GUI::IComponentTagValue *asControlValueInterface() override { return this; }
+    juce::Component *asJuceComponent() override { return this; }
 
     int rows{0}, columns{0}, heightOfOneImage{0}, frameOffset{0};
     int getRows() const { return rows; }
