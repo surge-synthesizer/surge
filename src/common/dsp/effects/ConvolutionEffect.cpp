@@ -347,8 +347,25 @@ void ConvolutionEffect::prep_ir()
 
     normalize(irLsub, irRsub);
     irSize_ = irLsub.size();
-    s = s && convolverL_.init(std::max(BLOCK_SIZE, 16), 256, irLsub);
-    s = s && convolverR_.init(std::max(BLOCK_SIZE, 16), 256, irRsub);
+    // Experimentally: in very very long reverbs, 16k tail / 128 head matches
+    // the CPU usage of ReaVerb (without using background threads) for very long
+    // reverbs. For shorter reverbs we're probably about 1.5 - 1.75x worse which
+    // is solid given that we use a pretty simple two-stage algorithm. It's
+    // kinda hard to measure directly on shorter stuff since Surge has a
+    // baseline CPU usage. This is all pretty vibes-based.
+    int hd_size = 0, tl_size = 0;
+    for (int i = 1; i <= 14; i++)
+    {
+        tl_size = 1 << i; // maxes out at 16384
+        const int div = irSize_ / tl_size;
+        if (div <= 3)
+            break;
+    }
+    hd_size = std::max(256, tl_size / 16);
+    hd_size = std::max(hd_size, std::max(BLOCK_SIZE, 16));
+    tl_size = std::max(hd_size, tl_size);
+    s = s && convolverL_.init(hd_size, tl_size, irLsub);
+    s = s && convolverR_.init(hd_size, tl_size, irRsub);
     if (!s)
     {
         storage->reportError("Error initializing the convolver, not running convolution effect",
