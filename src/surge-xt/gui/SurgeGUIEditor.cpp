@@ -1013,6 +1013,23 @@ void SurgeGUIEditor::idle()
                         }
                     }
                 }
+                else if (nonmod_param[j])
+                {
+                    // The nonmod_param can be controlled by midi (#8232)
+                    auto *ccContolledNonmodParam =
+                        dynamic_cast<Surge::Widgets::ModulatableControlInterface *>(
+                            nonmod_param[j]);
+
+                    if (ccContolledNonmodParam != NULL)
+                    {
+
+                        ccContolledNonmodParam->asControlValueInterface()->setValue(
+                            synth->refresh_ctrl_queue_value[i]);
+                        ccContolledNonmodParam->setQuantitizedDisplayValue(
+                            synth->refresh_ctrl_queue_value[i]);
+                        ccContolledNonmodParam->asJuceComponent()->repaint();
+                    }
+                }
             }
         }
 
