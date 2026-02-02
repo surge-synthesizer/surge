@@ -352,18 +352,18 @@ void ConvolutionEffect::prep_ir()
     // reverbs. For shorter reverbs we're probably about 1.5 - 1.75x worse which
     // is solid given that we use a pretty simple two-stage algorithm. It's
     // kinda hard to measure directly on shorter stuff since Surge has a
-    // baseline CPU usage. This is all pretty vibes-based.
+    // baseline CPU usage. This is all pretty vibes-based and if anyone has a
+    // more rigorous way of determining these please let us know.
     int hd_size = 0, tl_size = 0;
     for (int i = 1; i <= 14; i++)
     {
         tl_size = 1 << i; // maxes out at 16384
         const int div = irSize_ / tl_size;
-        if (div <= 3)
+        if (div <= 8)
             break;
     }
-    hd_size = std::max(256, tl_size / 16);
+    hd_size = tl_size / 64;
     hd_size = std::max(hd_size, std::max(BLOCK_SIZE, 16));
-    tl_size = std::max(hd_size, tl_size);
     s = s && convolverL_.init(hd_size, tl_size, irLsub);
     s = s && convolverR_.init(hd_size, tl_size, irRsub);
     if (!s)
