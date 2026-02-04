@@ -69,6 +69,8 @@ struct PresetProvider
             auto p = reinterpret_cast<PresetProvider *>(a->provider_data);
             return p->get_extension(b);
         };
+
+        dumpTiming = (getenv("SURGE_PRESET_DISCOVERY_TIMING") != nullptr);
     }
 
     ~PresetProvider() {}
@@ -123,6 +125,18 @@ struct PresetProvider
     bool get_metadata(uint32_t location_kind, const char *location,
                       const clap_preset_discovery_metadata_receiver_t *rcv)
     {
+        auto start = std::chrono::high_resolution_clock::now();
+        std::vector<std::pair<int, int64_t>> times;
+
+        auto snap = [&](auto l) {
+            if (dumpTiming)
+            {
+                auto t = std::chrono::high_resolution_clock::now();
+                auto dt = std::chrono::duration_cast<std::chrono::microseconds>(t - start);
+                times.emplace_back(l, dt.count());
+            }
+        };
+        snap(__LINE__);
         if (!rcv)
         {
             // we need to send it somewhere. And we can't do on_error without it so
@@ -147,6 +161,7 @@ struct PresetProvider
         }
         namespace mech = sst::basic_blocks::mechanics;
 
+        snap(__LINE__);
         auto bail = [rcv, location](const std::string &s) {
             std::string l{location};
             std::string ms = l + ": " + s;
@@ -160,6 +175,8 @@ struct PresetProvider
         std::ifstream stream(p, std::ios::in | std::ios::binary);
         if (!stream.is_open())
             return bail("Unable to open file");
+
+        snap(__LINE__);
 
         std::vector<char> fxChunk;
         fxChunk.resize(sizeof(sst::io::fxChunkSetCustom));
@@ -175,6 +192,8 @@ struct PresetProvider
             return bail("This is not a Surge FXP file");
         }
 
+        snap(__LINE__);
+
         std::vector<char> patchHeaderChunk;
         patchHeaderChunk.resize(sizeof(sst::io::patch_header));
         stream.read(patchHeaderChunk.data(), patchHeaderChunk.size());
@@ -188,12 +207,16 @@ struct PresetProvider
             return bail("Not a Surge XML containing FXP");
         }
 
+        snap(__LINE__);
+
         std::vector<char> xmlData;
         xmlData.resize(xmlSz + 1);
         stream.read(xmlData.data(), xmlData.size() - 1);
         if (!stream)
             return bail("Unable to read XML data");
         xmlData[xmlSz] = 0;
+
+        snap(__LINE__);
 
         TiXmlDocument doc;
         doc.Parse(xmlData.data(), nullptr, TIXML_ENCODING_LEGACY);
@@ -202,6 +225,7 @@ struct PresetProvider
             return bail(doc.ErrorDesc());
         }
 
+        snap(__LINE__);
         auto patch = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("patch"));
         if (!patch)
             return bail("XML does not contain a patch");
@@ -231,8 +255,21 @@ struct PresetProvider
         if (meta->Attribute("category"))
             rcv->add_extra_info(rcv, "category", meta->Attribute("category"));
 
+        snap(__LINE__);
+        if (dumpTiming)
+        {
+            std::cout << "Timing: " << location << "\n";
+
+            for (auto &[l, t] : times)
+            {
+                std::cout << "  L: " << l << "  : " << t << "us\n";
+            }
+            std::cout << std::flush;
+        }
         return true;
     }
+
+    bool dumpTiming{false};
 
     const void *get_extension(const char *eid) { return nullptr; }
 
