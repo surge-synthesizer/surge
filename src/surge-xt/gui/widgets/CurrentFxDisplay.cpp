@@ -309,7 +309,7 @@ struct ConvolutionButton : public juce::Component
         if (!sge)
             return;
 
-        juce::String fileTypes = "*.wav;*.flac";
+        juce::String fileTypes = "*.aif,*.aiff,*.flac,*.wav";
         sge->fileChooser = std::make_unique<juce::FileChooser>(
             "Select Impulse Response to Load", juce::File(path_to_string(path)), fileTypes);
         auto action = [this, path](const juce::FileChooser &c) {
@@ -432,7 +432,7 @@ struct ConvolutionButton : public juce::Component
     {
         if (!source.existsAsFile())
             return "";
-        fs::path destination = storage->userIRsPath / "IMPORTED";
+        fs::path destination = storage->userIRsPath / "Imported";
         if (!fs::exists(storage->userIRsPath))
             if (!fs::create_directory(storage->userIRsPath))
                 return "";
@@ -795,7 +795,8 @@ bool CurrentFxDisplay::canDropTarget(const juce::String &file)
     switch (storage->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:
-        return file.endsWith(".wav") || file.endsWith(".flac");
+        return file.endsWith(".wav") || file.endsWith(".flac") || file.endsWith(".aif") ||
+               file.endsWith(".aiff");
     default:
         return false;
     }
@@ -806,7 +807,9 @@ void CurrentFxDisplay::onDrop(const juce::String &file)
     switch (storage->getPatch().fx[current_fx_].type.val.i)
     {
     case fxt_convolution:
-        if ((file.endsWith(".wav") || file.endsWith(".flac")) && irbutton)
+        if ((file.endsWith(".wav") || file.endsWith(".flac") || file.endsWith(".aif") ||
+             file.endsWith(".aiff")) &&
+            irbutton)
         {
             auto f = juce::File(file);
             Surge::Storage::updateUserDefaultPath(
