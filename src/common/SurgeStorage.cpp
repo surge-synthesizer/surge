@@ -2023,6 +2023,8 @@ void SurgeStorage::refresh_irlistAddDir(bool userDir, const std::string &subdir)
 void SurgeStorage::refresh_irlistFrom(bool isUser, const fs::path &p, const std::string &subdir)
 {
     std::vector<std::string> supportedTableFileTypes;
+    supportedTableFileTypes.push_back(".aif");
+    supportedTableFileTypes.push_back(".aiff");
     supportedTableFileTypes.push_back(".wav");
     supportedTableFileTypes.push_back(".flac");
 
