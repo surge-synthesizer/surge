@@ -809,41 +809,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
                 case Surge::GUI::VKB_VELOCITY_UP_10PCT:
                     midiKeyboardVelocity = std::clamp(midiKeyboardVelocity + 0.1f, 0.f, 1.f);
                     keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-
-                case Surge::GUI::VKB_VELOCITY_016:
-                    midiKeyboardVelocity = 16.f / 127.f;
-                    keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-                case Surge::GUI::VKB_VELOCITY_032:
-                    midiKeyboardVelocity = 32.f / 127.f;
-                    keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-                case Surge::GUI::VKB_VELOCITY_048:
-                    midiKeyboardVelocity = 48.f / 127.f;
-                    keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-                case Surge::GUI::VKB_VELOCITY_064:
-                    midiKeyboardVelocity = 64.f / 127.f;
-                    keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-                case Surge::GUI::VKB_VELOCITY_080:
-                    midiKeyboardVelocity = 80.f / 127.f;
-                    keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-                case Surge::GUI::VKB_VELOCITY_096:
-                    midiKeyboardVelocity = 96.f / 127.f;
-                    keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-                case Surge::GUI::VKB_VELOCITY_112:
-                    midiKeyboardVelocity = 112.f / 127.f;
-                    keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-                case Surge::GUI::VKB_VELOCITY_127:
-                    midiKeyboardVelocity = 127.f / 127.f;
-                    keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;
-
+                    return true;              
                 default:
                     break;
                 }
