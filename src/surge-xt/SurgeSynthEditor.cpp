@@ -809,7 +809,7 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
                 case Surge::GUI::VKB_VELOCITY_UP_10PCT:
                     midiKeyboardVelocity = std::clamp(midiKeyboardVelocity + 0.1f, 0.f, 1.f);
                     keyboard->setVelocity(midiKeyboardVelocity, true);
-                    return true;              
+                    return true;
                 default:
                     break;
                 }
