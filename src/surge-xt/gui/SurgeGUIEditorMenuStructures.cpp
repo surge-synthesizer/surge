@@ -1419,8 +1419,9 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
     wfMenu.addItem(
         Surge::GUI::toOSCase("Virtual Keyboard: Click Sets Overall Velocity"), true,
         virtualKeyboardClickSetsVelocity, [this, virtualKeyboardClickSetsVelocity]() {
-            Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::VirtualKeyboardClickSetsVelocity, !virtualKeyboardClickSetsVelocity);
+            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
+                                                   Surge::Storage::VirtualKeyboardClickSetsVelocity,
+                                                   !virtualKeyboardClickSetsVelocity);
 
             // Update the keyboard component
             if (auto vkb = dynamic_cast<SurgeVirtualKeyboard *>(juceEditor->keyboard.get()))
