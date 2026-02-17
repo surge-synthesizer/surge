@@ -1054,23 +1054,6 @@ juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(const juce::Point<int> &wh
 
     mouseMenu.addSeparator();
 
-    // Virtual Keyboard mouse behavior
-    bool virtualKeyboardClickSetsVelocity = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::VirtualKeyboardClickSetsVelocity, false);
-
-    mouseMenu.addItem(
-        Surge::GUI::toOSCase("Virtual Keyboard: Click Sets Overall Velocity"), true,
-        virtualKeyboardClickSetsVelocity, [this, virtualKeyboardClickSetsVelocity]() {
-            Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::VirtualKeyboardClickSetsVelocity, !virtualKeyboardClickSetsVelocity);
-
-            // Update the keyboard component
-            if (auto vkb = dynamic_cast<SurgeVirtualKeyboard *>(juceEditor->keyboard.get()))
-            {
-                vkb->useClickPositionForOverallVelocity = !virtualKeyboardClickSetsVelocity;
-            }
-        });
-
     mouseMenu.addSeparator();
 
     return mouseMenu;
@@ -1428,6 +1411,25 @@ juce::PopupMenu SurgeGUIEditor::makeWorkflowMenu(const juce::Point<int> &where)
         wfMenu, Surge::GUI::toOSCase("Virtual Keyboard"),
         getShortcutDescription(Surge::GUI::KeyboardActions::TOGGLE_VIRTUAL_KEYBOARD), true,
         showVirtualKeyboard, [this]() { toggleVirtualKeyboard(); });
+
+    // Virtual Keyboard mouse behavior
+    bool virtualKeyboardClickSetsVelocity = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::VirtualKeyboardClickSetsVelocity, false);
+
+    wfMenu.addItem(
+        Surge::GUI::toOSCase("Virtual Keyboard: Click Sets Overall Velocity"), true,
+        virtualKeyboardClickSetsVelocity, [this, virtualKeyboardClickSetsVelocity]() {
+            Surge::Storage::updateUserDefaultValue(
+                &(this->synth->storage), Surge::Storage::VirtualKeyboardClickSetsVelocity, !virtualKeyboardClickSetsVelocity);
+
+            // Update the keyboard component
+            if (auto vkb = dynamic_cast<SurgeVirtualKeyboard *>(juceEditor->keyboard.get()))
+            {
+                vkb->useClickPositionForOverallVelocity = !virtualKeyboardClickSetsVelocity;
+            }
+        });
+
+    wfMenu.addSeparator();
 
     makeScopeEntry(wfMenu);
 
