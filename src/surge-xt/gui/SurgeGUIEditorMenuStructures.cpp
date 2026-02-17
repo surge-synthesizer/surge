@@ -1055,19 +1055,19 @@ juce::PopupMenu SurgeGUIEditor::makeMouseBehaviorMenu(const juce::Point<int> &wh
     mouseMenu.addSeparator();
 
     // Virtual Keyboard mouse behavior
-    bool vkbClickSetVelocity = Surge::Storage::getUserDefaultValue(
-        &(this->synth->storage), Surge::Storage::VKBClickSetVelocity, false);
+    bool virtualKeyboardClickSetsVelocity = Surge::Storage::getUserDefaultValue(
+        &(this->synth->storage), Surge::Storage::VirtualKeyboardClickSetsVelocity, false);
 
     mouseMenu.addItem(
         Surge::GUI::toOSCase("Virtual Keyboard: Click Sets Overall Velocity"), true,
-        vkbClickSetVelocity, [this, vkbClickSetVelocity]() {
+        virtualKeyboardClickSetsVelocity, [this, virtualKeyboardClickSetsVelocity]() {
             Surge::Storage::updateUserDefaultValue(
-                &(this->synth->storage), Surge::Storage::VKBClickSetVelocity, !vkbClickSetVelocity);
+                &(this->synth->storage), Surge::Storage::VirtualKeyboardClickSetsVelocity, !virtualKeyboardClickSetsVelocity);
 
             // Update the keyboard component
             if (auto vkb = dynamic_cast<SurgeVirtualKeyboard *>(juceEditor->keyboard.get()))
             {
-                vkb->useClickPositionForOverallVelocity = !vkbClickSetVelocity;
+                vkb->useClickPositionForOverallVelocity = !virtualKeyboardClickSetsVelocity;
             }
         });
 

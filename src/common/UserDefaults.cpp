@@ -151,11 +151,11 @@ std::string defaultKeyToString(DefaultKey k)
     case ShowVirtualKeyboard_Standalone:
         r = "showVirtualKeyboardStandalone";
         break;
+    case VirtualKeyboardClickSetsVelocity:
+        r = "virtualKeyboardClickSetsVelocity";
+        break;
     case VirtualKeyboardLayout:
         r = "virtualKeyboardLayout";
-        break;
-    case VKBClickSetVelocity:
-        r = "vkbClickSetVelocity";
         break;
     case UseSoftwareRenderer:
         r = "useSoftwareRenderer";

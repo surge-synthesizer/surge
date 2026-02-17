@@ -176,11 +176,11 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     keyboard->setWantsKeyboardFocus(false);
 
     // Load the saved VKB click velocity mode setting
-    bool vkbClickSetVelocity = Surge::Storage::getUserDefaultValue(
-        &(this->processor.surge->storage), Surge::Storage::VKBClickSetVelocity, false);
+    bool virtualKeyboardClickSetsVelocity = Surge::Storage::getUserDefaultValue(
+        &(this->processor.surge->storage), Surge::Storage::VirtualKeyboardClickSetsVelocity, false);
     if (auto vkb = dynamic_cast<SurgeVirtualKeyboard *>(keyboard.get()))
     {
-        vkb->useClickPositionForOverallVelocity = vkbClickSetVelocity;
+        vkb->useClickPositionForOverallVelocity = virtualKeyboardClickSetsVelocity;
         // Set up callback to update midiKeyboardVelocity when mode is enabled
         vkb->onVelocityChanged = [this](float vel) { midiKeyboardVelocity = vel; };
     }
