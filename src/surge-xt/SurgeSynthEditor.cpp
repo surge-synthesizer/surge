@@ -166,7 +166,7 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     auto mcValue = Surge::Storage::getUserDefaultValue(&(this->processor.surge->storage),
                                                        Surge::Storage::MiddleC, 1);
 
-    keyboard = std::make_unique<juce::MidiKeyboardComponent>(
+    keyboard = std::make_unique<SurgeVirtualKeyboard>(
         processor.midiKeyboardState, juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
     keyboard->setVelocity(midiKeyboardVelocity, true);
     keyboard->setOctaveForMiddleC(5 - mcValue);
@@ -174,6 +174,16 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     keyboard->setLowestVisibleKey(24);
     // this makes VKB always receive keyboard input (except when we focus on any typeins, of course)
     keyboard->setWantsKeyboardFocus(false);
+
+    // Load the saved VKB click velocity mode setting
+    bool vkbClickSetVelocity = Surge::Storage::getUserDefaultValue(
+        &(this->processor.surge->storage), Surge::Storage::VKBClickSetVelocity, false);
+    if (auto vkb = dynamic_cast<SurgeVirtualKeyboard *>(keyboard.get()))
+    {
+        vkb->useClickPositionForOverallVelocity = vkbClickSetVelocity;
+        // Set up callback to update midiKeyboardVelocity when mode is enabled
+        vkb->onVelocityChanged = [this](float vel) { midiKeyboardVelocity = vel; };
+    }
 
     auto vkbLayout = Surge::Storage::getUserDefaultValue(
         &(this->processor.surge->storage), Surge::Storage::VirtualKeyboardLayout, "QWERTY");
