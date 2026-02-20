@@ -34,6 +34,39 @@
 class SurgeGUIEditor;
 class SurgeJUCELookAndFeel;
 
+struct SurgeVirtualKeyboard : public juce::MidiKeyboardComponent
+{
+    SurgeVirtualKeyboard(juce::MidiKeyboardState &state, Orientation orientation)
+        : juce::MidiKeyboardComponent(state, orientation), onVelocityChanged([](float) {})
+    {
+    }
+
+    std::function<void(float)> onVelocityChanged;
+
+    // When true, clicking on the keyboard sets the overall velocity of the vkb
+    // When false (default), vkb velocity is not linked to click position
+    bool useClickPositionForOverallVelocity{false};
+
+    void toggleClickVelocityMode()
+    {
+        useClickPositionForOverallVelocity = !useClickPositionForOverallVelocity;
+    }
+
+    bool mouseDownOnKey(int midiNoteNumber, const juce::MouseEvent &e) override
+    {
+        if (useClickPositionForOverallVelocity)
+        {
+            auto noteAndVel = getNoteAndVelocityAtPosition(e.position);
+            float clickVelocity = std::clamp(noteAndVel.velocity, 0.0f, 1.0f);
+            setVelocity(clickVelocity, false);
+
+            onVelocityChanged(clickVelocity);
+        }
+
+        return juce::MidiKeyboardComponent::mouseDownOnKey(midiNoteNumber, e);
+    }
+};
+
 //==============================================================================
 /**
  */
