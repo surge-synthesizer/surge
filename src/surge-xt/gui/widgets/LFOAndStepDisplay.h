@@ -38,7 +38,8 @@ namespace Widgets
 {
 struct LFOAndStepDisplay : public juce::Component,
                            public WidgetBaseMixin<LFOAndStepDisplay>,
-                           public LongHoldMixin<LFOAndStepDisplay>
+                           public LongHoldMixin<LFOAndStepDisplay>,
+                           public ModulatableControlInterface
 {
     LFOAndStepDisplay(SurgeGUIEditor *e);
     void paint(juce::Graphics &g) override;
@@ -46,6 +47,9 @@ struct LFOAndStepDisplay : public juce::Component,
     void paintStepSeq(juce::Graphics &g);
     void paintTypeSelector(juce::Graphics &g);
     void resized() override;
+
+    Surge::GUI::IComponentTagValue *asControlValueInterface() override { return this; }
+    juce::Component *asJuceComponent() override { return this; }
 
     float value;
     float getValue() const override { return value; }
