@@ -91,6 +91,7 @@ enum DefaultKey
     FocusModEditorAfterAddModulationFrom,
     ShowVirtualKeyboard_Plugin,
     ShowVirtualKeyboard_Standalone,
+    VirtualKeyboardClickSetsVelocity,
     VirtualKeyboardLayout,
     UseSoftwareRenderer,
 
