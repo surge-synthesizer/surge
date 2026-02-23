@@ -816,21 +816,6 @@ bool SurgeSynthEditor::keyPressed(const juce::KeyPress &key, juce::Component *or
             }
         }
 
-        auto textChar = key.getTextCharacter();
-
-        // set VKB velocity to basic dynamic levels (ppp, pp, p, mp, mf, f, ff, fff)
-        if (textChar >= '1' && textChar <= '8')
-        {
-            float const velJump = 16.f / 127.f;
-
-            // juce::getTextCharacter() returns ASCII code of the char
-            // so subtract the first one we need to get our factor
-            midiKeyboardVelocity = std::clamp(velJump * (textChar - '1' + 1), 0.f, 1.f);
-            keyboard->setVelocity(midiKeyboardVelocity, true);
-
-            return true;
-        }
-
         if (sge->shouldForwardKeysToVKB() && orig != keyboard.get())
         {
             return keyboard->keyPressed(key);
