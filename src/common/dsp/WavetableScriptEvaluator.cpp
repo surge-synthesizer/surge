@@ -47,6 +47,7 @@ struct LuaWTEvaluator::Details
     size_t frameCount{10};
 
     bool isValid{false};
+    bool importWtData{false};
     std::vector<std::optional<frame_t>> frameCache;
     std::string wtName{"Scripted Wavetable"};
     void prepareIfInvalid();
@@ -69,6 +70,32 @@ struct LuaWTEvaluator::Details
 
         if (pushToGlobal)
             lua_setglobal(L, statetable);
+    }
+
+    void pushOscWavetable(const OscillatorStorage &oscdata)
+    {
+        const auto &wt = oscdata.wt;
+
+        lua_newtable(L); // Wavetable table for this oscillator
+
+        // Return if wavetable is invalid
+        // TODO: Is there a better way for this check?
+        if (!wt.everBuilt || wt.n_tables == 0 || wt.size == 0 ||
+            wt.TableF32WeakPointers[0][0] == nullptr)
+        {
+            return; // Empty table on stack
+        }
+
+        for (unsigned int t = 0; t < wt.n_tables; ++t)
+        {
+            lua_newtable(L); // Frame table
+            for (int i = 0; i < wt.size; ++i)
+            {
+                lua_pushnumber(L, wt.TableF32WeakPointers[0][t][i]);
+                lua_rawseti(L, -2, i + 1); // osc#[t+1][i+1] = value
+            }
+            lua_rawseti(L, -2, t + 1); // osc#[t+1] = frame table
+        }
     }
 
     LuaWTEvaluator::frame_t generateScriptAtFrame(size_t frame)
@@ -120,6 +147,22 @@ struct LuaWTEvaluator::Details
 
         lua_pushinteger(L, resolution);
         lua_setfield(L, tidx, "sample_count");
+
+        // Include each oscillator's wavetable in the scene if importWtData is true
+        if (importWtData)
+        {
+            int current_scene = storage->getPatch().scene_active.val.i;
+
+            for (int osc = 0; osc < n_oscs; ++osc)
+            {
+                auto &oscdata = storage->getPatch().scene[current_scene].osc[osc];
+                pushOscWavetable(oscdata);
+
+                // Assign to named field: wt.osc1 / osc2 / osc3
+                std::string oscName = "osc" + std::to_string(osc + 1);
+                lua_setfield(L, tidx, oscName.c_str());
+            }
+        }
 
         // So stack is now the table and the function
         auto pcr = lua_pcall(L, 1, 1, 0);
@@ -189,7 +232,22 @@ struct LuaWTEvaluator::Details
             {
                 if (lua_istable(L, -1))
                 {
+                    // Push the table into the global state first
                     lua_setglobal(L, statetable);
+
+                    // Now get the global table back to read importwt
+                    lua_getglobal(L, statetable);
+                    lua_getfield(L, -1, "importwt");
+                    if (lua_isboolean(L, -1))
+                    {
+                        importWtData = lua_toboolean(L, -1);
+                    }
+                    else if (lua_isnumber(L, -1))
+                    {
+                        importWtData = (lua_tonumber(L, -1) != 0.0);
+                    }
+
+                    lua_pop(L, 2); // pop importwt and statetable
                 }
                 else
                 {
@@ -235,7 +293,6 @@ struct LuaWTEvaluator::Details
         if (!isValid)
         {
             LOG("Validating");
-
             {
                 // Have a separate guard for this just to make sure I match
                 auto lwg = Surge::LuaSupport::SGLD("WavetableScript::details::clearGlobals", L);
@@ -253,6 +310,10 @@ struct LuaWTEvaluator::Details
             }
 
             auto wg = Surge::LuaSupport::SGLD("WavetableScript::details::makeValid", L);
+
+            // Reset importWtData so it does not carry over from a previous script
+            importWtData = false;
+
             std::string emsg;
             auto res = Surge::LuaSupport::parseStringDefiningMultipleFunctions(
                 L, script, {"init", "generate"}, emsg);
