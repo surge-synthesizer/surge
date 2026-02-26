@@ -1,17 +1,17 @@
-name: "Code formatting check"
+name: Format Check
 on: [ pull_request ]
 jobs:
   formatting-check:
-    name: "clang-format check"
-    runs-on: ubuntu-latest
+    name: Clang Format Check
+    runs-on: ubuntu-slim
     strategy:
       matrix:
         path: [ 'src' ]
     steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v6
 
-      - name: "Run clang-format check"
+      - name: Run clang-format style check
         uses: surge-synthesizer/sst-githubactions/clang-format-check@main
         with:
           path: ${{ matrix.path }}
