@@ -20,7 +20,7 @@ jobs:
       surge_is_nightly: ${{ steps.vers.outputs.surge_is_nightly}}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "Calculate version"
         id: vers
@@ -79,7 +79,7 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -100,7 +100,7 @@ jobs:
 
       - uses: surge-synthesizer/sst-githubactions/install-innosetup@main
         with:
-          version: "6.6.1"
+          version: "6.7.1"
 
       - name: "Prepare for JUCE"
         uses: surge-synthesizer/sst-githubactions/prepare-for-juce@main
@@ -141,7 +141,7 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -188,7 +188,7 @@ jobs:
           title: "A New Surge Nightly is Available"
 
       - name: "Checkout for git info"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 5
 
@@ -249,7 +249,7 @@ jobs:
           subtitle: "Release ${{ github.ref_name }}"
 
       - name: "Checkout for git info"
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 5
 
