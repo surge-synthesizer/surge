@@ -1257,10 +1257,7 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
     return amIChecked;
 }
 
-void PatchSelector::loadPatch(int id)
-{
-    loadPatch(id, false);
-}
+void PatchSelector::loadPatch(int id) { loadPatch(id, false); }
 
 void PatchSelector::loadPatch(int id, bool fromFavorites)
 {

@@ -6185,7 +6185,7 @@ void SurgeGUIEditor::setSpecificPatchAsFavorite(int patchid, bool b)
             favs.push_back(patchid);
             std::sort(favs.begin(), favs.end(), [this](const int &a, const int &b) {
                 return strnatcasecmp(synth->storage.patch_list[a].name.c_str(),
-                                    synth->storage.patch_list[b].name.c_str()) < 0;
+                                     synth->storage.patch_list[b].name.c_str()) < 0;
             });
         }
         else
