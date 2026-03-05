@@ -78,6 +78,7 @@
 #include "widgets/XMLConfiguredMenus.h"
 
 #include "ModulationGridConfiguration.h"
+#include "sst/plugininfra/strnatcmp.h"
 
 #include <cstring>
 #include <iostream>
@@ -6177,6 +6178,20 @@ void SurgeGUIEditor::setSpecificPatchAsFavorite(int patchid, bool b)
         synth->storage.patch_list[patchid].isFavorite = b;
         synth->storage.patchDB->setUserFavorite(synth->storage.patch_list[patchid].path.u8string(),
                                                 b);
+
+        auto &favs = synth->storage.favoritesOrdering;
+        if (b)
+        {
+            favs.push_back(patchid);
+            std::sort(favs.begin(), favs.end(), [this](const int &a, const int &b) {
+                return strnatcasecmp(synth->storage.patch_list[a].name.c_str(),
+                                     synth->storage.patch_list[b].name.c_str()) < 0;
+            });
+        }
+        else
+        {
+            favs.erase(std::remove(favs.begin(), favs.end(), patchid), favs.end());
+        }
     }
 }
 

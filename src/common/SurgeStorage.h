@@ -1641,6 +1641,7 @@ class alignas(16) SurgeStorage
     int firstUserCategory;
     std::vector<int> patchOrdering;
     std::vector<int> patchCategoryOrdering;
+    std::vector<int> favoritesOrdering;
     std::array<std::array<int, 128>, 128> patchIdToMidiBankAndProgram;
 
     // The in-memory wavetable database
