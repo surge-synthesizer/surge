@@ -137,6 +137,30 @@ TEST_CASE("Simple Query Parse", "[query]")
         REQUIRE(t->children[1]->children[0]->content == "bacon");
     }
 
+    SECTION("Favorite Keywords")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("FAV=yes");
+        REQUIRE(t->type == Surge::PatchStorage::PatchDBQueryParser::KEYWORD_EQUALS);
+        REQUIRE(t->content == "FAV");
+        REQUIRE(t->children[0]->content == "yes");
+    }
+
+    SECTION("Favorite Long Form Keywords")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("FAVORITES=yes");
+        REQUIRE(t->type == Surge::PatchStorage::PatchDBQueryParser::KEYWORD_EQUALS);
+        REQUIRE(t->content == "FAVORITES");
+        REQUIRE(t->children[0]->content == "yes");
+    }
+
+    SECTION("Favorite Keyword With Empty Value")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("FAV=");
+        REQUIRE(t->type == Surge::PatchStorage::PatchDBQueryParser::KEYWORD_EQUALS);
+        REQUIRE(t->content == "FAV");
+        REQUIRE(t->children[0]->content.empty());
+    }
+
     SECTION("Compound Keywords")
     {
         auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery(
@@ -179,5 +203,34 @@ TEST_CASE("SQL Generation", "[query]")
         auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
         REQUIRE(s ==
                 "( ( p.search_over LIKE '%in''it''%' ) AND ( p.search_over LIKE '%''''sine%' ) )");
+    }
+
+    SECTION("Favorite Keyword")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("FAV=yes");
+        auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
+        REQUIRE(s == "(p.path IN (SELECT path FROM Favorites))");
+    }
+
+    SECTION("Favorite Long Form Keyword")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("FAVORITES=yes");
+        auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
+        REQUIRE(s == "(p.path IN (SELECT path FROM Favorites))");
+    }
+
+    SECTION("Favorite With Empty Value")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("FAV=");
+        auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
+        REQUIRE(s == "(p.path IN (SELECT path FROM Favorites))");
+    }
+
+    SECTION("Favorite Combined With Literal")
+    {
+        auto t = Surge::PatchStorage::PatchDBQueryParser::parseQuery("pad FAV=yes");
+        auto s = Surge::PatchStorage::PatchDB::sqlWhereClauseFor(t);
+        REQUIRE(s ==
+                "( ( p.search_over LIKE '%pad%' ) AND (p.path IN (SELECT path FROM Favorites)) )");
     }
 }

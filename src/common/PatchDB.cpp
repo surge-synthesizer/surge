@@ -1516,6 +1516,11 @@ std::string PatchDB::sqlWhereClauseFor(const std::unique_ptr<PatchDBQueryParser:
         {
             oss << "(category LIKE '%" << protect(t->children[0]->content) << "%' )";
         }
+        else if (t->content == "FAVORITES" || t->content == "FAV")
+        {
+            // Value after = is ignored; any value filters to favorites
+            oss << "(p.path IN (SELECT path FROM Favorites))";
+        }
         else
         {
             oss << "(1 == 1)";
