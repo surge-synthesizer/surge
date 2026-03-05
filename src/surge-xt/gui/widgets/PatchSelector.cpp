@@ -945,26 +945,12 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
 bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBreak,
                                            bool addToSubMenu)
 {
-    std::vector<std::pair<int, Patch>> favs;
-    int i = 0;
-
-    for (auto p : storage->patch_list)
-    {
-        if (p.isFavorite)
-        {
-            favs.emplace_back(i, p);
-        }
-
-        i++;
-    }
+    auto &favs = storage->favoritesOrdering;
 
     if (favs.empty())
     {
         return false;
     }
-
-    std::sort(favs.begin(), favs.end(),
-              [](const auto &a, const auto &b) { return a.second.name < b.second.name; });
 
     if (addColumnBreak)
     {
@@ -976,10 +962,10 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
     {
         auto subMenu = juce::PopupMenu();
 
-        for (auto f : favs)
+        for (auto idx : favs)
         {
-            subMenu.addItem(juce::CharPointer_UTF8(f.second.name.c_str()),
-                            [this, f]() { this->loadPatch(f.first); });
+            subMenu.addItem(juce::CharPointer_UTF8(storage->patch_list[idx].name.c_str()),
+                            [this, idx]() { this->loadPatch(idx, true); });
         }
 
         subMenu.addSeparator();
@@ -992,10 +978,10 @@ bool PatchSelector::optionallyAddFavorites(juce::PopupMenu &p, bool addColumnBre
     }
     else
     {
-        for (auto f : favs)
+        for (auto idx : favs)
         {
-            p.addItem(juce::CharPointer_UTF8(f.second.name.c_str()),
-                      [this, f]() { this->loadPatch(f.first); });
+            p.addItem(juce::CharPointer_UTF8(storage->patch_list[idx].name.c_str()),
+                      [this, idx]() { this->loadPatch(idx, true); });
         }
         p.addSeparator();
         p.addItem(Surge::GUI::toOSCase("Export favorites to..."), [this]() { exportFavorites(); });
@@ -1273,11 +1259,19 @@ bool PatchSelector::populatePatchMenuForCategory(int c, juce::PopupMenu &context
 
 void PatchSelector::loadPatch(int id)
 {
+    loadPatch(id, false);
+}
+
+void PatchSelector::loadPatch(int id, bool fromFavorites)
+{
     if (id >= 0)
     {
         auto sge = firstListenerOfType<SurgeGUIEditor>();
         if (sge)
+        {
             sge->undoManager()->pushPatch();
+            sge->synth->patchSelectedFromFavorites = fromFavorites;
+        }
 
         enqueue_sel_id = id;
         notifyValueChanged();

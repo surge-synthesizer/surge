@@ -519,6 +519,7 @@ class alignas(16) SurgeSynthesizer
     std::atomic<uint64_t> midiNoteEvents{0};
 
     int current_category_id = 0;
+    bool patchSelectedFromFavorites = false;
     bool modsourceused[n_modsources];
     bool midiprogramshavechanged = false;
 

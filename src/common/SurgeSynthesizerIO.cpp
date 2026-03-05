@@ -51,6 +51,34 @@ void SurgeSynthesizer::jogPatch(bool increment, bool insideCategory)
         return;
     }
 
+    // If browsing favorites, navigate within the favorites list
+    // Favorites is a flat list; insideCategory has no effect here
+    if (patchSelectedFromFavorites && !storage.favoritesOrdering.empty())
+    {
+        auto &favs = storage.favoritesOrdering;
+        auto it = std::find(favs.begin(), favs.end(), patchid);
+
+        if (it == favs.end())
+        {
+            // Current patch no longer in favorites, fall through to normal navigation
+            patchSelectedFromFavorites = false;
+        }
+        else
+        {
+            int idx = std::distance(favs.begin(), it);
+            int n = favs.size();
+
+            if (increment)
+                idx = (idx + 1) % n;
+            else
+                idx = (idx - 1 + n) % n;
+
+            patchid_queue = favs[idx];
+            processAudioThreadOpsWhenAudioEngineUnavailable();
+            return;
+        }
+    }
+
     /*
     ** Ideally we would never call this with an out
     ** of range patchid, but the init case where we
@@ -126,6 +154,8 @@ void SurgeSynthesizer::jogPatch(bool increment, bool insideCategory)
 
 void SurgeSynthesizer::jogCategory(bool increment)
 {
+    patchSelectedFromFavorites = false;
+
     int c = storage.patch_category.size();
 
     if (!c)
@@ -180,6 +210,8 @@ void SurgeSynthesizer::jogPatchOrCategory(bool increment, bool isCategory, bool 
 
 void SurgeSynthesizer::selectRandomPatch()
 {
+    patchSelectedFromFavorites = false;
+
     if (patchid_queue >= 0)
         return;
     int p = storage.patch_list.size();

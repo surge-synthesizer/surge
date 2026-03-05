@@ -1000,6 +1000,17 @@ void SurgeStorage::refresh_patchlist()
             p.isFavorite = false;
     }
 
+    favoritesOrdering.clear();
+    for (int i = 0; i < patch_list.size(); i++)
+    {
+        if (patch_list[i].isFavorite)
+            favoritesOrdering.push_back(i);
+    }
+    std::sort(favoritesOrdering.begin(), favoritesOrdering.end(),
+              [this](const int &a, const int &b) {
+                  return strnatcasecmp(patch_list[a].name.c_str(), patch_list[b].name.c_str()) < 0;
+              });
+
     /*
      * Update midi program change here
      */

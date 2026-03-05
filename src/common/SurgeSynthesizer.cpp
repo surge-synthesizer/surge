@@ -2031,6 +2031,7 @@ void SurgeSynthesizer::polyAftertouch(char channel, int key, int value)
 void SurgeSynthesizer::programChange(char channel, int value)
 {
     PCH = value;
+    patchSelectedFromFavorites = false;
 
     auto pid = storage.patchIdToMidiBankAndProgram[CC0][PCH];
     if (pid >= 0)
