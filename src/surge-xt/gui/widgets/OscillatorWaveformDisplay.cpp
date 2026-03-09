@@ -558,6 +558,9 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     bool addUserLabel = false;
     int idx = 0;
 
+    wtFileIcon->replaceColour(juce::Colours::white, skin->getColor(Colors::PopupMenu::Text));
+    wtScriptIcon->replaceColour(juce::Colours::white, skin->getColor(Colors::PopupMenu::Text));
+
     if (selectedItem >= 0 && selectedItem < storage->wt_list.size() && singleCategory)
     {
         Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(contextMenu, "WAVETABLES");
@@ -1106,6 +1109,50 @@ void OscillatorWaveformDisplay::createAliasOptionsMenu(const bool useComponentBo
     contextMenu.showMenuAsync(sge->popupMenuOptions(useComponentBounds ? this : nullptr));
 }
 
+struct ItemWithSharedIcon : juce::PopupMenu::Item
+{
+    ItemWithSharedIcon(const juce::String &s) : juce::PopupMenu::Item(s) {}
+
+    void setSharedDrawable(std::shared_ptr<juce::Drawable> d) { sharedDrawable = d; }
+    std::shared_ptr<juce::Drawable> sharedDrawable;
+};
+
+struct ItemWithSharedIconComponent : juce::PopupMenu::CustomComponent
+{
+    ItemWithSharedIcon item;
+    juce::PopupMenu::Options options;
+    ItemWithSharedIconComponent(ItemWithSharedIcon &i) : item(i) {}
+
+    bool hl{false};
+    void mouseEnter(const juce::MouseEvent &event) override
+    {
+        hl = true;
+        repaint();
+    }
+    void mouseExit(const juce::MouseEvent &event) override
+    {
+        hl = false;
+        repaint();
+    }
+    void paint(juce::Graphics &g) override
+    {
+        const auto colour = item.colour != juce::Colour() ? &item.colour : nullptr;
+        const auto hasSubMenu =
+            item.subMenu != nullptr && (item.itemID == 0 || item.subMenu->getNumItems() > 0);
+
+        getLookAndFeel().drawPopupMenuItem(
+            g, getLocalBounds(), item.isSeparator, item.isEnabled, hl, item.isTicked, hasSubMenu,
+            item.text, item.shortcutKeyDescription, item.sharedDrawable.get(), colour);
+    }
+
+    void getIdealSize(int &idealWidth, int &idealHeight) override
+    {
+        getLookAndFeel().getIdealPopupMenuItemSizeWithOptions(item.text, item.isSeparator,
+                                                              options.getStandardItemHeight(),
+                                                              idealWidth, idealHeight, options);
+    }
+};
+
 bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &contextMenu,
                                                         int categoryId, int selectedItem,
                                                         bool intoTop)
@@ -1135,20 +1182,16 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
             }
 
             bool isWTS = storage->wt_list[p].path.extension() == ".wtscript";
-            auto item = new juce::PopupMenu::Item(storage->wt_list[p].name);
+            auto item = ItemWithSharedIcon(storage->wt_list[p].name);
 
-            wtFileIcon.get()->replaceColour(juce::Colours::white,
-                                            skin->getColor(Colors::PopupMenu::Text));
-            wtScriptIcon.get()->replaceColour(juce::Colours::white,
-                                              skin->getColor(Colors::PopupMenu::Text));
+            item.setEnabled(true);
+            item.setTicked(checked);
+            item.setAction(action);
+            item.setSharedDrawable(isWTS ? wtScriptIcon : wtFileIcon);
 
-            item->setEnabled(true);
-            item->setTicked(checked);
-            item->setAction(action);
-            item->setImage(isWTS ? wtScriptIcon.get()->createCopy()
-                                 : wtFileIcon.get()->createCopy());
-
-            subMenu->addItem(*item);
+            // subMenu->addItem(item);
+            subMenu->addCustomItem(1, std::make_unique<ItemWithSharedIconComponent>(item), nullptr,
+                                   "foo");
 
             sub++;
 
