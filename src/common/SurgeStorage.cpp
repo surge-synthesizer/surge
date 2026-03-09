@@ -1275,10 +1275,16 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &init
 
 void SurgeStorage::refresh_wtlist()
 {
+    using clock_t = std::chrono::high_resolution_clock;
+    using ms_t = std::chrono::duration<double, std::milli>;
+
+    auto t0 = clock_t::now();
+
     wt_category.clear();
     wt_list.clear();
 
     refresh_wtlistAddDir(false, "wavetables");
+    auto t_factory = clock_t::now();
 
     firstThirdPartyWTCategory = wt_category.size();
     if (extraThirdPartyWavetablesPath.empty() ||
@@ -1290,6 +1296,8 @@ void SurgeStorage::refresh_wtlist()
     {
         refresh_wtlistFrom(false, extraThirdPartyWavetablesPath, "wavetables_3rdparty");
     }
+    auto t_3rdparty = clock_t::now();
+
     firstUserWTCategory = wt_category.size();
     refresh_wtlistAddDir(true, "Wavetables");
 
@@ -1297,6 +1305,7 @@ void SurgeStorage::refresh_wtlist()
     {
         refresh_wtlistFrom(true, extraUserWavetablesPath, "");
     }
+    auto t_user = clock_t::now();
 
     wtCategoryOrdering = std::vector<int>(wt_category.size());
     std::iota(wtCategoryOrdering.begin(), wtCategoryOrdering.end(), 0);
@@ -1356,6 +1365,7 @@ void SurgeStorage::refresh_wtlist()
         std::sort(std::next(wtCategoryOrdering.begin(), groups[i]),
                   std::next(wtCategoryOrdering.begin(), groups[i + 1]), categoryCompare);
     }
+    auto t_catsort = clock_t::now();
 
     for (int i = 0; i < wt_category.size(); i++)
         wt_category[wtCategoryOrdering[i]].order = i;
@@ -1380,9 +1390,25 @@ void SurgeStorage::refresh_wtlist()
         std::sort(std::next(wtOrdering.begin(), start), std::next(wtOrdering.begin(), end),
                   wtCompare);
     }
+    auto t_wtsort = clock_t::now();
 
     for (int i = 0; i < wt_list.size(); i++)
         wt_list[wtOrdering[i]].order = i;
+
+    auto t_end = clock_t::now();
+
+    /*
+    std::cout << "refresh_wtlist timing:"
+              << "\n  factory scan:    " << ms_t(t_factory - t0).count() << " ms"
+              << "\n  3rd-party scan:  " << ms_t(t_3rdparty - t_factory).count() << " ms"
+              << "\n  user scan:       " << ms_t(t_user - t_3rdparty).count() << " ms"
+              << "\n  category sort:   " << ms_t(t_catsort - t_user).count() << " ms"
+              << "\n  wt sort:         " << ms_t(t_wtsort - t_catsort).count() << " ms"
+              << "\n  order assign:    " << ms_t(t_end - t_wtsort).count() << " ms"
+              << "\n  TOTAL:           " << ms_t(t_end - t0).count() << " ms"
+              << "\n  categories: " << wt_category.size() << "  wavetables: " << wt_list.size()
+              << "\n" << std::endl;
+              */
 }
 
 void SurgeStorage::refresh_wtlistAddDir(bool userDir, const std::string &subdir)

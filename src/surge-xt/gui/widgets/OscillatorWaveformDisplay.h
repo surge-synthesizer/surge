@@ -148,8 +148,8 @@ struct OscillatorWaveformDisplay : public juce::Component,
     std::string lastWavetableFilename;
 
   private:
-    std::unique_ptr<juce::Drawable> wtFileIcon;
-    std::unique_ptr<juce::Drawable> wtScriptIcon;
+    std::shared_ptr<juce::Drawable> wtFileIcon;
+    std::shared_ptr<juce::Drawable> wtScriptIcon;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OscillatorWaveformDisplay);
 };
