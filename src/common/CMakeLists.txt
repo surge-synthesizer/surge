@@ -47,7 +47,7 @@ set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
 surge_add_lib_subdirectory(PEGTL)
 
 if(NOT SURGE_SKIP_JUCE_FOR_RACK)
-  surge_add_lib_subdirectory(sst/sst-jucegui)
+  # surge_add_lib_subdirectory(sst/sst-jucegui)
   juce_add_binary_data(surge-common-binary
     NAMESPACE SurgeSharedBinary
     HEADER_NAME SurgeSharedBinary.h
