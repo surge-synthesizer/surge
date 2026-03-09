@@ -56,9 +56,12 @@ juce_add_plugin(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXEditor.cpp
+  SurgeFXEditor.h
   SurgeFXProcessor.cpp
-  ParameterPanel.cpp
+  SurgeFXProcessor.h
+  SurgeLookAndFeel.h
   FXOpenSoundControl.cpp
+  FXOpenSoundControl.h
   )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -66,7 +69,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   surge-fx-binary
   surge-juce
   surge-platform
-  sst-jucegui
+  #sst-jucegui
   juce::juce_audio_utils
   juce::juce_audio_processors
   juce::juce_osc

@@ -20,8 +20,6 @@
  * https://github.com/surge-synthesizer/surge
  */
 
-#ifndef SURGE_SRC_SURGE_FX_SURGELOOKANDFEEL_H
-#define SURGE_SRC_SURGE_FX_SURGELOOKANDFEEL_H
 #include "version.h"
 
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -226,7 +224,7 @@ class SurgeLookAndFeel : public juce::LookAndFeel_V4
                                        shouldDrawButtonAsDown);
     }
 
-    void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override {}
+    void drawCornerResizer(juce::Graphics &g, int w, int h, bool, bool) override {};
 
     void paintComponentBackground(juce::Graphics &g, int w, int h)
     {
@@ -512,4 +510,3 @@ class SurgeTempoSyncSwitch : public juce::ToggleButton
             g.fillRoundedRectangle(kbounds, controlRadius);
     }
 };
-#endif // SURGE_SRC_SURGE_FX_SURGELOOKANDFEEL_H
