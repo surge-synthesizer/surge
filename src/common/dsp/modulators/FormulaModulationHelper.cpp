@@ -371,19 +371,6 @@ end
         lua_pop(s.L, 1); // Pop math (or nil)
     }
 
-    s.del = 0;
-    s.dec = 0;
-    s.a = 0;
-    s.h = 0;
-    s.r = 0;
-    s.s = 0;
-
-    s.rate = 0;
-    s.phase = 0;
-    s.amp = 0;
-    s.deform = 0;
-    s.tempo = 120;
-
     if (s.raisedError)
         std::cout << "Error: " << *(s.error) << std::endl;
 #endif

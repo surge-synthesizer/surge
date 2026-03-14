@@ -279,13 +279,6 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
                       &storage->getPatch().formulamods[state.scene_id][i]);
         lfo[i].setIsVoice(true);
 
-        if (scene->lfo[i].shape.val.i == lt_formula)
-        {
-            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch(),
-                                                    scene_id);
-            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, this);
-        }
-
         modsources[ms_lfo1 + i] = &lfo[i];
     }
 
@@ -728,20 +721,18 @@ int SurgeVoice::routefilter(int r)
 
 template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, int e)
 {
-    // Always process LFO1 so the gate retrigger always work
-    lfo[0].process_block();
+    // Always process LFO1 so the gate retrigger always works, except for Formula see below
+    if (scene->lfo[0].shape.val.i != lt_formula)
+    {
+        lfo[0].process_block();
+    }
     velocitySource.process_block();
 
+    // Process LFOs but skip Formula until after applyModulationToLocalcopy()
     for (int i = 0; i < n_lfos_voice; i++)
     {
-        if (scene->lfo[i].shape.val.i == lt_formula)
-        {
-            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch(),
-                                                    state.scene_id);
-            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, this);
-        }
-
-        if (i != 0 && scene->modsource_doprocess[ms_lfo1 + i])
+        if (i != 0 && scene->modsource_doprocess[ms_lfo1 + i] &&
+            scene->lfo[i].shape.val.i != lt_formula)
         {
             lfo[i].process_block();
         }
@@ -788,6 +779,23 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
     memcpy(localcopy, paramptr, sizeof(localcopy));
 
     applyModulationToLocalcopy();
+
+    // Process Formula LFOs now that localcopy has updated modulation
+    for (int i = 0; i < n_lfos_voice; i++)
+    {
+        if (scene->lfo[i].shape.val.i == lt_formula)
+        {
+            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, storage->getPatch(),
+                                                    state.scene_id);
+            Surge::Formula::setupEvaluatorStateFrom(lfo[i].formulastate, this);
+
+            if (scene->modsource_doprocess[ms_lfo1 + i])
+            {
+                lfo[i].process_block();
+            }
+        }
+    }
+
     update_portamento();
 
     if (state.porta_doretrigger)
