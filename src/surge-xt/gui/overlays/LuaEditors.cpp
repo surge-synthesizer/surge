@@ -1022,10 +1022,17 @@ void SurgeCodeEditorComponent::mouseDoubleClick(const juce::MouseEvent &e)
     juce::CodeDocument::Position tokenStart(getPositionAt(e.x, e.y));
     juce::CodeDocument::Position tokenEnd(tokenStart);
 
-    if (e.getNumberOfClicks() > 2)
+    if (e.getNumberOfClicks() > 3)
+    {
+        auto scrollBeforeSelect = getFirstLineOnScreen();
+        moveCaretToTop(false);
+        moveCaretToEnd(true);
+        scrollToLine(scrollBeforeSelect);
+    }
+    else if (e.getNumberOfClicks() > 2)
     {
         getDocument().findLineContaining(tokenStart, tokenStart, tokenEnd);
-        selectRegion(tokenStart, tokenEnd);
+        selectRegion(tokenStart, tokenEnd.movedBy(-1));
     }
     else
     {
