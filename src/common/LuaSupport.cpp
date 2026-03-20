@@ -128,18 +128,6 @@ int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
 #endif
 }
 
-static int lua_limitRange(lua_State *L)
-{
-#if HAS_LUA
-    auto x = luaL_checknumber(L, -3);
-    auto low = luaL_checknumber(L, -2);
-    auto high = luaL_checknumber(L, -1);
-    auto res = limit_range(x, low, high);
-    lua_pushnumber(L, res);
-#endif
-    return 1;
-}
-
 // Custom print which accepts multiple arguments of type string, number, boolean, or nil
 static int lua_sandboxPrint(lua_State *L)
 {
@@ -341,11 +329,7 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L, uint64_t featu
     lua_createtable(L, 0, 40); // stack: ... > function > table
     int eidx = lua_gettop(L);  // environment table index
 
-    // add custom functions
-    lua_pushcfunction(L, lua_limitRange);
-    lua_setfield(L, eidx, "limit_range");
-    lua_pushcfunction(L, lua_limitRange);
-    lua_setfield(L, eidx, "clamp");
+    // Custom functions
     lua_pushcfunction(L, lua_sandboxPrint);
     lua_setfield(L, eidx, "print");
 
