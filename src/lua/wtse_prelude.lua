@@ -230,6 +230,18 @@ end
 --- BUILT-IN MODULATORS ---
 
 
+-- applies a cosine fade in/out to the edges of the input table
+-- fade_samples is optional and defaults to 4, maximized at half the table length
+function mod.cosine_fade(t, fade_samples)
+    fade_samples = math.min(fade_samples or 4, math.floor(#t * 0.5))
+    for i = 1, fade_samples do
+        local fade = 0.5 - 0.5 * math.cos(math.pi * (i - 1) / fade_samples)
+        t[i] = t[i] * fade
+        t[#t - i + 1] = t[#t - i + 1] * fade
+    end
+    return t
+end
+
 -- returns a table or two dimensional table with values from the input table,
 -- peak-normalized such that the maximum absolute value equals 1 (default) or the specified norm_factor
 function mod.normalize_peaks(t, norm_factor)
