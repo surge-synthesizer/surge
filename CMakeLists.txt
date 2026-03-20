@@ -77,12 +77,28 @@ endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 20)
 
+if(SURGE_BUILD_RS_EXAMPLES AND NOT SURGE_BUILD_RS)
+  message(STATUS "Enabling surge-rs, which is needed for its examples.")
+  set(SURGE_BUILD_RS ON)
+endif()
+
 # Enable LTO if unspecified, for release builds.
-if(CMAKE_BUILD_TYPE MATCHES "Release" AND ENABLE_LTO)
-  message(STATUS "Enabling link-time optimization for release builds.")
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# ...but not for rust!
+if(ENABLE_LTO)
+  if(SURGE_BUILD_RS)
+    message(STATUS "Rust bindings enabled! Disabling link-time optimization.")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+  elseif(CMAKE_BUILD_TYPE MATCHES "Release")
+    message(STATUS "Enabling link-time optimization for release builds.")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+  endif()
 else()
   message(STATUS "Link-time optimization is disabled.")
+endif()
+
+if(SURGE_BUILD_RS)
+    message(STATUS "Lua is being disabled due to temporary incompatibility with Rust bindings.")
+    set(SURGE_SKIP_LUA TRUE)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND UNIX AND NOT APPLE AND NOT SURGE_SKIP_PIE_CHANGE)

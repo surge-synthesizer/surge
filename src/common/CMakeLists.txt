@@ -1,6 +1,11 @@
 # vi:set sw=2 et:
 project(surge-common)
 
+# necessary for bindings to know how to operate.
+if(SURGE_BUILD_RS)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
+
 surge_add_lib_subdirectory(airwindows)
 surge_add_lib_subdirectory(binn)
 surge_add_lib_subdirectory(eurorack)
