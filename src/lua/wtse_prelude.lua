@@ -72,12 +72,12 @@ function math.freq_to_note(freq, ref)
 end
 
 -- converts a linear value to decibels
-function math.linear_to_dB(i)
+function math.lin_to_dB(i)
     return 20 * math.log10(i)
 end
 
 -- converts a decibel value to linear
-function math.dB_to_linear(i)
+function math.dB_to_lin(i)
     return 10 ^ (0.05 * i)
 end
 

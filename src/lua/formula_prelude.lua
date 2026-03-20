@@ -72,12 +72,12 @@ function math.freq_to_note(freq, ref)
 end
 
 -- converts a linear value to decibels
-function math.linear_to_dB(i)
+function math.lin_to_dB(i)
     return 20 * math.log10(i)
 end
 
 -- converts a decibel value to linear
-function math.dB_to_linear(i)
+function math.dB_to_lin(i)
     return 10 ^ (0.05 * i)
 end
 
@@ -231,7 +231,7 @@ end
 
 
 -- returns pitch bend value in semitones, scaled by pitch bend range up or down
-function mod.pb_to_semitones()
+function mod.pb_to_st()
     local pb = state.pb
     if pb > 0 then return state.pb_range_up * pb end
     if pb < 0 then return state.pb_range_dn * pb end
