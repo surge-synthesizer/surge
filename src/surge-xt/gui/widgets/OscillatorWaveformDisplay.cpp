@@ -1134,17 +1134,23 @@ struct ItemWithSharedIconComponent : juce::PopupMenu::CustomComponent
         hl = false;
         repaint();
     }
+    void mouseDown(const juce::MouseEvent &event) override
+    {
+        if (item.action)
+        {
+            item.action();
+        }
+        triggerMenuItem();
+    }
     void paint(juce::Graphics &g) override
     {
         const auto colour = item.colour != juce::Colour() ? &item.colour : nullptr;
         const auto hasSubMenu =
             item.subMenu != nullptr && (item.itemID == 0 || item.subMenu->getNumItems() > 0);
-
         getLookAndFeel().drawPopupMenuItem(
             g, getLocalBounds(), item.isSeparator, item.isEnabled, hl, item.isTicked, hasSubMenu,
             item.text, item.shortcutKeyDescription, item.sharedDrawable.get(), colour);
     }
-
     void getIdealSize(int &idealWidth, int &idealHeight) override
     {
         getLookAndFeel().getIdealPopupMenuItemSizeWithOptions(item.text, item.isSeparator,
@@ -1190,8 +1196,8 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
             item.setSharedDrawable(isWTS ? wtScriptIcon : wtFileIcon);
 
             // subMenu->addItem(item);
-            subMenu->addCustomItem(1, std::make_unique<ItemWithSharedIconComponent>(item), nullptr,
-                                   "foo");
+            subMenu->addCustomItem(p, std::make_unique<ItemWithSharedIconComponent>(item), nullptr,
+                                   storage->wt_list[p].name);
 
             sub++;
 
@@ -1274,6 +1280,7 @@ void OscillatorWaveformDisplay::handleWavetableLoad(int id)
 
 void OscillatorWaveformDisplay::loadWavetable(int id)
 {
+    // std::cout << "loadWavetable called with id: " << id << std::endl;
     if (id >= 0 && (id < storage->wt_list.size()))
     {
         if (sge)
