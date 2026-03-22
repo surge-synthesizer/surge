@@ -67,4 +67,4 @@
 	url = https://github.com/facebook/zstd.git
 [submodule "src/surge-rs/surge-rs"]
 	path = src/surge-rs/surge-rs
-	url = https://github.com/CattoByte/surge-rs
+	url = https://github.com/surge-synthesizer/surge-rs
