@@ -386,6 +386,7 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
                                  bool intoTop = false);
     bool categoryHasWtscript(int categoryId) const;
     void loadWavetableScript(int id);
+    void loadWavetableForSnapshot(int slot);
 
     int lastRes{-1}, lastFrames{-1}, lastFrame{-1}, lastRm{-1};
 

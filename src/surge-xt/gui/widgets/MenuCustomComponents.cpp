@@ -531,5 +531,189 @@ std::unique_ptr<juce::PopupMenu> ModMenuForAllComponent::createAccessibleSubMenu
     return std::move(res);
 }
 
+WavetableSnapshotMenuComponent::WavetableSnapshotMenuComponent(const std::string &label,
+                                                               const std::string &sName,
+                                                               std::function<void(Action)> cb)
+    : juce::PopupMenu::CustomComponent(false), snapLabel(label), sceneName(sName),
+      callback(std::move(cb))
+{
+    oscHitBoxes.fill(juce::Rectangle<int>());
+
+    auto clear = std::make_unique<TinyLittleIconButton>(1, [this]() {
+        callback(Action::Clear);
+        triggerMenuItem();
+    });
+    clear->accLabel = "Clear " + label;
+    addAndMakeVisible(*clear);
+    clearButton = std::move(clear);
+
+    setAccessible(true);
+    setTitle(label);
+}
+
+void WavetableSnapshotMenuComponent::getIdealSize(int &idealWidth, int &idealHeight)
+{
+    idealHeight = 36;
+    idealWidth = 366;
+}
+
+void WavetableSnapshotMenuComponent::paint(juce::Graphics &g)
+{
+    auto r = getLocalBounds().reduced(1);
+
+    auto ft = getLookAndFeel().getPopupMenuFont().withHeight(
+        getLookAndFeel().getPopupMenuFont().getHeight() - 1);
+
+    // Snapshot top label bold, detail text normal
+    auto sjlf = dynamic_cast<SurgeJUCELookAndFeel *>(&getLookAndFeel());
+    auto boldFt = sjlf ? sjlf->getPopupMenuBoldFont() : ft.boldened();
+    auto topRow = r.withHeight(r.getHeight() / 2).withTrimmedLeft(6);
+
+    g.setColour(getLookAndFeel().findColour(juce::PopupMenu::ColourIds::textColourId));
+
+    // Find where the detail portion starts
+    auto parenPos = snapLabel.find(" (");
+    std::string boldPart =
+        parenPos != std::string::npos ? snapLabel.substr(0, parenPos) : snapLabel;
+    std::string detailPart = parenPos != std::string::npos ? snapLabel.substr(parenPos) : "";
+
+    g.setFont(boldFt);
+    int boldW = boldFt.getStringWidth(boldPart);
+    g.drawText(boldPart, topRow.withWidth(boldW), juce::Justification::centredLeft);
+
+    if (!detailPart.empty())
+    {
+        g.setFont(ft);
+        g.drawText(detailPart, topRow.withTrimmedLeft(boldW), juce::Justification::centredLeft);
+    }
+
+    auto bottomRow = r.withTrimmedTop(r.getHeight() / 2).withHeight(r.getHeight() / 2);
+    g.setFont(ft);
+
+    // Draw "Import from Scene A/B" prefix
+    std::string prefix = "Import from " + sceneName + ": ";
+    int prefixW = ft.getStringWidth(prefix);
+    g.drawText(prefix, bottomRow.withTrimmedLeft(6), juce::Justification::centredLeft);
+
+    // Draw clickable items
+    int x = 6 + prefixW;
+    auto baseColour = getLookAndFeel().findColour(juce::PopupMenu::textColourId);
+    auto hoverColour = getLookAndFeel().findColour(juce::PopupMenu::highlightedBackgroundColourId);
+
+    for (int i = 0; i < 3; ++i)
+    {
+        std::string oscLabel = "Osc " + std::to_string(i + 1);
+        int w = boldFt.getStringWidth(oscLabel);
+        auto box = bottomRow.withLeft(x).withWidth(w);
+        oscHitBoxes[i] = box;
+        x += w + 6;
+
+        if (hoveredOsc == i)
+        {
+            g.setColour(hoverColour);
+            g.fillRoundedRectangle(box.toFloat().reduced(1), 2.f);
+            g.setColour(baseColour);
+        }
+        else
+        {
+            g.setColour(baseColour);
+        }
+        g.setFont(boldFt);
+        g.drawText(oscLabel, box, juce::Justification::centredLeft);
+    }
+
+    {
+        std::string fileLabel = ".wav/.wt";
+        int w = boldFt.getStringWidth(fileLabel) + 4;
+        auto box = bottomRow.withLeft(x).withWidth(w);
+        loadFileHitBox = box;
+
+        if (hoveredFile)
+        {
+            g.setColour(hoverColour);
+            g.fillRoundedRectangle(box.toFloat().reduced(1), 2.f);
+            g.setColour(baseColour);
+        }
+        else
+        {
+            g.setColour(baseColour);
+        }
+        g.setFont(boldFt);
+        g.drawText(fileLabel, box, juce::Justification::centredLeft);
+    }
+}
+
+void WavetableSnapshotMenuComponent::resized()
+{
+    auto r = getLocalBounds().reduced(1);
+    int halfH = r.getHeight() / 2;
+    auto bottomRow = r.withTrimmedTop(halfH);
+    int iconW = 15;
+    int y = bottomRow.getY() + (bottomRow.getHeight() - iconW) / 2;
+    clearButton->setBounds(r.getRight() - iconW - 4, y, iconW, iconW);
+}
+
+void WavetableSnapshotMenuComponent::mouseDown(const juce::MouseEvent &e)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        if (oscHitBoxes[i].contains(e.getPosition()))
+        {
+            callback(static_cast<Action>(i));
+            triggerMenuItem();
+            return;
+        }
+    }
+
+    if (loadFileHitBox.contains(e.getPosition()))
+    {
+        callback(Action::LoadFromFile);
+        triggerMenuItem();
+    }
+}
+
+void WavetableSnapshotMenuComponent::mouseMove(const juce::MouseEvent &e)
+{
+    int prev = hoveredOsc;
+    bool prevFile = hoveredFile;
+    hoveredOsc = -1;
+    hoveredFile = false;
+
+    for (int i = 0; i < 3; ++i)
+    {
+        if (oscHitBoxes[i].contains(e.getPosition()))
+        {
+            hoveredOsc = i;
+            break;
+        }
+    }
+
+    if (hoveredOsc == -1)
+    {
+        hoveredFile = loadFileHitBox.contains(e.getPosition());
+    }
+
+    if (hoveredOsc != prev || hoveredFile != prevFile)
+    {
+        repaint();
+    }
+}
+
+void WavetableSnapshotMenuComponent::mouseExit(const juce::MouseEvent &e)
+{
+    hoveredOsc = -1;
+    hoveredFile = false;
+    repaint();
+}
+
+void WavetableSnapshotMenuComponent::onSkinChanged()
+{
+    if (associatedBitmapStore)
+    {
+        clearButton->icons = associatedBitmapStore->getImage(IDB_MODMENU_ICONS);
+    }
+    repaint();
+}
+
 } // namespace Widgets
 } // namespace Surge

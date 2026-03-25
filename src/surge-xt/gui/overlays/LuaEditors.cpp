@@ -3905,6 +3905,7 @@ void WavetableScriptEditor::forceRefresh()
     setApplyEnabled(false);
     setCurrentFrame(1);
 
+    lastFrames = -1;
     rerenderFromUIState();
 }
 
@@ -3981,7 +3982,9 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
+    {
         respt *= 2;
+    }
 
     setupEvaluator();
 
@@ -4007,8 +4010,9 @@ void WavetableScriptEditor::setupEvaluator()
     auto resi = controlArea->resolutionN->getIntValue();
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
+    {
         respt *= 2;
-
+    }
     evaluator->setStorage(storage);
     evaluator->setScript(mainDocument->getAllContent().toStdString());
     evaluator->setResolution(respt);
@@ -4077,8 +4081,60 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
     {
         menu.addItem(Surge::GUI::toOSCase("Save as .wtscript..."),
                      [this]() { this->editor->saveWavetableScript(); });
-        menu.addSeparator();
+    }
+    menu.addSeparator();
 
+    // Import snapshot submenu
+    juce::PopupMenu importMenu;
+    std::string sceneName = (scene == 0) ? "Scene A" : "Scene B";
+
+    for (int slot = 0; slot < n_oscs; ++slot)
+    {
+        const auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[slot];
+
+        std::string snapLabel = "Snapshot " + std::to_string(slot + 1);
+        if (snap.enabled)
+            snapLabel += " (" + std::to_string(snap.n_tables) +
+                         (snap.n_tables == 1 ? " frame" : " frames") + ", " +
+                         std::to_string(snap.size) + " samples)";
+
+        auto comp = std::make_unique<Surge::Widgets::WavetableSnapshotMenuComponent>(
+            snapLabel, sceneName,
+            [this, slot](Surge::Widgets::WavetableSnapshotMenuComponent::Action action) {
+                if (action == Surge::Widgets::WavetableSnapshotMenuComponent::Action::LoadFromFile)
+                {
+                    loadWavetableForSnapshot(slot);
+                    return;
+                }
+                if (action == Surge::Widgets::WavetableSnapshotMenuComponent::Action::Clear)
+                {
+                    storage->getPatch().dawExtraState.editor.wtSnapshot[slot] =
+                        DAWExtraStateStorage::EditorState::WavetableSnapshot{};
+                }
+                else
+                {
+                    const int oscIndex = static_cast<int>(action);
+                    storage->getPatch().captureWavetableSnapshot(scene, slot, oscIndex);
+                }
+                lastFrames = -1;
+                rerenderFromUIState();
+                rendererComponent->repaint();
+            });
+        comp->setSkin(skin, associatedBitmapStore);
+
+        comp->clearButton->setVisible(snap.enabled);
+
+        importMenu.addCustomItem(-1, std::move(comp), nullptr, snapLabel);
+        if (slot < n_oscs - 1)
+        {
+            importMenu.addSeparator();
+        }
+    }
+    menu.addSubMenu(Surge::GUI::toOSCase("Import Wavetable Data"), importMenu);
+    menu.addSeparator();
+
+    if (!osc->wavetable_script.empty())
+    {
         menu.addItem(Surge::GUI::toOSCase("Export as .wav..."), [this]() {
             this->editor->exportWavetableAs(SurgeGUIEditor::WTExportFormat::WAV);
         });
@@ -4093,8 +4149,8 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
         menu.addItem("Export for VCV Rack...", [this]() {
             this->editor->exportWavetableAs(SurgeGUIEditor::WTExportFormat::VCVRACK);
         });
+        menu.addSeparator();
     }
-    menu.addSeparator();
 
     auto msurl = editor->helpURLForSpecial("wts-editor");
     auto hurl = editor->fullyResolvedHelpURL(msurl);
@@ -4203,6 +4259,33 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
         subMenu = &contextMenu;
     }
 
+    for (auto child : cat.children)
+    {
+        if (child.numberOfPatchesInCategoryAndChildren > 0)
+        {
+            // this isn't the best approach but it works
+            int cidx = 0;
+
+            for (auto &cc : storage->wt_category)
+            {
+                if (cc.name == child.name)
+                {
+                    break;
+                }
+
+                cidx++;
+            }
+
+            bool childHasWTS = populateMenuForCategory(*subMenu, cidx, selectedItem, false);
+
+            if (childHasWTS)
+            {
+                hasAnyWTS = true;
+                selected = selected || childHasWTS;
+            }
+        }
+    }
+
     for (auto p : storage->wtOrdering)
     {
         if (storage->wt_list[p].category == categoryId)
@@ -4244,33 +4327,6 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
                 {
                     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
                 }
-            }
-        }
-    }
-
-    for (auto child : cat.children)
-    {
-        if (child.numberOfPatchesInCategoryAndChildren > 0)
-        {
-            // this isn't the best approach but it works
-            int cidx = 0;
-
-            for (auto &cc : storage->wt_category)
-            {
-                if (cc.name == child.name)
-                {
-                    break;
-                }
-
-                cidx++;
-            }
-
-            bool childHasWTS = populateMenuForCategory(*subMenu, cidx, selectedItem, false);
-
-            if (childHasWTS)
-            {
-                hasAnyWTS = true;
-                selected = selected || childHasWTS;
             }
         }
     }
@@ -4333,6 +4389,69 @@ void WavetableScriptEditor::loadWavetableScript(int id)
         ssp->paramChangeToListeners(nullptr, true, ssp->SCT_WAVETABLE, (float)scene, (float)osc_id,
                                     (float)id, new_name);
     }
+}
+
+// Modified from OscillatorWaveformDisplay::loadWavetableFromFile
+void WavetableScriptEditor::loadWavetableForSnapshot(int slot)
+{
+    auto wtPath = storage->userWavetablesPath;
+    wtPath = Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastWavetablePath, wtPath);
+
+    if (!editor)
+    {
+        return;
+    }
+
+    juce::String fileTypes = "*.wav;*.wt";
+    editor->fileChooser = std::make_unique<juce::FileChooser>(
+        "Select Wavetable to Load", juce::File(path_to_string(wtPath)), fileTypes);
+    editor->fileChooser->launchAsync(
+        juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        [this, wtPath, slot](const juce::FileChooser &c) {
+            auto ress = c.getResults();
+
+            if (ress.size() != 1)
+            {
+                return;
+            }
+
+            auto res = c.getResult();
+            auto rString = res.getFullPathName().toStdString();
+
+            Wavetable tempWt;
+            storage->load_wt(rString, &tempWt, nullptr);
+
+            auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[slot];
+            snap = DAWExtraStateStorage::EditorState::WavetableSnapshot{};
+
+            if (tempWt.everBuilt && tempWt.n_tables > 0 && tempWt.size > 0 &&
+                tempWt.TableF32WeakPointers[0][0] != nullptr)
+            {
+                snap.n_tables = tempWt.n_tables;
+                snap.size = tempWt.size;
+                snap.frames.resize(tempWt.n_tables);
+
+                for (int t = 0; t < tempWt.n_tables; ++t)
+                {
+                    snap.frames[t].assign(tempWt.TableF32WeakPointers[0][t],
+                                          tempWt.TableF32WeakPointers[0][t] + tempWt.size);
+                }
+
+                snap.enabled = true;
+            }
+
+            lastFrames = -1;
+            rerenderFromUIState();
+            rendererComponent->repaint();
+
+            auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
+
+            if (dir != wtPath)
+            {
+                Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastWavetablePath,
+                                                      dir);
+            }
+        });
 }
 
 std::optional<std::pair<std::string, std::string>>

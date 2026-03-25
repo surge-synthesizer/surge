@@ -75,6 +75,8 @@ struct LuaWTEvaluator
         std::string script;
         int nframes = 0;
         int res_base = 0;
+
+        std::vector<std::pair<int, DAWExtraStateStorage::EditorState::WavetableSnapshot>> snapshots;
     };
     std::optional<WtscriptData> parseWtscript(const fs::path &filename, SurgeStorage *storage);
 };

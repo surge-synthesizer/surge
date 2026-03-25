@@ -6793,6 +6793,40 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             }
 
             wtscript.InsertEndChild(script);
+
+            TiXmlElement sn("snapshots");
+            bool hasSnapshots = false;
+            for (int slot = 0; slot < n_oscs; ++slot)
+            {
+                const auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[slot];
+                if (!snap.enabled)
+                {
+                    continue;
+                }
+
+                // Flatten 2D frames[table][sample] into a single float array
+                std::vector<float> flat;
+                flat.reserve(snap.n_tables * snap.size);
+                for (int t = 0; t < snap.n_tables; ++t)
+                {
+                    flat.insert(flat.end(), snap.frames[t].begin(), snap.frames[t].end());
+                }
+
+                TiXmlElement sl("snapshot");
+                sl.SetAttribute("slot", slot);
+                sl.SetAttribute("n_tables", snap.n_tables);
+                sl.SetAttribute("size", snap.size);
+                sl.SetAttribute("data",
+                                Surge::Storage::base64_encode((unsigned const char *)flat.data(),
+                                                              flat.size() * sizeof(float)));
+                sn.InsertEndChild(sl);
+                hasSnapshots = true;
+            }
+            if (hasSnapshots)
+            {
+                wtscript.InsertEndChild(sn);
+            }
+
             doc.InsertEndChild(wtscript);
             if (!doc.SaveFile(fullLocation))
             {

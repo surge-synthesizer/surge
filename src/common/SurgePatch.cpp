@@ -4521,3 +4521,33 @@ void SurgePatch::formulaFromXMLElement(FormulaModulatorStorage *fs, TiXmlElement
         fs->interpreter = (FormulaModulatorStorage::Interpreter)(interp);
     }
 }
+
+void SurgePatch::captureWavetableSnapshot(int scene, int slot, int osc)
+{
+    auto &snap = dawExtraState.editor.wtSnapshot[slot];
+    snap = DAWExtraStateStorage::EditorState::WavetableSnapshot{};
+    const auto &wt = this->scene[scene].osc[osc].wt;
+
+    // Check if we have a valid WT to copy
+    if (!wt.everBuilt || wt.n_tables == 0 || wt.size == 0 ||
+        wt.TableF32WeakPointers[0][0] == nullptr)
+    {
+        return; // leave snap.enabled = false
+    }
+
+    storage->waveTableDataMutex.lock();
+
+    snap.n_tables = wt.n_tables;
+    snap.size = wt.size;
+    snap.frames.resize(wt.n_tables);
+
+    for (int t = 0; t < wt.n_tables; ++t)
+    {
+        snap.frames[t].assign(wt.TableF32WeakPointers[0][t],
+                              wt.TableF32WeakPointers[0][t] + wt.size);
+    }
+
+    storage->waveTableDataMutex.unlock();
+
+    snap.enabled = true;
+}

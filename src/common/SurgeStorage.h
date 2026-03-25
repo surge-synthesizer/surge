@@ -1181,6 +1181,15 @@ struct DAWExtraStateStorage
         {
             int editMode = 0;
         } tuningOverlayState;
+
+        // Wavetable snapshots for use in the Wavetable Script Editor
+        struct WavetableSnapshot
+        {
+            std::vector<std::vector<float>> frames; // frames[table][sample]
+            int n_tables{0};
+            int size{0};
+            bool enabled{false};
+        } wtSnapshot[n_oscs];
     } editor;
 
     bool mpeEnabled = false;
@@ -1255,6 +1264,8 @@ class SurgePatch
     void stepSeqFromXmlElement(StepSequencerStorage *ss, TiXmlElement *parent) const;
     void formulaToXMLElement(FormulaModulatorStorage *ms, TiXmlElement &parent) const;
     void formulaFromXMLElement(FormulaModulatorStorage *ms, TiXmlElement *parent) const;
+
+    void captureWavetableSnapshot(int scene, int slot, int osc);
 
     void load_patch(const void *data, int size, bool preset);
     unsigned int load_arbitrary_block_storage(const void *data, std::size_t remainder);
