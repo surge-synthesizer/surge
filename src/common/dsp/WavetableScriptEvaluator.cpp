@@ -121,28 +121,31 @@ struct LuaWTEvaluator::Details
 
         // Inject snapshotted wavetables as a single 3D table: wt.snapshot[slot][frame][sample]
         lua_newtable(L); // Outer snapshot table
-        for (int s = 0; s < n_oscs; ++s)
+        if (storage)
         {
-            lua_newtable(L); // Slot table (empty if not imported)
-            if (storage->getPatch().dawExtraState.editor.wtSnapshot[s].enabled)
+            for (int s = 0; s < n_oscs; ++s)
             {
-                const auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[s];
-
-                if (snap.enabled && snap.n_tables > 0 && snap.size > 0)
+                lua_newtable(L); // Slot table (empty if not imported)
+                if (storage->getPatch().dawExtraState.editor.wtSnapshot[s].enabled)
                 {
-                    for (int t = 0; t < snap.n_tables; ++t)
+                    const auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[s];
+
+                    if (snap.enabled && snap.n_tables > 0 && snap.size > 0)
                     {
-                        lua_newtable(L); // Frame table
-                        for (int i = 0; i < snap.size; ++i)
+                        for (int t = 0; t < snap.n_tables; ++t)
                         {
-                            lua_pushnumber(L, snap.frames[t][i]); // Push sample value
-                            lua_rawseti(L, -2, i + 1);            // frame[i + 1] = value
+                            lua_newtable(L); // Frame table
+                            for (int i = 0; i < snap.size; ++i)
+                            {
+                                lua_pushnumber(L, snap.frames[t][i]); // Push sample value
+                                lua_rawseti(L, -2, i + 1);            // frame[i + 1] = value
+                            }
+                            lua_rawseti(L, -2, t + 1); // slot[t + 1] = frame table
                         }
-                        lua_rawseti(L, -2, t + 1); // slot[t + 1] = frame table
                     }
                 }
+                lua_rawseti(L, -2, s + 1); // snapshot[slot + 1] = slot table
             }
-            lua_rawseti(L, -2, s + 1); // snapshot[slot + 1] = slot table
         }
         lua_setfield(L, tidx, "snapshot");
 
