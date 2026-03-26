@@ -72,4 +72,5 @@ struct MenuButtonFromAsset : public juce::Component,
 
 } // namespace Widgets
 } // namespace Surge
+
 #endif // SURGE_SRC_SURGE_XT_GUI_WIDGETS_MENUBUTTONFROMASSET_H

@@ -104,7 +104,8 @@ void MenuButtonFromAsset::paint(juce::Graphics &g)
         // Clip to component bounds and show either frame 0 or frame 1
         g.saveState();
         g.reduceClipRegion(getLocalBounds());
-        float yOffset = showHover ? -b.getHeight() : 0.f;
+        float yOffset =
+            showHover ? 0.f : -b.getHeight(); // frame 0 = hover/active, frame 1 = default
         baseIcon->drawWithin(
             g,
             juce::Rectangle<float>(b.getX(), b.getY() + yOffset, b.getWidth(), b.getHeight() * 2.f),
