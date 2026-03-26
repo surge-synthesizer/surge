@@ -273,6 +273,7 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         if (lv0 == lv1)
         {
             es->timeAlongSegment = timeAlongSegment;
+            es->lastOutput = lv0;
             return lv0;
         }
 
