@@ -578,7 +578,7 @@ void WavetableSnapshotMenuComponent::paint(juce::Graphics &g)
     std::string detailPart = parenPos != std::string::npos ? snapLabel.substr(parenPos) : "";
 
     g.setFont(boldFt);
-    int boldW = juce::GlyphArrangement::getStringWidthInt(boldFt, boldPart);
+    int boldW = SST_STRING_WIDTH_INT(boldFt, boldPart);
     g.drawText(boldPart, topRow.withWidth(boldW), juce::Justification::centredLeft);
 
     if (!detailPart.empty())
@@ -592,7 +592,7 @@ void WavetableSnapshotMenuComponent::paint(juce::Graphics &g)
 
     // Draw "Import from Scene A/B" prefix
     std::string prefix = "Import from " + sceneName + ": ";
-    int prefixW = juce::GlyphArrangement::getStringWidthInt(ft, prefix);
+    int prefixW = SST_STRING_WIDTH_INT(ft, prefix);
     g.drawText(prefix, bottomRow.withTrimmedLeft(6), juce::Justification::centredLeft);
 
     // Draw clickable items
@@ -603,7 +603,7 @@ void WavetableSnapshotMenuComponent::paint(juce::Graphics &g)
     for (int i = 0; i < 3; ++i)
     {
         std::string oscLabel = "Osc " + std::to_string(i + 1);
-        int w = juce::GlyphArrangement::getStringWidthInt(boldFt, oscLabel);
+        int w = SST_STRING_WIDTH_INT(boldFt, oscLabel);
         auto box = bottomRow.withLeft(x).withWidth(w);
         oscHitBoxes[i] = box;
         x += w + 6;
@@ -624,7 +624,7 @@ void WavetableSnapshotMenuComponent::paint(juce::Graphics &g)
 
     {
         std::string fileLabel = ".wav/.wt";
-        int w = juce::GlyphArrangement::getStringWidthInt(boldFt, fileLabel) + 4;
+        int w = SST_STRING_WIDTH_INT(boldFt, fileLabel) + 4;
         auto box = bottomRow.withLeft(x).withWidth(w);
         loadFileHitBox = box;
 
