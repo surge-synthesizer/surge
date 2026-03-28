@@ -21,10 +21,12 @@
  */
 #include "ConvolutionEffect.h"
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <numeric>
 
 #include <CDSPResampler.h>
+#include "sst/basic-blocks/tables/SincTableProvider.h"
 
 namespace
 {
@@ -139,6 +141,7 @@ void ConvolutionEffect::init()
                    0, storage->samplerate_inv,
                    storage->db_to_linear(*pd_float[convolution_tilt_slope] * 0.5f));
     mix_.set_target(fxdata->p[convolution_mix].val.f);
+    delay_latched_ = false;
 }
 
 void ConvolutionEffect::init_ctrltypes()
@@ -262,12 +265,15 @@ void ConvolutionEffect::process(float *dataL, float *dataR)
     }
 
     // Cut out some annoying non-SSEable moves if we can.
-    if (delayTime_.v != 0)
+    if (delayTime_.v != 0 || delay_latched_)
     {
+        const float delay_samples = std::max(
+            delayTime_.v,
+            static_cast<float>(sst::basic_blocks::tables::SurgeSincTableProvider::FIRipol_N) / 2);
         for (std::size_t i = 0; i < BLOCK_SIZE; i++)
         {
-            delayedL_[i] = delayL_.read(delayTime_.v + (BLOCK_SIZE - 1 - i));
-            delayedR_[i] = delayR_.read(delayTime_.v + (BLOCK_SIZE - 1 - i));
+            delayedL_[i] = delayL_.read(delay_samples + (BLOCK_SIZE - 1 - i));
+            delayedR_[i] = delayR_.read(delay_samples + (BLOCK_SIZE - 1 - i));
             if (i < BLOCK_SIZE - 1)
                 delayTime_.process();
         }
@@ -390,7 +396,11 @@ void ConvolutionEffect::set_params()
         440 * storage->note_to_pitch_ignoring_tuning(*pd_float[convolution_tilt_center]), 0,
         storage->samplerate_inv, storage->db_to_linear(*pd_float[convolution_tilt_slope] * 0.5f));
     mix_.set_target_smoothed(*pd_float[convolution_mix]);
-    delayTime_.newValue(storage->samplerate * *pd_float[convolution_delay]);
+
+    float delay_samples = storage->samplerate * *pd_float[convolution_delay];
+    if (delay_samples > 0)
+        delay_latched_ = true;
+    delayTime_.newValue(delay_samples);
     delayTime_.process();
 
     // Do we need a reload for non-modulatable parameter changes?
