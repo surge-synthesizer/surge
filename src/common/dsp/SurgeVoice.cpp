@@ -1690,7 +1690,7 @@ void SurgeVoice::retriggerOSCWithIndependentAttacks()
                 osc[i]->init(usep);
             }
             if (scene->osc[i].type.val.i == ot_twist &&
-                !scene->osc[i].p[n_osc_params - 2].deactivated)
+                !scene->osc[i].p[5].deactivated) // p[5] = twist_lpg_response
             {
                 osc[i]->init(usep);
             }
