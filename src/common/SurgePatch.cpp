@@ -186,7 +186,8 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                     p_id.next(), id_s++, label, "-",
                     fmt::format("{:c}/osc/{}/param{}", 'a' + sc, osc + 1, i + 1), ct_none,
                     Surge::Skin::Connector::connectorByID("osc.param_" + std::to_string(i + 1)),
-                    sc_id, cg_OSC, osc, true, ((i < 6) ? sceasy : 0)));
+                    sc_id, cg_OSC, osc, true, ((i < 6) ? sceasy : 0), true,
+                    (i < osc_params_per_page) ? 1 : 2));
             }
 
             a->push_back(scene[sc].osc[osc].keytrack.assign(
@@ -504,7 +505,7 @@ SurgePatch::SurgePatch(SurgeStorage *storage)
                     fmt::format("{:c}/filter/{}/extra_param{}", 'a' + sc, f + 1, i + 1), ct_none,
                     Surge::Skin::Connector::connectorByID("filter.extra_param_" +
                                                          std::to_string(i + 1)),
-                    sc_id, cg_FILTER, f, true, 0));
+                    sc_id, cg_FILTER, f, true, 0, true, 2));
             }
         }
 

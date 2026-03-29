@@ -73,6 +73,7 @@ const int n_lfos_scene = 6;
 const int n_lfos = n_lfos_voice + n_lfos_scene;
 const int max_lfo_indices = 8;
 const int n_osc_params = 14;
+const int osc_params_per_page = 7;
 const int n_egs = 2;
 const int n_fx_params = 12;
 const int n_fx_slots = 16;
@@ -148,6 +149,8 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 
 const int ff_revision = 28;
 
+// 312 = 273 (original) + n_oscs * (n_osc_params - osc_params_per_page)  [= 3 * 7 = 21]
+//                      + n_filterunits_per_scene * n_extra_filter_params  [= 2 * 9 = 18]
 const int n_scene_params = 312;
 const int n_global_params = 11 + n_fx_slots * (n_fx_params + 1); // each param plus a type
 const int n_global_postparams = 1;

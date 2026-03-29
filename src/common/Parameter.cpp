@@ -172,12 +172,12 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
                              const Surge::Skin::Connector &c,
 
                              int scene, ControlGroup ctrlgroup, int ctrlgroup_entry,
-                             bool modulateable, int ctrlstyle, bool defaultDeactivation)
+                             bool modulateable, int ctrlstyle, bool defaultDeactivation, int hint)
 {
     assert(c.payload);
     auto r = assign(idp, pid, name, dispname, altOSCname, ctrltype, c.payload->id, c.payload->posx,
                     c.payload->posy, scene, ctrlgroup, ctrlgroup_entry, modulateable, ctrlstyle,
-                    defaultDeactivation);
+                    defaultDeactivation, hint);
 
     r->hasSkinConnector = true;
 
@@ -189,7 +189,7 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
 
                              std::string ui_identifier, int posx, int posy, int scene,
                              ControlGroup ctrlgroup, int ctrlgroup_entry, bool modulateable,
-                             int ctrlstyle, bool defaultDeactivation)
+                             int ctrlstyle, bool defaultDeactivation, int hint)
 {
     this->id_promise = idp.get();
     this->id = -1;
@@ -202,6 +202,7 @@ Parameter *Parameter::assign(ParameterIDCounter::promise_t idp, int pid, const c
     this->scene = scene;
     this->ctrlstyle = ctrlstyle;
     this->storage = nullptr;
+    this->hint = hint;
 
     char prefix[TXT_SIZE + 1] = {};
 

@@ -388,7 +388,7 @@ class Parameter
 
                       int scene = 0, ControlGroup ctrlgroup = cg_GLOBAL, int ctrlgroup_entry = 0,
                       bool modulateable = true, int ctrlstyle = cs_off,
-                      bool defaultDeactivation = true);
+                      bool defaultDeactivation = true, int hint = 1);
 
   public:
     Parameter *assign(ParameterIDCounter::promise_t id, int pid, const char *name,
@@ -398,7 +398,7 @@ class Parameter
 
                       int scene = 0, ControlGroup ctrlgroup = cg_GLOBAL, int ctrlgroup_entry = 0,
                       bool modulateable = true, int ctrlstyle = cs_off,
-                      bool defaultDeactivation = true);
+                      bool defaultDeactivation = true, int hint = 1);
 
     virtual ~Parameter();
 
@@ -538,6 +538,7 @@ class Parameter
     bool porta_constrate{}, porta_gliss{}, porta_retrigger{};
     int porta_curve{};
     int deform_type{};
+    int hint{1}; // UI page hint: 1 = first page (always visible), 2 = extra/extended page
 
     enum ParamDisplayType
     {
