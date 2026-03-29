@@ -14,6 +14,14 @@ local mod = {}
 --- MATH FUNCTIONS ---
 
 
+-- clamps x within range [low, high]
+function math.clamp(x, low, high)
+    if x < low then return low end
+    if x > high then return high end
+    return x
+end
+math.limit_range = math.clamp
+
 -- parity function returns 0 for even numbers and 1 for odd numbers
 function math.parity(x)
     return (x % 2 == 1 and 1) or 0
@@ -44,6 +52,35 @@ function math.range(a, b)
     return math.abs(a - b)
 end
 
+-- returns the frequency of the given MIDI note number under A440 equal temperament
+-- ref is optional and allows specifying a different center frequency for
+-- MIDI note 69 (middle A)
+function math.note_to_freq(note, ref)
+    local default = 440
+    ref = ref or default
+    return 2^((note - 69) / 12) * ref
+end
+
+-- returns the fractional MIDI note number matching given frequency under A440
+-- equal temperament
+-- ref is optional and allows specifying a different center frequency for
+-- MIDI note 69 (middle A)
+function math.freq_to_note(freq, ref)
+    local default = 440
+    ref = ref or default
+    return 12 * math.log((freq / ref), 2) + 69
+end
+
+-- converts a linear value to decibels
+function math.lin_to_dB(i)
+    return 20 * math.log10(i)
+end
+
+-- converts a decibel value to linear
+function math.dB_to_lin(i)
+    return 10 ^ (0.05 * i)
+end
+
 -- returns greatest common denominator between a and b
 -- use with integers only!
 function math.gcd(a, b)
@@ -71,10 +108,6 @@ function math.lcm(a, b)
 
     return t
 end
-
-
---- WTSE SPECIFIC MATH FUNCTIONS ---
-
 
 -- returns a table with the cumulative product of the elements in the input table
 function math.cumprod(t)
@@ -123,12 +156,12 @@ function math.logspace(start_point, end_point, num_points)
     return t
 end
 
--- returns a table of length n, or a multidimensional table with {n, n, ..} dimensions all initialized with zeros
-function math.zeros(dimensions)
+-- returns a table of length n, or a multidimensional table with {n, n, ..} dimensions all initialized with fill_value
+function math.full(dimensions, fill_value)
     if type(dimensions) == "number" then
         dimensions = {dimensions}
     elseif type(dimensions) ~= "table" or #dimensions == 0 then
-        return {0}
+        return {fill_value}
     end
     local function create_array(dimensions, depth)
         local size = dimensions[depth]
@@ -137,12 +170,22 @@ function math.zeros(dimensions)
             if depth < #dimensions then
                 t[i] = create_array(dimensions, depth + 1)
             else
-                t[i] = 0
+                t[i] = fill_value
             end
         end
         return t
     end
     return create_array(dimensions, 1)
+end
+
+-- returns a table of length n, or a multidimensional table with {n, n, ..} dimensions all initialized with zeros
+function math.zeros(dimensions)
+    return math.full(dimensions, 0)
+end
+
+-- returns a table of length n, or a multidimensional table with {n, n, ..} dimensions all initialized with ones
+function math.ones(dimensions)
+    return math.full(dimensions, 1)
 end
 
 -- returns a table or multidimensional table with every numerical value in the input table offset by x
@@ -164,8 +207,8 @@ end
 function math.max_abs(t)
     local o = 0
     for i = 1, #t do
-            local a = math.abs(t[i])
-            if a > o then o = a end
+        local a = math.abs(t[i])
+        if a > o then o = a end
     end
     return o
 end
@@ -186,6 +229,18 @@ end
 
 --- BUILT-IN MODULATORS ---
 
+
+-- applies a cosine fade in/out to the edges of the input table
+-- fade_samples is optional and defaults to 4, maximized at half the table length
+function mod.cosine_fade(t, fade_samples)
+    fade_samples = math.min(fade_samples or 4, math.floor(#t * 0.5))
+    for i = 1, fade_samples do
+        local fade = 0.5 - 0.5 * math.cos(math.pi * (i - 1) / fade_samples)
+        t[i] = t[i] * fade
+        t[#t - i + 1] = t[#t - i + 1] * fade
+    end
+    return t
+end
 
 -- returns a table or two dimensional table with values from the input table,
 -- peak-normalized such that the maximum absolute value equals 1 (default) or the specified norm_factor

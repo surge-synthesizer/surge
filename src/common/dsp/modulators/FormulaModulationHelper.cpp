@@ -261,6 +261,7 @@ end
                 voiceCount = 1;
             addi("voice_count", voiceCount);
 
+            addb("is_voice", s.isVoice);
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
             addb("use_envelope", true);

@@ -37,7 +37,7 @@
 
 #include "overlays/TypeinParamEditor.h"
 
-#include "widgets/MenuButtonFromIcon.h"
+#include "widgets/MenuButtonFromAsset.h"
 #include "widgets/MultiSwitch.h"
 #include "widgets/NumberField.h"
 #include "widgets/MenuCustomComponents.h"
@@ -1022,10 +1022,17 @@ void SurgeCodeEditorComponent::mouseDoubleClick(const juce::MouseEvent &e)
     juce::CodeDocument::Position tokenStart(getPositionAt(e.x, e.y));
     juce::CodeDocument::Position tokenEnd(tokenStart);
 
-    if (e.getNumberOfClicks() > 2)
+    if (e.getNumberOfClicks() > 3)
+    {
+        auto scrollBeforeSelect = getFirstLineOnScreen();
+        moveCaretToTop(false);
+        moveCaretToEnd(true);
+        scrollToLine(scrollBeforeSelect);
+    }
+    else if (e.getNumberOfClicks() > 2)
     {
         getDocument().findLineContaining(tokenStart, tokenStart, tokenEnd);
-        selectRegion(tokenStart, tokenEnd);
+        selectRegion(tokenStart, tokenEnd.movedBy(-1));
     }
     else
     {
@@ -3300,15 +3307,14 @@ struct WavetableScriptControlArea : public juce::Component,
             int xpos = margin * 3;
             int ypos = 1 + labelHeight + margin;
 
-            auto xml = juce::parseXML(SurgeXTBinary::menu_icon_svg);
-            auto icon = juce::Drawable::createFromSVG(*xml);
-            menuB = std::make_unique<Surge::Widgets::MenuButtonFromIcon>(
-                [] { return juce::PopupMenu(); }, std::move(icon));
+            menuB = std::make_unique<Surge::Widgets::MenuButtonFromAsset>(
+                [] { return juce::PopupMenu(); });
+            menuB->currentImageID = IDB_LFO_PRESET_MENU;
             auto btnrect = juce::Rectangle<int>(xpos, ypos - 1, 12, buttonHeight);
             menuB->setBounds(btnrect);
             menuB->setSkin(skin, associatedBitmapStore);
-            menuB->setTitle("File Menu");
-            menuB->setDescription("File Menu");
+            menuB->setTitle("Wavetable Script Menu");
+            menuB->setDescription("Wavetable Script Menu");
             menuB->menuFactory = [w = juce::Component::SafePointer(this)] {
                 juce::PopupMenu menu;
                 w->overlay->createMenu(menu);
@@ -3755,7 +3761,7 @@ struct WavetableScriptControlArea : public juce::Component,
     }
 
     std::unique_ptr<Surge::Overlays::TypeinLambdaEditor> typeinEditor;
-    std::unique_ptr<Surge::Widgets::MenuButtonFromIcon> menuB;
+    std::unique_ptr<Surge::Widgets::MenuButtonFromAsset> menuB;
     std::unique_ptr<juce::Label> codeL, renderModeL, currentFrameL, framesL, resolutionL;
     std::unique_ptr<Surge::Widgets::MultiSwitchSelfDraw> codeS, renderModeS, applyS, generateS;
     std::unique_ptr<Surge::Widgets::NumberField> currentFrameN, framesN, resolutionN;
@@ -4132,6 +4138,55 @@ bool WavetableScriptEditor::categoryHasWtscript(int categoryId) const
     return false;
 }
 
+// Copied from OscillatorWaveformDisplay.cpp
+struct ItemWithSharedIcon : juce::PopupMenu::Item
+{
+    ItemWithSharedIcon(const juce::String &s) : juce::PopupMenu::Item(s) {}
+    void setSharedDrawable(std::shared_ptr<juce::Drawable> d) { sharedDrawable = d; }
+    std::shared_ptr<juce::Drawable> sharedDrawable;
+};
+
+struct ItemWithSharedIconComponent : juce::PopupMenu::CustomComponent
+{
+    ItemWithSharedIcon item;
+    juce::PopupMenu::Options options;
+    ItemWithSharedIconComponent(ItemWithSharedIcon &i) : item(i) {}
+    bool hl{false};
+    void mouseEnter(const juce::MouseEvent &event) override
+    {
+        hl = true;
+        repaint();
+    }
+    void mouseExit(const juce::MouseEvent &event) override
+    {
+        hl = false;
+        repaint();
+    }
+    void mouseDown(const juce::MouseEvent &event) override
+    {
+        if (item.action)
+        {
+            item.action();
+        }
+        triggerMenuItem();
+    }
+    void paint(juce::Graphics &g) override
+    {
+        const auto colour = item.colour != juce::Colour() ? &item.colour : nullptr;
+        const auto hasSubMenu =
+            item.subMenu != nullptr && (item.itemID == 0 || item.subMenu->getNumItems() > 0);
+        getLookAndFeel().drawPopupMenuItem(
+            g, getLocalBounds(), item.isSeparator, item.isEnabled, hl, item.isTicked, hasSubMenu,
+            item.text, item.shortcutKeyDescription, item.sharedDrawable.get(), colour);
+    }
+    void getIdealSize(int &idealWidth, int &idealHeight) override
+    {
+        getLookAndFeel().getIdealPopupMenuItemSizeWithOptions(item.text, item.isSeparator,
+                                                              options.getStandardItemHeight(),
+                                                              idealWidth, idealHeight, options);
+    }
+};
+
 // Modified from OscillatorWaveformDisplay::populateMenuForCategory
 bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId,
                                                     int selectedItem, bool intoTop)
@@ -4169,17 +4224,15 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
                 selected = true;
             }
 
-            auto item = new juce::PopupMenu::Item(storage->wt_list[p].name);
+            auto item = ItemWithSharedIcon(storage->wt_list[p].name);
+            item.setEnabled(true);
+            item.setTicked(checked);
+            item.setAction(action);
+            item.setSharedDrawable(wtScriptIcon);
 
-            wtScriptIcon.get()->replaceColour(juce::Colours::white,
-                                              skin->getColor(Colors::PopupMenu::Text));
-
-            item->setEnabled(true);
-            item->setTicked(checked);
-            item->setAction(action);
-            item->setImage(wtScriptIcon.get()->createCopy());
-
-            subMenu->addItem(*item);
+            // subMenu->addItem(*item);
+            subMenu->addCustomItem(p, std::make_unique<ItemWithSharedIconComponent>(item), nullptr,
+                                   storage->wt_list[p].name);
 
             sub++;
 
@@ -4256,6 +4309,7 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
 
 void WavetableScriptEditor::loadWavetableScript(int id)
 {
+    // std::cout << "loadWavetable called with id: " << id << std::endl;
     if (storage->wt_list[id].path.extension() != ".wtscript")
     {
         return;

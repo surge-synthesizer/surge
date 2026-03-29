@@ -238,6 +238,8 @@ void MultiSwitch::mouseDrag(const juce::MouseEvent &event)
             setValue(limit_range((float)sel / (rows * columns - 1), 0.f, 1.f));
             notifyValueChanged();
         }
+
+        repaint();
     }
 }
 

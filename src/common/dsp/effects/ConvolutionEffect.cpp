@@ -135,7 +135,8 @@ void ConvolutionEffect::init()
     hc_.coeff_LP(lc_.calc_omega(*pd_float[convolution_hicut_freq] / 12.0), Q);
     lc_.coeff_instantize();
     hc_.coeff_instantize();
-    tilt_.setCoeff(*pd_float[convolution_tilt_center], 0, storage->samplerate_inv,
+    tilt_.setCoeff(440 * storage->note_to_pitch_ignoring_tuning(*pd_float[convolution_tilt_center]),
+                   0, storage->samplerate_inv,
                    storage->db_to_linear(*pd_float[convolution_tilt_slope] * 0.5f));
     mix_.set_target(fxdata->p[convolution_mix].val.f);
 }
@@ -386,8 +387,8 @@ void ConvolutionEffect::set_params()
     lc_.coeff_HP(lc_.calc_omega(*pd_float[convolution_locut_freq] / 12.0), Q);
     hc_.coeff_LP(lc_.calc_omega(*pd_float[convolution_hicut_freq] / 12.0), Q);
     tilt_.setCoeffForBlock<BLOCK_SIZE>(
-        *pd_float[convolution_tilt_center], 0, storage->samplerate_inv,
-        storage->db_to_linear(*pd_float[convolution_tilt_slope] * 0.5f));
+        440 * storage->note_to_pitch_ignoring_tuning(*pd_float[convolution_tilt_center]), 0,
+        storage->samplerate_inv, storage->db_to_linear(*pd_float[convolution_tilt_slope] * 0.5f));
     mix_.set_target_smoothed(*pd_float[convolution_mix]);
     delayTime_.newValue(storage->samplerate * *pd_float[convolution_delay]);
     delayTime_.process();

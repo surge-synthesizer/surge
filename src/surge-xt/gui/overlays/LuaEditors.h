@@ -380,7 +380,7 @@ struct WavetableScriptEditor : public CodeEditorContainerWithApply, public Refre
     void adjustCurrentFrame(int value);
     void setCurrentFrame(int value);
 
-    std::unique_ptr<juce::Drawable> wtScriptIcon;
+    std::shared_ptr<juce::Drawable> wtScriptIcon;
     void createMenu(juce::PopupMenu &menu);
     bool populateMenuForCategory(juce::PopupMenu &parent, int categoryId, int selectedItem,
                                  bool intoTop = false);

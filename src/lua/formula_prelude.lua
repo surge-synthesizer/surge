@@ -14,6 +14,14 @@ local mod = {}
 --- MATH FUNCTIONS ---
 
 
+-- clamps x within range [low, high]
+function math.clamp(x, low, high)
+    if x < low then return low end
+    if x > high then return high end
+    return x
+end
+math.limit_range = math.clamp
+
 -- parity function returns 0 for even numbers and 1 for odd numbers
 function math.parity(x)
     return (x % 2 == 1 and 1) or 0
@@ -63,6 +71,16 @@ function math.freq_to_note(freq, ref)
     return 12 * math.log((freq / ref), 2) + 69
 end
 
+-- converts a linear value to decibels
+function math.lin_to_dB(i)
+    return 20 * math.log10(i)
+end
+
+-- converts a decibel value to linear
+function math.dB_to_lin(i)
+    return 10 ^ (0.05 * i)
+end
+
 -- returns greatest common denominator between a and b
 -- use with integers only!
 function math.gcd(a, b)
@@ -91,9 +109,146 @@ function math.lcm(a, b)
     return t
 end
 
+-- returns a table with the cumulative product of the elements in the input table
+function math.cumprod(t)
+    local o = {}
+    o[1] = t[1]
+    for i = 2, #t do
+        o[i] = o[i - 1] * t[i]
+    end
+    return o
+end
+
+-- returns a table with the cumulative sum of the elements in the input table
+function math.cumsum(t)
+    local o = {}
+    o[1] = t[1]
+    for i = 2, #t do
+        o[i] = o[i - 1] + t[i]
+    end
+    return o
+end
+
+-- returns a table containing num_points linearly spaced numbers from start_point to end_point
+function math.linspace(start_point, end_point, num_points)
+    if num_points < 2 then
+        return {start_point}
+    end
+    local t = {}
+    local step = (end_point - start_point) / (num_points - 1)
+    for i = 1, num_points do
+        t[i] = start_point + (i - 1) * step
+    end
+    return t
+end
+
+-- returns a table containing num_points logarithmically spaced numbers from 10^start_point to 10^end_point
+function math.logspace(start_point, end_point, num_points)
+    if num_points < 2 then
+        return {start_point}
+    end
+    local t = {}
+    local step = (end_point - start_point) / (num_points - 1)
+    for i = 1, num_points do
+        local exponent = start_point + (i - 1) * step
+        t[i] = 10 ^ exponent
+    end
+    return t
+end
+
+-- returns a table of length n, or a multidimensional table with {n, n, ..} dimensions all initialized with fill_value
+function math.full(dimensions, fill_value)
+    if type(dimensions) == "number" then
+        dimensions = {dimensions}
+    elseif type(dimensions) ~= "table" or #dimensions == 0 then
+        return {fill_value}
+    end
+    local function create_array(dimensions, depth)
+        local size = dimensions[depth]
+        local t = {}
+        for i = 1, size do
+            if depth < #dimensions then
+                t[i] = create_array(dimensions, depth + 1)
+            else
+                t[i] = fill_value
+            end
+        end
+        return t
+    end
+    return create_array(dimensions, 1)
+end
+
+-- returns a table of length n, or a multidimensional table with {n, n, ..} dimensions all initialized with zeros
+function math.zeros(dimensions)
+    return math.full(dimensions, 0)
+end
+
+-- returns a table of length n, or a multidimensional table with {n, n, ..} dimensions all initialized with ones
+function math.ones(dimensions)
+    return math.full(dimensions, 1)
+end
+
+-- returns a table or multidimensional table with every numerical value in the input table offset by x
+function math.offset(t, x)
+    local o = {}
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            o[k] = math.offset(v, x)
+        elseif type(v) == "number" then
+            o[k] = v + x
+        else
+            o[k] = v
+        end
+    end
+    return o
+end
+
+-- returns the maximum absolute value found in the input table
+function math.max_abs(t)
+    local o = 0
+    for i = 1, #t do
+        local a = math.abs(t[i])
+        if a > o then o = a end
+    end
+    return o
+end
+
+-- returns the normalized sinc function for a table of input values
+function math.sinc(t)
+    local o = {}
+    for i, x in ipairs(t) do
+        if x == 0 then
+            o[i] = 1
+        else
+            o[i] = math.sin(math.pi * x) / (math.pi * x)
+        end
+    end
+    return o
+end
+
 
 --- BUILT-IN MODULATORS ---
 
+
+-- returns pitch bend value in semitones, scaled by pitch bend range up or down
+function mod.pb_to_st()
+    local pb = state.pb
+    if pb > 0 then return state.pb_range_up * pb end
+    if pb < 0 then return state.pb_range_dn * pb end
+    return 0
+end
+
+-- applies a cosine fade in/out to the edges of the input table
+-- fade_samples is optional and defaults to 4, maximized at half the table length
+function mod.cosine_fade(t, fade_samples)
+    fade_samples = math.min(fade_samples or 4, math.floor(#t * 0.5))
+    for i = 1, fade_samples do
+        local fade = 0.5 - 0.5 * math.cos(math.pi * (i - 1) / fade_samples)
+        t[i] = t[i] * fade
+        t[#t - i + 1] = t[#t - i + 1] * fade
+    end
+    return t
+end
 
 -- Clock Divider --
 

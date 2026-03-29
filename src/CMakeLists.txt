@@ -2,6 +2,8 @@
 option(SURGE_BUILD_FX "Build Surge FX bank" ON)
 option(SURGE_BUILD_XT "Build Surge XT synth" ON)
 option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge Python bindings with pybind11" OFF)
+option(SURGE_BUILD_RS "Build Surge XT Rust bindings (surge-rs)" OFF)
+option(SURGE_BUILD_RS_EXAMPLES "Build surge-rs examples" OFF)
 option(SURGE_COPY_TO_PRODUCTS "Copy built plugins to the products directory" ON)
 option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to system plugin area after build" OFF)
 option(SURGE_EXPOSE_PRESETS "Expose surge presets via the JUCE Program API" OFF)
@@ -170,6 +172,11 @@ endif()
 
 if(SURGE_BUILD_PYTHON_BINDINGS)
   add_subdirectory(surge-python)
+endif()
+
+# psa: this builds last (logic inside).
+if(SURGE_BUILD_RS)
+  add_subdirectory(surge-rs)
 endif()
 
 if(SURGE_BUILD_FX AND SURGE_BUILD_XT AND NOT CMAKE_CROSSCOMPILING)

@@ -9,7 +9,6 @@ file(GLOB SURGE_XT_JUCE_RESOURCES_GLOB
   ${CMAKE_SOURCE_DIR}/resources/surge-xt/memory-skin.xml
   ${CMAKE_SOURCE_DIR}/resources/surge-xt/wtfile_icon.svg
   ${CMAKE_SOURCE_DIR}/resources/surge-xt/wtscript_icon.svg
-  ${CMAKE_SOURCE_DIR}/resources/surge-xt/menu_icon.svg
 )
 
 juce_add_binary_data(surge-xt-binary
@@ -163,8 +162,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/LFOAndStepDisplay.h
   gui/widgets/MainFrame.cpp
   gui/widgets/MainFrame.h
-  gui/widgets/MenuButtonFromIcon.cpp
-  gui/widgets/MenuButtonFromIcon.h
+  gui/widgets/MenuButtonFromAsset.cpp
+  gui/widgets/MenuButtonFromAsset.h
   gui/widgets/MenuCustomComponents.cpp
   gui/widgets/MenuCustomComponents.h
   gui/widgets/MenuForDiscreteParams.cpp
