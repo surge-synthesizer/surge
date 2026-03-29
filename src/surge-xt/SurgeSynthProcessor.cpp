@@ -1728,8 +1728,7 @@ const void *JUCE_CALLTYPE clapJuceExtensionCustomFactory(const char *f)
 
 SurgeParamToJuceParamAdapter::SurgeParamToJuceParamAdapter(SurgeSynthProcessor *jp, Parameter *p)
     : ssp(jp), s(jp->surge.get()), p(p), range(0.f, 1.f, 0.001f),
-      SurgeBaseParam(juce::ParameterID(p->get_storage_name(),
-                                       1), // This "1" needs thought if we add params
+      SurgeBaseParam(juce::ParameterID(p->get_storage_name(), p->hint),
                      SurgeParamToJuceInfo::getParameterName(jp->surge.get(), p),
                      juce::AudioProcessorParameterWithIDAttributes())
 {
