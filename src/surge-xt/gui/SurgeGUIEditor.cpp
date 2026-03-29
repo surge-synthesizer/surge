@@ -1997,7 +1997,7 @@ void SurgeGUIEditor::openOrRecreateEditor()
             p->val_default.f = (p->extend_range || p->absolute) ? 16.f : 1.f;
         }
 
-        if (p->hasSkinConnector &&
+        if (p->hasSkinConnector && p->hint == 1 &&
             conn.payload->defaultComponent != Surge::Skin::Components::None && paramIsVisible)
         {
             // Some special cases where we don't add a control
