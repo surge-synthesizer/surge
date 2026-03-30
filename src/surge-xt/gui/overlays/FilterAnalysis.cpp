@@ -149,9 +149,9 @@ FilterAnalysis::FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s, SurgeSynthesi
     modeButton->setRows(1);
     modeButton->setColumns(2);
     modeButton->setLabels({"Analysis", "Parameters"});
-    modeButton->setWantsKeyboardFocus(false);
+    modeButton->setWantsKeyboardFocus(true);
     modeButton->setValue(0.f);
-    modeButton->setDraggable(true);
+    modeButton->setDraggable(false);
     addAndMakeVisible(*modeButton);
 
     selectFilter(0);
@@ -530,6 +530,9 @@ void FilterAnalysis::resized()
 
 void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 {
+    if (displayMode == PARAMETERS)
+        return;
+
     auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
 
     float rx0 = dRect.getX();
@@ -598,6 +601,9 @@ void FilterAnalysis::mouseDrag(const juce::MouseEvent &event)
 // just by clicking anywhere in the graph, no mouse movement required
 void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 {
+    if (displayMode == PARAMETERS)
+        return;
+
     const auto lb = getLocalBounds().transformedBy(getTransform().inverted());
     auto dRect = lb.withTrimmedTop(18).reduced(4);
     auto where = event.position;
@@ -630,6 +636,9 @@ void FilterAnalysis::mouseDown(const juce::MouseEvent &event)
 
 void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
 {
+    if (displayMode == PARAMETERS)
+        return;
+
     auto dRect = getLocalBounds();
 
     setMouseCursor(juce::MouseCursor::NormalCursor);
@@ -646,6 +655,9 @@ void FilterAnalysis::mouseUp(const juce::MouseEvent &event)
 
 void FilterAnalysis::mouseMove(const juce::MouseEvent &event)
 {
+    if (displayMode == PARAMETERS)
+        return;
+
     auto dRect = getLocalBounds().transformedBy(getTransform().inverted());
     bool reset = false;
     const bool withinHotzone =
