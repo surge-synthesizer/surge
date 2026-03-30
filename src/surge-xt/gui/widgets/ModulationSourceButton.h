@@ -85,17 +85,21 @@ struct ModulationSourceButton : public juce::Component,
     void setModList(const modlist_t &m)
     {
         modlist = m;
-        modlistIndex = 0;
+        // modlistIndex = 0;
 
-        auto sge = firstListenerOfType<SurgeGUIEditor>();
-        int lfo_id = getCurrentModSource() - ms_lfo1;
-        lfo_id = std::clamp(lfo_id, 0, n_lfos - 1);
-        auto scene = sge->current_scene;
+        auto ms = getCurrentModSource();
 
-        modlistIndex =
-            storage->getPatch()
-                .dawExtraState.editor.modulationSourceButtonState[sge->current_scene][lfo_id]
-                .index;
+        if (ms >= ms_lfo1 && ms <= ms_slfo6)
+        {
+            int lfo_id = ms - ms_lfo1;
+            auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+            modlistIndex =
+                storage->getPatch()
+                    .dawExtraState.editor.modulationSourceButtonState[sge->current_scene][lfo_id]
+                    .index;
+        }
+
         modlistIndex = limit_range(modlistIndex, 0, (int)(m.size() - 1));
 
         setAccessibleLabel(getCurrentModLabel());
