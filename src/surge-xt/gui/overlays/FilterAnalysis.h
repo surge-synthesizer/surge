@@ -94,7 +94,28 @@ struct FilterAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCompon
 
     bool wantsInitialKeyboardFocus() const override { return false; }
 
+    enum DisplayMode
+    {
+        ANALYSIS = 0,
+        PARAMETERS = 1,
+    };
+
+    class SwitchButton : public Surge::Widgets::MultiSwitchSelfDraw,
+                         public Surge::GUI::IComponentTagValue::Listener
+    {
+      public:
+        explicit SwitchButton(FilterAnalysis &parent);
+        void valueChanged(Surge::GUI::IComponentTagValue *p) override;
+
+      private:
+        FilterAnalysis &parent_;
+    };
+
+    DisplayMode displayMode{ANALYSIS};
+    void changeDisplayMode(DisplayMode mode);
+
     std::unique_ptr<Surge::Widgets::SelfDrawToggleButton> f1Button, f2Button;
+    std::unique_ptr<SwitchButton> modeButton;
     std::unique_ptr<FilterAnalysisEvaluator> evaluator;
     bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override;
     uint64_t catchUpStore{0};

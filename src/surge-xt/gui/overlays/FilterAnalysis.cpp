@@ -144,6 +144,16 @@ FilterAnalysis::FilterAnalysis(SurgeGUIEditor *e, SurgeStorage *s, SurgeSynthesi
     f2Button->onToggle = [this]() { selectFilter(1); };
     addAndMakeVisible(*f2Button);
 
+    modeButton = std::make_unique<SwitchButton>(*this);
+    modeButton->setStorage(storage);
+    modeButton->setRows(1);
+    modeButton->setColumns(2);
+    modeButton->setLabels({"Analysis", "Parameters"});
+    modeButton->setWantsKeyboardFocus(false);
+    modeButton->setValue(0.f);
+    modeButton->setDraggable(true);
+    addAndMakeVisible(*modeButton);
+
     selectFilter(0);
     repushData();
 }
@@ -154,10 +164,20 @@ void FilterAnalysis::onSkinChanged()
 {
     f1Button->setSkin(skin, associatedBitmapStore);
     f2Button->setSkin(skin, associatedBitmapStore);
+    modeButton->setSkin(skin, associatedBitmapStore);
 }
 
 void FilterAnalysis::paint(juce::Graphics &g)
 {
+    if (displayMode == PARAMETERS)
+    {
+        g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
+        g.setColour(skin->getColor(Colors::Waveshaper::Preview::Text));
+        g.setFont(skin->getFont(Fonts::Waveshaper::Preview::Title));
+        g.drawText("Parameters", getLocalBounds(), juce::Justification::centred);
+        return;
+    }
+
     auto &fs = editor->getPatch().scene[editor->current_scene].filterunit[whichFilter];
 
     constexpr auto dbRange = GRAPH_MAX_DB - GRAPH_MIN_DB;
@@ -502,7 +522,8 @@ void FilterAnalysis::resized()
     t.transformPoint(w, h);
 
     f1Button->setBounds(2, 2, 40, 15);
-    f2Button->setBounds(w - 42, 2, 40, 15);
+    f2Button->setBounds(44, 2, 40, 15);
+    modeButton->setBounds(w - 122, 2, 120, 15);
 
     catchUpStore = evaluator->outboundUpdates - 1; // because we need to rebuild the path
 }
@@ -646,6 +667,24 @@ void FilterAnalysis::mouseMove(const juce::MouseEvent &event)
     {
         setMouseCursor(juce::MouseCursor::NormalCursor);
     }
+}
+
+void FilterAnalysis::changeDisplayMode(DisplayMode mode)
+{
+    displayMode = mode;
+    repaint();
+}
+
+FilterAnalysis::SwitchButton::SwitchButton(FilterAnalysis &parent)
+    : Surge::Widgets::MultiSwitchSelfDraw(), parent_(parent)
+{
+    addListener(this);
+}
+
+void FilterAnalysis::SwitchButton::valueChanged(Surge::GUI::IComponentTagValue *p)
+{
+    auto mode = p->getValue() < 0.5 ? FilterAnalysis::ANALYSIS : FilterAnalysis::PARAMETERS;
+    parent_.changeDisplayMode(mode);
 }
 
 } // namespace Overlays
