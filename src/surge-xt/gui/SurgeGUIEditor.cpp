@@ -1997,7 +1997,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
             p->val_default.f = (p->extend_range || p->absolute) ? 16.f : 1.f;
         }
 
-        if (p->hasSkinConnector && p->hint == 1 &&
+        // Extra filter parameters are displayed in the FilterAnalysis overlay; skip them here.
+        bool isExtraFilterParam = strncmp(p->ui_identifier, "filter.extra_param_", 19) == 0;
+
+        if (p->hasSkinConnector && !isExtraFilterParam &&
             conn.payload->defaultComponent != Surge::Skin::Components::None && paramIsVisible)
         {
             // Some special cases where we don't add a control

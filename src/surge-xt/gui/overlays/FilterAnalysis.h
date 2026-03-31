@@ -27,10 +27,10 @@
 #include "SkinSupport.h"
 #include "FilterConfiguration.h"
 #include "SurgeGUICallbackInterfaces.h"
+#include "SurgeStorage.h"
 #include "widgets/ModulatableSlider.h"
 #include "widgets/MultiSwitch.h"
 
-class SurgeStorage;
 class SurgeGUIEditor;
 
 namespace Surge
@@ -55,7 +55,8 @@ struct FilterAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCompon
     void onSkinChanged() override;
     void resized() override;
     void repushData();
-    void forceDataRefresh() override { repushData(); }
+    void forceDataRefresh() override;
+    void layoutParameters();
 
     juce::Rectangle<float> hotzone;
     juce::Point<int> cursorHideOrigin;
@@ -120,6 +121,9 @@ struct FilterAnalysis : public OverlayComponent, Surge::GUI::SkinConsumingCompon
     bool shouldRepaintOnParamChange(const SurgePatch &patch, Parameter *p) override;
     uint64_t catchUpStore{0};
     juce::Path plotPath;
+
+    std::array<std::unique_ptr<Surge::Widgets::ModulatableSlider>, n_extra_filter_params>
+        extraParamSliders{};
 };
 } // namespace Overlays
 } // namespace Surge

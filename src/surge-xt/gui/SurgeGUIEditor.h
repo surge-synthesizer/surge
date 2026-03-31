@@ -102,6 +102,7 @@ struct MiniEdit;
 struct Alert;
 struct OverlayWrapper;
 struct PatchStoreDialog;
+struct FilterAnalysis;
 } // namespace Overlays
 } // namespace Surge
 
@@ -707,6 +708,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void hideTypeinParamEditor();
     friend struct Surge::Overlays::TypeinParamEditor;
     friend struct Surge::Overlays::PatchStoreDialog;
+    friend struct Surge::Overlays::FilterAnalysis;
     friend struct Surge::Widgets::MainFrame;
 
     Surge::GUI::IComponentTagValue *lfoEditSwitch = nullptr;
