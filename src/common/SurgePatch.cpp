@@ -1198,6 +1198,10 @@ void SurgePatch::load_patch(const void *data, int datasize, bool preset)
                 }
             }
         }
+        for (auto &i : fx)
+        {
+            i.user_data.clear();
+        }
         if (dr < end)
         {
             dr += load_arbitrary_block_storage(dr, ((char *)end - dr));

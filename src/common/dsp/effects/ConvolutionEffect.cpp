@@ -82,9 +82,7 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
                 fxdata->user_data.emplace("samplerate", ArbitraryBlockStorage::from_float(
                                                             static_cast<float>(std::get<0>(t))));
                 fxdata->user_data.emplace("left", ArbitraryBlockStorage::from_floats(v[0]));
-                if (v.size() < 2)
-                    fxdata->user_data.emplace("right", fxdata->user_data["left"]);
-                else
+                if (v.size() >= 2)
                     fxdata->user_data.emplace("right", ArbitraryBlockStorage::from_floats(v[1]));
             }
         }

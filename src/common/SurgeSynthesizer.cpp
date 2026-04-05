@@ -5350,7 +5350,7 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         if (source == target)
         {
             fxsync[source].type.val.i = 0;
-            fxsync[target].type.val.i = 0;
+            fxsync[source].user_data.clear();
         }
     }
     break;
