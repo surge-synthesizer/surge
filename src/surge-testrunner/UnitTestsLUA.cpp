@@ -1007,21 +1007,28 @@ TEST_CASE("Wavetable Script Snapshots", "[wts]")
     SECTION("Script Can Read Snapshot Data")
     {
         SurgeStorage storage;
+        auto &osc = storage.getPatch().scene[0].osc[0];
 
         // Populate snapshot slot 0 with a known 2-frame, 64-sample ramp
-        auto &snap = storage.getPatch().dawExtraState.editor.wtSnapshot[0];
-        snap.n_tables = 2;
-        snap.size = 64;
-        snap.frames.resize(2);
-        for (int t = 0; t < 2; ++t)
+        osc.wtSnapshots[0].emplace();
+        auto &snap = *osc.wtSnapshots[0];
+
+        constexpr int nframes = 2;
+        constexpr int nsamples = 64;
+        std::vector<float> flat(nframes * nsamples);
+        for (int t = 0; t < nframes; ++t)
         {
-            snap.frames[t].resize(64);
-            for (int i = 0; i < 64; ++i)
+            for (int i = 0; i < nsamples; ++i)
             {
-                snap.frames[t][i] = (float)(t + 1) * (float)i / 63.0f;
+                flat[t * nsamples + i] = (float)(t + 1) * (float)i / 63.0f;
             }
         }
-        snap.enabled = true;
+
+        wt_header wh{};
+        wh.n_samples = nsamples;
+        wh.n_tables = nframes;
+        wh.flags = 0;
+        snap.BuildWT(flat.data(), wh, false);
 
         // Script that copies snapshot slot 1 (Lua 1-indexed), frame matching wt.frame
         const std::string s = R"FN(
@@ -1053,6 +1060,7 @@ end
         auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
         la->setResolution(64);
         la->setStorage(&storage);
+        la->setOscillatorStorage(0, 0);
         la->setFrameCount(2);
         la->setScript(s);
 
@@ -1106,6 +1114,7 @@ end
         auto la = std::make_unique<Surge::WavetableScript::LuaWTEvaluator>();
         la->setResolution(64);
         la->setStorage(&storage);
+        la->setOscillatorStorage(0, 0);
         la->setFrameCount(1);
         la->setScript(s);
 

@@ -4014,6 +4014,7 @@ void WavetableScriptEditor::setupEvaluator()
         respt *= 2;
     }
     evaluator->setStorage(storage);
+    evaluator->setOscillatorStorage(scene, osc_id);
     evaluator->setScript(mainDocument->getAllContent().toStdString());
     evaluator->setResolution(respt);
     evaluator->setFrameCount(controlArea->framesN->getIntValue());
@@ -4085,18 +4086,21 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
     menu.addSeparator();
 
     // Import snapshot submenu
-    juce::PopupMenu importMenu;
+    juce::PopupMenu snapshotMenu;
     std::string sceneName = (scene == 0) ? "Scene A" : "Scene B";
 
-    for (int slot = 0; slot < n_oscs; ++slot)
+    for (int slot = 0; slot < n_wt_snapshots; ++slot)
     {
-        const auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[slot];
+        const auto &snap = osc->wtSnapshots[slot];
+        const bool populated = snap.has_value() && snap->everBuilt;
 
         std::string snapLabel = "Snapshot " + std::to_string(slot + 1);
-        if (snap.enabled)
-            snapLabel += " (" + std::to_string(snap.n_tables) +
-                         (snap.n_tables == 1 ? " frame" : " frames") + ", " +
-                         std::to_string(snap.size) + " samples)";
+        if (populated)
+        {
+            const unsigned int frames = snap->n_tables;
+            snapLabel += " (" + std::to_string(frames) + (frames == 1 ? " frame" : " frames") +
+                         ", " + std::to_string(snap->size) + " samples)";
+        }
 
         auto comp = std::make_unique<Surge::Widgets::WavetableSnapshotMenuComponent>(
             snapLabel, sceneName,
@@ -4108,13 +4112,12 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
                 }
                 if (action == Surge::Widgets::WavetableSnapshotMenuComponent::Action::Clear)
                 {
-                    storage->getPatch().dawExtraState.editor.wtSnapshot[slot] =
-                        DAWExtraStateStorage::EditorState::WavetableSnapshot{};
+                    osc->wtSnapshots[slot].reset();
                 }
                 else
                 {
-                    const int oscIndex = static_cast<int>(action);
-                    storage->getPatch().captureWavetableSnapshot(scene, slot, oscIndex);
+                    storage->getPatch().captureWavetableSnapshot(scene, static_cast<int>(action),
+                                                                 osc_id, slot);
                 }
                 lastFrames = -1;
                 rerenderFromUIState();
@@ -4122,15 +4125,15 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
             });
         comp->setSkin(skin, associatedBitmapStore);
 
-        comp->clearButton->setVisible(snap.enabled);
+        comp->clearButton->setVisible(populated);
 
-        importMenu.addCustomItem(-1, std::move(comp), nullptr, snapLabel);
-        if (slot < n_oscs - 1)
+        if (slot > 0)
         {
-            importMenu.addSeparator();
+            snapshotMenu.addSeparator();
         }
+        snapshotMenu.addCustomItem(-1, std::move(comp), nullptr, snapLabel);
     }
-    menu.addSubMenu(Surge::GUI::toOSCase("Import Wavetable Data"), importMenu);
+    menu.addSubMenu(Surge::GUI::toOSCase("Import Wavetable Data"), snapshotMenu);
     menu.addSeparator();
 
     if (!osc->wavetable_script.empty())
@@ -4394,6 +4397,7 @@ void WavetableScriptEditor::loadWavetableScript(int id)
 // Modified from OscillatorWaveformDisplay::loadWavetableFromFile
 void WavetableScriptEditor::loadWavetableForSnapshot(int slot)
 {
+    assert(slot >= 0 && slot < n_wt_snapshots);
     auto wtPath = storage->userWavetablesPath;
     wtPath = Surge::Storage::getUserDefaultPath(storage, Surge::Storage::LastWavetablePath, wtPath);
 
@@ -4418,26 +4422,18 @@ void WavetableScriptEditor::loadWavetableForSnapshot(int slot)
             auto res = c.getResult();
             auto rString = res.getFullPathName().toStdString();
 
-            Wavetable tempWt;
-            storage->load_wt(rString, &tempWt, nullptr);
-
-            auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[slot];
-            snap = DAWExtraStateStorage::EditorState::WavetableSnapshot{};
-
-            if (tempWt.everBuilt && tempWt.n_tables > 0 && tempWt.size > 0 &&
-                tempWt.TableF32WeakPointers[0][0] != nullptr)
+            auto &snap = osc->wtSnapshots[slot];
+            if (!snap.has_value())
             {
-                snap.n_tables = tempWt.n_tables;
-                snap.size = tempWt.size;
-                snap.frames.resize(tempWt.n_tables);
+                snap.emplace();
+            }
 
-                for (int t = 0; t < tempWt.n_tables; ++t)
-                {
-                    snap.frames[t].assign(tempWt.TableF32WeakPointers[0][t],
-                                          tempWt.TableF32WeakPointers[0][t] + tempWt.size);
-                }
+            storage->load_wt(rString, &snap.value(), nullptr);
 
-                snap.enabled = true;
+            if (!snap->everBuilt || snap->n_tables == 0 || snap->size == 0 ||
+                snap->TableF32WeakPointers[0][0] == nullptr)
+            {
+                snap.reset();
             }
 
             lastFrames = -1;

@@ -43,6 +43,7 @@ struct LuaWTEvaluator
                                             Surge::LuaSupport::EnvironmentFeatures::HAS_FFT;
 
     void setStorage(SurgeStorage *);
+    void setOscillatorStorage(int scene, int osc);
     void setScript(const std::string &);
     void setResolution(size_t);
     void setFrameCount(size_t);
@@ -75,10 +76,9 @@ struct LuaWTEvaluator
         std::string script;
         int nframes = 0;
         int res_base = 0;
-
-        std::vector<std::pair<int, DAWExtraStateStorage::EditorState::WavetableSnapshot>> snapshots;
     };
-    std::optional<WtscriptData> parseWtscript(const fs::path &filename, SurgeStorage *storage);
+    std::optional<WtscriptData> parseWtscript(const fs::path &filename, SurgeStorage *storage,
+                                              OscillatorStorage *oscdata);
 };
 
 } // namespace WavetableScript

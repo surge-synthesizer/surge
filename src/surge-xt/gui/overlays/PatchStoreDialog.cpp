@@ -219,6 +219,16 @@ PatchStoreDialog::PatchStoreDialog()
     storeTuningButton->setTitle(stbTitle);
     storeTuningButton->setDescription(stbTitle);
     addAndMakeVisible(*storeTuningButton);
+
+    auto ssbTitle = "Store Snapshots in Patch";
+
+    storeSnapshotsLabel = makeL(Surge::GUI::toOSCase(ssbTitle));
+
+    storeSnapshotsButton = std::make_unique<juce::ToggleButton>();
+    storeSnapshotsButton->setButtonText("");
+    storeSnapshotsButton->setTitle(ssbTitle);
+    storeSnapshotsButton->setDescription(ssbTitle);
+    addAndMakeVisible(*storeSnapshotsButton);
 }
 
 PatchStoreDialog::~PatchStoreDialog() = default;
@@ -234,6 +244,28 @@ void PatchStoreDialog::setStorage(SurgeStorage *s)
 void PatchStoreDialog::setStoreTuningInPatch(const bool value)
 {
     storeTuningButton->setToggleState(value, juce::dontSendNotification);
+}
+
+void PatchStoreDialog::setStoreSnapshotsInPatch(bool value)
+{
+    storeSnapshotsButton->setToggleState(value, juce::dontSendNotification);
+}
+
+void PatchStoreDialog::setHasSnapshots(bool value)
+{
+    if (value && !hasSnapshots)
+    {
+        auto pos = getEnclosingParentPosition();
+        pos = pos.withHeight(pos.getHeight() + 25);
+        setEnclosingParentPosition(pos);
+    }
+    if (!value && hasSnapshots)
+    {
+        auto pos = getEnclosingParentPosition();
+        pos = pos.withHeight(pos.getHeight() - 25);
+        setEnclosingParentPosition(pos);
+    }
+    hasSnapshots = value;
 }
 
 void PatchStoreDialog::paint(juce::Graphics &g)
@@ -309,11 +341,17 @@ void PatchStoreDialog::onSkinChanged()
     resetLabel(licenseEdL);
     resetLabel(commentEdL);
     resetLabel(storeTuningLabel);
+    resetLabel(storeSnapshotsLabel);
 
     storeTuningButton->setColour(juce::ToggleButton::tickDisabledColourId,
                                  skin->getColor(Colors::Dialog::Checkbox::Border));
     storeTuningButton->setColour(juce::ToggleButton::tickColourId,
                                  skin->getColor(Colors::Dialog::Checkbox::Tick));
+
+    storeSnapshotsButton->setColour(juce::ToggleButton::tickDisabledColourId,
+                                    skin->getColor(Colors::Dialog::Checkbox::Border));
+    storeSnapshotsButton->setColour(juce::ToggleButton::tickColourId,
+                                    skin->getColor(Colors::Dialog::Checkbox::Tick));
 
     catEd->setColour(Surge::Widgets::TypeAhead::ColourIds::emptyBackgroundId,
                      skin->getColor(Colors::Dialog::Entry::Background));
@@ -336,7 +374,9 @@ void PatchStoreDialog::setIsRename(bool b) { isRename = b; }
 void PatchStoreDialog::resized()
 {
     auto h = 25;
-    auto commH = getHeight() - (6 + showTagsField) * h + 8;
+    bool showTuning = editor && !editor->synth->storage.isStandardTuning;
+    int optionRows = hasSnapshots ? 1 : 0;
+    auto commH = getHeight() - (6 + showTagsField + optionRows) * h + 8;
     auto xSplit = 70;
     auto buttonHeight = 17;
     auto buttonWidth = 50;
@@ -410,22 +450,40 @@ void PatchStoreDialog::resized()
 
     cl = cl.translated(0, h);
     commentEdL->setBounds(cl);
-    cl = cl.translated(0, commH)
-             .withY(okButton->getY() - 1)
-             .withWidth(h + buttonWidth * 2.5)
-             .withHeight(okButton->getHeight() + 2);
+    auto optionRow = buttonRow.withX(0)
+                         .withWidth(h + buttonWidth * 2.5)
+                         .withHeight(okButton->getHeight() + 2);
 
-    if (!editor || editor->synth->storage.isStandardTuning)
+    if (!showTuning)
     {
         storeTuningButton->setVisible(false);
         storeTuningLabel->setVisible(false);
     }
     else
     {
-        auto lb = cl.withX(cl.withWidth(h).getRight() - margin).withWidth(buttonWidth * 2.5);
+        auto lb = optionRow.withX(optionRow.withWidth(h).getRight() - margin)
+                      .withWidth(buttonWidth * 2.5);
 
-        storeTuningButton->setBounds(cl);
+        storeTuningButton->setBounds(optionRow);
         storeTuningLabel->setBounds(lb);
+    }
+    optionRow = optionRow.translated(0, h);
+
+    if (!hasSnapshots)
+    {
+        storeSnapshotsButton->setVisible(false);
+        storeSnapshotsLabel->setVisible(false);
+    }
+    else
+    {
+        storeSnapshotsButton->setVisible(true);
+        storeSnapshotsLabel->setVisible(true);
+
+        auto lb = optionRow.withX(optionRow.withWidth(h).getRight() - margin)
+                      .withWidth(buttonWidth * 2.5);
+
+        storeSnapshotsButton->setBounds(optionRow);
+        storeSnapshotsLabel->setBounds(lb);
     }
 }
 
@@ -491,6 +549,9 @@ void PatchStoreDialog::buttonClicked(juce::Button *button)
                     synth->storage.currentMapping.name;
             }
         }
+
+        synth->storage.getPatch().snapshotsStoredInPatch =
+            storeSnapshotsButton->isVisible() && storeSnapshotsButton->getToggleState();
 
         // Ignore whatever comes from the DAW
         synth->storage.getPatch().dawExtraState.isPopulated = false;

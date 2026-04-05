@@ -6796,26 +6796,30 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
 
             TiXmlElement sn("snapshots");
             bool hasSnapshots = false;
-            for (int slot = 0; slot < n_oscs; ++slot)
+            for (int slot = 0; slot < n_wt_snapshots; ++slot)
             {
-                const auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[slot];
-                if (!snap.enabled)
+                const auto &snap = oscdata->wtSnapshots[slot];
+                if (!snap.has_value() || !snap->everBuilt)
                 {
                     continue;
                 }
 
-                // Flatten 2D frames[table][sample] into a single float array
+                const unsigned int nframes = snap->n_tables;
+                const int nsamples = snap->size;
+
+                // Flatten mip-level-0 samples into a single float array
                 std::vector<float> flat;
-                flat.reserve(snap.n_tables * snap.size);
-                for (int t = 0; t < snap.n_tables; ++t)
+                flat.reserve(static_cast<size_t>(nframes) * nsamples);
+                for (unsigned int t = 0; t < nframes; ++t)
                 {
-                    flat.insert(flat.end(), snap.frames[t].begin(), snap.frames[t].end());
+                    const float *tbl = snap->TableF32WeakPointers[0][t];
+                    flat.insert(flat.end(), tbl, tbl + nsamples);
                 }
 
                 TiXmlElement sl("snapshot");
                 sl.SetAttribute("slot", slot);
-                sl.SetAttribute("n_tables", snap.n_tables);
-                sl.SetAttribute("size", snap.size);
+                sl.SetAttribute("frames", nframes);
+                sl.SetAttribute("samples", nsamples);
                 sl.SetAttribute("data",
                                 Surge::Storage::base64_encode((unsigned const char *)flat.data(),
                                                               flat.size() * sizeof(float)));

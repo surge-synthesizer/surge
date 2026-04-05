@@ -47,6 +47,8 @@
 #include <type_traits>
 #include <random>
 #include <chrono>
+#include <array>
+#include <optional>
 
 #include "Tunings.h"
 #include "PatchDB.h"
@@ -156,6 +158,7 @@ const int n_total_params = n_global_params + 2 * n_scene_params + n_global_postp
 const int n_scenes = 2;
 const int n_filterunits_per_scene = 2;
 const int n_max_filter_subtypes = 16;
+const int n_wt_snapshots = 2;
 
 enum scene_mode
 {
@@ -719,6 +722,7 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     std::string wavetable_script = "";
     int wavetable_script_res_base = 5, // 32 * 2^this
         wavetable_script_nframes = 10;
+    std::array<std::optional<Wavetable>, n_wt_snapshots> wtSnapshots;
 
     void *queue_xmldata;
     int queue_type;
@@ -1181,15 +1185,6 @@ struct DAWExtraStateStorage
         {
             int editMode = 0;
         } tuningOverlayState;
-
-        // Wavetable snapshots for use in the Wavetable Script Editor
-        struct WavetableSnapshot
-        {
-            std::vector<std::vector<float>> frames; // frames[table][sample]
-            int n_tables{0};
-            int size{0};
-            bool enabled{false};
-        } wtSnapshot[n_oscs];
     } editor;
 
     bool mpeEnabled = false;
@@ -1265,14 +1260,14 @@ class SurgePatch
     void formulaToXMLElement(FormulaModulatorStorage *ms, TiXmlElement &parent) const;
     void formulaFromXMLElement(FormulaModulatorStorage *ms, TiXmlElement *parent) const;
 
-    void captureWavetableSnapshot(int scene, int slot, int osc);
-
     void load_patch(const void *data, int size, bool preset);
     unsigned int load_arbitrary_block_storage(const void *data, std::size_t remainder);
     void load_arbitrary_block_storage_xml(const TiXmlElement *patch);
+    bool hasAnySnapshots() const;
     unsigned int save_patch(void **data);
     std::vector<std::uint8_t> save_arbitrary_block_storage();
     Parameter *parameterFromOSCName(std::string stName);
+    void captureWavetableSnapshot(int scene, int srcOsc, int dstOsc, int slot);
 
     // data
     SurgeSceneStorage scene[n_scenes], morphscene;
@@ -1300,6 +1295,7 @@ class SurgePatch
     FormulaModulatorStorage formulamods[n_scenes][n_lfos];
 
     PatchTuningStorage patchTuning;
+    bool snapshotsStoredInPatch = false;
     DAWExtraStateStorage dawExtraState;
 
     std::vector<Parameter *> param_ptr;
@@ -1977,6 +1973,7 @@ class alignas(16) SurgeStorage
     std::array<std::string, n_oscs> clipboard_wavetable_script;
     std::array<int, n_oscs> clipboard_wavetable_script_res_base;
     std::array<int, n_oscs> clipboard_wavetable_script_nframes;
+    std::array<std::array<std::optional<Wavetable>, n_wt_snapshots>, n_oscs> clipboard_wtSnapshots;
 
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;

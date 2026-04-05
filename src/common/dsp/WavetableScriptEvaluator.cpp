@@ -42,6 +42,8 @@ static constexpr const char *statetable{"statetable"};
 struct LuaWTEvaluator::Details
 {
     SurgeStorage *storage{nullptr};
+    int current_scene{0};
+    int current_osc{0};
     std::string script{};
     size_t resolution{2048};
     size_t frameCount{10};
@@ -123,25 +125,27 @@ struct LuaWTEvaluator::Details
         lua_newtable(L); // Outer snapshot table
         if (storage)
         {
-            for (int s = 0; s < n_oscs; ++s)
+            auto &oscdata = storage->getPatch().scene[current_scene].osc[current_osc];
+            for (int s = 0; s < n_wt_snapshots; ++s)
             {
                 lua_newtable(L); // Slot table (empty if not imported)
-                if (storage->getPatch().dawExtraState.editor.wtSnapshot[s].enabled)
-                {
-                    const auto &snap = storage->getPatch().dawExtraState.editor.wtSnapshot[s];
+                const auto &snap = oscdata.wtSnapshots[s];
 
-                    if (snap.enabled && snap.n_tables > 0 && snap.size > 0)
+                if (snap.has_value() && snap->everBuilt && snap->n_tables > 0 && snap->size > 0)
+                {
+                    const unsigned int nframes = snap->n_tables;
+                    const int nsamples = snap->size;
+
+                    for (unsigned int t = 0; t < nframes; ++t)
                     {
-                        for (int t = 0; t < snap.n_tables; ++t)
+                        lua_newtable(L); // Frame table
+                        const float *tbl = snap->TableF32WeakPointers[0][t];
+                        for (int i = 0; i < nsamples; ++i)
                         {
-                            lua_newtable(L); // Frame table
-                            for (int i = 0; i < snap.size; ++i)
-                            {
-                                lua_pushnumber(L, snap.frames[t][i]); // Push sample value
-                                lua_rawseti(L, -2, i + 1);            // frame[i + 1] = value
-                            }
-                            lua_rawseti(L, -2, t + 1); // slot[t + 1] = frame table
+                            lua_pushnumber(L, tbl[i]); // Push sample value
+                            lua_rawseti(L, -2, i + 1); // frame[i + 1] = value
                         }
+                        lua_rawseti(L, -2, t + 1); // slot[t + 1] = frame table
                     }
                 }
                 lua_rawseti(L, -2, s + 1); // snapshot[slot + 1] = slot table
@@ -343,6 +347,14 @@ void LuaWTEvaluator::setStorage(SurgeStorage *s)
 #endif
 }
 
+void LuaWTEvaluator::setOscillatorStorage(int scene, int osc)
+{
+#if HAS_LUA
+    details->current_scene = scene;
+    details->current_osc = osc;
+#endif
+}
+
 void LuaWTEvaluator::setScript(const std::string &e)
 {
 #if HAS_LUA
@@ -477,8 +489,9 @@ void LuaWTEvaluator::generateWavetable(SurgeStorage *storage, OscillatorStorage 
 #endif
 }
 
-std::optional<LuaWTEvaluator::WtscriptData> LuaWTEvaluator::parseWtscript(const fs::path &filename,
-                                                                          SurgeStorage *storage)
+std::optional<LuaWTEvaluator::WtscriptData>
+LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
+                              OscillatorStorage *oscdata)
 {
 #if HAS_LUA
     TiXmlDocument doc;
@@ -529,17 +542,21 @@ std::optional<LuaWTEvaluator::WtscriptData> LuaWTEvaluator::parseWtscript(const 
     data.nframes = nframes;
     data.res_base = res_base;
 
-    // Skips parsing snapshots if absent
     auto sn = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("snapshots"));
     if (sn)
     {
         for (auto child = sn->FirstChildElement("snapshot"); child;
              child = child->NextSiblingElement("snapshot"))
         {
-            int slot = 0, n_tables = 0, size = 0;
+            int slot = 0, nframes = 0, nsamples = 0;
             if (child->QueryIntAttribute("slot", &slot) != TIXML_SUCCESS ||
-                child->QueryIntAttribute("n_tables", &n_tables) != TIXML_SUCCESS ||
-                child->QueryIntAttribute("size", &size) != TIXML_SUCCESS)
+                child->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS ||
+                child->QueryIntAttribute("samples", &nsamples) != TIXML_SUCCESS)
+            {
+                continue;
+            }
+
+            if (slot < 0 || slot >= n_wt_snapshots)
             {
                 continue;
             }
@@ -550,26 +567,22 @@ std::optional<LuaWTEvaluator::WtscriptData> LuaWTEvaluator::parseWtscript(const 
                 continue;
             }
             auto decoded = Surge::Storage::base64_decode(b64data);
-            if (decoded.size() != (size_t)(n_tables * size * (int)sizeof(float)))
+            if (decoded.size() != (size_t)(nframes * nsamples * (int)sizeof(float)))
             {
                 continue;
             }
 
-            DAWExtraStateStorage::EditorState::WavetableSnapshot snap;
-            snap.n_tables = n_tables;
-            snap.size = size;
-            snap.frames.resize(n_tables);
+            wt_header wh{};
+            wh.n_samples = nsamples;
+            wh.n_tables = nframes;
+            wh.flags = 0;
 
-            // Split the flat decoded buffer back into tables: frames[table][sample]
-            for (int t = 0; t < n_tables; ++t)
+            oscdata->wtSnapshots[slot].emplace();
+            oscdata->wtSnapshots[slot]->BuildWT(decoded.data(), wh, false);
+            if (!oscdata->wtSnapshots[slot]->everBuilt)
             {
-                snap.frames[t].resize(size);
-                std::memcpy(snap.frames[t].data(), decoded.data() + t * size * sizeof(float),
-                            size * sizeof(float));
+                oscdata->wtSnapshots[slot].reset();
             }
-
-            snap.enabled = true;
-            data.snapshots.emplace_back(slot, std::move(snap));
         }
     }
 
@@ -583,7 +596,12 @@ void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storag
                                   OscillatorStorage *oscdata)
 {
 #if HAS_LUA
-    auto data = parseWtscript(filename, storage);
+    for (auto &snap : oscdata->wtSnapshots)
+    {
+        snap.reset();
+    }
+
+    auto data = parseWtscript(filename, storage, oscdata);
     if (!data)
     {
         return;
@@ -592,19 +610,6 @@ void LuaWTEvaluator::loadWtscript(const fs::path &filename, SurgeStorage *storag
     oscdata->wavetable_script_nframes = data->nframes;
     oscdata->wavetable_script_res_base = data->res_base;
     oscdata->wavetable_script = data->script;
-
-    if (!data->snapshots.empty())
-    {
-        for (auto &[slot, sd] : data->snapshots)
-        {
-            if (slot < 0 || slot >= n_oscs)
-            {
-                continue;
-            }
-
-            storage->getPatch().dawExtraState.editor.wtSnapshot[slot] = std::move(sd);
-        }
-    }
 
     details->invalidate();
     generateWavetable(storage, oscdata, &oscdata->wt);
@@ -615,7 +620,7 @@ void LuaWTEvaluator::loadWtscriptForTesting(const fs::path &filename, SurgeStora
                                             OscillatorStorage *oscdata)
 {
 #if HAS_LUA
-    auto data = parseWtscript(filename, storage);
+    auto data = parseWtscript(filename, storage, oscdata);
     if (!data)
     {
         return;

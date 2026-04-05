@@ -2114,6 +2114,20 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         }
 
         clipboard_extraconfig[0] = getPatch().scene[scene].osc[entry].extraConfig;
+
+        for (int s = 0; s < n_wt_snapshots; ++s)
+        {
+            auto &src = getPatch().scene[scene].osc[entry].wtSnapshots[s];
+            if (src.has_value())
+            {
+                clipboard_wtSnapshots[0][s].emplace();
+                clipboard_wtSnapshots[0][s]->Copy(&src.value());
+            }
+            else
+            {
+                clipboard_wtSnapshots[0][s].reset();
+            }
+        }
     }
 
     if (type & cp_lfo)
@@ -2173,6 +2187,20 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
                 getPatch().scene[scene].osc[i].wavetable_script_res_base;
             clipboard_wavetable_script_nframes[i] =
                 getPatch().scene[scene].osc[i].wavetable_script_nframes;
+
+            for (int s = 0; s < n_wt_snapshots; ++s)
+            {
+                auto &src = getPatch().scene[scene].osc[i].wtSnapshots[s];
+                if (src.has_value())
+                {
+                    clipboard_wtSnapshots[i][s].emplace();
+                    clipboard_wtSnapshots[i][s]->Copy(&src.value());
+                }
+                else
+                {
+                    clipboard_wtSnapshots[i][s].reset();
+                }
+            }
         }
 
         auto fxOffset = 0;
@@ -2405,6 +2433,21 @@ void SurgeStorage::clipboard_paste(
         getPatch().update_controls(false, &getPatch().scene[scene].osc[entry]);
 
         getPatch().scene[scene].osc[entry].extraConfig = clipboard_extraconfig[0];
+
+        for (int s = 0; s < n_wt_snapshots; ++s)
+        {
+            auto &src = clipboard_wtSnapshots[0][s];
+            auto &dst = getPatch().scene[scene].osc[entry].wtSnapshots[s];
+            if (src.has_value())
+            {
+                dst.emplace();
+                dst->Copy(&src.value());
+            }
+            else
+            {
+                dst.reset();
+            }
+        }
     }
 
     if (type & cp_lfo)
@@ -2441,6 +2484,21 @@ void SurgeStorage::clipboard_paste(
                 clipboard_wavetable_script_res_base[i];
             getPatch().scene[scene].osc[i].wavetable_script_nframes =
                 clipboard_wavetable_script_nframes[i];
+
+            for (int s = 0; s < n_wt_snapshots; ++s)
+            {
+                auto &src = clipboard_wtSnapshots[i][s];
+                auto &dst = getPatch().scene[scene].osc[i].wtSnapshots[s];
+                if (src.has_value())
+                {
+                    dst.emplace();
+                    dst->Copy(&src.value());
+                }
+                else
+                {
+                    dst.reset();
+                }
+            }
         }
 
         auto fxOffset = 0;

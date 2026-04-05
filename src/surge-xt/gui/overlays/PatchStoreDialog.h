@@ -96,6 +96,11 @@ struct PatchStoreDialog : public OverlayComponent,
     std::unique_ptr<Widgets::SurgeTextButton> okButton, okOverButton, cancelButton;
     std::unique_ptr<juce::Label> storeTuningLabel;
     std::unique_ptr<juce::ToggleButton> storeTuningButton;
+    std::unique_ptr<juce::Label> storeSnapshotsLabel;
+    std::unique_ptr<juce::ToggleButton> storeSnapshotsButton;
+    bool hasSnapshots{false};
+    void setHasSnapshots(bool value);
+    void setStoreSnapshotsInPatch(bool value);
 
     bool isRename{false};
     void setIsRename(bool b);
