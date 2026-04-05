@@ -5351,6 +5351,8 @@ void SurgeSynthesizer::reorderFx(int source, int target, FXReorderMode m)
         {
             fxsync[source].type.val.i = 0;
             fxsync[source].user_data.clear();
+            fxsync[target].type.val.i = 0;
+            fxsync[target].user_data.clear();
         }
     }
     break;
