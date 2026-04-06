@@ -1111,15 +1111,29 @@ juce::PopupMenu SurgeGUIEditor::makePatchDefaultsMenu(const juce::Point<int> &wh
             &(this->synth->storage).patch_category[patchSelector->getCurrentCategoryId()].name;
         auto patchCurId =
             &(this->synth->storage).patch_list[patchSelector->getCurrentPatchId()].name;
+        auto catIsFactory =
+            (this->synth->storage).patch_category[patchSelector->getCurrentCategoryId()].isFactory;
 
-        patchDefMenu.addItem(Surge::GUI::toOSCase("Set Current Patch as Default"), [this, catCurId,
-                                                                                    patchCurId]() {
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::InitialPatchName, *patchCurId);
+        patchDefMenu.addItem(
+            Surge::GUI::toOSCase("Set Current Patch as Default"),
+            [this, catCurId, patchCurId, catIsFactory]() {
+                Surge::Storage::updateUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::InitialPatchName, *patchCurId);
 
-            Surge::Storage::updateUserDefaultValue(&(this->synth->storage),
-                                                   Surge::Storage::InitialPatchCategory, *catCurId);
-        });
+                Surge::Storage::updateUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::InitialPatchCategory, *catCurId);
+
+                Surge::Storage::updateUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::InitialPatchCategoryType,
+                    catIsFactory ? std::string("Factory") : std::string("User"));
+
+                this->synth->storage.initPatchName = Surge::Storage::getUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::InitialPatchName, "Init Saw");
+                this->synth->storage.initPatchCategory = Surge::Storage::getUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::InitialPatchCategory, "Templates");
+                this->synth->storage.initPatchCategoryType = Surge::Storage::getUserDefaultValue(
+                    &(this->synth->storage), Surge::Storage::InitialPatchCategoryType, "Factory");
+            });
     }
 
     patchDefMenu.addSeparator();
