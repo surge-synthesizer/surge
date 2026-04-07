@@ -164,7 +164,8 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     this->host_note_id = host_nid;
     this->originating_host_key = host_key;
     this->originating_host_channel = host_chan;
-    this->tilt_noise.s = this;
+    this->tilt_noise.emplace(storage->noiseRng);
+    this->tilt_noise->s = this;
     this->paramModulationCount = 0;
     assert(storage);
     assert(oscene);
@@ -228,7 +229,7 @@ SurgeVoice::SurgeVoice(SurgeStorage *storage, SurgeSceneStorage *oscene, pdata *
     noisegenL[1] = 0.f;
     noisegenR[1] = 0.f;
 
-    tilt_noise.initVoiceEffect();
+    tilt_noise->initVoiceEffect();
 
     // set states & variables
     state.gate = true;
@@ -1756,11 +1757,11 @@ void SurgeVoice::generate_tilt_noise(bool wide, bool stereo, float *blockL, floa
 {
     if (wide && stereo)
     {
-        tilt_noise.processStereo(nullptr, nullptr, blockL, blockR, 0.f);
+        tilt_noise->processStereo(nullptr, nullptr, blockL, blockR, 0.f);
     }
     else
     {
-        tilt_noise.processMonoToMono(nullptr, blockL, 0.f);
+        tilt_noise->processMonoToMono(nullptr, blockL, 0.f);
         if (wide)
         {
             std::copy(blockL, blockL + BLOCK_SIZE_OS, blockR);

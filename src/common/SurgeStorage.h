@@ -30,6 +30,7 @@
 #include "tinyxml/tinyxml.h"
 #include "filesystem/import.h"
 #include "sst/cpputils.h"
+#include "sst/basic-blocks/dsp/RNG.h"
 
 #include <vector>
 #include <memory>
@@ -1988,6 +1989,8 @@ class alignas(16) SurgeStorage
         std::uniform_real_distribution<float> pm1, z1;
         std::uniform_int_distribution<uint32_t> u32;
     } rngGen;
+
+    sst::basic_blocks::dsp::RNG noiseRng;
 
 #define DEBUG_RNG_THREADING 0
 #if DEBUG_RNG_THREADING

@@ -32,6 +32,7 @@
 #include <vembertech/lipol.h>
 #include "QuadFilterChain.h"
 #include <array>
+#include <optional>
 
 struct QuadFilterChainState;
 
@@ -314,7 +315,7 @@ class alignas(16) SurgeVoice
   private:
     friend class VoiceTiltNoiseAdapter;
     // Single per-voice instance.
-    sst::voice_effects::generator::TiltNoise<VoiceTiltNoiseAdapter> tilt_noise;
+    std::optional<sst::voice_effects::generator::TiltNoise<VoiceTiltNoiseAdapter>> tilt_noise;
     // Helper functions for doing noise generations.
     void generate_legacy_noise(bool wide, bool stereo, float *blockL, float *blockR);
     void generate_tilt_noise(bool wide, bool stereo, float *blockL, float *blockR);

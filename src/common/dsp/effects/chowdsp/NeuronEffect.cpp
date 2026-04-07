@@ -82,7 +82,6 @@ void NeuronEffect::process(float *dataL, float *dataR)
 
     applyStereoWidth(dataL, dataR, width);
     outgain.multiply_2_blocks(dataL, dataR, BLOCK_SIZE_QUAD);
-    modLFO.post_process();
 }
 
 void NeuronEffect::process_internal(float *dataL, float *dataR, const int numSamples)
@@ -100,6 +99,7 @@ void NeuronEffect::process_internal(float *dataL, float *dataR, const int numSam
 
         y1[0] = delay1.popSample(0);
         y1[1] = delay2.popSample(1);
+        modLFO.process();
     }
 }
 
@@ -139,11 +139,11 @@ void NeuronEffect::set_params()
         auto rmax = fxdata->p[neuron_lfo_rate].val_max.f;
         auto phase = clamp01((*pd_float[neuron_lfo_rate] - rmin) / (rmax - rmin));
 
-        modLFO.pre_process(mwave, 0.f, depth_val, phase);
+        modLFO.processStartOfBlock(mwave, 0.f, depth_val, phase);
     }
     else
     {
-        modLFO.pre_process(mwave, rate, depth_val, 0.f);
+        modLFO.processStartOfBlock(mwave, rate, depth_val, 0.f);
     }
 
     // calc makeup gain

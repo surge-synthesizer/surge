@@ -116,6 +116,7 @@ struct SurgeFXConfig
     }
 
     static inline bool temposyncInitialized(GlobalStorage *s) { return s->temposyncratio_inv != 0; }
+    static inline bool isTemposynced(EffectStorage *e, int idx) { return e->p[idx].temposync; }
     static inline float temposyncRatio(GlobalStorage *s, EffectStorage *e, int idx)
     {
         return e->p[idx].temposync ? s->temposyncratio : 1;
@@ -190,7 +191,7 @@ template <typename T> struct SurgeSSTFXBase : T
 
     void sampleRateReset() override { T::onSampleRateChanged(); }
 
-    const char *get_effectname() override { return T::effectName; }
+    const char *get_effectname() override { return T::displayName; }
 
     void init_default_values() override
     {
