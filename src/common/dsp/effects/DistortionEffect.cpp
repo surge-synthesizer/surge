@@ -126,6 +126,29 @@ void DistortionEffect::process(float *dataL, float *dataR)
         dD = (dE - dS) / (BLOCK_SIZE * dist_OS_bits);
     }
 
+    // DIGITAL maps zero input to a non-zero value; probe the shaper at zero with a
+    // throw-away state to measure the DC offset, then subtract it so that zero-in always
+    // produces zero-out regardless of future changes to the shaper implementation.
+    float dcOffset = 0.f;
+    if (useSSEShaper && wsop)
+    {
+        float sb alignas(16)[4] = {};
+        sst::waveshapers::QuadWaveshaperState probeState{};
+        for (int i = 0; i < sst::waveshapers::n_waveshaper_registers; ++i)
+            probeState.R[i] = SIMD_MM(setzero_ps)();
+        probeState.init = SIMD_MM(setzero_ps)();
+        auto dcres = wsop(&probeState, SIMD_MM(setzero_ps)(), SIMD_MM(set1_ps)(dS));
+        SIMD_MM(store_ps)(sb, dcres);
+        dcOffset = sb[0];
+    }
+
+    // DIGITAL has its own drive normalization built in (it divides by drive internally).
+    // Applying the usual dInv pre-scale means the signal is divided by drive twice, making
+    // the effective feedback loop gain |fb|/drive — at low drive (~0.06) that is ~15x and
+    // the loop inevitably diverges. Skip the dInv scaling for DIGITAL so the loop gain
+    // stays at |fb| < 1.
+    bool skipDriveNorm = (ws == sst::waveshapers::WaveshaperType::wst_digital);
+
     for (int k = 0; k < BLOCK_SIZE; k++)
     {
         // denormal thingy
@@ -147,15 +170,24 @@ void DistortionEffect::process(float *dataL, float *dataR)
             if (useSSEShaper)
             {
                 float sb alignas(16)[4];
-                auto dInv = 1.f / dNow;
 
-                sb[0] = L * dInv;
-                sb[1] = R * dInv;
+                if (skipDriveNorm)
+                {
+                    sb[0] = L;
+                    sb[1] = R;
+                }
+                else
+                {
+                    auto dInv = 1.f / dNow;
+                    sb[0] = L * dInv;
+                    sb[1] = R * dInv;
+                }
+
                 auto lr128 = SIMD_MM(load_ps)(sb);
                 auto wsres = wsop(&wsState, lr128, SIMD_MM(set1_ps)(dNow));
                 SIMD_MM(store_ps)(sb, wsres);
-                L = sb[0];
-                R = sb[1];
+                L = sb[0] - dcOffset;
+                R = sb[1] - dcOffset;
 
                 dNow += dD;
             }

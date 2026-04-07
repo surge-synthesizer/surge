@@ -32,6 +32,7 @@
 
 #include "UnitTestUtilities.h"
 #include "AudioInputEffect.h"
+#include "DistortionEffect.h"
 
 using namespace Surge::Test;
 
@@ -1079,5 +1080,107 @@ TEST_CASE("Audio Input Effect", "[fx]")
                 }
             }
         }
+    }
+}
+
+TEST_CASE("Distortion Digital Waveshaper Does Not Diverge", "[fx]")
+{
+    // Regression test for the distortion effect blowing up when:
+    // 1. The DIGITAL waveshaper is selected (it maps near-zero input to non-zero output)
+    // 2. Drive is very low (making the drive^-1 scaling factor enormous)
+    // 3. Feedback is large and negative
+    //
+    // The bug: drive.multiply_2_blocks scales the input down by a small drive factor,
+    // then for SSE shapers the code scales back up by dInv = 1/drive (huge for low drive).
+    // DIGITAL's non-zero output at zero input, multiplied through this large dInv, combined
+    // with strong negative feedback causes the feedback state L,R to diverge to ~1e7.
+    //
+    // Both sections below should pass after the fix. They will FAIL with the current code.
+
+    SECTION("Trance Pluck Patch Does Not Blow Out")
+    {
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        auto patchPath = fs::path{"resources/data/patches_3rdparty"} / "Damon Armani" / "Plucks" /
+                         "Trance Pluck.fxp";
+        INFO("Patch path: " << path_to_string(patchPath));
+        REQUIRE(fs::exists(patchPath));
+        surge->loadPatchByPath(path_to_string(patchPath).c_str(), -1, "Damon Armani");
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        surge->playNote(0, 60, 100, 0);
+
+        float maxOut = 0.f;
+        for (int i = 0; i < 500; ++i)
+        {
+            surge->process();
+            for (int s = 0; s < BLOCK_SIZE; ++s)
+            {
+                maxOut = std::max(maxOut, std::fabs(surge->output[0][s]));
+                maxOut = std::max(maxOut, std::fabs(surge->output[1][s]));
+            }
+            std::cout << "block " << i << " maxout = " << maxOut << std::endl;
+        }
+
+        // Normal audio output should be well under 10; divergence reaches ~1e7
+        INFO("Max output amplitude: " << maxOut);
+        REQUIRE(maxOut < 7.9f);
+    }
+
+    SECTION("Manual Config: Digital Waveshaper, Low Drive, Negative Feedback")
+    {
+        // Same conditions replicated programmatically so the test works without
+        // the 3rd-party patch file.
+        auto surge = Surge::Headless::createSurge(44100);
+        REQUIRE(surge);
+
+        for (int i = 0; i < 10; ++i)
+            surge->process();
+
+        Surge::Test::setFX(surge, 0, fxt_distortion);
+
+        auto &fxp = surge->storage.getPatch().fx[0];
+
+        // DIGITAL is index 4 in FXWaveShapers (wst_soft=0, wst_hard=1, wst_asym=2,
+        // wst_sine=3, wst_digital=4)
+        auto *modelParam = &fxp.p[DistortionEffect::dist_model];
+        surge->setParameter01(surge->idForParameter(modelParam),
+                              4.f / (modelParam->val_max.i - modelParam->val_min.i), false);
+
+        // Drive at minimum (-24 dB) so dInv = 1/drive is very large
+        auto *driveParam = &fxp.p[DistortionEffect::dist_drive];
+        surge->setParameter01(surge->idForParameter(driveParam), 0.0f, false);
+
+        // Large negative feedback: -0.9 maps to 01-value = (-0.9 - (-1)) / (1 - (-1)) = 0.05
+        auto *fbParam = &fxp.p[DistortionEffect::dist_feedback];
+        surge->setParameter01(surge->idForParameter(fbParam), 0.05f, false);
+
+        for (int i = 0; i < 20; ++i)
+            surge->process();
+
+        surge->playNote(0, 60, 100, 0);
+
+        float maxOut = 0.f;
+        for (int i = 0; i < 500; ++i)
+        {
+            surge->process();
+            for (int s = 0; s < BLOCK_SIZE; ++s)
+            {
+                maxOut = std::max(maxOut, std::fabs(surge->output[0][s]));
+                maxOut = std::max(maxOut, std::fabs(surge->output[1][s]));
+                std::cout << "SO " << surge->output[0][s] << " " << surge->output[1][s]
+                          << std::endl;
+            }
+        }
+
+        // Normal output should stay well under 10; divergence reaches ~1e7
+        INFO("Max output amplitude: " << maxOut);
+        REQUIRE(maxOut < 7.9f);
     }
 }
