@@ -31,7 +31,8 @@
 // to the sst-effects
 namespace Surge
 {
-using ModControl = sst::basic_blocks::modulators::FXModControl<BLOCK_SIZE>;
+using ModControl = sst::basic_blocks::modulators::FXModControl<
+    BLOCK_SIZE, sst::basic_blocks::modulators::RandomBehavior::rnd_single>;
 } // namespace Surge
 
 #endif // SURGE_SRC_COMMON_DSP_EFFECTS_MODCONTROL_H
