@@ -1427,7 +1427,7 @@ TEST_CASE("Mod LFO Is Well Behaved", "[mod]")
                 Surge::ModControl mc(48000, 1.0 / 48000);
                 for (int s = 0; s < 200; ++s)
                 {
-                    mc.pre_process(m, rate, depth, phase_offset);
+                    mc.processStartOfBlock(m, rate, depth, phase_offset);
                     REQUIRE(mc.value() <= 1.0);
                     REQUIRE(mc.value() >= -1.0);
                 }

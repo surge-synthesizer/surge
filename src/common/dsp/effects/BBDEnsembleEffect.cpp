@@ -308,10 +308,10 @@ void BBDEnsembleEffect::process(float *dataL, float *dataR)
 
     for (int i = 0; i < 3; ++i)
     {
-        modlfos[0][i].processStartOfBlock(Surge::ModControl::mod_sine, rate1, *pd_float[ens_lfo_depth1],
-                                  roff);
-        modlfos[1][i].processStartOfBlock(Surge::ModControl::mod_sine, rate2, *pd_float[ens_lfo_depth2],
-                                  roff);
+        modlfos[0][i].processStartOfBlock(Surge::ModControl::mod_sine, rate1,
+                                          *pd_float[ens_lfo_depth1], roff);
+        modlfos[1][i].processStartOfBlock(Surge::ModControl::mod_sine, rate2,
+                                          *pd_float[ens_lfo_depth2], roff);
 
         roff += onethird;
     }
