@@ -570,6 +570,30 @@ void OverlayWrapper::doTearOut(const juce::Point<int> &showAt)
     }
 
     resizeRecordsSize = true;
+
+    // Write size and position to user defaults on first tearout if not previously saved.
+    // Without this, closing without a resize/move leaves no saved prefs, and on restart
+    // the window appears at the wrong size (extra zoom applied) and won't tear back in.
+    if (storage)
+    {
+        if (canTearOutResize && (pt.first <= 0 || pt.second <= 0))
+        {
+            Surge::Storage::updateUserDefaultValue(
+                storage, canTearOutResizePair.second,
+                std::make_pair(tearOutParent->getWidth(), tearOutParent->getHeight()));
+        }
+
+        auto savedPos = std::make_pair(-1, -1);
+        savedPos =
+            Surge::Storage::getUserDefaultValue(storage, std::get<1>(canTearOutData), savedPos);
+
+        if (savedPos.first <= 0 || savedPos.second <= 0)
+        {
+            auto pos = tearOutParent->getPosition();
+            Surge::Storage::updateUserDefaultValue(storage, std::get<1>(canTearOutData),
+                                                   std::make_pair(pos.x, pos.y));
+        }
+    }
 }
 
 juce::Point<int> OverlayWrapper::currentTearOutLocation()
