@@ -176,9 +176,7 @@ struct LuaWTEvaluator::Details
                     lua_pop(L, 1);
                 }
                 if (gen)
-                {
                     res = values;
-                }
             }
         }
         else

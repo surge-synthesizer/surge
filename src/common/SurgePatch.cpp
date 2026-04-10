@@ -1324,15 +1324,17 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
                         continue;
 
                     // One blob per slot: [uint32 n_tables][uint32 n_samples][float data...]
-                    uint32_t nt = snap->n_tables;
-                    uint32_t ns = snap->size;
-                    std::vector<uint8_t> blob(8 + static_cast<size_t>(nt) * ns * sizeof(float));
-                    std::memcpy(blob.data() + 0, &nt, 4);
-                    std::memcpy(blob.data() + 4, &ns, 4);
-                    for (uint32_t t = 0; t < nt; t++)
+                    uint32_t ntables = snap->n_tables;
+                    uint32_t nsamples = snap->size;
+                    std::vector<uint8_t> blob(8 + static_cast<size_t>(ntables) * nsamples *
+                                                      sizeof(float));
+                    std::memcpy(blob.data() + 0, &ntables, 4);
+                    std::memcpy(blob.data() + 4, &nsamples, 4);
+                    for (uint32_t t = 0; t < ntables; t++)
                     {
-                        std::memcpy(blob.data() + 8 + static_cast<size_t>(t) * ns * sizeof(float),
-                                    snap->TableF32WeakPointers[0][t], ns * sizeof(float));
+                        std::memcpy(blob.data() + 8 +
+                                        static_cast<size_t>(t) * nsamples * sizeof(float),
+                                    snap->TableF32WeakPointers[0][t], nsamples * sizeof(float));
                     }
 
                     auto key = fmt::format("snap_{}", slot);
@@ -1491,7 +1493,6 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             }
 
             // Rebuild wavetable snapshots from the staged blobs.
-            // Format per slot: [uint32 n_tables][uint32 n_samples][float data...]
             for (int slot = 0; slot < n_wt_snapshots; slot++)
             {
                 auto key = fmt::format("snap_{}", slot);
@@ -1503,25 +1504,23 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
                 if (raw.size() < 8)
                     continue;
 
-                uint32_t nt = 0, ns = 0;
-                std::memcpy(&nt, raw.data() + 0, 4);
-                std::memcpy(&ns, raw.data() + 4, 4);
-                if (nt == 0 || ns == 0)
+                uint32_t ntables = 0, nsamples = 0;
+                std::memcpy(&ntables, raw.data() + 0, 4);
+                std::memcpy(&nsamples, raw.data() + 4, 4);
+                if (ntables == 0 || nsamples == 0)
                     continue;
-                if (raw.size() != 8 + static_cast<size_t>(nt) * ns * sizeof(float))
+                if (raw.size() != 8 + static_cast<size_t>(ntables) * nsamples * sizeof(float))
                     continue;
 
                 wt_header wh{};
-                wh.n_samples = ns;
-                wh.n_tables = nt;
+                wh.n_samples = nsamples;
+                wh.n_tables = ntables;
                 wh.flags = 0;
 
                 auto &snap = scene[sc].osc[osc].wtSnapshots[slot];
                 snap.emplace();
 
-                storage->waveTableDataMutex.lock();
                 snap->BuildWT(reinterpret_cast<float *>(raw.data() + 8), wh, false);
-                storage->waveTableDataMutex.unlock();
 
                 if (!snap->everBuilt)
                 {
