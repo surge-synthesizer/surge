@@ -34,8 +34,15 @@ namespace Surge
 {
 namespace GUI
 {
+static bool hostRequiresShowCursor{false};
+void setHostRequiresShowCursor(bool b) { hostRequiresShowCursor = b; }
+bool getHostRequiresShowCursor() { return hostRequiresShowCursor; }
+
 bool showCursor(SurgeStorage *storage)
 {
+    if (hostRequiresShowCursor)
+        return true;
+
     bool sc =
         Surge::Storage::getUserDefaultValue(storage, Surge::Storage::ShowCursorWhileEditing, 0);
     bool tm = Surge::Storage::getUserDefaultValue(storage, Surge::Storage::TouchMouseMode, false);

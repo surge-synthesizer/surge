@@ -378,6 +378,10 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     Surge::GUI::setIsStandalone(juceEditor->processor.wrapperType ==
                                 juce::AudioProcessor::wrapperType_Standalone);
 
+    // Logic Pro and GarageBand do not support cursor hiding
+    Surge::GUI::setHostRequiresShowCursor(juce::PluginHostType().isLogic() ||
+                                          juce::PluginHostType().isGarageBand());
+
     currentSkin = Surge::GUI::SkinDB::get()->defaultSkin(&(this->synth->storage));
 
     // init the size of the plugin

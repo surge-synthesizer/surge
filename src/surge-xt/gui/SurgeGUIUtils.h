@@ -47,6 +47,10 @@ inline bool openFileOrFolder(const fs::path &f) { return openFileOrFolder(path_t
 void setIsStandalone(bool);
 bool getIsStandalone();
 
+// Some hosts (Logic Pro, GarageBand) do not support cursor hiding
+void setHostRequiresShowCursor(bool);
+bool getHostRequiresShowCursor();
+
 } // namespace GUI
 } // namespace Surge
 
