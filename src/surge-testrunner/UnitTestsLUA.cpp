@@ -1010,7 +1010,7 @@ TEST_CASE("Wavetable Script Snapshots", "[wts]")
         auto &osc = storage.getPatch().scene[0].osc[0];
 
         // Populate snapshot slot 0 with a known 2-frame, 64-sample ramp
-        osc.wtSnapshots[0].emplace();
+        osc.wtSnapshots[0] = std::make_unique<Wavetable>();
         auto &snap = *osc.wtSnapshots[0];
 
         constexpr int nframes = 2;

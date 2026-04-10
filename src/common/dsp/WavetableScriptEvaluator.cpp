@@ -131,7 +131,7 @@ struct LuaWTEvaluator::Details
                 lua_newtable(L); // Slot table (empty if not imported)
                 const auto &snap = oscdata.wtSnapshots[s];
 
-                if (snap.has_value() && snap->everBuilt && snap->n_tables > 0 && snap->size > 0)
+                if (snap && snap->everBuilt && snap->n_tables > 0 && snap->size > 0)
                 {
                     const unsigned int nframes = snap->n_tables;
                     const int nsamples = snap->size;
@@ -575,7 +575,7 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
             wh.n_tables = nframes;
             wh.flags = 0;
 
-            oscdata->wtSnapshots[slot].emplace();
+            oscdata->wtSnapshots[slot] = std::make_unique<Wavetable>();
             oscdata->wtSnapshots[slot]->BuildWT(decoded.data(), wh, false);
             if (!oscdata->wtSnapshots[slot]->everBuilt)
             {

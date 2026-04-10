@@ -6799,7 +6799,7 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             for (int slot = 0; slot < n_wt_snapshots; ++slot)
             {
                 const auto &snap = oscdata->wtSnapshots[slot];
-                if (!snap.has_value() || !snap->everBuilt)
+                if (!snap || !snap->everBuilt)
                 {
                     continue;
                 }

@@ -3982,9 +3982,7 @@ void WavetableScriptEditor::rerenderFromUIState()
 
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
-    {
         respt *= 2;
-    }
 
     setupEvaluator();
 
@@ -4010,9 +4008,8 @@ void WavetableScriptEditor::setupEvaluator()
     auto resi = controlArea->resolutionN->getIntValue();
     auto respt = 32;
     for (int i = 1; i < resi; ++i)
-    {
         respt *= 2;
-    }
+
     evaluator->setStorage(storage);
     evaluator->setOscillatorStorage(scene, osc_id);
     evaluator->setScript(mainDocument->getAllContent().toStdString());
@@ -4092,7 +4089,7 @@ void WavetableScriptEditor::createMenu(juce::PopupMenu &menu)
     for (int slot = 0; slot < n_wt_snapshots; ++slot)
     {
         const auto &snap = osc->wtSnapshots[slot];
-        const bool populated = snap.has_value() && snap->everBuilt;
+        const bool populated = snap && snap->everBuilt;
 
         std::string snapLabel = "Snapshot " + std::to_string(slot + 1);
         if (populated)
@@ -4423,15 +4420,14 @@ void WavetableScriptEditor::loadWavetableForSnapshot(int slot)
             auto rString = res.getFullPathName().toStdString();
 
             auto &snap = osc->wtSnapshots[slot];
-            if (!snap.has_value())
+            if (!snap)
             {
-                snap.emplace();
+                snap = std::make_unique<Wavetable>();
             }
 
-            storage->load_wt(rString, &snap.value(), nullptr);
+            storage->load_wt(rString, snap.get(), nullptr);
 
-            if (!snap->everBuilt || snap->n_tables == 0 || snap->size == 0 ||
-                snap->TableF32WeakPointers[0][0] == nullptr)
+            if (!snap->everBuilt || snap->n_tables == 0 || snap->size == 0)
             {
                 snap.reset();
             }

@@ -48,7 +48,6 @@
 #include <random>
 #include <chrono>
 #include <array>
-#include <optional>
 
 #include "Tunings.h"
 #include "PatchDB.h"
@@ -722,7 +721,7 @@ struct OscillatorStorage : public CountedSetUserData // The counted set is the w
     std::string wavetable_script = "";
     int wavetable_script_res_base = 5, // 32 * 2^this
         wavetable_script_nframes = 10;
-    std::array<std::optional<Wavetable>, n_wt_snapshots> wtSnapshots;
+    std::array<std::unique_ptr<Wavetable>, n_wt_snapshots> wtSnapshots;
 
     void *queue_xmldata;
     int queue_type;
@@ -1973,7 +1972,8 @@ class alignas(16) SurgeStorage
     std::array<std::string, n_oscs> clipboard_wavetable_script;
     std::array<int, n_oscs> clipboard_wavetable_script_res_base;
     std::array<int, n_oscs> clipboard_wavetable_script_nframes;
-    std::array<std::array<std::optional<Wavetable>, n_wt_snapshots>, n_oscs> clipboard_wtSnapshots;
+    std::array<std::array<std::unique_ptr<Wavetable>, n_wt_snapshots>, n_oscs>
+        clipboard_wtSnapshots;
 
     char clipboard_modulator_names[n_lfos][max_lfo_indices][CUSTOM_CONTROLLER_LABEL_SIZE + 1];
     MonoVoicePriorityMode clipboard_primode = NOTE_ON_LATEST_RETRIGGER_HIGHEST;

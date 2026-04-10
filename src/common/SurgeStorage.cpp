@@ -2118,10 +2118,10 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
         for (int s = 0; s < n_wt_snapshots; ++s)
         {
             auto &src = getPatch().scene[scene].osc[entry].wtSnapshots[s];
-            if (src.has_value())
+            if (src)
             {
-                clipboard_wtSnapshots[0][s].emplace();
-                clipboard_wtSnapshots[0][s]->Copy(&src.value());
+                clipboard_wtSnapshots[0][s] = std::make_unique<Wavetable>();
+                clipboard_wtSnapshots[0][s]->Copy(src.get());
             }
             else
             {
@@ -2191,10 +2191,10 @@ void SurgeStorage::clipboard_copy(int type, int scene, int entry, modsources ms)
             for (int s = 0; s < n_wt_snapshots; ++s)
             {
                 auto &src = getPatch().scene[scene].osc[i].wtSnapshots[s];
-                if (src.has_value())
+                if (src)
                 {
-                    clipboard_wtSnapshots[i][s].emplace();
-                    clipboard_wtSnapshots[i][s]->Copy(&src.value());
+                    clipboard_wtSnapshots[i][s] = std::make_unique<Wavetable>();
+                    clipboard_wtSnapshots[i][s]->Copy(src.get());
                 }
                 else
                 {
@@ -2438,10 +2438,10 @@ void SurgeStorage::clipboard_paste(
         {
             auto &src = clipboard_wtSnapshots[0][s];
             auto &dst = getPatch().scene[scene].osc[entry].wtSnapshots[s];
-            if (src.has_value())
+            if (src)
             {
-                dst.emplace();
-                dst->Copy(&src.value());
+                dst = std::make_unique<Wavetable>();
+                dst->Copy(src.get());
             }
             else
             {
@@ -2489,10 +2489,10 @@ void SurgeStorage::clipboard_paste(
             {
                 auto &src = clipboard_wtSnapshots[i][s];
                 auto &dst = getPatch().scene[scene].osc[i].wtSnapshots[s];
-                if (src.has_value())
+                if (src)
                 {
-                    dst.emplace();
-                    dst->Copy(&src.value());
+                    dst = std::make_unique<Wavetable>();
+                    dst->Copy(src.get());
                 }
                 else
                 {

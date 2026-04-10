@@ -1320,7 +1320,7 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
                 for (int slot = 0; slot < n_wt_snapshots; slot++)
                 {
                     auto &snap = scene[sc].osc[osc].wtSnapshots[slot];
-                    if (!snap.has_value() || !snap->everBuilt)
+                    if (!snap || !snap->everBuilt)
                         continue;
 
                     // One blob per slot: [uint32 n_tables][uint32 n_samples][float data...]
@@ -1518,7 +1518,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
                 wh.flags = 0;
 
                 auto &snap = scene[sc].osc[osc].wtSnapshots[slot];
-                snap.emplace();
+                snap = std::make_unique<Wavetable>();
 
                 snap->BuildWT(reinterpret_cast<float *>(raw.data() + 8), wh, false);
 
@@ -4650,19 +4650,16 @@ void SurgePatch::captureWavetableSnapshot(int scene, int srcOsc, int dstOsc, int
     auto &snap = this->scene[scene].osc[dstOsc].wtSnapshots[slot];
     auto &src = this->scene[scene].osc[srcOsc].wt;
 
-    // Check if we have a valid WT to copy
-    if (!src.everBuilt || src.n_tables == 0 || src.size == 0 ||
-        src.TableF32WeakPointers[0][0] == nullptr)
+    if (!src.everBuilt || src.n_tables == 0 || src.size == 0)
     {
-        snap.reset();
         return;
     }
 
     storage->waveTableDataMutex.lock();
 
-    if (!snap.has_value())
+    if (!snap)
     {
-        snap.emplace();
+        snap = std::make_unique<Wavetable>();
     }
     snap->Copy(&src);
 
@@ -4674,7 +4671,7 @@ bool SurgePatch::hasAnySnapshots() const
     for (int sc = 0; sc < n_scenes; sc++)
         for (int osc = 0; osc < n_oscs; osc++)
             for (int slot = 0; slot < n_wt_snapshots; slot++)
-                if (scene[sc].osc[osc].wtSnapshots[slot].has_value())
+                if (scene[sc].osc[osc].wtSnapshots[slot])
                     return true;
     return false;
 }
