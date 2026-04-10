@@ -450,9 +450,8 @@ void PatchStoreDialog::resized()
 
     cl = cl.translated(0, h);
     commentEdL->setBounds(cl);
-    auto optionRow = buttonRow.withX(0)
-                         .withWidth(h + buttonWidth * 2.5)
-                         .withHeight(okButton->getHeight() + 2);
+    auto optionRow =
+        buttonRow.withX(0).withWidth(h + buttonWidth * 2.5).withHeight(okButton->getHeight() + 2);
 
     if (!showTuning)
     {

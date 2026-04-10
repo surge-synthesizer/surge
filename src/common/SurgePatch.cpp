@@ -1326,14 +1326,12 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
                     // One blob per slot: [uint32 n_tables][uint32 n_samples][float data...]
                     uint32_t nt = snap->n_tables;
                     uint32_t ns = snap->size;
-                    std::vector<uint8_t> blob(8 +
-                                              static_cast<size_t>(nt) * ns * sizeof(float));
+                    std::vector<uint8_t> blob(8 + static_cast<size_t>(nt) * ns * sizeof(float));
                     std::memcpy(blob.data() + 0, &nt, 4);
                     std::memcpy(blob.data() + 4, &ns, 4);
                     for (uint32_t t = 0; t < nt; t++)
                     {
-                        std::memcpy(blob.data() + 8 +
-                                        static_cast<size_t>(t) * ns * sizeof(float),
+                        std::memcpy(blob.data() + 8 + static_cast<size_t>(t) * ns * sizeof(float),
                                     snap->TableF32WeakPointers[0][t], ns * sizeof(float));
                     }
 
