@@ -1323,23 +1323,22 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
                     if (!snap || !snap->everBuilt)
                         continue;
 
-                    // One blob per slot: [uint32 n_tables][uint32 n_samples][float data...]
                     uint32_t ntables = snap->n_tables;
                     uint32_t nsamples = snap->size;
-                    std::vector<uint8_t> blob(8 + static_cast<size_t>(ntables) * nsamples *
-                                                      sizeof(float));
-                    std::memcpy(blob.data() + 0, &ntables, 4);
-                    std::memcpy(blob.data() + 4, &nsamples, 4);
+                    std::vector<float> data(static_cast<size_t>(ntables) * nsamples);
                     for (uint32_t t = 0; t < ntables; t++)
                     {
-                        std::memcpy(blob.data() + 8 +
-                                        static_cast<size_t>(t) * nsamples * sizeof(float),
+                        std::memcpy(data.data() + static_cast<size_t>(t) * nsamples,
                                     snap->TableF32WeakPointers[0][t], nsamples * sizeof(float));
                     }
 
-                    auto key = fmt::format("snap_{}", slot);
-                    binn_object_set_blob(oscmap, key.c_str(), blob.data(),
-                                         static_cast<int>(blob.size()));
+                    binn_object_set_uint32(oscmap, fmt::format("snap_{}_ntables", slot).c_str(),
+                                           ntables);
+                    binn_object_set_uint32(oscmap, fmt::format("snap_{}_nsamples", slot).c_str(),
+                                           nsamples);
+                    binn_object_set_blob(oscmap, fmt::format("snap_{}_data", slot).c_str(),
+                                         data.data(),
+                                         static_cast<int>(data.size() * sizeof(float)));
                 }
                 std::string key = fmt::format("osc_{}_{}", sc, osc);
                 binn_object_set_object(map, key.c_str(), oscmap);
@@ -1476,12 +1475,9 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             binn_iter_init(&inner, &obj, BINN_OBJECT);
             while (binn_object_next(&inner, osckey, &data))
             {
+                // Skip non-blob values; ntables/nsamples are stored as uint32 keys.
                 if (data.type != BINN_BLOB)
-                {
-                    std::cerr << "Binn value for " << osckey
-                              << " is not a blob, possible patch corruption." << std::endl;
                     continue;
-                }
 
                 std::string converted = std::string(osckey);
                 std::shared_ptr<std::vector<std::uint8_t>> &vdata = arb[converted];
@@ -1495,21 +1491,22 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             // Rebuild wavetable snapshots from the staged blobs.
             for (int slot = 0; slot < n_wt_snapshots; slot++)
             {
-                auto key = fmt::format("snap_{}", slot);
-                auto it = arb.find(key);
+                auto it = arb.find(fmt::format("snap_{}_data", slot));
                 if (it == arb.end())
                     continue;
 
-                auto &raw = *it->second;
-                if (raw.size() < 8)
+                unsigned int ntables = 0, nsamples = 0;
+                if (!binn_object_get_uint32(&obj, fmt::format("snap_{}_ntables", slot).c_str(),
+                                            &ntables))
                     continue;
-
-                uint32_t ntables = 0, nsamples = 0;
-                std::memcpy(&ntables, raw.data() + 0, 4);
-                std::memcpy(&nsamples, raw.data() + 4, 4);
+                if (!binn_object_get_uint32(&obj, fmt::format("snap_{}_nsamples", slot).c_str(),
+                                            &nsamples))
+                    continue;
                 if (ntables == 0 || nsamples == 0)
                     continue;
-                if (raw.size() != 8 + static_cast<size_t>(ntables) * nsamples * sizeof(float))
+
+                auto &raw = *it->second;
+                if (raw.size() != static_cast<size_t>(ntables) * nsamples * sizeof(float))
                     continue;
 
                 wt_header wh{};
@@ -1520,7 +1517,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
                 auto &snap = scene[sc].osc[osc].wtSnapshots[slot];
                 snap = std::make_unique<Wavetable>();
 
-                snap->BuildWT(reinterpret_cast<float *>(raw.data() + 8), wh, false);
+                snap->BuildWT(reinterpret_cast<float *>(raw.data()), wh, false);
 
                 if (!snap->everBuilt)
                 {
