@@ -1910,7 +1910,7 @@ TEST_CASE("Transpose by Tuning Period", "[tun]")
         REQUIRE(sceneRatioDown(surge) == Approx(1.0 / 3.0).margin(0.005));
     }
 
-    // ---- RETUNE_MIDI_ONLY: standard 12-semitone octave is always preserved ----
+    // ---- RETUNE_MIDI_ONLY: bool=off preserves 12-semitone octave; bool=on uses tuning period ----
 
     SECTION("ED3-13 RETUNE_MIDI_ONLY bool off: osc octave doubles (standard 12-semitone shift)")
     {
