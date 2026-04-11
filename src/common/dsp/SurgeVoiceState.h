@@ -51,6 +51,7 @@ struct SurgeVoiceState
     int64_t voiceOrderAtCreate{-1};
 
     float getPitch(SurgeStorage *storage);
+    float MTS_RetuningForBentKey(SurgeStorage *storage, float key);
 };
 
 #endif // SURGE_SRC_COMMON_DSP_SURGEVOICESTATE_H
