@@ -77,6 +77,12 @@ jobs:
             cmakeArgs: -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64"
             uploadResult: true
 
+          - name: ubuntu-arm
+            os: ubuntu-24.04-arm
+            cmakeArgs: -GNinja -DSURGE_LINUX_ARM=TRUE
+            uploadResult: true
+
+
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v6

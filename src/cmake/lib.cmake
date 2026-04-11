@@ -124,12 +124,18 @@ function(surge_make_installers)
       COMMAND zip -r ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-macos-${SXTVER}-pluginsonly.zip .
       )
   elseif(UNIX)
-    run_installer_script(installer_linux/make_deb.sh)
-    run_installer_script(installer_linux/make_rpm.sh)
+    if (DEFINED SURGE_LINUX_ARM)
+      set(SURGE_EXTRA_INSTALLER_NAME "-aarch64")
+      run_installer_script(installer_linux/make_deb_aarch64.sh)
+    else()
+      set(SURGE_EXTRA_INSTALLER_NAME "")
+      run_installer_script(installer_linux/make_deb.sh)
+      run_installer_script(installer_linux/make_rpm.sh)
+    endif()
     add_custom_command(TARGET surge-xt-distribution
       POST_BUILD
       WORKING_DIRECTORY ${SURGE_PRODUCT_DIR}
-      COMMAND tar cvzf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-linux-${SXTVER}-pluginsonly.tar.gz .
+      COMMAND tar cvzf ${SURGE_XT_DIST_OUTPUT_DIR}/surge-xt-linux${SURGE_EXTRA_INSTALLER_NAME}-${SXTVER}-pluginsonly.tar.gz .
       )
 
     set(SURGE_PORTABLE_DIR ${CMAKE_BINARY_DIR}/surge-xt-portable)
