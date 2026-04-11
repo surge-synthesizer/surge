@@ -5092,6 +5092,7 @@ void SurgeSynthesizer::populateDawExtraState()
     }
 
     des.mapChannelToOctave = storage.mapChannelToOctave;
+    des.transposeByTuningPeriod = storage.transposeByTuningPeriod;
 
     int n = n_global_params + (n_scene_params * n_scenes);
 
@@ -5195,6 +5196,7 @@ void SurgeSynthesizer::loadFromDawExtraState()
     }
 
     storage.mapChannelToOctave = des.mapChannelToOctave;
+    storage.transposeByTuningPeriod = des.transposeByTuningPeriod;
 
     int n = n_global_params + (n_scene_params * n_scenes);
     int nOld = n_global_params + n_scene_params;

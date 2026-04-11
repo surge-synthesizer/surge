@@ -130,6 +130,9 @@ std::string defaultKeyToString(DefaultKey k)
     case OverrideTempoOnPatchLoad:
         r = "overrideTempoOnPatchLoad";
         break;
+    case DefaultTransposeByTuningPeriod:
+        r = "defaultTransposeByTuningPeriod";
+        break;
     case DefaultPatchAuthor:
         r = "defaultPatchAuthor";
         break;

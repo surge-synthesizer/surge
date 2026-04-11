@@ -74,6 +74,7 @@ enum DefaultKey
     OverrideTuningOnPatchLoad,
     OverrideMappingOnPatchLoad,
     OverrideTempoOnPatchLoad,
+    DefaultTransposeByTuningPeriod,
 
     RememberTabPositionsPerScene,
     RestoreMSEGSnapFromPatch,

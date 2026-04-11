@@ -574,6 +574,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     monoPedalMode = (MonoPedalMode)Surge::Storage::getUserDefaultValue(
         this, Surge::Storage::MonoPedalMode, MonoPedalMode::HOLD_ALL_NOTES);
 
+    transposeByTuningPeriod = (bool)Surge::Storage::getUserDefaultValue(
+        this, Surge::Storage::DefaultTransposeByTuningPeriod, 0);
+
     for (int s = 0; s < n_scenes; ++s)
     {
         getPatch().scene[s].drift.set_extend_range(true);
@@ -3224,6 +3227,23 @@ void SurgeStorage::setTuningApplicationMode(const TuningApplicationMode m)
 SurgeStorage::TuningApplicationMode SurgeStorage::getTuningApplicationMode() const
 {
     return tuningApplicationMode;
+}
+
+float SurgeStorage::tuningPeriodSemitones() const
+{
+#ifndef SURGE_SKIP_ODDSOUND_MTS
+    if (oddsound_mts_client && oddsound_mts_active_as_client)
+        return (float)MTS_GetPeriodSemitones(oddsound_mts_client);
+#endif
+    if (isStandardTuning)
+        return 12.0f;
+    // In RETUNE_ALL mode pitch values are in scale-note-index space, so scale.count
+    // steps equal one period (e.g. 13 for ED3-13 Bohlen-Pierce, 19 for ED2-19).
+    if (tuningApplicationMode == RETUNE_ALL)
+        return (float)currentScale.count;
+    // In RETUNE_MIDI_ONLY mode pitch values are in semitone space, so the period in
+    // semitones (cents of the last scale tone / 100) is the correct step size.
+    return currentScale.tones[currentScale.count - 1].cents / 100.0f;
 }
 
 bool SurgeStorage::skipLoadWtAndPatch = false;

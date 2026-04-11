@@ -1195,6 +1195,7 @@ struct DAWExtraStateStorage
     std::string mappingName = "";
 
     bool mapChannelToOctave = false;
+    bool transposeByTuningPeriod = false;
 
     std::map<int, int> midictrl_map;           // param -> midictrl
     std::map<int, int> midichan_map;           // param -> midichan
@@ -1755,6 +1756,7 @@ class alignas(16) SurgeStorage
     bool hasPatchStoredTuning{false};
 
     std::atomic<bool> mapChannelToOctave; // When other midi modes come along, clean this up.
+    std::atomic<bool> transposeByTuningPeriod{false};
 
     bool mpeEnabled{false};
 
@@ -1893,6 +1895,17 @@ class alignas(16) SurgeStorage
         RETUNE_CONSTANT = 0,
         RETUNE_NOTE_ON_ONLY = 1
     } oddsoundRetuneMode = RETUNE_CONSTANT;
+
+    /*
+     * tuningPeriodSemitones returns the number of pitch units that correspond to one
+     * period of the current tuning. The meaning of "pitch units" depends on context:
+     * - In MTS mode: pitch is in semitone space; MTS_GetPeriodSemitones gives the period.
+     * - In RETUNE_ALL mode: pitch is in scale-note-index space; scale.count steps = one period.
+     * - In RETUNE_MIDI_ONLY mode: pitch is in semitone space; cents of last tone / 100 = one
+     * period.
+     * - Standard tuning: always 12 (one octave = 12 semitones).
+     */
+    float tuningPeriodSemitones() const;
 
     /*
      * If we tune at keyboard or with MTS, we don't reset the internal tuning table.

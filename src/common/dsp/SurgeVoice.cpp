@@ -806,8 +806,15 @@ template <bool first> void SurgeVoice::calc_ctrldata(QuadFilterChainState *Q, in
         pb *= (float)scene->pbrange_dn.val.i * (scene->pbrange_dn.extend_range ? 0.01f : 1.f);
 
     octaveSize = 12.0f;
-    if (!storage->isStandardTuning && storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
+    if (storage->transposeByTuningPeriod)
+    {
+        octaveSize = storage->tuningPeriodSemitones();
+    }
+    else if (!storage->isStandardTuning &&
+             storage->tuningApplicationMode == SurgeStorage::RETUNE_ALL)
+    {
         octaveSize = storage->currentScale.count;
+    }
 
     state.scenepbpitch = pb + localcopy[pitch_id].f * (scene->pitch.extend_range ? 12.f : 1.f) +
                          (octaveSize * localcopy[octave_id].i);

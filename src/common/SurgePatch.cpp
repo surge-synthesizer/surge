@@ -3428,6 +3428,13 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 dawExtraState.mapChannelToOctave = (ival != 0);
             }
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("transposeByTuningPeriod"));
+
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+            {
+                dawExtraState.transposeByTuningPeriod = (ival != 0);
+            }
+
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("midictrl_map"));
 
             if (p)
@@ -4198,6 +4205,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement mcto("mapChannelToOctave");
         mcto.SetAttribute("v", (int)(storage->mapChannelToOctave));
         dawExtraXML.InsertEndChild(mcto);
+
+        TiXmlElement tbtp("transposeByTuningPeriod");
+        tbtp.SetAttribute("v", (int)(bool)(storage->transposeByTuningPeriod));
+        dawExtraXML.InsertEndChild(tbtp);
 
         /*
         ** Add the MIDI learned controls
