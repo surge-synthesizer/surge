@@ -700,7 +700,6 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         tuningSubMenu.addSeparator();
     }
 
-
     tuningSubMenu.addItem(Surge::GUI::toOSCase("Transpose Octave by Tuning Period"), true,
                           (bool)(synth->storage.transposeByTuningPeriod), [this]() {
                               this->synth->storage.transposeByTuningPeriod =
@@ -711,8 +710,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         bool defVal = (bool)Surge::Storage::getUserDefaultValue(
             &(synth->storage), Surge::Storage::DefaultTransposeByTuningPeriod, 0);
         tuningSubMenu.addItem(
-            Surge::GUI::toOSCase("Set Transpose Octave by Tuning Period as Default"), true,
-            defVal, [this, defVal]() {
+            Surge::GUI::toOSCase("Set Transpose Octave by Tuning Period as Default"), true, defVal,
+            [this, defVal]() {
                 Surge::Storage::updateUserDefaultValue(
                     &(this->synth->storage), Surge::Storage::DefaultTransposeByTuningPeriod,
                     defVal ? 0 : 1);
