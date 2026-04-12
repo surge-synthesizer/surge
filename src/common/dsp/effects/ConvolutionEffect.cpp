@@ -112,9 +112,9 @@ int ConvolutionEffect::group_label_ypos(int id)
     case 0:
         return 1;
     case 1:
-        return 14;
+        return 13;
     case 2:
-        return 24;
+        return 23;
     }
     return 0;
 }
@@ -174,7 +174,7 @@ void ConvolutionEffect::init_ctrltypes()
 
     fxdata->p[convolution_delay].set_name("Pre-Delay");
     fxdata->p[convolution_delay].set_type(ct_convolution_delay);
-    fxdata->p[convolution_delay].posy_offset = 5;
+    fxdata->p[convolution_delay].posy_offset = 3;
 
     fxdata->p[convolution_size].set_name("Size");
     fxdata->p[convolution_size].set_type(ct_percent);
@@ -182,41 +182,41 @@ void ConvolutionEffect::init_ctrltypes()
     fxdata->p[convolution_size].val_max.f = 2.f;
     fxdata->p[convolution_size].val_default.f = 1.f;
     fxdata->p[convolution_size].modulateable = false;
-    fxdata->p[convolution_size].posy_offset = 5;
+    fxdata->p[convolution_size].posy_offset = 3;
 
     fxdata->p[convolution_start].set_name("Start");
     fxdata->p[convolution_start].set_type(ct_percent);
     fxdata->p[convolution_start].val_max.f = 0.9f;
     fxdata->p[convolution_start].modulateable = false;
-    fxdata->p[convolution_start].posy_offset = 5;
+    fxdata->p[convolution_start].posy_offset = 3;
 
     fxdata->p[convolution_reverse].set_name("Reverse From");
     fxdata->p[convolution_reverse].set_type(ct_percent_deactivatable);
     fxdata->p[convolution_reverse].val_max.f = 0.5f;
     fxdata->p[convolution_reverse].modulateable = false;
-    fxdata->p[convolution_reverse].posy_offset = 5;
+    fxdata->p[convolution_reverse].posy_offset = 3;
 
     fxdata->p[convolution_tilt_center].set_name("Tilt Center");
     fxdata->p[convolution_tilt_center].set_type(ct_freq_audible_deactivatable);
     fxdata->p[convolution_tilt_center].set_extend_range(false);
-    fxdata->p[convolution_tilt_center].posy_offset = 7;
+    fxdata->p[convolution_tilt_center].posy_offset = 5;
 
     fxdata->p[convolution_tilt_slope].set_name("Tilt Slope");
     fxdata->p[convolution_tilt_slope].set_type(ct_decibel_extra_narrow);
-    fxdata->p[convolution_tilt_slope].posy_offset = 7;
+    fxdata->p[convolution_tilt_slope].posy_offset = 5;
     fxdata->p[convolution_tilt_slope].dynamicDeactivation = &tiltDeact;
 
     fxdata->p[convolution_locut_freq].set_name("Low Cut");
     fxdata->p[convolution_locut_freq].set_type(ct_freq_audible_deactivatable_hp);
-    fxdata->p[convolution_locut_freq].posy_offset = 7;
+    fxdata->p[convolution_locut_freq].posy_offset = 5;
     fxdata->p[convolution_hicut_freq].set_name("High Cut");
     fxdata->p[convolution_hicut_freq].set_type(ct_freq_audible_deactivatable_lp);
-    fxdata->p[convolution_hicut_freq].posy_offset = 7;
+    fxdata->p[convolution_hicut_freq].posy_offset = 5;
 
     fxdata->p[convolution_mix].set_name("Mix");
     fxdata->p[convolution_mix].set_type(ct_percent);
     fxdata->p[convolution_mix].val_default.f = 1.f;
-    fxdata->p[convolution_mix].posy_offset = 9;
+    fxdata->p[convolution_mix].posy_offset = 7;
 }
 
 void ConvolutionEffect::init_default_values()

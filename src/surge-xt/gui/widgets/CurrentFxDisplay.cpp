@@ -6,7 +6,6 @@
 #include "AccessibleHelpers.h"
 #include "EffectChooser.h"
 #include "MenuCustomComponents.h"
-#include "MultiSwitch.h"
 #include "RuntimeFont.h"
 #include "SkinModel.h"
 #include "SurgeGUIEditor.h"
@@ -26,18 +25,6 @@ namespace Widgets
 
 namespace
 {
-
-struct IRJogSwitch : public Surge::Widgets::MultiSwitch,
-                     public Surge::GUI::IComponentTagValue::Listener
-{
-    std::function<void(float)> onJog;
-    IRJogSwitch() { addListener(this); }
-    void valueChanged(Surge::GUI::IComponentTagValue *) override
-    {
-        if (onJog)
-            onJog(getValue());
-    }
-};
 
 struct ConvolutionButton : public juce::Component
 {
@@ -79,10 +66,26 @@ struct ConvolutionButton : public juce::Component
             return;
         }
 
+        if (!event.mods.isPopupMenu())
+        {
+            if (leftJog.contains(event.position))
+            {
+                jogIR(-1);
+                return;
+            }
+            else if (rightJog.contains(event.position))
+            {
+                jogIR(1);
+                return;
+            }
+        }
+
         showIRMenu();
     }
 
-    bool isMousedOver = false;
+    bool isMousedOver{false};
+    bool isJogLHovered{false}, isJogRHovered{false}, isNameHovered{false};
+    juce::Rectangle<float> leftJog, rightJog, irNameRect;
 
     void mouseEnter(const juce::MouseEvent &event) override
     {
@@ -92,7 +95,24 @@ struct ConvolutionButton : public juce::Component
     void mouseExit(const juce::MouseEvent &event) override
     {
         isMousedOver = false;
+        isJogLHovered = false;
+        isJogRHovered = false;
+        isNameHovered = false;
         repaint();
+    }
+    void mouseMove(const juce::MouseEvent &event) override
+    {
+        auto njl = leftJog.contains(event.position);
+        auto njr = rightJog.contains(event.position);
+        auto nnm = irNameRect.contains(event.position);
+
+        if (njl != isJogLHovered || njr != isJogRHovered || nnm != isNameHovered)
+        {
+            isJogLHovered = njl;
+            isJogRHovered = njr;
+            isNameHovered = nnm;
+            repaint();
+        }
     }
 
     void paint(juce::Graphics &g) override
@@ -110,16 +130,48 @@ struct ConvolutionButton : public juce::Component
         auto fgframeHov = skin->getColor(Colors::Effect::Grid::Scene::BackgroundHover);
         auto fgtextHov = skin->getColor(Colors::Effect::Grid::Scene::TextHover);
 
-        auto irr = getLocalBounds();
+        auto irr = getLocalBounds().toFloat();
+        auto h = irr.getHeight();
 
-        bool focused = isMousedOver || hasKeyboardFocus(true);
-        g.setColour(focused ? fgcolHov : fgcol);
-        g.fillRect(irr);
-        g.setColour(focused ? fgframeHov : fgframe);
+        leftJog = irr.withRight(h);
+        rightJog = irr.withLeft(irr.getWidth() - h);
+        irNameRect = irr.withTrimmedLeft(h).withTrimmedRight(h);
+
+        float triO = 2;
+
+        // Fill each region individually for per-region hover.
+        g.setColour(isJogLHovered ? fgcolHov : fgcol);
+        g.fillRect(leftJog);
+        g.setColour(isJogRHovered ? fgcolHov : fgcol);
+        g.fillRect(rightJog);
+        bool nameFocused = isNameHovered || hasKeyboardFocus(true);
+        g.setColour(nameFocused ? fgcolHov : fgcol);
+        g.fillRect(irNameRect);
+
+        // Single outer border.
+        g.setColour(fgframe);
         g.drawRect(irr);
-        g.setColour(focused ? fgtextHov : fgtext);
+
+        // Left jog arrow
+        g.setColour(isJogLHovered ? fgtextHov : fgtext);
+        auto triL = juce::Path();
+        triL.addTriangle(leftJog.getTopRight().translated(-triO, triO),
+                         leftJog.getBottomRight().translated(-triO, -triO),
+                         leftJog.getCentre().withX(leftJog.getX() + triO));
+        g.fillPath(triL);
+
+        // Right jog arrow
+        g.setColour(isJogRHovered ? fgtextHov : fgtext);
+        auto triR = juce::Path();
+        triR.addTriangle(rightJog.getTopLeft().translated(triO, triO),
+                         rightJog.getBottomLeft().translated(triO, -triO),
+                         rightJog.getCentre().withX(rightJog.getX() + rightJog.getWidth() - triO));
+        g.fillPath(triR);
+
+        // IR name text
+        g.setColour(nameFocused ? fgtextHov : fgtext);
         g.setFont(skin->fontManager->getLatoAtSize(9));
-        g.drawText(juce::String(irname), irr, juce::Justification::centred);
+        g.drawText(juce::String(irname), irNameRect, juce::Justification::centred);
     }
 
     void showIRMenu()
@@ -665,7 +717,6 @@ void CurrentFxDisplay::defaultLayout()
     // Also turn off specialized convolution components.
     irbutton = nullptr;
     menu = nullptr;
-    irJog = nullptr;
 }
 
 void CurrentFxDisplay::conditionerLayout()
@@ -726,48 +777,6 @@ void CurrentFxDisplay::convolutionLayout()
     menu = std::move(ol);
     menu->setBounds(vr);
     editor_->addAndMakeVisibleWithTracking(this, *menu);
-
-    // Prev/next jog below the IR selector, right-aligned.
-    auto fxJogConn = Surge::Skin::Connector::connectorByID("fx.preset.prevnext");
-    auto fxJogSkinCtrl = editor_->currentSkin->getOrCreateControlForConnector(fxJogConn);
-    auto jogW = fxJogSkinCtrl->w;
-    auto jogH = fxJogSkinCtrl->h;
-    auto jogY = vr.getBottom() + 3;
-    auto jogX = vr.getRight() - jogW;
-
-    auto jog = std::make_unique<IRJogSwitch>();
-    jog->setStorage(storage);
-    auto jogImages = editor_->currentSkin->standardHoverAndHoverOnForControl(fxJogSkinCtrl,
-                                                                             editor_->bitmapStore);
-    jog->setSwitchDrawable(jogImages[0]);
-    jog->setHoverSwitchDrawable(jogImages[1]);
-    jog->setHoverOnSwitchDrawable(jogImages[2]);
-    auto bg = editor_->currentSkin->propertyValue(fxJogSkinCtrl, Surge::Skin::Component::IMAGE);
-    if (bg.has_value())
-        jog->setSwitchDrawable(editor_->bitmapStore->getImageByStringID(*bg));
-    auto ho =
-        editor_->currentSkin->propertyValue(fxJogSkinCtrl, Surge::Skin::Component::HOVER_IMAGE);
-    if (ho.has_value())
-        jog->setHoverSwitchDrawable(editor_->bitmapStore->getImageByStringID(*ho));
-    auto hoo =
-        editor_->currentSkin->propertyValue(fxJogSkinCtrl, Surge::Skin::Component::HOVER_ON_IMAGE);
-    if (hoo.has_value())
-        jog->setHoverOnSwitchDrawable(editor_->bitmapStore->getImageByStringID(*hoo));
-    jog->setRows(1);
-    jog->setColumns(2);
-    jog->setHeightOfOneImage(jogH);
-    jog->setDraggable(false);
-    jog->setIsAlwaysAccessibleMomentary(true);
-    jog->setSkin(editor_->currentSkin, editor_->bitmapStore, fxJogSkinCtrl);
-    jog->setupAccessibility();
-    jog->setBounds(jogX, jogY, jogW, jogH);
-    jog->onJog = [this](float val) {
-        auto *cb = dynamic_cast<ConvolutionButton *>(irbutton.get());
-        if (cb)
-            cb->jogIR(val > 0.5f ? 1 : -1);
-    };
-    irJog = std::move(jog);
-    editor_->addAndMakeVisibleWithTracking(this, *irJog);
 
     if (had_focus)
     {
