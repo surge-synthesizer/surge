@@ -1308,6 +1308,7 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
         }
         std::string key = fmt::format("fx{}", fx);
         binn_object_set_object(map, key.c_str(), fxmap);
+        binn_free(fxmap);
     }
 
     // Now compress it with zstd
