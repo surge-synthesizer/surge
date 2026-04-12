@@ -2943,7 +2943,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
         }
     }
 
-    // Clear all snapshots before potentially restoring from arb storage
+    // Clear all snapshots before potentially restoring from arbitrary_block_storage
     snapshotsStoredInPatch = false;
     for (int sc = 0; sc < n_scenes; sc++)
         for (int osc = 0; osc < n_oscs; osc++)

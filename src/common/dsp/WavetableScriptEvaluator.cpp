@@ -58,7 +58,7 @@ struct LuaWTEvaluator::Details
     std::string wtName{"Scripted Wavetable"};
 
     lua_State *L{nullptr};
-    int snapshotRef{LUA_NOREF}; // registry ref for cached wt.snapshot table
+    int snapshotRef{LUA_NOREF}; // Registry ref for cached wt.snapshot table
 
     void invalidate()
     {
@@ -539,7 +539,7 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
     using sst::io::wtscript_header;
 
     /* File layout:
-       - Legacy / snapshot-less: pure XML text
+       - Snapshot-less: pure XML text
        - With snapshots: [wtscript_header][XML][zstd-compressed snapshot blob]
         where wtscript_header = { tag "wts1", xmlsize, blobsize }
     */

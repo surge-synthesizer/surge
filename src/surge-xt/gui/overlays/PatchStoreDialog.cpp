@@ -220,7 +220,7 @@ PatchStoreDialog::PatchStoreDialog()
     storeTuningButton->setDescription(stbTitle);
     addAndMakeVisible(*storeTuningButton);
 
-    auto ssbTitle = "Store Snapshots in Patch";
+    auto ssbTitle = "Store WTS Snapshots in Patch";
 
     storeSnapshotsLabel = makeL(Surge::GUI::toOSCase(ssbTitle));
 
@@ -479,7 +479,7 @@ void PatchStoreDialog::resized()
         storeSnapshotsLabel->setVisible(true);
 
         auto lb = optionRow.withX(optionRow.withWidth(h).getRight() - margin)
-                      .withWidth(buttonWidth * 2.5);
+                      .withWidth(buttonWidth * 3.5);
 
         storeSnapshotsButton->setBounds(optionRow);
         storeSnapshotsLabel->setBounds(lb);
