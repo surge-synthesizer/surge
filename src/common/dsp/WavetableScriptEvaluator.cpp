@@ -483,6 +483,7 @@ bool LuaWTEvaluator::populateWavetable(wt_header &wh, float **wavdata)
         }
         else
         {
+            delete[] wd;
             return false;
         }
     }

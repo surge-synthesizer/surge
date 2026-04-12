@@ -1310,7 +1310,8 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
         binn_object_set_object(map, key.c_str(), fxmap);
     }
 
-    if (snapshotsStoredInPatch)
+    // User opt-in for patch files, always include for DAW state saves.
+    if (snapshotsStoredInPatch || (dawExtraState.isPopulated && hasAnySnapshots()))
     {
         for (int sc = 0; sc < n_scenes; sc++)
         {
@@ -1521,6 +1522,10 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
                 if (!snap->everBuilt)
                 {
                     snap.reset();
+                }
+                else
+                {
+                    snapshotsStoredInPatch = true;
                 }
             }
         }
