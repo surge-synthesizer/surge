@@ -51,6 +51,12 @@ struct patch_header
     // (but also since it's used in streaming, do it with care!)
     unsigned int xmlsize, wtsize[2][3];
 };
+
+struct wtscript_header
+{
+    char tag[4]; // 'wts1'
+    unsigned int xmlsize, blobsize;
+};
 #pragma pack(pop)
 } // namespace sst::io
 #endif // SURGE_FXPHEADERSTRUCTS_H

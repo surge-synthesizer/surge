@@ -23,10 +23,15 @@
 #include "WavetableScriptEvaluator.h"
 
 #include "LuaSupport.h"
-
+#include "PatchFileHeaderStructs.h"
 #include "lua/LuaSources.h"
 
+#include "sst/basic-blocks/mechanics/endian-ops.h"
+
+#include <cstring>
+#include <fstream>
 #include <tinyxml/tinyxml.h>
+#include "zstd.h"
 
 // #define LOG(...) std::cout << __FILE__ << ":" << __LINE__ << " " << __VA_ARGS__ << std::endl;
 #define LOG(...)
@@ -53,11 +58,65 @@ struct LuaWTEvaluator::Details
     std::string wtName{"Scripted Wavetable"};
 
     lua_State *L{nullptr};
+    int snapshotRef{LUA_NOREF}; // registry ref for cached wt.snapshot table
 
     void invalidate()
     {
         isValid = false;
         frameCache.clear();
+    }
+
+    // Push a freshly built wt.snapshot 3D table onto the Lua stack
+    void pushSnapshotTable()
+    {
+        lua_newtable(L); // Outer snapshot table
+        if (!storage)
+            return;
+
+        auto &oscdata = storage->getPatch().scene[current_scene].osc[current_osc];
+        for (int s = 0; s < n_wt_snapshots; ++s)
+        {
+            lua_newtable(L); // Slot table (empty if not imported)
+            const auto &snap = oscdata.wtSnapshots[s];
+
+            if (snap && snap->everBuilt && snap->n_tables > 0 && snap->size > 0)
+            {
+                const unsigned int nframes = snap->n_tables;
+                const int nsamples = snap->size;
+
+                for (unsigned int t = 0; t < nframes; ++t)
+                {
+                    lua_newtable(L); // Frame table
+                    const float *tbl = snap->TableF32WeakPointers[0][t];
+                    for (int i = 0; i < nsamples; ++i)
+                    {
+                        lua_pushnumber(L, tbl[i]); // Push sample value
+                        lua_rawseti(L, -2, i + 1); // frame[i + 1] = value
+                    }
+                    lua_rawseti(L, -2, t + 1); // slot[t + 1] = frame table
+                }
+            }
+            lua_rawseti(L, -2, s + 1); // snapshot[slot + 1] = slot table
+        }
+    }
+
+    // Build the snapshot table and stash it in the Lua registry so each generate call can reuse it
+    void cacheSnapshotTable()
+    {
+        if (!L)
+            return;
+        releaseSnapshotTable();
+        pushSnapshotTable();
+        snapshotRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    void releaseSnapshotTable()
+    {
+        if (L && snapshotRef != LUA_NOREF)
+        {
+            luaL_unref(L, LUA_REGISTRYINDEX, snapshotRef);
+            snapshotRef = LUA_NOREF;
+        }
     }
 
     void makeEmptyState(bool pushToGlobal)
@@ -122,35 +181,11 @@ struct LuaWTEvaluator::Details
         lua_setfield(L, tidx, "sample_count");
 
         // Inject snapshotted wavetables as a single 3D table: wt.snapshot[slot][frame][sample]
-        lua_newtable(L); // Outer snapshot table
-        if (storage)
-        {
-            auto &oscdata = storage->getPatch().scene[current_scene].osc[current_osc];
-            for (int s = 0; s < n_wt_snapshots; ++s)
-            {
-                lua_newtable(L); // Slot table (empty if not imported)
-                const auto &snap = oscdata.wtSnapshots[s];
-
-                if (snap && snap->everBuilt && snap->n_tables > 0 && snap->size > 0)
-                {
-                    const unsigned int nframes = snap->n_tables;
-                    const int nsamples = snap->size;
-
-                    for (unsigned int t = 0; t < nframes; ++t)
-                    {
-                        lua_newtable(L); // Frame table
-                        const float *tbl = snap->TableF32WeakPointers[0][t];
-                        for (int i = 0; i < nsamples; ++i)
-                        {
-                            lua_pushnumber(L, tbl[i]); // Push sample value
-                            lua_rawseti(L, -2, i + 1); // frame[i + 1] = value
-                        }
-                        lua_rawseti(L, -2, t + 1); // slot[t + 1] = frame table
-                    }
-                }
-                lua_rawseti(L, -2, s + 1); // snapshot[slot + 1] = slot table
-            }
-        }
+        // populateWavetable() pre-builds and caches once per regen cycle so we can reuse it
+        if (snapshotRef != LUA_NOREF)
+            lua_rawgeti(L, LUA_REGISTRYINDEX, snapshotRef);
+        else
+            pushSnapshotTable();
         lua_setfield(L, tidx, "snapshot");
 
         // So stack is now the table and the function
@@ -422,6 +457,14 @@ bool LuaWTEvaluator::populateWavetable(wt_header &wh, float **wavdata)
     if (!details->makeValid())
         return false;
 
+    // Build then cache the wt.snapshot Lua table once for this regen cycle
+    struct SnapshotCacheGuard
+    {
+        Details *d;
+        ~SnapshotCacheGuard() { d->releaseSnapshotTable(); }
+    } snapshotCacheGuard{details.get()};
+    details->cacheSnapshotTable();
+
     auto resolution = details->resolution;
     auto frames = details->frameCount;
 
@@ -492,10 +535,68 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
                               OscillatorStorage *oscdata)
 {
 #if HAS_LUA
-    TiXmlDocument doc;
-    if (!doc.LoadFile(filename))
+    namespace mech = sst::basic_blocks::mechanics;
+    using sst::io::wtscript_header;
+
+    /* File layout:
+       - Legacy / snapshot-less: pure XML text
+       - With snapshots: [wtscript_header][XML][zstd-compressed snapshot blob]
+        where wtscript_header = { tag "wts1", xmlsize, blobsize }
+    */
+
+    std::ifstream inFile(filename, std::ios::binary | std::ios::ate);
+    if (!inFile)
     {
         storage->reportError("Failed to load XML file.", "XML Load Error");
+        return std::nullopt;
+    }
+    const auto fileSize = static_cast<size_t>(inFile.tellg());
+    inFile.seekg(0);
+    std::vector<char> fileData(fileSize);
+    if (fileSize > 0)
+    {
+        inFile.read(fileData.data(), fileSize);
+    }
+    inFile.close();
+
+    // Detect the binary header by its 4-byte tag. If absent, treat the whole file as XML
+    const bool hasHeader =
+        fileSize >= sizeof(wtscript_header) && std::memcmp(fileData.data(), "wts1", 4) == 0;
+
+    size_t xmlOffset = 0;
+    size_t xmlSize = fileSize;
+    size_t blobOffset = 0;
+    size_t blobSize = 0;
+
+    if (hasHeader)
+    {
+        wtscript_header header{};
+        std::memcpy(&header, fileData.data(), sizeof(header));
+        header.xmlsize = mech::endian_read_int32LE(header.xmlsize);
+        header.blobsize = mech::endian_read_int32LE(header.blobsize);
+
+        xmlOffset = sizeof(wtscript_header);
+        xmlSize = header.xmlsize;
+        blobSize = header.blobsize;
+
+        const size_t bytesAfterHeader = fileSize - xmlOffset;
+        if (xmlSize > bytesAfterHeader || blobSize > bytesAfterHeader - xmlSize)
+        {
+            storage->reportError("Wavetable script file is truncated or corrupt.",
+                                 "XML Load Error");
+            return std::nullopt;
+        }
+
+        blobOffset = xmlOffset + xmlSize;
+    }
+
+    // Parse only the XML portion
+    std::string xmlStr(fileData.data() + xmlOffset, xmlSize);
+    TiXmlDocument doc;
+    doc.Parse(xmlStr.c_str(), nullptr, TIXML_ENCODING_LEGACY);
+    if (doc.Error())
+    {
+        storage->reportError("Failed to parse wavetable script XML.", "XML Load Error");
         return std::nullopt;
     }
 
@@ -540,46 +641,76 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
     data.nframes = nframes;
     data.res_base = res_base;
 
+    // Snapshots: metadata lives in XML; float data comes from the compressed trailing blob
     auto sn = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("snapshots"));
-    if (sn)
+    if (sn && blobSize > 0)
     {
-        for (auto child = sn->FirstChildElement("snapshot"); child;
-             child = child->NextSiblingElement("snapshot"))
-        {
-            int slot = 0, nframes = 0, nsamples = 0;
+        auto validSnapshot = [](TiXmlElement *child, int &slot, int &nframes, int &nsamples) {
             if (child->QueryIntAttribute("slot", &slot) != TIXML_SUCCESS ||
                 child->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS ||
                 child->QueryIntAttribute("samples", &nsamples) != TIXML_SUCCESS)
-            {
-                continue;
-            }
+                return false;
+            return slot >= 0 && slot < n_wt_snapshots && nframes > 0 && nframes <= max_subtables &&
+                   nsamples > 0 && nsamples <= max_wtable_size;
+        };
 
-            if (slot < 0 || slot >= n_wt_snapshots)
-            {
-                continue;
-            }
+        size_t expectedFloats = 0;
+        for (auto child = sn->FirstChildElement("snapshot"); child;
+             child = child->NextSiblingElement("snapshot"))
+        {
+            int slot, nframes, nsamples;
+            if (validSnapshot(child, slot, nframes, nsamples))
+                expectedFloats += static_cast<size_t>(nframes) * nsamples;
+        }
 
-            auto b64data = child->Attribute("data");
-            if (!b64data)
+        if (expectedFloats > 0)
+        {
+            const std::uint8_t *compData =
+                reinterpret_cast<const std::uint8_t *>(fileData.data() + blobOffset);
+            const auto decompressedSize = ZSTD_getFrameContentSize(compData, blobSize);
+            if (decompressedSize == ZSTD_CONTENTSIZE_ERROR ||
+                decompressedSize == ZSTD_CONTENTSIZE_UNKNOWN ||
+                decompressedSize != expectedFloats * sizeof(float))
             {
-                continue;
+                storage->reportError("Snapshot blob size mismatch; snapshots not loaded.",
+                                     "Wavetable Script Load Warning");
             }
-            auto decoded = Surge::Storage::base64_decode(b64data);
-            if (decoded.size() != (size_t)(nframes * nsamples * (int)sizeof(float)))
+            else
             {
-                continue;
-            }
+                std::vector<float> decompressed(expectedFloats);
+                const size_t result =
+                    ZSTD_decompress(decompressed.data(), decompressedSize, compData, blobSize);
+                if (ZSTD_isError(result) || result != decompressedSize)
+                {
+                    storage->reportError(
+                        "Failed to decompress snapshot blob; snapshots not loaded.",
+                        "Wavetable Script Load Warning");
+                }
+                else
+                {
+                    size_t floatOffset = 0;
+                    for (auto child = sn->FirstChildElement("snapshot"); child;
+                         child = child->NextSiblingElement("snapshot"))
+                    {
+                        int slot, nframes, nsamples;
+                        if (!validSnapshot(child, slot, nframes, nsamples))
+                            continue;
 
-            wt_header wh{};
-            wh.n_samples = nsamples;
-            wh.n_tables = nframes;
-            wh.flags = 0;
+                        wt_header wh{};
+                        wh.n_samples = nsamples;
+                        wh.n_tables = nframes;
+                        wh.flags = 0;
 
-            oscdata->wtSnapshots[slot] = std::make_unique<Wavetable>();
-            oscdata->wtSnapshots[slot]->BuildWT(decoded.data(), wh, false);
-            if (!oscdata->wtSnapshots[slot]->everBuilt)
-            {
-                oscdata->wtSnapshots[slot].reset();
+                        oscdata->wtSnapshots[slot] = std::make_unique<Wavetable>();
+                        oscdata->wtSnapshots[slot]->BuildWT(decompressed.data() + floatOffset, wh,
+                                                            false);
+                        if (!oscdata->wtSnapshots[slot]->everBuilt)
+                        {
+                            oscdata->wtSnapshots[slot].reset();
+                        }
+                        floatOffset += static_cast<size_t>(nframes) * nsamples;
+                    }
+                }
             }
         }
     }

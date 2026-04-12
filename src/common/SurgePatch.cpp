@@ -1323,10 +1323,10 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
                     if (!snap || !snap->everBuilt)
                         continue;
 
-                    uint32_t ntables = snap->n_tables;
-                    uint32_t nsamples = snap->size;
+                    std::uint32_t ntables = snap->n_tables;
+                    std::uint32_t nsamples = snap->size;
                     std::vector<float> data(static_cast<size_t>(ntables) * nsamples);
-                    for (uint32_t t = 0; t < ntables; t++)
+                    for (std::uint32_t t = 0; t < ntables; t++)
                     {
                         std::memcpy(data.data() + static_cast<size_t>(t) * nsamples,
                                     snap->TableF32WeakPointers[0][t], nsamples * sizeof(float));
@@ -1475,7 +1475,6 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             binn_iter_init(&inner, &obj, BINN_OBJECT);
             while (binn_object_next(&inner, osckey, &data))
             {
-                // Skip non-blob values; ntables/nsamples are stored as uint32 keys.
                 if (data.type != BINN_BLOB)
                     continue;
 

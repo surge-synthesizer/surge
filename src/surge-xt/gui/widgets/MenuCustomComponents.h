@@ -25,6 +25,7 @@
 
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "SkinSupport.h"
+#include "SurgeStorage.h"
 
 namespace Surge
 {
@@ -216,7 +217,7 @@ struct WavetableSnapshotMenuComponent : juce::PopupMenu::CustomComponent,
     std::string sceneName;
 
     std::unique_ptr<TinyLittleIconButton> clearButton;
-    std::array<juce::Rectangle<int>, 3> oscHitBoxes;
+    std::array<juce::Rectangle<int>, n_oscs> oscHitBoxes;
     int hoveredOsc{-1};
     juce::Rectangle<int> loadFileHitBox;
     bool hoveredFile{false};

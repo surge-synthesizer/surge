@@ -600,7 +600,7 @@ void WavetableSnapshotMenuComponent::paint(juce::Graphics &g)
     auto baseColour = getLookAndFeel().findColour(juce::PopupMenu::textColourId);
     auto hoverColour = getLookAndFeel().findColour(juce::PopupMenu::highlightedBackgroundColourId);
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < n_oscs; ++i)
     {
         std::string oscLabel = "Osc " + std::to_string(i + 1);
         int w = SST_STRING_WIDTH_INT(boldFt, oscLabel);
@@ -655,7 +655,7 @@ void WavetableSnapshotMenuComponent::resized()
 
 void WavetableSnapshotMenuComponent::mouseDown(const juce::MouseEvent &e)
 {
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < n_oscs; ++i)
     {
         if (oscHitBoxes[i].contains(e.getPosition()))
         {
@@ -679,7 +679,7 @@ void WavetableSnapshotMenuComponent::mouseMove(const juce::MouseEvent &e)
     hoveredOsc = -1;
     hoveredFile = false;
 
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < n_oscs; ++i)
     {
         if (oscHitBoxes[i].contains(e.getPosition()))
         {
