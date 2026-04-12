@@ -6,6 +6,7 @@
 #include "AccessibleHelpers.h"
 #include "EffectChooser.h"
 #include "MenuCustomComponents.h"
+#include "MultiSwitch.h"
 #include "RuntimeFont.h"
 #include "SkinModel.h"
 #include "SurgeGUIEditor.h"
@@ -25,6 +26,18 @@ namespace Widgets
 
 namespace
 {
+
+struct IRJogSwitch : public Surge::Widgets::MultiSwitch,
+                     public Surge::GUI::IComponentTagValue::Listener
+{
+    std::function<void(float)> onJog;
+    IRJogSwitch() { addListener(this); }
+    void valueChanged(Surge::GUI::IComponentTagValue *) override
+    {
+        if (onJog)
+            onJog(getValue());
+    }
+};
 
 struct ConvolutionButton : public juce::Component
 {
@@ -291,6 +304,40 @@ struct ConvolutionButton : public juce::Component
         }
         sge->synth->fx_reload[slot] = true;
         sge->synth->load_fx_needed = true;
+    }
+
+    void jogIR(int dir)
+    {
+        if (!storage || storage->irOrdering.empty())
+            return;
+
+        // Find current IR's position in the display ordering by name.
+        int currentPos = -1;
+        for (int i = 0; i < (int)storage->irOrdering.size(); i++)
+        {
+            if (storage->ir_list[storage->irOrdering[i]].name == irname)
+            {
+                currentPos = i;
+                break;
+            }
+        }
+
+        int newPos;
+        if (currentPos < 0)
+        {
+            // Current IR not in the list, start from beginning or end.
+            newPos = (dir > 0) ? 0 : (int)storage->irOrdering.size() - 1;
+        }
+        else
+        {
+            newPos = currentPos + dir;
+            if (newPos < 0)
+                newPos = (int)storage->irOrdering.size() - 1;
+            if (newPos >= (int)storage->irOrdering.size())
+                newPos = 0;
+        }
+
+        loadIR(storage->irOrdering[newPos]);
     }
 
     void loadIR(int id)
@@ -618,6 +665,7 @@ void CurrentFxDisplay::defaultLayout()
     // Also turn off specialized convolution components.
     irbutton = nullptr;
     menu = nullptr;
+    irJog = nullptr;
 }
 
 void CurrentFxDisplay::conditionerLayout()
@@ -678,6 +726,48 @@ void CurrentFxDisplay::convolutionLayout()
     menu = std::move(ol);
     menu->setBounds(vr);
     editor_->addAndMakeVisibleWithTracking(this, *menu);
+
+    // Prev/next jog below the IR selector, right-aligned.
+    auto fxJogConn = Surge::Skin::Connector::connectorByID("fx.preset.prevnext");
+    auto fxJogSkinCtrl = editor_->currentSkin->getOrCreateControlForConnector(fxJogConn);
+    auto jogW = fxJogSkinCtrl->w;
+    auto jogH = fxJogSkinCtrl->h;
+    auto jogY = vr.getBottom() + 3;
+    auto jogX = vr.getRight() - jogW;
+
+    auto jog = std::make_unique<IRJogSwitch>();
+    jog->setStorage(storage);
+    auto jogImages = editor_->currentSkin->standardHoverAndHoverOnForControl(fxJogSkinCtrl,
+                                                                             editor_->bitmapStore);
+    jog->setSwitchDrawable(jogImages[0]);
+    jog->setHoverSwitchDrawable(jogImages[1]);
+    jog->setHoverOnSwitchDrawable(jogImages[2]);
+    auto bg = editor_->currentSkin->propertyValue(fxJogSkinCtrl, Surge::Skin::Component::IMAGE);
+    if (bg.has_value())
+        jog->setSwitchDrawable(editor_->bitmapStore->getImageByStringID(*bg));
+    auto ho =
+        editor_->currentSkin->propertyValue(fxJogSkinCtrl, Surge::Skin::Component::HOVER_IMAGE);
+    if (ho.has_value())
+        jog->setHoverSwitchDrawable(editor_->bitmapStore->getImageByStringID(*ho));
+    auto hoo =
+        editor_->currentSkin->propertyValue(fxJogSkinCtrl, Surge::Skin::Component::HOVER_ON_IMAGE);
+    if (hoo.has_value())
+        jog->setHoverOnSwitchDrawable(editor_->bitmapStore->getImageByStringID(*hoo));
+    jog->setRows(1);
+    jog->setColumns(2);
+    jog->setHeightOfOneImage(jogH);
+    jog->setDraggable(false);
+    jog->setIsAlwaysAccessibleMomentary(true);
+    jog->setSkin(editor_->currentSkin, editor_->bitmapStore, fxJogSkinCtrl);
+    jog->setupAccessibility();
+    jog->setBounds(jogX, jogY, jogW, jogH);
+    jog->onJog = [this](float val) {
+        auto *cb = dynamic_cast<ConvolutionButton *>(irbutton.get());
+        if (cb)
+            cb->jogIR(val > 0.5f ? 1 : -1);
+    };
+    irJog = std::move(jog);
+    editor_->addAndMakeVisibleWithTracking(this, *irJog);
 
     if (had_focus)
     {

@@ -37,6 +37,8 @@ namespace Surge
 namespace Widgets
 {
 
+struct MultiSwitch;
+
 class CurrentFxDisplay : public MainFrame::OverlayComponent
 {
   public:
@@ -91,6 +93,7 @@ class CurrentFxDisplay : public MainFrame::OverlayComponent
     // Used by convolution.
     std::unique_ptr<juce::Component> irbutton;
     std::unique_ptr<juce::Component> menu;
+    std::unique_ptr<Surge::Widgets::MultiSwitch> irJog;
 
     // Note: Due to the existing code that refers to it, the effectChooser and
     // fxPresetLabel widgets are held in the SurgeGUIEditor class, rather than here.
