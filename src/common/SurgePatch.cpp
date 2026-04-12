@@ -1343,6 +1343,7 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
                 }
                 std::string key = fmt::format("osc_{}_{}", sc, osc);
                 binn_object_set_object(map, key.c_str(), oscmap);
+                binn_free(oscmap);
             }
         }
     }
