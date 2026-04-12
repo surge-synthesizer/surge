@@ -905,7 +905,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
             return;
         }
 
-        std::vector<char> xmlData;
+        std::string xmlData;
         xmlData.resize(xmlSz);
         stream.read(xmlData.data(), xmlData.size());
         if (!stream)
