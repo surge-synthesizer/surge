@@ -9,6 +9,7 @@
 #include "RuntimeFont.h"
 #include "SkinModel.h"
 #include "SurgeGUIEditor.h"
+#include "SurgeJUCEHelpers.h"
 #include "SurgeGUIEditorTags.h"
 #include "dsp/effects/ConditionerEffect.h"
 #include "dsp/effects/ConvolutionEffect.h"
@@ -60,6 +61,8 @@ struct ConvolutionButton : public juce::Component
 
     void mouseDown(const juce::MouseEvent &event) override
     {
+        hideTooltip();
+
         if (event.mods.isMiddleButtonDown() && sge)
         {
             sge->frame->mouseDown(event);
@@ -87,19 +90,68 @@ struct ConvolutionButton : public juce::Component
     bool isJogLHovered{false}, isJogRHovered{false}, isNameHovered{false};
     juce::Rectangle<float> leftJog, rightJog, irNameRect;
 
+    int tooltipCountdown{-1};
+    bool tooltipShowing{false};
+
+    bool isNameTruncated() const
+    {
+        if (!sge)
+            return false;
+        auto ft = sge->currentSkin->fontManager->getLatoAtSize(9);
+        auto textW = SST_STRING_WIDTH_FLOAT(ft, juce::String(irname));
+        return textW > irNameRect.getWidth() - 2;
+    }
+
+    void hideTooltip()
+    {
+        tooltipCountdown = -1;
+        if (sge && tooltipShowing)
+        {
+            sge->hideIRNameTooltip();
+        }
+        tooltipShowing = false;
+    }
+
+    void shouldTooltip()
+    {
+        if (tooltipCountdown < 0)
+            return;
+
+        tooltipCountdown--;
+
+        if (tooltipCountdown == 0)
+        {
+            tooltipCountdown = -1;
+            if (sge && isNameTruncated())
+            {
+                auto b = sge->frame->getLocalArea(this, getLocalBounds());
+                sge->showIRNameTooltip(irname, b);
+                tooltipShowing = true;
+            }
+        }
+        else
+        {
+            juce::Timer::callAfterDelay(100, Surge::GUI::makeSafeCallback<ConvolutionButton>(
+                                                 this, [](auto *that) { that->shouldTooltip(); }));
+        }
+    }
+
     void mouseEnter(const juce::MouseEvent &event) override
     {
         isMousedOver = true;
         repaint();
     }
+
     void mouseExit(const juce::MouseEvent &event) override
     {
         isMousedOver = false;
         isJogLHovered = false;
         isJogRHovered = false;
         isNameHovered = false;
+        hideTooltip();
         repaint();
     }
+
     void mouseMove(const juce::MouseEvent &event) override
     {
         auto njl = leftJog.contains(event.position);
@@ -112,6 +164,21 @@ struct ConvolutionButton : public juce::Component
             isJogRHovered = njr;
             isNameHovered = nnm;
             repaint();
+        }
+
+        if (nnm)
+        {
+            if (tooltipCountdown < 0 && !tooltipShowing)
+            {
+                tooltipCountdown = 3;
+                juce::Timer::callAfterDelay(100,
+                                            Surge::GUI::makeSafeCallback<ConvolutionButton>(
+                                                this, [](auto *that) { that->shouldTooltip(); }));
+            }
+        }
+        else
+        {
+            hideTooltip();
         }
     }
 
@@ -137,7 +204,7 @@ struct ConvolutionButton : public juce::Component
         rightJog = irr.withLeft(irr.getWidth() - h);
         irNameRect = irr.withTrimmedLeft(h).withTrimmedRight(h);
 
-        float triO = 2;
+        float triO = 3;
 
         // Fill each region individually for per-region hover.
         g.setColour(isJogLHovered ? fgcolHov : fgcol);

@@ -637,6 +637,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   public:
     void showPatchCommentTooltip(const std::string &comment);
     void hidePatchCommentTooltip();
+    void showIRNameTooltip(const std::string &text, const juce::Rectangle<int> &frameBounds);
+    void hideIRNameTooltip();
     void showInfowindow(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
     void showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
     void updateInfowindowContents(int ptag, bool isModulated);

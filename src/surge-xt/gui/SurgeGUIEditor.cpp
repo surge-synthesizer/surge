@@ -6362,6 +6362,27 @@ void SurgeGUIEditor::hidePatchCommentTooltip()
     }
 }
 
+void SurgeGUIEditor::showIRNameTooltip(const std::string &text,
+                                       const juce::Rectangle<int> &frameBounds)
+{
+    if (patchSelectorComment)
+    {
+        patchSelectorComment->positionForComment(
+            frameBounds.getCentre().withY(frameBounds.getBottom()), text, frameBounds.getWidth());
+        patchSelectorComment->setVisible(true);
+        patchSelectorComment->getParentComponent()->toFront(false);
+        patchSelectorComment->toFront(false);
+    }
+}
+
+void SurgeGUIEditor::hideIRNameTooltip()
+{
+    if (patchSelectorComment && patchSelectorComment->isVisible())
+    {
+        patchSelectorComment->setVisible(false);
+    }
+}
+
 void SurgeGUIEditor::addComponentWithTracking(juce::Component *target, juce::Component &source)
 {
     if (target->getIndexOfChildComponent(&source) >= 0)
