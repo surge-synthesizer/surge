@@ -4259,33 +4259,6 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
         subMenu = &contextMenu;
     }
 
-    for (auto child : cat.children)
-    {
-        if (child.numberOfPatchesInCategoryAndChildren > 0)
-        {
-            // this isn't the best approach but it works
-            int cidx = 0;
-
-            for (auto &cc : storage->wt_category)
-            {
-                if (cc.name == child.name)
-                {
-                    break;
-                }
-
-                cidx++;
-            }
-
-            bool childHasWTS = populateMenuForCategory(*subMenu, cidx, selectedItem, false);
-
-            if (childHasWTS)
-            {
-                hasAnyWTS = true;
-                selected = selected || childHasWTS;
-            }
-        }
-    }
-
     for (auto p : storage->wtOrdering)
     {
         if (storage->wt_list[p].category == categoryId)
@@ -4327,6 +4300,33 @@ bool WavetableScriptEditor::populateMenuForCategory(juce::PopupMenu &contextMenu
                 {
                     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(*subMenu, "");
                 }
+            }
+        }
+    }
+
+    for (auto child : cat.children)
+    {
+        if (child.numberOfPatchesInCategoryAndChildren > 0)
+        {
+            // this isn't the best approach but it works
+            int cidx = 0;
+
+            for (auto &cc : storage->wt_category)
+            {
+                if (cc.name == child.name)
+                {
+                    break;
+                }
+
+                cidx++;
+            }
+
+            bool childHasWTS = populateMenuForCategory(*subMenu, cidx, selectedItem, false);
+
+            if (childHasWTS)
+            {
+                hasAnyWTS = true;
+                selected = selected || childHasWTS;
             }
         }
     }
