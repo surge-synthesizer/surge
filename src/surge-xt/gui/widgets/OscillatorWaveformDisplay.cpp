@@ -1213,10 +1213,17 @@ bool OscillatorWaveformDisplay::populateMenuForCategory(juce::PopupMenu &context
         }
     }
 
+    bool addedSeparator = false;
     for (auto child : cat.children)
     {
         if (child.numberOfPatchesInCategoryAndChildren > 0)
         {
+            if (!addedSeparator && sub > 0)
+            {
+                subMenu->addSeparator();
+                addedSeparator = true;
+            }
+
             // this isn't the best approach but it works
             int cidx = 0;
 

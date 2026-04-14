@@ -287,7 +287,7 @@ struct ConvolutionButton : public juce::Component
 
             if (cat.isRoot)
             {
-                populateMenuForCategory(menu, c, 0, false);
+                populateMenuForCategory(menu, c, false);
             }
         }
 
@@ -299,8 +299,7 @@ struct ConvolutionButton : public juce::Component
         menu.showMenuAsync(sge->popupMenuOptions(getBounds().getBottomLeft()));
     }
 
-    bool populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId, int selectedItem,
-                                 bool intoTop)
+    bool populateMenuForCategory(juce::PopupMenu &contextMenu, int categoryId, bool intoTop)
     {
         int sub = 0;
         bool selected = false;
@@ -320,17 +319,16 @@ struct ConvolutionButton : public juce::Component
                 auto action = [this, p]() { this->loadIR(p); };
                 bool checked = false;
 
-                if (p == selectedItem)
+                if (storage->ir_list[p].name == irname)
                 {
-                    // This is currently bogus, we don't have a "checked" like we do w/ wavetables.
-                    // checked = true;
-                    // selected = true;
+                    checked = true;
+                    selected = true;
                 }
 
                 auto item = new juce::PopupMenu::Item(storage->ir_list[p].name);
 
                 item->setEnabled(true);
-                // item->setTicked(checked);
+                item->setTicked(checked);
                 item->setAction(action);
 
                 subMenu->addItem(*item);
@@ -350,10 +348,17 @@ struct ConvolutionButton : public juce::Component
             }
         }
 
+        bool addedSeparator = false;
         for (auto child : cat.children)
         {
             if (child.numberOfPatchesInCategoryAndChildren > 0)
             {
+                if (!addedSeparator && sub > 0)
+                {
+                    subMenu->addSeparator();
+                    addedSeparator = true;
+                }
+
                 // this isn't the best approach but it works
                 int cidx = 0;
 
@@ -367,7 +372,7 @@ struct ConvolutionButton : public juce::Component
                     cidx++;
                 }
 
-                bool checked = populateMenuForCategory(*subMenu, cidx, selectedItem, false);
+                bool checked = populateMenuForCategory(*subMenu, cidx, false);
 
                 if (checked)
                 {
