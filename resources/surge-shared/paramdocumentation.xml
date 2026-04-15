@@ -32,7 +32,7 @@
   <special id="filter-analysis" help_url="#filter-controls"/>
   <special id="waveshaper-analysis" help_url="#waveshaper"/>
   <special id="alias-shape" help_url="#shape"/>
-  <special id="action-history" help_url="#action-history"/>
+  <special id="action-history" help_url="#undo-and-redo"/>
   <special id="level-meter" help_url="#level-meter"/>
   <special id="oscilloscope" help_url="#oscilloscope"/>
   <special id="opensound-settings" help_url="#osc-settings"/>
@@ -303,18 +303,18 @@
   <param id="fx.param_12" type="1" help_url="#delay"/>
 
   <!-- special case FX params for Reverb 1 (2) -->
-  <param id="fx.param_1" type="2" help_url="#reverb"/>
-  <param id="fx.param_2" type="2" help_url="#reverb"/>
-  <param id="fx.param_3" type="2" help_url="#reverb"/>
-  <param id="fx.param_4" type="2" help_url="#reverb"/>
-  <param id="fx.param_5" type="2" help_url="#reverb"/>
-  <param id="fx.param_6" type="2" help_url="#reverb"/>
-  <param id="fx.param_7" type="2" help_url="#reverb"/>
-  <param id="fx.param_8" type="2" help_url="#reverb"/>
-  <param id="fx.param_9" type="2" help_url="#reverb"/>
-  <param id="fx.param_10" type="2" help_url="#reverb"/>
-  <param id="fx.param_11" type="2" help_url="#reverb"/>
-  <param id="fx.param_12" type="2" help_url="#reverb"/>
+  <param id="fx.param_1" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_2" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_3" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_4" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_5" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_6" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_7" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_8" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_9" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_10" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_11" type="2" help_url="#reverb-1"/>
+  <param id="fx.param_12" type="2" help_url="#reverb-1"/>
 
   <!-- special case FX params for Phaser (3) -->
   <param id="fx.param_1" type="3" help_url="#phaser"/>
