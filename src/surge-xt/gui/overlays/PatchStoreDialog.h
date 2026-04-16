@@ -87,6 +87,9 @@ struct PatchStoreDialog : public OverlayComponent,
     void setComment(const std::string &c) { commentEd->setText(c, juce::dontSendNotification); }
     void setTags(const std::vector<SurgePatch::Tag> &t);
     void setStoreTuningInPatch(const bool value);
+    void setStoreSnapshotsInPatch(const bool value);
+    bool hasSnapshots{false};
+    void setHasSnapshots(bool s) { hasSnapshots = s; };
 
     void onSkinChanged() override;
     void textEditorFocusLost(juce::TextEditor &) override;
@@ -98,9 +101,6 @@ struct PatchStoreDialog : public OverlayComponent,
     std::unique_ptr<juce::ToggleButton> storeTuningButton;
     std::unique_ptr<juce::Label> storeSnapshotsLabel;
     std::unique_ptr<juce::ToggleButton> storeSnapshotsButton;
-    bool hasSnapshots{false};
-    void setHasSnapshots(bool value);
-    void setStoreSnapshotsInPatch(bool value);
 
     bool isRename{false};
     void setIsRename(bool b);
