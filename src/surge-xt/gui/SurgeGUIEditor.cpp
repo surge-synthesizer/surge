@@ -107,6 +107,7 @@
 
 #include "filesystem/import.h"
 #include "RuntimeFont.h"
+#include "binn/binn.h"
 #include "zstd.h"
 
 #include "juce_core/juce_core.h"
@@ -6820,9 +6821,9 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
 
             wtscript.InsertEndChild(script);
 
-            // Collect snapshot float data and build per-slot XML metadata
-            TiXmlElement sn("snapshots");
-            std::vector<float> snapshotFloats;
+            // Build a binn object holding snapshot frame lists
+            binn *oscmap = binn_object();
+            bool hasSnapshots = false;
             for (int slot = 0; slot < n_wt_snapshots; ++slot)
             {
                 const auto &snap = oscdata->wtSnapshots[slot];
@@ -6831,24 +6832,15 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
                     continue;
                 }
 
-                const unsigned int nframes = snap->n_tables;
-                const int nsamples = snap->size;
-
-                for (unsigned int t = 0; t < nframes; ++t)
+                binn *frames = binn_list();
+                for (unsigned int t = 0; t < snap->n_tables; ++t)
                 {
-                    const float *tbl = snap->TableF32WeakPointers[0][t];
-                    snapshotFloats.insert(snapshotFloats.end(), tbl, tbl + nsamples);
+                    binn_list_add_blob(frames, snap->TableF32WeakPointers[0][t],
+                                       snap->size * sizeof(float));
                 }
-
-                TiXmlElement sl("snapshot");
-                sl.SetAttribute("slot", slot);
-                sl.SetAttribute("frames", nframes);
-                sl.SetAttribute("samples", nsamples);
-                sn.InsertEndChild(sl);
-            }
-            if (!snapshotFloats.empty())
-            {
-                wtscript.InsertEndChild(sn);
+                binn_object_set_list(oscmap, fmt::format("snap_{}", slot).c_str(), frames);
+                binn_free(frames);
+                hasSnapshots = true;
             }
 
             doc.InsertEndChild(wtscript);
@@ -6861,26 +6853,28 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             if (!outFile)
             {
                 storage->reportError("Failed to open file for writing.", "Save Error");
+                binn_free(oscmap);
                 return;
             }
 
-            if (snapshotFloats.empty())
+            if (!hasSnapshots)
             {
                 // Just the XML
                 outFile.write(xmlStr.data(), xmlStr.size());
             }
             else
             {
-                // Compress the snapshot float data
+                // Compress the binn snapshot data
                 namespace mech = sst::basic_blocks::mechanics;
-                const size_t rawSize = snapshotFloats.size() * sizeof(float);
-                const size_t compBound = ZSTD_compressBound(rawSize);
+                const auto rawSize = binn_size(oscmap);
+                const auto compBound = ZSTD_compressBound(rawSize);
                 std::vector<uint8_t> compressed(compBound);
                 const size_t compSize =
-                    ZSTD_compress(compressed.data(), compBound, snapshotFloats.data(), rawSize, 3);
+                    ZSTD_compress(compressed.data(), compBound, binn_ptr(oscmap), rawSize, 3);
                 if (ZSTD_isError(compSize))
                 {
                     storage->reportError("Failed to compress snapshot data.", "Save Error");
+                    binn_free(oscmap);
                     return;
                 }
                 compressed.resize(compSize);
@@ -6897,6 +6891,7 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
                 outFile.write(xmlStr.data(), xmlStr.size());
                 outFile.write(reinterpret_cast<const char *>(compressed.data()), compressed.size());
             }
+            binn_free(oscmap);
 
             outFile.close();
             if (!outFile)
