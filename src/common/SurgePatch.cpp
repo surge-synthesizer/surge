@@ -1318,9 +1318,9 @@ bool SurgePatch::writeOscSnapshotsToBinn(binn *oscmap, const OscillatorStorage &
     return any;
 }
 
-int SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc)
+bool SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc)
 {
-    int built = 0;
+    bool any = false;
     for (int slot = 0; slot < n_wt_snapshots; ++slot)
     {
         binn frames;
@@ -1373,10 +1373,10 @@ int SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc)
         }
         else
         {
-            ++built;
+            any = true;
         }
     }
-    return built;
+    return any;
 }
 
 std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
@@ -1544,7 +1544,7 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             }
 
             // Rebuild wavetable snapshots from the stored frame lists.
-            if (readOscSnapshotsFromBinn(&obj, scene[sc].osc[osc]) > 0)
+            if (readOscSnapshotsFromBinn(&obj, scene[sc].osc[osc]))
             {
                 snapshotsStoredInPatch = true;
             }
