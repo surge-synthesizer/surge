@@ -1233,6 +1233,7 @@ struct PatchTuningStorage
 
 class SurgeStorage;
 
+// Forward declare binn to avoid including binn.h into this header
 #ifndef BINN_H
 struct binn_struct;
 typedef struct binn_struct binn;
