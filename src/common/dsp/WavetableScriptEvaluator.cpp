@@ -533,6 +533,7 @@ void LuaWTEvaluator::generateWavetable(SurgeStorage *storage, OscillatorStorage 
 #endif
 }
 
+#if HAS_LUA
 static void loadWtscriptSnapshots(const void *compData, size_t blobSize, OscillatorStorage *oscdata)
 {
     auto decompressedSize = ZSTD_getFrameContentSize(compData, blobSize);
@@ -605,6 +606,7 @@ static void loadWtscriptSnapshots(const void *compData, size_t blobSize, Oscilla
     }
     binn_free(b);
 }
+#endif
 
 std::optional<LuaWTEvaluator::WtscriptData>
 LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
