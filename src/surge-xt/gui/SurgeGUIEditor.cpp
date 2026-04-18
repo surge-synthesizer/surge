@@ -6823,25 +6823,7 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
 
             // Build a binn object holding snapshot frame lists
             binn *oscmap = binn_object();
-            bool hasSnapshots = false;
-            for (int slot = 0; slot < n_wt_snapshots; ++slot)
-            {
-                const auto &snap = oscdata->wtSnapshots[slot];
-                if (!snap || !snap->everBuilt)
-                {
-                    continue;
-                }
-
-                binn *frames = binn_list();
-                for (unsigned int t = 0; t < snap->n_tables; ++t)
-                {
-                    binn_list_add_blob(frames, snap->TableF32WeakPointers[0][t],
-                                       snap->size * sizeof(float));
-                }
-                binn_object_set_list(oscmap, fmt::format("snap_{}", slot).c_str(), frames);
-                binn_free(frames);
-                hasSnapshots = true;
-            }
+            bool hasSnapshots = SurgePatch::writeOscSnapshotsToBinn(oscmap, *oscdata);
 
             doc.InsertEndChild(wtscript);
 

@@ -1233,6 +1233,11 @@ struct PatchTuningStorage
 
 class SurgeStorage;
 
+#ifndef BINN_H
+struct binn_struct;
+typedef struct binn_struct binn;
+#endif
+
 class SurgePatch
 {
   public:
@@ -1265,6 +1270,12 @@ class SurgePatch
     bool hasAnySnapshots() const;
     unsigned int save_patch(void **data);
     std::vector<std::uint8_t> save_arbitrary_block_storage();
+
+    // Writes snap_{slot} list entries into `oscmap`. Returns true if any snapshot was added.
+    static bool writeOscSnapshotsToBinn(binn *oscmap, const OscillatorStorage &osc);
+    // Reads snap_{slot} entries from `oscmap` into `osc.wtSnapshots`.
+    // Returns the number of snapshots successfully built.
+    static int readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc);
     Parameter *parameterFromOSCName(std::string stName);
     void captureWavetableSnapshot(int scene, int srcOsc, int dstOsc, int slot);
 

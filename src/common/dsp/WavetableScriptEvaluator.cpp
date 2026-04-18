@@ -553,57 +553,7 @@ static void loadWtscriptSnapshots(const void *compData, size_t blobSize, Oscilla
         return;
 
     binn *b = binn_open_ex(decompressed.data(), sz);
-    for (int slot = 0; slot < n_wt_snapshots; slot++)
-    {
-        binn frames;
-        if (!binn_object_get_value(b, fmt::format("snap_{}", slot).c_str(), &frames))
-            continue;
-        if (frames.type != BINN_LIST)
-            continue;
-
-        int ntables = binn_count(&frames);
-        if (ntables <= 0 || ntables > max_subtables)
-            continue;
-
-        binn first;
-        if (!binn_list_get_value(&frames, 1, &first) || first.type != BINN_BLOB)
-            continue;
-        int nsamples = binn_size(&first) / sizeof(float);
-        if (nsamples <= 0 || nsamples > max_wtable_size)
-            continue;
-
-        std::vector<float> data(static_cast<size_t>(ntables) * nsamples);
-        binn_iter fiter;
-        binn frame;
-        binn_iter_init(&fiter, &frames, BINN_LIST);
-        int t = 0;
-        while (binn_list_next(&fiter, &frame))
-        {
-            if (frame.type != BINN_BLOB ||
-                binn_size(&frame) != nsamples * static_cast<int>(sizeof(float)))
-                break;
-            std::memcpy(data.data() + static_cast<size_t>(t) * nsamples, frame.ptr,
-                        nsamples * sizeof(float));
-            t++;
-        }
-        if (t != ntables)
-            continue;
-
-        wt_header wh{};
-        wh.n_samples = nsamples;
-        wh.n_tables = ntables;
-        wh.flags = 0;
-
-        auto &snap = oscdata->wtSnapshots[slot];
-        snap = std::make_unique<Wavetable>();
-
-        snap->BuildWT(data.data(), wh, false);
-
-        if (!snap->everBuilt)
-        {
-            snap.reset();
-        }
-    }
+    SurgePatch::readOscSnapshotsFromBinn(b, *oscdata);
     binn_free(b);
 }
 #endif

@@ -1296,6 +1296,89 @@ unsigned int SurgePatch::save_patch(void **data)
     return psize;
 }
 
+bool SurgePatch::writeOscSnapshotsToBinn(binn *oscmap, const OscillatorStorage &osc)
+{
+    bool any = false;
+    for (int slot = 0; slot < n_wt_snapshots; ++slot)
+    {
+        const auto &snap = osc.wtSnapshots[slot];
+        if (!snap || !snap->everBuilt)
+            continue;
+
+        binn *frames = binn_list();
+        for (std::uint32_t t = 0; t < snap->n_tables; ++t)
+        {
+            binn_list_add_blob(frames, snap->TableF32WeakPointers[0][t],
+                               snap->size * sizeof(float));
+        }
+        binn_object_set_list(oscmap, fmt::format("snap_{}", slot).c_str(), frames);
+        binn_free(frames);
+        any = true;
+    }
+    return any;
+}
+
+int SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc)
+{
+    int built = 0;
+    for (int slot = 0; slot < n_wt_snapshots; ++slot)
+    {
+        binn frames;
+        if (!binn_object_get_value(oscmap, fmt::format("snap_{}", slot).c_str(), &frames))
+            continue;
+        if (frames.type != BINN_LIST)
+            continue;
+
+        int ntables = binn_count(&frames);
+        if (ntables <= 0 || ntables > max_subtables)
+            continue;
+
+        binn first;
+        if (!binn_list_get_value(&frames, 1, &first) || first.type != BINN_BLOB)
+            continue;
+        int nsamples = binn_size(&first) / sizeof(float);
+        if (nsamples <= 0 || nsamples > max_wtable_size)
+            continue;
+
+        std::vector<float> data(static_cast<size_t>(ntables) * nsamples);
+        binn_iter fiter;
+        binn frame;
+        binn_iter_init(&fiter, &frames, BINN_LIST);
+        int t = 0;
+        while (binn_list_next(&fiter, &frame))
+        {
+            if (frame.type != BINN_BLOB ||
+                binn_size(&frame) != nsamples * static_cast<int>(sizeof(float)))
+                break;
+            std::memcpy(data.data() + static_cast<size_t>(t) * nsamples, frame.ptr,
+                        nsamples * sizeof(float));
+            t++;
+        }
+        if (t != ntables)
+            continue;
+
+        wt_header wh{};
+        wh.n_samples = nsamples;
+        wh.n_tables = ntables;
+        wh.flags = 0;
+
+        auto &snap = osc.wtSnapshots[slot];
+        snap = std::make_unique<Wavetable>();
+
+        snap->BuildWT(data.data(), wh, false);
+
+        if (!snap->everBuilt)
+        {
+            snap.reset();
+        }
+        else
+        {
+            ++built;
+        }
+    }
+    return built;
+}
+
 std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
 {
     binn *map = binn_object();
@@ -1319,21 +1402,7 @@ std::vector<std::uint8_t> SurgePatch::save_arbitrary_block_storage()
             for (int osc = 0; osc < n_oscs; osc++)
             {
                 binn *oscmap = binn_object();
-                for (int slot = 0; slot < n_wt_snapshots; slot++)
-                {
-                    auto &snap = scene[sc].osc[osc].wtSnapshots[slot];
-                    if (!snap || !snap->everBuilt)
-                        continue;
-
-                    binn *frames = binn_list();
-                    for (std::uint32_t t = 0; t < snap->n_tables; t++)
-                    {
-                        binn_list_add_blob(frames, snap->TableF32WeakPointers[0][t],
-                                           snap->size * sizeof(float));
-                    }
-                    binn_object_set_list(oscmap, fmt::format("snap_{}", slot).c_str(), frames);
-                    binn_free(frames);
-                }
+                writeOscSnapshotsToBinn(oscmap, scene[sc].osc[osc]);
                 std::string key = fmt::format("osc_{}_{}", sc, osc);
                 binn_object_set_object(map, key.c_str(), oscmap);
                 binn_free(oscmap);
@@ -1475,60 +1544,9 @@ unsigned int SurgePatch::load_arbitrary_block_storage(const void *data, std::siz
             }
 
             // Rebuild wavetable snapshots from the stored frame lists.
-            for (int slot = 0; slot < n_wt_snapshots; slot++)
+            if (readOscSnapshotsFromBinn(&obj, scene[sc].osc[osc]) > 0)
             {
-                binn frames;
-                if (!binn_object_get_value(&obj, fmt::format("snap_{}", slot).c_str(), &frames))
-                    continue;
-                if (frames.type != BINN_LIST)
-                    continue;
-
-                int ntables = binn_count(&frames);
-                if (ntables <= 0 || ntables > max_subtables)
-                    continue;
-
-                binn first;
-                if (!binn_list_get_value(&frames, 1, &first) || first.type != BINN_BLOB)
-                    continue;
-                int nsamples = binn_size(&first) / sizeof(float);
-                if (nsamples <= 0 || nsamples > max_wtable_size)
-                    continue;
-
-                std::vector<float> data(static_cast<size_t>(ntables) * nsamples);
-                binn_iter fiter;
-                binn frame;
-                binn_iter_init(&fiter, &frames, BINN_LIST);
-                int t = 0;
-                while (binn_list_next(&fiter, &frame))
-                {
-                    if (frame.type != BINN_BLOB ||
-                        binn_size(&frame) != nsamples * static_cast<int>(sizeof(float)))
-                        break;
-                    std::memcpy(data.data() + static_cast<size_t>(t) * nsamples, frame.ptr,
-                                nsamples * sizeof(float));
-                    t++;
-                }
-                if (t != ntables)
-                    continue;
-
-                wt_header wh{};
-                wh.n_samples = nsamples;
-                wh.n_tables = ntables;
-                wh.flags = 0;
-
-                auto &snap = scene[sc].osc[osc].wtSnapshots[slot];
-                snap = std::make_unique<Wavetable>();
-
-                snap->BuildWT(data.data(), wh, false);
-
-                if (!snap->everBuilt)
-                {
-                    snap.reset();
-                }
-                else
-                {
-                    snapshotsStoredInPatch = true;
-                }
+                snapshotsStoredInPatch = true;
             }
         }
     }
