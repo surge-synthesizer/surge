@@ -231,7 +231,7 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void setFxStorage(FxStorage *s);
     void setFxBuffer(FxStorage *s) { fxbuffer = s; }
 
-    int current_fx;
+    int current_fx{0};
     void setCurrentFx(int i) { current_fx = i; }
 
     static Surge::FxClipboard::Clipboard fxClipboard;

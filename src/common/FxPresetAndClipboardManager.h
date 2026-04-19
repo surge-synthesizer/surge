@@ -88,6 +88,7 @@ struct Clipboard
 {
     Clipboard();
     std::vector<float> fxCopyPaste;
+    std::unordered_map<std::string, std::shared_ptr<std::vector<std::uint8_t>>> user_data;
 };
 void copyFx(SurgeStorage *, FxStorage *from, Clipboard &cb);
 bool isPasteAvailable(const Clipboard &cb);
