@@ -1327,18 +1327,34 @@ bool SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc)
         if (!binn_object_get_value(oscmap, fmt::format("snap_{}", slot).c_str(), &frames))
             continue;
         if (frames.type != BINN_LIST)
+        {
+            std::cerr << "Snapshot frames list missing or malformed; possibly corrupted patch."
+                      << std::endl;
             continue;
+        }
 
         int ntables = binn_count(&frames);
         if (ntables <= 0 || ntables > max_subtables)
+        {
+            std::cerr << "Snapshot table count out of range; possibly corrupted patch."
+                      << std::endl;
             continue;
+        }
 
         binn first;
         if (!binn_list_get_value(&frames, 1, &first) || first.type != BINN_BLOB)
+        {
+            std::cerr << "Snapshot frame blob missing or malformed; possibly corrupted patch."
+                      << std::endl;
             continue;
+        }
         int nsamples = binn_size(&first) / sizeof(float);
         if (nsamples <= 0 || nsamples > max_wtable_size)
+        {
+            std::cerr << "Snapshot sample count out of range; possibly corrupted patch."
+                      << std::endl;
             continue;
+        }
 
         std::vector<float> data(static_cast<size_t>(ntables) * nsamples);
         binn_iter fiter;
@@ -1355,7 +1371,10 @@ bool SurgePatch::readOscSnapshotsFromBinn(binn *oscmap, OscillatorStorage &osc)
             t++;
         }
         if (t != ntables)
+        {
+            std::cerr << "Snapshot frame count mismatch; possibly corrupted patch." << std::endl;
             continue;
+        }
 
         wt_header wh{};
         wh.n_samples = nsamples;
