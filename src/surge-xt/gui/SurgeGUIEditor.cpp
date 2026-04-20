@@ -6824,8 +6824,7 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
 
             // Build a binn object holding snapshot frame lists
             binn *oscmap = binn_object();
-            const auto freeOscmap =
-                sst::cpputils::make_scope_guard([&] { binn_free(oscmap); });
+            const auto freeOscmap = sst::cpputils::make_scope_guard([&] { binn_free(oscmap); });
             bool hasSnapshots = SurgePatch::writeOscSnapshotsToBinn(oscmap, *oscdata);
 
             doc.InsertEndChild(wtscript);
