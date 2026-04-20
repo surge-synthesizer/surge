@@ -455,6 +455,7 @@ void copyFx(SurgeStorage *storage, FxStorage *fx, Clipboard &cb)
     cb.fxCopyPaste.clear();
     cb.fxCopyPaste.resize(n_fx_params * 5 + 1); // type then (val; deform; ts; extend; deact)
     cb.fxCopyPaste[0] = fx->type.val.i;
+    cb.user_data = fx->user_data;
     for (int i = 0; i < n_fx_params; ++i)
     {
         int vp = i * 5 + 1;
@@ -490,6 +491,7 @@ void pasteFx(SurgeStorage *storage, FxStorage *fxbuffer, Clipboard &cb)
         return;
 
     fxbuffer->type.val.i = (int)cb.fxCopyPaste[0];
+    fxbuffer->user_data = cb.user_data;
 
     Effect *t_fx = spawn_effect(fxbuffer->type.val.i, storage, fxbuffer, 0);
     if (t_fx)
@@ -537,6 +539,7 @@ void pasteFx(SurgeStorage *storage, FxStorage *fxbuffer, Clipboard &cb)
     }
 
     cb.fxCopyPaste.clear();
+    cb.user_data.clear();
 }
 } // namespace FxClipboard
 } // namespace Surge

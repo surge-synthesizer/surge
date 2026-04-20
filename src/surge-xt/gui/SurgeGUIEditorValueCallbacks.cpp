@@ -3943,6 +3943,7 @@ void SurgeGUIEditor::valueChanged(Surge::GUI::IComponentTagValue *control)
         if (current_fx != nfx)
         {
             current_fx = nfx;
+            synth->storage.getPatch().dawExtraState.editor.current_fx = nfx;
             activateFromCurrentFx();
 
             queue_refresh = true;
