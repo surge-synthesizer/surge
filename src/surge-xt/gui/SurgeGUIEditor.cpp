@@ -46,6 +46,7 @@
 
 #include "SurgeGUIEditorTags.h"
 #include "fmt/core.h"
+#include "sst/cpputils/scope_guard.h"
 
 #include "overlays/AboutScreen.h"
 #include "overlays/MiniEdit.h"
@@ -6823,6 +6824,8 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
 
             // Build a binn object holding snapshot frame lists
             binn *oscmap = binn_object();
+            const auto freeOscmap =
+                sst::cpputils::make_scope_guard([&] { binn_free(oscmap); });
             bool hasSnapshots = SurgePatch::writeOscSnapshotsToBinn(oscmap, *oscdata);
 
             doc.InsertEndChild(wtscript);
@@ -6835,7 +6838,6 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             if (!outFile)
             {
                 storage->reportError("Failed to open file for writing.", "Save Error");
-                binn_free(oscmap);
                 return;
             }
 
@@ -6856,7 +6858,6 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
                 if (ZSTD_isError(compSize))
                 {
                     storage->reportError("Failed to compress snapshot data.", "Save Error");
-                    binn_free(oscmap);
                     return;
                 }
                 compressed.resize(compSize);
@@ -6873,7 +6874,6 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
                 outFile.write(xmlStr.data(), xmlStr.size());
                 outFile.write(reinterpret_cast<const char *>(compressed.data()), compressed.size());
             }
-            binn_free(oscmap);
 
             outFile.close();
             if (!outFile)
