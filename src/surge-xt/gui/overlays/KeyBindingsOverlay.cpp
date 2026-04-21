@@ -360,20 +360,55 @@ void KeyBindingsOverlay::createVKBLayoutMenu()
 
 void KeyBindingsOverlay::changeVKBLayout(const std::string layout)
 {
-    if (layout == "QWERTY 2 Octave")
-    {
-        storage->reportError(
-            "The QWERTY 2 Octave layout has conflicts with the default keyboard shortcuts.\n"
-            "Be sure to change any conflicting shortcuts like X to Shift+X and C to Shift+C or "
-            "other keys of your choice.",
-            "QWERTY 2 Octave Layout Warning");
-    }
-    Surge::Storage::updateUserDefaultValue(editor->getStorage(),
-                                           Surge::Storage::VirtualKeyboardLayout, layout);
-    editor->juceEditor->setVKBLayout(layout);
+    const auto vkbl = editor->juceEditor->vkbLayouts;
+    auto searchTerm = [&layout](const auto &x) { return x.first == layout; };
+    auto search = std::find_if(vkbl.begin(), vkbl.end(), searchTerm);
+    std::vector<Surge::GUI::KeyboardActions> conflicts;
 
-    vkbLayout->setLabels({"VKB Layout: " + layout});
-    vkbLayout->repaint();
+    conflicts.clear();
+
+    if (search != vkbl.end())
+    {
+        for (auto key : search->second)
+        {
+            const auto kc = (key >= 74 && key <= 122) ? key - 32 : key;
+            const auto kp = juce::KeyPress(kc, juce::ModifierKeys::noModifiers, 0);
+
+            for (auto const &[k, b] : editor->keyMapManager->bindings)
+            {
+                if (b.matches(kp))
+                {
+                    conflicts.emplace_back(k);
+                }
+            }
+        }
+    }
+
+    if (!conflicts.empty())
+    {
+        std::string keyNames;
+
+        for (auto &b : conflicts)
+        {
+            keyNames += Surge::GUI::keyboardActionDescription(b) + " (" +
+                        editor->getShortcutDescription(b) + ")\n";
+        }
+
+        storage->reportError(fmt::format("Selected virtual keyboard layout has conflicts with the "
+                                         "following keyboard shortcuts:\n\n{}\nPlease modify these "
+                                         "in order to be able to use this virtual keyboard layout!",
+                                         keyNames),
+                             "Virtual Keyboard Layout Conflict");
+    }
+    else
+    {
+        Surge::Storage::updateUserDefaultValue(editor->getStorage(),
+                                               Surge::Storage::VirtualKeyboardLayout, layout);
+        editor->juceEditor->setVKBLayout(layout);
+
+        vkbLayout->setLabels({"VKB Layout: " + layout});
+        vkbLayout->repaint();
+    }
 }
 
 KeyBindingsOverlay::~KeyBindingsOverlay()
@@ -413,7 +448,7 @@ void KeyBindingsOverlay::resized()
     okS->setBounds(okRect);
     cancelS->setBounds(canRect);
     resetAll->setBounds(canRect.translated(175, 0).withWidth(58));
-    vkbLayout->setBounds(okRect.translated(-183, 0).withWidth(128));
+    vkbLayout->setBounds(okRect.translated(-183, 0).withWidth(138));
 
     bindingList->setBounds(l);
 }

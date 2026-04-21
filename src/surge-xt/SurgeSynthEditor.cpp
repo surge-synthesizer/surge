@@ -291,7 +291,6 @@ void SurgeSynthEditor::setVKBLayout(const std::string layout)
 {
     auto searchTerm = [&layout](const auto &x) { return x.first == layout; };
     auto search = std::find_if(vkbLayouts.begin(), vkbLayouts.end(), searchTerm);
-    currentVKBLayout = layout;
 
     if (search != vkbLayouts.end())
     {

@@ -881,7 +881,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     };
 
     void alertBox(const std::string &title, const std::string &prompt, std::function<void()> onOk,
-                  std::function<void()> onCancel, AlertButtonStyle buttonStyle);
+                  std::function<void()> onCancel, AlertButtonStyle buttonStyle,
+                  uint16_t extraHeight = 0);
 
     void alertOKCancel(const std::string &title, const std::string &prompt,
                        std::function<void()> onOk, std::function<void()> onCancel = nullptr)
@@ -893,9 +894,10 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     {
         alertBox(title, prompt, onOk, onCancel, AlertButtonStyle::YES_NO);
     }
-    void messageBox(const std::string &title, const std::string &prompt)
+    void messageBox(const std::string &title, const std::string &prompt,
+                    const uint16_t extraHeight = 0)
     {
-        alertBox(title, prompt, nullptr, nullptr, AlertButtonStyle::OK);
+        alertBox(title, prompt, nullptr, nullptr, AlertButtonStyle::OK, extraHeight);
     }
 
     std::unique_ptr<Surge::Overlays::Alert> alert;

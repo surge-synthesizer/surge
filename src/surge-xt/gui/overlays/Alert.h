@@ -42,9 +42,10 @@ struct Alert : public Surge::Overlays::OverlayComponent,
                public Surge::GUI::SkinConsumingComponent,
                public juce::Button::Listener
 {
-    Alert();
+    Alert(uint16_t extraH = 0);
     ~Alert();
 
+    uint16_t extraHeight{0};
     std::string title, label;
     std::unique_ptr<Surge::Widgets::SurgeTextButton> okButton;
     std::unique_ptr<Surge::Widgets::SurgeTextButton> cancelButton;

@@ -52,8 +52,9 @@ struct MultiLineSkinLabel : juce::Label, public Surge::GUI::SkinConsumingCompone
     void onSkinChanged() override { repaint(); }
 };
 
-Alert::Alert()
+Alert::Alert(uint16_t extraH)
 {
+    extraHeight = extraH;
     setAccessible(true);
     setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
     setWantsKeyboardFocus(true);
@@ -92,7 +93,8 @@ void Alert::resetAccessibility()
 juce::Rectangle<int> Alert::getDisplayRegion()
 {
     return juce::Rectangle<int>(0, 0, windowWidth,
-                                108 + (dontAskAgainButton ? btnHeight + windowMargin : 0))
+                                108 + (dontAskAgainButton ? btnHeight + windowMargin : 0) +
+                                    extraHeight)
         .withCentre(getBounds().getCentre());
 }
 
@@ -110,7 +112,8 @@ void Alert::resized()
     auto fullRect = getDisplayRegion();
     auto dialogCenter = fullRect.getWidth() / 2;
 
-    labelComponent->setBounds(fullRect.withTrimmedTop(18).withHeight(68).reduced(windowMargin));
+    labelComponent->setBounds(
+        fullRect.withTrimmedTop(18).withHeight(68 + extraHeight).reduced(windowMargin));
 
     auto buttonRow =
         fullRect.withY(fullRect.getY() + fullRect.getHeight() - btnHeight - windowMargin)

@@ -634,7 +634,10 @@ void SurgeGUIEditor::idle()
                 }
                 else
                 {
-                    messageBox(title, msg);
+                    // TODO: Hacky af, but it'll do for now. Improve automatic resizing of message
+                    // box based on length of msg...
+                    int numEOL = std::count(msg.begin(), msg.end(), '\n');
+                    messageBox(title, msg, (numEOL >= 5) ? 14 * (numEOL - 4) : 0);
                 }
             }
         }
@@ -3720,9 +3723,9 @@ void SurgeGUIEditor::promptForMiniEdit(const std::string &value, const std::stri
 
 void SurgeGUIEditor::alertBox(const std::string &title, const std::string &prompt,
                               std::function<void()> onOk, std::function<void()> onCancel,
-                              AlertButtonStyle buttonStyle)
+                              AlertButtonStyle buttonStyle, uint16_t extraHeight)
 {
-    alert = std::make_unique<Surge::Overlays::Alert>();
+    alert = std::make_unique<Surge::Overlays::Alert>(extraHeight);
     alert->setSkin(currentSkin, bitmapStore);
     alert->setDescription(title);
     alert->setWindowTitle(title);
