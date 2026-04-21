@@ -621,7 +621,7 @@ void OscillatorWaveformDisplay::populateMenu(juce::PopupMenu &contextMenu, int s
     createWTLoadMenu(contextMenu);
     createWTExportMenu(contextMenu);
 
-#if INCLUDE_WT_SCRIPTING_EDITOR
+#if HAS_LUA
     if (!oscdata->wavetable_script.empty())
     {
         contextMenu.addItem(Surge::GUI::toOSCase("Save as .wtscript..."),
@@ -701,7 +701,7 @@ void OscillatorWaveformDisplay::createWTMenuItems(juce::PopupMenu &contextMenu, 
             createWTRenameMenu(contextMenu);
             contextMenu.addSeparator();
 
-#if INCLUDE_WT_SCRIPTING_EDITOR
+#if HAS_LUA
             createOpenScriptEditorMenu(contextMenu);
 #endif
 
@@ -1320,7 +1320,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
     }
 
     juce::String fileTypes = "*.wav;*.wt";
-#if INCLUDE_WT_SCRIPTING_EDITOR
+#if HAS_LUA
     fileTypes << ";*.wtscript";
 #endif
     sge->fileChooser = std::make_unique<juce::FileChooser>(
