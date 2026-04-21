@@ -371,8 +371,11 @@ void KeyBindingsOverlay::changeVKBLayout(const std::string layout)
     {
         for (auto key : search->second)
         {
-            const auto kc = (key >= 74 && key <= 122) ? key - 32 : key;
-            const auto kp = juce::KeyPress(kc, juce::ModifierKeys::noModifiers, 0);
+            // VKB layouts store keycodes as lowercase, but SST keybindings store them as uppercase
+            // because of juce::KeyPress::getTextDescription()
+            // see keyCodeToString() template instantiation in SurgeGUIEditor.h
+            const auto kp = juce::KeyPress(juce::CharacterFunctions::toUpperCase(key),
+                                           juce::ModifierKeys::noModifiers, 0);
 
             for (auto const &[k, b] : editor->keyMapManager->bindings)
             {
