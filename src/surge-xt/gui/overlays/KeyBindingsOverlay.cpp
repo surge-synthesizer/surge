@@ -107,10 +107,16 @@ struct KeyBindingsListRow : public juce::Component
             }
             else
             {
-                overlay->isLearning = false;
-                overlay->learnAction = -1;
+                if ((int)overlay->learnAction == (int)action)
+                {
+                    overlay->isLearning = false;
+                    overlay->learnAction = -1;
+                }
             }
+
+            overlay->bindingList->updateContent();
         };
+
         addAndMakeVisible(*learn);
 
         setFocusContainerType(juce::Component::FocusContainerType::focusContainer);
@@ -146,7 +152,11 @@ struct KeyBindingsListRow : public juce::Component
         auto desc = editor->getShortcutDescription(action);
 
         keyDesc->setText(desc, juce::dontSendNotification);
-        learn->setValue(0);
+
+        bool isThisRowLearning = (overlay->isLearning && (int)overlay->learnAction == (int)action);
+
+        learn->setToggleState(isThisRowLearning);
+        learn->setValue(isThisRowLearning);
 
         repaint();
     }
@@ -489,7 +499,11 @@ bool KeyBindingsOverlay::keyPressed(const juce::KeyPress &key)
         if (key.getModifiers().isAltDown())
             binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::ALT;
 
+        isLearning = false;
+        learnAction = -1;
+
         bindingList->updateContent();
+
         return true;
     }
     return Component::keyPressed(key);
