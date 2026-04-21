@@ -35,8 +35,8 @@ namespace GUI
 {
 struct UndoManagerImpl
 {
-    static constexpr int maxUndoStackMem = 1024 * 1024 * 100;
-    static constexpr int maxRedoStackMem = 1024 * 1024 * 100;
+    static constexpr int maxUndoStackMem = 1024 * 1024 * 25;
+    static constexpr int maxRedoStackMem = 1024 * 1024 * 25;
     SurgeGUIEditor *editor;
     SurgeSynthesizer *synth;
     UndoManagerImpl(SurgeGUIEditor *ed, SurgeSynthesizer *s) : editor(ed), synth(s) {}
