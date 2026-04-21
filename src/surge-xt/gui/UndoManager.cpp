@@ -135,19 +135,18 @@ struct UndoManagerImpl
         std::size_t estimateUserDataSize() const
         {
             std::size_t total = 0;
-            // This is an *estimate*. We get the size of the map (maybe, it's
-            // implementation dependent) and then we do not count the size of
-            // the map values if they have > 2 share count. There should always
-            // be more than 1 when we see it, because when we push an FX we copy
-            // what's already there before we make the change that requires the
-            // undo. This means the first push onto the undo stack will count
-            // against the stack size, but subsequents will not.
+            // Originally we tried to estimate the size of the data table, but
+            // then we started to use reference counting on it and it became
+            // bogus for the purposes of pushing/popping on the undo stack and
+            // tracking memory that way. Instead since it's reference counted
+            // now, we just don't include the data itself since it will
+            // eventually be inconsistent and mess up that push/pop size number.
+            // This means more memory can get used by the undo stack if the data
+            // goes away elsewhere, but so be it.
             for (const auto &[key, ptr] : user_data)
             {
                 total += key.size() + sizeof(std::string);
                 total += sizeof(ptr);
-                if (ptr.use_count() <= 2)
-                    total += sizeof(std::vector<std::uint8_t>) + ptr->size();
             }
             return total;
         }
