@@ -328,6 +328,12 @@ KeyBindingsOverlay::KeyBindingsOverlay(SurgeStorage *st, SurgeGUIEditor *ed)
     addAndMakeVisible(*bindingList);
 }
 
+KeyBindingsOverlay::~KeyBindingsOverlay()
+{
+    bindingList.reset(nullptr);
+    bindingListBoxModel.reset(nullptr); // order matters here
+}
+
 void KeyBindingsOverlay::resetAllToDefault()
 {
     for (auto const &[k, b] : editor->keyMapManager->bindings)
@@ -424,12 +430,6 @@ void KeyBindingsOverlay::changeVKBLayout(const std::string layout)
     }
 }
 
-KeyBindingsOverlay::~KeyBindingsOverlay()
-{
-    bindingList.reset(nullptr);
-    bindingListBoxModel.reset(nullptr); // order matters here
-}
-
 void KeyBindingsOverlay::paint(juce::Graphics &g)
 {
     if (!skin)
@@ -478,35 +478,93 @@ void KeyBindingsOverlay::onSkinChanged()
 
 bool KeyBindingsOverlay::keyPressed(const juce::KeyPress &key)
 {
+    using namespace Surge::GUI;
+
     if (isLearning)
     {
-        auto &binding = editor->keyMapManager->bindings[(Surge::GUI::KeyboardActions)learnAction];
+        auto newBinding = editor->keyMapManager->bindings[(KeyboardActions)learnAction];
 
-        binding.type = SurgeGUIEditor::keymap_t::Binding::KEYCODE;
-        binding.keyCode = key.getKeyCode();
-        binding.modifier = 0;
+        newBinding.type = SurgeGUIEditor::keymap_t::Binding::KEYCODE;
+        newBinding.keyCode = key.getKeyCode();
+        newBinding.modifier = 0;
 #if SST_COMMAND_CTRL_SAME_KEY
         if (key.getModifiers().isCommandDown() || key.getModifiers().isCtrlDown())
-            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::COMMAND;
+            newBinding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::COMMAND;
 #else
         if (key.getModifiers().isCommandDown())
-            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::COMMAND;
+            newBinding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::COMMAND;
         if (key.getModifiers().isCtrlDown())
-            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::CONTROL;
+            newBinding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::CONTROL;
 #endif
         if (key.getModifiers().isShiftDown())
-            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::SHIFT;
+            newBinding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::SHIFT;
         if (key.getModifiers().isAltDown())
-            binding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::ALT;
+            newBinding.modifier |= SurgeGUIEditor::keymap_t::Modifiers::ALT;
 
-        isLearning = false;
-        learnAction = -1;
+        KeyboardActions conflictedAction{KeyboardActions::n_kbdActions};
 
-        bindingList->updateContent();
+        for (auto const &[k, b] : editor->keyMapManager->bindings)
+        {
+            if (b == newBinding)
+            {
+                conflictedAction = k;
+            }
+        }
 
-        return true;
+        // we've found a conflict
+        if (conflictedAction < KeyboardActions::n_kbdActions)
+        {
+            // which row are we learning
+            auto *rowComp = dynamic_cast<KeyBindingsListRow *>(
+                bindingList->getComponentForRowNumber(learnAction));
+
+            // which learn button we want to keep focus on
+            focusedLearnComponent = rowComp ? rowComp->learn.get() : nullptr;
+
+            std::string keyNames = Surge::GUI::keyboardActionDescription(conflictedAction) + " (" +
+                                   editor->getShortcutDescription(conflictedAction) + ")\n";
+
+            storage->reportError(
+                fmt::format("The keyboard shortcut you have just entered is already assigned "
+                            "to:\n\n{}\nDismiss this dialog and try again!",
+                            keyNames),
+                "Keyboard Shortcut Conflict");
+
+            isLearning = true;
+
+            editor->kboNeedsRefocus = true;
+            editor->kboRefocusAction = (int)learnAction;
+
+            return true;
+        }
+        else
+        {
+            auto &oldBinding = editor->keyMapManager->bindings[(KeyboardActions)learnAction];
+
+            oldBinding = newBinding;
+
+            isLearning = false;
+            learnAction = -1;
+
+            focusedLearnComponent = nullptr;
+
+            bindingList->updateContent();
+
+            return true;
+        }
     }
+
     return Component::keyPressed(key);
+}
+
+// restore the focus after clicking away the reportError dialog
+void KeyBindingsOverlay::restoreFocus()
+{
+    if (isLearning && focusedLearnComponent)
+    {
+        focusedLearnComponent->setWantsKeyboardFocus(true);
+        focusedLearnComponent->grabKeyboardFocus();
+    }
 }
 
 } // namespace Overlays

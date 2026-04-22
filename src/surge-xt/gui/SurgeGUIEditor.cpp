@@ -54,6 +54,7 @@
 #include "overlays/MSEGEditor.h"
 #include "overlays/LuaEditors.h"
 #include "overlays/ModulationEditor.h"
+#include "overlays/KeyBindingsOverlay.h"
 #include "overlays/TypeinParamEditor.h"
 #include "overlays/Oscilloscope.h"
 #include "overlays/OverlayWrapper.h"
@@ -587,6 +588,7 @@ void SurgeGUIEditor::idle()
 #ifndef SURGE_SKIP_ODDSOUND_MTS
     getStorage()->send_tuning_update();
 #endif
+
     if (editor_open && frame && !synth->halt_engine)
     {
         bool patchChanged = false;
@@ -638,6 +640,21 @@ void SurgeGUIEditor::idle()
                     // box based on length of msg...
                     int numEOL = std::count(msg.begin(), msg.end(), '\n');
                     messageBox(title, msg, (numEOL >= 5) ? 14 * (numEOL - 4) : 0);
+                }
+            }
+        }
+
+        if (kboNeedsRefocus)
+        {
+            if (!(alert && alert->isVisible()))
+            {
+                auto *kbo =
+                    getOverlayIfOpenAs<Surge::Overlays::KeyBindingsOverlay>(KEYBINDINGS_EDITOR);
+
+                if (kbo)
+                {
+                    kbo->restoreFocus();
+                    kboNeedsRefocus = false;
                 }
             }
         }

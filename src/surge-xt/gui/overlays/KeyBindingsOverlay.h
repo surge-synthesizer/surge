@@ -42,6 +42,7 @@ struct KeyBindingsOverlay : public OverlayComponent, public Surge::GUI::SkinCons
 
     SurgeStorage *storage{nullptr};
     SurgeGUIEditor *editor{nullptr};
+
     KeyBindingsOverlay(SurgeStorage *storage, SurgeGUIEditor *editor);
     ~KeyBindingsOverlay();
 
@@ -56,11 +57,16 @@ struct KeyBindingsOverlay : public OverlayComponent, public Surge::GUI::SkinCons
 
     bool isLearning{false};
     int learnAction{0};
+
     bool keyPressed(const juce::KeyPress &key) override;
+
+    void restoreFocus();
 
     std::unique_ptr<Surge::Widgets::SelfDrawButton> okS, cancelS, resetAll, vkbLayout;
     std::unique_ptr<KeyBindingsListBoxModel> bindingListBoxModel;
     std::unique_ptr<juce::ListBox> bindingList;
+
+    juce::Component::SafePointer<juce::Component> focusedLearnComponent;
 };
 } // namespace Overlays
 } // namespace Surge
