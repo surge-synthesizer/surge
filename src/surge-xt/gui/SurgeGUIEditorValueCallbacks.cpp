@@ -1492,6 +1492,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
             Parameter *p = synth->storage.getPatch().param_ptr[ptag];
             if (p->ctrltype == ct_filtertype || p->ctrltype == ct_wstype)
             {
+                undoManager()->pushParameterChange(p->id, p, p->val);
                 p->deactivated = !p->deactivated;
                 synth->storage.getPatch().isDirty = true;
                 synth->refresh_editor = true;
