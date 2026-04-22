@@ -447,15 +447,15 @@ struct UndoManagerImpl
         while (undoStackMem > maxUndoStackMem)
         {
             auto r = undoStack.front();
-            freeAction(r.action);
             undoStackMem -= actionSize(r.action);
+            freeAction(r.action);
             undoStack.pop_front();
         }
         while (redoStackMem > maxRedoStackMem)
         {
             auto r = redoStack.front();
-            freeAction(r.action);
             redoStackMem -= actionSize(r.action);
+            freeAction(r.action);
             redoStack.pop_front();
         }
     }
