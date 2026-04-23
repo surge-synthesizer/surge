@@ -558,7 +558,11 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
     SelfModulationGuard modGuard(this);
 
+#if JUCE_VERSION >= 0x080009
     if (button.isMiddleButtonDown() || button.isBackButtonDown() || button.isForwardButtonDown())
+#else
+    if (button.isMiddleButtonDown())
+#endif
     {
         toggle_mod_editing();
 

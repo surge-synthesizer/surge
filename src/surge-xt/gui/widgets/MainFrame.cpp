@@ -72,9 +72,12 @@ void MainFrame::mouseDown(const juce::MouseEvent &event)
 
     editor->hideTypeinParamEditor();
 
+#if JUCE_VERSION >= 0x080009
     if (event.mods.isMiddleButtonDown() || event.mods.isBackButtonDown() ||
         event.mods.isForwardButtonDown())
-
+#else
+    if (event.mods.isMiddleButtonDown())
+#endif
     {
         editor->toggle_mod_editing();
     }
