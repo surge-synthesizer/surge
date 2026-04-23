@@ -482,6 +482,7 @@ bool KeyBindingsOverlay::keyPressed(const juce::KeyPress &key)
 
     if (isLearning)
     {
+        // this is a copy in case we conflict with an existing keybinding
         auto newBinding = editor->keyMapManager->bindings[(KeyboardActions)learnAction];
 
         newBinding.type = SurgeGUIEditor::keymap_t::Binding::KEYCODE;
@@ -532,8 +533,7 @@ bool KeyBindingsOverlay::keyPressed(const juce::KeyPress &key)
 
             isLearning = true;
 
-            editor->kboNeedsRefocus = true;
-            editor->kboRefocusAction = (int)learnAction;
+            editor->componentToFocusAfterAlertDismissal = focusedLearnComponent;
 
             return true;
         }
@@ -555,16 +555,6 @@ bool KeyBindingsOverlay::keyPressed(const juce::KeyPress &key)
     }
 
     return Component::keyPressed(key);
-}
-
-// restore the focus after clicking away the reportError dialog
-void KeyBindingsOverlay::restoreFocus()
-{
-    if (isLearning && focusedLearnComponent)
-    {
-        focusedLearnComponent->setWantsKeyboardFocus(true);
-        focusedLearnComponent->grabKeyboardFocus();
-    }
 }
 
 } // namespace Overlays

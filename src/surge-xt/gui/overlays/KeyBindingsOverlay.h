@@ -60,8 +60,6 @@ struct KeyBindingsOverlay : public OverlayComponent, public Surge::GUI::SkinCons
 
     bool keyPressed(const juce::KeyPress &key) override;
 
-    void restoreFocus();
-
     std::unique_ptr<Surge::Widgets::SelfDrawButton> okS, cancelS, resetAll, vkbLayout;
     std::unique_ptr<KeyBindingsListBoxModel> bindingListBoxModel;
     std::unique_ptr<juce::ListBox> bindingList;

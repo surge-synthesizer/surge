@@ -909,9 +909,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
         NEVER = 100
     };
 
-    // when KeyBindingsOverlay is learning, we need to give the focus back to it
-    bool kboNeedsRefocus{false};
-    int kboRefocusAction{-1};
+    // sometimes we need to return focus to a specific component after an Alert dialog is dismissed
+    // currently used by KeyBindingsOverlay
+    juce::Component::SafePointer<juce::Component> componentToFocusAfterAlertDismissal{nullptr};
 
     // Return whether we called the OK action automatically or not
     bool promptForOKCancelWithDontAskAgain(const ::std::string &title, const std::string &msg,

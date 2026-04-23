@@ -644,18 +644,12 @@ void SurgeGUIEditor::idle()
             }
         }
 
-        if (kboNeedsRefocus)
+        if (componentToFocusAfterAlertDismissal)
         {
             if (!(alert && alert->isVisible()))
             {
-                auto *kbo =
-                    getOverlayIfOpenAs<Surge::Overlays::KeyBindingsOverlay>(KEYBINDINGS_EDITOR);
-
-                if (kbo)
-                {
-                    kbo->restoreFocus();
-                    kboNeedsRefocus = false;
-                }
+                componentToFocusAfterAlertDismissal->setWantsKeyboardFocus(true);
+                componentToFocusAfterAlertDismissal->grabKeyboardFocus();
             }
         }
 
