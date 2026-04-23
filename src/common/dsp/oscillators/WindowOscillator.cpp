@@ -23,21 +23,10 @@
 #include "WindowOscillator.h"
 #include "DSPUtils.h"
 
+#include <bit>
 #include <cstdint>
 #include "DebugHelpers.h"
 
-#ifdef _WIN32
-#include <intrin.h>
-#else
-namespace
-{
-inline bool _BitScanReverse(unsigned long *result, unsigned long bits)
-{
-    *result = __builtin_ctz(bits);
-    return true;
-}
-} // anonymous namespace
-#endif
 int Float2Int(float x) { return int(x + 0.5f); }
 WindowOscillator::WindowOscillator(SurgeStorage *storage, OscillatorStorage *oscdata,
                                    pdata *localcopy)
@@ -324,14 +313,16 @@ template <bool FM, bool Full16> void WindowOscillator::ProcessWindowOscs(bool st
                 Window.Table[1][so] = TablePlusOne;
             }
 
-            unsigned long MSBpos;
             unsigned int bs = BigMULr16(RatioA, 3 * FormantMul);
 
-            if (_BitScanReverse(&MSBpos, bs))
-                MipMapB = limit_range((int)MSBpos - 17, 0, oscdata->wt.size_po2 - 1);
+            if (bs > 0)
+                MipMapB = limit_range((int)std::bit_width(bs) - 18, 0, oscdata->wt.size_po2 - 1);
 
-            if (_BitScanReverse(&MSBpos, 3 * RatioA))
-                MipMapA = limit_range((int)MSBpos - 17, 0, storage->WindowWT.size_po2 - 1);
+            unsigned int ratioA3 = 3 * RatioA;
+
+            if (ratioA3 > 0)
+                MipMapA = limit_range((int)std::bit_width(ratioA3) - 18, 0,
+                                      storage->WindowWT.size_po2 - 1);
 
             short *WaveAdr = oscdata->wt.TableI16WeakPointers[MipMapB][Window.Table[0][so]];
             short *WaveAdrP1 = oscdata->wt.TableI16WeakPointers[MipMapB][Window.Table[1][so]];
