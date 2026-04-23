@@ -558,7 +558,7 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
 
     SelfModulationGuard modGuard(this);
 
-    if (button.isMiddleButtonDown())
+    if (button.isMiddleButtonDown() || button.isBackButtonDown() || button.isForwardButtonDown())
     {
         toggle_mod_editing();
 

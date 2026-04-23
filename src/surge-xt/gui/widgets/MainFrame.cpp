@@ -72,7 +72,9 @@ void MainFrame::mouseDown(const juce::MouseEvent &event)
 
     editor->hideTypeinParamEditor();
 
-    if (event.mods.isMiddleButtonDown())
+    if (event.mods.isMiddleButtonDown() || event.mods.isBackButtonDown() ||
+        event.mods.isForwardButtonDown())
+
     {
         editor->toggle_mod_editing();
     }
