@@ -108,9 +108,9 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 12 -> 13 (1.7.0 release)      added slider deactivation facility
 //                               Sine LP/HP filters
 //                               Sine/FM2/FM3 feedback extension/bipolar
-// 13 -> 14 (1.8.0 nightlies)    add Phaser Stages/Center/Spread parameters
-//                               add ability to configure Vocoder modulator input (monosum/L/R/stereo)
-//                               add comb filter tuning and compatibility block
+// 13 -> 14 (1.8.0 nightlies)    added Phaser Stages/Center/Spread parameters
+//                               added ability to configure Vocoder modulator input (monosum/L/R/stereo)
+//                               added comb filter tuning and compatibility block
 // 14 -> 15 (1.8.0 release)      the great remapping of filter types (GitHub issue #3006, PR #3329)
 // 15 -> 16 (1.9.0 release)      oscillator retrigger is consistent now (GitHub issue #3171, PR #3785)
 //                               added tuningApplicationMode to patch
@@ -143,9 +143,9 @@ const int FIRoffsetI16 = FIRipolI16_N >> 1;
 // 25 -> 26 (XT 1.4.* nightlies) added WT Deform for new WT features
 //                               changed how extend-to-bipolar works for LFO Amplitude parameter
 //                               added DAWExtraState members for saving the state of Lua code editors, and variable group states in debugger
-// 26 -> 27 (XT 1.4.* nightlies) fix OBXD and BP12 legacy streaming for sst-filters upgrade
-//                               fix extendable parameters not extending in Waveshaper effect
-// 27 -> 28 (XT 1.4.* nightlies) Add corrected TX shapes to sine proc
+// 26 -> 27 (XT 1.4.* nightlies) fixed OB-Xd and BP12 legacy streaming for sst-filters upgrade
+//                               fixed extendable parameters not extending in Waveshaper effect
+// 27 -> 28 (XT 1.4.* nightlies) added corrected TX shapes to Sine oscillator
 // clang-format on
 
 const int ff_revision = 28;

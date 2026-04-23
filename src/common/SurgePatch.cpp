@@ -2562,8 +2562,38 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                         }
                     }
                 }
+
+                // adjust tuning by 4.61048 cents
+                // see GitHub issue #8049
+                // TODO: This won't be necessary in XT2.0, so can be removed then!
+                if (o.type.val.i == ot_twist)
+                {
+                    if (o.pitch.absolute)
+                    {
+                        if (o.pitch.extend_range)
+                        {
+                            o.pitch.val.f *= 1.00022222222222222166f;
+                        }
+                        else
+                        {
+                            o.pitch.val.f *= 1.00266666666666666f;
+                        }
+                    }
+                    else
+                    {
+                        if (o.pitch.extend_range)
+                        {
+                            o.pitch.val.f += 0.0038420666666666666f;
+                        }
+                        else
+                        {
+                            o.pitch.val.f += 0.0461048f;
+                        }
+                    }
+                }
             }
         }
+
         for (auto &f : fx)
         {
             if (f.type.val.i == fxt_ringmod)
