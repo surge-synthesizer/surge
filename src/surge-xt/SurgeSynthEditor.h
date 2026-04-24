@@ -34,42 +34,8 @@
 class SurgeGUIEditor;
 class SurgeJUCELookAndFeel;
 
-struct SurgeVirtualKeyboard : public juce::MidiKeyboardComponent
-{
-    SurgeVirtualKeyboard(juce::MidiKeyboardState &state, Orientation orientation)
-        : juce::MidiKeyboardComponent(state, orientation), onVelocityChanged([](float) {})
-    {
-    }
-
-    std::function<void(float)> onVelocityChanged;
-
-    // When true, clicking on the keyboard sets the overall velocity of the vkb
-    // When false (default), vkb velocity is not linked to click position
-    bool useClickPositionForOverallVelocity{false};
-
-    void toggleClickVelocityMode()
-    {
-        useClickPositionForOverallVelocity = !useClickPositionForOverallVelocity;
-    }
-
-    bool mouseDownOnKey(int midiNoteNumber, const juce::MouseEvent &e) override
-    {
-        if (useClickPositionForOverallVelocity)
-        {
-            auto noteAndVel = getNoteAndVelocityAtPosition(e.position);
-            float clickVelocity = std::clamp(noteAndVel.velocity, 0.0f, 1.0f);
-            setVelocity(clickVelocity, false);
-
-            onVelocityChanged(clickVelocity);
-        }
-
-        return juce::MidiKeyboardComponent::mouseDownOnKey(midiNoteNumber, e);
-    }
-};
-
 //==============================================================================
-/**
- */
+
 class SurgeSynthEditor : public juce::AudioProcessorEditor,
                          public juce::AsyncUpdater,
                          public juce::FileDragAndDropTarget,
@@ -209,6 +175,95 @@ struct SurgeSynthStartupErrorEditor : juce::AudioProcessorEditor
             "Report issue on Surge Synth Team Discord or GitHub with a screenshot of this screen",
             lb, juce::Justification::centred);
     }
+};
+
+//==============================================================================
+
+struct SurgeVirtualKeyboard : public juce::MidiKeyboardComponent
+{
+    SurgeVirtualKeyboard(SurgeSynthEditor *e, juce::MidiKeyboardState &state,
+                         Orientation orientation)
+        : editor(e), juce::MidiKeyboardComponent(state, orientation), keyboardState(state),
+          onVelocityChanged([](float) {})
+    {
+    }
+
+    ~SurgeVirtualKeyboard();
+
+    std::function<void(float)> onVelocityChanged;
+
+    // When true, clicking on the keyboard sets the overall velocity of the vkb
+    // When false (default), vkb velocity is not linked to click position
+    bool useClickPositionForOverallVelocity{false};
+
+    void toggleClickVelocityMode()
+    {
+        useClickPositionForOverallVelocity = !useClickPositionForOverallVelocity;
+    }
+
+    void clearAllLatches()
+    {
+        for (auto note : latchedNotes)
+        {
+            keyboardState.noteOff(getMidiChannel(), note, 0.0f);
+        }
+
+        latchedNotes.clear();
+    }
+
+    bool mouseDownOnKey(int midiNoteNumber, const juce::MouseEvent &e) override
+    {
+        if (useClickPositionForOverallVelocity)
+        {
+            float v = std::clamp(getNoteAndVelocityAtPosition(e.position).velocity, 0.0f, 1.0f);
+            setVelocity(v, false);
+            onVelocityChanged(v);
+        }
+
+        // right-click will latch keys!
+        if (e.mods.isPopupMenu())
+        {
+            if (latchedNotes.count(midiNoteNumber))
+            {
+                latchedNotes.erase(midiNoteNumber);
+                keyboardState.noteOff(getMidiChannel(), midiNoteNumber, 0.0f);
+            }
+            else
+            {
+                latchedNotes.insert(midiNoteNumber);
+                keyboardState.noteOn(getMidiChannel(), midiNoteNumber, getCurrentVelocity());
+            }
+
+            return false;
+        }
+
+        if (latchedNotes.count(midiNoteNumber))
+        {
+            latchedNotes.erase(midiNoteNumber);
+            keyboardState.noteOff(getMidiChannel(), midiNoteNumber, 0.0f);
+
+            return false;
+        }
+
+        return juce::MidiKeyboardComponent::mouseDownOnKey(midiNoteNumber, e);
+    }
+
+    bool mouseDraggedToKey(int midiNoteNumber, const juce::MouseEvent &e) override
+    {
+        if (e.mods.isPopupMenu())
+        {
+            return false;
+        }
+
+        return juce::MidiKeyboardComponent::mouseDraggedToKey(midiNoteNumber, e);
+    }
+
+  private:
+    juce::MidiKeyboardState &keyboardState;
+    std::set<int> latchedNotes;
+    SurgeSynthEditor *editor{nullptr};
+
+    float getCurrentVelocity() const;
 };
 
 #endif // SURGE_SRC_SURGE_XT_SURGESYNTHEDITOR_H

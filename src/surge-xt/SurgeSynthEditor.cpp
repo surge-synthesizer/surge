@@ -136,6 +136,13 @@ static std::weak_ptr<SurgeJUCELookAndFeel> surgeLookAndFeelWeakPointer;
 static std::mutex surgeLookAndFeelSetupMutex;
 
 //==============================================================================
+
+SurgeVirtualKeyboard::~SurgeVirtualKeyboard() { clearAllLatches(); }
+
+float SurgeVirtualKeyboard::getCurrentVelocity() const { return editor->midiKeyboardVelocity; }
+
+//==============================================================================
+
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     : juce::AudioProcessorEditor(&p), processor(p)
 {
@@ -167,7 +174,8 @@ SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
                                                        Surge::Storage::MiddleC, 1);
 
     keyboard = std::make_unique<SurgeVirtualKeyboard>(
-        processor.midiKeyboardState, juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
+        this, processor.midiKeyboardState,
+        juce::MidiKeyboardComponent::Orientation::horizontalKeyboard);
     keyboard->setVelocity(midiKeyboardVelocity, true);
     keyboard->setOctaveForMiddleC(5 - mcValue);
     keyboard->setKeyPressBaseOctave(midiKeyboardOctave);
