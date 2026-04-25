@@ -127,8 +127,27 @@ class LFOModulationSource : public ModulationSource
   private:
     pdata *localcopy;
     bool phaseInitialized;
+
     void initPhaseFromStartPhase();
     void msegEnvelopePhaseAdjustment();
+
+    inline float startPhaseRescaled() const
+    {
+        // start_phase doubles as shuffle parameter for step sequencer
+        // where it must remain as unscaled, full [0, 1] range
+        // which is also used in extended mode as (x * 2 - 1).
+        // Scale only for basic LFO shapes
+        if (lfo->shape.val.i == lt_stepseq || lfo->shape.val.i == lt_formula ||
+            lfo->shape.val.i == lt_envelope || lfo->shape.val.i == lt_mseg)
+        {
+            return localcopy[startphase].f;
+        }
+
+        // Prevent full-circle: scale to [0, 1) so val_max != val_min
+        constexpr float maxPhase = 1.0f - (1.0f / 360.0f);
+
+        return localcopy[startphase].f * maxPhase;
+    }
 
     float phase, target, noise, noised1, env_phase, priorPhase;
     int unwrappedphase_intpart;
