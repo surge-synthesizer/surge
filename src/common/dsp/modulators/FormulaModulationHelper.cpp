@@ -21,13 +21,21 @@
  */
 
 #include "FormulaModulationHelper.h"
+
 #include "LuaSupport.h"
 #include "SurgeVoice.h"
 #include "SurgeStorage.h"
-#include <thread>
-#include <functional>
-#include "fmt/core.h"
+
 #include "lua/LuaSources.h"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstring>
+#include <functional>
+#include <sstream>
+#include <string_view>
+#include "fmt/core.h"
 
 namespace Surge
 {
@@ -48,6 +56,8 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
         {
 #if HAS_LUA
             stateData.audioState = luaL_newstate();
+            if (!stateData.audioState)
+                return false;
             luaL_openlibs((lua_State *)(stateData.audioState));
 #endif
             firstTimeThrough = true;
@@ -65,6 +75,8 @@ bool prepareForEvaluation(SurgeStorage *storage, FormulaModulatorStorage *fs, Ev
         {
 #if HAS_LUA
             stateData.displayState = luaL_newstate();
+            if (!stateData.displayState)
+                return false;
             luaL_openlibs((lua_State *)(stateData.displayState));
 #endif
             firstTimeThrough = true;
@@ -605,6 +617,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
             auto r = lua_tonumber(s->L, -1);
             lua_pop(s->L, 1);
             output[0] = checkFinite(r);
+            onerr.replace = false;
             return;
         }
         if (!lua_istable(s->L, -1))
@@ -875,7 +888,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                 }
             };
 
-            for (auto k : ikeys)
+            for (auto &k : ikeys)
             {
                 std::ostringstream oss;
                 oss << "." << k;
@@ -887,7 +900,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                 lua_pop(es.L, 1);
             }
 
-            for (auto s : skeys)
+            for (const auto &s : skeys)
             {
                 if (show == SHOW_ALL || (show == SHOW_USER && isUserDefined(s)) ||
                     (show == SHOW_SYSTEM && !isUserDefined(s)))
@@ -946,7 +959,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
     // filtering
     if (filter != "")
     {
-        for (int i = 0; i < rows.size(); i++)
+        for (size_t i = 0; i < rows.size(); i++)
         {
             auto search = rows[i].label.find(filter, 0);
             if ((search != std::string::npos))
@@ -954,7 +967,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
                 rows[i].filterFlag = DebugRow::Found;
 
                 // tag all of its children
-                for (int k = i + 1; k < rows.size(); k++)
+                for (size_t k = i + 1; k < rows.size(); k++)
                 {
                     if (rows[k].depth > rows[i].depth)
                         rows[k].filterFlag = DebugRow::Child;
@@ -965,7 +978,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
             }
         }
 
-        for (int i = rows.size() - 1; i > -1; i--)
+        for (size_t i = rows.size(); i-- > 0;)
         {
 
             if (rows[i].filterFlag == DebugRow::Found)
@@ -978,7 +991,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
 
                 if (currentDepth > 0)
                 {
-                    for (int k = i - 1; k > -1; k--)
+                    for (size_t k = i; k-- > 0;)
                     {
 
                         if (rows[k].depth < currentDepth)
@@ -997,7 +1010,7 @@ std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::s
             }
         }
 
-        for (int i = rows.size() - 1; i > -1; i--)
+        for (size_t i = rows.size(); i-- > 0;)
         {
             if (rows[i].filterFlag != DebugRow::Found && rows[i].filterFlag != DebugRow::Ignore &&
                 rows[i].filterFlag != DebugRow::Child && !rows[i].isHeader)
@@ -1018,7 +1031,7 @@ std::string createDebugViewOfModState(const EvaluatorState &es)
     bool groupState[8] = {true, true, true, true, true, true, true, true};
     auto r = createDebugDataOfModState(es, "", groupState);
     std::ostringstream oss;
-    for (const auto d : r)
+    for (const auto &d : r)
     {
         oss << std::string(d.depth, ' ') << std::string(d.depth, ' ') << d.label << ": ";
         if (!d.hasValue)
@@ -1156,7 +1169,7 @@ std::variant<float, std::string, bool> runOverModStateForTesting(const std::stri
         return res;
     }
 
-    lua_pop(es.L, 1); // Pop evaluator state
+    lua_pop(es.L, 1); // Pop pcall result
 #endif
     return false;
 }

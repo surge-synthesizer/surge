@@ -26,8 +26,12 @@
 #include "SurgeStorage.h"
 #include "StringOps.h"
 #include "LuaSupport.h"
-#include <variant>
+
+#include <cstdint>
 #include <memory>
+#include <string>
+#include <variant>
+#include <vector>
 
 class SurgeVoice;
 
@@ -166,4 +170,4 @@ void createInitFormula(FormulaModulatorStorage *fs);
 
 } // namespace Formula
 } // namespace Surge
-#endif // SURGE_XT_FORMULAMODULATIONHELPER_H
+#endif // SURGE_SRC_COMMON_DSP_MODULATORS_FORMULAMODULATIONHELPER_H

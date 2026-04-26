@@ -480,7 +480,7 @@ struct ConvolutionButton : public juce::Component
         if (!sge)
             return;
 
-        juce::String fileTypes = "*.aif,*.aiff,*.flac,*.wav";
+        juce::String fileTypes = "*.aif;*.aiff;*.flac;*.wav";
         sge->fileChooser = std::make_unique<juce::FileChooser>(
             "Select Impulse Response to Load", juce::File(path_to_string(path)), fileTypes);
         auto action = [this, path](const juce::FileChooser &c) {
@@ -516,7 +516,7 @@ struct ConvolutionButton : public juce::Component
         manager.registerBasicFormats();
 
         juce::File f(file);
-        auto reader = manager.createReaderFor(f);
+        std::unique_ptr<juce::AudioFormatReader> reader{manager.createReaderFor(f)};
         if (!reader)
             return false;
         if (reader->numChannels != 1 && reader->numChannels != 2)

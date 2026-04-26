@@ -24,9 +24,15 @@
 #define SURGE_SRC_COMMON_DSP_WAVETABLESCRIPTEVALUATOR_H
 
 #include "LuaSupport.h"
-#include "StringOps.h"
 #include "SurgeStorage.h"
 #include "Wavetable.h"
+#include "filesystem/import.h"
+
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace Surge
 {
@@ -83,4 +89,4 @@ struct LuaWTEvaluator
 
 } // namespace WavetableScript
 } // namespace Surge
-#endif // SURGE_XT_WAVETABLESCRIPTEVALUATOR_H
+#endif // SURGE_SRC_COMMON_DSP_WAVETABLESCRIPTEVALUATOR_H

@@ -169,7 +169,7 @@ class CodeEditorSearch : public TextfieldPopup
     int result[512] = {0};
     int resultCurrent = 0;
     int resultTotal = 0;
-    bool saveCaretStartPositionLock;
+    bool saveCaretStartPositionLock = false;
     juce::String latestSearch;
     juce::CodeDocument::Position startCaretPosition;
 

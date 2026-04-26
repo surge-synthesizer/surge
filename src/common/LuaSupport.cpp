@@ -21,13 +21,6 @@
  */
 
 #include "LuaSupport.h"
-
-#include "basic_dsp.h"
-
-#if HAS_JUCE
-#include "SurgeSharedBinary.h"
-#endif
-
 #include "lua/LuaSources.h"
 
 #include <iostream>
@@ -47,7 +40,7 @@ bool Surge::LuaSupport::parseStringDefiningFunction(lua_State *L, const std::str
 }
 
 int Surge::LuaSupport::parseStringDefiningMultipleFunctions(
-    lua_State *L, const std::string &definition, const std::vector<std::string> functions,
+    lua_State *L, const std::string &definition, const std::vector<std::string> &functions,
     std::string &errorMessage)
 {
 #if HAS_LUA
@@ -459,12 +452,14 @@ bool Surge::LuaSupport::loadSurgePrelude(lua_State *L, const std::string &lua_sc
     {
         std::cout << "Error: Failed to load Lua file! [ " << lua_script.c_str() << " ]"
                   << std::endl;
+        lua_pop(L, 1); // Pop error
         return false;
     }
     auto pcall = lua_pcall(L, 0, 1, 0);
     if (pcall != 0)
     {
         std::cout << "Error: Failed to run Lua file! [ " << lua_script.c_str() << " ]" << std::endl;
+        lua_pop(L, 1); // Pop error
         return false;
     }
     lua_setglobal(L, surgeTableName);

@@ -197,7 +197,7 @@ struct LuaWTEvaluator::Details
             if (lua_istable(L, -1))
             {
                 bool gen{true};
-                for (auto i = 0; i < resolution && gen; ++i)
+                for (size_t i = 0; i < resolution && gen; ++i)
                 {
                     lua_pushinteger(L, i + 1);
                     lua_gettable(L, -2);
@@ -317,7 +317,7 @@ struct LuaWTEvaluator::Details
                 wtName = "Scripted Wavetable";
 
                 frameCache.clear();
-                for (int i = 0; i < frameCount; ++i)
+                for (size_t i = 0; i < frameCount; ++i)
                     frameCache.push_back(std::nullopt);
             }
 
@@ -476,7 +476,7 @@ bool LuaWTEvaluator::populateWavetable(wt_header &wh, float **wavdata)
     wh.flags = 0;
     *wavdata = wd;
 
-    for (int i = 0; i < frames; ++i)
+    for (size_t i = 0; i < frames; ++i)
     {
         auto v = getFrame(i);
         if (v.has_value())

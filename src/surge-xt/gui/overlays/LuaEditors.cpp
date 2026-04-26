@@ -26,6 +26,7 @@
 #include "RuntimeFont.h"
 #include "SkinColors.h"
 #include "SkinSupport.h"
+#include "StringOps.h"
 #include "SurgeImage.h"
 #include "SurgeImageStore.h"
 #include "SurgeJUCEHelpers.h"
@@ -2817,7 +2818,8 @@ void FormulaModulatorEditor::applyCode()
     updateDebuggerIfNeeded();
     editor->repaintFrame();
     setApplyEnabled(false);
-    mainEditor->grabKeyboardFocus();
+    if (mainEditor->isShowing())
+        mainEditor->grabKeyboardFocus();
 
     if (debugPanel->isOpen)
         debugPanel->initializeLfoDebugger();
@@ -3881,7 +3883,8 @@ void WavetableScriptEditor::applyCode()
     rerenderFromUIState();
     editor->repaintFrame();
     setApplyEnabled(false);
-    mainEditor->grabKeyboardFocus();
+    if (mainEditor->isShowing())
+        mainEditor->grabKeyboardFocus();
 
     repaint();
 }

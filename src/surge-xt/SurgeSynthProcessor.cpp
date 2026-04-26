@@ -51,7 +51,7 @@ SurgeStorage::AudioFileInput loadAudioFile(std::string file)
     juce::AudioFormatManager manager;
     manager.registerBasicFormats();
 
-    auto reader = manager.createReaderFor(juce::File(file));
+    std::unique_ptr<juce::AudioFormatReader> reader{manager.createReaderFor(juce::File(file))};
     if (!reader)
         return {};
 

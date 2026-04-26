@@ -55,9 +55,6 @@
 #include <bitset>
 #include "UndoManager.h"
 
-// Change this to 0 to disable WTSE component, to disable for release: change value, test, and push
-#define HAS_LUA 1
-
 class SurgeSynthEditor;
 
 #if SURGE_INCLUDE_MELATONIN_INSPECTOR

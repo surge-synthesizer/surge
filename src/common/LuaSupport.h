@@ -35,8 +35,6 @@ extern "C"
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
-#include <luajit.h>
-#include <lj_arch.h>
 
 #include <pffft.h>
 }
@@ -61,7 +59,7 @@ namespace LuaSupport
  * stack by 1.
  */
 
-bool parseStringDefiningFunction(lua_State *s, const std::string &definition,
+bool parseStringDefiningFunction(lua_State *L, const std::string &definition,
                                  const std::string &functionName, std::string &errorMessage);
 
 /*
@@ -74,8 +72,8 @@ bool parseStringDefiningFunction(lua_State *s, const std::string &definition,
  * the number which were nil. If the function returns 0 errorMessage will be populated
  * with something.
  */
-int parseStringDefiningMultipleFunctions(lua_State *s, const std::string &definition,
-                                         const std::vector<std::string> functions,
+int parseStringDefiningMultipleFunctions(lua_State *L, const std::string &definition,
+                                         const std::vector<std::string> &functions,
                                          std::string &errorMessage);
 
 /*
@@ -159,4 +157,4 @@ static constexpr const char *sharedTableName{"shared"};
 } // namespace LuaSupport
 } // namespace Surge
 
-#endif // SURGE_XT_LUASUPPORT_H
+#endif // SURGE_SRC_COMMON_LUASUPPORT_H
