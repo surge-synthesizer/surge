@@ -131,7 +131,7 @@ class LFOModulationSource : public ModulationSource
     void initPhaseFromStartPhase();
     void msegEnvelopePhaseAdjustment();
 
-    inline float startPhaseRescaled() const
+    inline float startPhaseClamped() const
     {
         // start_phase doubles as shuffle parameter for step sequencer
         // where it must remain as unscaled, full [0, 1] range
@@ -146,7 +146,7 @@ class LFOModulationSource : public ModulationSource
         // Prevent full-circle: scale to [0, 1) so val_max != val_min
         constexpr float maxPhase = 1.0f - (1.0f / 360.0f);
 
-        return localcopy[startphase].f * maxPhase;
+        return std::clamp(localcopy[startphase].f, 0.f, maxPhase);
     }
 
     float phase, target, noise, noised1, env_phase, priorPhase;

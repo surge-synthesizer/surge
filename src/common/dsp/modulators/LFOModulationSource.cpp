@@ -156,7 +156,7 @@ void LFOModulationSource::msegEnvelopePhaseAdjustment()
 
 void LFOModulationSource::initPhaseFromStartPhase()
 {
-    phase = startPhaseRescaled();
+    phase = startPhaseClamped();
     phaseInitialized = true;
 
     if (lfo->shape.val.i == lt_tri && lfo->rate.deactivated && !lfo->unipolar.val.b)
@@ -217,7 +217,7 @@ void LFOModulationSource::attackFrom(float start)
 
     if (is_display)
     {
-        phase = startPhaseRescaled();
+        phase = startPhaseClamped();
 
         if (lfo->shape.val.i == lt_stepseq)
         {
@@ -239,7 +239,7 @@ void LFOModulationSource::attackFrom(float start)
         }
         else
         {
-            phaseslider = startPhaseRescaled();
+            phaseslider = startPhaseClamped();
         }
 
         // With modulation the phaseslider can be outside [0, 1), as in #1524
