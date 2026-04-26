@@ -55,9 +55,6 @@
 #include <bitset>
 #include "UndoManager.h"
 
-// TODO: Remove this once ARM64EC build gates this correctly
-#define HAS_LUA 1
-
 class SurgeSynthEditor;
 
 #if SURGE_INCLUDE_MELATONIN_INSPECTOR

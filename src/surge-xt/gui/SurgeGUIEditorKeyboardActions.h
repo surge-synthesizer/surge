@@ -154,8 +154,10 @@ inline std::string keyboardActionName(KeyboardActions a)
         return "SHOW_KEYBINDINGS_EDITOR";
     case TOGGLE_LFO_EDITOR:
         return "SHOW_LFO_EDITOR";
+#if HAS_LUA
     case TOGGLE_WTS_EDITOR:
         return "SHOW_WTS_EDITOR";
+#endif
     case TOGGLE_MODLIST:
         return "SHOW_MODLIST";
     case TOGGLE_TUNING_EDITOR:
