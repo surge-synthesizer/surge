@@ -41,7 +41,7 @@ else()
 endif()
 
 surge_add_lib_subdirectory(sst/sst-cpputils)
-set(SST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES ON CACHE BOOL "No Native Aliases for SCXT") # Makes ARM64EC use neon basically
+set(SST_BASIC_BLOCKS_SIMD_OMIT_NATIVE_ALIASES ON CACHE BOOL "No Native Aliases for Surge XT") # Makes ARM64EC use Neon, basically
 surge_add_lib_subdirectory(sst/sst-basic-blocks)
 surge_add_lib_subdirectory(sst/sst-plugininfra)
 surge_add_lib_subdirectory(sst/sst-filters)
@@ -317,7 +317,7 @@ elseif(WIN32)
     _UNICODE
   )
 
-  message(STATUS "Adding simde interface library on windows")
+  message(STATUS "Adding SIMDe interface library on Windows")
   target_link_libraries(${PROJECT_NAME} PUBLIC surge::simde)
 
 endif()

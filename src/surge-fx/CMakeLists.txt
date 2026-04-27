@@ -31,11 +31,10 @@ juce_add_plugin(${PROJECT_NAME}
   NEEDS_MIDI_OUTPUT FALSE
   IS_MIDI_EFFECT FALSE
   MICROPHONE_PERMISSION_ENABLED TRUE
-  MICROPHONE_PERMISSION_TEXT "Surge XT Effects would like to use your microphone for Audio Input"
+  MICROPHONE_PERMISSION_TEXT "Surge XT Effects would like to use your microphone for audio input"
 
   BLUETOOTH_PERMISSION_ENABLED TRUE
-  BLUETOOTH_PERMISSION_TEXT "Surge XT Effects would like to use BlueTooth"
-
+  BLUETOOTH_PERMISSION_TEXT "Surge XT Effects would like to use Bluetooth"
 
   COPY_PLUGIN_AFTER_BUILD ${SURGE_COPY_AFTER_BUILD}
 
@@ -47,12 +46,11 @@ juce_add_plugin(${PROJECT_NAME}
   AU_MAIN_TYPE kAudioUnitType_Effect
   AU_SANDBOX_SAFE TRUE
 
-
   LV2_URI https://surge-synthesizer.github.io/lv2/surge-xt-fx
   LV2_SHARED_LIBRARY_NAME SurgeXT_FX
 
   FORMATS ${SURGE_JUCE_FORMATS}
-  )
+)
 
 target_sources(${PROJECT_NAME} PRIVATE
   SurgeFXEditor.cpp

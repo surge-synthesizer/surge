@@ -38,10 +38,10 @@ juce_add_plugin(${PROJECT_NAME}
   NEEDS_MIDI_OUTPUT FALSE
   IS_MIDI_EFFECT FALSE
   MICROPHONE_PERMISSION_ENABLED TRUE
-  MICROPHONE_PERMISSION_TEXT "Surge XT would like to use your microphone for Audio Input"
+  MICROPHONE_PERMISSION_TEXT "Surge XT would like to use your microphone for audio input"
 
   BLUETOOTH_PERMISSION_ENABLED TRUE
-  BLUETOOTH_PERMISSION_TEXT "Surge XT would like to use BlueTooth"
+  BLUETOOTH_PERMISSION_TEXT "Surge XT would like to use Bluetooth"
 
   COPY_PLUGIN_AFTER_BUILD ${SURGE_COPY_AFTER_BUILD}
 
@@ -252,13 +252,13 @@ if(APPLE)
   get_property(cliname TARGET ${PROJECT_NAME}-cli PROPERTY RUNTIME_OUTPUT_DIRECTORY)
   get_property(saname TARGET ${PROJECT_NAME}_Standalone PROPERTY RUNTIME_OUTPUT_DIRECTORY)
   set(cliexe ${cliname}/${PROJECT_NAME}-cli)
-  message(STATUS "macOS Standalone includes CLI")
+  message(STATUS "macOS standalone includes CLI")
 
   add_custom_command(
     TARGET ${PROJECT_NAME}_Standalone
     POST_BUILD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND echo "Relocating cli executable into Standalone"
+    COMMAND echo "Relocating CLI executable into standalone"
     COMMAND ${CMAKE_COMMAND} -E copy "${cliexe}" "${saname}/Surge XT.app/Contents/MacOS"
   )
 endif()

@@ -21,8 +21,8 @@ endif()
 project(Surge VERSION 1.4.0 LANGUAGES C CXX)
 
 # Banner {{{
-message(STATUS "It's Surge XT, folks! Version is ${PROJECT_VERSION}.")
-message(STATUS "CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}.")
+message(STATUS "It's Surge XT version ${PROJECT_VERSION}, folks!")
+message(STATUS "CMake build type is ${CMAKE_BUILD_TYPE}.")
 message(STATUS "CMake version is ${CMAKE_VERSION}.")
 message(STATUS "Compiler version is ${CMAKE_CXX_COMPILER_VERSION}.")
 math(EXPR SURGE_BITNESS "${CMAKE_SIZEOF_VOID_P} * 8" OUTPUT_FORMAT DECIMAL)
@@ -38,7 +38,7 @@ endif()
 set(SURGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(NOT EXISTS "${SURGE_SOURCE_DIR}/libs/tuning-library/README.md")
-  message(FATAL_ERROR "Cannot find the contents of the tuning-library submodule. This usually means"
+  message(FATAL_ERROR "Cannot find contents of the tuning-library submodule. This usually means"
     " that you haven't done a submodule update, so the repository will not build properly. "
     "To resolve this, please run git submodule update --init --recursive and re-run CMake!")
 endif()
@@ -78,7 +78,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 20)
 
 if(SURGE_BUILD_RS_EXAMPLES AND NOT SURGE_BUILD_RS)
-  message(STATUS "Enabling surge-rs, which is needed for its examples.")
+  message(STATUS "Enabling Rust bindings, which is needed for its examples.")
   set(SURGE_BUILD_RS ON)
 endif()
 
@@ -97,7 +97,7 @@ else()
 endif()
 
 if(SURGE_BUILD_RS)
-    message(STATUS "Lua is being disabled due to temporary incompatibility with Rust bindings.")
+  message(STATUS "Lua is disabled due to temporary incompatibility with Rust bindings.")
     set(SURGE_SKIP_LUA TRUE)
 endif()
 
@@ -258,8 +258,8 @@ source_group("Surge FX" REGULAR_EXPRESSION "src/common/dsp/effects/")
 source_group("Surge GUI" REGULAR_EXPRESSION "src/surge-xt/gui/")
 source_group("Generated Code" REGULAR_EXPRESSION "version.cpp")
 source_group("Headless" REGULAR_EXPRESSION "src/surge-testrunner/")
-source_group("Surge XT Juce" REGULAR_EXPRESSION "src/surge-xt/")
-source_group("Surge FX Juce" REGULAR_EXPRESSION "src/surge-fx/")
+source_group("Surge XT JUCE" REGULAR_EXPRESSION "src/surge-xt/")
+source_group("Surge FX JUCE" REGULAR_EXPRESSION "src/surge-fx/")
 
 # }}}
 option(SURGE_BUILD_TESTRUNNER "Build Surge unit test runner" ON)

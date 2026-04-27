@@ -1,18 +1,18 @@
 # vi:set sw=2 et:
-option(SURGE_BUILD_FX "Build Surge FX bank" ON)
-option(SURGE_BUILD_XT "Build Surge XT synth" ON)
-option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge Python bindings with pybind11" OFF)
-option(SURGE_BUILD_RS "Build Surge XT Rust bindings (surge-rs)" OFF)
-option(SURGE_BUILD_RS_EXAMPLES "Build surge-rs examples" OFF)
+option(SURGE_BUILD_XT "Build Surge XT plugin" ON)
+option(SURGE_BUILD_FX "Build Surge XT Effects plugin" ON)
+option(SURGE_BUILD_PYTHON_BINDINGS "Build Surge XT Python bindings" OFF)
+option(SURGE_BUILD_RS "Build Surge XT Rust bindings" OFF)
+option(SURGE_BUILD_RS_EXAMPLES "Build examples for Rust bindings" OFF)
 option(SURGE_COPY_TO_PRODUCTS "Copy built plugins to the products directory" ON)
 option(SURGE_COPY_AFTER_BUILD "Copy JUCE plugins to system plugin area after build" OFF)
-option(SURGE_EXPOSE_PRESETS "Expose surge presets via the JUCE Program API" OFF)
-option(SURGE_INCLUDE_MELATONIN_INSPECTOR "Include melatonin inspector" OFF)
+option(SURGE_EXPOSE_PRESETS "Expose Surge XT presets via the JUCE program API" OFF)
+option(SURGE_INCLUDE_MELATONIN_INSPECTOR "Include Melatonin Inspector" OFF)
 
 # Currently the JUCE LV2 build crashes in our CI pipeline, so leave it for users to self build
-option(SURGE_BUILD_LV2 "Build Surge as an LV2" OFF)
+option(SURGE_BUILD_LV2 "Build Surge XT as an LV2" OFF)
 
-option(SURGE_BUILD_CLAP "Build Surge as a CLAP" ON)
+option(SURGE_BUILD_CLAP "Build Surge XT as a CLAP" ON)
 
 if(NOT SURGE_COMPILE_BLOCK_SIZE)
   set(SURGE_COMPILE_BLOCK_SIZE 32)
@@ -33,8 +33,8 @@ if(NOT SURGE_SKIP_JUCE_FOR_RACK)
 endif()
 
 if(${CMAKE_VERSION} VERSION_LESS 3.21)
-  message(WARNING "CMake version less than 3.21. Skipping clap builds. Please "
-    "consider using a newer version of CMake")
+  message(WARNING "CMake version is lower than 3.21. Skipping CLAP builds. Please "
+    "consider using a newer version of CMake!")
   set(SURGE_BUILD_CLAP FALSE)
 else()
   message(STATUS "CMake version ${CMAKE_VERSION} allows CLAP build")
@@ -131,7 +131,7 @@ if(DEFINED ENV{VST2SDK_DIR} AND NOT SURGE_BUILD_PYTHON_BINDINGS)
   file(TO_CMAKE_PATH "$ENV{VST2SDK_DIR}" JUCE_VST2_DIR)
   juce_set_vst2_sdk_path(${JUCE_VST2_DIR})
   list(APPEND SURGE_JUCE_FORMATS VST)
-  message(STATUS "VST2 SDK path is $ENV{VST2SDK_DIR}")
+  message(STATUS "VST2 SDK path located in $ENV{VST2SDK_DIR}. Enabling!")
 
   # VST2 headers are invalid UTF-8
   add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/wd4828>)
@@ -139,13 +139,13 @@ endif()
 
 if(SURGE_BUILD_LV2)
   list(APPEND SURGE_JUCE_FORMATS LV2)
-  message(STATUS "Including JUCE7 LV2 support.")
+  message(STATUS "Including JUCE 7 LV2 support")
 endif()
 
 set(SSTPI_ASIOSDK "${CMAKE_SOURCE_DIR}/libs/sst/sst-plugininfra/libs/asiosdk")
 if(EXISTS "${CMAKE_SOURCE_DIR}/libs/sst/sst-plugininfra/libs/asiosdk")
   if (WIN32)
-    message(STATUS "ASIO SDK located in sst-plugininfra. Enabling")
+    message(STATUS "ASIO SDK located in sst-plugininfra. Enabling!")
     target_compile_definitions(surge-juce INTERFACE JUCE_ASIO=1)
     target_include_directories(surge-juce INTERFACE ${SSTPI_ASIOSDK}/common)
     set(JUCE_ASIO_SUPPORT TRUE)
