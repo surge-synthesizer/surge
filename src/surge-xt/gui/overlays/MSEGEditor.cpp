@@ -247,8 +247,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     std::function<float(float)> valToPx()
     {
-        auto drawArea = getDrawArea();
-        float vscale = drawArea.getHeight();
+        const auto drawArea = getDrawArea();
+        const float vscale = drawArea.getHeight();
         return [vscale, drawArea](float vp) -> float {
             float v = 1 - (vp + 1) * 0.5;
             return v * vscale + drawArea.getY();
@@ -257,8 +257,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     std::function<float(float)> pxToVal()
     {
-        auto drawArea = getDrawArea();
-        float vscale = drawArea.getHeight();
+        const auto drawArea = getDrawArea();
+        const float vscale = drawArea.getHeight();
         return [vscale, drawArea](float vx) -> float {
             auto v = (vx - drawArea.getY()) / vscale;
             auto vp = (1 - v) * 2 - 1;
@@ -268,9 +268,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     std::function<float(float)> timeToPx()
     {
-        auto drawArea = getDrawArea();
-        float maxt = drawDuration();
-        float tscale = 1.f * drawArea.getWidth() / maxt;
+        const auto drawArea = getDrawArea();
+        const float maxt = drawDuration();
+        const float tscale = 1.f * drawArea.getWidth() / maxt;
         return [tscale, drawArea, this](float t) {
             return (t - ms->axisStart) * tscale + drawArea.getX();
         };
@@ -278,9 +278,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
     std::function<float(float)> pxToTime() // INVESTIGATE
     {
-        auto drawArea = getDrawArea();
-        float maxt = drawDuration();
-        float tscale = 1.f * drawArea.getWidth() / maxt;
+        const auto drawArea = getDrawArea();
+        const float maxt = drawDuration();
+        const float tscale = 1.f * drawArea.getWidth() / maxt;
 
         // So px = t * tscale + drawarea;
         // So t = ( px - drawarea ) / tscale;
@@ -312,10 +312,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         }
     }
 
-    /*
-     * This little struct acts as a SmapGuard so that shift drags can reset snap and
-     * unreset snap
-     */
+    // This little struct acts as a SmapGuard so that Shift-drags can (un)reset snap
     struct SnapGuard
     {
         SnapGuard(MSEGCanvas *c) : c(c)
@@ -348,7 +345,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     {
         hotzones.clear();
 
-        auto drawArea = getDrawArea();
+        const auto drawArea = getDrawArea();
 
         auto handleRadius = 6.5;
 
@@ -1131,7 +1128,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             recalcHotZones(juce::Point<int>(vs.getX(), vs.getY()));
 
         g.fillAll(skin->getColor(Colors::MSEGEditor::Background));
-        auto drawArea = getDrawArea();
+        const auto drawArea = getDrawArea();
         float maxt = drawDuration();
         auto valpx = valToPx();
         auto tpx = timeToPx();
@@ -1186,7 +1183,6 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         float pathScale = 1.0;
 
-        auto xdisp = drawArea;
         float yOff = drawArea.getY();
 
         auto beginP = [yOff, pathScale](juce::Path &p, float x, float y) {
@@ -1501,6 +1497,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         {
             if (h.type == hotzone::MOUSABLE_NODE)
             {
+                using type = MSEGStorage::segment::Type;
+
                 int sz = 13;
                 int offx = 0, offy = 0;
                 bool showValue = false;
@@ -1557,20 +1555,47 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     };
 
                     const int detailedMode = Surge::Storage::getValueDisplayPrecision(storage);
+                    const bool is2Dcp =
+                        ms->segments[h.associatedSegment].type == type::QUAD_BEZIER ||
+                        ms->segments[h.associatedSegment].type == type::BROWNIAN;
+                    const bool readoutHasTwoRows =
+                        h.zoneSubType != hotzone::SEGMENT_CONTROL ||
+                        (h.zoneSubType == hotzone::SEGMENT_CONTROL && is2Dcp);
 
                     g.setFont(skin->fontManager->lfoTypeFont);
 
                     float val = h.specialEndpoint ? ms->segments[h.associatedSegment].nv1
                                                   : ms->segments[h.associatedSegment].v0;
 
-                    std::string txt = fmt::format("X: {:.{}f}", pxt(cx), detailedMode),
-                                txt2 = fmt::format("Y: {:.{}f}", val, detailedMode);
+                    std::string txt1, txt2;
 
-                    int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt),
+                    if (h.zoneSubType == hotzone::SEGMENT_CONTROL)
+                    {
+                        if (readoutHasTwoRows)
+                        {
+                            txt1 = fmt::format("CP X: {:.{}f}",
+                                               ms->segments[h.associatedSegment].cpduration,
+                                               detailedMode);
+                            txt2 = fmt::format("CP Y: {:.{}f}",
+                                               ms->segments[h.associatedSegment].cpv, detailedMode);
+                        }
+                        else
+                        {
+                            txt1 = fmt::format("CP: {:.{}f}", ms->segments[h.associatedSegment].cpv,
+                                               detailedMode);
+                        }
+                    }
+                    else
+                    {
+                        txt1 = fmt::format("X: {:.{}f}", pxt(cx), detailedMode);
+                        txt2 = fmt::format("Y: {:.{}f}", val, detailedMode);
+                    }
+
+                    int sw1 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt1),
                         sw2 = SST_STRING_WIDTH_INT(g.getCurrentFont(), txt2);
 
                     float dragX = r.getRight(), dragY = r.getBottom();
-                    float dragW = 6 + std::max(sw1, sw2), dragH = 22;
+                    float dragW = 6 + std::max(sw1, sw2), dragH = readoutHasTwoRows ? 22 : 11;
 
                     // reposition the display if we've reached right or bottom edge of drawArea
                     if (dragX + dragW > drawArea.getRight())
@@ -1603,11 +1628,14 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                     readout = readout.withTrimmedLeft(2).withHeight(10);
 
                     g.setColour(skin->getColor(Colors::LFO::StepSeq::InfoWindow::Text));
-                    g.drawText(txt, readout, juce::Justification::centredLeft);
+                    g.drawText(txt1, readout, juce::Justification::centredLeft);
 
-                    readout = readout.translated(0, 10);
+                    if (readoutHasTwoRows)
+                    {
+                        readout = readout.translated(0, 10);
 
-                    g.drawText(txt2, readout, juce::Justification::centredLeft);
+                        g.drawText(txt2, readout, juce::Justification::centredLeft);
+                    }
                 }
             }
         }
@@ -1629,30 +1657,30 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     void mouseDown(const juce::MouseEvent &e) override
     {
         prepareForUndo();
+
+        const auto drawArea = getDrawArea();
+
         mouseDownInitiation =
-            (getDrawArea().contains(e.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
-                                                        : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
+            (drawArea.contains(e.position.toInt()) ? MOUSE_DOWN_IN_DRAW_AREA
+                                                   : MOUSE_DOWN_OUTSIDE_DRAW_AREA);
+
+        // Edge case: Hotzones can span the axis and we want the entire node to be mouse clickable
+        for (auto h : hotzones)
+        {
+            if (h.rect.contains(e.position) && mouseDownInitiation == MOUSE_DOWN_OUTSIDE_DRAW_AREA)
+            {
+                mouseDownInitiation = MOUSE_DOWN_IN_DRAW_AREA;
+            }
+        }
+
         if (e.mods.isPopupMenu())
         {
-            auto da = getDrawArea();
-            if (da.contains(e.position.toInt()))
+
+            if (mouseDownInitiation)
             {
                 openPopup(e.position);
             }
-            else
-            {
-                /*
-                 * Edge case: Hotzones can span the axis and we want the entire node
-                 * to be right mouse clickable
-                 */
-                for (auto h : hotzones)
-                {
-                    if (h.rect.contains(e.position))
-                    {
-                        openPopup(e.position);
-                    }
-                }
-            }
+
             return;
         }
 
@@ -1706,6 +1734,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         {
             // Allow us to initiate drags on control points in draw mode
             bool amOverControl = false;
+
             for (auto &h : hotzones)
             {
                 if (h.rect.contains(where) && h.type == hotzone::MOUSABLE_NODE &&
@@ -1717,24 +1746,25 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
             if (!amOverControl)
             {
-                auto da = getDrawArea();
-                /*
-                 * Only initiate draws in the draw area allowing the axis to still pan and zoom
-                 */
-                if (da.contains(where.toInt()) &&
+                // Only initiate draws in the draw area allowing the axis to still pan and zoom
+                if (drawArea.contains(where.toInt()) &&
                     !(e.mods.isShiftDown() || e.mods.isMiddleButtonDown()))
                 {
-                    /*
-                     * Activate temporary snap but in draw mode, do vSnap only
-                     */
+                    // Activate temporary snap but in draw mode, do vSnap only
                     bool a = e.mods.isAltDown();
+
                     if (a)
                     {
                         snapGuard = std::make_shared<SnapGuard>(this);
+
                         if (a)
+                        {
                             ms->vSnap = ms->vSnapDefault;
+                        }
                     }
+
                     inDrawDrag = true;
+
                     return;
                 }
             }
@@ -1751,6 +1781,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             if (h.rect.contains(where) && h.type == hotzone::MOUSABLE_NODE)
             {
                 gotHZ = true;
+
                 hideCursor(where.toInt());
 
                 h.active = true;
@@ -1811,9 +1842,9 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             return;
         }
 
-        auto da = getDrawArea();
+        auto drawArea = getDrawArea();
 
-        if (da.contains(where))
+        if (drawArea.contains(where))
         {
             auto tf = pxToTime();
             auto pv = pxToVal();
@@ -2021,10 +2052,10 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
     {
         auto tf = pxToTime();
         auto t = tf(event.position.getX());
-        auto da = getDrawArea();
+        auto drawArea = getDrawArea();
         auto where = event.position.toInt();
 
-        if (da.contains(where))
+        if (drawArea.contains(where))
         {
             auto ohs = hoveredSegment;
             if (t < 0)
@@ -2525,8 +2556,8 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         typeinEditor->setReturnFocusTarget(this);
 
         auto r = typeinEditor->getRequiredSize();
-        typeinEditor->setBounds(r.withCentre(at));
 
+        typeinEditor->setBounds(r.withCentre(at).constrainedWithin(getDrawArea()));
         typeinEditor->setVisible(true);
         typeinEditor->grabFocus();
     }
