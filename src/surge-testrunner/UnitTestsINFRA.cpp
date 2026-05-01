@@ -25,10 +25,14 @@
 #include "HeadlessUtils.h"
 #include "BiquadFilter.h"
 #include "MemoryPool.h"
+#include "SurgeStorage.h"
 
 #include "sst/plugininfra/strnatcmp.h"
 
 #include "catch2/catch_amalgamated.hpp"
+
+#include <fstream>
+#include <vector>
 
 inline size_t align_diff(const void *ptr, std::uintptr_t alignment) noexcept
 {
@@ -334,5 +338,64 @@ TEST_CASE("User Data Path Override", "[infra]")
 
         // Clean up
         surge->storage.setOverridenUserPath(nullptr);
+    }
+}
+
+TEST_CASE("Surge Common Binary Resources", "[infra]")
+{
+    // Files bundled into the surge-common-binary CMakeRC archive. The leaf
+    // names must match cmrc_add_resource_library() in src/common/CMakeLists.txt.
+    static const std::vector<std::string> bundled = {
+        "configuration.xml",      "memoryWavetable.wt",  "oscspecification.html",
+        "paramdocumentation.xml", "README_UserArea.txt", "windows.wt",
+    };
+
+    SECTION("Each bundled resource loads non-empty")
+    {
+        for (const auto &name : bundled)
+        {
+            INFO("resource: " << name);
+            auto res = Surge::Storage::getSurgeCommonBinaryResource(name);
+            REQUIRE(res.has_value());
+            REQUIRE(!res->empty());
+        }
+    }
+
+    SECTION("Bundled bytes match the on-disk source file when reachable")
+    {
+        // Tests run with WORKING_DIRECTORY=${SURGE_SOURCE_DIR} under ctest, so
+        // resources/surge-shared/<name> is reachable. If invoked from another
+        // cwd, skip the byte-compare for that file rather than fail.
+        for (const auto &name : bundled)
+        {
+            INFO("resource: " << name);
+            fs::path onDisk = fs::path("resources") / "surge-shared" / name;
+            if (!fs::exists(onDisk))
+            {
+                WARN("Skipping byte-compare; source file not reachable from cwd: "
+                     << onDisk.u8string());
+                continue;
+            }
+            std::ifstream ifs(onDisk, std::ios::binary);
+            REQUIRE(ifs.good());
+            std::vector<char> diskBytes((std::istreambuf_iterator<char>(ifs)),
+                                        std::istreambuf_iterator<char>());
+
+            auto res = Surge::Storage::getSurgeCommonBinaryResource(name);
+            REQUIRE(res.has_value());
+            REQUIRE(res->size() == diskBytes.size());
+            REQUIRE(*res == diskBytes);
+        }
+    }
+
+    SECTION("Missing resource returns nullopt and does not throw")
+    {
+        std::optional<std::vector<char>> res;
+        REQUIRE_NOTHROW(res = Surge::Storage::getSurgeCommonBinaryResource(
+                            "definitely_not_a_real_resource.xyz"));
+        REQUIRE(!res.has_value());
+
+        REQUIRE_NOTHROW(res = Surge::Storage::getSurgeCommonBinaryResource(""));
+        REQUIRE(!res.has_value());
     }
 }

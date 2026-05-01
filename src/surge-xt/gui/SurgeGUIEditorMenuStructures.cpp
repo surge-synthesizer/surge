@@ -49,10 +49,6 @@
 #include "libMTSMaster.h"
 #endif
 
-#if HAS_JUCE
-#include "SurgeSharedBinary.h"
-#endif
-
 #include <regex>
 
 /* MAKE */
@@ -1938,15 +1934,15 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
     auto des = &(synth->storage.getPatch().dawExtraState);
     auto oscSubMenu = juce::PopupMenu();
 
-#if HAS_JUCE
     oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Settings..."),
                        [this]() { showOverlay(OPEN_SOUND_CONTROL_SETTINGS); });
 
     oscSubMenu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."), [this]() {
-        auto oscSpec = std::string(SurgeSharedBinary::oscspecification_html,
-                                   SurgeSharedBinary::oscspecification_htmlSize) +
-                       "\n";
-        showHTML(oscSpec);
+        if (auto oscSpecRes = Surge::Storage::getSurgeCommonBinaryResource("oscspecification.html"))
+        {
+            auto oscSpec = std::string(oscSpecRes->data(), oscSpecRes->size()) + "\n";
+            showHTML(oscSpec);
+        }
     });
 
     oscSubMenu.addSeparator();
@@ -1954,8 +1950,6 @@ juce::PopupMenu SurgeGUIEditor::makeOSCMenu(const juce::Point<int> &where)
     oscSubMenu.addItem(Surge::GUI::toOSCase("Download TouchOSC Template..."), []() {
         juce::URL(fmt::format("{}touchosc", stringWebsite)).launchInDefaultBrowser();
     });
-
-#endif
 
     return oscSubMenu;
 }

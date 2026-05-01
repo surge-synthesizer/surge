@@ -35,8 +35,6 @@
 #include "WavetableScriptEvaluator.h"
 #include "LuaSupport.h"
 
-#include "SurgeSharedBinary.h"
-
 #include "lua/LuaSources.h"
 
 #if HAS_LUA

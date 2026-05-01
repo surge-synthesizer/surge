@@ -154,6 +154,8 @@ endif()
 
 message(STATUS "Building Surge XT using the following JUCE wrappers: ${SURGE_JUCE_FORMATS}")
 
+include(cmake/CmakeRC.cmake)
+
 add_subdirectory(common)
 add_subdirectory(lua)
 add_subdirectory(platform)

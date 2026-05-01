@@ -28,9 +28,7 @@
 #include <map>
 #include <queue>
 #include "UserDefaults.h"
-#if HAS_JUCE
-#include "SurgeSharedBinary.h"
-#endif
+#include <cmrc/cmrc.hpp>
 #include "DebugHelpers.h"
 
 #include "sst/plugininfra/paths.h"
@@ -58,6 +56,9 @@
 #include "FormulaModulationHelper.h"
 
 #include "sst/basic-blocks/mechanics/endian-ops.h"
+
+CMRC_DECLARE(surge_common_binary);
+
 namespace mech = sst::basic_blocks::mechanics;
 
 using namespace std;
@@ -396,33 +397,16 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
 
     // TIXML requires a newline at end.
-#if HAS_JUCE
-    auto cxmlData = std::string(SurgeSharedBinary::configuration_xml,
-                                SurgeSharedBinary::configuration_xmlSize) +
-                    "\n";
-#else
     std::string cxmlData;
-
-    if (fs::exists(datapath / "configuration.xml"))
+    if (auto cxmlRes = Surge::Storage::getSurgeCommonBinaryResource("configuration.xml"))
     {
-        std::ifstream ifs(datapath / "configuration.xml");
-        std::stringstream buffer;
-        buffer << ifs.rdbuf();
-        cxmlData = buffer.str();
+        cxmlData = std::string(cxmlRes->data(), cxmlRes->size()) + "\n";
     }
-    else
-    {
-        cxmlData = std::string(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><midictrl/>");
-    }
-#endif
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
-#if HAS_JUCE
         std::cout << snapshotloader.ErrorDesc() << std::endl;
         reportError("Cannot parse 'configuration.xml' from memory. Internal Software Error.",
                     "Surge Incorrectly Built");
-#endif
     }
 
     load_midi_controllers();
@@ -435,31 +419,17 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         refresh_patchlist();
     }
 
-#if HAS_JUCE
-    if (!load_wt_wt_mem(SurgeSharedBinary::windows_wt, SurgeSharedBinary::windows_wtSize,
-                        &WindowWT))
     {
-        WindowWT.size = 0;
-        std::ostringstream oss;
-        oss << "Unable to load 'windows.wt' from memory. "
-            << "This is a fatal internal software error which should never occur!";
-        reportError(oss.str(), "Resource Loading Error");
-    }
-#else
-    if (fs::exists(datapath / "windows.wt"))
-    {
-        std::string metadata;
-        if (!load_wt_wt(path_to_string(datapath / "windows.wt"), &WindowWT, metadata))
+        auto windowsRes = Surge::Storage::getSurgeCommonBinaryResource("windows.wt");
+        if (!windowsRes || !load_wt_wt_mem(windowsRes->data(), windowsRes->size(), &WindowWT))
         {
             WindowWT.size = 0;
             std::ostringstream oss;
-            oss << "Unable to load 'windows.wt' from file. "
+            oss << "Unable to load 'windows.wt' from memory. "
                 << "This is a fatal internal software error which should never occur!";
             reportError(oss.str(), "Resource Loading Error");
-            _DBGCOUT << oss.str() << std::endl;
         }
     }
-#endif
 
     // Tuning library support
     currentScale = Tunings::evenTemperament12NoteScale();
@@ -479,10 +449,12 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     // Load the XML DocStrings if we are loading startup data
     if (loadWtAndPatch)
     {
-#if HAS_JUCE
-        auto pdData = std::string(SurgeSharedBinary::paramdocumentation_xml,
-                                  SurgeSharedBinary::paramdocumentation_xmlSize) +
-                      "\n";
+        auto pdRes = Surge::Storage::getSurgeCommonBinaryResource("paramdocumentation.xml");
+        std::string pdData;
+        if (pdRes)
+        {
+            pdData = std::string(pdRes->data(), pdRes->size()) + "\n";
+        }
 
         TiXmlDocument doc;
         if (!doc.Parse(pdData.c_str()) || doc.Error())
@@ -551,7 +523,6 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
                 }
             }
         }
-#endif
     }
 
     for (int s = 0; s < n_scenes; ++s)
@@ -651,15 +622,15 @@ void SurgeStorage::createUserDirectory()
                 fs::create_directories(s);
 
             userDataPathValid = true;
-#if HAS_JUCE
-            auto rd = std::string(SurgeSharedBinary::README_UserArea_txt,
-                                  SurgeSharedBinary::README_UserArea_txtSize) +
-                      "\n";
-            auto of = std::ofstream(userDataPath / "README.txt", std::ofstream::out);
-            if (of.is_open())
-                of << rd << std::endl;
-            of.close();
-#endif
+            if (auto readmeRes =
+                    Surge::Storage::getSurgeCommonBinaryResource("README_UserArea.txt"))
+            {
+                auto rd = std::string(readmeRes->data(), readmeRes->size()) + "\n";
+                auto of = std::ofstream(userDataPath / "README.txt", std::ofstream::out);
+                if (of.is_open())
+                    of << rd << std::endl;
+                of.close();
+            }
         }
         catch (const fs::filesystem_error &e)
         {
@@ -1494,10 +1465,10 @@ void SurgeStorage::load_wt(int id, Wavetable *wt, OscillatorStorage *osc)
 
     if (wt_list.empty() && id == 0)
     {
-#if HAS_JUCE
-        load_wt_wt_mem(SurgeSharedBinary::memoryWavetable_wt,
-                       SurgeSharedBinary::memoryWavetable_wtSize, wt);
-#endif
+        if (auto memWtRes = Surge::Storage::getSurgeCommonBinaryResource("memoryWavetable.wt"))
+        {
+            load_wt_wt_mem(memWtRes->data(), memWtRes->size(), wt);
+        }
         if (osc)
         {
             osc->wavetable_display_name = "Sin to Saw";
@@ -3934,6 +3905,25 @@ bool getValueDisplayIsHighPrecision(SurgeStorage *storage)
 } // namespace Storage
 
 } // namespace Surge
+
+std::optional<std::vector<char>>
+Surge::Storage::getSurgeCommonBinaryResource(const std::string &filename) noexcept
+{
+    try
+    {
+        auto fs = cmrc::surge_common_binary::get_filesystem();
+        if (!fs.is_file(filename))
+        {
+            return std::nullopt;
+        }
+        auto file = fs.open(filename);
+        return std::vector<char>(file.begin(), file.end());
+    }
+    catch (...)
+    {
+        return std::nullopt;
+    }
+}
 
 // Arbitrary block storage helpers.
 std::shared_ptr<std::vector<std::uint8_t>> ArbitraryBlockStorage::from_float(const float f)

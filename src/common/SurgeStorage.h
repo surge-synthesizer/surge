@@ -42,6 +42,7 @@
 #include <functional>
 #include <unordered_map>
 #include <map>
+#include <optional>
 #include <span>
 #include <utility>
 #include <type_traits>
@@ -2094,6 +2095,10 @@ std::string base64_decode(std::string const &encoded_string);
 
 int getValueDisplayPrecision(SurgeStorage *storage);
 bool getValueDisplayIsHighPrecision(SurgeStorage *storage);
+
+// Fetch a resource bundled into the surge-common-binary CMakeRC archive.
+// Returns nullopt if the resource is missing. Never throws.
+std::optional<std::vector<char>> getSurgeCommonBinaryResource(const std::string &filename) noexcept;
 
 } // namespace Storage
 } // namespace Surge

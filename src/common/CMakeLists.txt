@@ -54,25 +54,20 @@ set(PEGTL_BUILD_TESTS OFF CACHE BOOL "")
 set(PEGTL_BUILD_EXAMPLES OFF CACHE BOOL "")
 surge_add_lib_subdirectory(PEGTL)
 
-if(NOT SURGE_SKIP_JUCE_FOR_RACK)
-  # surge_add_lib_subdirectory(sst/sst-jucegui)
-  juce_add_binary_data(surge-common-binary
-    NAMESPACE SurgeSharedBinary
-    HEADER_NAME SurgeSharedBinary.h
-    SOURCES
-    ${SURGE_SOURCE_DIR}/resources/surge-shared/configuration.xml
-    ${SURGE_SOURCE_DIR}/resources/surge-shared/memoryWavetable.wt
-    ${SURGE_SOURCE_DIR}/resources/surge-shared/oscspecification.html
-    ${SURGE_SOURCE_DIR}/resources/surge-shared/paramdocumentation.xml
-    ${SURGE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
-    ${SURGE_SOURCE_DIR}/resources/surge-shared/windows.wt
-  )
-  target_compile_definitions(surge-common-binary PUBLIC HAS_JUCE=1 SKIP_JUCE=0)
 
-else()
-  add_library(surge-common-binary INTERFACE)
-  target_compile_definitions(surge-common-binary INTERFACE HAS_JUCE=0 SKIP_JUCE=1)
-endif()
+# CMakeRC replacement for the juce_add_binary_data. Resources are
+# accessed via Surge::Storage::getSurgeCommonBinaryResource().
+cmrc_add_resource_library(surge-common-binary
+  ALIAS surge::common-binary
+  NAMESPACE surge_common_binary
+  WHENCE ${SURGE_SOURCE_DIR}/resources/surge-shared
+  ${SURGE_SOURCE_DIR}/resources/surge-shared/configuration.xml
+  ${SURGE_SOURCE_DIR}/resources/surge-shared/memoryWavetable.wt
+  ${SURGE_SOURCE_DIR}/resources/surge-shared/oscspecification.html
+  ${SURGE_SOURCE_DIR}/resources/surge-shared/paramdocumentation.xml
+  ${SURGE_SOURCE_DIR}/resources/surge-shared/README_UserArea.txt
+  ${SURGE_SOURCE_DIR}/resources/surge-shared/windows.wt
+)
 
 add_library(${PROJECT_NAME}
   DebugHelpers.cpp

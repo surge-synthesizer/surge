@@ -30,7 +30,6 @@
 #include "widgets/SurgeTextButton.h"
 #include "widgets/MenuCustomComponents.h"
 #include "AccessibleHelpers.h"
-#include "SurgeSharedBinary.h"
 #include <regex>
 
 namespace Surge
@@ -388,10 +387,12 @@ void OpenSoundControlSettings::buttonClicked(juce::Button *button)
         menu.addSeparator();
 
         menu.addItem(Surge::GUI::toOSCase("Show OSC Specification..."), [this]() {
-            auto oscSpec = std::string(SurgeSharedBinary::oscspecification_html,
-                                       SurgeSharedBinary::oscspecification_htmlSize) +
-                           "\n";
-            editor->showHTML(oscSpec);
+            if (auto oscSpecRes =
+                    Surge::Storage::getSurgeCommonBinaryResource("oscspecification.html"))
+            {
+                auto oscSpec = std::string(oscSpecRes->data(), oscSpecRes->size()) + "\n";
+                editor->showHTML(oscSpec);
+            }
         });
 
         menu.showMenuAsync(editor->popupMenuOptions());
