@@ -606,7 +606,9 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
         populateLFOMS(tFullWave);
         tFullWave->attack();
     }
-    else if (lfodata->magnitude.val.f != lfodata->magnitude.val_max.f && skin->getVersion() >= 2)
+    else if (lfodata->magnitude.val.f != lfodata->magnitude.val_max.f &&
+             !(lfodata->shape.val.i == lt_formula && !tlfo->formulastate.useAmplitude) &&
+             skin->getVersion() >= 2)
     {
         bool useAmpWave = Surge::Storage::getUserDefaultValue(
             storage, Surge::Storage::ShowGhostedLFOWaveReference, 1);
@@ -728,7 +730,12 @@ void LFOAndStepDisplay::paintWaveform(juce::Graphics &g)
 
             minval = std::min(tlfo->get_output(modIndex), minval);
             maxval = std::max(tlfo->get_output(modIndex), maxval);
-            eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
+            float evalMag = lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
+            if (lfodata->shape.val.i == lt_formula && !tlfo->formulastate.useAmplitude)
+            {
+                evalMag = 1.f;
+            }
+            eval += tlfo->env_val * evalMag;
         }
 
         val = val / averagingWindow;
@@ -1384,7 +1391,12 @@ void LFOAndStepDisplay::paintStepSeq(juce::Graphics &g)
 
             minval = std::min(tlfo->get_output(0), minval);
             maxval = std::max(tlfo->get_output(0), maxval);
-            eval += tlfo->env_val * lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
+            float evalMag = lfodata->magnitude.get_extended(lfodata->magnitude.val.f);
+            if (lfodata->shape.val.i == lt_formula && !tlfo->formulastate.useAmplitude)
+            {
+                evalMag = 1.f;
+            }
+            eval += tlfo->env_val * evalMag;
         }
 
         val = val / averagingWindow;

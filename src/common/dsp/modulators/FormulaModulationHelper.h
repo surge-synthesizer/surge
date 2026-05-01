@@ -59,6 +59,7 @@ struct EvaluatorState
     char stateName[TXT_SIZE];
 
     bool isvalid = false;
+    bool useAmplitude = true;
     bool useEnvelope = true;
     bool isFinite = true;
 

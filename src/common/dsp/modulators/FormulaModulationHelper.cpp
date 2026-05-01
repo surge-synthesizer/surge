@@ -276,6 +276,7 @@ end
             addb("is_voice", s.isVoice);
             addb("is_rendering_to_ui", s.is_display);
             addb("clamp_output", true);
+            addb("use_amplitude", true);
             addb("use_envelope", true);
             addb("retrigger_AEG", false);
             addb("retrigger_FEG", false);
@@ -324,6 +325,7 @@ end
         // the modulator state which is now bound to the state name
         lua_settop(s.L, 0); // Clear all elements from the stack
 
+        s.useAmplitude = true;
         s.useEnvelope = true;
 
         {
@@ -337,6 +339,21 @@ end
             }
             else
             {
+                {
+                    // read off the amplitude control
+                    auto ga = Surge::LuaSupport::SGLD("prepareForEvaluation::amplituderead", s.L);
+                    lua_getfield(s.L, -1, "use_amplitude");
+                    if (lua_isboolean(s.L, -1))
+                    {
+                        s.useAmplitude = lua_toboolean(s.L, -1);
+                    }
+                    else if (lua_isnumber(s.L, -1))
+                    {
+                        s.useAmplitude = (lua_tonumber(s.L, -1) != 0.0);
+                    }
+
+                    lua_pop(s.L, 1); // Pop use_amplitude
+                }
                 {
                     // read off the envelope control
                     auto gv = Surge::LuaSupport::SGLD("prepareForEvaluation::enveloperead", s.L);
@@ -711,6 +728,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
             return res;
         };
 
+        s->useAmplitude = getBoolOrNumberDefault("use_amplitude", true);
         s->useEnvelope = getBoolOrNumberDefault("use_envelope", true);
         s->retrigger_AEG = getBoolOrNumberDefault("retrigger_AEG", false);
         s->retrigger_FEG = getBoolOrNumberDefault("retrigger_FEG", false);
@@ -754,7 +772,7 @@ enum showFilter
 
 bool isUserDefined(std::string str)
 {
-    static constexpr std::array<std::string_view, 55> keywords = {
+    static constexpr std::array<std::string_view, 56> keywords = {
         "amplitude",     "attack",        "block_size",
         "cc_breath",     "cc_expr",       "cc_mw",
         "cc_sus",        "chan_at",       "channel",
@@ -771,9 +789,9 @@ bool isUserDefined(std::string str)
         "released",      "retrigger_AEG", "retrigger_FEG",
         "samplerate",    "scene_mode",    "songpos",
         "split_point",   "startphase",    "sustain",
-        "tempo",         "tuned_key",     "use_envelope",
-        "velocity",      "voice_count",   "voice_id",
-        "subscriptions"};
+        "tempo",         "tuned_key",     "use_amplitude",
+        "use_envelope",  "velocity",      "voice_count",
+        "voice_id",      "subscriptions"};
 
     auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();
     // std::cout << "isCustom " << str << " = " << foundInList << "\n";

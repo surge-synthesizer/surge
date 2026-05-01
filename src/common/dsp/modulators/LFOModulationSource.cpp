@@ -1238,6 +1238,10 @@ void LFOModulationSource::process_block()
         // Since I'm (right now) the only vector valued modulator just do a little
         // chute and ladder dance here on the output and return
         auto magnf = limit_range(lfo->magnitude.get_extended(localcopy[magn].f), -3.f, 3.f);
+        if (!formulastate.useAmplitude)
+        {
+            magnf = 1.f;
+        }
         auto uni = lfo->unipolar.val.b;
 
         for (auto i = 0; i < formulastate.activeoutputs; ++i)
