@@ -258,6 +258,7 @@ end
             addn("songpos", s.songpos);
             addn("pb_range_up", s.pbrange_up);
             addn("pb_range_dn", s.pbrange_dn);
+            addn("mpe_bendrange", s.mpebendrange);
 
             if (s.isVoice)
             {
@@ -266,7 +267,6 @@ end
                 addi("velocity", s.velocity);
                 addi("voice_id", s.voiceOrderAtCreate);
 
-                addn("mpe_bendrange", s.mpebendrange);
                 addn("tuned_key", s.tunedkey);
 
                 addb("released", s.released);
@@ -559,6 +559,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addn("lowest_key", s->lowest_key);
     addn("highest_key", s->highest_key);
     addn("latest_key", s->latest_key);
+    addn("mpe_bendrange", s->mpebendrange);
 
     addi("voice_count", storage->activeVoiceCount + 1);
     addi("poly_limit", s->polylimit);
@@ -582,7 +583,6 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         addn("tuned_key", s->tunedkey);
         addn("poly_at", s->polyat);
         addn("mpe_bend", s->mpebend);
-        addn("mpe_bendrange", s->mpebendrange);
         addn("mpe_timbre", s->mpetimbre);
         addn("mpe_pressure", s->mpepressure);
 
