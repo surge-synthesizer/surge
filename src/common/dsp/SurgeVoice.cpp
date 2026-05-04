@@ -68,7 +68,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
             }
             else
             {
-                keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key + mpeBend,
+                keyRetuning = MTS_RetuningInSemitones(storage->oddsound_mts_client, key,
                                                       mtsUseChannelWhenRetuning ? channel : -1);
             }
         }
@@ -93,7 +93,7 @@ float SurgeVoiceState::getPitch(SurgeStorage *storage)
 #ifndef SURGE_SKIP_ODDSOUND_MTS
 float SurgeVoiceState::MTS_RetuningForBentKey(SurgeStorage *storage, float bentKey)
 {
-    auto ik = (int)(bentKey);
+    auto ik = std::floor(bentKey);
     auto frac = bentKey - ik;
 
     auto r1 = MTS_RetuningInSemitones(storage->oddsound_mts_client, ik, -1);
