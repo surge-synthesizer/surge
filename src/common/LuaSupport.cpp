@@ -346,9 +346,13 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L, uint64_t featu
     lua_setfield(L, eidx, sharedTableName);
 
     // add whitelisted functions and modules
+    // clang-format off
     static constexpr std::initializer_list<const char *> sandboxWhitelist{
-        "pairs",    "ipairs",       "unpack", "next",   "type", "tostring",
-        "tonumber", "setmetatable", "pcall",  "xpcall", "error"};
+        "pairs",    "ipairs",       "unpack",
+        "next",     "type",         "tostring",
+        "tonumber", "setmetatable", "pcall",
+        "xpcall",   "error"};
+    // clang-format on
 
     for (const auto &f : sandboxWhitelist)
     {
@@ -415,22 +419,6 @@ bool Surge::LuaSupport::setSurgeFunctionEnvironment(lua_State *L, uint64_t featu
         lua_pop(L, 1);
     }
     lua_pop(L, 1); // pop global math table and stack is back to f>t
-
-    // retrieve shared table and set entries to nil
-    lua_getglobal(L, "shared");
-    if (lua_istable(L, -1))
-    {
-        lua_pushnil(L);
-        while (lua_next(L, -2))
-        {
-            lua_pop(L, 1);        // pop value
-            lua_pushvalue(L, -1); // duplicate the key
-            lua_pushnil(L);
-            lua_settable(L, -4); // clear the key
-        }
-    }
-    // pop the retrieved value (either table or nil) from the stack
-    lua_pop(L, 1);
 
     // and now we are back to f>t so we can setfenv it
     lua_setfenv(L, -2);

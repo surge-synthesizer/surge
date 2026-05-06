@@ -49,7 +49,7 @@ struct GlobalData
 
 static constexpr int max_formula_outputs{max_lfo_indices};
 static constexpr uint64_t formulaFeatures = Surge::LuaSupport::EnvironmentFeatures::BASE;
-static constexpr const char *sharedTableName{"shared"};
+using Surge::LuaSupport::sharedTableName;
 
 struct EvaluatorState
 {
@@ -70,6 +70,8 @@ struct EvaluatorState
     bool retrigger_AEG, retrigger_FEG;
 
     bool is_display = false;
+
+    int lfo_id{0};
 
     // voice features
     bool isVoice, mpeenabled;
@@ -150,8 +152,6 @@ struct DebugRow
     };
     std::variant<float, std::string> value;
 };
-
-void setUserDefined(DebugRow &row, int depth, bool parent);
 
 std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &s, std::string filter,
                                                 bool state[8]);

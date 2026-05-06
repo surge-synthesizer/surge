@@ -953,6 +953,129 @@ end)FN");
     }
 }
 
+TEST_CASE("Shared Table", "[formula]")
+{
+    SECTION("Shared Table Persists Across Multiple Runs")
+    {
+        SurgeStorage storage;
+        FormulaModulatorStorage fs;
+
+        fs.setFormula(R"FN(
+function init(state)
+    state.clamp_output = false
+    if shared.count == nil then
+        shared.count = 0
+    end
+    return state
+end
+
+function process(state)
+    state.output = shared.count
+    shared.count = shared.count + 1
+    return state
+end)FN");
+
+        auto firstRun = runFormula(&storage, &fs, 0.0321, 5);
+        REQUIRE(!firstRun.empty());
+        auto secondRun = runFormula(&storage, &fs, 0.0321, 5);
+        REQUIRE(!secondRun.empty());
+
+        for (size_t i = 0; i < secondRun.size(); ++i)
+        {
+            REQUIRE(secondRun[i].v == firstRun.size() + i);
+        }
+    }
+
+    SECTION("Namespaced Shared Tables Do Not Collide")
+    {
+        SurgeStorage storage;
+        auto &fs0 = storage.getPatch().formulamods[0][0];
+        auto &fs1 = storage.getPatch().formulamods[0][1];
+
+        fs0.setFormula(R"FN(
+function init(state)
+    shared[state.lfo_id] = shared[state.lfo_id] or {}
+    shared[state.lfo_id].val = 0.25
+    return state
+end
+
+function process(state)
+    state.output = shared[state.lfo_id].val
+    return state
+end)FN");
+        fs1.setFormula(R"FN(
+function init(state)
+    shared[state.lfo_id] = shared[state.lfo_id] or {}
+    if shared[state.lfo_id].val == nil then
+        shared[state.lfo_id].val = 0.75
+    end
+    return state
+end
+
+function process(state)
+    state.output = shared[state.lfo_id].val
+    return state
+end)FN");
+        auto firstRun = runFormula(&storage, &fs0, 0.0321, 5);
+        REQUIRE(!firstRun.empty());
+        for (auto c : firstRun)
+        {
+            REQUIRE(c.v == 0.25);
+        }
+        auto secondRun = runFormula(&storage, &fs1, 0.0321, 5);
+        REQUIRE(!secondRun.empty());
+        for (auto c : secondRun)
+        {
+            REQUIRE(c.v == 0.75);
+        }
+    }
+
+    SECTION("Shared Table Is Wiped On Script Change")
+    {
+        SurgeStorage storage;
+        FormulaModulatorStorage fs;
+
+        auto scriptA = R"FN(
+-- Script A
+function init(state)
+    shared.val = 0.25
+    return state
+end
+
+function process(state)
+    state.output = shared.val
+    return state
+end)FN";
+        auto scriptB = R"FN(
+-- Script B (different hash from A)
+function init(state)
+    if shared.val == nil then
+        shared.val = 0.75
+    end
+    return state
+end
+
+function process(state)
+    state.output = shared.val
+    return state
+end)FN";
+        fs.setFormula(scriptA);
+        auto firstRun = runFormula(&storage, &fs, 0.0321, 5);
+        REQUIRE(!firstRun.empty());
+        for (auto c : firstRun)
+        {
+            REQUIRE(c.v == 0.25);
+        }
+        fs.setFormula(scriptB);
+        auto secondRun = runFormula(&storage, &fs, 0.0321, 5);
+        REQUIRE(!secondRun.empty());
+        for (auto c : secondRun)
+        {
+            REQUIRE(c.v == 0.75);
+        }
+    }
+}
+
 TEST_CASE("Wavetable Script", "[wts]")
 {
     SECTION("Just the Sines")
