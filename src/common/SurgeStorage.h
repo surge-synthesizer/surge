@@ -1594,9 +1594,15 @@ class alignas(16) SurgeStorage
     bool getOverrideDataHome(std::string &value);
     void createUserDirectory();
 
+    // Recompute userDataPathValid, userDefaultFilePath and all userDataPath-derived
+    // sub-paths (Patches, Wavetables, Skins, etc) from the current userDataPath.
+    // Call after any change to userDataPath.
+    void initializeUserDataPaths();
+
     // Methods for handling user data path override stored in a separate file
-    // This returns path.empty() if there's no override
-    fs::path getOverridenUserPath() const;
+    // This returns path.empty() if there's no override, or if the configured
+    // override is invalid (in which case an error is also reported).
+    fs::path getOverridenUserPath();
     void setOverridenUserPath(const fs::path *path);
 
     fs::path resolvePathTokens(fs::path path);

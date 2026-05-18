@@ -3588,6 +3588,40 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
     reloadFromSkin();
 }
 
+void SurgeGUIEditor::rescanAllDataFolders()
+{
+    auto &storage = this->synth->storage;
+
+    storage.refresh_wtlist();
+    storage.refresh_patchlist();
+    storage.refresh_irlist();
+    storage.rescanUserMidiMappings();
+
+    if (storage.fxUserPreset)
+        storage.fxUserPreset->doPresetRescan(&storage, true);
+    if (storage.modulatorPreset)
+        storage.modulatorPreset->forcePresetRescan();
+
+    // Force a rescan of MIDI program-change patch folder on next menu open
+    scannedForMidiPresets = false;
+
+    // Rescan skins and reapply the currently selected one
+    auto r = this->currentSkin->root;
+    auto n = this->currentSkin->name;
+
+    auto *db = Surge::GUI::SkinDB::get();
+    db->rescanForSkins(&storage);
+
+    auto e = db->getEntryByRootAndName(r, n);
+    if (e.has_value())
+        setupSkinFromEntry(*e);
+    else
+        setupSkinFromEntry(db->getDefaultSkinEntry());
+
+    // Rebuild the FX menu and other UI that depends on the rescans
+    this->synth->refresh_editor = true;
+}
+
 void SurgeGUIEditor::sliderHoverStart(int tag)
 {
     int ptag = tag - start_paramtags;
