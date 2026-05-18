@@ -80,6 +80,7 @@ class ConvolutionEffect : public Effect
     delay_t delayL_;
     delay_t delayR_;
     lag<float> delayTime_;
+    bool delay_latched_;
 
     // Stored values.
     float old_samplerate_;
