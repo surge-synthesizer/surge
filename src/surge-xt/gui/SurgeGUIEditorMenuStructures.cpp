@@ -1732,45 +1732,17 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
                                      this->synth->storage.setOverridenUserPath(&newPath);
 
                                      this->synth->storage.userDataPath = s;
+                                     this->synth->storage.initializeUserDataPaths();
                                      synth->storage.createUserDirectory();
 
-                                     this->synth->storage.refresh_wtlist();
-                                     this->synth->storage.refresh_patchlist();
+                                     this->rescanAllDataFolders();
                                  });
     });
 
     dataSubMenu.addSeparator();
 
-    dataSubMenu.addItem(Surge::GUI::toOSCase("Rescan All Data Folders"), [this]() {
-        this->synth->storage.refresh_wtlist();
-        this->synth->storage.refresh_patchlist();
-        this->scannedForMidiPresets = false;
-
-        this->synth->storage.fxUserPreset->doPresetRescan(&(this->synth->storage), true);
-        this->synth->storage.modulatorPreset->forcePresetRescan();
-
-        // Rescan for skins
-        auto r = this->currentSkin->root;
-        auto n = this->currentSkin->name;
-
-        auto *db = Surge::GUI::SkinDB::get();
-        db->rescanForSkins(&(this->synth->storage));
-
-        // So go find the skin
-        auto e = db->getEntryByRootAndName(r, n);
-
-        if (e.has_value())
-        {
-            setupSkinFromEntry(*e);
-        }
-        else
-        {
-            setupSkinFromEntry(db->getDefaultSkinEntry());
-        }
-
-        // Will need to rebuild the FX menu also so...
-        this->synth->refresh_editor = true;
-    });
+    dataSubMenu.addItem(Surge::GUI::toOSCase("Rescan All Data Folders"),
+                        [this]() { this->rescanAllDataFolders(); });
 
     return dataSubMenu;
 }

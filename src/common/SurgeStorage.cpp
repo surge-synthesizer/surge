@@ -353,41 +353,12 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
 #endif
 
-    try
-    {
-        userDataPathValid = false;
-        if (fs::is_directory(userDataPath))
-        {
-            userDataPathValid = true;
-            /*
-             * This code doesn't work because fs:: doesn't have a writable check and I don't
-             * want to create a file just to see in every startup path. We find out later
-             * anyway when we set up the directories.
-             */
-        }
-    }
-    catch (const fs::filesystem_error &e)
-    {
-        userDataPathValid = false;
-    }
-
-    userDefaultFilePath = userDataPath;
+    initializeUserDataPaths();
 
     userDefaultsProvider = std::make_unique<Surge::Storage::UserDefaultsProvider>(
         userDataPath, "SurgeXT", Surge::Storage::defaultKeyToString,
         [this](auto &a, auto &b) { reportError(a, b); });
 
-    // append separator if not present
-    userPatchesPath = userDataPath / "Patches";
-    userPatchesMidiProgramChangePath = userPatchesPath / midiProgramChangePatchesSubdir;
-    userWavetablesPath = userDataPath / "Wavetables";
-    userIRsPath = userDataPath / "Impulses";
-    userWavetablesExportPath = userWavetablesPath / "Exported";
-    userWavetableScriptsPath = userWavetablesPath / "Scripted";
-    userFXPath = userDataPath / "FX Presets";
-    userMidiMappingsPath = userDataPath / "MIDI Mappings";
-    userModulatorSettingsPath = userDataPath / "Modulator Presets";
-    userSkinsPath = userDataPath / "Skins";
     extraThirdPartyWavetablesPath = config.extraThirdPartyWavetablesPath;
     extraUserWavetablesPath = config.extraUsersWavetablesPath;
 
@@ -603,6 +574,40 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }
 
+void SurgeStorage::initializeUserDataPaths()
+{
+    try
+    {
+        userDataPathValid = false;
+        if (fs::is_directory(userDataPath))
+        {
+            userDataPathValid = true;
+            /*
+             * This code doesn't work because fs:: doesn't have a writable check and I don't
+             * want to create a file just to see in every startup path. We find out later
+             * anyway when we set up the directories.
+             */
+        }
+    }
+    catch (const fs::filesystem_error &e)
+    {
+        userDataPathValid = false;
+    }
+
+    userDefaultFilePath = userDataPath;
+
+    userPatchesPath = userDataPath / "Patches";
+    userPatchesMidiProgramChangePath = userPatchesPath / midiProgramChangePatchesSubdir;
+    userWavetablesPath = userDataPath / "Wavetables";
+    userIRsPath = userDataPath / "Impulses";
+    userWavetablesExportPath = userWavetablesPath / "Exported";
+    userWavetableScriptsPath = userWavetablesPath / "Scripted";
+    userFXPath = userDataPath / "FX Presets";
+    userMidiMappingsPath = userDataPath / "MIDI Mappings";
+    userModulatorSettingsPath = userDataPath / "Modulator Presets";
+    userSkinsPath = userDataPath / "Skins";
+}
+
 void SurgeStorage::createUserDirectory()
 {
     auto p = userDataPath;
@@ -675,47 +680,65 @@ fs::path SurgeStorage::calculateStandardUserDataPath(const std::string &sxt) con
     return res;
 }
 
-fs::path SurgeStorage::getOverridenUserPath() const
+fs::path SurgeStorage::getOverridenUserPath()
 {
     // Read the user data path override from surgeUserDirectoryLocation.xml
     auto overrideFile = localAppDataPath / "surgeUserDirectoryLocation.xml";
 
     if (!fs::exists(overrideFile))
     {
-        return {}; // Return empty path if file doesn't exist
+        return {}; // No override configured
     }
+
+    auto reportMalformed = [this, &overrideFile](const std::string &detail) {
+        reportError("The custom user data folder configuration file at\n" +
+                        path_to_string(overrideFile) + "\nis malformed (" + detail +
+                        "). Falling back to the default user data folder. Use "
+                        "\"Set Custom User Data Folder...\" to reconfigure.",
+                    "Custom User Data Folder Configuration Invalid");
+    };
 
     try
     {
         TiXmlDocument doc;
         if (!doc.LoadFile(path_to_string(overrideFile)))
         {
+            reportMalformed("XML parse error");
             return {};
         }
 
         auto root = doc.FirstChildElement("surge-user-directory");
         if (!root)
         {
+            reportMalformed("missing root element");
             return {};
         }
 
         auto pathElement = root->FirstChildElement("path");
         if (!pathElement || !pathElement->GetText())
         {
+            reportMalformed("missing path element");
             return {};
         }
 
         fs::path userPath{pathElement->GetText()};
 
-        // Verify the path exists before returning it
         if (fs::exists(userPath) && fs::is_directory(userPath))
         {
             return userPath;
         }
+
+        reportError("The configured custom user data folder\n" + path_to_string(userPath) +
+                        "\nno longer exists or is not a directory. Falling back to the default "
+                        "user data folder. Use \"Set Custom User Data Folder...\" to set a "
+                        "new location.",
+                    "Custom User Data Folder Missing");
     }
-    catch (...)
+    catch (const std::exception &e)
     {
-        // If anything goes wrong, return empty path
+        reportError(std::string("Error reading custom user data folder configuration: ") +
+                        e.what() + ". Falling back to the default user data folder.",
+                    "Custom User Data Folder Configuration Error");
     }
 
     return {};
