@@ -146,6 +146,11 @@ float SurgeVirtualKeyboard::getCurrentVelocity() const { return editor->midiKeyb
 SurgeSynthEditor::SurgeSynthEditor(SurgeSynthProcessor &p)
     : juce::AudioProcessorEditor(&p), processor(p)
 {
+    // Marks this editor as the popup-scale anchor for the SURGE PATCH in
+    // juce_TextEditor.cpp so TextEditor right-click menus inherit only the
+    // host scale factor and not the UI zoom transform applied to frame.
+    getProperties().set("SSTPopupAnchor", true);
+
     {
         std::lock_guard<std::mutex> grd(surgeLookAndFeelSetupMutex);
         if (auto sp = surgeLookAndFeelWeakPointer.lock())
