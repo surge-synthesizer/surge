@@ -1344,7 +1344,7 @@ void OscillatorWaveformDisplay::loadWavetableFromFile()
 
             if (res.hasFileExtension(".wtscript"))
             {
-                this->sge->loadWavetableScript(-1, fs::path(rString), storage, oscdata);
+                this->sge->loadWavetableScript(-1, string_to_path(rString), storage, oscdata);
             }
             else
             {
