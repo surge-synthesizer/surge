@@ -2893,7 +2893,7 @@ void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
 
     OscillatorStorage *oscdata =
         &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
-    evaluator->loadWtscript(fs::path(fn), &synth->storage, oscdata);
+    evaluator->loadWtscript(string_to_path(fn), &synth->storage, oscdata);
 
     oscdata->wt.current_id = -1;
     oscdata->queue_type = ot_wavetable; // Setting queue_type also handles OWD/editor refresh
@@ -6770,7 +6770,7 @@ void SurgeGUIEditor::loadWavetableScript()
 
             if (res.hasFileExtension(".wtscript"))
             {
-                loadWavetableScript(-1, fs::path(rString), &this->synth->storage, &oscdata);
+                loadWavetableScript(-1, string_to_path(rString), &this->synth->storage, &oscdata);
             }
 
             auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());
