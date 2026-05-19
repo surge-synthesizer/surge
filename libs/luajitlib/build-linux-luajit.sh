@@ -23,7 +23,7 @@ mkdir "${HD}" || error=1
 cp -r LuaJIT "${SD}" || error=1
 cd "${SD}/LuaJIT/src" || error=1
 
-make amalg "BUILDMODE=static" CFLAGS+=" -fPIC" || error=1
+make amalg "BUILDMODE=static" CFLAGS+=" -fPIC -fvisibility=hidden" || error=1
 
 cp lib*a "${OD}" || error=1
 echo "${OD}"
