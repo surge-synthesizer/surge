@@ -63,6 +63,7 @@ class StringOscillator : public Oscillator
         constant_square,
         constant_sweep,
         constant_audioin,
+        constant_scene_a_in,
     };
 
     // This coordinates with the UI code in SGE::controlModClicked around
@@ -86,16 +87,15 @@ class StringOscillator : public Oscillator
 
     static constexpr int max_oversample = 2;
 
-    StringOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
-        : Oscillator(s, o, p), charFilt(s), lp(s), hp(s), noiseLp(s), halfband(6, true)
-    {
-    }
+    StringOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p);
 
     ~StringOscillator();
 
     virtual void init(float pitch, bool is_display = false, bool nonzero_drift = true) override;
-    virtual void init_ctrltypes(int scene, int oscnum) override { init_ctrltypes(); };
+    virtual void init_ctrltypes(int scene, int oscnum) override;
     virtual void init_ctrltypes() override;
+
+    bool isInSceneB{false};
     virtual void init_default_values() override;
     virtual void process_block(float pitch, float drift = 0.f, bool stereo = false, bool FM = false,
                                float FMdepth = 0.f) override;

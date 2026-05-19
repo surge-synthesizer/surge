@@ -46,7 +46,7 @@
 #include "StringOscillator.h"
 #include "SurgeMemoryPools.h"
 
-int stringosc_excitations_count() { return 15; }
+int stringosc_excitations_count() { return 16; }
 
 std::string stringosc_excitation_name(int i)
 {
@@ -84,12 +84,30 @@ std::string stringosc_excitation_name(int i)
         return "Constant Sweep";
     case StringOscillator::constant_audioin:
         return "Audio In";
+    case StringOscillator::constant_scene_a_in:
+        return "Scene A In";
     }
     return "Unknown";
 }
 
+StringOscillator::StringOscillator(SurgeStorage *s, OscillatorStorage *o, pdata *p)
+    : Oscillator(s, o, p), charFilt(s), lp(s), hp(s), noiseLp(s), halfband(6, true)
+{
+    if (s)
+    {
+        for (int i = 0; i < n_oscs; ++i)
+            if (&(s->getPatch().scene[1].osc[i]) == o)
+                isInSceneB = true;
+        if (isInSceneB)
+            s->otherscene_clients++;
+    }
+}
+
 StringOscillator::~StringOscillator()
 {
+    if (isInSceneB && storage)
+        storage->otherscene_clients--;
+
     if (storage && !ownDelayLines)
     {
         if (delayLine[0])
@@ -331,6 +349,7 @@ void StringOscillator::init(float pitch, bool is_display, bool nzi)
         break;
 
         case constant_audioin:
+        case constant_scene_a_in:
             dlv[0] = (0);
             dlv[1] = (0);
             break;
@@ -521,6 +540,7 @@ void StringOscillator::process_block(float pitch, float drift, bool stereo, bool
         P(constant_sweep)
 
         P(constant_audioin)
+        P(constant_scene_a_in)
     }
 
 #undef P
@@ -793,6 +813,15 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
                     fbNoOutVal[t] = examp.v * storage->audio_in[t][i / 2];
             }
             break;
+            case constant_scene_a_in:
+            {
+                // only meaningful in scene B; scene A osc menu hides this entry
+                if (OS == 1)
+                    fbNoOutVal[t] = examp.v * storage->audio_otherscene[t][i];
+                if (OS == 2)
+                    fbNoOutVal[t] = examp.v * storage->audio_otherscene[t][i / 2];
+            }
+            break;
             default:
                 // We should do something else with amplitude here
                 val[t] *= examp.v;
@@ -850,6 +879,15 @@ void StringOscillator::process_block_internal(float pitch, float drift, bool ste
             charFilt.process_block(output, BLOCK_SIZE_OS);
         }
     }
+}
+
+void StringOscillator::init_ctrltypes(int scene, int oscnum)
+{
+    init_ctrltypes();
+
+    // Scene A In is only valid in scene B; trim the menu range in scene A
+    if (scene != 1)
+        oscdata->p[str_exciter_mode].val_max.i = constant_audioin;
 }
 
 void StringOscillator::init_ctrltypes()
