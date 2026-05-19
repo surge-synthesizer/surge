@@ -421,8 +421,10 @@ void OscillatorWaveformDisplay::paint(juce::Graphics &g)
         auto osctype = oscdata->type.val.i;
 
         if (osctype == ot_audioinput ||
-            (osctype == ot_string && oscdata->p[StringOscillator::str_exciter_mode].val.i ==
-                                         StringOscillator::constant_audioin) ||
+            (osctype == ot_string && (oscdata->p[StringOscillator::str_exciter_mode].val.i ==
+                                          StringOscillator::constant_audioin ||
+                                      oscdata->p[StringOscillator::str_exciter_mode].val.i ==
+                                          StringOscillator::constant_scene_a_in)) ||
             (osctype == ot_alias &&
              oscdata->p[AliasOscillator::ao_wave].val.i == AliasOscillator::aow_audiobuffer))
         {
