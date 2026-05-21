@@ -964,6 +964,14 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
   private:
     void setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry);
     void reloadFromSkin();
+
+  public:
+    // Re-scan every user-data folder (patches, wavetables, IRs, FX, modulator
+    // presets, MIDI mappings, skins) and reapply the current skin. Use after
+    // changing the user data folder or when the user asks for a manual rescan.
+    void rescanAllDataFolders();
+
+  private:
     Surge::GUI::IComponentTagValue *
     layoutComponentForSkin(std::shared_ptr<Surge::GUI::Skin::Control> skinCtrl, long tag,
                            int paramIndex = -1, Parameter *p = nullptr, int style = 0);

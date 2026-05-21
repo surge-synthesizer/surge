@@ -114,6 +114,17 @@ end
         }
     }
 
+    // Calculate lfo_id from the element pointer
+    // Requires that formulamods is a contiguous 2D array and that fs points inside it
+    auto computeLfoId = [storage](const FormulaModulatorStorage *fs) {
+        const auto &fm = storage->getPatch().formulamods;
+        const auto *base = &fm[0][0];
+        constexpr int total = n_scenes * n_lfos;
+        assert(fs >= base && fs < base + total);
+        return static_cast<int>(fs - base) + 1;
+    };
+    s.lfo_id = computeLfoId(fs);
+
     // OK so now evaluate the formula. This is a mistake - the loading and
     // compiling can be expensive so lets look it up by hash first
     auto h = fs->formulaHash;
@@ -198,6 +209,21 @@ end
             stateData.knownBadFunctions.insert(s.funcName);
         }
 
+        // Wipe shared table on each script parse
+        lua_getglobal(s.L, sharedTableName);
+        if (lua_istable(s.L, -1))
+        {
+            lua_pushnil(s.L);
+            while (lua_next(s.L, -2))
+            {
+                lua_pop(s.L, 1);        // pop value
+                lua_pushvalue(s.L, -1); // duplicate the key
+                lua_pushnil(s.L);
+                lua_settable(s.L, -4); // clear the key
+            }
+        }
+        lua_pop(s.L, 1); // pop shared (or nil)
+
         // this happens here because we did parse it at least. Don't parse again until it is changed
         lua_pushstring(s.L, fs->formulaString.c_str());
         lua_setglobal(s.L, pvn.c_str());
@@ -232,8 +258,8 @@ end
                 lua_setfield(s.L, -2, q);
             };
 
-            auto addi = [&s](const char *q, float f) {
-                lua_pushinteger(s.L, f);
+            auto addi = [&s](const char *q, int i) {
+                lua_pushinteger(s.L, i);
                 lua_setfield(s.L, -2, q);
             };
 
@@ -277,6 +303,7 @@ end
             addi("scene_mode", s.scenemode);
             addi("play_mode", s.polymode);
             addi("split_point", s.splitpoint);
+            addi("lfo_id", s.lfo_id);
 
             addb("mpe_enabled", s.mpeenabled);
             addb("is_voice", s.isVoice);
@@ -523,11 +550,6 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
         lua_setfield(s->L, -2, q);
     };
 
-    auto addnil = [s](const char *q) {
-        lua_pushnil(s->L);
-        lua_setfield(s->L, -2, q);
-    };
-
     // Stack is now func > table so we can update the table
     addi("intphase", phaseIntPart);
     addi("cycle", phaseIntPart); // Alias cycle for intphase
@@ -566,6 +588,7 @@ void valueAt(int phaseIntPart, float phaseFracPart, SurgeStorage *storage,
     addi("scene_mode", s->scenemode);
     addi("play_mode", s->polymode);
     addi("split_point", s->splitpoint);
+    addi("lfo_id", s->lfo_id);
 
     addb("is_rendering_to_ui", s->is_display);
     addb("mpe_enabled", s->mpeenabled);
@@ -772,7 +795,8 @@ enum showFilter
 
 bool isUserDefined(std::string str)
 {
-    static constexpr std::array<std::string_view, 56> keywords = {
+    // clang-format off
+    static constexpr std::array<std::string_view, 57> keywords = {
         "amplitude",     "attack",        "block_size",
         "cc_breath",     "cc_expr",       "cc_mw",
         "cc_sus",        "chan_at",       "channel",
@@ -780,28 +804,23 @@ bool isUserDefined(std::string str)
         "deform",        "delay",         "highest_key",
         "hold",          "intphase",      "is_rendering_to_ui",
         "is_voice",      "key",           "latest_key",
-        "lowest_key",    "macros",        "mpe_bend",
-        "mpe_bendrange", "mpe_enabled",   "mpe_pressure",
-        "mpe_timbre",    "output",        "pb",
-        "pb_range_dn",   "pb_range_up",   "phase",
-        "play_mode",     "poly_at",       "poly_limit",
-        "rate",          "rel_velocity",  "release",
-        "released",      "retrigger_AEG", "retrigger_FEG",
-        "samplerate",    "scene_mode",    "songpos",
-        "split_point",   "startphase",    "sustain",
-        "tempo",         "tuned_key",     "use_amplitude",
-        "use_envelope",  "velocity",      "voice_count",
-        "voice_id",      "subscriptions"};
+        "lfo_id",        "lowest_key",    "macros",
+        "mpe_bend",      "mpe_bendrange", "mpe_enabled",
+        "mpe_pressure",  "mpe_timbre",    "output",
+        "pb",            "pb_range_dn",   "pb_range_up",
+        "phase",         "play_mode",     "poly_at",
+        "poly_limit",    "rate",          "rel_velocity",
+        "release",       "released",      "retrigger_AEG",
+        "retrigger_FEG", "samplerate",    "scene_mode",
+        "songpos",       "split_point",   "startphase",
+        "sustain",       "tempo",         "tuned_key",
+        "use_amplitude", "use_envelope",  "velocity",
+        "voice_count",   "voice_id",      "subscriptions"};
+    // clang-format on
 
     auto foundInList = std::find(keywords.begin(), keywords.end(), str) != keywords.end();
     // std::cout << "isCustom " << str << " = " << foundInList << "\n";
     return !foundInList;
-}
-
-void setUserDefined(DebugRow &row, int depth, bool custom)
-{
-    if ((isUserDefined(row.label) && depth == 0) || custom == true)
-        row.isUserDefined = true;
 }
 
 std::vector<DebugRow> createDebugDataOfModState(const EvaluatorState &es, std::string filter,

@@ -2893,7 +2893,7 @@ void SurgeGUIEditor::wtscriptFileDropped(const string &fn)
 
     OscillatorStorage *oscdata =
         &synth->storage.getPatch().scene[current_scene].osc[current_osc[current_scene]];
-    evaluator->loadWtscript(fs::path(fn), &synth->storage, oscdata);
+    evaluator->loadWtscript(string_to_path(fn), &synth->storage, oscdata);
 
     oscdata->wt.current_id = -1;
     oscdata->queue_type = ot_wavetable; // Setting queue_type also handles OWD/editor refresh
@@ -3586,6 +3586,40 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
         synth->storage.reportError(msg, "Skin Loading Error");
     }
     reloadFromSkin();
+}
+
+void SurgeGUIEditor::rescanAllDataFolders()
+{
+    auto &storage = this->synth->storage;
+
+    storage.refresh_wtlist();
+    storage.refresh_patchlist();
+    storage.refresh_irlist();
+    storage.rescanUserMidiMappings();
+
+    if (storage.fxUserPreset)
+        storage.fxUserPreset->doPresetRescan(&storage, true);
+    if (storage.modulatorPreset)
+        storage.modulatorPreset->forcePresetRescan();
+
+    // Force a rescan of MIDI program-change patch folder on next menu open
+    scannedForMidiPresets = false;
+
+    // Rescan skins and reapply the currently selected one
+    auto r = this->currentSkin->root;
+    auto n = this->currentSkin->name;
+
+    auto *db = Surge::GUI::SkinDB::get();
+    db->rescanForSkins(&storage);
+
+    auto e = db->getEntryByRootAndName(r, n);
+    if (e.has_value())
+        setupSkinFromEntry(*e);
+    else
+        setupSkinFromEntry(db->getDefaultSkinEntry());
+
+    // Rebuild the FX menu and other UI that depends on the rescans
+    this->synth->refresh_editor = true;
 }
 
 void SurgeGUIEditor::sliderHoverStart(int tag)
@@ -6736,7 +6770,7 @@ void SurgeGUIEditor::loadWavetableScript()
 
             if (res.hasFileExtension(".wtscript"))
             {
-                loadWavetableScript(-1, fs::path(rString), &this->synth->storage, &oscdata);
+                loadWavetableScript(-1, string_to_path(rString), &this->synth->storage, &oscdata);
             }
 
             auto dir = string_to_path(res.getParentDirectory().getFullPathName().toStdString());

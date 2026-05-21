@@ -3494,7 +3494,7 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("lastLoadedPath"));
             if (p && p->Attribute("v"))
             {
-                dawExtraState.lastLoadedPatch = fs::path{p->Attribute("v")};
+                dawExtraState.lastLoadedPatch = string_to_path(p->Attribute("v"));
             }
 
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("disconnectFromOddSoundMTS"));

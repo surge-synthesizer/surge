@@ -32,6 +32,8 @@ message(STATUS "Targeting ${SURGE_BITNESS}-bit configuration.")
 if(APPLE)
   enable_language(OBJC)
   enable_language(OBJCXX)
+  set(CMAKE_OBJC_VISIBILITY_PRESET hidden)
+  set(CMAKE_OBJCXX_VISIBILITY_PRESET hidden)  
 endif()
 
 # Make Sure the REpo is properly cloned {{{
@@ -76,6 +78,9 @@ endif()
 # Global compiler/linker settings {{{
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 if(SURGE_BUILD_RS_EXAMPLES AND NOT SURGE_BUILD_RS)
   message(STATUS "Enabling Rust bindings, which is needed for its examples.")
@@ -119,12 +124,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 
     # Targeting Windows with GCC/Clang is experimental
     $<$<NOT:$<OR:$<BOOL:${WIN32}>,$<BOOL:${SURGE_SKIP_WERROR}>>>:-Werror>
-
-    # PE/COFF doesn't support visibility
-    $<$<NOT:$<BOOL:${WIN32}>>:-fvisibility=hidden>
-
-    # Inlines visibility is only relevant with C++
-    $<$<AND:$<NOT:$<BOOL:${WIN32}>>,$<COMPILE_LANGUAGE:CXX>>:-fvisibility-inlines-hidden>
 
     # BP note: If you want to turn on llvm/gcc sanitize undo this and the link options below
     $<$<BOOL:${SURGE_SANITIZE}>:-fsanitize=address>
