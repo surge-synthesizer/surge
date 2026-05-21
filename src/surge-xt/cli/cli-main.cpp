@@ -54,7 +54,7 @@ namespace detail
 {
 bool dispatchNextMessageOnSystemQueue(bool returnIfNoPendingMessages);
 }
-}
+} // namespace juce
 
 // The JUCE ALSA MIDI backend populates its device cache (cachedEndpoints) through an async
 // update posted by the background SequencerThread after it sees the PORT_SUBSCRIBED event
