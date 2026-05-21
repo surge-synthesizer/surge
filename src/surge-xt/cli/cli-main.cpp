@@ -42,6 +42,36 @@ extern void initialiseNSApplication();
 extern void objCShutdown(); // in cli-mac-helpers.mm
 #endif
 
+#if JUCE_LINUX
+// dispatchNextMessageOnSystemQueue is defined in juce_Messaging_linux.cpp (juce::detail
+// namespace) and used by runDispatchLoop() itself. With returnIfNoPendingMessages=true it
+// is non-blocking: processes one batch of ready fd events and returns false immediately
+// when the queue is empty. This lets us pump the JUCE message queue without requiring
+// JUCE_MODAL_LOOPS_PERMITTED.
+namespace juce
+{
+namespace detail
+{
+bool dispatchNextMessageOnSystemQueue(bool returnIfNoPendingMessages);
+}
+} // namespace juce
+
+// The JUCE ALSA MIDI backend populates its device cache (cachedEndpoints) through an async
+// update posted by the background SequencerThread after it sees the PORT_SUBSCRIBED event
+// that ALSA generates when EndpointsImplNative subscribes to system announcements. This
+// event is queued the moment getAvailableDevices() first creates the ALSA Client, but the
+// SequencerThread (poll timeout 100 ms) must then read it and call triggerAsyncUpdate()
+// before the cache is ready. Call this helper before the first meaningful
+// getAvailableDevices() call to let that async chain complete.
+static void primeMidiDeviceDiscovery()
+{
+    juce::MidiInput::getAvailableDevices(); // creates ALSA Client + starts SequencerThread
+    juce::Thread::sleep(150);               // ≤100 ms poll cycle + scheduling margin
+    while (juce::detail::dispatchNextMessageOnSystemQueue(true))
+        ;
+}
+#endif
+
 // This tells us to keep processing
 std::atomic<bool> continueLoop{true};
 
@@ -153,6 +183,10 @@ void listAudioDevices()
 void listMidiDevices()
 {
     juce::MessageManager::getInstance()->setCurrentThreadAsMessageThread();
+
+#if JUCE_LINUX
+    primeMidiDeviceDiscovery();
+#endif
 
     auto items = juce::MidiInput::getAvailableDevices();
     for (int i = 0; i < items.size(); ++i)
@@ -328,6 +362,10 @@ int main(int argc, char **argv)
 
     if (listDevices)
     {
+        // MessageManager must exist before listAudioDevices() so that when AudioDeviceManager
+        // construction creates the ALSA Client (via its midiDeviceListConnection member), the
+        // SequencerThread's triggerAsyncUpdate() has a live message queue to post to.
+        juce::MessageManager::getInstance()->setCurrentThreadAsMessageThread();
         listAudioDevices();
         listMidiDevices();
         exit(0);
@@ -368,6 +406,9 @@ int main(int argc, char **argv)
         engine->proc->surge->mpeEnabled = false; // the default
     }
 
+#if JUCE_LINUX
+    primeMidiDeviceDiscovery();
+#endif
     auto midiDevices = juce::MidiInput::getAvailableDevices();
     std::vector<std::unique_ptr<juce::MidiInput>> midiInputs;
 
@@ -629,7 +670,14 @@ int main(int argc, char **argv)
 
     manager->addAudioCallback(engine.get());
 
+#if JUCE_LINUX
+    // On Linux the JUCE ALSA backend relies on async updates for things like MIDI hotplug;
+    // run the message pump unconditionally so those updates are delivered during the run
+    // loop, not just at startup.
+    bool needsMessageLoop{true};
+#else
     bool needsMessageLoop{false};
+#endif
     if (oscInputPort > 0)
     {
         needsMessageLoop = true;
