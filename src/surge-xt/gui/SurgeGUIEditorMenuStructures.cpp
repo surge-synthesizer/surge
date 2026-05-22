@@ -92,48 +92,7 @@ juce::PopupMenu SurgeGUIEditor::makeLfoMenu(const juce::Point<int> &where)
         for (const auto &p : cat.presets)
         {
             auto action = [this, p, currentLfoId]() {
-                SurgeGUIEditor::forceLfoDisplayRepaint();
-
-                // clear state for current formula
-                this->synth->storage.getPatch().dawExtraState.editor.clearFormulaStateInScene(
-                    current_scene, currentLfoId);
-
-                undoManager()->pushFullLFO(current_scene, currentLfoId);
-                this->synth->storage.modulatorPreset->loadPresetFrom(
-                    p.path, &(this->synth->storage), current_scene, currentLfoId);
-
-                auto newshape = this->synth->storage.getPatch()
-                                    .scene[current_scene]
-                                    .lfo[currentLfoId]
-                                    .shape.val.i;
-
-                if (auto ol = getOverlayIfOpenAs<Surge::Overlays::MSEGEditor>(
-                        SurgeGUIEditor::MSEG_EDITOR))
-                {
-                    if (newshape == lt_mseg)
-                    {
-                        ol->forceRefresh();
-                    }
-                    else
-                    {
-                        closeOverlay(SurgeGUIEditor::MSEG_EDITOR);
-                    }
-                }
-
-                if (auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(
-                        SurgeGUIEditor::FORMULA_EDITOR))
-                {
-                    if (newshape == lt_formula)
-                    {
-                        ol->forceRefresh();
-                    }
-                    else
-                    {
-                        closeOverlay(SurgeGUIEditor::FORMULA_EDITOR);
-                    }
-                }
-
-                this->synth->refresh_editor = true;
+                loadModulatorPresetFrom(p.path, current_scene, currentLfoId);
             };
 
             m.addItem(p.name, action);
@@ -2102,4 +2061,37 @@ void SurgeGUIEditor::showSettingsMenu(const juce::Point<int> &where,
 
     settingsMenu.showMenuAsync(popupMenuOptions(where),
                                Surge::GUI::makeEndHoverCallback(launchFrom));
+}
+
+/* MISC */
+
+void SurgeGUIEditor::loadModulatorPresetFrom(const fs::path &path, int scene, int lfoId)
+{
+    forceLfoDisplayRepaint();
+
+    // clear formula state for target slot, same as menu path
+    synth->storage.getPatch().dawExtraState.editor.clearFormulaStateInScene(scene, lfoId);
+
+    undoManager()->pushFullLFO(scene, lfoId);
+    synth->storage.modulatorPreset->loadPresetFrom(path, &synth->storage, scene, lfoId);
+
+    auto newshape = synth->storage.getPatch().scene[scene].lfo[lfoId].shape.val.i;
+
+    if (auto ol = getOverlayIfOpenAs<Surge::Overlays::MSEGEditor>(MSEG_EDITOR))
+    {
+        if (newshape == lt_mseg)
+            ol->forceRefresh();
+        else
+            closeOverlay(MSEG_EDITOR);
+    }
+
+    if (auto ol = getOverlayIfOpenAs<Surge::Overlays::FormulaModulatorEditor>(FORMULA_EDITOR))
+    {
+        if (newshape == lt_formula)
+            ol->forceRefresh();
+        else
+            closeOverlay(FORMULA_EDITOR);
+    }
+
+    synth->refresh_editor = true;
 }

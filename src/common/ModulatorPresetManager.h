@@ -34,7 +34,7 @@ namespace Storage
 struct ModulatorPreset
 {
     /*
-     * Given a storage, scene, and LFO, stream stream it to a file relative to the location
+     * Given a storage, scene, and LFO, stream it to a file relative to the location
      * in the user directory LFO presets area
      */
     void savePresetToUser(const fs::path &location, SurgeStorage *s, int scene, int lfo);

@@ -4931,8 +4931,9 @@ bool SurgeGUIEditor::canDropTarget(const juce::String &fname)
 
     auto fullPath = juceStringToFSPath(fname);
 
-    constexpr std::array<std::string_view, 8> allowedExtensions{
-        ".scl"sv, ".kbm"sv, ".wav"sv, ".wt"sv, ".wtscript"sv, ".fxp"sv, ".surge-skin"sv, ".zip"sv};
+    constexpr std::array<std::string_view, 9> allowedExtensions{
+        ".scl"sv, ".kbm"sv,       ".wav"sv,        ".wt"sv, ".wtscript"sv,
+        ".fxp"sv, ".modpreset"sv, ".surge-skin"sv, ".zip"sv};
 
     std::string ext = fullPath.extension().u8string();
 
@@ -4973,6 +4974,11 @@ bool SurgeGUIEditor::onDrop(const juce::String &fname)
     else if (ext == ".fxp")
     {
         queuePatchFileLoad(fullPath.u8string());
+    }
+    else if (ext == ".modpreset")
+    {
+        const auto lfoId = modsource_editor[current_scene] - ms_lfo1;
+        loadModulatorPresetFrom(fullPath.u8string(), current_scene, lfoId);
     }
     else if (ext == ".surge-skin")
     {
