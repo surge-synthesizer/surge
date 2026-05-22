@@ -264,6 +264,8 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void forceLfoDisplayRepaint();
 
+    void loadModulatorPresetFrom(const fs::path &path, int scene, int lfoId);
+
   private:
     void openOrRecreateEditor();
     std::unique_ptr<Surge::Overlays::OverlayComponent> makeStorePatchDialog();
