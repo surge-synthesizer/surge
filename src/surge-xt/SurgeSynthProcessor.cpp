@@ -271,7 +271,7 @@ void SurgeSynthProcessor::changeProgramName(int index, const juce::String &newNa
 /* OSC (Open Sound Control) */
 bool SurgeSynthProcessor::initOSCIn(int port)
 {
-    if (port <= 0)
+    if (port < 1 || port > 65535)
     {
         return false;
     }
@@ -286,9 +286,20 @@ bool SurgeSynthProcessor::initOSCIn(int port)
 
 bool SurgeSynthProcessor::changeOSCInPort(int new_port)
 {
-    surge->storage.oscReceiving = false;
+    if (new_port < 1 || new_port > 65535)
+    {
+        return false;
+    }
+
+    surge->storage.oscPortInLastBound = 0;
     oscHandler.stopListening();
-    return initOSCIn(new_port);
+
+    bool status = oscHandler.initOSCInRange(new_port, new_port + OSC_IN_PORT_SCAN_RANGE);
+
+    surge->storage.oscReceiving = status;
+    surge->storage.oscStartIn = true;
+
+    return status;
 }
 
 bool SurgeSynthProcessor::initOSCOut(int port, std::string ipaddr)

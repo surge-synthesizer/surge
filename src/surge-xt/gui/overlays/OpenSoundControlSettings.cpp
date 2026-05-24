@@ -37,6 +37,33 @@ namespace Surge
 namespace Overlays
 {
 
+namespace
+{
+class StatusLabel : public juce::Label
+{
+  public:
+    using juce::Label::Label;
+
+  protected:
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override
+    {
+        class Handler : public juce::AccessibilityHandler
+        {
+          public:
+            explicit Handler(juce::Label &l)
+                : juce::AccessibilityHandler(l, juce::AccessibilityRole::staticText), label(l)
+            {
+            }
+            juce::String getTitle() const override { return label.getText(); }
+
+          private:
+            juce::Label &label;
+        };
+        return std::make_unique<Handler>(*this);
+    }
+};
+} // namespace
+
 OpenSoundControlSettings::OpenSoundControlSettings()
 {
     setAccessible(true);
@@ -49,7 +76,6 @@ OpenSoundControlSettings::OpenSoundControlSettings()
         Surge::Widgets::fixupJuceTextEditorAccessibility(*ed);
         ed->setTitle(n);
         ed->setSelectAllWhenFocused(true);
-        ed->setWantsKeyboardFocus(true);
         addAndMakeVisible(*ed);
         return std::move(ed);
     };
@@ -58,7 +84,6 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     inPort->setJustification(juce::Justification::centred);
     inPort->addListener(this);
     inPort->setInputRestrictions(5, "0123456789");
-    addAndMakeVisible(*inPort);
 
     inPortReset = std::make_unique<Widgets::SurgeTextButton>("Default Port");
     inPortReset->addListener(this);
@@ -69,7 +94,6 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     outPort->setJustification(juce::Justification::centred);
     outPort->addListener(this);
     outPort->setInputRestrictions(5, "0123456789");
-    addAndMakeVisible(*outPort);
 
     outPortReset = std::make_unique<Widgets::SurgeTextButton>("Default Port");
     outPortReset->addListener(this);
@@ -80,7 +104,6 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     outIP->setJustification(juce::Justification::centred);
     outIP->addListener(this);
     outIP->setInputRestrictions(15, "0123456789.");
-    addAndMakeVisible(*outIP);
 
     inL = std::make_unique<juce::Label>("OSC In", "OSC In");
     addAndMakeVisible(*inL);
@@ -123,6 +146,11 @@ OpenSoundControlSettings::OpenSoundControlSettings()
     enableOut->addListener(this);
     enableOut->setTitle("OSC Output Enable");
     addAndMakeVisible(*enableOut);
+
+    statusL = std::make_unique<StatusLabel>("statusL", "");
+    statusL->setJustificationType(juce::Justification::centred);
+    statusL->setWantsKeyboardFocus(true);
+    addAndMakeVisible(*statusL);
 }
 
 OpenSoundControlSettings::~OpenSoundControlSettings() = default;
@@ -160,7 +188,7 @@ void OpenSoundControlSettings::shownInParent()
 void OpenSoundControlSettings::onSkinChanged()
 {
     auto resetColors = [this](const auto &typein) {
-        typein->setFont(skin->getFont(Fonts::System::Display));
+        typein->setFont(skin->getFont(Fonts::PatchStore::TextEntry));
         typein->setColour(juce::TextEditor::backgroundColourId,
                           skin->getColor(Colors::Dialog::Entry::Background));
         typein->setColour(juce::TextEditor::textColourId,
@@ -175,7 +203,7 @@ void OpenSoundControlSettings::onSkinChanged()
                           skin->getColor(Colors::Dialog::Entry::Border));
 
         typein->applyColourToAllText(skin->getColor(Colors::Dialog::Entry::Text));
-        typein->applyFontToAllText(skin->getFont(Fonts::System::Display));
+        typein->applyFontToAllText(skin->getFont(Fonts::PatchStore::TextEntry));
     };
 
     auto resetLabel = [this](const auto &label) {
@@ -190,8 +218,10 @@ void OpenSoundControlSettings::onSkinChanged()
     resetLabel(inL);
     resetLabel(outL);
     resetLabel(outIPL);
+    resetLabel(statusL);
 
-    outIPL->setJustificationType(juce::Justification::centred);
+    outIPL->setJustificationType(juce::Justification::centredRight);
+    outIPL->setBorderSize(juce::BorderSize<int>(1, 5, 1, 0));
 
     enableIn->setColour(juce::ToggleButton::tickDisabledColourId,
                         skin->getColor(Colors::Dialog::Checkbox::Border));
@@ -202,6 +232,8 @@ void OpenSoundControlSettings::onSkinChanged()
                          skin->getColor(Colors::Dialog::Checkbox::Border));
     enableOut->setColour(juce::ToggleButton::tickColourId,
                          skin->getColor(Colors::Dialog::Checkbox::Tick));
+
+    statusL->setBorderSize(juce::BorderSize<int>(1, 0, 1, 0));
 
     inPortReset->setSkin(skin, associatedBitmapStore);
     outPortReset->setSkin(skin, associatedBitmapStore);
@@ -217,32 +249,32 @@ void OpenSoundControlSettings::resized()
     // overall size set in SurgeGUIEditorOverlays.cpp when created
     static constexpr int uheight = 18;
     static constexpr int ushift = 30;
-    static constexpr int margin = 8;
+    static constexpr int margin = 6;
     static constexpr int halfmargin = margin / 2;
     static constexpr int buttonHeight = 17;
     static constexpr int buttonWidth = 50;
     static constexpr int defButtonWidth = 64;
     static constexpr int checkboxWidth = 68;
-
-    auto col = getLocalBounds();
+    static constexpr int ipFieldWidth = checkboxWidth;
+    auto bounds = getLocalBounds();
+    auto col = bounds.withWidth(bounds.getWidth() / 3);
+    const int rightEdge = bounds.getWidth() - margin;
 
     // left
-    col = col.withWidth(col.getWidth() / 3);
-
     {
         auto lcol = col.withHeight(uheight);
-        auto inb = lcol.translated(0, margin).withSizeKeepingCentre(checkboxWidth, buttonHeight);
+        auto inb = lcol.translated(0, margin).withSize(checkboxWidth, buttonHeight).withX(margin);
 
         enableIn->setBounds(inb);
 
         inL->setBounds(inb.translated(20, 0));
 
         lcol = lcol.translated(0, ushift + halfmargin);
-        inPort->setBounds(lcol.withSizeKeepingCentre(defButtonWidth, buttonHeight));
+        inPort->setBounds(lcol.withSize(defButtonWidth, buttonHeight).withX(margin));
         inPort->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift - halfmargin);
-        inPortReset->setBounds(lcol.withSizeKeepingCentre(defButtonWidth, buttonHeight));
+        inPortReset->setBounds(lcol.withSize(defButtonWidth, buttonHeight).withX(margin));
     }
 
     // center
@@ -266,29 +298,32 @@ void OpenSoundControlSettings::resized()
 
     // right
     col = col.translated(col.getWidth(), 0);
-
     {
+        static constexpr int ipLabelWidth = 88;
         auto lcol = col.withHeight(uheight);
 
-        outIPL->setBounds(lcol.translated(0, margin));
+        outIPL->setBounds(
+            lcol.translated(0, margin).withSize(ipLabelWidth, uheight).withRightX(rightEdge));
 
         lcol = lcol.translated(0, ushift + halfmargin);
-        outIP->setBounds(lcol.reduced(margin + halfmargin, 0));
+        outIP->setBounds(lcol.withSize(ipFieldWidth, buttonHeight).withRightX(rightEdge));
         outIP->setIndents(4, 0);
 
         lcol = lcol.translated(0, ushift - halfmargin);
-        outIPReset->setBounds(lcol.reduced(margin + halfmargin, 0));
+        outIPReset->setBounds(lcol.withSize(defButtonWidth, buttonHeight).withRightX(rightEdge));
     }
 
     // bottom row
-    auto row = getLocalBounds();
-    const auto yPos = getLocalBounds().getHeight() - buttonHeight - margin;
+    const int okY = bounds.getHeight() - buttonHeight - margin;
+    const int resetBottom = inPortReset->getBottom();
+    const int statusY = resetBottom + (okY - resetBottom - buttonHeight) / 2;
+    statusL->setBounds(margin, statusY, bounds.getWidth() - 2 * margin, buttonHeight);
 
-    help->setBounds(row.translated(outIPReset->getRight() - buttonHeight, yPos)
+    auto row = bounds;
+    help->setBounds(row.translated(outIPReset->getRight() - buttonHeight, okY)
                         .withSize(buttonHeight, buttonHeight));
 
-    row = row.translated(row.getWidth() / 2 - buttonWidth / 2, yPos);
-
+    row = row.translated(row.getWidth() / 2 - buttonWidth / 2, okY);
     row.setSize(buttonWidth, buttonHeight);
 
     ok->setBounds(row);
@@ -313,6 +348,37 @@ void OpenSoundControlSettings::setValuesFromEditor()
     outIP->setText(editor->synth->storage.oscOutIP, juce::dontSendNotification);
     outPortReset->setEnabled(editor->synth->storage.oscPortOut != defaultOSCOutPort);
     outIPReset->setEnabled(editor->synth->storage.oscOutIP != defaultOSCOutIP);
+
+    updateStatusLabel();
+}
+
+void OpenSoundControlSettings::updateStatusLabel()
+{
+    if (!editor)
+        return;
+
+    auto &handler = editor->juceEditor->processor.oscHandler;
+    std::string statusText;
+    if (handler.listening)
+    {
+        int actual = handler.iportnum;
+        int preferred = editor->synth->storage.oscPortIn;
+        if (actual == preferred)
+        {
+            statusText = "Listening on port " + std::to_string(actual);
+        }
+        else if (handler.restoredFromLastBound)
+        {
+            statusText =
+                "Listening on port " + std::to_string(actual) + " (restored from last session)";
+        }
+        else
+        {
+            statusText = "Listening on port " + std::to_string(actual) + " (preferred " +
+                         std::to_string(preferred) + " was already in use)";
+        }
+    }
+    statusL->setText(statusText, juce::dontSendNotification);
 }
 
 void OpenSoundControlSettings::textEditorTextChanged(juce::TextEditor &ed) { setAllEnableds(); }
@@ -445,7 +511,7 @@ bool OpenSoundControlSettings::updateAll()
 
     if (isInputChanged())
     {
-        int newPort = std::stoi(inPort->getText().toStdString());
+        int newPort = inPort->getText().getIntValue();
 
         if (enableIn->getToggleState())
         {
@@ -469,9 +535,11 @@ bool OpenSoundControlSettings::updateAll()
         }
     }
 
+    updateStatusLabel();
+
     if (isOutputChanged())
     {
-        int newPort = std::stoi(outPort->getText().toStdString());
+        int newPort = outPort->getText().getIntValue();
 
         if (enableOut->getToggleState())
         {
@@ -501,15 +569,14 @@ bool OpenSoundControlSettings::updateAll()
 bool OpenSoundControlSettings::isInputChanged()
 {
     return ((enableIn->getToggleState() != editor->synth->storage.oscReceiving) ||
-            (inPort->getText().toStdString() != std::to_string(editor->synth->storage.oscPortIn)));
+            (inPort->getText().getIntValue() != editor->synth->storage.oscPortIn));
 }
 
 bool OpenSoundControlSettings::isOutputChanged()
 {
-    return (
-        (enableOut->getToggleState() != editor->synth->storage.oscSending) ||
-        (outPort->getText().toStdString() != std::to_string(editor->synth->storage.oscPortOut)) ||
-        (outIP->getText().toStdString() != editor->synth->storage.oscOutIP));
+    return ((enableOut->getToggleState() != editor->synth->storage.oscSending) ||
+            (outPort->getText().getIntValue() != editor->synth->storage.oscPortOut) ||
+            (outIP->getText().toStdString() != editor->synth->storage.oscOutIP));
 }
 
 bool OpenSoundControlSettings::is_number(const std::string &s)
@@ -520,23 +587,22 @@ bool OpenSoundControlSettings::is_number(const std::string &s)
 // Returns new port integer value if portStr is valid, otherwise returns 0
 int OpenSoundControlSettings::validPort(std::string portStr, std::string type)
 {
-    int newPort = 0;
+    auto reportInvalid = [&] {
+        std::ostringstream msg;
+        msg << type << " port number must be between 1 and 65535!";
+        storage->reportError(msg.str(), "Port Number Error");
+    };
 
     if (!is_number(portStr))
     {
-        std::ostringstream msg;
-        msg << type << " port number must be between 1 and 65535!";
-        storage->reportError(msg.str(), "Port Number Error");
+        reportInvalid();
         return 0;
     }
 
-    newPort = std::stoi(portStr);
-
-    if (newPort > 65535 || newPort < 1)
+    int newPort = std::stoi(portStr);
+    if (newPort < 1 || newPort > 65535)
     {
-        std::ostringstream msg;
-        msg << type << " port number must be between 1 and 65535!";
-        storage->reportError(msg.str(), "Port Number Error");
+        reportInvalid();
         return 0;
     }
 

@@ -62,6 +62,8 @@ struct OpenSoundControlSettings : public OverlayComponent,
     int defaultOSCOutPort;
     std::string defaultOSCOutIP;
 
+    void updateStatusLabel();
+
     void onSkinChanged() override;
     void buttonClicked(juce::Button *button) override;
 
@@ -81,7 +83,7 @@ struct OpenSoundControlSettings : public OverlayComponent,
     void validateInputs(juce::TextEditor &);
 
     std::unique_ptr<juce::TextEditor> inPort, outPort, outIP;
-    std::unique_ptr<juce::Label> inL, outL, outIPL;
+    std::unique_ptr<juce::Label> inL, outL, outIPL, statusL;
     std::unique_ptr<Widgets::SurgeTextButton> inPortReset, outPortReset, outIPReset, help, apply,
         ok, cancel;
     std::unique_ptr<juce::ToggleButton> enableOut, enableIn;

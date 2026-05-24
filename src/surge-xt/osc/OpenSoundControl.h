@@ -60,6 +60,7 @@ class OpenSoundControl : public juce::OSCReceiver,
 
     void initOSC(SurgeSynthProcessor *ssp, const std::unique_ptr<SurgeSynthesizer> &surge);
     bool initOSCIn(int port);
+    bool initOSCInRange(int startPort, int endPort);
     bool initOSCOut(int port, std::string ipaddr);
     void stopListening(bool updateOSCStartInStorage = true);
     void tryOSCStartup();
@@ -69,8 +70,10 @@ class OpenSoundControl : public juce::OSCReceiver,
     std::string outIPAddr = DEFAULT_OSC_IPADDR_OUT;
     bool listening = false;
     bool sendingOSC = false;
+    bool restoredFromLastBound = false;
 
     std::unique_ptr<Surge::WavetableScript::LuaWTEvaluator> evaluator;
+    std::unique_ptr<juce::DatagramSocket> ownedInSocket;
     void oscMessageReceived(const juce::OSCMessage &message) override;
     void oscBundleReceived(const juce::OSCBundle &bundle) override;
 

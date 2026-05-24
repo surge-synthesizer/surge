@@ -1216,6 +1216,7 @@ struct DAWExtraStateStorage
     bool disconnectFromOddSoundMTS{false};
 
     int oscPortIn{DEFAULT_OSC_PORT_IN};
+    int oscPortInLastBound{0}; // Tracks bound port for restoration, 0 = never bound
     int oscPortOut{DEFAULT_OSC_PORT_OUT};
     std::string oscIPAddrOut{DEFAULT_OSC_IPADDR_OUT};
     bool oscStartIn{false};
@@ -1782,6 +1783,7 @@ class alignas(16) SurgeStorage
     bool mpeEnabled{false};
 
     int oscPortIn{DEFAULT_OSC_PORT_IN};
+    int oscPortInLastBound{0}; // Tracks bound port for restoration, 0 = never bound
     int oscPortOut{DEFAULT_OSC_PORT_OUT};
     std::string oscOutIP{"127.0.0.1"};
     bool oscStartIn{false};

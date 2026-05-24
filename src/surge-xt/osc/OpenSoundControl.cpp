@@ -36,6 +36,12 @@
 #include "Tunings.h"
 #include "filesystem/import.h"
 
+#if JUCE_WINDOWS
+#include <winsock2.h>
+#else
+#include <sys/socket.h>
+#endif
+
 namespace Surge
 {
 namespace OSC
@@ -66,27 +72,60 @@ void OpenSoundControl::tryOSCStartup()
         return;
     }
 
-    bool startOSCInNow = synth->storage.getPatch().dawExtraState.oscStartIn;
+    const auto &des = synth->storage.getPatch().dawExtraState;
 
-    if (startOSCInNow)
+    /*
+    Input port bind strategy:
+        - In a DAW plugin context, if a previous session bound a specific port (lastBound > 0), try
+          that port first so sessions are reproducible across project reloads
+        - If that port is taken, fall back to scanning the next OSC_IN_PORT_SCAN_RANGE ports above
+          the configured preferred port
+        - On a fresh instance (no lastBound), go straight to the range scan
+        - In standalone, lastBound is ignored so each launch starts fresh from the preferred port
+    */
+    if (des.oscStartIn)
     {
-        int defaultOSCInPort = synth->storage.getPatch().dawExtraState.oscPortIn;
+        int startPort = des.oscPortIn;
+        int endPort = startPort + OSC_IN_PORT_SCAN_RANGE;
 
-        if (defaultOSCInPort > 0)
+        // Standalone always starts fresh
+        const bool isStandalone =
+            sspPtr->wrapperType == juce::AudioProcessor::wrapperType_Standalone;
+        int lastBound = isStandalone ? 0 : des.oscPortInLastBound;
+
+        bool status = false;
+
+        // If we have a stored last bound port from a prior session, try it first
+        if (lastBound > 0)
         {
-            if (!initOSCIn(defaultOSCInPort))
+            status = initOSCIn(lastBound);
+            if (status)
             {
-                sspPtr->initOSCError(defaultOSCInPort);
+                // Flag this as a true restore so the dialog can describe it accurately
+                restoredFromLastBound = true;
             }
+            else
+            {
+                // Last bound port not available, fall back to scanning the range
+                status = initOSCInRange(startPort, endPort);
+            }
+        }
+        else if (startPort > 0)
+        {
+            // Fresh instance, scan the range from the preferred port
+            status = initOSCInRange(startPort, endPort);
+        }
+
+        if (!status)
+        {
+            sspPtr->initOSCError(startPort);
         }
     }
 
-    bool startOSCOutNow = synth->storage.getPatch().dawExtraState.oscStartOut;
-
-    if (startOSCOutNow)
+    if (des.oscStartOut)
     {
-        int defaultOSCOutPort = synth->storage.getPatch().dawExtraState.oscPortOut;
-        std::string defaultOSCOutIPAddr = synth->storage.getPatch().dawExtraState.oscIPAddrOut;
+        int defaultOSCOutPort = des.oscPortOut;
+        std::string defaultOSCOutIPAddr = des.oscIPAddrOut;
 
         if (defaultOSCOutPort > 0)
         {
@@ -100,19 +139,81 @@ void OpenSoundControl::tryOSCStartup()
 
 bool OpenSoundControl::initOSCIn(int port)
 {
-    if (port < 1 || port == oportnum)
+    if (port < 1 || port > 65535 || port == oportnum)
     {
         return false;
     }
 
-    if (connect(port))
+    // Build a DatagramSocket so we can clear SO_REUSEADDR to get us port hijack protection
+    auto sock = std::make_unique<juce::DatagramSocket>(false);
+    int handle = sock->getRawSocketHandle();
+    if (handle < 0)
     {
-        addListener(this);
-        listening = true;
-        iportnum = port;
-        synth->storage.oscReceiving = true;
-        synth->storage.oscStartIn = true;
-        return true;
+        std::cerr << "OSC failed to create socket for port " << port << std::endl;
+        return false;
+    }
+
+    auto setOpt = [handle](int name, int val) {
+        return setsockopt(handle, SOL_SOCKET, name, reinterpret_cast<const char *>(&val),
+                          sizeof(val)) == 0;
+    };
+
+    if (!setOpt(SO_REUSEADDR, 0))
+    {
+        std::cerr << "OSC: failed to clear SO_REUSEADDR on port " << port << std::endl;
+    }
+#if JUCE_WINDOWS
+    if (!setOpt(SO_EXCLUSIVEADDRUSE, 1))
+    {
+        std::cerr << "OSC: failed to set SO_EXCLUSIVEADDRUSE on port " << port << std::endl;
+    }
+#endif
+
+    if (!sock->bindToPort(port))
+    {
+        return false;
+    }
+
+    // connectToSocket disconnects any prior receiver, freeing the old socket for replacement
+    if (!connectToSocket(*sock))
+    {
+        std::cerr << "OSC failed to start receiver on port " << port << std::endl;
+        return false;
+    }
+
+    ownedInSocket = std::move(sock);
+    addListener(this);
+    listening = true;
+    iportnum = port;
+    restoredFromLastBound = false;
+    synth->storage.oscReceiving = true;
+    synth->storage.oscStartIn = true;
+
+    // Remember the actual bound port so future sessions can restore it directly
+    if (sspPtr->wrapperType != juce::AudioProcessor::wrapperType_Standalone)
+    {
+        synth->storage.oscPortInLastBound = port;
+    }
+
+    return true;
+}
+
+// Scan a range of ports starting at startPort, stopping at the first successfull bind
+// The actual bound port can be read from iportnum on success
+bool OpenSoundControl::initOSCInRange(int startPort, int endPort)
+{
+    if (endPort < startPort)
+    {
+        endPort = startPort;
+    }
+    endPort = std::min(endPort, 65535);
+
+    for (int p = startPort; p <= endPort; p++)
+    {
+        if (initOSCIn(p))
+        {
+            return true;
+        }
     }
 
     return false;
@@ -126,6 +227,9 @@ void OpenSoundControl::stopListening(bool updateOSCStartInStorage)
     }
 
     removeListener(this);
+    // disconnect() stops the receiver thread; we own the socket so we release it ourselves
+    disconnect();
+    ownedInSocket.reset();
     listening = false;
 
     if (synth)
