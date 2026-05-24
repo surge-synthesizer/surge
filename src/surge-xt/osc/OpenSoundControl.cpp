@@ -20,6 +20,11 @@
  * https://github.com/surge-synthesizer/surge
  */
 
+// winsock2.h must come before anything that might pull in windows.h (JUCE does)
+#if defined(_WIN32) || defined(_WIN64)
+#include <winsock2.h>
+#endif
+
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "OpenSoundControl.h"
@@ -36,9 +41,7 @@
 #include "Tunings.h"
 #include "filesystem/import.h"
 
-#if JUCE_WINDOWS
-#include <winsock2.h>
-#else
+#if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/socket.h>
 #endif
 
