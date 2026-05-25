@@ -96,6 +96,9 @@ void ModulatorPreset::savePresetToUser(const fs::path &location, SurgeStorage *s
             TiXmlElement lfox("lfo");
             lfox.SetAttribute("shape", lfotype);
 
+            const char *lfoName = s->getPatch().LFOBankLabel[scene][lfoid][0];
+            lfox.SetAttribute("name", lfoName[0] != 0 ? lfoName : "");
+
             TiXmlElement params("params");
             for (auto curr = &(lfo->rate); curr <= &(lfo->release); ++curr)
             {
@@ -224,6 +227,22 @@ void ModulatorPreset::loadPresetFrom(const fs::path &location, SurgeStorage *s, 
         return;
     }
     lfo->shape.val.i = lfotype;
+
+    const char *savedName = lfox->Attribute("name");
+
+    // An empty string means the preset was saved with the default name,
+    // so we clear the label and let the engine show its own default.
+    memset(s->getPatch().LFOBankLabel[scene][lfoid][0], 0,
+           CUSTOM_CONTROLLER_LABEL_SIZE * sizeof(char));
+
+    if (savedName)
+    {
+        if (savedName[0] != '\0')
+        {
+            strncpy(s->getPatch().LFOBankLabel[scene][lfoid][0], savedName,
+                    CUSTOM_CONTROLLER_LABEL_SIZE - 1);
+        }
+    }
 
     auto params = TINYXML_SAFE_TO_ELEMENT(lfox->FirstChildElement("params"));
     if (!params)
