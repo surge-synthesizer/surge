@@ -126,8 +126,10 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
     setFocusContainerType(juce::Component::FocusContainerType::keyboardFocusContainer);
 
     makeMenu();
+
     surgeLookFeel.reset(new SurgeLookAndFeel());
     setLookAndFeel(surgeLookFeel.get());
+    juce::LookAndFeel::setDefaultLookAndFeel(surgeLookFeel.get());
 
     picker = std::make_unique<Picker>(this);
     addAndMakeVisibleRecordOrder(picker.get());
@@ -140,6 +142,9 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
         fxParamSliders[i].setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
         fxParamSliders[i].setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0,
                                           0);
+        fxParamSliders[i].setMouseDragSensitivity(400);
+        fxParamSliders[i].setVelocityModeParameters(0.1, 1, 0.1, true,
+                                                    juce::ModifierKeys::shiftModifier);
         fxParamSliders[i].setChangeNotificationOnlyOnRelease(false);
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
         fxParamSliders[i].onValueChange = [i, this]() {
@@ -172,7 +177,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, false);
         };
 
-        fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " TempoSync");
+        fxTempoSync[i].setTitle("Parameter " + std::to_string(i) + " Tempo Sync");
         addAndMakeVisibleRecordOrder(&(fxTempoSync[i]));
 
         fxDeactivated[i].setOnOffImage(BinaryData::DE_Act_svg, BinaryData::DE_Act_svgSize,
@@ -221,7 +226,7 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
             this->processor.setUserEditingParamFeature(i, false);
         };
 
-        fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absoluted");
+        fxAbsoluted[i].setTitle("Parameter " + std::to_string(i) + " Absolute");
         addAndMakeVisibleRecordOrder(&(fxAbsoluted[i]));
 
         processor.prepareParametersAbsentAudio();
@@ -271,9 +276,26 @@ SurgefxAudioProcessorEditor::~SurgefxAudioProcessorEditor()
     this->processor.storage->removeErrorListener(this);
 }
 
+void SurgefxAudioProcessorEditor::parentHierarchyChanged()
+{
+    for (auto *p = getParentComponent(); p != nullptr; p = p->getParentComponent())
+    {
+        if (auto dw = dynamic_cast<juce::DocumentWindow *>(p))
+        {
+            if (processor.wrapperType == juce::AudioProcessor::wrapperType_Standalone)
+            {
+                dw->setColour(juce::DocumentWindow::backgroundColourId, juce::Colours::black);
+            }
+        }
+    }
+
+    AudioProcessorEditor::parentHierarchyChanged();
+}
+
 void SurgefxAudioProcessorEditor::resetLabels()
 {
     processor.prepareParametersAbsentAudio();
+
     auto st = [](auto &thing, const std::string &title) {
         thing.setTitle(title);
         if (auto *handler = thing.getAccessibilityHandler())
@@ -282,11 +304,13 @@ void SurgefxAudioProcessorEditor::resetLabels()
             handler->notifyAccessibilityEvent(juce::AccessibilityEvent::valueChanged);
         }
     };
+
     for (int i = 0; i < n_fx_params; ++i)
     {
         auto nm = processor.getParamName(i) + " " + processor.getParamGroup(i);
         fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
                                    juce::NotificationType::dontSendNotification);
+        fxParamSliders[i].setDoubleClickReturnValue(true, processor.getFXDefaultValue01(i));
         fxParamDisplay[i].setDisplay(processor.getParamValue(i).c_str());
         fxParamDisplay[i].setGroup(processor.getParamGroup(i).c_str());
         fxParamDisplay[i].setName(processor.getParamName(i).c_str());
@@ -759,9 +783,7 @@ void SurgefxAudioProcessorEditor::promptForTypeinValue(const std::string &prompt
 void SurgefxAudioProcessorEditor::onSurgeError(const std::string &msg, const std::string &title,
                                                const SurgeStorage::ErrorType &errorType)
 {
-    /*
-     * We could be cleverer than this but for now lets just do this
-     */
+    // We could be cleverer than this but for now lets just do this
     juce::MessageManager::callAsync([msg, title]() {
         juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::AlertIconType::WarningIcon, title,
                                                msg, "OK");
@@ -782,18 +804,13 @@ void SurgefxAudioProcessorEditor::toggleLatencyMode()
 
     std::ostringstream oss;
     oss << "Please restart the DAW transport or reload your DAW project for this setting "
-           "to take "
-           "effect!\n\n"
-        << (clm ? "The processing latency is now 32 samples, and variable size audio "
-                  "buffers are "
-                  "supported."
+           "to take effect!\n\n"
+        << (clm ? "The processing latency is now 32 samples, "
+                  "and variable size audio buffers are supported."
                 : "The processing latency is now disabled, so fixed size buffers of at "
-                  "least "
-                  "32 samples are required. Note that some DAWs (particularly FL Studio) "
-                  "use "
-                  "variable size buffers by default, so in this mode you have to adjust "
-                  "the plugin "
-                  "processing options in your DAW to send fixed size audio buffers.");
+                  "least 32 samples are required. Note that some DAWs (particularly FL Studio) "
+                  "use variable size buffers by default, so in this mode you have to adjust "
+                  "the plugin processing options in your DAW to send fixed size audio buffers.");
 
     juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::InfoIcon,
                                            "Latency Setting Changed", oss.str());
