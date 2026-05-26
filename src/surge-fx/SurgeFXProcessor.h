@@ -129,7 +129,11 @@ class SurgefxAudioProcessor : public juce::AudioProcessor,
         return fxstorage->p[fx_param_remap[i]].get_default_value_f01();
     }
     float getFXParamValue01(int i) { return *(fxParams[i]); }
-    void setFXParamValue01(int i, float f) { *(fxParams[i]) = f; }
+    void setFXParamValue01(int i, float f, bool forceInteger = false)
+    {
+        fxstorage->p[fx_param_remap[i]].set_value_f01(f, forceInteger);
+        *(fxParams[i]) = fxstorage->p[fx_param_remap[i]].get_value_f01();
+    }
 
     void setFXParamTempoSync(int i, bool b)
     {
