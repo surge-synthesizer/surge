@@ -136,22 +136,30 @@ SurgefxAudioProcessorEditor::SurgefxAudioProcessorEditor(SurgefxAudioProcessor &
 
     for (int i = 0; i < n_fx_params; ++i)
     {
-        fxParamSliders[i].setRange(0.0, 1.0, 0.0001);
+        fxParamSliders[i].setRange(0.0, 1.0, 0.0);
         fxParamSliders[i].setValue(processor.getFXStorageValue01(i),
                                    juce::NotificationType::dontSendNotification);
         fxParamSliders[i].setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
         fxParamSliders[i].setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0,
                                           0);
-        fxParamSliders[i].setMouseDragSensitivity(400);
-        fxParamSliders[i].setVelocityModeParameters(0.1, 1, 0.1, true,
+        fxParamSliders[i].setMouseDragSensitivity(750);
+        fxParamSliders[i].setVelocityModeParameters(0.04, 1, 0.04, true,
                                                     juce::ModifierKeys::shiftModifier);
         fxParamSliders[i].setChangeNotificationOnlyOnRelease(false);
         fxParamSliders[i].setEnabled(processor.getParamEnabled(i));
         fxParamSliders[i].onValueChange = [i, this]() {
-            this->processor.prepareParametersAbsentAudio();
-            this->processor.setFXParamValue01(i, this->fxParamSliders[i].getValue());
-            fxParamDisplay[i].setDisplay(
-                processor.getParamValueFromFloat(i, this->fxParamSliders[i].getValue()));
+            const bool forceInteger = juce::ModifierKeys::getCurrentModifiers().isCtrlDown();
+
+            processor.prepareParametersAbsentAudio();
+            processor.setFXParamValue01(i, this->fxParamSliders[i].getValue(), forceInteger);
+
+            if (forceInteger)
+            {
+                fxParamSliders[i].setValue(processor.getFXParamValue01(i),
+                                           juce::NotificationType::dontSendNotification);
+            }
+
+            fxParamDisplay[i].setDisplay(processor.getParamValue(i));
             fxParamSliders[i].setTextValue(processor.getParamValue(i).c_str());
         };
         fxParamSliders[i].onDragStart = [i, this]() {
