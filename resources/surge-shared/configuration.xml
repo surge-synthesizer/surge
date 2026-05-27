@@ -19,7 +19,7 @@
 </type>
 <separator/>
 <type i="2" name="Wavetable" retrigger="0" p0_extend_range="1" p5_extend_range="0"/>
-<type i="7" name="Window" retrigger="0" p0_extend_range="0" p5_extend_range="0"/>
+<type i="7" name="Window" retrigger="0" p0_extend_range="1" p5_extend_range="0"/>
 <separator/>
 <type i="1" name="Sine" retrigger="1" p1_extend_range="1" p5_extend_range="0"/>
 <type i="6" name="FM2" retrigger="1" p6_extend_range="1"/>
