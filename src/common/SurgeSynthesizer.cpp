@@ -5064,6 +5064,7 @@ void SurgeSynthesizer::populateDawExtraState()
     des.isPopulated = true;
 
     des.oscPortIn = storage.oscPortIn;
+    des.oscPortInLastBound = storage.oscPortInLastBound;
     des.oscPortOut = storage.oscPortOut;
     des.oscIPAddrOut = storage.oscOutIP;
     des.oscStartIn = storage.oscStartIn;
@@ -5133,6 +5134,7 @@ void SurgeSynthesizer::loadFromDawExtraState()
     mpeEnabled = des.mpeEnabled;
 
     storage.oscPortIn = des.oscPortIn;
+    storage.oscPortInLastBound = des.oscPortInLastBound;
     storage.oscPortOut = des.oscPortOut;
     storage.oscOutIP = des.oscIPAddrOut;
     storage.oscStartIn = des.oscStartIn;

@@ -68,6 +68,7 @@ const int N_INPUTS = 2;
 const int DEFAULT_POLYLIMIT = 16;
 
 const int DEFAULT_OSC_PORT_IN = 53280;
-const int DEFAULT_OSC_PORT_OUT = 53281;
+const int DEFAULT_OSC_PORT_OUT = 53270; // Out port outside the range of in ports we try binding to
+const int OSC_IN_PORT_SCAN_RANGE = 100; // Number of ports to try binding to
 const inline std::string DEFAULT_OSC_IPADDR_OUT = "127.0.0.1";
 #endif // SURGE_SRC_COMMON_GLOBALS_H

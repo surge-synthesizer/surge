@@ -3451,6 +3451,14 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
                 storage->oscPortIn = ival;
             }
 
+            p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oscPortInLastBound"));
+
+            if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
+            {
+                dawExtraState.oscPortInLastBound = ival;
+                storage->oscPortInLastBound = ival;
+            }
+
             p = TINYXML_SAFE_TO_ELEMENT(de->FirstChild("oscPortOut"));
 
             if (p && p->QueryIntAttribute("v", &ival) == TIXML_SUCCESS)
@@ -4309,6 +4317,10 @@ unsigned int SurgePatch::save_xml(void **data) // allocates mem, must be freed b
         TiXmlElement oscPortIn("oscPortIn");
         oscPortIn.SetAttribute("v", dawExtraState.oscPortIn);
         dawExtraXML.InsertEndChild(oscPortIn);
+
+        TiXmlElement oscPortInLastBound("oscPortInLastBound");
+        oscPortInLastBound.SetAttribute("v", dawExtraState.oscPortInLastBound);
+        dawExtraXML.InsertEndChild(oscPortInLastBound);
 
         TiXmlElement oscPortOut("oscPortOut");
         oscPortOut.SetAttribute("v", dawExtraState.oscPortOut);
