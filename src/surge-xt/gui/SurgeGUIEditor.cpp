@@ -5155,6 +5155,16 @@ void SurgeGUIEditor::lfoShapeChanged(int prior, int curr)
         undoManager()->pushParameterChange(
             id, &(synth->storage.getPatch().scene[current_scene].lfo[lfoid].shape), pd);
         synth->storage.getPatch().isDirty = true;
+
+        // Clear phase extend range when leaving step sequencer
+        if (prior == lt_stepseq && curr != lt_stepseq)
+        {
+            auto &phase = synth->storage.getPatch().scene[current_scene].lfo[lfoid].start_phase;
+            if (phase.extend_range)
+            {
+                phase.set_extend_range(false);
+            }
+        }
     }
 
     bool needs_refresh{false};

@@ -2775,6 +2775,13 @@ int32_t SurgeGUIEditor::controlModifierClicked(Surge::GUI::IComponentTagValue *c
                         case ct_countedset_percent_extendable_wtdeform:
                             txt = "Continuous Morph";
                             break;
+                        case ct_lfophaseshuffle:
+                        {
+                            auto cge = p->ctrlgroup_entry - ms_lfo1;
+                            auto lf = &(synth->storage.getPatch().scene[p->scene - 1].lfo[cge]);
+                            visible = lf->shape.val.i == lt_stepseq;
+                            break;
+                        }
                         default:
                             break;
                         }

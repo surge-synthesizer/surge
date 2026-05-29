@@ -2196,6 +2196,10 @@ void Parameter::set_extend_range(bool er)
             {
                 val.f = val_min.f;
             }
+            else if (val.f > val_max.f)
+            {
+                val.f = val_max.f;
+            }
 
             displayType = LinearWithScale;
             snprintf(displayInfo.unit, DISPLAYINFO_TXT_SIZE, "semitones");
@@ -2207,29 +2211,58 @@ void Parameter::set_extend_range(bool er)
         case ct_freq_audible_fm3_extendable:
         {
             val_min.f = -60; // 13.75 Hz
+
+            if (val.f < val_min.f)
+            {
+                val.f = val_min.f;
+            }
         }
         break;
         case ct_freq_reson_band1:
         {
             // Why the heck are we modifying this here?
             val_max.f = -6.6305f; // 300 Hz
+
+            if (val.f > val_max.f)
+            {
+                val.f = val_max.f;
+            }
         }
         break;
         case ct_freq_reson_band2:
         {
             val_min.f = -6.6305f;  // 300 Hz
             val_max.f = 21.23265f; // 1500 Hz
+
+            if (val.f < val_min.f)
+            {
+                val.f = val_min.f;
+            }
+            else if (val.f > val_max.f)
+            {
+                val.f = val_max.f;
+            }
         }
         break;
         case ct_freq_reson_band3:
         {
             val_min.f = 21.23265f; // 1500 Hz
+
+            if (val.f < val_min.f)
+            {
+                val.f = val_min.f;
+            }
         }
         break;
         case ct_dly_fb_clippingmodes:
         case ct_lfoamplitude:
         {
             val_min.f = 0.f;
+
+            if (val.f < val_min.f)
+            {
+                val.f = val_min.f;
+            }
         }
         break;
         case ct_lfophaseshuffle:
