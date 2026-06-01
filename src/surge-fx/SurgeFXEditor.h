@@ -64,6 +64,8 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
     void paint(juce::Graphics &) override;
     void resized() override;
     void parentHierarchyChanged() override;
+    void mouseDown(const juce::MouseEvent &) override;
+    void mouseUp(const juce::MouseEvent &) override;
 
     float getImpliedZoom() const { return getWidth() * 1.0 / baseWidth; }
 
@@ -162,12 +164,17 @@ class SurgefxAudioProcessorEditor : public juce::AudioProcessorEditor,
             return false;
         }
     };
+
     AccSlider fxParamSliders[n_fx_params];
     SurgeFXParamDisplay fxParamDisplay[n_fx_params];
     SurgeTempoSyncSwitch fxTempoSync[n_fx_params];
     SurgeTempoSyncSwitch fxDeactivated[n_fx_params];
     SurgeTempoSyncSwitch fxExtended[n_fx_params];
     SurgeTempoSyncSwitch fxAbsoluted[n_fx_params];
+
+    int rubberbandParamIdx{-1};
+    float rubberbandValue{0.f};
+    bool rubberbandMode{false};
 
     void blastToggleState(int i);
     void resetLabels();
