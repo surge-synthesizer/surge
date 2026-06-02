@@ -602,13 +602,13 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void showMidiLearnOverlay(const juce::Rectangle<int> &r);
     void hideMidiLearnOverlay();
 
+    int selectedFX[n_fx_slots];
+    std::string fxPresetName[n_fx_slots];
+
   private:
     std::function<void(SurgeGUIEditor *, bool resizeWindow)> zoom_callback;
     bool zoomInvalid = false;
     static constexpr int minimumZoom = 25;
-
-    int selectedFX[n_fx_slots];
-    std::string fxPresetName[n_fx_slots];
 
     int processRunningCheckEvery{0};
     std::unique_ptr<juce::Component> noProcessingOverlay{nullptr};

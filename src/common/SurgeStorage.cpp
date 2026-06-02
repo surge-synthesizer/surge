@@ -559,7 +559,17 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     catch (fs::filesystem_error &e)
     {
-        reportError(e.what(), "Error Scanning FX Presets");
+        reportError(e.what(), "Error Scanning FX Presets!");
+    }
+
+    try
+    {
+        fxChainUserPreset = std::make_unique<Surge::Storage::FxChainUserPreset>();
+        fxChainUserPreset->doPresetRescan(this);
+    }
+    catch (fs::filesystem_error &e)
+    {
+        reportError(e.what(), "Error Scanning FX Chains!");
     }
 
     try
@@ -569,7 +579,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     catch (fs::filesystem_error &e)
     {
-        reportError(e.what(), "Error Scanning Modulator Presets");
+        reportError(e.what(), "Error Scanning Modulator Presets!");
     }
     memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }
@@ -603,6 +613,7 @@ void SurgeStorage::initializeUserDataPaths()
     userWavetablesExportPath = userWavetablesPath / "Exported";
     userWavetableScriptsPath = userWavetablesPath / "Scripted";
     userFXPath = userDataPath / "FX Presets";
+    userFXChainPath = userDataPath / "FX Chains";
     userMidiMappingsPath = userDataPath / "MIDI Mappings";
     userModulatorSettingsPath = userDataPath / "Modulator Presets";
     userSkinsPath = userDataPath / "Skins";
@@ -621,9 +632,10 @@ void SurgeStorage::createUserDirectory()
     {
         try
         {
-            for (auto &s : {userDataPath, userDefaultFilePath, userPatchesPath, userWavetablesPath,
-                            userModulatorSettingsPath, userFXPath, userWavetablesExportPath,
-                            userWavetableScriptsPath, userSkinsPath, userMidiMappingsPath})
+            for (auto &s :
+                 {userDataPath, userDefaultFilePath, userPatchesPath, userWavetablesPath,
+                  userModulatorSettingsPath, userFXPath, userFXChainPath, userWavetablesExportPath,
+                  userWavetableScriptsPath, userSkinsPath, userMidiMappingsPath})
                 fs::create_directories(s);
 
             userDataPathValid = true;
