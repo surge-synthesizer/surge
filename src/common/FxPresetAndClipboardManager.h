@@ -80,6 +80,62 @@ struct FxUserPreset
 
     void loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer);
 };
+
+struct FxChainUserPreset
+{
+    struct Preset
+    {
+        std::string file;
+        std::string name;
+        int streamingVersion{ff_revision};
+        fs::path subPath{};
+
+        struct SlotData
+        {
+            int type{0};
+            float p[n_fx_params]{};
+            bool ts[n_fx_params]{};
+            bool er[n_fx_params]{};
+            bool da[n_fx_params]{};
+            int dt[n_fx_params]{};
+
+            std::string presetName;
+
+            // Extra attributes that go in the userdata.
+            std::string filename; // special for convolver
+            std::string userdata; // whole thing
+        };
+        SlotData slots[n_fx_per_chain];
+
+        Preset()
+        {
+            for (auto &s : slots)
+            {
+                s.type = 0;
+                for (int i = 0; i < n_fx_params; ++i)
+                {
+                    s.p[i] = 0.f;
+                    s.ts[i] = false;
+                    s.er[i] = false;
+                    s.da[i] = false;
+                    s.dt[i] = -1;
+                }
+            }
+        }
+    };
+
+    std::vector<Preset> scannedPresets;
+    bool haveScannedPresets{false};
+
+    void doPresetRescan(SurgeStorage *storage, bool forceRescan = false);
+    std::vector<Preset> getPresets() const { return scannedPresets; }
+
+    bool readFromXMLSnapshot(Preset &p, TiXmlElement *snapshotEl);
+    void saveChainPresetIn(SurgeStorage *s, const Preset::SlotData slots[n_fx_per_chain],
+                           const std::string &fn);
+    void loadPresetOnto(const Preset &p, SurgeStorage *s, FxStorage *fxbuffer[n_fx_per_chain]);
+};
+
 } // namespace Storage
 
 namespace FxClipboard
@@ -90,9 +146,28 @@ struct Clipboard
     std::vector<float> fxCopyPaste;
     std::unordered_map<std::string, std::shared_ptr<std::vector<std::uint8_t>>> user_data;
 };
+
 void copyFx(SurgeStorage *, FxStorage *from, Clipboard &cb);
 bool isPasteAvailable(const Clipboard &cb);
 void pasteFx(SurgeStorage *, FxStorage *onto, Clipboard &cb);
+
+struct ChainClipboard
+{
+    struct SlotCopy
+    {
+        std::vector<float> params;
+        std::unordered_map<std::string, std::shared_ptr<std::vector<std::uint8_t>>> user_data;
+        std::string presetName;
+    };
+    SlotCopy slots[n_fx_per_chain];
+    bool hasData{false};
+};
+
+void copyFxChain(SurgeStorage *, FxStorage *from[n_fx_per_chain],
+                 const std::string presetNames[n_fx_per_chain], ChainClipboard &cb);
+bool isChainPasteAvailable(const ChainClipboard &cb);
+void pasteFxChain(SurgeStorage *, FxStorage *onto[n_fx_per_chain], ChainClipboard &cb);
+
 } // namespace FxClipboard
 } // namespace Surge
 #endif // SURGE_XT_FXPRESETANDCLIPBOARDMANAGER_H

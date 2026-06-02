@@ -123,6 +123,7 @@ using namespace Surge::ParamConfig;
 struct DroppedUserDataEntries
 {
     std::vector<int> fxPresets;
+    std::vector<int> fxChains;
     std::vector<int> midiMappings;
     std::vector<int> modulatorSettings;
     std::vector<int> patches;
@@ -132,6 +133,7 @@ struct DroppedUserDataEntries
     void clear()
     {
         fxPresets.clear();
+        fxChains.clear();
         midiMappings.clear();
         modulatorSettings.clear();
         patches.clear();
@@ -141,8 +143,8 @@ struct DroppedUserDataEntries
 
     int totalSize() const
     {
-        return fxPresets.size() + midiMappings.size() + modulatorSettings.size() + patches.size() +
-               skins.size() + wavetables.size();
+        return fxPresets.size() + fxChains.size() + midiMappings.size() + modulatorSettings.size() +
+               patches.size() + skins.size() + wavetables.size();
     }
 };
 
@@ -179,6 +181,10 @@ class DroppedUserDataHandler
             if (entry->filename.endsWithIgnoreCase(".srgfx"))
             {
                 entries.fxPresets.push_back(iEntry);
+            }
+            else if (entry->filename.endsWithIgnoreCase(".srgfxchain"))
+            {
+                entries.fxChains.push_back(iEntry);
             }
             else if (entry->filename.endsWithIgnoreCase(".srgmid"))
             {
@@ -283,6 +289,14 @@ class DroppedUserDataHandler
         for (int iEntry : entries.fxPresets)
         {
             if (!uncompressEntry(iEntry, storage->userFXPath))
+            {
+                return false;
+            }
+        }
+
+        for (int iEntry : entries.fxChains)
+        {
+            if (!uncompressEntry(iEntry, storage->userFXChainPath))
             {
                 return false;
             }
@@ -2514,7 +2528,7 @@ void SurgeGUIEditor::effectSettingsBackgroundClick(int whichScene, Surge::Widget
                                synth->storage.getPatch().isDirty = true;
                        });
 
-    fxGridMenu.showMenuAsync(popupMenuOptions(c), Surge::GUI::makeEndHoverCallback(c));
+    fxGridMenu.showMenuAsync(popupMenuOptions(nullptr, false), Surge::GUI::makeEndHoverCallback(c));
 }
 
 void SurgeGUIEditor::controlBeginEdit(Surge::GUI::IComponentTagValue *control)
@@ -3599,6 +3613,8 @@ void SurgeGUIEditor::rescanAllDataFolders()
 
     if (storage.fxUserPreset)
         storage.fxUserPreset->doPresetRescan(&storage, true);
+    if (storage.fxChainUserPreset)
+        storage.fxChainUserPreset->doPresetRescan(&storage, true);
     if (storage.modulatorPreset)
         storage.modulatorPreset->forcePresetRescan();
 
@@ -5026,6 +5042,12 @@ bool SurgeGUIEditor::onDrop(const juce::String &fname)
             oss << fmt::format("{0} FX preset{1}", sz, sz != 1 ? "s" : "");
         }
 
+        if (entries.fxChains.size() > 0)
+        {
+            auto sz = entries.fxChains.size();
+            oss << fmt::format("{0} FX chain{1}", sz, sz != 1 ? "s" : "");
+        }
+
         if (entries.midiMappings.size() > 0)
         {
             auto sz = entries.midiMappings.size();
@@ -5071,6 +5093,12 @@ bool SurgeGUIEditor::onDrop(const juce::String &fname)
             if (entries.fxPresets.size() > 0)
             {
                 storage->fxUserPreset->doPresetRescan(storage, true);
+                this->queueRebuildUI();
+            }
+
+            if (entries.fxChains.size() > 0)
+            {
+                storage->fxChainUserPreset->doPresetRescan(storage, true);
                 this->queueRebuildUI();
             }
 

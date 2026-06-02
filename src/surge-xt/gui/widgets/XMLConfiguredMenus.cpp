@@ -765,6 +765,39 @@ void FxMenu::loadSnapshot(int type, TiXmlElement *e, int idx)
     }
 }
 
+/////////////////
+
+static int fxSlotToChain(int patchSlot)
+{
+    for (int i = 0; i < n_fx_slots; ++i)
+    {
+        if (fxslot_order[i] == patchSlot)
+        {
+            return i / n_fx_per_chain; // fxchains value
+        }
+    }
+
+    return fxc_scenea; // unreachable
+}
+
+static void buildChainSlotPtrs(SurgeGUIEditor *sge, int current_fx,
+                               FxStorage *slots[n_fx_per_chain], FxStorage *bufs[n_fx_per_chain],
+                               std::string names[n_fx_per_chain])
+{
+    auto &patch = sge->synth->storage.getPatch();
+
+    for (int i = 0; i < n_fx_per_chain; ++i)
+    {
+        int idx = fxslot_order[fxSlotToChain(current_fx) * n_fx_per_chain + i];
+
+        slots[i] = &patch.fx[idx];
+        bufs[i] = &sge->synth->fxsync[idx];
+        names[i] = sge->fxPresetName[idx];
+    }
+}
+
+/////////////////
+
 void FxMenu::populateForContext(bool isCalledInEffectChooser)
 {
     auto sge = firstListenerOfType<SurgeGUIEditor>();
@@ -796,14 +829,18 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     }
 
     auto cfx = std::string{"Current FX Slot"};
+    auto cfxc = std::string{"Current FX Chain"};
     auto helpMenuText = std::string{"FX Presets"};
     auto helpMenuScreeReaderText = helpMenuText;
+
+    const auto cur_fx = current_fx;
 
     if (cfxid >= 0 && cfxid < n_fx_slots)
     {
         if (isCalledInEffectChooser)
         {
             cfx = fxslot_longnames[cfxid];
+            cfxc = fxchain_names[fxSlotToChain(cfxid)];
             helpMenuText = cfx;
         }
 
@@ -812,6 +849,7 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     }
 
     menu.addColumnBreak();
+
     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FUNCTIONS");
 
     if (addDeact)
@@ -823,6 +861,8 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
                 that->repaint();
             });
     }
+
+    menu.addSeparator();
 
     menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfx)), enableClear, false,
                  [this, cfxid, that = juce::Component::SafePointer(sge->effectChooser.get())]() {
@@ -836,26 +876,97 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
                      repaint();
                  });
 
+    menu.addItem(Surge::GUI::toOSCase(fmt::format("Clear {}", cfxc)), true, false,
+                 [this, sge, cur_fx]() { sge->enqueueFXChainClear(fxSlotToChain(cur_fx)); });
+
+    menu.addItem(Surge::GUI::toOSCase("Clear All FX Chains"), true, false,
+                 [this, sge]() { sge->enqueueFXChainClear(-1); });
+
+    menu.addSeparator();
+
+    if (fx->type.val.i != fxt_off)
+    {
+        menu.addItem(Surge::GUI::toOSCase("Save FX Preset As..."), [this]() { this->saveFX(); });
+    }
+
+    menu.addItem(Surge::GUI::toOSCase("Save FX Chain Preset As..."),
+                 [this]() { this->saveChain(); });
+
+    menu.addSeparator();
+
+    menu.addItem(Surge::GUI::toOSCase("Copy FX Preset"), [this]() { this->copyFX(); });
+
+    if (Surge::FxClipboard::isPasteAvailable(fxClipboard))
+    {
+        menu.addItem(Surge::GUI::toOSCase("Paste FX Preset"), [this]() {
+            this->pasteFX();
+            this->storage->getPatch().isDirty = true;
+        });
+    }
+
+    menu.addItem(Surge::GUI::toOSCase("Copy FX Chain"), [this]() { this->copyChain(); });
+
+    if (Surge::FxClipboard::isChainPasteAvailable(fxChainClipboard))
+    {
+        menu.addItem(Surge::GUI::toOSCase("Paste FX Chain"), [this]() {
+            this->pasteChain();
+            this->storage->getPatch().isDirty = true;
+        });
+    }
+
+    menu.addSeparator();
+
     if (sge)
     {
-        auto initSubmenu = juce::PopupMenu();
+        storage->fxChainUserPreset->doPresetRescan(storage);
+        const auto &chainPresets = storage->fxChainUserPreset->getPresets();
+        auto chainSubmenu = juce::PopupMenu();
 
-        initSubmenu.addItem(Surge::GUI::toOSCase("Clear Scene A Insert FX Chain"), true, false,
-                            [this, sge]() { sge->enqueueFXChainClear(0); });
+        if (!chainPresets.empty())
+        {
+            chainSubmenu.addSeparator();
 
-        initSubmenu.addItem(Surge::GUI::toOSCase("Clear Scene B Insert FX Chain"), true, false,
-                            [this, sge]() { sge->enqueueFXChainClear(1); });
+            // Group by subPath (folder), matching how scanExtraPresets
+            // structures user single-slot presets.
+            fs::path lastSub;
 
-        initSubmenu.addItem(Surge::GUI::toOSCase("Clear Send FX Chain"), true, false,
-                            [this, sge]() { sge->enqueueFXChainClear(2); });
+            for (const auto &cp : chainPresets)
+            {
+                if (cp.subPath != lastSub)
+                {
+                    if (!lastSub.empty())
+                        chainSubmenu.addSeparator();
+                    if (!cp.subPath.empty())
+                        Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(
+                            chainSubmenu, path_to_string(cp.subPath));
+                    lastSub = cp.subPath;
+                }
 
-        initSubmenu.addItem(Surge::GUI::toOSCase("Clear Global FX Chain"), true, false,
-                            [this, sge]() { sge->enqueueFXChainClear(3); });
+                chainSubmenu.addItem(cp.name, [this, cp, sge, cur_fx]() {
+                    // Push undo for all slots in the chain at once.
+                    // If a per-chain undo push exists use that; otherwise
+                    // push each slot individually.
 
-        initSubmenu.addItem(Surge::GUI::toOSCase("Clear All FX Chains"), true, false,
-                            [this, sge]() { sge->enqueueFXChainClear(-1); });
+                    int chainIdx = fxSlotToChain(cur_fx);
 
-        menu.addSubMenu(Surge::GUI::toOSCase("Clear Chains"), initSubmenu);
+                    for (int i = 0; i < n_fx_per_chain; ++i)
+                        sge->undoManager()->pushFX(fxslot_order[(chainIdx * n_fx_per_chain) + i]);
+
+                    FxStorage *slots[n_fx_per_chain];
+                    FxStorage *bufs[n_fx_per_chain];
+                    std::string names[n_fx_per_chain];
+                    buildChainSlotPtrs(sge, cur_fx, slots, bufs, names);
+
+                    storage->fxChainUserPreset->loadPresetOnto(cp, storage, bufs);
+
+                    sge->synth->load_fx_needed = true;
+                    storage->getPatch().isDirty = true;
+                    sge->queueRebuildUI();
+                });
+            }
+        }
+
+        menu.addSubMenu(Surge::GUI::toOSCase("FX Chains"), chainSubmenu);
     }
 
     menu.addSeparator();
@@ -870,21 +981,6 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     };
 
     menu.addItem(Surge::GUI::toOSCase("Refresh FX Preset List"), rsA);
-    if (fx->type.val.i != fxt_off)
-    {
-        menu.addItem(Surge::GUI::toOSCase("Save FX Preset As..."), [this]() { this->saveFX(); });
-    }
-
-    menu.addSeparator();
-
-    menu.addItem(Surge::GUI::toOSCase("Copy FX Preset"), [this]() { this->copyFX(); });
-    if (Surge::FxClipboard::isPasteAvailable(fxClipboard))
-    {
-        menu.addItem(Surge::GUI::toOSCase("Paste FX Preset"), [this]() {
-            this->pasteFX();
-            this->storage->getPatch().isDirty = true;
-        });
-    }
 
     menu.addSeparator();
 
@@ -923,6 +1019,8 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
     }
 }
 
+//////////
+
 Surge::FxClipboard::Clipboard FxMenu::fxClipboard;
 
 void FxMenu::copyFX()
@@ -959,6 +1057,101 @@ void FxMenu::saveFX()
             this);
     }
 }
+
+//////////
+
+Surge::FxClipboard::ChainClipboard FxMenu::fxChainClipboard;
+
+void FxMenu::copyChain()
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (!sge)
+        return;
+
+    FxStorage *slots[n_fx_per_chain];
+    FxStorage *bufs[n_fx_per_chain];
+    std::string names[n_fx_per_chain];
+
+    buildChainSlotPtrs(sge, current_fx, slots, bufs, names);
+
+    Surge::FxClipboard::copyFxChain(storage, slots, names, fxChainClipboard);
+}
+
+void FxMenu::pasteChain()
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (!sge)
+        return;
+
+    FxStorage *slots[n_fx_per_chain];
+    FxStorage *bufs[n_fx_per_chain];
+    std::string names[n_fx_per_chain];
+
+    buildChainSlotPtrs(sge, current_fx, slots, bufs, names);
+
+    Surge::FxClipboard::pasteFxChain(storage, bufs, fxChainClipboard);
+
+    storage->getPatch().isDirty = true;
+    sge->queueRebuildUI();
+}
+
+void FxMenu::saveChain()
+{
+    auto sge = firstListenerOfType<SurgeGUIEditor>();
+
+    if (!sge)
+        return;
+
+    FxStorage *slots[n_fx_per_chain];
+    FxStorage *bufs[n_fx_per_chain];
+    std::string names[n_fx_per_chain];
+
+    buildChainSlotPtrs(sge, current_fx, slots, bufs, names);
+
+    sge->promptForMiniEdit(
+        "", "Enter the FX chain name:", "Save FX Chain", juce::Point<int>{},
+        [this, sge, slots, names](const std::string &presetName) {
+            // Build SlotData array from live FxStorage + selectedName
+            Surge::Storage::FxChainUserPreset::Preset::SlotData sd[n_fx_per_chain];
+
+            for (int i = 0; i < n_fx_per_chain; ++i)
+            {
+                FxStorage *fx = slots[i];
+                sd[i].type = fx->type.val.i;
+                sd[i].presetName = names[i];
+
+                for (int p = 0; p < n_fx_params; ++p)
+                {
+                    switch (fx->p[p].valtype)
+                    {
+                    case vt_float:
+                        sd[i].p[p] = fx->p[p].val.f;
+                        break;
+                    case vt_int:
+                        sd[i].p[p] = (float)fx->p[p].val.i;
+                        break;
+                    default:
+                        break;
+                    }
+
+                    sd[i].ts[p] = fx->p[p].can_temposync() && fx->p[p].temposync;
+                    sd[i].er[p] = fx->p[p].can_extend_range() && fx->p[p].extend_range;
+                    sd[i].da[p] = fx->p[p].can_deactivate() && fx->p[p].deactivated;
+                    sd[i].dt[p] = fx->p[p].has_deformoptions() ? fx->p[p].deform_type : -1;
+                }
+
+                if (fx->user_data.contains("filename"))
+                    sd[i].filename = fx->by_key("filename").to_string();
+            }
+
+            storage->fxChainUserPreset->saveChainPresetIn(storage, sd, presetName);
+        },
+        this);
+}
+
+//////////
 
 void FxMenu::loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p)
 {

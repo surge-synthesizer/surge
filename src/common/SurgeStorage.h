@@ -365,6 +365,13 @@ enum fxchains
     fxc_global,
 };
 
+const char fxchain_names[n_fx_chains][NAMECHARS] = {
+    "Scene A Insert FX Chain",
+    "Scene B Insert FX Chain",
+    "Send FX Chain",
+    "Global FX Chain",
+};
+
 const char fxslot_names[n_fx_slots][NAMECHARS] = {
     "A Insert FX 1", "A Insert FX 2", "B Insert FX 1", "B Insert FX 2",
     "Send FX 1",     "Send FX 2",     "Global FX 1",   "Global FX 2",
@@ -1426,6 +1433,7 @@ struct ScenesOutputData
 };
 
 struct FxUserPreset;
+struct FxChainUserPreset;
 struct ModulatorPreset;
 } // namespace Storage
 namespace Memory
@@ -1685,6 +1693,7 @@ class alignas(16) SurgeStorage
     std::vector<int> irCategoryOrdering;
 
     std::unique_ptr<Surge::Storage::FxUserPreset> fxUserPreset;
+    std::unique_ptr<Surge::Storage::FxChainUserPreset> fxChainUserPreset;
     std::unique_ptr<Surge::Storage::ModulatorPreset> modulatorPreset;
 
     bool datapathOverriden{false};
@@ -1698,6 +1707,7 @@ class alignas(16) SurgeStorage
     fs::path userIRsPath;
     fs::path userModulatorSettingsPath;
     fs::path userFXPath;
+    fs::path userFXChainPath;
     fs::path userWavetablesExportPath;
     fs::path userWavetableScriptsPath;
     fs::path userSkinsPath;

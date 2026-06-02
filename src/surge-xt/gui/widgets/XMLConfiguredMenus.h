@@ -235,9 +235,16 @@ struct FxMenu : public juce::Component, public XMLMenuPopulator, public WidgetBa
     void setCurrentFx(int i) { current_fx = i; }
 
     static Surge::FxClipboard::Clipboard fxClipboard;
+
     void copyFX();
     void pasteFX();
     void saveFX();
+
+    static Surge::FxClipboard::ChainClipboard fxChainClipboard;
+
+    void copyChain();
+    void pasteChain();
+    void saveChain();
 
     void loadByIndex(const std::string &name, int index) override;
     void loadUserPreset(const Surge::Storage::FxUserPreset::Preset &p);
