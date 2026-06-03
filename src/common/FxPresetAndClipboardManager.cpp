@@ -170,10 +170,10 @@ void FxUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Experienced file system error when scanning user FX. " << e.what();
+        oss << "Experienced a filesystem error when scanning user FX presets!\n\n" << e.what();
 
         if (storage)
-            storage->reportError(oss.str(), "FileSystem Error");
+            storage->reportError(oss.str(), "Filesystem Error");
     }
 }
 
@@ -286,7 +286,7 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
             {
                 storage->reportError(std::string("Unable to open FX preset file '") +
                                          path_to_string(outputPath) + "' for writing!",
-                                     "Error");
+                                     "Write Error");
                 return;
             }
 
@@ -378,11 +378,11 @@ void FxUserPreset::saveFxIn(SurgeStorage *storage, FxStorage *fx, const std::str
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Exception occurred while attempting to write the preset! Most likely, "
+        oss << "Exception occurred while attempting to write the FX preset. Most likely, "
                "invalid characters or a reserved name was used to name the preset. "
-               "Please try again with a different name!\n"
-            << "Details " << e.what();
-        storage->reportError(oss.str(), "Preset Write Error");
+               "Please try again with a different name!\n\n"
+            << e.what();
+        storage->reportError(oss.str(), "Write Error");
     }
 }
 
@@ -522,9 +522,9 @@ void FxChainUserPreset::doPresetRescan(SurgeStorage *storage, bool forceRescan)
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Experienced file system error when scanning FX chain presets. " << e.what();
+        oss << "Experienced a filesystem error when scanning FX chain presets!\n\n" << e.what();
         if (storage)
-            storage->reportError(oss.str(), "FileSystem Error");
+            storage->reportError(oss.str(), "Filesystem Error");
     }
 }
 
@@ -624,7 +624,7 @@ void FxChainUserPreset::saveChainPresetIn(SurgeStorage *storage,
             {
                 storage->reportError(std::string("Unable to open FX chain preset file '") +
                                          path_to_string(outputPath) + "' for writing!",
-                                     "Error");
+                                     "Write Error");
                 return;
             }
 
@@ -709,11 +709,11 @@ void FxChainUserPreset::saveChainPresetIn(SurgeStorage *storage,
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Exception occurred while attempting to write the chain preset! "
+        oss << "Exception occurred while attempting to write the FX chain preset! "
                "Most likely, invalid characters or a reserved name was used. "
-               "Please try again with a different name!\n"
-            << "Details " << e.what();
-        storage->reportError(oss.str(), "Preset Write Error");
+               "Please try again with a different name!\n\n"
+            << e.what();
+        storage->reportError(oss.str(), "Write Error");
     }
 }
 

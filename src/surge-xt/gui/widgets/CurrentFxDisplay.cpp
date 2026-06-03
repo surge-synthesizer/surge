@@ -992,14 +992,14 @@ void CurrentFxDisplay::onDrop(const juce::String &file)
             {
                 storage->reportError(
                     fmt::format("Failed to copy impulse response from {}!", file.toStdString()),
-                    "Impulse Response Load Error");
+                    "Load Error");
                 return;
             }
             if (!cb->loadWavForConvolution(rString))
             {
                 storage->reportError(
                     fmt::format("Failed to load impulse response from {}!", file.toStdString()),
-                    "Impulse Response Load Error");
+                    "Load Error");
                 return;
             }
         }

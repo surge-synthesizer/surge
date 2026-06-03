@@ -742,7 +742,7 @@ juce::PopupMenu SurgefxAudioProcessorEditor::makeOSCMenu()
 
             std::string form_str =
                 "'/fx/param/<n> <val>'; replace <n> with 1 - 12 and <val> with 0.0 - 1.0 ";
-            w->processor.storage->reportError(form_str, "OSC Message Format:");
+            w->processor.storage->reportError(form_str, "OSC Message Format");
         });
 
     return oscSubMenu;

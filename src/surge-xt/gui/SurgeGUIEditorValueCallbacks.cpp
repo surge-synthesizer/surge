@@ -514,12 +514,11 @@ void SurgeGUIEditor::refreshSkin()
     if (!currentSkin->reloadSkin(bitmapStore))
     {
         auto db = Surge::GUI::SkinDB::get();
-        std::string msg =
-            "Unable to load skin! Reverting the skin to Surge Classic XT.\n\nSkin error:\n" +
-            db->getAndResetErrorString();
+        std::string msg = "Unable to load the skin! Reverting to Surge Classic XT.\n\n" +
+                          db->getAndResetErrorString();
         currentSkin = db->defaultSkin(&(synth->storage));
         currentSkin->reloadSkin(bitmapStore);
-        synth->storage.reportError(msg, "Skin Loading Error");
+        synth->storage.reportError(msg, "Load Error");
     }
 
     reloadFromSkin();

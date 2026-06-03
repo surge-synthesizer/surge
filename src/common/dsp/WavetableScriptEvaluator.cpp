@@ -227,7 +227,7 @@ struct LuaWTEvaluator::Details
             oss << "Failed to evaluate the generate() function!\n" << err;
 
             if (storage)
-                storage->reportError(oss.str(), "Wavetable Evaluator Runtime Error");
+                storage->reportError(oss.str(), "Wavetable Script Evaluator Error");
             else
                 std::cerr << oss.str();
         }
@@ -264,7 +264,7 @@ struct LuaWTEvaluator::Details
                 {
                     if (storage)
                         storage->reportError("Init function returned a non-table.",
-                                             "Wavetable Script Evaluator");
+                                             "Wavetable Script Evaluator Error");
                     makeEmptyState(true);
                 }
             }
@@ -277,7 +277,7 @@ struct LuaWTEvaluator::Details
                     err = "Lua error: Value is nil.";
                 oss << "Failed to evaluate init() function!\n" << err;
                 if (storage)
-                    storage->reportError(oss.str(), "Wavetable Evaluator Init Error");
+                    storage->reportError(oss.str(), "Wavetable Script Evaluator Error");
                 else
                     std::cerr << oss.str();
                 lua_pop(L, -1);
@@ -575,7 +575,7 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
     std::ifstream inFile(filename, std::ios::binary | std::ios::ate);
     if (!inFile)
     {
-        storage->reportError("Failed to load XML file.", "XML Load Error");
+        storage->reportError("Failed to load XML file.", "Load Error");
         return std::nullopt;
     }
     const auto fileSize = static_cast<size_t>(inFile.tellg());
@@ -609,8 +609,7 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
 
         if (xmlSize > bytesAfterHeader || blobSize > bytesAfterHeader - xmlSize)
         {
-            storage->reportError("Wavetable script file is truncated or corrupt.",
-                                 "XML Load Error");
+            storage->reportError("Wavetable script file is truncated or corrupt!", "Load Error");
             return std::nullopt;
         }
 
@@ -624,43 +623,42 @@ LuaWTEvaluator::parseWtscript(const fs::path &filename, SurgeStorage *storage,
     doc.Parse(xmlStr.c_str(), nullptr, TIXML_ENCODING_LEGACY);
     if (doc.Error())
     {
-        storage->reportError("Failed to parse wavetable script XML.", "XML Load Error");
+        storage->reportError("Failed to parse wavetable script XML!", "Load Error");
         return std::nullopt;
     }
 
     auto wtscript = TINYXML_SAFE_TO_ELEMENT(doc.FirstChildElement("wtscript"));
     if (!wtscript)
     {
-        storage->reportError("No root <wtscript> element found.", "XML Load Error");
+        storage->reportError("No root wtscript element found!", "Load Error");
         return std::nullopt;
     }
 
     auto wavetable_script = TINYXML_SAFE_TO_ELEMENT(wtscript->FirstChildElement("script"));
     if (!wavetable_script)
     {
-        storage->reportError("No <wavetable_script> element found.", "XML Load Error");
+        storage->reportError("No wavetable_script element found!", "Load Error");
         return std::nullopt;
     }
 
     auto b64script = wavetable_script->Attribute("lua");
     if (!b64script || std::strlen(b64script) == 0)
     {
-        storage->reportError("Empty or missing lua attribute in <wavetable_script>.",
-                             "XML Load Error");
+        storage->reportError("Empty or missing lua attribute in wavetable_script!", "Load Error");
         return std::nullopt;
     }
 
     int nframes = 0;
     if (wavetable_script->QueryIntAttribute("frames", &nframes) != TIXML_SUCCESS)
     {
-        storage->reportError("Missing or invalid frames attribute.", "XML Load Error");
+        storage->reportError("Missing or invalid frames attribute!", "Load Error");
         return std::nullopt;
     }
 
     int res_base = 0;
     if (wavetable_script->QueryIntAttribute("samples", &res_base) != TIXML_SUCCESS)
     {
-        storage->reportError("Missing or invalid samples attribute.", "XML Load Error");
+        storage->reportError("Missing or invalid samples attribute!", "Load Error");
         return std::nullopt;
     }
 

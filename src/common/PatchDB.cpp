@@ -384,9 +384,8 @@ CREATE TABLE IF NOT EXISTS Favorites (
         if (ec != SQLITE_OK)
         {
             std::ostringstream oss;
-            oss << "An error occurred opening sqlite file '" << dbname << "'. The error was '"
-                << sqlite3_errmsg(dbh) << "'.";
-            storage->reportError(oss.str(), "Surge Patch Database Error");
+            oss << "An error occurred when opening '" << dbname << "'.\n\n" << sqlite3_errmsg(dbh);
+            storage->reportError(oss.str(), "Database Error");
             if (dbh)
             {
                 // even if opening fails we still need to close the database
@@ -488,7 +487,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
             }
             catch (const SQL::Exception &e)
             {
-                storage->reportError(e.what(), "PatchDB Setup Error");
+                storage->reportError(e.what(), "Database Setup Error");
             }
         }
 
@@ -705,7 +704,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
                                "writing up to 10 more times. "
                                "Please dismiss this error in the meantime!\n\n Attempt: "
                             << lock_retries;
-                        storage->reportError(oss.str(), "Patch Database Locked");
+                        storage->reportError(oss.str(), "Database Locked");
                         // OK so in this case, we reload doThis onto the front of the queue and
                         // sleep
                         lock_retries++;
@@ -725,12 +724,12 @@ CREATE TABLE IF NOT EXISTS Favorites (
                         {
                             storage->reportError(
                                 "Database is locked and unwritable after multiple attempts!",
-                                "Patch Database Locked");
+                                "Database Locked");
                         }
                     }
                     catch (SQL::Exception &e)
                     {
-                        storage->reportError(e.what(), "Patch DB");
+                        storage->reportError(e.what(), "Database Error");
                     }
                 }
             }
@@ -805,7 +804,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         {
             if (storage)
             {
-                storage->reportError(e.what(), "PatchDB - Load Check");
+                storage->reportError(e.what(), "Database Load Check");
             }
             return;
         }
@@ -837,7 +836,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         {
             if (storage)
             {
-                storage->reportError(e.what(), "PatchDB - Insert Patch");
+                storage->reportError(e.what(), "Database Insert Patch");
             }
             return;
         }
@@ -942,7 +941,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         {
             if (storage)
             {
-                storage->reportError(e.what(), "PatchDB - FXP Features");
+                storage->reportError(e.what(), "Database FXP Features");
             }
             return;
         }
@@ -961,7 +960,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         {
             if (storage)
             {
-                storage->reportError(e.what(), "PatchDB - FXP Features");
+                storage->reportError(e.what(), "Database FXP Features");
             }
             return;
         }
@@ -988,7 +987,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Junk gave Junk");
+            storage->reportError(e.what(), "Database Junk Gave Junk");
         }
     }
 
@@ -1008,7 +1007,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Junk gave Junk");
+            storage->reportError(e.what(), "Database Junk Gave Junk");
         }
     }
 
@@ -1023,7 +1022,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Junk gave Junk");
+            storage->reportError(e.what(), "Database Junk Gave Junk");
         }
     }
     void addRootCategory(const std::string &name, CatType type)
@@ -1044,7 +1043,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Category Query");
+            storage->reportError(e.what(), "Database Category Query");
         }
 
         try
@@ -1060,7 +1059,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Category Root Insert");
+            storage->reportError(e.what(), "Database Category Root Insert");
         }
     }
 
@@ -1084,7 +1083,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Category Query");
+            storage->reportError(e.what(), "Database Category Query");
         }
 
         try
@@ -1111,7 +1110,7 @@ CREATE TABLE IF NOT EXISTS Favorites (
         }
         catch (const SQL::Exception &e)
         {
-            storage->reportError(e.what(), "PatchDB - Category Root Insert");
+            storage->reportError(e.what(), "Database Category Root Insert");
         }
     }
 
@@ -1221,7 +1220,7 @@ std::vector<std::pair<std::string, int>> PatchDB::readAllFeatures()
     }
     catch (SQL::Exception &e)
     {
-        storage->reportError(e.what(), "PatchDB - readFeatures");
+        storage->reportError(e.what(), "Database Read Features");
     }
     return res;
 }
@@ -1246,7 +1245,7 @@ std::vector<std::string> PatchDB::readAllFeatureValueString(const std::string &f
     }
     catch (SQL::Exception &e)
     {
-        storage->reportError(e.what(), "PatchDB - readFeatures");
+        storage->reportError(e.what(), "Database Read Features");
     }
     return res;
 }
@@ -1271,7 +1270,7 @@ std::vector<int> PatchDB::readAllFeatureValueInt(const std::string &feature)
     }
     catch (SQL::Exception &e)
     {
-        storage->reportError(e.what(), "PatchDB - readFeatures");
+        storage->reportError(e.what(), "Database Read Features");
     }
     return res;
 }
@@ -1316,7 +1315,7 @@ std::vector<PatchDB::patchRecord> PatchDB::rawQueryForNameLike(const std::string
         }
         else
         {
-            storage->reportError(e.what(), "PatchDB - rawQueryForNameLike");
+            storage->reportError(e.what(), "Database Raw Query For Name Like");
         }
     }
 
@@ -1379,7 +1378,7 @@ std::vector<PatchDB::catRecord> PatchDB::internalCategories(int t, const std::st
     }
     catch (SQL::Exception &e)
     {
-        storage->reportError(e.what(), "PatchDB - Loading Categories");
+        storage->reportError(e.what(), "Database Loading Categories");
     }
 
     return res;
@@ -1428,7 +1427,7 @@ std::vector<std::string> PatchDB::readUserFavorites()
     catch (SQL::Exception &e)
     {
         // This error really doesn't matter most of the time
-        storage->reportError(e.what(), "PatchDB - Loading Favorites");
+        storage->reportError(e.what(), "Database Loading Favorites");
     }
     return std::vector<std::string>();
 }
@@ -1457,7 +1456,7 @@ PatchDB::readAllPatchPathsWithIdAndModTime()
     catch (SQL::Exception &e)
     {
         // This error really doesn't matter most of the time
-        storage->reportError(e.what(), "PatchDB - Loading Favorites");
+        storage->reportError(e.what(), "Database Loading Favorites");
     }
     return res;
 }
@@ -1589,7 +1588,7 @@ PatchDB::queryFromQueryString(const std::unique_ptr<PatchDBQueryParser::Token> &
         }
         else
         {
-            storage->reportError(e.what(), "PatchDB - rawQueryForNameLike");
+            storage->reportError(e.what(), "Database Raw Query For Name Like");
         }
     }
 

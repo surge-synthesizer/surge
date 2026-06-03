@@ -75,7 +75,12 @@ ConvolutionEffect::ConvolutionEffect(SurgeStorage *storage, FxStorage *fxdata, p
 
             if (v.empty())
             {
-                storage->reportError("Error loading provided impulse response", "FX Error");
+                storage->reportError(
+                    fmt::format(
+                        "Impulse response sample at\n\n{}\n\ncould not be loaded. Perhaps it was "
+                        "renamed or moved to another location?",
+                        f),
+                    "Load Error");
             }
             else
             {
@@ -373,8 +378,9 @@ void ConvolutionEffect::prep_ir()
     s = s && convolverR_.init(hd_size, tl_size, irRsub);
     if (!s)
     {
-        storage->reportError("Error initializing the convolver, not running convolution effect",
-                             "FX Error");
+        storage->reportError(
+            "Error initializing the convolution engine. The effect will not process audio!",
+            "Convolution Error");
         return;
     }
 

@@ -152,7 +152,7 @@
     <snapshot name="Init (Send)" p0="0.500000" p1="0.500000" p2="1.000000" p3="0.500000" p4="0.500000" p5="0.000000"
               p6="0.000000" p7="1.000000"/>
 </type>
-<sectionheader label="MULTIEFFECTS"/>
+<sectionheader label="MISCELLANEOUS"/>
 <type i="14" name="Airwindows">
     <snapshot name="Init" p0="46" p1="1.000000" p2="0.000000" p3="1.000000"/>
 </type>

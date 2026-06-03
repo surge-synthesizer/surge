@@ -1603,14 +1603,12 @@ void SurgePatch::load_xml(const void *data, int datasize, bool is_preset)
 
     if (datasize >= (1 << 22))
     {
-        auto msg = fmt::format(
-            "The patch that we attempted to load has a very large header ({:d} bytes), "
-            "which is larger than our safety threshold of 4 megabytes. This almost definitely "
-            "means that the patch header is corrupted, so Surge XT will not "
-            "proceed with loading!",
-            datasize);
+        auto msg = fmt::format("The patch has a header larger than 4 MB. This almost definitely "
+                               "means that the header is corrupted, so as a safety measure, the "
+                               "patch won't be loaded!",
+                               datasize);
 
-        storage->reportError(msg, "Patch Load Error");
+        storage->reportError(msg, "Load Error");
 
         return;
     }
