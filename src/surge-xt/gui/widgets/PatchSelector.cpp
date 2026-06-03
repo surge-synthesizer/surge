@@ -882,7 +882,7 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
                     " does not exist. It seems that your Surge factory patches folder is "
                     "missing.\n\n"
                     "Please run the Surge installer to set up the factory patches.",
-                "Factory Patches Folder Not Found");
+                "Load Error");
         }
     });
 
@@ -894,7 +894,7 @@ void PatchSelector::showClassicMenu(bool single_category, bool userOnly)
                     " does not exist. It seems that your Surge third party patches folder is "
                     "missing.\n\n"
                     "Please run the Surge installer to set up the third party patches.",
-                "Third Party Patches Folder Not Found");
+                "Load Error");
         }
     });
 

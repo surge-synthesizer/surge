@@ -59,7 +59,7 @@ void FXOpenSoundControl::tryOSCStartup()
 {
     if (!storage || !sfxPtr)
     {
-        storage->reportError("synth or sfxPtr are null", "OSC startup failure");
+        storage->reportError("SurgeStorage or sfxPtr are null!", "OSC Startup Error");
         return;
     }
 
@@ -141,7 +141,7 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
 
     if (addr.empty() || addr.at(0) != '/')
     {
-        storage->reportError("Bad OSC message format.", "OSC input error");
+        storage->reportError("Bad OSC message format!", "OSC Input Error");
         return;
     }
 
@@ -166,19 +166,19 @@ void FXOpenSoundControl::oscMessageReceived(const juce::OSCMessage &message)
                 index = stoi(addr_part);
                 if (index < 1 || index > 12)
                 {
-                    storage->reportError("Bad FX parameter index. Must be 1-12.",
-                                         "OSC input error");
+                    storage->reportError("Bad FX parameter index! Must be 1-12.",
+                                         "OSC Input Error");
                     return;
                 }
             }
             catch (const std::exception &e)
             {
-                storage->reportError("Bad format for FX parameter index.", "OSC input error");
+                storage->reportError("Bad format for FX parameter index!", "OSC Input Error");
                 return;
             }
             if (!message[0].isFloat32())
             {
-                storage->reportError("Expected float value.", "OSC input error");
+                storage->reportError("Expected float value!", "OSC Input Error");
                 return;
             }
 

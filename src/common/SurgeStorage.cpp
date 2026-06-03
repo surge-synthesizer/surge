@@ -82,9 +82,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     else if (samplerate < 12000 || samplerate > 48000 * 32)
     {
         std::ostringstream oss;
-        oss << "Warning: SurgeStorage constructed with invalid samplerate: " << samplerate
-            << " - resetting to 48000 until audio system tells us otherwise" << std::endl;
-        reportError(oss.str(), "Sample Rate Corrupted on Startup");
+        oss << "SurgeStorage wa constructed with invalid samplerate ()" << samplerate
+            << " Hz). It will be reset to 48000 until audio system tells us otherwise!\n";
+        reportError(oss.str(), "Initialization Error");
         setSamplerate(48000);
     }
     else
@@ -347,7 +347,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
             reportError(
                 std::string() + "Surge is unable to find the %DOCUMENTS% directory. " +
                     "Your system is misconfigured and several features including saving patches, " +
-                    "the search database and preferences will not work. " + e.what(),
+                    "patch database and storing user preferences will not work!\n\n" + e.what(),
                 "Unable to determine %DOCUMENTS%");
         }
     }
@@ -376,8 +376,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     if (!snapshotloader.Parse(cxmlData.c_str()))
     {
         std::cout << snapshotloader.ErrorDesc() << std::endl;
-        reportError("Cannot parse 'configuration.xml' from memory. Internal Software Error.",
-                    "Surge Incorrectly Built");
+        reportError("Cannot parse 'configuration.xml' from memory! This means that Surge XT was "
+                    "incorrectly built from source code, which should never happen.",
+                    "Internal Software Error");
     }
 
     load_midi_controllers();
@@ -396,9 +397,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
         {
             WindowWT.size = 0;
             std::ostringstream oss;
-            oss << "Unable to load 'windows.wt' from memory. "
-                << "This is a fatal internal software error which should never occur!";
-            reportError(oss.str(), "Resource Loading Error");
+            oss << "Unable to load 'windows.wt' from memory. This means that Surge XT was "
+                   "incorrectly built from source code, which should never happen.";
+            reportError(oss.str(), "Internal Software Error");
         }
     }
 
@@ -440,10 +441,9 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
             TiXmlElement *pdoc = TINYXML_SAFE_TO_ELEMENT(doc.FirstChild("param-doc"));
             if (!pdoc)
             {
-                reportError(
-                    "Unknown top element in paramdocumentation.xml - not a parameter documentation "
-                    "XML file!",
-                    "Error");
+                reportError("Unknown top element in paramdocumentation.xml file. The file seems "
+                            "corrupted or malformed.",
+                            "Load Error");
             }
             else
             {
@@ -559,7 +559,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     catch (fs::filesystem_error &e)
     {
-        reportError(e.what(), "Error Scanning FX Presets!");
+        reportError(e.what(), "Filesystem Error");
     }
 
     try
@@ -569,7 +569,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     catch (fs::filesystem_error &e)
     {
-        reportError(e.what(), "Error Scanning FX Chains!");
+        reportError(e.what(), "Filesystem Error");
     }
 
     try
@@ -579,7 +579,7 @@ SurgeStorage::SurgeStorage(const SurgeStorage::SurgeStorageConfig &config) : oth
     }
     catch (fs::filesystem_error &e)
     {
-        reportError(e.what(), "Error Scanning Modulator Presets!");
+        reportError(e.what(), "Filesystem Error");
     }
     memoryPools = std::make_unique<Surge::Memory::SurgeMemoryPools>(this);
 }
@@ -651,8 +651,8 @@ void SurgeStorage::createUserDirectory()
         }
         catch (const fs::filesystem_error &e)
         {
-            reportError(std::string() + "User directory is non-writable. " + e.what(),
-                        "Unable to set up User Directory.");
+            reportError(fmt::format("User directory is non-writable.\n\n{}", e.what()),
+                        "Filesystem Error");
             userDataPathValid = false;
         }
     }
@@ -668,7 +668,7 @@ void SurgeStorage::createUserDirectory()
             }
             catch (const fs::filesystem_error &e)
             {
-                reportError(e.what(), "Unable to set up User Directory");
+                reportError(e.what(), "Filesystem Error");
                 userDataPathValid = false;
             }
         }
@@ -707,7 +707,7 @@ fs::path SurgeStorage::getOverridenUserPath()
                         path_to_string(overrideFile) + "\nis malformed (" + detail +
                         "). Falling back to the default user data folder. Use "
                         "\"Set Custom User Data Folder...\" to reconfigure.",
-                    "Custom User Data Folder Configuration Invalid");
+                    "User Data Folder Error");
     };
 
     try
@@ -744,13 +744,13 @@ fs::path SurgeStorage::getOverridenUserPath()
                         "\nno longer exists or is not a directory. Falling back to the default "
                         "user data folder. Use \"Set Custom User Data Folder...\" to set a "
                         "new location.",
-                    "Custom User Data Folder Missing");
+                    "Custom User Data Folder Error");
     }
     catch (const std::exception &e)
     {
         reportError(std::string("Error reading custom user data folder configuration: ") +
                         e.what() + ". Falling back to the default user data folder.",
-                    "Custom User Data Folder Configuration Error");
+                    "Custom User Data Folder Error");
     }
 
     return {};
@@ -799,11 +799,11 @@ void SurgeStorage::setOverridenUserPath(const fs::path *path)
     catch (const fs::filesystem_error &e)
     {
         reportError(std::string() + "Unable to save user directory override: " + e.what(),
-                    "Error Saving Override");
+                    "Filesystem Error");
     }
     catch (...)
     {
-        reportError("Unable to save user directory override", "Error Saving Override");
+        reportError("Unable to save user directory override", "Filesystem Error");
     }
 }
 
@@ -992,10 +992,10 @@ void SurgeStorage::refresh_patchlist()
         {
             std::ostringstream erross;
             erross << "Unable to determine the modification time of '" << p.path.u8string() << ". "
-                   << "This usually means the file can't be opened, or is a broken symlink, or "
-                      "some such. Underlying error: "
+                   << "This usually means the file cannot be opened, is a broken symbolic link, or "
+                      "similar.\n\n"
                    << e.what();
-            reportError(erross.str(), "Unable to Read File Time");
+            reportError(erross.str(), "File Read Error");
             p.lastModTime = 0;
         }
         auto ps = p.path.u8string();
@@ -1199,7 +1199,7 @@ void SurgeStorage::refreshPatchOrWTListAddDir(bool userDir, const fs::path &init
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Experienced filesystem error when building patches. " << e.what();
+        oss << "Experienced filesystem error when building patches.\n\n" << e.what();
         reportError(oss.str(), "Filesystem Error");
     }
 
@@ -1557,8 +1557,8 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
     {
         std::ostringstream oss;
         oss << "Unable to load file with extension " << extension
-            << "! Surge XT only supports .wav, .wt and .wtscript wavetable files!";
-        reportError(oss.str(), "Error");
+            << "!\nSurge XT only supports .wav, .wt and .wtscript wavetable files!";
+        reportError(oss.str(), "Load Error");
     }
 
     if (osc && loaded)
@@ -1581,7 +1581,7 @@ void SurgeStorage::load_wt(string filename, Wavetable *wt, OscillatorStorage *os
         {
             if (!parse_wt_metadata(metadata, osc))
             {
-                reportError("Unable to parse metadata", "WaveTable Load");
+                reportError("Unable to parse metadata", "Load Error");
                 std::cerr << metadata << std::endl;
                 osc->wavetable_script = {};
                 osc->wavetable_script_res_base = 5;
@@ -1677,7 +1677,7 @@ bool SurgeStorage::load_wt_wt(string filename, Wavetable *wt, std::string &metad
             << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
             << stringRepository;
-        reportError(oss.str(), "Wavetable Loading Error");
+        reportError(oss.str(), "Load Error");
     }
     return wasBuilt;
 }
@@ -1731,7 +1731,7 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
             << " If you would like, please attach the wavetable which caused this error to a new "
                "GitHub issue at "
             << stringRepository;
-        reportError(oss.str(), "Wavetable Loading Error");
+        reportError(oss.str(), "Load Error");
     }
     return wasBuilt;
 }
@@ -1739,7 +1739,7 @@ bool SurgeStorage::load_wt_wt_mem(const char *data, size_t dataSize, Wavetable *
 bool SurgeStorage::export_wt_wt_portable(const fs::path &fname, Wavetable *wt,
                                          const std::string &metadata)
 {
-    std::string errorMessage{"Unkown error"};
+    std::string errorMessage{"Unknown error!"};
     std::filebuf wfp;
 
     if (!wfp.open(fname, std::ios::binary | std::ios::out))
@@ -1747,7 +1747,7 @@ bool SurgeStorage::export_wt_wt_portable(const fs::path &fname, Wavetable *wt,
         errorMessage = "Unable to open file " + fname.u8string() + "!";
         errorMessage += std::strerror(errno);
 
-        reportError(errorMessage, "Wavetable Export");
+        reportError(errorMessage, "Export Error");
 
         return false;
     }
@@ -3206,7 +3206,7 @@ bool SurgeStorage::resetToCurrentScaleAndMapping()
     catch (Tunings::TuningError &e)
     {
         retuneTo12TETScaleC261Mapping();
-        reportError(e.what(), "SCL/KBM Error - Resetting to standard");
+        reportError(e.what(), "SCL/KBM Error");
     }
 
     auto t = currentTuning;
@@ -3339,7 +3339,7 @@ void SurgeStorage::rescanUserMidiMappings()
     catch (const fs::filesystem_error &e)
     {
         std::ostringstream oss;
-        oss << "Experienced filesystem error when loading MIDI settings. " << e.what();
+        oss << "Experienced filesystem error when loading the MIDI mapping.\n\n" << e.what();
         reportError(oss.str(), "Filesystem Error");
     }
 }
@@ -3360,7 +3360,7 @@ void SurgeStorage::loadMidiMappingByName(std::string name)
     {
         // Invalid XML Document. Show an error?
         reportError("Unable to locate surge-midi element in XML. Not a valid MIDI mapping!",
-                    "Surge MIDI");
+                    "Load Error");
         return;
     }
 
@@ -3486,8 +3486,8 @@ void SurgeStorage::storeMidiMappingToName(std::string name)
     if (!doc.SaveFile(path_to_string(fn)))
     {
         std::ostringstream oss;
-        oss << "Unable to save MIDI settings to '" << fn.u8string() << "'!";
-        reportError(oss.str(), "Error");
+        oss << "Unable to save the MIDI mapping to '" << fn.u8string() << "'!";
+        reportError(oss.str(), "Write Error");
     }
 }
 
@@ -3558,7 +3558,7 @@ void SurgeStorage::connect_as_oddsound_main()
                     "reset the MTS-ESP system, use the 'Reinitialize MTS-ESP' option in Surge XT. "
                     "Alternatively, quit the other program and attempt re-enabling Act as MTS-ESP "
                     "source option.",
-                    "MTS-ESP Source Initialization Error");
+                    "MTS-ESP Error");
     }
     lastSentTuningUpdate = -1;
 

@@ -2810,7 +2810,7 @@ struct TuningControlArea : public juce::Component,
             {
                 overlay->storage->reportError(
                     "You have unapplied changes in your SCL/KBM. Please apply them before saving!",
-                    "SCL Save Error");
+                    "Notification");
                 break;
             }
             fileChooser = std::make_unique<juce::FileChooser>("Save SCL", juce::File(), "*.scl");
@@ -2836,9 +2836,8 @@ struct TuningControlArea : public juce::Component,
                     }
                     else
                     {
-                        overlay->storage->reportError("Unable to save Scala file to " +
-                                                          fsp.u8string() + "!",
-                                                      "Scala Save Error");
+                        overlay->storage->reportError(
+                            "Unable to save Scala file to " + fsp.u8string() + "!", "Write Error");
                     }
                 });
         }
@@ -2853,7 +2852,7 @@ struct TuningControlArea : public juce::Component,
                         " does not exist. It seems that your Surge factory data folder is "
                         "missing.\n\n"
                         "Please run the Surge installer to set up the factory data.",
-                    "Tuning Library Folder Not Found");
+                    "Load Error");
             }
         }
         break;
@@ -3127,7 +3126,7 @@ void TuningOverlay::onNewSCLKBM(const std::string &scl, const std::string &kbm)
     }
     catch (const Tunings::TuningError &e)
     {
-        storage->reportError(e.what(), "Error Applying Tuning");
+        storage->reportError(e.what(), "Tuning Error");
     }
 }
 

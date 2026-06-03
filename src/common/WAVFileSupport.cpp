@@ -585,7 +585,7 @@ std::string SurgeStorage::export_wt_wav_portable(const fs::path &fname, Wavetabl
             errorMessage = "Unable to open file " + fname.u8string() + "!";
             errorMessage += std::strerror(errno);
 
-            reportError(errorMessage, "Wavetable Export");
+            reportError(errorMessage, "Export Error");
 
             return "";
         }

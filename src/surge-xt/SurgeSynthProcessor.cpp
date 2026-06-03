@@ -679,7 +679,7 @@ void SurgeSynthProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                         "This can be avoided by setting the DAW to use fixed buffer sizes, if "
                         "possible.",
                         fmt::arg("sz", BLOCK_SIZE)),
-            "Audio Input Latency Activated", SurgeStorage::AUDIO_INPUT_LATENCY_WARNING, false);
+            "Audio Input Latency", SurgeStorage::AUDIO_INPUT_LATENCY_WARNING, false);
         inputIsLatent = true;
     }
 

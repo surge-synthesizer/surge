@@ -254,8 +254,8 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
         auto msg = sst::plugininfra::misc_platform::getLastSystemError();
 
         storage.reportError(std::string() + "Unable to open file '" + std::string(fxpPath) +
-                                "'. Error Is: " + msg,
-                            "Unable to open file");
+                                "'.\n\n" + msg,
+                            "Load Error");
         return false;
     }
     fxChunkSetCustom fxp;
@@ -290,9 +290,9 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
         //   oss << "Synth ID is '" << q.c[0] << q.c[1] << q.c[2] << q.c[3] << "'; Surge expected
         //   'cjs3'. ";
         //}
-        oss << "This error usually occurs when you attempt to load an .fxp that belongs to another "
-               "plugin into Surge XT.";
-        storage.reportError(oss.str(), "Unknown FXP File");
+        oss << "Loaded file has unknown FXP file format. This error usually occurs when you "
+               "attempt to load an .fxp that belongs to another plugin into Surge XT.";
+        storage.reportError(oss.str(), "Load Error");
         return false;
     }
 
@@ -375,7 +375,7 @@ bool SurgeSynthesizer::loadPatchByPath(const char *fxpPath, int categoryId, cons
             }
             catch (Tunings::TuningError &e)
             {
-                storage.reportError(e.what(), "Error applying tuning!");
+                storage.reportError(e.what(), "Tuning Error");
                 storage.retuneTo12TETScaleC261Mapping();
             }
         }
@@ -625,9 +625,9 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
         std::ostringstream oss;
         oss << "Exception occurred while creating category folder! Most likely, invalid characters "
                "were used to name the category. Please remove suspicious characters and try "
-               "again!\nErrMessage: "
-            << msg << "\n"
-            << "Details " << e.what();
+               "again!\nError Message: "
+            << msg << "\n\n"
+            << e.what();
         storage.reportError(oss.str(), "Path Create Error");
         return;
     }
@@ -661,8 +661,8 @@ void SurgeSynthesizer::savePatch(bool factoryInPlace, bool skipOverwrite)
         std::ostringstream oss;
         oss << "Exception occurred while attempting to write the patch! Most likely, "
                "invalid characters or a reserved name was used to name the patch. "
-               "Please try again with a different name!\n"
-            << "Details " << e.what();
+               "Please try again with a different name!\n\n"
+            << e.what();
         storage.reportError(oss.str(), "Patch Write Error");
         return;
     }
@@ -680,9 +680,8 @@ void SurgeSynthesizer::savePatchToPath(fs::path filename, bool refreshPatchList)
     {
         auto msg = sst::plugininfra::misc_platform::getLastSystemError();
 
-        storage.reportError("Unable to save the patch to '" + filename.u8string() +
-                                "'. Error is: " + msg,
-                            "Patch Save Error");
+        storage.reportError("Unable to save the patch to '" + filename.u8string() + "'. \n\n" + msg,
+                            "Patch Write Error");
 
         return;
     }

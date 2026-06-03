@@ -780,7 +780,7 @@ void SurgeGUIEditor::idle()
                        " you can probably ignore this message and continue once Surge XT catches "
                        "up.";
 
-                synth->storage.reportError(oss.str(), "Patch Loading Error");
+                synth->storage.reportError(oss.str(), "Load Error");
             }
         }
 
@@ -2016,9 +2016,9 @@ void SurgeGUIEditor::openOrRecreateEditor()
         {
             // This would only happen if we added new parameters
             synth->storage.reportError(
-                "INTERNAL ERROR: List of parameters is larger than maximum number of parameter "
+                "List of parameters is larger than maximum number of parameter "
                 "slots. Increase n_paramslots in SurgeGUIEditor.h!",
-                "Error");
+                "Internal Error");
         }
 
         Parameter *p = *iter;
@@ -2405,15 +2405,14 @@ bool SurgeGUIEditor::open(void *parent)
         auto db = Surge::GUI::SkinDB::get();
 
         std::ostringstream oss;
-        oss << "Unable to load current skin! Reverting the skin to Surge XT Classic.\n\nSkin "
-               "Error:\n"
+        oss << "Unable to load the skin! Reverting to Surge XT Classic.\n\n"
             << db->getAndResetErrorString();
 
         auto msg = std::string(oss.str());
         this->currentSkin = db->defaultSkin(&(this->synth->storage));
         this->currentSkin->reloadSkin(this->bitmapStore);
 
-        synth->storage.reportError(msg, "Skin Loading Error");
+        synth->storage.reportError(msg, "Load Error");
     }
 
     reloadFromSkin();
@@ -3369,7 +3368,7 @@ void SurgeGUIEditor::promptForUserValueEntry(Parameter *p, juce::Component *c, i
             synth->storage.reportError(
                 "This parameter does not support editing its value by text input.\n\n"
                 "Please report this to Surge Synth Team in order to fix the problem!",
-                "Error");
+                "Internal Error");
             return;
         }
 
@@ -3590,14 +3589,14 @@ void SurgeGUIEditor::setupSkinFromEntry(const Surge::GUI::SkinDB::Entry &entry)
     if (!this->currentSkin->reloadSkin(this->bitmapStore))
     {
         std::ostringstream oss;
-        oss << "Unable to load " << entry.root << entry.name
-            << " skin! Reverting the skin to Surge XT Classic.\n\nSkin Error:\n"
+        oss << "Unable to load '" << entry.root << entry.name
+            << "'! Reverting to Surge XT Classic.\n\n"
             << db->getAndResetErrorString();
 
         auto msg = std::string(oss.str());
         this->currentSkin = db->defaultSkin(&(this->synth->storage));
         this->currentSkin->reloadSkin(this->bitmapStore);
-        synth->storage.reportError(msg, "Skin Loading Error");
+        synth->storage.reportError(msg, "Load Error");
     }
     reloadFromSkin();
 }
@@ -6764,7 +6763,7 @@ void SurgeGUIEditor::exportWavetableAs(WTExportFormat exportFormat)
                 if (!this->synth->storage.export_wt_wt_portable(fsp, &oscdata.wt, metadata))
                 {
                     this->synth->storage.reportError(
-                        "Unable to save the wavetable to " + fsp.u8string(), "Wavetable Export");
+                        "Unable to save the wavetable to " + fsp.u8string(), "Export Error");
                 }
                 break;
             }
@@ -6928,7 +6927,7 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             std::ofstream outFile(fullLocation, std::ios::binary);
             if (!outFile)
             {
-                storage->reportError("Failed to open file for writing.", "Save Error");
+                storage->reportError("Failed to open file for writing.", "Write Error");
                 return;
             }
 
@@ -6948,7 +6947,7 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
                     ZSTD_compress(compressed.data(), compBound, binn_ptr(oscmap), rawSize, 3);
                 if (ZSTD_isError(compSize))
                 {
-                    storage->reportError("Failed to compress snapshot data.", "Save Error");
+                    storage->reportError("Failed to compress snapshot data.", "Write Error");
                     return;
                 }
                 compressed.resize(compSize);
@@ -6969,7 +6968,7 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
             outFile.close();
             if (!outFile)
             {
-                storage->reportError("Failed to write file.", "Save Error");
+                storage->reportError("Failed to write file.", "Write Error");
                 return;
             }
 
@@ -7001,7 +7000,7 @@ void SurgeGUIEditor::saveWavetableScript(const fs::path &location, SurgeStorage 
                "Most likely, invalid characters or a reserved name was used to name "
                "the script. Please try again with a different name!\n"
             << "Details " << e.what();
-        storage->reportError(oss.str(), "Script Write Error");
+        storage->reportError(oss.str(), "Write Error");
     }
 }
 

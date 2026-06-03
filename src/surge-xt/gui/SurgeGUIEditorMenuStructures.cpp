@@ -482,7 +482,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 catch (Tunings::TuningError &e)
                 {
                     synth->storage.retuneTo12TETScaleC261Mapping();
-                    synth->storage.reportError(e.what(), "Loading Error");
+                    synth->storage.reportError(e.what(), "Load Error");
                 }
                 tuningChanged();
                 auto tuningLabel = path_to_string(fs::path(synth->storage.currentScale.name));
@@ -546,7 +546,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                 catch (Tunings::TuningError &e)
                 {
                     synth->storage.remapToConcertCKeyboard();
-                    synth->storage.reportError(e.what(), "Loading Error");
+                    synth->storage.reportError(e.what(), "Load Error");
                 }
                 tuningChanged();
                 auto mappingLabel = synth->storage.currentMapping.name;
@@ -601,7 +601,7 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
                         " does not exist. It seems that your Surge factory data folder is "
                         "missing.\n\n"
                         "Please run the Surge installer to set up the factory data.",
-                    "Factory Tuning Library Folder Not Found");
+                    "Load Error");
             }
         });
 
@@ -1664,7 +1664,7 @@ juce::PopupMenu SurgeGUIEditor::makeDataMenu(const juce::Point<int> &where)
                 "The folder " + path_to_string(this->synth->storage.datapath) +
                     " does not exist. It seems that your Surge factory data folder is missing.\n\n"
                     "Please run the Surge installer to set up the factory data.",
-                "Factory Data Folder Not Found");
+                "Load Error");
         }
     });
 

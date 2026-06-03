@@ -809,7 +809,6 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
 
     auto cfxid = -1;
     auto cfxtype = 0;
-    bool addDeact = false;
     bool isDeact = false;
     bool enableClear = true;
 
@@ -821,7 +820,6 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
         {
             auto deactbm = sge->effectChooser->getDeactivatedBitmask();
 
-            addDeact = true;
             isDeact = deactbm & (1 << cfxid);
             cfxtype = sge->effectChooser->fxTypes[cfxid];
             enableClear = cfxtype != fxt_off;
@@ -852,15 +850,12 @@ void FxMenu::populateForContext(bool isCalledInEffectChooser)
 
     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FUNCTIONS");
 
-    if (addDeact)
-    {
-        menu.addItem(
-            Surge::GUI::toOSCase(fmt::format("{} {}", (isDeact ? "Activate" : "Deactivate"), cfx)),
-            [that = juce::Component::SafePointer(sge->effectChooser.get())]() {
-                that->toggleSelectedDeactivation();
-                that->repaint();
-            });
-    }
+    menu.addItem(
+        Surge::GUI::toOSCase(fmt::format("{} {}", (isDeact ? "Activate" : "Deactivate"), cfx)),
+        [that = juce::Component::SafePointer(sge->effectChooser.get())]() {
+            that->toggleSelectedDeactivation();
+            that->repaint();
+        });
 
     menu.addSeparator();
 
@@ -1214,10 +1209,10 @@ void FxMenu::scanExtraPresets()
     {
         // really nothing to do about this other than continue without the preset
         std::ostringstream oss;
-        oss << "Experienced file system error when scanning user FX. " << e.what();
+        oss << "Experienced file system error when scanning user FX presets!\n\n" << e.what();
 
         if (storage)
-            storage->reportError(oss.str(), "FileSystem Error");
+            storage->reportError(oss.str(), "Filesystem Error");
     }
 }
 
