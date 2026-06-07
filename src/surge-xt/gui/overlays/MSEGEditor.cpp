@@ -360,10 +360,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // Put in the loop marker boxes
         if (ms->loopMode != MSEGStorage::LoopMode::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-            float pxs = tpx(ms->segmentStart[ls]);
-            float pxe = tpx(ms->segmentEnd[le]);
+            int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                                                                    : ms->loop_end;
+            float pxs =
+                (ls >= ms->n_activeSegments) ? tpx(ms->totalDuration) : tpx(ms->segmentStart[ls]);
+            float pxe = (le < 0) ? tpx(0.f) : tpx(ms->segmentEnd[le]);
             auto hs = hotzone();
             hs.type = hotzone::Type::LOOPMARKER;
             hs.segmentDirection = hotzone::HORIZONTAL_ONLY;
@@ -377,31 +379,53 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             {
                 hs.onDrag = [pxt, this](float x, float y, const juce::Point<float> &w) {
                     auto t = pxt(w.x);
-                    t = limit_range(t, 0.f, ms->segmentStart[ms->n_activeSegments - 1]);
+                    t = limit_range(t, 0.f, ms->totalDuration);
 
-                    auto seg = Surge::MSEG::timeToSegment(this->ms, t);
+                    int seg;
 
-                    float pct = 0;
-                    if (this->ms->segments[seg].duration > 0)
+                    if (t >= ms->totalDuration)
                     {
-                        pct = (t - this->ms->segmentStart[seg]) / this->ms->segments[seg].duration;
+                        seg = ms->n_activeSegments; // last point
                     }
-                    if (pct > 0.5)
+                    else
                     {
-                        seg++;
+                        seg = Surge::MSEG::timeToSegment(this->ms, t);
+                        float pct = 0;
+
+                        if (this->ms->segments[seg].duration > 0)
+                        {
+                            pct = (t - this->ms->segmentStart[seg]) /
+                                  this->ms->segments[seg].duration;
+                        }
+
+                        if (pct > 0.5)
+                        {
+                            seg++;
+                        }
                     }
+
                     if (seg != ms->loop_start)
                     {
                         Surge::MSEG::setLoopStart(ms, seg);
                         modelChanged();
                         repaint();
                     }
+
                     loopDragTime = t;
                     loopDragIsStart = true;
-                    if (ms->loop_start >= 0)
-                        loopDragEnd = this->ms->segmentStart[ms->loop_start];
-                    else
+
+                    if (ms->loop_start == MSEGStorage::kLoopPointUnset)
+                    {
                         loopDragEnd = 0;
+                    }
+                    else if (ms->loop_start >= ms->n_activeSegments)
+                    {
+                        loopDragEnd = ms->totalDuration;
+                    }
+                    else
+                    {
+                        loopDragEnd = ms->segmentStart[ms->loop_start];
+                    }
                 };
 
                 hs.rect = juce::Rectangle<float>(pxs - 0.5, haxisArea.getY() + 1, loopMarkerWidth,
@@ -414,34 +438,62 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
                 he.onDrag = [pxt, this](float x, float y, const juce::Point<float> &w) {
                     auto t = pxt(w.x);
-                    t = limit_range(t, ms->segmentEnd[0], ms->totalDuration);
-                    auto seg = Surge::MSEG::timeToSegment(this->ms, t);
-                    if (t == ms->totalDuration)
+                    t = limit_range(t, 0.f, ms->totalDuration);
+
+                    int seg;
+                    if (t <= 0.f)
+                    {
+                        seg = -1; // point 0
+                    }
+                    else if (t >= ms->totalDuration)
+                    {
                         seg = ms->n_activeSegments - 1;
-                    if (seg > 0)
-                        seg--; // since this is the END marker
-                    float pct = 0;
-                    if (this->ms->segments[seg + 1].duration > 0)
-                    {
-                        pct =
-                            (t - this->ms->segmentEnd[seg]) / this->ms->segments[seg + 1].duration;
                     }
-                    if (pct > 0.5)
+                    else
                     {
-                        seg++;
+                        seg = Surge::MSEG::timeToSegment(this->ms, t);
+
+                        if (seg > 0)
+                        {
+                            seg--; // END marker: seg index is the one that ends here
+                        }
+
+                        float pct = 0;
+
+                        if (seg + 1 < ms->n_activeSegments &&
+                            this->ms->segments[seg + 1].duration > 0)
+                        {
+                            pct = (t - ms->segmentEnd[seg]) / this->ms->segments[seg + 1].duration;
+                        }
+
+                        if (pct > 0.5)
+                        {
+                            seg++;
+                        }
                     }
+
                     if (seg != ms->loop_end)
                     {
                         Surge::MSEG::setLoopEnd(ms, seg);
                         modelChanged();
                         repaint();
                     }
+
                     loopDragTime = t;
                     loopDragIsStart = false;
-                    if (ms->loop_end >= 0)
-                        loopDragEnd = this->ms->segmentEnd[ms->loop_end];
+
+                    if (ms->loop_end == MSEGStorage::kLoopPointUnset)
+                    {
+                        loopDragEnd = ms->totalDuration;
+                    }
+                    else if (ms->loop_end < 0)
+                    {
+                        loopDragEnd = 0.f;
+                    }
                     else
-                        loopDragEnd = this->ms->totalDuration;
+                    {
+                        loopDragEnd = ms->segmentEnd[ms->loop_end];
+                    }
                 };
 
                 hotzones.push_back(hs);
@@ -825,19 +877,20 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // draw looped area of the axis
         if (ms->loopMode != MSEGStorage::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-
-            float pxs = limit_range((float)tpx(ms->segmentStart[ls]), (float)haxisArea.getX(),
-                                    (float)haxisArea.getRight());
-            float pxe = limit_range((float)tpx(ms->segmentEnd[le]), (float)haxisArea.getX(),
-                                    (float)haxisArea.getRight());
+            int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                                                                    : ms->loop_end;
+            float pxs =
+                (ls >= ms->n_activeSegments) ? tpx(ms->totalDuration) : tpx(ms->segmentStart[ls]);
+            float pxe = (le < 0) ? tpx(0.f) : tpx(ms->segmentEnd[le]);
 
             auto r = juce::Rectangle<float>(juce::Point<float>(pxs, haxisArea.getY()),
                                             juce::Point<float>(pxe, haxisArea.getY() + 15));
 
             // draw the loop region start to end
-            if (!(ms->loop_start == ms->loop_end + 1))
+            if (!(ms->loop_start != MSEGStorage::kLoopPointUnset &&
+                  ms->loop_end != MSEGStorage::kLoopPointUnset &&
+                  ms->loop_start == ms->loop_end + 1))
             {
                 g.setColour(skin->getColor(Colors::MSEGEditor::Loop::RegionAxis));
                 g.fillRect(r);
@@ -846,14 +899,17 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
             auto mcolor = skin->getColor(Colors::MSEGEditor::Loop::Marker);
 
             // draw loop markers
-            if ((loopDragTime < 0 || !loopDragIsStart) && (ls >= 0 && ls < ms->segmentStart.size()))
+            if ((loopDragTime < 0 || !loopDragIsStart))
             {
-                drawLoopDragMarker(g, mcolor, hotzone::LOOP_START, ms->segmentStart[ls]);
+                float startT =
+                    (ls >= ms->n_activeSegments) ? ms->totalDuration : ms->segmentStart[ls];
+                drawLoopDragMarker(g, mcolor, hotzone::LOOP_START, startT);
             }
 
-            if ((loopDragTime < 0 || loopDragIsStart) && (le >= 0 && le < ms->segmentStart.size()))
+            if ((loopDragTime < 0 || loopDragIsStart))
             {
-                drawLoopDragMarker(g, mcolor, hotzone::LOOP_END, ms->segmentEnd[le]);
+                float endT = (le < 0) ? 0.f : ms->segmentEnd[le];
+                drawLoopDragMarker(g, mcolor, hotzone::LOOP_END, endT);
             }
 
             // loop marker when dragged
@@ -1138,11 +1194,12 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
         // Draw the loop region fill
         if (ms->loopMode != MSEGStorage::LoopMode::ONESHOT && ms->editMode != MSEGStorage::LFO)
         {
-            int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
-            int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-
-            float pxs = tpx(ms->segmentStart[ls]);
-            float pxe = tpx(ms->segmentEnd[le]);
+            int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                                                                    : ms->loop_end;
+            float pxs =
+                (ls >= ms->n_activeSegments) ? tpx(ms->totalDuration) : tpx(ms->segmentStart[ls]);
+            float pxe = (le < 0) ? tpx(0.f) : tpx(ms->segmentEnd[le]);
 
             if (!(pxs > drawArea.getRight() || pxe < drawArea.getX()))
             {
@@ -3075,7 +3132,13 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
 
         if (ms->editMode != MSEGStorage::LFO && ms->loopMode != MSEGStorage::LoopMode::ONESHOT)
         {
-            if (tts <= ms->loop_end + 1 && tts != ms->loop_start)
+            const int effectiveLoopStart =
+                (ms->loop_start == MSEGStorage::kLoopPointUnset) ? 0 : ms->loop_start;
+            const int effectiveLoopEnd = (ms->loop_end == MSEGStorage::kLoopPointUnset)
+                                             ? ms->n_activeSegments - 1
+                                             : ms->loop_end;
+
+            if (tts <= effectiveLoopEnd + 1 && tts != ms->loop_start)
             {
                 contextMenu.addItem(Surge::GUI::toOSCase("Set Loop Start"), [this, tts]() {
                     Surge::MSEG::setLoopStart(ms, tts);
@@ -3084,7 +3147,7 @@ struct MSEGCanvas : public juce::Component, public Surge::GUI::SkinConsumingComp
                 });
             }
 
-            if (tts >= ms->loop_start - 1 && tts != ms->loop_end)
+            if (tts >= effectiveLoopStart - 1 && tts != ms->loop_end)
             {
                 contextMenu.addItem(Surge::GUI::toOSCase("Set Loop End"), [this, tts, t]() {
                     auto along = t - ms->segmentStart[tts];
