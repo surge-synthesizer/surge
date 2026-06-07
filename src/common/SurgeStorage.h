@@ -929,7 +929,12 @@ struct MSEGStorage
                        // at current value and progress to end once
     } loopMode = LOOP;
 
-    int loop_start = -1, loop_end = -1; // -1 signifies the entire MSEG in this context
+    static constexpr int kLoopPointUnset = -13214;
+
+    // loop_start: 0..n_activeSegments (n_activeSegments = starts at very last point)
+    // loop_end:   -1..n_activeSegments-1 (-1 = ends at very first point, point 0)
+    // Either field == kLoopPointUnset means "unset, use full-range default"
+    int loop_start = kLoopPointUnset, loop_end = kLoopPointUnset;
 
     int n_activeSegments = 0;
     std::array<segment, max_msegs> segments;

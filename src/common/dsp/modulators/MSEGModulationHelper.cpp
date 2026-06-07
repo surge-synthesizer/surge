@@ -36,14 +36,13 @@ void rebuildCache(MSEGStorage *ms)
 {
     forceToConstrainedNormalForm(ms);
 
-    if (ms->loop_start > ms->n_activeSegments - 1)
+    if (ms->loop_start != MSEGStorage::kLoopPointUnset && ms->loop_start > ms->n_activeSegments)
     {
-        ms->loop_start = -1;
+        ms->loop_start = MSEGStorage::kLoopPointUnset;
     }
-
-    if (ms->loop_end > ms->n_activeSegments - 1)
+    if (ms->loop_end != MSEGStorage::kLoopPointUnset && ms->loop_end > ms->n_activeSegments - 1)
     {
-        ms->loop_end = -1;
+        ms->loop_end = MSEGStorage::kLoopPointUnset;
     }
 
     float totald = 0;
@@ -105,14 +104,33 @@ void rebuildCache(MSEGStorage *ms)
 
     if (ms->n_activeSegments > 0)
     {
-        if (ms->loop_end >= 0)
+        // Resolve effective loop_end: unset → last seg, -1 → point 0 (duration 0)
+        if (ms->loop_end == MSEGStorage::kLoopPointUnset)
+        {
+            ms->durationToLoopEnd = ms->totalDuration; // default: full run before looping
+        }
+        else if (ms->loop_end == -1)
+        {
+            ms->durationToLoopEnd = 0; // loop ends at point 0
+        }
+        else
         {
             ms->durationToLoopEnd = ms->segmentEnd[ms->loop_end];
         }
 
-        ms->durationLoopStartToLoopEnd =
-            ms->segmentEnd[(ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1)] -
-            ms->segmentStart[(ms->loop_start >= 0 ? ms->loop_start : 0)];
+        // Effective segment indices for loop span
+        int le_idx = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                     : (ms->loop_end == -1)                         ? -1 // handled below
+                                                                    : ms->loop_end;
+        int ls_idx = (ms->loop_start == MSEGStorage::kLoopPointUnset)
+                         ? 0
+                         : ms->loop_start; // may equal n_activeSegments (last point)
+
+        float loopEndTime = (le_idx < 0) ? 0.f : ms->segmentEnd[le_idx];
+        float loopStartTime =
+            (ls_idx >= ms->n_activeSegments) ? ms->totalDuration : ms->segmentStart[ls_idx];
+
+        ms->durationLoopStartToLoopEnd = loopEndTime - loopStartTime;
     }
 }
 
@@ -166,7 +184,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
     }
     else
     {
-        if (ms->loop_end == -1 || ms->loop_end >= ms->n_activeSegments)
+        if (ms->loop_end == MSEGStorage::kLoopPointUnset ||
+            ms->loop_end >= ms->n_activeSegments - 1)
         {
             return es->releaseStartValue;
         }
@@ -179,7 +198,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
         }
         else
         {
-            double adjustedPhase = up - es->releaseStartPhase + ms->segmentEnd[ms->loop_end];
+            double adjustedPhase = up - es->releaseStartPhase +
+                                   (ms->loop_end == -1 ? 0.0 : ms->segmentEnd[ms->loop_end]);
 
             // so now find the index
             idx = -1;
@@ -245,7 +265,8 @@ float valueAt(int ip, float fup, float df, MSEGStorage *ms, EvaluatorState *es, 
 
     // So are we in the gated release segment?
     if (es->loopState == EvaluatorState::RELEASING && ms->loopMode == MSEGStorage::GATED_LOOP &&
-        idx == ms->loop_end + 1)
+        ms->loop_end != MSEGStorage::kLoopPointUnset &&
+        idx == (ms->loop_end == -1 ? 0 : ms->loop_end + 1))
     {
         float cpratio = 0.5;
 
@@ -768,8 +789,12 @@ int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlon
     else
     {
         // The loop case is more tedious
-        int le = (ms->loop_end >= 0 ? ms->loop_end : ms->n_activeSegments - 1);
-        int ls = (ms->loop_start >= 0 ? ms->loop_start : 0);
+        int le = (ms->loop_end == MSEGStorage::kLoopPointUnset) ? ms->n_activeSegments - 1
+                 : (ms->loop_end == -1)                         ? -1 // zero-length at point 0
+                                                                : ms->loop_end;
+        int ls = (ms->loop_start == MSEGStorage::kLoopPointUnset)
+                     ? 0
+                     : ms->loop_start; // may be n_activeSegments
 
         // So are we before the first loop end point
         if (t <= ms->durationToLoopEnd)
@@ -782,7 +807,8 @@ int timeToSegment(MSEGStorage *ms, double t, bool ignoreLoops, float &amountAlon
                     return i;
                 }
         }
-        else if (ms->loop_start > ms->loop_end && ms->loop_start >= 0 && ms->loop_end >= 0)
+        else if (ms->loop_start != MSEGStorage::kLoopPointUnset &&
+                 ms->loop_end != MSEGStorage::kLoopPointUnset && ms->loop_start > ms->loop_end)
         {
             // This basically means we just iterate around the loop_end endpoint which we do by
             // saying we are basically at the end point all the way along
@@ -856,16 +882,16 @@ void insertAtIndex(MSEGStorage *ms, int insertIndex)
     ms->segments[insertIndex].cpv = ms->segments[nxt].v0 * 0.5;
     ms->segments[insertIndex].cpduration = 0.125;
 
-    /*
-     * Handle the loops. We have just inserted at index so if start or end
-     * is later we need to push them out
-     */
-    if (ms->loop_start >= insertIndex)
+    // Handle the loops. We have just inserted at index so if start or end
+    // is later we need to push them out
+    if (ms->loop_start != MSEGStorage::kLoopPointUnset && ms->loop_start >= insertIndex)
     {
         ms->loop_start++;
     }
 
-    if (ms->loop_end >= insertIndex - 1)
+    if (ms->loop_end != MSEGStorage::kLoopPointUnset &&
+        ms->loop_end >= 0 && // -1 (point 0) never shifts
+        ms->loop_end >= insertIndex - 1)
     {
         ms->loop_end++;
     }
@@ -1095,12 +1121,15 @@ void unsplitSegment(MSEGStorage *ms, float t, bool wrapTime)
 
     ms->n_activeSegments--;
 
-    if (ms->loop_start > idx)
+    if (ms->loop_start != MSEGStorage::kLoopPointUnset && ms->loop_start > idx &&
+        ms->loop_start > 0) // don't shift below 0
     {
         ms->loop_start--;
     }
 
-    if (ms->loop_end >= idx)
+    if (ms->loop_end != MSEGStorage::kLoopPointUnset &&
+        ms->loop_end >= 0 && // -1 (point 0) stays as-is
+        ms->loop_end >= idx)
     {
         ms->loop_end--;
     }
@@ -1143,12 +1172,15 @@ void deleteSegment(MSEGStorage *ms, int idx)
         rebuildCache(ms);
     }
 
-    if (ms->loop_start > idx)
+    if (ms->loop_start != MSEGStorage::kLoopPointUnset && ms->loop_start > idx &&
+        ms->loop_start > 0) // don't shift below 0
     {
         ms->loop_start--;
     }
 
-    if (ms->loop_end >= idx)
+    if (ms->loop_end != MSEGStorage::kLoopPointUnset &&
+        ms->loop_end >= 0 && // -1 (point 0) stays as-is
+        ms->loop_end >= idx)
     {
         ms->loop_end--;
     }
@@ -1759,18 +1791,21 @@ void setLoopStart(MSEGStorage *ms, int seg)
 {
     ms->loop_start = seg;
 
-    if (ms->loop_end >= 0 && ms->loop_end < ms->loop_start)
+    if (ms->loop_end != MSEGStorage::kLoopPointUnset &&
+        ms->loop_end < ms->loop_start - 1) // allow equal (zero-length loop is valid)
     {
-        ms->loop_end = std::max(0, seg - 1);
+        ms->loop_end = std::max(-1, seg - 1); // -1 is now valid (point 0)
     }
 }
+
 void setLoopEnd(MSEGStorage *ms, int seg)
 {
     ms->loop_end = seg;
 
-    if (ms->loop_start >= 0 && ms->loop_start > ms->loop_end)
+    if (ms->loop_start != MSEGStorage::kLoopPointUnset &&
+        ms->loop_start > ms->loop_end + 1) // allow start == end+1 (zero-length)
     {
-        ms->loop_start = std::min(ms->n_activeSegments - 1, seg + 1);
+        ms->loop_start = std::min(ms->n_activeSegments, seg + 1); // n_activeSegments is now valid
     }
 }
 } // namespace MSEG
