@@ -81,6 +81,34 @@ void resetCP(MSEGStorage *ms)
     }
 }
 
+// ---------------------------------------------------------------------------
+// Helper: 4-segment MSEG, each segment 0.25 wide, FREE endpoints, LOOP mode.
+// Values ramp linearly: seg0 0→0.25, seg1 0.25→0.5, seg2 0.5→0.75, seg3 0.75→1.
+// loop_start / loop_end left at -1 (full loop) unless the test overrides them.
+// ---------------------------------------------------------------------------
+static MSEGStorage makeRamp4()
+{
+    MSEGStorage ms;
+    ms.n_activeSegments = 4;
+    ms.loopMode = MSEGStorage::LoopMode::LOOP;
+    ms.endpointMode = MSEGStorage::EndpointMode::FREE;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        ms.segments[i].duration = 0.25;
+        ms.segments[i].type = MSEGStorage::segment::LINEAR;
+        ms.segments[i].v0 = i * 0.25f;
+        ms.segments[i].nv1 = (i + 1) * 0.25f;
+    }
+
+    ms.loop_start = -1;
+    ms.loop_end = -1;
+
+    resetCP(&ms);
+    Surge::MSEG::rebuildCache(&ms);
+    return ms;
+}
+
 /*
  * These tests test the relationship between configuration of MSEG Storage and the phase evaluator
  */
@@ -542,14 +570,387 @@ TEST_CASE("Zero Size Loops", "[mseg]")
     }
 }
 
-/*
- * Tests to add
- * - loop point 0 (start = end + 1)
- * - loop start at 0
- * - manipulation routines
- *    - insert
- *    - delete
- *    - split
- *    - unsplit
- *  - each of those with loop preservation also
- */
+TEST_CASE("Loop Start At Zero", "[mseg]")
+{
+    SECTION("Full loop with loop_start=0 loops the whole MSEG")
+    {
+        // loop_start=0, loop_end=3 is the same as both being -1 (default full
+        // loop), but setting them explicitly exercises the non-default path.
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 0;
+        ms.loop_end = 3;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // Run for 3 cycles. The ramp is v = fracPhase so we can check midpoints.
+        auto run = runMSEG(&ms, 0.025, 3);
+        for (auto c : run)
+        {
+            float frac = c.phase - (int)c.phase;
+            // Check a few mid-segment points where the linear ramp is unambiguous.
+            if (frac > 0.05f && frac < 0.20f)
+            {
+                INFO("phase=" << c.phase << " frac=" << frac << " v=" << c.v);
+                REQUIRE(c.v == Approx(frac).margin(0.03f));
+            }
+            if (frac > 0.55f && frac < 0.70f)
+            {
+                INFO("phase=" << c.phase << " frac=" << frac << " v=" << c.v);
+                REQUIRE(c.v == Approx(frac).margin(0.03f));
+            }
+        }
+    }
+
+    SECTION("Single-segment loop at index 0 never plays later segments")
+    {
+        MSEGStorage ms;
+        ms.n_activeSegments = 3;
+        ms.loopMode = MSEGStorage::LoopMode::LOOP;
+        ms.endpointMode = MSEGStorage::EndpointMode::FREE;
+
+        // seg0: ramp 0→1. rebuildCache sets nv1 = seg1.v0, so seg1.v0 must be 1
+        // to get the intended 0→1 ramp; we set it explicitly here.
+        ms.segments[0].duration = 0.25;
+        ms.segments[0].type = MSEGStorage::segment::LINEAR;
+        ms.segments[0].v0 = 0.0f;
+
+        // seg1, seg2: v0=1 so that rebuildCache writes seg0.nv1=1 (correct ramp).
+        // These segments should never be reached while the loop holds.
+        for (int i = 1; i < 3; ++i)
+        {
+            ms.segments[i].duration = 0.25;
+            ms.segments[i].type = MSEGStorage::segment::LINEAR;
+            ms.segments[i].v0 = 1.0f;
+            ms.segments[i].nv1 = 1.0f;
+        }
+
+        ms.loop_start = 0;
+        ms.loop_end = 0;
+
+        resetCP(&ms);
+        Surge::MSEG::rebuildCache(&ms);
+
+        // seg0 ramps 0→1, so all values must stay in [0, 1].
+        auto run = runMSEG(&ms, 0.025, 2);
+        for (auto c : run)
+        {
+            INFO("phase=" << c.phase << " v=" << c.v);
+            REQUIRE(c.v >= -0.01f);
+            REQUIRE(c.v <= 1.01f);
+        }
+    }
+}
+
+TEST_CASE("Manipulation Routines", "[mseg]")
+{
+    // --- insert ---
+
+    SECTION("Insert before loop shifts both loop indices up")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 2;
+        ms.loop_end = 3;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // insertBefore(t=0.125) → insertAtIndex(0).
+        // loop_start 2 >= 0 → 3; loop_end 3 >= -1 → 4.
+        Surge::MSEG::insertBefore(&ms, 0.125f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 5);
+        REQUIRE(ms.loop_start == 3);
+        REQUIRE(ms.loop_end == 4);
+    }
+
+    SECTION("Insert after loop end does not shift loop indices")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 0;
+        ms.loop_end = 1;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // insertAfter(t=0.875) → insertAtIndex(4) = append.
+        // loop_start 0, loop_end 1 are both before the insertion point.
+        Surge::MSEG::insertAfter(&ms, 0.875f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 5);
+        REQUIRE(ms.loop_start == 0);
+        REQUIRE(ms.loop_end == 1);
+    }
+
+    SECTION("Insert inside loop region shifts loop end but not loop start")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 1;
+        ms.loop_end = 3;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // insertBefore(t=0.5) → insertAtIndex(2).
+        // loop_start 1 < 2: unchanged.
+        // loop_end 3 >= 1 (insertIndex - 1): → 4.
+        Surge::MSEG::insertBefore(&ms, 0.5f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 5);
+        REQUIRE(ms.loop_start == 1);
+        REQUIRE(ms.loop_end == 4);
+    }
+
+    // --- delete ---
+
+    SECTION("Delete before loop shifts both loop indices down")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 2;
+        ms.loop_end = 3;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // Delete idx 0 (before loop).
+        // loop_start 2 > 0 → 1; loop_end 3 >= 0 → 2.
+        Surge::MSEG::deleteSegment(&ms, 0);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 3);
+        REQUIRE(ms.loop_start == 1);
+        REQUIRE(ms.loop_end == 2);
+    }
+
+    SECTION("Delete after loop end does not change loop indices")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 0;
+        ms.loop_end = 1;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // Delete idx 3 (after loop).
+        // loop_start 0, loop_end 1 are both < 3.
+        Surge::MSEG::deleteSegment(&ms, 3);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 3);
+        REQUIRE(ms.loop_start == 0);
+        REQUIRE(ms.loop_end == 1);
+    }
+
+    SECTION("Delete loop start segment: loop_start unchanged, loop_end shifts")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 1;
+        ms.loop_end = 3;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // Delete idx 1 (== loop_start).
+        // loop_start: condition is > idx (not >=), so 1 is NOT > 1: unchanged.
+        // loop_end 3 >= 1 → 2.
+        Surge::MSEG::deleteSegment(&ms, 1);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 3);
+        REQUIRE(ms.loop_start == 1);
+        REQUIRE(ms.loop_end == 2);
+    }
+
+    // --- split ---
+
+    SECTION("Split before loop shifts both loop indices up")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 2;
+        ms.loop_end = 3;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // splitSegment(t=0.125) → internally insertAtIndex(1).
+        // loop_start 2 >= 1 → 3; loop_end 3 >= 0 → 4.
+        Surge::MSEG::splitSegment(&ms, 0.125f, 0.1f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 5);
+        REQUIRE(ms.loop_start == 3);
+        REQUIRE(ms.loop_end == 4);
+    }
+
+    SECTION("Split inside loop shifts loop end but not loop start")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 1;
+        ms.loop_end = 2;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // splitSegment(t=0.375) → insertAtIndex(2).
+        // loop_start 1 < 2: unchanged. loop_end 2 >= 1 → 3.
+        Surge::MSEG::splitSegment(&ms, 0.375f, 0.3f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 5);
+        REQUIRE(ms.loop_start == 1);
+        REQUIRE(ms.loop_end == 3);
+    }
+
+    // --- unsplit ---
+
+    SECTION("Unsplit before loop shifts both loop indices down")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 2;
+        ms.loop_end = 3;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // unsplitSegment(t=0.25) merges seg0+seg1, deletes idx 1.
+        // loop_start 2 > 1 → 1; loop_end 3 >= 1 → 2.
+        Surge::MSEG::unsplitSegment(&ms, 0.25f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 3);
+        REQUIRE(ms.loop_start == 1);
+        REQUIRE(ms.loop_end == 2);
+    }
+
+    SECTION("Unsplit inside loop shifts loop end but not loop start")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 1;
+        ms.loop_end = 3;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // unsplitSegment(t=0.625) merges seg2+seg3, deletes idx 3.
+        // loop_start 1, not > 3: unchanged. loop_end 3 >= 3 → 2.
+        Surge::MSEG::unsplitSegment(&ms, 0.625f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 3);
+        REQUIRE(ms.loop_start == 1);
+        REQUIRE(ms.loop_end == 2);
+    }
+
+    SECTION("Unsplit after loop end does not change loop indices")
+    {
+        MSEGStorage ms = makeRamp4();
+        ms.loop_start = 0;
+        ms.loop_end = 1;
+        Surge::MSEG::rebuildCache(&ms);
+
+        // unsplitSegment(t=0.75) merges seg2+seg3, deletes idx 3.
+        // loop_start 0, loop_end 1: both < 3, unchanged.
+        Surge::MSEG::unsplitSegment(&ms, 0.75f);
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 3);
+        REQUIRE(ms.loop_start == 0);
+        REQUIRE(ms.loop_end == 1);
+    }
+}
+
+TEST_CASE("Manipulation With Loop Preservation Playback", "[mseg]")
+{
+    SECTION("Insert outside loop does not disturb loop playback")
+    {
+        // 3-segment MSEG: seg0 is a pre-attack, segs 1+2 form a 0→1→0 loop.
+        auto build = []() {
+            MSEGStorage ms;
+            ms.n_activeSegments = 3;
+            ms.loopMode = MSEGStorage::LoopMode::LOOP;
+            ms.endpointMode = MSEGStorage::EndpointMode::FREE;
+
+            ms.segments[0].duration = 0.5f;
+            ms.segments[0].type = MSEGStorage::segment::LINEAR;
+            ms.segments[0].v0 = -1.0f;
+            ms.segments[0].nv1 = 0.0f;
+
+            ms.segments[1].duration = 0.25f;
+            ms.segments[1].type = MSEGStorage::segment::LINEAR;
+            ms.segments[1].v0 = 0.0f;
+            ms.segments[1].nv1 = 1.0f;
+
+            ms.segments[2].duration = 0.25f;
+            ms.segments[2].type = MSEGStorage::segment::LINEAR;
+            ms.segments[2].v0 = 1.0f;
+            ms.segments[2].nv1 = 0.0f;
+
+            ms.loop_start = 1;
+            ms.loop_end = 2;
+            resetCP(&ms);
+            Surge::MSEG::rebuildCache(&ms);
+            return ms;
+        };
+
+        // Reference: run as-is and capture the steady-state loop values.
+        auto msRef = build();
+        auto refRun = runMSEG(&msRef, 0.025f, 4);
+
+        // Modified: insert a segment before the loop, then run.
+        auto msMod = build();
+        Surge::MSEG::insertBefore(&msMod, 0.1f); // inserts at idx 0, pre-loop
+        Surge::MSEG::rebuildCache(&msMod);
+
+        REQUIRE(msMod.loop_start == 2);
+        REQUIRE(msMod.loop_end == 3);
+
+        auto modRun = runMSEG(&msMod, 0.025f, 4);
+
+        // The loop region is 0→1→0 in both cases. Once we're past the
+        // pre-loop section, values must stay non-negative (loop never dips < 0).
+        for (auto c : modRun)
+        {
+            float loopStart = msMod.segmentStart[msMod.loop_start];
+            if (c.phase > loopStart + 0.05f)
+            {
+                INFO("phase=" << c.phase << " v=" << c.v);
+                REQUIRE(c.v >= -0.01f);
+                REQUIRE(c.v <= 1.01f);
+            }
+        }
+    }
+
+    SECTION("Delete outside loop does not disturb loop playback")
+    {
+        // 4-segment MSEG: seg0 pre-loop, segs 1+2 looped (0→1→0), seg3 post-loop.
+        MSEGStorage ms;
+        ms.n_activeSegments = 4;
+        ms.loopMode = MSEGStorage::LoopMode::LOOP;
+        ms.endpointMode = MSEGStorage::EndpointMode::FREE;
+
+        ms.segments[0].duration = 0.25f;
+        ms.segments[0].type = MSEGStorage::segment::LINEAR;
+        ms.segments[0].v0 = -1.0f;
+        ms.segments[0].nv1 = 0.0f;
+
+        ms.segments[1].duration = 0.25f;
+        ms.segments[1].type = MSEGStorage::segment::LINEAR;
+        ms.segments[1].v0 = 0.0f;
+        ms.segments[1].nv1 = 1.0f;
+
+        ms.segments[2].duration = 0.25f;
+        ms.segments[2].type = MSEGStorage::segment::LINEAR;
+        ms.segments[2].v0 = 1.0f;
+        ms.segments[2].nv1 = 0.0f;
+
+        ms.segments[3].duration = 0.25f;
+        ms.segments[3].type = MSEGStorage::segment::LINEAR;
+        ms.segments[3].v0 = 0.0f;
+        ms.segments[3].nv1 = 0.0f;
+
+        ms.loop_start = 1;
+        ms.loop_end = 2;
+        resetCP(&ms);
+        Surge::MSEG::rebuildCache(&ms);
+
+        Surge::MSEG::deleteSegment(&ms, 3); // remove post-loop segment
+        Surge::MSEG::rebuildCache(&ms);
+
+        REQUIRE(ms.n_activeSegments == 3);
+        REQUIRE(ms.loop_start == 1);
+        REQUIRE(ms.loop_end == 2);
+
+        // Loop region (segs 1+2) is 0→1→0, always non-negative.
+        auto run = runMSEG(&ms, 0.025f, 3);
+        for (auto c : run)
+        {
+            if (c.phase > ms.segmentStart[ms.loop_start] + 0.05f)
+            {
+                INFO("phase=" << c.phase << " v=" << c.v);
+                REQUIRE(c.v >= -0.01f);
+                REQUIRE(c.v <= 1.01f);
+            }
+        }
+    }
+}
