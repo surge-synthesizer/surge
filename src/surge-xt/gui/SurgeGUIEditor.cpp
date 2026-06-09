@@ -74,6 +74,7 @@
 #include "widgets/OscillatorWaveformDisplay.h"
 #include "widgets/ParameterInfowindow.h"
 #include "widgets/PatchSelector.h"
+#include "widgets/Tooltip.h"
 #include "widgets/Switch.h"
 #include "widgets/VerticalLabel.h"
 #include "widgets/VuMeter.h"
@@ -467,8 +468,8 @@ SurgeGUIEditor::SurgeGUIEditor(SurgeSynthEditor *jEd, SurgeSynthesizer *synth)
     paramInfowindow = std::make_unique<Surge::Widgets::ParameterInfowindow>();
     paramInfowindow->setVisible(false);
 
-    patchSelectorComment = std::make_unique<Surge::Widgets::PatchSelectorCommentTooltip>();
-    patchSelectorComment->setVisible(false);
+    globalTooltip = std::make_unique<Surge::Widgets::Tooltip>();
+    globalTooltip->setVisible(false);
 
     typeinParamEditor = std::make_unique<Surge::Overlays::TypeinParamEditor>();
     typeinParamEditor->setVisible(false);
@@ -706,6 +707,49 @@ void SurgeGUIEditor::idle()
            runct = 0;
         }
           */
+
+        // overlay tooltip hover tracking
+        {
+            auto *hovered = frame->getComponentAt(frame->getMouseXYRelative());
+            juce::TooltipClient *tc{nullptr};
+            bool isSwitch{false};
+
+            while (hovered && hovered != juceEditor->topLevelContainer.get())
+            {
+                if ((tc = dynamic_cast<juce::TooltipClient *>(hovered)))
+                {
+                    break;
+                }
+
+                hovered = hovered->getParentComponent();
+            }
+
+            if (dynamic_cast<Surge::Widgets::Switch *>(tc))
+            {
+                isSwitch = true;
+            }
+
+            auto text = tc ? tc->getTooltip().toStdString() : std::string{};
+
+            if (text.empty())
+            {
+                if (tooltipFrameCounter != 0)
+                {
+                    tooltipFrameCounter = 0;
+                    hideTooltip();
+                }
+            }
+            else if (++tooltipFrameCounter == 18)
+            {
+                auto r = hovered->getBounds();
+
+                // just for Switch widget, use the horizontal center of it but with no width
+                // so that the tooltip is dynamically sized based on content
+                // see Tooltip::positionForText()
+                showTooltip(text,
+                            isSwitch ? r.withX(r.getCentreX()).withWidth(0) : hovered->getBounds());
+            }
+        }
 
         if (firstIdleCountdown)
         {
@@ -2161,10 +2205,10 @@ void SurgeGUIEditor::openOrRecreateEditor()
 
     // Make sure the infowindow typein
     paramInfowindow->setVisible(false);
-    patchSelectorComment->setVisible(false);
+    globalTooltip->setVisible(false);
 
     addComponentWithTracking(frame.get(), *paramInfowindow);
-    addComponentWithTracking(frame.get(), *patchSelectorComment);
+    addComponentWithTracking(frame.get(), *globalTooltip);
 
     // Mouse behavior
     if (Surge::Widgets::ModulatableSlider::sliderMoveRateState ==
@@ -2930,7 +2974,42 @@ void SurgeGUIEditor::mappingFileDropped(const juce::String &fname)
 
 void SurgeGUIEditor::tuningChanged()
 {
+    if (tuneStatus)
+    {
+        auto sw = dynamic_cast<Surge::Widgets::Switch *>(tuneStatus);
+
+        if (sw)
+        {
+            const std::string scl = synth->storage.currentScale.description;
+            const std::string kbm = synth->storage.currentMapping.name;
+            std::string info{""};
+            const auto hasmts =
+                synth->storage.oddsound_mts_client && synth->storage.oddsound_mts_active_as_client;
+
+            if (synth->storage.isStandardTuning ? hasmts : !synth->storage.isToggledToCache)
+            {
+                if (!scl.empty())
+                {
+                    info = "Tuning: " + scl;
+                }
+
+                if (!kbm.empty())
+                {
+                    if (!info.empty())
+                    {
+                        info += "\n";
+                    }
+
+                    info += "Mapping: " + kbm;
+                }
+            }
+
+            sw->setTooltip(info);
+        }
+    }
+
     auto tc = dynamic_cast<Surge::Overlays::TuningOverlay *>(getOverlayIfOpen(TUNING_EDITOR));
+
     if (tc)
     {
         tc->setTuning(synth->storage.currentTuning);
@@ -3211,7 +3290,7 @@ void SurgeGUIEditor::reloadFromSkin()
 
     bitmapStore->setPhysicalZoomFactor(getZoomFactor() * dbs);
     paramInfowindow->setSkin(currentSkin, bitmapStore);
-    patchSelectorComment->setSkin(currentSkin, bitmapStore);
+    globalTooltip->setSkin(currentSkin, bitmapStore);
 
     auto bg = currentSkin->customBackgroundImage();
 
@@ -6438,46 +6517,24 @@ void SurgeGUIEditor::loadFromDawExtraState(SurgeSynthesizer *synth)
     }
 }
 
-void SurgeGUIEditor::showPatchCommentTooltip(const std::string &comment)
+void SurgeGUIEditor::showTooltip(const std::string &text, const juce::Rectangle<int> &bounds,
+                                 const juce::Justification alignment)
 {
-    if (patchSelectorComment)
+    if (globalTooltip)
     {
-        auto psb = patchSelector->getBounds();
-
-        patchSelectorComment->positionForComment(psb.getCentre().withY(psb.getBottom()), comment,
-                                                 psb.getWidth());
-        patchSelectorComment->setVisible(true);
-        patchSelectorComment->getParentComponent()->toFront(false);
-        patchSelectorComment->toFront(false);
+        globalTooltip->positionForText(bounds.getCentre().withY(bounds.getBottom()), text,
+                                       bounds.getWidth(), alignment);
+        globalTooltip->setVisible(true);
+        globalTooltip->getParentComponent()->toFront(false);
+        globalTooltip->toFront(false);
     }
 }
 
-void SurgeGUIEditor::hidePatchCommentTooltip()
+void SurgeGUIEditor::hideTooltip()
 {
-    if (patchSelectorComment && patchSelectorComment->isVisible())
+    if (globalTooltip && globalTooltip->isVisible())
     {
-        patchSelectorComment->setVisible(false);
-    }
-}
-
-void SurgeGUIEditor::showIRNameTooltip(const std::string &text,
-                                       const juce::Rectangle<int> &frameBounds)
-{
-    if (patchSelectorComment)
-    {
-        patchSelectorComment->positionForComment(
-            frameBounds.getCentre().withY(frameBounds.getBottom()), text, frameBounds.getWidth());
-        patchSelectorComment->setVisible(true);
-        patchSelectorComment->getParentComponent()->toFront(false);
-        patchSelectorComment->toFront(false);
-    }
-}
-
-void SurgeGUIEditor::hideIRNameTooltip()
-{
-    if (patchSelectorComment && patchSelectorComment->isVisible())
-    {
-        patchSelectorComment->setVisible(false);
+        globalTooltip->setVisible(false);
     }
 }
 

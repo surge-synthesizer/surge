@@ -21,7 +21,6 @@
  */
 
 #include "PatchSelector.h"
-#include "PatchSelector.h"
 #include "SurgeStorage.h"
 #include "SurgeGUIUtils.h"
 #include "SurgeGUIEditor.h"
@@ -442,32 +441,10 @@ void PatchSelector::mouseEnter(const juce::MouseEvent &)
 {
     browserHover = true;
     repaint();
-
-    if (tooltipCountdown < 0)
-    {
-        tooltipCountdown = 3;
-        juce::Timer::callAfterDelay(100, Surge::GUI::makeSafeCallback<PatchSelector>(
-                                             this, [](auto *that) { that->shouldTooltip(); }));
-    }
 }
 
 void PatchSelector::mouseMove(const juce::MouseEvent &e)
 {
-    if (tooltipCountdown >= 0)
-    {
-        tooltipCountdown = 3;
-    }
-
-    // todo : apply mouse tolerance here
-    if (tooltipShowing && e.position.getDistanceFrom(tooltipMouseLocation.toFloat()) > 1)
-    {
-        toggleCommentTooltip(false);
-    }
-    else
-    {
-        tooltipMouseLocation = e.position;
-    }
-
     auto pfh = favoritesHover;
     favoritesHover = false;
 
@@ -526,51 +503,8 @@ void PatchSelector::mouseDown(const juce::MouseEvent &e)
         return;
     }
 
-    tooltipCountdown = -1;
-    toggleCommentTooltip(false);
-
     stuckHover = true;
     showClassicMenu(e.mods.isPopupMenu(), e.mods.isCommandDown());
-}
-
-void PatchSelector::shouldTooltip()
-{
-    if (tooltipCountdown < 0 || typeAhead->isVisible())
-    {
-        return;
-    }
-
-    tooltipCountdown--;
-
-    if (tooltipCountdown == 0)
-    {
-        tooltipCountdown = -1;
-        toggleCommentTooltip(true);
-    }
-    else
-    {
-        juce::Timer::callAfterDelay(100, Surge::GUI::makeSafeCallback<PatchSelector>(
-                                             this, [](auto *that) { that->shouldTooltip(); }));
-    }
-}
-
-void PatchSelector::toggleCommentTooltip(bool b)
-{
-    auto sge = firstListenerOfType<SurgeGUIEditor>();
-
-    if (sge)
-    {
-        if (b && !comment.empty())
-        {
-            tooltipShowing = true;
-            sge->showPatchCommentTooltip(comment);
-        }
-        else
-        {
-            tooltipShowing = false;
-            sge->hidePatchCommentTooltip();
-        }
-    }
 }
 
 void PatchSelector::openPatchBrowser()
@@ -1558,62 +1492,6 @@ std::unique_ptr<juce::AccessibilityHandler> PatchSelector::createAccessibilityHa
     return std::make_unique<PatchSelectorAH>(this);
 }
 
-void PatchSelectorCommentTooltip::paint(juce::Graphics &g)
-{
-    namespace clr = Colors::PatchBrowser::CommentTooltip;
-    g.fillAll(skin->getColor(clr::Border));
-    g.setColour(skin->getColor(clr::Background));
-    g.fillRect(getLocalBounds().reduced(1));
-    g.setColour(skin->getColor(clr::Text));
-    g.setFont(skin->fontManager->getLatoAtSize(9));
-    g.drawMultiLineText(comment, 4, g.getCurrentFont().getHeight() + 2, getWidth(),
-                        juce::Justification::left);
-}
-
-void PatchSelectorCommentTooltip::positionForComment(const juce::Point<int> &centerPoint,
-                                                     const std::string &c,
-                                                     const int maxTooltipWidth)
-{
-    comment = c;
-
-    std::stringstream ss(comment);
-    std::string to;
-
-    int numLines = 0;
-
-    auto ft = skin->fontManager->getLatoAtSize(9);
-    auto width = 0.f;
-    auto maxWidth = (float)maxTooltipWidth;
-
-    while (std::getline(ss, to, '\n'))
-    {
-        auto w = SST_STRING_WIDTH_FLOAT(ft, to);
-
-        // in case of an empty line, we still need to count it as an extra row
-        // so bump it up a bit so that the rows calculation ceils to 1
-        if (w == 0.f)
-        {
-            w = 1.f;
-        }
-
-        auto rows = std::ceil(w / maxWidth);
-
-        width = std::max(w, width);
-        numLines += (int)rows;
-    }
-
-    auto height = std::max((numLines * (ft.getHeight() + 2)) + 2, 16.f);
-    auto margin = 10;
-
-    auto r = juce::Rectangle<int>()
-                 .withCentre(juce::Point(centerPoint.x, centerPoint.y))
-                 .withSizeKeepingCentre(std::min(width + margin, maxWidth), height)
-                 .translated(0, height / 2);
-
-    setBounds(r);
-    repaint();
-}
-
 void PatchSelector::searchUpdated()
 {
     outstandingSearches++;
@@ -1627,7 +1505,8 @@ void PatchSelector::searchUpdated()
                 if (sge)
                 {
                     auto items = ptr->patchDbProvider->lastSearchResult.size();
-                    auto ann = fmt::format("Found {} patches; Down to navigate", items);
+                    auto ann =
+                        fmt::format("Found {} patches; press down arrow to navigate!", items);
                     sge->enqueueAccessibleAnnouncement(ann);
                 }
             }
@@ -1638,9 +1517,6 @@ void PatchSelector::searchUpdated()
 
 void PatchSelector::typeaheadButtonPressed()
 {
-    tooltipCountdown = -1;
-    toggleCommentTooltip(false);
-
     if (wasTypeaheadCanceledSinceLastIdle)
     {
         toggleTypeAheadSearch(false);
@@ -1667,9 +1543,6 @@ void PatchSelector::setIsFavorite(bool b)
 void PatchSelector::showFavoritesMenu()
 {
     juce::PopupMenu menu;
-
-    tooltipCountdown = -1;
-    toggleCommentTooltip(false);
 
     Surge::Widgets::MenuCenteredBoldLabel::addToMenuAsSectionHeader(menu, "FAVORITES");
 

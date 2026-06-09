@@ -186,6 +186,8 @@ target_sources(${PROJECT_NAME} PRIVATE
   gui/widgets/Switch.cpp
   gui/widgets/Switch.h
   gui/widgets/SurgeTextButton.cpp
+  gui/widgets/Tooltip.cpp
+  gui/widgets/Tooltip.h
   gui/widgets/TypeAheadTextEditor.cpp
   gui/widgets/VerticalLabel.cpp
   gui/widgets/VerticalLabel.h

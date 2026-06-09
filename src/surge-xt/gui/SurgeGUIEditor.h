@@ -78,7 +78,7 @@ struct NumberField;
 struct OscillatorWaveformDisplay;
 struct ParameterInfowindow;
 struct PatchSelector;
-struct PatchSelectorCommentTooltip;
+struct Tooltip;
 struct Switch;
 struct VerticalLabel;
 struct VuMeter;
@@ -147,6 +147,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
 
     void idle();
     int slowIdleCounter{0};
+    int tooltipFrameCounter{0};
     bool queue_refresh;
     virtual void toggle_mod_editing();
 
@@ -623,7 +624,7 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     // std::array<std::unique_ptr<Surge::Widgets::VuMeter>, n_fx_slots + 1> vu;
     bool firstTimePatchLoad{true};
     std::unique_ptr<Surge::Widgets::PatchSelector> patchSelector;
-    std::unique_ptr<Surge::Widgets::PatchSelectorCommentTooltip> patchSelectorComment;
+    std::unique_ptr<Surge::Widgets::Tooltip> globalTooltip;
     std::unique_ptr<Surge::Widgets::OscillatorMenu> oscMenu;
     std::unique_ptr<Surge::Widgets::WaveShaperSelector> waveshaperSelector;
     std::unique_ptr<Surge::Widgets::Switch> waveshaperAnalysis;
@@ -634,10 +635,9 @@ class SurgeGUIEditor : public Surge::GUI::IComponentTagValue::Listener,
     void setupAlternates(modsources ms);
 
   public:
-    void showPatchCommentTooltip(const std::string &comment);
-    void hidePatchCommentTooltip();
-    void showIRNameTooltip(const std::string &text, const juce::Rectangle<int> &frameBounds);
-    void hideIRNameTooltip();
+    void showTooltip(const std::string &text, const juce::Rectangle<int> &frameBounds,
+                     const juce::Justification alignment = juce::Justification::left);
+    void hideTooltip();
     void showInfowindow(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
     void showInfowindowSelfDismiss(int ptag, juce::Rectangle<int> relativeTo, bool isModulated);
     void updateInfowindowContents(int ptag, bool isModulated);

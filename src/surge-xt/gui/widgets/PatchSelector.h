@@ -39,6 +39,7 @@ namespace Widgets
 struct PatchDBTypeAheadProvider;
 
 struct PatchSelector : public juce::Component,
+                       public juce::SettableTooltipClient,
                        public WidgetBaseMixin<PatchSelector>,
                        public TypeAhead::TypeAheadListener
 {
@@ -104,7 +105,17 @@ struct PatchSelector : public juce::Component,
 
         repaint();
     }
-    void setComment(const std::string &c) { comment = c; }
+
+    void setComment(const std::string &c)
+    {
+        comment = c;
+        setTooltip(comment);
+    }
+
+    juce::String getTooltip() override
+    {
+        return typeAhead->isVisible() ? "" : juce::SettableTooltipClient::getTooltip();
+    }
 
     void setTags(const std::vector<SurgePatch::Tag> &itag) { tags = itag; }
 
@@ -130,8 +141,7 @@ struct PatchSelector : public juce::Component,
         browserHover = false;
         favoritesHover = false;
         searchHover = false;
-        tooltipCountdown = -1;
-        // toggleCommentTooltip(false);
+
         repaint();
     }
 
@@ -180,12 +190,6 @@ struct PatchSelector : public juce::Component,
     std::vector<SurgePatch::Tag> tags;
     int current_category = 0, current_patch = 0;
 
-    int tooltipCountdown{-1};
-    void toggleCommentTooltip(bool b);
-    void shouldTooltip();
-    juce::Point<float> tooltipMouseLocation;
-    bool tooltipShowing{false};
-
     /**
      * populatePatchMenuForCategory
      *
@@ -206,20 +210,6 @@ struct PatchSelector : public juce::Component,
 
   protected:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelector);
-};
-
-struct PatchSelectorCommentTooltip : public juce::Component,
-                                     public Surge::GUI::SkinConsumingComponent
-{
-    PatchSelectorCommentTooltip() {}
-    void paint(juce::Graphics &g) override;
-
-    std::string comment;
-    void positionForComment(const juce::Point<int> &centerPoint, const std::string &comment,
-                            const int maxTooltipWidth);
-
-  protected:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatchSelectorCommentTooltip);
 };
 } // namespace Widgets
 } // namespace Surge
