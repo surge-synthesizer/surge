@@ -723,8 +723,9 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
     if (getStorage()->oddsound_mts_active_as_main)
     {
         auto nc = MTS_GetNumClients();
-        tuningSubMenu.addItem("MTS-ESP has " + std::to_string(nc) + " clients", false, false,
-                              []() {});
+        tuningSubMenu.addItem(fmt::format("{} client{} connected",
+                                          nc == 0 ? "No" : std::to_string(nc), nc != 1 ? "s" : ""),
+                              false, false, []() {});
     }
 
     if (getStorage()->oddsound_mts_active_as_main || !canMaster)
@@ -733,8 +734,8 @@ juce::PopupMenu SurgeGUIEditor::makeTuningMenu(const juce::Point<int> &where, bo
         {
             tuningSubMenu.addItem("Reinitialize MTS Library and IPC", true, false, [this]() {
                 std::string msg =
-                    "Reinitializing MTS will disconnect all clients, including "
-                    "this one, and will generally require you to restart your DAW session, "
+                    "Reinitializing MTS will disconnect all clients including this one. "
+                    "It will also require you to restart your DAW session, "
                     "but it will clear up after particularly nasty crashes or IPC issues. "
                     "Are you sure you want to do this?";
                 alertYesNo("Reinitialize MTS-ESP", msg, MTS_Reinitialize);
