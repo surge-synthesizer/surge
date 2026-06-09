@@ -186,10 +186,10 @@ BINN_PRIVATE void * binn_malloc(int size) {
 BINN_PRIVATE void * binn_memdup(const void *src, int size) {
   void *dest;
 
-  if (src == NULL || size <= 0) return NULL;
+  if (src == NULL || size <= 0 || size > (1 << 30)) return NULL;
   dest = binn_malloc(size);
   if (dest == NULL) return NULL;
-  memcpy(dest, src, size);
+  memcpy(dest, src, (size_t)size);
   return dest;
 
 }
@@ -3496,9 +3496,9 @@ char * APIENTRY binn_get_str(binn *value) {
     return (char*) value->ptr;
   case BINN_BOOL:
     if (value->vbool)
-      strcpy(buf, "true");
+      snprintf(buf, sizeof buf, "true");
     else
-      strcpy(buf, "false");
+      snprintf(buf, sizeof buf, "false");
     goto loc_convert_value;
   }
 
