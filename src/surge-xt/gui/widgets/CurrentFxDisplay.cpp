@@ -27,7 +27,7 @@ namespace Widgets
 namespace
 {
 
-struct ConvolutionButton : public juce::Component
+struct ConvolutionButton : public juce::Component, public juce::SettableTooltipClient
 {
     // We lock to make sure we don't update the current FX in the middle of
     // loading a WAV, but if it does slip through the cracks (maybe the parent
@@ -49,20 +49,24 @@ struct ConvolutionButton : public juce::Component
     FxStorage *fxs{nullptr};
     int slot{-1};
     std::string irname{"No impulse response loaded!"};
+
     void setEffect(ConvolutionEffect *f, FxStorage *s, int n)
     {
         std::lock_guard l(loading);
         fx = f;
         fxs = s;
         slot = n;
+
         if (fxs->user_data.contains("irname"))
+        {
             irname = fxs->by_key("irname").to_string();
+        }
+
+        setTooltip(isNameTruncated() ? irname : "");
     }
 
     void mouseDown(const juce::MouseEvent &event) override
     {
-        hideTooltip();
-
         if (event.mods.isMiddleButtonDown() && sge)
         {
             sge->frame->mouseDown(event);
@@ -102,38 +106,9 @@ struct ConvolutionButton : public juce::Component
         return textW > irNameRect.getWidth() - 2;
     }
 
-    void hideTooltip()
+    juce::String getTooltip() override
     {
-        tooltipCountdown = -1;
-        if (sge && tooltipShowing)
-        {
-            sge->hideIRNameTooltip();
-        }
-        tooltipShowing = false;
-    }
-
-    void shouldTooltip()
-    {
-        if (tooltipCountdown < 0)
-            return;
-
-        tooltipCountdown--;
-
-        if (tooltipCountdown == 0)
-        {
-            tooltipCountdown = -1;
-            if (sge && isNameTruncated())
-            {
-                auto b = sge->frame->getLocalArea(this, getLocalBounds());
-                sge->showIRNameTooltip(irname, b);
-                tooltipShowing = true;
-            }
-        }
-        else
-        {
-            juce::Timer::callAfterDelay(100, Surge::GUI::makeSafeCallback<ConvolutionButton>(
-                                                 this, [](auto *that) { that->shouldTooltip(); }));
-        }
+        return isNameTruncated() ? juce::SettableTooltipClient::getTooltip() : "";
     }
 
     void mouseEnter(const juce::MouseEvent &event) override
@@ -148,7 +123,6 @@ struct ConvolutionButton : public juce::Component
         isJogLHovered = false;
         isJogRHovered = false;
         isNameHovered = false;
-        hideTooltip();
         repaint();
     }
 
@@ -164,21 +138,6 @@ struct ConvolutionButton : public juce::Component
             isJogRHovered = njr;
             isNameHovered = nnm;
             repaint();
-        }
-
-        if (nnm)
-        {
-            if (tooltipCountdown < 0 && !tooltipShowing)
-            {
-                tooltipCountdown = 3;
-                juce::Timer::callAfterDelay(100,
-                                            Surge::GUI::makeSafeCallback<ConvolutionButton>(
-                                                this, [](auto *that) { that->shouldTooltip(); }));
-            }
-        }
-        else
-        {
-            hideTooltip();
         }
     }
 
@@ -504,6 +463,7 @@ struct ConvolutionButton : public juce::Component
                 Surge::Storage::updateUserDefaultPath(storage, Surge::Storage::LastIRPath, dir);
             }
         };
+
         sge->fileChooser->launchAsync(juce::FileBrowserComponent::openMode |
                                           juce::FileBrowserComponent::canSelectFiles,
                                       action);
